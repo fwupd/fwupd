@@ -62,12 +62,12 @@ fu_legion_hid2_device_convert_version(FuDevice *device, guint64 version_raw)
 static gboolean
 fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_get_version_new();
-	g_autoptr(GByteArray) result = fu_struct_legion_version_new();
+	g_autoptr(FuStructLegionGetVersion) st_cmd = fu_struct_legion_get_version_new();
+	g_autoptr(FuStructLegionVersion) st_res = fu_struct_legion_version_new();
 
-	if (!fu_legion_hid2_device_transfer(self, cmd, result, error))
+	if (!fu_legion_hid2_device_transfer(self, st_cmd->buf, st_res->buf, error))
 		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(self), fu_struct_legion_version_get_version(result));
+	fu_device_set_version_raw(FU_DEVICE(self), fu_struct_legion_version_get_version(st_res));
 
 	return TRUE;
 }
@@ -79,19 +79,19 @@ fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 static void
 fu_legion_hid2_device_setup_touchpad_direct(FuLegionHid2Device *self)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_get_pl_test_new();
-	g_autoptr(GByteArray) tp_man = fu_struct_legion_get_pl_test_result_new();
-	g_autoptr(GByteArray) tp_ver = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuStructLegionGetPlTest) st_cmd = fu_struct_legion_get_pl_test_new();
+	g_autoptr(FuStructLegionGetPlTestResult) st_man = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuStructLegionGetPlTestResult) st_ver = fu_struct_legion_get_pl_test_result_new();
 	g_autoptr(FuDevice) child = NULL;
 	g_autoptr(GError) error_child = NULL;
 
 	/* determine which vendor touchpad */
-	fu_struct_legion_get_pl_test_set_index(cmd, FU_LEGION_HID2_PL_TEST_TP_MANUFACTURER);
-	if (!fu_legion_hid2_device_transfer(self, cmd, tp_man, &error_child)) {
+	fu_struct_legion_get_pl_test_set_index(st_cmd, FU_LEGION_HID2_PL_TEST_TP_MANUFACTURER);
+	if (!fu_legion_hid2_device_transfer(self, st_cmd->buf, st_man->buf, &error_child)) {
 		g_debug("failed to get touchpad manufacturer: %s", error_child->message);
 		return;
 	}
-	switch (fu_struct_legion_get_pl_test_result_get_content(tp_man)) {
+	switch (fu_struct_legion_get_pl_test_result_get_content(st_man)) {
 	case FU_LEGION_HID2_TP_MAN_BETTER_LIFE:
 		child = fu_legion_hid2_bl_device_new(FU_DEVICE(self));
 		break;
@@ -105,13 +105,13 @@ fu_legion_hid2_device_setup_touchpad_direct(FuLegionHid2Device *self)
 	}
 
 	/* lookup firmware from MCU (*NOT* from touchpad directly) */
-	fu_struct_legion_get_pl_test_set_index(cmd, FU_LEGION_HID2_PL_TEST_TP_VERSION);
-	if (!fu_legion_hid2_device_transfer(self, cmd, tp_ver, &error_child)) {
+	fu_struct_legion_get_pl_test_set_index(st_cmd, FU_LEGION_HID2_PL_TEST_TP_VERSION);
+	if (!fu_legion_hid2_device_transfer(self, st_cmd->buf, st_ver->buf, &error_child)) {
 		g_debug("failed to get touchpad version: %s", error_child->message);
 		return;
 	}
 
-	fu_device_set_version_raw(child, fu_struct_legion_get_pl_test_result_get_content(tp_ver));
+	fu_device_set_version_raw(child, fu_struct_legion_get_pl_test_result_get_content(st_ver));
 
 	fu_device_add_child(FU_DEVICE(self), child);
 }
@@ -153,9 +153,8 @@ fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_strtoull(tp_version, &version, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error)) {
+	if (!fu_strtoull(tp_version, &version, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
-	}
 
 	fu_device_set_version_raw(child, version);
 	fu_device_add_child(FU_DEVICE(self), child);
@@ -193,13 +192,13 @@ fu_legion_hid2_device_setup_version(FuLegionHid2Device *self, GError **error)
 }
 
 static gboolean
-fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
+fu_legion_hid2_device_validate_descriptor(FuLegionHid2Device *self, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
 	if (descriptor == NULL)
 		return FALSE;
 	report = fu_hid_descriptor_find_report(descriptor,
@@ -229,9 +228,10 @@ fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
 static gboolean
 fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 {
+	FuLegionHid2Device *self = FU_LEGION_HID2_DEVICE(device);
 	g_autoptr(GError) error_touchpad = NULL;
 
-	if (!fu_legion_hid2_device_validate_descriptor(device, error))
+	if (!fu_legion_hid2_device_validate_descriptor(self, error))
 		return FALSE;
 
 	if (!fu_legion_hid2_device_setup_version(FU_LEGION_HID2_DEVICE(device), error))
@@ -247,43 +247,19 @@ fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_legion_hid2_device_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
-				       FuProgress *progress,
-				       FuFirmwareParseFlags flags,
-				       GError **error)
-{
-	guint32 version;
-	g_autoptr(FuFirmware) firmware = fu_legion_hid2_firmware_new();
-
-	/* sanity check */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
-	version = fu_legion_hid2_firmware_get_version(firmware);
-	if (fu_device_get_version_raw(device) > version) {
-		g_autofree gchar *version_str =
-		    fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
-		g_info("downgrading to firmware %s", version_str);
-	}
-
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_legion_hid2_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(GByteArray) cmd = NULL;
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionStartIap) st_cmd = NULL;
+	g_autoptr(FuStructLegionIapResult) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	cmd = fu_struct_legion_start_iap_new();
-	result = fu_struct_legion_iap_result_new();
+	st_cmd = fu_struct_legion_start_iap_new();
+	st_res = fu_struct_legion_iap_result_new();
 
 	if (!fu_legion_hid2_device_transfer(FU_LEGION_HID2_DEVICE(device),
-					    cmd,
-					    result,
+					    st_cmd->buf,
+					    st_res->buf,
 					    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
@@ -307,6 +283,7 @@ fu_legion_hid2_device_init(FuLegionHid2Device *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.legion-hid2");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID2_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -317,7 +294,6 @@ fu_legion_hid2_device_class_init(FuLegionHid2DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_legion_hid2_device_setup;
-	device_class->prepare_firmware = fu_legion_hid2_device_prepare_firmware;
 	device_class->convert_version = fu_legion_hid2_device_convert_version;
 	device_class->detach = fu_legion_hid2_device_detach;
 }

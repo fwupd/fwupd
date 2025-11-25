@@ -261,22 +261,9 @@ if build_daemon
     daemon_loader_src = 'fu-main.c'
   endif
 
-  fwupddaemon_rs = custom_target(
-    'fu-daemon-rs',
-    input: 'fu-daemon.rs',
-    output: ['fu-daemon-struct.c', 'fu-daemon-struct.h'],
-    command: [
-      python3,
-      join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
-      '@INPUT@',
-      '@OUTPUT0@',
-      '@OUTPUT1@',
-    ],
-  )
   executable(
     'fwupd',
     fwupdengine_rs,
-    fwupddaemon_rs,
     plugins_hdr,
     sources: [daemon_loader_src, 'fu-daemon.c', 'fu-dbus-daemon.c'],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],

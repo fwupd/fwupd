@@ -1,0 +1,73 @@
+# GL3523
+[GENESYS_USBHUB\IC_3523]
+GenesysSupportDualBank = true
+GenesysHubBank2Address = 0x8000
+GenesysHubBankCapacity = 0x6000
+GenesysCodesignBank1Address = 0x6000
+GenesysCodesignBank2Address = 0xe000
+GenesysCodesignBankCapacity = 0x400
+GenesysFwDataMaxCount = 0x10000
+
+# 352350 changes:
+# hub supports flexible code size
+# hub code capacity
+# codesign bank addresses
+[GENESYS_USBHUB\IC_352350]
+GenesysSupportCodeSize = true
+GenesysHubBankCapacity = 0x8000
+GenesysCodesignBank1Address = 0x7c00
+GenesysCodesignBank2Address = 0xfc00
+
+# 352360(3523plus) changes:
+# hub supports flexible code size
+# hub code capacity and bank2 address
+[GENESYS_USBHUB\IC_352360]
+GenesysSupportCodeSize = true
+GenesysHubBank2Address = 0x10000
+GenesysHubBankCapacity = 0x10000
+GenesysFwDataMaxCount = 0x20000
+
+# GL3525
+[GENESYS_USBHUB\IC_3525]
+GenesysSupportDualBank = true
+GenesysSupportCodeSize = true
+GenesysHubBank2Address = 0xb000
+GenesysHubBankCapacity = 0xb000
+GenesysPdBank1Address = 0x16000
+GenesysPdBank2Address = 0x23000
+GenesysPdBankCapacity = 0xd000
+GenesysDevBank1Address = 0x30000
+GenesysDevBank2Address = 0x38000
+GenesysDevBankCapacity = 0x8000
+GenesysCodesignBank1Address = 0x16000
+GenesysCodesignBank2Address = 0x17000
+GenesysCodesignBankCapacity = 0x1000
+GenesysFwDataMaxCount = 0x40000
+
+# 352530 changes:
+# hub code capacity and bank2 address
+# dev bank addresses
+# pd code capacity and bank addresses
+[GENESYS_USBHUB\IC_352530]
+GenesysHubBank2Address = 0x10000
+GenesysHubBankCapacity = 0x10000
+GenesysDevBank1Address = 0x20000
+GenesysDevBank2Address = 0x30000
+GenesysPdBank1Address = 0x40000
+GenesysPdBank2Address = 0x60000
+GenesysPdBankCapacity = 0x20000
+GenesyswDataMaxCount = 0x80000
+
+# GL3590
+[GENESYS_USBHUB\IC_3590]
+GenesysSupportDualBank = true
+GenesysSupportCodeSize = true
+GenesysHubBank2Address = 0x10000
+GenesysHubBankCapacity = 0x10000
+GenesysDevBank1Address = 0x20000
+GenesysDevBank2Address = 0x30000
+GenesysDevBankCapacity = 0x10000
+GenesysCodesignBank1Address = 0xff00
+GenesysCodesignBank2Address = 0x1ff00
+GenesysCodesignBankCapacity = 0x100
+GenesysFwDataMaxCount = 0x40000

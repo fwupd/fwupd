@@ -170,7 +170,7 @@ fu_steelseries_fizz_write_fs(FuSteelseriesFizz *self,
 			fu_chunk_get_data_sz(chk),
 			error))
 			return FALSE;
-		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+		buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 		if (buf_res == NULL)
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -198,7 +198,7 @@ fu_steelseries_fizz_erase_fs(FuSteelseriesFizz *self,
 	fu_struct_steelseries_fizz_erase_file_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_erase_file_req_set_filesystem(st_req, fs);
 	fu_struct_steelseries_fizz_erase_file_req_set_id(st_req, id);
-	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+	buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 	return buf_res != NULL;
 }
 
@@ -217,7 +217,7 @@ fu_steelseries_fizz_reset(FuSteelseriesFizz *self,
 	st_req = fu_struct_steelseries_fizz_reset_req_new();
 	fu_struct_steelseries_fizz_reset_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_reset_req_set_mode(st_req, mode);
-	return fu_steelseries_fizz_request(self, st_req, error);
+	return fu_steelseries_fizz_request(self, st_req->buf, error);
 }
 
 gboolean
@@ -241,7 +241,7 @@ fu_steelseries_fizz_get_crc32_fs(FuSteelseriesFizz *self,
 	fu_struct_steelseries_fizz_file_crc32_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_file_crc32_req_set_filesystem(st_req, fs);
 	fu_struct_steelseries_fizz_file_crc32_req_set_id(st_req, id);
-	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+	buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 	if (buf_res == NULL)
 		return FALSE;
 	st_res = fu_struct_steelseries_fizz_file_crc32_res_parse(buf_res->data,
@@ -295,7 +295,7 @@ fu_steelseries_fizz_read_fs(FuSteelseriesFizz *self,
 		fu_struct_steelseries_fizz_read_access_file_req_set_offset(
 		    st_req,
 		    fu_chunk_get_address(chk));
-		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+		buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 		if (buf_res == NULL)
 			return FALSE;
 		st_res = fu_struct_steelseries_fizz_read_access_file_res_parse(buf_res->data,
@@ -699,7 +699,7 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 }
 
 static void
-fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
+fu_steelseries_fizz_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

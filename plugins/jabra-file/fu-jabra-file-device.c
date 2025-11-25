@@ -85,8 +85,8 @@ fu_jabra_file_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 	FuJabraFilePacket *cmd_req = (FuJabraFilePacket *)user_data;
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      self->epout,
-					      cmd_req->data,
-					      cmd_req->len,
+					      cmd_req->buf->data,
+					      cmd_req->buf->len,
 					      NULL,
 					      FU_JABRA_FILE_STANDARD_SEND_TIMEOUT,
 					      NULL, /* cancellable */
@@ -116,8 +116,8 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      self->epin,
-					      cmd_rsp->data,
-					      cmd_rsp->len,
+					      cmd_rsp->buf->data,
+					      cmd_rsp->buf->len,
 					      NULL,
 					      FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT,
 					      NULL, /* cancellable */
@@ -125,18 +125,18 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
-	if (cmd_rsp->data[2] == self->address &&
-	    (cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_IDENTITY &&
-	     cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_FILE &&
-	     cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_DFU &&
-	     cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_VIDEO &&
-	     cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK &&
-	     cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_NACK)) {
+	if (cmd_rsp->buf->data[2] == self->address &&
+	    (cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_IDENTITY &&
+	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_FILE &&
+	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_DFU &&
+	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_VIDEO &&
+	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK &&
+	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_NACK)) {
 		/* unrelated report, ignore and rx again */
 		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 						      0x82,
-						      cmd_rsp->data,
-						      cmd_rsp->len,
+						      cmd_rsp->buf->data,
+						      cmd_rsp->buf->len,
 						      NULL,
 						      FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT,
 						      NULL, /* cancellable */
@@ -172,12 +172,12 @@ fu_jabra_file_device_rx_with_sequence_cb(FuDevice *device, gpointer user_data, G
 	cmd_rsp = fu_jabra_file_device_rx(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (self->sequence_number != cmd_rsp->data[3]) {
+	if (self->sequence_number != cmd_rsp->buf->data[3]) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "sequence_number error -- got 0x%x, expected 0x%x",
-			    cmd_rsp->data[3],
+			    cmd_rsp->buf->data[3],
 			    self->sequence_number);
 		return FALSE;
 	}
@@ -219,10 +219,10 @@ fu_jabra_file_device_ensure_name(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	name = fu_memstrsafe(cmd_rsp->data,
-			     cmd_rsp->len,
+	name = fu_memstrsafe(cmd_rsp->buf->data,
+			     cmd_rsp->buf->len,
 			     FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + 1,
-			     cmd_rsp->len - (FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + 1),
+			     cmd_rsp->buf->len - (FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + 1),
 			     error);
 	if (name == NULL)
 		return FALSE;
@@ -247,8 +247,8 @@ fu_jabra_file_device_ensure_dfu_pid(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	self->dfu_pid =
-	    fu_memread_uint16(cmd_rsp->data + FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD, G_LITTLE_ENDIAN);
+	self->dfu_pid = fu_memread_uint16(cmd_rsp->buf->data + FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD,
+					  G_LITTLE_ENDIAN);
 	return TRUE;
 }
 
@@ -270,10 +270,10 @@ fu_jabra_file_device_ensure_version(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	version = fu_memstrsafe(cmd_rsp->data,
-				cmd_rsp->len,
+	version = fu_memstrsafe(cmd_rsp->buf->data,
+				cmd_rsp->buf->len,
 				FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + 1,
-				cmd_rsp->len - (FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + 1),
+				cmd_rsp->buf->len - (FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + 1),
 				error);
 	if (version == NULL)
 		return FALSE;
@@ -321,15 +321,15 @@ fu_jabra_file_device_file_checksum(FuJabraFileDevice *self,
 	cmd_rsp2 = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp2 == NULL)
 		return FALSE;
-	if (cmd_rsp2->data[5] == FU_JABRA_FILE_PACKET_CMD_NACK) {
+	if (cmd_rsp2->buf->data[5] == FU_JABRA_FILE_PACKET_CMD_NACK) {
 		*match = FALSE;
 		return TRUE;
 	}
 	if (!fu_memcpy_safe(device_checksum,
 			    sizeof(device_checksum),
 			    0,
-			    cmd_rsp2->data,
-			    cmd_rsp2->len,
+			    cmd_rsp2->buf->data,
+			    cmd_rsp2->buf->len,
 			    12,
 			    sizeof(device_checksum),
 			    error))
@@ -373,17 +373,17 @@ fu_jabra_file_device_write_delete_file(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (cmd_rsp->data[5] == FU_JABRA_FILE_PACKET_CMD_NACK && cmd_rsp->data[6] == 0xF7)
+	if (cmd_rsp->buf->data[5] == FU_JABRA_FILE_PACKET_CMD_NACK && cmd_rsp->buf->data[6] == 0xF7)
 		return TRUE;
-	if (cmd_rsp->data[5] == FU_JABRA_FILE_PACKET_CMD_ACK)
+	if (cmd_rsp->buf->data[5] == FU_JABRA_FILE_PACKET_CMD_ACK)
 		return TRUE;
 
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INTERNAL,
 		    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-		    cmd_rsp->data[5],
-		    cmd_rsp->data[6]);
+		    cmd_rsp->buf->data[5],
+		    cmd_rsp->buf->data[6]);
 	return FALSE;
 }
 
@@ -406,8 +406,8 @@ fu_jabra_file_device_write_first_block(FuJabraFileDevice *self,
 	fu_memwrite_uint32(data + 1, fu_firmware_get_size(firmware), G_BIG_ENDIAN);
 	if (!fu_jabra_file_packet_set_payload(cmd_req, data, sizeof(data), error))
 		return FALSE;
-	if (!fu_memcpy_safe(cmd_req->data,
-			    cmd_req->len,
+	if (!fu_memcpy_safe(cmd_req->buf->data,
+			    cmd_req->buf->len,
 			    FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + sizeof(data),
 			    upgrade,
 			    sizeof(upgrade),
@@ -420,13 +420,13 @@ fu_jabra_file_device_write_first_block(FuJabraFileDevice *self,
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK) {
+	if (cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    cmd_rsp->data[5],
-			    cmd_rsp->data[6]);
+			    cmd_rsp->buf->data[5],
+			    cmd_rsp->buf->data[6]);
 		return FALSE;
 	}
 	return TRUE;
@@ -451,8 +451,8 @@ fu_jabra_file_device_write_next_block(FuJabraFileDevice *self,
 	fu_jabra_file_packet_set_cmd(cmd_req, FU_JABRA_FILE_PACKET_CMD_FILE);
 	if (!fu_jabra_file_packet_set_payload(cmd_req, data, sizeof(data), error))
 		return FALSE;
-	if (!fu_memcpy_safe(cmd_req->data,
-			    cmd_req->len,
+	if (!fu_memcpy_safe(cmd_req->buf->data,
+			    cmd_req->buf->len,
 			    FU_JABRA_FILE_PACKET_OFFSET_PAYLOAD + sizeof(data),
 			    buf,
 			    bufsz,
@@ -467,13 +467,13 @@ fu_jabra_file_device_write_next_block(FuJabraFileDevice *self,
 		cmd_rsp = fu_jabra_file_device_rx(self, error);
 		if (cmd_rsp == NULL)
 			return FALSE;
-		if (cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK) {
+		if (cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-				    cmd_rsp->data[5],
-				    cmd_rsp->data[6]);
+				    cmd_rsp->buf->data[5],
+				    cmd_rsp->buf->data[6]);
 			return FALSE;
 		}
 	}
@@ -527,7 +527,7 @@ fu_jabra_file_device_check_device_busy(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (cmd_rsp->data[7] != 0x00) {
+	if (cmd_rsp->buf->data[7] != 0x00) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED, "is busy");
 		return FALSE;
 	}
@@ -556,13 +556,13 @@ fu_jabra_file_device_start_update(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (cmd_rsp->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK) {
+	if (cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    cmd_rsp->data[5],
-			    cmd_rsp->data[6]);
+			    cmd_rsp->buf->data[5],
+			    cmd_rsp->buf->data[6]);
 		return FALSE;
 	}
 	return TRUE;
@@ -690,7 +690,7 @@ fu_jabra_file_device_attach(FuDevice *device, FuProgress *progress, GError **err
 }
 
 static void
-fu_jabra_file_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_jabra_file_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

@@ -35,7 +35,10 @@ struct FuStructIfwiCpdManifest {
     size: u32le,				// dwords
     id: u32le,
     rsvd: u32le,
-    version: u64le,
+    version_major: u16le,
+    version_minor: u16le,
+    version_hotfix: u16le,
+    version_build: u16le,
     svn: u32le,
 }
 

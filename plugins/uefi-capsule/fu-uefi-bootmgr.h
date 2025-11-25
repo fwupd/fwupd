@@ -15,7 +15,7 @@ typedef enum {
 	FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE = 1 << 1,
 	FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER = 1 << 2,
 	FU_UEFI_BOOTMGR_FLAG_LAST
-} FuUefiBootmgrFlags;
+} G_GNUC_FLAG_ENUM FuUefiBootmgrFlags;
 
 gboolean
 fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error);

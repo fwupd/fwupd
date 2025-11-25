@@ -1,12 +1,11 @@
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, main, --pattern, 1_.*_X]
     -   id: check-added-large-files
-    -   id: check-byte-order-marker
     -   id: check-executables-have-shebangs
     -   id: forbid-new-submodules
     -   id: check-yaml
@@ -25,12 +24,12 @@ repos:
     -   id: mixed-line-ending
         args: [--fix=lf]
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.4.1
     hooks:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 23.12.1
+    rev: 25.9.0
     hooks:
     - id: black
 -   repo: local
@@ -67,18 +66,10 @@ repos:
               src/tests/history_v[12]\.db|
               src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors
             )$
-    - id: check-null-false-returns
-      name: check for null / false return mismatch
-      language: script
-      entry: ./contrib/ci/check-null-false-returns.py
     - id: check-potfiles
       name: check for missing translated files from potfiles
       language: script
       entry: ./contrib/ci/check-potfiles.py
-    - id: check-finalizers
-      name: check for missing GObject parent finalize
-      language: script
-      entry: ./contrib/ci/check-finalizers.py
     - id: check-headers
       name: check for superfluous includes
       language: script
@@ -96,16 +87,18 @@ repos:
       language: system
       entry: shellcheck --severity=warning -e SC2068
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: shfmt
       name: format shell scripts with shfmt
       language: system
       entry: shfmt --write --indent 4
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: run-tests
       name: run tests before pushing
       language: system
       entry: "test-fwupd"
-      stages: [push]
+      stages: [pre-push]
     - id: clang-format
       name: clang-format
       language: script
@@ -125,11 +118,11 @@ repos:
       language: script
       entry: ./contrib/ci/check-meson-install-tags.py
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+    rev: v0.45.0
     hooks:
     - id: markdownlint
       args: ['--fix', '--ignore', '.github']
 -   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.16.3
+    rev: v8.28.0
     hooks:
     -   id: gitleaks

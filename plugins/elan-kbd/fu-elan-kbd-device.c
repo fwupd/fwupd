@@ -180,7 +180,7 @@ fu_elan_kbd_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	    fu_struct_elan_kbd_software_reset_req_new();
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	if (!fu_elan_kbd_device_status_check(self, buf, error))
@@ -197,7 +197,7 @@ fu_elan_kbd_device_ensure_ver_spec(FuElanKbdDevice *self, GError **error)
 	g_autoptr(FuStructElanKbdGetVerSpecRes) st_res = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	st_res = fu_struct_elan_kbd_get_ver_spec_res_parse(buf->data, buf->len, 0x0, error);
@@ -215,7 +215,7 @@ fu_elan_kbd_device_ensure_ver_fw(FuElanKbdDevice *self, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	st_res = fu_struct_elan_kbd_get_ver_fw_res_parse(buf->data, buf->len, 0x0, error);
@@ -233,7 +233,7 @@ fu_elan_kbd_device_ensure_dev_status(FuElanKbdDevice *self, GError **error)
 	g_autoptr(FuStructElanKbdGetStatusRes) st_res = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	st_res = fu_struct_elan_kbd_get_status_res_parse(buf->data, buf->len, 0x0, error);
@@ -251,7 +251,7 @@ fu_elan_kbd_device_ensure_boot_cond1(FuElanKbdDevice *self, GError **error)
 	g_autoptr(FuStructElanKbdBootConditionRes) st_res = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	st_res = fu_struct_elan_kbd_boot_condition_res_parse(buf->data, buf->len, 0x0, error);
@@ -267,7 +267,7 @@ fu_elan_kbd_device_abort(FuElanKbdDevice *self, GError **error)
 	g_autoptr(FuStructElanKbdAbortReq) st_req = fu_struct_elan_kbd_abort_req_new();
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -308,7 +308,7 @@ fu_elan_kbd_device_cmd_read_rom_finished(FuElanKbdDevice *self, guint8 csum, GEr
 	g_autoptr(GByteArray) buf = NULL;
 
 	fu_struct_elan_kbd_read_rom_finished_req_set_csum(st_req, csum);
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -332,7 +332,7 @@ fu_elan_kbd_device_cmd_read_rom(FuElanKbdDevice *self,
 	/* set up read */
 	fu_struct_elan_kbd_read_rom_req_set_addr(st_req, addr);
 	fu_struct_elan_kbd_read_rom_req_set_len(st_req, len);
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return NULL;
 	if (!fu_elan_kbd_device_status_check(self, buf, error))
@@ -357,7 +357,7 @@ fu_elan_kbd_device_cmd_read_option_finished(FuElanKbdDevice *self, guint8 csum, 
 	g_autoptr(GByteArray) buf = NULL;
 
 	fu_struct_elan_kbd_read_option_finished_req_set_csum(st_req, csum);
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -376,7 +376,7 @@ fu_elan_kbd_device_cmd_read_option(FuElanKbdDevice *self, FuProgress *progress, 
 	fu_progress_set_steps(progress, len / FU_ELAN_KBD_DEVICE_EP_DATA_SIZE);
 
 	/* set up read */
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return NULL;
 	if (!fu_elan_kbd_device_status_check(self, buf, error))
@@ -434,7 +434,8 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 	}
 	img_bootloader = fu_firmware_new_from_bytes(blob_bootloader);
 	fu_firmware_set_id(img_bootloader, "bootloader");
-	fu_firmware_add_image(firmware, img_bootloader);
+	if (!fu_firmware_add_image(firmware, img_bootloader, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* app */
@@ -449,7 +450,8 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 	}
 	img_app = fu_firmware_new_from_bytes(blob_app);
 	fu_firmware_set_idx(img_app, FU_ELAN_KBD_FIRMWARE_IDX_APP);
-	fu_firmware_add_image(firmware, img_app);
+	if (!fu_firmware_add_image(firmware, img_app, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* option */
@@ -461,7 +463,8 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 	}
 	img_option = fu_firmware_new_from_bytes(blob_option);
 	fu_firmware_set_idx(img_option, FU_ELAN_KBD_FIRMWARE_IDX_OPTION);
-	fu_firmware_add_image(firmware, img_option);
+	if (!fu_firmware_add_image(firmware, img_option, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -476,7 +479,7 @@ fu_elan_kbd_device_cmd_get_auth_lock(FuElanKbdDevice *self, guint8 *key, GError 
 	g_autoptr(FuStructElanKbdGetAuthLockRes) st_res = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	st_res = fu_struct_elan_kbd_get_auth_lock_res_parse(buf->data, buf->len, 0x0, error);
@@ -494,7 +497,7 @@ fu_elan_kbd_device_cmd_set_auth_lock(FuElanKbdDevice *self, guint8 key, GError *
 	g_autoptr(GByteArray) buf = NULL;
 
 	fu_struct_elan_kbd_set_auth_lock_req_set_key(st_req, key ^ 0x58);
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -515,7 +518,7 @@ fu_elan_kbd_device_cmd_entry_iap(FuElanKbdDevice *self, GError **error)
 	g_autoptr(FuStructElanKbdEntryIapReq) st_req = fu_struct_elan_kbd_entry_iap_req_new();
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -527,7 +530,7 @@ fu_elan_kbd_device_cmd_finished_iap(FuElanKbdDevice *self, GError **error)
 	g_autoptr(FuStructElanKbdFinishedIapReq) st_req = fu_struct_elan_kbd_finished_iap_req_new();
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -541,7 +544,7 @@ fu_elan_kbd_device_cmd_write_rom_finished(FuElanKbdDevice *self, guint8 csum, GE
 	g_autoptr(GByteArray) buf = NULL;
 
 	fu_struct_elan_kbd_write_rom_finished_req_set_csum(st_req, csum);
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	return fu_elan_kbd_device_status_check(self, buf, error);
@@ -566,7 +569,7 @@ fu_elan_kbd_device_cmd_write_rom(FuElanKbdDevice *self,
 	/* set up write */
 	fu_struct_elan_kbd_write_rom_req_set_addr(st_req, addr);
 	fu_struct_elan_kbd_write_rom_req_set_len(st_req, bufsz);
-	buf = fu_elan_kbd_device_cmd(self, st_req, error);
+	buf = fu_elan_kbd_device_cmd(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
 	if (!fu_elan_kbd_device_status_check(self, buf, error))
@@ -654,7 +657,7 @@ fu_elan_kbd_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_elan_kbd_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_elan_kbd_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

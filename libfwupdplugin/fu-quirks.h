@@ -28,7 +28,7 @@ typedef enum {
 	FU_QUIRKS_LOAD_FLAG_NO_VERIFY = 1 << 2,
 	/*< private >*/
 	FU_QUIRKS_LOAD_FLAG_LAST
-} FuQuirksLoadFlags;
+} G_GNUC_FLAG_ENUM FuQuirksLoadFlags;
 
 /**
  * FuQuirksIter:

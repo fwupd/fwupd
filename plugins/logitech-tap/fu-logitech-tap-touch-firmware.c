@@ -196,6 +196,7 @@ fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_find(stream,
 				  (const guint8 *)image_end_magic,
 				  strlen(image_end_magic),
+				  0x0,
 				  &ap_end_offset,
 				  error)) {
 		g_prefix_error_literal(error, "failed to find anchor: ");
@@ -220,7 +221,8 @@ fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_offset(ap_img, ap_end);
 	if (!fu_firmware_set_stream(ap_img, ap_stream, error))
 		return FALSE;
-	fu_firmware_add_image(firmware, ap_img);
+	if (!fu_firmware_add_image(firmware, ap_img, error))
+		return FALSE;
 
 	/* calculate basic checksum for dataflash (DF) */
 	df_stream = fu_partial_input_stream_new(stream, df_start, df_end - df_start, error);
@@ -235,7 +237,8 @@ fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_offset(df_img, df_end);
 	if (!fu_firmware_set_stream(df_img, df_stream, error))
 		return FALSE;
-	fu_firmware_add_image(firmware, df_img);
+	if (!fu_firmware_add_image(firmware, df_img, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

@@ -1,12 +1,18 @@
 /* auto-generated, do not modify */
 #include "config.h"
 
+#include <glib.h>
+
 #include "{{basename}}"
 {%- if struct_objs %}
 #include "fu-byte-array.h"
 #include "fu-mem-private.h"
 #include "fu-string.h"
 {%- endif %}
+
+{%- for header_basename in import_headers %}
+#include "{{header_basename}}"
+{%- endfor %}
 
 #ifdef G_LOG_DOMAIN
   #undef G_LOG_DOMAIN

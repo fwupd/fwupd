@@ -20,11 +20,11 @@ fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
 				const gchar *guid,
 				const gchar *name,
 				GBytes *bytes,
-				guint32 attr,
+				FuEfiVariableAttrs attr,
 				GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 GBytes *
 fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
 				const gchar *guid,
 				const gchar *name,
-				guint32 *attr,
+				FuEfiVariableAttrs *attr,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);

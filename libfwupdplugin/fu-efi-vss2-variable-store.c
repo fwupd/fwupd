@@ -51,8 +51,20 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 
+	/* sanity check */
+	if (fu_struct_efi_vss2_variable_store_header_get_size(st) >
+	    fu_firmware_get_size_max(firmware)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "VSS store larger than max size: 0x%x > 0x%x",
+			    (guint)fu_struct_efi_vss2_variable_store_header_get_size(st),
+			    (guint)fu_firmware_get_size_max(firmware));
+		return FALSE;
+	}
+
 	/* parse each attr */
-	offset += st->len;
+	offset += st->buf->len;
 	while (offset < fu_struct_efi_vss2_variable_store_header_get_size(st)) {
 		g_autoptr(FuFirmware) img = fu_efi_vss_auth_variable_new();
 
@@ -72,7 +84,8 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 		if (fu_efi_vss_auth_variable_get_state(FU_EFI_VSS_AUTH_VARIABLE(img)) ==
 		    FU_EFI_VARIABLE_STATE_VARIABLE_ADDED) {
 			fu_firmware_set_offset(img, offset);
-			fu_firmware_add_image(firmware, img);
+			if (!fu_firmware_add_image(firmware, img, error))
+				return FALSE;
 		}
 		offset += fu_firmware_get_size(img);
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
@@ -91,7 +104,7 @@ fu_efi_vss2_variable_store_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* sanity check */
-	if (fu_firmware_get_size(firmware) < st->len) {
+	if (fu_firmware_get_size(firmware) < st->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -107,27 +120,27 @@ fu_efi_vss2_variable_store_write(FuFirmware *firmware, GError **error)
 		fw = fu_firmware_write(img, error);
 		if (fw == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st, fw);
-		fu_byte_array_align_up(st, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
+		fu_byte_array_append_bytes(st->buf, fw);
+		fu_byte_array_align_up(st->buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 	}
 
 	/* sanity check */
-	if (st->len > fu_firmware_get_size(firmware)) {
+	if (st->buf->len > fu_firmware_get_size(firmware)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "VSS2 store is too small, needed 0x%x but defined as 0x%x",
-			    st->len,
+			    st->buf->len,
 			    (guint)(fu_firmware_get_size(firmware)));
 		return NULL;
 	}
 
 	/* fix up header and attrs */
-	fu_byte_array_set_size(st, fu_firmware_get_size(firmware), 0xFF);
+	fu_byte_array_set_size(st->buf, fu_firmware_get_size(firmware), 0xFF);
 	fu_struct_efi_vss2_variable_store_header_set_size(st, fu_firmware_get_size(firmware));
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void
@@ -136,7 +149,13 @@ fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 	g_type_ensure(FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000); /* 4KB */
+#else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000000); /* 16MB */
+#endif
 }
 
 static void

@@ -19,13 +19,14 @@
 #include <string.h>
 
 #include "fu-dell-dock-common.h"
+#include "fu-dell-dock-struct.h"
 
 #define I2C_TBT_ADDRESS 0xa2
 
 const FuHIDI2CParameters tbt_base_settings = {
     .i2ctargetaddr = I2C_TBT_ADDRESS,
     .regaddrlen = 1,
-    .i2cspeed = I2C_SPEED_400K,
+    .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,
 };
 
 /* TR Device ID */
@@ -74,10 +75,10 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 					  buffer[self->blob_major_offset],
 					  buffer[self->blob_minor_offset]);
 	g_info("writing Thunderbolt firmware version %s", dynamic_version);
-	g_debug("Total Image size: %" G_GSIZE_FORMAT, image_size);
+	g_debug("total image size: %" G_GSIZE_FORMAT, image_size);
 
 	memcpy(&start_offset, buffer, sizeof(guint32)); /* nocheck:blocked */
-	g_debug("Header size 0x%x", start_offset);
+	g_debug("header size 0x%x", start_offset);
 	if (start_offset > image_size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -126,7 +127,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
-	if (fu_dell_dock_ec_tbt_passive(fu_device_get_parent(device))) {
+	if (fu_dell_dock_ec_tbt_passive(FU_DELL_DOCK_EC(fu_device_get_parent(device)))) {
 		g_info("using passive flow for Thunderbolt");
 	} else if (!fu_dell_dock_hid_tbt_authenticate(fu_device_get_proxy(device),
 						      &tbt_base_settings,
@@ -198,7 +199,7 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent(device);
-	version = fu_dell_dock_ec_get_tbt_version(parent);
+	version = fu_dell_dock_ec_get_tbt_version(FU_DELL_DOCK_EC(parent));
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 		fu_device_set_version(device, version);

@@ -1038,6 +1038,12 @@ LIBFWUPD_2.0.16 {
 
 LIBFWUPD_2.0.17 {
   global:
+    fwupd_client_clean_remote;
+    fwupd_client_clean_remote_async;
+    fwupd_client_clean_remote_finish;
     fwupd_client_get_hwids;
+    fwupd_remote_ensure_checksum_sig;
+    fwupd_remote_ensure_mtime;
+    fwupd_remote_get_mtime;
   local: *;
 } LIBFWUPD_2.0.16;

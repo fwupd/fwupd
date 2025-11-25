@@ -362,7 +362,7 @@ fu_security_attrs_sort_cb(gconstpointer item1, gconstpointer item2)
 	return g_strcmp0(sort1, sort2);
 }
 
-static struct {
+const struct {
 	const gchar *appstream_id;
 	FwupdSecurityAttrLevel level;
 } appstream_id_level_map[] = {
@@ -434,7 +434,7 @@ fu_security_attrs_ensure_level(FwupdSecurityAttr *attr)
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 }
 
-static struct {
+const struct {
 	const gchar *appstream_id;
 	const gchar *fwupd_version;
 } appstream_id_version_map[] = {

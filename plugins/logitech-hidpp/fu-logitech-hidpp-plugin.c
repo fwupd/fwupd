@@ -34,6 +34,7 @@ fu_logitech_hidpp_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "LogitechHidppModelId");
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "unifying");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_BOOTLOADER_NORDIC);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_BOOTLOADER_TEXAS);

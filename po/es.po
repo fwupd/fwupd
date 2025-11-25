@@ -11,16 +11,21 @@
 # Francisco Serrador <serrador@protonmail.com>, 2022
 # Giovanni Alfredo Garciliano Diaz <giobeatle10@gmail.com>, 2024
 # Santiago FN, 2024
+# Richard Hughes <hughsient@gmail.com>, 2025.
+# Francisco Serrador <fserrador@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Spanish (http://app.transifex.com/freedesktop/fwupd/language/es/)\n"
+"PO-Revision-Date: 2025-11-18 20:51+0000\n"
+"Last-Translator: Francisco Serrador <fserrador@gmail.com>\n"
+"Language-Team: Spanish <https://hosted.weblate.org/projects/fwupd/fwupd/es/>\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es\n"
-"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n != 0 && n % 1000000 == 0) ? 1 : 2);\n"
+"X-Generator: Weblate 5.15-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -310,7 +315,7 @@ msgstr[2] "%u dispositivos tienen una actualización disponible."
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u dispositivo no es la mejor configuración conocida."
-msgstr[1] "%u dispositivos no son la mejor configuración conocida"
+msgstr[1] "%u dispositivos no son la mejor configuración conocida."
 msgstr[2] "%u dispositivos no son la mejor configuración conocida."
 
 #. TRANSLATORS: duration in minutes
@@ -400,7 +405,7 @@ msgstr "Activando actualización del firmware para"
 
 #. TRANSLATORS: command description
 msgid "Adds devices to watch for future emulation"
-msgstr "Añade dispositivos que vigilen para emulación futura."
+msgstr "Añade dispositivos que vigilen para emulación futura"
 
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
@@ -485,9 +490,9 @@ msgstr "Aplicando actualización…"
 #. * the domain administrator
 msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
-msgstr[0] "Firmware aprobado"
-msgstr[1] "Firmware aprobado"
-msgstr[2] "Firmware aprobado"
+msgstr[0] "Firmware aprobado:"
+msgstr[1] "Firmware aprobados:"
+msgstr[2] "Firmware aprobados:"
 
 #. TRANSLATORS: command description
 msgid "Asks the daemon to quit"
@@ -1406,7 +1411,7 @@ msgstr "Bloqueo de Protección de Escritura Firmware"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
-msgstr "Protección de Escritura del Firmware del de la memoria del firmware del dispositivo con el que es condonado. "
+msgstr "Protección de Escritura del Firmware del de la memoria del firmware del dispositivo con el que es condonado."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -1941,7 +1946,7 @@ msgstr "Listado de apuntes en dbx"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware GTypes"
-msgstr "Enumera los tipos GType del firmware que estén disponibles."
+msgstr "Enumera los tipos GType del firmware que estén disponibles"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
@@ -2398,7 +2403,7 @@ msgstr "ID Remoto"
 
 #. TRANSLATORS: command description
 msgid "Removes devices to watch for future emulation"
-msgstr "Extrae dispositivos para vigilar en emulación futura."
+msgstr "Extrae dispositivos para vigilar en emulación futura"
 
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
@@ -2445,7 +2450,7 @@ msgstr "Reiniciando dispositivo…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
-msgstr "Obtiene la configuración de la BIOS. Si no se proporciona ningún argumente se devuelve toda la configuración."
+msgstr "Obtiene la configuración de la BIOS. Si no se proporciona ningún argumente se devuelve toda la configuración"
 
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
@@ -3009,7 +3014,7 @@ msgstr "La Clave de Plataforma UEFI es utilizada para determinar si el software 
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
-msgstr "El almacenaje de certificado UEFI está ahora actualizado."
+msgstr "El almacenaje de certificado UEFI está ahora actualizado"
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -3212,7 +3217,7 @@ msgstr "Protección de memoria UEFI activada y bloqueada"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection enabled but not locked"
-msgstr "Protección de memoria UEFI activada pero no bloqueada "
+msgstr "Protección de memoria UEFI activada pero no bloqueada"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"

@@ -27,3 +27,11 @@
 #if !GLIB_CHECK_VERSION(2, 80, 0)
 #define g_task_return_new_error_literal g_task_return_new_error
 #endif
+
+#ifndef G_GNUC_FLAG_ENUM
+#if g_macro__has_attribute(flag_enum)
+#define G_GNUC_FLAG_ENUM __attribute__((flag_enum))
+#else
+#define G_GNUC_FLAG_ENUM
+#endif
+#endif

@@ -7,6 +7,7 @@ fwupdplugin_structs = [
   'fu-cfi.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
+  'fu-context.rs', # fuzzing
   'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
@@ -452,8 +453,9 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
+    colorhug_test_firmware,
     rustgen.process('fu-self-test.rs'),
-    sources: ['fu-test-device.c', 'fu-self-test.c'],
+    sources: ['fu-self-test-device.c', 'fu-self-test.c'],
     include_directories: [root_incdir, fwupd_incdir],
     dependencies: [library_deps, fwupdplugin_rs_dep],
     link_with: [fwupd, fwupdplugin],

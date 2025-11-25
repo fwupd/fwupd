@@ -12,12 +12,11 @@
 #include "fu-nvme-device.h"
 #include "fu-nvme-struct.h"
 
-#define FU_NVME_ID_CTRL_SIZE 0x1000
-
 struct _FuNvmeDevice {
 	FuPciDevice parent_instance;
 	guint pci_depth;
 	guint64 write_block_size;
+	guint serial_suffix;
 };
 
 #define FU_NVME_COMMIT_ACTION_CA0 0b000 /* replace only */
@@ -28,6 +27,10 @@ struct _FuNvmeDevice {
 #define FU_NVME_DEVICE_FLAG_FORCE_ALIGN "force-align"
 #define FU_NVME_DEVICE_FLAG_COMMIT_CA3	"commit-ca3"
 
+#define FU_NVME_LOG_FW_SLOT 0x03
+
+#define FU_NVME_FW_SLOT_INFO_AFI_FWUP (1u << 3)
+
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
 #define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
@@ -37,6 +40,7 @@ fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	fwupd_codec_string_append_int(str, idt, "PciDepth", self->pci_depth);
+	fwupd_codec_string_append_int(str, idt, "SerialSuffix", self->serial_suffix);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
@@ -190,6 +194,60 @@ fu_nvme_device_fw_download(FuNvmeDevice *self,
 	return fu_nvme_device_submit_admin_passthru(self, &cmd, buf_mut, bufsz, error);
 }
 
+static FuStructNvmeFwSlotInfoLog *
+fu_nvme_device_get_fw_slot_info(FuNvmeDevice *self, GError **error)
+{
+	guint8 buf[FU_STRUCT_NVME_FW_SLOT_INFO_LOG_SIZE] = {0};
+	guint32 numd = (sizeof(buf) >> 2) - 1;
+	struct nvme_admin_cmd cmd = {
+	    .opcode = 0x02,
+	    .nsid = 0xffffffff,
+	    .addr = 0x0, /* memory address of data */
+	    .data_len = sizeof(buf),
+	    .cdw10 = (numd << 16) | FU_NVME_LOG_FW_SLOT,
+	};
+
+	if (!fu_nvme_device_submit_admin_passthru(self, &cmd, buf, sizeof(buf), error))
+		return NULL;
+	return fu_struct_nvme_fw_slot_info_log_parse(buf, sizeof(buf), 0x0, error);
+}
+
+static gboolean
+fu_nvme_device_wait_for_fw_download_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuNvmeDevice *self = FU_NVME_DEVICE(device);
+	g_autoptr(FuStructNvmeFwSlotInfoLog) st_log = NULL;
+
+	st_log = fu_nvme_device_get_fw_slot_info(self, error);
+	if (st_log == NULL)
+		return FALSE;
+	if (fu_struct_nvme_fw_slot_info_log_get_afi(st_log) & FU_NVME_FW_SLOT_INFO_AFI_FWUP) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "download still marked in-progress");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_nvme_device_wait_for_fw_download(FuNvmeDevice *self, GError **error)
+{
+	/* preserve compat with older emulation files */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.0.17"))
+		return TRUE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_nvme_device_wait_for_fw_download_cb,
+				    600,
+				    100, /* ms */
+				    NULL,
+				    error);
+}
+
 static void
 fu_nvme_device_parse_cns_maybe_dell(FuNvmeDevice *self, const guint8 *buf)
 {
@@ -218,55 +276,107 @@ fu_nvme_device_parse_cns_maybe_dell(FuNvmeDevice *self, const guint8 *buf)
 		fu_device_add_instance_id(FU_DEVICE(self), guid_efi);
 }
 
-static gboolean
-fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
+gboolean
+fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **error)
 {
+	gsize serialsz;
+
+	g_return_val_if_fail(serial != NULL, FALSE);
+
+	/* always */
+	fu_device_set_serial(FU_DEVICE(self), serial);
+
+	/* some vendors seem to think it's logical to use the last 5 (Lexar) or 6 (Phison)
+	 * characters of the serial number for the firmware variant */
+	serialsz = strlen(serial);
+	if (self->serial_suffix > 0 && serialsz > self->serial_suffix) {
+		/* keep SNSUFFIX as just the tail */
+		fu_device_add_instance_str(FU_DEVICE(self),
+					   "SNSUFFIX",
+					   serial + (serialsz - self->serial_suffix));
+		if (!fu_device_build_instance_id(FU_DEVICE(self),
+						 error,
+						 "NVME",
+						 "VEN",
+						 "DEV",
+						 "SNSUFFIX",
+						 NULL))
+			return FALSE;
+
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    "NVME",
+					    "VEN",
+					    "DEV",
+					    "SNSUFFIX",
+					    "NAME",
+					    NULL);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize bufsz, GError **error)
+{
+	guint8 frmw;
 	guint8 fawr;
 	guint8 fwug;
 	guint8 nfws;
 	guint8 s1ro;
-	g_autofree gchar *gu = NULL;
+	const fwupd_guid_t *gu;
 	g_autofree gchar *mn = NULL;
+	g_autofree gchar *mn_stripped = NULL;
 	g_autofree gchar *sn = NULL;
-	g_autofree gchar *sr = NULL;
+	g_autofree gchar *fr = NULL;
+	g_autoptr(FuStructNvmeIdCtrl) st = NULL;
 
 	/* wrong size */
-	if (sz != FU_NVME_ID_CTRL_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to parse blob, expected 0x%04x bytes",
-			    (guint)FU_NVME_ID_CTRL_SIZE);
+	st = fu_struct_nvme_id_ctrl_parse(buf, bufsz, 0x0, error);
+	if (st == NULL)
 		return FALSE;
+
+	/* get sanitized string from CNS -- see NVM-Express-1_3c-2018.05.24-Ratified.pdf */
+	mn = fu_struct_nvme_id_ctrl_get_mn(st);
+	if (mn != NULL) {
+		mn_stripped = fu_strstrip(mn);
+		if (mn_stripped[0] != '\0') {
+			fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", mn_stripped);
+			fu_device_set_name(FU_DEVICE(self), mn_stripped);
+		}
+	}
+	sn = fu_struct_nvme_id_ctrl_get_sn(st);
+	if (sn != NULL) {
+		g_autofree gchar *str = fu_strstrip(sn);
+		if (!fu_nvme_device_set_serial(self, str, error))
+			return FALSE;
+	}
+	fr = fu_struct_nvme_id_ctrl_get_fr(st);
+	if (fr != NULL) {
+		g_autofree gchar *str = fu_strstrip(fr);
+		if (str[0] != '\0')
+			fu_device_set_version(FU_DEVICE(self), fr);
 	}
 
-	/* get sanitized string from CNS -- see the following doc for offsets:
-	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
-	sn = fu_nvme_device_get_string_safe(buf, 4, 23);
-	if (sn != NULL)
-		fu_device_set_serial(FU_DEVICE(self), sn);
-	mn = fu_nvme_device_get_string_safe(buf, 24, 63);
-	if (mn != NULL)
-		fu_device_set_name(FU_DEVICE(self), mn);
-	sr = fu_nvme_device_get_string_safe(buf, 64, 71);
-	if (sr != NULL)
-		fu_device_set_version(FU_DEVICE(self), sr);
-
-	/* firmware update granularity (FWUG) */
-	fwug = buf[319];
+	/* firmware update granularity */
+	fwug = fu_struct_nvme_id_ctrl_get_fwug(st);
 	if (fwug != 0x00 && fwug != 0xff)
 		self->write_block_size = ((guint64)fwug) * 0x1000;
 
 	/* firmware slot information */
-	fawr = (buf[260] & 0x10) >> 4;
-	nfws = (buf[260] & 0x0e) >> 1;
-	s1ro = buf[260] & 0x01;
+	frmw = fu_struct_nvme_id_ctrl_get_frmw(st);
+	fawr = (frmw & 0x10) >> 4;
+	nfws = (frmw & 0x0e) >> 1;
+	s1ro = frmw & 0x01;
 	g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
 
-	/* FRU globally unique identifier (FGUID) */
-	gu = fu_nvme_device_get_guid_safe(buf, 127);
-	if (gu != NULL)
-		fu_device_add_instance_id(FU_DEVICE(self), gu);
+	/* FRU globally unique identifier */
+	gu = fu_struct_nvme_id_ctrl_get_fguid(st);
+	if (fu_common_guid_is_plausible((const guint8 *)gu)) {
+		g_autofree gchar *guid = fwupd_guid_to_string(gu, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+		fu_device_add_instance_id(FU_DEVICE(self), guid);
+	}
 
 	/* Dell helpfully provide an EFI GUID we can use in the vendor offset,
 	 * but don't have a header or any magic we can use -- so check if the
@@ -274,9 +384,9 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	fu_nvme_device_parse_cns_maybe_dell(self, buf);
 
 	/* fall back to the device description */
-	if (mn != NULL && fu_device_get_guids(FU_DEVICE(self))->len == 0) {
+	if (mn_stripped != NULL && fu_device_get_guids(FU_DEVICE(self))->len == 0) {
 		g_debug("no vendor GUID, falling back to mn");
-		fu_device_add_instance_id(FU_DEVICE(self), mn);
+		fu_device_add_instance_id(FU_DEVICE(self), mn_stripped);
 	}
 	return TRUE;
 }
@@ -348,7 +458,7 @@ static gboolean
 fu_nvme_device_setup(FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
-	guint8 buf[FU_NVME_ID_CTRL_SIZE] = {0x0};
+	guint8 buf[FU_STRUCT_NVME_ID_CTRL_SIZE] = {0x0};
 
 	/* get and parse CNS */
 	if (!fu_nvme_device_identify_ctrl(self, buf, sizeof(buf), error)) {
@@ -434,6 +544,12 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
+	/* wait */
+	if (!fu_nvme_device_wait_for_fw_download(self, error)) {
+		g_prefix_error_literal(error, "firmware download did not complete: ");
+		return FALSE;
+	}
+
 	/* commit */
 	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3))
 		commit_action = FU_NVME_COMMIT_ACTION_CA3;
@@ -462,6 +578,13 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 		self->write_block_size = tmp;
 		return TRUE;
 	}
+	if (g_strcmp0(key, "NvmeSerialSuffixChars") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->serial_suffix = tmp;
+		return TRUE;
+	}
 
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -471,7 +594,7 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 }
 
 static void
-fu_nvme_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_nvme_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

@@ -30,7 +30,7 @@ struct _FuElantpHidDevice {
 G_DEFINE_TYPE(FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
-fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error);
+fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GError **error);
 
 static void
 fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -416,7 +416,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* The ic_page_count is based on 64 bytes/page. */
+	/* ic_page_count is based on 64 bytes/page */
 	fu_device_set_firmware_size(device, (guint64)self->ic_page_count * (guint64)64);
 
 	/* is in bootloader mode */
@@ -442,7 +442,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_read_haptic_enable(self, &error_local)) {
 		g_debug("no haptic device detected: %s", error_local->message);
 	} else {
-		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new(device);
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new();
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
@@ -532,13 +532,12 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_device_filling_forcetable_firmware(FuDevice *device,
+fu_elantp_hid_device_filling_forcetable_firmware(FuElantpHidDevice *self,
 						 guint8 *fw_data,
 						 gsize fw_size,
 						 guint32 force_table_addr,
 						 GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
 	const guint8 fillature[] = {0x77, 0x33, 0x44, 0xaa};
 	const guint8 signature[] = {0xAA, 0x55, 0xCC, 0x33, 0xFF, 0xFF};
 	guint8 buf[64] = {[0 ... 63] = 0xFF};
@@ -630,7 +629,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* detach */
-	if (!fu_elantp_hid_device_detach(device, fu_progress_get_child(progress), error))
+	if (!fu_elantp_hid_device_detach(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -653,7 +652,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 			return FALSE;
 
 		if (!fu_elantp_hid_device_filling_forcetable_firmware(
-			device,
+			self,
 			buf2,
 			bufsz,
 			fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware)),
@@ -764,16 +763,15 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
 	guint16 iap_ver;
 	guint16 ic_type;
 	guint8 buf[2] = {0x0};
 	guint16 tmp;
 
 	/* sanity check */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_info("in bootloader mode, reset IC");
 		if (!fu_elantp_hid_device_write_cmd(self,
 						    FU_ETP_CMD_I2C_IAP_RESET,
@@ -941,7 +939,7 @@ fu_elantp_hid_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_elantp_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_elantp_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

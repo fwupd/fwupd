@@ -113,7 +113,7 @@ guint16
 fu_dfu_device_get_transfer_size(FuDfuDevice *self)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
+	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), G_MAXUINT16);
 	return priv->transfer_size;
 }
 
@@ -129,7 +129,7 @@ guint16
 fu_dfu_device_get_version(FuDfuDevice *self)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
+	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), G_MAXUINT16);
 	return priv->version;
 }
 
@@ -313,7 +313,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			g_info("DFU v1.1 assumed");
 			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		} else {
-			g_warning("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
+			g_debug("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
 			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		}
 
@@ -657,7 +657,6 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 					    &error_local)) {
 		/* some devices just reboot and stall the endpoint :/ */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
-		    //		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring while detaching: %s", error_local->message);
 		} else {
@@ -823,7 +822,7 @@ guint8
 fu_dfu_device_get_interface(FuDfuDevice *self)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xff);
+	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), G_MAXUINT8);
 	return priv->iface_number;
 }
 
@@ -927,7 +926,7 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 	 * write -- there's no way to avoid blocking the daemon like this... */
 	if (fu_device_has_private_flag(FU_DEVICE(self),
 				       FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET)) {
-		g_debug("blocking wait to work around Jabra hardware...");
+		g_debug("blocking wait to work around Jabra hardware…");
 		fu_device_sleep(device, 10000);
 	}
 
@@ -1247,7 +1246,7 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		return;
 
 	/* not the right error to query */
-	if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+	if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) /* nocheck:error */
 		return;
 
 	/* get the status */
@@ -1372,7 +1371,7 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 }
 
 static void
-fu_dfu_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_dfu_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

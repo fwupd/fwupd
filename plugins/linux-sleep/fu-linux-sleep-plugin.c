@@ -19,8 +19,7 @@ fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-	g_autofree gchar *fn = g_build_filename(sysfsdir, "power", "mem_sleep", NULL);
+	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_SYSFSDIR, "power", "mem_sleep", NULL);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = NULL;

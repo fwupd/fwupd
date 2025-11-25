@@ -39,7 +39,8 @@ fu_fit_firmware_get_image_root(FuFitFirmware *self)
 	fu_fdt_image_set_attr_uint32(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_TIMESTAMP, 0x0);
 	fu_fdt_image_set_attr_str(FU_FDT_IMAGE(img), "description", "Firmware image");
 	fu_fdt_image_set_attr_str(FU_FDT_IMAGE(img), "creator", "fwupd");
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), img, NULL))
+		return NULL;
 	return FU_FDT_IMAGE(img);
 }
 
@@ -61,6 +62,8 @@ fu_fit_firmware_get_timestamp(FuFitFirmware *self)
 
 	g_return_val_if_fail(FU_IS_FIT_FIRMWARE(self), 0x0);
 
+	if (img_root == NULL)
+		return 0;
 	/* this has to exist */
 	(void)fu_fdt_image_get_attr_u32(img_root, FU_FIT_FIRMWARE_ATTR_TIMESTAMP, &tmp, NULL);
 	return tmp;
@@ -80,11 +83,13 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp)
 {
 	g_autoptr(FuFdtImage) img_root = fu_fit_firmware_get_image_root(self);
 	g_return_if_fail(FU_IS_FIT_FIRMWARE(self));
+	if (img_root == NULL)
+		return;
 	fu_fdt_image_set_attr_uint32(img_root, FU_FIT_FIRMWARE_ATTR_TIMESTAMP, timestamp);
 }
 
 static gboolean
-fu_fit_firmware_verify_crc32(FuFirmware *firmware,
+fu_fit_firmware_verify_crc32(FuFitFirmware *self,
 			     FuFirmware *img,
 			     FuFirmware *img_hash,
 			     GBytes *blob,
@@ -112,12 +117,12 @@ fu_fit_firmware_verify_crc32(FuFirmware *firmware,
 	}
 
 	/* success */
-	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	return TRUE;
 }
 
 static gboolean
-fu_fit_firmware_verify_checksum(FuFirmware *firmware,
+fu_fit_firmware_verify_checksum(FuFitFirmware *self,
 				FuFirmware *img,
 				FuFirmware *img_hash,
 				GChecksumType checksum_type,
@@ -153,12 +158,12 @@ fu_fit_firmware_verify_checksum(FuFirmware *firmware,
 		return FALSE;
 
 	/* success */
-	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	return TRUE;
 }
 
 static gboolean
-fu_fit_firmware_verify_hash(FuFirmware *firmware,
+fu_fit_firmware_verify_hash(FuFitFirmware *self,
 			    FuFirmware *img,
 			    FuFirmware *img_hash,
 			    GBytes *blob,
@@ -175,9 +180,9 @@ fu_fit_firmware_verify_hash(FuFirmware *firmware,
 		return FALSE;
 	}
 	if (g_strcmp0(algo, "crc32") == 0)
-		return fu_fit_firmware_verify_crc32(firmware, img, img_hash, blob, error);
+		return fu_fit_firmware_verify_crc32(self, img, img_hash, blob, error);
 	if (g_strcmp0(algo, "md5") == 0) {
-		return fu_fit_firmware_verify_checksum(firmware,
+		return fu_fit_firmware_verify_checksum(self,
 						       img,
 						       img_hash,
 						       G_CHECKSUM_MD5,
@@ -185,7 +190,7 @@ fu_fit_firmware_verify_hash(FuFirmware *firmware,
 						       error);
 	}
 	if (g_strcmp0(algo, "sha1") == 0) {
-		return fu_fit_firmware_verify_checksum(firmware,
+		return fu_fit_firmware_verify_checksum(self,
 						       img,
 						       img_hash,
 						       G_CHECKSUM_SHA1,
@@ -193,7 +198,7 @@ fu_fit_firmware_verify_hash(FuFirmware *firmware,
 						       error);
 	}
 	if (g_strcmp0(algo, "sha256") == 0) {
-		return fu_fit_firmware_verify_checksum(firmware,
+		return fu_fit_firmware_verify_checksum(self,
 						       img,
 						       img_hash,
 						       G_CHECKSUM_SHA256,
@@ -206,7 +211,7 @@ fu_fit_firmware_verify_hash(FuFirmware *firmware,
 }
 
 static gboolean
-fu_fit_firmware_verify_image(FuFirmware *firmware,
+fu_fit_firmware_verify_image(FuFitFirmware *self,
 			     GInputStream *stream,
 			     FuFirmware *img,
 			     FuFirmwareParseFlags flags,
@@ -256,11 +261,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 				return FALSE;
 			}
 			if (g_str_has_prefix(fu_firmware_get_id(img_hash), "hash")) {
-				if (!fu_fit_firmware_verify_hash(firmware,
-								 img,
-								 img_hash,
-								 blob,
-								 error))
+				if (!fu_fit_firmware_verify_hash(self, img, img_hash, blob, error))
 					return FALSE;
 			}
 		}
@@ -271,7 +272,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 }
 
 static gboolean
-fu_fit_firmware_verify_configuration(FuFirmware *firmware,
+fu_fit_firmware_verify_configuration(FuFitFirmware *self,
 				     FuFirmware *img,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
@@ -293,6 +294,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
+	FuFitFirmware *self = FU_FIT_FIRMWARE(firmware);
 	g_autoptr(FuFirmware) img_cfgs = NULL;
 	g_autoptr(FuFirmware) img_images = NULL;
 	g_autoptr(FuFirmware) img_root = NULL;
@@ -320,7 +322,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 	img_images_array = fu_firmware_get_images(img_images);
 	for (guint i = 0; i < img_images_array->len; i++) {
 		FuFirmware *img = g_ptr_array_index(img_images_array, i);
-		if (!fu_fit_firmware_verify_image(firmware, stream, img, flags, error))
+		if (!fu_fit_firmware_verify_image(self, stream, img, flags, error))
 			return FALSE;
 	}
 
@@ -331,7 +333,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 	img_cfgs_array = fu_firmware_get_images(img_cfgs);
 	for (guint i = 0; i < img_cfgs_array->len; i++) {
 		FuFirmware *img = g_ptr_array_index(img_cfgs_array, i);
-		if (!fu_fit_firmware_verify_configuration(firmware, img, flags, error))
+		if (!fu_fit_firmware_verify_configuration(self, img, flags, error))
 			return FALSE;
 	}
 

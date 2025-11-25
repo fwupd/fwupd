@@ -59,14 +59,17 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 }
 
 static gboolean
-fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GError **error)
+fu_system76_launch_device_command(FuSystem76LaunchDevice *self,
+				  guint8 *data,
+				  gsize len,
+				  GError **error)
 {
 	const guint8 ep_out = 0x03;
 	gsize actual_len = 0;
 	FuSystem76LaunchDeviceHelper helper = {.data = data, .len = len};
 
 	/* send command */
-	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(device),
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      ep_out,
 					      data,
 					      len,
@@ -85,17 +88,22 @@ fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GEr
 			    actual_len);
 		return FALSE;
 	}
-	return fu_device_retry(device, fu_system76_launch_device_response_cb, 5, &helper, error);
+	return fu_device_retry(FU_DEVICE(self),
+			       fu_system76_launch_device_response_cb,
+			       5,
+			       &helper,
+			       error);
 }
 
 static gboolean
 fu_system76_launch_device_version_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	FuSystem76LaunchDevice *self = FU_SYSTEM76_LAUNCH_DEVICE(device);
 	guint8 data[32] = {SYSTEM76_LAUNCH_CMD_VERSION, 0};
 	g_autofree gchar *version = NULL;
 
 	/* execute version command */
-	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
+	if (!fu_system76_launch_device_command(self, data, sizeof(data), error)) {
 		g_prefix_error_literal(error, "failed to execute version command: ");
 		return FALSE;
 	}
@@ -123,12 +131,12 @@ fu_system76_launch_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_system76_launch_device_reset(FuDevice *device, guint8 *rc, GError **error)
+fu_system76_launch_device_reset(FuSystem76LaunchDevice *self, guint8 *rc, GError **error)
 {
 	guint8 data[32] = {SYSTEM76_LAUNCH_CMD_RESET, 0};
 
 	/* execute reset command */
-	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
+	if (!fu_system76_launch_device_command(self, data, sizeof(data), error)) {
 		g_prefix_error_literal(error, "failed to execute reset command: ");
 		return FALSE;
 	}
@@ -138,7 +146,7 @@ fu_system76_launch_device_reset(FuDevice *device, guint8 *rc, GError **error)
 }
 
 static gboolean
-fu_system76_launch_device_security_set(FuDevice *device,
+fu_system76_launch_device_security_set(FuSystem76LaunchDevice *self,
 				       FuSystem76LaunchSecurityState state,
 				       guint8 *rc,
 				       GError **error)
@@ -146,7 +154,7 @@ fu_system76_launch_device_security_set(FuDevice *device,
 	guint8 data[32] = {SYSTEM76_LAUNCH_CMD_SECURITY_SET, 0, state, 0};
 
 	/* execute security set command */
-	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
+	if (!fu_system76_launch_device_command(self, data, sizeof(data), error)) {
 		g_prefix_error_literal(error, "failed to execute security set command: ");
 		return FALSE;
 	}
@@ -158,12 +166,13 @@ fu_system76_launch_device_security_set(FuDevice *device,
 static gboolean
 fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuSystem76LaunchDevice *self = FU_SYSTEM76_LAUNCH_DEVICE(device);
 	guint8 rc = 0x0;
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* prompt for unlock if reset was blocked */
-	if (!fu_system76_launch_device_reset(device, &rc, error))
+	if (!fu_system76_launch_device_reset(self, &rc, error))
 		return FALSE;
 
 	/* unlikely, but already unlocked */
@@ -174,7 +183,7 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 
 	/* notify device of desire to unlock */
 	if (!fu_system76_launch_device_security_set(
-		device,
+		self,
 		FU_SYSTEM76_LAUNCH_SECURITY_STATE_PREPARE_UNLOCK,
 		&rc,
 		error))
@@ -213,7 +222,7 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 	/* poll for the user-unlock */
 	do {
 		fu_device_sleep(device, 1000); /* ms */
-		if (!fu_system76_launch_device_reset(device, &rc, error))
+		if (!fu_system76_launch_device_reset(self, &rc, error))
 			return FALSE;
 	} while (rc != 0 &&
 		 g_timer_elapsed(timer, NULL) * 1000.f < FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
@@ -231,7 +240,7 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 }
 
 static void
-fu_system76_launch_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_system76_launch_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

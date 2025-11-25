@@ -249,7 +249,7 @@ fu_redfish_backend_session_headers_callback(char *ptr, size_t size, size_t nmemb
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(userdata);
 	if ((size * nmemb) > 16 && g_ascii_strncasecmp(ptr, "X-Auth-Token:", 13) == 0) {
 		g_autofree gchar *session_key = NULL;
-		/* The string also includes \r\n at the end */
+		/* string also includes \r\n at the end */
 		session_key = g_strndup(ptr + 14, (size * nmemb) - 16);
 		fu_redfish_backend_set_session_key(self, session_key);
 	}

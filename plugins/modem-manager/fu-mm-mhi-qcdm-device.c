@@ -57,13 +57,11 @@ fu_mm_mhi_qcdm_device_detach(FuDevice *device, FuProgress *progress, GError **er
 static FuKernelSearchPathLocker *
 fu_mm_mhi_qcdm_device_search_path_locker_new(FuMmMhiQcdmDevice *self, GError **error)
 {
-	g_autofree gchar *cachedir = NULL;
 	g_autofree gchar *mm_fw_dir = NULL;
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
 	/* create a directory to store firmware files for modem-manager plugin */
-	cachedir = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	mm_fw_dir = g_build_filename(cachedir, "modem-manager", "firmware", NULL);
+	mm_fw_dir = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "modem-manager", "firmware", NULL);
 	if (g_mkdir_with_parents(mm_fw_dir, 0700) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -127,7 +125,6 @@ fu_mm_mhi_qcdm_device_prepare_firmware(FuDevice *device,
 {
 	FuMmMhiQcdmDevice *self = FU_MM_MHI_QCDM_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
-	g_autoptr(GBytes) firehose_prog = NULL;
 
 	/* parse as archive */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
@@ -168,7 +165,7 @@ fu_mm_mhi_qcdm_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_mm_mhi_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_mm_mhi_qcdm_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

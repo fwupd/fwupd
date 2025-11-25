@@ -685,7 +685,7 @@ fu_history_convert_hash_to_string(GHashTable *hash)
 	return g_string_free(str, FALSE);
 }
 
-/* unset some flags we don't want to store */
+/* nocheck:name unset some flags we don't want to store */
 static FwupdDeviceFlags
 fu_history_get_device_flags_filtered(FuDevice *device)
 {
@@ -710,6 +710,7 @@ gboolean
 fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 {
 	gint rc;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
@@ -720,7 +721,7 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* overwrite entry if it exists */
-	g_debug("modifying device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
+	g_debug("modifying device %s", id_display);
 	rc = sqlite3_prepare_v2(self->db,
 				"UPDATE history SET "
 				"update_state = ?1, "
@@ -789,6 +790,7 @@ fu_history_modify_device_release(FuHistory *self,
 				 GError **error)
 {
 	gint rc;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -803,7 +805,7 @@ fu_history_modify_device_release(FuHistory *self,
 	metadata = fu_history_convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* overwrite entry if it exists */
-	g_debug("modifying device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
+	g_debug("modifying device %s", id_display);
 	rc = sqlite3_prepare_v2(self->db,
 				"UPDATE history SET "
 				"update_state = ?1, "
@@ -861,6 +863,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	const gchar *checksum_device;
 	const gchar *checksum = NULL;
 	gint rc;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -878,7 +881,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	/* ensure all old device(s) with this ID are removed */
 	if (!fu_history_remove_device(self, device, error))
 		return FALSE;
-	g_debug("add device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
+	g_debug("add device %s", id_display);
 	checksum = fwupd_checksum_get_by_kind(fu_release_get_checksums(release), G_CHECKSUM_SHA1);
 	checksum_device =
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1);
@@ -999,6 +1002,7 @@ gboolean
 fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 {
 	gint rc;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
@@ -1008,7 +1012,7 @@ fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 	if (!fu_history_load(self, error))
 		return FALSE;
 
-	g_debug("remove device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
+	g_debug("remove device %s", id_display);
 	rc = sqlite3_prepare_v2(self->db,
 				"DELETE FROM history WHERE device_id = ?1;",
 				-1,

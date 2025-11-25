@@ -28,12 +28,13 @@ struct _FuIgscDevice {
 #define FU_IGSC_DEVICE_FLAG_HAS_OPROM "has-oprom"
 #define FU_IGSC_DEVICE_FLAG_HAS_SKU   "has-sku"
 
-#define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
 #define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	   480000 /* 480 sec */
 
 #define HECI1_CSE_FS_MODE_MASK 0x3
 #define HECI1_CSE_FS_CP_MODE   0x3
+
+#define HECI1_CSE_FS_BACKGROUND_OPERATION_NEEDED_BIT (1 << 13)
 
 G_DEFINE_TYPE(FuIgscDevice, fu_igsc_device, FU_TYPE_HECI_DEVICE)
 
@@ -116,9 +117,20 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 	g_autoptr(FuIgscFwuHeciVersionReq) st_req = fu_igsc_fwu_heci_version_req_new();
 	g_autoptr(FuIgscFwuHeciVersionRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	res_buf = g_malloc0(res_bufsz);
 	fu_igsc_fwu_heci_version_req_set_partition(st_req, partition);
-	if (!fu_igsc_device_command(self, st_req->data, st_req->len, res_buf, res_bufsz, error)) {
+	if (!fu_igsc_device_command(self,
+				    st_req->buf->data,
+				    st_req->buf->len,
+				    res_buf,
+				    res_bufsz,
+				    error)) {
 		g_prefix_error_literal(error, "invalid HECI message response: ");
 		return FALSE;
 	}
@@ -141,7 +153,7 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 				    0x0, /* dst */
 				    res_buf,
 				    res_bufsz,
-				    st_res->len, /* src */
+				    st_res->buf->len, /* src */
 				    fu_igsc_fwu_heci_version_res_get_version_length(st_res),
 				    error)) {
 			return FALSE;
@@ -163,9 +175,15 @@ fu_igsc_device_get_aux_version(FuIgscDevice *self,
 	g_autoptr(FuIgscFwDataHeciVersionReq) st_req = fu_igsc_fw_data_heci_version_req_new();
 	g_autoptr(FuIgscFwDataHeciVersionRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -194,9 +212,15 @@ fu_igsc_device_get_subsystem_ids(FuIgscDevice *self, GError **error)
 	    fu_igsc_fwu_heci_get_subsystem_ids_req_new();
 	g_autoptr(FuIgscFwuHeciGetSubsystemIdsRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -221,9 +245,15 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 	g_autoptr(FuIgscFwuHeciGetConfigReq) st_req = fu_igsc_fwu_heci_get_config_req_new();
 	g_autoptr(FuIgscFwuHeciGetConfigRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -246,11 +276,10 @@ static gboolean
 fu_igsc_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuStructIgscFwVersion) fw_code_version = fu_struct_igsc_fw_version_new();
+	g_autoptr(FuStructIgscFwVersion) st_fwversion = fu_struct_igsc_fw_version_new();
 
-	/* connect to MCA interface */
+	/* connect to interface */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_MCHI2, 0, error)) {
 		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
@@ -263,31 +292,23 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to get ARBH SVN: ");
 		return FALSE;
 	}
-	if (!fu_udev_device_reopen(FU_UDEV_DEVICE(self), error))
-		return FALSE;
-
-	/* now connect to fwupdate interface */
-	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
-		g_prefix_error_literal(error, "failed to connect: ");
-		return FALSE;
-	}
 
 	/* get current version */
 	if (!fu_igsc_device_get_version_raw(self,
 					    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
-					    fw_code_version->data,
-					    fw_code_version->len,
+					    st_fwversion->buf->data,
+					    st_fwversion->buf->len,
 					    error)) {
 		g_prefix_error_literal(error, "cannot get fw version: ");
 		return FALSE;
 	}
-	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
+	self->project = fu_struct_igsc_fw_version_get_project(st_fwversion);
 	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
 		version = g_strdup_printf("%u.%u",
-					  fu_struct_igsc_fw_version_get_hotfix(fw_code_version),
-					  fu_struct_igsc_fw_version_get_build(fw_code_version));
+					  fu_struct_igsc_fw_version_get_hotfix(st_fwversion),
+					  fu_struct_igsc_fw_version_get_build(st_fwversion));
 	}
 	fu_device_set_version(device, version);
 
@@ -314,16 +335,16 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 
 	/* some devices have children */
 	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_AUX)) {
-		g_autoptr(FuIgscAuxDevice) device_child = fu_igsc_aux_device_new(ctx);
+		g_autoptr(FuIgscAuxDevice) device_child = fu_igsc_aux_device_new(device);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	}
 	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_OPROM)) {
 		g_autoptr(FuIgscOpromDevice) device_code = NULL;
 		g_autoptr(FuIgscOpromDevice) device_data = NULL;
 		device_code =
-		    fu_igsc_oprom_device_new(ctx, FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE);
+		    fu_igsc_oprom_device_new(device, FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE);
 		device_data =
-		    fu_igsc_oprom_device_new(ctx, FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA);
+		    fu_igsc_oprom_device_new(device, FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_code));
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_data));
 	}
@@ -470,15 +491,31 @@ fu_igsc_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
+fu_igsc_device_update_end(FuIgscDevice *self, FuIgscFwuHeciPayloadType payload_type, GError **error)
 {
 	guint8 res_buf[FU_IGSC_FWU_HECI_END_RES_SIZE] = {0};
 	g_autoptr(FuIgscFwuHeciEndReq) st_req = fu_igsc_fwu_heci_end_req_new();
 	g_autoptr(FuIgscFwuHeciEndRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
+	/* we are not expecting a reply */
+	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
+	    payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
+		fu_dump_raw(G_LOG_DOMAIN, "MEI-write", st_req->buf->data, st_req->buf->len);
+		return fu_mei_device_write(FU_MEI_DEVICE(self),
+					   st_req->buf->data,
+					   st_req->buf->len,
+					   FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT,
+					   error);
+	}
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -487,6 +524,7 @@ fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 	if (st_res == NULL)
 		return FALSE;
 	return fu_igsc_heci_check_status(fu_igsc_fwu_heci_end_res_get_status(st_res), error);
+
 }
 
 static gboolean
@@ -497,10 +535,10 @@ fu_igsc_device_update_data(FuIgscDevice *self, const guint8 *data, gsize length,
 	g_autoptr(FuIgscFwuHeciDataRes) st_res = NULL;
 
 	fu_igsc_fwu_heci_data_req_set_data_length(st_req, length);
-	g_byte_array_append(st_req, data, length);
+	g_byte_array_append(st_req->buf, data, length);
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -523,16 +561,22 @@ fu_igsc_device_update_start(FuIgscDevice *self,
 	g_autoptr(FuIgscFwuHeciStartReq) st_req = fu_igsc_fwu_heci_start_req_new();
 	g_autoptr(FuIgscFwuHeciStartRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_input_stream_size(fw, &streamsz, error))
 		return FALSE;
 	fu_igsc_fwu_heci_start_req_set_update_img_length(st_req, streamsz);
 	fu_igsc_fwu_heci_start_req_set_payload_type(st_req, payload_type);
 	fu_igsc_fwu_heci_start_req_set_flags(st_req, FU_IGSC_FWU_HECI_START_FLAG_NONE);
 	if (fw_info != NULL)
-		fu_byte_array_append_bytes(st_req, fw_info);
+		fu_byte_array_append_bytes(st_req->buf, fw_info);
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -548,8 +592,8 @@ fu_igsc_device_no_update(FuIgscDevice *self, GError **error)
 {
 	g_autoptr(FuIgscFwuHeciNoUpdateReq) st_req = fu_igsc_fwu_heci_no_update_req_new();
 	return fu_mei_device_write(FU_MEI_DEVICE(self),
-				   st_req->data,
-				   st_req->len,
+				   st_req->buf->data,
+				   st_req->buf->len,
 				   FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT,
 				   error);
 }
@@ -560,6 +604,12 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 			    FuProgress *progress,
 			    GError **error)
 {
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -586,14 +636,15 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 
 /* the expectation is that it will fail eventually */
 static gboolean
-fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
+fu_igsc_device_wait_for_version(FuIgscDevice *self, GError **error)
 {
-	g_autoptr(FuStructIgscFwVersion) fw_code_version = fu_struct_igsc_fw_version_new();
+	g_autoptr(FuStructIgscFwVersion) st_fwversion = fu_struct_igsc_fw_version_new();
 	for (guint i = 0; i < 20; i++) {
+		fu_mei_device_disconnect(FU_MEI_DEVICE(self));
 		if (!fu_igsc_device_get_version_raw(self,
 						    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
-						    fw_code_version->data,
-						    fw_code_version->len,
+						    st_fwversion->buf->data,
+						    st_fwversion->buf->len,
 						    NULL))
 			return TRUE;
 		fu_device_sleep(FU_DEVICE(self), 100);
@@ -603,9 +654,30 @@ fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 }
 
 static gboolean
-fu_igsc_device_reconnect_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_igsc_device_reconnect_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	return fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error);
+	fu_mei_device_disconnect(FU_MEI_DEVICE(device));
+	return fu_mei_device_connect(FU_MEI_DEVICE(device), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error);
+}
+
+static gboolean
+fu_igsc_device_wait_heci_finish_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuIgscDevice *self = FU_IGSC_DEVICE(device);
+	guint32 fw_status = 0;
+
+	if (!fu_igsc_device_get_fw_status(self, 5, &fw_status, error))
+		return FALSE;
+	if (fw_status & HECI1_CSE_FS_BACKGROUND_OPERATION_NEEDED_BIT) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "FWSTS5 is 0x%x",
+			    fw_status);
+		return FALSE;
+	}
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -618,26 +690,25 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 {
 	gboolean cp_mode;
 	guint32 sts5 = 0;
-	gsize payloadsz =
-	    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) - FU_IGSC_FWU_HECI_DATA_REQ_SIZE;
+	gsize payloadsz;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
 		fu_progress_set_id(progress, G_STRLOC);
+		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "get-status");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, "write-chunks");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-end");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "wait-for-reboot");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 46, "reconnect");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 20, "wait");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 20, "reconnect");
 	} else {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "get-status");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, "write-chunks");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-end");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "wait-for-reboot");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reconnect");
 	}
 
@@ -655,6 +726,17 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* data */
+	if (fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) <
+	    FU_IGSC_FWU_HECI_DATA_REQ_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "mei device max msg length invalid: 0x%x",
+			    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)));
+		return FALSE;
+	}
+	payloadsz =
+	    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) - FU_IGSC_FWU_HECI_DATA_REQ_SIZE;
 	chunks = fu_chunk_array_new_from_stream(fw,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
@@ -667,38 +749,50 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* stop */
-	if (!fu_igsc_device_update_end(self, error)) {
+	if (!fu_igsc_device_update_end(self, payload_type, error)) {
 		g_prefix_error_literal(error, "failed to end: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
 
-	/* detect a firmware reboot */
-	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
-	    payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
-		if (!fu_igsc_device_wait_for_reset(self, error))
-			return FALSE;
-	}
-	fu_progress_step_done(progress);
-
-	/* after Gfx FW update there is a FW reset so driver reconnect is needed */
+	/* after the Gfx FW update there is a FW reset so a driver reconnect is needed */
 	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
+		/* we can't use WAIT_FOR_REPLUG as the mei device itself doesn't disappear and
+		 * reappear, only the *fwu interface* does... */
+		fu_device_sleep_full(FU_DEVICE(self), 5000, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
+
+		/* wait for the fwu interface to reply with the version information */
 		if (cp_mode) {
-			if (!fu_igsc_device_wait_for_reset(self, error))
+			if (!fu_igsc_device_wait_for_version(self, error))
 				return FALSE;
 		}
 		if (!fu_device_retry_full(FU_DEVICE(self),
 					  fu_igsc_device_reconnect_cb,
 					  200,
-					  300 /* ms */,
+					  1000 /* ms */,
 					  NULL,
-					  error))
+					  error)) {
+			g_prefix_error_literal(error, "failed to wait for reconnect: ");
 			return FALSE;
+		}
 		if (!fu_igsc_device_no_update(self, error)) {
 			g_prefix_error_literal(error, "failed to send no-update: ");
 			return FALSE;
 		}
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_igsc_device_wait_heci_finish_cb,
+					  600,
+					  500 /* ms */,
+					  NULL,
+					  error)) {
+			g_prefix_error_literal(error, "failed to wait for reconnect: ");
+			return FALSE;
+		}
+		if (cp_mode) {
+			if (!fu_igsc_device_wait_for_version(self, error))
+				return FALSE;
+		}
 	}
 	fu_progress_step_done(progress);
 
@@ -735,55 +829,18 @@ fu_igsc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* restart */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	return TRUE;
 }
 
-static gboolean
-fu_igsc_device_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError **error)
-{
-	g_autoptr(FuDevice) parent = NULL;
-
-	/* get PCI parent */
-	parent = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
-	if (parent == NULL)
-		return FALSE;
-	return fu_udev_device_write_sysfs(FU_UDEV_DEVICE(parent),
-					  "power/control",
-					  val,
-					  FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT,
-					  error);
-}
-
-static gboolean
-fu_igsc_device_prepare(FuDevice *device,
-		       FuProgress *progress,
-		       FwupdInstallFlags flags,
-		       GError **error)
-{
-	FuIgscDevice *self = FU_IGSC_DEVICE(device);
-	return fu_igsc_device_set_pci_power_policy(self, "on", error);
-}
-
-static gboolean
-fu_igsc_device_cleanup(FuDevice *device,
-		       FuProgress *progress,
-		       FwupdInstallFlags flags,
-		       GError **error)
-{
-	FuIgscDevice *self = FU_IGSC_DEVICE(device);
-	return fu_igsc_device_set_pci_power_policy(self, "auto", error);
-}
-
 static void
-fu_igsc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_igsc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void
@@ -793,6 +850,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 	fu_device_set_summary(FU_DEVICE(self), "Discrete Graphics Card");
@@ -826,8 +884,6 @@ fu_igsc_device_class_init(FuIgscDeviceClass *klass)
 	device_class->to_string = fu_igsc_device_to_string;
 	device_class->setup = fu_igsc_device_setup;
 	device_class->probe = fu_igsc_device_probe;
-	device_class->prepare = fu_igsc_device_prepare;
-	device_class->cleanup = fu_igsc_device_cleanup;
 	device_class->prepare_firmware = fu_igsc_device_prepare_firmware;
 	device_class->write_firmware = fu_igsc_device_write_firmware;
 }

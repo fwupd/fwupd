@@ -5,16 +5,20 @@
 # Translators:
 # Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2025
 # Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Catalan (http://app.transifex.com/freedesktop/fwupd/language/ca/)\n"
+"PO-Revision-Date: 2025-10-24 09:55+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Catalan <https://hosted.weblate.org/projects/fwupd/fwupd/ca/>\n"
+"Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ca\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -293,7 +297,7 @@ msgstr[1] "%u dies"
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] " %u dispositiu té una actualització de microprogramari disponible."
+msgstr[0] "%u dispositiu té una actualització de microprogramari disponible."
 msgstr[1] "%u dispositius tenen una actualització de microprogramari disponible."
 
 #. TRANSLATORS: this is shown in the MOTD
@@ -484,7 +488,7 @@ msgstr "Adjunta al mode microprogramari."
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
-msgstr "S'està autenticant..."
+msgstr "S'està autenticant…"
 
 #. TRANSLATORS: user needs to run a command
 msgid "Authentication details are required"
@@ -786,7 +790,7 @@ msgstr "Opcions per a la depuració"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr "S'està descomprimint..."
+msgstr "S'està descomprimint…"
 
 #. TRANSLATORS: command description
 msgid "Delete an EFI boot entry"
@@ -1091,7 +1095,7 @@ msgstr "Descarrega un fitxer"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "S'està descarregant..."
+msgstr "S'està descarregant…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
@@ -1188,7 +1192,7 @@ msgstr "Esborra tot l'historial de les actualitzacions de microprogramari."
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "S'està esborrant..."
+msgstr "S'està esborrant…"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -1608,7 +1612,7 @@ msgstr "Està habilitada la protecció IOMMU de dispositius"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr "Està ociós..."
+msgstr "Està ociós…"
 
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
@@ -1693,7 +1697,7 @@ msgstr "Es requereix explícitament la instal·lació d'una versió específica"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "S'està instal·lant l'actualització de microprogramari..."
+msgstr "S'està instal·lant l'actualització de microprogramari…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1951,7 +1955,7 @@ msgstr "Carregat des d'un mòdul extern"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr "S'està carregant..."
+msgstr "S'està carregant…"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Locked"
@@ -2202,11 +2206,11 @@ msgstr "Analitza i mostra els detalls sobre un fitxer de microprogramari."
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr "S'està analitzant l'actualització de la dbx..."
+msgstr "S'està analitzant l'actualització de la dbx…"
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
-msgstr "S'està analitzant la dbx del sistema..."
+msgstr "S'està analitzant la dbx del sistema…"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -2345,7 +2349,7 @@ msgstr "Llegint des de %s…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
-msgstr "S'està llegint..."
+msgstr "S'està llegint…"
 
 #. TRANSLATORS: Plugin is active and in use
 msgid "Ready"
@@ -2435,7 +2439,7 @@ msgstr "Voleu reiniciar el dimoni per a fer efectiu el canvi?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr "S'està reiniciant el dispositiu..."
+msgstr "S'està reiniciant el dispositiu…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -2560,7 +2564,7 @@ msgstr "Augment escalar"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
-msgstr "Planificació..."
+msgstr "Planificació…"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"
@@ -3412,7 +3416,7 @@ msgstr "Vàlid"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "S'està validant el contingut ESP..."
+msgstr "S'està validant el contingut ESP…"
 
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
@@ -3424,7 +3428,7 @@ msgstr "Venedor"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "S'està verificant..."
+msgstr "S'està verificant…"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -3461,7 +3465,7 @@ msgstr "Fitxer d'escriptura:"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr "S'està escrivint..."
+msgstr "S'està escrivint…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."

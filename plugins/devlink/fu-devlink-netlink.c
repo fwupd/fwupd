@@ -406,7 +406,7 @@ fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *
 	struct nlattr *tb[CTRL_ATTR_MAX + 1] = {};
 	struct nlattr *mcgrp;
 
-	g_return_val_if_fail(nlh != NULL, MNL_CB_ERROR);
+	g_return_val_if_fail(nlh != NULL, -1);
 
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_genl_ctrl_attr_cb, tb);
 	if (tb[CTRL_ATTR_FAMILY_ID] == NULL)
@@ -461,7 +461,8 @@ fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
 	    error);
 }
 
-/* open generic netlink socket for devlink family */
+/* nocheck:name
+ * open generic netlink socket for devlink family */
 FuDevlinkGenSocket *
 fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 {
@@ -482,7 +483,12 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 			/* skip actual socket operations if emulated */
 			/* create dummy pipe for emulation */
-			if (!g_unix_open_pipe(nlg->pipe_fds, O_CLOEXEC, error)) {
+#if GLIB_CHECK_VERSION(2, 77, 0)
+			int flags = O_CLOEXEC;
+#else
+			int flags = FD_CLOEXEC;
+#endif
+			if (!g_unix_open_pipe(nlg->pipe_fds, flags, error)) {
 				g_prefix_error_literal(error,
 						       "failed to create pipe for emulation: ");
 				return NULL;

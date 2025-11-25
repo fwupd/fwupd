@@ -292,9 +292,8 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 				       FU_COMMON_VERSION_DECODE_BCD(val >> 8),
 				       FU_COMMON_VERSION_DECODE_BCD(val));
 	}
-	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
+	if (kind == FWUPD_VERSION_FORMAT_PAIR)
 		return g_strdup_printf("%u.%u", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
-	}
 	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
 		return g_strdup_printf("%u.%u.%u.%u",
 				       (guint)(val >> 12) & 0xF,
@@ -308,9 +307,8 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 				       (guint)(val >> 8) & 0xF,
 				       (guint)val & 0xFF);
 	}
-	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN) {
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strdup_printf("%" G_GUINT16_FORMAT, val);
-	}
 	if (kind == FWUPD_VERSION_FORMAT_HEX) {
 		/* 0xAABB */
 		return g_strdup_printf("0x%04x", val);
@@ -398,6 +396,17 @@ _g_ascii_is_digits(const gchar *str)
 	g_return_val_if_fail(str != NULL, FALSE);
 	for (gsize i = 0; str[i] != '\0'; i++) {
 		if (!g_ascii_isdigit(str[i]))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+_g_ascii_is_xdigits(const gchar *str)
+{
+	g_return_val_if_fail(str != NULL, FALSE);
+	for (gsize i = 0; str[i] != '\0'; i++) {
+		if (!g_ascii_isxdigit(str[i]))
 			return FALSE;
 	}
 	return TRUE;
@@ -593,6 +602,8 @@ fu_version_guess_format(const gchar *version)
 	if (sz == 1) {
 		if (g_str_has_prefix(version, "0x") || _g_ascii_is_digits(version))
 			return FWUPD_VERSION_FORMAT_NUMBER;
+		if (_g_ascii_is_xdigits(version))
+			return FWUPD_VERSION_FORMAT_HEX;
 		return FWUPD_VERSION_FORMAT_PLAIN;
 	}
 
@@ -621,7 +632,8 @@ fu_version_format_convert_base(FwupdVersionFormat fmt)
 	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME || fmt == FWUPD_VERSION_FORMAT_INTEL_ME2 ||
 	    fmt == FWUPD_VERSION_FORMAT_INTEL_CSME19)
 		return FWUPD_VERSION_FORMAT_QUAD;
-	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
+	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB ||
+	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_SURFACE_LEGACY)
 		return FWUPD_VERSION_FORMAT_TRIPLET;
 	if (fmt == FWUPD_VERSION_FORMAT_BCD)
 		return FWUPD_VERSION_FORMAT_PAIR;
@@ -657,6 +669,12 @@ fu_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **
 	/* nothing we can check for */
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
 		return TRUE;
+
+	/* hex */
+	if (fmt == FWUPD_VERSION_FORMAT_HEX) {
+		if (_g_ascii_is_xdigits(version))
+			return TRUE;
+	}
 
 	/* check the base format */
 	fmt_guess = fu_version_guess_format(version);

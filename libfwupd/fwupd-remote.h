@@ -123,7 +123,15 @@ typedef enum {
 	 * Since: 1.9.5
 	 */
 	FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE = 1 << 5,
-} FwupdRemoteFlags;
+	/**
+	 * FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES:
+	 *
+	 * Do not slow deployment using phased updates.
+	 *
+	 * Since: 2.0.17
+	 */
+	FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES = 1 << 6,
+} G_GNUC_FLAG_ENUM FwupdRemoteFlags;
 
 FwupdRemoteKind
 fwupd_remote_kind_from_string(const gchar *kind);

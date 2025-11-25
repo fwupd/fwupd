@@ -124,9 +124,8 @@ fu_elanfp_device_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz,
 	guint8 endpoint = ELAN_EP_CMD_IN;
 	gsize actual = 0;
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER))
 		endpoint = ELAN_EP_IMG_IN;
-	}
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 endpoint,
@@ -413,7 +412,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				      TRUE,
 				      NULL,
 				      error)) {
-		g_prefix_error_literal(error, "failed to hardware reset ");
+		g_prefix_error_literal(error, "failed to hardware reset: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -446,7 +445,7 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 }
 
 static void
-fu_elanfp_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_elanfp_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

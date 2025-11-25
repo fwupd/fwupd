@@ -127,8 +127,7 @@ static gboolean
 fu_amd_kria_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 #ifdef __aarch64__
-	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	g_autofree gchar *esrt_path = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
+	g_autofree gchar *esrt_path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
 
 	/* if there is an ESRT use that instead and disable the plugin */
 	if (g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {

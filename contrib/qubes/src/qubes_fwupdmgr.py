@@ -482,9 +482,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             elif isinstance(updev_dict[updev_key][0], str):
                 for i, data in enumerate(updev_dict[updev_key]):
                     if i == 0:
-                        print(output + "\u00B7" + data)
+                        print(output + "\u00b7" + data)
                         continue
-                    print(style + _tabs(" ") + "\u00B7" + data)
+                    print(style + _tabs(" ") + "\u00b7" + data)
             elif isinstance(updev_dict[updev_key][0], dict):
                 if level == 0 and help_f is True:
                     print(output)

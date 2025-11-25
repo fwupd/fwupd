@@ -6,3 +6,7 @@
 {%- else %}
 #include <fwupd.h>
 {%- endif %}
+
+{%- for header_basename in import_headers %}
+#include "{{header_basename}}"
+{%- endfor %}

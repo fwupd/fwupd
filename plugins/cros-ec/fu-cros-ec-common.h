@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#define SHA256_DIGEST_LENGTH 32
+
 typedef struct {
 	gchar *boardname;
 	gchar *triplet;

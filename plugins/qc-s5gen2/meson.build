@@ -21,4 +21,11 @@ plugin_builtins += static_library('fu_plugin_qc_s5gen2',
   dependencies: plugin_deps,
 )
 
-device_tests += files('tests/qualcomm-qcc5171.json')
+enumeration_data += files(
+  'tests/ugreen-15765a-setup.json',
+)
+
+device_tests += files(
+  'tests/qualcomm-qcc5171.json',
+  'tests/ugreen-15765a.json',
+)

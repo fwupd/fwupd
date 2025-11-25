@@ -647,13 +647,13 @@ fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
 }
 
 static gboolean
-fu_cfi_device_chip_select_assert(FuDevice *device, GError **error)
+fu_cfi_device_chip_select_assert_cb(FuDevice *device, GError **error)
 {
 	return fu_cfi_device_chip_select(FU_CFI_DEVICE(device), TRUE, error);
 }
 
 static gboolean
-fu_cfi_device_chip_select_deassert(FuDevice *device, GError **error)
+fu_cfi_device_chip_select_deassert_cb(FuDevice *device, GError **error)
 {
 	return fu_cfi_device_chip_select(FU_CFI_DEVICE(device), FALSE, error);
 }
@@ -674,8 +674,8 @@ fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	return fu_device_locker_new_full(FU_DEVICE(self),
-					 fu_cfi_device_chip_select_assert,
-					 fu_cfi_device_chip_select_deassert,
+					 fu_cfi_device_chip_select_assert_cb,
+					 fu_cfi_device_chip_select_deassert_cb,
 					 error);
 }
 
@@ -922,7 +922,7 @@ fu_cfi_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_cfi_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_cfi_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -951,6 +951,7 @@ fu_cfi_device_init(FuCfiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_build_vendor_id(FU_DEVICE(self), "SPI", "*");
 	fu_device_set_summary(FU_DEVICE(self), "CFI flash chip");
 }

@@ -46,10 +46,3 @@ as `/dev/drm_dp_aux0` as well as the i2c bus attached to the device, such as
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.6.2`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* PingYao Chen: @Pingyao5115

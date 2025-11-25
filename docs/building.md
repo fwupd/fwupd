@@ -2,7 +2,7 @@
 title: Building & Debugging fwupd
 ---
 
-These instructons below can either be used by the silicon vendor, or the consulting company to debug existing and new plugins. Sometimes new hardware is only supported in the development version of fwupd which may not even be available as a Snap or Flatpak yet.
+These instructions below can either be used by the silicon vendor, or the consulting company to debug existing and new plugins. Sometimes new hardware is only supported in the development version of fwupd which may not even be available as a Snap or Flatpak yet.
 
 ## Prerequisites
 
@@ -173,6 +173,20 @@ fwupdmgr install ~/foo.cab
 ```
 
 This will send the firmware archive from the locally built `fwupdmgr` to the locally built daemon using a file descriptor, which will call the new plugin code with the firmware blob in the archive. The daemon terminal will also show lots of useful debugging during this process.
+
+## Committing Code
+
+The `./contrib/setup` script automatically sets up [pre-commit](https://pre-commit.com/) to run many different source tools when adding code with `git commit` -- for instance:
+
+* Reformatting the code to match the project guidelines, using standard language specific linting tools like `black`, `shfmt` and `clang-format`
+* Shell scripts are verified using `shellcheck`
+* Checking if all the user-visible commands in `fwupdmgr` are documented in `fwupdmgr.md`
+* Checking if the correct headers are being used for the plugin
+* Checking for common GError and fwupd anti-patterns and other common design problems
+* And many more!
+
+If the `check-source.py` checks fail incorrectly, you can use a `/* nocheck:token */` to ignore the failure if you are 100% sure if the source checker is being overzealous.
+In this case you should also file an issue against fwupd with a minimal reproducer so we can fix the tool for future commits.
 
 ## Using Visual Studio code to build and test
 

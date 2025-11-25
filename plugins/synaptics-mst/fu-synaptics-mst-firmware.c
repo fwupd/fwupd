@@ -56,7 +56,7 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 {
 	guint16 addrs[] = {ADDR_CONFIG_TESLA, ADDR_CONFIG_CAYENNE, ADDR_CONFIG_CARRERA};
 	for (guint i = 0; i < G_N_ELEMENTS(addrs); i++) {
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructSynapticsFirmwareConfig) st = NULL;
 		st = fu_struct_synaptics_firmware_config_parse_stream(stream,
 								      offset + addrs[i],
 								      error);

@@ -32,8 +32,7 @@ fu_kernel_locked_down(void)
 {
 #ifdef __linux__
 	gsize len = 0;
-	g_autofree gchar *dir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_SECURITY);
-	g_autofree gchar *fname = g_build_filename(dir, "lockdown", NULL);
+	g_autofree gchar *fname = fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
 	g_autofree gchar *data = NULL;
 	g_auto(GStrv) options = NULL;
 
@@ -181,7 +180,6 @@ fu_kernel_get_config_path(GError **error)
 #ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
 	g_autofree gchar *config_fn = NULL;
-	g_autofree gchar *bootdir = fu_path_from_kind(FU_PATH_KIND_HOSTFS_BOOT);
 
 	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) < 0) {
@@ -192,7 +190,7 @@ fu_kernel_get_config_path(GError **error)
 		return NULL;
 	}
 	config_fn = g_strdup_printf("config-%s", name_tmp.release);
-	return g_build_filename(bootdir, config_fn, NULL);
+	return fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, config_fn, NULL);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -220,8 +218,7 @@ fu_kernel_get_config(GError **error)
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *procdir = fu_path_from_kind(FU_PATH_KIND_PROCFS);
-	g_autofree gchar *config_fngz = g_build_filename(procdir, "config.gz", NULL);
+	g_autofree gchar *config_fngz = fu_path_build(FU_PATH_KIND_PROCFS, "config.gz", NULL);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
@@ -341,9 +338,7 @@ fu_kernel_get_cmdline(GError **error)
 gboolean
 fu_kernel_check_cmdline_mutable(GError **error)
 {
-	g_autofree gchar *bootdir = fu_path_from_kind(FU_PATH_KIND_HOSTFS_BOOT);
 	g_autofree gchar *grubby_path = NULL;
-	g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
 	g_auto(GStrv) config_files = g_new0(gchar *, 3);
 
 	/* not found */
@@ -352,8 +347,8 @@ fu_kernel_check_cmdline_mutable(GError **error)
 		return FALSE;
 
 	/* check all the config files are writable */
-	config_files[0] = g_build_filename(bootdir, "grub2", "grub.cfg", NULL);
-	config_files[1] = g_build_filename(sysconfdir, "grub.cfg", NULL);
+	config_files[0] = fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, "grub2", "grub.cfg", NULL);
+	config_files[1] = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "grub.cfg", NULL);
 	for (guint i = 0; config_files[i] != NULL; i++) {
 		g_autoptr(GFile) file = g_file_new_for_path(config_files[i]);
 		g_autoptr(GFileInfo) info = NULL;

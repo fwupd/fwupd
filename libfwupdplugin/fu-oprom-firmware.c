@@ -121,8 +121,8 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	guint16 expansion_header_offset = 0;
 	guint16 pci_header_offset;
 	guint16 image_length = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
-	g_autoptr(GByteArray) st_pci = NULL;
+	g_autoptr(FuStructOprom) st_hdr = NULL;
+	g_autoptr(FuStructOpromPci) st_pci = NULL;
 
 	/* parse header */
 	st_hdr = fu_struct_oprom_parse_stream(stream, 0x0, error);
@@ -179,7 +179,8 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		}
 		fu_firmware_set_id(img, "cpd");
 		fu_firmware_set_offset(img, expansion_header_offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image(firmware, img, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -193,12 +194,12 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize image_size = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_oprom_new();
-	g_autoptr(GByteArray) st_pci = fu_struct_oprom_pci_new();
+	g_autoptr(FuStructOprom) st_hdr = fu_struct_oprom_new();
+	g_autoptr(FuStructOpromPci) st_pci = fu_struct_oprom_pci_new();
 	g_autoptr(GBytes) blob_cpd = NULL;
 
 	/* the smallest each image (and header) can be is 512 bytes */
-	image_size += fu_common_align_up(st_hdr->len, FU_FIRMWARE_ALIGNMENT_512);
+	image_size += fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_512);
 	blob_cpd = fu_firmware_get_image_by_id_bytes(firmware, "cpd", NULL);
 	if (blob_cpd != NULL) {
 		image_size +=
@@ -215,7 +216,7 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 							    image_size -
 								FU_OPROM_FIRMWARE_ALIGN_LEN);
 	}
-	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
+	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
 
 	/* add PCI section */
 	fu_struct_oprom_pci_set_vendor_id(st_pci, priv->vendor_id);
@@ -224,7 +225,7 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_oprom_pci_set_code_type(st_pci, fu_firmware_get_idx(firmware));
 	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_IS_LAST_IMAGE))
 		fu_struct_oprom_pci_set_indicator(st_pci, FU_OPROM_INDICATOR_FLAG_LAST);
-	g_byte_array_append(buf, st_pci->data, st_pci->len);
+	fu_byte_array_append_array(buf, st_pci->buf);
 	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_512, 0xFF);
 
 	/* add CPD */
@@ -289,6 +290,7 @@ static void
 fu_oprom_firmware_init(FuOpromFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 }
 
 static void

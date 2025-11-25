@@ -41,18 +41,21 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTargetAvr, fu_dfu_target_avr, FU_TYPE_DFU_TARGET
 
 /* Atmel AVR32 version of DFU:
  * http://www.atmel.com/images/doc32131.pdf */
-#define DFU_AVR32_GROUP_SELECT		    0x06 /** SELECT */
+
+/* SELECT */
 #define DFU_AVR32_CMD_SELECT_MEMORY	    0x03
 
 #define DFU_AVR32_MEMORY_UNIT		    0x00
 #define DFU_AVR32_MEMORY_PAGE		    0x01
 
-#define DFU_AVR32_GROUP_DOWNLOAD	    0x01 /** DOWNLOAD */
+/* DOWNLOAD */
 #define DFU_AVR32_CMD_PROGRAM_START	    0x00
-#define DFU_AVR32_GROUP_UPLOAD		    0x03 /** UPLOAD */
+
+/* UPLOAD */
 #define DFU_AVR32_CMD_READ_MEMORY	    0x00
 #define DFU_AVR32_CMD_BLANK_CHECK	    0x01
-#define DFU_AVR32_GROUP_EXEC		    0x04 /** EXEC */
+
+/* EXEC */
 #define DFU_AVR32_CMD_ERASE		    0x00
 #define DFU_AVR32_ERASE_EVERYTHING	    0xff
 #define DFU_AVR32_CMD_START_APPLI	    0x03
@@ -73,7 +76,7 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_EXEC);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_EXEC);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_ERASE);
 	fu_byte_array_append_uint8(buf, 0xFF);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 5000, progress, error)) {
@@ -96,7 +99,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-zero");
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_EXEC);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_EXEC);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_START_APPLI);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_START_APPLI_RESET);
 	if (!fu_dfu_target_download_chunk(target,
@@ -164,7 +167,7 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 	}
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_SELECT);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_SELECT);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_SELECT_MEMORY);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_MEMORY_UNIT);
 	fu_byte_array_append_uint8(buf, memory_unit);
@@ -237,7 +240,7 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_SELECT);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_SELECT);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_SELECT_MEMORY);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_MEMORY_PAGE);
 	fu_byte_array_append_uint16(buf, memory_page, G_BIG_ENDIAN);
@@ -270,7 +273,7 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_UPLOAD);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_UPLOAD);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_READ_MEMORY);
 	fu_byte_array_append_uint16(buf, addr_start, G_BIG_ENDIAN);
 	fu_byte_array_append_uint16(buf, addr_end, G_BIG_ENDIAN);
@@ -587,7 +590,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		}
 
 		/* create chunk with header and footer */
-		fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_DOWNLOAD);
+		fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_DOWNLOAD);
 		fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_PROGRAM_START);
 		fu_byte_array_append_uint16(buf, fu_chunk_get_address(chk), G_BIG_ENDIAN);
 		fu_byte_array_append_uint16(buf,

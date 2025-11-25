@@ -140,7 +140,7 @@ fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name)
  * @name: Variable name
  * @data: Data to set
  * @data_sz: size of data
- * @attr: Attributes
+ * @attr: (nullable) (out): #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
  *
  * Gets the data from a UEFI variable in NVRAM
@@ -155,7 +155,7 @@ fu_efivars_get_data(FuEfivars *self,
 		    const gchar *name,
 		    guint8 **data,
 		    gsize *data_sz,
-		    guint32 *attr,
+		    FuEfiVariableAttrs *attr,
 		    GError **error)
 {
 	FuEfivarsClass *efivars_class = FU_EFIVARS_GET_CLASS(self);
@@ -177,7 +177,7 @@ fu_efivars_get_data(FuEfivars *self,
  * @self: a #FuEfivars
  * @guid: Globally unique identifier
  * @name: Variable name
- * @attr: (nullable): Attributes
+ * @attr: (out): #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
  *
  * Gets the data from a UEFI variable in NVRAM
@@ -190,7 +190,7 @@ GBytes *
 fu_efivars_get_data_bytes(FuEfivars *self,
 			  const gchar *guid,
 			  const gchar *name,
-			  guint32 *attr,
+			  FuEfiVariableAttrs *attr,
 			  GError **error)
 {
 	guint8 *data = NULL;
@@ -324,7 +324,7 @@ fu_efivars_space_free(FuEfivars *self, GError **error)
  * @name: Variable name
  * @data: Data to set
  * @sz: size of @data
- * @attr: Attributes
+ * @attr: #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
  *
  * Sets the data to a UEFI variable in NVRAM
@@ -339,7 +339,7 @@ fu_efivars_set_data(FuEfivars *self,
 		    const gchar *name,
 		    const guint8 *data,
 		    gsize sz,
-		    guint32 attr,
+		    FuEfiVariableAttrs attr,
 		    GError **error)
 {
 	FuEfivarsClass *efivars_class = FU_EFIVARS_GET_CLASS(self);
@@ -363,7 +363,7 @@ fu_efivars_set_data(FuEfivars *self,
  * @guid: globally unique identifier
  * @name: variable name
  * @bytes: data blob
- * @attr: attributes
+ * @attr: #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
  *
  * Sets the data to a UEFI variable in NVRAM
@@ -377,7 +377,7 @@ fu_efivars_set_data_bytes(FuEfivars *self,
 			  const gchar *guid,
 			  const gchar *name,
 			  GBytes *bytes,
-			  guint32 attr,
+			  FuEfiVariableAttrs attr,
 			  GError **error)
 {
 	gsize bufsz = 0;
@@ -457,7 +457,7 @@ fu_efivars_set_secure_boot(FuEfivars *self, gboolean enabled, GError **error)
 				   "SecureBoot",
 				   &value,
 				   sizeof(value),
-				   FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS,
+				   FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS,
 				   error);
 }
 
@@ -525,9 +525,9 @@ fu_efivars_set_boot_next(FuEfivars *self, guint16 idx, GError **error)
 				   "BootNext",
 				   buf,
 				   sizeof(buf),
-				   FU_EFIVARS_ATTR_NON_VOLATILE |
-				       FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				       FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				   FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				       FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+				       FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				   error);
 }
 
@@ -588,7 +588,8 @@ fu_efivars_set_boot_current(FuEfivars *self, guint16 idx, GError **error)
 				   "BootCurrent",
 				   buf,
 				   sizeof(buf),
-				   FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				   FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				       FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				   error);
 }
 
@@ -664,9 +665,9 @@ fu_efivars_set_boot_order(FuEfivars *self, GArray *order, GError **error)
 				   "BootOrder",
 				   buf->data,
 				   buf->len,
-				   FU_EFIVARS_ATTR_NON_VOLATILE |
-				       FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				       FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				   FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				       FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+				       FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				   error);
 }
 
@@ -749,7 +750,8 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
 		g_autoptr(GBytes) img_blob = g_bytes_new_static("hello", 5);
 		fu_firmware_set_id(img_text, ".text");
 		fu_firmware_set_bytes(img_text, img_blob);
-		fu_firmware_add_image(pefile, img_text);
+		if (!fu_firmware_add_image(pefile, img_text, error))
+			return FALSE;
 		if (!fu_firmware_write_file(pefile, file, error))
 			return FALSE;
 	}
@@ -760,11 +762,14 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
 	dp_fp = fu_efi_file_path_device_path_new();
 	if (!fu_efi_file_path_device_path_set_name(dp_fp, target, error))
 		return FALSE;
-	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_hdd));
-	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_fp));
+	if (!fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_hdd), error))
+		return FALSE;
+	if (!fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_fp), error))
+		return FALSE;
 
 	fu_firmware_set_id(FU_FIRMWARE(entry), name);
-	fu_firmware_add_image(FU_FIRMWARE(entry), FU_FIRMWARE(devpath_list));
+	if (!fu_firmware_add_image(FU_FIRMWARE(entry), FU_FIRMWARE(devpath_list), error))
+		return FALSE;
 	return fu_efivars_set_boot_entry(self, idx, entry, error);
 }
 
@@ -815,9 +820,9 @@ fu_efivars_set_boot_data(FuEfivars *self, guint16 idx, GBytes *blob, GError **er
 					 FU_EFIVARS_GUID_EFI_GLOBAL,
 					 name,
 					 blob,
-					 FU_EFIVARS_ATTR_NON_VOLATILE |
-					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+					     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					 error);
 }
 

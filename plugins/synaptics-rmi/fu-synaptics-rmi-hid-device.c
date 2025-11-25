@@ -67,7 +67,6 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				 GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
@@ -94,24 +93,24 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 	for (guint j = req->len; j < 21; j++)
 		fu_byte_array_append_uint8(req, 0x0);
 	fu_dump_full(G_LOG_DOMAIN, "ReportWrite", req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
-	if (!fu_io_channel_write_byte_array(io_channel,
-					    req,
-					    RMI_DEVICE_DEFAULT_TIMEOUT,
-					    FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-						FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					    error))
+	if (!fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
+					     req,
+					     RMI_DEVICE_DEFAULT_TIMEOUT,
+					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
+						 FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+					     error))
 		return NULL;
 
 	/* keep reading responses until we get enough data */
 	while (buf->len < req_sz) {
 		guint8 input_count_sz = 0;
 		g_autoptr(GByteArray) res = NULL;
-		res = fu_io_channel_read_byte_array(io_channel,
-						    req_sz + HID_RMI4_REPORT_ID_SIZE +
-							HID_RMI4_DATA_LENGTH_SIZE,
-						    RMI_DEVICE_DEFAULT_TIMEOUT,
-						    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-						    error);
+		res = fu_udev_device_read_byte_array(FU_UDEV_DEVICE(self),
+						     req_sz + HID_RMI4_REPORT_ID_SIZE +
+							 HID_RMI4_DATA_LENGTH_SIZE,
+						     RMI_DEVICE_DEFAULT_TIMEOUT,
+						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						     error);
 		if (res == NULL)
 			return NULL;
 		if (res->len == 0) {
@@ -182,7 +181,6 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 				  GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint8 len = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -216,12 +214,12 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 		fu_byte_array_append_uint8(buf, 0x0);
 	fu_dump_full(G_LOG_DOMAIN, "DeviceWrite", buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 
-	return fu_io_channel_write_byte_array(io_channel,
-					      buf,
-					      RMI_DEVICE_DEFAULT_TIMEOUT,
-					      FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-						  FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					      error);
+	return fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
+					       buf,
+					       RMI_DEVICE_DEFAULT_TIMEOUT,
+					       FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
+						   FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+					       error);
 }
 
 static gboolean
@@ -231,7 +229,6 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 					  GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* wait for event from hardware */
@@ -240,11 +237,11 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 		g_autoptr(GError) error_local = NULL;
 
 		/* read from fd */
-		res = fu_io_channel_read_byte_array(io_channel,
-						    HID_RMI4_ATTN_INTERRUPT_SOURCES + 1,
-						    timeout_ms,
-						    FU_IO_CHANNEL_FLAG_NONE,
-						    &error_local);
+		res = fu_udev_device_read_byte_array(FU_UDEV_DEVICE(self),
+						     HID_RMI4_ATTN_INTERRUPT_SOURCES + 1,
+						     timeout_ms,
+						     FU_IO_CHANNEL_FLAG_NONE,
+						     &error_local);
 		if (res == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
 				break;
@@ -419,10 +416,10 @@ fu_synaptics_rmi_hid_device_detach(FuDevice *device, FuProgress *progress, GErro
 	if (f34 == NULL)
 		return FALSE;
 	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
-		if (!fu_synaptics_rmi_v5_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v5_device_detach(self, progress, error))
 			return FALSE;
 	} else if (f34->function_version == 0x2) {
-		if (!fu_synaptics_rmi_v7_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v7_device_detach(self, progress, error))
 			return FALSE;
 	} else {
 		g_set_error(error,
@@ -507,12 +504,10 @@ fu_synaptics_rmi_hid_device_query_status(FuSynapticsRmiDevice *rmi_device, GErro
 	f34 = fu_synaptics_rmi_device_get_function(rmi_device, 0x34, error);
 	if (f34 == NULL)
 		return FALSE;
-	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
+	if (f34->function_version == 0x0 || f34->function_version == 0x1)
 		return fu_synaptics_rmi_v5_device_query_status(rmi_device, error);
-	}
-	if (f34->function_version == 0x2) {
+	if (f34->function_version == 0x2)
 		return fu_synaptics_rmi_v7_device_query_status(rmi_device, error);
-	}
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
@@ -522,7 +517,7 @@ fu_synaptics_rmi_hid_device_query_status(FuSynapticsRmiDevice *rmi_device, GErro
 }
 
 static void
-fu_synaptics_rmi_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_synaptics_rmi_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

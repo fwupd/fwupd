@@ -105,7 +105,7 @@ typedef enum {
 	 * The fix can be automatically reverted.
 	 */
 	FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO = 1 << 15,
-} FwupdSecurityAttrFlags;
+} G_GNUC_FLAG_ENUM FwupdSecurityAttrFlags;
 
 /**
  * FwupdSecurityAttrLevel:

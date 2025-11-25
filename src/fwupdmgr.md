@@ -151,6 +151,8 @@ configured in the daemon:
 
 **modify-remote**: Edit a remote, for instance turning on properties such as `AutomaticReports`.
 
+**clean-remote**: Cleans a remote, deleting metadata where required.
+
 ### Historical Data
 
 The following actions can be used to upload, export or clear historical data:
@@ -170,7 +172,7 @@ In some cases, sharing the history will return results to webpages describing th
 
 ### Platform Security
 
-The following actions can be used to view or fix platform security issus:
+The following actions can be used to view or fix platform security issues:
 
 **security**: Gets the list of host security attributes which are used to evaluate the security level of the machine.
 

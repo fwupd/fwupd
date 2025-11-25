@@ -48,10 +48,8 @@ fu_devlink_component_write_firmware(FuDevice *device,
 }
 
 void
-fu_devlink_component_add_instance_keys(FuDevice *device, gchar **keys)
+fu_devlink_component_add_instance_keys(FuDevlinkComponent *self, gchar **keys)
 {
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-
 	if (self->instance_keys == NULL)
 		self->instance_keys = g_ptr_array_new_with_free_func((GDestroyNotify)g_strfreev);
 	g_ptr_array_add(self->instance_keys, keys);
@@ -93,8 +91,7 @@ fu_devlink_component_probe(FuDevice *device, GError **error)
 		g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
 		g_auto(GStrv) keys = NULL;
 
-		/* Future optimization: use g_strv_builder_addv() when available on all supported
-		   platforms. */
+		/* future optimization: use g_strv_builder_addv() when available */
 		for (j = 0; basekeys[j] != NULL; j++)
 			g_strv_builder_add(keys_builder, basekeys[j]);
 		for (j = 0; instance_keys[j] != NULL; j++)
@@ -141,7 +138,7 @@ fu_devlink_component_cleanup(FuDevice *device,
 }
 
 static void
-fu_devlink_component_set_progress(FuDevice *self, FuProgress *progress)
+fu_devlink_component_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -152,7 +149,7 @@ fu_devlink_component_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 43, "reload");
 }
 
-FuDevice *
+FuDevlinkComponent *
 fu_devlink_component_new(FuDevice *proxy, const gchar *logical_id)
 {
 	g_autoptr(FuDevlinkComponent) self = NULL;
@@ -162,7 +159,7 @@ fu_devlink_component_new(FuDevice *proxy, const gchar *logical_id)
 	self =
 	    g_object_new(FU_TYPE_DEVLINK_COMPONENT, "proxy", proxy, "logical-id", logical_id, NULL);
 	fu_device_add_instance_str(FU_DEVICE(self), "COMPONENT", logical_id);
-	return FU_DEVICE(g_steal_pointer(&self));
+	return g_steal_pointer(&self);
 }
 
 static void

@@ -173,7 +173,7 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	/* get version */
 	fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_GET_VERSION);
 	reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_GET_VERSION_SIZE);
-	if (!fu_synaprom_device_cmd_send(self, st_request, reply, progress, 250, error)) {
+	if (!fu_synaprom_device_cmd_send(self, st_request->buf, reply, progress, 250, error)) {
 		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
@@ -290,10 +290,10 @@ fu_synaprom_device_write_chunks(FuSynapromDevice *self,
 
 		/* patch */
 		fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_BOOTLDR_PATCH);
-		g_byte_array_append(st_request, chunk->data, chunk->len);
+		g_byte_array_append(st_request->buf, chunk->data, chunk->len);
 		reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_GENERIC_SIZE);
 		if (!fu_synaprom_device_cmd_send(self,
-						 st_request,
+						 st_request->buf,
 						 reply,
 						 fu_progress_get_child(progress),
 						 20000,
@@ -471,7 +471,7 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static void
-fu_synaprom_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_synaprom_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

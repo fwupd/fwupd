@@ -34,5 +34,7 @@ fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian
     G_GNUC_NON_NULL(1);
 void
 fu_byte_array_append_bytes(GByteArray *array, GBytes *bytes) G_GNUC_NON_NULL(1, 2);
+void
+fu_byte_array_append_array(GByteArray *array, GByteArray *array2) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_byte_array_compare(GByteArray *buf1, GByteArray *buf2, GError **error) G_GNUC_NON_NULL(1, 2);

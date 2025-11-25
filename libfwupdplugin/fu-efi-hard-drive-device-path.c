@@ -95,7 +95,7 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 				    GError **error)
 {
 	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(firmware);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiHardDriveDevicePath) st = NULL;
 
 	/* re-parse */
 	st = fu_struct_efi_hard_drive_device_path_parse_stream(stream, 0x0, error);
@@ -111,7 +111,7 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 	self->signature_type = fu_struct_efi_hard_drive_device_path_get_signature_type(st);
 
 	/* success */
-	fu_firmware_set_size(firmware, fu_struct_efi_device_path_get_length(st));
+	fu_firmware_set_size(firmware, st->buf->len);
 	return TRUE;
 }
 
@@ -119,7 +119,7 @@ static GByteArray *
 fu_efi_hard_drive_device_path_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(firmware);
-	g_autoptr(GByteArray) st = fu_struct_efi_hard_drive_device_path_new();
+	g_autoptr(FuStructEfiHardDriveDevicePath) st = fu_struct_efi_hard_drive_device_path_new();
 
 	/* required */
 	fu_struct_efi_hard_drive_device_path_set_partition_number(st, self->partition_number);
@@ -131,7 +131,7 @@ fu_efi_hard_drive_device_path_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_hard_drive_device_path_set_signature_type(st, self->signature_type);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

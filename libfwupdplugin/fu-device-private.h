@@ -16,6 +16,8 @@
 gboolean
 fu_device_has_private_flag_quark(FuDevice *self, GQuark flag_quark) G_GNUC_NON_NULL(1);
 void
+fu_device_remove_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
+void
 fu_device_remove_children(FuDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_parent_guids(FuDevice *self) G_GNUC_NON_NULL(1);
@@ -39,8 +41,6 @@ const gchar *
 fu_device_get_update_request_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id) G_GNUC_NON_NULL(1);
-gboolean
-fu_device_check_fwupd_version(FuDevice *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_set_fwupd_version(FuDevice *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1, 2);
 gboolean
@@ -95,3 +95,5 @@ fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error) G_GNUC_NON_NULL(1, 2);
+gchar *
+fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error) G_GNUC_NON_NULL(1);

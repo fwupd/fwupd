@@ -156,7 +156,7 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
-		if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(img), error))
+		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(img), error))
 			return FALSE;
 	}
 

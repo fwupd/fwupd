@@ -132,7 +132,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 #if MM_CHECK_VERSION(1, 26, 0)
 	MMModemPortInfo *ignored_ports = NULL;
 	guint n_ignored_ports = 0;
-#endif // MM_CHECK_VERSION(1, 26, 0)
+#endif
 	const gchar **device_ids;
 	guint64 ports_bitmask = 0;
 	GType gtype = G_TYPE_INVALID;
@@ -225,7 +225,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 		}
 		mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
 	}
-#endif // MM_CHECK_VERSION(1, 26, 0)
+#endif
 
 	/* find the correct GType */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
@@ -351,7 +351,7 @@ fu_mm_backend_device_added_cb(MMManager *manager, MMObject *omodem, FuMmBackend 
 		g_debug("modem came back, rescanning");
 		if (!fu_mm_device_probe_from_omodem(FU_MM_DEVICE(device), omodem, &error_local))
 			g_debug("ignoring: %s", error_local->message);
-		// FIXME: perhaps need to mm_firmware_update_settings_get_fastboot_at()
+		/* FIXME: perhaps need to mm_firmware_update_settings_get_fastboot_at() */
 	}
 	fu_mm_backend_device_add(self, omodem);
 }

@@ -20,6 +20,8 @@ fu_mei_device_connect(FuMeiDevice *self,
 		      const gchar *uuid,
 		      guint8 req_protocol_version,
 		      GError **error) G_GNUC_NON_NULL(1, 2);
+void
+fu_mei_device_disconnect(FuMeiDevice *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_mei_device_read(FuMeiDevice *self,
 		   guint8 *buf,

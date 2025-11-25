@@ -52,7 +52,8 @@ fu_pkcs7_parse_x509_certificate(FuPkcs7 *self, gnutls_datum_t *data, GError **er
 				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error))
 		return FALSE;
-	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(crt));
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(crt), error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

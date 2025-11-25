@@ -109,7 +109,7 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 	if (bios_tables == NULL)
 		return FALSE;
 
-	/* Get SMBIOS data */
+	/* get SMBIOS data */
 	bios_blob = g_ptr_array_index(bios_tables, 0);
 	buf = g_bytes_get_data(bios_blob, &bufsz);
 	if (bufsz == 0)
@@ -291,76 +291,12 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 	return NULL;
 }
 
-typedef char *flashrom_data;
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(flashrom_data, flashrom_data_free)
-
-static gboolean
-fu_flashrom_plugin_probe(FuFlashromPlugin *self, GError **error)
-{
-	gint rc;
-#ifdef HAVE_FLASHROM_FLASH_PROBE_V2
-	g_autoptr(flashrom_data) all_matched_names = NULL;
-
-	rc = flashrom_flash_probe_v2(self->flashctx,
-				     (const char ***const)&all_matched_names,
-				     self->flashprog,
-				     NULL);
-	if (rc == -1) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: unknown error");
-		return FALSE;
-	}
-	if (rc == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: no chips matched");
-		return FALSE;
-	}
-	if (rc > 1) {
-		g_autofree gchar *names = g_strjoinv(",", all_matched_names);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "flash probe failed: multiple chips were found: %s",
-			    names);
-		return FALSE;
-	}
-#else
-	rc = flashrom_flash_probe(&self->flashctx, self->flashprog, NULL);
-	if (rc == 3) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: multiple chips were found");
-		return FALSE;
-	}
-	if (rc == 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: no chip was found");
-		return FALSE;
-	}
-	if (rc != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash probe failed: unknown error");
-		return FALSE;
-	}
-#endif
-	/* success */
-	return TRUE;
-}
-
 static gboolean
 fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	const gchar *flashrom_args;
 	const gchar *flashrom_prog;
+	gint rc;
 	const gchar *guid;
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuFlashromPlugin *self = FU_FLASHROM_PLUGIN(plugin);
@@ -405,8 +341,29 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 				    "programmer initialization failed");
 		return FALSE;
 	}
-	if (!fu_flashrom_plugin_probe(self, error))
+
+	rc = flashrom_flash_probe(&self->flashctx, self->flashprog, NULL);
+	if (rc == 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash probe failed: multiple chips were found");
 		return FALSE;
+	}
+	if (rc == 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash probe failed: no chip was found");
+		return FALSE;
+	}
+	if (rc != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash probe failed: unknown error");
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	return TRUE;
@@ -444,6 +401,7 @@ fu_flashrom_plugin_finalize(GObject *obj)
 		flashrom_programmer_shutdown(self->flashprog);
 	g_free(self->guid);
 
+	/* nocheck:finalize */
 	/* G_OBJECT_CLASS(fu_flashrom_plugin_parent_class)->finalize() not required as modular */
 }
 

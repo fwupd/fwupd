@@ -16,6 +16,7 @@
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
+#include "fu-version-common.h"
 
 /**
  * FuIfwiCpdFirmware:
@@ -49,7 +50,8 @@ fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static gboolean
-fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
+fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
+				    FuFirmware *firmware,
 				    GInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
@@ -57,13 +59,20 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint32 size;
 	gsize offset = 0;
-	g_autoptr(GByteArray) st_mhd = NULL;
+	guint64 version_raw = 0;
+	g_autoptr(FuStructIfwiCpdManifest) st_mhd = NULL;
 
 	/* raw version */
 	st_mhd = fu_struct_ifwi_cpd_manifest_parse_stream(stream, offset, error);
 	if (st_mhd == NULL)
 		return FALSE;
-	fu_firmware_set_version_raw(firmware, fu_struct_ifwi_cpd_manifest_get_version(st_mhd));
+
+	/* read as [u16le;4] and then build back into a native u64 */
+	version_raw += (guint64)fu_struct_ifwi_cpd_manifest_get_version_major(st_mhd) << 48;
+	version_raw += (guint64)fu_struct_ifwi_cpd_manifest_get_version_minor(st_mhd) << 32;
+	version_raw += (guint64)fu_struct_ifwi_cpd_manifest_get_version_hotfix(st_mhd) << 16;
+	version_raw += ((guint64)fu_struct_ifwi_cpd_manifest_get_version_build(st_mhd)) << 0;
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
 
 	/* verify the size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -85,7 +94,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 		guint32 extension_type = 0;
 		guint32 extension_length = 0;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GByteArray) st_mex = NULL;
+		g_autoptr(FuStructIfwiCpdManifestExt) st_mex = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* set the extension type as the index */
@@ -101,7 +110,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 		extension_length = fu_struct_ifwi_cpd_manifest_ext_get_extension_length(st_mex);
 		if (extension_length == 0x0)
 			break;
-		if (extension_length < st_mex->len) {
+		if (extension_length < st_mex->buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -110,8 +119,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 			return FALSE;
 		}
 		partial_stream = fu_partial_input_stream_new(stream,
-							     offset + st_mex->len,
-							     extension_length - st_mex->len,
+							     offset + st_mex->buf->len,
+							     extension_length - st_mex->buf->len,
 							     error);
 		if (partial_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut CPD extension: ");
@@ -122,7 +131,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 		offset += extension_length;
 	}
@@ -148,7 +157,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructIfwiCpd) st_hdr = NULL;
 	gsize offset = 0;
 	guint32 num_of_entries;
 
@@ -176,7 +185,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		guint32 img_offset = 0;
 		g_autofree gchar *id = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GByteArray) st_ent = NULL;
+		g_autoptr(FuStructIfwiCpdEntry) st_ent = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* the IDX is the position in the file */
@@ -212,14 +221,18 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		if (i == FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST &&
 		    fu_struct_ifwi_cpd_entry_get_length(st_ent) >
 			FU_STRUCT_IFWI_CPD_MANIFEST_SIZE) {
-			if (!fu_ifwi_cpd_firmware_parse_manifest(img, partial_stream, flags, error))
+			if (!fu_ifwi_cpd_firmware_parse_manifest(self,
+								 img,
+								 partial_stream,
+								 flags,
+								 error))
 				return FALSE;
 		}
 
 		/* success */
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += st_ent->len;
+		offset += st_ent->buf->len;
 	}
 
 	/* success */
@@ -232,19 +245,19 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize offset = 0;
-	g_autoptr(GByteArray) buf = fu_struct_ifwi_cpd_new();
+	g_autoptr(FuStructIfwiCpd) st = fu_struct_ifwi_cpd_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* write the header */
-	fu_struct_ifwi_cpd_set_num_of_entries(buf, imgs->len);
-	fu_struct_ifwi_cpd_set_header_version(buf, priv->header_version);
-	fu_struct_ifwi_cpd_set_entry_version(buf, priv->entry_version);
-	fu_struct_ifwi_cpd_set_checksum(buf, 0x0);
-	fu_struct_ifwi_cpd_set_partition_name(buf, fu_firmware_get_idx(firmware));
-	fu_struct_ifwi_cpd_set_crc32(buf, 0x0);
+	fu_struct_ifwi_cpd_set_num_of_entries(st, imgs->len);
+	fu_struct_ifwi_cpd_set_header_version(st, priv->header_version);
+	fu_struct_ifwi_cpd_set_entry_version(st, priv->entry_version);
+	fu_struct_ifwi_cpd_set_checksum(st, 0x0);
+	fu_struct_ifwi_cpd_set_partition_name(st, fu_firmware_get_idx(firmware));
+	fu_struct_ifwi_cpd_set_crc32(st, 0x0);
 
 	/* fixup the image offsets */
-	offset += buf->len;
+	offset += st->buf->len;
 	offset += FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -262,7 +275,7 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	/* add entry headers */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GByteArray) st_ent = fu_struct_ifwi_cpd_entry_new();
+		g_autoptr(FuStructIfwiCpdEntry) st_ent = fu_struct_ifwi_cpd_entry_new();
 
 		/* sanity check */
 		if (fu_firmware_get_id(img) == NULL) {
@@ -277,7 +290,7 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_struct_ifwi_cpd_entry_set_offset(st_ent, fu_firmware_get_offset(img));
 		fu_struct_ifwi_cpd_entry_set_length(st_ent, fu_firmware_get_size(img));
-		g_byte_array_append(buf, st_ent->data, st_ent->len);
+		fu_byte_array_append_array(st->buf, st_ent->buf);
 	}
 
 	/* add entry data */
@@ -287,11 +300,11 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 		blob = fu_firmware_get_bytes(img, error);
 		if (blob == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, blob);
+		fu_byte_array_append_bytes(st->buf, blob);
 	}
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean
@@ -321,10 +334,17 @@ fu_ifwi_cpd_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_ifwi_cpd_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint64(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
 static void
@@ -336,6 +356,7 @@ fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 	firmware_class->parse = fu_ifwi_cpd_firmware_parse;
 	firmware_class->write = fu_ifwi_cpd_firmware_write;
 	firmware_class->build = fu_ifwi_cpd_firmware_build;
+	firmware_class->convert_version = fu_ifwi_cpd_firmware_convert_version;
 }
 
 /**

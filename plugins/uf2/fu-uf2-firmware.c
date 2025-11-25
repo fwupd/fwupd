@@ -50,8 +50,8 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 			g_autofree gchar *str = NULL;
 			str = fu_memstrsafe(buf,
 					    bufsz,
-					    offset + st_ext->len,
-					    sz - st_ext->len,
+					    offset + st_ext->buf->len,
+					    sz - st_ext->buf->len,
 					    error);
 			if (str == NULL)
 				return FALSE;
@@ -60,8 +60,8 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 			g_autofree gchar *str = NULL;
 			str = fu_memstrsafe(buf,
 					    bufsz,
-					    offset + st_ext->len,
-					    sz - st_ext->len,
+					    offset + st_ext->buf->len,
+					    sz - st_ext->buf->len,
 					    error);
 			if (str == NULL)
 				return FALSE;
@@ -89,7 +89,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	const guint8 *buf = fu_chunk_get_data(chk);
 	guint32 flags = 0;
 	guint32 datasz = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructUf2) st = NULL;
 
 	/* parse */
 	st = fu_struct_uf2_parse(fu_chunk_get_data(chk),
@@ -212,9 +212,9 @@ fu_uf2_firmware_build_utf8_extension(FuUf2FirmwareTag tag, const gchar *str)
 {
 	g_autoptr(FuStructUf2Extension) st = fu_struct_uf2_extension_new();
 	fu_struct_uf2_extension_set_tag(st, tag);
-	fu_struct_uf2_extension_set_size(st, st->len + strlen(str));
-	g_byte_array_append(st, (const guint8 *)str, strlen(str));
-	fu_byte_array_align_up(st, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	fu_struct_uf2_extension_set_size(st, st->buf->len + strlen(str));
+	g_byte_array_append(st->buf, (const guint8 *)str, strlen(str));
+	fu_byte_array_align_up(st->buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 	return g_steal_pointer(&st);
 }
 
@@ -224,7 +224,7 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	gsize offset_ext = FU_STRUCT_UF2_OFFSET_DATA + fu_chunk_get_data_sz(chk);
 	guint32 addr = fu_firmware_get_addr(FU_FIRMWARE(self));
 	guint32 flags = FU_UF2_FIRMWARE_BLOCK_FLAG_NONE;
-	g_autoptr(GByteArray) st = fu_struct_uf2_new();
+	g_autoptr(FuStructUf2) st = fu_struct_uf2_new();
 	g_autoptr(GPtrArray) extensions =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_uf2_extension_unref);
 
@@ -268,20 +268,20 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	/* copy in any extensions */
 	for (guint i = 0; i < extensions->len; i++) {
 		FuStructUf2Extension *st_ext = g_ptr_array_index(extensions, i);
-		if (!fu_memcpy_safe(st->data,
-				    st->len,
+		if (!fu_memcpy_safe(st->buf->data,
+				    st->buf->len,
 				    offset_ext,
-				    st_ext->data,
-				    st_ext->len,
+				    st_ext->buf->data,
+				    st_ext->buf->len,
 				    0x0,
-				    st_ext->len,
+				    st_ext->buf->len,
 				    error))
 			return NULL;
-		offset_ext += st_ext->len;
+		offset_ext += st_ext->buf->len;
 	}
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static GByteArray *

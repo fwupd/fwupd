@@ -48,6 +48,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         local-install 'Install a firmware file in cabinet format on this hardware' \
         modify-config 'Modifies a daemon configuration value' \
         modify-remote 'Modifies a given remote' \
+        clean-remote 'Clean a given remote' \
         quit 'Asks the daemon to quit' \
         refresh 'Refresh metadata from remote server' \
         reinstall 'Reinstall current firmware on the device' \

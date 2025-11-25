@@ -52,8 +52,8 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 					    0x09,
 					    0x0200 | FU_JABRA_GNP_IFACE,
 					    fu_jabra_gnp_device_get_iface_hid(parent),
-					    tx_data->txbuf,
-					    FU_JABRA_GNP_BUF_SIZE,
+					    tx_data->buf->data,
+					    tx_data->buf->len,
 					    NULL,
 					    tx_data->timeout,
 					    NULL, /* cancellable */
@@ -196,13 +196,12 @@ fu_jabra_gnp_child_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_jabra_gnp_child_device_write_image(FuDevice *device,
+fu_jabra_gnp_child_device_write_image(FuJabraGnpChildDevice *self,
 				      FuFirmware *firmware,
 				      FuFirmware *img,
 				      FuProgress *progress,
 				      GError **error)
 {
-	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
 	const guint chunk_size = 52;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -220,7 +219,7 @@ fu_jabra_gnp_child_device_write_image(FuDevice *device,
 	stream = fu_firmware_get_stream(img, error);
 	if (stream == NULL)
 		return FALSE;
-	if (!fu_jabra_gnp_write_partition(device,
+	if (!fu_jabra_gnp_write_partition(FU_DEVICE(self),
 					  self->address,
 					  self->sequence_number,
 					  fu_firmware_get_idx(img),
@@ -229,12 +228,12 @@ fu_jabra_gnp_child_device_write_image(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* start erasing */
-	if (!fu_jabra_gnp_start(device, self->address, self->sequence_number, error))
+	if (!fu_jabra_gnp_start(FU_DEVICE(self), self->address, self->sequence_number, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* poll for erase done */
-	if (!fu_jabra_gnp_flash_erase_done(device, self->address, error))
+	if (!fu_jabra_gnp_flash_erase_done(FU_DEVICE(self), self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -247,7 +246,7 @@ fu_jabra_gnp_child_device_write_image(FuDevice *device,
 	if (chunks == NULL)
 		return FALSE;
 	if (self->fwu_protocol == FU_JABRA_GNP_PROTOCOL_OTA) {
-		if (!fu_jabra_gnp_write_crc(device,
+		if (!fu_jabra_gnp_write_crc(FU_DEVICE(self),
 					    self->address,
 					    self->sequence_number,
 					    fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
@@ -258,7 +257,7 @@ fu_jabra_gnp_child_device_write_image(FuDevice *device,
 	} else {
 		/* self->fwu_protocol == FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA*/
 		if (!fu_jabra_gnp_write_extended_crc(
-			device,
+			FU_DEVICE(self),
 			self->address,
 			self->sequence_number,
 			fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
@@ -267,7 +266,7 @@ fu_jabra_gnp_child_device_write_image(FuDevice *device,
 			error))
 			return FALSE;
 	}
-	if (!fu_jabra_gnp_write_chunks(device,
+	if (!fu_jabra_gnp_write_chunks(FU_DEVICE(self),
 				       self->address,
 				       chunks,
 				       fu_progress_get_child(progress),
@@ -276,13 +275,13 @@ fu_jabra_gnp_child_device_write_image(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify */
-	if (!fu_jabra_gnp_read_verify_status(device, self->address, error))
+	if (!fu_jabra_gnp_read_verify_status(FU_DEVICE(self), self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write version */
 	if (!fu_jabra_gnp_write_version(
-		device,
+		FU_DEVICE(self),
 		self->address,
 		self->sequence_number,
 		fu_jabra_gnp_firmware_get_version_data(FU_JABRA_GNP_FIRMWARE(firmware)),
@@ -322,7 +321,7 @@ fu_jabra_gnp_child_device_write_firmware(FuDevice *device,
 		return FALSE;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		if (!fu_jabra_gnp_child_device_write_image(device,
+		if (!fu_jabra_gnp_child_device_write_image(self,
 							   firmware,
 							   img,
 							   fu_progress_get_child(progress),
@@ -373,7 +372,7 @@ fu_jabra_gnp_child_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_jabra_gnp_child_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_jabra_gnp_child_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

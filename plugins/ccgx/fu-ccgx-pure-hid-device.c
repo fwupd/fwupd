@@ -34,19 +34,16 @@ fu_ccgx_pure_hid_device_command(FuCcgxPureHidDevice *self,
 				guint8 param2,
 				GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_ccgx_pure_hid_command_new();
-	fu_struct_ccgx_pure_hid_command_set_cmd(cmd, param1);
-	fu_struct_ccgx_pure_hid_command_set_opt(cmd, param2);
-	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
-				      FU_CCGX_PURE_HID_REPORT_ID_COMMAND,
-				      cmd->data,
-				      cmd->len,
-				      FU_CCGX_PURE_HID_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
-				      error)) {
-		return FALSE;
-	}
-	return TRUE;
+	g_autoptr(FuStructCcgxPureHidCommand) st = fu_struct_ccgx_pure_hid_command_new();
+	fu_struct_ccgx_pure_hid_command_set_cmd(st, param1);
+	fu_struct_ccgx_pure_hid_command_set_opt(st, param2);
+	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+					FU_CCGX_PURE_HID_REPORT_ID_COMMAND,
+					st->buf->data,
+					st->buf->len,
+					FU_CCGX_PURE_HID_DEVICE_TIMEOUT,
+					FU_HID_DEVICE_FLAG_NONE,
+					error);
 }
 
 static gboolean
@@ -103,7 +100,7 @@ fu_ccgx_pure_hid_device_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error
 	guint8 buf[0x40] = {FU_CCGX_PURE_HID_REPORT_ID_INFO, 0};
 	guint version = 0;
 	g_autofree gchar *bl_ver = NULL;
-	g_autoptr(GByteArray) st_info = NULL;
+	g_autoptr(FuStructCcgxPureHidFwInfo) st_info = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      buf[0],
@@ -313,13 +310,13 @@ fu_ccgx_pure_hid_device_write_row(FuCcgxPureHidDevice *self,
 				  gsize row_len,
 				  GError **error)
 {
-	g_autoptr(GByteArray) st_hdr = fu_struct_ccgx_pure_hid_write_hdr_new();
+	g_autoptr(FuStructCcgxPureHidWriteHdr) st_hdr = fu_struct_ccgx_pure_hid_write_hdr_new();
 
 	fu_struct_ccgx_pure_hid_write_hdr_set_pd_resp(st_hdr,
 						      FU_CCGX_PD_RESP_FLASH_READ_WRITE_CMD_SIG);
 	fu_struct_ccgx_pure_hid_write_hdr_set_addr(st_hdr, address);
-	if (!fu_memcpy_safe(st_hdr->data,
-			    st_hdr->len,
+	if (!fu_memcpy_safe(st_hdr->buf->data,
+			    st_hdr->buf->len,
 			    FU_STRUCT_CCGX_PURE_HID_WRITE_HDR_OFFSET_DATA,
 			    row,
 			    row_len,
@@ -329,9 +326,9 @@ fu_ccgx_pure_hid_device_write_row(FuCcgxPureHidDevice *self,
 		return FALSE;
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
-				      st_hdr->data[0],
-				      st_hdr->data,
-				      st_hdr->len,
+				      st_hdr->buf->data[0],
+				      st_hdr->buf->data,
+				      st_hdr->buf->len,
 				      FU_CCGX_PURE_HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -395,7 +392,7 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_ccgx_pure_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_ccgx_pure_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

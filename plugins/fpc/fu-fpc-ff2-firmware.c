@@ -55,7 +55,7 @@ fu_fpc_ff2_firmware_parse(FuFirmware *firmware,
 guint32
 fu_fpc_ff2_firmware_get_blocks_num(FuFpcFf2Firmware *self)
 {
-	g_return_val_if_fail(FU_IS_FPC_FF2_FIRMWARE(self), G_MAXUINT16);
+	g_return_val_if_fail(FU_IS_FPC_FF2_FIRMWARE(self), G_MAXUINT32);
 	return self->blocks_num;
 }
 

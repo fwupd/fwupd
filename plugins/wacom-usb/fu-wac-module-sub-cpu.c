@@ -206,14 +206,14 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 }
 
 static FuFirmware *
-fu_wac_module_sub_cpu_prepare_firmware(FuDevice *self,
+fu_wac_module_sub_cpu_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
 				       FuProgress *progress,
 				       FuFirmwareParseFlags flags,
 				       GError **error)
 {
-	FuFirmware *firmware_srec = fu_srec_firmware_new();
-	if (!fu_firmware_parse_stream(firmware_srec,
+	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new();
+	if (!fu_firmware_parse_stream(firmware,
 				      stream,
 				      0,
 				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
@@ -221,7 +221,7 @@ fu_wac_module_sub_cpu_prepare_firmware(FuDevice *self,
 		g_prefix_error_literal(error, "wacom sub_cpu failed to parse firmware: ");
 		return NULL;
 	}
-	return firmware_srec;
+	return g_steal_pointer(&firmware);
 }
 
 static void

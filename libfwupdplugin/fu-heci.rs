@@ -37,6 +37,23 @@ enum FuMkhiStatus {
     ResourceInUse = 0xE5,
     NoResource = 0xE6,
     GeneralError = 0xFF,
+    // GPU fw update
+    LowerArbSvn = 0x233,
+    LowerTcbSvn = 0x23B,
+    LowerVcn = 0x23C,
+    UpdateIupSvn = 0x29A,
+    UpdateIupVcn = 0x29B,
+    UpdateImageLen = 0x29C,
+    UpdatePvBit = 0x29D,
+    UpdateEngineeringMismatch = 0x2B2,
+    UpdateVerManFailedOrom = 0x102C,
+    UpdateDeviceIdNotMatch = 0x102F,
+    UpdateOpromSectionNotExist = 0x1032,
+    UpdateOpromInvalidStructure = 0x1035,
+    UpdateGetOpromVersionFailed 0x103C,
+    UpdateOromInvalidStructure = 0x1045,
+    UpdateVerManFailedGfxData = 0x1048,
+    UpdateGfxDataOemManufVer = 0x104B,
 }
 
 #[repr(u8)]

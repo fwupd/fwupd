@@ -915,7 +915,7 @@ fu_bluez_device_method_acquire(FuBluezDevice *self,
 						       g_variant_new("(@a{sv})", opt_variant),
 						       G_DBUS_CALL_FLAGS_NONE,
 						       -1,
-						       NULL, // fd list
+						       NULL, /* fd list */
 						       &out_fd_list,
 						       NULL,
 						       error);
@@ -985,14 +985,14 @@ fu_bluez_device_write_acquire(FuBluezDevice *self, const gchar *uuid, gint32 *mt
 }
 
 static void
-fu_bluez_device_incorporate(FuDevice *self, FuDevice *donor)
+fu_bluez_device_incorporate(FuDevice *device, FuDevice *donor)
 {
-	FuBluezDevice *uself = FU_BLUEZ_DEVICE(self);
+	FuBluezDevice *uself = FU_BLUEZ_DEVICE(device);
 	FuBluezDevice *udonor = FU_BLUEZ_DEVICE(donor);
 	FuBluezDevicePrivate *priv = GET_PRIVATE(uself);
 	FuBluezDevicePrivate *privdonor = GET_PRIVATE(udonor);
 
-	g_return_if_fail(FU_IS_BLUEZ_DEVICE(self));
+	g_return_if_fail(FU_IS_BLUEZ_DEVICE(device));
 	g_return_if_fail(FU_IS_BLUEZ_DEVICE(donor));
 
 	if (g_hash_table_size(priv->uuids) == 0) {

@@ -117,8 +117,7 @@ fu_cpu_get_attrs(GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *procpath = fu_path_from_kind(FU_PATH_KIND_PROCFS);
-	g_autofree gchar *fn = g_build_filename(procpath, "cpuinfo", NULL);
+	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
 	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -355,7 +354,7 @@ fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value)
 	g_autofree gchar *value_hex = NULL;
 	if (value == 0)
 		return;
-	value_hex = g_strdup_printf("0x%x", (guint)value);
+	value_hex = g_strdup_printf("0x%lx", (gulong)value);
 	xb_builder_node_insert_text(bn, key, value_hex, NULL);
 }
 

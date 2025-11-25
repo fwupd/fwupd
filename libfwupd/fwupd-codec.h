@@ -44,7 +44,7 @@ typedef enum {
 	 * Since: 2.0.8
 	 */
 	FWUPD_CODEC_FLAG_COMPRESSED = 1 << 1,
-} FwupdCodecFlags;
+} G_GNUC_FLAG_ENUM FwupdCodecFlags;
 
 struct _FwupdCodecInterface {
 	GTypeInterface g_iface;

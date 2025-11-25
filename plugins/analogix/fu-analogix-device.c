@@ -28,7 +28,7 @@ fu_analogix_device_to_string(FuDevice *device, guint idt, GString *str)
 
 static gboolean
 fu_analogix_device_send(FuAnalogixDevice *self,
-			AnxBbRqtCode reqcode,
+			FuAnalogixBbRqt reqcode,
 			guint16 val0code,
 			guint16 index,
 			const guint8 *buf,
@@ -77,7 +77,7 @@ fu_analogix_device_send(FuAnalogixDevice *self,
 
 static gboolean
 fu_analogix_device_receive(FuAnalogixDevice *self,
-			   AnxBbRqtCode reqcode,
+			   FuAnalogixBbRqt reqcode,
 			   guint16 val0code,
 			   guint16 index,
 			   guint8 *buf,
@@ -126,7 +126,7 @@ fu_analogix_device_get_update_status(FuAnalogixDevice *self,
 	for (guint i = 0; i < 3000; i++) {
 		guint8 status_tmp = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 		if (!fu_analogix_device_receive(self,
-						ANX_BB_RQT_GET_UPDATE_STATUS,
+						FU_ANALOGIX_BB_RQT_GET_UPDATE_STATUS,
 						0,
 						0,
 						&status_tmp,
@@ -164,15 +164,27 @@ fu_analogix_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get OCM version */
-	if (!fu_analogix_device_receive(self, ANX_BB_RQT_READ_FW_VER, 0, 0, &buf_fw[1], 1, error))
+	if (!fu_analogix_device_receive(self,
+					FU_ANALOGIX_BB_RQT_READ_FW_VER,
+					0,
+					0,
+					&buf_fw[1],
+					1,
+					error))
 		return FALSE;
-	if (!fu_analogix_device_receive(self, ANX_BB_RQT_READ_FW_RVER, 0, 0, &buf_fw[0], 1, error))
+	if (!fu_analogix_device_receive(self,
+					FU_ANALOGIX_BB_RQT_READ_FW_RVER,
+					0,
+					0,
+					&buf_fw[0],
+					1,
+					error))
 		return FALSE;
 	self->ocm_version = fu_memread_uint16(buf_fw, G_LITTLE_ENDIAN);
 
 	/*  get custom version */
 	if (!fu_analogix_device_receive(self,
-					ANX_BB_RQT_READ_CUS_VER,
+					FU_ANALOGIX_BB_RQT_READ_CUS_VER,
 					0,
 					0,
 					&buf_custom[1],
@@ -180,7 +192,7 @@ fu_analogix_device_setup(FuDevice *device, GError **error)
 					error))
 		return FALSE;
 	if (!fu_analogix_device_receive(self,
-					ANX_BB_RQT_READ_CUS_RVER,
+					FU_ANALOGIX_BB_RQT_READ_CUS_RVER,
 					0,
 					0,
 					&buf_custom[0],
@@ -249,7 +261,7 @@ fu_analogix_device_write_chunks(FuAnalogixDevice *self,
 		if (chk == NULL)
 			return FALSE;
 		if (!fu_analogix_device_send(self,
-					     ANX_BB_RQT_SEND_UPDATE_DATA,
+					     FU_ANALOGIX_BB_RQT_SEND_UPDATE_DATA,
 					     req_val,
 					     i + 1,
 					     fu_chunk_get_data(chk),
@@ -297,7 +309,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 		return FALSE;
 	fu_memwrite_uint32(buf_init, streamsz, G_LITTLE_ENDIAN);
 	if (!fu_analogix_device_send(self,
-				     ANX_BB_RQT_SEND_UPDATE_DATA,
+				     FU_ANALOGIX_BB_RQT_SEND_UPDATE_DATA,
 				     req_val,
 				     0,
 				     buf_init,
@@ -396,7 +408,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	if (fw_cus != NULL) {
 		if (!fu_analogix_device_write_image(self,
 						    fw_cus,
-						    ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
+						    FU_ANALOGIX_BB_WVAL_UPDATE_CUSTOM_DEF,
 						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error_literal(error, "program custom define failed: ");
@@ -409,7 +421,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	if (fw_stx != NULL) {
 		if (!fu_analogix_device_write_image(self,
 						    fw_stx,
-						    ANX_BB_WVAL_UPDATE_SECURE_TX,
+						    FU_ANALOGIX_BB_WVAL_UPDATE_SECURE_TX,
 						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error_literal(error, "program secure TX failed: ");
@@ -422,7 +434,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	if (fw_srx != NULL) {
 		if (!fu_analogix_device_write_image(self,
 						    fw_srx,
-						    ANX_BB_WVAL_UPDATE_SECURE_RX,
+						    FU_ANALOGIX_BB_WVAL_UPDATE_SECURE_RX,
 						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error_literal(error, "program secure RX failed: ");
@@ -435,7 +447,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	if (fw_ocm != NULL) {
 		if (!fu_analogix_device_write_image(self,
 						    fw_ocm,
-						    ANX_BB_WVAL_UPDATE_OCM,
+						    FU_ANALOGIX_BB_WVAL_UPDATE_OCM,
 						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error_literal(error, "program OCM failed: ");
@@ -466,7 +478,7 @@ fu_analogix_device_attach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static void
-fu_analogix_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_analogix_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

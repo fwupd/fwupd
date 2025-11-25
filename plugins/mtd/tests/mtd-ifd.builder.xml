@@ -1,0 +1,17 @@
+<firmware gtype="FuIfdFirmware">
+  <descriptor_map0>0x40003</descriptor_map0>
+  <descriptor_map1>0x58100208</descriptor_map1>
+  <descriptor_map2>0x310330</descriptor_map2>
+  <firmware gtype="FuIfdImage">
+    <id>bios</id>
+    <idx>0x1</idx>
+    <addr>0x1000</addr>
+    <data>V29ybGQh</data>
+  </firmware>
+  <firmware gtype="FuIfdImage">
+    <id>me</id>
+    <idx>0x2</idx>
+    <addr>0x2000</addr>
+    <data>V29ybGQh</data>
+  </firmware>
+</firmware>

@@ -29,7 +29,7 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructSynapticsCapeHidHdr) st = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(GInputStream) stream_body = NULL;
 
@@ -69,10 +69,12 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_hdr, stream_hdr, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, img_hdr);
+	if (!fu_firmware_add_image(firmware, img_hdr, error))
+		return FALSE;
 
 	/* body */
-	stream_body = fu_partial_input_stream_new(stream, st->len, streamsz - st->len, error);
+	stream_body =
+	    fu_partial_input_stream_new(stream, st->buf->len, streamsz - st->buf->len, error);
 	if (stream_body == NULL)
 		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_body, error))
@@ -86,30 +88,30 @@ fu_synaptics_cape_hid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsCapeHidFirmware *self = FU_SYNAPTICS_CAPE_HID_FIRMWARE(firmware);
 	guint64 ver = fu_firmware_get_version_raw(firmware);
-	g_autoptr(GByteArray) buf = fu_struct_synaptics_cape_hid_hdr_new();
+	g_autoptr(FuStructSynapticsCapeHidHdr) st_hdr = fu_struct_synaptics_cape_hid_hdr_new();
 	g_autoptr(GBytes) payload = NULL;
 
 	/* pack */
 	fu_struct_synaptics_cape_hid_hdr_set_vid(
-	    buf,
+	    st_hdr,
 	    fu_synaptics_cape_firmware_get_vid(FU_SYNAPTICS_CAPE_FIRMWARE(self)));
 	fu_struct_synaptics_cape_hid_hdr_set_pid(
-	    buf,
+	    st_hdr,
 	    fu_synaptics_cape_firmware_get_pid(FU_SYNAPTICS_CAPE_FIRMWARE(self)));
-	fu_struct_synaptics_cape_hid_hdr_set_crc(buf, 0xFFFF);
-	fu_struct_synaptics_cape_hid_hdr_set_ver_w(buf, ver >> 0);
-	fu_struct_synaptics_cape_hid_hdr_set_ver_x(buf, ver >> 16);
-	fu_struct_synaptics_cape_hid_hdr_set_ver_y(buf, ver >> 32);
-	fu_struct_synaptics_cape_hid_hdr_set_ver_z(buf, ver >> 48);
+	fu_struct_synaptics_cape_hid_hdr_set_crc(st_hdr, 0xFFFF);
+	fu_struct_synaptics_cape_hid_hdr_set_ver_w(st_hdr, ver >> 0);
+	fu_struct_synaptics_cape_hid_hdr_set_ver_x(st_hdr, ver >> 16);
+	fu_struct_synaptics_cape_hid_hdr_set_ver_y(st_hdr, ver >> 32);
+	fu_struct_synaptics_cape_hid_hdr_set_ver_z(st_hdr, ver >> 48);
 
 	/* payload */
 	payload = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (payload == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(buf, payload);
-	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
+	fu_byte_array_append_bytes(st_hdr->buf, payload);
+	fu_byte_array_align_up(st_hdr->buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st_hdr->buf);
 }
 
 static void

@@ -12,7 +12,8 @@
 G_DECLARE_FINAL_TYPE(FuDevlinkComponent, fu_devlink_component, FU, DEVLINK_COMPONENT, FuDevice)
 
 void
-fu_devlink_component_add_instance_keys(FuDevice *device, gchar **keys) G_GNUC_NON_NULL(1, 2);
+fu_devlink_component_add_instance_keys(FuDevlinkComponent *self, gchar **keys)
+    G_GNUC_NON_NULL(1, 2);
 
-FuDevice *
+FuDevlinkComponent *
 fu_devlink_component_new(FuDevice *proxy, const gchar *logical_id) G_GNUC_NON_NULL(1, 2);

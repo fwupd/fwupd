@@ -88,3 +88,10 @@ enum FuDfuAvr32MemoryUnit {
     Signature,
     User,
 }
+
+enum FuDfuAvr32Group {
+    Download = 0x01,
+    Upload = 0x03,
+    Exec = 0x04,
+    Select = 0x06,
+}

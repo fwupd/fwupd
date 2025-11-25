@@ -308,7 +308,7 @@ guint8
 fu_hid_device_get_interface(FuHidDevice *self)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	g_return_val_if_fail(FU_HID_DEVICE(self), G_MAXUINT8);
 	return priv->interface;
 }
 
@@ -347,7 +347,7 @@ guint8
 fu_hid_device_get_ep_addr_in(FuHidDevice *self)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	g_return_val_if_fail(FU_HID_DEVICE(self), G_MAXUINT8);
 	return priv->ep_addr_in;
 }
 
@@ -386,7 +386,7 @@ guint8
 fu_hid_device_get_ep_addr_out(FuHidDevice *self)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_HID_DEVICE(self), 0xff);
+	g_return_val_if_fail(FU_HID_DEVICE(self), G_MAXUINT8);
 	return priv->ep_addr_out;
 }
 

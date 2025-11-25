@@ -218,7 +218,14 @@ fu_wac_module_cleanup(FuDevice *device,
 		      GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(parent, error);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+		return FALSE;
+	}
+	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_cleanup(parent, progress, flags, error);
@@ -309,7 +316,7 @@ fu_wac_module_constructed(GObject *object)
 }
 
 static void
-fu_wac_module_set_progress(FuDevice *self, FuProgress *progress)
+fu_wac_module_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

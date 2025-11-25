@@ -141,7 +141,7 @@ fu_acpi_table_parse(FuFirmware *firmware,
 	length = fu_struct_acpi_table_get_length(st);
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (length > streamsz || length < st->len) {
+	if (length > streamsz || length < st->buf->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,

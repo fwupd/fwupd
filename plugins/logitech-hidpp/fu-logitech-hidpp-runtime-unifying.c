@@ -54,9 +54,8 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 }
 
 static gboolean
-fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **error)
+fu_logitech_hidpp_runtime_unifying_setup_internal(FuLogitechHidppRuntime *self, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	guint8 config[10] = {0};
 	g_autofree gchar *version_fw = NULL;
 
@@ -95,7 +94,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 						      config[2],
 						      config[3],
 						      (guint16)config[4] << 8 | config[5]);
-	fu_device_set_version(device, version_fw);
+	fu_device_set_version(FU_DEVICE(self), version_fw);
 
 	/* get bootloader version */
 	if (fu_logitech_hidpp_runtime_get_version_bl_major(self) > 0) {
@@ -105,20 +104,20 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 		    fu_logitech_hidpp_runtime_get_version_bl_major(self),
 		    config[8],
 		    config[9]);
-		fu_device_set_version_bootloader(FU_DEVICE(device), version_bl);
+		fu_device_set_version_bootloader(FU_DEVICE(self), version_bl);
 
 		/* is the USB receiver expecting signed firmware */
 		if ((fu_logitech_hidpp_runtime_get_version_bl_major(self) == 0x01 &&
 		     config[8] >= 0x04) ||
 		    (fu_logitech_hidpp_runtime_get_version_bl_major(self) == 0x03 &&
 		     config[8] >= 0x02)) {
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-			fu_device_add_protocol(device, "com.logitech.unifyingsigned");
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+			fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 		}
 	}
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD)) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-		fu_device_add_protocol(device, "com.logitech.unifying");
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD)) {
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
 	}
 
 	/* enable HID++ notifications */
@@ -134,6 +133,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 static gboolean
 fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 {
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	g_autoptr(GError) error_local = NULL;
 	for (guint i = 0; i < 5; i++) {
 		g_clear_error(&error_local);
@@ -141,7 +141,7 @@ fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 		 * the device first -- we can't use the SwID as this is a
 		 * HID++2.0 feature */
 		fu_device_sleep(device, 200); /* ms */
-		if (fu_logitech_hidpp_runtime_unifying_setup_internal(device, &error_local))
+		if (fu_logitech_hidpp_runtime_unifying_setup_internal(self, &error_local))
 			return TRUE;
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -153,7 +153,7 @@ fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

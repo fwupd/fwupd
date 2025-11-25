@@ -51,6 +51,9 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		fu_device_add_child(device, FU_DEVICE(x509_device));
 	}
 
+	if (fu_context_has_flag(fu_device_get_context(device), FU_CONTEXT_FLAG_INSECURE_UEFI))
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+
 	/* success */
 	return TRUE;
 }
@@ -76,10 +79,10 @@ fu_uefi_kek_device_write_firmware(FuDevice *device,
 		FU_EFIVARS_GUID_EFI_GLOBAL,
 		fu_device_get_physical_id(device),
 		fw,
-		FU_EFIVARS_ATTR_APPEND_WRITE |
-		    FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-		    FU_EFIVARS_ATTR_RUNTIME_ACCESS | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-		    FU_EFIVARS_ATTR_NON_VOLATILE,
+		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
+		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 		error)) {
 		return FALSE;
 	}
@@ -89,7 +92,7 @@ fu_uefi_kek_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_uefi_kek_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_kek_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

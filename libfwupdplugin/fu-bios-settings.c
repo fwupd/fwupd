@@ -81,7 +81,7 @@ fu_bios_settings_set_description(FuBiosSettings *self, FwupdBiosSetting *attr, G
 
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 
-	/* Try ID, then name, and then key */
+	/* try ID, then name, and then key */
 	value = g_hash_table_lookup(self->descriptions, fwupd_bios_setting_get_id(attr));
 	if (value != NULL) {
 		fwupd_bios_setting_set_description(attr, value);

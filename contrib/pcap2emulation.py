@@ -288,9 +288,9 @@ class Pcap2Emulation:
             return {"Id": s, "Data": captured_data}
         elif layers["usb"]["usb_usb_endpoint_address_direction"] == "1":
             if "usb_usb_urb_len" in layers["usb"]:
-                self.bulk_incoming_lens[
-                    layers["frame"]["frame_frame_number"]
-                ] = get_int(layers["usb"]["usb_usb_urb_len"])
+                self.bulk_incoming_lens[layers["frame"]["frame_frame_number"]] = (
+                    get_int(layers["usb"]["usb_usb_urb_len"])
+                )
         return {}
 
     def _get_interface_descriptor(

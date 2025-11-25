@@ -166,7 +166,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 					     flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, firmware_coswid, error))
+		if (!fu_firmware_add_image(firmware, firmware_coswid, error))
 			return FALSE;
 		if (fu_firmware_get_size(firmware_coswid) == 0) {
 			g_set_error_literal(error,
@@ -187,7 +187,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuStructUswid) buf = fu_struct_uswid_new();
+	g_autoptr(FuStructUswid) st = fu_struct_uswid_new();
 	g_autoptr(GByteArray) payload = g_byte_array_new();
 	g_autoptr(GBytes) payload_blob = NULL;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
@@ -223,14 +223,14 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* pack */
-	fu_struct_uswid_set_hdrver(buf, priv->hdrver);
-	fu_struct_uswid_set_payloadsz(buf, g_bytes_get_size(payload_blob));
+	fu_struct_uswid_set_hdrver(st, priv->hdrver);
+	fu_struct_uswid_set_payloadsz(st, g_bytes_get_size(payload_blob));
 	if (priv->hdrver >= 3) {
 		guint8 flags = 0;
 		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE)
 			flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
-		fu_struct_uswid_set_flags(buf, flags);
-		fu_struct_uswid_set_compression(buf, priv->compression);
+		fu_struct_uswid_set_flags(st, flags);
+		fu_struct_uswid_set_compression(st, priv->compression);
 	} else if (priv->hdrver >= 2) {
 		guint8 flags = 0;
 		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE) {
@@ -243,17 +243,17 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 			}
 			flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
 		}
-		fu_struct_uswid_set_flags(buf, flags);
-		g_byte_array_set_size(buf, buf->len - 1);
-		fu_struct_uswid_set_hdrsz(buf, buf->len);
+		fu_struct_uswid_set_flags(st, flags);
+		g_byte_array_set_size(st->buf, st->buf->len - 1);
+		fu_struct_uswid_set_hdrsz(st, st->buf->len);
 	} else {
-		g_byte_array_set_size(buf, buf->len - 2);
-		fu_struct_uswid_set_hdrsz(buf, buf->len);
+		g_byte_array_set_size(st->buf, st->buf->len - 2);
+		fu_struct_uswid_set_hdrsz(st, st->buf->len);
 	}
-	fu_byte_array_append_bytes(buf, payload_blob);
+	fu_byte_array_append_bytes(st->buf, payload_blob);
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean
@@ -290,6 +290,15 @@ fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
+fu_uswid_firmware_add_magic(FuFirmware *firmware)
+{
+	fu_firmware_add_magic(firmware,
+			      (const guint8 *)FU_STRUCT_USWID_DEFAULT_MAGIC,
+			      sizeof(fwupd_guid_t),
+			      0x0);
+}
+
+static void
 fu_uswid_firmware_init(FuUswidFirmware *self)
 {
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -310,6 +319,7 @@ fu_uswid_firmware_class_init(FuUswidFirmwareClass *klass)
 	firmware_class->write = fu_uswid_firmware_write;
 	firmware_class->build = fu_uswid_firmware_build;
 	firmware_class->export = fu_uswid_firmware_export;
+	firmware_class->add_magic = fu_uswid_firmware_add_magic;
 }
 
 /**

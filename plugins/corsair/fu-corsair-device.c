@@ -111,9 +111,8 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_corsair_device_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **error)
+fu_corsair_device_poll_subdevice(FuCorsairDevice *self, gboolean *subdevice_added, GError **error)
 {
-	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	guint32 subdevices;
 	g_autoptr(FuCorsairDevice) child = NULL;
 	g_autoptr(FuCorsairBp) child_bp = NULL;
@@ -131,7 +130,7 @@ fu_corsair_device_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GE
 		return TRUE;
 	}
 
-	child_bp = fu_corsair_bp_new(FU_USB_DEVICE(device), TRUE);
+	child_bp = fu_corsair_bp_new(FU_USB_DEVICE(self), TRUE);
 	fu_device_incorporate(FU_DEVICE(child_bp),
 			      FU_DEVICE(self->bp),
 			      FU_DEVICE_INCORPORATE_FLAG_ALL);
@@ -146,16 +145,15 @@ fu_corsair_device_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GE
 	if (!fu_device_setup(FU_DEVICE(child), error))
 		return FALSE;
 
-	fu_device_add_child(device, FU_DEVICE(child));
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 	*subdevice_added = TRUE;
 
 	return TRUE;
 }
 
 static gchar *
-fu_corsair_device_get_version(FuDevice *device, GError **error)
+fu_corsair_device_get_version(FuCorsairDevice *self, GError **error)
 {
-	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	guint32 version_raw;
 
 	if (!fu_corsair_bp_get_property(self->bp,
@@ -164,9 +162,9 @@ fu_corsair_device_get_version(FuDevice *device, GError **error)
 					error))
 		return NULL;
 
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		gboolean broken_by_flag =
-		    fu_device_has_private_flag(device,
+		    fu_device_has_private_flag(FU_DEVICE(self),
 					       FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER);
 
 		/* Version 0xffffffff means that previous update was interrupted.
@@ -174,9 +172,8 @@ fu_corsair_device_get_version(FuDevice *device, GError **error)
 		   firmware will not be rejected because of older version. It is safe to always
 		   pass firmware because setup in bootloader mode can only happen during
 		   emergency update */
-		if (broken_by_flag || version_raw == G_MAXUINT32) {
+		if (broken_by_flag || version_raw == G_MAXUINT32)
 			version_raw = 0;
-		}
 	}
 
 	return fu_corsair_version_from_uint32(version_raw);
@@ -212,7 +209,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	if (mode == FU_CORSAIR_DEVICE_MODE_BOOTLOADER)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
-	version = fu_corsair_device_get_version(device, error);
+	version = fu_corsair_device_get_version(self, error);
 	if (version == NULL) {
 		g_prefix_error_literal(error, "cannot get version: ");
 		return FALSE;
@@ -247,14 +244,14 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	if (self->subdevice_id != NULL &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		gboolean subdevice_added = FALSE;
-		g_autoptr(GError) local_error = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* Give some time to a subdevice to get connected to the receiver.
 		 * Without this delay a subdevice may be not present even if it is
 		 * turned on. */
 		fu_device_sleep(device, CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
-		if (!fu_corsair_device_poll_subdevice(device, &subdevice_added, &local_error)) {
-			g_warning("error polling subdevice: %s", local_error->message);
+		if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, &error_local)) {
+			g_warning("error polling subdevice: %s", error_local->message);
 		} else {
 			/* start polling if a subdevice was not added */
 			if (!subdevice_added)
@@ -268,9 +265,8 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_corsair_device_reload(FuDevice *device, GError **error)
 {
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
+	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE))
 		return fu_corsair_device_setup(device, error);
-	}
 
 	/* USB devices will be reloaded by FWUPD after reenumeration */
 	return TRUE;
@@ -301,20 +297,17 @@ fu_corsair_device_is_subdevice_connected_cb(FuDevice *device, gpointer user_data
 }
 
 static gboolean
-fu_corsair_device_reconnect_subdevice(FuDevice *device, GError **error)
+fu_corsair_device_reconnect_subdevice(FuCorsairDevice *self, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 
 	if (parent == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "cannot get parent: ");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cannot get parent");
 		return FALSE;
 	}
 
-	/* Wait some time to make sure that a subdevice was disconnected. */
-	fu_device_sleep(device, CORSAIR_SUBDEVICE_REBOOT_DELAY);
+	/* wait some time to make sure that a subdevice was disconnected */
+	fu_device_sleep(FU_DEVICE(self), CORSAIR_SUBDEVICE_REBOOT_DELAY);
 
 	if (!fu_device_retry_full(parent,
 				  fu_corsair_device_is_subdevice_connected_cb,
@@ -330,12 +323,11 @@ fu_corsair_device_reconnect_subdevice(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_corsair_device_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError **error)
+fu_corsair_device_ensure_mode(FuCorsairDevice *self, FuCorsairDeviceMode mode, GError **error)
 {
-	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	FuCorsairDeviceMode current_mode;
 
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		current_mode = FU_CORSAIR_DEVICE_MODE_BOOTLOADER;
 	} else {
 		current_mode = FU_CORSAIR_DEVICE_MODE_APPLICATION;
@@ -356,18 +348,18 @@ fu_corsair_device_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError
 		}
 	}
 
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
-		if (!fu_corsair_device_reconnect_subdevice(device, error)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
+		if (!fu_corsair_device_reconnect_subdevice(self, error)) {
 			g_prefix_error_literal(error, "subdevice did not reconnect: ");
 			return FALSE;
 		}
 		if (mode == FU_CORSAIR_DEVICE_MODE_BOOTLOADER) {
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		} else {
-			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		}
 	} else {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}
 
 	return TRUE;
@@ -376,13 +368,15 @@ fu_corsair_device_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError
 static gboolean
 fu_corsair_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	return fu_corsair_device_ensure_mode(device, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);
+	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
+	return fu_corsair_device_ensure_mode(self, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);
 }
 
 static gboolean
 fu_corsair_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	return fu_corsair_device_ensure_mode(device, FU_CORSAIR_DEVICE_MODE_BOOTLOADER, error);
+	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
+	return fu_corsair_device_ensure_mode(self, FU_CORSAIR_DEVICE_MODE_BOOTLOADER, error);
 }
 
 static gboolean
@@ -435,7 +429,7 @@ fu_corsair_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
-fu_corsair_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_corsair_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -494,6 +488,7 @@ fu_corsair_device_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_corsair_device_poll(FuDevice *device, GError **error)
 {
+	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	gboolean subdevice_added = FALSE;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -503,9 +498,8 @@ fu_corsair_device_poll(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_corsair_device_poll_subdevice(device, &subdevice_added, error)) {
+	if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, error))
 		return FALSE;
-	}
 
 	/* stop polling if a subdevice was added */
 	if (subdevice_added) {

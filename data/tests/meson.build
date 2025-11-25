@@ -5,10 +5,19 @@ con2.set('installedtestsdatadir', installed_test_datadir)
 con2.set('devicetestdir', join_paths(installed_test_datadir, 'device-tests'))
 con2.set('bindir', bindir)
 con2.set('libexecdir', libexecdir)
+con2.set('localstatedir', localstatedir)
 
 configure_file(
   input: 'fwupdmgr.test.in',
   output: 'fwupdmgr.test',
+  configuration: con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
+  input: 'fwupdmgr-online.test.in',
+  output: 'fwupdmgr-online.test',
   configuration: con2,
   install: true,
   install_dir: installed_test_datadir,
@@ -69,6 +78,14 @@ install_data(
 configure_file(
   input: 'fwupdmgr.sh',
   output: 'fwupdmgr.sh',
+  configuration: con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
+  input: 'fwupdmgr-online.sh',
+  output: 'fwupdmgr-online.sh',
   configuration: con2,
   install: true,
   install_dir: installed_test_datadir,

@@ -1,6 +1,7 @@
 # fwupd
 
 [![Build Status](https://github.com/fwupd/fwupd/actions/workflows/ci.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/ci.yml)
+[![Translation Status](https://hosted.weblate.org/widget/fwupd/svg-badge.svg)](https://hosted.weblate.org/engage/fwupd/)
 [![CodeQL](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
@@ -41,7 +42,7 @@ distro-provided system version.
 analysis plugin built to analyze GLib code. It can be installed and then run using:
 
     mkdir build-tartan
-    CC=clang-17 meson ../
+    CC=clang-18 meson ../
     SCANBUILD=../contrib/tartan.sh ninja scan-build
 
 ## LVFS
@@ -77,7 +78,7 @@ If updates are available for any devices on the system, they'll be displayed.
 This will download and apply all updates for your system.
 
 - Updates that can be applied live will be done immediately.
-- Updates that run at bootup will be staged for the next reboot.
+- Updates that run at boot-up will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
 users section of the [fwupd website](https://fwupd.org).

@@ -711,26 +711,28 @@ fu_input_stream_chunkify(GInputStream *stream,
  * @stream: a #GInputStream
  * @buf: input buffer to look for
  * @bufsz: size of @buf
- * @offset: (nullable): found offset
+ * @offset: starting offset, typically 0x0
+ * @offset_found: (nullable) (out): found offset
  * @error: (nullable): optional return location for an error
  *
  * Find a memory buffer within an input stream, without loading the entire stream into a buffer.
  *
  * Returns: %TRUE if @buf was found
  *
- * Since: 2.0.0
+ * Since: 2.0.18
  **/
 gboolean
 fu_input_stream_find(GInputStream *stream,
 		     const guint8 *buf,
 		     gsize bufsz,
-		     gsize *offset,
+		     gsize offset,
+		     gsize *offset_found,
 		     GError **error)
 {
 	g_autoptr(GByteArray) buf_acc = g_byte_array_new();
 	const gsize blocksz = 0x10000;
 	gsize offset_add = 0;
-	gsize offset_cur = 0;
+	gsize offset_cur = offset;
 
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -738,7 +740,7 @@ fu_input_stream_find(GInputStream *stream,
 	g_return_val_if_fail(bufsz < blocksz, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	while (offset_cur < bufsz) {
+	while (TRUE) {
 		g_autoptr(GByteArray) buf_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -757,9 +759,9 @@ fu_input_stream_find(GInputStream *stream,
 		g_byte_array_append(buf_acc, buf_tmp->data, buf_tmp->len);
 
 		/* we found something */
-		if (fu_memmem_safe(buf_acc->data, buf_acc->len, buf, bufsz, offset, NULL)) {
-			if (offset != NULL)
-				*offset += offset_add;
+		if (fu_memmem_safe(buf_acc->data, buf_acc->len, buf, bufsz, offset_found, NULL)) {
+			if (offset_found != NULL)
+				*offset_found += offset + offset_add;
 			return TRUE;
 		}
 

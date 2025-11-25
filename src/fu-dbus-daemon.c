@@ -177,7 +177,7 @@ fu_dbus_daemon_set_status(FuDbusDaemon *self, FwupdStatus status)
 		return;
 	self->status = status;
 
-	g_debug("Emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
+	g_debug("emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	fu_dbus_daemon_emit_property_changed(self, "Status", g_variant_new_uint32(status));
 }
 
@@ -571,7 +571,7 @@ fu_dbus_daemon_progress_percentage_changed_cb(FuProgress *progress,
 		return;
 	self->percentage = percentage;
 
-	g_debug("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
+	g_debug("emitting PropertyChanged('Percentage'='%u%%')", percentage);
 	fu_dbus_daemon_emit_property_changed(self, "Percentage", g_variant_new_uint32(percentage));
 }
 
@@ -680,6 +680,29 @@ fu_dbus_daemon_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gp
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
+static void
+fu_dbus_daemon_authorize_clean_remote_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_clean_remote(engine, helper->remote_id, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
 static FuPolkitAuthorityCheckFlags
 fu_dbus_daemon_engine_request_get_authority_check_flags(FuEngineRequest *request)
 {
@@ -758,7 +781,7 @@ fu_dbus_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 					 &error);
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
 	if (fu_daemon_get_pending_stop(FU_DAEMON(self))) {
-		g_set_error_literal(&error,
+		g_set_error_literal(&error, /* nocheck:error-false-return */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "daemon was stopped");
@@ -1060,8 +1083,19 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+	if (fd_list == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no file descriptors are associated");
+		return NULL;
+	}
+	if (g_unix_fd_list_get_length(fd_list) != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong number of file descriptors: %i",
+			    g_unix_fd_list_get_length(fd_list));
 		return NULL;
 	}
 	fd = g_unix_fd_list_get(fd_list, 0, error);
@@ -1093,8 +1127,19 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+	if (fd_list == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no file descriptors are associated");
+		return NULL;
+	}
+	if (g_unix_fd_list_get_length(fd_list) != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong number of file descriptors: %i",
+			    g_unix_fd_list_get_length(fd_list));
 		return NULL;
 	}
 	fd = g_unix_fd_list_get(fd_list, 0, error);
@@ -1118,39 +1163,38 @@ static gboolean
 fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 {
 #ifdef HAVE_HSI
-	g_autofree gchar *sysfsfwdir = NULL;
-	g_autofree gchar *xen_privileged_fn = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 
 	if (g_getenv("UMOCKDEV_DIR") != NULL)
 		return TRUE;
-	if (fu_daemon_get_machine_kind(FU_DAEMON(self)) == FU_DAEMON_MACHINE_KIND_PHYSICAL)
-		return TRUE;
 
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
-	/* privileged xen can access most hardware */
-	xen_privileged_fn =
-	    g_build_filename(sysfsfwdir, "hypervisor", "start_flags", "privileged", NULL);
-	if (g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
-		g_autofree gchar *contents = NULL;
-
-		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
-			if (g_strcmp0(contents, "1") == 0)
-				return TRUE;
-		}
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_CONTAINER)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HSI unavailable for container");
+		return FALSE;
+	}
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR) &&
+	    !fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HSI unavailable for unprivileged hypervisor");
+		return FALSE;
 	}
 
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI unavailable for hypervisor");
+	/* success */
+	return TRUE;
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "HSI support not enabled");
 
-#endif
 	return FALSE;
+#endif
 }
 
 static void
@@ -1844,8 +1888,20 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 	/* update the metadata store */
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 2) {
-		g_set_error_literal(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+	if (fd_list == NULL) {
+		g_set_error_literal(&error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no file descriptors are associated");
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+	if (g_unix_fd_list_get_length(fd_list) != 2) {
+		g_set_error(&error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong number of file descriptors: %i",
+			    g_unix_fd_list_get_length(fd_list));
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
@@ -1883,7 +1939,6 @@ fu_dbus_daemon_method_unlock(FuDbusDaemon *self,
 {
 	const gchar *device_id = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
-	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s)", &device_id);
 
@@ -1911,7 +1966,6 @@ fu_dbus_daemon_method_activate(FuDbusDaemon *self,
 {
 	const gchar *device_id = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
-	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s)", &device_id);
 
@@ -2022,6 +2076,36 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_method_clean_remote(FuDbusDaemon *self,
+				   GVariant *parameters,
+				   FuEngineRequest *request,
+				   GDBusMethodInvocation *invocation)
+{
+	const gchar *remote_id = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	/* check the id exists */
+	g_variant_get(parameters, "(&s)", &remote_id);
+
+	/* create helper object */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->remote_id = g_strdup(remote_id);
+	helper->self = self;
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.clean-remote",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_clean_remote_cb,
+				  g_steal_pointer(&helper));
+}
+
+static void
 fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 				    GVariant *parameters,
 				    FuEngineRequest *request,
@@ -2029,7 +2113,6 @@ fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 {
 	const gchar *device_id = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* check the id exists */
 	g_variant_get(parameters, "(&s)", &device_id);
@@ -2478,6 +2561,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"ModifyConfig", fu_dbus_daemon_method_modify_config},
 	    {"ResetConfig", fu_dbus_daemon_method_reset_config},
 	    {"ModifyRemote", fu_dbus_daemon_method_modify_remote},
+	    {"CleanRemote", fu_dbus_daemon_method_clean_remote},
 	    {"VerifyUpdate", fu_dbus_daemon_method_verify_update},
 	    {"Verify", fu_dbus_daemon_method_verify},
 	    {"SetFeatureFlags", fu_dbus_daemon_method_set_feature_flags},
@@ -2504,7 +2588,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 
 	/* be helpful */
 	parameters_str = g_variant_print_string(parameters, NULL, TRUE);
-	g_debug("Called %s%s", method_name, parameters_str->str);
+	g_debug("called %s%s", method_name, parameters_str->str);
 
 	/* call the correct vfunc */
 	for (guint i = 0; i < G_N_ELEMENTS(method_funcs); i++) {
@@ -2606,7 +2690,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "HostMachineId") == 0) {
 		const gchar *tmp = fu_engine_get_host_machine_id(engine);
 		if (tmp == NULL) {
-			g_set_error(error,
+			g_set_error(error, /* nocheck:error */
 				    G_DBUS_ERROR,
 				    G_DBUS_ERROR_NOT_SUPPORTED,
 				    "failed to get daemon property %s",
@@ -2621,7 +2705,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		g_autofree gchar *tmp = fu_engine_get_host_security_id(engine, NULL);
 		return g_variant_new_string(tmp);
 #else
-		g_set_error(error,
+		g_set_error(error, /* nocheck:error */
 			    G_DBUS_ERROR,
 			    G_DBUS_ERROR_NOT_SUPPORTED,
 			    "failed to get daemon property %s",
@@ -2641,7 +2725,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return fu_dbus_daemon_get_property_hwids(self);
 
 	/* return an error */
-	g_set_error(error,
+	g_set_error(error, /* nocheck:error */
 		    G_DBUS_ERROR,
 		    G_DBUS_ERROR_UNKNOWN_PROPERTY,
 		    "failed to get daemon property %s",

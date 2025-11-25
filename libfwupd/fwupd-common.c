@@ -547,7 +547,12 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 {
 	gint fd = open(fn, O_RDONLY);
 	if (fd < 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "failed to open %s", fn);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to open %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
 		return NULL;
 	}
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
@@ -561,7 +566,12 @@ fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 {
 	gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRWXU);
 	if (fd < 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "failed to open %s", fn);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to open %s: %s",
+			    fn,
+			    fwupd_strerror(errno));
 		return NULL;
 	}
 	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(fd, TRUE));

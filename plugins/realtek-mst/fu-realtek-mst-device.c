@@ -550,7 +550,7 @@ fu_realtek_mst_device_detach(FuDevice *device, FuProgress *progress, GError **er
 	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_ISP, FALSE, error))
 		return FALSE;
 
-	/* Switch to programming mode (stops regular operation) */
+	/* switch to programming mode (stops regular operation) */
 	if (!fu_realtek_mst_device_write_register(self,
 						  FU_REALTEK_MST_REG_MCU_MODE,
 						  MCU_MODE_ISP,
@@ -793,7 +793,7 @@ fu_realtek_mst_device_attach(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
-fu_realtek_mst_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_realtek_mst_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

@@ -6,7 +6,7 @@ typedef enum {
     {{item.c_define}},
 {%- endif %}
 {%- endfor %}
-} {{obj.c_type}};
+} {% if obj.is_bitfield %}G_GNUC_FLAG_ENUM{%- endif %} {{obj.c_type}};
 
 {%- if not obj.items_any_defaults and not obj.item('Last') %}
 #define {{obj.c_define_last}} {{obj.items|length}}

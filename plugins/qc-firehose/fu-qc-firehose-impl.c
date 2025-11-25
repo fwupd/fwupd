@@ -275,7 +275,7 @@ fu_qc_firehose_impl_read_xml_cb(FuQcFirehoseImpl *self,
 					 error)) {
 				g_prefix_error_literal(
 				    error,
-				    "failed to parse MaxPayloadSizeToTargetInBytes:");
+				    "failed to parse MaxPayloadSizeToTargetInBytes: ");
 				return FALSE;
 			}
 			g_debug("max payload size now 0x%x", (guint)helper->max_payload_size);
@@ -736,7 +736,7 @@ fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error)
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	FuQcFirehoseImplHelper helper = {0x0};
 
-	/* <data><power value="reset /></data> */
+	/* <data><power value="reset" /></data> */
 	xb_builder_node_insert_text(bn, "power", NULL, "value", "reset", NULL);
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;

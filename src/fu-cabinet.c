@@ -79,28 +79,32 @@ fu_cabinet_get_silo(FuCabinet *self, GError **error)
  * @self: a #FuCabinet
  * @basename: filename
  * @data: file data
+ * @error: (nullable): optional return location for an error
  *
  * Adds a file to the silo.
  *
- * Since: 1.6.0
+ * Returns: %TRUE for success
  **/
-void
-fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
+gboolean
+fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data, GError **error)
 {
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
 
-	g_return_if_fail(FU_IS_CABINET(self));
-	g_return_if_fail(basename != NULL);
-	g_return_if_fail(data != NULL);
+	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
+	g_return_val_if_fail(basename != NULL, FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
 
 	fu_firmware_set_bytes(FU_FIRMWARE(img), data);
 	fu_firmware_set_id(FU_FIRMWARE(img), basename);
-	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img));
+	return fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error);
 }
 
 /* sets the firmware and signature blobs on XbNode */
 static gboolean
-fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
+fu_cabinet_parse_release(FuCabinet *self,
+			 XbNode *release,
+			 FuFirmwareParseFlags flags,
+			 GError **error)
 {
 	const gchar *csum_filename = NULL;
 	gsize streamsz = 0;
@@ -116,6 +120,20 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 	g_autoptr(GBytes) release_flags_blob = NULL;
 	g_autoptr(GBytes) filename_blob = NULL;
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
+	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS;
+
+	/* distrusting RSA? */
+	if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_TRUST_PQ_SIGNATURES) {
+#if JCAT_CHECK_VERSION(0, 2, 4)
+		jcat_flags |= JCAT_VERIFY_FLAG_ONLY_PQ;
+#else
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "only trusting PQ signatures requires libjcat >= 0.2.4");
+		return FALSE;
+#endif
+	}
 
 	/* we set this with XbBuilderSource before the silo was created */
 	metadata_trust = xb_node_query_first(release, "../../info/metadata_trust", NULL);
@@ -232,13 +250,13 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		blob_target_sha512 = jcat_blob_new_utf8(JCAT_BLOB_KIND_SHA512, checksum_sha512);
 		jcat_item_add_blob(item_target, blob_target_sha512);
 
-		results = jcat_context_verify_target(self->jcat_context,
-						     item_target,
-						     item,
-						     JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
-							 JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-							 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						     &error_local);
+		results =
+		    jcat_context_verify_target(self->jcat_context,
+					       item_target,
+					       item,
+					       jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						   JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+					       &error_local);
 		if (results == NULL) {
 			g_info("failed to verify indirect payload %s: %s",
 			       basename,
@@ -259,8 +277,7 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		results = jcat_context_verify_item(self->jcat_context,
 						   blob,
 						   item,
-						   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
-						       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						   jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
@@ -293,13 +310,12 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 			if (data_sig == NULL)
 				return FALSE;
 			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
-			jcat_result =
-			    jcat_context_verify_blob(self->jcat_context,
-						     blob,
-						     jcat_blob,
-						     JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
-							 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						     &error_local);
+			jcat_result = jcat_context_verify_blob(
+			    self->jcat_context,
+			    blob,
+			    jcat_blob,
+			    jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+			    &error_local);
 			if (jcat_result == NULL) {
 				g_info("failed to verify payload %s using detached: %s",
 				       basename,
@@ -504,11 +520,29 @@ fu_cabinet_build_silo_file(FuCabinet *self,
 }
 
 static gboolean
-fu_cabinet_build_silo_metainfo(FuCabinet *self, FuFirmware *img, GError **error)
+fu_cabinet_build_silo_metainfo(FuCabinet *self,
+			       FuFirmware *img,
+			       FuFirmwareParseFlags flags,
+			       GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	const gchar *fn = fu_firmware_get_id(img);
 	g_autoptr(JcatItem) item = NULL;
+	JcatVerifyFlags jcat_flags =
+	    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM | JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+
+	/* distrusting RSA? */
+	if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_TRUST_PQ_SIGNATURES) {
+#if JCAT_CHECK_VERSION(0, 2, 4)
+		jcat_flags |= JCAT_VERIFY_FLAG_ONLY_PQ;
+#else
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "only trusting PQ signatures requires libjcat >= 0.2.4");
+		return FALSE;
+#endif
+	}
 
 	/* validate against the Jcat file */
 	item = jcat_file_get_item_by_id(self->jcat_file, fn, NULL);
@@ -525,8 +559,7 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, FuFirmware *img, GError **error)
 		results = jcat_context_verify_item(self->jcat_context,
 						   blob,
 						   item,
-						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						   jcat_flags,
 						   &error_local);
 		if (results == NULL) {
 			g_info("failed to verify %s: %s", fn, error_local->message);
@@ -581,7 +614,10 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 
 /* adds each image to the silo */
 static gboolean
-fu_cabinet_build_silo_folder(FuCabinet *self, FuFirmware *img, GError **error)
+fu_cabinet_build_silo_folder(FuCabinet *self,
+			     FuFirmware *img,
+			     FuFirmwareParseFlags flags,
+			     GError **error)
 {
 	const gchar *fn = fu_firmware_get_id(img);
 	if (fn == NULL) {
@@ -592,14 +628,14 @@ fu_cabinet_build_silo_folder(FuCabinet *self, FuFirmware *img, GError **error)
 		return FALSE;
 	}
 	if (g_str_has_suffix(fn, ".metainfo.xml")) {
-		if (!fu_cabinet_build_silo_metainfo(self, img, error))
+		if (!fu_cabinet_build_silo_metainfo(self, img, flags, error))
 			return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_cabinet_build_silo(FuCabinet *self, GError **error)
+fu_cabinet_build_silo(FuCabinet *self, FuFirmwareParseFlags flags, GError **error)
 {
 	g_autoptr(GPtrArray) imgs = NULL;
 	g_autoptr(XbBuilderFixup) fixup1 = NULL;
@@ -628,7 +664,7 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	/* adds each metainfo file to the silo */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		if (!fu_cabinet_build_silo_folder(self, img, error))
+		if (!fu_cabinet_build_silo_folder(self, img, flags, error))
 			return FALSE;
 	}
 
@@ -900,8 +936,7 @@ fu_cabinet_sign(FuCabinet *self,
 	if (!jcat_file_export_stream(jcat_file, ostr, JCAT_EXPORT_FLAG_NONE, NULL, error))
 		return FALSE;
 	new_bytes = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(ostr));
-	fu_cabinet_add_file(self, "firmware.jcat", new_bytes);
-	return TRUE;
+	return fu_cabinet_add_file(self, "firmware.jcat", new_bytes, error);
 }
 
 static gboolean
@@ -946,7 +981,7 @@ fu_cabinet_parse(FuFirmware *firmware,
 	}
 
 	/* build xmlb silo */
-	if (!fu_cabinet_build_silo(self, error))
+	if (!fu_cabinet_build_silo(self, flags, error))
 		return FALSE;
 
 	/* sanity check */
@@ -986,7 +1021,7 @@ fu_cabinet_parse(FuFirmware *firmware,
 		for (guint j = 0; j < releases->len; j++) {
 			XbNode *rel = g_ptr_array_index(releases, j);
 			g_info("processing release: %s", xb_node_get_attr(rel, "version"));
-			if (!fu_cabinet_parse_release(self, rel, error))
+			if (!fu_cabinet_parse_release(self, rel, flags, error))
 				return FALSE;
 		}
 	}

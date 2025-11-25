@@ -28,21 +28,23 @@ fu_wacom_raw_aes_device_add_recovery_hwid(FuWacomRawAesDevice *self, GError **er
 	fu_struct_wacom_raw_request_set_addr(st_req, FU_WACOM_RAW_BL_START_ADDR);
 	fu_struct_wacom_raw_request_set_size8(st_req, FU_WACOM_RAW_BL_BYTES_CHECK / 8);
 	if (!fu_wacom_raw_device_set_feature(FU_WACOM_RAW_DEVICE(self),
-					     st_req->data,
-					     st_req->len,
+					     st_req->buf->data,
+					     st_req->buf->len,
 					     error)) {
 		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
 	if (!fu_wacom_raw_device_get_feature(FU_WACOM_RAW_DEVICE(self),
-					     st_req->data,
-					     st_req->len,
+					     st_req->buf->data,
+					     st_req->buf->len,
 					     error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
-	st_rsp =
-	    fu_struct_wacom_raw_bl_verify_response_parse(st_req->data, st_req->len, 0x0, error);
+	st_rsp = fu_struct_wacom_raw_bl_verify_response_parse(st_req->buf->data,
+							      st_req->buf->len,
+							      0x0,
+							      error);
 	if (st_rsp == NULL)
 		return FALSE;
 	if (fu_struct_wacom_raw_bl_verify_response_get_size8(st_rsp) !=
@@ -77,16 +79,19 @@ fu_wacom_raw_aes_device_query_operation_mode(FuWacomRawAesDevice *self,
 					     FuWacomRawOperationMode *mode,
 					     GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_wacom_raw_fw_query_mode_request_new();
-	g_autoptr(GByteArray) st_rsp = NULL;
+	g_autoptr(FuStructWacomRawFwQueryModeRequest) st_req =
+	    fu_struct_wacom_raw_fw_query_mode_request_new();
+	g_autoptr(FuStructWacomRawFwQueryModeResponse) st_rsp = NULL;
 
 	if (!fu_wacom_raw_device_get_feature(FU_WACOM_RAW_DEVICE(self),
-					     st_req->data,
-					     st_req->len,
+					     st_req->buf->data,
+					     st_req->buf->len,
 					     error))
 		return FALSE;
-	st_rsp =
-	    fu_struct_wacom_raw_fw_query_mode_response_parse(st_req->data, st_req->len, 0x0, error);
+	st_rsp = fu_struct_wacom_raw_fw_query_mode_response_parse(st_req->buf->data,
+								  st_req->buf->len,
+								  0x0,
+								  error);
 	if (st_rsp == NULL)
 		return FALSE;
 	if (mode != NULL)
@@ -118,12 +123,12 @@ fu_wacom_raw_aes_device_setup(FuDevice *device, GError **error)
 
 		/* get firmware version */
 		if (!fu_wacom_raw_device_get_feature(FU_WACOM_RAW_DEVICE(self),
-						     st_req->data,
-						     st_req->len,
+						     st_req->buf->data,
+						     st_req->buf->len,
 						     error))
 			return FALSE;
-		st_rsp = fu_struct_wacom_raw_fw_status_response_parse(st_req->data,
-								      st_req->len,
+		st_rsp = fu_struct_wacom_raw_fw_status_response_parse(st_req->buf->data,
+								      st_req->buf->len,
 								      0x0,
 								      error);
 		if (st_rsp == NULL)
@@ -159,7 +164,7 @@ fu_wacom_raw_aes_device_attach(FuDevice *device, FuProgress *progress, GError **
 
 	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_TYPE);
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_TYPE_FINALIZER);
-	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
+	if (!fu_wacom_raw_device_set_feature(self, st_req->buf->data, st_req->buf->len, error)) {
 		g_prefix_error_literal(error, "failed to finalize the device: ");
 		return FALSE;
 	}

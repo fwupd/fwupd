@@ -28,12 +28,12 @@ fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
 				      GError **error)
 {
 	FuAmdKriaPersistentFirmware *self = FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware);
-	g_autoptr(FuStructAmdKriaPersistReg) content = NULL;
+	g_autoptr(FuStructAmdKriaPersistReg) st = NULL;
 
-	content = fu_struct_amd_kria_persist_reg_parse_stream(stream, 0x0, error);
-	if (content == NULL)
+	st = fu_struct_amd_kria_persist_reg_parse_stream(stream, 0x0, error);
+	if (st == NULL)
 		return FALSE;
-	self->last_booted = fu_struct_amd_kria_persist_reg_get_last_booted_img(content);
+	self->last_booted = fu_struct_amd_kria_persist_reg_get_last_booted_img(st);
 
 	return TRUE;
 }

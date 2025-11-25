@@ -101,7 +101,7 @@ fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_KEYBOARD)
 		return FU_DEVICE_ICON_INPUT_KEYBOARD;
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
-		return FU_DEVICE_ICON_PDA; // ish
+		return FU_DEVICE_ICON_PDA; /* ish */
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_NUMPAD)
 		return FU_DEVICE_ICON_INPUT_DIALPAD;
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_MOUSE)
@@ -109,9 +109,9 @@ fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TOUCHPAD)
 		return FU_DEVICE_ICON_INPUT_TOUCHPAD;
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TRACKBALL)
-		return FU_DEVICE_ICON_INPUT_MOUSE; // ish
+		return FU_DEVICE_ICON_INPUT_MOUSE; /* ish */
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_PRESENTER)
-		return FU_DEVICE_ICON_PDA; // ish
+		return FU_DEVICE_ICON_PDA; /* ish */
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_RECEIVER)
 		return FU_DEVICE_ICON_USB_RECEIVER;
 	return NULL;
@@ -144,19 +144,19 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
 	GPtrArray *children = NULL;
 
 	/* handle failure */
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-	msg->device_id = priv->device_idx;
-	msg->sub_id = 0x00;	      /* rootIndex */
-	msg->function_id = 0x01 << 4; /* ping */
-	msg->data[0] = 0x00;
-	msg->data[1] = 0x00;
-	msg->data[2] = 0xaa; /* user-selected value */
-	msg->hidpp_version = priv->hidpp_version;
-	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, &error_local)) {
+	st_req->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	st_req->device_id = priv->device_idx;
+	st_req->sub_id = 0x00;		 /* rootIndex */
+	st_req->function_id = 0x01 << 4; /* ping */
+	st_req->data[0] = 0x00;
+	st_req->data[1] = 0x00;
+	st_req->data[2] = 0xaa; /* user-selected value */
+	st_req->hidpp_version = priv->hidpp_version;
+	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			priv->hidpp_version = 1;
 			return TRUE;
@@ -179,15 +179,15 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 
 	/* if the device index is unset, grab it from the reply */
 	if (priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
-	    msg->device_id != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED) {
-		priv->device_idx = msg->device_id;
+	    st_req->device_id != FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED) {
+		priv->device_idx = st_req->device_id;
 		g_debug("device index is %02x", priv->device_idx);
 	}
 
 	/* format version in BCD format */
 	if (priv->hidpp_version != FU_LOGITECH_HIDPP_VERSION_BLE) {
-		/* minor version is in msg->data[1] */;
-		priv->hidpp_version = msg->data[0];
+		/* minor version is in st_req->data[1] */;
+		priv->hidpp_version = st_req->data[0];
 	}
 
 	/* success */
@@ -201,7 +201,7 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	const guint timeout = 1; /* ms */
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
@@ -210,9 +210,9 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* flush pending data */
-	msg->device_id = priv->device_idx;
-	msg->hidpp_version = priv->hidpp_version;
-	if (!fu_logitech_hidpp_receive(FU_UDEV_DEVICE(self), msg, timeout, &error_local)) {
+	st_req->device_id = priv->device_idx;
+	st_req->hidpp_version = priv->hidpp_version;
+	if (!fu_logitech_hidpp_receive(FU_UDEV_DEVICE(self), st_req, timeout, &error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_warning("failed to get pending read: %s", error_local->message);
 			return TRUE;
@@ -374,43 +374,44 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 		guint16 build;
 		g_autofree gchar *version = NULL;
 		g_autofree gchar *name = NULL;
-		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+		g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
 
-		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-		msg->device_id = priv->device_idx;
-		msg->sub_id = idx;
-		msg->function_id = 0x01 << 4; /* getInfo */
-		msg->hidpp_version = priv->hidpp_version;
-		msg->data[0] = i;
-		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+		st_req->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+		st_req->device_id = priv->device_idx;
+		st_req->sub_id = idx;
+		st_req->function_id = 0x01 << 4; /* getInfo */
+		st_req->hidpp_version = priv->hidpp_version;
+		st_req->data[0] = i;
+		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, error)) {
 			g_prefix_error_literal(error, "failed to get firmware info: ");
 			return FALSE;
 		}
 		/* use the single available slot, otherwise -- the slot which is not active */
-		if (msg->data[0] == 0) {
-			if (!app_ok || FU_BIT_IS_CLEAR(msg->data[8], 0))
+		if (st_req->data[0] == 0) {
+			if (!app_ok || FU_BIT_IS_CLEAR(st_req->data[8], 0))
 				priv->cached_fw_entity = i;
 			app_ok = TRUE;
 		}
-		if (msg->data[1] == 0x00 && msg->data[2] == 0x00 && msg->data[3] == 0x00 &&
-		    msg->data[4] == 0x00 && msg->data[5] == 0x00 && msg->data[6] == 0x00 &&
-		    msg->data[7] == 0x00) {
+		if (st_req->data[1] == 0x00 && st_req->data[2] == 0x00 && st_req->data[3] == 0x00 &&
+		    st_req->data[4] == 0x00 && st_req->data[5] == 0x00 && st_req->data[6] == 0x00 &&
+		    st_req->data[7] == 0x00) {
 			g_debug("no version set for entity %u", i);
 			continue;
 		}
-		name = g_strdup_printf("%c%c%c", msg->data[1], msg->data[2], msg->data[3]);
-		build = ((guint16)msg->data[6]) << 8 | msg->data[7];
-		version = fu_logitech_hidpp_format_version(name, msg->data[4], msg->data[5], build);
+		name = g_strdup_printf("%c%c%c", st_req->data[1], st_req->data[2], st_req->data[3]);
+		build = ((guint16)st_req->data[6]) << 8 | st_req->data[7];
+		version =
+		    fu_logitech_hidpp_format_version(name, st_req->data[4], st_req->data[5], build);
 		g_debug("firmware entity 0x%02x version is %s", i, version);
-		if (msg->data[0] == 0) {
+		if (st_req->data[0] == 0) {
 			/* set version from the active entity */
-			if (FU_BIT_IS_SET(msg->data[8], 0))
+			if (FU_BIT_IS_SET(st_req->data[8], 0))
 				fu_device_set_version(FU_DEVICE(self), version);
-		} else if (msg->data[0] == 1) {
+		} else if (st_req->data[0] == 1) {
 			fu_device_set_version_bootloader(FU_DEVICE(self), version);
-		} else if (msg->data[0] == 2) {
+		} else if (st_req->data[0] == 2) {
 			fu_device_set_metadata(FU_DEVICE(self), "version-hw", version);
-		} else if (msg->data[0] == 5 &&
+		} else if (st_req->data[0] == 5 &&
 			   fu_device_has_private_flag(FU_DEVICE(self),
 						      FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO)) {
 			if (!fu_logitech_hidpp_device_create_radio_child(self, i, build, error)) {
@@ -442,7 +443,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 	guint64 pid_tmp = 0;
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* get the (optional) feature index */
@@ -451,19 +452,19 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 	if (idx == 0x00)
 		return TRUE;
 
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-	msg->device_id = priv->device_idx;
-	msg->sub_id = idx;
-	msg->function_id = 0x00 << 4; /* getDeviceInfo */
-	msg->hidpp_version = priv->hidpp_version;
-	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+	st_req->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+	st_req->device_id = priv->device_idx;
+	st_req->sub_id = idx;
+	st_req->function_id = 0x00 << 4; /* getDeviceInfo */
+	st_req->hidpp_version = priv->hidpp_version;
+	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, error)) {
 		g_prefix_error_literal(error, "failed to get the model ID: ");
 		return FALSE;
 	}
 
 	/* ignore extendedModelID in data[13] */
 	for (guint i = 7; i < 13; i++)
-		g_string_append_printf(str, "%02X", msg->data[i]);
+		g_string_append_printf(str, "%02X", st_req->data[i]);
 	fu_logitech_hidpp_device_set_model_id(self, str->str);
 
 	/* truncate to 4 chars and convert to a PID */
@@ -495,27 +496,27 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 		    FU_LOGITECH_HIDPP_FEATURE_UNIFIED_BATTERY);
 		if (idx != 0x00) {
 			gboolean socc = FALSE; /* state of charge capability */
-			g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-			msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-			msg->device_id = priv->device_idx;
-			msg->sub_id = idx;
-			msg->function_id = 0x00 << 4; /* get_capabilities */
-			msg->hidpp_version = priv->hidpp_version;
-			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+			g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
+			st_req->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+			st_req->device_id = priv->device_idx;
+			st_req->sub_id = idx;
+			st_req->function_id = 0x00 << 4; /* get_capabilities */
+			st_req->hidpp_version = priv->hidpp_version;
+			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, error)) {
 				g_prefix_error_literal(error, "failed to get battery info: ");
 				return FALSE;
 			}
-			if (msg->data[1] & 0x02)
+			if (st_req->data[1] & 0x02)
 				socc = TRUE;
-			msg->function_id = 0x01 << 4; /* get_status */
-			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+			st_req->function_id = 0x01 << 4; /* get_status */
+			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, error)) {
 				g_prefix_error_literal(error, "failed to get battery info: ");
 				return FALSE;
 			}
 			if (socc) {
-				fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+				fu_device_set_battery_level(FU_DEVICE(self), st_req->data[0]);
 			} else {
-				switch (msg->data[1]) {
+				switch (st_req->data[1]) {
 				case 1: /* critical */
 					fu_device_set_battery_level(FU_DEVICE(self), 5);
 					break;
@@ -529,7 +530,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 					fu_device_set_battery_level(FU_DEVICE(self), 90);
 					break;
 				default:
-					g_warning("unknown battery level: 0x%02x", msg->data[1]);
+					g_warning("unknown battery level: 0x%02x", st_req->data[1]);
 					break;
 				}
 			}
@@ -541,42 +542,42 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 		    self,
 		    FU_LOGITECH_HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
 		if (idx != 0x00) {
-			g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-			msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-			msg->device_id = priv->device_idx;
-			msg->sub_id = idx;
-			msg->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
-			msg->hidpp_version = priv->hidpp_version;
-			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+			g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
+			st_req->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+			st_req->device_id = priv->device_idx;
+			st_req->sub_id = idx;
+			st_req->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
+			st_req->hidpp_version = priv->hidpp_version;
+			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, error)) {
 				g_prefix_error_literal(error, "failed to get battery info: ");
 				return FALSE;
 			}
-			if (msg->data[0] != 0x00)
-				fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+			if (st_req->data[0] != 0x00)
+				fu_device_set_battery_level(FU_DEVICE(self), st_req->data[0]);
 			return TRUE;
 		}
 	}
 
 	/* try HID++1.0 battery mileage */
 	if (priv->hidpp_version == 1) {
-		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-		msg->device_id = priv->device_idx;
-		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_REGISTER;
-		msg->function_id = FU_LOGITECH_HIDPP_REGISTER_BATTERY_MILEAGE << 4;
-		msg->hidpp_version = priv->hidpp_version;
-		if (fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, NULL)) {
-			if (msg->data[0] != 0x7F)
-				fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+		g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
+		st_req->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
+		st_req->device_id = priv->device_idx;
+		st_req->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_REGISTER;
+		st_req->function_id = FU_LOGITECH_HIDPP_REGISTER_BATTERY_MILEAGE << 4;
+		st_req->hidpp_version = priv->hidpp_version;
+		if (fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, NULL)) {
+			if (st_req->data[0] != 0x7F)
+				fu_device_set_battery_level(FU_DEVICE(self), st_req->data[0]);
 			else
-				g_warning("unknown battery level: 0x%02x", msg->data[0]);
+				g_warning("unknown battery level: 0x%02x", st_req->data[0]);
 			return TRUE;
 		}
 
 		/* try HID++1.0 battery status instead */
-		msg->function_id = FU_LOGITECH_HIDPP_REGISTER_BATTERY_STATUS << 4;
-		if (fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, NULL)) {
-			switch (msg->data[0]) {
+		st_req->function_id = FU_LOGITECH_HIDPP_REGISTER_BATTERY_STATUS << 4;
+		if (fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), st_req, NULL)) {
+			switch (st_req->data[0]) {
 			case 1: /* 0 - 10 */
 				fu_device_set_battery_level(FU_DEVICE(self), 5);
 				break;
@@ -590,7 +591,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 				fu_device_set_battery_level(FU_DEVICE(self), 90);
 				break;
 			default:
-				g_warning("unknown battery percentage: 0x%02x", msg->data[0]);
+				g_warning("unknown battery percentage: 0x%02x", st_req->data[0]);
 				break;
 			}
 			return TRUE;
@@ -603,18 +604,20 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 
 /* wrapper function to reuse the pre-rustgen communication */
 static gboolean
-fu_logitech_hidpp_device_transfer_msg(FuLogitechHidppDevice *self, GByteArray *msg, GError **error)
+fu_logitech_hidpp_device_transfer_msg(FuLogitechHidppDevice *self,
+				      GByteArray *st_req,
+				      GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	FuLogitechHidppHidppMsg *hidpp_msg = NULL;
 
-	g_return_val_if_fail(msg != NULL, FALSE);
+	g_return_val_if_fail(st_req != NULL, FALSE);
 
 	/* enlarge the size since fu_logitech_hidpp_transfer() returns the answer in the
 	 * same message */
-	fu_byte_array_set_size(msg, sizeof(FuLogitechHidppHidppMsg), 0);
+	fu_byte_array_set_size(st_req, sizeof(FuLogitechHidppHidppMsg), 0);
 
-	hidpp_msg = (FuLogitechHidppHidppMsg *)msg->data;
+	hidpp_msg = (FuLogitechHidppHidppMsg *)st_req->data;
 	hidpp_msg->hidpp_version = priv->hidpp_version;
 
 	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), hidpp_msg, error))
@@ -640,9 +643,9 @@ fu_logitech_hidpp_device_rdfu_get_capabilities(FuLogitechHidppDevice *self, GErr
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
-	g_autoptr(FuStructLogitechHidppRdfuGetCapabilities) msg =
+	g_autoptr(FuStructLogitechHidppRdfuGetCapabilities) st_req =
 	    fu_struct_logitech_hidpp_rdfu_get_capabilities_new();
-	g_autoptr(GByteArray) response = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuCapabilities) st_res = NULL;
 
 	priv->rdfu_capabilities = 0; /* set empty */
 
@@ -651,20 +654,23 @@ fu_logitech_hidpp_device_rdfu_get_capabilities(FuLogitechHidppDevice *self, GErr
 	if (idx == 0x00)
 		return TRUE;
 
-	fu_struct_logitech_hidpp_rdfu_get_capabilities_set_device_id(msg, priv->device_idx);
-	fu_struct_logitech_hidpp_rdfu_get_capabilities_set_sub_id(msg, idx);
+	fu_struct_logitech_hidpp_rdfu_get_capabilities_set_device_id(st_req, priv->device_idx);
+	fu_struct_logitech_hidpp_rdfu_get_capabilities_set_sub_id(st_req, idx);
 
 	g_debug("read capabilities");
-	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
+	if (!fu_logitech_hidpp_device_transfer_msg(self, st_req->buf, error)) {
 		g_prefix_error_literal(error, "failed to get capabilities: ");
 		return FALSE;
 	}
 
-	response = fu_struct_logitech_hidpp_rdfu_capabilities_parse(msg->data, msg->len, 0, error);
-	if (response == NULL)
+	st_res = fu_struct_logitech_hidpp_rdfu_capabilities_parse(st_req->buf->data,
+								  st_req->buf->len,
+								  0,
+								  error);
+	if (st_res == NULL)
 		return FALSE;
 	priv->rdfu_capabilities =
-	    fu_struct_logitech_hidpp_rdfu_capabilities_get_capabilities(response);
+	    fu_struct_logitech_hidpp_rdfu_capabilities_get_capabilities(st_res);
 	return TRUE;
 }
 
@@ -676,9 +682,9 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 	guint8 status;
-	g_autoptr(FuStructLogitechHidppRdfuStartDfu) msg =
+	g_autoptr(FuStructLogitechHidppRdfuStartDfu) st_req =
 	    fu_struct_logitech_hidpp_rdfu_start_dfu_new();
-	g_autoptr(GByteArray) response = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuStartDfuResponse) st_res = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -689,23 +695,28 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 		return FALSE;
 	}
 
-	fu_struct_logitech_hidpp_rdfu_start_dfu_set_device_id(msg, priv->device_idx);
-	fu_struct_logitech_hidpp_rdfu_start_dfu_set_sub_id(msg, idx);
-	fu_struct_logitech_hidpp_rdfu_start_dfu_set_fw_entity(msg, priv->cached_fw_entity);
-	if (!fu_struct_logitech_hidpp_rdfu_start_dfu_set_magic(msg, magic->data, magic->len, error))
+	fu_struct_logitech_hidpp_rdfu_start_dfu_set_device_id(st_req, priv->device_idx);
+	fu_struct_logitech_hidpp_rdfu_start_dfu_set_sub_id(st_req, idx);
+	fu_struct_logitech_hidpp_rdfu_start_dfu_set_fw_entity(st_req, priv->cached_fw_entity);
+	if (!fu_struct_logitech_hidpp_rdfu_start_dfu_set_magic(st_req,
+							       magic->data,
+							       magic->len,
+							       error))
 		return FALSE;
 
 	g_debug("startDfu");
-	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
+	if (!fu_logitech_hidpp_device_transfer_msg(self, st_req->buf, error)) {
 		g_prefix_error_literal(error, "startDfu failed: ");
 		return FALSE;
 	}
 
-	response =
-	    fu_struct_logitech_hidpp_rdfu_start_dfu_response_parse(msg->data, msg->len, 0, error);
-	if (response == NULL)
+	st_res = fu_struct_logitech_hidpp_rdfu_start_dfu_response_parse(st_req->buf->data,
+									st_req->buf->len,
+									0,
+									error);
+	if (st_res == NULL)
 		return FALSE;
-	status = fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_status_code(msg);
+	status = fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_status_code(st_res);
 	if (status != FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DATA_TRANSFER_READY) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -724,7 +735,7 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_check_status(FuLogitechHidppDevice *self,
-					   GByteArray *response,
+					   FuStructLogitechHidppRdfuResponse *st_res,
 					   GError **error);
 
 static void
@@ -738,23 +749,23 @@ fu_logitech_hidpp_device_rdfu_set_state(FuLogitechHidppDevice *self, FuLogitechH
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_status_data_transfer_ready(FuLogitechHidppDevice *self,
-							 GByteArray *response,
+							 FuStructLogitechHidppRdfuResponse *st_res,
 							 GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint16 block;
-	g_autoptr(GByteArray) params = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuDataTransferReady) st_params = NULL;
 
 	priv->rdfu_state = FU_LOGITECH_HIDPP_RDFU_STATE_TRANSFER;
-	params = fu_struct_logitech_hidpp_rdfu_data_transfer_ready_parse(
-	    response->data,
-	    response->len,
+	st_params = fu_struct_logitech_hidpp_rdfu_data_transfer_ready_parse(
+	    st_res->buf->data,
+	    st_res->buf->len,
 	    FU_STRUCT_LOGITECH_HIDPP_RDFU_RESPONSE_OFFSET_STATUS_CODE,
 	    error);
-	if (params == NULL)
+	if (st_params == NULL)
 		return FALSE;
 
-	block = fu_struct_logitech_hidpp_rdfu_data_transfer_ready_get_block_id(params);
+	block = fu_struct_logitech_hidpp_rdfu_data_transfer_ready_get_block_id(st_params);
 	if (block != 0 && block <= priv->rdfu_block) {
 		/* additional protection from misbehaviored devices */
 		fu_logitech_hidpp_device_rdfu_set_state(self,
@@ -769,23 +780,23 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_ready(FuLogitechHidppDevice *
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *self,
-							GByteArray *response,
+							FuStructLogitechHidppRdfuResponse *st_res,
 							GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint retry = 0;
-	g_autoptr(GByteArray) params = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuDataTransferWait) st_params = NULL;
 
-	params = fu_struct_logitech_hidpp_rdfu_data_transfer_wait_parse(
-	    response->data,
-	    response->len,
+	st_params = fu_struct_logitech_hidpp_rdfu_data_transfer_wait_parse(
+	    st_res->buf->data,
+	    st_res->buf->len,
 	    FU_STRUCT_LOGITECH_HIDPP_RDFU_RESPONSE_OFFSET_STATUS_CODE,
 	    error);
-	if (params == NULL)
+	if (st_params == NULL)
 		return FALSE;
 
 	/* set the delay to wait the next event */
-	priv->rdfu_wait = fu_struct_logitech_hidpp_rdfu_data_transfer_wait_get_delay_ms(params);
+	priv->rdfu_wait = fu_struct_logitech_hidpp_rdfu_data_transfer_wait_get_delay_ms(st_params);
 
 	/* if we already in waiting loop just leave to avoid recursion */
 	if (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_WAIT)
@@ -794,7 +805,7 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *s
 	priv->rdfu_state = FU_LOGITECH_HIDPP_RDFU_STATE_WAIT;
 
 	while (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_WAIT) {
-		g_autoptr(GByteArray) wait_response = NULL;
+		g_autoptr(FuStructLogitechHidppRdfuResponse) st_wait_res = NULL;
 		g_autoptr(FuLogitechHidppHidppMsg) msg_in_wait = fu_logitech_hidpp_msg_new();
 		g_autoptr(GError) error_local = NULL;
 
@@ -817,16 +828,16 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *s
 			return FALSE;
 		}
 
-		wait_response = fu_struct_logitech_hidpp_rdfu_response_parse(
+		st_wait_res = fu_struct_logitech_hidpp_rdfu_response_parse(
 		    (guint8 *)msg_in_wait,
 		    fu_logitech_hidpp_msg_get_payload_length(msg_in_wait),
 		    0,
 		    error);
-		if (wait_response == NULL)
+		if (st_wait_res == NULL)
 			return FALSE;
 
 		/* check the message and set the new delay if requested additional wait */
-		if (!fu_logitech_hidpp_device_rdfu_check_status(self, wait_response, error))
+		if (!fu_logitech_hidpp_device_rdfu_check_status(self, st_wait_res, error))
 			return FALSE;
 
 		/* too lot attempts in a raw, let's fail everything */
@@ -844,23 +855,23 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *s
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_status_pkt_ack(FuLogitechHidppDevice *self,
-					     GByteArray *response,
+					     FuStructLogitechHidppRdfuResponse *st_res,
 					     GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint32 pkt;
-	g_autoptr(GByteArray) params = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuDfuTransferPktAck) st_params = NULL;
 
 	priv->rdfu_state = FU_LOGITECH_HIDPP_RDFU_STATE_TRANSFER;
-	params = fu_struct_logitech_hidpp_rdfu_dfu_transfer_pkt_ack_parse(
-	    response->data,
-	    response->len,
+	st_params = fu_struct_logitech_hidpp_rdfu_dfu_transfer_pkt_ack_parse(
+	    st_res->buf->data,
+	    st_res->buf->len,
 	    FU_STRUCT_LOGITECH_HIDPP_RDFU_RESPONSE_OFFSET_STATUS_CODE,
 	    error);
-	if (params == NULL)
+	if (st_params == NULL)
 		return FALSE;
 
-	pkt = fu_struct_logitech_hidpp_rdfu_dfu_transfer_pkt_ack_get_pkt_number(params);
+	pkt = fu_struct_logitech_hidpp_rdfu_dfu_transfer_pkt_ack_get_pkt_number(st_params);
 	/* expecting monotonic increase */
 	if (pkt != priv->rdfu_pkt + 1) {
 		/* additional protection from misbehaviored devices */
@@ -890,10 +901,10 @@ fu_logitech_hidpp_device_rdfu_status_pkt_ack(FuLogitechHidppDevice *self,
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_check_status(FuLogitechHidppDevice *self,
-					   GByteArray *response,
+					   FuStructLogitechHidppRdfuResponse *st_res,
 					   GError **error)
 {
-	guint8 status = fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_status_code(response);
+	guint8 status = fu_struct_logitech_hidpp_rdfu_response_get_status_code(st_res);
 
 	switch (status) {
 	case FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DFU_NOT_STARTED:
@@ -902,19 +913,17 @@ fu_logitech_hidpp_device_rdfu_check_status(FuLogitechHidppDevice *self,
 		break;
 	case FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DATA_TRANSFER_READY:
 		/* ready for transfer, next block requested */
-		if (!fu_logitech_hidpp_device_rdfu_status_data_transfer_ready(self,
-									      response,
-									      error))
+		if (!fu_logitech_hidpp_device_rdfu_status_data_transfer_ready(self, st_res, error))
 			return FALSE;
 		break;
 	case FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DATA_TRANSFER_WAIT:
 		/* device requested to wait */
-		if (!fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(self, response, error))
+		if (!fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(self, st_res, error))
 			return FALSE;
 		break;
 	case FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DFU_TRANSFER_PKT_ACK:
 		/* ok to transfer next packet */
-		if (!fu_logitech_hidpp_device_rdfu_status_pkt_ack(self, response, error))
+		if (!fu_logitech_hidpp_device_rdfu_status_pkt_ack(self, st_res, error))
 			return FALSE;
 		break;
 	case FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DFU_TRANSFER_COMPLETE:
@@ -951,10 +960,9 @@ fu_logitech_hidpp_device_rdfu_get_dfu_status(FuLogitechHidppDevice *self, GError
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
-	g_autoptr(FuStructLogitechHidppRdfuGetDfuStatus) msg =
+	g_autoptr(FuStructLogitechHidppRdfuGetDfuStatus) st_req =
 	    fu_struct_logitech_hidpp_rdfu_get_dfu_status_new();
-	g_autoptr(GByteArray) response = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuResponse) st_res = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -965,21 +973,24 @@ fu_logitech_hidpp_device_rdfu_get_dfu_status(FuLogitechHidppDevice *self, GError
 		return FALSE;
 	}
 
-	fu_struct_logitech_hidpp_rdfu_get_dfu_status_set_device_id(msg, priv->device_idx);
-	fu_struct_logitech_hidpp_rdfu_get_dfu_status_set_sub_id(msg, idx);
-	fu_struct_logitech_hidpp_rdfu_get_dfu_status_set_fw_entity(msg, priv->cached_fw_entity);
+	fu_struct_logitech_hidpp_rdfu_get_dfu_status_set_device_id(st_req, priv->device_idx);
+	fu_struct_logitech_hidpp_rdfu_get_dfu_status_set_sub_id(st_req, idx);
+	fu_struct_logitech_hidpp_rdfu_get_dfu_status_set_fw_entity(st_req, priv->cached_fw_entity);
 
 	g_debug("getDfuStatus for entity %u", priv->cached_fw_entity);
-	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
+	if (!fu_logitech_hidpp_device_transfer_msg(self, st_req->buf, error)) {
 		g_prefix_error_literal(error, "getDfuStatus failed: ");
 		return FALSE;
 	}
 
-	response = fu_struct_logitech_hidpp_rdfu_response_parse(msg->data, msg->len, 0, error);
-	if (response == NULL)
+	st_res = fu_struct_logitech_hidpp_rdfu_response_parse(st_req->buf->data,
+							      st_req->buf->len,
+							      0,
+							      error);
+	if (st_res == NULL)
 		return FALSE;
 
-	return fu_logitech_hidpp_device_rdfu_check_status(self, response, error);
+	return fu_logitech_hidpp_device_rdfu_check_status(self, st_res, error);
 }
 
 static gboolean
@@ -990,10 +1001,9 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 	guint8 flags = FU_LOGITECH_HIDPP_RDFU_APPLY_FLAG_FORCE_DFU_BIT;
-	g_autoptr(FuStructLogitechHidppRdfuApplyDfu) msg =
+	g_autoptr(FuStructLogitechHidppRdfuApplyDfu) st_req =
 	    fu_struct_logitech_hidpp_rdfu_apply_dfu_new();
 	FuLogitechHidppHidppMsg *hidpp_msg = NULL;
-	g_autoptr(GByteArray) response = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -1014,13 +1024,13 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 
 	g_debug("applyDfu for entity %u", fw_entity);
 
-	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_device_id(msg, priv->device_idx);
-	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_sub_id(msg, idx);
-	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_fw_entity(msg, fw_entity);
-	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_flags(msg, flags);
+	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_device_id(st_req, priv->device_idx);
+	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_sub_id(st_req, idx);
+	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_fw_entity(st_req, fw_entity);
+	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_flags(st_req, flags);
 
 	/* reuse pre-rustgen send */
-	hidpp_msg = (FuLogitechHidppHidppMsg *)msg->data;
+	hidpp_msg = (FuLogitechHidppHidppMsg *)st_req->buf->data;
 	hidpp_msg->hidpp_version = priv->hidpp_version;
 	/* don't expect the reply for forced applyDfu */
 	if (!fu_logitech_hidpp_send(FU_UDEV_DEVICE(self),
@@ -1041,10 +1051,9 @@ fu_logitech_hidpp_device_rdfu_transfer_pkt(FuLogitechHidppDevice *self,
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
-	g_autoptr(FuStructLogitechHidppRdfuTransferDfuData) msg =
+	g_autoptr(FuStructLogitechHidppRdfuTransferDfuData) st_req =
 	    fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_new();
-	g_autoptr(GByteArray) response = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuResponse) st_res = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -1055,22 +1064,25 @@ fu_logitech_hidpp_device_rdfu_transfer_pkt(FuLogitechHidppDevice *self,
 		return FALSE;
 	}
 
-	fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_set_device_id(msg, priv->device_idx);
-	fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_set_sub_id(msg, idx);
-	if (!fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_set_data(msg, data, datasz, error))
+	fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_set_device_id(st_req, priv->device_idx);
+	fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_set_sub_id(st_req, idx);
+	if (!fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_set_data(st_req, data, datasz, error))
 		return FALSE;
 
 	g_debug("transferDfuData");
-	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
+	if (!fu_logitech_hidpp_device_transfer_msg(self, st_req->buf, error)) {
 		g_prefix_error_literal(error, "transferDfuData failed: ");
 		return FALSE;
 	}
 
-	response = fu_struct_logitech_hidpp_rdfu_response_parse(msg->data, msg->len, 0, error);
-	if (response == NULL)
+	st_res = fu_struct_logitech_hidpp_rdfu_response_parse(st_req->buf->data,
+							      st_req->buf->len,
+							      0,
+							      error);
+	if (st_res == NULL)
 		return FALSE;
 
-	return fu_logitech_hidpp_device_rdfu_check_status(self, response, error);
+	return fu_logitech_hidpp_device_rdfu_check_status(self, st_res, error);
 }
 
 static gboolean
@@ -1610,7 +1622,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 			}
 			return TRUE;
 		}
-		g_debug("got wrong packet, continue to wait...");
+		g_debug("got wrong packet, continue to wait…");
 	}
 
 	/* nothing in the queue */
@@ -1622,13 +1634,12 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_dfu(FuDevice *device,
+fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 					    FuFirmware *firmware,
 					    FuProgress *progress,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
-	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz = 0;
 	const guint8 *data;
@@ -1681,18 +1692,16 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
+fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
 					     FuFirmware *firmware,
 					     FuProgress *progress,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
-	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	FuLogitechRdfuFirmware *entity_fw = NULL;
 	guint8 idx;
 	guint retry = 0;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GByteArray) magic = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1780,7 +1789,7 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
 	if (!fu_logitech_hidpp_device_rdfu_apply_dfu(self, priv->cached_fw_entity, error))
 		return FALSE;
 
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	return TRUE;
 }
@@ -1794,12 +1803,11 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 {
 	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	guint8 idx;
-	g_autoptr(GBytes) fw = NULL;
 
 	/* device should support either RDFU or DFU mode */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx != 0x00) {
-		return fu_logitech_hidpp_device_write_firmware_rdfu(device,
+		return fu_logitech_hidpp_device_write_firmware_rdfu(self,
 								    firmware,
 								    progress,
 								    flags,
@@ -1809,7 +1817,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {
-		return fu_logitech_hidpp_device_write_firmware_dfu(device,
+		return fu_logitech_hidpp_device_write_firmware_dfu(self,
 								   firmware,
 								   progress,
 								   flags,
@@ -1925,7 +1933,7 @@ fu_logitech_hidpp_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_logitech_hidpp_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_hidpp_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

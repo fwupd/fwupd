@@ -60,6 +60,7 @@ struct FuUtil {
 	GMainLoop *loop;
 	GOptionContext *context;
 	FuContext *ctx;
+	GSource *source_sigint;
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgress *progress;
@@ -69,6 +70,7 @@ struct FuUtil {
 	gboolean no_reboot_check;
 	gboolean no_safety_check;
 	gboolean no_device_prompt;
+	gboolean assume_yes;
 	gboolean prepare_blob;
 	gboolean cleanup_blob;
 	gboolean enable_json_state;
@@ -164,8 +166,7 @@ fu_util_lock(FuUtil *self, GError **error)
 	if (use_user) {
 		lockfn = fu_util_get_user_cache_path("fwupdtool");
 	} else {
-		g_autofree gchar *lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
-		lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+		lockfn = fu_path_build(FU_PATH_KIND_LOCKDIR, "fwupdtool", NULL);
 	}
 	if (!fu_path_mkdir_parent(lockfn, error))
 		return FALSE;
@@ -266,10 +267,11 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 }
 
 static void
-fu_util_maybe_prefix_sandbox_error(const gchar *value, GError **error)
+fu_util_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* nocheck:error */
 {
 	g_autofree gchar *path = g_path_get_dirname(value);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+		/* nocheck:error */
 		g_prefix_error(error,
 			       "Unable to access %s. You may need to copy %s to %s: ",
 			       path,
@@ -319,13 +321,34 @@ fu_util_sigint_cb(gpointer user_data)
 #endif
 
 static void
-fu_util_setup_signal_handlers(FuUtil *self)
+fu_util_handle_sigint_start(FuUtil *self)
 {
 #ifdef HAVE_GIO_UNIX
-	g_autoptr(GSource) source = g_unix_signal_source_new(SIGINT);
-	g_source_set_callback(source, fu_util_sigint_cb, self, NULL);
-	g_source_attach(g_steal_pointer(&source), self->main_ctx);
+	if (self->source_sigint != NULL)
+		return;
+	self->source_sigint = g_unix_signal_source_new(SIGINT);
+	g_source_set_callback(self->source_sigint, fu_util_sigint_cb, self, NULL);
+	g_source_attach(self->source_sigint, self->main_ctx);
 #endif
+}
+
+static void
+fu_util_handle_sigint_stop(FuUtil *self)
+{
+	if (self->source_sigint == NULL)
+		return;
+	g_source_destroy(self->source_sigint);
+	self->source_sigint = NULL;
+}
+
+static void
+fu_util_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuUtil *self)
+{
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
+		fu_util_handle_sigint_start(self);
+	} else {
+		fu_util_handle_sigint_stop(self);
+	}
 }
 
 static void
@@ -353,6 +376,8 @@ fu_util_private_free(FuUtil *self)
 		g_object_unref(self->progress);
 	if (self->context != NULL)
 		g_option_context_free(self->context);
+	if (self->source_sigint != NULL)
+		g_source_destroy(self->source_sigint);
 	if (self->lock_fd >= 0)
 		g_close(self->lock_fd, NULL);
 	g_ptr_array_unref(self->post_requests);
@@ -397,6 +422,7 @@ fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtil *self)
 {
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *tmp = fu_device_to_string(device);
+		/* nocheck:print */
 		g_debug("ADDED:\n%s", tmp);
 	}
 }
@@ -406,6 +432,7 @@ fu_util_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtil *sel
 {
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *tmp = fu_device_to_string(device);
+		/* nocheck:print */
 		g_debug("REMOVED:\n%s", tmp);
 	}
 }
@@ -573,12 +600,9 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices_opt, GError **error)
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	fu_console_print(self->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
-		dev = g_ptr_array_index(devices_filtered, i);
-		fu_console_print(self->console,
-				 "%u.\t%s (%s)",
-				 i + 1,
-				 fu_device_get_id(dev),
-				 fu_device_get_name(dev));
+		FuDevice *device_tmp = g_ptr_array_index(devices_filtered, i);
+		g_autofree gchar *id_display = fu_device_get_id_display(device_tmp);
+		fu_console_print(self->console, "%u.\t%s", i + 1, id_display);
 	}
 
 	/* TRANSLATORS: get interactive prompt */
@@ -751,7 +775,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -1725,8 +1749,16 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 			    g_strdup_printf("%s %s",
 					    fu_engine_get_host_vendor(self->engine),
 					    fu_engine_get_host_product(self->engine));
-			if (!fu_util_prompt_warning(self->console, dev, rel, title, error))
+			if (!fu_util_prompt_warning(self->console, dev, rel, title, &error_local)) {
+				if (g_error_matches(error_local,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOTHING_TO_DO)) {
+					g_debug("%s", error_local->message);
+					continue;
+				}
+				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
+			}
 			if (!fu_util_prompt_warning_fde(self->console, dev, error))
 				return FALSE;
 		}
@@ -1753,7 +1785,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_unsupported->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_unsupported, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -1764,7 +1796,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		    self->console,
 		    /* TRANSLATORS: message letting the user there is an update
 		     * waiting, but there is a reason it cannot be deployed */
-		    _("Devices with firmware updates that need user action: "));
+		    _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -2292,6 +2324,39 @@ fu_util_remote_modify(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_remote_clean(FuUtil *self, gchar **values, GError **error)
+{
+	FwupdRemote *remote = NULL;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	remote = fu_engine_get_remote_by_id(self->engine, values[0], error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fu_engine_clean_remote(self->engine, fwupd_remote_get_id(remote), error))
+		return FALSE;
+
+	if (self->as_json)
+		return TRUE;
+
+	/* TRANSLATORS: success message */
+	fu_console_print_literal(self->console, _("Successfully cleaned remote"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 {
 	FwupdRemote *remote = NULL;
@@ -2321,7 +2386,27 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 	if (self->as_json)
 		return TRUE;
 
+	/* TRANSLATORS: success message */
 	fu_console_print_literal(self->console, _("Successfully disabled remote"));
+
+	/* delete the now-unused cache files? */
+	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
+	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
+		if (self->assume_yes ||
+		    fu_console_input_bool(self->console,
+					  FALSE,
+					  "%s",
+					  /* TRANSLATORS: this is now useless */
+					  _("Delete the now-unused remote cache files?"))) {
+			if (!fu_engine_clean_remote(self->engine, values[0], error))
+				return FALSE;
+		}
+		fu_console_print_literal(self->console,
+					 /* TRANSLATORS: success message */
+					 _("Successfully cleaned remote"));
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2341,7 +2426,7 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
+	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_REMOTES, self->progress, error))
 		return FALSE;
 
 	/* get search results */
@@ -3064,7 +3149,7 @@ fu_util_firmware_parse(FuUtil *self, gchar **values, GError **error)
 
 	/* does firmware specify an internal size */
 	firmware = g_object_new(gtype, NULL);
-	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_STORED_SIZE)) {
+	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_ALLOW_LINEAR)) {
 		g_autoptr(FuFirmware) firmware_linear = fu_linear_firmware_new(gtype);
 		g_autoptr(GPtrArray) imgs = NULL;
 		if (!fu_firmware_parse_stream(firmware_linear,
@@ -3447,7 +3532,8 @@ fu_util_firmware_convert(FuUtil *self, gchar **values, GError **error)
 	images = fu_firmware_get_images(firmware_src);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		fu_firmware_add_image(firmware_dst, img);
+		if (!fu_firmware_add_image(firmware_dst, img, error))
+			return FALSE;
 	}
 
 	/* copy data as fallback, preferring a binary blob to the export */
@@ -3461,7 +3547,8 @@ fu_util_firmware_convert(FuUtil *self, gchar **values, GError **error)
 				return FALSE;
 		}
 		img = fu_firmware_new_from_bytes(fw);
-		fu_firmware_add_image(firmware_dst, img);
+		if (!fu_firmware_add_image(firmware_dst, img, error))
+			return FALSE;
 	}
 
 	/* write new file */
@@ -3794,8 +3881,9 @@ fu_util_refresh_remote(FuUtil *self, FwupdRemote *remote, GError **error)
 }
 
 static gboolean
-fu_util_refresh(FuUtil *self, gchar **values, GError **error)
+fu_util_download_metadata(FuUtil *self, GError **error)
 {
+	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* load engine */
@@ -3812,6 +3900,7 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		g_autoptr(GError) error_local = NULL;
 		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
@@ -3823,10 +3912,81 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		if (!fu_util_refresh_remote(self, remote, error))
+		if (!fu_util_refresh_remote(self, remote, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("ignoring: %s", error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
+		refresh_cnt++;
 	}
+
+	/* metadata refreshed recently */
+	if (refresh_cnt == 0) {
+		if (self->flags & FWUPD_INSTALL_FLAG_FORCE) {
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    /* TRANSLATORS: error message for a user who ran fwupdmgr */
+			    _("Metadata is already up to date"));
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    /* TRANSLATORS: error message for a user who ran fwupdmgr
+			     * refresh recently -- %1 is '--force' */
+			    _("Metadata is up to date; use %s to refresh again."),
+			    "--force");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_util_refresh(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+
+	/* just do everything */
+	if (g_strv_length(values) == 0)
+		return fu_util_download_metadata(self, error);
+
+	/* sanity check */
+	if (g_strv_length(values) != 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	/* open files */
+	bytes_raw = fu_bytes_get_contents(values[0], error);
+	if (bytes_raw == NULL)
+		return FALSE;
+	bytes_sig = fu_bytes_get_contents(values[1], error);
+	if (bytes_sig == NULL)
+		return FALSE;
+	return fu_engine_update_metadata_bytes(self->engine,
+					       values[2],
+					       bytes_raw,
+					       bytes_sig,
+					       error);
 }
 
 static gboolean
@@ -4195,7 +4355,7 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	if (g_strv_length(values) == 1)
-		dev = fu_util_get_device(self, values[1], error);
+		dev = fu_util_get_device(self, values[0], error);
 	else
 		dev = fu_util_prompt_for_device(self, NULL, error);
 	if (dev == NULL)
@@ -4310,6 +4470,45 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_results(FuUtil *self, gchar **values, GError **error)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FwupdDevice) device = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected DEVICE-ID");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	/* print device */
+	device = fu_engine_get_results(self->engine, values[0], error);
+	if (device == NULL)
+		return FALSE;
+	if (self->as_json) {
+		str = fwupd_codec_to_json_string(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_NONE, error);
+		if (str == NULL)
+			return FALSE;
+	} else {
+		str = fwupd_codec_to_string(FWUPD_CODEC(device));
+	}
+	fu_console_print_literal(self->console, str);
+	return TRUE;
+}
+
+static gboolean
 fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 {
 	g_autoptr(GHashTable) settings = fu_util_bios_settings_parse_argv(input, error);
@@ -4324,8 +4523,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 		return FALSE;
 
 	if (!fu_engine_modify_bios_settings(self->engine, settings, FALSE, error)) {
-		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error_literal(error, "failed to set BIOS setting: ");
+		g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
@@ -4969,7 +5167,8 @@ fu_util_build_cabinet(FuUtil *self, gchar **values, GError **error)
 				    values[i]);
 			return FALSE;
 		}
-		fu_cabinet_add_file(cab_file, basename, blob);
+		if (!fu_cabinet_add_file(cab_file, basename, blob, error))
+			return FALSE;
 	}
 
 	/* export */
@@ -5234,6 +5433,14 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Filter with a set of release flags using a ~ prefix to "
 		"exclude, e.g. 'trusted-release,~trusted-metadata'"),
+	     NULL},
+	    {"assume-yes",
+	     'y',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &self->assume_yes,
+	     /* TRANSLATORS: command line option */
+	     N_("Answer yes to all questions"),
 	     NULL},
 	    {"json",
 	     '\0',
@@ -5533,7 +5740,8 @@ main(int argc, char *argv[])
 			      fu_util_get_remotes);
 	fu_util_cmd_array_add(cmd_array,
 			      "refresh",
-			      NULL,
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[FILE FILE_SIG REMOTE-ID]"),
 			      /* TRANSLATORS: command description */
 			      _("Refresh metadata from remote server"),
 			      fu_util_refresh);
@@ -5590,6 +5798,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Switch the firmware branch on the device"),
 			      fu_util_switch_branch);
+	fu_util_cmd_array_add(cmd_array,
+			      "get-results",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("DEVICE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Gets the results from the last update"),
+			      fu_util_get_results);
 	fu_util_cmd_array_add(cmd_array,
 			      "clear-history",
 			      NULL,
@@ -5718,6 +5933,13 @@ main(int argc, char *argv[])
 			      _("Modifies a given remote"),
 			      fu_util_remote_modify);
 	fu_util_cmd_array_add(cmd_array,
+			      "clean-remote",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("REMOTE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Cleans a given remote"),
+			      fu_util_remote_clean);
+	fu_util_cmd_array_add(cmd_array,
 			      "enable-remote",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("REMOTE-ID"),
@@ -5766,7 +5988,6 @@ main(int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();
-	fu_util_setup_signal_handlers(self);
 	g_signal_connect(G_CANCELLABLE(self->cancellable),
 			 "cancelled",
 			 G_CALLBACK(fu_util_cancelled_cb),
@@ -5879,6 +6100,10 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	self->ctx = fu_context_new();
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::flags",
+			 G_CALLBACK(fu_util_context_flags_notify_cb),
+			 self);
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
@@ -5930,12 +6155,15 @@ main(int argc, char *argv[])
 					 _("Use %s for help"),
 					 "fwupdtool --help");
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			/* nocheck:print */
 			g_info("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE)) {
+			/* nocheck:print */
 			g_info("%s\n", error->message);
 			return EXIT_NOT_REACHABLE;
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			/* nocheck:print */
 			g_info("%s\n", error->message);
 			return EXIT_NOT_FOUND;
 		}

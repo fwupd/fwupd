@@ -67,10 +67,10 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 		FU_EFIVARS_GUID_SECURITY_DATABASE,
 		"dbx",
 		fw,
-		FU_EFIVARS_ATTR_APPEND_WRITE |
-		    FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-		    FU_EFIVARS_ATTR_RUNTIME_ACCESS | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-		    FU_EFIVARS_ATTR_NON_VOLATILE,
+		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
+		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 		error)) {
 		return FALSE;
 	}
@@ -258,7 +258,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_dbx_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -269,12 +269,14 @@ fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static gboolean
-fu_uefi_dbx_device_cleanup(FuDevice *self,
+fu_uefi_dbx_device_cleanup(FuDevice *device,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error))
+	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
+
+	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(self, error))
 		return FALSE;
 
 	return TRUE;

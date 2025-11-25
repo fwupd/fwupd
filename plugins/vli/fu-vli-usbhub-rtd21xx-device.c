@@ -29,23 +29,6 @@ G_DEFINE_TYPE(FuVliUsbhubRtd21xxDevice, fu_vli_usbhub_rtd21xx_device, FU_TYPE_DE
 #define ISP_DATA_BLOCKSIZE 30
 #define ISP_PACKET_SIZE	   32
 
-typedef enum {
-	ISP_STATUS_BUSY = 0xBB,		/* host must wait for device */
-	ISP_STATUS_IDLE_SUCCESS = 0x11, /* previous command was OK */
-	ISP_STATUS_IDLE_FAILURE = 0x12, /* previous command failed */
-} IspStatus;
-
-typedef enum {
-	ISP_CMD_ENTER_FW_UPDATE = 0x01,
-	ISP_CMD_GET_PROJECT_ID_ADDR = 0x02,
-	ISP_CMD_SYNC_IDENTIFY_CODE = 0x03,
-	ISP_CMD_GET_FW_INFO = 0x04,
-	ISP_CMD_FW_UPDATE_START = 0x05,
-	ISP_CMD_FW_UPDATE_ISP_DONE = 0x06,
-	ISP_CMD_FW_UPDATE_EXIT = 0x07,
-	ISP_CMD_FW_UPDATE_RESET = 0x08,
-} IspCmd;
-
 static gboolean
 fu_vli_usbhub_rtd21xx_device_i2c_write(FuVliUsbhubDevice *self,
 				       guint8 target_addr,
@@ -143,7 +126,7 @@ fu_vli_usbhub_rtd21xx_device_read_status_cb(FuDevice *device, gpointer user_data
 	guint8 status = 0xfd;
 	if (!fu_vli_usbhub_rtd21xx_device_read_status_raw(self, &status, error))
 		return FALSE;
-	if (status == ISP_STATUS_BUSY) {
+	if (status == FU_VLI_USBHUB_RTD21XX_ISP_STATUS_BUSY) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "status was 0x%02x", status);
 		return FALSE;
 	}
@@ -167,7 +150,7 @@ fu_vli_usbhub_rtd21xx_device_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *s
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	guint8 buf_rep[7] = {0x00};
-	guint8 buf_req[] = {ISP_CMD_GET_FW_INFO};
+	guint8 buf_req[] = {FU_VLI_USBHUB_RTD21XX_ISP_CMD_GET_FW_INFO};
 	g_autofree gchar *version = NULL;
 
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
@@ -239,7 +222,7 @@ fu_vli_usbhub_rtd21xx_device_detach_cb(FuDevice *device, gpointer user_data, GEr
 		return FALSE;
 	if (!fu_vli_usbhub_rtd21xx_device_read_status_raw(self, &status, error))
 		return FALSE;
-	if (status != ISP_STATUS_IDLE_SUCCESS) {
+	if (status != FU_VLI_USBHUB_RTD21XX_ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -272,7 +255,7 @@ static gboolean
 fu_vli_usbhub_rtd21xx_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
-	guint8 buf[] = {ISP_CMD_FW_UPDATE_RESET};
+	guint8 buf[] = {FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_RESET};
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -329,7 +312,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* enable ISP high priority */
-	write_buf[0] = ISP_CMD_ENTER_FW_UPDATE;
+	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_ENTER_FW_UPDATE;
 	write_buf[1] = 0x01;
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
@@ -344,7 +327,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* get project ID address */
-	write_buf[0] = ISP_CMD_GET_PROJECT_ID_ADDR;
+	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_GET_PROJECT_ID_ADDR;
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
@@ -366,7 +349,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to read project ID: ");
 		return FALSE;
 	}
-	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
+	if (read_buf[0] != FU_VLI_USBHUB_RTD21XX_ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -384,7 +367,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 				    error))
 		return FALSE;
 	project_id_count = read_buf[5];
-	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
+	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_SYNC_IDENTIFY_CODE;
 	if (!fu_input_stream_read_safe(stream,
 				       write_buf,
 				       sizeof(write_buf),
@@ -408,7 +391,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* background FW update start command */
-	write_buf[0] = ISP_CMD_FW_UPDATE_START;
+	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_START;
 	fu_memwrite_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
@@ -460,7 +443,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* update finish command */
 	if (!fu_vli_usbhub_rtd21xx_device_read_status(self, NULL, error))
 		return FALSE;
-	write_buf[0] = ISP_CMD_FW_UPDATE_ISP_DONE;
+	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_ISP_DONE;
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
@@ -475,7 +458,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* exit background-fw mode */
 	if (!fu_vli_usbhub_rtd21xx_device_read_status(self, NULL, error))
 		return FALSE;
-	write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
+	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_EXIT;
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
@@ -527,7 +510,7 @@ fu_vli_usbhub_rtd21xx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_vli_usbhub_rtd21xx_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_vli_usbhub_rtd21xx_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

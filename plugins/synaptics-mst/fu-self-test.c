@@ -45,7 +45,6 @@ fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 	while ((basename = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
 		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_autoptr(FuProgress) progress_local = fu_progress_new(G_STRLOC);
 		g_autoptr(FuSynapticsMstDevice) dev = NULL;
 		g_autoptr(GError) error_local = NULL;
 

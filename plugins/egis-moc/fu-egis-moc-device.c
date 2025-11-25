@@ -95,15 +95,16 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 	fu_struct_egis_moc_pkg_header_set_sync(st_hdr, 0x45474953);
 	fu_struct_egis_moc_pkg_header_set_id(st_hdr, 0x00000001);
 	fu_struct_egis_moc_pkg_header_set_len(st_hdr, req->len);
-	g_byte_array_append(st_hdr, req->data, req->len);
-	fu_struct_egis_moc_pkg_header_set_chksum(st_hdr,
-						 fu_egis_moc_device_pkg_header_checksum(st_hdr));
+	g_byte_array_append(st_hdr->buf, req->data, req->len);
+	fu_struct_egis_moc_pkg_header_set_chksum(
+	    st_hdr,
+	    fu_egis_moc_device_pkg_header_checksum(st_hdr->buf));
 
 	/* send data */
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_EGIS_MOC_USB_BULK_EP_OUT,
-					 st_hdr->data,
-					 st_hdr->len,
+					 st_hdr->buf->data,
+					 st_hdr->buf->len,
 					 &actual_len,
 					 FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
 					 NULL,
@@ -111,7 +112,7 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
 	}
-	if (actual_len != st_hdr->len) {
+	if (actual_len != st_hdr->buf->len) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid length");
 		return FALSE;
 	}
@@ -121,7 +122,7 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 }
 
 static gboolean
-fu_egis_moc_device_cmd_recv_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_egis_moc_device_cmd_recv_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	gsize actual_len = 0;
 	guint32 csum = 0;
@@ -132,7 +133,7 @@ fu_egis_moc_device_cmd_recv_cb(FuDevice *self, gpointer user_data, GError **erro
 
 	/* package format = | zlp | ack | zlp | data | */
 	fu_byte_array_set_size(buf, FU_EGIS_MOC_FLASH_TRANSFER_BLOCK_SIZE, 0x00);
-	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(device),
 					 FU_EGIS_MOC_USB_BULK_EP_IN,
 					 buf->data,
 					 buf->len,
@@ -196,15 +197,14 @@ fu_egis_moc_device_cmd_recv_cb(FuDevice *self, gpointer user_data, GError **erro
 }
 
 static GByteArray *
-fu_egis_moc_device_fw_cmd(FuEgisMocDevice *device,
+fu_egis_moc_device_fw_cmd(FuEgisMocDevice *self,
 			  FuStructEgisMocCmdReq *st_req,
 			  gsize bufsz,
 			  GError **error)
 {
-	FuEgisMocDevice *self = FU_EGIS_MOC_DEVICE(device);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	if (!fu_egis_moc_device_cmd_send(self, st_req, error))
+	if (!fu_egis_moc_device_cmd_send(self, st_req->buf, error))
 		return NULL;
 	fu_byte_array_set_size(buf, bufsz, 0x00);
 	if (!fu_device_retry(FU_DEVICE(self), fu_egis_moc_device_cmd_recv_cb, 10, buf, error))
@@ -488,7 +488,7 @@ fu_egis_moc_device_detach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static void
-fu_egis_moc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_egis_moc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

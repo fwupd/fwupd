@@ -10,7 +10,6 @@
 #include "fu-usi-dock-child-device.h"
 #include "fu-usi-dock-dmc-device.h"
 #include "fu-usi-dock-mcu-device.h"
-#include "fu-usi-dock-struct.h"
 
 struct _FuUsiDockMcuDevice {
 	FuHidDevice parent_instance;
@@ -39,7 +38,7 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  gsize bufsz,
 			  GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_usi_dock_mcu_cmd_req_new();
+	g_autoptr(FuStructUsiDockMcuCmdReq) st = fu_struct_usi_dock_mcu_cmd_req_new();
 
 	fu_struct_usi_dock_mcu_cmd_req_set_length(st, 0x3 + bufsz);
 	fu_struct_usi_dock_mcu_cmd_req_set_tag3(st, tag2);
@@ -49,14 +48,14 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 	}
 
 	/* special cases */
-	if (st->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
+	if (st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
 	    FU_USI_DOCK_MCU_CMD_FW_UPDATE)
-		st->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
+		st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
-					st->data,
-					st->len,
+					st->buf->data,
+					st->buf->len,
 					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					error);
@@ -70,7 +69,7 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 			  GError **error)
 {
 	guint8 buf[64] = {0};
-	g_autoptr(GByteArray) st_rsp = NULL;
+	g_autoptr(FuStructUsiDockMcuCmdRes) st_rsp = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      USB_HID_REPORT_ID2,
@@ -117,6 +116,20 @@ fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+FuDevice *
+fu_usi_dock_mcu_device_find_child(FuUsiDockMcuDevice *self, FuUsiDockFirmwareIdx chip_idx)
+{
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(children, i);
+		if (fu_usi_dock_child_device_get_chip_idx(FU_USI_DOCK_CHILD_DEVICE(device_tmp)) ==
+		    chip_idx) {
+			return g_object_ref(device_tmp);
+		}
+	}
+	return NULL;
 }
 
 static gboolean
@@ -217,8 +230,8 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 		}
 
 		if (g_strcmp0(components[i].name, "DMC") == 0) {
-			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
-			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
+			if ((val[2] == 0x00 && val[3] == 0x00) ||
+			    (val[2] == 0xFF && val[3] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -398,12 +411,12 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_usi_dock_hid_req_new();
+	g_autoptr(FuStructUsiDockHidReq) st_req = fu_struct_usi_dock_hid_req_new();
 
 	fu_struct_usi_dock_hid_req_set_length(st_req, fu_chunk_get_data_sz(chk));
 	fu_struct_usi_dock_hid_req_set_tag3(st_req, FU_USI_DOCK_TAG2_MASS_DATA_SPI);
-	if (!fu_memcpy_safe(st_req->data,
-			    st_req->len,
+	if (!fu_memcpy_safe(st_req->buf->data,
+			    st_req->buf->len,
 			    FU_STRUCT_USI_DOCK_HID_REQ_OFFSET_BUF, /* dst */
 			    fu_chunk_get_data(chk),
 			    fu_chunk_get_data_sz(chk),
@@ -413,8 +426,8 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      USB_HID_REPORT_ID2,
-				      st_req->data,
-				      st_req->len,
+				      st_req->buf->data,
+				      st_req->buf->len,
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
@@ -589,7 +602,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_usi_dock_mcu_device_wait_for_spi_ready_cb,
-			     30,
+			     60,
 			     NULL,
 			     error)) {
 		g_prefix_error_literal(error, "failed to wait for erase: ");
@@ -782,7 +795,7 @@ fu_usi_dock_mcu_device_replace(FuDevice *device, FuDevice *donor)
 }
 
 static void
-fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_usi_dock_mcu_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

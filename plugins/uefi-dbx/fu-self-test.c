@@ -43,7 +43,7 @@ fu_uefi_dbx_zero_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(csum);
 	fu_firmware_set_bytes(FU_FIRMWARE(sig), csum);
-	fu_firmware_add_image(siglist, FU_FIRMWARE(sig));
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig), NULL);
 	blob = fu_firmware_write(siglist, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
@@ -55,7 +55,7 @@ fu_uefi_dbx_zero_func(void)
 					      FU_EFIVARS_GUID_EFI_GLOBAL,
 					      "KEK",
 					      blob,
-					      FU_EFIVARS_ATTR_NON_VOLATILE,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -65,7 +65,7 @@ fu_uefi_dbx_zero_func(void)
 					      FU_EFIVARS_GUID_SECURITY_DATABASE,
 					      "dbx",
 					      blob,
-					      FU_EFIVARS_ATTR_NON_VOLATILE,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -187,7 +187,7 @@ fu_self_test_mock_snapd_easy_get_request(FuTestFixture *fixture, const gchar *en
 	g_assert_true(res == CURLE_OK);
 	g_assert_true(status_code == 200);
 
-	g_debug("rsp:\n%s", buf->data);
+	g_debug("rsp:%s", buf->data);
 
 	return g_bytes_new(buf->data, buf->len);
 }

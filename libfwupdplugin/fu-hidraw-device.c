@@ -85,7 +85,7 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	g_autoptr(GBytes) fw = NULL;
 
-	/* Get Report Descriptor Size */
+	/* get report descriptor size */
 	if (!fu_ioctl_execute(ioctl,
 			      HIDIOCGRDESCSIZE,
 			      (guint8 *)&desc_size,

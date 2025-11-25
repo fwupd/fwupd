@@ -145,6 +145,9 @@ fu_engine_modify_remote(FuEngine *self,
 			const gchar *value,
 			GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
+fu_engine_clean_remote(FuEngine *self, const gchar *remote_id, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_engine_modify_device(FuEngine *self,
 			const gchar *device_id,
 			const gchar *key,

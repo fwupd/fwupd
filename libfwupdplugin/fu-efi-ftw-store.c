@@ -60,20 +60,34 @@ fu_efi_ftw_store_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 
+	/* sanity check */
+	if (fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(st) >
+	    fu_firmware_get_size_max(firmware)) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
+		    "FTW store larger than max size: 0x%x > 0x%x",
+		    (guint)fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(
+			st),
+		    (guint)fu_firmware_get_size_max(firmware));
+		return FALSE;
+	}
+
 	/* attributes we care about */
 	self->state = fu_struct_efi_fault_tolerant_working_block_header64_get_state(st);
 
 	/* data area */
 	blob = fu_input_stream_read_bytes(
 	    stream,
-	    st->len,
+	    st->buf->len,
 	    fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(st),
 	    NULL,
 	    error);
 	if (blob == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(firmware, blob);
-	fu_firmware_set_size(firmware, st->len + g_bytes_get_size(blob));
+	fu_firmware_set_size(firmware, st->buf->len + g_bytes_get_size(blob));
 
 	/* success */
 	return TRUE;
@@ -98,14 +112,14 @@ fu_efi_ftw_store_write(FuFirmware *firmware, GError **error)
 	    g_bytes_get_size(blob));
 	fu_struct_efi_fault_tolerant_working_block_header64_set_crc(
 	    st,
-	    fu_crc32(FU_CRC_KIND_B32_STANDARD, st->data, st->len));
+	    fu_crc32(FU_CRC_KIND_B32_STANDARD, st->buf->data, st->buf->len));
 
 	/* attrs + data area */
 	fu_struct_efi_fault_tolerant_working_block_header64_set_state(st, self->state);
-	fu_byte_array_append_bytes(st, blob);
+	fu_byte_array_append_bytes(st->buf, blob);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean
@@ -127,6 +141,11 @@ static void
 fu_efi_ftw_store_init(FuEfiFtwStore *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000); /* 4KB */
+#else
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000000); /* 16MB */
+#endif
 }
 
 static void

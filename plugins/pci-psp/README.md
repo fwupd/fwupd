@@ -20,10 +20,3 @@ This plugin requires read only access to attributes located within `/sys/bus/pci
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.8.0`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Mario Limonciello: @superm1

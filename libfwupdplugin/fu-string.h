@@ -50,6 +50,8 @@ gchar *
 fu_strjoin(const gchar *separator, GPtrArray *array) G_GNUC_NON_NULL(1, 2);
 GString *
 fu_strdup(const gchar *str, gsize bufsz, gsize offset) G_GNUC_NON_NULL(1);
+void
+fu_string_strip(GString *str) G_GNUC_NON_NULL(1);
 
 /**
  * FuStrsplitFunc:
@@ -89,7 +91,7 @@ fu_strsplit_stream(GInputStream *stream,
 typedef enum {
 	FU_UTF_CONVERT_FLAG_NONE = 0,
 	FU_UTF_CONVERT_FLAG_APPEND_NUL = 1 << 0,
-} FuUtfConvertFlags;
+} G_GNUC_FLAG_ENUM FuUtfConvertFlags;
 
 gchar *
 fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error)

@@ -42,7 +42,7 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") != 0)
 		return;
 
-	/* Operating system will handle finishing updates later */
+	/* operating system will handle finishing updates later */
 	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation") &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));
@@ -66,7 +66,9 @@ fu_thunderbolt_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GE
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
-			return fu_thunderbolt_retimer_set_parent_port_offline(dev, error);
+			return fu_thunderbolt_retimer_offline_parent_port(
+			    FU_THUNDERBOLT_RETIMER(dev),
+			    error);
 		}
 	}
 	return TRUE;
@@ -81,7 +83,9 @@ fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GE
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
 			fu_device_sleep(dev, FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
-			return fu_thunderbolt_retimer_set_parent_port_online(dev, error);
+			return fu_thunderbolt_retimer_online_parent_port(
+			    FU_THUNDERBOLT_RETIMER(dev),
+			    error);
 		}
 	}
 	return TRUE;

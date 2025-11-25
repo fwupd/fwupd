@@ -15,6 +15,8 @@ enum FuFirmwareParseFlags {
     NoSearch = 1 << 8, // no heuristics
     CacheStream = 1 << 10,
     CacheBlob = 1 << 11,
+    OnlyTrustPqSignatures = 1 << 12,
+    OnlyPartitionLayout = 1 << 13,
 }
 
 #[derive(ToString)]
@@ -30,6 +32,7 @@ enum FuFirmwareFlags {
     NoAutoDetection = 1 << 7, // has no known header
     HasCheckCompatible = 1 << 8,
     IsLastImage = 1 << 9, // use for FuLinearFirmware when padding is present
+    AllowLinear = 1 << 10, // parse as an array of firmwares
 }
 
 enum FuFirmwareAlignment {

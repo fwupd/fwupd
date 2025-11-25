@@ -36,6 +36,22 @@ fu_genesys_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "GenesysUsbhubReadRequest");
 	fu_context_add_quirk_key(ctx, "GenesysUsbhubSwitchRequest");
 	fu_context_add_quirk_key(ctx, "GenesysUsbhubWriteRequest");
+	fu_context_add_quirk_key(ctx, "GenesysSupportDualBank");
+	fu_context_add_quirk_key(ctx, "GenesysSupportCodeSize");
+	fu_context_add_quirk_key(ctx, "GenesysHubBank1Address");
+	fu_context_add_quirk_key(ctx, "GenesysHubBank2Address");
+	fu_context_add_quirk_key(ctx, "GenesysHubBankCapacity");
+	fu_context_add_quirk_key(ctx, "GenesysDevBank1Address");
+	fu_context_add_quirk_key(ctx, "GenesysDevBank2Address");
+	fu_context_add_quirk_key(ctx, "GenesysDevBankCapacity");
+	fu_context_add_quirk_key(ctx, "GenesysPdBank1Address");
+	fu_context_add_quirk_key(ctx, "GenesysPdBank2Address");
+	fu_context_add_quirk_key(ctx, "GenesysPdBankCapacity");
+	fu_context_add_quirk_key(ctx, "GenesysCodesignBank1Address");
+	fu_context_add_quirk_key(ctx, "GenesysCodesignBank2Address");
+	fu_context_add_quirk_key(ctx, "GenesysCodesignBankCapacity");
+	fu_context_add_quirk_key(ctx, "GenesysFwDataMaxCount");
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_USBHUB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_HUBHID_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GENESYS_USBHUB_FIRMWARE);
@@ -76,7 +92,7 @@ fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 			  fu_device_get_physical_id(usb_parent));
 		fu_plugin_device_remove(self, device);
 	} else {
-		fu_genesys_usbhub_device_set_hid_channel(parent, device);
+		fu_genesys_usbhub_device_set_hid_channel(FU_GENESYS_USBHUB_DEVICE(parent), device);
 		fu_device_add_child(parent, device);
 	}
 }

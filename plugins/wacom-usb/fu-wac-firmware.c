@@ -58,7 +58,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 	if (g_strcmp0(cmd, "") == 0)
 		return TRUE;
 
-	/* Wacom-specific metadata */
+	/* custom metadata */
 	if (g_strcmp0(cmd, "WA") == 0) {
 		/* header info record */
 		if (token->len > 3 && memcmp(token->str + 2, "COM", 3) == 0) {
@@ -245,7 +245,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 		fu_firmware_set_bytes(img, fw_srec);
 		fu_firmware_set_addr(img, fu_firmware_get_addr(firmware_srec));
 		fu_firmware_set_idx(img, helper->images_cnt);
-		if (!fu_firmware_add_image_full(helper->firmware, img, error))
+		if (!fu_firmware_add_image(helper->firmware, img, error))
 			return FALSE;
 		helper->images_cnt++;
 

@@ -44,7 +44,7 @@ fu_huddly_usb_device_find_interface(FuHuddlyUsbDevice *self, GError **error)
 
 	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL) {
-		g_prefix_error_literal(error, "could not find interface");
+		g_prefix_error_literal(error, "could not find interface: ");
 		return FALSE;
 	}
 	for (guint i = 0; i < intfs->len; i++) {
@@ -93,7 +93,7 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 src->data + offset,
 						 chunk_size,
 						 &transmitted,
-						 2000,
+						 5000,
 						 NULL,
 						 error)) {
 			return FALSE;
@@ -194,7 +194,7 @@ fu_huddly_usb_device_salute(FuHuddlyUsbDevice *self, GError **error)
 	g_autoptr(GByteArray) response = g_byte_array_new();
 	g_autofree gchar *str = NULL;
 
-	g_debug("send salute...");
+	g_debug("send salute…");
 	fu_byte_array_append_uint8(salutation, 0x00);
 
 	if (!fu_huddly_usb_device_bulk_write(self, salutation, NULL, error)) {
@@ -267,7 +267,25 @@ static gboolean
 fu_huddly_usb_device_reboot(FuHuddlyUsbDevice *self, GError **error)
 {
 	g_autoptr(FuHuddlyUsbHLinkMsg) msg = fu_huddly_usb_hlink_msg_new("camctrl/reboot", NULL);
-	return fu_huddly_usb_device_hlink_send(self, msg, error);
+	g_autoptr(GError) error_local = NULL;
+
+	/* set flag to indicate disconnection is expected before sending reboot command */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* send reboot command - device may disconnect during or after this call */
+	if (!fu_huddly_usb_device_hlink_send(self, msg, &error_local)) {
+		/* if error is due to device disconnection (expected after reboot), ignore it */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("device disconnected during reboot as expected: %s",
+				error_local->message);
+			return TRUE;
+		}
+		/* propagate other errors */
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -348,11 +366,26 @@ fu_huddly_usb_device_hpk_done_cb(FuDevice *device, gpointer user_data, GError **
 	g_autoptr(FuMsgpackItem) item_operation = NULL;
 	g_autoptr(FuMsgpackItem) item_error = NULL;
 	g_autoptr(FuMsgpackItem) item_reboot = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) items = NULL;
-
-	msg_res = fu_huddly_usb_device_hlink_receive(self, error);
-	if (msg_res == NULL)
+	msg_res = fu_huddly_usb_device_hlink_receive(self, &error_local);
+	if (msg_res == NULL) {
+		/* For dual-image devices, disconnection during hpk execution might be expected */
+		if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE) &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("device disconnected during hpk execution (expected for "
+				"dual-image): %s",
+				error_local->message);
+			/* assume reboot is needed since device disconnected during firmware
+			 * execution */
+			self->need_reboot = TRUE;
+			/* set flag to indicate device has disconnected */
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	items = fu_msgpack_parse(msg_res->payload, error);
 	if (items == NULL)
 		return FALSE;
@@ -421,6 +454,12 @@ fu_huddly_usb_device_hpk_run(FuHuddlyUsbDevice *self, const gchar *filename, GEr
 				  error))
 		return FALSE;
 
+	/* if device has disconnected (dual-image case), skip unsubscribe since device is gone */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		g_debug("skipping unsubscribe as device has disconnected");
+		return TRUE;
+	}
+
 	return fu_huddly_usb_device_hlink_unsubscribe(self, "upgrader/status", error);
 }
 
@@ -465,6 +504,29 @@ fu_huddly_usb_device_attach(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuHuddlyUsbDevice *self = FU_HUDDLY_USB_DEVICE(device);
 
+	/* check if device is in usb adapter mode*/
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("device in USB Adapter mode (PID BA01), running verification cycle");
+
+		/* in usb adapter mode, device needs verification to complete the update process.*/
+		if (!fu_huddly_usb_device_verify(self, progress, error)) {
+			g_prefix_error_literal(error, "verification failed in USB Adapter mode: ");
+			return FALSE;
+		}
+
+		/* after verification, explicitly reboot to return to normal camera mode.*/
+		g_debug("verification completed, sending final reboot to return to normal mode");
+		if (!fu_huddly_usb_device_reboot(self, error)) {
+			g_prefix_error_literal(error,
+					       "failed final reboot from USB Adapter mode: ");
+			return FALSE;
+		}
+
+		g_debug("final reboot sent, device should return to normal mode");
+		return TRUE;
+	}
+
+	/* normal attach process for regular operation (PID A032) */
 	if (!fu_huddly_usb_device_ensure_product_info(self, error)) {
 		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
@@ -576,7 +638,7 @@ fu_huddly_usb_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	if (!self->need_reboot) {
-		/* The device not requesting reboot could occur if the device was in an unverified
+		/* the device not requesting reboot could occur if the device was in an unverified
 		state due to an aborted previous upgrade attempt, in which case this download will
 		complete the upgrade */
 		g_warning("expected device to request reboot after download");
@@ -590,7 +652,7 @@ fu_huddly_usb_device_write_firmware(FuDevice *device,
 
 	/* success */
 	self->pending_verify = TRUE;
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/* note: FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG is already set in reboot function */
 	return TRUE;
 }
 

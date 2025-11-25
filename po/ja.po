@@ -9,16 +9,21 @@
 # Ryo Nakano, 2024
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
 # YOSHIDUMI, Rentaro, 2021
+# Richard Hughes <hughsient@gmail.com>, 2025.
+# Mikenu Takeru <mikenu-jp@users.noreply.hosted.weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Japanese (http://app.transifex.com/freedesktop/fwupd/language/ja/)\n"
+"PO-Revision-Date: 2025-11-14 16:51+0000\n"
+"Last-Translator: Mikenu Takeru <mikenu-jp@users.noreply.hosted.weblate.org>\n"
+"Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.15-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -303,6 +308,20 @@ msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u 個のデバイスが推奨設定になっていません。"
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u 個のデバイスが、有効なリモートでサポートされています（更新が公開されています）"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u 個のデバイスが更新可能です"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -487,7 +506,7 @@ msgstr "認証情報の入力が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "外付け機器でファームウェアをダウングレードするには認証が必要です"
+msgstr "取り外し可能なデバイスのファームウェアをダウングレードするには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
@@ -551,11 +570,11 @@ msgstr "ホストのセキュリティ問題の修正を元に戻すには認証
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "機器のロックを解除するには認証が必要です"
+msgstr "デバイスのロックを解除するには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "外付け機器でファームウェアを更新するには認証が必要です"
+msgstr "取り外し可能なデバイスのファームウェアを更新するには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
@@ -636,7 +655,7 @@ msgstr "ブランチ"
 
 #. TRANSLATORS: command description
 msgid "Build a cabinet archive from a firmware blob and XML metadata"
-msgstr "ファームウェアからキャビネットアーカイブを構築する"
+msgstr "ファームウェアブロブとXMLメタデータからキャビネットアーカイブを構築します"
 
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
@@ -671,7 +690,7 @@ msgstr "キャンセルされました"
 
 #. TRANSLATORS: same or newer update already applied
 msgid "Cannot apply as dbx update has already been applied."
-msgstr "dbx アップデートは既に適用されているため、適用できません"
+msgstr "dbx アップデートは既に適用されているため、適用できません。"
 
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
@@ -725,7 +744,7 @@ msgstr "コミュニティサポート"
 
 #. TRANSLATORS: command description
 msgid "Compares two versions for equality"
-msgstr "2つのバージョンが等しいかどうかを比較します。"
+msgstr "2つのバージョンが等しいかどうかを比較します"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -804,7 +823,7 @@ msgstr "詳細"
 #. works
 #. * well together. In the OEM and ODM industries it is often called a BKC
 msgid "Deviate from the best known configuration?"
-msgstr "最良既知構成 (BKC) から逸脱しますか?"
+msgstr "既知の最適構成から逸脱しますか?"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
@@ -880,7 +899,7 @@ msgstr "デバイスに接続できません"
 
 #. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
 msgid "Device is unreachable, or out of wireless range"
-msgstr "デバイスに接続できません (ワイヤレス範囲外、またはオフライン)"
+msgstr "デバイスに接続できないか、ワイヤレス範囲外です"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -912,7 +931,7 @@ msgstr "このデバイスのアップデートにはソフトウェアライセ
 
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
-msgstr "このデバイスのファームウェアアップデートが利用可能です。"
+msgstr "このデバイスには、デバイスソフトウェアの更新が提供されています。"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -1222,6 +1241,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "FILENAME DEVICE-ID [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 
@@ -1255,7 +1278,7 @@ msgstr "Windows サービスへの接続に失敗しました。サービスが�
 
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
-msgstr "サービスへの接続に失敗しました"
+msgstr "デーモンへの接続に失敗しました"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -1286,7 +1309,7 @@ msgstr "ファイルの解析に失敗しました"
 #. * %1 is '--filter-release'
 #, c-format
 msgid "Failed to parse flags for %s"
-msgstr "%s のフラグを解析できませんでした"
+msgstr "%s のフラグ解析に失敗しました"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1323,11 +1346,15 @@ msgstr "ファイル名の指定が必要です"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "デバイスフラグセットでフィルタリングし、~ プレフィックスを使用して除外します。例: 'internal,~needs-reboot'"
+msgstr "デバイスフラグのセットを使用してフィルターします。除外するには ~ プレフィックスを使用します。例: 'internal,~needs-reboot'"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
-msgstr "リリースフラグセットでフィルタリングし、~ プレフィックスを使用して除外します。例: 'trusted-release,~trusted-metadata'"
+msgstr "リリースフラグのセットを使用してフィルターします。除外するには ~ プレフィックスを使用します。例: 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command description
+msgid "Finds firmware releases from the metadata"
+msgstr "メタデータからファームウェアのリリースを探す"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1417,7 +1444,7 @@ msgstr "ファームウェアアップデート"
 #. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
 #, c-format
 msgid "Firmware updates disabled; run '%s' to enable"
-msgstr "ファームウェアアップデートは無効です。有効にするには '%s' を実行してください。"
+msgstr "ファームウェアアップデートは無効です。有効にするには '%s' を実行してください"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1495,7 +1522,7 @@ msgstr "既知のバージョン形式をすべて取得する"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
-msgstr "デバイスレポートのメタデータを取得する"
+msgstr "デバイスレポートのメタデータを取得します"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -1621,7 +1648,7 @@ msgstr "非重要なファームウェア要件を無視する"
 
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "SSL の厳格なチェックを無視し、将来的にこれを自動化するには、環境変数 DISABLE_SSL_STRICT をエクスポートしてください。"
+msgstr "SSL の厳格なチェックを無視し、将来的にこれを自動化するには、環境変数 DISABLE_SSL_STRICT をエクスポートしてください"
 
 #. TRANSLATORS: show the user a generic image that can be themed
 msgid "Image"
@@ -1642,7 +1669,7 @@ msgstr "アップグレードを防ぐためにシステムをロック"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
-msgstr "インストール時間"
+msgstr "インストール所要時間"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file in cabinet format on this hardware"
@@ -1721,7 +1748,7 @@ msgid "Intel BootGuard Error Policy"
 msgstr "Intel BootGuard エラーポリシー"
 
 msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
-msgstr "Intel BootGuard エラーポリシーは、デバイスソフトウェアの改ざんが検出された場合、起動を続行しません。"
+msgstr "Intel BootGuard エラーポリシーは、デバイスソフトウェアが改ざんされた場合、デバイスの起動を停止します。"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
@@ -1810,11 +1837,11 @@ msgstr "無効な引数です。AppStream ID を指定してください"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
-msgstr "引数が不足しています。少なくとも ARCHIVE FIRMWARE METAINFO を指定してください"
+msgstr "引数が無効です。少なくとも ARCHIVE FIRMWARE METAINFO が必要です"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected base-16 integer"
-msgstr "無効な引数です。16進整数を指定してください"
+msgstr "引数が無効です。16進数の整数が必要です"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1983,7 +2010,7 @@ msgstr "特定のプラグインを手動で有効にする"
 
 #. TRANSLATORS: longer description
 msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
-msgstr "製造モードは、デバイス製造時に使用されるモードで、セキュリティ機能は無効化されています。"
+msgstr "製造モードはデバイスの製造時に使用され、セキュリティ機能がまだ有効化されていません。"
 
 #. TRANSLATORS: Longest valid string for BIOS setting
 msgid "Maximum length"
@@ -2077,6 +2104,10 @@ msgstr "新バージョン"
 msgid "No action specified!"
 msgstr "アクションが指定されていません!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "更新可能なデバイスはありません"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2129,7 +2160,7 @@ msgstr "%s に該当するボリュームがありません"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
-msgstr "承認されていません"
+msgstr "未承認"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2251,6 +2282,10 @@ msgstr "%s か %s のいずれかを入力してください:"
 msgid "Plugin dependencies missing"
 msgstr "プラグインの依存関係が見つかりません"
 
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "プラグインの列挙によって、デバイスの現在のモードが変更される可能性があります"
+
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
 msgstr "このプラグインはテスト専用です"
@@ -2269,11 +2304,11 @@ msgstr "プリブート DMA 保護"
 
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is disabled"
-msgstr "起動前 DMA 保護が無効"
+msgstr "プリブート DMA 保護が無効"
 
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
-msgstr "起動前 DMA 保護が有効"
+msgstr "プリブート DMA 保護が有効"
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
@@ -2281,7 +2316,7 @@ msgstr "プリブート DMA 保護は、デバイスがコンピューターに�
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
-msgstr "デバイスでロック解除を押して、アップデートプロセスを続行してください。"
+msgstr "更新処理を続行するには、デバイス上でロック解除を押してください。"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -2359,7 +2394,7 @@ msgstr "%s を %s に再インストールしますか?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
-msgstr "現在のファームウェアを再インストール"
+msgstr "デバイスの現在のファームウェアを再インストールする"
 
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
@@ -2439,7 +2474,7 @@ msgstr "マシンのすべてのハードウェア ID を返す"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Review and upload report now?"
-msgstr "レポートを今すぐ確認してアップロードしますか?"
+msgstr "レポートを確認して今すぐアップロードしますか?"
 
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
@@ -2590,18 +2625,18 @@ msgstr "シリアルナンバー"
 #. TRANSLATORS: Configured a BIOS setting to a value
 #, c-format
 msgid "Set BIOS setting '%s' using '%s'."
-msgstr "BIOS 設定 '%s' を '%s' に設定しました。"
+msgstr "BIOS設定「%s」を「%s」に設定しました。"
 
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
-msgstr "BIOS 設定を変更する"
+msgstr "BIOS設定を変更する"
 
 msgid "Set one or more BIOS settings"
 msgstr "BIOS 設定を 1 つ以上設定する"
 
 #. TRANSLATORS: command description
 msgid "Set or remove an EFI boot hive entry"
-msgstr "EFI ブートハイブエントリを設定または削除する"
+msgstr "EFIブートハイブのエントリを設定または削除する"
 
 #. TRANSLATORS: command description
 msgid "Set the EFI boot next"
@@ -2617,7 +2652,7 @@ msgstr "一時的エラー発生時のダウンロード再試行回数を設定
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
-msgstr "一つ以上の BIOS 設定を変更"
+msgstr "1つ以上のBIOS設定を変更する"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -2737,6 +2772,11 @@ msgstr "リモートを正常に無効にしました"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "テストデバイスを正常に無効にしました"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr "新しいメタデータのダウンロードに成功しました:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -2955,7 +2995,7 @@ msgstr "信頼できるベンダーによるテスト済み"
 
 #. TRANSLATORS: the boot entry was in a legacy format
 msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
-msgstr "EFI ブートエントリが hive 形式ではありません。shim が古い場合、読み取りに失敗する可能性があります"
+msgstr "EFI ブートエントリが hive 形式ではありません。shim が古い場合、読み取りに失敗する可能性があります。"
 
 #. TRANSLATORS: try to treat the legacy format as a hive
 msgid "The EFI boot entry was not in hive format, falling back"
@@ -3003,7 +3043,7 @@ msgstr "UEFI システムは、起動時にメモリ属性を設定すること�
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
-msgstr "デーモンがサードパーティのコードを読み込んでいるため、アップストリーム開発者によるサポートは一切受けられません!"
+msgstr "デーモンはサードパーティ製コードをロードしたため、今後はアップストリーム開発者のサポート対象外となります！"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
@@ -3012,7 +3052,7 @@ msgstr "ファームウェアの提供元 %s がハードウェアベンダー�
 
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
-msgstr "システムクロックが正しく設定されておらず、ファイルのダウンロードが失敗する可能性があります。"
+msgstr "システムクロックが正しく設定されていません。ファイルダウンロードに失敗する可能性があります。"
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been re-inserted."
@@ -3055,7 +3095,7 @@ msgstr "%s コマンドが実行されると、このデバイスは %s に戻�
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
-msgstr "このファームウェアは LVFS コミュニティメンバーが提供しており、元のハードウェアベンダーからの提供・サポートはありません。"
+msgstr "このファームウェアは LVFS コミュニティメンバーによって提供されたもので、元のハードウェアベンダーからの提供 (またはサポート) はありません。"
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -3082,7 +3122,7 @@ msgstr "システムの HSI セキュリティレベルが低いです。"
 
 #. TRANSLATORS: description of dbxtool
 msgid "This tool allows an administrator to apply UEFI dbx updates."
-msgstr "管理者が UEFI dbx のアップデートを適用できるツール"
+msgstr "このツールは管理者に UEFI dbx のアップデートを許可します。"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
@@ -3095,18 +3135,18 @@ msgstr "このツールは、管理者が fwupd プラグインをホストシ�
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
 msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
-msgstr "このツールはカーネル引数 '%s' を追加できますが、コンピューターを再起動した後でのみ有効になります。"
+msgstr "このツールはカーネル引数 '%s' を追加できますが、変更はコンピューターの再起動後に有効になります。"
 
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
-msgstr "このツールはBIOS設定 '%s' を '%s' から '%s' に自動的に変更できますが、コンピューターを再起動した後でのみ有効になります。"
+msgstr "このツールはBIOS設定 '%s' を '%s' から '%s' に自動的に変更できますが、変更はコンピューターの再起動後に有効になります。"
 
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
 msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
-msgstr "このツールはカーネル引数を '%s' から '%s' に変更できますが、コンピューターを再起動した後でのみ有効になります。"
+msgstr "このツールはカーネル引数を '%s' から '%s' に変更できますが、変更はコンピューターの再起動後に有効になります。"
 
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
@@ -3142,7 +3182,7 @@ msgstr "UEFI ESP パーティションが正しく設定されていない可能
 
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
-msgstr "UEFI ESP パーティションが検出されないか、設定されていません"
+msgstr "UEFI ESP パーティションが検出されないか、構成されていません"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
@@ -3377,7 +3417,7 @@ msgstr "重要度"
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
 msgid "Use %s for help"
-msgstr "ヘルプを表示するには %s を使用してください。"
+msgstr "ヘルプを表示するには %s を使用してください"
 
 #. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the
 #. program
@@ -3422,11 +3462,15 @@ msgstr "バージョン"
 
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
-msgstr "fwupd バージョン"
+msgstr "バージョン [fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "警告"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "WORD"
+msgstr "WORD"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"
@@ -3475,7 +3519,7 @@ msgstr "このファームウェアを使用するとハードウェアが損傷
 #. * of firmware that works together
 #, c-format
 msgid "Your system is set up to the BKC of %s."
-msgstr "お使いのシステムは %s の BKC に設定されています。"
+msgstr "このシステムは %s のBKC (既知の最適構成) に設定されています。"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[APPSTREAM_ID]"

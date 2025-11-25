@@ -50,9 +50,8 @@ fu_logitech_hidpp_msg_to_string(FuLogitechHidppHidppMsg *msg)
 			       "function-id: %02x   [%s]\n",
 			       msg->function_id,
 			       fu_logitech_hidpp_msg_fcn_id_to_string(msg));
-	if (!fu_logitech_hidpp_msg_is_error(msg, &error)) {
+	if (!fu_logitech_hidpp_msg_is_error(msg, &error))
 		g_string_append_printf(str, "error:       %s\n", error->message);
-	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
 	return g_string_free(g_steal_pointer(&str), FALSE);

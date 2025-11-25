@@ -37,6 +37,7 @@ These devices use the standard USB DeviceInstanceId values for the HID under USB
 Additionally, some customized instance IDs are added. e.g.
 
 * `USB\VID_03F0&PID_0610&IC_352330&BONDING_0F`
+* `USB\VID_03F0&PID_0610&IC_352330&BONDING_0F&RUNMODE_M`
 * `USB\VID_03F0&PID_0610&VENDOR_GENESYSLOGIC&IC_352330&BONDING_0F&PORTNUM_23&VENDORSUP_C09B5DD3-1A23-51D2-995A-F7366AAB3CA4`
 * `USB\VID_05E3&PID_0630&PROJECT_1885D34D-0418-5EF8-8E69-4CEF77B6B6E8`
 * `USB\VID_03F0&PID_0610&PUBKEY_AB859399-95B8-5817-B521-9AD8CC7F5BD6`
@@ -99,18 +100,6 @@ USB Hub Write Request value.
 
 Since 1.7.6.
 
-### use-i2c-ch0
-
-Scalar uses I²C channel 0.
-
-Since 1.7.6.
-
-### pause-r2-cpu
-
-Scalar pause R2 CPU.
-
-Since 1.7.6.
-
 ### GenesysScalerDeviceTransferSize
 
 Scaler Block size to use for transfers.
@@ -152,6 +141,78 @@ CFI Flash Id.
 
 Since 1.8.2.
 
+## Firmware Bank Quirk Use
+
+These parameters are used to configure and manage Genesys firmware banks.
+
+This plugin uses the following plugin-specific quirks to indicate firmware bank detail:
+
+### GenesysSupportDualBank
+
+Indicates if dual-bank support is enabled.
+
+Since 2.0.17
+
+### GenesysSupportCodeSize
+
+Indicatess if code size support is enabled.
+
+Since 2.0.17
+
+### GenesysHubBank1Address / GenesysHubBank2Address
+
+Memory addresses for Hub bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysHubBankCapacity
+
+Capacity of the Hub bank.
+
+Since 2.0.17
+
+### GenesysDevBank1Address / GenesysDevBank2Address
+
+Memory addresses for Device bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysDevBankCapacity
+
+Capacity of the Device bank.
+
+Since 2.0.17
+
+### GenesysPdBank1Address / GenesysPdBank2Address
+
+Memory addresses for PD bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysPdBankCapacity
+
+Capacity of the PD bank.
+
+Since 2.0.17
+
+### GenesysCodesignBank1Address / GenesysCodesignBank2Address
+
+Memory addresses for Codesign bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysCodesignBankCapacity
+
+Capacity of the Codesign bank.
+
+Since 2.0.17
+
+### GenesysFwDataMaxCount
+
+Maximum count of firmware data.
+
+Since 2.0.17
+
 ## Update Behavior
 
 The devices are independently updated at runtime using USB control transfers.
@@ -171,10 +232,3 @@ This plugin requires read/write access to `/dev/bus/usb`.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.7.6`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Adam Chen: @adamgene

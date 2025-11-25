@@ -22,7 +22,7 @@ typedef enum {
 	FU_DUMP_FLAGS_SHOW_ADDRESSES = 1 << 1,
 	/*< private >*/
 	FU_DUMP_FLAGS_LAST
-} FuDumpFlags;
+} G_GNUC_FLAG_ENUM FuDumpFlags;
 
 void
 fu_dump_raw(const gchar *log_domain, const gchar *title, const guint8 *data, gsize len)

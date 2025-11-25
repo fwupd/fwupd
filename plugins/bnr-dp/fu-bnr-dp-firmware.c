@@ -17,15 +17,15 @@ struct _FuBnrDpFirmware {
 
 	/* mandatory XML header attributes, not part of payload. additionally, "Ver" (version) is
 	 * also mandatory */
-	guint64 device_id;	  /* Dev */
-	gchar *usage;		  /* Use */
-	gchar function;		  /* Fct */
-	guint64 variant;	  /* Var */
-	guint64 payload_length;	  /* Len */
-	guint16 payload_checksum; /* Chk */
-	gchar *material;	  /* Mat */
-	gchar *creation_date;	  /* Date (nullable) */
-	gchar *comment;		  /* Rem (nullable) */
+	guint64 device_id;	  /* dev */
+	gchar *usage;		  /* use */
+	gchar function;		  /* fct */
+	guint64 variant;	  /* var */
+	guint64 payload_length;	  /* len */
+	guint16 payload_checksum; /* chk */
+	gchar *material;	  /* mat */
+	gchar *creation_date;	  /* date (nullable) */
+	gchar *comment;		  /* rem (nullable) */
 };
 
 G_DEFINE_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU_TYPE_FIRMWARE)
@@ -47,7 +47,7 @@ fu_bnr_dp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static gchar *
-fu_bnr_dp_firmware_convert_version(FuFirmware *self, guint64 version_raw)
+fu_bnr_dp_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
 	return fu_bnr_dp_version_to_string(version_raw);
 }
@@ -289,6 +289,7 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_find(stream,
 				  header_separator,
 				  sizeof(header_separator),
+				  0x0,
 				  &separator_idx,
 				  error))
 		return FALSE;
@@ -448,7 +449,7 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 
 	/* check that the current CRC was correct */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
-		       st_header->data,
+		       st_header->buf->data,
 		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
 	if (fu_struct_bnr_dp_payload_header_get_crc(st_header) != crc) {
 		g_set_error(
@@ -473,12 +474,12 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 
 	/* update checksum */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
-		       st_header->data,
+		       st_header->buf->data,
 		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
 
 	fu_struct_bnr_dp_payload_header_set_crc(st_header, crc);
 
-	patch = g_bytes_new(st_header->data, st_header->len);
+	patch = fu_struct_bnr_dp_payload_header_to_bytes(st_header);
 	fu_firmware_add_patch(FU_FIRMWARE(self), FU_BNR_DP_FIRMWARE_HEADER_OFFSET, patch);
 
 	return TRUE;

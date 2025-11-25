@@ -60,7 +60,7 @@ typedef enum {
 	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0,
 	/*< private >*/
 	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
-} FwupdClientDownloadFlags;
+} G_GNUC_FLAG_ENUM FwupdClientDownloadFlags;
 
 /**
  * FwupdClientUploadFlags:
@@ -86,7 +86,7 @@ typedef enum {
 	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0,
 	/*< private >*/
 	FWUPD_CLIENT_UPLOAD_FLAG_LAST
-} FwupdClientUploadFlags;
+} G_GNUC_FLAG_ENUM FwupdClientUploadFlags;
 
 FwupdClient *
 fwupd_client_new(void);
@@ -421,6 +421,16 @@ gboolean
 fwupd_client_modify_remote_finish(FwupdClient *self,
 				  GAsyncResult *res,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_clean_remote_async(FwupdClient *self,
+				const gchar *remote_id,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fwupd_client_clean_remote_finish(FwupdClient *self,
+				 GAsyncResult *res,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_modify_device_async(FwupdClient *self,
 				 const gchar *device_id,

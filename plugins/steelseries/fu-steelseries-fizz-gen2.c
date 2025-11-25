@@ -127,7 +127,7 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 	    fu_struct_steelseries_fizz_version2_req_new();
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req->buf, error))
 		return NULL;
 	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
 	if (buf_res == NULL)
@@ -150,7 +150,7 @@ fu_steelseries_fizz_gen2_get_battery_level(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesBatteryLevel2Res) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen2_response(self, error);
 	if (buf_res == NULL)
@@ -189,7 +189,7 @@ fu_steelseries_fizz_gen2_get_paired_status(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesConnectionStatus2Res) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen2_response(self, error);
 	if (buf_res == NULL)
@@ -225,7 +225,7 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesConnectionStatus2Res) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen2_response(self, error);
 	if (buf_res == NULL)
@@ -304,7 +304,7 @@ fu_steelseries_fizz_gen2_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel
 	g_autoptr(FuStructSteelseriesSerial2Req) st_req = fu_struct_steelseries_serial2_req_new();
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req->buf, error))
 		return NULL;
 	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
 	if (buf_res == NULL)
@@ -341,13 +341,14 @@ fu_steelseries_fizz_gen2_is_updatable(FuSteelseriesFizzImpl *self, FuDevice *dev
 	if (!fu_device_emit_request(device, request, NULL, error))
 		return FALSE;
 
-	/* FIXME: return commented as soon as we have support of simultaneous connections */
-	// fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 sec */
-	// fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	// fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/*
+	 * FIXME: return commented as soon as we have support of simultaneous connections:
+	 * fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	 * fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	 * fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	 */
 
 	/* success */
-	// return TRUE;
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

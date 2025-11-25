@@ -39,7 +39,9 @@ fu_nordic_hid_firmware_b0_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_nordic_hid_firmware_b0_read_fwinfo(FuFirmware *firmware, GInputStream *stream, GError **error)
+fu_nordic_hid_firmware_b0_read_fwinfo(FuNordicHidFirmwareB0 *self,
+				      GInputStream *stream,
+				      GError **error)
 {
 	guint32 magic_common;
 	guint32 magic_fwinfo;
@@ -93,7 +95,7 @@ fu_nordic_hid_firmware_b0_read_fwinfo(FuFirmware *firmware, GInputStream *stream
 						  ver_minor,
 						  ver_rev,
 						  ver_build_nr);
-			fu_firmware_set_version(firmware, version);
+			fu_firmware_set_version(FU_FIRMWARE(self), version);
 			return TRUE;
 		default:
 			break;
@@ -113,10 +115,11 @@ fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
+	FuNordicHidFirmwareB0 *self = FU_NORDIC_HID_FIRMWARE_B0(firmware);
 	if (!FU_FIRMWARE_CLASS(fu_nordic_hid_firmware_b0_parent_class)
 		 ->parse(firmware, stream, flags, error))
 		return FALSE;
-	return fu_nordic_hid_firmware_b0_read_fwinfo(firmware, stream, error);
+	return fu_nordic_hid_firmware_b0_read_fwinfo(self, stream, error);
 }
 
 static void

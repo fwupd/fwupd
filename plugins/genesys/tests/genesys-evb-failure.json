@@ -1,0 +1,34 @@
+{
+  "name": "EVB",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "793188b383dbdbe1ae074a3f095c35fef3779e1c3d0b6239b58fec9742f4769e-GenesysLogic_TestEVB_GL352360_89.19.cab",
+      "emulation-url": "676ebed5ab3bd6a8d9a3f0d4e7ad1672c9fe4a7fd44a386b3a62ae27965f96a5-TestEVB_GL352360_emu.zip",
+      "components": [
+        {
+          "name": "GL352360-HID",
+          "version": "89.19",
+          "guids": [
+            "9d544514-8380-5ac6-92bf-1565f106af5e",
+            "361571b4-7109-59c6-b776-1132ab45bd7b"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "b25e68b9f4203d6a1fccfe5f7f269fe78c8eb099248a3da4120de5bb6a757f1b-GenesysLogic_TestEVB_GL3525_89.06.cab",
+      "emulation-url": "da59f16b4b7fe32b794e3d3e72be35f3926a3f55c5134e28bfef0bc08431597d-TestEVB_GL3525_C.zip",
+      "components": [
+        {
+          "name": "GL352510-HID",
+          "version": "89.6",
+          "guids": [
+            "9aaeccaf-ac29-5104-8e63-5ebb8e2ce039",
+            "0adc4b01-85c8-5c04-a6bd-1317d9305e27"
+          ]
+        }
+      ]
+    }
+  ]
+}
