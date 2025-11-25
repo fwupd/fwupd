@@ -333,6 +333,7 @@ class Tokenizer:
                 ]
                 and not is_comment_mode
                 and not is_quote_mode
+                and not (data[pos - 1] == "'" and data[pos + 1] == "'")
             ):
                 self.dump_acc()
                 dump_char = True
