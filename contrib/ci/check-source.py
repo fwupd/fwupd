@@ -34,6 +34,78 @@ def _find_func_name(line: str) -> Optional[str]:
     return func_name
 
 
+def _split_args(line: str) -> list[str]:
+    is_quoted: bool = False
+    split = []
+    last_idx = 0
+    for idx, char in enumerate(line):
+        if is_quoted and char == '"':
+            is_quoted = False
+            continue
+        if char == '"':
+            is_quoted = True
+            continue
+        if not is_quoted and char == ",":
+            split.append(line[last_idx:idx].strip())
+            last_idx = idx + 1
+    split.append(line[last_idx:].strip())
+    return split
+
+
+def _number_non_empty_lines(lines: list[str]) -> int:
+    cnt: int = 0
+    for line in lines:
+        if line not in ["\n", ""]:
+            cnt += 1
+    return cnt
+
+
+# make lines long again
+def _fix_newlines(lines: list[str]) -> list[str]:
+    lines_fixed = []
+    padding: int = 0
+    for line in lines:
+        # push back onto previous line
+        if lines_fixed and lines_fixed[-1].endswith(","):
+            lines_fixed[-1] += " " + line.lstrip()
+            padding += 1
+            continue
+
+        # push back onto previous line
+        if (
+            line
+            and line.lstrip()[0] == '"'
+            and lines_fixed
+            and lines_fixed[-1].endswith('"')
+        ):
+            lines_fixed[-1] = lines_fixed[-1][:-1] + line.lstrip()[1:]
+            padding += 1
+            continue
+
+        # this means the line numbers match
+        for _ in range(padding):
+            lines_fixed.append("\n")
+        padding = 0
+        lines_fixed.append(line)
+    return lines_fixed
+
+
+# convert a CamelCase name into snake_case
+def _camel_to_snake(name: str) -> str:
+    name_snake: str = ""
+    for char in name:
+        if char.islower() or char.isnumeric():
+            name_snake += char
+            continue
+        if char == "_":
+            name_snake += char
+            continue
+        if name_snake:  # and not char.isnumeric():
+            name_snake += "_"
+        name_snake += char.lower()
+    return name_snake
+
+
 class SourceFailure:
     def __init__(self, fn=None, linecnt=None, message=None, nocheck=None):
         self.fn: Optional[str] = fn
@@ -53,6 +125,7 @@ class Checker:
         self._current_fn: Optional[str] = None
         self._current_linecnt: Optional[int] = None
         self._current_nocheck: Optional[str] = None
+        self._gtype_parents: dict[str, str] = {}
 
     def add_failure(self, message=None):
         self.failures.append(
@@ -159,6 +232,50 @@ class Checker:
             return
         self._test_line_function_names_valid(func_name)
 
+    def _test_line_missing_literal_task_return_new(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_task_return_new_error(")
+        if idx == -1:
+            return
+        sections = _split_args(line)
+        if len(sections) == 4:
+            self.add_failure(f"missing literal, use g_task_return_new_error() instead")
+
+    def _test_line_missing_literal_prefix_error(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_prefix_error(")
+        if idx == -1:
+            return
+        sections = _split_args(line)
+        if len(sections) == 2:
+            self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
+        if len(sections) > 1 and not sections[1].endswith(': "'):
+            self.add_failure(f"missing ': ' suffix")
+
+    def _test_line_missing_literal_set_error(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_set_error(")
+        if idx == -1:
+            return
+        if line.find("%m") != -1:
+            return
+        if line.find("TRANSLATORS") != -1:
+            return
+        sections = _split_args(line)
+        if len(sections) == 4:
+            self.add_failure(f"missing literal, use g_set_error_literal() instead")
+        if len(sections) > 3 and sections[3].endswith(': "'):
+            self.add_failure(f"extraneous ': ' suffix")
+
     def _test_line_enums(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:prefix"
@@ -200,6 +317,28 @@ class Checker:
             if varname not in ["signals", "quarks"]:
                 self.add_failure(f"static variable {varname} not allowed")
             break
+
+    def _test_zero_init(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:zero-init"
+        in_struct: bool = False
+        for linecnt, line in enumerate(lines):
+            self._current_linecnt = linecnt + 1
+            if line.find(self._current_nocheck) != -1:
+                continue
+            if line.find("struct ") != -1:
+                in_struct = True
+                continue
+            if in_struct and line == "}":
+                in_struct = False
+                continue
+            if in_struct:
+                continue
+            if line.find(" = ") != -1:
+                continue
+            if not line.lstrip().startswith("guint"):
+                continue
+            if line.endswith("];"):
+                self.add_failure(f"buffer not zero init, use ` = {{0}}`")
 
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
@@ -312,6 +451,65 @@ class Checker:
                 f"file has too many inline magic values ({len(magic_inlines)}), "
                 f"limit of {magic_inlines_limit}"
             )
+
+    def _test_lines_gerror_false_returns(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:error-false-return"
+
+        func_begin: int = 0
+        for linecnt, line in enumerate(lines):
+            self._current_linecnt = linecnt + 1
+            if (
+                line.find("g_set_error_literal(") != -1
+                or line.find("g_set_error(") != -1
+            ):
+                func_begin = linecnt
+                continue
+            if line.find(self._current_nocheck) != -1:
+                func_begin = 0
+                continue
+            if not func_begin:
+                continue
+            if line.find("return") != -1 or line.find("break;") != -1:
+                func_begin = 0
+                continue
+            if line.find("}") != -1:
+                func_begin = 0
+                self.add_failure("uses g_set_error() without returning FALSE")
+                continue
+
+    def _test_lines_gerror_not_set(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:error"
+
+        linecnt_g_set_error: int = 0
+        for linecnt, line in enumerate(lines):
+            if line.startswith("#define"):
+                continue
+            if line.find(self._current_nocheck) != -1:
+                continue
+            self._current_linecnt = linecnt + 1
+
+            # we're adding to the error
+            if line.find("g_prefix_error") != -1:
+                if not linecnt_g_set_error:
+                    self.add_failure("uses g_prefix_error() without setting error")
+                    continue
+                if _number_non_empty_lines(lines[linecnt_g_set_error:linecnt]) > 5:
+                    self.add_failure(
+                        "uses g_prefix_error() without setting error within 5 previous lines"
+                    )
+                continue
+
+            # are we "setting" the error
+            sections = _split_args(line)
+            for section in sections:
+                if (
+                    section.startswith("error")
+                    or section.startswith("&error")
+                    or section.startswith("GError")
+                    or section.find("(error)") != -1
+                ):
+                    linecnt_g_set_error = linecnt
+                    break
 
     def _test_lines_gerror(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:error"
@@ -457,6 +655,64 @@ class Checker:
             self.add_failure("nesting was weird")
             success = False
 
+    def _test_gobject_parents(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:name"
+
+        gtype: Optional[str] = None
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                continue
+            self._current_linecnt = linecnt + 1
+            if line.find("G_DECLARE_FINAL_TYPE") != -1:
+                gtype, _, _, _, gtypeparent = line[21:-1].replace(" ", "").split(",")
+                self._gtype_parents[gtype] = gtypeparent
+                continue
+            if line.find("G_DECLARE_DERIVABLE_TYPE") != -1:
+                gtype, _, _, _, gtypeparent = line[25:-1].replace(" ", "").split(",")
+                self._gtype_parents[gtype] = gtypeparent
+                continue
+            if line.find("G_DEFINE_TYPE") != -1:
+                gtype, prefix, parent = (
+                    line.split("(")[1].split(")")[0].replace(" ", "").split(",")[0:3]
+                )
+                # verify prefix is correct
+                if gtype not in ["FuIOChannel"]:
+                    if prefix != _camel_to_snake(gtype):
+                        self.add_failure(
+                            f"Weird prefix for GType {gtype}, "
+                            f"got {prefix} and expected {_camel_to_snake(gtype)}"
+                        )
+
+                # verify the correct _get_type() define is being used
+                if gtype not in self._gtype_parents:
+                    continue
+                parentgtype_sections = _camel_to_snake(
+                    self._gtype_parents[gtype]
+                ).split("_")
+                parentgtype_sections.insert(1, "type")
+                expected_parentgtype = "_".join(parentgtype_sections).upper()
+                if parent != expected_parentgtype:
+                    self.add_failure(
+                        f"Invalid GType parent type for {gtype}, "
+                        f"got {parent} and expected {expected_parentgtype}"
+                    )
+                continue
+
+            # verify that the correct thing is included in the class struct
+            if line.startswith("struct _"):
+                gtype = line[8:].split(" ")[0]
+                continue
+            if line.endswith("parent_instance;"):
+                parentgtype = line[1:-17]
+                if gtype not in self._gtype_parents:
+                    continue
+                expected_parentgtype = self._gtype_parents[gtype]
+                if expected_parentgtype != parentgtype:
+                    self.add_failure(
+                        f"Invalid GType parent type for {gtype}, "
+                        f"got {parentgtype} and expected {expected_parentgtype}"
+                    )
+
     def _test_lines(self, lines: List[str]) -> None:
         lines_nocheck: List[str] = []
 
@@ -476,14 +732,28 @@ class Checker:
             # test for invalid enum names
             self._test_line_enums(line)
 
+            # test for missing literals
+            self._test_line_missing_literal_task_return_new(line)
+            self._test_line_missing_literal_prefix_error(line)
+            self._test_line_missing_literal_set_error(line)
+
             # test for static variables
             self._test_static_vars(line)
+
+        # using too many hardcoded constants
+        self._test_gobject_parents(lines)
 
         # using too many hardcoded constants
         self._test_lines_magic_numbers(lines)
 
         # using FUWPD_ERROR domains
         self._test_lines_gerror(lines)
+
+        # prefix with no set
+        self._test_lines_gerror_not_set(lines)
+
+        # setting GError, not returning
+        self._test_lines_gerror_false_returns(lines)
 
         # not nesting too deep
         self._test_lines_depth(lines)
@@ -497,11 +767,14 @@ class Checker:
         # should use FuDeviceClass->convert_version
         self._test_lines_device_convert_version(lines)
 
+        # test for non-zero'd init
+        self._test_zero_init(lines)
+
     def test_file(self, fn: str) -> None:
         self._current_fn = fn
         with open(fn, "rb") as f:
             try:
-                self._test_lines(f.read().decode().split("\n"))
+                self._test_lines(_fix_newlines(f.read().decode().split("\n")))
             except UnicodeDecodeError as e:
                 print(f"failed to read {fn}: {e}")
 
@@ -527,7 +800,7 @@ def test_files() -> int:
         fns.extend(glob.glob("libfwupdplugin/*.[c|h]"))
         fns.extend(glob.glob("plugins/*/*.[c|h]"))
         fns.extend(glob.glob("src/*.[c|h]"))
-    for fn in fns:
+    for fn in sorted(fns, reverse=True):
         if os.path.basename(fn) == "check-source.py":
             continue
         checker.test_file(fn)

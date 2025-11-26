@@ -32,6 +32,7 @@ if build_standalone
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man5'),
     )
     custom_target('fwupd-remotes.d.5',
@@ -45,6 +46,7 @@ if build_standalone
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-remote.c'),
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man5'),
     )
   endif
@@ -124,6 +126,7 @@ if build_docs
     ],
     build_by_default: true,
     install: true,
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc'),
   )
 
@@ -182,6 +185,7 @@ if build_docs
     ],
     build_by_default: true,
     install: true,
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc'),
   )
   man_cmd = []
@@ -196,25 +200,31 @@ if build_docs
       man_cmd,
     ],
     install: true,
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'fwupd')
   )
   if hsi
     install_data(['hsi.html'],
+      install_tag: 'doc',
       install_dir : join_paths(datadir, 'doc', 'fwupd')
     )
   endif
   install_data(['urlmap_fwupd.js'],
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'libfwupd')
   )
   install_data(['urlmap_fwupdplugin.js'],
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'libfwupdplugin')
   )
   #make devhelp work
   install_symlink('libfwupd',
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
     pointing_to: join_paths('..', 'libfwupd'),
   )
   install_symlink('libfwupdplugin',
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
     pointing_to: join_paths('..', 'libfwupdplugin'),
   )

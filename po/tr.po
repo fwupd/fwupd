@@ -567,10 +567,6 @@ msgid "FILENAME"
 msgstr "DOSYA-ADI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "DOSYAADI AYGIT-KİMLİĞİ"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "DOSYAADI [AYGIT-KİMLİĞİ|GUID]"
 

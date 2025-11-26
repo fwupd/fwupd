@@ -140,7 +140,7 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 		return NULL;
 	st_hdr = fu_struct_synaprom_cfg_hdr_parse_stream(stream_hdr, 0x0, error);
 	if (st_hdr == NULL) {
-		g_prefix_error(error, "CFG metadata is invalid: ");
+		g_prefix_error_literal(error, "CFG metadata is invalid: ");
 		return NULL;
 	}
 	if (fu_struct_synaprom_cfg_hdr_get_product(st_hdr) != FU_SYNAPROM_PRODUCT_PROMETHEUS) {

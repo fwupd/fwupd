@@ -30,7 +30,7 @@ fu_legion_hid2_iap_device_transfer(FuLegionHid2IapDevice *self,
 					  FU_LEGION_HID2_IAP_DEVICE_TIMEOUT,
 					  FU_IO_CHANNEL_FLAG_NONE,
 					  error)) {
-			g_prefix_error(error, "failed to write packet: ");
+			g_prefix_error_literal(error, "failed to write packet: ");
 			return FALSE;
 		}
 	}
@@ -42,7 +42,7 @@ fu_legion_hid2_iap_device_transfer(FuLegionHid2IapDevice *self,
 					 FU_LEGION_HID2_IAP_DEVICE_TIMEOUT,
 					 FU_IO_CHANNEL_FLAG_NONE,
 					 error)) {
-			g_prefix_error(error, "failed to read packet: ");
+			g_prefix_error_literal(error, "failed to read packet: ");
 			return FALSE;
 		}
 	}
@@ -135,7 +135,7 @@ fu_legion_hid2_iap_device_unlock_flash(FuLegionHid2IapDevice *self, GError **err
 
 	result = fu_legion_hid2_iap_device_tlv(self, cmd, error);
 	if (result == NULL) {
-		g_prefix_error(error, "failed to unlock: ");
+		g_prefix_error_literal(error, "failed to unlock: ");
 		return FALSE;
 	}
 
@@ -152,7 +152,7 @@ fu_legion_hid2_iap_device_verify_signature(FuLegionHid2IapDevice *self, GError *
 
 	result = fu_legion_hid2_iap_device_tlv(self, cmd, error);
 	if (result == NULL) {
-		g_prefix_error(error, "failed to verify signature: ");
+		g_prefix_error_literal(error, "failed to verify signature: ");
 		return FALSE;
 	}
 
@@ -169,7 +169,7 @@ fu_legion_hid2_iap_device_verify_code(FuLegionHid2IapDevice *self, GError **erro
 
 	result = fu_legion_hid2_iap_device_tlv(self, cmd, error);
 	if (result == NULL) {
-		g_prefix_error(error, "failed to verify code: ");
+		g_prefix_error_literal(error, "failed to verify code: ");
 		return FALSE;
 	}
 
@@ -206,7 +206,7 @@ fu_legion_hid2_iap_device_write_data_chunks(FuLegionHid2IapDevice *self,
 
 		res = fu_legion_hid2_iap_device_tlv(self, req, error);
 		if (res == NULL) {
-			g_prefix_error(error, "failed to write data chunks: ");
+			g_prefix_error_literal(error, "failed to write data chunks: ");
 			return FALSE;
 		}
 
@@ -228,7 +228,7 @@ fu_legion_hid2_iap_device_wait_for_complete_cb(FuDevice *device, gpointer user_d
 
 	result = fu_legion_hid2_iap_device_tlv(FU_LEGION_HID2_IAP_DEVICE(device), cmd, error);
 	if (result == NULL) {
-		g_prefix_error(error, "failed to verify code: ");
+		g_prefix_error_literal(error, "failed to verify code: ");
 		return FALSE;
 	}
 	value = fu_struct_legion_iap_tlv_get_value(result, NULL);

@@ -190,7 +190,7 @@ fu_ch341a_device_configure_stream(FuCh341aDevice *self, GError **error)
 			FU_CH341A_CMD_I2C_STM_SET | self->speed,
 			FU_CH341A_CMD_I2C_STM_END};
 	if (!fu_ch341a_device_write(self, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to configure stream: ");
+		g_prefix_error_literal(error, "failed to configure stream: ");
 		return FALSE;
 	}
 
@@ -249,7 +249,6 @@ fu_ch341a_device_init(FuCh341aDevice *self)
 	self->speed = FU_CH341A_STM_I2C_SPEED_STANDARD;
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x0);
 	fu_device_set_name(FU_DEVICE(self), "CH341A");
-	fu_device_set_vendor(FU_DEVICE(self), "WinChipHead");
 }
 
 static void

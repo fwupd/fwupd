@@ -47,7 +47,7 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "write", buf, sizeof(buf));
 	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to write report: ");
+		g_prefix_error_literal(error, "failed to write report: ");
 		return FALSE;
 	}
 
@@ -122,7 +122,10 @@ fu_steelseries_fizz_hid_ensure_version(FuSteelseriesFizzHid *self, GError **erro
 		return FALSE;
 	version = fu_strsafe((const gchar *)st_buf->data, st_buf->len);
 	if (version == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "unable to read version");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "unable to read version");
 		return FALSE;
 	}
 	fu_device_set_version(FU_DEVICE(self), version);

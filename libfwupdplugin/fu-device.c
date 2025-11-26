@@ -680,10 +680,10 @@ fu_device_retry_full(FuDevice *self,
 
 		/* sanity check */
 		if (error_local == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "exec failed but no error set!");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "exec failed but no error set!");
 			return FALSE;
 		}
 
@@ -2575,6 +2575,11 @@ fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype)
 	priv->firmware_gtype = firmware_gtype;
 }
 
+typedef struct {
+	FuDevice *self;
+	FuDeviceInstanceFlags flags;
+} FuDeviceQuirksIterHelper;
+
 static void
 fu_device_quirks_iter_cb(FuContext *ctx,
 			 const gchar *key,
@@ -2582,18 +2587,23 @@ fu_device_quirks_iter_cb(FuContext *ctx,
 			 FuContextQuirkSource source,
 			 gpointer user_data)
 {
-	FuDevice *self = FU_DEVICE(user_data);
+	FuDeviceQuirksIterHelper *helper = (FuDeviceQuirksIterHelper *)user_data;
 	g_autoptr(GError) error = NULL;
-	if (!fu_device_set_quirk_kv(self, key, value, source, &error)) {
+#ifndef SUPPORTED_BUILD
+	if (helper->flags & FU_DEVICE_INSTANCE_FLAG_DEPRECATED)
+		g_critical("matched deprecated instance ID %s -> %s", key, value);
+#endif
+	if (!fu_device_set_quirk_kv(helper->self, key, value, source, &error)) {
 		if (!g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 			g_warning("failed to set quirk key %s=%s: %s", key, value, error->message);
 	}
 }
 
 static void
-fu_device_add_guid_quirks(FuDevice *self, const gchar *guid)
+fu_device_add_guid_quirks(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceQuirksIterHelper helper = {.self = self, .flags = flags};
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(guid != NULL);
@@ -2605,7 +2615,11 @@ fu_device_add_guid_quirks(FuDevice *self, const gchar *guid)
 	}
 
 	/* run the query */
-	fu_context_lookup_quirk_by_id_iter(priv->ctx, guid, NULL, fu_device_quirks_iter_cb, self);
+	fu_context_lookup_quirk_by_id_iter(priv->ctx,
+					   guid,
+					   NULL,
+					   fu_device_quirks_iter_cb,
+					   &helper);
 }
 
 /**
@@ -2820,8 +2834,13 @@ fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInst
 		if ((item->flags & flags) == 0)
 			continue;
 		if (g_strcmp0(item->instance_id, instance_id) == 0 ||
-		    g_strcmp0(item->guid, instance_id) == 0)
+		    g_strcmp0(item->guid, instance_id) == 0) {
+#ifndef SUPPORTED_BUILD
+			if (item->flags & FU_DEVICE_INSTANCE_FLAG_DEPRECATED)
+				g_critical("using deprecated instance ID %s", instance_id);
+#endif
 			return TRUE;
+		}
 	}
 	return FALSE;
 }
@@ -2863,7 +2882,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS) == 0 &&
 		    (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS) > 0) {
 			/* visible -> visible+quirks */
-			fu_device_add_guid_quirks(self, item->guid);
+			fu_device_add_guid_quirks(self, item->guid, item->flags);
 		}
 		item->flags |= flags;
 	} else {
@@ -2882,7 +2901,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 
 		/* we want the quirks to match so the plugin is set */
 		if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
-			fu_device_add_guid_quirks(self, item->guid);
+			fu_device_add_guid_quirks(self, item->guid, item->flags);
 	}
 
 	/* already done by ->setup(), so this must be ->registered() */
@@ -3140,6 +3159,11 @@ fu_device_fixup_vendor_name(FuDevice *self)
  * @vendor: a device vendor
  *
  * Sets the vendor name on the device.
+ *
+ * NOTE: The vendor is frequently used as a prefix to the device name in front-end tools, and so
+ * @vendor should be as short as possible.
+ * This should also be the "nice name" the user is familiar with and should not be the legal name,
+ * for example use `AMD` not `Advanced Micro Devices, Inc.`.
  *
  * Since: 1.6.2
  **/
@@ -5819,13 +5843,13 @@ fu_device_open_internal(FuDevice *self, GError **error)
 
 	/* probe */
 	if (!fu_device_probe(self, error)) {
-		g_prefix_error(error, "failed to probe: ");
+		g_prefix_error_literal(error, "failed to probe: ");
 		return FALSE;
 	}
 
 	/* ensure the device ID is already setup */
 	if (!fu_device_ensure_id(self, error)) {
-		g_prefix_error(error, "failed to ensure ID: ");
+		g_prefix_error_literal(error, "failed to ensure ID: ");
 		return FALSE;
 	}
 
@@ -5838,12 +5862,12 @@ fu_device_open_internal(FuDevice *self, GError **error)
 						  FU_DEVICE_RETRY_OPEN_DELAY,
 						  NULL,
 						  error)) {
-				g_prefix_error(error, "failed to retry subclass open: ");
+				g_prefix_error_literal(error, "failed to retry subclass open: ");
 				return FALSE;
 			}
 		} else {
 			if (!device_class->open(self, error)) {
-				g_prefix_error(error, "failed to subclass open: ");
+				g_prefix_error_literal(error, "failed to subclass open: ");
 				return FALSE;
 			}
 		}
@@ -5851,13 +5875,13 @@ fu_device_open_internal(FuDevice *self, GError **error)
 
 	/* setup */
 	if (!fu_device_setup(self, error)) {
-		g_prefix_error(error, "failed to setup: ");
+		g_prefix_error_literal(error, "failed to setup: ");
 		return FALSE;
 	}
 
 	/* ensure the device ID is still valid */
 	if (!fu_device_ensure_id(self, error)) {
-		g_prefix_error(error, "failed to ensure ID: ");
+		g_prefix_error_literal(error, "failed to ensure ID: ");
 		return FALSE;
 	}
 
@@ -6797,7 +6821,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		for (guint i = 0; i < instance_ids->len; i++) {
 			const gchar *instance_id = g_ptr_array_index(instance_ids, i);
 			g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
-			fu_device_add_guid_quirks(self, guid);
+			fu_device_add_guid_quirks(self, guid, FU_DEVICE_INSTANCE_FLAG_NONE);
 		}
 	}
 }
@@ -7512,6 +7536,67 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 }
 
 /**
+ * fu_device_build_instance_id_strv:
+ * @self: a #FuDevice
+ * @subsystem: (not nullable): subsystem, e.g. `NVME`
+ * @keys: (nullable): %NULL terminated array of string keys
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates an instance ID from a prefix and an array of key values.
+ * If the key value cannot be found, the parent and then proxy is also queried.
+ *
+ * If any of the key values remain unset then no instance ID is added.
+ *
+ *	fu_device_add_instance_str(dev, "VID", "1234");
+ *	fu_device_add_instance_u16(dev, "PID", 5678);
+ *	const gchar *keys[] = {"VID", "PID", NULL};
+ *	if (!fu_device_build_instance_id_strv(dev, "NVME", keys, &error))
+ *		g_warning("failed to add ID: %s", error->message);
+ *
+ * Returns: %TRUE if the instance ID was added.
+ *
+ * Since: 2.0.14
+ **/
+gboolean
+fu_device_build_instance_id_strv(FuDevice *self,
+				 const gchar *subsystem,
+				 gchar **keys,
+				 GError **error)
+{
+	FuDevice *parent = fu_device_get_parent(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GString) str = g_string_new(subsystem);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(subsystem != NULL, FALSE);
+
+	for (guint i = 0; keys != NULL && keys[i] != NULL; i++) {
+		const gchar *key = keys[i];
+		const gchar *value;
+
+		value = fu_device_get_instance_str(self, key);
+		if (value == NULL && parent != NULL)
+			value = fu_device_get_instance_str(parent, key);
+		if (value == NULL && priv->proxy != NULL)
+			value = fu_device_get_instance_str(priv->proxy, key);
+		if (value == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no value for %s",
+				    key);
+			return FALSE;
+		}
+		g_string_append(str, i == 0 ? "\\" : "&");
+		g_string_append_printf(str, "%s_%s", key, value);
+	}
+
+	/* success */
+	fu_device_add_instance_id(self, str->str);
+	return TRUE;
+}
+
+/**
  * fu_device_build_instance_id:
  * @self: a #FuDevice
  * @error: (nullable): optional return location for an error
@@ -7535,47 +7620,26 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
 {
-	FuDevice *parent = fu_device_get_parent(self);
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	gboolean ret = TRUE;
 	va_list args;
-	g_autoptr(GString) str = g_string_new(subsystem);
+	g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
+	g_auto(GStrv) keys = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
 
+	/* convert varargs to GStrv */
 	va_start(args, subsystem);
-	for (guint i = 0;; i++) {
+	for (;;) {
 		const gchar *key = va_arg(args, const gchar *);
-		const gchar *value;
 		if (key == NULL)
 			break;
-		value = fu_device_get_instance_str(self, key);
-		if (value == NULL && parent != NULL)
-			value = fu_device_get_instance_str(parent, key);
-		if (value == NULL && priv->proxy != NULL)
-			value = fu_device_get_instance_str(priv->proxy, key);
-		if (value == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no value for %s",
-				    key);
-			ret = FALSE;
-			break;
-		}
-		g_string_append(str, i == 0 ? "\\" : "&");
-		g_string_append_printf(str, "%s_%s", key, value);
+		g_strv_builder_add(keys_builder, key);
 	}
 	va_end(args);
+	keys = g_strv_builder_end(keys_builder);
 
-	/* we set an error above */
-	if (!ret)
-		return FALSE;
-
-	/* success */
-	fu_device_add_instance_id(self, str->str);
-	return TRUE;
+	/* call the strv version */
+	return fu_device_build_instance_id_strv(self, subsystem, keys, error);
 }
 
 /**

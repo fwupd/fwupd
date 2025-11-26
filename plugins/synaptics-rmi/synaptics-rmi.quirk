@@ -2,7 +2,6 @@
 [HIDRAW\VEN_06CB&DEV_2819]
 Plugin = synaptics_rmi
 GType = FuSynapticsRmiHidDevice
-Vendor = Synaptics
 Flags = only-supported
 
 # LENOVO X1 Nano

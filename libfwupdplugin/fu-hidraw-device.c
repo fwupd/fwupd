@@ -25,9 +25,44 @@
  * See also: #FuUdevDevice
  */
 
-G_DEFINE_TYPE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
+typedef struct {
+	FuHidrawBusType bus_type;
+} FuHidrawDevicePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
+
+#define GET_PRIVATE(o) (fu_hidraw_device_get_instance_private(o))
 
 #define FU_HIDRAW_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
+
+static void
+fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
+	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "BusType",
+				  fu_hidraw_bus_type_to_string(priv->bus_type));
+}
+
+/**
+ * fu_hidraw_device_get_bus_type:
+ * @self: a #FuHidrawDevice
+ *
+ * Gets the bus type.
+ *
+ * Returns: a #FuHidrawBusType, e.g. %FU_HIDRAW_BUS_TYPE_USB
+ *
+ * Since: 2.0.14
+ **/
+FuHidrawBusType
+fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
+{
+	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FU_HIDRAW_BUS_TYPE_UNKNOWN);
+	return priv->bus_type;
+}
 
 /**
  * fu_hidraw_device_parse_descriptor:
@@ -59,7 +94,7 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 			      5000,
 			      FU_IOCTL_FLAG_NONE,
 			      error)) {
-		g_prefix_error(error, "failed to get report descriptor size: ");
+		g_prefix_error_literal(error, "failed to get report descriptor size: ");
 		return NULL;
 	}
 
@@ -72,7 +107,7 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 			      5000,
 			      FU_IOCTL_FLAG_NONE,
 			      error)) {
-		g_prefix_error(error, "failed to get report descriptor: ");
+		g_prefix_error_literal(error, "failed to get report descriptor: ");
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
@@ -109,6 +144,51 @@ fu_hidraw_device_probe_usb(FuHidrawDevice *self, GError **error)
 }
 
 static gboolean
+fu_hidraw_device_setup(FuDevice *device, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
+	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
+	struct hidraw_devinfo hid_raw_info = {0x0};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRAWINFO,
+			      (guint8 *)&hid_raw_info,
+			      sizeof(hid_raw_info),
+			      NULL,
+			      FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      &error_local)) {
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("ignoring missing emulation data: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	priv->bus_type = hid_raw_info.bustype;
+
+	/* fallback only */
+	if (fu_device_get_vid(device) == 0x0)
+		fu_device_set_vid(device, hid_raw_info.vendor);
+	if (fu_device_get_pid(device) == 0x0)
+		fu_device_set_pid(device, hid_raw_info.product);
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/hidraw.h> not available");
+	return FALSE;
+#endif
+}
+
+static gboolean
 fu_hidraw_device_probe(FuDevice *device, GError **error)
 {
 	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
@@ -140,7 +220,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 					 G_MAXUINT16,
 					 FU_INTEGER_BASE_16,
 					 error)) {
-				g_prefix_error(error, "failed to parse HID_ID: ");
+				g_prefix_error_literal(error, "failed to parse HID_ID: ");
 				return FALSE;
 			}
 			fu_device_set_vid(device, (guint16)val);
@@ -153,7 +233,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 					 G_MAXUINT16,
 					 FU_INTEGER_BASE_16,
 					 error)) {
-				g_prefix_error(error, "failed to parse HID_ID: ");
+				g_prefix_error_literal(error, "failed to parse HID_ID: ");
 				return FALSE;
 			}
 			fu_device_set_pid(device, (guint16)val);
@@ -222,6 +302,13 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* USB\\VID_1234 */
+	fu_device_add_instance_u16(FU_DEVICE(self), "VID", fu_device_get_vid(device));
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 NULL);
 	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", fu_device_get_vid(device));
 	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", fu_device_get_pid(device));
 	fu_device_build_instance_id_full(device,
@@ -353,6 +440,84 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 #endif
 }
 
+/**
+ * fu_hidraw_device_set_report:
+ * @self: a #FuHidrawDevice
+ * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
+ * @bufsz: the size of @buf
+ * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Do a HID SetOutputReport request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.14
+ **/
+gboolean
+fu_hidraw_device_set_report(FuHidrawDevice *self,
+			    const guint8 *buf,
+			    gsize bufsz,
+			    FuIOChannelFlags flags,
+			    GError **error)
+{
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, bufsz);
+	return fu_udev_device_write(FU_UDEV_DEVICE(self),
+				    buf,
+				    bufsz,
+				    FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+				    flags,
+				    error);
+}
+
+/**
+ * fu_hidraw_device_get_report:
+ * @self: a #FuHidrawDevice
+ * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
+ * @bufsz: the size of @buf
+ * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Do a HID GetInputReport request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.14
+ **/
+gboolean
+fu_hidraw_device_get_report(FuHidrawDevice *self,
+			    guint8 *buf,
+			    gsize bufsz,
+			    FuIOChannelFlags flags,
+			    GError **error)
+{
+	gsize bytes_read = 0;
+
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
+				 buf,
+				 bufsz,
+				 &bytes_read,
+				 FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+				 flags,
+				 error))
+		return FALSE;
+
+	if (bytes_read != bufsz) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "invalid response");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static void
 fu_hidraw_device_init(FuHidrawDevice *self)
 {
@@ -364,4 +529,6 @@ fu_hidraw_device_class_init(FuHidrawDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_hidraw_device_probe;
+	device_class->setup = fu_hidraw_device_setup;
+	device_class->to_string = fu_hidraw_device_to_string;
 }

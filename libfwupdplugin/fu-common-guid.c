@@ -23,13 +23,13 @@
 gboolean
 fu_common_guid_is_plausible(const guint8 *buf)
 {
-	guint guint_sum = 0;
+	guint sum = 0;
 
 	for (guint i = 0; i < 16; i++)
-		guint_sum += buf[i];
-	if (guint_sum == 0x00)
+		sum += buf[i];
+	if (sum == 0x00)
 		return FALSE;
-	if (guint_sum < 0xff)
+	if (sum < 0xff)
 		return FALSE;
 	return TRUE;
 }

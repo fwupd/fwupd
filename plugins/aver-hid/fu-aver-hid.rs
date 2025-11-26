@@ -73,7 +73,7 @@ struct FuStructAverHidReqIsp {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
-    data: [u8; 508] = 0xFF,
+    data: [u8; 508] = [0xFF; 508],
     end: u8 == 0x00,
 }
 
@@ -86,7 +86,7 @@ struct FuStructAverHidReqIspFileStart {
     file_name: [char; 52],
     file_size: u32le,
     free_space: u32le,
-    _reserved: [u8; 448] = 0xFF,
+    _reserved: [u8; 448] = [0xFF; 448],
     end: u8 == 0x00,
 }
 
@@ -96,7 +96,7 @@ struct FuStructAverHidReqIspFileDnload {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
-    data: [u8; 508] = 0xFF,
+    data: [u8; 508] = [0xFF; 508],
 }
 
 #[derive(Setters, Getters, New, Default)]
@@ -109,7 +109,7 @@ struct FuStructAverHidReqIspFileEnd {
     end_flag: u8,
     file_size: u32le,
     free_space: u32le,
-    _reserved: [u8; 448] = 0xFF,
+    _reserved: [u8; 448] = [0xFF; 448],
     end: u8 == 0x00,
 }
 
@@ -120,7 +120,7 @@ struct FuStructAverHidReqIspStart {
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
     isp_cmd: [u8; 60],
-    _reserved: [u8; 448] = 0xFF,
+    _reserved: [u8; 448] = [0xFF; 448],
     end: u8 == 0x00,
 }
 
@@ -130,7 +130,7 @@ struct FuStructAverHidReqDeviceVersion {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x25,
     ver: [u8; 11],
-    _reserved: [u8; 498] = 0xFF,
+    _reserved: [u8; 498] = [0xFF; 498],
     end: u8 == 0x00,
 }
 
@@ -143,7 +143,7 @@ struct FuStructAverHidResIspStatus {
     status: u8,
     status_string: [char; 58],
     progress: u8,
-    _reserved: [u8; 448] = 0xFF,
+    _reserved: [u8; 448] = [0xFF; 448],
     end: u8 == 0x00,
 }
 
@@ -153,7 +153,7 @@ struct FuStructAverHidResIsp {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
-    _reserved: [u8; 508] = 0xFF,
+    _reserved: [u8; 508] = [0xFF; 508],
     end: u8 == 0x00,
 }
 
@@ -163,7 +163,7 @@ struct FuStructAverHidResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x25,
     ver: [u8; 11],
-    _reserved: [u8; 498] = 0xFF,
+    _reserved: [u8; 498] = [0xFF; 498],
     end: u8 == 0x00,
 }
 
@@ -175,7 +175,7 @@ struct FuStructAverSafeispReq {
     custom_res: u16le,
     custom_parm0: u32le = 0x00,
     custom_parm1: u32le = 0x00,
-    data: [u8; 1012] = 0x00,
+    data: [u8; 1012] = [0x00; 1012],
 };
 
 #[derive(New, Getters, Validate, Default)]
@@ -186,7 +186,7 @@ struct FuStructAverSafeispRes {
     custom_res: u16le,
     custom_parm0: u32le,
     custom_parm1: u32le,
-    data: [u8; 4] = 0x00,
+    data: [u8; 4] = [0x00; 4],
 };
 
 #[derive(Getters, Validate, Default)]
@@ -195,5 +195,5 @@ struct FuStructAverSafeispResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8 == 0x14,
     ver: [u8; 11],
-    _reserved: [u8; 3] = 0x00,
+    _reserved: [u8; 3] = [0x00; 3],
 }

@@ -412,12 +412,15 @@ fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, G
 	FuSteelseriesSonicWirelessStatus *wl_status = (FuSteelseriesSonicWirelessStatus *)user_data;
 
 	if (!fu_steelseries_sonic_wireless_status(self, wl_status, error)) {
-		g_prefix_error(error, "failed to get wireless status: ");
+		g_prefix_error_literal(error, "failed to get wireless status: ");
 		return FALSE;
 	}
 	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(*wl_status));
 	if (*wl_status != FU_STEELSERIES_SONIC_WIRELESS_STATUS_CONNECTED) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "device is unreachable");
 		return FALSE;
 	}
 
@@ -437,7 +440,7 @@ fu_steelseries_sonic_wait_for_connect(FuSteelseriesSonic *self,
 	g_autofree gchar *msg = NULL;
 
 	if (!fu_steelseries_sonic_wireless_status(self, &wl_status, error)) {
-		g_prefix_error(error, "failed to get wireless status: ");
+		g_prefix_error_literal(error, "failed to get wireless status: ");
 		return FALSE;
 	}
 	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(wl_status));
@@ -532,7 +535,7 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 						   error))
 		return FALSE;
 	if (!fu_steelseries_sonic_ensure_battery_state(self, error)) {
-		g_prefix_error(error, "failed to get battery state: ");
+		g_prefix_error_literal(error, "failed to get battery state: ");
 		return FALSE;
 	}
 
@@ -924,8 +927,6 @@ fu_steelseries_sonic_class_init(FuSteelseriesSonicClass *klass)
 static void
 fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 {
-	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), -1);
-
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

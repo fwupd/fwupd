@@ -42,7 +42,6 @@ enum FuEngineLoadFlags {
     Remotes = 1 << 2,
     Hwinfo = 1 << 3,
     NoCache = 1 << 4,
-    NoIdleSources = 1 << 5,
     BuiltinPlugins = 1 << 6,
     EnsureClientCert = 1 << 7,
     ExternalPlugins = 1 << 8,   // dload'ed plugins such as flashrom

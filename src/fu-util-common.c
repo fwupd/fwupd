@@ -1623,6 +1623,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: The plugin is only for testing */
 		return g_strdup(_("Plugin is only for testing"));
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION) {
+		/* TRANSLATORS: The plugin enumeration might change the device current mode */
+		return g_strdup(_("Plugin enumeration may change device state"));
+	}
 
 	/* fall back for unknown types */
 	return g_strdup(fwupd_plugin_flag_to_string(plugin_flag));
@@ -1648,7 +1652,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
 	case FWUPD_PLUGIN_FLAG_TEST_ONLY:
 	case FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION:
-		return fu_console_color_format(plugin_flag_str, FU_CONSOLE_COLOR_BLACK);
+		return fu_console_color_format(plugin_flag_str, FU_CONSOLE_COLOR_YELLOW);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:

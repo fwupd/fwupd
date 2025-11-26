@@ -82,7 +82,7 @@ fu_uefi_sbat_device_prepare_firmware(FuDevice *device,
 						 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE,
 					     error);
 	if (esp_files == NULL) {
-		g_prefix_error(error, "failed to get files on ESP: ");
+		g_prefix_error_literal(error, "failed to get files on ESP: ");
 		return NULL;
 	}
 	for (guint i = 0; i < esp_files->len; i++) {

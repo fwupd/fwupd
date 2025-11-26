@@ -111,6 +111,10 @@ repos:
       types_or: [shell, c, python]
       language: script
       entry: ./contrib/ci/check-license.py
+    - id: check-meson-install-tags
+      name: Check meson install tags
+      language: script
+      entry: ./contrib/ci/check-meson-install-tags.py
 -   repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.38.0
     hooks:

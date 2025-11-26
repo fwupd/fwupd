@@ -8,4 +8,5 @@ enum FuDeviceInstanceFlags {
     Quirks  = 1 << 1,
     Generic = 1 << 2, // added by a baseclass
     Counterpart = 1 << 3,
+    Deprecated = 1 << 4,
 }

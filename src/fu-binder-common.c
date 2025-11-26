@@ -96,7 +96,7 @@ fu_binder_daemon_method_invocation_return_error(AParcel *out, GError *error)
 {
 	g_autoptr(AStatus) status = NULL;
 
-	fu_error_convert(&error);
+	fwupd_error_convert(&error);
 
 	g_return_val_if_fail(error != NULL, STATUS_BAD_VALUE);
 

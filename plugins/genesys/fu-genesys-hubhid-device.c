@@ -180,7 +180,7 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 							 0x0, /* src */
 							 setup->length,
 							 error)) {
-			g_prefix_error(error, "error packing request data: ");
+			g_prefix_error_literal(error, "error packing request data: ");
 			return FALSE;
 		}
 	}
@@ -250,7 +250,7 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 				      GENESYS_HUBHID_REPORT_TIMEOUT,
 				      GENESYS_HUBHID_REPORT_FLAGS,
 				      error)) {
-		g_prefix_error(error, "error finishing report: ");
+		g_prefix_error_literal(error, "error finishing report: ");
 		return FALSE;
 	}
 
@@ -338,7 +338,7 @@ fu_genesys_hubhid_device_validate_token(FuGenesysHubhidDevice *self, GError **er
 			    0,
 			    buf_hid_token->len,
 			    error)) {
-		g_prefix_error(error, "wrong HID token string: ");
+		g_prefix_error_literal(error, "wrong HID token string: ");
 		return FALSE;
 	}
 
@@ -372,7 +372,7 @@ fu_genesys_hubhid_device_setup(FuDevice *device, GError **error)
 
 	/* FuHidDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_hubhid_device_parent_class)->setup(device, error)) {
-		g_prefix_error(error, "error setting up device: ");
+		g_prefix_error_literal(error, "error setting up device: ");
 		return FALSE;
 	}
 

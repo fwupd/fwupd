@@ -15,6 +15,8 @@ G_DECLARE_DERIVABLE_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuUdevDevice)
 
 #define FU_MM_DEVICE_FLAG_USE_BRANCH "use-branch"
 
+#define FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW "make-serial-raw"
+
 /* less ifdefs */
 #if !MM_CHECK_VERSION(1, 24, 0)
 #define MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA	      (1 << 5)
@@ -44,5 +46,6 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, G
 gboolean
 fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
     G_GNUC_NON_NULL(1);
-void
-fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id, GError **error)
+    G_GNUC_NON_NULL(1, 2);

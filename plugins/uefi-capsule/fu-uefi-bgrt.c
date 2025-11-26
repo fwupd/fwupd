@@ -70,7 +70,7 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 				    file,
 				    FU_FIRMWARE_PARSE_FLAG_NONE,
 				    error)) {
-		g_prefix_error(error, "BGRT image invalid: ");
+		g_prefix_error_literal(error, "BGRT image invalid: ");
 		return FALSE;
 	}
 	self->width = fu_bitmap_image_get_width(bmp_image);

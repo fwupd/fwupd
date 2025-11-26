@@ -53,7 +53,7 @@ fu_intel_mkhi_device_setup(FuDevice *device, GError **error)
 
 	/* connect */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(device), FU_HECI_DEVICE_UUID_MKHI, 0, error)) {
-		g_prefix_error(error, "failed to connect: ");
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
 	}
 

@@ -77,7 +77,7 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_ERASE);
 	fu_byte_array_append_uint8(buf, 0xFF);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 5000, progress, error)) {
-		g_prefix_error(error, "cannot mass-erase: ");
+		g_prefix_error_literal(error, "cannot mass-erase: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -170,7 +170,7 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 	fu_byte_array_append_uint8(buf, memory_unit);
 	g_debug("selecting memory unit 0x%02x", (guint)memory_unit);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
-		g_prefix_error(error, "cannot select memory unit: ");
+		g_prefix_error_literal(error, "cannot select memory unit: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -212,7 +212,7 @@ fu_dfu_target_avr_select_memory_page(FuDfuTarget *target,
 	fu_byte_array_append_uint8(buf, memory_page & 0xFF);
 	g_debug("selecting memory page 0x%01x", (guint)memory_page);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
-		g_prefix_error(error, "cannot select memory page: ");
+		g_prefix_error_literal(error, "cannot select memory page: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -243,7 +243,7 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
 	fu_byte_array_append_uint16(buf, memory_page, G_BIG_ENDIAN);
 	g_debug("selecting memory page 0x%02x", (guint)memory_page);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
-		g_prefix_error(error, "cannot select memory page: ");
+		g_prefix_error_literal(error, "cannot select memory page: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -310,7 +310,7 @@ fu_dfu_target_avr_read_command(FuDfuTarget *target,
 	fu_byte_array_append_uint8(buf, addr);
 	g_debug("read command page:0x%02x addr:0x%02x", (guint)page, (guint)addr);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
-		g_prefix_error(error, "cannot read command page: ");
+		g_prefix_error_literal(error, "cannot read command page: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -481,7 +481,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	} else {
 		chunk_sig = fu_dfu_target_avr32_get_chip_signature(target, progress, error);
 		if (chunk_sig == NULL) {
-			g_prefix_error(error, "failed to get chip signature: ");
+			g_prefix_error_literal(error, "failed to get chip signature: ");
 			return FALSE;
 		}
 	}
@@ -490,7 +490,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	buf = g_bytes_get_data(chunk_sig, &sz);
 	fu_dump_bytes(G_LOG_DOMAIN, "AVR:CID", chunk_sig);
 	if (!fu_memread_uint32_safe(buf, sz, 0x0, &priv->device_id, G_BIG_ENDIAN, error)) {
-		g_prefix_error(error, "cannot read config memory: ");
+		g_prefix_error_literal(error, "cannot read config memory: ");
 		return FALSE;
 	}
 

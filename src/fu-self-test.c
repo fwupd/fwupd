@@ -23,6 +23,7 @@
 #include "fu-context-private.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-drm-device-private.h"
 #include "fu-efivars-private.h"
 #include "fu-engine-config.h"
 #include "fu-engine-helper.h"
@@ -1331,6 +1332,8 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	GPtrArray *plugins;
 	gboolean ret;
+	g_autoptr(FuDrmDevice) drm_device = g_object_new(FU_TYPE_DRM_DEVICE, NULL);
+	g_autoptr(FuEdid) edid = fu_edid_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
@@ -1426,6 +1429,18 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 								   &error_local))
 				g_debug("ignoring: %s", error_local->message);
 		}
+	}
+
+	/* register a DRM device as some plugins use these for quirks */
+	fu_edid_set_pnp_id(edid, "PNP");
+	fu_edid_set_eisa_id(edid, "IBM");
+	fu_edid_set_product_name(edid, "Display");
+	fu_edid_set_serial_number(edid, "123456");
+	fu_edid_set_product_code(edid, 0x1234);
+	fu_drm_device_set_edid(drm_device, edid);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		fu_plugin_runner_device_register(plugin, FU_DEVICE(drm_device));
 	}
 
 	/* create each custom device with a context only */
@@ -3181,8 +3196,8 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Flags:                updatable|historical|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
 			    "  VersionFormat:        triplet\n"
-			    "  Created:              2018-01-07\n"
-			    "  Modified:             2017-12-27\n"
+			    "  Created:              2018-01-07 15:13:20\n"
+			    "  Modified:             2017-12-27 01:26:40\n"
 			    "  UpdateState:          success\n"
 			    "  FuRelease:\n"
 			    "    AppstreamId:        com.hughski.test.firmware\n"
@@ -3192,6 +3207,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  InstanceId[vi]:       12345678-1234-1234-1234-123456789012\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
+	g_debug("%s", device_str);
 	ret = g_strcmp0(device_str, device_str_expected) == 0;
 	g_assert_true(ret);
 
@@ -3783,6 +3799,7 @@ fu_engine_install_request(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(fu_release_get_firmware_basename(release), ==, "firmware.bin");
+	g_assert_cmpstr(fu_release_get_version(release), ==, "1.2.3");
 
 	g_signal_connect(FU_ENGINE(engine),
 			 "device-request",
@@ -3914,8 +3931,8 @@ fu_engine_history_error_func(gconstpointer user_data)
 	    "  Flags:                updatable|historical|unsigned-payload\n"
 	    "  Version:              1.2.2\n"
 	    "  VersionFormat:        triplet\n"
-	    "  Created:              2018-01-07\n"
-	    "  Modified:             2017-12-27\n"
+	    "  Created:              2018-01-07 15:13:20\n"
+	    "  Modified:             2017-12-27 01:26:40\n"
 	    "  UpdateState:          failed\n"
 	    "  UpdateError:          failed to write-firmware: device was not in supported mode\n"
 	    "  FuRelease:\n"
@@ -3926,6 +3943,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	    "  InstanceId[vi]:       12345678-1234-1234-1234-123456789012\n"
 	    "  AcquiesceDelay:       50\n",
 	    checksum);
+	g_debug("%s", device_str);
 	ret = g_strcmp0(device_str, device_str_expected) == 0;
 	g_assert_true(ret);
 }
@@ -5639,7 +5657,7 @@ fu_memcpy_func(gconstpointer user_data)
 {
 	const guint8 src[] = {'a', 'b', 'c', 'd', 'e'};
 	gboolean ret;
-	guint8 dst[4];
+	guint8 dst[4] = {0};
 	g_autoptr(GError) error = NULL;
 
 	/* copy entire buffer */
@@ -6104,6 +6122,9 @@ fu_common_store_cab_artifact_func(void)
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
 	    "  <releases>\n"
 	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
 	    "      <artifacts>\n"
@@ -6131,28 +6152,32 @@ fu_common_store_cab_artifact_func(void)
 	g_assert_true(ret);
 
 	/* create silo (sha1, using artifacts object; mixed case) */
-	blob2 = fu_test_build_cab(FALSE,
-				  "acme.metainfo.xml",
-				  "<component type=\"firmware\">\n"
-				  "  <id>com.acme.example.firmware</id>\n"
-				  "  <releases>\n"
-				  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-				  "      <artifacts>\n"
-				  "        <artifact type=\"source\">\n"
-				  "          <filename>firmware.dfu</filename>\n"
-				  "          <checksum "
-				  "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
-				  "checksum>\n"
-				  "        </artifact>\n"
-				  "      </artifacts>\n"
-				  "    </release>\n"
-				  "  </releases>\n"
-				  "</component>",
-				  "firmware.dfu",
-				  "world",
-				  "firmware.dfu.asc",
-				  "signature",
-				  NULL);
+	blob2 = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"source\">\n"
+	    "          <filename>firmware.dfu</filename>\n"
+	    "          <checksum "
+	    "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
+	    "checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.dfu",
+	    "world",
+	    "firmware.dfu.asc",
+	    "signature",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet2),
 				      blob2,
 				      0x0,
@@ -6167,6 +6192,9 @@ fu_common_store_cab_artifact_func(void)
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
 	    "  <releases>\n"
 	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
 	    "      <artifacts>\n"
@@ -6196,26 +6224,29 @@ fu_common_store_cab_artifact_func(void)
 	g_assert_true(ret);
 
 	/* create silo (legacy release object) */
-	blob4 =
-	    fu_test_build_cab(FALSE,
-			      "acme.metainfo.xml",
-			      "<component type=\"firmware\">\n"
-			      "  <id>com.acme.example.firmware</id>\n"
-			      "  <releases>\n"
-			      "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			      "        <checksum "
-			      "target=\"content\" "
-			      "filename=\"firmware.dfu\">"
-			      "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
-			      "checksum>\n"
-			      "    </release>\n"
-			      "  </releases>\n"
-			      "</component>",
-			      "firmware.dfu",
-			      "world",
-			      "firmware.dfu.asc",
-			      "signature",
-			      NULL);
+	blob4 = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	    "        <checksum "
+	    "target=\"content\" "
+	    "filename=\"firmware.dfu\">"
+	    "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
+	    "checksum>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.dfu",
+	    "world",
+	    "firmware.dfu.asc",
+	    "signature",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet4),
 				      blob4,
 				      0x0,
@@ -6239,17 +6270,21 @@ fu_common_store_cab_unsigned_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = fu_test_build_cab(FALSE,
-				 "acme.metainfo.xml",
-				 "<component type=\"firmware\">\n"
-				 "  <id>com.acme.example.firmware</id>\n"
-				 "  <releases>\n"
-				 "    <release version=\"1.2.3\"/>\n"
-				 "  </releases>\n"
-				 "</component>",
-				 "firmware.bin",
-				 "world",
-				 NULL);
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\"/>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
@@ -6292,6 +6327,9 @@ fu_common_store_cab_sha256_func(void)
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
 	    "  <releases>\n"
 	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
 	    "      <checksum target=\"content\" "
@@ -6325,17 +6363,21 @@ fu_common_store_cab_folder_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = fu_test_build_cab(FALSE,
-				 "lvfs\\acme.metainfo.xml",
-				 "<component type=\"firmware\">\n"
-				 "  <id>com.acme.example.firmware</id>\n"
-				 "  <releases>\n"
-				 "    <release version=\"1.2.3\"/>\n"
-				 "  </releases>\n"
-				 "</component>",
-				 "lvfs\\firmware.bin",
-				 "world",
-				 NULL);
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "lvfs\\acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\"/>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "lvfs\\firmware.bin",
+	    "world",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
@@ -6388,21 +6430,25 @@ fu_common_store_cab_error_wrong_size_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = fu_test_build_cab(FALSE,
-				 "acme.metainfo.xml",
-				 "<component type=\"firmware\">\n"
-				 "  <id>com.acme.example.firmware</id>\n"
-				 "  <releases>\n"
-				 "    <release version=\"1.2.3\">\n"
-				 "      <size type=\"installed\">7004701</size>\n"
-				 "      <checksum filename=\"firmware.bin\" target=\"content\" "
-				 "type=\"sha1\">deadbeef</checksum>\n"
-				 "    </release>\n"
-				 "  </releases>\n"
-				 "</component>",
-				 "firmware.bin",
-				 "world",
-				 NULL);
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\">\n"
+	    "      <size type=\"installed\">7004701</size>\n"
+	    "      <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"sha1\">deadbeef</checksum>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
@@ -6420,19 +6466,23 @@ fu_common_store_cab_error_missing_file_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = fu_test_build_cab(FALSE,
-				 "acme.metainfo.xml",
-				 "<component type=\"firmware\">\n"
-				 "  <id>com.acme.example.firmware</id>\n"
-				 "  <releases>\n"
-				 "    <release version=\"1.2.3\">\n"
-				 "      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
-				 "    </release>\n"
-				 "  </releases>\n"
-				 "</component>",
-				 "firmware.bin",
-				 "world",
-				 NULL);
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\">\n"
+	    "      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
@@ -6450,17 +6500,21 @@ fu_common_store_cab_error_size_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = fu_test_build_cab(FALSE,
-				 "acme.metainfo.xml",
-				 "<component type=\"firmware\">\n"
-				 "  <id>com.acme.example.firmware</id>\n"
-				 "  <releases>\n"
-				 "    <release version=\"1.2.3\"/>\n"
-				 "  </releases>\n"
-				 "</component>",
-				 "firmware.bin",
-				 "world",
-				 NULL);
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\"/>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
 	fu_firmware_set_size_max(FU_FIRMWARE(cabinet), 123);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
@@ -6479,20 +6533,24 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = fu_test_build_cab(FALSE,
-				 "acme.metainfo.xml",
-				 "<component type=\"firmware\">\n"
-				 "  <id>com.acme.example.firmware</id>\n"
-				 "  <releases>\n"
-				 "    <release version=\"1.2.3\">\n"
-				 "      <checksum filename=\"firmware.bin\" target=\"content\" "
-				 "type=\"sha1\">deadbeef</checksum>\n"
-				 "    </release>\n"
-				 "  </releases>\n"
-				 "</component>",
-				 "firmware.bin",
-				 "world",
-				 NULL);
+	blob = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\">\n"
+	    "      <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"sha1\">deadbeef</checksum>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.bin",
+	    "world",
+	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
@@ -7096,7 +7154,7 @@ fu_config_migrate_1_9_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_config_load(config, &error);
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -7177,7 +7235,7 @@ fu_config_migrate_1_7_func(void)
 
 	/* we don't want to run all the plugins just to get the _init() defaults */
 	fu_config_set_plugin_defaults(config);
-	ret = fu_config_load(config, &error);
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_MIGRATE_FILES, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -7290,7 +7348,7 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "pixart_rf");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7354,7 +7412,7 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "hughski_colorhug");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7394,7 +7452,7 @@ fu_test_engine_fake_v4l(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "logitech_tap");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7441,7 +7499,6 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "nvme");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES |
 				 FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     progress,
 			     &error);
@@ -7492,7 +7549,7 @@ fu_test_engine_fake_serio(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "synaptics_rmi");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7545,7 +7602,7 @@ fu_test_engine_fake_tpm(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "tpm");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7592,7 +7649,7 @@ fu_test_engine_fake_block(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "scsi");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7652,6 +7709,7 @@ main(int argc, char **argv)
 
 	/* do not save silo */
 	self->ctx = fu_context_new();
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

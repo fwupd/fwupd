@@ -1112,10 +1112,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "फाइलनाम प्रमाणपत्र निजी-कुंजी"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "फाइलनाम उपकरण-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "फाइलनाम ऑफ़सेट डेटा [फर्मवेयर-प्रकार]"
 
@@ -1419,7 +1415,6 @@ msgid "Host Security Events"
 msgstr "होस्ट की सुरक्षा घटनाएं"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "होस्ट सुरक्षा ID (HSI) समर्थित नहीं है"
 

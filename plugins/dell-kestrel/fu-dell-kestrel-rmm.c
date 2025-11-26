@@ -55,7 +55,7 @@ fu_dell_kestrel_rmm_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_dell_kestrel_rmm_fix_version(self, error)) {
-		g_prefix_error(error, "failed to fix RMM version: ");
+		g_prefix_error_literal(error, "failed to fix RMM version: ");
 		return FALSE;
 	}
 

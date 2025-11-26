@@ -6,6 +6,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_TERMIOS_H
+#include <termios.h>
+#endif
+
 #include "fu-mm-common.h"
 #include "fu-mm-device.h"
 
@@ -20,11 +24,22 @@
 /* not strictly last, but the last we care about */
 #define MM_MODEM_PORT_TYPE_LAST (MM_MODEM_PORT_TYPE_IGNORED + 1)
 
+typedef enum {
+	FU_MM_DEVICE_PORT_FLAG_NONE = 0,
+	FU_MM_DEVICE_PORT_FLAG_MAKE_RAW = 1 << 0,
+} FuMmDevicePortFlags;
+
+typedef struct {
+	MMModemPortType type;
+	gchar *device_file;
+	FuMmDevicePortFlags flags;
+} FuMmDevicePort;
+
 typedef struct {
 	gboolean inhibited;
 	gchar *branch_at;
 	gchar *inhibition_uid;
-	gchar *port[MM_MODEM_PORT_TYPE_LAST];
+	GPtrArray *ports; /* element-type FuMmDevicePort */
 } FuMmDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuMmDevice, fu_mm_device, FU_TYPE_UDEV_DEVICE);
@@ -36,6 +51,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuMmDevice, fu_mm_device, FU_TYPE_UDEV_DEVICE);
 #define FU_MM_DEVICE_AT_DELAY 3000 /* ms */
 
 enum { PROP_0, PROP_INHIBITED, PROP_LAST };
+
+static void
+fu_mm_device_port_free(FuMmDevicePort *port)
+{
+	g_free(port->device_file);
+	g_free(port);
+}
 
 static void
 fu_mm_device_set_branch_at(FuMmDevice *self, const gchar *branch_at)
@@ -55,12 +77,11 @@ fu_mm_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "BranchAt", priv->branch_at);
 	fwupd_codec_string_append_bool(str, idt, "Inhibited", priv->inhibited);
 	fwupd_codec_string_append(str, idt, "InhibitionUid", priv->inhibition_uid);
-	for (guint i = 0; i < MM_MODEM_PORT_TYPE_LAST; i++) {
-		if (priv->port[i] != NULL) {
-			g_autofree gchar *title =
-			    g_strdup_printf("Port[%s]", fu_mm_device_port_type_to_string(i));
-			fwupd_codec_string_append(str, idt, title, priv->port[i]);
-		}
+	for (guint i = 0; i < priv->ports->len; i++) {
+		FuMmDevicePort *port = g_ptr_array_index(priv->ports, i);
+		g_autofree gchar *title =
+		    g_strdup_printf("Port[%s]", fu_mm_device_port_type_to_string(port->type));
+		fwupd_codec_string_append(str, idt, title, port->device_file);
 	}
 }
 
@@ -96,17 +117,27 @@ fu_mm_device_set_device_file(FuMmDevice *self, MMModemPortType port_type, GError
 {
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_MM_DEVICE(self), FALSE);
-	g_return_val_if_fail(port_type < MM_MODEM_PORT_TYPE_LAST, FALSE);
-	if (priv->port[port_type] == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no port for %s",
-			    fu_mm_device_port_type_to_string(port_type));
-		return FALSE;
+
+	/* find port by type */
+	for (guint i = 0; i < priv->ports->len; i++) {
+		FuMmDevicePort *port = g_ptr_array_index(priv->ports, i);
+		if (port_type == port->type) {
+			if (port->flags & FU_MM_DEVICE_PORT_FLAG_MAKE_RAW) {
+				fu_device_add_private_flag(FU_DEVICE(self),
+							   FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW);
+			}
+			fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), port->device_file);
+			return TRUE;
+		}
 	}
-	fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), priv->port[port_type]);
-	return TRUE;
+
+	/* not found */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "no port for %s",
+		    fu_mm_device_port_type_to_string(port_type));
+	return FALSE;
 }
 
 static gboolean
@@ -141,8 +172,36 @@ fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **
 	return fu_mm_device_writeln(autosuspend_delay_filename, buf, error);
 }
 
-void
-fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
+static gboolean
+fu_mm_device_add_instance_id_vid(FuMmDevice *self, const gchar *value, GError **error)
+{
+	if (fu_device_get_vid(FU_DEVICE(self)) == 0x0) {
+		guint64 value_u64 = 0;
+		if (!fu_strtoull(value, &value_u64, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+			return FALSE;
+		fu_device_set_vid(FU_DEVICE(self), (guint16)value_u64);
+	}
+	if (fu_device_get_instance_str(FU_DEVICE(self), "VID") == NULL)
+		fu_device_add_instance_str(FU_DEVICE(self), "VID", value);
+	return TRUE;
+}
+
+static gboolean
+fu_mm_device_add_instance_id_pid(FuMmDevice *self, const gchar *value, GError **error)
+{
+	if (fu_device_get_pid(FU_DEVICE(self)) == 0x0) {
+		guint64 value_u64 = 0;
+		if (!fu_strtoull(value, &value_u64, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+			return FALSE;
+		fu_device_set_pid(FU_DEVICE(self), (guint16)value_u64);
+	}
+	if (fu_device_get_instance_str(FU_DEVICE(self), "PID") == NULL)
+		fu_device_add_instance_str(FU_DEVICE(self), "PID", value);
+	return TRUE;
+}
+
+gboolean
+fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id, GError **error)
 {
 	g_autofree gchar *subsys_pid = NULL;
 	g_autofree gchar *subsys_vid = NULL;
@@ -160,13 +219,18 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 	/* parse the ModemManager InstanceID lookalike */
 	subsys_instancestr = g_strsplit(device_id, "\\", 2);
 	if (subsys_instancestr[1] == NULL)
-		return;
+		return TRUE;
 	instancestrs = g_strsplit(subsys_instancestr[1], "&", -1);
 	for (guint i = 0; instancestrs[i] != NULL; i++) {
 		g_auto(GStrv) kv = g_strsplit(instancestrs[i], "_", 2);
-		if (g_strcmp0(kv[0], "VID") == 0 || g_strcmp0(kv[0], "PID") == 0 ||
-		    g_strcmp0(kv[0], "REV") == 0 || g_strcmp0(kv[0], "NAME") == 0 ||
-		    g_strcmp0(kv[0], "CARRIER") == 0) {
+		if (g_strcmp0(kv[0], "VID") == 0) {
+			if (!fu_mm_device_add_instance_id_vid(self, kv[1], error))
+				return FALSE;
+		} else if (g_strcmp0(kv[0], "PID") == 0) {
+			if (!fu_mm_device_add_instance_id_pid(self, kv[1], error))
+				return FALSE;
+		} else if (g_strcmp0(kv[0], "REV") == 0 || g_strcmp0(kv[0], "NAME") == 0 ||
+			   g_strcmp0(kv[0], "CARRIER") == 0) {
 			fu_device_add_instance_str(FU_DEVICE(self), kv[0], kv[1]);
 		} else if (g_strcmp0(kv[0], "SSVID") == 0 && subsys_vid == NULL) {
 			subsys_vid = g_strdup(kv[1]);
@@ -273,17 +337,34 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 						    NULL);
 		}
 	}
+	return TRUE;
 }
 
 static void
-fu_mm_device_add_port(FuMmDevice *self, MMModemPortType port_type, const gchar *device_file)
+fu_mm_device_add_port(FuMmDevice *self,
+		      MMModemPortType port_type,
+		      const gchar *device_file,
+		      FuMmDevicePortFlags flags)
 {
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
+	FuMmDevicePort *port;
+
 	if (port_type >= MM_MODEM_PORT_TYPE_LAST)
 		return;
-	if (priv->port[port_type] != NULL)
-		return;
-	priv->port[port_type] = g_strdup(device_file);
+
+	/* already exists */
+	for (guint i = 0; i < priv->ports->len; i++) {
+		port = g_ptr_array_index(priv->ports, i);
+		if (port->type == port_type)
+			return;
+	}
+
+	/* create new */
+	port = g_new0(FuMmDevicePort, 1);
+	port->type = port_type;
+	port->flags = flags;
+	port->device_file = g_strdup(device_file);
+	g_ptr_array_add(priv->ports, port);
 }
 
 gboolean
@@ -342,42 +423,42 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	fu_device_set_backend_id(FU_DEVICE(self), mm_object_get_path(omodem));
 
 	/* look for the AT and QMI/MBIM ports */
-	if (!mm_modem_get_ports(modem, &used_ports, &n_used_ports)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to get port information");
-		return FALSE;
-	}
-	for (guint i = 0; i < n_used_ports; i++) {
-		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", used_ports[i].name);
-		if (used_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
-			continue;
-		if (used_ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
-		    g_pattern_match_simple("wwan*qcdm*", used_ports[i].name)) {
-			fu_mm_device_add_port(self, MM_MODEM_PORT_TYPE_QCDM, device_file);
-		} else {
-			fu_mm_device_add_port(self, used_ports[i].type, device_file);
+	if (mm_modem_get_ports(modem, &used_ports, &n_used_ports)) {
+		for (guint i = 0; i < n_used_ports; i++) {
+			g_autofree gchar *device_file =
+			    g_strdup_printf("/dev/%s", used_ports[i].name);
+			if (used_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
+				continue;
+			if (used_ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
+			    g_pattern_match_simple("wwan*qcdm*", used_ports[i].name)) {
+				fu_mm_device_add_port(self,
+						      MM_MODEM_PORT_TYPE_QCDM,
+						      device_file,
+						      FU_MM_DEVICE_PORT_FLAG_NONE);
+			} else {
+				fu_mm_device_add_port(self,
+						      used_ports[i].type,
+						      device_file,
+						      FU_MM_DEVICE_PORT_FLAG_NONE);
+			}
 		}
+		mm_modem_port_info_array_free(used_ports, n_used_ports);
 	}
-	mm_modem_port_info_array_free(used_ports, n_used_ports);
 
 #if MM_CHECK_VERSION(1, 26, 0)
-	if (!mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to get ignored port information");
-		return FALSE;
+	if (mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
+		for (guint i = 0; i < n_ignored_ports; i++) {
+			g_autofree gchar *device_file =
+			    g_strdup_printf("/dev/%s", ignored_ports[i].name);
+			if (ignored_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
+				continue;
+			fu_mm_device_add_port(self,
+					      ignored_ports[i].type,
+					      device_file,
+					      FU_MM_DEVICE_PORT_FLAG_MAKE_RAW);
+		}
+		mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
 	}
-	for (guint i = 0; i < n_ignored_ports; i++) {
-		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", ignored_ports[i].name);
-		if (ignored_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
-			continue;
-
-		fu_mm_device_add_port(self, ignored_ports[i].type, device_file);
-	}
-	mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
 #endif // MM_CHECK_VERSION(1, 26, 0)
 
 	/* add properties to fwupd device */
@@ -393,12 +474,10 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* filter these */
-	for (guint i = 0; device_ids[i] != NULL; i++)
-		fu_mm_device_add_instance_id(self, device_ids[i]);
-
-	/* fix up vendor name */
-	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(self)), "QUALCOMM INCORPORATED") == 0)
-		fu_device_set_vendor(FU_DEVICE(self), "Qualcomm");
+	for (guint i = 0; device_ids[i] != NULL; i++) {
+		if (!fu_mm_device_add_instance_id(self, device_ids[i], error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -651,6 +730,70 @@ fu_mm_device_ensure_payload(FuMmDevice *self)
 }
 
 static gboolean
+fu_mm_device_make_serial_raw(FuMmDevice *self, GError **error)
+{
+#ifdef HAVE_TERMIOS_H
+	gint fd = fu_io_channel_unix_get_fd(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)));
+	struct termios tio;
+
+	if (tcgetattr(fd, &tio) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
+#endif
+			    "could not get termios attributes: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+
+	cfmakeraw(&tio);
+
+	if (tcsetattr(fd, TCSANOW, &tio) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
+#endif
+			    "could not set termios attributes: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as <termios.h> not found");
+	return FALSE;
+#endif
+}
+
+static gboolean
+fu_mm_device_open(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	/* FuUdevDevice->open() */
+	if (!FU_DEVICE_CLASS(fu_mm_device_parent_class)->open(device, error))
+		return FALSE;
+
+	/* ignored ports have not previously been configured by ModemManager */
+	if (fu_device_has_private_flag(device, FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW)) {
+		if (!fu_mm_device_make_serial_raw(self, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_setup(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
@@ -708,7 +851,8 @@ fu_mm_device_from_json(FuDevice *device, JsonObject *json_object, GError **error
 		JsonArray *json_array = json_object_get_array_member(json_object, "DeviceIds");
 		for (guint i = 0; i < json_array_get_length(json_array); i++) {
 			const gchar *instance_id = json_array_get_string_element(json_array, i);
-			fu_mm_device_add_instance_id(self, instance_id);
+			if (!fu_mm_device_add_instance_id(self, instance_id, error))
+				return FALSE;
 		}
 	}
 
@@ -720,7 +864,8 @@ fu_mm_device_from_json(FuDevice *device, JsonObject *json_object, GError **error
 			const gchar *port_type = l->data;
 			fu_mm_device_add_port(self,
 					      fu_mm_device_port_type_from_string(port_type),
-					      json_object_get_string_member(json_ports, port_type));
+					      json_object_get_string_member(json_ports, port_type),
+					      FU_MM_DEVICE_PORT_FLAG_NONE);
 		}
 	}
 
@@ -771,12 +916,11 @@ fu_mm_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags fl
 	/* ports always specified */
 	json_builder_set_member_name(builder, "Ports");
 	json_builder_begin_object(builder);
-	for (guint i = 0; i < MM_MODEM_PORT_TYPE_LAST; i++) {
-		if (priv->port[i] != NULL) {
-			fwupd_codec_json_append(builder,
-						fu_mm_device_port_type_to_string(i),
-						priv->port[i]);
-		}
+	for (guint i = 0; i < priv->ports->len; i++) {
+		FuMmDevicePort *port = g_ptr_array_index(priv->ports, i);
+		fwupd_codec_json_append(builder,
+					fu_mm_device_port_type_to_string(port->type),
+					port->device_file);
 	}
 	json_builder_end_object(builder);
 }
@@ -813,6 +957,7 @@ fu_mm_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 static void
 fu_mm_device_init(FuMmDevice *self)
 {
+	FuMmDevicePrivate *priv = GET_PRIVATE(self);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
@@ -825,9 +970,11 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MODEM);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW);
 	fu_device_add_possible_plugin(FU_DEVICE(self), "modem_manager");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	priv->ports = g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_device_port_free);
 }
 
 static void
@@ -836,10 +983,9 @@ fu_mm_device_finalize(GObject *object)
 	FuMmDevice *self = FU_MM_DEVICE(object);
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
 
-	for (guint i = 0; i < MM_MODEM_PORT_TYPE_LAST; i++)
-		g_free(priv->port[i]);
 	g_free(priv->branch_at);
 	g_free(priv->inhibition_uid);
+	g_ptr_array_unref(priv->ports);
 
 	G_OBJECT_CLASS(fu_mm_device_parent_class)->finalize(object);
 }
@@ -859,6 +1005,7 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	device_class->set_quirk_kv = fu_mm_device_set_quirk_kv;
 	device_class->from_json = fu_mm_device_from_json;
 	device_class->add_json = fu_mm_device_add_json;
+	device_class->open = fu_mm_device_open;
 
 	pspec = g_param_spec_boolean("inhibited",
 				     NULL,

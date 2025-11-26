@@ -231,7 +231,7 @@ fu_dbus_daemon_create_request(FuDbusDaemon *self, const gchar *sender, GError **
 				       NULL,
 				       error);
 	if (value == NULL) {
-		g_prefix_error(error, "failed to read user id of caller: ");
+		g_prefix_error_literal(error, "failed to read user id of caller: ");
 		return NULL;
 	}
 	g_variant_get(value, "(u)", &calling_uid);
@@ -320,7 +320,7 @@ fu_dbus_daemon_auth_helper_free(FuMainAuthHelper *helper)
 static void
 fu_dbus_daemon_method_invocation_return_gerror(GDBusMethodInvocation *invocation, GError *error)
 {
-	fu_error_convert(&error);
+	fwupd_error_convert(&error);
 	g_dbus_method_invocation_return_gerror(invocation, error);
 }
 
@@ -1075,7 +1075,7 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	}
 	return g_steal_pointer(&stream);
 #else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
 #endif
 }
@@ -1108,7 +1108,7 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 	}
 	return g_steal_pointer(&stream);
 #else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
 #endif
 }
@@ -1822,7 +1822,7 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
 	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 2) {
-		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+		g_set_error_literal(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
@@ -2799,7 +2799,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG,
 			    fu_progress_get_child(progress),
 			    error)) {
-		g_prefix_error(error, "failed to load engine: ");
+		g_prefix_error_literal(error, "failed to load engine: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -2808,7 +2808,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 	self->introspection_daemon =
 	    fu_dbus_daemon_load_introspection(FWUPD_DBUS_INTERFACE ".xml", error);
 	if (self->introspection_daemon == NULL) {
-		g_prefix_error(error, "failed to load introspection: ");
+		g_prefix_error_literal(error, "failed to load introspection: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -2831,7 +2831,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 						NULL,
 						error);
 		if (server == NULL) {
-			g_prefix_error(error, "failed to create D-Bus server: ");
+			g_prefix_error_literal(error, "failed to create D-Bus server: ");
 			return FALSE;
 		}
 		g_message("using socket address: %s", g_dbus_server_get_client_address(server));

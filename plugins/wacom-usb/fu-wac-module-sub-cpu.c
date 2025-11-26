@@ -100,7 +100,7 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 static GBytes *
 fu_wac_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
 {
-	guint8 buf[FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ + 5];
+	guint8 buf[FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ + 5]; /* nocheck:zero-init */
 
 	memset(buf, 0xff, sizeof(buf));
 	fu_memwrite_uint32(&buf[0], fu_chunk_get_address(chunk), G_BIG_ENDIAN);
@@ -113,7 +113,7 @@ fu_wac_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
 			    0, /* src */
 			    fu_chunk_get_data_sz(chunk),
 			    error)) {
-		g_prefix_error(error, "wacom sub_cpu module failed to build packet: ");
+		g_prefix_error_literal(error, "wacom sub_cpu module failed to build packet: ");
 		return NULL;
 	}
 
@@ -157,7 +157,7 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_START_TIMEOUT,
 				       error)) {
-		g_prefix_error(error, "wacom sub_cpu module failed to erase: ");
+		g_prefix_error_literal(error, "wacom sub_cpu module failed to erase: ");
 		return FALSE;
 	}
 
@@ -178,7 +178,7 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 					       FU_WAC_MODULE_POLL_INTERVAL,
 					       FU_WAC_MODULE_DATA_TIMEOUT,
 					       error)) {
-			g_prefix_error(error, "wacom sub_cpu module failed to write: ");
+			g_prefix_error_literal(error, "wacom sub_cpu module failed to write: ");
 			return FALSE;
 		}
 		/* update progress */
@@ -196,7 +196,7 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_END_TIMEOUT,
 				       error)) {
-		g_prefix_error(error, "wacom sub_cpu module failed to end: ");
+		g_prefix_error_literal(error, "wacom sub_cpu module failed to end: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -218,7 +218,7 @@ fu_wac_module_sub_cpu_prepare_firmware(FuDevice *self,
 				      0,
 				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      error)) {
-		g_prefix_error(error, "wacom sub_cpu failed to parse firmware: ");
+		g_prefix_error_literal(error, "wacom sub_cpu failed to parse firmware: ");
 		return NULL;
 	}
 	return firmware_srec;

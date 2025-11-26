@@ -325,10 +325,10 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 	if (blkid_probe_lookup_value(pr, "LABEL", &data, &datalen) == 0)
 		fu_block_partition_set_fs_label(self, data, datalen);
 #else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "not supported as <blkid.h> not found");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <blkid.h> not found");
 	return FALSE;
 #endif
 

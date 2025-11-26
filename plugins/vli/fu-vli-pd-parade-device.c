@@ -47,7 +47,10 @@ fu_vli_pd_parade_device_i2c_read(FuVliPdParadeDevice *self,
 
 	/* sanity check */
 	if (bufsz > 0x40) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "request too large");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "request too large");
 		return FALSE;
 	}
 
@@ -109,7 +112,7 @@ static gboolean
 fu_vli_pd_parade_device_start_mcu(FuVliPdParadeDevice *self, GError **error)
 {
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0x00, error)) {
-		g_prefix_error(error, "failed to start MCU: ");
+		g_prefix_error_literal(error, "failed to start MCU: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -119,11 +122,11 @@ static gboolean
 fu_vli_pd_parade_device_stop_mcu(FuVliPdParadeDevice *self, GError **error)
 {
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0xC0, error)) {
-		g_prefix_error(error, "failed to stop MCU: ");
+		g_prefix_error_literal(error, "failed to stop MCU: ");
 		return FALSE;
 	}
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0x40, error)) {
-		g_prefix_error(error, "failed to stop MCU 2nd: ");
+		g_prefix_error_literal(error, "failed to stop MCU 2nd: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -257,10 +260,10 @@ fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 		}
 	}
 	if (!ret) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to wait for SPI not BUSY");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to wait for SPI not BUSY");
 		return FALSE;
 	}
 
@@ -293,10 +296,10 @@ fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 			}
 		}
 		if (!ret2) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to wait for SPI CMD done");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "failed to wait for SPI CMD done");
 			return FALSE;
 		}
 
@@ -315,10 +318,10 @@ fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 		}
 	}
 	if (!ret) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to wait for SPI status clear");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to wait for SPI status clear");
 		return FALSE;
 	}
 
@@ -395,7 +398,7 @@ fu_vli_pd_parade_device_block_erase(FuVliPdParadeDevice *self, guint8 block_idx,
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "Erase failed @0x%x",
+					    "erase failed @0x%x",
 					    addr);
 				return FALSE;
 			}
@@ -463,7 +466,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
-	guint8 buf[0x20];
+	guint8 buf[0x20] = {0};
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) buf_verify = NULL;

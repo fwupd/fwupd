@@ -1221,10 +1221,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NAZWA-PLIKU CERTYFIKAT KLUCZ-PRYWATNY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NAZWA-PLIKU IDENTYFIKATOR-URZĄDZENIA"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "NAZWA-PLIKU WYRÓWNANIE DANE [TYP-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
@@ -1536,7 +1532,6 @@ msgid "Host Security Events"
 msgstr "Zdarzenia zabezpieczeń komputera"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Identyfikator zabezpieczeń komputera (HSI) jest nieobsługiwany"
 

@@ -35,7 +35,7 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 	if (!fu_steelseries_fizz_impl_get_connection_status(FU_STEELSERIES_FIZZ_IMPL(proxy),
 							    &status,
 							    error)) {
-		g_prefix_error(error, "failed to get connection status: ");
+		g_prefix_error_literal(error, "failed to get connection status: ");
 		return FALSE;
 	}
 	g_debug("FuSteelseriesFizzConnection: %s",
@@ -93,19 +93,22 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
 	if (!fu_steelseries_fizz_get_connection_status(FU_STEELSERIES_FIZZ(parent),
 						       &status,
 						       error)) {
-		g_prefix_error(error, "failed to get connection status: ");
+		g_prefix_error_literal(error, "failed to get connection status: ");
 		return FALSE;
 	}
 	g_debug("FuSteelseriesFizzConnection: %s",
 		fu_steelseries_fizz_connection_status_to_string(status));
 	if (status == FU_STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "device is unreachable");
 		return FALSE;
 	}
 
 	/* ping */
 	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, error)) {
-		g_prefix_error(error, "failed to ping on reconnect: ");
+		g_prefix_error_literal(error, "failed to ping on reconnect: ");
 		return FALSE;
 	}
 
@@ -169,7 +172,7 @@ fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError
 				       TRUE,
 				       FU_STEELSERIES_FIZZ_RESET_MODE_NORMAL,
 				       &error_local))
-		g_warning("failed to reset: %s", error_local->message);
+		g_debug("failed to reset: %s", error_local->message);
 	fu_progress_step_done(progress);
 
 	/* wait for receiver to reset the connection status to 0 */
@@ -258,7 +261,7 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 	}
 
 	serial = fu_steelseries_fizz_impl_get_serial(FU_STEELSERIES_FIZZ_IMPL(proxy),
-						     FALSE,
+						     TRUE,
 						     &error_local);
 	if (serial != NULL) {
 		fu_device_set_serial(device, serial);
@@ -304,7 +307,7 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, error)) {
-		g_prefix_error(error, "failed to ping: ");
+		g_prefix_error_literal(error, "failed to ping: ");
 		return FALSE;
 	}
 

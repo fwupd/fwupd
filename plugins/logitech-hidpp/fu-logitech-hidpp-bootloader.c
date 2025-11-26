@@ -103,11 +103,11 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 			if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x09, &offset, error))
 				return NULL;
 			if (offset != 0x0000) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "extended linear addresses with offset different from "
-					    "0 are not supported");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "extended linear addresses with offset "
+						    "different from 0 are not supported");
 				return NULL;
 			}
 			continue;
@@ -216,7 +216,7 @@ fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GErr
 	    fu_logitech_hidpp_bootloader_request_new();
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_REBOOT;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to attach back to runtime: ");
+		g_prefix_error_literal(error, "failed to attach back to runtime: ");
 		return FALSE;
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -236,7 +236,7 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GEr
 	/* call into hardware */
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_BL_VERSION;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to get firmware version: ");
+		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return FALSE;
 	}
 
@@ -248,7 +248,10 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GEr
 	minor = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 6);
 	version = fu_logitech_hidpp_format_version("BOT", major, minor, build);
 	if (version == NULL) {
-		g_prefix_error(error, "failed to format firmware version: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to format firmware version");
 		return FALSE;
 	}
 	fu_device_set_version_bootloader(FU_DEVICE(self), version);
@@ -278,7 +281,7 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 	/* get memory map */
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_MEMINFO;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to get meminfo: ");
+		g_prefix_error_literal(error, "failed to get meminfo: ");
 		return FALSE;
 	}
 	if (req->len != 0x06) {
@@ -305,11 +308,10 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 				     GError **error)
 {
 	gsize actual_length = 0;
-	guint8 buf_request[32];
-	guint8 buf_response[32];
+	guint8 buf_request[32] = {0};
+	guint8 buf_response[32] = {0};
 
 	/* build packet */
-	memset(buf_request, 0x00, sizeof(buf_request));
 	buf_request[0x00] = req->cmd;
 	buf_request[0x01] = req->addr >> 8;
 	buf_request[0x02] = req->addr & 0xff;
@@ -333,7 +335,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 				      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "failed to send data: ");
+		g_prefix_error_literal(error, "failed to send data: ");
 		return FALSE;
 	}
 
@@ -356,7 +358,6 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 	}
 
 	/* get response */
-	memset(buf_response, 0x00, sizeof(buf_response));
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      FU_LOGITECH_HIDPP_DEVICE_EP1,
 					      buf_response,
@@ -365,7 +366,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 					      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to get data: ");
+		g_prefix_error_literal(error, "failed to get data: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "device->host", buf_response, actual_length);

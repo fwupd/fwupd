@@ -189,7 +189,7 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 					FU_INTEL_CVS_DEVICE_SYSFS_TIMEOUT,
 					FU_IO_CHANNEL_FLAG_NONE,
 					error)) {
-		g_prefix_error(error, "failed to write payload to virtual stream: ");
+		g_prefix_error_literal(error, "failed to write payload to virtual stream: ");
 		return FALSE;
 	}
 	if (!fu_io_channel_seek(io_payload, 0x0, error))

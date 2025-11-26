@@ -326,7 +326,7 @@ fu_nordic_hid_cfg_channel_cmd_send_by_id(FuNordicHidCfgChannel *self,
 	}
 
 	if (!fu_nordic_hid_cfg_channel_send(self, (guint8 *)msg, sizeof(*msg), error)) {
-		g_prefix_error(error, "failed to send: ");
+		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
 
@@ -361,7 +361,7 @@ fu_nordic_hid_cfg_channel_cmd_send(FuNordicHidCfgChannel *self,
 						      data,
 						      data_len,
 						      error)) {
-		g_prefix_error(error, "failed to send: ");
+		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
 
@@ -386,7 +386,7 @@ fu_nordic_hid_cfg_channel_cmd_receive(FuNordicHidCfgChannel *self,
 			     FU_NORDIC_HID_CFG_CHANNEL_RETRIES,
 			     &helper,
 			     error)) {
-		g_prefix_error(error, "Failed on receive: ");
+		g_prefix_error_literal(error, "failed on receive: ");
 		return FALSE;
 	}
 
@@ -504,7 +504,7 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 						NULL,
 						0,
 						error)) {
-		g_prefix_error(error, "INDEX_PEERS cmd_send failed: ");
+		g_prefix_error_literal(error, "INDEX_PEERS cmd_send failed: ");
 		return FALSE;
 	}
 
@@ -518,7 +518,7 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 
 	/* Peers available */
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
-		g_prefix_error(error, "INDEX_PEERS cmd_receive failed: ");
+		g_prefix_error_literal(error, "INDEX_PEERS cmd_receive failed: ");
 		return FALSE;
 	}
 
@@ -540,12 +540,12 @@ fu_nordic_hid_cfg_channel_get_next_peer_id_cmd(FuNordicHidCfgChannel *self,
 						NULL,
 						0,
 						error)) {
-		g_prefix_error(error, "GET_PEER cmd_send failed: ");
+		g_prefix_error_literal(error, "GET_PEER cmd_send failed: ");
 		return FALSE;
 	}
 
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
-		g_prefix_error(error, "GET_PEER cmd_receive failed: ");
+		g_prefix_error_literal(error, "GET_PEER cmd_receive failed: ");
 		return FALSE;
 	}
 
@@ -572,7 +572,7 @@ fu_nordic_hid_cfg_channel_read_peers_cache_cmd(FuNordicHidCfgChannel *self,
 						NULL,
 						0,
 						error)) {
-		g_prefix_error(error, "GET_PEERS_CACHE cmd_send failed: ");
+		g_prefix_error_literal(error, "GET_PEERS_CACHE cmd_send failed: ");
 		return FALSE;
 	}
 
@@ -586,7 +586,7 @@ fu_nordic_hid_cfg_channel_read_peers_cache_cmd(FuNordicHidCfgChannel *self,
 
 	/* configuration channel peer caching available */
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
-		g_prefix_error(error, "GET_PEERS_CACHE cmd_receive failed: ");
+		g_prefix_error_literal(error, "GET_PEERS_CACHE cmd_receive failed: ");
 		return FALSE;
 	}
 
@@ -1175,7 +1175,7 @@ fu_nordic_hid_cfg_channel_dfu_sync(FuNordicHidCfgChannel *self,
 				  FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY,
 				  &helper,
 				  error)) {
-		g_prefix_error(error, "failed on dfu sync: ");
+		g_prefix_error_literal(error, "failed on dfu sync: ");
 		return FALSE;
 	}
 	dfu_info->dfu_state = res->data[0];
@@ -1294,7 +1294,7 @@ fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **err
 						 "BOARD",
 						 "BL",
 						 NULL)) {
-			g_prefix_error(error, "failed to add ID without generation: ");
+			g_prefix_error_literal(error, "failed to add ID without generation: ");
 			return FALSE;
 		}
 	}
@@ -1308,7 +1308,7 @@ fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **err
 					 "BL",
 					 "GEN",
 					 NULL)) {
-		g_prefix_error(error, "failed to add complete ID: ");
+		g_prefix_error_literal(error, "failed to add complete ID: ");
 		return FALSE;
 	}
 

@@ -1244,10 +1244,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "IME-DATOTEKE POTRDILO OSEBNI-KLJUČ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "IMEDATOTEKE ID-NAPRAVE"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "IME-DATOTEKE ODMIK PODATKI [VRSTA-VDELANE-PROGRAMSKE-OPREME]"
 
@@ -1578,7 +1574,6 @@ msgid "Host Security Events"
 msgstr "Dogodki varnosti gostitelja"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Varnostni ID gostitelja (HSI) ni podprt"
 
@@ -3381,7 +3376,7 @@ msgstr "Posodobi vse navedene naprave na najnovejšo različico vdelane programs
 #, c-format
 msgid "Updates have been published for %u local device"
 msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Posodobitve so objavljene za %u krajevnih naprav"
+msgstr[0] "Posodobitve so objavljene za %u krajevno napravo"
 msgstr[1] "Posodobitve so objavljene za %u od %u krajevnih naprav"
 msgstr[2] "Posodobitve so objavljene za %u od %u krajevnih naprav"
 msgstr[3] "Posodobitve so objavljene za %u od %u krajevnih naprav"

@@ -953,6 +953,7 @@ fu_util_device_test_step(FuUtil *self,
 	if (helper->use_emulation) {
 		g_autofree gchar *emulation_filename = NULL;
 		g_autofree gchar *emulation_url = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* just ignore anything without emulation data */
 		if (json_object_has_member(json_obj, "emulation-url")) {
@@ -985,8 +986,16 @@ fu_util_device_test_step(FuUtil *self,
 		if (!fwupd_client_emulation_load(self->client,
 						 emulation_filename,
 						 self->cancellable,
-						 error)) {
-			g_prefix_error(error, "failed to load %s: ", emulation_filename);
+						 &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug("ignoring: %s", error_local->message);
+				helper->nr_skipped++;
+				return TRUE;
+			}
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to load %s: ",
+						   emulation_filename);
 			return FALSE;
 		}
 	}
@@ -1061,7 +1070,7 @@ fu_util_device_test_step(FuUtil *self,
 	/* remove emulated devices */
 	if (helper->use_emulation) {
 		if (!fu_util_device_test_remove_emulated_devices(self, error)) {
-			g_prefix_error(error, "failed to remove emulated devices: ");
+			g_prefix_error_literal(error, "failed to remove emulated devices: ");
 			return FALSE;
 		}
 	}
@@ -1090,7 +1099,7 @@ fu_util_device_test_filename(FuUtil *self,
 
 	/* parse JSON */
 	if (!json_parser_load_from_file(parser, filename, error)) {
-		g_prefix_error(error, "test not in JSON format: ");
+		g_prefix_error_literal(error, "test not in JSON format: ");
 		return FALSE;
 	}
 	json_root = json_parser_get_root(parser);
@@ -3396,7 +3405,7 @@ fu_util_downgrade(FuUtil *self, gchar **values, GError **error)
 		    /* TRANSLATORS: message letting the user know no device downgrade available
 		     * %1 is the device name */
 		    g_strdup_printf(_("No downgrades for %s"), fwupd_device_get_name(dev));
-		g_prefix_error(error, "%s: ", downgrade_str);
+		g_prefix_error(error, "%s: ", downgrade_str); /* nocheck:error */
 		return FALSE;
 	}
 
@@ -4145,6 +4154,7 @@ fu_util_sync(FuUtil *self, gchar **values, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No device branch or system HostBkc set");
+			/* nocheck:error-false-return */
 		}
 		if (rel == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
@@ -4183,10 +4193,10 @@ fu_util_sync(FuUtil *self, gchar **values, GError **error)
 
 	/* nothing was done */
 	if (cnt == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "No devices required modification");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "No devices required modification");
 		return FALSE;
 	}
 
@@ -4288,11 +4298,11 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *str = NULL;
 
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4727,7 +4737,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 
 	if (!fwupd_client_modify_bios_setting(self->client, settings, self->cancellable, error)) {
 		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error(error, "failed to set BIOS setting: ");
+			g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
@@ -4798,11 +4808,11 @@ static gboolean
 fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4914,11 +4924,11 @@ static gboolean
 fu_util_security_undo(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 

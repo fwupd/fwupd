@@ -52,10 +52,10 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	/* dock type according to ec */
 	dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(ec_device));
 	if (dock_type == FU_DELL_DOCK_BASE_TYPE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "can't read base dock type from EC");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "can't read base dock type from EC");
 		return FALSE;
 	}
 
@@ -90,7 +90,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 		fu_device_add_child(ec_device, FU_DEVICE(rmm_device));
 
 		if (!fu_dell_kestrel_rmm_fix_version(rmm_device, error)) {
-			g_prefix_error(error, "failed to fix rmm version: ");
+			g_prefix_error_literal(error, "failed to fix rmm version: ");
 			return FALSE;
 		}
 
@@ -100,7 +100,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	/* RTS usb hub devices */
 	if (pid == DELL_KESTREL_USB_RTS0_G1_PID || pid == DELL_KESTREL_USB_RTS0_G2_PID ||
 	    pid == DELL_KESTREL_USB_RTS5_G2_PID) {
-		g_autoptr(FuDellKestrelRtsHub) hub_device = NULL;
+		g_autoptr(FuDellKestrelRtshub) hub_device = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;
 
 		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type);
@@ -188,10 +188,10 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
 		ec_dev = fu_dell_kestrel_ec_new(device, uod);
 		if (ec_dev == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "can't create EC V2 device");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "can't create EC V2 device");
 			return FALSE;
 		}
 

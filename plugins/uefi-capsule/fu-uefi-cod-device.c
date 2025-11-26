@@ -294,7 +294,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
 					 error)) {
-			g_prefix_error(error, "Could not set OsIndications: ");
+			g_prefix_error_literal(error, "Could not set OsIndications: ");
 			return FALSE;
 		}
 	}

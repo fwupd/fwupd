@@ -46,7 +46,10 @@ fu_intel_amt_device_status_set_error(guint32 status, GError **error)
 		return FALSE;
 	}
 	if (status == FU_AMT_STATUS_HOST_IF_EMPTY_RESPONSE) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Intel AMT is disabled");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Intel AMT is disabled");
 		return FALSE;
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unknown error");
@@ -203,17 +206,17 @@ fu_intel_amt_device_setup(FuDevice *device, GError **error)
 
 	/* get versions */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(device), FU_INTEL_AMT_DEVICE_UUID, 0, error)) {
-		g_prefix_error(error, "failed to connect: ");
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
 	}
 	if (!fu_intel_amt_device_ensure_version(self, error)) {
-		g_prefix_error(error, "failed to check version: ");
+		g_prefix_error_literal(error, "failed to check version: ");
 		return FALSE;
 	}
 
 	/* get provisioning state */
 	if (!fu_intel_amt_device_get_provisioning_state(self, &provisioning_state, error)) {
-		g_prefix_error(error, "failed to get provisioning state: ");
+		g_prefix_error_literal(error, "failed to get provisioning state: ");
 		return FALSE;
 	}
 	if (provisioning_state < FU_AMT_PROVISIONING_STATE_LAST) {

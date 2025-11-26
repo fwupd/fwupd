@@ -38,6 +38,48 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.14" date="2025-08-29">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for ignoring the network connectivity requirement</li>
+          <li>Allow building on RHEL-9 and RHEL-10</li>
+          <li>Allow plugins to know the firmware version during update</li>
+          <li>Allow UEFI capsule devices to opt-out of Capsule-on-Disk</li>
+          <li>Allow unsetting HwID plugin context flags</li>
+          <li>Allow upgrading from a zero "empty" UEFI dbx</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add an automatic firehose counterpart to the QCDM modem device</li>
+          <li>Disable signature time checks when verifying firmware</li>
+          <li>Do not add a vendor ID of UNKNOWN when the signature has no vendor</li>
+          <li>Do not discover ThunderBolt retimer devices when run in single-shot mode</li>
+          <li>Do not use deprecated libflashrom API</li>
+          <li>Enhance firmware metadata generation in firmware_packager</li>
+          <li>Ensure Lexar NVMe drives use a proper version number</li>
+          <li>Fix parsing and writing UF2 extension sections</li>
+          <li>Fix Synaptics RMI initialization for new devices</li>
+          <li>Fix updating DFOTA and MBIM modem devices</li>
+          <li>Move some vendor name fixups to the quirk file</li>
+          <li>Remove CapsuleOnDisk HwID match for Dell</li>
+          <li>Return a sensible error when using build-cabinet wrong</li>
+          <li>Set the firehose loader filename in a more permissive way</li>
+          <li>Update the mapping for TPM vendor names</li>
+          <li>Verify the checksum of the serialized data in tests</li>
+          <li>Work around a libmbim bug when detaching</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Egis MoC devices</li>
+          <li>Framework QMK devices</li>
+          <li>ILITEK touch controllers</li>
+          <li>SteelSeries Arctis Nova 3P</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.13" date="2025-07-21">
       <description>
         <p>

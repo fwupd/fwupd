@@ -38,7 +38,7 @@ fu_pci_psp_device_ensure_agesa_version(FuPciPspDevice *self, GError **error)
 						   FU_CPU_AGESA_SMBIOS_OFFSET,
 						   error);
 	if (agesa_stream == NULL) {
-		g_prefix_error(error, "no SMBIOS data: ");
+		g_prefix_error_literal(error, "no SMBIOS data: ");
 		return FALSE;
 	}
 	split = g_strsplit(agesa_stream, " ", 3);
@@ -421,7 +421,7 @@ fu_pci_psp_device_init(FuPciPspDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD);
-	fu_device_set_vendor(FU_DEVICE(self), "Advanced Micro Devices, Inc.");
+	fu_device_set_vendor(FU_DEVICE(self), "AMD");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_physical_id(FU_DEVICE(self), "pci-psp");
 }

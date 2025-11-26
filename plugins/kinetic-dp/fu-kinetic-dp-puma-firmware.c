@@ -13,7 +13,7 @@
 #include "fu-kinetic-dp-secure-device.h"
 
 struct _FuKineticDpPumaFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 typedef struct {
@@ -177,17 +177,17 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	if (cmdb_tmp == NULL)
 		return FALSE;
 	if (cmdb_tmp->len != FU_KINETIC_DP_PUMA_REQUEST_CMDB_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid firmware -- cmdb block invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid firmware -- cmdb block invalid");
 		return FALSE;
 	}
 	if (memcmp(cmdb_tmp->data, cmdb_sig, sizeof(cmdb_sig)) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid firmware -- cmdb block not found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid firmware -- cmdb block not found");
 		return FALSE;
 	}
 
@@ -279,7 +279,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	if (!fu_kinetic_dp_puma_firmware_parse_chip_id(app_fw_stream, &priv->chip_id, error))
 		return FALSE;
 	if (!fu_kinetic_dp_puma_firmware_parse_app_fw(self, app_fw_stream, error)) {
-		g_prefix_error(error, "failed to parse info from Puma App firmware: ");
+		g_prefix_error_literal(error, "failed to parse info from Puma App firmware: ");
 		return FALSE;
 	}
 

@@ -29,6 +29,7 @@ shared_module('fu_plugin_modem_manager',
     'fu-mm-mhi-qcdm-device.c',
     'fu-mm-plugin.c',
     'fu-mm-qcdm-device.c',
+    'fu-mm-qdu-mbim-device.c',
     'fu-mm-qmi-device.c',
   ],
   include_directories: plugin_incdirs,
@@ -46,6 +47,7 @@ shared_module('fu_plugin_modem_manager',
 )
 
 device_tests += files(
+  'tests/lenovo-em061kgl-mbim.json',
   'tests/foxconn-t99w373-mbim.json',
   'tests/qc-eg25ggc-fastboot.json',
 )

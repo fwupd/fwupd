@@ -27,6 +27,7 @@ endif
 
 if build_standalone
   install_data(['fwupd.conf'],
+    install_tag: 'runtime',
     install_dir: join_paths(sysconfdir, 'fwupd'),
     install_mode: 'rw-r-----',
   )
@@ -34,6 +35,7 @@ if build_standalone
     'ds20.quirk',
     'power.quirk',
     'cfi.quirk',
+    'vendors.quirk',
   ])
 endif
 
@@ -47,15 +49,18 @@ if get_option('metainfo')
       '@OUTPUT@',
     ],
     install: true,
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'metainfo'),
   )
   install_data(['org.freedesktop.fwupd.svg'],
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
   )
 endif
 
 if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
+    install_tag: 'runtime',
     install_dir: join_paths(datadir, 'dbus-1', 'system.d')
   )
 
@@ -166,11 +171,13 @@ if build_daemon
       output: 'fwupd.service',
       configuration: build_conf,
       install: true,
+      install_tag: 'runtime',
       install_dir: systemdunitdir,
     )
 
     # for various plugins
     install_data(['fwupd-i2c.conf'],
+      install_tag: 'runtime',
       install_dir: systemd_modules_load_dir,
     )
 
@@ -180,6 +187,7 @@ if build_daemon
       output: 'fwupd.shutdown',
       configuration: build_conf,
       install: true,
+      install_tag: 'runtime',
       install_dir: systemd_shutdown_dir,
     )
   else
@@ -191,6 +199,7 @@ if build_daemon
     output: 'org.freedesktop.fwupd.service',
     configuration: build_conf,
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(datadir, 'dbus-1', 'system-services'),
   )
 
@@ -202,6 +211,7 @@ if build_daemon
       input: 'org.freedesktop.fwupd.plist',
       output: 'org.freedesktop.fwupd.plist',
       configuration: con2,
+      install_tag: 'runtime',
       install_dir: get_option('launchd_agent_dir'),
     )
   endif

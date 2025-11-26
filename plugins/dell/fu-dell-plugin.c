@@ -95,7 +95,7 @@ fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 				   0x0,
 				   &value,
 				   error)) {
-		g_prefix_error(error, "invalid DE data: ");
+		g_prefix_error_literal(error, "invalid DE data: ");
 		return FALSE;
 	}
 	if (value != 0xDE) {
@@ -118,7 +118,7 @@ fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 			    0x0, /* src */
 			    sizeof(da_values),
 			    error)) {
-		g_prefix_error(error, "unable to access flash interface: ");
+		g_prefix_error_literal(error, "unable to access flash interface: ");
 		return FALSE;
 	}
 	if (!(da_values.supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
@@ -185,7 +185,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	g_autofree gchar *esrtdir = NULL;
 
 	if (!fu_dell_plugin_supported(plugin, error)) {
-		g_prefix_error(error, "firmware updating not supported: ");
+		g_prefix_error_literal(error, "firmware updating not supported: ");
 		return FALSE;
 	}
 
@@ -197,10 +197,10 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	esrtdir = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
 	if (!g_file_test(esrtdir, G_FILE_TEST_EXISTS)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "capsule support disabled in BIOS");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "capsule support disabled in BIOS");
 		return FALSE;
 	}
 

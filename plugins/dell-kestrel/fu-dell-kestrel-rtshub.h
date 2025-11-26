@@ -9,7 +9,7 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_DELL_KESTREL_RTSHUB (fu_dell_kestrel_rtshub_get_type())
-G_DECLARE_FINAL_TYPE(FuDellKestrelRtsHub,
+G_DECLARE_FINAL_TYPE(FuDellKestrelRtshub,
 		     fu_dell_kestrel_rtshub,
 		     FU,
 		     DELL_KESTREL_RTSHUB,
@@ -35,5 +35,5 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelRtsHub,
 #define DELL_KESTREL_RTSHUB_BUFFER_SIZE		192
 #define DELL_KESTREL_RTSHUB_TRANSFER_BLOCK_SIZE 128
 
-FuDellKestrelRtsHub *
+FuDellKestrelRtshub *
 fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type);

@@ -117,7 +117,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 			g_autoptr(GInputStream) img_stream =
 			    fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
 			if (img_stream == NULL) {
-				g_prefix_error(error, "failed to cut EFI image: ");
+				g_prefix_error_literal(error, "failed to cut EFI image: ");
 				return FALSE;
 			}
 			if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
