@@ -235,7 +235,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		results = jcat_context_verify_target(self->jcat_context,
 						     item_target,
 						     item,
-						     JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						     JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+							 JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 							 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						     &error_local);
 		if (results == NULL) {
@@ -258,7 +259,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		results = jcat_context_verify_item(self->jcat_context,
 						   blob,
 						   item,
-						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+						       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
@@ -291,11 +293,13 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 			if (data_sig == NULL)
 				return FALSE;
 			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
-			jcat_result = jcat_context_verify_blob(self->jcat_context,
-							       blob,
-							       jcat_blob,
-							       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-							       &error_local);
+			jcat_result =
+			    jcat_context_verify_blob(self->jcat_context,
+						     blob,
+						     jcat_blob,
+						     JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+							 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						     &error_local);
 			if (jcat_result == NULL) {
 				g_info("failed to verify payload %s using detached: %s",
 				       basename,
@@ -568,7 +572,7 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 					     JCAT_IMPORT_FLAG_NONE,
 					     NULL,
 					     error)) {
-			g_prefix_error(error, "failed to import JCat stream: ");
+			g_prefix_error_literal(error, "failed to import JCat stream: ");
 			return FALSE;
 		}
 	}
@@ -602,6 +606,7 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	g_autoptr(XbBuilderFixup) fixup2 = NULL;
 	g_autoptr(XbBuilderFixup) fixup3 = NULL;
 	g_autoptr(XbBuilderFixup) fixup4 = NULL;
+	g_autoptr(XbNode) guid1 = NULL;
 
 	/* verbose profiling */
 	if (g_getenv("FWUPD_XMLB_VERBOSE") != NULL) {
@@ -657,6 +662,23 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	    xb_builder_compile(self->builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
 	if (self->silo == NULL) {
 		fwupd_error_convert(error);
+		return FALSE;
+	}
+
+	/* verify there's at least one GUID */
+	guid1 = xb_silo_query_first(self->silo,
+				    "components/component[@type='firmware']/"
+				    "provides/firmware[@type='flashed']",
+				    error);
+	if (guid1 == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	if (xb_node_get_text(guid1) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no <firmware type='flashed'> data");
 		return FALSE;
 	}
 

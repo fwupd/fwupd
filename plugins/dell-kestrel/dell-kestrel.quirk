@@ -45,12 +45,12 @@ Plugin = synaptics_vmm9
 Name = USB4v2 controller
 Summary = Dell Dock USB4v2 Controller
 Icon = thunderbolt
-Vendor = Dell Computer Corp.
+Vendor = Dell
 VendorId = TBT:0x00D4
 
 [TBT-00d4b0a1]
 Name = USB4 controller
 Summary = Dell Dock USB4 Controller
 Icon = thunderbolt
-Vendor = Dell Computer Corp.
+Vendor = Dell
 VendorId = TBT:0x00D4

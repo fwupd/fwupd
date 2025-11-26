@@ -316,10 +316,10 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 
 	if (qmi_indication_pdc_load_config_output_get_frame_reset(output, &frame_reset, NULL) &&
 	    frame_reset) {
-		g_set_error(&ctx->error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "couldn't load mcfg: sent data discarded");
+		g_set_error_literal(&ctx->error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "couldn't load mcfg: sent data discarded");
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -327,7 +327,8 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 	if (!qmi_indication_pdc_load_config_output_get_remaining_size(output,
 								      &remaining_size,
 								      &ctx->error)) {
-		g_prefix_error(&ctx->error, "couldn't load remaining size: ");
+		g_prefix_error_literal(&ctx->error, /* nocheck:error */
+				       "couldn't load remaining size: ");
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
@@ -867,8 +868,8 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 							   file_info->bytes,
 							   &archive_context.error);
 		if (file_info->digest == NULL) {
-			g_prefix_error(&archive_context.error,
-				       "Failed to write file '%s':",
+			g_prefix_error(&archive_context.error, /* nocheck:error */
+				       "Failed to write file %s: ",
 				       file_info->filename);
 			break;
 		}

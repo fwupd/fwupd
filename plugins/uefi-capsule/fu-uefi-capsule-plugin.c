@@ -36,6 +36,12 @@ struct _FuUefiCapsulePlugin {
 
 G_DEFINE_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU_TYPE_PLUGIN)
 
+FuBackend *
+fu_uefi_capsule_plugin_get_backend(FuUefiCapsulePlugin *self)
+{
+	return self->backend;
+}
+
 static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
@@ -400,7 +406,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 				     0x0,
 				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error)) {
-		g_prefix_error(error, "splash invalid: ");
+		g_prefix_error_literal(error, "splash invalid: ");
 		return FALSE;
 	}
 	width = fu_bitmap_image_get_width(bmp_image);
@@ -847,7 +853,7 @@ fu_uefi_capsule_plugin_ensure_screen_size_config(FuUefiCapsulePlugin *self, GErr
 				 G_MAXUINT32,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse ScreenWidth: ");
+			g_prefix_error_literal(error, "failed to parse ScreenWidth: ");
 			return FALSE;
 		}
 		self->screen_width = (guint32)tmp64;
@@ -861,7 +867,7 @@ fu_uefi_capsule_plugin_ensure_screen_size_config(FuUefiCapsulePlugin *self, GErr
 				 G_MAXUINT32,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse ScreenHeight: ");
+			g_prefix_error_literal(error, "failed to parse ScreenHeight: ");
 			return FALSE;
 		}
 		self->screen_height = (guint32)tmp64;
@@ -1022,7 +1028,7 @@ fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **err
 				 &bufsz,
 				 NULL,
 				 error)) {
-		g_prefix_error(error, "failed to read EFI variable: ");
+		g_prefix_error_literal(error, "failed to read EFI variable: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint64_safe(buf, bufsz, 0x0, &value, G_LITTLE_ENDIAN, error))
@@ -1081,7 +1087,8 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
 	/* firmware may lie */
-	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
+	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk") &&
+	    !fu_context_has_hwid_flag(ctx, "no-capsule-on-disk")) {
 		g_autoptr(GError) error_cod = NULL;
 		if (!fu_uefi_capsule_plugin_check_cod_support(self, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
@@ -1146,6 +1153,9 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	str = fu_uefi_bgrt_get_supported(self->bgrt) ? "Enabled" : "Disabled";
 	g_info("UX capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
+	str = bootloader_supports_fwupd ? "True" : "False";
+	g_info("Bootloader supports fwupd: %s", str);
+	fu_plugin_add_report_metadata(plugin, "BootloaderSupportsFwupd", str);
 	fu_progress_step_done(progress);
 
 	return TRUE;

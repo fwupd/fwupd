@@ -80,7 +80,7 @@ fu_qc_firehose_usb_device_read(FuQcFirehoseUsbDevice *self, guint timeout_ms, GE
 					 timeout_ms,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to do bulk transfer (read): ");
+		g_prefix_error_literal(error, "failed to do bulk transfer (read): ");
 		return NULL;
 	}
 
@@ -120,7 +120,7 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 						 timeout_ms,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to do bulk transfer (write data): ");
+			g_prefix_error_literal(error, "failed to do bulk transfer (write data): ");
 			return FALSE;
 		}
 		if (actual_len != fu_chunk_get_data_sz(chk)) {
@@ -144,7 +144,7 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 						 timeout_ms,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to do bulk transfer (write zlp): ");
+			g_prefix_error_literal(error, "failed to do bulk transfer (write zlp): ");
 			return FALSE;
 		}
 	}
@@ -342,7 +342,7 @@ fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
-	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
+	fu_device_set_remove_delay(FU_DEVICE(self), 90000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }

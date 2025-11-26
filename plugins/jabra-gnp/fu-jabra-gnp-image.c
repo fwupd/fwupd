@@ -12,7 +12,7 @@
 #include "fu-jabra-gnp-image.h"
 
 struct _FuJabraGnpImage {
-	FuArchiveFirmware parent_instance;
+	FuFirmware parent_instance;
 	guint32 crc32;
 };
 

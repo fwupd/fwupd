@@ -331,7 +331,7 @@ static gchar *
 fwupd_client_build_user_agent_system(void)
 {
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 #endif
 	g_autofree gchar *locale = NULL;
 	g_autofree gchar *os_release = NULL;
@@ -339,7 +339,6 @@ fwupd_client_build_user_agent_system(void)
 
 	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
 #ifdef HAVE_UTSNAME_H
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) >= 0) {
 		g_ptr_array_add(ids,
 				g_strdup_printf("%s %s %s",
@@ -3266,10 +3265,10 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 					  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Install CAB only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Install CAB only supported on Linux");
 #endif
 }
 
@@ -3351,10 +3350,10 @@ fwupd_client_install_async(FwupdClient *self,
 					  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Install CAB async only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Install CAB async only supported on Linux");
 #endif
 }
 
@@ -3526,10 +3525,10 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 	/* get the default release only until other parts of fwupd can cope */
 	locations = fwupd_release_get_locations(data->release);
 	if (locations->len == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_FILE,
-					"release missing URI");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"release missing URI");
 		return;
 	}
 	uri_tmp = g_ptr_array_index(locations, 0);
@@ -3589,10 +3588,10 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 		}
 	}
 	if (uris_built->len == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_FILE,
-					"No URIs to download");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"No URIs to download");
 		return;
 	}
 
@@ -3831,10 +3830,10 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Get Details only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Get Details only supported on Linux");
 #endif
 }
 
@@ -3900,10 +3899,10 @@ fwupd_client_get_details_async(FwupdClient *self,
 	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Get Details only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Get Details only supported on Linux");
 #endif
 }
 
@@ -4300,10 +4299,10 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 						  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Update metadata only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Update metadata only supported on Linux");
 #endif
 }
 
@@ -4432,7 +4431,7 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 	}
 	data->signature = g_steal_pointer(&bytes);
 	if (!fwupd_remote_load_signature_bytes(data->remote, data->signature, &error)) {
-		g_prefix_error(&error, "Failed to load signature: ");
+		g_prefix_error_literal(&error, "Failed to load signature: ");
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -5676,31 +5675,47 @@ fwupd_client_download_error_is_fatal(const GError *error)
 	return TRUE;
 }
 
-static GBytes *
-fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
+static gboolean
+fwupd_client_test_network(const gchar *url, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	GNetworkMonitor *monitor = g_network_monitor_get_default();
-	gulong delay_ms = 2500;
+	GNetworkMonitor *monitor;
+	g_autoptr(GUri) uri = NULL;
 	g_autoptr(GError) error_monitor = NULL;
 	g_autoptr(GSocketConnectable) address = NULL;
-	g_autoptr(GUri) uri = NULL;
 
-	/* test if we can reach this network */
+	if (g_getenv("FWUPD_IGNORE_NETWORK_REACHABLE") != NULL)
+		return TRUE;
+
 	uri = g_uri_parse(url, G_URI_FLAGS_NONE, error);
 	if (uri == NULL)
-		return NULL;
+		return FALSE;
+
 	address = g_network_address_parse(g_uri_get_host(uri), g_uri_get_port(uri), error);
 	if (address == NULL)
-		return NULL;
+		return FALSE;
+
+	monitor = g_network_monitor_get_default();
 	if (!g_network_monitor_can_reach(monitor, address, NULL, &error_monitor)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_REACHABLE,
 			    "network is unreachable: %s",
 			    error_monitor->message);
-		return NULL;
+		return FALSE;
 	}
+
+	return TRUE;
+}
+
+static GBytes *
+fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	gulong delay_ms = 2500;
+
+	/* test if we can reach this network */
+	if (!fwupd_client_test_network(url, error))
+		return NULL;
 
 	for (guint i = 0;; i++, delay_ms *= 2) {
 		g_autoptr(GBytes) blob = NULL;
@@ -5751,6 +5766,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "not sure how to handle: %s",
 				    url);
+			/* nocheck:error-false-return */
 		}
 		if (i == helper->urls->len - 1) {
 			g_task_return_error(task, g_steal_pointer(&error));
@@ -6033,17 +6049,17 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 	/* parse */
 	bytes = fwupd_client_upload_bytes_finish(FWUPD_CLIENT(source), res, &error);
 	if (bytes == NULL) {
-		g_prefix_error(&error, "failed to upload report: ");
+		g_prefix_error_literal(&error, "failed to upload report: ");
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
 
 	/* server returned nothing, and probably exploded in a ball of flames */
 	if (g_bytes_get_size(bytes) == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_FILE,
-					"failed to upload, zero length data");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"failed to upload, zero length data");
 		return;
 	}
 

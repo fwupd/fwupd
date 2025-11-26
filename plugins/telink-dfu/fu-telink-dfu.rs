@@ -23,7 +23,7 @@ struct FuStructTelinkDfuEndCheck {
 #[repr(C, packed)]
 struct FuStructTelinkDfuBlePkt {
     preamble: u16le,
-    payload: [u8; 16] = 0xFF,
+    payload: [u8; 16] = [0xFF; 16],
     crc: u16le,
 }
 
@@ -31,7 +31,7 @@ struct FuStructTelinkDfuBlePkt {
 #[repr(C, packed)]
 struct FuStructTelinkDfuHidPktPayload {
     ota_cmd: u16le = 0xFFFF,
-    ota_data: [u8; 16] = 0xFF,
+    ota_data: [u8; 16] = [0xFF; 16],
     crc: u16le = 0xFFFF,
 }
 

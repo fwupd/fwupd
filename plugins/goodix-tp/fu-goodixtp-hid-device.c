@@ -80,7 +80,7 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 					  sizeof(rcv_buf),
 					  FU_IOCTL_FLAG_NONE,
 					  error)) {
-		g_prefix_error(error, "failed get report: ");
+		g_prefix_error_literal(error, "failed get report: ");
 		return FALSE;
 	}
 	if (rcv_buf[0] != REPORT_ID) {
@@ -108,7 +108,7 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 					  bufsz,
 					  FU_IOCTL_FLAG_NONE,
 					  error)) {
-		g_prefix_error(error, "failed set report: ");
+		g_prefix_error_literal(error, "failed set report: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -142,7 +142,7 @@ fu_goodixtp_hid_device_init(FuGoodixtpHidDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.goodix.goodixtp");
 	fu_device_set_name(FU_DEVICE(self), "Touch Controller Sensor");
-	fu_device_set_vendor(FU_DEVICE(self), "Goodix inc.");
+	fu_device_set_vendor(FU_DEVICE(self), "Goodix");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);

@@ -1,5 +1,5 @@
 {%- if Parent == 'Udev' -%}
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
 {%- endif %}
 cargs = ['-DG_LOG_DOMAIN="FuPlugin{{VendorExample}}"']
 
@@ -23,6 +23,3 @@ device_tests += files(
   'tests/vendor-example.json',
   'tests/vendor-example-setup.json',
 )
-{%- if Parent == 'Udev' %}
-endif
-{%- endif %}

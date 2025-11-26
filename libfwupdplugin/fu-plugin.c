@@ -728,7 +728,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL) {
-		g_prefix_error(error, "failed to open device: ");
+		g_prefix_error_literal(error, "failed to open device: ");
 		return FALSE;
 	}
 
@@ -747,7 +747,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 
 		fw_old = fu_device_dump_firmware(device, fu_progress_get_child(progress), error);
 		if (fw_old == NULL) {
-			g_prefix_error(error, "failed to backup old firmware: ");
+			g_prefix_error_literal(error, "failed to backup old firmware: ");
 			return FALSE;
 		}
 		localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
@@ -813,7 +813,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_device_attach_full(device, progress, &error_local))
 			g_debug("ignoring attach failure: %s", error_local->message);
-		g_prefix_error(error, "failed to read firmware: ");
+		g_prefix_error_literal(error, "failed to read firmware: ");
 		return FALSE;
 	}
 	fw = fu_firmware_write(firmware, error);
@@ -821,7 +821,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_device_attach_full(device, progress, &error_local))
 			g_debug("ignoring attach failure: %s", error_local->message);
-		g_prefix_error(error, "failed to write firmware: ");
+		g_prefix_error_literal(error, "failed to write firmware: ");
 		return FALSE;
 	}
 	for (guint i = 0; checksum_types[i] != 0; i++) {
@@ -872,6 +872,7 @@ fu_plugin_runner_startup(FuPlugin *self, FuProgress *progress, GError **error)
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_INTERNAL,
 						    "unspecified error");
+				/* nocheck:error-false-return */
 			}
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
@@ -921,6 +922,7 @@ fu_plugin_runner_ready(FuPlugin *self, FuProgress *progress, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -991,6 +993,7 @@ fu_plugin_runner_device_generic(FuPlugin *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -1029,6 +1032,7 @@ fu_plugin_runner_device_generic_progress(FuPlugin *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -1068,6 +1072,7 @@ fu_plugin_runner_flagged_device_generic(FuPlugin *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -1105,6 +1110,7 @@ fu_plugin_runner_device_array_generic(FuPlugin *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -1159,6 +1165,7 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		/* coldplug failed, but we might have already added devices to the daemon... */
 		if (priv->devices != NULL) {
@@ -1816,6 +1823,7 @@ fu_plugin_runner_backend_device_added(FuPlugin *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -1864,6 +1872,7 @@ fu_plugin_runner_backend_device_changed(FuPlugin *self, FuDevice *device, GError
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -2050,6 +2059,7 @@ fu_plugin_runner_verify(FuPlugin *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -2295,6 +2305,7 @@ fu_plugin_runner_clear_results(FuPlugin *self, FuDevice *device, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -2345,6 +2356,7 @@ fu_plugin_runner_get_results(FuPlugin *self, FuDevice *device, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
+			/* nocheck:error-false-return */
 		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),

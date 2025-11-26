@@ -234,7 +234,7 @@ fu_realtek_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 
 	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_DEBUG, FALSE, error)) {
-		g_prefix_error(error, "failed to ensure address: ");
+		g_prefix_error_literal(error, "failed to ensure address: ");
 		return FALSE;
 	}
 
@@ -509,7 +509,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 							 MCU_MODE_WRITE_BUF,
 							 10,
 							 error)) {
-			g_prefix_error(error, "failed waiting for write buffer to clear: ");
+			g_prefix_error_literal(error, "failed waiting for write buffer to clear: ");
 			return FALSE;
 		}
 		/* write data into FIFO */
@@ -653,10 +653,10 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 						    error))
 		return FALSE;
 	if (memcmp(g_bytes_get_data(firmware_bytes, NULL), readback_buf, FLASH_USER_SIZE) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "flash contents after write do not match firmware image");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "flash contents do not match firmware image");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -816,7 +816,6 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rtd2142");
-	fu_device_set_vendor(FU_DEVICE(self), "Realtek");
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", 0x10EC);
 	fu_device_set_summary(FU_DEVICE(self), "DisplayPort MST hub");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);

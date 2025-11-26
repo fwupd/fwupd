@@ -91,7 +91,7 @@ fu_byte_array_append_uint8(GByteArray *array, guint8 data)
 void
 fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian)
 {
-	guint8 buf[2];
+	guint8 buf[2]; /* nocheck:zero-init */
 	fu_memwrite_uint16(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }
@@ -109,7 +109,7 @@ fu_byte_array_append_uint16(GByteArray *array, guint16 data, FuEndianType endian
 void
 fu_byte_array_append_uint24(GByteArray *array, guint32 data, FuEndianType endian)
 {
-	guint8 buf[3];
+	guint8 buf[3]; /* nocheck:zero-init */
 	fu_memwrite_uint24(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }
@@ -127,7 +127,7 @@ fu_byte_array_append_uint24(GByteArray *array, guint32 data, FuEndianType endian
 void
 fu_byte_array_append_uint32(GByteArray *array, guint32 data, FuEndianType endian)
 {
-	guint8 buf[4];
+	guint8 buf[4]; /* nocheck:zero-init */
 	fu_memwrite_uint32(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }
@@ -145,7 +145,7 @@ fu_byte_array_append_uint32(GByteArray *array, guint32 data, FuEndianType endian
 void
 fu_byte_array_append_uint64(GByteArray *array, guint64 data, FuEndianType endian)
 {
-	guint8 buf[8];
+	guint8 buf[8]; /* nocheck:zero-init */
 	fu_memwrite_uint64(buf, data, endian);
 	g_byte_array_append(array, buf, sizeof(buf));
 }

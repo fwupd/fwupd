@@ -1168,10 +1168,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NAMABERKAS SERTIFIKAT KUNCI-PRIVAT"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NAMABERKAS ID-PERANTI"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "DATA OFSET NAMA-BERKAS [TIPE-FIRMWARE]"
 
@@ -1488,7 +1484,6 @@ msgid "Host Security Events"
 msgstr "Kejadian Keamanan Host"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Host Security ID (HSI) tidak didukung"
 

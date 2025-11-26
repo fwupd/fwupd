@@ -48,7 +48,7 @@ fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, GError **error)
 					"1",
 					FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
 					error)) {
-		g_prefix_error(error, "setting usb4 port offline failed: ");
+		g_prefix_error_literal(error, "setting usb4 port offline failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -70,7 +70,7 @@ fu_thunderbolt_udev_rescan_port(FuUdevDevice *device, GError **error)
 					"1",
 					FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
 					error)) {
-		g_prefix_error(error, "rescan on port failed: ");
+		g_prefix_error_literal(error, "rescan on port failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -93,7 +93,7 @@ fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, GError **error)
 					"0",
 					FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
 					error)) {
-		g_prefix_error(error, "setting port online failed: ");
+		g_prefix_error_literal(error, "setting port online failed: ");
 		return FALSE;
 	}
 	return TRUE;

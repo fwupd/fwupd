@@ -64,7 +64,7 @@ fu_wacom_raw_device_check_mpu(FuWacomRawDevice *self, GError **error)
 				     0,
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_NO_ERROR_CHECK,
 				     error)) {
-		g_prefix_error(error, "failed to get MPU type: ");
+		g_prefix_error_literal(error, "failed to get MPU type: ");
 		return FALSE;
 	}
 
@@ -140,7 +140,7 @@ fu_wacom_raw_device_check_mode(FuWacomRawDevice *self, GError **error)
 				     0,
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_NO_ERROR_CHECK,
 				     error)) {
-		g_prefix_error(error, "failed to check mode: ");
+		g_prefix_error_literal(error, "failed to check mode: ");
 		return FALSE;
 	}
 	if (rsp_value != 0x06) {
@@ -170,7 +170,7 @@ fu_wacom_raw_device_set_version_bootloader(FuWacomRawDevice *self, GError **erro
 				     0,
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_NO_ERROR_CHECK,
 				     error)) {
-		g_prefix_error(error, "failed to get bootloader version: ");
+		g_prefix_error_literal(error, "failed to get bootloader version: ");
 		return FALSE;
 	}
 	version = g_strdup_printf("%u", rsp_value);
@@ -255,7 +255,7 @@ fu_wacom_raw_device_cmd_response(FuWacomRawDevice *self,
 	g_autoptr(FuStructWacomRawRequest) st_rsp = NULL;
 
 	if (!fu_wacom_raw_device_get_feature(self, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
 	st_rsp = fu_struct_wacom_raw_response_parse(buf, sizeof(buf), 0x0, error);
@@ -303,7 +303,7 @@ fu_wacom_raw_device_cmd(FuWacomRawDevice *self,
 			GError **error)
 {
 	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
-		g_prefix_error(error, "failed to send: ");
+		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), delay_ms);

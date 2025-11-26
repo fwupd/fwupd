@@ -64,7 +64,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 					  buf,
 					  bufsz,
 					  error)) {
-		g_prefix_error(error, "failed to read legacy PD header: ");
+		g_prefix_error_literal(error, "failed to read legacy PD header: ");
 		return FALSE;
 	}
 	st = fu_struct_vli_pd_hdr_parse(buf, bufsz, 0x0, error);
@@ -80,7 +80,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 						  buf,
 						  bufsz,
 						  error)) {
-			g_prefix_error(error, "failed to read PD header: ");
+			g_prefix_error_literal(error, "failed to read PD header: ");
 			return FALSE;
 		}
 		fu_struct_vli_pd_hdr_unref(st);
@@ -92,7 +92,10 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	/* just empty space */
 	fwver = fu_struct_vli_pd_hdr_get_fwver(st);
 	if (fwver == G_MAXUINT32) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no PD device header found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no PD device header found");
 		return FALSE;
 	}
 

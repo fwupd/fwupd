@@ -276,7 +276,7 @@ fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error)
 {
 	const guint8 *buf = g_bytes_get_data(bytes, bufsz);
 	if (buf == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid data");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid data");
 		return NULL;
 	}
 	return buf;

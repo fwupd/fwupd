@@ -850,17 +850,26 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 		}
 	}
 
+	/* write */
+	if (klass->write != NULL) {
+		blob = fu_firmware_write(self, error);
+		if (blob == NULL)
+			return NULL;
+		return g_compute_checksum_for_bytes(csum_kind, blob);
+	}
+
 	/* internal data */
 	if (priv->bytes != NULL)
 		return g_compute_checksum_for_bytes(csum_kind, priv->bytes);
 	if (priv->stream != NULL)
 		return fu_input_stream_compute_checksum(priv->stream, csum_kind, error);
 
-	/* write */
-	blob = fu_firmware_write(self, error);
-	if (blob == NULL)
-		return NULL;
-	return g_compute_checksum_for_bytes(csum_kind, blob);
+	/* nothing to do */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no input data, as no FuFirmware->write, stream or bytes");
+	return NULL;
 }
 
 /**
@@ -1070,7 +1079,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 	} else {
 		partial_stream = fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
 		if (partial_stream == NULL) {
-			g_prefix_error(error, "failed to cut firmware: ");
+			g_prefix_error_literal(error, "failed to cut firmware: ");
 			return FALSE;
 		}
 	}
@@ -1405,7 +1414,7 @@ fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
 
 	/* parse XML */
 	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error(error, "could not parse XML: ");
+		g_prefix_error_literal(error, "could not parse XML: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -1475,7 +1484,7 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags
 
 	stream = g_file_read(file, NULL, error);
 	if (stream == NULL) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	return fu_firmware_parse_stream(self, G_INPUT_STREAM(stream), 0, flags, error);

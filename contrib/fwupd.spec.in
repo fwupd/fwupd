@@ -1,10 +1,16 @@
-%global glib2_version 2.45.8
+%global glib2_version 2.68.0
 %global libxmlb_version 0.1.3
 %global libusb_version 1.0.9
 %global libcurl_version 7.62.0
 %global libjcat_version 0.1.0
 %global systemd_version 249
 %global json_glib_version 1.1.1
+
+# to use this feature use `rpmbuild -ba fwupd.spec --with=libfwupdcompat`
+%bcond_with libfwupdcompat
+%if %{with libfwupdcompat} || 0%{?rhel}
+%global libfwupd_19x_version 31
+%endif
 
 # although we ship a few tiny python files these are utilities that 99.99%
 # of users do not need -- use this to avoid dragging python onto CoreOS
@@ -15,6 +21,10 @@
 %global enable_ci 0
 %global enable_tests 1
 %global __meson_wrap_mode nodownload
+
+%if 0%{?fedora} >= 30 || 0%{?rhel} >= 10
+%global have_gi_docgen 1
+%endif
 
 # fwupd.efi is only available on these arches
 %ifarch x86_64 aarch64 riscv64
@@ -51,8 +61,13 @@ Release:   0.#BUILD#%{?alphatag}%{?dist}
 License:   LGPL-2.1-or-later
 URL:       https://github.com/fwupd/fwupd
 Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
+%if 0%{?libfwupd_19x_version}
+Source1:   https://github.com/fwupd/%{name}-efi/archive/refs/tags/1.7.tar.gz
+Source2:   https://github.com/fwupd/%{name}/releases/download/1.9.%{libfwupd_19x_version}/%{name}-1.9.%{libfwupd_19x_version}.tar.xz
+%endif
 
 BuildRequires: gettext
+BuildRequires: hwdata
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
 BuildRequires: libusb1-devel >= %{libusb_version}
@@ -77,7 +92,9 @@ BuildRequires: gobject-introspection-devel
 BuildRequires: valgrind
 BuildRequires: valgrind-devel
 %endif
+%if 0%{?have_gi_docgen}
 BuildRequires: gi-docgen
+%endif
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
@@ -114,8 +131,10 @@ Requires(postun): systemd
 
 Requires: glib2%{?_isa} >= %{glib2_version}
 Requires: libxmlb%{?_isa} >= %{libxmlb_version}
-Requires: libusb1%{?_isa} >= %{libusb_version}
 Requires: shared-mime-info
+
+# deliberately has no _isa as libusbx in RHEL-9 does not include it
+Requires: libusb1 >= %{libusb_version}
 
 %if 0%{?rhel} > 7 || 0%{?fedora} > 28
 Recommends: python3
@@ -226,7 +245,36 @@ fwupd wrapper for Qubes OS
 %prep
 %autosetup -p1
 
+# the EFI helper
+%if 0%{?libfwupd_19x_version}
+mkdir -p subprojects/fwupd-efi
+tar xfvs %{SOURCE1} -C subprojects/fwupd-efi --strip-components=1
+cd subprojects/fwupd-efi
+cd -
+%endif
+
+# and the old version for libfwupd1
+%if 0%{?libfwupd_19x_version}
+tar xfs %{SOURCE2}
+%endif
+
 %build
+
+%if 0%{?libfwupd_19x_version}
+cd fwupd-1.9.%{libfwupd_19x_version}
+%meson \
+    -Dbuild=library \
+    -Ddocs=disabled \
+    -Dcbor=disabled \
+    -Dpolkit=disabled \
+    -Dtests=false \
+    -Dbash_completion=false \
+    -Dplugin_msr=disabled \
+    -Dintrospection=disabled \
+    -Dlaunchd=disabled
+%meson_build
+cd -
+%endif
 
 %meson \
 %if 0%{?enable_ci}
@@ -237,7 +285,11 @@ fwupd wrapper for Qubes OS
     -Dsupported_build=enabled \
 %endif
     -Dumockdev_tests=disabled \
+%if 0%{?have_gi_docgen}
     -Ddocs=enabled \
+%else
+    -Ddocs=disabled \
+%endif
 %if 0%{?enable_tests}
     -Dtests=true \
 %else
@@ -276,6 +328,13 @@ fwupd wrapper for Qubes OS
 %endif
 
 %install
+
+%if 0%{?libfwupd_19x_version}
+cd fwupd-1.9.%{libfwupd_19x_version}
+%meson_install
+cd -
+%endif
+
 %meson_install
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
@@ -360,9 +419,14 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/builtin.quirk.gz
+%if 0%{?have_gi_docgen}
 %{_datadir}/doc/fwupd/*.html
+%endif
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/grub.d/35_fwupd
+%endif
+%if 0%{?libfwupd_19x_version}
+%{_libdir}/libfwupd.so.2*
 %endif
 %{_libdir}/libfwupd.so.3*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
@@ -386,13 +450,18 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
+%if 0%{?have_gi_docgen}
 %{_datadir}/doc/fwupd/libfwupdplugin
 %{_datadir}/doc/fwupd/libfwupd
 %{_datadir}/doc/libfwupdplugin
 %{_datadir}/doc/libfwupd
+%endif
 %{_datadir}/vala/vapi
+%if 0%{?libfwupd_19x_version}
+%{_includedir}/fwupd-1
+%endif
 %{_includedir}/fwupd-3
-%{_libdir}/libfwupd*.so
+%{_libdir}/libfwupd.so
 %{_libdir}/pkgconfig/fwupd.pc
 
 %files tests

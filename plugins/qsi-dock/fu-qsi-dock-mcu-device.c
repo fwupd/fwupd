@@ -45,7 +45,7 @@ fu_qsi_dock_mcu_device_tx(FuQsiDockMcuDevice *self,
 static gboolean
 fu_qsi_dock_mcu_device_rx(FuQsiDockMcuDevice *self, guint8 *outbuf, gsize outbufsz, GError **error)
 {
-	guint8 buf[64];
+	guint8 buf[64] = {0};
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      FU_QSI_DOCK_REPORT_ID,
@@ -206,8 +206,8 @@ fu_qsi_dock_mcu_device_checksum(FuQsiDockMcuDevice *self,
 			  FU_QSI_DOCK_CMD1_SPI,
 			  FU_QSI_DOCK_CMD2_SPI_EXTERNAL_FLASH_CHECKSUM,
 			  0};
-	guint8 fw_length[4];
-	guint8 checksum_val[2];
+	guint8 fw_length[4] = {0};
+	guint8 checksum_val[2] = {0};
 
 	fu_memwrite_uint32(fw_length, length, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(checksum_val, checksum, G_LITTLE_ENDIAN);
@@ -255,7 +255,10 @@ fu_qsi_dock_mcu_device_checksum(FuQsiDockMcuDevice *self,
 
 	/* MCU Checksum Compare Result 0:Pass 1:Fail */
 	if (buf[2] != 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "checksum did not match");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "checksum did not match");
 		return FALSE;
 	}
 
@@ -423,8 +426,8 @@ fu_qsi_dock_mcu_device_wait_for_spi_erase_ready_cb(FuQsiDockMcuDevice *self,
 			  FU_QSI_DOCK_CMD1_SPI,
 			  FU_QSI_DOCK_CMD2_SPI_EXTERNAL_FLASH_ERASE};
 	guint32 offset = 0;
-	guint8 fw_length[4];
-	guint8 flash_offset[4];
+	guint8 fw_length[4] = {0};
+	guint8 flash_offset[4] = {0};
 
 	fu_memwrite_uint32(fw_length, length, G_LITTLE_ENDIAN);
 	fu_memwrite_uint32(flash_offset, offset, G_LITTLE_ENDIAN);
@@ -503,7 +506,7 @@ fu_qsi_dock_mcu_device_write_firmware_with_idx(FuQsiDockMcuDevice *self,
 			     30,
 			     NULL,
 			     error)) {
-		g_prefix_error(error, "failed to wait for initial: ");
+		g_prefix_error_literal(error, "failed to wait for initial: ");
 		return FALSE;
 	}
 	if (!fu_qsi_dock_mcu_device_wait_for_spi_erase_ready_cb(self,

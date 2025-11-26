@@ -36,7 +36,7 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
-	fwupd_codec_string_append_hex(str, idt, "IsPciDevice", self->is_pci_device);
+	fwupd_codec_string_append_bool(str, idt, "IsPciDevice", self->is_pci_device);
 }
 
 static gchar *
@@ -109,7 +109,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	}
 	stream = fu_input_stream_from_path(fn, error);
 	if (stream == NULL) {
-		g_prefix_error(error, "failed to open device: ");
+		g_prefix_error_literal(error, "failed to open device: ");
 		return NULL;
 	}
 	if (self->metadata_size > 0) {
@@ -138,7 +138,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				      error)) {
-		g_prefix_error(error, "failed to parse image: ");
+		g_prefix_error_literal(error, "failed to parse image: ");
 		return NULL;
 	}
 
@@ -464,7 +464,7 @@ fu_mtd_device_write(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progres
 
 	/* rewind */
 	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), 0x0, error)) {
-		g_prefix_error(error, "failed to rewind: ");
+		g_prefix_error_literal(error, "failed to rewind: ");
 		return FALSE;
 	}
 

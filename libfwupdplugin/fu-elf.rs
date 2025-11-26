@@ -19,7 +19,7 @@ struct FuStructElfFileHeader64le {
     ei_version: u8 == 0x1,
     ei_osabi: u8 = 0x3,
     ei_abiversion: u8,
-    _ei_padding: [u8; 7] = 0x00000000000000,
+    _ei_padding: [u8; 7],
     type: FuElfFileHeaderType,
     machine: u16le,
     version: u32le == 0x1,

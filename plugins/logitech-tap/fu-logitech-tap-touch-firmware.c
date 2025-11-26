@@ -198,7 +198,7 @@ fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 				  strlen(image_end_magic),
 				  &ap_end_offset,
 				  error)) {
-		g_prefix_error(error, "failed to find anchor: ");
+		g_prefix_error_literal(error, "failed to find anchor: ");
 		return FALSE;
 	}
 	ap_end = ap_end_offset + 32 + 2;

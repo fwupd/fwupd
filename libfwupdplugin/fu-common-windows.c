@@ -217,7 +217,7 @@ fu_common_get_olson_timezone_id_impl(GError **error)
 	}
 	name = g_utf16_to_utf8(tzinfo.StandardName, -1, NULL, NULL, error);
 	if (name == NULL) {
-		g_prefix_error(error, "cannot convert timezone name to UTF-8: ");
+		g_prefix_error_literal(error, "cannot convert timezone name to UTF-8: ");
 		return NULL;
 	}
 

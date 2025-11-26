@@ -1463,6 +1463,11 @@ fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value) G_GN
 void
 fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value) G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_device_build_instance_id_strv(FuDevice *self,
+				 const gchar *subsystem,
+				 gchar **keys,
+				 GError **error) G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
     G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 3);
 gboolean
@@ -1482,3 +1487,7 @@ FuDeviceEvent *
 fu_device_save_event(FuDevice *self, const gchar *id);
 FuDeviceEvent *
 fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
+void
+fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
+GPtrArray *
+fu_device_get_events(FuDevice *self);

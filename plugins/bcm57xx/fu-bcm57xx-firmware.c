@@ -288,7 +288,7 @@ fu_bcm57xx_firmware_validate(FuFirmware *firmware,
 	guint32 magic = 0;
 
 	if (!fu_input_stream_read_u32(stream, 0x0, &magic, G_BIG_ENDIAN, error)) {
-		g_prefix_error(error, "failed to read magic: ");
+		g_prefix_error_literal(error, "failed to read magic: ");
 		return FALSE;
 	}
 	if (magic != BCM_APE_HEADER_MAGIC && magic != BCM_STAGE1_HEADER_MAGIC_BROADCOM &&
@@ -375,7 +375,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	if (stream_header == NULL)
 		return FALSE;
 	if (!fu_bcm57xx_firmware_parse_header(self, stream_header, error)) {
-		g_prefix_error(error, "failed to parse header: ");
+		g_prefix_error_literal(error, "failed to parse header: ");
 		return FALSE;
 	}
 
@@ -388,7 +388,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	img_info = fu_bcm57xx_firmware_parse_info(self, stream_info, flags, error);
 	if (img_info == NULL) {
-		g_prefix_error(error, "failed to parse info: ");
+		g_prefix_error_literal(error, "failed to parse info: ");
 		return FALSE;
 	}
 	fu_firmware_set_offset(img_info, BCM_NVRAM_INFO_BASE);
@@ -400,7 +400,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	if (stream_vpd == NULL)
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_vpd, stream_vpd, 0x0, flags, error)) {
-		g_prefix_error(error, "failed to parse VPD: ");
+		g_prefix_error_literal(error, "failed to parse VPD: ");
 		return FALSE;
 	}
 	fu_firmware_set_id(img_vpd, "vpd");
@@ -413,7 +413,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	if (stream_info2 == NULL)
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_info2, stream_info2, 0x0, flags, error)) {
-		g_prefix_error(error, "failed to parse info2: ");
+		g_prefix_error_literal(error, "failed to parse info2: ");
 		return FALSE;
 	}
 	fu_firmware_set_id(img_info2, "info2");
@@ -423,7 +423,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	/* stage1 */
 	img_stage1 = fu_bcm57xx_firmware_parse_stage1(self, stream, &stage1_sz, flags, error);
 	if (img_stage1 == NULL) {
-		g_prefix_error(error, "failed to parse stage1: ");
+		g_prefix_error_literal(error, "failed to parse stage1: ");
 		return FALSE;
 	}
 	fu_firmware_add_image(firmware, img_stage1);
@@ -431,7 +431,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	/* stage2 */
 	img_stage2 = fu_bcm57xx_firmware_parse_stage2(self, stream, stage1_sz, flags, error);
 	if (img_stage2 == NULL) {
-		g_prefix_error(error, "failed to parse stage2: ");
+		g_prefix_error_literal(error, "failed to parse stage2: ");
 		return FALSE;
 	}
 	fu_firmware_add_image(firmware, img_stage2);

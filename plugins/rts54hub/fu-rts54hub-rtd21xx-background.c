@@ -48,7 +48,7 @@ fu_rts54hub_rtd21xx_background_ensure_version_unlocked(FuRts54hubRtd21xxBackgrou
 						  buf_req,
 						  sizeof(buf_req),
 						  error)) {
-		g_prefix_error(error, "failed to get version number: ");
+		g_prefix_error_literal(error, "failed to get version number: ");
 		return FALSE;
 	}
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
@@ -57,7 +57,7 @@ fu_rts54hub_rtd21xx_background_ensure_version_unlocked(FuRts54hubRtd21xxBackgrou
 						 buf_rep,
 						 sizeof(buf_rep),
 						 error)) {
-		g_prefix_error(error, "failed to get version number: ");
+		g_prefix_error_literal(error, "failed to get version number: ");
 		return FALSE;
 	}
 
@@ -78,7 +78,7 @@ fu_rts54hub_rtd21xx_background_detach_raw(FuRts54hubRtd21xxBackground *self, GEr
 						  buf,
 						  sizeof(buf),
 						  error)) {
-		g_prefix_error(error, "failed to detach: ");
+		g_prefix_error_literal(error, "failed to detach: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -112,7 +112,7 @@ fu_rts54hub_rtd21xx_background_detach_cb(FuDevice *device, gpointer user_data, G
 static gboolean
 fu_rts54hub_rtd21xx_background_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
+	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -130,7 +130,7 @@ fu_rts54hub_rtd21xx_background_detach(FuDevice *device, FuProgress *progress, GE
 static gboolean
 fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
+	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	guint8 buf[] = {ISP_CMD_FW_UPDATE_EXIT};
@@ -145,7 +145,7 @@ fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GE
 						  buf,
 						  sizeof(buf),
 						  error)) {
-		g_prefix_error(error, "failed to attach: ");
+		g_prefix_error_literal(error, "failed to attach: ");
 		return FALSE;
 	}
 	fu_device_sleep_full(device, 1000, progress); /* ms */
@@ -177,7 +177,7 @@ fu_rts54hub_rtd21xx_background_setup(FuDevice *device, GError **error)
 static gboolean
 fu_rts54hub_rtd21xx_background_reload(FuDevice *device, GError **error)
 {
-	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
+	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open parent device */
@@ -228,7 +228,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 						  write_buf,
 						  1,
 						  error)) {
-		g_prefix_error(error, "failed to get project ID address: ");
+		g_prefix_error_literal(error, "failed to get project ID address: ");
 		return FALSE;
 	}
 
@@ -240,14 +240,14 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 						 read_buf,
 						 6,
 						 error)) {
-		g_prefix_error(error, "failed to read project ID: ");
+		g_prefix_error_literal(error, "failed to read project ID: ");
 		return FALSE;
 	}
 	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "failed project ID with error 0x%02x: ",
+			    "failed project ID with error 0x%02x",
 			    read_buf[0]);
 		return FALSE;
 	}
@@ -272,7 +272,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 						  write_buf,
 						  project_id_count + 1,
 						  error)) {
-		g_prefix_error(error, "failed to send fw update start cmd: ");
+		g_prefix_error_literal(error, "failed to send fw update start cmd: ");
 		return FALSE;
 	}
 	if (!fu_rts54hub_rtd21xx_device_read_status(FU_RTS54HUB_RTD21XX_DEVICE(self), NULL, error))
@@ -287,7 +287,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 						  write_buf,
 						  3,
 						  error)) {
-		g_prefix_error(error, "failed to send fw update start cmd: ");
+		g_prefix_error_literal(error, "failed to send fw update start cmd: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -340,7 +340,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 						  write_buf,
 						  1,
 						  error)) {
-		g_prefix_error(error, "failed update finish cmd: ");
+		g_prefix_error_literal(error, "failed update finish cmd: ");
 		return FALSE;
 	}
 

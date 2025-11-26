@@ -72,7 +72,7 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 	fu_device_sleep(device, self->operation_delay);
 
 	if (!ret) {
-		g_prefix_error(error, "failed to do bulk transfer: ");
+		g_prefix_error_literal(error, "failed to do bulk transfer: ");
 		return FALSE;
 	}
 	if (actual_len != buflen) {

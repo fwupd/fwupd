@@ -724,10 +724,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FAILO-VARDAS LIUDIJIMAS PRIVATUSIS-RAKTAS"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FAILO-VARDAS ĮRENGINIO-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "FAILO-VARDAS [ĮRENGINIO-ID|GUID]"
 

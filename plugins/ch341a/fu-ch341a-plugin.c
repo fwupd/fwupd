@@ -9,14 +9,14 @@
 #include "fu-ch341a-device.h"
 #include "fu-ch341a-plugin.h"
 
-struct _FuCh341APlugin {
+struct _FuCh341aPlugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(FuCh341APlugin, fu_ch341a_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuCh341aPlugin, fu_ch341a_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_ch341a_plugin_init(FuCh341APlugin *self)
+fu_ch341a_plugin_init(FuCh341aPlugin *self)
 {
 }
 
@@ -35,7 +35,7 @@ fu_ch341a_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_ch341a_plugin_class_init(FuCh341APluginClass *klass)
+fu_ch341a_plugin_class_init(FuCh341aPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);

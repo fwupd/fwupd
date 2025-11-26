@@ -561,7 +561,7 @@ fu_ipmi_device_get_user_password(FuIpmiDevice *self, guint8 user_id, GError **er
 					&resp_len,
 					FU_IPMI_DEVICE_TIMEOUT,
 					error)) {
-		g_prefix_error(error, "failed to get username: ");
+		g_prefix_error_literal(error, "failed to get username: ");
 		return NULL;
 	}
 	if (resp_len != sizeof(resp)) {
@@ -600,7 +600,7 @@ fu_ipmi_device_set_user_name(FuIpmiDevice *self,
 			    0x0, /* src */
 			    username_sz,
 			    error)) {
-		g_prefix_error(error, "username invalid: ");
+		g_prefix_error_literal(error, "username invalid: ");
 		return FALSE;
 	}
 
@@ -674,7 +674,7 @@ fu_ipmi_device_set_user_password(FuIpmiDevice *self,
 			    0x0, /* src */
 			    password_sz,
 			    error)) {
-		g_prefix_error(error, "password invalid: ");
+		g_prefix_error_literal(error, "password invalid: ");
 		return FALSE;
 	}
 

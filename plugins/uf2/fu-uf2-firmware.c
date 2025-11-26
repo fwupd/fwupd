@@ -15,18 +15,72 @@ struct _FuUf2Firmware {
 
 G_DEFINE_TYPE(FuUf2Firmware, fu_uf2_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_UF2_FIRMWARE_BLOCK_FLAG_NONE		     0x00000000
-#define FU_UF2_FIRMWARE_BLOCK_FLAG_NOFLASH	     0x00000001
-#define FU_UF2_FIRMWARE_BLOCK_FLAG_IS_CONTAINER	     0x00001000
-#define FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_FAMILY	     0x00002000
-#define FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_MD5	     0x00004000
-#define FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_EXTENSION_TAG 0x00008000
+static gboolean
+fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
+				 const guint8 *buf,
+				 gsize bufsz,
+				 gsize offset,
+				 GError **error)
+{
+	while (offset < bufsz) {
+		guint8 sz = 0;
+		FuUf2FirmwareTag tag = 0;
+		g_autoptr(FuStructUf2Extension) st_ext = NULL;
 
-#define FU_U2F_FIRMWARE_TAG_VERSION	0x9fc7bc /* semver of firmware file (UTF-8) */
-#define FU_U2F_FIRMWARE_TAG_DESCRIPTION 0x650d9d /* description of device (UTF-8) */
-#define FU_U2F_FIRMWARE_TAG_PAGE_SZ	0x0be9f7 /* page size of target device (uint32_t) */
-#define FU_U2F_FIRMWARE_TAG_SHA1	0xb46db0 /* SHA-2 checksum of firmware */
-#define FU_U2F_FIRMWARE_TAG_DEVICE_ID	0xc8a729 /* device type identifier (uint32_t or uint64_t) */
+		st_ext = fu_struct_uf2_extension_parse(buf, bufsz, offset, error);
+		if (st_ext == NULL)
+			return FALSE;
+		sz = fu_struct_uf2_extension_get_size(st_ext);
+		if (sz == 0)
+			break;
+		if (sz < 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid extension tag 0x%x [%s] size 0x%x",
+				    tag,
+				    fu_uf2_firmware_tag_to_string(tag),
+				    (guint)sz);
+			return FALSE;
+		}
+		tag = fu_struct_uf2_extension_get_tag(st_ext);
+		if (tag == 0)
+			break;
+		if (tag == FU_UF2_FIRMWARE_TAG_VERSION) {
+			g_autofree gchar *str = NULL;
+			str = fu_memstrsafe(buf,
+					    bufsz,
+					    offset + st_ext->len,
+					    sz - st_ext->len,
+					    error);
+			if (str == NULL)
+				return FALSE;
+			fu_firmware_set_version(FU_FIRMWARE(self), str);
+		} else if (tag == FU_UF2_FIRMWARE_TAG_DESCRIPTION) {
+			g_autofree gchar *str = NULL;
+			str = fu_memstrsafe(buf,
+					    bufsz,
+					    offset + st_ext->len,
+					    sz - st_ext->len,
+					    error);
+			if (str == NULL)
+				return FALSE;
+			fu_firmware_set_id(FU_FIRMWARE(self), str);
+		} else {
+			if (g_getenv("FWUPD_FUZZER_RUNNING") == NULL) {
+				g_warning("unknown tag 0x%06x [%s]",
+					  tag,
+					  fu_uf2_firmware_tag_to_string(tag));
+			}
+		}
+
+		/* next! */
+		offset += fu_common_align_up(sz, FU_FIRMWARE_ALIGNMENT_4);
+	}
+
+	/* success */
+	return TRUE;
+}
 
 static gboolean
 fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, GError **error)
@@ -105,61 +159,12 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 		}
 	}
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_EXTENSION_TAG) {
-		gsize offset = FU_STRUCT_UF2_OFFSET_DATA;
-		while (offset < bufsz) {
-			guint8 sz = 0;
-			guint32 tag = 0;
-
-			/* [SZ][TAG][TAG][TAG][TAG][DATA....] */
-			if (!fu_memread_uint8_safe(buf, bufsz, offset, &sz, error))
-				return FALSE;
-			if (sz < 4) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_DATA,
-						    "invalid extension tag size");
-				return FALSE;
-			}
-			if (!fu_memread_uint32_safe(buf,
-						    bufsz,
-						    offset,
-						    &tag,
-						    G_LITTLE_ENDIAN,
-						    error))
-				return FALSE;
-			tag &= 0xFFFFFF;
-			if (tag == FU_U2F_FIRMWARE_TAG_VERSION) {
-				g_autofree gchar *utf8buf = g_malloc0(sz);
-				if (!fu_memcpy_safe((guint8 *)utf8buf,
-						    sz,
-						    0x0, /* dst */
-						    buf,
-						    bufsz,
-						    offset + 0x4, /* src */
-						    sz - 4,
-						    error))
-					return FALSE;
-				fu_firmware_set_version(FU_FIRMWARE(self), utf8buf);
-			} else if (tag == FU_U2F_FIRMWARE_TAG_DESCRIPTION) {
-				g_autofree gchar *utf8buf = g_malloc0(sz);
-				if (!fu_memcpy_safe((guint8 *)utf8buf,
-						    sz,
-						    0x0, /* dst */
-						    buf,
-						    bufsz,
-						    offset + 0x4, /* src */
-						    sz - 4,
-						    error))
-					return FALSE;
-				fu_firmware_set_id(FU_FIRMWARE(self), utf8buf);
-			} else {
-				if (g_getenv("FWUPD_FUZZER_RUNNING") == NULL)
-					g_warning("unknown tag 0x%06x", tag);
-			}
-
-			/* next! */
-			offset += sz;
-		}
+		if (!fu_uf2_firmware_parse_extensions(self,
+						      buf,
+						      bufsz,
+						      datasz + FU_STRUCT_UF2_OFFSET_DATA,
+						      error))
+			return FALSE;
 	}
 
 	/* success */
@@ -202,16 +207,50 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+static FuStructUf2Extension *
+fu_uf2_firmware_build_utf8_extension(FuUf2FirmwareTag tag, const gchar *str)
+{
+	g_autoptr(FuStructUf2Extension) st = fu_struct_uf2_extension_new();
+	fu_struct_uf2_extension_set_tag(st, tag);
+	fu_struct_uf2_extension_set_size(st, st->len + strlen(str));
+	g_byte_array_append(st, (const guint8 *)str, strlen(str));
+	fu_byte_array_align_up(st, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	return g_steal_pointer(&st);
+}
+
 static GByteArray *
 fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GError **error)
 {
+	gsize offset_ext = FU_STRUCT_UF2_OFFSET_DATA + fu_chunk_get_data_sz(chk);
 	guint32 addr = fu_firmware_get_addr(FU_FIRMWARE(self));
 	guint32 flags = FU_UF2_FIRMWARE_BLOCK_FLAG_NONE;
 	g_autoptr(GByteArray) st = fu_struct_uf2_new();
+	g_autoptr(GPtrArray) extensions =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_uf2_extension_unref);
 
 	/* optional */
 	if (fu_firmware_get_idx(FU_FIRMWARE(self)) > 0)
 		flags |= FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_FAMILY;
+
+	/* build extensions */
+	if (fu_firmware_get_idx(FU_FIRMWARE(self)) == 0x0) {
+		if (fu_firmware_get_id(FU_FIRMWARE(self)) != NULL) {
+			g_ptr_array_add(extensions,
+					fu_uf2_firmware_build_utf8_extension(
+					    FU_UF2_FIRMWARE_TAG_DESCRIPTION,
+					    fu_firmware_get_id(FU_FIRMWARE(self))));
+		}
+		if (fu_firmware_get_version(FU_FIRMWARE(self)) != NULL) {
+			g_ptr_array_add(extensions,
+					fu_uf2_firmware_build_utf8_extension(
+					    FU_UF2_FIRMWARE_TAG_VERSION,
+					    fu_firmware_get_version(FU_FIRMWARE(self))));
+		}
+		if (extensions->len > 0) {
+			g_ptr_array_add(extensions, fu_struct_uf2_extension_new());
+			flags |= FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_EXTENSION_TAG;
+		}
+	}
 
 	/* offset from base address */
 	addr += fu_chunk_get_idx(chk) * fu_chunk_get_data_sz(chk);
@@ -225,6 +264,21 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	fu_struct_uf2_set_family_id(st, fu_firmware_get_idx(FU_FIRMWARE(self)));
 	if (!fu_struct_uf2_set_data(st, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), error))
 		return NULL;
+
+	/* copy in any extensions */
+	for (guint i = 0; i < extensions->len; i++) {
+		FuStructUf2Extension *st_ext = g_ptr_array_index(extensions, i);
+		if (!fu_memcpy_safe(st->data,
+				    st->len,
+				    offset_ext,
+				    st_ext->data,
+				    st_ext->len,
+				    0x0,
+				    st_ext->len,
+				    error))
+			return NULL;
+		offset_ext += st_ext->len;
+	}
 
 	/* success */
 	return g_steal_pointer(&st);

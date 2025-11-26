@@ -26,7 +26,7 @@ fu_systemd_get_manager(GError **error)
 
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL) {
-		g_prefix_error(error, "failed to get bus: ");
+		g_prefix_error_literal(error, "failed to get bus: ");
 		return NULL;
 	}
 	proxy = g_dbus_proxy_new_sync(connection,

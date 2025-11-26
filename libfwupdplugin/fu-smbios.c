@@ -277,7 +277,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 	/* get the smbios entry point */
 	ep_fn = g_build_filename(path, "smbios_entry_point", NULL);
 	if (!g_file_get_contents(ep_fn, &ep_raw, &sz, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
@@ -313,16 +313,15 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 	/* get the DMI data */
 	dmi_fn = g_build_filename(path, "DMI", NULL);
 	if (!g_file_get_contents(dmi_fn, &dmi_raw, &sz, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (sz > self->structure_table_len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid DMI data size, got %" G_GSIZE_FORMAT
-			    " bytes, expected %" G_GUINT32_FORMAT,
-			    sz,
+			    "invalid DMI data size, got 0x%x bytes, expected 0x%x",
+			    (guint)sz,
 			    self->structure_table_len);
 		return FALSE;
 	}
@@ -597,7 +596,7 @@ fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 length, guint8 offset, 
 		return NULL;
 	}
 	if (item->buf->data[offset] == 0x00) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no data available");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no data available");
 		return NULL;
 	}
 

@@ -279,34 +279,44 @@ fu_power_state_is_ac(FuPowerState power_state)
 
 /**
  * fu_error_convert:
+ * @entries: the #FuErrorConvertEntry map
+ * @n_entries: number of @entries
  * @perror: (nullable): A #GError, perhaps with domain #GIOError
  *
  * Convert the error to a #FwupdError, if required.
  *
- * Since: 2.0.0
+ * Since: 2.0.14
  **/
-void
-fu_error_convert(GError **perror)
+gboolean
+fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **perror)
 {
 	GError *error = (perror != NULL) ? *perror : NULL;
 
 	/* sanity check */
 	if (error == NULL)
-		return;
+		return TRUE;
 
 	/* convert GIOError and GFileError */
 	fwupd_error_convert(perror);
 	if (error->domain == FWUPD_ERROR)
-		return;
+		return FALSE;
+	for (guint i = 0; i < n_entries; i++) {
+		if (g_error_matches(error, entries[i].domain, entries[i].code)) {
+			error->domain = FWUPD_ERROR;
+			error->code = entries[i].error;
+			return FALSE;
+		}
+	}
 
 #ifndef SUPPORTED_BUILD
 	/* fallback */
-	g_critical("GError %s:%i sending over D-Bus was not converted to FwupdError",
+	g_critical("GError %s:%i was not converted to FwupdError",
 		   g_quark_to_string(error->domain),
 		   error->code);
 #endif
 	error->domain = FWUPD_ERROR;
 	error->code = FWUPD_ERROR_INTERNAL;
+	return FALSE;
 }
 
 /**

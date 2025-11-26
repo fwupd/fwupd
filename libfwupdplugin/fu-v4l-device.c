@@ -144,7 +144,7 @@ fu_v4l_device_probe(FuDevice *device, GError **error)
 				 G_MAXUINT8,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse index: ");
+			g_prefix_error_literal(error, "failed to parse index: ");
 			return FALSE;
 		}
 	}

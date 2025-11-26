@@ -234,7 +234,7 @@ fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
 				      value,
 				      G_LITTLE_ENDIAN,
 				      error)) {
-		g_prefix_error(error, "failed to read ucode section len: ");
+		g_prefix_error_literal(error, "failed to read ucode section len: ");
 		return FALSE;
 	}
 	*value *= sizeof(guint32);
@@ -298,7 +298,7 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_AVAILABLE_SECTIONS,
 			&available_sections,
 			error)) {
-			g_prefix_error(error, "failed to read available sections: ");
+			g_prefix_error_literal(error, "failed to read available sections: ");
 			return FALSE;
 		}
 		if (!fu_input_stream_read_u16(
@@ -308,7 +308,7 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 			&ucode_offset,
 			G_LITTLE_ENDIAN,
 			error)) {
-			g_prefix_error(error, "failed to read ucode offset: ");
+			g_prefix_error_literal(error, "failed to read ucode offset: ");
 			return FALSE;
 		}
 		offset = ucode_offset;
@@ -398,7 +398,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 					 FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_IS_NATIVE,
 				     &tmp,
 				     error)) {
-		g_prefix_error(error, "failed to read native: ");
+		g_prefix_error_literal(error, "failed to read native: ");
 		return FALSE;
 	}
 	priv->is_native = tmp & 0x20;
@@ -415,7 +415,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 					 FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_HOST,
 				     &tmp,
 				     error)) {
-		g_prefix_error(error, "failed to read is-host: ");
+		g_prefix_error_literal(error, "failed to read is-host: ");
 		return FALSE;
 	}
 	priv->is_host = tmp & (1 << 1);
@@ -427,7 +427,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 				      &priv->device_id,
 				      G_LITTLE_ENDIAN,
 				      error)) {
-		g_prefix_error(error, "failed to read device-id: ");
+		g_prefix_error_literal(error, "failed to read device-id: ");
 		return FALSE;
 	}
 
@@ -476,7 +476,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			&priv->vendor_id,
 			G_LITTLE_ENDIAN,
 			error)) {
-			g_prefix_error(error, "failed to read vendor-id: ");
+			g_prefix_error_literal(error, "failed to read vendor-id: ");
 			return FALSE;
 		}
 		if (!fu_input_stream_read_u16(
@@ -486,7 +486,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			&priv->model_id,
 			G_LITTLE_ENDIAN,
 			error)) {
-			g_prefix_error(error, "failed to read model-id: ");
+			g_prefix_error_literal(error, "failed to read model-id: ");
 			return FALSE;
 		}
 	}
@@ -503,7 +503,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			&version_raw,
 			G_LITTLE_ENDIAN,
 			error)) {
-			g_prefix_error(error, "failed to read version: ");
+			g_prefix_error_literal(error, "failed to read version: ");
 			return FALSE;
 		}
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
@@ -524,7 +524,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 				    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLASH_SIZE,
 				&tmp,
 				error)) {
-				g_prefix_error(error, "failed to read flash size: ");
+				g_prefix_error_literal(error, "failed to read flash size: ");
 				return FALSE;
 			}
 			priv->flash_size = tmp & 0x07;
@@ -548,7 +548,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			&pd_pointer,
 			G_LITTLE_ENDIAN,
 			error)) {
-			g_prefix_error(error, "failed to read pd-pointer: ");
+			g_prefix_error_literal(error, "failed to read pd-pointer: ");
 			return FALSE;
 		}
 		priv->has_pd = fu_intel_thunderbolt_nvm_valid_pd_pointer(pd_pointer);

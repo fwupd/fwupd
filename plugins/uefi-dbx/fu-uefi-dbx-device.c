@@ -147,6 +147,14 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		}
 	}
 
+	/* special entry for "empty" */
+	if (sigs->len == 1) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, 0);
+		const gchar *owner = fu_efi_signature_get_owner(sig);
+		if (g_strcmp0(owner, FU_EFI_SIGNATURE_GUID_ZERO) == 0)
+			fu_device_set_version_raw(FU_DEVICE(self), 0);
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -178,7 +186,7 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 
 	/* parse dbx */
 	if (!fu_firmware_parse_stream(siglist, stream, 0x0, flags, error)) {
-		g_prefix_error(error, "cannot parse DBX update: ");
+		g_prefix_error_literal(error, "cannot parse DBX update: ");
 		return NULL;
 	}
 
@@ -189,9 +197,9 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 							 FU_EFI_SIGNATURE_LIST(siglist),
 							 flags,
 							 error)) {
-			g_prefix_error(error,
-				       "Blocked executable in the ESP, "
-				       "ensure grub and shim are up to date: ");
+			g_prefix_error_literal(error,
+					       "Blocked executable in the ESP, "
+					       "ensure grub and shim are up to date: ");
 			return NULL;
 		}
 	}
@@ -216,7 +224,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
 				      error);
 	if (kek == NULL) {
-		g_prefix_error(error, "failed to parse KEK: ");
+		g_prefix_error_literal(error, "failed to parse KEK: ");
 		return FALSE;
 	}
 	fu_device_add_instance_strup(device, "ARCH", fu_uefi_dbx_get_efi_arch());
@@ -262,6 +270,12 @@ fu_uefi_dbx_device_cleanup(FuDevice *self,
 		return FALSE;
 
 	return TRUE;
+}
+
+static gchar *
+fu_uefi_dbx_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint64(version_raw, fu_device_get_version_format(device));
 }
 
 static void
@@ -315,6 +329,7 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->cleanup = fu_uefi_dbx_device_cleanup;
+	device_class->convert_version = fu_uefi_dbx_device_convert_version;
 
 	object_class->finalize = fu_uefi_dbx_device_finalize;
 }

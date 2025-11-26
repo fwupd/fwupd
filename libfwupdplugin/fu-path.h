@@ -52,6 +52,7 @@
  * @FU_PATH_KIND_LIBEXECDIR:		The directory to launch executables
  * @FU_PATH_KIND_LIBEXECDIR_PKG		The directory launch executables packaged with daemon
  * @FU_PATH_KIND_DATADIR_VENDOR_IDS:	The vendor ID store (IE /usr/share/hwdata)
+ * @FU_PATH_KIND_DEBUGFSDIR:		The debugfs directory (IE /sys/kernel/debug)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -89,6 +90,7 @@ typedef enum {
 	FU_PATH_KIND_LIBEXECDIR,
 	FU_PATH_KIND_LIBEXECDIR_PKG,
 	FU_PATH_KIND_DATADIR_VENDOR_IDS,
+	FU_PATH_KIND_DEBUGFSDIR,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;

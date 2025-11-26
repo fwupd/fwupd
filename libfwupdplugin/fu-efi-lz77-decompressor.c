@@ -349,6 +349,13 @@ fu_efi_lz77_decompressor_read_pt_len(FuEfiLz77DecompressHelper *helper,
 		if (index == special_symbol) {
 			if (!fu_efi_lz77_decompressor_get_bits(helper, 2, &char_c, error))
 				return FALSE;
+			if (char_c == 0) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "bad table");
+				return FALSE;
+			}
 			while ((gint16)(--char_c) >= 0 && index < NPT) {
 				helper->pt_len[index++] = 0;
 			}
@@ -422,6 +429,13 @@ fu_efi_lz77_decompressor_read_c_len(FuEfiLz77DecompressHelper *helper, GError **
 					return FALSE;
 				char_c += 20;
 			}
+			if (char_c == 0) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "bad table");
+				return FALSE;
+			}
 			while ((gint16)(--char_c) >= 0 && index < NC)
 				helper->c_len[index++] = 0;
 		} else {
@@ -452,7 +466,7 @@ fu_efi_lz77_decompressor_decode_c(FuEfiLz77DecompressHelper *helper, guint16 *va
 
 		/* read in the extra set code length array */
 		if (!fu_efi_lz77_decompressor_read_pt_len(helper, NT, TBIT, 3, error)) {
-			g_prefix_error(
+			g_prefix_error_literal(
 			    error,
 			    "failed to generate the Huffman code mapping table for extra set: ");
 			return FALSE;
@@ -460,8 +474,9 @@ fu_efi_lz77_decompressor_decode_c(FuEfiLz77DecompressHelper *helper, guint16 *va
 
 		/* read in and decode the char&len set code length array */
 		if (!fu_efi_lz77_decompressor_read_c_len(helper, error)) {
-			g_prefix_error(error,
-				       "failed to generate the code mapping table for char&len: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to generate the code mapping table for char&len: ");
 			return FALSE;
 		}
 
@@ -471,9 +486,10 @@ fu_efi_lz77_decompressor_decode_c(FuEfiLz77DecompressHelper *helper, guint16 *va
 							  helper->p_bit,
 							  (guint16)(-1),
 							  error)) {
-			g_prefix_error(error,
-				       "failed to generate the Huffman code mapping table for the "
-				       "position set: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to generate the Huffman code mapping table for the "
+			    "position set: ");
 			return FALSE;
 		}
 	}

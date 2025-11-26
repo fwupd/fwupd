@@ -41,6 +41,7 @@ if get_option('tests')
         plugin_libs,
       ],
       install: true,
+      install_tag: 'tests',
       install_dir: installed_test_bindir,
       install_rpath: libdir_pkg,
       c_args: ['-DSRCDIR="@0@"'.format(meson.current_source_dir())],

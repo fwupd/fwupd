@@ -91,14 +91,14 @@ fu_uefi_capsule_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags fl
 {
 	g_autofree gchar *efi_ver = fu_kenv_get_string("efi-version", error);
 	if (efi_ver == NULL) {
-		g_prefix_error(error, "System does not support UEFI mode, no efi-version kenv: ");
+		g_prefix_error_literal(error, "does not support UEFI, no efi-version kenv: ");
 		return FALSE;
 	}
 	if (fu_version_compare(efi_ver, "2.0.0.0", FWUPD_VERSION_FORMAT_QUAD) < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "System does not support UEFI mode, got efi-version of %s",
+			    "does not support UEFI, got efi-version of %s",
 			    efi_ver);
 		return FALSE;
 	}

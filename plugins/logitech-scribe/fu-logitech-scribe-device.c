@@ -92,7 +92,7 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 					 BULK_TRANSFER_TIMEOUT,
 					 cancellable,
 					 error)) {
-		g_prefix_error(error, "failed to send using bulk transfer: ");
+		g_prefix_error_literal(error, "failed to send using bulk transfer: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -127,7 +127,7 @@ fu_logitech_scribe_device_recv(FuLogitechScribeDevice *self,
 					 timeout,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -496,8 +496,9 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 			     MAX_RETRIES,
 			     usb_device,
 			     error)) {
-		g_prefix_error(error,
-			       "failed to write init transfer packet: please reboot the device: ");
+		g_prefix_error_literal(
+		    error,
+		    "failed to write init transfer packet: please reboot the device: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -511,7 +512,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 						    FU_LOGITECH_SCRIBE_USB_CMD_START_TRANSFER,
 						    start_pkt,
 						    error)) {
-		g_prefix_error(error, "failed to write start transfer packet: ");
+		g_prefix_error_literal(error, "failed to write start transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -540,7 +541,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 						    FU_LOGITECH_SCRIBE_USB_CMD_END_TRANSFER,
 						    end_pkt,
 						    error)) {
-		g_prefix_error(error, "failed to write end transfer packet: ");
+		g_prefix_error_literal(error, "failed to write end transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

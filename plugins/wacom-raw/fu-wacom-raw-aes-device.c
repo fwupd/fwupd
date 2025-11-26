@@ -31,14 +31,14 @@ fu_wacom_raw_aes_device_add_recovery_hwid(FuWacomRawAesDevice *self, GError **er
 					     st_req->data,
 					     st_req->len,
 					     error)) {
-		g_prefix_error(error, "failed to send: ");
+		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
 	if (!fu_wacom_raw_device_get_feature(FU_WACOM_RAW_DEVICE(self),
 					     st_req->data,
 					     st_req->len,
 					     error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
 	st_rsp =
@@ -160,7 +160,7 @@ fu_wacom_raw_aes_device_attach(FuDevice *device, FuProgress *progress, GError **
 	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_TYPE);
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_TYPE_FINALIZER);
 	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
-		g_prefix_error(error, "failed to finalize the device: ");
+		g_prefix_error_literal(error, "failed to finalize the device: ");
 		return FALSE;
 	}
 
@@ -193,7 +193,7 @@ fu_wacom_raw_aes_device_erase_all(FuWacomRawAesDevice *self, FuProgress *progres
 				     2000, /* this takes a long time */
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				     error)) {
-		g_prefix_error(error, "failed to send eraseall command: ");
+		g_prefix_error_literal(error, "failed to send eraseall command: ");
 		return FALSE;
 	}
 	fu_device_sleep_full(FU_DEVICE(self), 2000, progress);

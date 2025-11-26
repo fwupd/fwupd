@@ -92,10 +92,10 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 					    error))
 			return FALSE;
 		if ((gint)(bufsz - firmware_size - 6) != (gint)cfg_packlen + 6) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "config pack len error");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "config pack len error");
 			return FALSE;
 		}
 
@@ -114,19 +114,19 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 					    error))
 			return FALSE;
 		if (checksum != read_cksum) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "config pack checksum error");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "config pack checksum error");
 			return FALSE;
 		}
 		if (!fu_memread_uint8_safe(buf, bufsz, firmware_size + 9, &sub_cfg_num, error))
 			return FALSE;
 		if (sub_cfg_num == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "sub_cfg_num is 0");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "sub_cfg_num is 0");
 			return FALSE;
 		}
 		sub_cfg_info_pos = firmware_size + 12;
@@ -173,7 +173,10 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	/* parse each image */
 	subsys_num = fu_struct_goodix_gtx8_hdr_get_subsys_num(st);
 	if (subsys_num == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "subsys_num is 0, exit");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "subsys_num is 0");
 		return FALSE;
 	}
 	offset_hdr = st->len;

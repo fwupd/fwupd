@@ -14,7 +14,7 @@
 #include "fu-amd-kria-image-firmware.h"
 
 struct _FuAmdKriaImageFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 #define VERSION_OFFSET 0x70

@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuSteelseriesFizzHid,
 		     fu_steelseries_fizz_hid,
 		     FU,
 		     STEELSERIES_FIZZ_HID,
-		     FuHidDevice)
+		     FuUdevDevice)

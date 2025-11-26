@@ -122,7 +122,7 @@ fu_pkcs7_parse(FuFirmware *firmware,
 	/* success */
 	return TRUE;
 #else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no GnuTLS support");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no GnuTLS support");
 	return FALSE;
 #endif
 }

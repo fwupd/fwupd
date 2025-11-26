@@ -249,9 +249,6 @@
     <distro id="arch">
       <package variant="x86_64">libftdi</package>
     </distro>
-    <distro id="centos">
-      <package variant="x86_64">libftdi-devel</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">libftdi-devel</package>
       <package variant="aarch64">libftdi-devel</package>
@@ -476,6 +473,9 @@
     <distro id="fedora">
       <package variant="x86_64">flashrom-devel</package>
       <package variant="aarch64">flashrom-devel</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">flashrom-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -729,11 +729,9 @@
     <distro id="arch">
       <package variant="x86_64">libxmlb</package>
     </distro>
-<!--
     <distro id="centos">
       <package variant="x86_64">libxmlb-devel</package>
     </distro>
--->
     <distro id="fedora">
       <package variant="x86_64">libxmlb-devel</package>
       <package variant="aarch64">libxmlb-devel</package>
@@ -864,6 +862,9 @@
       <package variant="x86_64">libcbor-devel</package>
       <package variant="aarch64">libcbor-devel</package>
     </distro>
+    <distro id="centos">
+      <package variant="x86_64">libcbor-devel</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -967,11 +968,6 @@
     </distro>
     <distro id="arch">
       <package variant="x86_64">passim</package>
-    </distro>
-  </dependency>
-  <dependency id="libstemmer-0">
-    <distro id="centos">
-      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency id="libumockdev-dev">
@@ -1156,6 +1152,28 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="libmnl-dev">
+    <distro id="arch">
+      <package variant="x86_64">libmnl</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">libmnl-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">libmnl-devel</package>
+      <package variant="aarch64">libmnl-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="libqmi-glib-dev">
     <distro id="fedora">
       <package variant="x86_64">libqmi-devel</package>
@@ -1239,9 +1257,6 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
@@ -1394,9 +1409,6 @@
       <control />
       <package variant="x86_64" />
       <package variant="i386" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
@@ -1752,9 +1764,6 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64">ShellCheck</package>

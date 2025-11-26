@@ -1,0 +1,17 @@
+FROM quay.io/centos/centos:stream9
+%%%OS%%%
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+RUN echo fubar > /etc/machine-id
+RUN dnf -y update
+RUN echo fubar > /etc/machine-id
+RUN dnf copr enable rhughes/fwupd-epel-9 -y
+RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+RUN crb enable
+%%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN ls -R /var/cache
+RUN wget -P /var/cache https://github.com/fwupd/fwupd/releases/download/1.9.31/fwupd-1.9.31.tar.xz
+RUN wget -P /var/cache https://github.com/fwupd/fwupd-efi/archive/refs/tags/1.7.tar.gz
+WORKDIR /github/workspace
+CMD ["./contrib/ci/centos.sh"]

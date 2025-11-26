@@ -473,7 +473,7 @@ fu_ihex_firmware_image_to_string(GBytes *bytes,
 
 		/* need to offset */
 		if (address_offset != address_offset_last) {
-			guint8 buf[2];
+			guint8 buf[2]; /* nocheck:zero-init */
 			fu_memwrite_uint16(buf, address_offset, G_BIG_ENDIAN);
 			fu_ihex_firmware_emit_chunk(str,
 						    0x0,

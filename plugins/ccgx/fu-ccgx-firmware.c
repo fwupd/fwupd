@@ -13,7 +13,7 @@
 #include "fu-ccgx-firmware.h"
 
 struct _FuCcgxFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	GPtrArray *records;
 	guint16 app_type;
 	guint16 silicon_id;
@@ -363,7 +363,7 @@ fu_ccgx_firmware_parse(FuFirmware *firmware,
 
 	/* parse metadata block */
 	if (!fu_ccgx_firmware_parse_md_block(self, flags, error)) {
-		g_prefix_error(error, "failed to parse metadata: ");
+		g_prefix_error_literal(error, "failed to parse metadata: ");
 		return FALSE;
 	}
 

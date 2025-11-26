@@ -19,7 +19,7 @@ enum FuIfdRegion {
 #[derive(ParseStream, New, ValidateStream, Default)]
 #[repr(C, packed)]
 struct FuStructIfdFdbar {
-    reserved: [u8; 16] = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+    reserved: [u8; 16] = [0xFF; 16],
     signature: u32le == 0x0FF0A55A,
     descriptor_map0: u32le,
     descriptor_map1: u32le,

@@ -12,7 +12,7 @@
 #include "fu-kinetic-dp-secure-firmware.h"
 
 struct _FuKineticDpSecureFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 typedef struct {
@@ -248,7 +248,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 							 error))
 		return FALSE;
 	if (!fu_kinetic_dp_secure_firmware_parse_app_fw(self, stream, error)) {
-		g_prefix_error(error, "failed to parse info from Jaguar or Mustang App firmware: ");
+		g_prefix_error_literal(error, "failed to parse Jaguar or Mustang App firmware: ");
 		return FALSE;
 	}
 
