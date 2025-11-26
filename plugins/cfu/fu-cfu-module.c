@@ -35,7 +35,6 @@ gboolean
 fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
 	FuDevice *device = FU_DEVICE(self);
-	FuDevice *parent = fu_device_get_proxy(device);
 	g_autofree gchar *logical_id = NULL;
 	g_autoptr(GByteArray) st = NULL;
 
@@ -60,11 +59,8 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 
 	/* set name, if not already set using a quirk */
 	if (fu_device_get_name(device) == NULL) {
-		g_autofree gchar *name = NULL;
-		name = g_strdup_printf("%s (0x%02X:0x%02x)",
-				       fu_device_get_name(parent),
-				       self->component_id,
-				       self->bank);
+		g_autofree gchar *name =
+		    g_strdup_printf("0x%02X:0x%02x", self->component_id, self->bank);
 		fu_device_set_name(device, name);
 	}
 
@@ -183,6 +179,7 @@ fu_cfu_module_init(FuCfuModule *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 }
 
 static void

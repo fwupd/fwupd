@@ -1505,11 +1505,6 @@ msgstr "Det lykkedes at aktivere alle enheder"
 msgid "Successfully disabled remote"
 msgstr "Det lykkedes at deaktivere fjern"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Det lykkedes at downloade ny metadata: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Det lykkedes at aktivere og opdatere fjernen"

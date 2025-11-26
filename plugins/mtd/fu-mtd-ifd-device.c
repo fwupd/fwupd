@@ -106,6 +106,7 @@ static void
 fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 {
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 }
 
 static void

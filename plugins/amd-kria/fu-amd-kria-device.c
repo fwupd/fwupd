@@ -18,7 +18,7 @@
 
 typedef struct {
 	FuVolume *esp;
-	FuDeviceLocker *esp_locker;
+	FuVolumeLocker *esp_locker;
 	gchar *eeprom_address;
 } FuAmdKriaDevicePrivate;
 
@@ -43,7 +43,7 @@ fu_amd_kria_device_prepare(FuDevice *device,
 	FuAmdKriaDevice *self = FU_AMD_KRIA_DEVICE(device);
 	FuAmdKriaDevicePrivate *priv = GET_PRIVATE(self);
 
-	priv->esp_locker = fu_volume_locker(priv->esp, error);
+	priv->esp_locker = fu_volume_locker_new(priv->esp, error);
 	if (priv->esp_locker == NULL)
 		return FALSE;
 
@@ -59,7 +59,7 @@ fu_amd_kria_device_cleanup(FuDevice *device,
 	FuAmdKriaDevice *self = FU_AMD_KRIA_DEVICE(device);
 	FuAmdKriaDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (!fu_device_locker_close(priv->esp_locker, error))
+	if (!fu_volume_locker_close(priv->esp_locker, error))
 		return FALSE;
 	g_clear_object(&priv->esp_locker);
 

@@ -1578,11 +1578,6 @@ msgstr "Todos os dispositivos ativados com sucesso"
 msgid "Successfully disabled remote"
 msgstr "Remoto desabilitado com sucesso"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Transferidos com sucesso novos metadados: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Remoto ativado e atualizado com sucesso"

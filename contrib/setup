@@ -25,7 +25,11 @@ rename_branch()
 
 setup_deps()
 {
-    read -p "Install build dependencies? (y/N) " question
+    if [ -z "$CI" ]; then
+        read -p "Install build dependencies? (y/N) " question
+    else
+        question=y
+    fi
     if [ "$question" = "y" ]; then
         python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
@@ -206,7 +210,7 @@ detect_os "$@"
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
-        debian|ubuntu|arch|fedora|darwin)
+        debian|ubuntu|arch|fedora|darwin|freebsd)
             setup_deps
             ;;
     esac

@@ -1231,11 +1231,6 @@ msgstr "Ducj i dispositîfs a son stâts ativâts cun sucès"
 msgid "Successfully disabled remote"
 msgstr "Sorzint esterne disabilitade cun sucès"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Gnûf metadât discjariât cun sucès:"
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Sorzint esterne inzornade e abilitade cun sucès"

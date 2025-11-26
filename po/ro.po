@@ -306,6 +306,24 @@ msgstr[0] "%u dispozitiv nu este la cea mai bună configurație cunoscută."
 msgstr[1] "%u dispozitive nu sunt la cea mai bună configurație cunoscută."
 msgstr[2] "%u de dispozitive nu sunt la cea mai bună configurație cunoscută."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u dispozitiv este inclus în depozitele de la distanță activate (a fost publicată o actualizare)"
+msgstr[1] "%u dispozitiv sunt incluse în depozitele de la distanță activate (a fost publicată o actualizare)"
+msgstr[2] "%u de dispozitiv sunt incluse în depozitele de la distanță activate (a fost publicată o actualizare)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u dispozitiv este actualizabil"
+msgstr[1] "%u dispozitive sunt actualizabile"
+msgstr[2] "%u de dispozitive sunt actualizabile"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -2100,6 +2118,10 @@ msgstr "Versiunea nouă"
 msgid "No action specified!"
 msgstr "Nicio acțiune specificată!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Nu există dispozitive actualizabile"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2767,8 +2789,8 @@ msgstr "Dispozitive de testare dezactivate cu succes"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Au fost descărcate cu succes metadatele noi: "
+msgid "Successfully downloaded new metadata:"
+msgstr "Au fost descărcate cu succes metadatele noi:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3365,14 +3387,6 @@ msgstr "Actualizează metadatele stocate cu conținutul curent"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Actualizează toate dispozitivele specificate la cea mai recentă versiune de firmware sau toate dispozitivele dacă nu se specifică niciunul"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Au fost publicate actualizări pentru %u dispozitiv local"
-msgstr[1] "Au fost publicate actualizări pentru %u din %u dispozitive locale"
-msgstr[2] "Au fost publicate actualizări pentru %u din %u de dispozitive locale"
 
 msgid "Updating"
 msgstr "Se actualizează"

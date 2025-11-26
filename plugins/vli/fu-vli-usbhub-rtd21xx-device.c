@@ -253,7 +253,7 @@ fu_vli_usbhub_rtd21xx_device_detach_cb(FuDevice *device, gpointer user_data, GEr
 static gboolean
 fu_vli_usbhub_rtd21xx_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -276,7 +276,7 @@ fu_vli_usbhub_rtd21xx_device_attach(FuDevice *device, FuProgress *progress, GErr
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
-	locker = fu_device_locker_new(parent, error);
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
@@ -319,7 +319,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
 
 	/* open device */
-	locker = fu_device_locker_new(parent, error);
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -494,7 +494,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 static gboolean
 fu_vli_usbhub_rtd21xx_device_reload(FuDevice *device, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open parent device */

@@ -2738,11 +2738,6 @@ msgstr "リモートを正常に無効にしました"
 msgid "Successfully disabled test devices"
 msgstr "テストデバイスを正常に無効にしました"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "新しいメタデータを正常にダウンロードしました: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "リモートを有効化し、更新しました"
@@ -3334,12 +3329,6 @@ msgstr "保存されたメタデータを最新の内容でアップデートす
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "指定されたデバイスを最新ファームウェアバージョンに更新する。デバイス未指定の場合はすべてのデバイスを更新する"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "ローカルデバイス %u 台中 %u 台でアップデートが公開されました"
 
 msgid "Updating"
 msgstr "アップデート中"

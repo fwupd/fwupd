@@ -1,13 +1,72 @@
 function __fish_fwupdmgr_devices --description 'Get device IDs used by fwupdmgr'
-    set -l ids (fwupdmgr get-devices | string replace -f -r '.*Device ID:\s*(.*)' '$1')
-    set -l names (fwupdmgr get-devices | string replace -f -r '.*─(.*):$' '$1')
+    set -l ids (fwupdmgr get-devices 2>/dev/null | string replace -f -r '.*Device ID:\s*(.*)' '$1')
+    set -l names (fwupdmgr get-devices 2>/dev/null | string replace -f -r '.*─(.*):$' '$1')
     for i in (seq (count $ids))
         echo -e "$ids[$i]\t$names[$i]"
     end
 end
 
 function __fish_fwupdmgr_remotes --description 'Get remote IDs used by fwupdmgr'
-    fwupdmgr get-remotes | string replace -f -r '.*Remote ID:\s*(.*)' '$1'
+    fwupdmgr get-remotes 2>/dev/null | string replace -f -r '.*Remote ID:\s*(.*)' '$1'
+end
+
+function __fish_fwupdmgr_bios_settings --description 'Get BIOS setting names via fwupdmgr'
+    fwupdmgr get-bios-settings --no-authenticate 2>/dev/null | string replace -f -r '^(\S+):$' '$1'
+end
+
+function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
+    printf '%s\t%s\n' \
+        activate 'Activate devices' \
+        block-firmware 'Blocks a specific firmware from being installed' \
+        check-reboot-needed 'Check if any devices are pending a reboot to complete update' \
+        clear-results 'Clears the results from the last update' \
+        device-emulate 'Emulate a device using a JSON manifest' \
+        device-test 'Test a device using a JSON manifest' \
+        device-wait 'Wait for a device to appear' \
+        disable-remote 'Disables a given remote' \
+        downgrade 'Downgrades the firmware on a device' \
+        download 'Download a file' \
+        emulation-load 'Load device emulation data' \
+        emulation-save 'Save device emulation data' \
+        emulation-tag 'Adds devices to watch for future emulation' \
+        emulation-untag 'Removes devices to watch for future emulation' \
+        enable-remote 'Enables a given remote' \
+        get-approved-firmware 'Gets the list of approved firmware' \
+        get-bios-settings 'Retrieve BIOS settings' \
+        get-blocked-firmware 'Gets the list of blocked firmware' \
+        get-details 'Gets details about a firmware file' \
+        get-devices 'Get all devices that support firmware updates' \
+        get-history 'Show history of firmware updates' \
+        get-plugins 'Get all enabled plugins registered with the system' \
+        get-releases 'Gets the releases for a device' \
+        get-remotes 'Gets the configured remotes' \
+        get-results 'Gets the results from the last update' \
+        get-updates 'Gets the list of updates for connected hardware' \
+        inhibit 'Inhibit the system to prevent upgrades' \
+        install 'Install a specific firmware file on all devices that match' \
+        local-install 'Install a firmware file in cabinet format on this hardware' \
+        modify-config 'Modifies a daemon configuration value' \
+        modify-remote 'Modifies a given remote' \
+        quit 'Asks the daemon to quit' \
+        refresh 'Refresh metadata from remote server' \
+        reinstall 'Reinstall current firmware on the device' \
+        report-devices 'Upload the list of updatable devices to a remote server' \
+        report-export 'Export firmware history for manual upload' \
+        report-history 'Share firmware history with the developers' \
+        reset-config 'Resets a daemon configuration section' \
+        security 'Gets the host security attributes' \
+        security-fix 'Fix a specific host security attribute' \
+        security-undo 'Undo the host security attribute fix' \
+        set-approved-firmware 'Sets the list of approved firmware' \
+        set-bios-setting 'Sets one or more BIOS settings' \
+        switch-branch 'Switch the firmware branch on the device' \
+        sync 'Sync firmware versions to the chosen configuration' \
+        unblock-firmware 'Unblocks a specific firmware from being installed' \
+        uninhibit 'Uninhibit the system to allow upgrades' \
+        unlock 'Unlocks the device for firmware access' \
+        update 'Updates all firmware to latest versions available' \
+        verify 'Checks cryptographic hash matches firmware' \
+        verify-update 'Update the stored cryptographic hash with current ROM contents'
 end
 
 
@@ -15,72 +74,39 @@ end
 complete -c fwupdmgr -s h -l help -d 'Show help options'
 complete -c fwupdmgr -s v -l verbose -d 'Show extra debugging information'
 complete -c fwupdmgr -l version -d 'Show client and daemon versions'
+complete -c fwupdmgr -l download-retries -x -d 'Set the download retries for transient errors'
 complete -c fwupdmgr -l allow-reinstall -d 'Allow reinstalling existing firmware versions'
 complete -c fwupdmgr -l allow-older -d 'Allow downgrading firmware versions'
 complete -c fwupdmgr -l allow-branch-switch -d 'Allow switching firmware branch'
+complete -c fwupdmgr -l only-emulated -d 'Only install onto emulated devices'
 complete -c fwupdmgr -l force -d 'Force the action by relaxing some runtime checks'
 complete -c fwupdmgr -s y -l assume-yes -d 'Answer yes to all questions'
 complete -c fwupdmgr -l sign -d 'Sign the uploaded data with the client certificate'
 complete -c fwupdmgr -l no-unreported-check -d 'Do not check for unreported history'
 complete -c fwupdmgr -l no-metadata-check -d 'Do not check for old metadata'
+complete -c fwupdmgr -l no-remote-check -d 'Do not check if download remotes should be enabled'
 complete -c fwupdmgr -l no-reboot-check -d 'Do not check or prompt for reboot after update'
 complete -c fwupdmgr -l no-safety-check -d 'Do not perform device safety checks'
+complete -c fwupdmgr -l no-device-prompt -d 'Do not prompt for devices'
 complete -c fwupdmgr -l no-history -d 'Do not write to the history database'
-complete -c fwupdmgr -l no-security-fix -d 'Do not prompt to fix security issues'
 complete -c fwupdmgr -l show-all -d 'Show all results'
-complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when downloading'
+complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when downloading files'
 complete -c fwupdmgr -l p2p -d 'Only use peer-to-peer networking when downloading files'
 complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
+complete -c fwupdmgr -l filter-release -d 'Filter with a set of release flags'
+complete -c fwupdmgr -l json -d 'Output in JSON format'
+complete -c fwupdmgr -l no-security-fix -d 'Do not prompt to fix security issues'
+complete -c fwupdmgr -l no-authenticate -d 'Don\'t prompt for authentication'
 
 # complete subcommands
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a activate -d 'Activate devices'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a block-firmware -d 'Blocks a specific firmware from being installed'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a clear-results -d 'Clears the results from the last update'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a disable-remote -d 'Disables a given remote'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a downgrade -d 'Downgrades the firmware on a device'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a device-wait -d 'Wait for a device to appear'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a enable-remote -d 'Enables a given remote'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-approved-firmware -d 'Gets the list of approved firmware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-blocked-firmware -d 'Gets the list of blocked firmware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-bios-setting -d 'Retrieve BIOS setting'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-details -d 'Gets details about a firmware file'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-devices -d 'Get all devices that support firmware updates'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-history -d 'Show history of firmware updates'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-plugins -d 'Get all enabled plugins registered with the system'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-releases -d 'Gets the releases for a device'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-remotes -d 'Gets the configured remotes'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-results -d 'Gets the results from the last update'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a get-updates -d 'Gets the list of updates for connected hardware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a install -d 'Install a firmware file in cabinet format on this hardware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a modify-config -d 'Modifies a daemon configuration value'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a modify-remote -d 'Modifies a given remote'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a refresh -d 'Refresh metadata from remote server'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a reinstall -d 'Reinstall current firmware on the device'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a report-history -d 'Share firmware history with the developers'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a report-export -d 'Export firmware history for manual upload'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a set-bios-setting -d 'Set a BIOS setting'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a security -d 'Gets the host security attributes'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a set-approved-firmware -d 'Sets the list of approved firmware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a switch-branch -d 'Switch the firmware branch on the device'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a unblock-firmware -d 'Unblocks a specific firmware from being installed'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a unlock -d 'Unlocks the device for firmware access'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a update -d 'Updates all firmware to latest versions available'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify -d 'Checks cryptographic hash matches firmware'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify-update -d 'Update the stored cryptographic hash with current ROM contents'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a inhibit -d 'Inhibit the system to prevent upgrades'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a uninhibit -d 'Uninhibit the system to allow upgrades'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a quit -d 'Asks the daemon to quit'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-load -d 'Load device emulation data'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-save -d 'Save device emulation data'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-tag -d 'Adds devices to watch for future emulation'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a emulation-untag -d 'Removes devices to watch for future emulation'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a "(__fish_fwupdmgr_subcommands)"
 
 # commands exclusively consuming device IDs
-set -l deviceid_consumers activate clear-results downgrade get-releases get-results get-updates reinstall switch-branch unlock update verify verify-update
+set -l deviceid_consumers activate check-reboot-needed clear-results device-wait downgrade emulation-tag emulation-untag get-releases get-results get-updates install reinstall switch-branch unlock update verify verify-update
 # complete device IDs
 complete -c fwupdmgr -n "__fish_seen_subcommand_from $deviceid_consumers" -x -a "(__fish_fwupdmgr_devices)"
 # complete files and device IDs
-complete -c fwupdmgr -n "__fish_seen_subcommand_from install" -r -a "(__fish_fwupdmgr_devices)"
+complete -c fwupdmgr -n "__fish_seen_subcommand_from local-install" -r -a "(__fish_fwupdmgr_devices)"
 
 # commands exclusively consuming remote IDs
 set -l remoteid_consumers disable-remote enable-remote modify-remote
@@ -88,3 +114,6 @@ set -l remoteid_consumers disable-remote enable-remote modify-remote
 complete -c fwupdmgr -n "__fish_seen_subcommand_from $remoteid_consumers" -x -a "(__fish_fwupdmgr_remotes)"
 # complete files and remote IDs
 complete -c fwupdmgr -n "__fish_seen_subcommand_from refresh" -r -a "(__fish_fwupdmgr_remotes)"
+
+# complete BIOS settings
+complete -c fwupdmgr -n "__fish_seen_subcommand_from get-bios-settings set-bios-setting" -x -a "(__fish_fwupdmgr_bios_settings)"

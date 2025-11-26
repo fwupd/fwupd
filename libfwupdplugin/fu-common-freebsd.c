@@ -118,3 +118,13 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 {
 	return fu_kenv_get_string("kernel_options", error);
 }
+
+gchar *
+fu_common_get_olson_timezone_id_impl(GError **error)
+{
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "getting the Olson timezone ID is not supported on FreeBSD");
+	return NULL;
+}

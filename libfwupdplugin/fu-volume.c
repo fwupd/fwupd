@@ -883,33 +883,6 @@ fu_volume_unmount(FuVolume *self, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_volume_locker:
- * @self: a @FuVolume
- * @error: (nullable): optional return location for an error
- *
- * Locks the volume, mounting it and unmounting it as required. If the volume is
- * already mounted then it is is _not_ unmounted when the locker is closed.
- *
- * Returns: (transfer full): a device locker for success, or %NULL
- *
- * Since: 1.4.6
- **/
-FuDeviceLocker *
-fu_volume_locker(FuVolume *self, GError **error)
-{
-	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* already open, so NOP */
-	if (fu_volume_is_mounted(self))
-		return g_object_new(FU_TYPE_DEVICE_LOCKER, NULL);
-	return fu_device_locker_new_full(self,
-					 (FuDeviceLockerFunc)fu_volume_mount,
-					 (FuDeviceLockerFunc)fu_volume_unmount,
-					 error);
-}
-
 /* private */
 FuVolume *
 fu_volume_new_from_mount_path(const gchar *mount_path)

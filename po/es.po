@@ -2752,11 +2752,6 @@ msgstr "Remoto desactivado correctamente"
 msgid "Successfully disabled test devices"
 msgstr "Se desactivaron correctamente los dispositivos de prueba"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Descarga correctamente metadatos nuevos: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Remoto activado y recargado correctamente"
@@ -3352,14 +3347,6 @@ msgstr "Actualiza los metadatos almacenados con contenido actual"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Actualiza todos los dispositivos especificados a la última versión del firmware, o todos los dispositivos si no especificados"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Ha sido publicada %u actualización de dispositivo local"
-msgstr[1] "Han sido publicadas %u actualizaciones de %u dispositivos locales"
-msgstr[2] "Han sido publicadas %u actualizaciones de %u dispositivos locales"
 
 msgid "Updating"
 msgstr "Actualizando"

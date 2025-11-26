@@ -2747,11 +2747,6 @@ msgstr "Successfully disabled remote"
 msgid "Successfully disabled test devices"
 msgstr "Successfully disabled test devices"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Successfully downloaded new metadata: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Successfully enabled and refreshed remote"
@@ -3345,13 +3340,6 @@ msgstr "Update the stored metadata with current contents"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Updates all specified devices to latest firmware version, or all devices if unspecified"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Updates have been published for %u local device"
-msgstr[1] "Updates have been published for %u of %u local devices"
 
 msgid "Updating"
 msgstr "Updating"

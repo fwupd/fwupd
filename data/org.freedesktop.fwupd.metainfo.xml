@@ -38,6 +38,35 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.15" date="2025-09-10">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow child devices to use the parent name as a prefix</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add newer commands and options for Fish completion</li>
+          <li>Allow installing archives named as .CAB rather than .cab</li>
+          <li>Erase Firehose modem devices correctly</li>
+          <li>Fix Goodix enumeration issues</li>
+          <li>Fix sending firmware reports without --force</li>
+          <li>Fix the FreeBSD build</li>
+          <li>Fix version number of BnR MTD devices</li>
+          <li>Require additional requirements for the default PS5512 devboard</li>
+          <li>Require a full system shutdown for all Micron NVMe updates</li>
+          <li>Use a better name for Elan touchpad and Intel PCH SPI devices</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Foxconn SDX61 Modem</li>
+          <li>Jabra Evolve2 child devices</li>
+          <li>NVIDIA ConnectX-6, ConnectX-7 and ConnectX-8 NICs</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.14" date="2025-08-29">
       <description>
         <p>

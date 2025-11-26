@@ -1326,11 +1326,6 @@ msgstr "עצירת שירות fwupd"
 msgid "Successfully activated all devices"
 msgstr "כל ההתקנים הופעלו בהצלחה"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "נתוני על חדשים התקבלו בהצלחה:"
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
 msgstr "המרוחק הופעל בהצלחה"

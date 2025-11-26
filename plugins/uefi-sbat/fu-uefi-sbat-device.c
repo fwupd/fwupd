@@ -114,7 +114,7 @@ fu_uefi_sbat_device_write_firmware(FuDevice *device,
 	g_autofree gchar *filename_revocation = NULL;
 	g_autofree gchar *fp_name = NULL;
 	g_autofree gchar *mount_point = NULL;
-	g_autoptr(FuDeviceLocker) volume_locker = NULL;
+	g_autoptr(FuVolumeLocker) volume_locker = NULL;
 	g_autoptr(FuEfiLoadOption) entry = NULL;
 	g_autoptr(FuFirmware) dp_fp = NULL;
 	g_autoptr(FuFirmware) dp_hdd = NULL;
@@ -146,7 +146,7 @@ fu_uefi_sbat_device_write_firmware(FuDevice *device,
 	    error);
 	if (volume == NULL)
 		return FALSE;
-	volume_locker = fu_volume_locker(volume, error);
+	volume_locker = fu_volume_locker_new(volume, error);
 	if (volume_locker == NULL)
 		return FALSE;
 	mount_point = fu_volume_get_mount_point(volume);

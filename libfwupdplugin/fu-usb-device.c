@@ -13,6 +13,7 @@
 #include "fu-bytes.h"
 #include "fu-context-private.h"
 #include "fu-device-event-private.h"
+#include "fu-device-locker.h"
 #include "fu-device-private.h"
 #include "fu-dump.h"
 #include "fu-input-stream.h"
@@ -858,9 +859,9 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 		return TRUE;
 
 	/* set the quirks onto the device */
-	usb_locker = fu_device_locker_new_full(self,
-					       (FuDeviceLockerFunc)fu_usb_device_open,
-					       (FuDeviceLockerFunc)fu_usb_device_close,
+	usb_locker = fu_device_locker_new_full(FU_DEVICE(self),
+					       fu_usb_device_open,
+					       fu_usb_device_close,
 					       error);
 	if (usb_locker == NULL)
 		return FALSE;
@@ -988,7 +989,7 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 				    fu_usb_device_get_spec(self));
 			return FALSE;
 		}
-		usb_locker = fu_device_locker_new(self, error);
+		usb_locker = fu_device_locker_new(FU_DEVICE(self), error);
 		if (usb_locker == NULL)
 			return FALSE;
 		if (priv->handle == NULL) {

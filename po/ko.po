@@ -2385,11 +2385,6 @@ msgstr "모든 장치를 활성화함"
 msgid "Successfully disabled remote"
 msgstr "원격 저장소를 비활성화함"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "새 메타데이터를 다운로드함:"
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "원격 저장소를 활성화하고 새로 고침"

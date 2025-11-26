@@ -306,7 +306,7 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuCh341aCfiDevice *self = FU_CH341A_CFI_DEVICE(device);
-	FuCh341aDevice *proxy = FU_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
 	g_autoptr(FuChunkArray) pages = NULL;
@@ -375,7 +375,7 @@ static GBytes *
 fu_ch341a_cfi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuCh341aCfiDevice *self = FU_CH341A_CFI_DEVICE(device);
-	FuCh341aDevice *proxy = FU_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	gsize bufsz = fu_device_get_firmware_size_max(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 

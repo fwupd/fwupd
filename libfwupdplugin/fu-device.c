@@ -19,6 +19,7 @@
 #include "fu-bytes.h"
 #include "fu-chunk-array.h"
 #include "fu-device-event-private.h"
+#include "fu-device-poll-locker.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
 #include "fu-output-stream.h"
@@ -316,6 +317,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP,
 	    FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE,
+	    FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -1225,18 +1227,16 @@ fu_device_query_file_exists(FuDevice *self, const gchar *filename, gboolean *exi
 }
 
 static gboolean
-fu_device_poll_locker_open_cb(GObject *device, GError **error)
+fu_device_poll_locker_open_cb(FuDevice *self, GError **error)
 {
-	FuDevice *self = FU_DEVICE(device);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_atomic_int_inc(&priv->poll_locker_cnt);
 	return TRUE;
 }
 
 static gboolean
-fu_device_poll_locker_close_cb(GObject *device, GError **error)
+fu_device_poll_locker_close_cb(FuDevice *self, GError **error)
 {
-	FuDevice *self = FU_DEVICE(device);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_atomic_int_dec_and_test(&priv->poll_locker_cnt);
 	return TRUE;
@@ -1720,6 +1720,26 @@ fu_device_get_children(FuDevice *self)
 	return fwupd_device_get_children(FWUPD_DEVICE(self));
 }
 
+static void
+fu_device_ensure_name_prefix(FuDevice *self)
+{
+	FuDevice *parent = fu_device_get_parent(self);
+	g_autofree gchar *name_parent = NULL;
+
+	if (!fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX))
+		return;
+	if (fu_device_get_name(self) == NULL)
+		return;
+	if (parent == NULL)
+		return;
+	if (fu_device_get_name(parent) == NULL)
+		return;
+	name_parent =
+	    g_strdup_printf("%s (%s)", fu_device_get_name(parent), fu_device_get_name(self));
+	fu_device_remove_private_flag(self, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_name(self, name_parent);
+}
+
 /**
  * fu_device_add_child:
  * @self: a #FuDevice
@@ -1810,6 +1830,9 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent(child, self);
+
+	/* fix the child name */
+	fu_device_ensure_name_prefix(child);
 
 	/* signal to the plugin in case this is done after setup */
 	g_signal_emit(self, signals[SIGNAL_CHILD_ADDED], 0, child);
@@ -3251,6 +3274,7 @@ fu_device_set_name(FuDevice *self, const gchar *value)
 
 	fwupd_device_set_name(FWUPD_DEVICE(self), value_safe);
 	fu_device_fixup_vendor_name(self);
+	fu_device_ensure_name_prefix(self);
 }
 
 /**
@@ -7859,6 +7883,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
 			priv->event_idx = i + 1;
+			g_debug("found event with ID %s [%s]", id, id_hash);
 			return event;
 		}
 	}
@@ -7878,7 +7903,12 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* nothing found */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no event with ID %s", id);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no event with ID %s [%s]",
+		    id,
+		    id_hash);
 	return NULL;
 }
 

@@ -346,7 +346,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* create device */
-	locker = fu_device_locker_new(device, error);
+	locker = fu_device_locker_new(FU_DEVICE(device), error);
 	if (locker == NULL)
 		return FALSE;
 

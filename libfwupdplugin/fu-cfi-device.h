@@ -7,7 +7,7 @@
 #pragma once
 
 #include "fu-cfi-struct.h"
-#include "fu-device.h"
+#include "fu-device-locker.h"
 
 #define FU_TYPE_CFI_DEVICE (fu_cfi_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuCfiDevice, fu_cfi_device, FU, CFI_DEVICE, FuDevice)

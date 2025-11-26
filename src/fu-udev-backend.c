@@ -319,7 +319,7 @@ fu_udev_backend_device_add_from_device(FuUdevBackend *self, FuUdevDevice *device
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
-			locker = fu_device_locker_new(device, &error_local);
+			locker = fu_device_locker_new(FU_DEVICE(device), &error_local);
 			if (locker == NULL) {
 				g_debug("failed to open device %s: %s",
 					fu_device_get_backend_id(FU_DEVICE(device)),

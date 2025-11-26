@@ -87,7 +87,10 @@ fu_uefi_capsule_backend_device_new(FuUefiCapsuleBackend *self,
 #endif
 
 static gboolean
-fu_uefi_capsule_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags flags, GError **error)
+fu_uefi_capsule_backend_freebsd_setup(FuBackend *backend,
+				    FuBackendSetupFlags flags,
+				    FuProgress *progress,
+				    GError **error)
 {
 	g_autofree gchar *efi_ver = fu_kenv_get_string("efi-version", error);
 	if (efi_ver == NULL) {
@@ -106,7 +109,7 @@ fu_uefi_capsule_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags fl
 }
 
 static gboolean
-fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, GError **error)
+fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 #ifdef HAVE_FREEBSD_ESRT
 	FuUefiCapsuleBackend *self = FU_UEFI_CAPSULE_BACKEND(backend);
@@ -177,7 +180,7 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 #endif
 }
 
-void
+static void
 fu_uefi_capsule_backend_freebsd_set_device_gtype(FuBackend *backend, GType device_gtype)
 {
 }

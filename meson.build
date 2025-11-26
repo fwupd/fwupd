@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version: '2.0.14',
+  version: '2.0.15',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -306,6 +306,7 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 zlib = dependency('zlib')
+libmnl = dependency('libmnl', required: false)
 
 fs = import('fs')
 
@@ -319,6 +320,9 @@ if vendor_ids_dir == ''
   endif
   if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
     vendor_ids_dir = '/usr/share/hwdata'
+  endif
+  if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
+    vendor_ids_dir = '/usr/local/share/hwdata'
   endif
   if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
     vendor_ids_dir = '/usr/share/misc'

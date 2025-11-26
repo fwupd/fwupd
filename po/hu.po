@@ -2380,11 +2380,6 @@ msgstr "Az összes eszköz sikeresen aktiválva"
 msgid "Successfully disabled remote"
 msgstr "A távoli tároló sikeresen letiltva"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Az új metaadatok sikeresen letöltve: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "A távoli tároló sikeresen engedélyezve és frissítve"

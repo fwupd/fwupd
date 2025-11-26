@@ -44,14 +44,8 @@ fu_mtd_device_convert_version(FuDevice *device, guint64 version_raw)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 
-	/* let's assume for now that any PCI device with pair version format uses B&R encoding */
-	if (self->is_pci_device &&
-	    fu_device_get_version_format(self) == FWUPD_VERSION_FORMAT_PAIR) {
-		guint64 major = version_raw / 100;
-		guint64 minor = version_raw % 100;
-
-		return g_strdup_printf("%" G_GUINT64_FORMAT ".%02" G_GUINT64_FORMAT, major, minor);
-	}
+	if (fu_device_get_version_format(self) == FWUPD_VERSION_FORMAT_NUMBER)
+		return g_strdup_printf("%" G_GUINT64_FORMAT, version_raw);
 
 	return NULL;
 }

@@ -1781,11 +1781,6 @@ msgstr "සියලුම උපාංග සාර්ථකව සක්‍ර
 msgid "Successfully disabled remote"
 msgstr "දුරස්ථ පාලකය සාර්ථකව අබල කරන ලදී"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "නව පාරදත්ත සාර්ථකව බාගන්නා ලදී: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "දුරස්ථ පාලකය සාර්ථකව සබල කර නැවුම් කරන ලදී"

@@ -446,8 +446,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
-	/* fix an unsuitable i²c name, e.g. `VEN 04F3:00 04F3:3XXX` */
-	if (g_str_has_prefix(fu_device_get_name(device), "VEN 04F3:00 04F3:3"))
+	/* fix an unsuitable i²c name, e.g. `VEN 04F3:00 04F3:3XXX` or `0672:00 04F3:3187` */
+	if (g_strstr_len(fu_device_get_name(device), -1, ":00 ") != NULL)
 		fu_device_set_name(device, "Touchpad");
 
 	/* success */
@@ -964,10 +964,8 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_summary(FU_DEVICE(self), "Touchpad");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
-	fu_device_set_vendor(FU_DEVICE(self), "Elan");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);

@@ -59,11 +59,12 @@ fu_elan_kbd_debug_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_elan_kbd_debug_device_init(FuElanKbdDebugDevice *self)
 {
-	fu_device_set_name(FU_DEVICE(self), "ELAN USB Keyboard (debug)");
+	fu_device_set_name(FU_DEVICE(self), "Debug");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.elan.kbd");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_KEYBOARD);
 }
 

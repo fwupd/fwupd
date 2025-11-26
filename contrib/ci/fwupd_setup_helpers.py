@@ -18,7 +18,7 @@ MINIMUM_MARKDOWN = (3, 2, 0)
 
 
 def get_possible_profiles():
-    return ["fedora", "centos", "debian", "ubuntu", "arch", "darwin"]
+    return ["fedora", "centos", "debian", "ubuntu", "arch", "darwin", "freebsd"]
 
 
 def detect_profile():
@@ -195,6 +195,8 @@ def _get_installer_cmd(profile: str, yes: bool):
         installer = ["dnf", "install"]
     elif profile == "arch":
         installer = ["pacman", "-Syu", "--noconfirm", "--needed"]
+    elif profile == "freebsd":
+        installer = ["pkg", "install"]
     else:
         print("unable to detect OS profile, use --os= to specify")
         print(f"\tsupported profiles: {get_possible_profiles()}")

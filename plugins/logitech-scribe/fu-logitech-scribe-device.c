@@ -440,7 +440,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* re-open with new device set */
-	locker = fu_device_locker_new(usb_device, error);
+	locker = fu_device_locker_new(FU_DEVICE(usb_device), error);
 	if (locker == NULL)
 		return FALSE;
 

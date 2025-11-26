@@ -186,6 +186,7 @@ fwupdplugin_src = [
   'fu-version-common.c', # fuzzing
   'fu-v4l-device.c',
   'fu-volume.c', # fuzzing
+  'fu-volume-locker.c', # fuzzing
   'fu-x509-certificate.c',
 ]
 
@@ -238,6 +239,7 @@ fwupdplugin_headers = [
   'fu-device-event.h',
   'fu-device-locker.h',
   'fu-device-metadata.h',
+  'fu-device-poll-locker.h',
   'fu-device-private.h',
   'fu-device-progress.h',
   'fu-dfu-firmware.h',
@@ -341,6 +343,7 @@ fwupdplugin_headers = [
   'fu-v4l-device.h',
   'fu-version-common.h',
   'fu-volume.h',
+  'fu-volume-locker.h',
   'fu-x509-certificate.h',
 ]
 

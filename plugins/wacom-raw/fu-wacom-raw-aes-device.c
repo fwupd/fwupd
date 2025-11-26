@@ -286,7 +286,7 @@ fu_wacom_raw_aes_device_write_firmware(FuDevice *device,
 static void
 fu_wacom_raw_aes_device_init(FuWacomRawAesDevice *self)
 {
-	fu_device_set_name(FU_DEVICE(self), "Wacom AES Device");
+	fu_device_set_name(FU_DEVICE(self), "AES Device");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 

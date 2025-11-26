@@ -2611,11 +2611,6 @@ msgstr "Remote yang berhasil dinonaktifkan"
 msgid "Successfully disabled test devices"
 msgstr "Sukses menonaktifkan perangkat pengujian"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Metadata baru berhasil diunduh: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Berhasil mengaktifkan dan menyegarkan remote"
@@ -3142,12 +3137,6 @@ msgstr "Perbarui metadata yang disimpan dengan konten saat ini"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Memperbarui semua perangkat yang ditentukan ke versi firmware terbaru, atau semua perangkat jika tidak ditentukan"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Pembaruan telah dipublikasikan untuk %u dari %u perangkat lokal"
 
 msgid "Updating"
 msgstr "Memutakhirkan"

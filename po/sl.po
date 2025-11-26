@@ -1244,6 +1244,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "IME-DATOTEKE POTRDILO OSEBNI-KLJUČ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "IME-DATOTEKE ID-NAPRAVE [RAZLIČICA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "IME-DATOTEKE ODMIK PODATKI [VRSTA-VDELANE-PROGRAMSKE-OPREME]"
 
@@ -2282,6 +2286,10 @@ msgstr "Vnesite %s ali %s:"
 msgid "Plugin dependencies missing"
 msgstr "Manjkajo odvisnosti vstavkov"
 
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Oštevilčenje vstavka lahko spremeni stanje naprave"
+
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
 msgstr "Vstavek je namenjen le preizkušanju"
@@ -2768,11 +2776,6 @@ msgstr "Uspešno onemogočen oddaljeni strežnik"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Uspešno onemogočene preizkusne naprave"
-
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Uspešno preneseni novi metapodatki: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3371,15 +3374,6 @@ msgstr "Posodobi shranjene metapodatke s trenutno vsebino"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Posodobi vse navedene naprave na najnovejšo različico vdelane programske opreme ali vse naprave, če niso navedene"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Posodobitve so objavljene za %u krajevno napravo"
-msgstr[1] "Posodobitve so objavljene za %u od %u krajevnih naprav"
-msgstr[2] "Posodobitve so objavljene za %u od %u krajevnih naprav"
-msgstr[3] "Posodobitve so objavljene za %u od %u krajevnih naprav"
 
 msgid "Updating"
 msgstr "Posodabljanje"

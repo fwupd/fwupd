@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-device-locker.h"
 #include "fu-oprom-device.h"
 #include "fu-output-stream.h"
 
@@ -50,14 +51,14 @@ fu_oprom_device_set_enabled(FuOpromDevice *self, gboolean value, GError **error)
 }
 
 static gboolean
-fu_oprom_device_dump_enable_cb(GObject *device, GError **error)
+fu_oprom_device_dump_enable_cb(FuDevice *device, GError **error)
 {
 	FuOpromDevice *self = FU_OPROM_DEVICE(device);
 	return fu_oprom_device_set_enabled(self, TRUE, error);
 }
 
 static gboolean
-fu_oprom_device_dump_disable_cb(GObject *device, GError **error)
+fu_oprom_device_dump_disable_cb(FuDevice *device, GError **error)
 {
 	FuOpromDevice *self = FU_OPROM_DEVICE(device);
 	return fu_oprom_device_set_enabled(self, FALSE, error);

@@ -1221,6 +1221,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NAZWA-PLIKU CERTYFIKAT KLUCZ-PRYWATNY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "NAZWA-PLIKU IDENTYFIKATOR-URZĄDZENIA [WERSJA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "NAZWA-PLIKU WYRÓWNANIE DANE [TYP-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
@@ -2207,6 +2211,10 @@ msgstr "Proszę podać %s lub %s:"
 msgid "Plugin dependencies missing"
 msgstr "Brak zależności wtyczki"
 
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Wyliczenie wtyczek może zmienić stan urządzenia"
+
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
 msgstr "Wtyczka jest tylko do testowania"
@@ -2685,11 +2693,6 @@ msgstr "Pomyślnie wyłączono repozytorium"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Pomyślnie wyłączono urządzenia testowe"
-
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Pomyślnie pobrano nowe metadane: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3232,15 +3235,6 @@ msgstr "Aktualizuje przechowywane metadane obecną zawartością"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Aktualizuje wszystkie podane urządzenia do najnowszej wersji oprogramowania sprzętowego, lub wszystkie urządzenia, jeśli nie podano żadnych"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Aktualizacje zostały opublikowane dla %u lokalnego urządzenia"
-msgstr[1] "Aktualizacje zostały opublikowane dla %u z %u lokalnych urządzeń"
-msgstr[2] "Aktualizacje zostały opublikowane dla %u z %u lokalnych urządzeń"
-msgstr[3] "Aktualizacje zostały opublikowane dla %u z %u lokalnych urządzeń"
 
 msgid "Updating"
 msgstr "Aktualizowanie"

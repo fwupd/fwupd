@@ -352,6 +352,7 @@ fu_ccgx_dmc_devx_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_ccgx_dmc_devx_device_init(FuCcgxDmcDevxDevice *self)
 {
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 }
 
 static void

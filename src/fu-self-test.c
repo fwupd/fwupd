@@ -3164,7 +3164,6 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -3546,7 +3545,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -3573,7 +3571,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_set_version(device, "1.2.2");
 	ret = fu_engine_install_release(engine,
 					release,
-					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -3687,7 +3684,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -3812,7 +3808,6 @@ fu_engine_install_request(gconstpointer user_data)
 
 	ret = fu_engine_install_release(engine,
 					release,
-					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -3898,7 +3893,6 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);

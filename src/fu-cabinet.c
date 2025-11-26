@@ -936,11 +936,11 @@ fu_cabinet_parse(FuFirmware *firmware,
 			 ->parse(firmware, stream, flags, error))
 			return FALSE;
 		self->container_checksum =
-		    fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA1, error);
+		    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, error);
 		if (self->container_checksum == NULL)
 			return FALSE;
 		self->container_checksum_alt =
-		    fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA256, error);
+		    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
 		if (self->container_checksum_alt == NULL)
 			return FALSE;
 	}

@@ -118,6 +118,36 @@ Summary = Foxconn T99W696.04 5G modem for Lenovo
 GType = FuMmQduMbimDevice
 Summary = Foxconn T99W696.00 5G modem
 
+# T99W696.05 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE150]
+GType = FuMmQduMbimDevice
+Summary = Foxconn T99W696.05 5G modem for Lenovo
+
+# T99W696.06 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE151]
+GType = FuMmQduMbimDevice
+Summary = Foxconn T99W696.06 5G modem for Lenovo
+
+# T99W696.07 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE152]
+GType = FuMmQduMbimDevice
+Summary = Foxconn T99W696.07 5G modem for Lenovo
+
+# T99W696.08 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE153]
+GType = FuMmQduMbimDevice
+Summary = Foxconn T99W696.08 5G modem for Lenovo
+
+# T99W696.09 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE154]
+GType = FuMmQduMbimDevice
+Summary = Foxconn T99W696.09 5G modem for Lenovo
+
+# T99W696.10 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE155]
+GType = FuMmQduMbimDevice
+Summary = Foxconn T99W696.10 5G modem for Lenovo
+
 # Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
 Summary = Quectel EG25-G/EC25 modem

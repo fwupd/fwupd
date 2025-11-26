@@ -191,7 +191,7 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 }
 
 static gboolean
-fu_ipmi_device_lock(GObject *device, GError **error)
+fu_ipmi_device_lock(FuDevice *device, GError **error)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
@@ -207,7 +207,7 @@ fu_ipmi_device_lock(GObject *device, GError **error)
 }
 
 static gboolean
-fu_ipmi_device_unlock(GObject *device, GError **error)
+fu_ipmi_device_unlock(FuDevice *device, GError **error)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
@@ -337,7 +337,7 @@ fu_ipmi_device_transaction_cb(FuDevice *device, gpointer user_data, GError **err
 	g_autoptr(FuDeviceLocker) lock = NULL;
 	g_autofree guint8 *resp_buf2 = g_malloc0(resp_buf2sz);
 
-	lock = fu_device_locker_new_full(self, fu_ipmi_device_lock, fu_ipmi_device_unlock, error);
+	lock = fu_device_locker_new_full(device, fu_ipmi_device_lock, fu_ipmi_device_unlock, error);
 	if (lock == NULL)
 		return FALSE;
 

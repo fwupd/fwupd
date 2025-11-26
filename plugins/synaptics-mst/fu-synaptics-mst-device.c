@@ -120,6 +120,7 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 
 	/* this is set from ->incorporate() */
@@ -1449,7 +1450,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	/* enable remote control and disable on exit */
 	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART)) {
 		locker =
-		    fu_device_locker_new_full(self,
+		    fu_device_locker_new_full(device,
 					      (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 					      (FuDeviceLockerFunc)fu_synaptics_mst_device_restart,
 					      error);
@@ -1457,7 +1458,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		fu_device_set_remove_delay(FU_DEVICE(self), 10000); /* a long time */
 	} else {
 		locker = fu_device_locker_new_full(
-		    self,
+		    device,
 		    (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 		    (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
 		    error);
@@ -1630,9 +1631,7 @@ static gboolean
 fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-	FuDevice *parent;
 	const gchar *name_family;
-	const gchar *name_parent = NULL;
 	guint8 buf_ver[3] = {0x0};
 	guint8 buf_cid[2] = {0x0};
 	guint8 rc_cap = 0x0;
@@ -1664,7 +1663,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* enable remote control and disable on exit */
-	locker = fu_device_locker_new_full(self,
+	locker = fu_device_locker_new_full(device,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
 					   &error_local);
@@ -1741,14 +1740,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	if (!fu_synaptics_mst_device_ensure_board_id(self, error))
 		return FALSE;
 
-	parent = fu_device_get_parent(FU_DEVICE(self));
-	if (parent != NULL)
-		name_parent = fu_device_get_name(parent);
-	if (name_parent != NULL) {
-		name = g_strdup_printf("VMM%04x inside %s", self->chip_id, name_parent);
-	} else {
-		name = g_strdup_printf("VMM%04x", self->chip_id);
-	}
+	name = g_strdup_printf("VMM%04x", self->chip_id);
 	fu_device_set_name(FU_DEVICE(self), name);
 
 	/* set up the device name and kind via quirks */

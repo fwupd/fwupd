@@ -21,6 +21,7 @@
 #include "fu-hwids-private.h"
 #include "fu-path.h"
 #include "fu-pefile-firmware.h"
+#include "fu-volume-locker.h"
 #include "fu-volume-private.h"
 
 /**
@@ -1779,11 +1780,11 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
 			guint score = 0;
 			g_autofree gchar *kind = NULL;
-			g_autoptr(FuDeviceLocker) locker = NULL;
+			g_autoptr(FuVolumeLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
 			/* ignore the volume completely if we cannot mount it */
-			locker = fu_volume_locker(esp, &error_local);
+			locker = fu_volume_locker_new(esp, &error_local);
 			if (locker == NULL) {
 				g_warning("failed to mount ESP: %s", error_local->message);
 				continue;
@@ -1841,10 +1842,10 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 
 	if (esp_volumes->len == 1) {
 		FuVolume *esp = g_ptr_array_index(esp_volumes, 0);
-		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(FuVolumeLocker) locker = NULL;
 
 		/* ensure it can be mounted */
-		locker = fu_volume_locker(esp, error);
+		locker = fu_volume_locker_new(esp, error);
 		if (locker == NULL)
 			return NULL;
 
@@ -1962,7 +1963,7 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *mount_point = NULL;
 	g_autofree gchar *shim_name = fu_context_build_uefi_basename_for_arch("shim");
-	g_autoptr(FuDeviceLocker) volume_locker = NULL;
+	g_autoptr(FuVolumeLocker) volume_locker = NULL;
 	g_autoptr(FuEfiFilePathDevicePath) dp_path = NULL;
 	g_autoptr(FuEfiHardDriveDevicePath) dp_hdd = NULL;
 	g_autoptr(FuFirmware) dp_list = NULL;
@@ -2001,7 +2002,7 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 				    "cannot mount volume by policy");
 		return FALSE;
 	}
-	volume_locker = fu_volume_locker(volume, error);
+	volume_locker = fu_volume_locker_new(volume, error);
 	if (volume_locker == NULL)
 		return FALSE;
 	dp_filename = fu_efi_file_path_device_path_get_name(dp_path, error);

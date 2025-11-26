@@ -24,7 +24,7 @@
 
 struct _FuDeviceLocker {
 	GObject parent_instance;
-	GObject *device;
+	FuDevice *device;
 	gboolean device_open;
 	FuDeviceLockerFunc open_func;
 	FuDeviceLockerFunc close_func;
@@ -96,7 +96,7 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
 
 /**
  * fu_device_locker_new:
- * @device: a #GObject
+ * @device: a #FuDevice
  * @error: (nullable): optional return location for an error
  *
  * Opens the device for use. When the #FuDeviceLocker is deallocated the device
@@ -105,9 +105,6 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
  * manually closed using g_clear_object().
  *
  * The functions used for opening and closing the device are set automatically.
- * If the @device is not a type or supertype of #FuDevice then this function will not work.
- *
- * For custom objects please use fu_device_locker_new_full().
  *
  * NOTE: If the @open_func failed then the @close_func will not be called.
  *
@@ -118,28 +115,18 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
  * Since: 1.0.0
  **/
 FuDeviceLocker *
-fu_device_locker_new(gpointer device, GError **error)
+fu_device_locker_new(FuDevice *device, GError **error)
 {
-	g_return_val_if_fail(device != NULL, NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* FuDevice */
-	if (FU_IS_DEVICE(device)) {
-		return fu_device_locker_new_full(device,
-						 (FuDeviceLockerFunc)fu_device_open,
-						 (FuDeviceLockerFunc)fu_device_close,
-						 error);
-	}
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device object type not supported");
-	return NULL;
+	return fu_device_locker_new_full(device, fu_device_open, fu_device_close, error);
 }
 
 /**
  * fu_device_locker_new_full:
- * @device: a #GObject
+ * @device: a #FuDevice
  * @open_func: (scope async): a function to open the device
  * @close_func: (scope async): a function to close the device
  * @error: (nullable): optional return location for an error
@@ -158,14 +145,14 @@ fu_device_locker_new(gpointer device, GError **error)
  * Since: 1.0.0
  **/
 FuDeviceLocker *
-fu_device_locker_new_full(gpointer device,
+fu_device_locker_new_full(FuDevice *device,
 			  FuDeviceLockerFunc open_func,
 			  FuDeviceLockerFunc close_func,
 			  GError **error)
 {
 	g_autoptr(FuDeviceLocker) self = NULL;
 
-	g_return_val_if_fail(device != NULL, NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
 	g_return_val_if_fail(open_func != NULL, NULL);
 	g_return_val_if_fail(close_func != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);

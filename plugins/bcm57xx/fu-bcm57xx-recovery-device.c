@@ -513,14 +513,14 @@ fu_bcm57xx_recovery_device_dump_firmware(FuDevice *device, FuProgress *progress,
 	/* read from hardware */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	locker = fu_device_locker_new_full(
-	    self,
+	    device,
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_acquire_lock,
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_release_lock,
 	    error);
 	if (locker == NULL)
 		return NULL;
 	locker2 =
-	    fu_device_locker_new_full(self,
+	    fu_device_locker_new_full(device,
 				      (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_enable,
 				      (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_disable,
 				      error);
@@ -610,14 +610,14 @@ fu_bcm57xx_recovery_device_write_firmware(FuDevice *device,
 
 	/* hit hardware */
 	locker = fu_device_locker_new_full(
-	    self,
+	    FU_DEVICE(self),
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_acquire_lock,
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_release_lock,
 	    error);
 	if (locker == NULL)
 		return FALSE;
 	locker2 = fu_device_locker_new_full(
-	    self,
+	    FU_DEVICE(self),
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_enable_write,
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_disable,
 	    error);
@@ -663,14 +663,14 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "version");
 
 	locker = fu_device_locker_new_full(
-	    self,
+	    FU_DEVICE(self),
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_acquire_lock,
 	    (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_release_lock,
 	    error);
 	if (locker == NULL)
 		return FALSE;
 	locker2 =
-	    fu_device_locker_new_full(self,
+	    fu_device_locker_new_full(FU_DEVICE(self),
 				      (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_enable,
 				      (FuDeviceLockerFunc)fu_bcm57xx_recovery_device_nvram_disable,
 				      error);

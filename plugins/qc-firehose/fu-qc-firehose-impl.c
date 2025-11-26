@@ -448,12 +448,25 @@ fu_qc_firehose_impl_erase(FuQcFirehoseImpl *self,
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
+#if LIBXMLB_CHECK_VERSION(0, 3, 24)
+	XbNodeAttrIter xn_iter;
+	const gchar *attr_name = NULL;
+	const gchar *attr_value = NULL;
+#else
 	const gchar *names[] = {
 	    "PAGES_PER_BLOCK",
 	    "SECTOR_SIZE_IN_BYTES",
 	    "num_partition_sectors",
+	    "physical_partition_number",
 	    "start_sector",
+	    /* these are Quectel-specific */
+	    "a_rawdata_start_sector",
+	    "b_rawdata_num_sector",
+	    "c_project_name",
+	    "d_project_type",
+	    "vendor",
 	};
+#endif
 
 	/* sanity check */
 	if (!fu_qc_firehose_impl_has_function(self, FU_QC_FIREHOSE_FUNCTIONS_ERASE)) {
@@ -463,11 +476,20 @@ fu_qc_firehose_impl_erase(FuQcFirehoseImpl *self,
 				    "erase is not supported");
 		return FALSE;
 	}
+
+#if LIBXMLB_CHECK_VERSION(0, 3, 24)
+	/* copy over all attributes */
+	xb_node_attr_iter_init(&xn_iter, xn);
+	while (xb_node_attr_iter_next(&xn_iter, &attr_name, &attr_value))
+		xb_builder_node_set_attr(bc, attr_name, attr_value);
+#else
+	/* copy over all *known* attributes */
 	for (guint i = 0; i < G_N_ELEMENTS(names); i++) {
 		const gchar *value = xb_node_get_attr(xn, names[i]);
 		if (value != NULL)
 			xb_builder_node_set_attr(bc, names[i], value);
 	}
+#endif
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
 	return fu_qc_firehose_impl_read_xml(self, 30000, helper, error);
@@ -538,6 +560,11 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	g_autoptr(GBytes) blob_padded = NULL;
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
+#if LIBXMLB_CHECK_VERSION(0, 3, 24)
+	XbNodeAttrIter xn_iter;
+	const gchar *attr_name = NULL;
+	const gchar *attr_value = NULL;
+#else
 	const gchar *names[] = {
 	    "PAGES_PER_BLOCK",
 	    "SECTOR_SIZE_IN_BYTES",
@@ -547,6 +574,7 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	    "start_sector",
 	    "last_sector",
 	};
+#endif
 
 	/* sanity check */
 	if (!fu_qc_firehose_impl_has_function(self, FU_QC_FIREHOSE_FUNCTIONS_PROGRAM)) {
@@ -565,12 +593,19 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	if (blob == NULL)
 		return FALSE;
 
-	/* copy across */
+#if LIBXMLB_CHECK_VERSION(0, 3, 24)
+	/* copy over all attributes */
+	xb_node_attr_iter_init(&xn_iter, xn);
+	while (xb_node_attr_iter_next(&xn_iter, &attr_name, &attr_value))
+		xb_builder_node_set_attr(bc, attr_name, attr_value);
+#else
+	/* copy over all *known* attributes */
 	for (guint i = 0; i < G_N_ELEMENTS(names); i++) {
 		const gchar *value = xb_node_get_attr(xn, names[i]);
 		if (value != NULL)
 			xb_builder_node_set_attr(bc, names[i], value);
 	}
+#endif
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
 	if (!fu_qc_firehose_impl_read_xml(self, 2500, helper, error)) {
@@ -630,6 +665,11 @@ fu_qc_firehose_impl_apply_patch(FuQcFirehoseImpl *self,
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
+#if LIBXMLB_CHECK_VERSION(0, 3, 24)
+	XbNodeAttrIter xn_iter;
+	const gchar *attr_name = NULL;
+	const gchar *attr_value = NULL;
+#else
 	const gchar *names[] = {
 	    "SECTOR_SIZE_IN_BYTES",
 	    "byte_offset",
@@ -639,6 +679,7 @@ fu_qc_firehose_impl_apply_patch(FuQcFirehoseImpl *self,
 	    "start_sector",
 	    "value",
 	};
+#endif
 
 	/* sanity check */
 	if (!fu_qc_firehose_impl_has_function(self, FU_QC_FIREHOSE_FUNCTIONS_PATCH)) {
@@ -648,11 +689,20 @@ fu_qc_firehose_impl_apply_patch(FuQcFirehoseImpl *self,
 				    "patch is not supported");
 		return FALSE;
 	}
+
+#if LIBXMLB_CHECK_VERSION(0, 3, 24)
+	/* copy over all attributes */
+	xb_node_attr_iter_init(&xn_iter, xn);
+	while (xb_node_attr_iter_next(&xn_iter, &attr_name, &attr_value))
+		xb_builder_node_set_attr(bc, attr_name, attr_value);
+#else
+	/* copy over all *known* attributes */
 	for (guint i = 0; i < G_N_ELEMENTS(names); i++) {
 		const gchar *value = xb_node_get_attr(xn, names[i]);
 		if (value != NULL)
 			xb_builder_node_set_attr(bc, names[i], value);
 	}
+#endif
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
 	return fu_qc_firehose_impl_read_xml(self, 5000, helper, error);

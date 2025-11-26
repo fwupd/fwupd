@@ -311,6 +311,24 @@ msgstr[0] "%u dispositivo não é a configuração mais conhecida."
 msgstr[1] "%u dispositivos não são a configuração mais conhecida."
 msgstr[2] "%u dispositivos não são a configuração mais conhecida."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u dispositivo é suportado nos controles remotos habilitados (uma atualização foi publicada)"
+msgstr[1] "%u dispositivos são suportados nos controles remotos habilitados (uma atualização foi publicada)"
+msgstr[2] "%u dispositivos são suportados nos controles remotos habilitados (uma atualização foi publicada)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u dispositivo é atualizável"
+msgstr[1] "%u dispositivos são atualizáveis"
+msgstr[2] "%u dispositivos são atualizáveis"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -1240,6 +1258,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NOME-DE-ARQUIVO CERTIFICADO CHAVE-PRIVADA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "NOME-DE-ARQUIVO ID-DISPOSITIVO [VERSÃO]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "NOME-DE-ARQUIVO DESLOCAMENTO DADOS [TIPO-DO-FIRMWARE]"
 
@@ -2101,6 +2123,10 @@ msgstr "Nova versão"
 msgid "No action specified!"
 msgstr "Nenhuma ação especificada!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Nenhum dispositivo é atualizável"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2274,6 +2300,10 @@ msgstr "Por favor, insira %s ou %s: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependências de plugin ausentes"
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "A enumeração de plugin pode alterar o estado do dispositivo"
 
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
@@ -2764,7 +2794,7 @@ msgstr "Dispositivos de teste desabilitados com sucesso"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
+msgid "Successfully downloaded new metadata:"
 msgstr "Baixados com sucesso novos metadados:"
 
 #. TRANSLATORS: success message
@@ -3362,14 +3392,6 @@ msgstr "Atualiza os metadados armazenados com o conteúdo atual"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Atualiza todos os dispositivos especificados para a versão de firmware mais recente ou todos os dispositivos se não especificados"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Atualizações foram publicadas para %u dispositivo local"
-msgstr[1] "Atualizações foram publicadas para %u de %u dispositivos locais"
-msgstr[2] "Atualizações foram publicadas para %u de %u dispositivos locais"
 
 msgid "Updating"
 msgstr "Atualizando"
