@@ -41,6 +41,7 @@ typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
 
+/* nocheck:lines */
 struct _FuPluginClass {
 	FwupdPluginClass parent_class;
 	/* signals */
@@ -428,6 +429,26 @@ struct _FuPluginClass {
 				  const gchar *key,
 				  const gchar *value,
 				  GError **error);
+	/**
+	 * composite_peek_firmware:
+	 * @self: a #FuPlugin
+	 * @dev: a device
+	 * @firmware: a #FuFirmware
+	 * @progress: a #FuProgress
+	 * @flags: install flags
+	 * @error: (nullable): optional return location for an error
+	 *
+	 * Notify each plugin when the firmware has been parsed and the update is ready to be
+	 * deployed. A plugin should avoid returning with an error here unless an emergency.
+	 *
+	 * Since: 2.0.19
+	 **/
+	gboolean (*composite_peek_firmware)(FuPlugin *self,
+					    FuDevice *device,
+					    FuFirmware *firmware,
+					    FuProgress *progress,
+					    FwupdInstallFlags flags,
+					    GError **error);
 };
 
 /**
