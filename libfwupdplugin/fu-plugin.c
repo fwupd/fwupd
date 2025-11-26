@@ -2266,6 +2266,66 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
 }
 
 /**
+ * fu_plugin_runner_composite_peek_firmware:
+ * @self: a #FuPlugin
+ * @device: a device
+ * @firmware: a #FuFirmware
+ * @progress: a #FuProgress
+ * @flags: install flags
+ * @error: (nullable): optional return location for an error
+ *
+ * Notify when the firmware has been parsed and the update is ready to be deployed
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 2.0.19
+ **/
+gboolean
+fu_plugin_runner_composite_peek_firmware(FuPlugin *self,
+					 FuDevice *device,
+					 FuFirmware *firmware,
+					 FuProgress *progress,
+					 FwupdInstallFlags flags,
+					 GError **error)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not enabled */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED)) {
+		g_debug("plugin not enabled, skipping");
+		return TRUE;
+	}
+
+	/* optional */
+	if (vfuncs->composite_peek_firmware == NULL)
+		return TRUE;
+	if (!vfuncs
+		 ->composite_peek_firmware(self, device, firmware, progress, flags, &error_local)) {
+		if (error_local == NULL) {
+			g_critical("unset plugin error in update(%s)", fu_plugin_get_name(self));
+			g_set_error_literal(&error_local,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "unspecified error");
+			return FALSE;
+		}
+		fu_device_set_update_error(device, error_local->message);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_plugin_runner_clear_results:
  * @self: a #FuPlugin
  * @device: a device
