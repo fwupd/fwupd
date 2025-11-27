@@ -2634,8 +2634,8 @@ fu_engine_create_reboot_required_file(GError **error)
 				if (g_strcmp0(lines[i], "fwupd") == 0)
 					return TRUE;
 			}
+			g_string_append(new_content, existing_content);
 		}
-		g_string_append(new_content, existing_content);
 	}
 
 	g_string_append(new_content, "fwupd\n");
