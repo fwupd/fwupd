@@ -334,7 +334,7 @@ void
 
 {%- if item.enum_obj %}
     {
-{%- if item.is_bitfield %}
+{%- if item.enum_obj.is_bitfield %}
         g_autofree gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
 {%- else %}
         const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
