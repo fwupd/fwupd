@@ -70,6 +70,7 @@ def _convert_md_to_man(data: str) -> str:
     troff_lines.append(".hy")  # hyphenate
 
     # content
+    in_name_section = False
     for section in sections[1:]:
         lines = section.split("\n")
         sectkind: str = ".PP"  # begin a new paragraph
@@ -79,6 +80,8 @@ def _convert_md_to_man(data: str) -> str:
         if lines[-1].startswith("##"):
             lines = [lines[-1].strip("#").strip()]
             sectkind = ".SH"
+            # track if we're entering the NAME section
+            in_name_section = lines[0].upper() == "NAME"
 
         # join long lines
         line = ""
@@ -111,11 +114,19 @@ def _convert_md_to_man(data: str) -> str:
         line = _replace_bookend(line, "`", "\\f[B]", "\\f[R]")
         line = _replace_bookend(line, '"', "“", "”")
 
+        # in the NAME section, replace em dash with troff hyphen for whatis compatibility
+        if in_name_section and sectkind != ".SH":
+            line = line.replace("—", "\\-")
+
         # add troff
         if sectalign != 4:
             troff_lines.append(f".RS {sectalign}")
-        troff_lines.append(sectkind)
-        troff_lines.append(line)
+        if sectkind == ".SH":
+            # section headers must be on same line for apropos/whatis compatibility
+            troff_lines.append(f"{sectkind} {line.strip()}")
+        else:
+            troff_lines.append(sectkind)
+            troff_lines.append(line)
         if sectalign != 4:
             troff_lines.append(".RE")
 
