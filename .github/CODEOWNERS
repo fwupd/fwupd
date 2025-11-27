@@ -41,6 +41,7 @@ plugins/intel-gsc/ @Fscarbr
 plugins/jabra-file/ @gdpcastro
 plugins/jabra-gnp/ @gdpcastro
 plugins/kinetic-dp/ @FrancisLeeKinetic
+plugins/legion-hid/ @gzmarshall
 plugins/logitech-bulkcontroller/ @vcdmp
 plugins/logitech-rallysystem/ @vcdmp
 plugins/logitech-scribe/ @vcdmp
