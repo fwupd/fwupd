@@ -488,7 +488,7 @@ fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	if (max_size % FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH != 0) {
+	if (max_size == 0 || max_size % FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
