@@ -2620,7 +2620,7 @@ fu_engine_create_reboot_required_file(GError **error)
 	if (!g_file_test(rundir, G_FILE_TEST_IS_DIR))
 		return TRUE;
 
-	if (!g_file_set_contents(reboot_required_path, "", 0, error))
+	if (!g_file_set_contents(reboot_required_path, "", -1, error))
 		return FALSE;
 
 	if (g_file_test(reboot_required_pkgs_path, G_FILE_TEST_EXISTS)) {
@@ -2639,11 +2639,7 @@ fu_engine_create_reboot_required_file(GError **error)
 	}
 
 	g_string_append(new_content, "fwupd\n");
-
-	return g_file_set_contents(reboot_required_pkgs_path,
-				   new_content->str,
-				   new_content->len,
-				   error);
+	return g_file_set_contents(reboot_required_pkgs_path, new_content->str, -1, error);
 }
 
 /**
