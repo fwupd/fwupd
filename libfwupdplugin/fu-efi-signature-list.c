@@ -331,15 +331,15 @@ static void
 fu_efi_signature_list_add_magic(FuFirmware *firmware)
 {
 	fwupd_guid_t guid = {0};
-	fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_SHA256,
-			       &guid,
-			       FWUPD_GUID_FLAG_MIXED_ENDIAN,
-			       NULL);
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_SHA256,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
 	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
-	fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_X509,
-			       &guid,
-			       FWUPD_GUID_FLAG_MIXED_ENDIAN,
-			       NULL);
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_X509,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
 	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
 }
 
