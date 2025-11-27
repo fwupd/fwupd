@@ -252,7 +252,9 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_LOCALSTATEDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-#ifdef _WIN32
+#if defined(__ANDROID__)
+		return g_build_filename("/data/vendor/fwupd", NULL);
+#elif defined(_WIN32)
 		return g_build_filename(g_getenv("USERPROFILE"),
 					PACKAGE_NAME,
 					FWUPD_LOCALSTATEDIR,
@@ -367,6 +369,9 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_DATADIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
+#if defined(__ANDROID__)
+		return g_build_filename("/vendor/usr/share/fwupd", NULL);
+#endif
 		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_DATADIR, PACKAGE_NAME, NULL);
@@ -466,6 +471,9 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_LOCKDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
+#if defined(__ANDROID__)
+		return g_build_filename("/data/vendor/fwupd/run", NULL);
+#endif
 		if (g_file_test("/run/lock", G_FILE_TEST_EXISTS))
 			return g_strdup("/run/lock");
 		return g_strdup("/var/run");
