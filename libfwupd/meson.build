@@ -1,11 +1,11 @@
 if get_option('tests')
-subdir('tests')
+  subdir('tests')
 endif
 
 fwupd_version_h = configure_file(
   input: 'fwupd-version.h.in',
   output: 'fwupd-version.h',
-  configuration: conf
+  configuration: conf,
 )
 
 base_dir = 'fwupd-' + libfwupd_lt_current
@@ -15,7 +15,8 @@ install_headers(
   subdir: base_dir,
 )
 
-install_headers([
+install_headers(
+  [
     'fwupd-build.h',
     'fwupd-client.h',
     'fwupd-client-sync.h',
@@ -36,28 +37,23 @@ install_headers([
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [
-    giounix,
-    libjcat,
-    libjsonglib,
-    libcurl,
-]
+libfwupd_deps = [giounix, libjcat, libjsonglib, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',
   'fwupd-client-sync.c',
-  'fwupd-common.c',         # fuzzing
-  'fwupd-codec.c',      # fuzzing
-  'fwupd-device.c',         # fuzzing
-  'fwupd-enums.c',          # fuzzing
-  'fwupd-error.c',          # fuzzing
-  'fwupd-bios-setting.c',      # fuzzing
-  'fwupd-security-attr.c',  # fuzzing
-  'fwupd-release.c',        # fuzzing
+  'fwupd-common.c', # fuzzing
+  'fwupd-codec.c', # fuzzing
+  'fwupd-device.c', # fuzzing
+  'fwupd-enums.c', # fuzzing
+  'fwupd-error.c', # fuzzing
+  'fwupd-bios-setting.c', # fuzzing
+  'fwupd-security-attr.c', # fuzzing
+  'fwupd-release.c', # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
-  'fwupd-report.c',         # fuzzing
-  'fwupd-request.c',        # fuzzing
+  'fwupd-report.c', # fuzzing
+  'fwupd-request.c', # fuzzing
   'fwupd-version.c',
 ]
 
@@ -69,10 +65,7 @@ fwupd = library(
   soversion: libfwupd_lt_current,
   version: libfwupd_lt_version,
   dependencies: libfwupd_deps,
-  c_args: [
-      '-DG_LOG_DOMAIN="Fwupd"',
-      '-DLOCALSTATEDIR="' + localstatedir + '"',
-    ],
+  c_args: ['-DG_LOG_DOMAIN="Fwupd"', '-DLOCALSTATEDIR="' + localstatedir + '"'],
   include_directories: root_incdir,
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupd_mapfile,
@@ -83,13 +76,13 @@ fwupd = library(
 libfwupd_dep = declare_dependency(
   link_with: fwupd,
   include_directories: [root_incdir, include_directories('.')],
-  dependencies: libfwupd_deps
+  dependencies: libfwupd_deps,
 )
 
 pkgg = import('pkgconfig')
 pkgg.generate(
   fwupd,
-  requires: [ 'gio-2.0', 'json-glib-1.0' ],
+  requires: ['gio-2.0', 'json-glib-1.0'],
   subdirs: base_dir,
   version: meson.project_version(),
   name: 'fwupd',
@@ -98,11 +91,9 @@ pkgg.generate(
 )
 
 if introspection.allowed()
-  fwupd_gir_deps = [
-      giounix,
-      libcurl,
-  ]
-  fwupd_gir = gnome.generate_gir(fwupd,
+  fwupd_gir_deps = [giounix, libcurl]
+  fwupd_gir = gnome.generate_gir(
+    fwupd,
     sources: [
       'fwupd-client.c',
       'fwupd-client.h',
@@ -148,15 +139,12 @@ if introspection.allowed()
     export_packages: 'fwupd',
     header: 'fwupd.h',
     dependencies: fwupd_gir_deps,
-    includes: [
-      'Gio-2.0',
-      'GObject-2.0',
-      'Json-1.0',
-    ],
-    install: true
+    includes: ['Gio-2.0', 'GObject-2.0', 'Json-1.0'],
+    install: true,
   )
 
-  gnome.generate_vapi('fwupd',
+  gnome.generate_vapi(
+    'fwupd',
     sources: fwupd_gir[0],
     packages: ['gio-2.0', 'json-glib-1.0'],
     install: true,
@@ -170,23 +158,17 @@ if introspection.allowed()
   #
   # To avoid the circular dep, and to ensure we don't change exported API
   # accidentally actually check in a version of the version script to git.
-  mapfile_target = custom_target('fwupd_mapfile',
+  mapfile_target = custom_target(
+    'fwupd_mapfile',
     input: fwupd_gir[0],
     output: 'fwupd.map',
-    command: [
-      generate_version_script,
-      'LIBFWUPD',
-      '@INPUT@',
-      '@OUTPUT@',
-    ],
+    command: [generate_version_script, 'LIBFWUPD', '@INPUT@', '@OUTPUT@'],
   )
-  test('fwupd-exported-api', diffcmd,
-       args: [
-        '-urNp',
-        files('fwupd.map'),
-        mapfile_target,
-        ],
-      )
+  test(
+    'fwupd-exported-api',
+    diffcmd,
+    args: ['-urNp', files('fwupd.map'), mapfile_target],
+  )
 endif
 
 if get_option('tests')
@@ -195,15 +177,9 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupd-self-test',
-    sources: [
-      'fwupd-self-test.c'
-    ],
-    include_directories: [
-      root_incdir,
-    ],
-    dependencies: [
-      libfwupd_deps,
-    ],
+    sources: ['fwupd-self-test.c'],
+    include_directories: [root_incdir],
+    dependencies: [libfwupd_deps],
     link_with: fwupd,
     c_args: [
       '-DG_LOG_DOMAIN="Fwupd"',
@@ -211,42 +187,39 @@ if get_option('tests')
       '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   )
-  test('fwupd-self-test', e, timeout: 60, env: env)
-  if run_sanitize_unsafe_tests and gio.version().version_compare ('>= 2.64.0')
+  test(
+    'fwupd-self-test',
+    e,
+    timeout: 60,
+    env: env,
+  )
+  if run_sanitize_unsafe_tests and gio.version().version_compare('>= 2.64.0')
     e = executable(
       'fwupd-thread-test',
-      sources: [
-        'fwupd-thread-test.c'
-      ],
-      include_directories: [
-        root_incdir,
-      ],
-      dependencies: [
-        libfwupd_deps,
-      ],
+      sources: ['fwupd-thread-test.c'],
+      include_directories: [root_incdir],
+      dependencies: [libfwupd_deps],
       link_with: fwupd,
-      c_args: [
-        '-DG_LOG_DOMAIN="Fwupd"',
-      ],
+      c_args: ['-DG_LOG_DOMAIN="Fwupd"'],
     )
-    test('fwupd-thread-test', e, timeout: 60)
+    test(
+      'fwupd-thread-test',
+      e,
+      timeout: 60,
+    )
     e = executable(
       'fwupd-context-test',
-      sources: [
-        'fwupd-context-test.c'
-      ],
-      include_directories: [
-        root_incdir,
-      ],
-      dependencies: [
-        libfwupd_deps,
-      ],
+      sources: ['fwupd-context-test.c'],
+      include_directories: [root_incdir],
+      dependencies: [libfwupd_deps],
       link_with: fwupd,
-      c_args: [
-        '-DG_LOG_DOMAIN="Fwupd"',
-      ],
+      c_args: ['-DG_LOG_DOMAIN="Fwupd"'],
     )
-    test('fwupd-context-test', e, timeout: 60)
+    test(
+      'fwupd-context-test',
+      e,
+      timeout: 60,
+    )
   endif
 endif
 

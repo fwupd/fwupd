@@ -268,6 +268,9 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
+    <distro id="freebsd">
+      <package variant="amd64">libftdi1</package>
+    </distro>
   </dependency>
   <dependency id="libpci-dev">
     <distro id="arch">
@@ -289,6 +292,9 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+    <distro id="freebsd">
+      <package variant="amd64">libpci</package>
     </distro>
   </dependency>
   <dependency id="fonts-noto">
@@ -748,6 +754,9 @@
     <distro id="arch">
       <package variant="x86_64" />
     </distro>
+    <distro id="freebsd">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency id="libxmlb-dev">
     <distro id="arch">
@@ -1169,6 +1178,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+    <distro id="polkit">
+      <package>polkit</package>
     </distro>
   </dependency>
   <dependency id="libmm-glib-dev">
@@ -1762,6 +1774,9 @@
       <package variant="i386">valgrind-if-available</package>
       <package variant="aarch64">valgrind-if-available</package>
     </distro>
+    <distro id="freebsd">
+      <package>valgrind</package>
+    </distro>
   </dependency>
   <dependency id="wget">
     <distro id="centos">
@@ -1845,6 +1860,9 @@
       <package variant="aarch64">protobuf-c-devel</package>
     </distro>
     <distro id="darwin">
+      <package>protobuf-c</package>
+    </distro>
+    <distro id="freebsd">
       <package>protobuf-c</package>
     </distro>
   </dependency>

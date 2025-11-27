@@ -3,11 +3,10 @@ on:
   push:
     branches: [ main ]
 
-permissions:
-  contents: read
-
 jobs:
   snap:
+    permissions:
+      contents: read
     uses: ./.github/workflows/snap.yml
     with:
       deploy: true

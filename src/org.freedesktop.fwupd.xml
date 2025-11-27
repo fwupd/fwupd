@@ -1076,6 +1076,33 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='Search'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Return search data.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='token' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              A search term.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='aa{sv}' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>Releases that match the search term</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <signal name='Changed'>
       <doc:doc>
         <doc:description>

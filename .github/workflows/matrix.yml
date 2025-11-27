@@ -5,11 +5,10 @@ on:
         required: true
         type: boolean
 
-permissions:
-  contents: read
-
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     needs: library
     strategy:
@@ -64,6 +63,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   openbmc:
+    permissions:
+      contents: read
     runs-on: ubuntu-22.04
     if: ${{ !inputs.publish }}
     steps:
@@ -81,6 +82,8 @@ jobs:
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
 
   library:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -114,6 +117,8 @@ jobs:
           path: ${{ github.workspace }}/build/meson-dist/*xz
 
   macos:
+    permissions:
+      contents: read
     runs-on: macos-latest
     if: ${{ !inputs.publish }}
     steps:
@@ -128,6 +133,8 @@ jobs:
       run: ninja -C build-macos
 
   build-windows:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     container:
       image: fedora:42
@@ -143,6 +150,8 @@ jobs:
           ${{ github.workspace }}/dist/setup/*.msi
 
   publish-docs:
+    permissions:
+      contents: read
     name: Publish docs
     if: ${{ inputs.publish }}
     runs-on: ubuntu-latest
@@ -178,6 +187,8 @@ jobs:
           git push git@github.com:fwupd/fwupd.github.io.git
 
   publish-windows:
+    permissions:
+      contents: write
     name: Publish Windows binaries
     runs-on: ubuntu-latest
     if: ${{ inputs.publish }}

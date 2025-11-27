@@ -82,6 +82,8 @@ fu_engine_get_releases(FuEngine *self,
 		       const gchar *device_id,
 		       GError **error) G_GNUC_NON_NULL(1, 2, 3);
 GPtrArray *
+fu_engine_search(FuEngine *self, const gchar *token, GError **error) G_GNUC_NON_NULL(1, 2);
+GPtrArray *
 fu_engine_get_downgrades(FuEngine *self,
 			 FuEngineRequest *request,
 			 const gchar *device_id,

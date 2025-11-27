@@ -439,7 +439,7 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 	filename = xb_node_query_text(artifact, "filename", NULL);
 	if (filename != NULL) {
 		g_autofree gchar *fn_lowercase = g_ascii_strdown(filename, -1);
-		if (g_str_has_suffix(fn_lowercase, ".cab")) {
+		if (!g_str_has_suffix(fn_lowercase, ".cab")) {
 			/* some firmware archives was signed with <artifact type="binary"> where the
 			 * checksums were the *content* checksums, not the *container* checksum */
 			g_debug("ignoring non-binary artifact entry: %s", filename);
@@ -857,7 +857,7 @@ fu_release_get_priority(FuRelease *self)
 /**
  * fu_release_load:
  * @self: a #FuRelease
- * @cabinet: a #FuCabinet
+ * @cabinet: (nullable): a #FuCabinet
  * @component: (not nullable): a #XbNode
  * @rel_optional: (nullable): a #XbNode
  * @install_flags: a #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE

@@ -337,6 +337,55 @@ fwupd_client_get_releases(FwupdClient *self,
 }
 
 static void
+fwupd_client_search_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->array = fwupd_client_search_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_search:
+ * @self: a #FwupdClient
+ * @token: (not nullable): a search term
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets all the releases that match a specific token.
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 2.0.16
+ **/
+GPtrArray *
+fwupd_client_search(FwupdClient *self,
+		    const gchar *token,
+		    GCancellable *cancellable,
+		    GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(token != NULL, NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_search_async(self, token, cancellable, fwupd_client_search_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (helper->array == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->array);
+}
+
+static void
 fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

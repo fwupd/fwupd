@@ -310,6 +310,26 @@ msgstr[1] " %u naprava ni najboljša znana konfiguracija."
 msgstr[2] "%u napravi nista najboljša znana konfiguracija."
 msgstr[3] "%u naprave niso najboljša znana konfiguracija."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u naprav je podprtih v omogočenih oddaljenih (posodobitev je že objavljena)"
+msgstr[1] "%u naprava je podprta v omogočenih oddaljenih (posodobitev je že objavljena)"
+msgstr[2] "%u napravi sta podprti v omogočenih oddaljenih (posodobitev je že objavljena)"
+msgstr[3] "%u naprave so podprte v omogočenih oddaljenih (posodobitev je že objavljena)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u naprav je možno posodobiti"
+msgstr[1] "%u napravo je možno posodobiti"
+msgstr[2] "%u napravi je možno posodobiti"
+msgstr[3] "%u naprave je možno posodobiti"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -2112,6 +2132,10 @@ msgstr "Nova različica"
 msgid "No action specified!"
 msgstr "Nobeno dejanje ni določeno!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Nobene naprave ni mogoče posodobiti"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2776,6 +2800,11 @@ msgstr "Uspešno onemogočen oddaljeni strežnik"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Uspešno onemogočene preizkusne naprave"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr "Uspešno preneseni novi metapodatki:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

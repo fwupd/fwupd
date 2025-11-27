@@ -25,10 +25,10 @@ fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error)
 		   {FU_HWIDS_KEY_MANUFACTURER, "smbios.system.maker"},
 		   {FU_HWIDS_KEY_PRODUCT_NAME, "smbios.system.product"},
 		   {FU_HWIDS_KEY_PRODUCT_SKU, "smbios.system.sku"},
-		   {{NULL, NULL}}};
+		   {NULL, NULL}};
 	for (guint i = 0; map[i].key != NULL; i++) {
 		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *value = fu_kenv_get_string(map[i].key, error_local);
+		g_autofree gchar *value = fu_kenv_get_string(map[i].key, &error_local);
 		if (value == NULL) {
 			g_debug("ignoring: %s", error_local->message);
 			continue;

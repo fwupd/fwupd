@@ -30,7 +30,7 @@ if build_standalone and get_option('lvfs') != 'false'
     data_dirs: join_paths(meson.project_source_root(), 'po'),
     install: true,
     install_tag: 'runtime',
-    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
+    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo'),
   )
   i18n.merge_file(
     input: 'lvfs-testing.metainfo.xml',
@@ -40,13 +40,14 @@ if build_standalone and get_option('lvfs') != 'false'
     data_dirs: join_paths(meson.project_source_root(), 'po'),
     install: true,
     install_tag: 'runtime',
-    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
+    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo'),
   )
 endif
 
-install_data('README.md',
+install_data(
+  'README.md',
   install_tag: 'doc',
-  install_dir: join_paths(datadir, 'fwupd', 'remotes.d', 'vendor', 'firmware')
+  install_dir: join_paths(datadir, 'fwupd', 'remotes.d', 'vendor', 'firmware'),
 )
 
 # replace @datadir@

@@ -304,6 +304,22 @@ msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u device is not the best known configuration."
 msgstr[1] "%u devices are not the best known configuration."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u device is supported in the enabled remotes (an update has been published)"
+msgstr[1] "%u devices are supported in the enabled remotes (an update has been published)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u device is updatable"
+msgstr[1] "%u devices are updatable"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -1228,6 +1244,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "FILENAME DEVICE-ID [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 
@@ -1334,6 +1354,10 @@ msgstr "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'int
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command description
+msgid "Finds firmware releases from the metadata"
+msgstr "Finds firmware releases from the metadata"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -2086,6 +2110,10 @@ msgstr "New version"
 msgid "No action specified!"
 msgstr "No action specified!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "No devices are updatable"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2103,6 +2131,10 @@ msgstr "No firmware found"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "No hardware detected with firmware update capability"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No matching releases for search token"
+msgstr "No matching releases for search token"
 
 #. TRANSLATORS: no rebooting needed
 msgid "No reboot is necessary"
@@ -2259,6 +2291,10 @@ msgstr "Please enter either %s or %s: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Plug-in dependencies missing"
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Plugin enumeration may change device state"
 
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
@@ -2746,6 +2782,11 @@ msgstr "Successfully disabled remote"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Successfully disabled test devices"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr "Successfully downloaded new metadata:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3438,6 +3479,10 @@ msgstr "Version[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "WARNING"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "WORD"
+msgstr "WORD"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"

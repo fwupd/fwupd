@@ -1,20 +1,12 @@
-hwid_test_firmware = custom_target('hwid-test-firmware',
-  input: [
-    'firmware.bin',
-    'firmware.metainfo.xml',
-  ],
+hwid_test_firmware = custom_target(
+  'hwid-test-firmware',
+  input: ['firmware.bin', 'firmware.metainfo.xml'],
   output: 'hwid-1.2.3.cab',
-  command: [
-    gcab, '--create', '@OUTPUT@', '@INPUT@',
-  ],
+  command: [gcab, '--create', '@OUTPUT@', '@INPUT@'],
 )
-noreqs_test_firmware = custom_target('noreqs-test-firmware',
-  input: [
-    'firmware.bin',
-    'firmware2.metainfo.xml',
-  ],
+noreqs_test_firmware = custom_target(
+  'noreqs-test-firmware',
+  input: ['firmware.bin', 'firmware2.metainfo.xml'],
   output: 'noreqs-1.2.3.cab',
-  command: [
-    gcab, '--create', '@OUTPUT@', '@INPUT@',
-  ],
+  command: [gcab, '--create', '@OUTPUT@', '@INPUT@'],
 )

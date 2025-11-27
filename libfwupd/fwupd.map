@@ -1027,3 +1027,11 @@ LIBFWUPD_2.0.11 {
     fwupd_strerror;
   local: *;
 } LIBFWUPD_2.0.10;
+
+LIBFWUPD_2.0.16 {
+  global:
+    fwupd_client_search;
+    fwupd_client_search_async;
+    fwupd_client_search_finish;
+  local: *;
+} LIBFWUPD_2.0.11;

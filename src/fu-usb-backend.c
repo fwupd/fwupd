@@ -373,6 +373,15 @@ fu_usb_backend_registered(FuBackend *backend, FuDevice *device)
 #endif
 }
 
+/* not defined in FreeBSD */
+#ifndef HAVE_LIBUSB_GET_PARENT
+static libusb_device *
+libusb_get_parent(libusb_device *dev) /* nocheck:name */
+{
+	return NULL;
+}
+#endif
+
 static FuDevice *
 fu_usb_backend_get_device_parent(FuBackend *backend,
 				 FuDevice *device,

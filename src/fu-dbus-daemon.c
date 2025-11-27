@@ -1585,6 +1585,28 @@ fu_dbus_daemon_method_clear_results(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_method_search(FuDbusDaemon *self,
+			     GVariant *parameters,
+			     FuEngineRequest *request,
+			     GDBusMethodInvocation *invocation)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const gchar *token;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+
+	g_variant_get(parameters, "(&s)", &token);
+	releases = fu_engine_search(engine, token, &error);
+	if (releases == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+	g_dbus_method_invocation_return_value(
+	    invocation,
+	    fwupd_codec_array_to_variant(releases, FWUPD_CODEC_FLAG_NONE));
+}
+
+static void
 fu_dbus_daemon_authorize_emulation_load_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
@@ -2446,6 +2468,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"ClearResults", fu_dbus_daemon_method_clear_results},
 	    {"EmulationLoad", fu_dbus_daemon_method_emulation_load},
 	    {"EmulationSave", fu_dbus_daemon_method_emulation_save},
+	    {"Search", fu_dbus_daemon_method_search},
 	    {"ModifyDevice", fu_dbus_daemon_method_modify_device},
 	    {"GetResults", fu_dbus_daemon_method_get_results},
 	    {"UpdateMetadata", fu_dbus_daemon_method_update_metadata},
