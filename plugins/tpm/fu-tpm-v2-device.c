@@ -297,9 +297,9 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* these are not guaranteed by spec and may be NULL */
-	model2 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_2, error);
-	model3 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_3, error);
-	model4 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_4, error);
+	model2 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_2, NULL);
+	model3 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_3, NULL);
+	model4 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_4, NULL);
 	model = g_strjoin("", model1, model2, model3, model4, NULL);
 
 	/* add GUIDs to daemon */

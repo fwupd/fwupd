@@ -12,7 +12,8 @@ plugins/uefi-dbx/tests/snapd.py --datadir /usr/share/installed-tests/fwupd/tests
 # run TPM simulator
 export TPM2TOOLS_TCTI=swtpm:host=127.0.0.1,port=2321
 swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init,startup-clear --tpmstate "dir=$PWD" &
-trap 'kill $!' EXIT
+SWTPM_PID=$!
+trap "kill $SWTPM_PID" EXIT
 # extend a PCR0 value for test suite
 sleep 2
 tpm2_pcrextend 0:sha1=f1d2d2f924e986ac86fdf7b36c94bcdf32beec15
