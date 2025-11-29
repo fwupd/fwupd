@@ -34,3 +34,4 @@ plugins/uefi-dbx/tests/
 .ossfuzz
 *.rej
 /snap
+_codeql_detected_source_root
