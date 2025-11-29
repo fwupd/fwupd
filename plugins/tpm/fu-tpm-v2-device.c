@@ -265,11 +265,12 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 		(void)g_setenv("TSS2_LOG", "esys+none,tcti+none", FALSE);
 
 	rc = Esys_Startup(self->esys_context, TPM2_SU_CLEAR);
-	if (rc != TSS2_RC_SUCCESS) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to initialize TPM");
+	if (rc != TSS2_RC_SUCCESS && rc != TPM2_RC_INITIALIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to initialize TPM: 0x%x",
+			    rc);
 		return FALSE;
 	}
 
