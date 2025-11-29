@@ -351,14 +351,16 @@ fu_tpm_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	/* look for TPM v2.0 via software TCTI */
 	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
 		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(FuTpmDevice) tpm_device = NULL;
 
-		self->tpm_device = fu_tpm_v2_device_new(fu_plugin_get_context(plugin));
-		fu_device_set_physical_id(FU_DEVICE(self->tpm_device), "TCTI");
-		locker = fu_device_locker_new(FU_DEVICE(self->tpm_device), error);
+		tpm_device = fu_tpm_v2_device_new(fu_plugin_get_context(plugin));
+		fu_device_set_physical_id(FU_DEVICE(tpm_device), "TCTI");
+		locker = fu_device_locker_new(FU_DEVICE(tpm_device), error);
 		if (locker == NULL)
 			return FALSE;
-		if (!fu_device_setup(FU_DEVICE(self->tpm_device), error))
+		if (!fu_device_setup(FU_DEVICE(tpm_device), error))
 			return FALSE;
+		self->tpm_device = g_steal_pointer(&tpm_device);
 		fu_plugin_device_add(plugin, FU_DEVICE(self->tpm_device));
 		return TRUE;
 	}
