@@ -363,21 +363,14 @@ fu_tpm_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	/* look for TPM v2.0 via software TCTI when no udev device is available */
 	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
 		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_autoptr(GError) error_local = NULL;
 
 		self->tpm_device = fu_tpm_v2_device_new(fu_plugin_get_context(plugin));
 		fu_device_set_physical_id(FU_DEVICE(self->tpm_device), "TCTI");
-		locker = fu_device_locker_new(FU_DEVICE(self->tpm_device), &error_local);
-		if (locker == NULL) {
-			g_debug("failed to open software TPM v2.0: %s", error_local->message);
-			g_clear_object(&self->tpm_device);
-			return TRUE;
-		}
-		if (!fu_device_setup(FU_DEVICE(self->tpm_device), &error_local)) {
-			g_debug("failed to setup software TPM v2.0: %s", error_local->message);
-			g_clear_object(&self->tpm_device);
-			return TRUE;
-		}
+		locker = fu_device_locker_new(FU_DEVICE(self->tpm_device), error);
+		if (locker == NULL)
+			return FALSE;
+		if (!fu_device_setup(FU_DEVICE(self->tpm_device), error))
+			return FALSE;
 		fu_plugin_device_add(plugin, FU_DEVICE(self->tpm_device));
 	}
 
