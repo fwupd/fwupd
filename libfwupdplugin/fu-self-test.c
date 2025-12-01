@@ -5653,6 +5653,12 @@ fu_firmware_builder_round_trip_func(void)
 		"a305749853781c6899c4b28039cb4c7d9059b910",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
+	    {
+		FU_TYPE_JSON_FIRMWARE,
+		"json.builder.xml",
+		"845be24c3f31c4e8f0feeadfe356b3156628ba99",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
 #ifdef HAVE_CBOR
 	    {
 		FU_TYPE_USWID_FIRMWARE,
