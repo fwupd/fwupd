@@ -54,6 +54,7 @@ typedef struct {
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
+	gboolean smbios_uefi_enabled;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
@@ -350,6 +351,56 @@ fu_context_get_smbios_integer(FuContext *self,
 		return G_MAXUINT;
 	}
 	return fu_smbios_get_integer(priv->smbios, type, length, offset, error);
+}
+
+/* private helper to check SMBIOS once */
+static gboolean
+fu_context_check_smbios_uefi_enabled_internal(FuContext *self)
+{
+	GBytes *bios_blob;
+	const guint8 *data;
+	gsize sz;
+	g_autoptr(GPtrArray) bios_tables = NULL;
+
+	bios_tables = fu_context_get_smbios_data(self,
+						 FU_SMBIOS_STRUCTURE_TYPE_BIOS,
+						 FU_SMBIOS_STRUCTURE_LENGTH_ANY,
+						 NULL);
+	if (bios_tables == NULL) {
+		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
+		if (tmp != NULL)
+			return TRUE;
+		return FALSE;
+	}
+	bios_blob = g_ptr_array_index(bios_tables, 0);
+	data = g_bytes_get_data(bios_blob, &sz);
+	if (sz < 0x14)
+		return FALSE;
+	if (data[1] < 0x14)
+		return FALSE;
+	if (!(data[0x13] & (1 << 3)))
+		return FALSE;
+	return TRUE;
+}
+
+/**
+ * fu_context_check_smbios_uefi_enabled:
+ * @self: a #FuContext
+ *
+ * Checks if the system SMBIOS BIOS Characteristics Extension Byte 2 indicates
+ * that UEFI is supported.
+ *
+ * Returns: %TRUE if UEFI is supported by the system hardware, %FALSE otherwise
+ *
+ * Since: 2.0.19
+ **/
+gboolean
+fu_context_check_smbios_uefi_enabled(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO), FALSE);
+	return priv->smbios_uefi_enabled;
 }
 
 /**
@@ -1240,6 +1291,9 @@ fu_context_load_hwinfo(FuContext *self,
 
 	if (!fu_hwids_setup(priv->hwids, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
+
+	priv->smbios_uefi_enabled = fu_context_check_smbios_uefi_enabled_internal(self);
+
 	fu_progress_step_done(progress);
 
 	/* set the hwid flags */

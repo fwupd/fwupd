@@ -29,6 +29,15 @@ fu_bios_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		return FALSE;
 	}
 
+	/* check if UEFI is supported by the hardware */
+	if (!fu_context_check_smbios_uefi_enabled(ctx)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "system does not support UEFI");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -38,10 +47,10 @@ fu_bios_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *esrt_path = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_efivars = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_efivars_supported(efivars, &error_local)) {
+	if (!fu_efivars_supported(efivars, &error_efivars)) {
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_LEGACY_BIOS);
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		return TRUE;
