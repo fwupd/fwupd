@@ -1453,6 +1453,7 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	    "FuGenesysUsbhubFirmware",
 	    "FuIntelThunderboltFirmware",
 	    "FuIntelThunderboltNvm",
+	    "FuJsonFirmware",
 	    "FuUefiUpdateInfo",
 	    NULL,
 	};
