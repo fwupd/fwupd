@@ -17,6 +17,7 @@ fwupd_structs = [
   'fwupd-device.rs', # fuzzing
   'fwupd-enums.rs', # fuzzing
   'fwupd-error.rs', # fuzzing
+  'fwupd-json.rs', # fuzzing
   'fwupd-plugin.rs', # fuzzing
   'fwupd-release.rs', # fuzzing
   'fwupd-remote.rs', # fuzzing
@@ -78,6 +79,11 @@ install_headers(
     'fwupd-remote.h',
     'fwupd-report.h',
     'fwupd-request.h',
+    'fwupd-json-array.h',
+    'fwupd-json-common.h',
+    'fwupd-json-node.h',
+    'fwupd-json-object.h',
+    'fwupd-json-parser.h',
     'fwupd-bios-setting.h',
     'fwupd-security-attr.h',
     'fwupd-release.h',
@@ -97,6 +103,11 @@ libfwupd_src = [
   'fwupd-device.c', # fuzzing
   'fwupd-error.c', # fuzzing
   'fwupd-bios-setting.c', # fuzzing
+  'fwupd-json-array.c', # fuzzing
+  'fwupd-json-common.c', # fuzzing
+  'fwupd-json-node.c', # fuzzing
+  'fwupd-json-object.c', # fuzzing
+  'fwupd-json-parser.c', # fuzzing
   'fwupd-security-attr.c', # fuzzing
   'fwupd-release.c', # fuzzing
   'fwupd-plugin.c',
@@ -173,6 +184,16 @@ if introspection.allowed()
       'fwupd-error.h',
       'fwupd-bios-setting.c',
       'fwupd-bios-setting.h',
+      'fwupd-json-array.c',
+      'fwupd-json-array.h',
+      'fwupd-json-common.c',
+      'fwupd-json-common.h',
+      'fwupd-json-node.c',
+      'fwupd-json-node.h',
+      'fwupd-json-object.c',
+      'fwupd-json-object.h',
+      'fwupd-json-parser.c',
+      'fwupd-json-parser.h',
       'fwupd-security-attr.c',
       'fwupd-security-attr.h',
       'fwupd-security-attr-private.h',

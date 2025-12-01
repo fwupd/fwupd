@@ -440,6 +440,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("intel-thunderbolt"),
         Fuzzer("ifwi-cpd"),
         Fuzzer("ifwi-fpt"),
+        Fuzzer("json"),
         Fuzzer("oprom"),
         Fuzzer("uswid"),
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
