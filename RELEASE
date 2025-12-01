@@ -11,7 +11,7 @@ To make sure it's done right, you can reference commit 433e809318c68c9ab6d4ae50e
 
 Check IFD parsing (if the files are available):
 
-    ../../contrib/check-ifd-firmware.py ../../fwupd-test-roms/
+    ../../contrib/check-ifd-firmware.py ../../../fwupd-test-roms/
 
 Write release entries:
 

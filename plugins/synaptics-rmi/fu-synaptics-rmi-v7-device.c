@@ -184,7 +184,6 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 
 	/* for BL7, we need erase config partition */
 	if (flash->bootloader_id[1] == 7) {
-		g_autoptr(GByteArray) erase_config_cmd = g_byte_array_new();
 		g_autoptr(FuStructSynapticsRmiV7EraseCoreConfig) st_cfg =
 		    fu_struct_synaptics_rmi_v7_erase_core_config_new();
 

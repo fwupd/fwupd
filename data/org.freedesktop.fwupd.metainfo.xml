@@ -38,6 +38,44 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.18" date="2025-12-01">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a MOTD message for devices needing reboot after staged updates</li>
+          <li>Create the reboot-required file when a firmware update requires reboot</li>
+          <li>Record the system state for each composite emulation</li>
+          <li>Update USI docking station firmware without requiring a manual replug</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a MTD device problem if the Intel SPI BIOS lock is set</li>
+          <li>Allow changing the child name when using PARENT_NAME_PREFIX</li>
+          <li>Allow UpdateCapsule to work on systems that do not support SecureBoot</li>
+          <li>Correctly parse the EFI_CAPSULE_RESULT_VARIABLE_HEADER</li>
+          <li>Fall back to the SMBIOS version for BIOS MTD devices</li>
+          <li>Fix a crash when trying to record an i2c emulation</li>
+          <li>Fixed Huddly upgrade problems with major version changes</li>
+          <li>Fix man page compatibility with apropos and whatis</li>
+          <li>Fix parsing USB BOS descriptors</li>
+          <li>Fix up the x86_64-specific capsule flags when deploying UEFI firmware</li>
+          <li>Improve firmware stream searching speed by a huge amount</li>
+          <li>Only convert the release uint32_t to device version format for UEFI devices</li>
+          <li>Only handle SIGINT in fwupdtool when required</li>
+          <li>Refactor the hypervisor and container detection to be usable from plugins</li>
+          <li>Set PlatformArchitecture as the CPU architecture for RISC-V machines</li>
+          <li>Use a sensible timeout when doing qc-s5gen2 HID requests</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP Portable USB-C 4K HDMI Hub</li>
+          <li>Lenovo Legion Go 2 (as a HID device)</li>
+          <li>Synaptics HapticsPad</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.17" date="2025-11-05">
       <description>
         <p>
