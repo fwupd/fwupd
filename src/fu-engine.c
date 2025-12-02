@@ -9183,6 +9183,30 @@ fu_engine_idle_inhibit_changed_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *sel
 	}
 }
 
+static gchar *
+fu_engine_find_keyring_path(void)
+{
+	const gchar *credentials_directory = g_getenv("CREDENTIALS_DIRECTORY");
+	if (credentials_directory != NULL) {
+		g_autofree gchar *client_pem = NULL;
+		g_autofree gchar *secret_key = NULL;
+		client_pem = g_build_filename(credentials_directory,
+					      PACKAGE_NAME,
+					      "pki",
+					      "client.pem",
+					      NULL);
+		secret_key = g_build_filename(credentials_directory,
+					      PACKAGE_NAME,
+					      "pki",
+					      "secret.key",
+					      NULL);
+		if (g_file_test(client_pem, G_FILE_TEST_EXISTS) &&
+		    g_file_test(secret_key, G_FILE_TEST_EXISTS))
+			return g_build_filename(credentials_directory, PACKAGE_NAME, NULL);
+	}
+	return fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+}
+
 static void
 fu_engine_constructed(GObject *obj)
 {
@@ -9276,7 +9300,7 @@ fu_engine_constructed(GObject *obj)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
-	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	keyring_path = fu_engine_find_keyring_path();
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	pkidir_fw = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "pki", "fwupd", NULL);
 	jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
