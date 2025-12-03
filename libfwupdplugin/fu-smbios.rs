@@ -1,6 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[repr(u8)]
 enum FuSmbiosStructureType {
     Bios,
     System,
@@ -89,4 +90,60 @@ struct FuStructSmbiosStructure {
     type: u8,
     length: u8,
     handle: u16le,
+}
+
+#[repr(u64le)]
+enum FuSmbiosBiosCharacteristics {
+    _None = 1 << 0,
+    _Reserved = 1 << 1,
+    _Unknown = 1 << 2,
+    BiosCharacteristicsNotSupported = 1 << 3,
+    IsaSupported = 1 << 4,
+    McaSupported = 1 << 5,
+    EisaSupported = 1 << 6,
+    PciSupported = 1 << 7,
+    PccardSupported = 1 << 8,
+    PlugAndPlaySupported = 1 << 9,
+    ApmSupported = 1 << 10,
+    BiosIsUpgradeable = 1 << 11,
+    BiosShadowingAllowed = 1 << 12,
+    VlvesaSupported = 1 << 13,
+    EscdSupportAvailable = 1 << 14,
+    BootFromCdSupported = 1 << 15,
+    SelectableBootSupported = 1 << 16,
+}
+
+#[repr(u16le)]
+enum FuSmbiosBiosCharacteristicsExt {
+    AcpiSupported = 1 << 0,
+    UsbLegacySupported = 1 << 1,
+    AgpSupported = 1 << 2,
+    I2oBootSupported = 1 << 3,
+    Ls120SuperDiskBootSupported = 1 << 4,
+    AtapiZipSupported = 1 << 5,
+    1394BootSupported = 1 << 6,
+    SmartBatterySupported = 1 << 7,
+    BiosBootSpecificationSupported = 1 << 8,
+    FunctionKeyNetworkBootSupported = 1 << 9,
+    EnableTargetedContentDistribution = 1 << 10,
+    UefiSpecificationSupported = 1 << 11,
+    IsVirtualMachine = 1 << 12,
+    ManufacturingModeSupported = 1 << 13,
+    ManufacturingModeEnabled = 1 << 14,
+    _Reserved = 1 << 15,
+}
+
+#[derive(ParseBytes, Default)]
+#[repr(C, packed)]
+struct FuStructSmbiosBiosInformation {
+    type: FuSmbiosStructureType == Bios,
+    length: u8,
+    handle: u16le,
+    vendor: u8,
+    version: u8,
+    starting_addr_segment: u16le,
+    release_date: u8,
+    rom_size: u8,
+    characteristics: FuSmbiosBiosCharacteristics,
+    characteristics_ext: FuSmbiosBiosCharacteristicsExt,
 }

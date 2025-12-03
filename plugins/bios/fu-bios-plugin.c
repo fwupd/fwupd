@@ -29,6 +29,16 @@ fu_bios_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		return FALSE;
 	}
 
+	/* check if UEFI is supported by the hardware */
+	if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "system does not support UEFI");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
