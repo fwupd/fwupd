@@ -194,7 +194,7 @@ fu_dell_dock_status_init(FuDellDockStatus *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_HID_DEVICE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DELL_DOCK_EC);
 }
 
 static void
