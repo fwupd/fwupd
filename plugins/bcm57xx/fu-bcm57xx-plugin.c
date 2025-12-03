@@ -10,7 +10,6 @@
 #include "fu-bcm57xx-dict-image.h"
 #include "fu-bcm57xx-firmware.h"
 #include "fu-bcm57xx-plugin.h"
-#include "fu-bcm57xx-recovery-device.h"
 #include "fu-bcm57xx-stage1-image.h"
 #include "fu-bcm57xx-stage2-image.h"
 
@@ -45,10 +44,11 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* is in recovery mode if has no ethtool interface */
+	/* has no ethtool interface */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", "enp81s0f0", NULL);
 	} else {
+		g_autofree gchar *ethtool_iface = NULL;
 		fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
 				      "net",
 				      NULL);
@@ -60,12 +60,15 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 		}
 		ifaces = fu_path_glob(fn, "en*", NULL);
 		if (ifaces == NULL || ifaces->len == 0) {
-			dev = g_object_new(FU_TYPE_BCM57XX_RECOVERY_DEVICE, NULL);
-		} else {
-			g_autofree gchar *ethtool_iface =
-			    g_path_get_basename(g_ptr_array_index(ifaces, 0));
-			dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", ethtool_iface, NULL);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no interfaces detected for %s",
+				    fn);
+			return FALSE;
 		}
+		ethtool_iface = g_path_get_basename(g_ptr_array_index(ifaces, 0));
+		dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", ethtool_iface, NULL);
 	}
 	fu_device_incorporate(dev, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	locker = fu_device_locker_new(dev, error);
@@ -93,7 +96,6 @@ fu_bcm57xx_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_BCM57XX_DEVICE);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_BCM57XX_RECOVERY_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_DICT_IMAGE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_STAGE1_IMAGE);
