@@ -91,8 +91,9 @@ The latest cabinet archive can also be installed into the `vendor-firmware`
 remote found in `/usr/share/fwupd/remotes.d/vendor/firmware/` which allows the version-fixup to work
 even when offline -- although using the LVFS source is recommended for most users.
 
-The *last-entry checksum* can be found from the
-`fwupdtool firmware-parse DBXUpdate-$VERSION$.x64.bin efi-signature-list` command.
+> [!TIP]
+> The *last-entry checksum* can be found from the
+> `fwupdtool firmware-parse DBXUpdate-$VERSION$.x64.bin efi-signature-list` command.
 
 ## Update Behavior
 

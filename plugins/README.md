@@ -13,8 +13,9 @@ If you have a firmware specification and would like to see support
 in this project, please file an issue and share the spec.  Patches are also
 welcome.
 
-We will not accept plugins that upgrade hardware using a proprietary Linux
-executable, proprietary UEFI executable, proprietary library, or DBus interface.
+> [!IMPORTANT]
+> We will not accept plugins that upgrade hardware using a proprietary Linux
+> executable, proprietary UEFI executable, proprietary library, or DBus interface.
 
 ## Plugin interaction
 
