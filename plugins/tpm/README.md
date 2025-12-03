@@ -47,9 +47,10 @@ vendor-specific commands used from a UEFI UpdateCapsule and with an OEM-provided
 If a vendor wanted to use the plugin code provided here they would still need to tell us how to
 set up the correct `keyHandle` for `FieldUpgradeStart` and how to handle authorization.
 
-We do not know of any vendor that does TPM updates using the standardized API, and so the code
-provided here is more of a *this is how it should be implemented* rather than with any expectation
-it is actually going to just work.
+> [!WARNING]
+> We do not know of any vendor that does TPM updates using the standardized API, and so the code
+> provided here is more of a *this is how it should be implemented* rather than with any expectation
+> it is actually going to just work.
 
 ## Vendor ID Security
 

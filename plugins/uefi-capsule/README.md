@@ -30,11 +30,12 @@ than "Linux Firmware Updater" (with spaces) due to long-fixed EFI boot manager
 bugs. Many users will have these old BIOS versions installed and so we use the
 `use-legacy-bootmgr-desc` quirk to use the safe name.
 
-On some Lenovo hardware only one capsule is installable due to possible problems
-with the UpdateCapsule coalesce operation. As soon as one UEFI device has been
-scheduled for update the other UEFI devices found in the ESRT will be marked
-as `updatable-hidden` rather than `updatable`. Rebooting will restore them so
-they can be updated on next OS boot.
+> [!NOTE]
+> On some Lenovo hardware only one capsule is installable due to possible problems
+> with the UpdateCapsule coalesce operation. As soon as one UEFI device has been
+> scheduled for update the other UEFI devices found in the ESRT will be marked
+> as `updatable-hidden` rather than `updatable`. Rebooting will restore them so
+> they can be updated on next OS boot.
 
 ## Firmware Format
 
@@ -81,8 +82,9 @@ The main formats used by vendors are `triplet`, `quad`, `dell-bios` and `dell-bi
 There are more details about firmware version formats and a full list of all the different allowed
 values on the [LVFS](https://lvfs.readthedocs.io/en/latest/metainfo.html#version-format).
 
-NOTE: Firmware can require either the `quad` or `triplet` string version format, but it may be more
-portable to depend on the number -- which will also work if the metadata has not been refreshed yet.
+> [!TIP]
+> Firmware can require either the `quad` or `triplet` string version format, but it may be more
+> portable to depend on the number -- which will also work if the metadata has not been refreshed yet.
 
 ## Update Behavior
 

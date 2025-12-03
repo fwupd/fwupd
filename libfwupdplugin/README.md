@@ -6,7 +6,8 @@ removed when branching for new minor versions.
 
 Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 
-Remember: Plugins should be upstream!
+> [!IMPORTANT]
+> Plugins should be upstream!
 
 ## 1.5.5
 
