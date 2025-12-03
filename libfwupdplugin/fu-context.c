@@ -75,6 +75,50 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuContext, fu_context, G_TYPE_OBJECT)
 
 #define GET_PRIVATE(o) (fu_context_get_instance_private(o))
 
+static gboolean
+fu_context_ensure_smbios_uefi_enabled(FuContext *self, GError **error)
+{
+	GBytes *bios_blob;
+	g_autoptr(FuStructSmbiosBiosInformation) st = NULL;
+	g_autoptr(GPtrArray) bios_tables = NULL;
+
+	bios_tables = fu_context_get_smbios_data(self, 0, FU_SMBIOS_STRUCTURE_LENGTH_ANY, NULL);
+	if (bios_tables == NULL) {
+		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
+		if (tmp != NULL)
+			return TRUE;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SMBIOS not supported");
+		return FALSE;
+	}
+	bios_blob = g_ptr_array_index(bios_tables, 0);
+
+	st = fu_struct_smbios_bios_information_parse_bytes(bios_blob, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	if (fu_struct_smbios_bios_information_get_length(st) < 0x14) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SMBIOS 2.3 not supported");
+		return FALSE;
+	}
+	if ((fu_struct_smbios_bios_information_get_characteristics_ext(st) &
+	     FU_SMBIOS_BIOS_CHARACTERISTICS_EXT_UEFI_SPECIFICATION_SUPPORTED) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "System does not support UEFI mode");
+		return FALSE;
+	}
+
+	/* success */
+	fu_context_add_flag(self, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+	return TRUE;
+}
+
 static GFile *
 fu_context_get_fdt_file(GError **error)
 {
@@ -1190,6 +1234,7 @@ fu_context_load_hwinfo(FuContext *self,
 	GPtrArray *guids;
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
 	g_autoptr(GError) error_hwids = NULL;
+	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
 	struct {
 		const gchar *name;
@@ -1241,6 +1286,10 @@ fu_context_load_hwinfo(FuContext *self,
 	if (!fu_hwids_setup(priv->hwids, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
 	fu_progress_step_done(progress);
+
+	/* does the system support UEFI mode? */
+	if (!fu_context_ensure_smbios_uefi_enabled(self, &error_smbios))
+		g_debug("%s", error_smbios->message);
 
 	/* set the hwid flags */
 	guids = fu_context_get_hwid_guids(self);
