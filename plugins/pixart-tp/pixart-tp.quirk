@@ -1,0 +1,17 @@
+[HIDRAW\VEN_093A&DEV_4F07]
+Plugin = pixart_tp
+GType = FuPxiTpDevice
+HidVersionReg = bank=0x00;addr=0xb2
+SramSelect = 0x0f
+
+[HIDRAW\VEN_093A&DEV_3307]
+Plugin = pixart_tp
+GType = FuPxiTpDevice
+HidVersionReg = bank=0x00;addr=0xb2
+SramSelect = 0x08
+
+[HIDRAW\VEN_093A&DEV_0343]
+Plugin = pixart_tp
+GType = FuPxiTpDevice
+HidVersionReg = bank=0x00;addr=0xb2
+SramSelect = 0x0f

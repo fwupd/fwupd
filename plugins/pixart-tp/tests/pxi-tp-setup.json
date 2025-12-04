@@ -1,0 +1,174 @@
+{
+  "FwupdVersion" : "2.0.17",
+  "UsbDevices" : [
+    {
+      "Created" : "2025-10-14T06:08:51.287963Z",
+      "GType" : "FuUdevDevice",
+      "BackendId" : "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:0343.000E/hidraw/hidraw3",
+      "DeviceFile" : "/dev/hidraw3",
+      "Subsystem" : "hidraw",
+      "Vendor" : 2362,
+      "Model" : 835,
+      "Events" : [
+        {
+          "Id" : "GetSymlinkTarget:Attr=subsystem",
+          "Data" : "hidraw"
+        },
+        {
+          "Id" : "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id" : "ReadAttr:Attr=uevent",
+          "Data" : "MAJOR=239\nMINOR=3\nDEVNAME=hidraw3"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVNAME",
+          "Data" : "hidraw3"
+        },
+        {
+          "Id" : "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id" : "ReadAttr:Attr=device"
+        },
+        {
+          "Id" : "ReadAttr:Attr=class"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id" : "GetBackendParent:Subsystem=hid",
+          "GType" : "FuUdevDevice",
+          "BackendId" : "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:0343.000E"
+        },
+        {
+          "Id" : "GetSymlinkTarget:Attr=subsystem",
+          "Data" : "hid"
+        },
+        {
+          "Id" : "GetSymlinkTarget:Attr=driver",
+          "Data" : "hid-multitouch"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id" : "ReadAttr:Attr=uevent",
+          "Data" : "DRIVER=hid-multitouch\nHID_ID=0003:0000093A:00000343\nHID_NAME=Pixart Imaging, Inc. HID Bridge:2C 0020 093A 0343 0011\nHID_PHYS=usb-0000:00:14.0-5/input0\nHID_UNIQ=P000000001\nMODALIAS=hid:b0003g0004v0000093Ap00000343"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id" : "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id" : "ReadAttr:Attr=device"
+        },
+        {
+          "Id" : "ReadAttr:Attr=class"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id" : "ReadProp:Key=HID_ID",
+          "Data" : "0003:0000093A:00000343"
+        },
+        {
+          "Id" : "ReadProp:Key=HID_NAME",
+          "Data" : "Pixart Imaging, Inc. HID Bridge:2C 0020 093A 0343 0011"
+        },
+        {
+          "Id" : "ReadProp:Key=HID_UNIQ",
+          "Data" : "P000000001"
+        },
+        {
+          "Id" : "ReadProp:Key=HID_PHYS",
+          "Data" : "usb-0000:00:14.0-5/input0"
+        },
+        {
+          "Id" : "GetBackendParent:Subsystem=usb:usb_device",
+          "GType" : "FuUsbDevice",
+          "BackendId" : "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5",
+          "PhysicalId" : "3-5"
+        },
+        {
+          "Id" : "GetSymlinkTarget:Attr=subsystem",
+          "Data" : "usb"
+        },
+        {
+          "Id" : "GetSymlinkTarget:Attr=driver",
+          "Data" : "usb"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVTYPE",
+          "Data" : "usb_device"
+        },
+        {
+          "Id" : "ReadAttr:Attr=uevent",
+          "Data" : "MAJOR=189\nMINOR=272\nDEVNAME=bus/usb/003/017\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=93a/343/11\nTYPE=0/0/0\nBUSNUM=003\nDEVNUM=017"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVNAME",
+          "Data" : "bus/usb/003/017"
+        },
+        {
+          "Id" : "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id" : "ReadAttr:Attr=device"
+        },
+        {
+          "Id" : "ReadAttr:Attr=class"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVTYPE",
+          "Data" : "usb_device"
+        },
+        {
+          "Id" : "ReadProp:Key=BUSNUM",
+          "Data" : "003"
+        },
+        {
+          "Id" : "ReadAttr:Attr=uevent",
+          "Data" : "MAJOR=189\nMINOR=272\nDEVNAME=bus/usb/003/017\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=93a/343/11\nTYPE=0/0/0\nBUSNUM=003\nDEVNUM=017"
+        },
+        {
+          "Id" : "ReadProp:Key=DEVNUM",
+          "Data" : "017"
+        },
+        {
+          "Id" : "LoadDescriptor:basename=descriptors",
+          "Data" : "EgEAAgAAAEA6CUMDEQABAgMBCQIiAAEBAIAyCQQAAAEDAAAACSEQAQABIoMCBwWBAwACAQ=="
+        },
+        {
+          "Id" : "LoadDescriptor:basename=bos_descriptors"
+        },
+        {
+          "Id" : "ReadProp:Key=HID_FIRMWARE_VERSION"
+        },
+        {
+          "Id" : "Ioctl:Request=0xc0044806,Data=Q7IQAA==,Length=0x4",
+          "DataOut" : "Q7IQAA=="
+        },
+        {
+          "Id" : "Ioctl:Request=0xc0044807,Data=QwAAAA==,Length=0x4",
+          "DataOut" : "Q7IAEQ=="
+        },
+        {
+          "Id" : "Ioctl:Request=0xc0044806,Data=Q7MQAA==,Length=0x4",
+          "DataOut" : "Q7MQAA=="
+        },
+        {
+          "Id" : "Ioctl:Request=0xc0044807,Data=QwAAAA==,Length=0x4",
+          "DataOut" : "Q7MAAA=="
+        }
+      ]
+    }
+  ]
+}
