@@ -2410,6 +2410,97 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_crc(FuUtil *self, gchar **values, GError **error)
+{
+	FuCrcKind kind;
+
+	/* sanity check */
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected KIND FILENAME [FILENAME]");
+		return FALSE;
+	}
+
+	/* get kind */
+	kind = fu_crc_kind_from_string(values[0]);
+	if (kind == FU_CRC_KIND_UNKNOWN) {
+		g_autofree gchar *str = NULL;
+		g_autoptr(GPtrArray) crc_kinds = g_ptr_array_new();
+		for (guint i = 1; i < FU_CRC_KIND_LAST; i++)
+			g_ptr_array_add(crc_kinds, (gpointer)fu_crc_kind_to_string(i));
+		str = fu_strjoin("|", crc_kinds);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "Invalid CRC kind, expected %s",
+			    str);
+		return FALSE;
+	}
+
+	/* get CRC of each file */
+	for (guint i = 1; values[i] != NULL; i++) {
+		g_autoptr(GBytes) blob = NULL;
+
+		blob = fu_bytes_get_contents(values[i], error);
+		if (blob == NULL)
+			return FALSE;
+		if (fu_crc_size(kind) == 8) {
+			guint8 crc = fu_crc8_bytes(kind, blob);
+			fu_console_print(self->console, "%s: 0x%02x", values[i], crc);
+		} else if (fu_crc_size(kind) == 16) {
+			guint16 crc = fu_crc16_bytes(kind, blob);
+			fu_console_print(self->console, "%s: 0x%04x", values[i], crc);
+		} else if (fu_crc_size(kind) == 32) {
+			guint32 crc = fu_crc32_bytes(kind, blob);
+			fu_console_print(self->console, "%s: 0x%08x", values[i], crc);
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_crc_find(FuUtil *self, gchar **values, GError **error)
+{
+	FuCrcKind kind;
+	guint64 crc_target = 0;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* sanity check */
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected CRC FILENAME");
+		return FALSE;
+	}
+
+	/* parse CRC */
+	if (!fu_strtoull(values[0], &crc_target, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
+
+	/* find the first CRC that matches */
+	blob = fu_bytes_get_contents(values[1], error);
+	if (blob == NULL)
+		return FALSE;
+	kind = fu_crc_find(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob), crc_target);
+	if (kind == FU_CRC_KIND_UNKNOWN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "did not find known CRC kind");
+		return FALSE;
+	}
+	fu_console_print_literal(self->console, fu_crc_kind_to_string(kind));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_search(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
@@ -5984,6 +6075,20 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Finds firmware releases from the metadata"),
 			      fu_util_search);
+	fu_util_cmd_array_add(cmd_array,
+			      "crc",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("KIND FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Calculates a CRC of a file"),
+			      fu_util_crc);
+	fu_util_cmd_array_add(cmd_array,
+			      "crc-find",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("CRC FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Finds a algorithm that matches the file CRC"),
+			      fu_util_crc_find);
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();

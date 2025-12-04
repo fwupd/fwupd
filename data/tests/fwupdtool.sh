@@ -402,3 +402,29 @@ expect_rc 0
 echo " ● Resetting config…"
 run reset-config test
 expect_rc 0
+
+# ---
+echo " ● Calculating CRCs…"
+echo "hello world" >${TMPDIR}/crc.txt
+run crc b8-autosar ${TMPDIR}/crc.txt
+expect_rc 0
+run crc b16-xmodem ${TMPDIR}/crc.txt
+expect_rc 0
+run crc b32-standard ${TMPDIR}/crc.txt
+expect_rc 0
+
+# ---
+echo " ● Calculating CRCs (invalid)…"
+run crc ${TMPDIR}/crc.txt
+expect_rc 1
+run crc invalid ${TMPDIR}/crc.txt
+expect_rc 1
+
+# ---
+echo " ● Finding CRC…"
+run crc-find ${TMPDIR}/crc.txt
+expect_rc 1
+run crc-find 0xaf083b2d ${TMPDIR}/crc.txt
+expect_rc 0
+run crc-find 0x12345678 ${TMPDIR}/crc.txt
+expect_rc 1

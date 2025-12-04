@@ -449,9 +449,9 @@ fu_common_crc_func(void)
 	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32_POSIX, buf, sizeof(buf)), ==, 0x037915C4);
 	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32_SATA, buf, sizeof(buf)), ==, 0xBA55CCAC);
 	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32_XFER, buf, sizeof(buf)), ==, 0x868E70FC);
-	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32_C, buf, sizeof(buf)), ==, 0x5A14B9F9);
-	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32_D, buf, sizeof(buf)), ==, 0x68AD8D3C);
-	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32_Q, buf, sizeof(buf)), ==, 0xE955C875);
+	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32C, buf, sizeof(buf)), ==, 0x5A14B9F9);
+	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32D, buf, sizeof(buf)), ==, 0x68AD8D3C);
+	g_assert_cmpint(fu_crc32(FU_CRC_KIND_B32Q, buf, sizeof(buf)), ==, 0xE955C875);
 }
 
 static void
