@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 Harris Tai <harris_tai@pixart.com>
+ * Copyright 2025 Micky Hsieh <micky_hsieh@pixart.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+// =============================================================
+// file: fu-pxi-tp-tf-communication (pure C, offset-based parsing; no packed structs)
+// =============================================================
+
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=300
+ */
+
 #include "config.h"
 
 #include "fu-pxi-tp-tf-communication.h"
@@ -16,7 +32,7 @@
 
 #define TF_FEATURE_REPORT_BYTE_LENGTH 64
 
-/* CRC8: x^8 + x^2 + x + 1 */
+/* crc8: x^8 + x^2 + x + 1 */
 static const guint8 CRC8_TABLE[256] = /* nocheck:static */ {
     0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
     0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65, 0x48, 0x4F, 0x46, 0x41, 0x54, 0x53, 0x5A, 0x5D,
@@ -47,7 +63,7 @@ fu_pxi_tp_tf_communication_compute_crc8(const guint8 *data, gsize len)
 	return crc;
 }
 
-/* --- TF Standard Communication helpers --- */
+/* --- tf Standard Communication helpers --- */
 
 static gboolean
 fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
@@ -272,7 +288,7 @@ fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 			return TRUE;
 		}
 
-		g_debug("TF: read firmware version failed try %" G_GSIZE_FORMAT "/%d: %s",
+		g_debug("tf: read firmware version failed try %" G_GSIZE_FORMAT "/%d: %s",
 			i + 1,
 			FAILED_RETRY_TIMES,
 			local_error != NULL ? local_error->message : "unknown");
@@ -284,11 +300,11 @@ fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 	return fu_pxi_tp_common_fail(error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
-				     "TF: failed to read firmware version after %d retries",
+				     "tf: failed to read firmware version after %d retries",
 				     FAILED_RETRY_TIMES);
 }
 
-/* Read TF upgrade download status (status + number of packets accepted by MCU) */
+/* read TF upgrade download status (status + number of packets accepted by MCU) */
 static gboolean
 fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 						guint8 *status,
@@ -316,12 +332,12 @@ fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 				return TRUE;
 			}
 
-			g_debug("TF: download status reply has unexpected length: %" G_GSIZE_FORMAT,
+			g_debug("tf: download status reply has unexpected length: %" G_GSIZE_FORMAT,
 				len);
 			/* treat as failure and retry */
 		}
 
-		g_debug("TF: read download status failed try %" G_GSIZE_FORMAT "/%d: %s",
+		g_debug("tf: read download status failed try %" G_GSIZE_FORMAT "/%d: %s",
 			i + 1,
 			FAILED_RETRY_TIMES,
 			local_error != NULL ? local_error->message : "unknown");
@@ -333,11 +349,11 @@ fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 	return fu_pxi_tp_common_fail(error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
-				     "TF: failed to read download status after %d retries",
+				     "tf: failed to read download status after %d retries",
 				     FAILED_RETRY_TIMES);
 }
 
-/* Perform one TF firmware update attempt: no outer retries here */
+/* perform one TF firmware update attempt: no outer retries here */
 static gboolean
 fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 					  FuProgress *progress,
@@ -351,8 +367,8 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 
 	(void)progress; /* currently unused, can be wired to progress if needed */
 
-	/* Disable touch function while updating TF */
-	g_debug("TF: disabling touch");
+	/* disable touch function while updating TF */
+	g_debug("tf: disabling touch");
 	guint8 touch_operate_buf = 1;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      TOUCH_CONTROL,
@@ -362,17 +378,17 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return fu_pxi_tp_common_fail(error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_WRITE,
-					     "TF: failed to disable touch");
+					     "tf: failed to disable touch");
 	}
 
-	/* Enter TF bootloader / upgrade mode */
-	g_debug("TF: enter bootloader mode");
+	/* enter TF bootloader / upgrade mode */
+	g_debug("tf: enter bootloader mode");
 	guint8 tmp_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
 	tmp_buf[0] = 0x01;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self, SET_UPGRADE_MODE, tmp_buf, 1, error)) {
 		/* best-effort rollback: re-enable touch, ignore errors */
 		touch_operate_buf = 0;
-		g_debug("TF: re-enabling touch after bootloader enter failure");
+		g_debug("tf: re-enabling touch after bootloader enter failure");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
 							       &touch_operate_buf,
@@ -382,17 +398,17 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return fu_pxi_tp_common_fail(error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_WRITE,
-					     "TF: failed to enter bootloader mode");
+					     "tf: failed to enter bootloader mode");
 	}
 
 	fu_device_sleep(FU_DEVICE(self), 100);
 
-	/* Erase flash before programming */
-	g_debug("TF: erase flash");
+	/* erase flash before programming */
+	g_debug("tf: erase flash");
 	tmp_buf[0] = 0x02; /* erase mode */
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self, SET_UPGRADE_MODE, tmp_buf, 1, error)) {
 		touch_operate_buf = 0;
-		g_debug("TF: re-enabling touch after erase command failure");
+		g_debug("tf: re-enabling touch after erase command failure");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
 							       &touch_operate_buf,
@@ -402,16 +418,16 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return fu_pxi_tp_common_fail(error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_WRITE,
-					     "TF: failed to send erase flash command");
+					     "tf: failed to send erase flash command");
 	}
 
 	fu_device_sleep(FU_DEVICE(self), erase_wait_time);
 
-	/* Calculate total number of packets */
+	/* calculate total number of packets */
 	guint32 num = (data_size + max_packet_data_len - 1) / max_packet_data_len;
 	guint32 offset = 0;
 
-	g_debug("TF: start writing flash, packets=%u, total_size=%u", num, data_size);
+	g_debug("tf: start writing flash, packets=%u, total_size=%u", num, data_size);
 
 	for (guint32 i = 1; i <= num; i++, offset += max_packet_data_len) {
 		gsize count = (i == num) ? (data_size - offset) : max_packet_data_len;
@@ -430,7 +446,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 				break; /* this packet succeeded */
 			}
 
-			g_debug("TF: packet %u write failed, attempt %u/%d: %s",
+			g_debug("tf: packet %u write failed, attempt %u/%d: %s",
 				i,
 				k + 1,
 				FAILED_RETRY_TIMES,
@@ -444,7 +460,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		if (k == FAILED_RETRY_TIMES) {
 			/* give up on this packet: rollback touch and fail */
 			touch_operate_buf = 0;
-			g_debug("TF: re-enabling touch after packet %u write failure", i);
+			g_debug("tf: re-enabling touch after packet %u write failure", i);
 			(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 								       TOUCH_CONTROL,
 								       &touch_operate_buf,
@@ -455,7 +471,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 			    error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "TF: failed to write flash packet %u after %d retries",
+			    "tf: failed to write flash packet %u after %d retries",
 			    i,
 			    FAILED_RETRY_TIMES);
 		}
@@ -465,9 +481,9 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 			fu_device_sleep(FU_DEVICE(self), send_interval);
 	}
 
-	g_debug("TF: all packets sent, checking download status");
+	g_debug("tf: all packets sent, checking download status");
 
-	/* Read back download status from device */
+	/* read back download status from device */
 	guint8 status = 0;
 	guint16 mcu_packet_number = 0;
 	if (!fu_pxi_tp_tf_communication_read_download_status(self,
@@ -475,7 +491,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 							     &mcu_packet_number,
 							     error)) {
 		touch_operate_buf = 0;
-		g_debug("TF: re-enabling touch after download status read failure");
+		g_debug("tf: re-enabling touch after download status read failure");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
 							       &touch_operate_buf,
@@ -485,17 +501,17 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return fu_pxi_tp_common_fail(error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_WRITE,
-					     "TF: failed to read download status");
+					     "tf: failed to read download status");
 	}
 
-	g_debug("TF: download status OK, expected_packets=%u, device_packets=%u, status=%u",
+	g_debug("tf: download status OK, expected_packets=%u, device_packets=%u, status=%u",
 		num,
 		mcu_packet_number,
 		status);
 
 	if (status != 0 || mcu_packet_number != num) {
 		touch_operate_buf = 0;
-		g_debug("TF: re-enabling touch after download status mismatch");
+		g_debug("tf: re-enabling touch after download status mismatch");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
 							       &touch_operate_buf,
@@ -506,29 +522,29 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_WRITE,
-		    "TF: upgrade failed, status=%u, device_packets=%u, expected_packets=%u",
+		    "tf: upgrade failed, status=%u, device_packets=%u, expected_packets=%u",
 		    status,
 		    mcu_packet_number,
 		    num);
 	}
 
 	fu_device_sleep(FU_DEVICE(self), 50);
-	g_debug("TF: download status indicates success, exiting upgrade mode");
+	g_debug("tf: download status indicates success, exiting upgrade mode");
 
-	/* Exit upgrade mode (best-effort) */
+	/* exit upgrade mode (best-effort) */
 	tmp_buf[0] = 0x00;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self, SET_UPGRADE_MODE, tmp_buf, 1, NULL))
-		g_debug("TF: failed to exit upgrade mode (ignored)");
+		g_debug("tf: failed to exit upgrade mode (ignored)");
 
-	/* Re-enable touch (best-effort) */
+	/* re-enable touch (best-effort) */
 	touch_operate_buf = 0;
-	g_debug("TF: re-enabling touch after successful upgrade");
+	g_debug("tf: re-enabling touch after successful upgrade");
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      TOUCH_CONTROL,
 						      &touch_operate_buf,
 						      1,
 						      NULL))
-		g_debug("TF: failed to re-enable touch (ignored)");
+		g_debug("tf: failed to re-enable touch (ignored)");
 
 	return TRUE;
 }
@@ -556,7 +572,7 @@ fu_pxi_tp_tf_communication_version_cmp(const guint8 a[3], const guint8 b[3])
  * - verifies TF version matches target version
  */
 gboolean
-fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
+fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  FuProgress *progress,
 						  guint32 send_interval,
 						  guint32 data_size,
@@ -564,7 +580,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
 						  const guint8 target_ver[3],
 						  GError **error)
 {
-	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 	const gsize max_attempts = 3;
 	guint8 ver_before[3] = {0};
 	gboolean have_ver_before = FALSE;
@@ -572,25 +587,25 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
 
-	/* Stop touchpad reports while updating TF */
-	g_debug("TF: stop touchpad report");
+	/* stop touchpad reports while updating TF */
+	g_debug("tf: stop touchpad report");
 	WRITE_USER_REG(0x00, 0x56, 0x01);
 
-	/* Try to read TF firmware version before update (mode=1: APP) */
+	/* try to read TF firmware version before update (mode=1: APP) */
 	if (fu_pxi_tp_tf_communication_read_firmware_version(self,
 							     1, /* APP */
 							     ver_before,
 							     &ver_err)) {
-		g_debug("TF: firmware version before update (mode=1 APP): %u.%u.%u",
+		g_debug("tf: firmware version before update (mode=1 APP): %u.%u.%u",
 			ver_before[0],
 			ver_before[1],
 			ver_before[2]);
 		have_ver_before = TRUE;
 
-		/* If current version >= target, skip update */
+		/* if current version >= target, skip update */
 		if (target_ver != NULL &&
 		    fu_pxi_tp_tf_communication_version_cmp(ver_before, target_ver) >= 0) {
-			g_debug("TF: current FW %u.%u.%u >= target %u.%u.%u, skip update",
+			g_debug("tf: current FW %u.%u.%u >= target %u.%u.%u, skip update",
 				ver_before[0],
 				ver_before[1],
 				ver_before[2],
@@ -600,26 +615,26 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
 			return TRUE;
 		}
 	} else {
-		g_debug("TF: failed to read firmware version before update: %s",
+		g_debug("tf: failed to read firmware version before update: %s",
 			ver_err != NULL ? ver_err->message : "unknown error");
 	}
 
-	/* Sanity check: first 128 bytes (except some header) must be zero */
-	g_debug("TF: validate ROM header (first 128 bytes after header must be zero)");
+	/* sanity check: first 128 bytes (except some header) must be zero */
+	g_debug("tf: validate ROM header (first 128 bytes after header must be zero)");
 	for (gsize i = 6; i < 128; i++) {
 		if (data->data[i] != 0x00) {
 			return fu_pxi_tp_common_fail(
 			    error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "TF: invalid ROM file, non-zero data in header region");
+			    "tf: invalid ROM file, non-zero data in header region");
 		}
 	}
 
 	for (gsize attempt = 1; attempt <= max_attempts; attempt++) {
 		g_autoptr(GError) local_error = NULL;
 
-		g_debug("TF: firmware update attempt %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT,
+		g_debug("tf: firmware update attempt %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT,
 			attempt,
 			max_attempts);
 
@@ -629,7 +644,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
 							      data_size,
 							      data,
 							      &local_error)) {
-			/* Read TF firmware version after successful update */
+			/* read tf firmware version after successful update */
 			fu_device_sleep(FU_DEVICE(self), 1000);
 
 			guint8 ver_after[3] = {0};
@@ -643,24 +658,24 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
 				    error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
-				    "TF: failed to read firmware version after update: %s",
+				    "tf: failed to read firmware version after update: %s",
 				    ver_after_err != NULL ? ver_after_err->message
 							  : "unknown error");
 			}
 
-			g_debug("TF: firmware version after update (mode=1 APP): %u.%u.%u",
+			g_debug("tf: firmware version after update (mode=1 APP): %u.%u.%u",
 				ver_after[0],
 				ver_after[1],
 				ver_after[2]);
 
-			/* Verify version matches target version */
+			/* verify version matches target version */
 			if (target_ver != NULL &&
 			    fu_pxi_tp_tf_communication_version_cmp(ver_after, target_ver) != 0) {
 				return fu_pxi_tp_common_fail(
 				    error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "TF: firmware version after update (%u.%u.%u) "
+				    "tf: firmware version after update (%u.%u.%u) "
 				    "does not match target (%u.%u.%u)",
 				    ver_after[0],
 				    ver_after[1],
@@ -670,24 +685,24 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuDevice *device,
 				    target_ver[2]);
 			}
 
-			g_debug("TF: firmware update succeeded on attempt %" G_GSIZE_FORMAT,
+			g_debug("tf: firmware update succeeded on attempt %" G_GSIZE_FORMAT,
 				attempt);
 			return TRUE;
 		}
 
-		g_debug("TF: firmware update attempt %" G_GSIZE_FORMAT " failed: %s",
+		g_debug("tf: firmware update attempt %" G_GSIZE_FORMAT " failed: %s",
 			attempt,
 			local_error != NULL ? local_error->message : "unknown error");
 
 		if (attempt < max_attempts)
-			g_debug("TF: retrying firmware update");
+			g_debug("tf: retrying firmware update");
 	}
 
-	/* All attempts failed, report a single error to caller */
+	/* all attempts failed, report a single error to caller */
 	return fu_pxi_tp_common_fail(error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
-				     "TF: firmware update failed after %" G_GSIZE_FORMAT
+				     "tf: firmware update failed after %" G_GSIZE_FORMAT
 				     " attempts",
 				     max_attempts);
 }

@@ -30,7 +30,7 @@ struct _FuPxiTpFirmware {
 	guint16 num_sections; /* as stored */
 
 	/* parsed sections */
-	GPtrArray *sections; /* FuPxiTpSection*, free with g_free */
+	GPtrArray *sections; /* fuPxiTpSection*, free with g_free */
 };
 
 G_DEFINE_TYPE(FuPxiTpFirmware, fu_pxi_tp_firmware, FU_TYPE_FIRMWARE)
@@ -139,6 +139,7 @@ fu_pxi_tp_firmware_validate(FuFirmware *firmware,
  *
  * Returns: %TRUE on success, %FALSE with @error set on failure.
  */
+/* nocheck:memread */
 static gboolean
 fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
@@ -192,7 +193,7 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		fu_pxi_tp_common_fail(error,
 				      FWUPD_ERROR,
 				      FWUPD_ERROR_INVALID_FILE,
-				      "Header Length Error");
+				      "header length error");
 		return FALSE;
 	}
 
@@ -388,7 +389,7 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 
-		/* NEW: copy Reserved (12 bytes at 0x12) */
+		/* new: copy Reserved (12 bytes at 0x12) */
 		if (!fu_memcpy_safe((guchar *)s->reserved,
 				    sizeof s->reserved,
 				    0,
@@ -551,11 +552,11 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	fu_pxi_tp_firmware_kx_and_dec(bn, "flash_sectors", self->flash_sectors);
 	fu_pxi_tp_firmware_kx_and_dec(bn, "num_sections", self->num_sections);
 
-	/* CRCs (stored) */
+	/* crcs (stored) */
 	fu_pxi_tp_firmware_kx_and_dec(bn, "header_crc32", self->header_crc32);
 	fu_pxi_tp_firmware_kx_and_dec(bn, "file_crc32", self->file_crc32);
 
-	/* CRCs (recomputed) + status */
+	/* crcs (recomputed) + status */
 	if (d != NULL && self->header_len >= 4 && self->header_len <= sz) {
 		guint32 hdr_crc_calc = fu_crc32(FU_CRC_KIND_B32_STANDARD, d, self->header_len - 4);
 		fu_pxi_tp_firmware_kx_and_dec(bn, "header_crc32_calc", hdr_crc_calc);
@@ -603,7 +604,7 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		g_autofree gchar *p_in_range = g_strdup_printf("section%u_in_file_range", i);
 		g_autofree gchar *p_extname = g_strdup_printf("section%u_external_file", i);
 		g_autofree gchar *p_sample_hex = g_strdup_printf("section%u_sample_hex_0_32", i);
-		/* NEW: reserved export */
+		/* new: reserved export */
 		g_autofree gchar *p_reserved_hex = g_strdup_printf("section%u_reserved_hex", i);
 
 		/* values */
@@ -625,7 +626,7 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		fu_pxi_tp_firmware_kx_and_dec(bn, p_len, s->section_length);
 		fu_pxi_tp_firmware_kx_and_dec(bn, p_crc, s->section_crc);
 
-		/* NEW: dump reserved bytes as hex (all, no truncation) */
+		/* new: dump reserved bytes as hex (all, no truncation) */
 		{
 			g_autofree gchar *rhex =
 			    fu_pxi_tp_firmware_hexdump_slice(s->reserved,
@@ -789,7 +790,7 @@ fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self)
 	return self->sections;
 }
 
-/* Returns a segment of data according to the file address offset (GByteArray*; full transfer) */
+/* returns a segment of data according to the file address offset (GByteArray*; full transfer) */
 GByteArray *
 fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 				     gsize file_address,
@@ -818,7 +819,7 @@ fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 		return NULL;
 	}
 
-	/* Declare at the beginning of this small block to comply with C90 rules */
+	/* declare at the beginning of this small block to comply with C90 rules */
 	{
 		GBytes *child = g_bytes_new_from_bytes(fw, file_address, len);
 		gsize out_len = 0;
@@ -827,7 +828,7 @@ fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 	}
 }
 
-/* Returns a segment of data according to the flash address offset (GByteArray*; full transfer) */
+/* returns a segment of data according to the flash address offset (GByteArray*; full transfer) */
 GByteArray *
 fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
 				      guint32 flash_addr,
@@ -887,7 +888,7 @@ fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
 				return NULL;
 			}
 
-			/* Declare at the beginning of this small block to comply with C90 rules */
+			/* declare at the beginning of this small block to comply with C90 rules */
 			{
 				GBytes *child = g_bytes_new_from_bytes(fw, (gsize)file_off_64, len);
 				gsize out_len = 0;
@@ -907,7 +908,7 @@ fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
 	return NULL;
 }
 
-/* Find the first internal & valid section of the specified type; return NULL if not found */
+/* find the first internal & valid section of the specified type; return NULL if not found */
 static FuPxiTpSection *
 fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
 {
@@ -920,7 +921,7 @@ fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
 		if (s->update_type == type)
 			return s;
 	}
-	g_debug("Cannot find the section");
+	g_debug("cannot find the section");
 	return NULL;
 }
 
@@ -929,7 +930,7 @@ fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
 	    fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_FW_SECTION);
-	g_debug("File Firmware CRC: 0x%08x", (guint)s->section_crc);
+	g_debug("file firmware CRC: 0x%08x", (guint)s->section_crc);
 	return s ? s->section_crc : 0;
 }
 
@@ -937,11 +938,11 @@ guint32
 fu_pxi_tp_firmware_get_file_parameter_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s = fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_PARAM);
-	g_debug("File Parameter CRC: 0x%08x", (guint)s->section_crc);
+	g_debug("file parameter CRC: 0x%08x", (guint)s->section_crc);
 	return s ? s->section_crc : 0;
 }
 
-/* Get the target_flash_start of the first section where update_type == 1 (FW_SECTION) and is
+/* get the target_flash_start of the first section where update_type == 1 (FW_SECTION) and is
  * internal & valid */
 guint32
 fu_pxi_tp_firmware_get_firmware_address(FuPxiTpFirmware *self)

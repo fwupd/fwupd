@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
- #include "config.h"
+#include "config.h"
 
 #include <stdarg.h>
 
@@ -55,4 +55,23 @@ fu_pxi_tp_common_get_feature(FuPxiTpDevice *self,
 					    len,
 					    FU_IOCTL_FLAG_NONE,
 					    error);
+}
+
+gboolean
+fu_pxi_tp_common_propagate_with_log(GError **error, GError **error_local, const char *ctx)
+{
+	if (error_local != NULL && *error_local != NULL) {
+		/* add context to the existing error text */
+		if (ctx != NULL && *ctx != '\0')
+			g_prefix_error(*error_local, "%s: ", ctx); /* nocheck:error */
+
+		/* propagate or clear without dereferencing the GError fields */
+		if (error != NULL)
+			g_propagate_error(error, g_steal_pointer(error_local));
+		else
+			g_clear_error(error_local);
+
+		return FALSE;
+	}
+	return TRUE;
 }

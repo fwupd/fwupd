@@ -1,6 +1,10 @@
-// =============================================================
-// file: fu-pxi-tp-struct.h  (pure C, no C++ guards, no packed structs)
-// =============================================================
+/*
+ * Copyright 2025 Harris Tai <harris_tai@pixart.com>
+ * Copyright 2025 Micky Hsieh <micky_hsieh@pixart.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
 #pragma once
 
 #include <glib.h>
