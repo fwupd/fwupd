@@ -61,14 +61,7 @@ High-level flow:
    - `bank 0x01, reg 0x2c = 0xaa`
    - `bank 0x01, reg 0x2d = 0xbb`
 
-4. **Reload (rebind transport)**  
-   The plugin triggers a **driver rebind** on the nearest parent
-   (`hid`, `i2c`, or `usb`) by writing to
-   `/sys/bus/<subsystem>/drivers/<driver>/{unbind,bind}` and sets
-   `WAIT_FOR_REPLUG` so fwupd waits for re-enumeration and fetches the
-   **new HID report descriptor**.
-
-No OS reboot is required.
+OS reboot is required.
 
 ## Vendor ID Security
 
@@ -99,6 +92,7 @@ Defines where to read the **device firmware version** (2 bytes, **little-endian*
 Plugin = pixart_tp
 GType = FuPxiTpDevice
 HidVersionReg = bank=0x00; addr=0xb2
+SramSelect = 0x0f
 
 ### `SramSelect`
 
@@ -106,16 +100,6 @@ Selects the SRAM type used for 256-byte page programming:
 SramSelect = 0x0f
 
 **Default**: `0x0f`.
-
-## External Interface Access
-
-This plugin requires:
-
-- Read/write access to **`/dev/hidraw*`**
-- Permission to write **sysfs driver control** files for rebind:  
-  `/sys/bus/<hid|i2c|usb>/drivers/<driver>/{unbind,bind}`
-
-fwupd runs as root on typical installations, which is sufficient.
 
 ## Version Considerations
 
