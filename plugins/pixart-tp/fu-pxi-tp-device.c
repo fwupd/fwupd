@@ -662,9 +662,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 			fu_pxi_tp_device_reset(self, 0xaa, 0xbb, error);
 			guint32 send_interval = (guint32)s->reserved[3]; /* ms */
 			g_debug("send interval (ms): %u", send_interval);
-			g_debug("pxi-tp: update TF firmware, section %u, len=%u",
-				i,
-				(guint)data->len);
+			g_debug("update TF firmware, section %u, len=%u", i, (guint)data->len);
 
 			if (!fu_pxi_tp_tf_communication_write_firmware_process(self,
 									       prog_write,

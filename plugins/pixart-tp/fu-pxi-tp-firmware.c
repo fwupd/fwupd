@@ -428,7 +428,7 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		    s->update_type != PXI_TP_UPDATE_TYPE_BOOTLOADER &&
 		    s->update_type != PXI_TP_UPDATE_TYPE_PARAM &&
 		    s->update_type != PXI_TP_UPDATE_TYPE_TF_FORCE) {
-			g_debug("pxi-tp: unknown update_type %u for section %u", s->update_type, i);
+			g_debug("unknown update_type %u for section %u", s->update_type, i);
 		}
 
 		/* track required types (must exist and be VALID=1) */
