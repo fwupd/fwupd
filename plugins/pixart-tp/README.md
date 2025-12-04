@@ -47,17 +47,17 @@ These devices use the standard **HID** DeviceInstanceId values, e.g.
 
 High-level flow:
 
-1. **Detach (enter bootloader)**  
+1. **Detach (enter bootloader)**
    Writes device registers to switch to engineer mode:
    - `bank 0x01, reg 0x2c = 0xaa`
    - `bank 0x01, reg 0x2d = 0xcc`
 
-2. **Erase/Program**  
-   - Erase flash by **sector (4 KiB)**  
+2. **Erase/Program**
+   - Erase flash by **sector (4 KiB)**
    - Program by **page (256 B)** using an SRAM selected by `SramSelect`
    - Busy/write-enable checks are performed between operations
 
-3. **Attach (exit bootloader)**  
+3. **Attach (exit bootloader)**
    - `bank 0x01, reg 0x2c = 0xaa`
    - `bank 0x01, reg 0x2d = 0xbb`
 
@@ -111,11 +111,3 @@ fwupdtool --plugins pixart-tp --verbose get-devices
 fwupdtool --plugins pixart-tp --verbose install ./pixart-tp-<ver>.cab \
   --allow-older --allow-reinstall
 ```
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-- <harris_tai@pixart.com>
-- <micky_hsieh@pixart.com>
