@@ -29,13 +29,11 @@ fu_pxi_tp_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	g_debug("🧪 Pixart TP Plugin has been loaded!");
 
 	fu_context_add_quirk_key(ctx, "PxiStartAddr");
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PXI_TP_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_PXI_TP_FIRMWARE);
-	g_debug("🧪 Pixart TP Plugin fu_pxi_plugin_constructed Done!");
 }
 
 static void
