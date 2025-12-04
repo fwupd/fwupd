@@ -5,9 +5,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-// =============================================================
-// file: fu-pxi-tp-firmware.c (pure C, offset-based parsing; no packed structs)
-// =============================================================
+/*
+ * =============================================================
+ * file: fu-pxi-tp-firmware.c (pure C, offset-based parsing; no packed structs)
+ * =============================================================
+ */
+
 #include "config.h"
 
 #include <fwupdplugin.h>
@@ -30,35 +33,10 @@ struct _FuPxiTpFirmware {
 	guint16 num_sections; /* as stored */
 
 	/* parsed sections */
-	GPtrArray *sections; /* fuPxiTpSection*, free with g_free */
+	GPtrArray *sections; /* FuPxiTpSection*, free with g_free */
 };
 
 G_DEFINE_TYPE(FuPxiTpFirmware, fu_pxi_tp_firmware, FU_TYPE_FIRMWARE)
-
-/* ------------------------- helpers ------------------------- */
-/**
- * _fu_trim_ascii_nul:
- * @dst: destination buffer containing a fixed-width ASCII field
- * @dstsz: total size of @dst in bytes
- *
- * Ensures the buffer is a valid C string by forcing a NUL terminator at
- * the last byte and trimming any trailing spaces or NULs from the end.
- * Useful for on-disk fixed-length fields that may be padded.
- */
-static void
-_fu_trim_ascii_nul(char *dst, size_t dstsz)
-{
-	if (dstsz == 0)
-		return;
-	dst[dstsz - 1] = '\0'; /* guarantee termination */
-
-	for (gssize i = (gssize)dstsz - 2; i >= 0; i--) {
-		if (dst[i] == '\0' || dst[i] == ' ')
-			dst[i] = '\0'; /* strip trailing space or redundant NULs */
-		else
-			break; /* stop at first non-space content */
-	}
-}
 
 /* handy: short hexdump for export fields */
 static gchar *
@@ -98,6 +76,7 @@ fu_pxi_tp_firmware_validate(FuFirmware *firmware,
 	gsize hdrsz = 0;
 	guint16 hdrlen = 0;
 	const guint8 *d = NULL;
+
 	/* we only support offset 0; quiet FALSE on others */
 	if (offset != 0)
 		return FALSE;
@@ -164,19 +143,21 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 
 	/* lightweight checks again (with errors reported here) */
 	if (sz < PXI_TP_HEADER_V1_LEN) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "file too small: %" G_GSIZE_FORMAT " bytes (need >= %u)",
-				      sz,
-				      (guint)PXI_TP_HEADER_V1_LEN);
+		g_debug("file too small for header: %" G_GSIZE_FORMAT " bytes (need >= %u)",
+			sz,
+			(guint)PXI_TP_HEADER_V1_LEN);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "file too small for FWHD header");
 		return FALSE;
 	}
 	if (memcmp(d + PXI_TP_O_MAGIC, PXI_TP_MAGIC, 4) != 0) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "bad magic, expected 'FWHD'");
+		g_debug("bad magic, expected 'FWHD'");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid FWHD magic");
 		return FALSE;
 	}
 
@@ -190,10 +171,13 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (self->header_len != PXI_TP_HEADER_V1_LEN || self->header_len > sz ||
 	    self->header_len < 4) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "header length error");
+		g_debug("header length error: header_len=%u, file_size=%" G_GSIZE_FORMAT,
+			(guint)self->header_len,
+			sz);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid FWHD header length");
 		return FALSE;
 	}
 
@@ -250,21 +234,23 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	if (sz < self->header_len) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "truncated header: %" G_GSIZE_FORMAT " < %u",
-				      sz,
-				      (guint)self->header_len);
+		g_debug("truncated header: file_size=%" G_GSIZE_FORMAT ", header_len=%u",
+			sz,
+			(guint)self->header_len);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "truncated FWHD header");
 		return FALSE;
 	}
 	if (self->num_sections > PXI_TP_MAX_SECTIONS) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "num_sections %u exceeds max %u",
-				      (guint)self->num_sections,
-				      (guint)PXI_TP_MAX_SECTIONS);
+		g_debug("num_sections %u exceeds max %u",
+			(guint)self->num_sections,
+			(guint)PXI_TP_MAX_SECTIONS);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "too many FWHD sections");
 		return FALSE;
 	}
 
@@ -272,12 +258,13 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 hdr_crc_calc = fu_crc32(FU_CRC_KIND_B32_STANDARD, d, self->header_len - 4);
 		if (hdr_crc_calc != self->header_crc32) {
-			fu_pxi_tp_common_fail(error,
-					      FWUPD_ERROR,
-					      FWUPD_ERROR_INVALID_FILE,
-					      "header CRC mismatch, got 0x%08x, expected 0x%08x",
-					      (guint)hdr_crc_calc,
-					      (guint)self->header_crc32);
+			g_debug("header CRC mismatch, got 0x%08x, expected 0x%08x",
+				(guint)hdr_crc_calc,
+				(guint)self->header_crc32);
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "FWHD header CRC mismatch");
 			return FALSE;
 		}
 	}
@@ -287,12 +274,13 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		guint32 file_crc_calc =
 		    fu_crc32(FU_CRC_KIND_B32_STANDARD, d + self->header_len, sz - self->header_len);
 		if (file_crc_calc != self->file_crc32) {
-			fu_pxi_tp_common_fail(error,
-					      FWUPD_ERROR,
-					      FWUPD_ERROR_INVALID_FILE,
-					      "file CRC mismatch, got 0x%08x, expected 0x%08x",
-					      (guint)file_crc_calc,
-					      (guint)self->file_crc32);
+			g_debug("file CRC mismatch, got 0x%08x, expected 0x%08x",
+				(guint)file_crc_calc,
+				(guint)self->file_crc32);
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "FWHD payload CRC mismatch");
 			return FALSE;
 		}
 	}
@@ -307,13 +295,14 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		     (guint64)self->num_sections * (guint64)PXI_TP_SECTION_SIZE;
 
 	if (sectab_end > self->header_len) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "section table exceeds header: need %" G_GUINT64_FORMAT
-				      " bytes within header_len=%u",
-				      sectab_end - (guint64)PXI_TP_O_SECTIONS_BASE,
-				      (guint)self->header_len);
+		g_debug("section table exceeds header: need %" G_GUINT64_FORMAT
+			" bytes within header_len=%u",
+			sectab_end - (guint64)PXI_TP_O_SECTIONS_BASE,
+			(guint)self->header_len);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "FWHD section table exceeds header");
 		return FALSE;
 	}
 
@@ -330,11 +319,11 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		gsize want;
 
 		if (sec_off + PXI_TP_SECTION_SIZE > self->header_len) {
-			fu_pxi_tp_common_fail(error,
-					      FWUPD_ERROR,
-					      FWUPD_ERROR_INVALID_FILE,
-					      "section %u header out of range",
-					      i);
+			g_debug("section %u header out of range", i);
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "FWHD section header out of range");
 			return FALSE;
 		}
 
@@ -404,9 +393,8 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 
 		/* copy fixed-width external filename (34 bytes, offset 0x1E) */
 		dstcap = sizeof(s->external_file_name);
-		want = (PXI_TP_S_EXTNAME_LEN < (dstcap > 0 ? dstcap - 1 : 0))
-			   ? PXI_TP_S_EXTNAME_LEN
-			   : (dstcap > 0 ? dstcap - 1 : 0);
+		want = MIN((gsize)PXI_TP_S_EXTNAME_LEN, (dstcap > 0 ? dstcap - 1 : 0));
+
 		if (!fu_memcpy_safe((guchar *)s->external_file_name,
 				    dstcap,
 				    0,
@@ -418,9 +406,10 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 			g_free(s);
 			return FALSE;
 		}
+
+		/* ensure NUL end */
 		if (dstcap > 0)
 			s->external_file_name[want] = '\0';
-		_fu_trim_ascii_nul(s->external_file_name, dstcap);
 
 		/* known update types (0/1/2/3/16) */
 		if (s->update_type != PXI_TP_UPDATE_TYPE_GENERAL &&
@@ -447,31 +436,35 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 
 	/* --- enforce required section presence & validity --- */
 	if (!saw_fw) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "required section missing: firmware (type=FW_SECTION)");
+		g_debug("required section missing: firmware (type=FW_SECTION)");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "required firmware section missing");
 		return FALSE;
 	}
 	if (!saw_param) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "required section missing: parameter (type=PARAM)");
+		g_debug("required section missing: parameter (type=PARAM)");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "required parameter section missing");
 		return FALSE;
 	}
 	if (!saw_fw_valid) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "required firmware section present but VALID bit is 0");
+		g_debug("required firmware section present but VALID bit is 0");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware section marked as invalid");
 		return FALSE;
 	}
 	if (!saw_param_valid) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "required parameter section present but VALID bit is 0");
+		g_debug("required parameter section present but VALID bit is 0");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "parameter section marked as invalid");
 		return FALSE;
 	}
 
@@ -808,14 +801,15 @@ fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 		return g_byte_array_new();
 
 	if (file_address >= sz || (guint64)file_address + (guint64)len > (guint64)sz) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INVALID_FILE,
-				      "file slice out of range: off=%" G_GSIZE_FORMAT
-				      ", len=%" G_GSIZE_FORMAT ", size=%" G_GSIZE_FORMAT,
-				      file_address,
-				      len,
-				      sz);
+		g_debug("file slice out of range: off=%" G_GSIZE_FORMAT ", len=%" G_GSIZE_FORMAT
+			", size=%" G_GSIZE_FORMAT,
+			file_address,
+			len,
+			sz);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "file slice out of range");
 		return NULL;
 	}
 
@@ -848,10 +842,11 @@ fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
 
 	secs = fu_pxi_tp_firmware_get_sections(self);
 	if (secs == NULL) {
-		fu_pxi_tp_common_fail(error,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_INTERNAL,
-				      "no sections available");
+		g_debug("no sections available when mapping flash slice");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no sections available");
 		return NULL;
 	}
 
@@ -874,17 +869,17 @@ fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
 			const guint64 file_off_64 = (guint64)s->internal_file_start + off_in_sec;
 
 			if (file_off_64 + (guint64)len > (guint64)sz) {
-				fu_pxi_tp_common_fail(error,
-						      FWUPD_ERROR,
-						      FWUPD_ERROR_INVALID_FILE,
-						      "mapped slice out of file range: sec=%u "
-						      "file_off=%" G_GUINT64_FORMAT
-						      " len=%" G_GSIZE_FORMAT
-						      " size=%" G_GSIZE_FORMAT,
-						      i,
-						      file_off_64,
-						      len,
-						      sz);
+				g_debug("mapped slice out of file range: sec=%u "
+					"file_off=%" G_GUINT64_FORMAT " len=%" G_GSIZE_FORMAT
+					" size=%" G_GSIZE_FORMAT,
+					i,
+					file_off_64,
+					len,
+					sz);
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "mapped flash slice out of file range");
 				return NULL;
 			}
 
@@ -898,13 +893,13 @@ fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
 		}
 	}
 
-	fu_pxi_tp_common_fail(
-	    error,
-	    FWUPD_ERROR,
-	    FWUPD_ERROR_INVALID_FILE,
-	    "flash range [0x%08x..0x%08x) not covered by a single internal section",
-	    flash_addr,
-	    (guint32)(flash_addr + (len ? (len - 1) : 0)));
+	g_debug("flash range [0x%08x..0x%08x) not covered by a single internal section",
+		flash_addr,
+		(guint32)(flash_addr + (len ? (len - 1) : 0)));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "flash range not covered by a single internal section");
 	return NULL;
 }
 
@@ -921,7 +916,7 @@ fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
 		if (s->update_type == type)
 			return s;
 	}
-	g_debug("cannot find the section");
+	g_debug("cannot find section of type %u", type);
 	return NULL;
 }
 
@@ -930,7 +925,7 @@ fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
 	    fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_FW_SECTION);
-	g_debug("file firmware CRC: 0x%08x", (guint)s->section_crc);
+	g_debug("file firmware CRC: 0x%08x", (guint)(s ? s->section_crc : 0));
 	return s ? s->section_crc : 0;
 }
 
@@ -938,7 +933,7 @@ guint32
 fu_pxi_tp_firmware_get_file_parameter_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s = fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_PARAM);
-	g_debug("file parameter CRC: 0x%08x", (guint)s->section_crc);
+	g_debug("file parameter CRC: 0x%08x", (guint)(s ? s->section_crc : 0));
 	return s ? s->section_crc : 0;
 }
 
