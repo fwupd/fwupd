@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include "fu-pxi-tp-register.h"
+#include "fu-pxi-tp-struct.h" /* for FuStructPxiTf*Cmd */
 #include "fu-pxi-tp-tf-communication.h"
 
 #define REPORT_ID__PASS_THROUGH 0xCC
@@ -115,15 +116,38 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	guint8 buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
 	gsize offset = 0;
 
-	buf[offset++] = REPORT_ID__PASS_THROUGH;
-	buf[offset++] = TF_FRAME_PREAMBLE;
-	buf[offset++] = SLAVE_ADDRESS;
-	buf[offset++] = TF_FUNC_WRITE_SIMPLE; /* function code */
-	buf[offset++] = (guint8)(addr & 0xFF);
-	buf[offset++] = (guint8)(addr >> 8);
-	buf[offset++] = (guint8)(in_bufsz & 0xFF);
-	buf[offset++] = (guint8)(in_bufsz >> 8);
+	/* build header using rustgen struct (endian-safe) */
+	g_autoptr(FuStructPxiTfWriteSimpleCmd) st_write_simple =
+	    fu_struct_pxi_tf_write_simple_cmd_new();
+	if (st_write_simple == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to allocate TF write simple header");
+		return FALSE;
+	}
 
+	fu_struct_pxi_tf_write_simple_cmd_set_report_id(st_write_simple, REPORT_ID__PASS_THROUGH);
+	fu_struct_pxi_tf_write_simple_cmd_set_preamble(st_write_simple, TF_FRAME_PREAMBLE);
+	fu_struct_pxi_tf_write_simple_cmd_set_slave_addr(st_write_simple, SLAVE_ADDRESS);
+	fu_struct_pxi_tf_write_simple_cmd_set_func(st_write_simple, TF_FUNC_WRITE_SIMPLE);
+	fu_struct_pxi_tf_write_simple_cmd_set_addr(st_write_simple, addr);
+	fu_struct_pxi_tf_write_simple_cmd_set_len(st_write_simple, (guint16)in_bufsz);
+
+	/* copy header into feature report buffer */
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0, /* dst_offset */
+			    st_write_simple->buf->data,
+			    st_write_simple->buf->len, /* src_sz */
+			    0,			       /* src_offset */
+			    st_write_simple->buf->len, /* n */
+			    error))
+		return FALSE;
+
+	offset = FU_STRUCT_PXI_TF_WRITE_SIMPLE_CMD_SIZE;
+
+	/* copy payload */
 	if (in_bufsz > 0 && in_buf != NULL) {
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
@@ -134,9 +158,10 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 				    in_bufsz, /* n */
 				    error))
 			return FALSE;
+		offset += in_bufsz;
 	}
 
-	offset += in_bufsz;
+	/* CRC + tail */
 	buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, buf + 2, offset - 2);
 	buf[offset++] = TF_FRAME_TAIL;
 
@@ -156,21 +181,40 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	gsize offset = 0;
 	gsize datalen = in_bufsz + 4; /* 2 bytes total + 2 bytes index */
 
-	buf[offset++] = REPORT_ID__PASS_THROUGH;
-	buf[offset++] = TF_FRAME_PREAMBLE;
-	buf[offset++] = SLAVE_ADDRESS;
-	buf[offset++] = TF_FUNC_WRITE_WITH_PACK; /* function code with packet info */
-	buf[offset++] = (guint8)(addr & 0xFF);
-	buf[offset++] = (guint8)(addr >> 8);
+	/* build header using rustgen struct (endian-safe) */
+	g_autoptr(FuStructPxiTfWritePacketCmd) st_write_packet =
+	    fu_struct_pxi_tf_write_packet_cmd_new();
+	if (st_write_packet == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to allocate TF write packet header");
+		return FALSE;
+	}
 
-	buf[offset++] = (guint8)(datalen & 0xFF);
-	buf[offset++] = (guint8)(datalen >> 8);
+	fu_struct_pxi_tf_write_packet_cmd_set_report_id(st_write_packet, REPORT_ID__PASS_THROUGH);
+	fu_struct_pxi_tf_write_packet_cmd_set_preamble(st_write_packet, TF_FRAME_PREAMBLE);
+	fu_struct_pxi_tf_write_packet_cmd_set_slave_addr(st_write_packet, SLAVE_ADDRESS);
+	fu_struct_pxi_tf_write_packet_cmd_set_func(st_write_packet, TF_FUNC_WRITE_WITH_PACK);
+	fu_struct_pxi_tf_write_packet_cmd_set_addr(st_write_packet, addr);
+	fu_struct_pxi_tf_write_packet_cmd_set_datalen(st_write_packet, (guint16)datalen);
+	fu_struct_pxi_tf_write_packet_cmd_set_packet_total(st_write_packet, (guint16)packet_total);
+	fu_struct_pxi_tf_write_packet_cmd_set_packet_index(st_write_packet, (guint16)packet_index);
 
-	buf[offset++] = (guint8)(packet_total & 0xFF);
-	buf[offset++] = (guint8)(packet_total >> 8);
-	buf[offset++] = (guint8)(packet_index & 0xFF);
-	buf[offset++] = (guint8)(packet_index >> 8);
+	/* copy header into feature report buffer */
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0, /* dst_offset */
+			    st_write_packet->buf->data,
+			    st_write_packet->buf->len, /* src_sz */
+			    0,			       /* src_offset */
+			    st_write_packet->buf->len, /* n */
+			    error))
+		return FALSE;
 
+	offset = FU_STRUCT_PXI_TF_WRITE_PACKET_CMD_SIZE;
+
+	/* copy payload */
 	if (in_bufsz > 0 && in_buf != NULL) {
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
@@ -181,9 +225,10 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 				    in_bufsz, /* n */
 				    error))
 			return FALSE;
+		offset += in_bufsz;
 	}
 
-	offset += in_bufsz;
+	/* CRC + tail */
 	buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, buf + 2, offset - 2);
 	buf[offset++] = TF_FRAME_TAIL;
 
@@ -208,27 +253,49 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 
 	memset(out_buf, 0, out_bufsz);
 
-	out_buf[offset++] = REPORT_ID__PASS_THROUGH;
-	out_buf[offset++] = TF_FRAME_PREAMBLE;
-	out_buf[offset++] = SLAVE_ADDRESS;
-	out_buf[offset++] = TF_FUNC_READ_WITH_LEN; /* function code with reply length */
-	out_buf[offset++] = (guint8)(addr & 0xFF);
-	out_buf[offset++] = (guint8)(addr >> 8);
+	/* build header using rustgen struct (endian-safe) */
+	g_autoptr(FuStructPxiTfReadCmd) st_read = fu_struct_pxi_tf_read_cmd_new();
+	if (st_read == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to allocate TF read header");
+		return FALSE;
+	}
 
 	/* nDataLen = input length + 2 bytes for reply length (low/high) */
 	datalen = in_bufsz + 2;
-	out_buf[offset++] = (guint8)(datalen & 0xFF);
-	out_buf[offset++] = (guint8)(datalen >> 8);
 
-	/* reply length hint: expected payload length */
+	fu_struct_pxi_tf_read_cmd_set_report_id(st_read, REPORT_ID__PASS_THROUGH);
+	fu_struct_pxi_tf_read_cmd_set_preamble(st_read, TF_FRAME_PREAMBLE);
+	fu_struct_pxi_tf_read_cmd_set_slave_addr(st_read, SLAVE_ADDRESS);
+	fu_struct_pxi_tf_read_cmd_set_func(st_read, TF_FUNC_READ_WITH_LEN);
+	fu_struct_pxi_tf_read_cmd_set_addr(st_read, addr);
+	fu_struct_pxi_tf_read_cmd_set_datalen(st_read, (guint16)datalen);
+
 	if (n_bytes_returned != NULL) {
-		out_buf[offset++] = (guint8)(*n_bytes_returned & 0xFF);
-		out_buf[offset++] = (guint8)((*n_bytes_returned >> 8) & 0xFF);
+		gsize hint = *n_bytes_returned;
+		if (hint > G_MAXUINT16)
+			hint = G_MAXUINT16;
+		fu_struct_pxi_tf_read_cmd_set_reply_len(st_read, (guint16)hint);
 	} else {
-		out_buf[offset++] = 0x00;
-		out_buf[offset++] = 0x00;
+		fu_struct_pxi_tf_read_cmd_set_reply_len(st_read, 0);
 	}
 
+	/* copy header into out_buf */
+	if (!fu_memcpy_safe(out_buf,
+			    out_bufsz,
+			    0, /* dst_offset */
+			    st_read->buf->data,
+			    st_read->buf->len, /* src_sz */
+			    0,		       /* src_offset */
+			    st_read->buf->len, /* n */
+			    error))
+		return FALSE;
+
+	offset = FU_STRUCT_PXI_TF_READ_CMD_SIZE;
+
+	/* copy extra input payload (if any) */
 	if (in_bufsz > 0 && in_buf != NULL) {
 		if (!fu_memcpy_safe(out_buf,
 				    out_bufsz,
@@ -239,9 +306,10 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 				    in_bufsz, /* n */
 				    error))
 			return FALSE;
+		offset += in_bufsz;
 	}
 
-	offset += in_bufsz;
+	/* CRC + tail */
 	out_buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, offset - 2);
 	out_buf[offset++] = TF_FRAME_TAIL;
 

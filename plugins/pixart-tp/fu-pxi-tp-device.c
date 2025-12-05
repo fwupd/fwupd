@@ -14,8 +14,8 @@
 #include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-device.h"
 #include "fu-pxi-tp-firmware.h"
+#include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-register.h"
-#include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
 
 struct _FuPxiTpDevice {

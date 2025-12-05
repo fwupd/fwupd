@@ -11,7 +11,7 @@
 
 #include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-firmware.h"
-#include "fu-pxi-tp-struct.h"
+#include "fu-pxi-tp-fw-struct.h"
 
 struct _FuPxiTpFirmware {
 	FuFirmware parent_instance;

@@ -6,7 +6,7 @@ plugin_quirks += files('pixart-tp.quirk')
 plugin_builtin_pxi_tp = static_library('fu_plugin_pxi_tp',
   rustgen.process('fu-pxi-tp.rs'),
   sources: [
-    'fu-pxi-tp-struct.c',
+    'fu-pxi-tp-fw-struct.c',
     'fu-pxi-tp-common.c',
     'fu-pxi-tp-device.c',
     'fu-pxi-tp-firmware.c',
