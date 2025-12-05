@@ -4,12 +4,8 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
-#include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
+#include "config.h"
 
 #include "fu-pxi-common.h"
 #include "fu-pxi-firmware.h"
