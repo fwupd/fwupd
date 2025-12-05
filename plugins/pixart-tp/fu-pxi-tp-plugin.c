@@ -30,7 +30,11 @@ fu_pxi_tp_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 
-	fu_context_add_quirk_key(ctx, "PxiStartAddr");
+	/* register quirk keys used by FuPxiTpDevice */
+	fu_context_add_quirk_key(ctx, "PxiTpHidVersionBank");
+	fu_context_add_quirk_key(ctx, "PxiTpHidVersionAddr");
+	fu_context_add_quirk_key(ctx, "PxiTpSramSelect");
+
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PXI_TP_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_PXI_TP_FIRMWARE);

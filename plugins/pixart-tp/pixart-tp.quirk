@@ -1,17 +1,20 @@
 [HIDRAW\VEN_093A&DEV_4F07]
 Plugin = pixart_tp
 GType = FuPxiTpDevice
-HidVersionReg = bank=0x00;addr=0xb2
-SramSelect = 0x0f
+PxiTpHidVersionBank = 0x00
+PxiTpHidVersionAddr = 0xb2
+PxiTpSramSelect = 0x0f
 
 [HIDRAW\VEN_093A&DEV_3307]
 Plugin = pixart_tp
 GType = FuPxiTpDevice
-HidVersionReg = bank=0x00;addr=0xb2
-SramSelect = 0x08
+PxiTpHidVersionBank = 0x00
+PxiTpHidVersionAddr = 0xb2
+PxiTpSramSelect = 0x08
 
 [HIDRAW\VEN_093A&DEV_0343]
 Plugin = pixart_tp
 GType = FuPxiTpDevice
-HidVersionReg = bank=0x00;addr=0xb2
-SramSelect = 0x0f
+PxiTpHidVersionBank = 0x00
+PxiTpHidVersionAddr = 0xb2
+PxiTpSramSelect = 0x0f

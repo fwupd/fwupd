@@ -1177,67 +1177,30 @@ fu_pxi_tp_device_set_quirk_kv(FuDevice *device,
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 
-	if (g_strcmp0(key, "HidVersionReg") == 0) {
-		GStrv parts;
-		guint i;
-
-		/* allow: "bank=0x00; addr=0x0b" (fixed 2 bytes, LE) */
-		parts = g_strsplit(value, ";", -1);
-
-		for (i = 0; parts && parts[i]; i++) {
-			gchar *kv;
-			GStrv kvp = NULL;
-			const gchar *k = NULL;
-			const gchar *v = NULL;
-			guint64 tmp = 0;
-
-			kv = g_strstrip(parts[i]);
-			if (*kv == '\0')
-				continue;
-
-			kvp = g_strsplit(kv, "=", 2);
-			if (!kvp[0] || !kvp[1]) {
-				g_strfreev(kvp);
-				continue;
-			}
-
-			k = g_strstrip(kvp[0]);
-			v = g_strstrip(kvp[1]);
-
-			if (g_ascii_strcasecmp(k, "bank") == 0) {
-				if (!fu_strtoull(v, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error)) {
-					g_strfreev(kvp);
-					g_strfreev(parts);
-					return FALSE;
-				}
-				self->ver_bank = (guint8)tmp;
-
-			} else if (g_ascii_strcasecmp(k, "addr") == 0) {
-				if (!fu_strtoull(v, &tmp, 0, 0xffff, FU_INTEGER_BASE_AUTO, error)) {
-					g_strfreev(kvp);
-					g_strfreev(parts);
-					return FALSE;
-				}
-				self->ver_addr = (guint16)tmp;
-			}
-
-			g_strfreev(kvp);
-		}
-
-		g_strfreev(parts);
-
-		g_debug("quirk: HidVersionReg parsed => bank=0x%02x addr=0x%04x",
-			(guint)self->ver_bank,
-			(guint)self->ver_addr);
+	if (g_strcmp0(key, "PxiTpHidVersionBank") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->ver_bank = (guint8)tmp;
+		g_debug("quirk: PxiTpHidVersionBank => 0x%02x", self->ver_bank);
 		return TRUE;
 	}
 
-	if (g_strcmp0(key, "SramSelect") == 0) {
+	if (g_strcmp0(key, "PxiTpHidVersionAddr") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, 0xffff, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->ver_addr = (guint16)tmp;
+		g_debug("quirk: PxiTpHidVersionAddr => 0x%04x", self->ver_addr);
+		return TRUE;
+	}
+
+	if (g_strcmp0(key, "PxiTpSramSelect") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->sram_select = (guint8)tmp;
-		g_debug("quirk: SramSelect parsed => 0x%02x", (guint)self->sram_select);
+		g_debug("quirk: PxiTpSramSelect => 0x%02x", self->sram_select);
 		return TRUE;
 	}
 
