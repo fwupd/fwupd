@@ -501,16 +501,6 @@ fu_pxi_tp_firmware_update_info_to_flags(guint8 ui)
 	return s->str[0] ? g_string_free(s, FALSE) : (g_string_free(s, TRUE), g_strdup("0"));
 }
 
-/* insert both hex (kx) and decimal (kv ... _dec) */
-static void
-fu_pxi_tp_firmware_kx_and_dec(XbBuilderNode *bn, const char *key, guint64 v)
-{
-	fu_xmlb_builder_insert_kx(bn, key, v); /* hex */
-	g_autofree gchar *kdec = g_strdup_printf("%s_dec", key);
-	g_autofree gchar *vdec = g_strdup_printf("%" G_GUINT64_FORMAT, v);
-	fu_xmlb_builder_insert_kv(bn, kdec, vdec);
-}
-
 static void
 fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -523,28 +513,28 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 	/* top-level identity and sizes */
 	fu_xmlb_builder_insert_kv(bn, "magic", "FWHD");
-	fu_pxi_tp_firmware_kx_and_dec(bn, "file_size", sz);
-	fu_pxi_tp_firmware_kx_and_dec(bn, "header_length", self->header_len);
+	fu_xmlb_builder_insert_kx(bn, "file_size", sz);
+	fu_xmlb_builder_insert_kx(bn, "header_length", self->header_len);
 	/* payload size = total - header_len, bound to 0 */
-	fu_pxi_tp_firmware_kx_and_dec(bn,
-				      "payload_size",
-				      (sz > self->header_len) ? (sz - self->header_len) : 0);
+	fu_xmlb_builder_insert_kx(bn,
+				  "payload_size",
+				  (sz > self->header_len) ? (sz - self->header_len) : 0);
 
 	/* header core fields */
-	fu_pxi_tp_firmware_kx_and_dec(bn, "header_version", self->header_ver);
-	fu_pxi_tp_firmware_kx_and_dec(bn, "file_version", self->file_ver);
-	fu_pxi_tp_firmware_kx_and_dec(bn, "ic_part_id", self->ic_part_id);
-	fu_pxi_tp_firmware_kx_and_dec(bn, "flash_sectors", self->flash_sectors);
-	fu_pxi_tp_firmware_kx_and_dec(bn, "num_sections", self->num_sections);
+	fu_xmlb_builder_insert_kx(bn, "header_version", self->header_ver);
+	fu_xmlb_builder_insert_kx(bn, "file_version", self->file_ver);
+	fu_xmlb_builder_insert_kx(bn, "ic_part_id", self->ic_part_id);
+	fu_xmlb_builder_insert_kx(bn, "flash_sectors", self->flash_sectors);
+	fu_xmlb_builder_insert_kx(bn, "num_sections", self->num_sections);
 
 	/* crcs (stored) */
-	fu_pxi_tp_firmware_kx_and_dec(bn, "header_crc32", self->header_crc32);
-	fu_pxi_tp_firmware_kx_and_dec(bn, "file_crc32", self->file_crc32);
+	fu_xmlb_builder_insert_kx(bn, "header_crc32", self->header_crc32);
+	fu_xmlb_builder_insert_kx(bn, "file_crc32", self->file_crc32);
 
 	/* crcs (recomputed) + status */
 	if (d != NULL && self->header_len >= 4 && self->header_len <= sz) {
 		guint32 hdr_crc_calc = fu_crc32(FU_CRC_KIND_B32_STANDARD, d, self->header_len - 4);
-		fu_pxi_tp_firmware_kx_and_dec(bn, "header_crc32_calc", hdr_crc_calc);
+		fu_xmlb_builder_insert_kx(bn, "header_crc32_calc", hdr_crc_calc);
 		fu_xmlb_builder_insert_kv(bn,
 					  "header_crc32_ok",
 					  (hdr_crc_calc == self->header_crc32) ? "true" : "false");
@@ -552,7 +542,7 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	if (d != NULL && sz > self->header_len) {
 		guint32 file_crc_calc =
 		    fu_crc32(FU_CRC_KIND_B32_STANDARD, d + self->header_len, sz - self->header_len);
-		fu_pxi_tp_firmware_kx_and_dec(bn, "file_crc32_calc", file_crc_calc);
+		fu_xmlb_builder_insert_kx(bn, "file_crc32_calc", file_crc_calc);
 		fu_xmlb_builder_insert_kv(bn,
 					  "file_crc32_ok",
 					  (file_crc_calc == self->file_crc32) ? "true" : "false");
@@ -560,12 +550,12 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 	/* ranges (handy for quick eyeballing) */
 	if (self->header_len <= sz) {
-		fu_pxi_tp_firmware_kx_and_dec(bn, "range_header_begin", 0);
-		fu_pxi_tp_firmware_kx_and_dec(bn,
-					      "range_header_end",
-					      self->header_len); /* [0,header) */
-		fu_pxi_tp_firmware_kx_and_dec(bn, "range_payload_begin", self->header_len);
-		fu_pxi_tp_firmware_kx_and_dec(bn, "range_payload_end", sz);
+		fu_xmlb_builder_insert_kx(bn, "range_header_begin", 0);
+		fu_xmlb_builder_insert_kx(bn,
+					  "range_header_end",
+					  self->header_len); /* [0,header) */
+		fu_xmlb_builder_insert_kx(bn, "range_payload_begin", self->header_len);
+		fu_xmlb_builder_insert_kx(bn, "range_payload_end", sz);
 	}
 
 	/* sections */
@@ -593,11 +583,11 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		g_autofree gchar *p_reserved_hex = g_strdup_printf("section%u_reserved_hex", i);
 
 		/* values */
-		fu_pxi_tp_firmware_kx_and_dec(bn, p_type, s->update_type);
+		fu_xmlb_builder_insert_kx(bn, p_type, s->update_type);
 		fu_xmlb_builder_insert_kv(bn,
 					  p_type_name,
 					  fu_pxi_tp_firmware_update_type_to_str(s->update_type));
-		fu_pxi_tp_firmware_kx_and_dec(bn, p_info, s->update_info);
+		fu_xmlb_builder_insert_kx(bn, p_info, s->update_info);
 		g_autofree gchar *flags_str =
 		    fu_pxi_tp_firmware_update_info_to_flags(s->update_info);
 		fu_xmlb_builder_insert_kv(bn, p_info_flags, flags_str);
@@ -606,10 +596,10 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		fu_xmlb_builder_insert_kv(bn, p_is_valid, s->is_valid_update ? "true" : "false");
 		fu_xmlb_builder_insert_kv(bn, p_is_ext, s->is_external ? "true" : "false");
 
-		fu_pxi_tp_firmware_kx_and_dec(bn, p_flash_start, s->target_flash_start);
-		fu_pxi_tp_firmware_kx_and_dec(bn, p_int_start, s->internal_file_start);
-		fu_pxi_tp_firmware_kx_and_dec(bn, p_len, s->section_length);
-		fu_pxi_tp_firmware_kx_and_dec(bn, p_crc, s->section_crc);
+		fu_xmlb_builder_insert_kx(bn, p_flash_start, s->target_flash_start);
+		fu_xmlb_builder_insert_kx(bn, p_int_start, s->internal_file_start);
+		fu_xmlb_builder_insert_kx(bn, p_len, s->section_length);
+		fu_xmlb_builder_insert_kx(bn, p_crc, s->section_crc);
 
 		/* new: dump reserved bytes as hex (all, no truncation) */
 		{
@@ -629,7 +619,7 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 				guint32 calc = fu_crc32(FU_CRC_KIND_B32_STANDARD,
 							d + s->internal_file_start,
 							s->section_length);
-				fu_pxi_tp_firmware_kx_and_dec(bn, p_crc_calc, calc);
+				fu_xmlb_builder_insert_kx(bn, p_crc_calc, calc);
 				fu_xmlb_builder_insert_kv(bn,
 							  p_crc_ok,
 							  (calc == s->section_crc) ? "true"
