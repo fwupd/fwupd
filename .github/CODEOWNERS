@@ -53,6 +53,7 @@ plugins/parade-lspcon/ @Pingyao5115
 plugins/parade-usbhub/ @hublin2024 @jimmytu5167 @andychu5168
 plugins/pci-psp/ @superm1
 plugins/pixart-rf/ @sam412081go
+plugins/pixart-tp/ @PixartHarris
 plugins/qc-firehose/ @hughsie
 plugins/qc-s5gen2/ @d4s
 plugins/qsi-dock/ @hssinf
