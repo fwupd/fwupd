@@ -146,9 +146,10 @@ fu_snapd_uefi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	const gchar *startup_msg = "{\"action\":\"efi-secureboot-update-startup\"}";
 	const gchar *snapd_snap_socket_override = g_getenv("FWUPD_SNAPD_SNAP_SOCKET");
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GString) msg = NULL;
 
 	/* only enable snapd integration if either running inside a snap or we detect that this is a
 	snapd FDE setup. either of these cases makes snapd integration mandatory */
@@ -182,10 +183,12 @@ fu_snapd_uefi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 	(void)curl_easy_setopt(self->curl_template, CURLOPT_HTTPHEADER, self->req_hdrs);
 
 	/* notify snapd of that the DBX manager has started */
+	fwupd_json_object_add_string(json_obj, "action", "efi-secureboot-update-startup");
+	msg = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_NONE);
 	if (!fu_snapd_uefi_plugin_simple_req(self,
 					     "/v2/system-secureboot",
-					     startup_msg,
-					     strlen(startup_msg),
+					     msg->str,
+					     msg->len,
 					     &error_local)) {
 		/* unless we got specific error indicating lack of relevant APIs, snapd integration
 		 * is considered to be supported, even if snapd itself cannot be reached */
@@ -202,15 +205,18 @@ fu_snapd_uefi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 static gboolean
 fu_snapd_uefi_plugin_cleanup(FuSnapPlugin *self, FuDevice *device, GError **error)
 {
-	const gchar *msg = "{\"action\":\"efi-secureboot-update-db-cleanup\"}";
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(GString) msg = NULL;
 
 	/* notify of an completed update to one of secureboot key databases --
 	 * a successful call shall result in completion of a corresponding change on the
 	 * snapd side */
+	fwupd_json_object_add_string(json_obj, "action", "efi-secureboot-update-db-cleanup");
+	msg = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_NONE);
 	if (!fu_snapd_uefi_plugin_simple_req(self,
 					     "/v2/system-secureboot",
-					     msg,
-					     strlen(msg),
+					     msg->str,
+					     msg->len,
 					     error)) {
 		g_prefix_error_literal(error, "failed to notify snapd of cleanup: ");
 		return FALSE;
@@ -247,7 +253,8 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 	const gchar *key_database;
 	const guint8 *buf;
 	g_autofree gchar *b64data = NULL;
-	g_autofree gchar *msg = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(GString) msg = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* not interesting */
@@ -261,20 +268,17 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
 	b64data = g_base64_encode(buf, bufsz);
-	msg = g_strdup_printf("{"
-			      "\"action\":\"efi-secureboot-update-db-prepare\","
-			      "\"key-database\":\"%s\","
-			      "\"payload\":\"%s\""
-			      "}",
-			      key_database,
-			      b64data);
 
 	/* Notify of an upcoming update to the DBX. A successful call shall initiate a
 	 * change tracking an update to the DBX on the snapd side */
+	fwupd_json_object_add_string(json_obj, "action", "efi-secureboot-update-db-prepare");
+	fwupd_json_object_add_string(json_obj, "key-database", key_database);
+	fwupd_json_object_add_string(json_obj, "payload", b64data);
+	msg = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_NONE);
 	if (!fu_snapd_uefi_plugin_simple_req(self,
 					     "/v2/system-secureboot",
-					     msg,
-					     strlen(msg),
+					     msg->str,
+					     msg->len,
 					     error)) {
 		g_prefix_error_literal(error, "failed to notify snapd of prepare: ");
 		return FALSE;
