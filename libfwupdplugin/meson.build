@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
   'fu-common.rs', # fuzzing
   'fu-acpi-table.rs', # fuzzing
@@ -8,7 +9,6 @@ fwupdplugin_structs = [
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
-  'fu-crc.rs', # fuzzing
   'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
