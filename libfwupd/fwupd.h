@@ -17,6 +17,10 @@
 #include <libfwupd/fwupd-device.h>
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
+#include <libfwupd/fwupd-json-array.h>
+#include <libfwupd/fwupd-json-node.h>
+#include <libfwupd/fwupd-json-object.h>
+#include <libfwupd/fwupd-json-parser.h>
 #include <libfwupd/fwupd-plugin.h>
 #include <libfwupd/fwupd-release.h>
 #include <libfwupd/fwupd-remote.h>
