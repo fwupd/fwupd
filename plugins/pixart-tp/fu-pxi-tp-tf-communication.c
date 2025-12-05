@@ -5,11 +5,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-/*
- * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
- * nocheck:magic-inlines=300
- */
-
 #include "config.h"
 
 #include "fu-pxi-tp-register.h"
@@ -29,36 +24,84 @@
 
 #define TF_FEATURE_REPORT_BYTE_LENGTH 64
 
-/* crc8: x^8 + x^2 + x + 1 */
-static const guint8 CRC8_TABLE[256] = /* nocheck:static */ {
-    0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
-    0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65, 0x48, 0x4F, 0x46, 0x41, 0x54, 0x53, 0x5A, 0x5D,
-    0xE0, 0xE7, 0xEE, 0xE9, 0xFC, 0xFB, 0xF2, 0xF5, 0xD8, 0xDF, 0xD6, 0xD1, 0xC4, 0xC3, 0xCA, 0xCD,
-    0x90, 0x97, 0x9E, 0x99, 0x8C, 0x8B, 0x82, 0x85, 0xA8, 0xAF, 0xA6, 0xA1, 0xB4, 0xB3, 0xBA, 0xBD,
-    0xC7, 0xC0, 0xC9, 0xCE, 0xDB, 0xDC, 0xD5, 0xD2, 0xFF, 0xF8, 0xF1, 0xF6, 0xE3, 0xE4, 0xED, 0xEA,
-    0xB7, 0xB0, 0xB9, 0xBE, 0xAB, 0xAC, 0xA5, 0xA2, 0x8F, 0x88, 0x81, 0x86, 0x93, 0x94, 0x9D, 0x9A,
-    0x27, 0x20, 0x29, 0x2E, 0x3B, 0x3C, 0x35, 0x32, 0x1F, 0x18, 0x11, 0x16, 0x03, 0x04, 0x0D, 0x0A,
-    0x57, 0x50, 0x59, 0x5E, 0x4B, 0x4C, 0x45, 0x42, 0x6F, 0x68, 0x61, 0x66, 0x73, 0x74, 0x7D, 0x7A,
-    0x89, 0x8E, 0x87, 0x80, 0x95, 0x92, 0x9B, 0x9C, 0xB1, 0xB6, 0xBF, 0xB8, 0xAD, 0xAA, 0xA3, 0xA4,
-    0xF9, 0xFE, 0xF7, 0xF0, 0xE5, 0xE2, 0xEB, 0xEC, 0xC1, 0xC6, 0xCF, 0xC8, 0xDD, 0xDA, 0xD3, 0xD4,
-    0x69, 0x6E, 0x67, 0x60, 0x75, 0x72, 0x7B, 0x7C, 0x51, 0x56, 0x5F, 0x58, 0x4D, 0x4A, 0x43, 0x44,
-    0x19, 0x1E, 0x17, 0x10, 0x05, 0x02, 0x0B, 0x0C, 0x21, 0x26, 0x2F, 0x28, 0x3D, 0x3A, 0x33, 0x34,
-    0x4E, 0x49, 0x40, 0x47, 0x52, 0x55, 0x5C, 0x5B, 0x76, 0x71, 0x78, 0x7F, 0x6A, 0x6D, 0x64, 0x63,
-    0x3E, 0x39, 0x30, 0x37, 0x22, 0x25, 0x2C, 0x2B, 0x06, 0x01, 0x08, 0x0F, 0x1A, 0x1D, 0x14, 0x13,
-    0xAE, 0xA9, 0xA0, 0xA7, 0xB2, 0xB5, 0xBC, 0xBB, 0x96, 0x91, 0x98, 0x9F, 0x8A, 0x8D, 0x84, 0x83,
-    0xDE, 0xD9, 0xD0, 0xD7, 0xC2, 0xC5, 0xCC, 0xCB, 0xE6, 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3,
+/* ---- TF RMI framing / function codes ---- */
+enum {
+	TF_FRAME_PREAMBLE = 0x5A,
+	TF_FRAME_TAIL = 0xA5,
+
+	TF_FUNC_WRITE_SIMPLE = 0x00,
+	TF_FUNC_WRITE_WITH_PACK = 0x04,
+	TF_FUNC_READ_WITH_LEN = 0x0B,
+
+	TF_EXCEPTION_FLAG = 0x80,
 };
 
-static guint8
-fu_pxi_tp_tf_communication_compute_crc8(const guint8 *data, gsize len)
-{
-	guint8 crc = 0;
+/* ---- TF RMI frame layout ---- */
+enum {
+	/* note: index 0 is REPORT_ID__PASS_THROUGH */
+	TF_HDR_OFFSET_PREAMBLE = 1,
+	TF_HDR_OFFSET_SLAVE_ADDR = 2,
+	TF_HDR_OFFSET_FUNC_CODE = 3,
+	TF_HDR_OFFSET_DLEN0 = 4,
+	TF_HDR_OFFSET_DLEN1 = 5,
+	TF_HDR_HEADER_BYTES = 8, /* header up to len + replylen */
 
-	while (len--)
-		crc = CRC8_TABLE[crc ^ *data++];
+	TF_PAYLOAD_OFFSET_APP = 6,     /* first app payload byte */
+	TF_TAIL_CRC_OFFSET_BIAS = 6,   /* CRC index = datalen + 6 */
+	TF_TAIL_MAGIC_BYTE_OFFSET = 7, /* tail index = datalen + 7 */
 
-	return crc;
-}
+	TF_VERSION_BYTES = 3,
+	TF_DOWNLOAD_STATUS_BYTES = 3, /* status(1) + packet_number(2) */
+};
+
+/* ---- TF upgrade mode payload ---- */
+enum {
+	TF_UPGRADE_MODE_EXIT = 0x00,
+	TF_UPGRADE_MODE_ENTER_BOOT = 0x01,
+	TF_UPGRADE_MODE_ERASE_FLASH = 0x02,
+};
+
+/* ---- TF touch control payload ---- */
+enum {
+	TF_TOUCH_ENABLE = 0x00,
+	TF_TOUCH_DISABLE = 0x01,
+};
+
+/* ---- TF timing constants ---- */
+enum {
+	TF_RMI_REPLY_WAIT_MS = 10,	   /* wait for RMI reply */
+	TF_BOOTLOADER_ENTER_WAIT_MS = 100, /* after enter bootloader */
+	TF_ERASE_WAIT_MS = 2000,	   /* erase flash wait time */
+	TF_DOWNLOAD_POST_WAIT_MS = 50,	   /* after download status OK */
+	TF_APP_VERSION_WAIT_MS = 1000,	   /* before/after app version read */
+	TF_DEFAULT_SEND_INTERVAL_MS = 50,  /* fallback when send_interval==0 */
+	TF_MAX_PACKET_DATA_LEN = 32,	   /* bytes per upgrade packet */
+};
+
+/* ---- ROM header check spec ---- */
+enum {
+	TF_ROM_HEADER_SKIP_BYTES = 6,  /* bytes reserved for TF header */
+	TF_ROM_HEADER_CHECK_END = 128, /* check [6, 128) */
+	TF_ROM_HEADER_ZERO = 0x00,
+};
+
+/* ---- TF firmware version mode ---- */
+enum {
+	TF_FW_MODE_APP = 1,
+	TF_FW_MODE_BOOT = 2,
+	TF_FW_MODE_ALGO = 3,
+};
+
+/* ---- TF update flow retry ---- */
+enum {
+	TF_UPDATE_FLOW_MAX_ATTEMPTS = 3,
+};
+
+/* ---- TP proxy mode (host<->TF pass-through) ---- */
+enum {
+	PXI_TP_PROXY_MODE_NORMAL = 0x00,
+	PXI_TP_PROXY_MODE_TF_UPDATE = 0x01,
+};
 
 /* --- tf Standard Communication helpers --- */
 
@@ -73,9 +116,9 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	gsize offset = 0;
 
 	buf[offset++] = REPORT_ID__PASS_THROUGH;
-	buf[offset++] = 0x5A;
+	buf[offset++] = TF_FRAME_PREAMBLE;
 	buf[offset++] = SLAVE_ADDRESS;
-	buf[offset++] = 0x00; /* function code */
+	buf[offset++] = TF_FUNC_WRITE_SIMPLE; /* function code */
 	buf[offset++] = (guint8)(addr & 0xFF);
 	buf[offset++] = (guint8)(addr >> 8);
 	buf[offset++] = (guint8)(in_bufsz & 0xFF);
@@ -94,8 +137,8 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	}
 
 	offset += in_bufsz;
-	buf[offset++] = fu_pxi_tp_tf_communication_compute_crc8(buf + 2, offset - 2);
-	buf[offset++] = 0xA5;
+	buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, buf + 2, offset - 2);
+	buf[offset++] = TF_FRAME_TAIL;
 
 	return fu_pxi_tp_common_send_feature(self, buf, TF_FEATURE_REPORT_BYTE_LENGTH, error);
 }
@@ -114,9 +157,9 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	gsize datalen = in_bufsz + 4; /* 2 bytes total + 2 bytes index */
 
 	buf[offset++] = REPORT_ID__PASS_THROUGH;
-	buf[offset++] = 0x5A;
+	buf[offset++] = TF_FRAME_PREAMBLE;
 	buf[offset++] = SLAVE_ADDRESS;
-	buf[offset++] = 0x04; /* function code with packet info */
+	buf[offset++] = TF_FUNC_WRITE_WITH_PACK; /* function code with packet info */
 	buf[offset++] = (guint8)(addr & 0xFF);
 	buf[offset++] = (guint8)(addr >> 8);
 
@@ -141,8 +184,8 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	}
 
 	offset += in_bufsz;
-	buf[offset++] = fu_pxi_tp_tf_communication_compute_crc8(buf + 2, offset - 2);
-	buf[offset++] = 0xA5;
+	buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, buf + 2, offset - 2);
+	buf[offset++] = TF_FRAME_TAIL;
 
 	return fu_pxi_tp_common_send_feature(self, buf, TF_FEATURE_REPORT_BYTE_LENGTH, error);
 }
@@ -166,9 +209,9 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	memset(out_buf, 0, out_bufsz);
 
 	out_buf[offset++] = REPORT_ID__PASS_THROUGH;
-	out_buf[offset++] = 0x5A;
+	out_buf[offset++] = TF_FRAME_PREAMBLE;
 	out_buf[offset++] = SLAVE_ADDRESS;
-	out_buf[offset++] = 0x0B; /* function code with reply length */
+	out_buf[offset++] = TF_FUNC_READ_WITH_LEN; /* function code with reply length */
 	out_buf[offset++] = (guint8)(addr & 0xFF);
 	out_buf[offset++] = (guint8)(addr >> 8);
 
@@ -199,13 +242,13 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	}
 
 	offset += in_bufsz;
-	out_buf[offset++] = fu_pxi_tp_tf_communication_compute_crc8(out_buf + 2, offset - 2);
-	out_buf[offset++] = 0xA5;
+	out_buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, offset - 2);
+	out_buf[offset++] = TF_FRAME_TAIL;
 
 	if (!fu_pxi_tp_common_send_feature(self, out_buf, TF_FEATURE_REPORT_BYTE_LENGTH, error))
 		return FALSE;
 
-	fu_device_sleep(FU_DEVICE(self), 10);
+	fu_device_sleep(FU_DEVICE(self), TF_RMI_REPLY_WAIT_MS);
 
 	if (!fu_pxi_tp_common_get_feature(self,
 					  REPORT_ID__PASS_THROUGH,
@@ -215,31 +258,32 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 		return FALSE;
 
 	/* parse reply header */
-	if (out_buf[1] != 0x5A || out_buf[2] != SLAVE_ADDRESS) {
+	if (out_buf[TF_HDR_OFFSET_PREAMBLE] != TF_FRAME_PREAMBLE ||
+	    out_buf[TF_HDR_OFFSET_SLAVE_ADDR] != SLAVE_ADDRESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "TF RMI read: invalid header 0x%02x 0x%02x",
-			    out_buf[1],
-			    out_buf[2]);
+			    out_buf[TF_HDR_OFFSET_PREAMBLE],
+			    out_buf[TF_HDR_OFFSET_SLAVE_ADDR]);
 		return FALSE;
 	}
 
 	/* exception frame? */
-	if ((out_buf[3] & 0x80) != 0) {
+	if ((out_buf[TF_HDR_OFFSET_FUNC_CODE] & TF_EXCEPTION_FLAG) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "TF RMI read: device returned exception 0x%02x",
-			    out_buf[3]);
+			    out_buf[TF_HDR_OFFSET_FUNC_CODE]);
 		return FALSE;
 	}
 
 	/* datalen is payload length reported by device */
-	datalen = out_buf[4] + ((gsize)out_buf[5] << 8);
-	if (fu_pxi_tp_tf_communication_compute_crc8(out_buf + 2, datalen + 4) !=
-		out_buf[datalen + 6] ||
-	    out_buf[datalen + 7] != 0xA5) {
+	datalen = out_buf[TF_HDR_OFFSET_DLEN0] + ((gsize)out_buf[TF_HDR_OFFSET_DLEN1] << 8);
+	if (fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, datalen + 4) !=
+		out_buf[datalen + TF_TAIL_CRC_OFFSET_BIAS] ||
+	    out_buf[datalen + TF_TAIL_MAGIC_BYTE_OFFSET] != TF_FRAME_TAIL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -248,7 +292,7 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	}
 
 	if (n_bytes_returned != NULL)
-		*n_bytes_returned = datalen + 8;
+		*n_bytes_returned = datalen + TF_HDR_HEADER_BYTES;
 
 	return TRUE;
 }
@@ -261,7 +305,7 @@ fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 						 GError **error)
 {
 	guint8 in_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize len = 3; /* expected payload length = 3 bytes (version) */
+	gsize len = TF_VERSION_BYTES; /* expected payload length = 3 bytes (version) */
 
 	for (gsize i = 0; i < FAILED_RETRY_TIMES; i++) {
 		g_autoptr(GError) local_error = NULL;
@@ -276,12 +320,12 @@ fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 							&local_error)) {
 			/* version bytes are at offset 6: [major, minor, patch] */
 			if (!fu_memcpy_safe(version,
-					    3, /* dst_sz */
-					    0, /* dst_offset */
+					    TF_VERSION_BYTES, /* dst_sz */
+					    0,		      /* dst_offset */
 					    in_buf,
-					    sizeof(in_buf), /* src_sz */
-					    6,		    /* src_offset */
-					    3,		    /* n */
+					    sizeof(in_buf),	   /* src_sz */
+					    TF_PAYLOAD_OFFSET_APP, /* src_offset */
+					    TF_VERSION_BYTES,	   /* n */
 					    error))
 				return FALSE;
 
@@ -313,7 +357,7 @@ fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 						GError **error)
 {
 	guint8 in_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize len = 3; /* expected payload length = 1 (status) + 2 (packet_number) */
+	gsize len = TF_DOWNLOAD_STATUS_BYTES; /* payload length: status(1) + packet_number(2) */
 
 	for (gsize i = 0; i < FAILED_RETRY_TIMES; i++) {
 		g_autoptr(GError) local_error = NULL;
@@ -327,9 +371,11 @@ fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 							&len,
 							&local_error)) {
 			/* total frame length should be header(8) + payload(3) = 11 */
-			if (len >= 11 && len - 8 == 3) {
-				*status = in_buf[6];
-				*packet_number = (guint16)in_buf[7] + ((guint16)in_buf[8] << 8);
+			if (len >= TF_HDR_HEADER_BYTES + TF_DOWNLOAD_STATUS_BYTES &&
+			    len - TF_HDR_HEADER_BYTES == TF_DOWNLOAD_STATUS_BYTES) {
+				*status = in_buf[TF_PAYLOAD_OFFSET_APP];
+				*packet_number = (guint16)in_buf[TF_PAYLOAD_OFFSET_APP + 1] +
+						 ((guint16)in_buf[TF_PAYLOAD_OFFSET_APP + 2] << 8);
 				return TRUE;
 			}
 
@@ -364,14 +410,13 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 					  const GByteArray *data,
 					  GError **error)
 {
-	const guint32 max_packet_data_len = 32;
-	const guint32 erase_wait_time = 2000; /* ms */
+	const guint32 max_packet_data_len = TF_MAX_PACKET_DATA_LEN;
 
 	(void)progress; /* currently unused, can be wired to progress if needed */
 
 	/* disable touch function while updating TF */
 	g_debug("disabling touch");
-	guint8 touch_operate_buf = 1;
+	guint8 touch_operate_buf = TF_TOUCH_DISABLE;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      TOUCH_CONTROL,
 						      &touch_operate_buf,
@@ -387,10 +432,10 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	/* enter TF bootloader / upgrade mode */
 	g_debug("enter bootloader mode");
 	guint8 tmp_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	tmp_buf[0] = 0x01;
+	tmp_buf[0] = TF_UPGRADE_MODE_ENTER_BOOT;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self, SET_UPGRADE_MODE, tmp_buf, 1, error)) {
 		/* best-effort rollback: re-enable touch, ignore errors */
-		touch_operate_buf = 0;
+		touch_operate_buf = TF_TOUCH_ENABLE;
 		g_debug("re-enabling touch after bootloader enter failure");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
@@ -405,13 +450,13 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_device_sleep(FU_DEVICE(self), 100);
+	fu_device_sleep(FU_DEVICE(self), TF_BOOTLOADER_ENTER_WAIT_MS);
 
 	/* erase flash before programming */
 	g_debug("erase flash");
-	tmp_buf[0] = 0x02; /* erase mode */
+	tmp_buf[0] = TF_UPGRADE_MODE_ERASE_FLASH;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self, SET_UPGRADE_MODE, tmp_buf, 1, error)) {
-		touch_operate_buf = 0;
+		touch_operate_buf = TF_TOUCH_ENABLE;
 		g_debug("re-enabling touch after erase command failure");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
@@ -426,7 +471,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_device_sleep(FU_DEVICE(self), erase_wait_time);
+	fu_device_sleep(FU_DEVICE(self), TF_ERASE_WAIT_MS);
 
 	/* calculate total number of packets */
 	guint32 num = (data_size + max_packet_data_len - 1) / max_packet_data_len;
@@ -459,12 +504,13 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 
 			if (k < FAILED_RETRY_TIMES - 1)
 				fu_device_sleep(FU_DEVICE(self),
-						send_interval > 0 ? send_interval : 50);
+						send_interval > 0 ? send_interval
+								  : TF_DEFAULT_SEND_INTERVAL_MS);
 		}
 
 		if (k == FAILED_RETRY_TIMES) {
 			/* give up on this packet: rollback touch and fail */
-			touch_operate_buf = 0;
+			touch_operate_buf = TF_TOUCH_ENABLE;
 			g_debug("re-enabling touch after packet %u write failure", i);
 			(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 								       TOUCH_CONTROL,
@@ -495,7 +541,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 							     &status,
 							     &mcu_packet_number,
 							     error)) {
-		touch_operate_buf = 0;
+		touch_operate_buf = TF_TOUCH_ENABLE;
 		g_debug("re-enabling touch after download status read failure");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
@@ -516,7 +562,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		status);
 
 	if (status != 0 || mcu_packet_number != num) {
-		touch_operate_buf = 0;
+		touch_operate_buf = TF_TOUCH_ENABLE;
 		g_debug("re-enabling touch after download status mismatch");
 		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 							       TOUCH_CONTROL,
@@ -534,16 +580,16 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_device_sleep(FU_DEVICE(self), 50);
+	fu_device_sleep(FU_DEVICE(self), TF_DOWNLOAD_POST_WAIT_MS);
 	g_debug("download status indicates success, exiting upgrade mode");
 
 	/* exit upgrade mode (best-effort) */
-	tmp_buf[0] = 0x00;
+	tmp_buf[0] = TF_UPGRADE_MODE_EXIT;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self, SET_UPGRADE_MODE, tmp_buf, 1, NULL))
 		g_debug("failed to exit upgrade mode (ignored)");
 
 	/* re-enable touch (best-effort) */
-	touch_operate_buf = 0;
+	touch_operate_buf = TF_TOUCH_ENABLE;
 	g_debug("re-enabling touch after successful upgrade");
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      TOUCH_CONTROL,
@@ -569,7 +615,7 @@ fu_pxi_tp_tf_communication_version_cmp(const guint8 a[3], const guint8 b[3])
 }
 
 /* Public entry point used by the main plugin:
- * - reads TF version before update (mode=1, APP)
+ * - reads TF version before update (mode=APP)
  * - skips update if current version >= target version
  * - validates TF image
  * - stops touchpad report
@@ -586,24 +632,27 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  const guint8 target_ver[3],
 						  GError **error)
 {
-	const gsize max_attempts = 3;
 	guint8 ver_before[3] = {0};
 	gboolean have_ver_before = FALSE;
 	g_autoptr(GError) ver_err = NULL;
 
-	fu_device_sleep(FU_DEVICE(self), 1000);
+	fu_device_sleep(FU_DEVICE(self), TF_APP_VERSION_WAIT_MS);
 
 	/* stop touchpad reports while updating TF */
 	g_debug("stop touchpad report");
-	if (!fu_pxi_tp_register_user_write(self, 0x00, 0x56, 0x01, error))
+	if (!fu_pxi_tp_register_user_write(self,
+					   PXI_TP_USER_BANK0,
+					   PXI_TP_R_USER0_PROXY_MODE,
+					   PXI_TP_PROXY_MODE_TF_UPDATE,
+					   error))
 		return FALSE;
 
-	/* try to read TF firmware version before update (mode=1: APP) */
+	/* try to read TF firmware version before update (mode=APP) */
 	if (fu_pxi_tp_tf_communication_read_firmware_version(self,
-							     1, /* APP */
+							     TF_FW_MODE_APP,
 							     ver_before,
 							     &ver_err)) {
-		g_debug("firmware version before update (mode=1 APP): %u.%u.%u",
+		g_debug("firmware version before update (mode=APP): %u.%u.%u",
 			ver_before[0],
 			ver_before[1],
 			ver_before[2]);
@@ -619,6 +668,13 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 				target_ver[0],
 				target_ver[1],
 				target_ver[2]);
+
+			/* best-effort restore proxy mode */
+			(void)fu_pxi_tp_register_user_write(self,
+							    PXI_TP_USER_BANK0,
+							    PXI_TP_R_USER0_PROXY_MODE,
+							    PXI_TP_PROXY_MODE_NORMAL,
+							    NULL);
 			return TRUE;
 		}
 	} else {
@@ -626,10 +682,14 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			ver_err != NULL ? ver_err->message : "unknown error");
 	}
 
-	/* sanity check: first 128 bytes (except some header) must be zero */
-	g_debug("validate ROM header (first 128 bytes after header must be zero)");
-	for (gsize i = 6; i < 128; i++) {
-		if (data->data[i] != 0x00) {
+	/* sanity check: bytes [6, 128) must be zero (ROM header rule) */
+	g_debug("validate ROM header (bytes [%d, %d) must be 0x%02x)",
+		TF_ROM_HEADER_SKIP_BYTES,
+		TF_ROM_HEADER_CHECK_END,
+		TF_ROM_HEADER_ZERO);
+
+	for (gsize i = TF_ROM_HEADER_SKIP_BYTES; i < TF_ROM_HEADER_CHECK_END; i++) {
+		if (data->data[i] != TF_ROM_HEADER_ZERO) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
@@ -638,12 +698,12 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 		}
 	}
 
-	for (gsize attempt = 1; attempt <= max_attempts; attempt++) {
+	for (gsize attempt = 1; attempt <= TF_UPDATE_FLOW_MAX_ATTEMPTS; attempt++) {
 		g_autoptr(GError) local_error = NULL;
 
-		g_debug("firmware update attempt %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT,
+		g_debug("firmware update attempt %" G_GSIZE_FORMAT "/%d",
 			attempt,
-			max_attempts);
+			TF_UPDATE_FLOW_MAX_ATTEMPTS);
 
 		if (fu_pxi_tp_tf_communication_write_firmware(self,
 							      progress,
@@ -652,13 +712,13 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 							      data,
 							      &local_error)) {
 			/* read tf firmware version after successful update */
-			fu_device_sleep(FU_DEVICE(self), 1000);
+			fu_device_sleep(FU_DEVICE(self), TF_APP_VERSION_WAIT_MS);
 
 			guint8 ver_after[3] = {0};
 			g_autoptr(GError) ver_after_err = NULL;
 
 			if (!fu_pxi_tp_tf_communication_read_firmware_version(self,
-									      1, /* APP */
+									      TF_FW_MODE_APP,
 									      ver_after,
 									      &ver_after_err)) {
 				g_set_error(error,
@@ -670,7 +730,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 				return FALSE;
 			}
 
-			g_debug("firmware version after update (mode=1 APP): %u.%u.%u",
+			g_debug("firmware version after update (mode=APP): %u.%u.%u",
 				ver_after[0],
 				ver_after[1],
 				ver_after[2]);
@@ -700,7 +760,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			attempt,
 			local_error != NULL ? local_error->message : "unknown error");
 
-		if (attempt < max_attempts)
+		if (attempt < TF_UPDATE_FLOW_MAX_ATTEMPTS)
 			g_debug("retrying firmware update");
 	}
 
@@ -709,6 +769,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_WRITE,
 		    "firmware update failed after %" G_GSIZE_FORMAT " attempts",
-		    max_attempts);
+		    (gsize)TF_UPDATE_FLOW_MAX_ATTEMPTS);
 	return FALSE;
 }

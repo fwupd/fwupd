@@ -5,12 +5,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-/*
- * =============================================================
- * file: fu-pxi-tp-firmware.c (pure C, offset-based parsing; no packed structs)
- * =============================================================
- */
-
 #include "config.h"
 
 #include <fwupdplugin.h>
@@ -30,9 +24,7 @@ struct _FuPxiTpFirmware {
 	guint16 flash_sectors;
 	guint32 file_crc32;
 	guint32 header_crc32;
-	guint16 num_sections; /* as stored */
-
-	/* parsed sections */
+	guint16 num_sections;
 	GPtrArray *sections; /* FuPxiTpSection*, free with g_free */
 };
 
