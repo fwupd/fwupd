@@ -17,5 +17,3 @@ guint16
 fu_bcm57xx_firmware_get_vendor(FuBcm57xxFirmware *self);
 guint16
 fu_bcm57xx_firmware_get_model(FuBcm57xxFirmware *self);
-gboolean
-fu_bcm57xx_firmware_is_backup(FuBcm57xxFirmware *self);

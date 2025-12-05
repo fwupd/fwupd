@@ -624,12 +624,6 @@ fu_bcm57xx_firmware_get_model(FuBcm57xxFirmware *self)
 	return self->model;
 }
 
-gboolean
-fu_bcm57xx_firmware_is_backup(FuBcm57xxFirmware *self)
-{
-	return self->is_backup;
-}
-
 static void
 fu_bcm57xx_firmware_init(FuBcm57xxFirmware *self)
 {
