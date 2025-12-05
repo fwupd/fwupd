@@ -54,6 +54,8 @@ foreach fwupdplugin_struct : fwupdplugin_structs
       '@INPUT@',
       '@OUTPUT0@',
       '@OUTPUT1@',
+      '--include',
+      'fwupd.h',
     ],
   )
 endforeach

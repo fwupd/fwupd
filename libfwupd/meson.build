@@ -10,6 +10,32 @@ fwupd_version_h = configure_file(
 
 base_dir = 'fwupd-' + libfwupd_lt_current
 
+fwupd_structs = [
+  'fwupd-client.rs', # fuzzing
+]
+
+# do not use structgen as these are referenced in headers too...
+fwupd_rs_targets = []
+foreach fwupd_struct : fwupd_structs
+  fwupd_rs_targets += custom_target(
+    'lib' + fwupd_struct,
+    input: fwupd_struct,
+    output: [
+      fwupd_struct.replace('.rs', '-struct.c'),
+      fwupd_struct.replace('.rs', '-struct.h'),
+    ],
+    command: [
+      python3,
+      join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+      '--include',
+      'fwupd-build.h',
+      '@INPUT@',
+      '@OUTPUT0@',
+      '@OUTPUT1@',
+    ],
+  )
+endforeach
+
 install_headers(
   'fwupd.h',
   subdir: base_dir,
@@ -61,6 +87,7 @@ fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = library(
   'fwupd',
+  fwupd_rs_targets,
   sources: libfwupd_src,
   soversion: libfwupd_lt_current,
   version: libfwupd_lt_version,
@@ -71,6 +98,16 @@ fwupd = library(
   link_depends: fwupd_mapfile,
   install: true,
   install_tag: 'lib',
+)
+
+# see https://mesonbuild.com/FAQ.html#how-do-i-tell-meson-that-my-sources-use-generated-headers
+fwupd_rs_headers = []
+foreach fwupd_rs_target : fwupd_rs_targets
+  fwupd_rs_headers += fwupd_rs_target[1]
+endforeach
+fwupd_rs_dep = declare_dependency(
+  link_with: fwupd,
+  sources: fwupd_rs_headers,
 )
 
 libfwupd_dep = declare_dependency(
@@ -131,6 +168,7 @@ if introspection.allowed()
       'fwupd-request-private.h',
       'fwupd-version.c',
       fwupd_version_h,
+      fwupd_rs_targets,
     ],
     nsversion: '2.0',
     namespace: 'Fwupd',
@@ -179,7 +217,7 @@ if get_option('tests')
     'fwupd-self-test',
     sources: ['fwupd-self-test.c'],
     include_directories: [root_incdir],
-    dependencies: [libfwupd_deps],
+    dependencies: [libfwupd_deps, fwupd_rs_dep],
     link_with: fwupd,
     c_args: [
       '-DG_LOG_DOMAIN="Fwupd"',

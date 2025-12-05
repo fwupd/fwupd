@@ -854,6 +854,8 @@ rustgen = generator(
     '@INPUT@',
     '@OUTPUT0@',
     '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
   ],
 )
 
