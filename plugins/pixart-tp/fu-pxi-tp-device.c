@@ -1253,20 +1253,35 @@ fu_pxi_tp_device_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_pxi_tp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_pxi_tp_device_setup(device, error))
-			g_warning("failed to refresh version (already attached)");
-		return TRUE;
-	}
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 
-	if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device), PXI_TP_RESET_MODE_APPLICATION, error))
+	/* Normal runtime attach:
+	 * - Version should already be set in ->setup()
+	 * - Do not talk to hardware again here, and certainly do not warn
+	 *   if the device is already attached or emulated.
+	 */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
+
+	/* coming back from bootloader into application mode */
+	if (!fu_pxi_tp_device_reset(self, PXI_TP_RESET_MODE_APPLICATION, error))
 		return FALSE;
 
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	g_debug("exit bootloader");
 
-	if (!fu_pxi_tp_device_setup(device, error))
-		g_warning("failed to refresh version after attached");
+	/* Best-effort refresh of the version string.
+	 * In self-tests or emulated environments this may fail, and that's fine:
+	 * do NOT emit warnings here, as G_DEBUG=fatal-criticals would abort.
+	 */
+	{
+		g_autoptr(GError) local_error = NULL;
+
+		if (!fu_pxi_tp_device_setup(device, &local_error)) {
+			g_debug("failed to refresh version after attach: %s",
+				local_error != NULL ? local_error->message : "unknown");
+		}
+	}
 
 	return TRUE;
 }
