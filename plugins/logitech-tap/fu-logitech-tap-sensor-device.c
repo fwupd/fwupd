@@ -24,8 +24,6 @@
 #define HIDIOCGINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
 #endif
 
-const guint kLogiDefaultSensorSleepIntervalMs = 50;
-
 struct _FuLogitechTapSensorDevice {
 	FuHidrawDevice parent_instance;
 };
@@ -271,7 +269,7 @@ fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GEr
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), kLogiDefaultSensorSleepIntervalMs); /* 50 ms */
+	fu_device_sleep(FU_DEVICE(self), 50); /* 50 ms */
 	/* serial number is a 12-byte-string that is stored in MCU  */
 	/* each get request fetches 1 word (4 bytes), so iterate 3 times */
 	for (int index = 1; index <= 3; index++) {
