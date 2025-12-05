@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-pxi-tp-register.h"
 
 #define REPORT_ID_SINGLE 0x42

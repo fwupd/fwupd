@@ -7,10 +7,6 @@
 
 #include "config.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-device.h"
 #include "fu-pxi-tp-firmware.h"

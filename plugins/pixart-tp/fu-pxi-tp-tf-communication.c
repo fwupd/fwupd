@@ -8,7 +8,7 @@
 #include "config.h"
 
 #include "fu-pxi-tp-register.h"
-#include "fu-pxi-tp-struct.h" /* for FuStructPxiTf*Cmd */
+#include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
 
 #define REPORT_ID__PASS_THROUGH 0xCC

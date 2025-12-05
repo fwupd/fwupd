@@ -10,8 +10,6 @@
 #include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-register.h"
 
-G_BEGIN_DECLS
-
 gboolean
 fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  FuProgress *progress,
@@ -20,5 +18,3 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  GByteArray *data,
 						  const guint8 target_ver[3],
 						  GError **error);
-
-G_END_DECLS

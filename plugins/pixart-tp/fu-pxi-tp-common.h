@@ -6,7 +6,6 @@
  */
 
 #pragma once
-#include <fwupdplugin.h>
 
 #include "fu-pxi-tp-device.h"
 

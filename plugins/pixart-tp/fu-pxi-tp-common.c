@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <stdarg.h>
-
 #include "fu-pxi-tp-common.h"
 
 gboolean
