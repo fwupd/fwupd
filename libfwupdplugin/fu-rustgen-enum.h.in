@@ -1,5 +1,15 @@
+/**
+ * {{obj.c_type}}:
+ */
 typedef enum {
 {%- for item in obj.items %}
+    /**
+     * {{item.c_define}}:
+     *
+{%- if item.since %}
+     * Since: {{item.since}}
+{%- endif %}
+     */
 {%- if item.default %}
     {{item.c_define}} = {{item.default}},
 {%- else %}

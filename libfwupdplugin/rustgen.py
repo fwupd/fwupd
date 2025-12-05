@@ -81,9 +81,7 @@ class EnumObj:
     def c_method(self, suffix: str):
 
         name_snake = _camel_to_snake(self.name)
-
         if self._exports["NoBitfield"] != Export.NONE:
-            print(name_snake)
             if name_snake.endswith("flags"):
                 name_snake = name_snake[:-1]
 
@@ -107,7 +105,6 @@ class EnumObj:
     @property
     def is_bitfield(self) -> bool:
         if self._exports["NoBitfield"] != Export.NONE:
-            print("XXX", self.name)
             return False
         for item in self.items:
             if item.is_bitfield:
@@ -141,6 +138,7 @@ class EnumObj:
 
     def add_public_export(self, derive: str) -> None:
 
+        # split out the API version this was added
         idx = derive.find("(since=")
         if idx != -1:
             self.exports_since[derive[:idx]] = derive[idx + 7 : -1]
@@ -164,6 +162,7 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.since: Optional[str] = None
         self.is_bitfield = False
 
     @property
@@ -695,6 +694,7 @@ class Generator:
         offset: int = 0
         struct_seen_b32: bool = False
         bits_offset: int = 0
+        since: Optional[str] = None
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
 
@@ -708,7 +708,17 @@ class Generator:
                 self._use_import(where, why, what)
 
             # remove comments and indent
-            line = line.split("//")[0].strip()
+            comment = None
+            try:
+                line, comment = line.split("//", maxsplit=1)
+            except ValueError:
+                pass
+            else:
+                if comment:
+                    idx = comment.find("Since:")
+                    if idx != -1:
+                        since = comment[idx + 6 :].strip()
+            line = line.strip()
             if not line:
                 continue
 
@@ -764,6 +774,7 @@ class Generator:
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
+                since = None
                 derives.clear()
                 offset = 0
                 bits_offset = 0
@@ -780,6 +791,7 @@ class Generator:
             # split enumeration into sections
             if enum_cur:
                 enum_item = EnumItem(enum_cur)
+                enum_item.since = since
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
