@@ -9,23 +9,18 @@ plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
     'fu-uefi-dbx-plugin.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
-    'fu-uefi-dbx-snapd-notifier.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
   dependencies: [
     plugin_deps,
-    libcurl,
   ],
 )
 plugin_builtins += plugin_builtin_uefi_dbx
 device_tests += files('tests/uefi-dbx.json')
 
 if get_option('tests')
-  install_data(['tests/snapd.py'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
-
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())

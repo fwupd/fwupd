@@ -3356,6 +3356,28 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static gboolean
+fu_engine_composite_peek_firmware(FuEngine *self,
+				  FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		if (!fu_plugin_runner_composite_peek_firmware(plugin,
+							      device,
+							      firmware,
+							      progress,
+							      flags,
+							      error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_engine_write_firmware(FuEngine *self,
 			 const gchar *device_id,
 			 FuFirmware *firmware,
@@ -3378,6 +3400,10 @@ fu_engine_write_firmware(FuEngine *self,
 	}
 	device_progress = fu_device_progress_new(device, progress);
 	g_return_val_if_fail(device_progress != NULL, FALSE);
+
+	/* notify all the other plugins */
+	if (!fu_engine_composite_peek_firmware(self, device, firmware, progress, flags, error))
+		return FALSE;
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);

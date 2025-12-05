@@ -112,6 +112,7 @@ plugins = {
   'rts54hub': false,
   'steelseries': false,
   'scsi': false,
+  'snapd-uefi': false,
   'synaptics-cape': false,
   'synaptics-cxaudio': false,
   'synaptics-mst': false,
