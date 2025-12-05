@@ -12,6 +12,7 @@ base_dir = 'fwupd-' + libfwupd_lt_current
 
 fwupd_structs = [
   'fwupd-client.rs', # fuzzing
+  'fwupd-report.rs', # fuzzing
 ]
 
 # do not use structgen as these are referenced in headers too...

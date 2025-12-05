@@ -1,6 +1,18 @@
 {%- set export = obj.export('ToString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 {%- if obj.is_bitfield %}
+/**
+ * {{obj.c_method('ToString')}}:
+ * @val: report flags, e.g. %FWUPD_REPORT_FLAG_FROM_OEM
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Returns: identifier string
+ *
+{%- if "ToString" in obj.exports_since %}
+ * Since: {{obj.exports_since["ToString"]}}
+{%- endif %}
+ **/
 {{export.value}}gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
@@ -15,6 +27,18 @@
     return g_strjoinv(",", (gchar **)data);
 }
 {%- else %}
+/**
+ * {{obj.c_method('ToString')}}:
+ * @val: report flags, e.g. %FWUPD_REPORT_FLAG_FROM_OEM
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Returns: identifier string
+ *
+{%- if "ToString" in obj.exports_since %}
+ * Since: {{obj.exports_since["ToString"]}}
+{%- endif %}
+ **/
 {{export.value}}const gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
@@ -29,6 +53,18 @@
 
 {%- set export = obj.export('FromString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('FromString')}}:
+ * @val: (nullable): a string, e.g. `from-oem`
+ *
+ * Converts a string to an enumerated value.
+ *
+ * Returns: enumerated value
+ *
+{%- if "FromString" in obj.exports_since %}
+ * Since: {{obj.exports_since["FromString"]}}
+{%- endif %}
+ **/
 {{export.value}}{{obj.c_type}}
 {{obj.c_method('FromString')}}(const gchar *val)
 {

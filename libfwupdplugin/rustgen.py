@@ -73,11 +73,21 @@ class EnumObj:
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
             "FromString": Export.NONE,
+            "NoBitfield": Export.NONE,
         }
+        self.exports_since: Dict[str, str] = {}
         self._is_bitfield = False
 
     def c_method(self, suffix: str):
-        return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+        name_snake = _camel_to_snake(self.name)
+
+        if self._exports["NoBitfield"] != Export.NONE:
+            print(name_snake)
+            if name_snake.endswith("flags"):
+                name_snake = name_snake[:-1]
+
+        return f"{name_snake}_{_camel_to_snake(suffix)}"
 
     @property
     def c_type(self):
@@ -96,6 +106,9 @@ class EnumObj:
 
     @property
     def is_bitfield(self) -> bool:
+        if self._exports["NoBitfield"] != Export.NONE:
+            print("XXX", self.name)
+            return False
         for item in self.items:
             if item.is_bitfield:
                 return True
@@ -127,6 +140,12 @@ class EnumObj:
         self._exports[derive] = Export.PRIVATE
 
     def add_public_export(self, derive: str) -> None:
+
+        idx = derive.find("(since=")
+        if idx != -1:
+            self.exports_since[derive[:idx]] = derive[idx + 7 : -1]
+            derive = derive[:idx]
+
         if derive == "Bitfield":
             self._is_bitfield = True
             return
@@ -161,6 +180,8 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
+        # if "NoBitfield" not in self.obj._exports and val.find("<<") != -1:
+        #    self.is_bitfield = True
         if val.find("<<") != -1:
             self.is_bitfield = True
         if val.startswith("0x") or val.startswith("0b"):
