@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 // The kind of remote.
+// Since: 0.9.6
+#[derive(ToString, FromString)]
 enum FwupdRemoteKind {
     // Unknown kind.
     Unknown,
@@ -16,6 +18,7 @@ enum FwupdRemoteKind {
 
 // The flags available for the remote.
 // Since: 1.9.4
+#[derive(ToString, FromString, NoBitfield)]
 enum FwupdRemoteFlags {
     // No flags set.
     None = 0,

@@ -81,68 +81,6 @@ typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 
-/**
- * fwupd_remote_flag_to_string:
- * @flag: remote attribute flags, e.g. %FWUPD_REMOTE_FLAG_ENABLED
- *
- * Returns the printable string for the flag.
- *
- * Returns: string, or %NULL
- *
- * Since: 1.9.4
- **/
-const gchar *
-fwupd_remote_flag_to_string(FwupdRemoteFlags flag)
-{
-	if (flag == FWUPD_REMOTE_FLAG_NONE)
-		return "none";
-	if (flag == FWUPD_REMOTE_FLAG_ENABLED)
-		return "enabled";
-	if (flag == FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)
-		return "approval-required";
-	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)
-		return "automatic-reports";
-	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)
-		return "automatic-security-reports";
-	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA)
-		return "allow-p2p-metadata";
-	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)
-		return "allow-p2p-firmware";
-	if (flag == FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES)
-		return "no-phased-updates";
-	return NULL;
-}
-
-/**
- * fwupd_remote_flag_from_string:
- * @flag: (nullable): a string, e.g. `enabled`
- *
- * Converts a string to an enumerated flag.
- *
- * Returns: enumerated value
- *
- * Since: 1.9.4
- **/
-FwupdRemoteFlags
-fwupd_remote_flag_from_string(const gchar *flag)
-{
-	if (g_strcmp0(flag, "enabled") == 0)
-		return FWUPD_REMOTE_FLAG_ENABLED;
-	if (g_strcmp0(flag, "approval-required") == 0)
-		return FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED;
-	if (g_strcmp0(flag, "automatic-reports") == 0)
-		return FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS;
-	if (g_strcmp0(flag, "automatic-security-reports") == 0)
-		return FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS;
-	if (g_strcmp0(flag, "allow-p2p-metadata") == 0)
-		return FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA;
-	if (g_strcmp0(flag, "allow-p2p-firmware") == 0)
-		return FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE;
-	if (g_strcmp0(flag, "no-phased-updates") == 0)
-		return FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES;
-	return FWUPD_REMOTE_FLAG_NONE;
-}
-
 static void
 fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
@@ -674,50 +612,6 @@ fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri)
 
 	g_free(priv->report_uri);
 	priv->report_uri = g_steal_pointer(&report_uri_safe);
-}
-
-/**
- * fwupd_remote_kind_from_string:
- * @kind: (nullable): a string, e.g. `download`
- *
- * Converts an printable string to an enumerated type.
- *
- * Returns: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
- *
- * Since: 0.9.6
- **/
-FwupdRemoteKind
-fwupd_remote_kind_from_string(const gchar *kind)
-{
-	if (g_strcmp0(kind, "download") == 0)
-		return FWUPD_REMOTE_KIND_DOWNLOAD;
-	if (g_strcmp0(kind, "local") == 0)
-		return FWUPD_REMOTE_KIND_LOCAL;
-	if (g_strcmp0(kind, "directory") == 0)
-		return FWUPD_REMOTE_KIND_DIRECTORY;
-	return FWUPD_REMOTE_KIND_UNKNOWN;
-}
-
-/**
- * fwupd_remote_kind_to_string:
- * @kind: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
- *
- * Converts an enumerated type to a printable string.
- *
- * Returns: a string, e.g. `download`
- *
- * Since: 0.9.6
- **/
-const gchar *
-fwupd_remote_kind_to_string(FwupdRemoteKind kind)
-{
-	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD)
-		return "download";
-	if (kind == FWUPD_REMOTE_KIND_LOCAL)
-		return "local";
-	if (kind == FWUPD_REMOTE_KIND_DIRECTORY)
-		return "directory";
-	return NULL;
 }
 
 /**

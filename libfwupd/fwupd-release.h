@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fwupd-enums.h"
+#include "fwupd-release-struct.h"
 #include "fwupd-report.h"
 
 G_BEGIN_DECLS

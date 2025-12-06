@@ -14,8 +14,11 @@ fwupd_structs = [
   'fwupd-bios-setting.rs', # fuzzing
   'fwupd-client.rs', # fuzzing
   'fwupd-codec.rs', # fuzzing
+  'fwupd-device.rs', # fuzzing
   'fwupd-enums.rs', # fuzzing
   'fwupd-error.rs', # fuzzing
+  'fwupd-plugin.rs', # fuzzing
+  'fwupd-release.rs', # fuzzing
   'fwupd-remote.rs', # fuzzing
   'fwupd-report.rs', # fuzzing
   'fwupd-request.rs', # fuzzing
@@ -79,7 +82,6 @@ libfwupd_src = [
   'fwupd-common.c', # fuzzing
   'fwupd-codec.c', # fuzzing
   'fwupd-device.c', # fuzzing
-  'fwupd-enums.c', # fuzzing
   'fwupd-error.c', # fuzzing
   'fwupd-bios-setting.c', # fuzzing
   'fwupd-security-attr.c', # fuzzing

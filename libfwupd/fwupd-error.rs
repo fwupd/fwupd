@@ -2,39 +2,30 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 // The error code.
+// Since: 0.1.1
+#[derive(ToString(since=0.7.0), FromString(since=0.7.0))]
 enum FwupdError {
 	// Internal error.
-	// Since: 0.1.1
 	Internal,
 	// Installed newer firmware version.
-	// Since: 0.1.1
 	VersionNewer,
 	// Installed same firmware version.
-	// Since: 0.1.1
 	VersionSame,
 	// Already set to be installed offline.
-	// Since: 0.1.1
 	AlreadyPending,
 	// Failed to get authentication.
-	// Since: 0.1.1
 	AuthFailed,
 	// Failed to read from device.
-	// Since: 0.1.1
 	Read,
 	// Failed to write to the device.
-	// Since: 0.1.1
 	Write,
 	// Invalid file format.
-	// Since: 0.1.1
 	InvalidFile,
 	// No matching device exists.
-	// Since: 0.1.1
 	NotFound,
 	// Nothing to do.
-	// Since: 0.1.1
 	NothingToDo,
 	// Action was not possible.
-	// Since: 0.1.1
 	NotSupported,
 	// Signature was invalid.
 	// Since: 0.1.2

@@ -27,15 +27,6 @@ struct _FwupdRemoteClass {
 	void (*_fwupd_reserved7)(void);
 };
 
-FwupdRemoteKind
-fwupd_remote_kind_from_string(const gchar *kind);
-const gchar *
-fwupd_remote_kind_to_string(FwupdRemoteKind kind);
-const gchar *
-fwupd_remote_flag_to_string(FwupdRemoteFlags flag);
-FwupdRemoteFlags
-fwupd_remote_flag_from_string(const gchar *flag);
-
 FwupdRemote *
 fwupd_remote_new(void);
 const gchar *
