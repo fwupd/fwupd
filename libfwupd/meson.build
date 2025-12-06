@@ -154,7 +154,6 @@ if introspection.allowed()
       'fwupd-device.c',
       'fwupd-device.h',
       'fwupd-device-private.h',
-      'fwupd-enums.c',
       'fwupd-enums.h',
       'fwupd-enums-private.h',
       'fwupd-error.c',
