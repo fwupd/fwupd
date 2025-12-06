@@ -128,7 +128,6 @@ gboolean
 fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
 	guint8 payload[257] = {REPORT_ID_BURST};
-	gboolean ok;
 
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -142,15 +141,14 @@ fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize buf
 		return FALSE;
 	}
 
-	ok = fu_memcpy_safe(payload,
+	if (!fu_memcpy_safe(payload,
 			    sizeof(payload),
 			    1, /* dst offset: payload[1..] */
 			    buf,
 			    bufsz,
 			    0, /* src offset: buf[0..] */
 			    bufsz,
-			    error);
-	if (!ok) {
+			    error)) {
 		g_prefix_error_literal(error, "burst write memcpy failed: ");
 		return FALSE;
 	}
@@ -168,7 +166,6 @@ fu_pxi_tp_register_burst_read(FuPxiTpDevice *self, guint8 *buf, gsize bufsz, GEr
 {
 	guint8 payload[257] = {REPORT_ID_BURST};
 	gsize copy_len;
-	gboolean ok;
 
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -181,15 +178,14 @@ fu_pxi_tp_register_burst_read(FuPxiTpDevice *self, guint8 *buf, gsize bufsz, GEr
 	/* skip report id */
 	copy_len = MIN(bufsz, (gsize)(sizeof(payload) - 1));
 
-	ok = fu_memcpy_safe(buf,
+	if (!fu_memcpy_safe(buf,
 			    bufsz,
 			    0, /* dst offset */
 			    payload,
 			    sizeof(payload),
 			    1, /* src offset: skip report id */
 			    copy_len,
-			    error);
-	if (!ok) {
+			    error)) {
 		g_prefix_error_literal(error, "burst read memcpy failed: ");
 		return FALSE;
 	}
