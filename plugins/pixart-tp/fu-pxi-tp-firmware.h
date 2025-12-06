@@ -21,8 +21,6 @@ fu_pxi_tp_firmware_new(void);
 guint16
 fu_pxi_tp_firmware_get_header_version(FuPxiTpFirmware *self);
 guint16
-fu_pxi_tp_firmware_get_file_version(FuPxiTpFirmware *self);
-guint16
 fu_pxi_tp_firmware_get_ic_part_id(FuPxiTpFirmware *self);
 guint16
 fu_pxi_tp_firmware_get_total_flash_sectors(FuPxiTpFirmware *self);

@@ -739,13 +739,6 @@ fu_pxi_tp_firmware_get_header_version(FuPxiTpFirmware *self)
 }
 
 guint16
-fu_pxi_tp_firmware_get_file_version(FuPxiTpFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), 0);
-	return self->file_ver;
-}
-
-guint16
 fu_pxi_tp_firmware_get_ic_part_id(FuPxiTpFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), 0);
