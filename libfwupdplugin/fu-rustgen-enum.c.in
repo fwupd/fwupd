@@ -88,7 +88,11 @@
     if (g_strcmp0(val, "{{item.value}}") == 0)
         return {{item.c_define}};
 {%- endfor %}
+{%- if obj.item('Unknown') %}
+    return {{obj.items[-1].c_define}};
+{%- else %}
     return {{obj.items[0].c_define}};
+{%- endif %}
 {%- endif %}
 }
 {%- endif %}
