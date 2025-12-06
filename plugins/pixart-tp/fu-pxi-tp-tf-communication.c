@@ -104,6 +104,18 @@ enum {
 	PXI_TP_PROXY_MODE_TF_UPDATE = 0x01,
 };
 
+/* ---- retry helper contexts ---- */
+
+typedef struct {
+	guint8 mode;
+	guint8 *version;
+} FuPxiTpTfReadFwVersionCtx;
+
+typedef struct {
+	guint8 *status;
+	guint16 *packet_number;
+} FuPxiTpTfReadDlStatusCtx;
+
 /* --- tf Standard Communication helpers --- */
 
 static gboolean
@@ -365,6 +377,83 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	return TRUE;
 }
 
+/* --- fu_device_retry() callbacks --- */
+
+static gboolean
+fu_pxi_tp_tf_communication_read_firmware_version_cb(FuDevice *device,
+						    gpointer user_data,
+						    GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	FuPxiTpTfReadFwVersionCtx *ctx = user_data;
+	guint8 in_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
+	gsize len = TF_VERSION_BYTES; /* expected payload length = 3 bytes (version) */
+
+	if (!fu_pxi_tp_tf_communication_read_rmi(self,
+						 READ_VERSION_CMD,
+						 &ctx->mode,
+						 1,
+						 in_buf,
+						 sizeof(in_buf),
+						 &len,
+						 error)) {
+		return FALSE;
+	}
+
+	/* version bytes are at offset 6: [major, minor, patch] */
+	if (!fu_memcpy_safe(ctx->version,
+			    TF_VERSION_BYTES, /* dst_sz */
+			    0,		      /* dst_offset */
+			    in_buf,
+			    sizeof(in_buf),	   /* src_sz */
+			    TF_PAYLOAD_OFFSET_APP, /* src_offset */
+			    TF_VERSION_BYTES,	   /* n */
+			    error)) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_pxi_tp_tf_communication_read_download_status_cb(FuDevice *device,
+						   gpointer user_data,
+						   GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	FuPxiTpTfReadDlStatusCtx *ctx = user_data;
+	guint8 in_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
+	gsize len = TF_DOWNLOAD_STATUS_BYTES; /* payload length: status(1) + packet_number(2) */
+
+	if (!fu_pxi_tp_tf_communication_read_rmi(self,
+						 READ_UPGRADE_STATUS,
+						 NULL,
+						 0,
+						 in_buf,
+						 sizeof(in_buf),
+						 &len,
+						 error)) {
+		return FALSE;
+	}
+
+	/* total frame length should be header(8) + payload(3) = 11 */
+	if (len < TF_HDR_HEADER_BYTES + TF_DOWNLOAD_STATUS_BYTES ||
+	    len - TF_HDR_HEADER_BYTES != TF_DOWNLOAD_STATUS_BYTES) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "download status reply has unexpected length: %" G_GSIZE_FORMAT,
+			    len);
+		return FALSE;
+	}
+
+	*(ctx->status) = in_buf[TF_PAYLOAD_OFFSET_APP];
+	*(ctx->packet_number) = (guint16)in_buf[TF_PAYLOAD_OFFSET_APP + 1] +
+				((guint16)in_buf[TF_PAYLOAD_OFFSET_APP + 2] << 8);
+
+	return TRUE;
+}
+
 /* mode: 1=APP, 2=BOOT, 3=ALGO (according to original protocol) */
 static gboolean
 fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
@@ -372,49 +461,23 @@ fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 						 guint8 *version,
 						 GError **error)
 {
-	guint8 in_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize len = TF_VERSION_BYTES; /* expected payload length = 3 bytes (version) */
+	FuPxiTpTfReadFwVersionCtx ctx = {
+	    .mode = mode,
+	    .version = version,
+	};
 
-	for (gsize i = 0; i < FAILED_RETRY_TIMES; i++) {
-		g_autoptr(GError) local_error = NULL;
-
-		if (fu_pxi_tp_tf_communication_read_rmi(self,
-							READ_VERSION_CMD,
-							&mode,
-							1,
-							in_buf,
-							sizeof(in_buf),
-							&len,
-							&local_error)) {
-			/* version bytes are at offset 6: [major, minor, patch] */
-			if (!fu_memcpy_safe(version,
-					    TF_VERSION_BYTES, /* dst_sz */
-					    0,		      /* dst_offset */
-					    in_buf,
-					    sizeof(in_buf),	   /* src_sz */
-					    TF_PAYLOAD_OFFSET_APP, /* src_offset */
-					    TF_VERSION_BYTES,	   /* n */
-					    error))
-				return FALSE;
-
-			return TRUE;
-		}
-
-		g_debug("read firmware version failed try %" G_GSIZE_FORMAT "/%d: %s",
-			i + 1,
-			FAILED_RETRY_TIMES,
-			local_error != NULL ? local_error->message : "unknown");
-
-		if (i < FAILED_RETRY_TIMES - 1)
-			fu_device_sleep(FU_DEVICE(self), FAILED_RETRY_INTERVAL);
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_tf_communication_read_firmware_version_cb,
+				  FAILED_RETRY_TIMES,
+				  FAILED_RETRY_INTERVAL,
+				  &ctx,
+				  error)) {
+		if (error != NULL && *error != NULL)
+			g_prefix_error_literal(error, "failed to read firmware version: ");
+		return FALSE;
 	}
 
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_WRITE,
-		    "failed to read firmware version after %d retries",
-		    FAILED_RETRY_TIMES);
-	return FALSE;
+	return TRUE;
 }
 
 /* read TF upgrade download status (status + number of packets accepted by MCU) */
@@ -424,49 +487,23 @@ fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 						guint16 *packet_number,
 						GError **error)
 {
-	guint8 in_buf[TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize len = TF_DOWNLOAD_STATUS_BYTES; /* payload length: status(1) + packet_number(2) */
+	FuPxiTpTfReadDlStatusCtx ctx = {
+	    .status = status,
+	    .packet_number = packet_number,
+	};
 
-	for (gsize i = 0; i < FAILED_RETRY_TIMES; i++) {
-		g_autoptr(GError) local_error = NULL;
-
-		if (fu_pxi_tp_tf_communication_read_rmi(self,
-							READ_UPGRADE_STATUS,
-							NULL,
-							0,
-							in_buf,
-							sizeof(in_buf),
-							&len,
-							&local_error)) {
-			/* total frame length should be header(8) + payload(3) = 11 */
-			if (len >= TF_HDR_HEADER_BYTES + TF_DOWNLOAD_STATUS_BYTES &&
-			    len - TF_HDR_HEADER_BYTES == TF_DOWNLOAD_STATUS_BYTES) {
-				*status = in_buf[TF_PAYLOAD_OFFSET_APP];
-				*packet_number = (guint16)in_buf[TF_PAYLOAD_OFFSET_APP + 1] +
-						 ((guint16)in_buf[TF_PAYLOAD_OFFSET_APP + 2] << 8);
-				return TRUE;
-			}
-
-			g_debug("download status reply has unexpected length: %" G_GSIZE_FORMAT,
-				len);
-			/* treat as failure and retry */
-		}
-
-		g_debug("read download status failed try %" G_GSIZE_FORMAT "/%d: %s",
-			i + 1,
-			FAILED_RETRY_TIMES,
-			local_error != NULL ? local_error->message : "unknown");
-
-		if (i < FAILED_RETRY_TIMES - 1)
-			fu_device_sleep(FU_DEVICE(self), FAILED_RETRY_INTERVAL);
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_tf_communication_read_download_status_cb,
+				  FAILED_RETRY_TIMES,
+				  FAILED_RETRY_INTERVAL,
+				  &ctx,
+				  error)) {
+		if (error != NULL && *error != NULL)
+			g_prefix_error_literal(error, "failed to read download status: ");
+		return FALSE;
 	}
 
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_WRITE,
-		    "failed to read download status after %d retries",
-		    FAILED_RETRY_TIMES);
-	return FALSE;
+	return TRUE;
 }
 
 /* perform one TF firmware update attempt: no outer retries here */
