@@ -73,9 +73,6 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 					 gsize in_bufsz,
 					 GError **error)
 {
-	guint8 buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize offset = 0;
-
 	/* build header using rustgen struct (endian-safe) */
 	g_autoptr(FuStructPxiTfWriteSimpleCmd) st_write_simple =
 	    fu_struct_pxi_tf_write_simple_cmd_new();
@@ -96,43 +93,25 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	fu_struct_pxi_tf_write_simple_cmd_set_addr(st_write_simple, addr);
 	fu_struct_pxi_tf_write_simple_cmd_set_len(st_write_simple, (guint16)in_bufsz);
 
-	/* copy header into feature report buffer */
-	if (!fu_memcpy_safe(buf,
-			    sizeof(buf),
-			    0, /* dst_offset */
-			    st_write_simple->buf->data,
-			    st_write_simple->buf->len, /* src_sz */
-			    0,			       /* src_offset */
-			    st_write_simple->buf->len, /* n */
-			    error))
-		return FALSE;
-
-	offset = FU_STRUCT_PXI_TF_WRITE_SIMPLE_CMD_SIZE;
-
-	/* copy payload */
-	if (in_bufsz > 0 && in_buf != NULL) {
-		if (!fu_memcpy_safe(buf,
-				    sizeof(buf),
-				    offset,
-				    in_buf,
-				    in_bufsz, /* src_sz */
-				    0,	      /* src_offset */
-				    in_bufsz, /* n */
-				    error))
-			return FALSE;
-		offset += in_bufsz;
-	}
+	/* append payload directly into existing byte array */
+	if (in_bufsz > 0 && in_buf != NULL)
+		g_byte_array_append(st_write_simple->buf, in_buf, (guint)in_bufsz);
 
 	/* CRC + tail:
 	 * - CRC is computed from index 2 (preamble) to end of payload+header
 	 * - tail is TF frame magic byte (0xA5)
 	 */
-	buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, buf + 2, offset - 2);
-	buf[offset++] = FU_PXI_TF_FRAME_CONST_TAIL;
+	guint8 crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
+			     st_write_simple->buf->data + 2,
+			     st_write_simple->buf->len - 2);
+	g_byte_array_append(st_write_simple->buf, &crc, 1);
+
+	guint8 tail = FU_PXI_TF_FRAME_CONST_TAIL;
+	g_byte_array_append(st_write_simple->buf, &tail, 1);
 
 	return fu_pxi_tp_common_send_feature(self,
-					     buf,
-					     FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
+					     st_write_simple->buf->data,
+					     st_write_simple->buf->len,
 					     error);
 }
 
@@ -145,13 +124,18 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 						 gsize in_bufsz,
 						 GError **error)
 {
-	guint8 buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize offset = 0;
 	gsize datalen = in_bufsz + 4; /* 2 bytes total + 2 bytes index */
 
 	/* build header using rustgen struct (endian-safe) */
 	g_autoptr(FuStructPxiTfWritePacketCmd) st_write_packet =
 	    fu_struct_pxi_tf_write_packet_cmd_new();
+	if (st_write_packet == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to allocate TF write packet header");
+		return FALSE;
+	}
 
 	/* defaults:
 	 *   report_id  = 0xCC
@@ -164,40 +148,22 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	fu_struct_pxi_tf_write_packet_cmd_set_packet_total(st_write_packet, (guint16)packet_total);
 	fu_struct_pxi_tf_write_packet_cmd_set_packet_index(st_write_packet, (guint16)packet_index);
 
-	/* copy header into feature report buffer */
-	if (!fu_memcpy_safe(buf,
-			    sizeof(buf),
-			    0, /* dst_offset */
-			    st_write_packet->buf->data,
-			    st_write_packet->buf->len, /* src_sz */
-			    0,			       /* src_offset */
-			    st_write_packet->buf->len, /* n */
-			    error))
-		return FALSE;
+	/* append payload directly into existing byte array */
+	if (in_bufsz > 0 && in_buf != NULL)
+		g_byte_array_append(st_write_packet->buf, in_buf, (guint)in_bufsz);
 
-	offset = FU_STRUCT_PXI_TF_WRITE_PACKET_CMD_SIZE;
+	/* CRC + tail */
+	guint8 crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
+			     st_write_packet->buf->data + 2,
+			     st_write_packet->buf->len - 2);
+	g_byte_array_append(st_write_packet->buf, &crc, 1);
 
-	/* copy payload */
-	if (in_bufsz > 0 && in_buf != NULL) {
-		if (!fu_memcpy_safe(buf,
-				    sizeof(buf),
-				    offset,
-				    in_buf,
-				    in_bufsz, /* src_sz */
-				    0,	      /* src_offset */
-				    in_bufsz, /* n */
-				    error))
-			return FALSE;
-		offset += in_bufsz;
-	}
-
-	/* crc + tail */
-	buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, buf + 2, offset - 2);
-	buf[offset++] = FU_PXI_TF_FRAME_CONST_TAIL;
+	guint8 tail = FU_PXI_TF_FRAME_CONST_TAIL;
+	g_byte_array_append(st_write_packet->buf, &tail, 1);
 
 	return fu_pxi_tp_common_send_feature(self,
-					     buf,
-					     FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
+					     st_write_packet->buf->data,
+					     st_write_packet->buf->len,
 					     error);
 }
 
