@@ -11,8 +11,15 @@ fwupd_version_h = configure_file(
 base_dir = 'fwupd-' + libfwupd_lt_current
 
 fwupd_structs = [
+  'fwupd-bios-setting.rs', # fuzzing
   'fwupd-client.rs', # fuzzing
+  'fwupd-codec.rs', # fuzzing
+  'fwupd-enums.rs', # fuzzing
+  'fwupd-error.rs', # fuzzing
+  'fwupd-remote.rs', # fuzzing
   'fwupd-report.rs', # fuzzing
+  'fwupd-request.rs', # fuzzing
+  'fwupd-security-attr.rs', # fuzzing
 ]
 
 # do not use structgen as these are referenced in headers too...

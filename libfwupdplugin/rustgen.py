@@ -9,6 +9,7 @@ import os
 import sys
 import uuid
 import argparse
+import copy
 
 from enum import Enum
 from typing import Optional, List, Tuple, Dict
@@ -67,6 +68,8 @@ def _camel_to_snake(name: str) -> str:
 class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
+        self.since: Optional[str] = None
+        self.comments: list[str] = []
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
         self.is_imported: bool = False
@@ -143,6 +146,8 @@ class EnumObj:
         if idx != -1:
             self.exports_since[derive[:idx]] = derive[idx + 7 : -1]
             derive = derive[:idx]
+        elif self.since:
+            self.exports_since[derive] = self.since
 
         if derive == "Bitfield":
             self._is_bitfield = True
@@ -162,6 +167,7 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.comments: list[str] = []
         self.since: Optional[str] = None
         self.is_bitfield = False
 
@@ -179,10 +185,17 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
-        # if "NoBitfield" not in self.obj._exports and val.find("<<") != -1:
-        #    self.is_bitfield = True
-        if val.find("<<") != -1:
+
+        # parse bitfield shifts
+        try:
+            number, bitshift = val.split("<<", maxsplit=1)
+        except ValueError:
+            pass
+        else:
             self.is_bitfield = True
+            # make sure we promote to a larger integer type
+            if int(bitshift) >= 31:
+                val = f"{int(number)}ull<<{bitshift}"
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):
@@ -697,6 +710,7 @@ class Generator:
         since: Optional[str] = None
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
+        comments_cur: list[str] = []
 
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
@@ -708,16 +722,18 @@ class Generator:
                 self._use_import(where, why, what)
 
             # remove comments and indent
-            comment = None
             try:
                 line, comment = line.split("//", maxsplit=1)
             except ValueError:
                 pass
             else:
-                if comment:
-                    idx = comment.find("Since:")
-                    if idx != -1:
-                        since = comment[idx + 6 :].strip()
+                comment = comment.strip()
+                if comment.startswith("Since:"):
+                    since = comment[6:].strip()
+                elif comment.startswith("SPDX") or comment.startswith("Copyright"):
+                    pass
+                elif comment:
+                    comments_cur.append(comment.strip())
             line = line.strip()
             if not line:
                 continue
@@ -738,7 +754,10 @@ class Generator:
                     raise ValueError(f"enum {name} already defined on line {line_num}")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
+                enum_cur.since = since
+                enum_cur.comments.extend(comments_cur)
                 self.enum_objs[name] = enum_cur
+                comments_cur.clear()
                 continue
 
             # the enum type
@@ -774,6 +793,7 @@ class Generator:
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
+                comments_cur.clear()
                 since = None
                 derives.clear()
                 offset = 0
@@ -792,11 +812,13 @@ class Generator:
             if enum_cur:
                 enum_item = EnumItem(enum_cur)
                 enum_item.since = since
+                enum_item.comments.extend(comments_cur)
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
                     enum_item.parse_default(parts[1])
                 enum_cur.items.append(enum_item)
+                comments_cur.clear()
 
             # split structure into sections
             if struct_cur:

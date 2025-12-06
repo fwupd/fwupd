@@ -37,32 +37,6 @@ struct _FwupdClientClass {
 	void (*_fwupd_reserved6)(void);
 };
 
-/**
- * FwupdClientUploadFlags:
- *
- * The options to use for uploading.
- **/
-typedef enum {
-	/**
-	 * FWUPD_CLIENT_UPLOAD_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_UPLOAD_FLAG_NONE = 0,
-	/**
-	 * FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:
-	 *
-	 * Always use multipart/form-data.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0,
-	/*< private >*/
-	FWUPD_CLIENT_UPLOAD_FLAG_LAST
-} G_GNUC_FLAG_ENUM FwupdClientUploadFlags;
-
 FwupdClient *
 fwupd_client_new(void);
 GMainContext *

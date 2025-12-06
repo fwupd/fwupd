@@ -1,12 +1,20 @@
 // Copyright 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+// The CPU vendor.
 enum FuCpuVendor {
     Unknown,
     Intel,
     Amd,
 }
 
+// The system power state.
+//
+// This does not have to be exactly what the battery is doing, but is supposed to represent the
+// 40,000ft view of the system power state.
+//
+// For example, it is perfectly correct to set %FU_POWER_STATE_AC if the system is connected to
+// AC power, but the battery cells are discharging for health or for other performance reasons.
 #[derive(ToString)]
 enum FuPowerState {
     Unknown,
@@ -14,6 +22,7 @@ enum FuPowerState {
     Battery,                // On system battery
 }
 
+// The device lid state.
 #[derive(ToString)]
 enum FuLidState {
     Unknown,
@@ -21,6 +30,7 @@ enum FuLidState {
     Closed,
 }
 
+// The device lid state.
 #[derive(ToString, FromString)]
 enum FuDisplayState {
     Unknown,
