@@ -14,7 +14,7 @@
 /* ---- basic TF constants ---- */
 #define FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH  64
 #define FU_PXI_TF_WRITE_SIMPLE_CMD_REPORT_ID  0xCC
-#define FU_PXI_TF_WRITE_SIMPLE_CMD_SLAVE_ADDR 0x2C
+#define FU_PXI_TF_WRITE_SIMPLE_CMD_TARGET_ADDR 0x2C
 
 #define FU_PXI_TF_FAILED_RETRY_TIMES	3
 #define FU_PXI_TF_FAILED_RETRY_INTERVAL 10 /* ms */
@@ -22,7 +22,7 @@
 /* ---- tf RMI frame layout ---- */
 /* note: index 0 is REPORT_ID_PASS_THROUGH (0xCC) */
 #define FU_PXI_TF_HDR_OFFSET_PREAMBLE	1
-#define FU_PXI_TF_HDR_OFFSET_SLAVE_ADDR 2
+#define FU_PXI_TF_HDR_OFFSET_TARGET_ADDR 2
 #define FU_PXI_TF_HDR_OFFSET_FUNC_CODE	3
 #define FU_PXI_TF_HDR_OFFSET_DLEN0	4
 #define FU_PXI_TF_HDR_OFFSET_DLEN1	5
@@ -90,7 +90,7 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	/* defaults are already set in the struct:
 	 *   report_id  = 0xCC
 	 *   preamble   = 0x5A
-	 *   slave_addr = 0x2C
+	 *   target_addr = 0x2C
 	 *   func       = 0x00 (TF_FUNC_WRITE_SIMPLE)
 	 */
 	fu_struct_pxi_tf_write_simple_cmd_set_addr(st_write_simple, addr);
@@ -163,7 +163,7 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	/* defaults:
 	 *   report_id  = 0xCC
 	 *   preamble   = 0x5A
-	 *   slave_addr = 0x2C
+	 *   target_addr = 0x2C
 	 *   func       = 0x04 (TF_FUNC_WRITE_WITH_PACK)
 	 */
 	fu_struct_pxi_tf_write_packet_cmd_set_addr(st_write_packet, addr);
@@ -242,7 +242,7 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	/* defaults:
 	 *   report_id  = 0xCC
 	 *   preamble   = 0x5A
-	 *   slave_addr = 0x2C
+	 *   target_addr = 0x2C
 	 *   func       = 0x0B (TF_FUNC_READ_WITH_LEN)
 	 */
 	fu_struct_pxi_tf_read_cmd_set_addr(st_read, addr);
@@ -305,13 +305,13 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 
 	/* parse reply header */
 	if (out_buf[FU_PXI_TF_HDR_OFFSET_PREAMBLE] != FU_PXI_TF_FRAME_CONST_PREAMBLE ||
-	    out_buf[FU_PXI_TF_HDR_OFFSET_SLAVE_ADDR] != FU_PXI_TF_WRITE_SIMPLE_CMD_SLAVE_ADDR) {
+	    out_buf[FU_PXI_TF_HDR_OFFSET_TARGET_ADDR] != FU_PXI_TF_WRITE_SIMPLE_CMD_TARGET_ADDR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "TF RMI read: invalid header 0x%02x 0x%02x",
 			    out_buf[FU_PXI_TF_HDR_OFFSET_PREAMBLE],
-			    out_buf[FU_PXI_TF_HDR_OFFSET_SLAVE_ADDR]);
+			    out_buf[FU_PXI_TF_HDR_OFFSET_TARGET_ADDR]);
 		return FALSE;
 	}
 

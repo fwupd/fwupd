@@ -121,7 +121,7 @@ enum FuPxiTfFrameConst {
 struct FuStructPxiTfWriteSimpleCmd {
     report_id:  u8 = 0xCC,
     preamble:   u8 = 0x5A,
-    slave_addr: u8 = 0x2C,
+    target_addr: u8 = 0x2C,
     func:       u8 = 0x00,
     addr:       u16le,
     len:        u16le,
@@ -132,7 +132,7 @@ struct FuStructPxiTfWriteSimpleCmd {
 struct FuStructPxiTfWritePacketCmd {
     report_id:    u8 = 0xCC,
     preamble:     u8 = 0x5A,
-    slave_addr:   u8 = 0x2C,
+    target_addr:   u8 = 0x2C,
     func:         u8 = 0x04,
     addr:         u16le,
     datalen:      u16le,
@@ -145,7 +145,7 @@ struct FuStructPxiTfWritePacketCmd {
 struct FuStructPxiTfReadCmd {
     report_id:  u8 = 0xCC,
     preamble:   u8 = 0x5A,
-    slave_addr: u8 = 0x2C,
+    target_addr: u8 = 0x2C,
     func:       u8 = 0x0B,
     addr:       u16le,
     datalen:    u16le,
