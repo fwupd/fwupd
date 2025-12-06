@@ -12,8 +12,8 @@
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-register.h"
+#include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
-
 struct _FuPxiTpDevice {
 	FuHidrawDevice parent_instance;
 	guint8 sram_select;
@@ -29,73 +29,60 @@ G_DEFINE_TYPE(FuPxiTpDevice, fu_pxi_tp_device, FU_TYPE_HIDRAW_DEVICE)
 #define PXI_TP_PAGE_SIZE	      256
 #define PXI_TP_PAGES_COUNT_PER_SECTOR 16
 
-/* ---- reset mode & keys ---- */
+/* ---- reset mode & keys ----
+ *
+ * NOTE:
+ *   The actual enum values and constants are now defined in the Rust .rs file
+ *   and exported as C macros by rustgen:
+ *
+ *     FuPxiTpResetMode::Application  -> FU_PXI_TP_RESET_MODE_APPLICATION
+ *     FuPxiTpResetMode::Bootloader   -> FU_PXI_TP_RESET_MODE_BOOTLOADER
+ *
+ *     FuPxiTpResetKey1::Suspend        -> FU_PXI_TP_RESET_KEY1_SUSPEND
+ *     FuPxiTpResetKey2::Regular      -> FU_PXI_TP_RESET_KEY2_REGULAR
+ *     FuPxiTpResetKey2::Bootloader   -> FU_PXI_TP_RESET_KEY2_BOOTLOADER
+ *
+ *   Likewise for the flash/CRC enums used below:
+ *
+ *     FuPxiTpFlashInst::Cmd0         -> FU_PXI_TP_FLASH_INST_CMD0
+ *     FuPxiTpFlashInst::Cmd1         -> FU_PXI_TP_FLASH_INST_CMD1
+ *
+ *     FuPxiTpFlashExecState::Success -> FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS
+ *     FuPxiTpFlashWriteEnable::Success -> FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS
+ *     FuPxiTpFlashStatus::Busy       -> FU_PXI_TP_FLASH_STATUS_BUSY
+ *
+ *     FuPxiTpFlashCcr::WriteEnable   -> FU_PXI_TP_FLASH_CCR_WRITE_ENABLE
+ *     FuPxiTpFlashCcr::ReadStatus    -> FU_PXI_TP_FLASH_CCR_READ_STATUS
+ *     FuPxiTpFlashCcr::EraseSector   -> FU_PXI_TP_FLASH_CCR_ERASE_SECTOR
+ *     FuPxiTpFlashCcr::ProgramPage   -> FU_PXI_TP_FLASH_CCR_PROGRAM_PAGE
+ *
+ *     FuPxiTpPartId::Pjp274          -> FU_PXI_TP_PART_ID_PJP274
+ *
+ *     FuPxiTpCrcCtrl::FwBank0        -> FU_PXI_TP_CRC_CTRL_FW_BANK0
+ *     FuPxiTpCrcCtrl::FwBank1        -> FU_PXI_TP_CRC_CTRL_FW_BANK1
+ *     FuPxiTpCrcCtrl::ParamBank0     -> FU_PXI_TP_CRC_CTRL_PARAM_BANK0
+ *     FuPxiTpCrcCtrl::ParamBank1     -> FU_PXI_TP_CRC_CTRL_PARAM_BANK1
+ *     FuPxiTpCrcCtrl::Busy           -> FU_PXI_TP_CRC_CTRL_BUSY
+ */
 
-typedef enum {
-	PXI_TP_RESET_MODE_APPLICATION = 0,
-	PXI_TP_RESET_MODE_BOOTLOADER = 1,
-} FuPxiTpResetMode;
-
-enum {
-	PXI_TP_RESET_KEY1_MAGIC = 0xaa,
-	PXI_TP_RESET_KEY2_REGULAR = 0xbb,
-	PXI_TP_RESET_KEY2_BOOTLOADER = 0xcc,
-};
-
-/* ---- flash command constants ---- */
-
-enum {
-	PXI_TP_FLASH_INST_CMD0 = 0x00,
-	PXI_TP_FLASH_INST_CMD1 = 0x01,
-};
-
-enum {
-	PXI_TP_FLASH_EXEC_STATE_BUSY = 0x01,
-	PXI_TP_FLASH_EXEC_STATE_SUCCESS = 0x00,
-	PXI_TP_FLASH_WRITE_ENABLE_SUCCESS = 0x02,
-	PXI_TP_FLASH_STATUS_BUSY = 0x01, /* busy bit in status register */
-};
-
-enum {
-	PXI_TP_FLASH_CCR_WRITE_ENABLE = 0x00000106,
-	PXI_TP_FLASH_CCR_READ_STATUS = 0x01000105,
-	PXI_TP_FLASH_CCR_ERASE_SECTOR = 0x00002520,
-	PXI_TP_FLASH_CCR_PROGRAM_PAGE = 0x01002502,
-};
-
-/* ---- device part-id values ---- */
-enum {
-	PXI_TP_PART_ID_PJP274 = 0x0274,
-};
-
-/* ---- CRC control for firmware ---- */
-enum {
-	/* CRC_CTRL mode: which firmware bank to calculate */
-	PXI_TP_CRC_CTRL_FW_BANK0 = 0x02, /* firmware CRC on bank0 */
-	PXI_TP_CRC_CTRL_FW_BANK1 = 0x10, /* firmware CRC on bank1 */
-
-	/* CRC_CTRL mode: which parameter bank to calculate */
-	PXI_TP_CRC_CTRL_PARAM_BANK0 = 0x04, /* parameter CRC on bank0 */
-	PXI_TP_CRC_CTRL_PARAM_BANK1 = 0x20, /* parameter CRC on bank1 */
-
-	/* CRC_CTRL status bit */
-	PXI_TP_CRC_CTRL_BUSY = 0x01,
-};
+/* ---- device part-id values, CRC control, flash constants ----
+ * All moved to the Rust .rs file and exposed as FU_PXI_TP_* macros.
+ */
 
 static gboolean
-fu_pxi_tp_device_reset(FuPxiTpDevice *self, FuPxiTpResetMode mode, GError **error)
+fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 {
-	guint8 key1 = PXI_TP_RESET_KEY1_MAGIC;
+	guint8 key1 = FU_PXI_TP_RESET_KEY1_SUSPEND;
 	guint8 key2 = 0;
 	guint delay_ms = 0;
 
 	switch (mode) {
-	case PXI_TP_RESET_MODE_APPLICATION:
-		key2 = PXI_TP_RESET_KEY2_REGULAR;
+	case FU_PXI_TP_RESET_MODE_APPLICATION:
+		key2 = FU_PXI_TP_RESET_KEY2_REGULAR;
 		delay_ms = 500;
 		break;
-	case PXI_TP_RESET_MODE_BOOTLOADER:
-		key2 = PXI_TP_RESET_KEY2_BOOTLOADER;
+	case FU_PXI_TP_RESET_MODE_BOOTLOADER:
+		key2 = FU_PXI_TP_RESET_KEY2_BOOTLOADER;
 		delay_ms = 10;
 		break;
 	default:
@@ -198,11 +185,11 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 					     error))
 			return FALSE;
 
-		if (out_val == PXI_TP_FLASH_EXEC_STATE_SUCCESS)
+		if (out_val == FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS)
 			break;
 	}
 
-	if (out_val != PXI_TP_FLASH_EXEC_STATE_SUCCESS) {
+	if (out_val != FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -222,16 +209,16 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 	guint8 out_val = 0;
 
 	if (!fu_pxi_tp_device_flash_execute(self,
-					    PXI_TP_FLASH_INST_CMD0,
-					    PXI_TP_FLASH_CCR_WRITE_ENABLE,
+					    FU_PXI_TP_FLASH_INST_CMD0,
+					    FU_PXI_TP_FLASH_CCR_WRITE_ENABLE,
 					    0,
 					    error))
 		return FALSE;
 
 	for (guint i = 0; i < flash_write_enable_retry_max; i++) {
 		if (!fu_pxi_tp_device_flash_execute(self,
-						    PXI_TP_FLASH_INST_CMD1,
-						    PXI_TP_FLASH_CCR_READ_STATUS,
+						    FU_PXI_TP_FLASH_INST_CMD1,
+						    FU_PXI_TP_FLASH_CCR_READ_STATUS,
 						    1,
 						    error))
 			return FALSE;
@@ -245,11 +232,11 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 					     error))
 			return FALSE;
 
-		if ((out_val & PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) != 0)
+		if ((out_val & FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) != 0)
 			break;
 	}
 
-	if ((out_val & PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) == 0) {
+	if ((out_val & FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -271,8 +258,8 @@ fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 
 	for (guint i = 0; i < flash_busy_retry_max; i++) {
 		if (!fu_pxi_tp_device_flash_execute(self,
-						    PXI_TP_FLASH_INST_CMD1,
-						    PXI_TP_FLASH_CCR_READ_STATUS,
+						    FU_PXI_TP_FLASH_INST_CMD1,
+						    FU_PXI_TP_FLASH_CCR_READ_STATUS,
 						    1,
 						    error))
 			return FALSE;
@@ -287,11 +274,11 @@ fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 			return FALSE;
 
 		/* busy bit cleared? */
-		if ((out_val & PXI_TP_FLASH_STATUS_BUSY) == 0)
+		if ((out_val & FU_PXI_TP_FLASH_STATUS_BUSY) == 0)
 			break;
 	}
 
-	if ((out_val & PXI_TP_FLASH_STATUS_BUSY) != 0) {
+	if ((out_val & FU_PXI_TP_FLASH_STATUS_BUSY) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -339,8 +326,8 @@ fu_pxi_tp_device_flash_erase_sector(FuPxiTpDevice *self, guint8 sector, GError *
 		return FALSE;
 
 	if (!fu_pxi_tp_device_flash_execute(self,
-					    PXI_TP_FLASH_INST_CMD0,
-					    PXI_TP_FLASH_CCR_ERASE_SECTOR,
+					    FU_PXI_TP_FLASH_INST_CMD0,
+					    FU_PXI_TP_FLASH_CCR_ERASE_SECTOR,
 					    0,
 					    error))
 		return FALSE;
@@ -403,7 +390,7 @@ fu_pxi_tp_device_flash_program_256b_to_flash(FuPxiTpDevice *self,
 
 	if (!fu_pxi_tp_device_flash_execute(self,
 					    0x84,
-					    PXI_TP_FLASH_CCR_PROGRAM_PAGE,
+					    FU_PXI_TP_FLASH_CCR_PROGRAM_PAGE,
 					    PXI_TP_PAGE_SIZE,
 					    error))
 		return FALSE;
@@ -533,13 +520,13 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 	part_id |= (guint16)out_val << 8;
 
 	switch (part_id) {
-	case PXI_TP_PART_ID_PJP274:
+	case FU_PXI_TP_PART_ID_PJP274:
 		if (swap_flag != 0) {
 			/* PJP274 + swap enabled → firmware on bank1 */
 			if (!fu_pxi_tp_register_user_write(self,
 							   PXI_TP_USER_BANK0,
 							   PXI_TP_R_USER0_CRC_CTRL,
-							   PXI_TP_CRC_CTRL_FW_BANK1,
+							   FU_PXI_TP_CRC_CTRL_FW_BANK1,
 							   error))
 				return 0;
 		} else {
@@ -547,7 +534,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 			if (!fu_pxi_tp_register_user_write(self,
 							   PXI_TP_USER_BANK0,
 							   PXI_TP_R_USER0_CRC_CTRL,
-							   PXI_TP_CRC_CTRL_FW_BANK0,
+							   FU_PXI_TP_CRC_CTRL_FW_BANK0,
 							   error))
 				return 0;
 		}
@@ -558,7 +545,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 		if (!fu_pxi_tp_register_user_write(self,
 						   PXI_TP_USER_BANK0,
 						   PXI_TP_R_USER0_CRC_CTRL,
-						   PXI_TP_CRC_CTRL_FW_BANK0,
+						   FU_PXI_TP_CRC_CTRL_FW_BANK0,
 						   error))
 			return 0;
 		break;
@@ -576,11 +563,11 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 			return 0;
 
 		/* busy bit cleared? */
-		if ((out_val & PXI_TP_CRC_CTRL_BUSY) == 0)
+		if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) == 0)
 			break;
 	}
 
-	if ((out_val & PXI_TP_CRC_CTRL_BUSY) != 0) {
+	if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -663,13 +650,13 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 	part_id |= (guint16)out_val << 8;
 
 	switch (part_id) {
-	case PXI_TP_PART_ID_PJP274:
+	case FU_PXI_TP_PART_ID_PJP274:
 		if (swap_flag != 0) {
 			/* PJP274 + swap enabled → parameter on bank1 */
 			if (!fu_pxi_tp_register_user_write(self,
 							   PXI_TP_USER_BANK0,
 							   PXI_TP_R_USER0_CRC_CTRL,
-							   PXI_TP_CRC_CTRL_PARAM_BANK1,
+							   FU_PXI_TP_CRC_CTRL_PARAM_BANK1,
 							   error))
 				return 0;
 		} else {
@@ -677,7 +664,7 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 			if (!fu_pxi_tp_register_user_write(self,
 							   PXI_TP_USER_BANK0,
 							   PXI_TP_R_USER0_CRC_CTRL,
-							   PXI_TP_CRC_CTRL_PARAM_BANK0,
+							   FU_PXI_TP_CRC_CTRL_PARAM_BANK0,
 							   error))
 				return 0;
 		}
@@ -688,7 +675,7 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 		if (!fu_pxi_tp_register_user_write(self,
 						   PXI_TP_USER_BANK0,
 						   PXI_TP_R_USER0_CRC_CTRL,
-						   PXI_TP_CRC_CTRL_PARAM_BANK0,
+						   FU_PXI_TP_CRC_CTRL_PARAM_BANK0,
 						   error))
 			return 0;
 		break;
@@ -706,11 +693,11 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 			return 0;
 
 		/* busy bit cleared? */
-		if ((out_val & PXI_TP_CRC_CTRL_BUSY) == 0)
+		if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) == 0)
 			break;
 	}
 
-	if ((out_val & PXI_TP_CRC_CTRL_BUSY) != 0) {
+	if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -1070,7 +1057,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 			/* target TF version is stored in s->reserved[0..2] */
 			guint8 target_ver[3] = {s->reserved[0], s->reserved[1], s->reserved[2]};
 
-			if (!fu_pxi_tp_device_reset(self, PXI_TP_RESET_MODE_APPLICATION, error))
+			if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
 				return FALSE;
 
 			guint32 send_interval = (guint32)s->reserved[3]; /* ms */
@@ -1087,7 +1074,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 				return FALSE;
 			}
 
-			if (!fu_pxi_tp_device_reset(self, PXI_TP_RESET_MODE_BOOTLOADER, error))
+			if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_BOOTLOADER, error))
 				return FALSE;
 
 			written += (guint64)data->len;
@@ -1113,7 +1100,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 	fu_progress_set_steps(prog_verify, 2);
 
 	/* crc check */
-	if (!fu_pxi_tp_device_reset(self, PXI_TP_RESET_MODE_BOOTLOADER, error))
+	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_BOOTLOADER, error))
 		return FALSE;
 
 	crc_value = fu_pxi_tp_device_crc_firmware(self, error);
@@ -1211,7 +1198,7 @@ fu_pxi_tp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 		return TRUE;
 
 	/* coming back from bootloader into application mode */
-	if (!fu_pxi_tp_device_reset(self, PXI_TP_RESET_MODE_APPLICATION, error))
+	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
 		return FALSE;
 
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -1239,7 +1226,9 @@ fu_pxi_tp_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
-	if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device), PXI_TP_RESET_MODE_BOOTLOADER, error))
+	if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device),
+				    FU_PXI_TP_RESET_MODE_BOOTLOADER,
+				    error))
 		return FALSE;
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -1256,7 +1245,7 @@ fu_pxi_tp_device_cleanup(FuDevice *device,
 	g_debug("fu_pxi_tp_device_cleanup");
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device),
-					    PXI_TP_RESET_MODE_APPLICATION,
+					    FU_PXI_TP_RESET_MODE_APPLICATION,
 					    error))
 			return FALSE;
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);

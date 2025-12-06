@@ -3,6 +3,72 @@
 //
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+// ---- TP enums exported to C via rustgen ----
+
+#[repr(u8)]
+enum FuPxiTpResetMode {
+    Application,
+    Bootloader,
+}
+
+#[repr(u8)]
+enum FuPxiTpResetKey1 {
+    Suspend = 0xaa,
+}
+
+#[repr(u8)]
+enum FuPxiTpResetKey2 {
+    Regular    = 0xbb,
+    Bootloader = 0xcc,
+}
+
+#[repr(u8)]
+enum FuPxiTpFlashInst {
+    Cmd0 = 0x00,
+    Cmd1 = 0x01,
+}
+
+#[repr(u8)]
+enum FuPxiTpFlashExecState {
+    Busy    = 0x01,
+    Success = 0x00,
+}
+
+#[repr(u8)]
+enum FuPxiTpFlashWriteEnable {
+    Success = 0x02,
+}
+
+#[repr(u8)]
+enum FuPxiTpFlashStatus {
+    Busy = 0x01,
+}
+
+#[repr(u32)]
+enum FuPxiTpFlashCcr {
+    WriteEnable = 0x00000106,
+    ReadStatus  = 0x01000105,
+    EraseSector = 0x00002520,
+    ProgramPage = 0x01002502,
+}
+
+#[repr(u16)]
+enum FuPxiTpPartId {
+    Pjp274 = 0x0274,
+}
+
+#[repr(u8)]
+enum FuPxiTpCrcCtrl {
+    FwBank0    = 0x02,
+    FwBank1    = 0x10,
+    ParamBank0 = 0x04,
+    ParamBank1 = 0x20,
+    Busy       = 0x01,
+}
+
+
+// ---- TF enums exported to C via rustgen ----
+
 // TF write-simple command header:
 //   REPORT_ID__PASS_THROUGH
 //   TF_FRAME_PREAMBLE
