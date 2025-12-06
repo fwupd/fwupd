@@ -469,15 +469,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 						      tmp_buf,
 						      1,
 						      error)) {
-		/* best-effort rollback: re-enable touch, ignore errors */
-		touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-		g_debug("re-enabling touch after bootloader enter failure");
-		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							       FU_PXI_TF_CMD_TOUCH_CONTROL,
-							       &touch_operate_buf,
-							       1,
-							       NULL);
-
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -495,14 +486,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 						      tmp_buf,
 						      1,
 						      error)) {
-		touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-		g_debug("re-enabling touch after erase command failure");
-		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							       FU_PXI_TF_CMD_TOUCH_CONTROL,
-							       &touch_operate_buf,
-							       1,
-							       NULL);
-
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -519,15 +502,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 								       FU_CHUNK_PAGESZ_NONE,
 								       max_packet_data_len);
 	if (chunks == NULL) {
-		/* rollback touch and fail */
-		touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-		g_debug("re-enabling touch after chunk array creation failure");
-		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							       FU_PXI_TF_CMD_TOUCH_CONTROL,
-							       &touch_operate_buf,
-							       1,
-							       NULL);
-
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -538,13 +512,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	gsize num_chunks = fu_chunk_array_length(chunks);
 	if (num_chunks == 0) {
 		g_debug("no firmware data to write (zero chunks)");
-		/* best-effort: re-enable touch before return */
-		touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							       FU_PXI_TF_CMD_TOUCH_CONTROL,
-							       &touch_operate_buf,
-							       1,
-							       NULL);
 		return TRUE;
 	}
 
@@ -556,18 +523,8 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	for (guint32 idx = 0; idx < num; idx++) {
 		guint32 packet_index = idx + 1;
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx, error);
-		if (chk == NULL) {
-			/* rollback touch and fail */
-			touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-			g_debug("re-enabling touch after chunk index %u fetch failure",
-				packet_index);
-			(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-								       FU_PXI_TF_CMD_TOUCH_CONTROL,
-								       &touch_operate_buf,
-								       1,
-								       NULL);
+		if (chk == NULL)
 			return FALSE;
-		}
 
 		gsize count = fu_chunk_get_data_sz(chk);
 		const guint8 *chunk_data = fu_chunk_get_data(chk);
@@ -601,15 +558,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		}
 
 		if (k == FU_PXI_TF_FAILED_RETRY_TIMES) {
-			/* give up on this packet: rollback touch and fail */
-			touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-			g_debug("re-enabling touch after packet %u write failure", packet_index);
-			(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-								       FU_PXI_TF_CMD_TOUCH_CONTROL,
-								       &touch_operate_buf,
-								       1,
-								       NULL);
-
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -633,14 +581,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 							     &status,
 							     &mcu_packet_number,
 							     error)) {
-		touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-		g_debug("re-enabling touch after download status read failure");
-		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							       FU_PXI_TF_CMD_TOUCH_CONTROL,
-							       &touch_operate_buf,
-							       1,
-							       NULL);
-
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -654,14 +594,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		status);
 
 	if (status != 0 || mcu_packet_number != num) {
-		touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-		g_debug("re-enabling touch after download status mismatch");
-		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							       FU_PXI_TF_CMD_TOUCH_CONTROL,
-							       &touch_operate_buf,
-							       1,
-							       NULL);
-
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -674,25 +606,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_DOWNLOAD_POST_WAIT_MS);
 	g_debug("download status indicates success, exiting upgrade mode");
-
-	/* exit upgrade mode (best-effort) */
-	tmp_buf[0] = FU_PXI_TF_UPGRADE_MODE_EXIT;
-	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-						      FU_PXI_TF_CMD_SET_UPGRADE_MODE,
-						      tmp_buf,
-						      1,
-						      NULL))
-		g_debug("failed to exit upgrade mode (ignored)");
-
-	/* re-enable touch (best-effort) */
-	touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_ENABLE;
-	g_debug("re-enabling touch after successful upgrade");
-	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-						      FU_PXI_TF_CMD_TOUCH_CONTROL,
-						      &touch_operate_buf,
-						      1,
-						      NULL))
-		g_debug("failed to re-enable touch (ignored)");
 
 	return TRUE;
 }
@@ -764,13 +677,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 				target_ver[0],
 				target_ver[1],
 				target_ver[2]);
-
-			/* best-effort restore proxy mode */
-			(void)fu_pxi_tp_register_user_write(self,
-							    PXI_TP_USER_BANK0,
-							    PXI_TP_R_USER0_PROXY_MODE,
-							    FU_PXI_TP_PROXY_MODE_NORMAL,
-							    NULL);
 			return TRUE;
 		}
 	} else {
