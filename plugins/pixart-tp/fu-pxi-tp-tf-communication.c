@@ -11,7 +11,7 @@
 #include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
 
-#define REPORT_ID__PASS_THROUGH 0xCC
+#define REPORT_ID_PASS_THROUGH	0xCC
 #define SLAVE_ADDRESS		0x2C
 
 #define FAILED_RETRY_TIMES    3
@@ -39,7 +39,7 @@ enum {
 
 /* ---- TF RMI frame layout ---- */
 enum {
-	/* note: index 0 is REPORT_ID__PASS_THROUGH */
+	/* note: index 0 is REPORT_ID_PASS_THROUGH */
 	TF_HDR_OFFSET_PREAMBLE = 1,
 	TF_HDR_OFFSET_SLAVE_ADDR = 2,
 	TF_HDR_OFFSET_FUNC_CODE = 3,
@@ -139,7 +139,7 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_struct_pxi_tf_write_simple_cmd_set_report_id(st_write_simple, REPORT_ID__PASS_THROUGH);
+	fu_struct_pxi_tf_write_simple_cmd_set_report_id(st_write_simple, REPORT_ID_PASS_THROUGH);
 	fu_struct_pxi_tf_write_simple_cmd_set_preamble(st_write_simple, TF_FRAME_PREAMBLE);
 	fu_struct_pxi_tf_write_simple_cmd_set_slave_addr(st_write_simple, SLAVE_ADDRESS);
 	fu_struct_pxi_tf_write_simple_cmd_set_func(st_write_simple, TF_FUNC_WRITE_SIMPLE);
@@ -204,7 +204,7 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_struct_pxi_tf_write_packet_cmd_set_report_id(st_write_packet, REPORT_ID__PASS_THROUGH);
+	fu_struct_pxi_tf_write_packet_cmd_set_report_id(st_write_packet, REPORT_ID_PASS_THROUGH);
 	fu_struct_pxi_tf_write_packet_cmd_set_preamble(st_write_packet, TF_FRAME_PREAMBLE);
 	fu_struct_pxi_tf_write_packet_cmd_set_slave_addr(st_write_packet, SLAVE_ADDRESS);
 	fu_struct_pxi_tf_write_packet_cmd_set_func(st_write_packet, TF_FUNC_WRITE_WITH_PACK);
@@ -278,7 +278,7 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	/* nDataLen = input length + 2 bytes for reply length (low/high) */
 	datalen = in_bufsz + 2;
 
-	fu_struct_pxi_tf_read_cmd_set_report_id(st_read, REPORT_ID__PASS_THROUGH);
+	fu_struct_pxi_tf_read_cmd_set_report_id(st_read, REPORT_ID_PASS_THROUGH);
 	fu_struct_pxi_tf_read_cmd_set_preamble(st_read, TF_FRAME_PREAMBLE);
 	fu_struct_pxi_tf_read_cmd_set_slave_addr(st_read, SLAVE_ADDRESS);
 	fu_struct_pxi_tf_read_cmd_set_func(st_read, TF_FUNC_READ_WITH_LEN);
@@ -331,7 +331,7 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	fu_device_sleep(FU_DEVICE(self), TF_RMI_REPLY_WAIT_MS);
 
 	if (!fu_pxi_tp_common_get_feature(self,
-					  REPORT_ID__PASS_THROUGH,
+					  REPORT_ID_PASS_THROUGH,
 					  out_buf,
 					  TF_FEATURE_REPORT_BYTE_LENGTH,
 					  error))
@@ -578,14 +578,65 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 
 	fu_device_sleep(FU_DEVICE(self), TF_ERASE_WAIT_MS);
 
-	/* calculate total number of packets */
-	guint32 num = (data_size + max_packet_data_len - 1) / max_packet_data_len;
-	guint32 offset = 0;
+	/* build chunk array from firmware payload */
+	g_autoptr(GBytes) blob = g_bytes_new(data->data, data_size);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(blob,
+								       FU_CHUNK_ADDR_OFFSET_NONE,
+								       FU_CHUNK_PAGESZ_NONE,
+								       max_packet_data_len);
+	if (chunks == NULL) {
+		/* rollback touch and fail */
+		touch_operate_buf = TF_TOUCH_ENABLE;
+		g_debug("re-enabling touch after chunk array creation failure");
+		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
+							       TOUCH_CONTROL,
+							       &touch_operate_buf,
+							       1,
+							       NULL);
+
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to create chunk array from firmware data");
+		return FALSE;
+	}
+
+	gsize num_chunks = fu_chunk_array_length(chunks);
+	if (num_chunks == 0) {
+		g_debug("no firmware data to write (zero chunks)");
+		/* best-effort: re-enable touch before return */
+		touch_operate_buf = TF_TOUCH_ENABLE;
+		(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
+							       TOUCH_CONTROL,
+							       &touch_operate_buf,
+							       1,
+							       NULL);
+		return TRUE;
+	}
+
+	/* total number of packets */
+	guint32 num = (guint32)num_chunks;
 
 	g_debug("start writing flash, packets=%u, total_size=%u", num, data_size);
 
-	for (guint32 i = 1; i <= num; i++, offset += max_packet_data_len) {
-		gsize count = (i == num) ? (data_size - offset) : max_packet_data_len;
+	for (guint32 idx = 0; idx < num; idx++) {
+		guint32 packet_index = idx + 1;
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx, error);
+		if (chk == NULL) {
+			/* rollback touch and fail */
+			touch_operate_buf = TF_TOUCH_ENABLE;
+			g_debug("re-enabling touch after chunk index %u fetch failure",
+				packet_index);
+			(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
+								       TOUCH_CONTROL,
+								       &touch_operate_buf,
+								       1,
+								       NULL);
+			return FALSE;
+		}
+
+		gsize count = fu_chunk_get_data_sz(chk);
+		const guint8 *chunk_data = fu_chunk_get_data(chk);
 		guint32 k = 0;
 
 		for (; k < FAILED_RETRY_TIMES; k++) {
@@ -594,15 +645,15 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 			if (fu_pxi_tp_tf_communication_write_rmi_with_packet(self,
 									     WRITE_UPGRADE_DATA,
 									     num,
-									     i,
-									     &data->data[offset],
+									     packet_index,
+									     chunk_data,
 									     count,
 									     &local_error)) {
 				break; /* this packet succeeded */
 			}
 
 			g_debug("packet %u write failed, attempt %u/%d: %s",
-				i,
+				packet_index,
 				k + 1,
 				FAILED_RETRY_TIMES,
 				local_error != NULL ? local_error->message : "unknown");
@@ -616,7 +667,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		if (k == FAILED_RETRY_TIMES) {
 			/* give up on this packet: rollback touch and fail */
 			touch_operate_buf = TF_TOUCH_ENABLE;
-			g_debug("re-enabling touch after packet %u write failure", i);
+			g_debug("re-enabling touch after packet %u write failure", packet_index);
 			(void)fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 								       TOUCH_CONTROL,
 								       &touch_operate_buf,
@@ -627,7 +678,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
 				    "failed to write flash packet %u after %d retries",
-				    i,
+				    packet_index,
 				    FAILED_RETRY_TIMES);
 			return FALSE;
 		}
