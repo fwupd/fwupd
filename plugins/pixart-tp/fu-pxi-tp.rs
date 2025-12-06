@@ -46,10 +46,10 @@ enum FuPxiTpFlashStatus {
 
 #[repr(u32)]
 enum FuPxiTpFlashCcr {
-    WriteEnable = 0x00000106,
-    ReadStatus  = 0x01000105,
-    EraseSector = 0x00002520,
-    ProgramPage = 0x01002502,
+    WriteEnable = 0x0000_0106,
+    ReadStatus  = 0x0100_0105,
+    EraseSector = 0x0000_2520,
+    ProgramPage = 0x0100_2502,
 }
 
 #[repr(u16)]
@@ -66,65 +66,88 @@ enum FuPxiTpCrcCtrl {
     Busy       = 0x01,
 }
 
+// TP proxy mode (host<->TF pass-through)
+#[repr(u8)]
+enum FuPxiTpProxyMode {
+    Normal   = 0x00,
+    TfUpdate = 0x01,
+}
 
 // ---- TF enums exported to C via rustgen ----
 
-// TF write-simple command header:
-//   REPORT_ID__PASS_THROUGH
-//   TF_FRAME_PREAMBLE
-//   SLAVE_ADDRESS
-//   TF_FUNC_WRITE_SIMPLE
-//   addr (LE16)
-//   len  (LE16)
-#[derive(New)]
-#[repr(C, packed)]
-struct FuStructPxiTfWriteSimpleCmd {
-    report_id: u8,
-    preamble: u8,
-    slave_addr: u8,
-    func: u8,
-    addr: u16le,
-    len: u16le,
+// TF function command IDs (RMI addr)
+#[repr(u16)]
+enum FuPxiTfCmd {
+    SetUpgradeMode   = 0x0001,
+    WriteUpgradeData = 0x0002,
+    ReadUpgradeStatus = 0x0003,
+    ReadVersion      = 0x0007,
+    TouchControl     = 0x0303,
 }
 
-// TF write-with-packet command header:
-//   REPORT_ID__PASS_THROUGH
-//   TF_FRAME_PREAMBLE
-//   SLAVE_ADDRESS
-//   TF_FUNC_WRITE_WITH_PACK
-//   addr         (LE16)
-//   datalen      (LE16)  // payload bytes: 2 bytes total + 2 bytes index + data
-//   packet_total (LE16)
-//   packet_index (LE16)
-#[derive(New)]
+// TF upgrade mode payload
+#[repr(u8)]
+enum FuPxiTfUpgradeMode {
+    Exit      = 0x00,
+    EnterBoot = 0x01,
+    EraseFlash = 0x02,
+}
+
+// TF touch control payload
+#[repr(u8)]
+enum FuPxiTfTouchControl {
+    Enable  = 0x00,
+    Disable = 0x01,
+}
+
+// TF firmware version mode (mode: 1=APP, 2=BOOT, 3=ALGO)
+#[repr(u8)]
+enum FuPxiTfFwMode {
+    App  = 1,
+    Boot = 2,
+    Algo = 3,
+}
+
+// TF frame constants (preamble, tail, flags)
+#[repr(u8)]
+enum FuPxiTfFrameConst {
+    Preamble      = 0x5A,
+    Tail          = 0xA5,
+    ExceptionFlag = 0x80,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructPxiTfWriteSimpleCmd {
+    report_id:  u8 = 0xCC,
+    preamble:   u8 = 0x5A,
+    slave_addr: u8 = 0x2C,
+    func:       u8 = 0x00,
+    addr:       u16le,
+    len:        u16le,
+}
+
+#[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfWritePacketCmd {
-    report_id: u8,
-    preamble: u8,
-    slave_addr: u8,
-    func: u8,
-    addr: u16le,
-    datalen: u16le,
+    report_id:    u8 = 0xCC,
+    preamble:     u8 = 0x5A,
+    slave_addr:   u8 = 0x2C,
+    func:         u8 = 0x04,
+    addr:         u16le,
+    datalen:      u16le,
     packet_total: u16le,
     packet_index: u16le,
 }
 
-// TF read-with-length command header:
-//   REPORT_ID__PASS_THROUGH
-//   TF_FRAME_PREAMBLE
-//   SLAVE_ADDRESS
-//   TF_FUNC_READ_WITH_LEN
-//   addr      (LE16)
-//   datalen   (LE16)  // in_buf length + 2 bytes reply length
-//   reply_len (LE16)  // expected reply payload length (hint)
-#[derive(New)]
+#[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfReadCmd {
-    report_id: u8,
-    preamble: u8,
-    slave_addr: u8,
-    func: u8,
-    addr: u16le,
-    datalen: u16le,
-    reply_len: u16le,
+    report_id:  u8 = 0xCC,
+    preamble:   u8 = 0x5A,
+    slave_addr: u8 = 0x2C,
+    func:       u8 = 0x0B,
+    addr:       u16le,
+    datalen:    u16le,
+    reply_len:  u16le,
 }
