@@ -68,8 +68,6 @@ G_DEFINE_TYPE_EXTENDED(FwupdRequest,
 const gchar *
 fwupd_request_kind_to_string(FwupdRequestKind kind)
 {
-	if (kind == FWUPD_REQUEST_KIND_UNKNOWN)
-		return "unknown";
 	if (kind == FWUPD_REQUEST_KIND_POST)
 		return "post";
 	if (kind == FWUPD_REQUEST_KIND_IMMEDIATE)
@@ -90,13 +88,11 @@ fwupd_request_kind_to_string(FwupdRequestKind kind)
 FwupdRequestKind
 fwupd_request_kind_from_string(const gchar *kind)
 {
-	if (g_strcmp0(kind, "unknown") == 0)
-		return FWUPD_REQUEST_KIND_UNKNOWN;
 	if (g_strcmp0(kind, "post") == 0)
 		return FWUPD_REQUEST_KIND_POST;
 	if (g_strcmp0(kind, "immediate") == 0)
 		return FWUPD_REQUEST_KIND_IMMEDIATE;
-	return FWUPD_REQUEST_KIND_LAST;
+	return FWUPD_REQUEST_KIND_UNKNOWN;
 }
 
 /**

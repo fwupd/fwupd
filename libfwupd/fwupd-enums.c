@@ -21,8 +21,6 @@
 const gchar *
 fwupd_status_to_string(FwupdStatus status)
 {
-	if (status == FWUPD_STATUS_UNKNOWN)
-		return "unknown";
 	if (status == FWUPD_STATUS_IDLE)
 		return "idle";
 	if (status == FWUPD_STATUS_DECOMPRESSING)
@@ -67,8 +65,6 @@ fwupd_status_to_string(FwupdStatus status)
 FwupdStatus
 fwupd_status_from_string(const gchar *status)
 {
-	if (g_strcmp0(status, "unknown") == 0)
-		return FWUPD_STATUS_UNKNOWN;
 	if (g_strcmp0(status, "idle") == 0)
 		return FWUPD_STATUS_IDLE;
 	if (g_strcmp0(status, "decompressing") == 0)
@@ -97,7 +93,7 @@ fwupd_status_from_string(const gchar *status)
 		return FWUPD_STATUS_SHUTDOWN;
 	if (g_strcmp0(status, "waiting-for-user") == 0)
 		return FWUPD_STATUS_WAITING_FOR_USER;
-	return FWUPD_STATUS_LAST;
+	return FWUPD_STATUS_UNKNOWN;
 }
 
 /**
@@ -517,8 +513,6 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 const gchar *
 fwupd_update_state_to_string(FwupdUpdateState update_state)
 {
-	if (update_state == FWUPD_UPDATE_STATE_UNKNOWN)
-		return "unknown";
 	if (update_state == FWUPD_UPDATE_STATE_PENDING)
 		return "pending";
 	if (update_state == FWUPD_UPDATE_STATE_SUCCESS)
@@ -545,8 +539,6 @@ fwupd_update_state_to_string(FwupdUpdateState update_state)
 FwupdUpdateState
 fwupd_update_state_from_string(const gchar *update_state)
 {
-	if (g_strcmp0(update_state, "unknown") == 0)
-		return FWUPD_UPDATE_STATE_UNKNOWN;
 	if (g_strcmp0(update_state, "pending") == 0)
 		return FWUPD_UPDATE_STATE_PENDING;
 	if (g_strcmp0(update_state, "success") == 0)

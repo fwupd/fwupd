@@ -58,17 +58,17 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_error_from_string(tmp), ==, i);
 	}
-	for (guint i = 0; i < FWUPD_STATUS_LAST; i++) {
+	for (guint i = FWUPD_STATUS_UNKNOWN + 1; i < FWUPD_STATUS_LAST; i++) {
 		const gchar *tmp = fwupd_status_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_status_from_string(tmp), ==, i);
 	}
-	for (guint i = 0; i < FWUPD_UPDATE_STATE_LAST; i++) {
+	for (guint i = FWUPD_UPDATE_STATE_UNKNOWN + 1; i < FWUPD_UPDATE_STATE_LAST; i++) {
 		const gchar *tmp = fwupd_update_state_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_update_state_from_string(tmp), ==, i);
 	}
-	for (guint i = 0; i < FWUPD_REQUEST_KIND_LAST; i++) {
+	for (guint i = FWUPD_REQUEST_KIND_UNKNOWN + 1; i < FWUPD_REQUEST_KIND_LAST; i++) {
 		const gchar *tmp = fwupd_request_kind_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_request_kind_from_string(tmp), ==, i);
