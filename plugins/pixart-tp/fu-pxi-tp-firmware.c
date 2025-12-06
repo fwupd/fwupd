@@ -461,12 +461,18 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* expose header values as standard metadata */
-	g_autofree gchar *ver = g_strdup_printf("0x%04x", self->file_ver);
-	fu_firmware_set_version(firmware, ver);
+	fu_firmware_set_version_raw(firmware, self->file_ver);
 
-	/* your container size is the whole file */
+	/* container size is the whole file */
 	fu_firmware_set_size(firmware, sz);
 	return TRUE;
+}
+
+static gchar *
+fu_pxi_tp_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16((guint16)version_raw,
+				      fu_firmware_get_version_format(firmware));
 }
 
 static const char *
@@ -686,6 +692,7 @@ fu_pxi_tp_firmware_init(FuPxiTpFirmware *self)
 {
 	self->sections = g_ptr_array_new_with_free_func(g_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
 }
 
 /* ---------------- finalize ---------------- */
@@ -713,6 +720,7 @@ fu_pxi_tp_firmware_class_init(FuPxiTpFirmwareClass *klass)
 	firmware_class->export = fu_pxi_tp_firmware_export;
 	firmware_class->write = fu_pxi_tp_firmware_write;
 	firmware_class->build = fu_pxi_tp_firmware_build;
+	firmware_class->convert_version = fu_pxi_tp_firmware_convert_version;
 }
 
 /* ---------------- factory ----------------- */
