@@ -12,8 +12,8 @@
 #include "fu-pxi-tp-tf-communication.h"
 
 /* ---- basic TF constants ---- */
-#define FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH  64
-#define FU_PXI_TF_WRITE_SIMPLE_CMD_REPORT_ID  0xCC
+#define FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH   64
+#define FU_PXI_TF_WRITE_SIMPLE_CMD_REPORT_ID   0xCC
 #define FU_PXI_TF_WRITE_SIMPLE_CMD_TARGET_ADDR 0x2C
 
 #define FU_PXI_TF_FAILED_RETRY_TIMES	3
@@ -21,12 +21,12 @@
 
 /* ---- tf RMI frame layout ---- */
 /* note: index 0 is REPORT_ID_PASS_THROUGH (0xCC) */
-#define FU_PXI_TF_HDR_OFFSET_PREAMBLE	1
+#define FU_PXI_TF_HDR_OFFSET_PREAMBLE	 1
 #define FU_PXI_TF_HDR_OFFSET_TARGET_ADDR 2
-#define FU_PXI_TF_HDR_OFFSET_FUNC_CODE	3
-#define FU_PXI_TF_HDR_OFFSET_DLEN0	4
-#define FU_PXI_TF_HDR_OFFSET_DLEN1	5
-#define FU_PXI_TF_HDR_HEADER_BYTES	8 /* header up to len + replylen */
+#define FU_PXI_TF_HDR_OFFSET_FUNC_CODE	 3
+#define FU_PXI_TF_HDR_OFFSET_DLEN0	 4
+#define FU_PXI_TF_HDR_OFFSET_DLEN1	 5
+#define FU_PXI_TF_HDR_HEADER_BYTES	 8 /* header up to len + replylen */
 
 #define FU_PXI_TF_PAYLOAD_OFFSET_APP	 6 /* first app payload byte */
 #define FU_PXI_TF_TAIL_CRC_OFFSET_BIAS	 6 /* CRC index = datalen + 6 */
@@ -152,13 +152,6 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	/* build header using rustgen struct (endian-safe) */
 	g_autoptr(FuStructPxiTfWritePacketCmd) st_write_packet =
 	    fu_struct_pxi_tf_write_packet_cmd_new();
-	if (st_write_packet == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to allocate TF write packet header");
-		return FALSE;
-	}
 
 	/* defaults:
 	 *   report_id  = 0xCC
