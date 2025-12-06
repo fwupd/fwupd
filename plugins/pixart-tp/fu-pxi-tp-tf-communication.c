@@ -442,12 +442,18 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 					  GError **error)
 {
 	const guint32 max_packet_data_len = FU_PXI_TF_MAX_PACKET_DATA_LEN;
+	guint8 touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_DISABLE;
+	guint8 tmp_buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	gsize num_chunks = 0;
+	guint32 num = 0;
+	guint32 idx;
 
 	(void)progress; /* currently unused, can be wired to progress if needed */
 
 	/* disable touch function while updating TF */
 	g_debug("disabling touch");
-	guint8 touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_DISABLE;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      FU_PXI_TF_CMD_TOUCH_CONTROL,
 						      &touch_operate_buf,
@@ -462,7 +468,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 
 	/* enter TF bootloader / upgrade mode */
 	g_debug("enter bootloader mode");
-	guint8 tmp_buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
 	tmp_buf[0] = FU_PXI_TF_UPGRADE_MODE_ENTER_BOOT;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      FU_PXI_TF_CMD_SET_UPGRADE_MODE,
@@ -496,11 +501,11 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_ERASE_WAIT_MS);
 
 	/* build chunk array from firmware payload */
-	g_autoptr(GBytes) blob = g_bytes_new(data->data, data_size);
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(blob,
-								       FU_CHUNK_ADDR_OFFSET_NONE,
-								       FU_CHUNK_PAGESZ_NONE,
-								       max_packet_data_len);
+	blob = g_bytes_new(data->data, data_size);
+	chunks = fu_chunk_array_new_from_bytes(blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       max_packet_data_len);
 	if (chunks == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -509,18 +514,18 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	gsize num_chunks = fu_chunk_array_length(chunks);
+	num_chunks = fu_chunk_array_length(chunks);
 	if (num_chunks == 0) {
 		g_debug("no firmware data to write (zero chunks)");
 		return TRUE;
 	}
 
 	/* total number of packets */
-	guint32 num = (guint32)num_chunks;
+	num = (guint32)num_chunks;
 
 	g_debug("start writing flash, packets=%u, total_size=%u", num, data_size);
 
-	for (guint32 idx = 0; idx < num; idx++) {
+	for (idx = 0; idx < num; idx++) {
 		guint32 packet_index = idx + 1;
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx, error);
 		if (chk == NULL)
@@ -575,33 +580,37 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	g_debug("all packets sent, checking download status");
 
 	/* read back download status from device */
-	guint8 status = 0;
-	guint16 mcu_packet_number = 0;
-	if (!fu_pxi_tp_tf_communication_read_download_status(self,
-							     &status,
-							     &mcu_packet_number,
-							     error)) {
-		g_set_error_literal(error,
+	{
+		guint8 status = 0;
+		guint16 mcu_packet_number = 0;
+
+		if (!fu_pxi_tp_tf_communication_read_download_status(self,
+								     &status,
+								     &mcu_packet_number,
+								     error)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_WRITE,
+					    "failed to read download status");
+			return FALSE;
+		}
+
+		g_debug("download status OK, expected_packets=%u, device_packets=%u, status=%u",
+			num,
+			mcu_packet_number,
+			status);
+
+		if (status != 0 || mcu_packet_number != num) {
+			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
-				    "failed to read download status");
-		return FALSE;
-	}
-
-	g_debug("download status OK, expected_packets=%u, device_packets=%u, status=%u",
-		num,
-		mcu_packet_number,
-		status);
-
-	if (status != 0 || mcu_packet_number != num) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "upgrade failed, status=%u, device_packets=%u, expected_packets=%u",
-			    status,
-			    mcu_packet_number,
-			    num);
-		return FALSE;
+				    "upgrade failed, status=%u, device_packets=%u, "
+				    "expected_packets=%u",
+				    status,
+				    mcu_packet_number,
+				    num);
+			return FALSE;
+		}
 	}
 
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_DOWNLOAD_POST_WAIT_MS);
@@ -716,42 +725,47 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			/* read tf firmware version after successful update */
 			fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
 
-			guint8 ver_after[3] = {0};
-			g_autoptr(GError) ver_after_err = NULL;
+			{
+				guint8 ver_after[3] = {0};
+				g_autoptr(GError) ver_after_err = NULL;
 
-			if (!fu_pxi_tp_tf_communication_read_firmware_version(self,
-									      FU_PXI_TF_FW_MODE_APP,
-									      ver_after,
-									      &ver_after_err)) {
-				g_set_error(error,
+				if (!fu_pxi_tp_tf_communication_read_firmware_version(
+					self,
+					FU_PXI_TF_FW_MODE_APP,
+					ver_after,
+					&ver_after_err)) {
+					g_set_error(
+					    error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_READ,
 					    "failed to read firmware version after update: %s",
 					    ver_after_err != NULL ? ver_after_err->message
 								  : "unknown error");
-				return FALSE;
-			}
+					return FALSE;
+				}
 
-			g_debug("firmware version after update (mode=APP): %u.%u.%u",
-				ver_after[0],
-				ver_after[1],
-				ver_after[2]);
+				g_debug("firmware version after update (mode=APP): %u.%u.%u",
+					ver_after[0],
+					ver_after[1],
+					ver_after[2]);
 
-			/* verify version matches target version */
-			if (target_ver != NULL &&
-			    fu_pxi_tp_tf_communication_version_cmp(ver_after, target_ver) != 0) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "firmware version after update (%u.%u.%u) "
-					    "does not match target (%u.%u.%u)",
-					    ver_after[0],
-					    ver_after[1],
-					    ver_after[2],
-					    target_ver[0],
-					    target_ver[1],
-					    target_ver[2]);
-				return FALSE;
+				/* verify version matches target version */
+				if (target_ver != NULL &&
+				    fu_pxi_tp_tf_communication_version_cmp(ver_after, target_ver) !=
+					0) {
+					g_set_error(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "firmware version after update (%u.%u.%u) "
+						    "does not match target (%u.%u.%u)",
+						    ver_after[0],
+						    ver_after[1],
+						    ver_after[2],
+						    target_ver[0],
+						    target_ver[1],
+						    target_ver[2]);
+					return FALSE;
+				}
 			}
 
 			g_debug("firmware update succeeded on attempt %" G_GSIZE_FORMAT, attempt);
