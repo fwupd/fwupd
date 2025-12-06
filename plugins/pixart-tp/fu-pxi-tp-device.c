@@ -23,6 +23,12 @@ struct _FuPxiTpDevice {
 
 G_DEFINE_TYPE(FuPxiTpDevice, fu_pxi_tp_device, FU_TYPE_HIDRAW_DEVICE)
 
+/* ---- flash properties ---- */
+
+#define PXI_TP_SECTOR_SIZE	      4096
+#define PXI_TP_PAGE_SIZE	      256
+#define PXI_TP_PAGES_COUNT_PER_SECTOR 16
+
 /* ---- reset mode & keys ---- */
 
 typedef enum {
@@ -55,13 +61,6 @@ enum {
 	PXI_TP_FLASH_CCR_READ_STATUS = 0x01000105,
 	PXI_TP_FLASH_CCR_ERASE_SECTOR = 0x00002520,
 	PXI_TP_FLASH_CCR_PROGRAM_PAGE = 0x01002502,
-};
-
-/* ---- flash properties ---- */
-enum {
-	PXI_TP_SECTOR_SIZE = 4096,
-	PXI_TP_PAGE_SIZE = 256,
-	PXI_TP_PAGES_COUNT_PER_SECTOR = 16,
 };
 
 /* ---- device part-id values ---- */
@@ -131,11 +130,9 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 			       guint16 data_cnt,
 			       GError **error)
 {
-	enum {
-		PXI_TP_FLASH_EXECUTE_RETRY_MAX = 10,
-		PXI_TP_FLASH_EXECUTE_RETRY_DELAY_MS = 1,
-		PXI_TP_FLASH_EXECUTE_START = 0x01,
-	};
+	const guint flash_execute_retry_max = 10;
+	const guint flash_execute_retry_delay_ms = 1;
+	const guint8 flash_execute_start = 0x01;
 
 	guint8 out_val = 0;
 
@@ -187,12 +184,12 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 	if (!fu_pxi_tp_register_write(self,
 				      PXI_TP_SYSTEM_BANK4,
 				      PXI_TP_R_SYS4_FLASH_EXECUTE,
-				      PXI_TP_FLASH_EXECUTE_START,
+				      flash_execute_start,
 				      error))
 		return FALSE;
 
-	for (guint i = 0; i < PXI_TP_FLASH_EXECUTE_RETRY_MAX; i++) {
-		fu_device_sleep(FU_DEVICE(self), PXI_TP_FLASH_EXECUTE_RETRY_DELAY_MS);
+	for (guint i = 0; i < flash_execute_retry_max; i++) {
+		fu_device_sleep(FU_DEVICE(self), flash_execute_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_read(self,
 					     PXI_TP_SYSTEM_BANK4,
@@ -219,10 +216,8 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 static gboolean
 fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 {
-	enum {
-		PXI_TP_FLASH_WRITE_ENABLE_RETRY_MAX = 10,
-		PXI_TP_FLASH_WRITE_ENABLE_RETRY_DELAY_MS = 1,
-	};
+	const guint flash_write_enable_retry_max = 10;
+	const guint flash_write_enable_retry_delay_ms = 1;
 
 	guint8 out_val = 0;
 
@@ -233,7 +228,7 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 					    error))
 		return FALSE;
 
-	for (guint i = 0; i < PXI_TP_FLASH_WRITE_ENABLE_RETRY_MAX; i++) {
+	for (guint i = 0; i < flash_write_enable_retry_max; i++) {
 		if (!fu_pxi_tp_device_flash_execute(self,
 						    PXI_TP_FLASH_INST_CMD1,
 						    PXI_TP_FLASH_CCR_READ_STATUS,
@@ -241,7 +236,7 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 						    error))
 			return FALSE;
 
-		fu_device_sleep(FU_DEVICE(self), PXI_TP_FLASH_WRITE_ENABLE_RETRY_DELAY_MS);
+		fu_device_sleep(FU_DEVICE(self), flash_write_enable_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_read(self,
 					     PXI_TP_SYSTEM_BANK4,
@@ -269,14 +264,12 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 static gboolean
 fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 {
-	enum {
-		PXI_TP_FLASH_BUSY_RETRY_MAX = 1000,
-		PXI_TP_FLASH_BUSY_RETRY_DELAY_MS = 1,
-	};
+	const guint flash_busy_retry_max = 1000;
+	const guint flash_busy_retry_delay_ms = 1;
 
 	guint8 out_val = 0;
 
-	for (guint i = 0; i < PXI_TP_FLASH_BUSY_RETRY_MAX; i++) {
+	for (guint i = 0; i < flash_busy_retry_max; i++) {
 		if (!fu_pxi_tp_device_flash_execute(self,
 						    PXI_TP_FLASH_INST_CMD1,
 						    PXI_TP_FLASH_CCR_READ_STATUS,
@@ -284,7 +277,7 @@ fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 						    error))
 			return FALSE;
 
-		fu_device_sleep(FU_DEVICE(self), PXI_TP_FLASH_BUSY_RETRY_DELAY_MS);
+		fu_device_sleep(FU_DEVICE(self), flash_busy_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_read(self,
 					     PXI_TP_SYSTEM_BANK4,
@@ -505,11 +498,8 @@ fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *ctn, GErro
 static guint32
 fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 {
-	enum {
-		/* polling parameters for firmware CRC */
-		PXI_TP_CRC_FW_RETRY_MAX = 1000,
-		PXI_TP_CRC_FW_RETRY_DELAY_MS = 10,
-	};
+	const guint crc_fw_retry_max = 1000;
+	const guint crc_fw_retry_delay_ms = 10;
 
 	guint8 out_val = 0;
 	guint8 swap_flag = 0;
@@ -575,8 +565,8 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 	}
 
 	/* wait CRC calculation completed */
-	for (guint i = 0; i < PXI_TP_CRC_FW_RETRY_MAX; i++) {
-		fu_device_sleep(FU_DEVICE(self), PXI_TP_CRC_FW_RETRY_DELAY_MS);
+	for (guint i = 0; i < crc_fw_retry_max; i++) {
+		fu_device_sleep(FU_DEVICE(self), crc_fw_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_user_read(self,
 						  PXI_TP_USER_BANK0,
@@ -634,14 +624,12 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 	g_debug("firmware CRC: 0x%08x", (guint)return_value);
 	return return_value;
 }
+
 static guint32
 fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 {
-	enum {
-		/* polling parameters for parameter CRC */
-		PXI_TP_CRC_PARAM_RETRY_MAX = 1000,
-		PXI_TP_CRC_PARAM_RETRY_DELAY_MS = 10,
-	};
+	const guint crc_param_retry_max = 1000;
+	const guint crc_param_retry_delay_ms = 10;
 
 	guint8 out_val = 0;
 	guint8 swap_flag = 0;
@@ -707,8 +695,8 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 	}
 
 	/* wait CRC calculation completed */
-	for (guint i = 0; i < PXI_TP_CRC_PARAM_RETRY_MAX; i++) {
-		fu_device_sleep(FU_DEVICE(self), PXI_TP_CRC_PARAM_RETRY_DELAY_MS);
+	for (guint i = 0; i < crc_param_retry_max; i++) {
+		fu_device_sleep(FU_DEVICE(self), crc_param_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_user_read(self,
 						  PXI_TP_USER_BANK0,
