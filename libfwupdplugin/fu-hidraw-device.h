@@ -33,6 +33,12 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 			     FuIoctlFlags flags,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_hidraw_device_get_input(FuHidrawDevice *self,
+			   guint8 *buf,
+			   gsize bufsz,
+			   FuIoctlFlags flags,
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_hidraw_device_set_report(FuHidrawDevice *self,
 			    const guint8 *buf,
 			    gsize bufsz,
