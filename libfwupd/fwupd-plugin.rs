@@ -3,7 +3,7 @@
 
 // Flags used to represent plugin attributes
 // Since: 1.5.0
-#[derive(ToString, FromString, NoBitfield)]
+#[derive(ToString(enum), FromString(enum))]
 enum FwupdPluginFlags {
     // No plugin flags are set.
     None = 0,

@@ -68,7 +68,7 @@ def _camel_to_snake(name: str) -> str:
 class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
-        self.since: Optional[str] = None
+        self._since: Optional[str] = None
         self.comments: list[str] = []
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
@@ -76,19 +76,29 @@ class EnumObj:
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
             "FromString": Export.NONE,
-            "NoBitfield": Export.NONE,
         }
-        self.exports_since: Dict[str, str] = {}
+        self._c_methods: Dict[str, Export] = {}
+        self._derives_since: Dict[str, str] = {}
         self._is_bitfield = False
+        self._is_force_enum = False
 
     def c_method(self, suffix: str):
 
+        # override
+        if suffix in self._c_methods:
+            return self._c_methods[suffix]
+
         name_snake = _camel_to_snake(self.name)
-        if self._exports["NoBitfield"] != Export.NONE:
+        if self._is_force_enum:
             if name_snake.endswith("flags"):
                 name_snake = name_snake[:-1]
 
         return f"{name_snake}_{_camel_to_snake(suffix)}"
+
+    def since(self, derive: str) -> Optional[str]:
+        if derive in self._derives_since:
+            return self._derives_since[derive]
+        return self._since
 
     @property
     def c_type(self):
@@ -107,7 +117,7 @@ class EnumObj:
 
     @property
     def is_bitfield(self) -> bool:
-        if self._exports["NoBitfield"] != Export.NONE:
+        if self._is_force_enum:
             return False
         for item in self.items:
             if item.is_bitfield:
@@ -139,15 +149,28 @@ class EnumObj:
             return
         self._exports[derive] = Export.PRIVATE
 
+    def add_export_param(self, derive: str, value: str):
+
+        if derive in ["FromString", "ToString"] and value == "enum":
+            self._is_force_enum = True
+            return
+        if value.startswith("since="):
+            self._derives_since[derive] = value[6:]
+            return
+        if value.startswith("name="):
+            self._c_methods[derive] = value[5:]
+            return
+        raise ValueError(f"derive {derive} parameter {value} unknown")
+
     def add_public_export(self, derive: str) -> None:
 
-        # split out the API version this was added
-        idx = derive.find("(since=")
+        # split out the any derive params
+        idx = derive.find("(")
         if idx != -1:
-            self.exports_since[derive[:idx]] = derive[idx + 7 : -1]
+            params = derive[idx + 1 : -1].split(";")
             derive = derive[:idx]
-        elif self.since:
-            self.exports_since[derive] = self.since
+            for param in params:
+                self.add_export_param(derive, param)
 
         if derive == "Bitfield":
             self._is_bitfield = True
@@ -754,7 +777,7 @@ class Generator:
                     raise ValueError(f"enum {name} already defined on line {line_num}")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
-                enum_cur.since = since
+                enum_cur._since = since
                 enum_cur.comments.extend(comments_cur)
                 self.enum_objs[name] = enum_cur
                 comments_cur.clear()
@@ -811,7 +834,7 @@ class Generator:
             # split enumeration into sections
             if enum_cur:
                 enum_item = EnumItem(enum_cur)
-                enum_item.since = since
+                enum_item._since = since
                 enum_item.comments.extend(comments_cur)
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]

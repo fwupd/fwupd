@@ -3,7 +3,7 @@
 
 // Flags used to represent report attributes
 // Since: 1.9.1
-#[derive(ToString, FromString, NoBitfield)]
+#[derive(ToString(enum), FromString(enum))]
 enum FwupdReportFlags {
     // No report flags are set.
     None = 0,

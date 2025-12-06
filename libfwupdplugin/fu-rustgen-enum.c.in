@@ -9,8 +9,9 @@
  *
  * Returns: identifier string
  *
-{%- if "ToString" in obj.exports_since %}
- * Since: {{obj.exports_since["ToString"]}}
+{%- if obj.since('ToString') %}
+ *
+ * Since: {{obj.since('ToString')}}
 {%- endif %}
  **/
 {{export.value}}gchar *
@@ -34,9 +35,9 @@
  * Converts an enumerated value to a string.
  *
  * Returns: identifier string
+{%- if obj.since('ToString') %}
  *
-{%- if "ToString" in obj.exports_since %}
- * Since: {{obj.exports_since["ToString"]}}
+ * Since: {{obj.since('ToString')}}
 {%- endif %}
  **/
 {{export.value}}const gchar *
@@ -60,9 +61,9 @@
  * Converts a string to an enumerated value.
  *
  * Returns: enumerated value
+{%- if obj.since('FromString') %}
  *
-{%- if "FromString" in obj.exports_since %}
- * Since: {{obj.exports_since["FromString"]}}
+ * Since: {{obj.since('FromString')}}
 {%- endif %}
  **/
 {{export.value}}{{obj.c_type}}

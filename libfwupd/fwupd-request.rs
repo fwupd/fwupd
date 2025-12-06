@@ -15,7 +15,7 @@ enum FwupdRequestKind {
 
 // Flags used to represent request attributes
 // Since: 1.8.6
-#[derive(ToString, FromString, NoBitfield)]
+#[derive(ToString(enum), FromString(enum))]
 enum FwupdRequestFlags {
     // No flags are set.
     None = 0,

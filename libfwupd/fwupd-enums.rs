@@ -46,7 +46,7 @@ enum FwupdStatus {
 
 // The flags to the feature capabilities of the front-end client.
 // Since: 1.4.5
-#[derive(ToString, FromString, NoBitfield)]
+#[derive(ToString(enum), FromString(enum))]
 enum FwupdFeatureFlags {
     // No trust.
     None = 0,
@@ -83,7 +83,7 @@ enum FwupdFeatureFlags {
 
 // Flags to set when performing the firmware update or install.
 // Since: 0.7.0
-#[derive(ToString(since=2.0.0), FromString(since=2.0.0), NoBitfield)]
+#[derive(ToString(enum;name=fwupd_install_flags_to_string;since=2.0.0), FromString(enum;name=fwupd_install_flags_from_string;since=2.0.0))]
 enum FwupdInstallFlags {
     // No flags set.
     None = 0,

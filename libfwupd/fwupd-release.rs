@@ -3,7 +3,7 @@
 
 // Flags used to represent release attributes
 // Since: 1.2.6
-#[derive(ToString, FromString, NoBitfield)]
+#[derive(ToString(enum), FromString(enum))]
 enum FwupdReleaseFlags {
     // No flags are set.
     None = 0,

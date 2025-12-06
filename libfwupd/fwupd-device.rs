@@ -3,7 +3,7 @@
 
 // Flags used to represent device attributes
 // Since: 0.1.3
-#[derive(ToString(since=0.7.0), FromString(since=0.7.0), NoBitfield)]
+#[derive(ToString(enum;since=0.7.0), FromString(enum;since=0.7.0))]
 enum FwupdDeviceFlags {
     // No flags set
     None = 0,
@@ -156,7 +156,7 @@ enum FwupdDeviceFlags {
 // Problems are reasons why the device is not updatable.
 // All problems have to be fixable by the user, rather than the plugin author.
 // Since: 1.8.1
-#[derive(ToString, FromString, NoBitfield)]
+#[derive(ToString(enum), FromString(enum))]
 enum FwupdDeviceProblem {
     // No device problems detected.
     None = 0,
