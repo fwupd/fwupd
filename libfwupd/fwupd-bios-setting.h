@@ -8,7 +8,7 @@
 
 #include <glib-object.h>
 
-#include "fwupd-build.h"
+#include "fwupd-bios-setting-struct.h"
 
 G_BEGIN_DECLS
 
@@ -32,48 +32,6 @@ struct _FwupdBiosSettingClass {
 #define FWUPD_BIOS_SETTING_RESET_BIOS	  "reset_bios"
 #define FWUPD_BIOS_SETTING_DEBUG_CMD	  "debug_cmd"
 #define FWUPD_BIOS_SETTING_SELF_TEST	  "fwupd_self_test"
-
-/**
- * FwupdBiosSettingKind:
- *
- * The type of BIOS setting.
- **/
-typedef enum {
-	/**
-	 * FWUPD_BIOS_SETTING_KIND_UNKNOWN:
-	 *
-	 * BIOS setting type is unknown.
-	 *
-	 * Since: 1.8.4
-	 */
-	FWUPD_BIOS_SETTING_KIND_UNKNOWN = 0,
-	/**
-	 * FWUPD_BIOS_SETTING_KIND_ENUMERATION:
-	 *
-	 * BIOS setting that has enumerated possible values.
-	 *
-	 * Since: 1.8.4
-	 */
-	FWUPD_BIOS_SETTING_KIND_ENUMERATION = 1,
-	/**
-	 * FWUPD_BIOS_SETTING_KIND_INTEGER:
-	 *
-	 * BIOS setting that is an integer.
-	 *
-	 * Since: 1.8.4
-	 */
-	FWUPD_BIOS_SETTING_KIND_INTEGER = 2,
-	/**
-	 * FWUPD_BIOS_SETTING_KIND_STRING:
-	 *
-	 * BIOS setting that accepts a string.
-	 *
-	 * Since: 1.8.4
-	 */
-	FWUPD_BIOS_SETTING_KIND_STRING = 3,
-	/*< private >*/
-	FWUPD_BIOS_SETTING_KIND_LAST = 4
-} FwupdBiosSettingKind;
 
 FwupdBiosSetting *
 fwupd_bios_setting_new(const gchar *name, const gchar *path);

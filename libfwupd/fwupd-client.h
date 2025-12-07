@@ -8,7 +8,7 @@
 
 #include <gio/gio.h>
 
-#include "fwupd-build.h"
+#include "fwupd-client-struct.h"
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 #include "fwupd-remote.h"
@@ -35,58 +35,6 @@ struct _FwupdClientClass {
 	void (*_fwupd_reserved5)(void);
 	void (*_fwupd_reserved6)(void);
 };
-
-/**
- * FwupdClientDownloadFlags:
- *
- * The options to use for downloading.
- **/
-typedef enum {
-	/**
-	 * FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE = 0,
-	/**
-	 * FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P:
-	 *
-	 * Only use peer-to-peer when downloading URIs.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0,
-	/*< private >*/
-	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
-} G_GNUC_FLAG_ENUM FwupdClientDownloadFlags;
-
-/**
- * FwupdClientUploadFlags:
- *
- * The options to use for uploading.
- **/
-typedef enum {
-	/**
-	 * FWUPD_CLIENT_UPLOAD_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_UPLOAD_FLAG_NONE = 0,
-	/**
-	 * FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:
-	 *
-	 * Always use multipart/form-data.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0,
-	/*< private >*/
-	FWUPD_CLIENT_UPLOAD_FLAG_LAST
-} G_GNUC_FLAG_ENUM FwupdClientUploadFlags;
 
 FwupdClient *
 fwupd_client_new(void);
