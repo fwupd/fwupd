@@ -600,10 +600,11 @@ class StructItem:
 
 
 class Generator:
-    def __init__(self, basename, modules_map: Dict[str, str]) -> None:
+    def __init__(self, basename, modules_map: Dict[str, str], includes=[]) -> None:
         self.basename: str = basename
         self.import_headers: list[str] = []
         self.modules_map: Dict[str, str] = modules_map
+        self.includes: list[str] = includes
         self.struct_objs: Dict[str, StructObj] = {}
         self.enum_objs: Dict[str, EnumObj] = {}
         self._env = Environment(
@@ -815,6 +816,7 @@ class Generator:
             "enum_objs": self.enum_objs,
             "struct_objs": self.struct_objs,
             "import_headers": self.import_headers,
+            "includes": self.includes,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
@@ -843,6 +845,9 @@ if __name__ == "__main__":
     parser.add_argument("dst_c", action="store", type=str, help="destination .c")
     parser.add_argument("dst_h", action="store", type=str, help="destination .h")
     parser.add_argument("--use", action="append", default=[], help="module:path")
+    parser.add_argument(
+        "--include", action="append", default=[], help="fwupd.h|fwupdplugin.h"
+    )
     args = parser.parse_args()
 
     # parse map from module to path
@@ -854,7 +859,11 @@ if __name__ == "__main__":
         except IndexError:
             sys.exit(f"expected module:path, got {entry}")
 
-    g = Generator(basename=os.path.basename(args.dst_h), modules_map=modules_map)
+    g = Generator(
+        basename=os.path.basename(args.dst_h),
+        modules_map=modules_map,
+        includes=args.include,
+    )
     with open(args.src, "rb") as f:
         try:
             dst_c, dst_h = g.process_input(
