@@ -2132,23 +2132,35 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("BootTime"), btime);
 
 	/* add context information */
-	g_hash_table_insert(
-	    hash,
-	    g_strdup("PowerState"),
-	    g_strdup(fu_power_state_to_string(fu_context_get_power_state(self->ctx))));
-	g_hash_table_insert(
-	    hash,
-	    g_strdup("DisplayState"),
-	    g_strdup(fu_display_state_to_string(fu_context_get_display_state(self->ctx))));
-	g_hash_table_insert(hash,
-			    g_strdup("LidState"),
-			    g_strdup(fu_lid_state_to_string(fu_context_get_lid_state(self->ctx))));
-	g_hash_table_insert(hash,
-			    g_strdup("BatteryLevel"),
-			    g_strdup_printf("%u", fu_context_get_battery_level(self->ctx)));
-	g_hash_table_insert(hash,
-			    g_strdup("BatteryThreshold"),
-			    g_strdup_printf("%u", fu_context_get_battery_threshold(self->ctx)));
+	if (fu_context_get_power_state(self->ctx) != FU_POWER_STATE_UNKNOWN) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("PowerState"),
+		    g_strdup(fu_power_state_to_string(fu_context_get_power_state(self->ctx))));
+	}
+	if (fu_context_get_display_state(self->ctx) != FU_DISPLAY_STATE_UNKNOWN) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("DisplayState"),
+		    g_strdup(fu_display_state_to_string(fu_context_get_display_state(self->ctx))));
+	}
+	if (fu_context_get_lid_state(self->ctx) != FU_LID_STATE_UNKNOWN) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("LidState"),
+		    g_strdup(fu_lid_state_to_string(fu_context_get_lid_state(self->ctx))));
+	}
+	if (fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID) {
+		g_hash_table_insert(hash,
+				    g_strdup("BatteryLevel"),
+				    g_strdup_printf("%u", fu_context_get_battery_level(self->ctx)));
+	}
+	if (fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("BatteryThreshold"),
+		    g_strdup_printf("%u", fu_context_get_battery_threshold(self->ctx)));
+	}
 
 	return g_steal_pointer(&hash);
 }
