@@ -9,42 +9,10 @@
 #include <gio/gio.h>
 #include <json-glib/json-glib.h>
 
-#include "fwupd-build.h"
+#include "fwupd-codec-struct.h"
 
 #define FWUPD_TYPE_CODEC (fwupd_codec_get_type())
 G_DECLARE_INTERFACE(FwupdCodec, fwupd_codec, FWUPD, CODEC, GObject)
-
-/**
- * FwupdCodecFlags:
- *
- * The flags to use when converting data from one form to another.
- **/
-typedef enum {
-	/**
-	 * FWUPD_CODEC_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 2.0.0
-	 */
-	FWUPD_CODEC_FLAG_NONE = 0,
-	/**
-	 * FWUPD_CODEC_FLAG_TRUSTED:
-	 *
-	 * Include values that may be regarded as trusted or sensitive.
-	 *
-	 * Since: 2.0.0
-	 */
-	FWUPD_CODEC_FLAG_TRUSTED = 1 << 0,
-	/**
-	 * FWUPD_CODEC_FLAG_COMPRESSED:
-	 *
-	 * Compress values to the smallest possible size.
-	 *
-	 * Since: 2.0.8
-	 */
-	FWUPD_CODEC_FLAG_COMPRESSED = 1 << 1,
-} G_GNUC_FLAG_ENUM FwupdCodecFlags;
 
 struct _FwupdCodecInterface {
 	GTypeInterface g_iface;

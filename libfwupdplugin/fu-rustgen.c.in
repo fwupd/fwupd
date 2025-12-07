@@ -1,4 +1,9 @@
-/* auto-generated, do not modify */
+/*
+ * This file is auto-generated, do not modify!
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
 #include "config.h"
 
 #include <glib.h>
