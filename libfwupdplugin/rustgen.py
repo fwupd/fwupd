@@ -161,8 +161,17 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
-        if val.find("<<") != -1:
+
+        # parse bitfield shifts
+        try:
+            number, bitshift = val.split("<<", maxsplit=1)
+        except ValueError:
+            pass
+        else:
             self.is_bitfield = True
+            # make sure we promote to a larger integer type
+            if int(bitshift) >= 31:
+                val = f"{int(number)}ull<<{bitshift}"
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):
