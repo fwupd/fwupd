@@ -29,7 +29,12 @@ expect_rc() {
 }
 
 run() {
-    cmd="fwupdtool -v $*"
+    if [ -x @bindir@/fwupdtool ]; then
+        cmd="@bindir@/fwupdtool -v --plugins test $*"
+    else
+        # for the snap CI target
+        cmd="fwupdtool -v --plugins test $*"
+    fi
     echo " ● cmd: $cmd" >fwupdtool.txt
     $cmd 1>>fwupdtool.txt 2>&1
 }

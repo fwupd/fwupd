@@ -23,6 +23,16 @@ expect_rc() {
     [ "$expected" -eq "$rc" ] || error "$rc" "$expected"
 }
 
+run() {
+    if [ ! -x @bindir@/fwupdmgr ]; then
+        cmd="@bindir@/fwupdmgr $*"
+    else
+        # for the snap CI target
+        cmd="fwupdmgr $*"
+    fi
+    $cmd
+}
+
 # ---
 echo " ● Starting P2P daemon…"
 export FWUPD_DBUS_SOCKET="/run/fwupd.sock"
@@ -32,12 +42,12 @@ while [ ! -e ${FWUPD_DBUS_SOCKET} ]; do sleep 1; done
 
 # ---
 echo " ● Starting P2P client…"
-fwupdmgr get-devices --json
+run get-devices --json
 expect_rc 0
 
 # ---
 echo " ● Shutting down P2P daemon…"
-fwupdmgr quit
+run quit
 expect_rc 0
 
 # success!
