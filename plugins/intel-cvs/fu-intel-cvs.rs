@@ -23,7 +23,7 @@ struct FuStructIntelCvsFirmwareHdr {
     header_checksum: u32le,
 }
 
-// CV SoC device status */
+// CV SoC device status
 #[repr(u8)]
 enum FuIntelCvsDeviceState {
     DeviceOff       = 0,
@@ -35,7 +35,7 @@ enum FuIntelCvsDeviceState {
     DeviceDwnldBusy = 1 << 7,
 };
 
-// CVS sensor Status */
+// CVS sensor Status
 #[repr(u8)]
 enum FuIntelCvsSensorState {
     Released        = 0,
@@ -43,7 +43,7 @@ enum FuIntelCvsSensorState {
     IpuAcquired     = 1 << 1,
 };
 
-// CVS driver Status */
+// CVS driver Status
 #[repr(u8)]
 enum FuIntelCvsState {
     Init            = 0,
