@@ -7652,7 +7652,6 @@ fu_engine_report_metadata_func(gconstpointer user_data)
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(GList) keys = NULL;
 	const gchar *keys_exist[] = {
-	    "BatteryLevel",
 	    "BatteryThreshold",
 	    "CompileVersion(org.freedesktop.fwupd)",
 	    "CpuArchitecture",
