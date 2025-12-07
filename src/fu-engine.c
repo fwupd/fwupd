@@ -2097,9 +2097,21 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
 	if (uname(&name_tmp) >= 0) {
-		g_hash_table_insert(hash, g_strdup("CpuArchitecture"), g_strdup(name_tmp.machine));
-		g_hash_table_insert(hash, g_strdup("KernelName"), g_strdup(name_tmp.sysname));
-		g_hash_table_insert(hash, g_strdup("KernelVersion"), g_strdup(name_tmp.release));
+		if (name_tmp.machine[0] != '\0') {
+			g_hash_table_insert(hash,
+					    g_strdup("CpuArchitecture"),
+					    g_strdup(name_tmp.machine));
+		}
+		if (name_tmp.sysname[0] != '\0') {
+			g_hash_table_insert(hash,
+					    g_strdup("KernelName"),
+					    g_strdup(name_tmp.sysname));
+		}
+		if (name_tmp.release[0] != '\0') {
+			g_hash_table_insert(hash,
+					    g_strdup("KernelVersion"),
+					    g_strdup(name_tmp.release));
+		}
 	}
 #endif
 #if defined(HAVE_AUXV_H) && !defined(__FreeBSD__)
@@ -2110,7 +2122,8 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		tmp = name_tmp.machine;
 		g_debug("no AT_PLATFORM, so using CpuArchitecture (%s) for platform", tmp);
 	}
-	g_hash_table_insert(hash, g_strdup("PlatformArchitecture"), g_strdup(tmp));
+	if (tmp != NULL)
+		g_hash_table_insert(hash, g_strdup("PlatformArchitecture"), g_strdup(tmp));
 #endif
 
 	/* add the kernel boot time so we can detect a reboot */
