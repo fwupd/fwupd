@@ -43,7 +43,7 @@
 {{export.value}}const gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
-{%- for item in obj.items %}
+{%- for item in obj.items|rejectattr('name', 'equalto', 'Unknown') %}
     if (val == {{item.c_define}})
         return "{{item.value}}";
 {%- endfor %}
@@ -84,11 +84,16 @@
     }
     return value;
 {%- else %}
-{%- for item in obj.items %}
+{%- for item in obj.items|rejectattr('name', 'equalto', 'Unknown') %}
     if (g_strcmp0(val, "{{item.value}}") == 0)
         return {{item.c_define}};
 {%- endfor %}
+{%- set item_unknown = obj.item('Unknown') %}
+{%- if item_unknown %}
+    return {{item_unknown.c_define}};
+{%- else %}
     return {{obj.items[0].c_define}};
+{%- endif %}
 {%- endif %}
 }
 {%- endif %}
