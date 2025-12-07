@@ -1,6 +1,19 @@
 {%- set export = obj.export('ToString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 {%- if obj.is_bitfield %}
+/**
+ * {{obj.c_method('ToString')}}:
+ * @val: value, e.g. %{{obj.items[1].c_define}}
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Returns: identifier string
+ *
+{%- if obj.since('ToString') %}
+ *
+ * Since: {{obj.since('ToString')}}
+{%- endif %}
+ **/
 {{export.value}}gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
@@ -15,6 +28,18 @@
     return g_strjoinv(",", (gchar **)data);
 }
 {%- else %}
+/**
+ * {{obj.c_method('ToString')}}:
+ * @val: value{%- if obj.items|length > 1 %}, e.g. %{{obj.items[1].c_define}}{%- endif %}
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Returns: identifier string
+{%- if obj.since('ToString') %}
+ *
+ * Since: {{obj.since('ToString')}}
+{%- endif %}
+ **/
 {{export.value}}const gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
@@ -29,6 +54,18 @@
 
 {%- set export = obj.export('FromString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('FromString')}}:
+ * @val: (nullable): a string{%- if obj.items|length > 1 %}, e.g. `{{obj.items[1].value}}`{%- endif %}
+ *
+ * Converts a string to an enumerated value.
+ *
+ * Returns: enumerated value
+{%- if obj.since('FromString') %}
+ *
+ * Since: {{obj.since('FromString')}}
+{%- endif %}
+ **/
 {{export.value}}{{obj.c_type}}
 {{obj.c_method('FromString')}}(const gchar *val)
 {

@@ -67,6 +67,8 @@ def _camel_to_snake(name: str) -> str:
 class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
+        self._since: Optional[str] = None
+        self.comments: list[str] = []
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
         self.is_imported: bool = False
@@ -78,6 +80,9 @@ class EnumObj:
 
     def c_method(self, suffix: str):
         return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+    def since(self, derive: str) -> Optional[str]:
+        return self._since
 
     @property
     def c_type(self):
@@ -145,6 +150,8 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.comments: list[str] = []
+        self.since: Optional[str] = None
         self.is_bitfield = False
 
     @property
@@ -683,8 +690,10 @@ class Generator:
         offset: int = 0
         struct_seen_b32: bool = False
         bits_offset: int = 0
+        since: Optional[str] = None
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
+        comments_cur: list[str] = []
 
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
@@ -696,7 +705,19 @@ class Generator:
                 self._use_import(where, why, what)
 
             # remove comments and indent
-            line = line.split("//")[0].strip()
+            try:
+                line, comment = line.split("//", maxsplit=1)
+            except ValueError:
+                pass
+            else:
+                comment = comment.strip()
+                if comment.startswith("Since:"):
+                    since = comment[6:].strip()
+                elif comment.startswith("SPDX") or comment.startswith("Copyright"):
+                    pass
+                elif comment:
+                    comments_cur.append(comment.strip())
+            line = line.strip()
             if not line:
                 continue
 
@@ -716,7 +737,10 @@ class Generator:
                     raise ValueError(f"enum {name} already defined on line {line_num}")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
+                enum_cur._since = since
+                enum_cur.comments.extend(comments_cur)
                 self.enum_objs[name] = enum_cur
+                comments_cur.clear()
                 continue
 
             # the enum type
@@ -752,6 +776,8 @@ class Generator:
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
+                comments_cur.clear()
+                since = None
                 derives.clear()
                 offset = 0
                 bits_offset = 0
@@ -768,11 +794,14 @@ class Generator:
             # split enumeration into sections
             if enum_cur:
                 enum_item = EnumItem(enum_cur)
+                enum_item._since = since
+                enum_item.comments.extend(comments_cur)
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
                     enum_item.parse_default(parts[1])
                 enum_cur.items.append(enum_item)
+                comments_cur.clear()
 
             # split structure into sections
             if struct_cur:
