@@ -11,6 +11,8 @@ dfu_rs = custom_target('fu-dfu-rs',
     python3,
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@', '@OUTPUT0@', '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
   ],
 )
 plugin_builtin_dfu = static_library('fu_plugin_dfu',

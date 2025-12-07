@@ -4,7 +4,9 @@
 {%- if struct_objs %}
 #include <fu-input-stream.h>
 {%- else %}
-#include <fwupd.h>
+{%- for include in includes %}
+#include <{{include}}>
+{%- endfor %}
 {%- endif %}
 
 {%- for header_basename in import_headers %}
