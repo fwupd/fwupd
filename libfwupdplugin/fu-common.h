@@ -12,36 +12,6 @@
 #include "fu-common-struct.h"
 
 /**
- * FuCpuVendor:
- *
- * The CPU vendor.
- **/
-
-/**
- * FuPowerState:
- *
- * The system power state.
- *
- * This does not have to be exactly what the battery is doing, but is supposed to represent the
- * 40,000ft view of the system power state.
- *
- * For example, it is perfectly correct to set %FU_POWER_STATE_AC if the system is connected to
- * AC power, but the battery cells are discharging for health or for other performance reasons.
- **/
-
-/**
- * FuLidState:
- *
- * The device lid state.
- **/
-
-/**
- * FuDisplayState:
- *
- * The device lid state.
- **/
-
-/**
  * FU_BIT_SET:
  * @val: integer value
  * @pos: bit position, where 0 is the least significant byte
