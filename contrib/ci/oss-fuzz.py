@@ -167,19 +167,22 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, f"{dst}")
 
-    def rustgen(self, src: str) -> str:
+    def rustgen(self, src: str, includes: list[str] = []) -> str:
         fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
         try:
+            argv = [
+                "python",
+                "fwupd/libfwupdplugin/rustgen.py",
+                src,
+                fulldst_c,
+                fulldst_h,
+            ]
+            for include in includes:
+                argv += ["--include", include]
             subprocess.run(
-                [
-                    "python",
-                    "fwupd/libfwupdplugin/rustgen.py",
-                    src,
-                    fulldst_c,
-                    fulldst_h,
-                ],
+                argv,
                 cwd=self.srcdir,
                 check=True,
             )
@@ -385,7 +388,7 @@ def _build(bld: Builder) -> None:
             if src.endswith(".c"):
                 built_objs.append(bld.compile(src))
             elif src.endswith(".rs"):
-                built_objs.append(bld.compile(bld.rustgen(src)))
+                built_objs.append(bld.compile(bld.rustgen(src, includes=["fwupd.h"])))
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
@@ -479,7 +482,9 @@ def _build(bld: Builder) -> None:
             if obj.endswith(".c"):
                 fuzz_objs.append(bld.compile(obj))
             elif obj.endswith(".rs"):
-                fuzz_objs.append(bld.compile(bld.rustgen(obj)))
+                fuzz_objs.append(
+                    bld.compile(bld.rustgen(obj, includes=["fwupdplugin.h"]))
+                )
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
