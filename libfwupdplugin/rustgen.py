@@ -106,10 +106,10 @@ class EnumObj:
                 return True
         return self._is_bitfield
 
-    def check(self):
+    def check(self, prefix: Optional[str] = None):
         # check we're prefixed with something sane
-        if not self.name.startswith("Fu"):
-            raise ValueError(f"enum {self.name} does not have 'Fu' prefix")
+        if prefix and not self.name.startswith(prefix):
+            raise ValueError(f"enum {self.name} does not have '{prefix}' prefix")
 
         # check we'd not just done ZERO=0, ONE=1, TWO=2, etc
         indexed = True
@@ -243,10 +243,10 @@ class StructObj:
                 return True
         return False
 
-    def check(self):
+    def check(self, prefix: Optional[str] = None):
         # check we're prefixed with something sane
-        if not self.name.startswith("Fu"):
-            raise ValueError(f"struct {self.name} does not have 'Fu' prefix")
+        if prefix and not self.name.startswith(prefix):
+            raise ValueError(f"struct {self.name} does not have '{prefix}' prefix")
 
     def add_private_export(self, derive: str) -> None:
         if self._exports[derive] == Export.PUBLIC:
@@ -616,8 +616,15 @@ class StructItem:
 
 
 class Generator:
-    def __init__(self, basename, modules_map: Dict[str, str], includes=[]) -> None:
+    def __init__(
+        self,
+        basename,
+        modules_map: Dict[str, str],
+        prefix: Optional[str] = None,
+        includes=[],
+    ) -> None:
         self.basename: str = basename
+        self.prefix: Optional[str] = prefix
         self.import_headers: list[str] = []
         self.modules_map: Dict[str, str] = modules_map
         self.includes: list[str] = includes
@@ -657,7 +664,7 @@ class Generator:
             fn = os.path.join(self.modules_map[where], f"fu-{module}.rs")
         except KeyError:
             raise ValueError(f"invalid module name: {where}")
-        child = Generator(self.basename, self.modules_map)
+        child = Generator(self.basename, self.modules_map, prefix=self.prefix)
         with open(fn, "rb") as f:
             child._parse_input(f.read().decode())
 
@@ -761,7 +768,7 @@ class Generator:
             # end of structure
             if line.startswith("}"):
                 if struct_cur:
-                    struct_cur.check()
+                    struct_cur.check(prefix=self.prefix)
                     for derive in derives:
                         struct_cur.add_public_export(derive)
                     for item in struct_cur.items:
@@ -770,7 +777,7 @@ class Generator:
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
                 if enum_cur:
-                    enum_cur.check()
+                    enum_cur.check(prefix=self.prefix)
                     for derive in derives:
                         enum_cur.add_public_export(derive)
                 struct_cur = None
@@ -882,6 +889,7 @@ if __name__ == "__main__":
     parser.add_argument("src", action="store", type=str, help="source")
     parser.add_argument("dst_c", action="store", type=str, help="destination .c")
     parser.add_argument("dst_h", action="store", type=str, help="destination .h")
+    parser.add_argument("--prefix", action="store", type=str, default="", help="prefix")
     parser.add_argument("--use", action="append", default=[], help="module:path")
     parser.add_argument(
         "--include", action="append", default=[], help="fwupd.h|fwupdplugin.h"
@@ -901,6 +909,7 @@ if __name__ == "__main__":
         basename=os.path.basename(args.dst_h),
         modules_map=modules_map,
         includes=args.include,
+        prefix=args.prefix,
     )
     with open(args.src, "rb") as f:
         try:

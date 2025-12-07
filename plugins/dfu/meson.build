@@ -13,6 +13,8 @@ dfu_rs = custom_target('fu-dfu-rs',
     '@INPUT@', '@OUTPUT0@', '@OUTPUT1@',
     '--include',
     'fwupdplugin.h',
+    '--prefix',
+    'Fu',
   ],
 )
 plugin_builtin_dfu = static_library('fu_plugin_dfu',

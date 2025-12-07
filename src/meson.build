@@ -144,6 +144,8 @@ fwupdengine_rs = custom_target(
     '@OUTPUT1@',
     '--include',
     'fwupdplugin.h',
+    '--prefix',
+    'Fu',
   ],
 )
 fwupdengine = library(
