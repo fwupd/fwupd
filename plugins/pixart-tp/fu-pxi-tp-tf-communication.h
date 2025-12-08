@@ -18,3 +18,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  GByteArray *data,
 						  const guint8 target_ver[3],
 						  GError **error);
+
+gboolean
+fu_pxi_tp_tf_communication_exit_upgrade_mode(FuPxiTpDevice *self, GError **error);

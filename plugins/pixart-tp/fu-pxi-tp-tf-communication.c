@@ -109,6 +109,12 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	guint8 tail = FU_PXI_TF_FRAME_CONST_TAIL;
 	g_byte_array_append(st_write_simple->buf, &tail, 1);
 
+	gsize need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_simple->buf->len;
+	if (need > 0) {
+		guint8 zeros[64] = {0}; /* safe, max 64 */
+		g_byte_array_append(st_write_simple->buf, zeros, need);
+	}
+
 	return fu_pxi_tp_common_send_feature(self,
 					     st_write_simple->buf->data,
 					     st_write_simple->buf->len,
@@ -160,6 +166,12 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 
 	guint8 tail = FU_PXI_TF_FRAME_CONST_TAIL;
 	g_byte_array_append(st_write_packet->buf, &tail, 1);
+
+	gsize need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_packet->buf->len;
+	if (need > 0) {
+		guint8 zeros[64] = {0}; /* safe, max 64 */
+		g_byte_array_append(st_write_packet->buf, zeros, need);
+	}
 
 	return fu_pxi_tp_common_send_feature(self,
 					     st_write_packet->buf->data,
@@ -651,7 +663,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  GError **error)
 {
 	guint8 ver_before[3] = {0};
-	gboolean have_ver_before = FALSE;
 	g_autoptr(GError) ver_err = NULL;
 
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
@@ -665,6 +676,10 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 					   error))
 		return FALSE;
 
+	/* exit upgrade mode (best-effort) to get the fw version not bootloader version */
+	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, NULL))
+		g_debug("failed to exit upgrade mode (ignored)");
+
 	/* try to read TF firmware version before update (mode=APP) */
 	if (fu_pxi_tp_tf_communication_read_firmware_version(self,
 							     FU_PXI_TF_FW_MODE_APP,
@@ -674,7 +689,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			ver_before[0],
 			ver_before[1],
 			ver_before[2]);
-		have_ver_before = TRUE;
 
 		/* if current version >= target, skip update */
 		if (target_ver != NULL &&
@@ -724,7 +738,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 							      &local_error)) {
 			/* read tf firmware version after successful update */
 			fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
-
 			{
 				guint8 ver_after[3] = {0};
 				g_autoptr(GError) ver_after_err = NULL;
@@ -787,4 +800,16 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 		    "firmware update failed after %" G_GSIZE_FORMAT " attempts",
 		    (gsize)FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS);
 	return FALSE;
+}
+
+gboolean
+fu_pxi_tp_tf_communication_exit_upgrade_mode(FuPxiTpDevice *self, GError **error)
+{
+	guint8 mode = FU_PXI_TF_UPGRADE_MODE_EXIT;
+
+	return fu_pxi_tp_tf_communication_write_rmi_cmd(self,
+							FU_PXI_TF_CMD_SET_UPGRADE_MODE,
+							&mode,
+							1,
+							error);
 }

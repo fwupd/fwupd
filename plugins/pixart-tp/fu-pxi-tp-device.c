@@ -1242,6 +1242,12 @@ fu_pxi_tp_device_cleanup(FuDevice *device,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
+	g_debug("fu_pxi_tp_tf_device_cleanup");
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	/* exit upgrade mode (best-effort) */
+	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, NULL))
+		g_debug("failed to exit upgrade mode (ignored)");
+
 	g_debug("fu_pxi_tp_device_cleanup");
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device),
