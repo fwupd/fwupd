@@ -1,9 +1,91 @@
 // Copyright 2025 Harris Tai <harris_tai@pixart.com>
-// Copyright 2025 Micky Hsieh <micky_hsieh@pixart.com>
+// Copyright 2025 Micky Hsieh
 //
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-// ---- TP enums exported to C via rustgen ----
+// =====================================================================
+// ---- TP protocol enums exported to C via rustgen
+// =====================================================================
+
+// ---- Bank IDs ----
+#[repr(u8)]
+enum FuPxiTpSystemBank {
+    Bank0 = 0x00,
+    Bank1 = 0x01,
+    Bank2 = 0x02,
+    Bank4 = 0x04,
+    Bank6 = 0x06,
+}
+
+#[repr(u8)]
+enum FuPxiTpUserBank {
+    Bank0 = 0x00,
+    Bank1 = 0x01,
+    Bank2 = 0x02,
+}
+
+// ---- System bank 4 (flash engine registers) ----
+#[repr(u8)]
+enum FuPxiTpRegSys4 {
+    FlashStatus   = 0x1c,
+    SwapFlag      = 0x29,
+    FlashInstCmd  = 0x2c,
+    FlashBufAddr0 = 0x2e,
+    FlashBufAddr1 = 0x2f,
+    FlashCcr0     = 0x40,
+    FlashCcr1     = 0x41,
+    FlashCcr2     = 0x42,
+    FlashCcr3     = 0x43,
+    FlashDataCnt0 = 0x44,
+    FlashDataCnt1 = 0x45,
+    FlashAddr0    = 0x48,
+    FlashAddr1    = 0x49,
+    FlashAddr2    = 0x4a,
+    FlashAddr3    = 0x4b,
+    FlashExecute  = 0x56,
+}
+
+// ---- System bank 6 (SRAM buffer) ----
+#[repr(u8)]
+enum FuPxiTpRegSys6 {
+    SramGainSelect = 0x08,
+    SramSelect     = 0x09,
+    SramTrigger    = 0x0a,
+    SramData       = 0x0b,
+    SramChecksum   = 0x0c,
+    SramAddr0      = 0x10,
+    SramAddr1      = 0x11,
+}
+
+// ---- System bank 1 (reset control registers) ----
+#[repr(u8)]
+enum FuPxiTpRegSys1 {
+    ResetKey1 = 0x2c,
+    ResetKey2 = 0x2d,
+}
+
+// ---- System bank 2 (update mode) ----
+#[repr(u8)]
+enum FuPxiTpRegSys2 {
+    UpdateMode = 0x0d,
+}
+
+// ---- User bank 0 (part ID + CRC registers) ----
+#[repr(u8)]
+enum FuPxiTpRegUser0 {
+    ProxyMode  = 0x56,
+    PartId0    = 0x78,
+    PartId1    = 0x79,
+    CrcCtrl    = 0x82,
+    CrcResult0 = 0x84,
+    CrcResult1 = 0x85,
+    CrcResult2 = 0x86,
+    CrcResult3 = 0x87,
+}
+
+// =====================================================================
+// ---- TP enums previously defined (kept unchanged)
+// =====================================================================
 
 #[repr(u8)]
 enum FuPxiTpResetMode {
@@ -66,41 +148,43 @@ enum FuPxiTpCrcCtrl {
     Busy       = 0x01,
 }
 
-// TP proxy mode (host<->TF pass-through)
+// Host <-> TF pass-through proxy mode
 #[repr(u8)]
 enum FuPxiTpProxyMode {
     Normal   = 0x00,
     TfUpdate = 0x01,
 }
 
-// ---- TF enums exported to C via rustgen ----
+// =====================================================================
+// ---- TF (Touch Firmware) enums exported to C
+// =====================================================================
 
-// TF function command IDs (RMI addr)
+// TF function command IDs
 #[repr(u16)]
 enum FuPxiTfCmd {
-    SetUpgradeMode   = 0x0001,
-    WriteUpgradeData = 0x0002,
+    SetUpgradeMode    = 0x0001,
+    WriteUpgradeData  = 0x0002,
     ReadUpgradeStatus = 0x0003,
-    ReadVersion      = 0x0007,
-    TouchControl     = 0x0303,
+    ReadVersion       = 0x0007,
+    TouchControl      = 0x0303,
 }
 
 // TF upgrade mode payload
 #[repr(u8)]
 enum FuPxiTfUpgradeMode {
-    Exit      = 0x00,
-    EnterBoot = 0x01,
+    Exit       = 0x00,
+    EnterBoot  = 0x01,
     EraseFlash = 0x02,
 }
 
-// TF touch control payload
+// TF touch control
 #[repr(u8)]
 enum FuPxiTfTouchControl {
     Enable  = 0x00,
     Disable = 0x01,
 }
 
-// TF firmware version mode (mode: 1=APP, 2=BOOT, 3=ALGO)
+// TF firmware version mode
 #[repr(u8)]
 enum FuPxiTfFwMode {
     App  = 1,
@@ -108,7 +192,7 @@ enum FuPxiTfFwMode {
     Algo = 3,
 }
 
-// TF frame constants (preamble, tail, flags)
+// TF frame constants
 #[repr(u8)]
 enum FuPxiTfFrameConst {
     Preamble      = 0x5A,
@@ -116,38 +200,42 @@ enum FuPxiTfFrameConst {
     ExceptionFlag = 0x80,
 }
 
+// =====================================================================
+// ---- TF struct definitions (unchanged)
+// =====================================================================
+
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfWriteSimpleCmd {
-    report_id:  u8 = 0xCC,
-    preamble:   u8 = 0x5A,
+    report_id:   u8 = 0xCC,
+    preamble:    u8 = 0x5A,
     target_addr: u8 = 0x2C,
-    func:       u8 = 0x00,
-    addr:       u16le,
-    len:        u16le,
+    func:        u8 = 0x00,
+    addr:        u16le,
+    len:         u16le,
 }
 
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfWritePacketCmd {
-    report_id:    u8 = 0xCC,
-    preamble:     u8 = 0x5A,
+    report_id:     u8 = 0xCC,
+    preamble:      u8 = 0x5A,
     target_addr:   u8 = 0x2C,
-    func:         u8 = 0x04,
-    addr:         u16le,
-    datalen:      u16le,
-    packet_total: u16le,
-    packet_index: u16le,
+    func:          u8 = 0x04,
+    addr:          u16le,
+    datalen:       u16le,
+    packet_total:  u16le,
+    packet_index:  u16le,
 }
 
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfReadCmd {
-    report_id:  u8 = 0xCC,
-    preamble:   u8 = 0x5A,
+    report_id:   u8 = 0xCC,
+    preamble:    u8 = 0x5A,
     target_addr: u8 = 0x2C,
-    func:       u8 = 0x0B,
-    addr:       u16le,
-    datalen:    u16le,
-    reply_len:  u16le,
+    func:        u8 = 0x0B,
+    addr:        u16le,
+    datalen:     u16le,
+    reply_len:   u16le,
 }

@@ -29,46 +29,6 @@ G_DEFINE_TYPE(FuPxiTpDevice, fu_pxi_tp_device, FU_TYPE_HIDRAW_DEVICE)
 #define PXI_TP_PAGE_SIZE	      256
 #define PXI_TP_PAGES_COUNT_PER_SECTOR 16
 
-/* ---- reset mode & keys ----
- *
- * NOTE:
- *   The actual enum values and constants are now defined in the Rust .rs file
- *   and exported as C macros by rustgen:
- *
- *     FuPxiTpResetMode::Application  -> FU_PXI_TP_RESET_MODE_APPLICATION
- *     FuPxiTpResetMode::Bootloader   -> FU_PXI_TP_RESET_MODE_BOOTLOADER
- *
- *     FuPxiTpResetKey1::Suspend        -> FU_PXI_TP_RESET_KEY1_SUSPEND
- *     FuPxiTpResetKey2::Regular      -> FU_PXI_TP_RESET_KEY2_REGULAR
- *     FuPxiTpResetKey2::Bootloader   -> FU_PXI_TP_RESET_KEY2_BOOTLOADER
- *
- *   Likewise for the flash/CRC enums used below:
- *
- *     FuPxiTpFlashInst::Cmd0         -> FU_PXI_TP_FLASH_INST_CMD0
- *     FuPxiTpFlashInst::Cmd1         -> FU_PXI_TP_FLASH_INST_CMD1
- *
- *     FuPxiTpFlashExecState::Success -> FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS
- *     FuPxiTpFlashWriteEnable::Success -> FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS
- *     FuPxiTpFlashStatus::Busy       -> FU_PXI_TP_FLASH_STATUS_BUSY
- *
- *     FuPxiTpFlashCcr::WriteEnable   -> FU_PXI_TP_FLASH_CCR_WRITE_ENABLE
- *     FuPxiTpFlashCcr::ReadStatus    -> FU_PXI_TP_FLASH_CCR_READ_STATUS
- *     FuPxiTpFlashCcr::EraseSector   -> FU_PXI_TP_FLASH_CCR_ERASE_SECTOR
- *     FuPxiTpFlashCcr::ProgramPage   -> FU_PXI_TP_FLASH_CCR_PROGRAM_PAGE
- *
- *     FuPxiTpPartId::Pjp274          -> FU_PXI_TP_PART_ID_PJP274
- *
- *     FuPxiTpCrcCtrl::FwBank0        -> FU_PXI_TP_CRC_CTRL_FW_BANK0
- *     FuPxiTpCrcCtrl::FwBank1        -> FU_PXI_TP_CRC_CTRL_FW_BANK1
- *     FuPxiTpCrcCtrl::ParamBank0     -> FU_PXI_TP_CRC_CTRL_PARAM_BANK0
- *     FuPxiTpCrcCtrl::ParamBank1     -> FU_PXI_TP_CRC_CTRL_PARAM_BANK1
- *     FuPxiTpCrcCtrl::Busy           -> FU_PXI_TP_CRC_CTRL_BUSY
- */
-
-/* ---- device part-id values, CRC control, flash constants ----
- * All moved to the Rust .rs file and exposed as FU_PXI_TP_* macros.
- */
-
 static gboolean
 fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 {
@@ -90,8 +50,8 @@ fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 	}
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK1,
-				      PXI_TP_R_SYS1_RESET_KEY1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK1,
+				      FU_PXI_TP_REG_SYS1_RESET_KEY1,
 				      key1,
 				      error))
 		return FALSE;
@@ -99,8 +59,8 @@ fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 	fu_device_sleep(FU_DEVICE(self), 30);
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK1,
-				      PXI_TP_R_SYS1_RESET_KEY2,
+				      FU_PXI_TP_SYSTEM_BANK_BANK1,
+				      FU_PXI_TP_REG_SYS1_RESET_KEY2,
 				      key2,
 				      error))
 		return FALSE;
@@ -124,53 +84,53 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 	guint8 out_val = 0;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_INST_CMD,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_INST_CMD,
 				      inst_cmd,
 				      error))
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_CCR0,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_CCR0,
 				      (guint8)((ccr_cmd >> 0) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_CCR1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_CCR1,
 				      (guint8)((ccr_cmd >> 8) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_CCR2,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_CCR2,
 				      (guint8)((ccr_cmd >> 16) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_CCR3,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_CCR3,
 				      (guint8)((ccr_cmd >> 24) & 0xff),
 				      error))
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_DATACNT0,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_DATA_CNT0,
 				      (guint8)((data_cnt >> 0) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_DATACNT1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_DATA_CNT1,
 				      (guint8)((data_cnt >> 8) & 0xff),
 				      error))
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_EXECUTE,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_EXECUTE,
 				      flash_execute_start,
 				      error))
 		return FALSE;
@@ -179,8 +139,8 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 		fu_device_sleep(FU_DEVICE(self), flash_execute_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_read(self,
-					     PXI_TP_SYSTEM_BANK4,
-					     PXI_TP_R_SYS4_FLASH_EXECUTE,
+					     FU_PXI_TP_SYSTEM_BANK_BANK4,
+					     FU_PXI_TP_REG_SYS4_FLASH_EXECUTE,
 					     &out_val,
 					     error))
 			return FALSE;
@@ -226,8 +186,8 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 		fu_device_sleep(FU_DEVICE(self), flash_write_enable_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_read(self,
-					     PXI_TP_SYSTEM_BANK4,
-					     PXI_TP_R_SYS4_FLASH_STATUS,
+					     FU_PXI_TP_SYSTEM_BANK_BANK4,
+					     FU_PXI_TP_REG_SYS4_FLASH_STATUS,
 					     &out_val,
 					     error))
 			return FALSE;
@@ -267,8 +227,8 @@ fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 		fu_device_sleep(FU_DEVICE(self), flash_busy_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_read(self,
-					     PXI_TP_SYSTEM_BANK4,
-					     PXI_TP_R_SYS4_FLASH_STATUS,
+					     FU_PXI_TP_SYSTEM_BANK_BANK4,
+					     FU_PXI_TP_REG_SYS4_FLASH_STATUS,
 					     &out_val,
 					     error))
 			return FALSE;
@@ -301,26 +261,26 @@ fu_pxi_tp_device_flash_erase_sector(FuPxiTpDevice *self, guint8 sector, GError *
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR0,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR0,
 				      (guint8)((flash_address >> 0) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR1,
 				      (guint8)((flash_address >> 8) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR2,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR2,
 				      (guint8)((flash_address >> 16) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR3,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR3,
 				      (guint8)((flash_address >> 24) & 0xff),
 				      error))
 		return FALSE;
@@ -351,39 +311,39 @@ fu_pxi_tp_device_flash_program_256b_to_flash(FuPxiTpDevice *self,
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_BUF_ADDR0,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_BUF_ADDR0,
 				      0x00,
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_BUF_ADDR1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_BUF_ADDR1,
 				      0x00,
 				      error))
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR0,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR0,
 				      (guint8)((flash_address >> 0) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR1,
 				      (guint8)((flash_address >> 8) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR2,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR2,
 				      (guint8)((flash_address >> 16) & 0xff),
 				      error))
 		return FALSE;
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK4,
-				      PXI_TP_R_SYS4_FLASH_ADDR3,
+				      FU_PXI_TP_SYSTEM_BANK_BANK4,
+				      FU_PXI_TP_REG_SYS4_FLASH_ADDR3,
 				      (guint8)((flash_address >> 24) & 0xff),
 				      error))
 		return FALSE;
@@ -412,30 +372,30 @@ fu_pxi_tp_device_write_sram_256b(FuPxiTpDevice *self, const guint8 *data, GError
 	};
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK6,
-				      PXI_TP_R_SYS6_SRAM_ADDR0,
+				      FU_PXI_TP_SYSTEM_BANK_BANK6,
+				      FU_PXI_TP_REG_SYS6_SRAM_ADDR0,
 				      0x00,
 				      error))
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK6,
-				      PXI_TP_R_SYS6_SRAM_ADDR1,
+				      FU_PXI_TP_SYSTEM_BANK_BANK6,
+				      FU_PXI_TP_REG_SYS6_SRAM_ADDR1,
 				      0x00,
 				      error))
 		return FALSE;
 
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK6,
-				      PXI_TP_R_SYS6_SRAM_SELECT,
+				      FU_PXI_TP_SYSTEM_BANK_BANK6,
+				      FU_PXI_TP_REG_SYS6_SRAM_SELECT,
 				      self->sram_select,
 				      error))
 		return FALSE;
 
 	/* enable NCS so that the following burst goes to SRAM buffer */
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK6,
-				      PXI_TP_R_SYS6_SRAM_TRIGGER,
+				      FU_PXI_TP_SYSTEM_BANK_BANK6,
+				      FU_PXI_TP_REG_SYS6_SRAM_TRIGGER,
 				      PXI_TP_SRAM_TRIGGER_NCS_ENABLE,
 				      error))
 		return FALSE;
@@ -449,8 +409,8 @@ fu_pxi_tp_device_write_sram_256b(FuPxiTpDevice *self, const guint8 *data, GError
 
 	/* disable NCS and commit SRAM buffer to target address */
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK6,
-				      PXI_TP_R_SYS6_SRAM_TRIGGER,
+				      FU_PXI_TP_SYSTEM_BANK_BANK6,
+				      FU_PXI_TP_REG_SYS6_SRAM_TRIGGER,
 				      PXI_TP_SRAM_TRIGGER_NCS_DISABLE,
 				      error))
 		return FALSE;
@@ -495,8 +455,8 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 
 	/* read swap_flag from system bank4 */
 	if (!fu_pxi_tp_register_read(self,
-				     PXI_TP_SYSTEM_BANK4,
-				     PXI_TP_R_SYS4_SWAP_FLAG,
+				     FU_PXI_TP_SYSTEM_BANK_BANK4,
+				     FU_PXI_TP_REG_SYS4_SWAP_FLAG,
 				     &out_val,
 				     error))
 		return 0;
@@ -504,16 +464,16 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 
 	/* read part_id from user bank0 (little-endian) */
 	if (!fu_pxi_tp_register_read(self,
-				     PXI_TP_USER_BANK0,
-				     PXI_TP_R_USER0_PART_ID0,
+				     FU_PXI_TP_USER_BANK_BANK0,
+				     FU_PXI_TP_REG_USER0_PART_ID0,
 				     &out_val,
 				     error))
 		return 0;
 	part_id = out_val;
 
 	if (!fu_pxi_tp_register_read(self,
-				     PXI_TP_USER_BANK0,
-				     PXI_TP_R_USER0_PART_ID1,
+				     FU_PXI_TP_USER_BANK_BANK0,
+				     FU_PXI_TP_REG_USER0_PART_ID1,
 				     &out_val,
 				     error))
 		return 0;
@@ -524,16 +484,16 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 		if (swap_flag != 0) {
 			/* PJP274 + swap enabled → firmware on bank1 */
 			if (!fu_pxi_tp_register_user_write(self,
-							   PXI_TP_USER_BANK0,
-							   PXI_TP_R_USER0_CRC_CTRL,
+							   FU_PXI_TP_USER_BANK_BANK0,
+							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_FW_BANK1,
 							   error))
 				return 0;
 		} else {
 			/* PJP274 normal boot → firmware on bank0 */
 			if (!fu_pxi_tp_register_user_write(self,
-							   PXI_TP_USER_BANK0,
-							   PXI_TP_R_USER0_CRC_CTRL,
+							   FU_PXI_TP_USER_BANK_BANK0,
+							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_FW_BANK0,
 							   error))
 				return 0;
@@ -543,8 +503,8 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 	default:
 		/* other part_id: always use bank0 firmware CRC */
 		if (!fu_pxi_tp_register_user_write(self,
-						   PXI_TP_USER_BANK0,
-						   PXI_TP_R_USER0_CRC_CTRL,
+						   FU_PXI_TP_USER_BANK_BANK0,
+						   FU_PXI_TP_REG_USER0_CRC_CTRL,
 						   FU_PXI_TP_CRC_CTRL_FW_BANK0,
 						   error))
 			return 0;
@@ -556,8 +516,8 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 		fu_device_sleep(FU_DEVICE(self), crc_fw_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_user_read(self,
-						  PXI_TP_USER_BANK0,
-						  PXI_TP_R_USER0_CRC_CTRL,
+						  FU_PXI_TP_USER_BANK_BANK0,
+						  FU_PXI_TP_REG_USER0_CRC_CTRL,
 						  &out_val,
 						  error))
 			return 0;
@@ -577,32 +537,32 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 
 	/* read CRC result (32-bit, little-endian) */
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT0,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT0,
 					  &out_val,
 					  error))
 		return 0;
 	return_value |= (guint32)out_val;
 
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT1,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT1,
 					  &out_val,
 					  error))
 		return 0;
 	return_value |= (guint32)out_val << 8;
 
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT2,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT2,
 					  &out_val,
 					  error))
 		return 0;
 	return_value |= (guint32)out_val << 16;
 
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT3,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT3,
 					  &out_val,
 					  error))
 		return 0;
@@ -625,8 +585,8 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 
 	/* read swap_flag from system bank4 */
 	if (!fu_pxi_tp_register_read(self,
-				     PXI_TP_SYSTEM_BANK4,
-				     PXI_TP_R_SYS4_SWAP_FLAG,
+				     FU_PXI_TP_SYSTEM_BANK_BANK4,
+				     FU_PXI_TP_REG_SYS4_SWAP_FLAG,
 				     &out_val,
 				     error))
 		return 0;
@@ -634,16 +594,16 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 
 	/* read part_id from user bank0 (little-endian) */
 	if (!fu_pxi_tp_register_read(self,
-				     PXI_TP_USER_BANK0,
-				     PXI_TP_R_USER0_PART_ID0,
+				     FU_PXI_TP_USER_BANK_BANK0,
+				     FU_PXI_TP_REG_USER0_PART_ID0,
 				     &out_val,
 				     error))
 		return 0;
 	part_id = out_val;
 
 	if (!fu_pxi_tp_register_read(self,
-				     PXI_TP_USER_BANK0,
-				     PXI_TP_R_USER0_PART_ID1,
+				     FU_PXI_TP_USER_BANK_BANK0,
+				     FU_PXI_TP_REG_USER0_PART_ID1,
 				     &out_val,
 				     error))
 		return 0;
@@ -654,16 +614,16 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 		if (swap_flag != 0) {
 			/* PJP274 + swap enabled → parameter on bank1 */
 			if (!fu_pxi_tp_register_user_write(self,
-							   PXI_TP_USER_BANK0,
-							   PXI_TP_R_USER0_CRC_CTRL,
+							   FU_PXI_TP_USER_BANK_BANK0,
+							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_PARAM_BANK1,
 							   error))
 				return 0;
 		} else {
 			/* PJP274 normal boot → parameter on bank0 */
 			if (!fu_pxi_tp_register_user_write(self,
-							   PXI_TP_USER_BANK0,
-							   PXI_TP_R_USER0_CRC_CTRL,
+							   FU_PXI_TP_USER_BANK_BANK0,
+							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_PARAM_BANK0,
 							   error))
 				return 0;
@@ -673,8 +633,8 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 	default:
 		/* other part_id: always use bank0 parameter CRC */
 		if (!fu_pxi_tp_register_user_write(self,
-						   PXI_TP_USER_BANK0,
-						   PXI_TP_R_USER0_CRC_CTRL,
+						   FU_PXI_TP_USER_BANK_BANK0,
+						   FU_PXI_TP_REG_USER0_CRC_CTRL,
 						   FU_PXI_TP_CRC_CTRL_PARAM_BANK0,
 						   error))
 			return 0;
@@ -686,8 +646,8 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 		fu_device_sleep(FU_DEVICE(self), crc_param_retry_delay_ms);
 
 		if (!fu_pxi_tp_register_user_read(self,
-						  PXI_TP_USER_BANK0,
-						  PXI_TP_R_USER0_CRC_CTRL,
+						  FU_PXI_TP_USER_BANK_BANK0,
+						  FU_PXI_TP_REG_USER0_CRC_CTRL,
 						  &out_val,
 						  error))
 			return 0;
@@ -707,32 +667,32 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 
 	/* read CRC result (32-bit, little-endian) */
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT0,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT0,
 					  &out_val,
 					  error))
 		return 0;
 	return_value |= (guint32)out_val;
 
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT1,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT1,
 					  &out_val,
 					  error))
 		return 0;
 	return_value |= (guint32)out_val << 8;
 
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT2,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT2,
 					  &out_val,
 					  error))
 		return 0;
 	return_value |= (guint32)out_val << 16;
 
 	if (!fu_pxi_tp_register_user_read(self,
-					  PXI_TP_USER_BANK0,
-					  PXI_TP_R_USER0_CRC_RESULT3,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_RESULT3,
 					  &out_val,
 					  error))
 		return 0;
@@ -822,8 +782,8 @@ fu_pxi_tp_device_update_flash_process(FuPxiTpDevice *self,
 
 	/* device-specific pre-write toggle (original behavior) */
 	if (!fu_pxi_tp_register_write(self,
-				      PXI_TP_SYSTEM_BANK2,
-				      PXI_TP_R_SYS2_UPDATE_MODE,
+				      FU_PXI_TP_SYSTEM_BANK_BANK2,
+				      FU_PXI_TP_REG_SYS2_UPDATE_MODE,
 				      0x02,
 				      error))
 		return FALSE;

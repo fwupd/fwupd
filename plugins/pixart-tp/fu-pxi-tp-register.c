@@ -15,7 +15,11 @@
 #define OP_READ		 0x10
 
 gboolean
-fu_pxi_tp_register_write(FuPxiTpDevice *self, guint8 bank, guint8 addr, guint8 val, GError **error)
+fu_pxi_tp_register_write(FuPxiTpDevice *self,
+			 FuPxiTpSystemBank bank,
+			 guint8 addr,
+			 guint8 val,
+			 GError **error)
 {
 	guint8 buf[4] = {REPORT_ID_SINGLE, addr, bank, val};
 
@@ -35,7 +39,7 @@ fu_pxi_tp_register_write(FuPxiTpDevice *self, guint8 bank, guint8 addr, guint8 v
 
 gboolean
 fu_pxi_tp_register_read(FuPxiTpDevice *self,
-			guint8 bank,
+			FuPxiTpSystemBank bank,
 			guint8 addr,
 			guint8 *out_val,
 			GError **error)
@@ -69,7 +73,7 @@ fu_pxi_tp_register_read(FuPxiTpDevice *self,
 /* --- User Register --- */
 gboolean
 fu_pxi_tp_register_user_write(FuPxiTpDevice *self,
-			      guint8 bank,
+			      FuPxiTpUserBank bank,
 			      guint8 addr,
 			      guint8 val,
 			      GError **error)
@@ -92,7 +96,7 @@ fu_pxi_tp_register_user_write(FuPxiTpDevice *self,
 
 gboolean
 fu_pxi_tp_register_user_read(FuPxiTpDevice *self,
-			     guint8 bank,
+			     FuPxiTpUserBank bank,
 			     guint8 addr,
 			     guint8 *out_val,
 			     GError **error)

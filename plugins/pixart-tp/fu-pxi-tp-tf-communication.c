@@ -670,8 +670,8 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 	/* stop touchpad reports while updating TF */
 	g_debug("stop touchpad report");
 	if (!fu_pxi_tp_register_user_write(self,
-					   PXI_TP_USER_BANK0,
-					   PXI_TP_R_USER0_PROXY_MODE,
+					   FU_PXI_TP_USER_BANK_BANK0,
+					   FU_PXI_TP_REG_USER0_PROXY_MODE,
 					   FU_PXI_TP_PROXY_MODE_TF_UPDATE,
 					   error))
 		return FALSE;
