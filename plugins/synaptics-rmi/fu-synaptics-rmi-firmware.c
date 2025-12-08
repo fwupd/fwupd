@@ -768,6 +768,15 @@ fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
 
 	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
 	cntrs_len = fu_struct_rmi_container_descriptor_get_content_length(st_dsc) / 4;
+	if (cntrs_len > RMI_IMG_MAX_CONTAINERS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "too many containers in file [%u], maximum is %u",
+			    cntrs_len,
+			    (guint)RMI_IMG_MAX_CONTAINERS);
+		return FALSE;
+	}
 	for (guint32 i = 0; i < cntrs_len; i++) {
 		guint32 addr_offset = offset + i * 4;
 		guint16 container_id;
