@@ -4,17 +4,17 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('pixart-rf.quirk')
-plugin_builtin_pxi = static_library('fu_plugin_pxi',
+plugin_builtin_pxi = static_library('fu_plugin_pixart_rf',
   rustgen.process(
-    'fu-pxi.rs', # fuzzing
+    'fu-pixart-rf.rs', # fuzzing
   ),
   sources: [
-    'fu-pxi-plugin.c',
-    'fu-pxi-common.c', # fuzzing
-    'fu-pxi-ble-device.c',
-    'fu-pxi-receiver-device.c',
-    'fu-pxi-wireless-device.c',
-    'fu-pxi-firmware.c', # fuzzing
+    'fu-pixart-rf-plugin.c',
+    'fu-pixart-rf-common.c', # fuzzing
+    'fu-pixart-rf-ble-device.c',
+    'fu-pixart-rf-receiver-device.c',
+    'fu-pixart-rf-wireless-device.c',
+    'fu-pixart-rf-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
   c_args: cargs,
@@ -31,13 +31,13 @@ device_tests += files(
 )
 
 if get_option('tests')
-  install_data(['tests/pixart.builder.xml'],
+  install_data(['tests/pixart-rf.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
-    'pxi-self-test',
+    'pixart-rf-self-test',
     sources: [
       'fu-self-test.c',
     ],
@@ -55,5 +55,5 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('pxi-self-test', e, env: env)
+  test('pixart-rf-self-test', e, env: env)
 endif

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ToString)]
-enum FuPxiOtaSpecCheckResult {
+enum FuPixartRfOtaSpecCheckResult {
     Ok = 1,
     FwOutOfBounds = 2,
     ProcessIllegal = 3,
@@ -12,7 +12,7 @@ enum FuPxiOtaSpecCheckResult {
 }
 
 #[derive(ToString)]
-enum FuPxiWirelessModuleOtaRspCode {
+enum FuPixartRfWirelessModuleOtaRspCode {
     Ok,
     Finish,
     Fail,
@@ -23,20 +23,20 @@ enum FuPxiWirelessModuleOtaRspCode {
     NotReady,
 }
 
-enum FuPxiOtaDisconnectReason {
+enum FuPixartRfOtaDisconnectReason {
     CodeJump = 1,
     UpdateDone = 2,
     Reset,
 }
 
 // OTA rsp code for wireless module
-enum FuPxiWirelessModuleType {
+enum FuPixartRfWirelessModuleType {
     Mouse,
     Keyboard,
     Receiver,
 }
 
-enum FuPxiDeviceCmd {
+enum FuPixartRfDeviceCmd {
     FwOtaInit		    = 0x10,
     FwWrite			    = 0x17,
     FwUpgrade		    = 0x18,
@@ -56,7 +56,7 @@ enum FuPxiDeviceCmd {
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructPxiOtaFwState {
+struct FuStructPixartRfOtaFwState {
     status: u8,
     new_flow: u8,
     offset: u16le,

@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuPxiPlugin, fu_pxi_plugin, FU, PXI_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuPixartRfPlugin, fu_pixart_rf_plugin, FU, PIXART_RF_PLUGIN, FuPlugin)

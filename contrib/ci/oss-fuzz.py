@@ -468,7 +468,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("elantp"),
         Fuzzer("genesys-scaler", srcdir="genesys", pattern="genesys-scaler-firmware"),
         Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
-        Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
+        Fuzzer("pixart-rf"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus", pattern="synaprom-firmware"),
         Fuzzer("synaptics-cape"),

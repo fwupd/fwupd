@@ -7,31 +7,31 @@
 
 #include "config.h"
 
-#include "fu-pxi-ble-device.h"
-#include "fu-pxi-common.h"
-#include "fu-pxi-firmware.h"
-#include "fu-pxi-struct.h"
+#include "fu-pixart-rf-ble-device.h"
+#include "fu-pixart-rf-common.h"
+#include "fu-pixart-rf-firmware.h"
+#include "fu-pixart-rf-struct.h"
 
-#define PXI_HID_DEV_OTA_INPUT_REPORT_ID	     0x05
-#define PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID 0x06
-#define PXI_HID_DEV_OTA_FEATURE_REPORT_ID    0x07
+#define PIXART_RF_HID_DEV_OTA_INPUT_REPORT_ID	   0x05
+#define PIXART_RF_HID_DEV_OTA_RETRANSMIT_REPORT_ID 0x06
+#define PIXART_RF_HID_DEV_OTA_FEATURE_REPORT_ID	   0x07
 
-#define PXI_HID_DEV_OTA_REPORT_USAGE_PAGE     0xff02u
-#define PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE 0xff01u
-#define PXI_HID_DEV_OTA_NOTIFY_USAGE_PAGE     0xff00u
+#define PIXART_RF_HID_DEV_OTA_REPORT_USAGE_PAGE	    0xff02u
+#define PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE 0xff01u
+#define PIXART_RF_HID_DEV_OTA_NOTIFY_USAGE_PAGE	    0xff00u
 
 #define ERR_COMMAND_SUCCESS 0x0
 
-#define FU_PXI_DEVICE_OBJECT_SIZE_MAX	  4096 /* bytes */
-#define FU_PXI_BLE_DEVICE_OTA_BUF_SZ	  512  /* bytes */
-#define FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN  4    /* bytes */
-#define FU_PXI_BLE_DEVICE_FW_INFO_RET_LEN 8    /* bytes */
+#define FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX	4096 /* bytes */
+#define FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ	512  /* bytes */
+#define FU_PIXART_RF_BLE_DEVICE_NOTIFY_RET_LEN	4    /* bytes */
+#define FU_PIXART_RF_BLE_DEVICE_FW_INFO_RET_LEN 8    /* bytes */
 
-#define FU_PXI_BLE_DEVICE_NOTIFY_TIMEOUT_MS 5000
+#define FU_PIXART_RF_BLE_DEVICE_NOTIFY_TIMEOUT_MS 5000
 
-#define FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES 30
+#define FU_PIXART_RF_BLE_DEVICE_SET_REPORT_RETRIES 30
 
-struct _FuPxiBleDevice {
+struct _FuPixartRfBleDevice {
 	FuHidrawDevice parent_instance;
 	FuPixartRfOtaFwState fwstate;
 	guint8 retransmit_id;
@@ -40,34 +40,34 @@ struct _FuPxiBleDevice {
 	gchar *model_name;
 };
 
-G_DEFINE_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU_TYPE_HIDRAW_DEVICE)
+G_DEFINE_TYPE(FuPixartRfBleDevice, fu_pixart_rf_ble_device, FU_TYPE_HIDRAW_DEVICE)
 
 static void
-fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
+fu_pixart_rf_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
+	FuPixartRfBleDevice *self = FU_PIXART_RF_BLE_DEVICE(device);
 	fwupd_codec_string_append(str, idt, "ModelName", self->model_name);
-	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
+	fu_pixart_rf_ota_fw_state_to_string(&self->fwstate, idt, str);
 	fwupd_codec_string_append_hex(str, idt, "RetransmitID", self->retransmit_id);
 	fwupd_codec_string_append_hex(str, idt, "FeatureReportID", self->feature_report_id);
 	fwupd_codec_string_append_hex(str, idt, "InputReportID", self->input_report_id);
 }
 
 static FuFirmware *
-fu_pxi_ble_device_prepare_firmware(FuDevice *device,
-				   GInputStream *stream,
-				   FuProgress *progress,
-				   FuFirmwareParseFlags flags,
-				   GError **error)
+fu_pixart_rf_ble_device_prepare_firmware(FuDevice *device,
+					 GInputStream *stream,
+					 FuProgress *progress,
+					 FuFirmwareParseFlags flags,
+					 GError **error)
 {
-	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new();
+	FuPixartRfBleDevice *self = FU_PIXART_RF_BLE_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_pixart_rf_firmware_new();
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
-	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
+	if (fu_device_has_private_flag(device, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
+	    fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
 		g_autoptr(GInputStream) stream_new = NULL;
 
@@ -79,12 +79,12 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
 
-	} else if (!fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
-		   !fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
+	} else if (!fu_device_has_private_flag(device, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
+		   !fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		const gchar *model_name;
 
 		/* check is compatible with hardware */
-		model_name = fu_pxi_firmware_get_model_name(FU_PXI_FIRMWARE(firmware));
+		model_name = fu_pixart_rf_firmware_get_model_name(FU_PIXART_RF_FIRMWARE(firmware));
 		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 			if (self->model_name == NULL || model_name == NULL) {
 				g_set_error_literal(error,
@@ -116,7 +116,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_pixart_rf_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	GByteArray *req = (GByteArray *)user_data;
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(device),
@@ -127,17 +127,20 @@ fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **
 }
 
 static gboolean
-fu_pxi_ble_device_set_feature(FuPxiBleDevice *self, GByteArray *req, GError **error)
+fu_pixart_rf_ble_device_set_feature(FuPixartRfBleDevice *self, GByteArray *req, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_pxi_ble_device_set_feature_cb,
-			       FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES,
+			       fu_pixart_rf_ble_device_set_feature_cb,
+			       FU_PIXART_RF_BLE_DEVICE_SET_REPORT_RETRIES,
 			       req,
 			       error);
 }
 
 static gboolean
-fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GError **error)
+fu_pixart_rf_ble_device_get_feature(FuPixartRfBleDevice *self,
+				    guint8 *buf,
+				    guint bufsz,
+				    GError **error)
 {
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
@@ -160,10 +163,10 @@ fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GE
 }
 
 static gboolean
-fu_pxi_ble_device_search_hid_feature_report_id(FuHidDescriptor *descriptor,
-					       guint16 usage_page,
-					       guint8 *report_id,
-					       GError **error)
+fu_pixart_rf_ble_device_search_hid_feature_report_id(FuHidDescriptor *descriptor,
+						     guint16 usage_page,
+						     guint8 *report_id,
+						     GError **error)
 {
 	g_autoptr(FuFirmware) item_id = NULL;
 	g_autoptr(FuHidReport) report = NULL;
@@ -192,10 +195,10 @@ fu_pxi_ble_device_search_hid_feature_report_id(FuHidDescriptor *descriptor,
 }
 
 static gboolean
-fu_pxi_ble_device_search_hid_input_report_id(FuHidDescriptor *descriptor,
-					     guint16 usage_page,
-					     guint8 *report_id,
-					     GError **error)
+fu_pixart_rf_ble_device_search_hid_input_report_id(FuHidDescriptor *descriptor,
+						   guint16 usage_page,
+						   guint8 *report_id,
+						   GError **error)
 {
 	g_autoptr(FuHidReport) report = NULL;
 	g_autoptr(FuFirmware) item_id = NULL;
@@ -224,7 +227,7 @@ fu_pxi_ble_device_search_hid_input_report_id(FuHidDescriptor *descriptor,
 }
 
 static gboolean
-fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_check_support_report_id(FuPixartRfBleDevice *self, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(GError) error_local1 = NULL;
@@ -236,36 +239,39 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 
 	/* check ota retransmit feature report usage page exists */
-	if (!fu_pxi_ble_device_search_hid_feature_report_id(descriptor,
-							    PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
-							    &self->retransmit_id,
-							    &error_local1)) {
+	if (!fu_pixart_rf_ble_device_search_hid_feature_report_id(
+		descriptor,
+		PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		&self->retransmit_id,
+		&error_local1)) {
 		g_debug("failed to parse descriptor: %s", error_local1->message);
 	}
 	g_debug("usage-page: 0x%x retransmit_id: %d",
-		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
 		self->retransmit_id);
 
 	/* check ota feature report usage page exists */
-	if (!fu_pxi_ble_device_search_hid_feature_report_id(descriptor,
-							    PXI_HID_DEV_OTA_REPORT_USAGE_PAGE,
-							    &self->feature_report_id,
-							    &error_local2)) {
+	if (!fu_pixart_rf_ble_device_search_hid_feature_report_id(
+		descriptor,
+		PIXART_RF_HID_DEV_OTA_REPORT_USAGE_PAGE,
+		&self->feature_report_id,
+		&error_local2)) {
 		g_debug("failed to parse descriptor: %s", error_local2->message);
 	}
 	g_debug("usage-page: 0x%x feature_report_id: %d",
-		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
 		self->feature_report_id);
 
 	/* check ota notify input report usage page exist or not */
-	if (!fu_pxi_ble_device_search_hid_input_report_id(descriptor,
-							  PXI_HID_DEV_OTA_NOTIFY_USAGE_PAGE,
-							  &self->input_report_id,
-							  &error_local3)) {
+	if (!fu_pixart_rf_ble_device_search_hid_input_report_id(
+		descriptor,
+		PIXART_RF_HID_DEV_OTA_NOTIFY_USAGE_PAGE,
+		&self->input_report_id,
+		&error_local3)) {
 		g_debug("failed to parse descriptor: %s", error_local3->message);
 	}
 	g_debug("usage-page: 0x%x input_report_id: %d",
-		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
+		PIXART_RF_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
 		self->input_report_id);
 
 	/* success */
@@ -273,21 +279,21 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_ble_device_fw_ota_check_retransmit(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_fw_ota_check_retransmit(FuPixartRfBleDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* write fw ota retransmit command to reset the ota state */
 	fu_byte_array_append_uint8(req, self->retransmit_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_RETRANSMIT);
-	return fu_pxi_ble_device_set_feature(self, req, error);
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_OTA_RETRANSMIT);
+	return fu_pixart_rf_ble_device_set_feature(self, req, error);
 }
 
 static gboolean
-fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
-				       FuFirmware *firmware,
-				       FuProgress *progress,
-				       GError **error)
+fu_pixart_rf_ble_device_check_support_resume(FuPixartRfBleDevice *self,
+					     FuFirmware *firmware,
+					     FuProgress *progress,
+					     GError **error)
 {
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -302,7 +308,7 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+					       FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX);
 	if (self->fwstate.offset > fu_chunk_array_length(chunks)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -342,22 +348,22 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 }
 
 static gboolean
-fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
-			      goffset port,
-			      guint8 *status,
-			      guint16 *checksum,
-			      GError **error)
+fu_pixart_rf_ble_device_wait_notify(FuPixartRfBleDevice *self,
+				    goffset port,
+				    guint8 *status,
+				    guint16 *checksum,
+				    GError **error)
 {
 	g_autoptr(GTimer) timer = g_timer_new();
-	guint8 res[FU_PXI_BLE_DEVICE_OTA_BUF_SZ] = {0};
+	guint8 res[FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ] = {0};
 	guint8 cmd_status = 0x0;
 
 	/* skip the wrong report id ,and keep polling until result is correct */
-	while (g_timer_elapsed(timer, NULL) * 1000.f < FU_PXI_BLE_DEVICE_NOTIFY_TIMEOUT_MS) {
+	while (g_timer_elapsed(timer, NULL) * 1000.f < FU_PIXART_RF_BLE_DEVICE_NOTIFY_TIMEOUT_MS) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
 					  port,
 					  res,
-					  (FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
+					  (FU_PIXART_RF_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
 					  error))
 			return FALSE;
 		if (res[0] == self->input_report_id)
@@ -378,7 +384,7 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 		if (!fu_memread_uint8_safe(res, sizeof(res), 0x1, &status_tmp, error))
 			return FALSE;
 		/* need check command result if command is fw upgrade */
-		if (status_tmp == FU_PXI_DEVICE_CMD_FW_UPGRADE) {
+		if (status_tmp == FU_PIXART_RF_DEVICE_CMD_FW_UPGRADE) {
 			if (!fu_memread_uint8_safe(res, sizeof(res), 0x2, &cmd_status, error))
 				return FALSE;
 			if (cmd_status != ERR_COMMAND_SUCCESS) {
@@ -409,29 +415,29 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 }
 
 static gboolean
-fu_pxi_ble_device_fw_object_create(FuPxiBleDevice *self, FuChunk *chk, GError **error)
+fu_pixart_rf_ble_device_fw_object_create(FuPixartRfBleDevice *self, FuChunk *chk, GError **error)
 {
 	guint8 opcode = 0;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* request */
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_OBJECT_CREATE);
 	fu_byte_array_append_uint32(req, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint32(req, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
-	if (!fu_pxi_ble_device_set_feature(self, req, error))
+	if (!fu_pixart_rf_ble_device_set_feature(self, req, error))
 		return FALSE;
 
 	/* check object create success or not */
-	if (!fu_pxi_ble_device_wait_notify(self, 0x0, &opcode, NULL, error))
+	if (!fu_pixart_rf_ble_device_wait_notify(self, 0x0, &opcode, NULL, error))
 		return FALSE;
-	if (opcode != FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE) {
+	if (opcode != FU_PIXART_RF_DEVICE_CMD_FW_OBJECT_CREATE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
 			    "FwObjectCreate opcode got 0x%02x, expected 0x%02x",
 			    opcode,
-			    (guint)FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
+			    (guint)FU_PIXART_RF_DEVICE_CMD_FW_OBJECT_CREATE);
 		return FALSE;
 	}
 
@@ -440,16 +446,16 @@ fu_pxi_ble_device_fw_object_create(FuPxiBleDevice *self, FuChunk *chk, GError **
 }
 
 static gboolean
-fu_pxi_ble_device_write_payload(FuPxiBleDevice *self, FuChunk *chk, GError **error)
+fu_pixart_rf_ble_device_write_payload(FuPixartRfBleDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
 	fu_byte_array_append_uint8(req, self->feature_report_id);
 	g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-	return fu_pxi_ble_device_set_feature(self, req, error);
+	return fu_pixart_rf_ble_device_set_feature(self, req, error);
 }
 
 static gboolean
-fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error)
+fu_pixart_rf_ble_device_write_chunk(FuPixartRfBleDevice *self, FuChunk *chk, GError **error)
 {
 	guint32 prn = 0;
 	guint16 checksum;
@@ -458,7 +464,7 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
 
 	/* send create fw object command */
-	if (!fu_pxi_ble_device_fw_object_create(self, chk, error))
+	if (!fu_pixart_rf_ble_device_fw_object_create(self, chk, error))
 		return FALSE;
 
 	/* write payload */
@@ -473,20 +479,20 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 		chk2 = fu_chunk_array_index(chunks, i, error);
 		if (chk2 == NULL)
 			return FALSE;
-		if (!fu_pxi_ble_device_write_payload(self, chk2, error))
+		if (!fu_pixart_rf_ble_device_write_payload(self, chk2, error))
 			return FALSE;
 		prn++;
 		/* wait notify from device when PRN over threshold write or
 		 * offset reach max object sz or write offset reach fw length */
 		if (prn >= self->fwstate.prn_threshold || i == fu_chunk_array_length(chunks) - 1) {
 			guint8 opcode = 0;
-			if (!fu_pxi_ble_device_wait_notify(self,
-							   0x0,
-							   &opcode,
-							   &checksum_device,
-							   error))
+			if (!fu_pixart_rf_ble_device_wait_notify(self,
+								 0x0,
+								 &opcode,
+								 &checksum_device,
+								 error))
 				return FALSE;
-			if (opcode != FU_PXI_DEVICE_CMD_FW_WRITE) {
+			if (opcode != FU_PIXART_RF_DEVICE_CMD_FW_WRITE) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_READ,
@@ -516,14 +522,15 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 }
 
 static gboolean
-fu_pxi_ble_device_reset(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_reset(FuPixartRfBleDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_MCU_RESET); /* OTA reset command */
-	fu_byte_array_append_uint8(req, FU_PXI_OTA_DISCONNECT_REASON_RESET);
+	fu_byte_array_append_uint8(req,
+				   FU_PIXART_RF_DEVICE_CMD_FW_MCU_RESET); /* OTA reset command */
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_OTA_DISCONNECT_REASON_RESET);
 
-	if (!fu_pxi_ble_device_set_feature(self, req, error)) {
+	if (!fu_pixart_rf_ble_device_set_feature(self, req, error)) {
 		g_prefix_error_literal(error, "failed to reset: ");
 		return FALSE;
 	}
@@ -533,30 +540,30 @@ fu_pxi_ble_device_reset(FuPxiBleDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_ble_device_fw_ota_init(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_fw_ota_init(FuPixartRfBleDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* write fw ota init command */
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_INIT);
-	return fu_pxi_ble_device_set_feature(self, req, error);
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_OTA_INIT);
+	return fu_pixart_rf_ble_device_set_feature(self, req, error);
 }
 
 static gboolean
-fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **error)
+fu_pixart_rf_ble_device_fw_ota_init_new(FuPixartRfBleDevice *self, gsize bufsz, GError **error)
 {
-	guint8 res[FU_PXI_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
+	guint8 res[FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 fw_version[10] = {0x0};
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* write fw ota init new command */
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW);
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_OTA_INIT_NEW);
 	fu_byte_array_append_uint32(req, bufsz, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint8(req, 0x0); /* OTA setting */
 	g_byte_array_append(req, fw_version, sizeof(fw_version));
-	if (!fu_pxi_ble_device_set_feature(self, req, error))
+	if (!fu_pixart_rf_ble_device_set_feature(self, req, error))
 		return FALSE;
 
 	/* delay for BLE device read command */
@@ -564,20 +571,21 @@ fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **er
 
 	/* read fw ota init new command */
 	res[0] = self->feature_report_id;
-	res[1] = FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW;
-	if (!fu_pxi_ble_device_get_feature(self, res, sizeof(res), error))
+	res[1] = FU_PIXART_RF_DEVICE_CMD_FW_OTA_INIT_NEW;
+	if (!fu_pixart_rf_ble_device_get_feature(self, res, sizeof(res), error))
 		return FALSE;
 
 	/* shared state */
-	if (!fu_pxi_ota_fw_state_parse(&self->fwstate, res, sizeof(res), 0x05, error))
+	if (!fu_pixart_rf_ota_fw_state_parse(&self->fwstate, res, sizeof(res), 0x05, error))
 		return FALSE;
-	if (self->fwstate.spec_check_result != FU_PXI_OTA_SPEC_CHECK_RESULT_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "FwInitNew spec check fail: %s [0x%02x]",
-			    fu_pxi_ota_spec_check_result_to_string(self->fwstate.spec_check_result),
-			    self->fwstate.spec_check_result);
+	if (self->fwstate.spec_check_result != FU_PIXART_RF_OTA_SPEC_CHECK_RESULT_OK) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_READ,
+		    "FwInitNew spec check fail: %s [0x%02x]",
+		    fu_pixart_rf_ota_spec_check_result_to_string(self->fwstate.spec_check_result),
+		    self->fwstate.spec_check_result);
 		return FALSE;
 	}
 
@@ -586,10 +594,10 @@ fu_pxi_ble_device_fw_ota_init_new(FuPxiBleDevice *self, gsize bufsz, GError **er
 }
 
 static gboolean
-fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
-			     FuFirmware *firmware,
-			     FuProgress *progress,
-			     GError **error)
+fu_pixart_rf_ble_device_fw_upgrade(FuPixartRfBleDevice *self,
+				   FuFirmware *firmware,
+				   FuProgress *progress,
+				   GError **error)
 {
 	const gchar *version;
 	guint8 fw_version[5] = {0x0};
@@ -603,10 +611,10 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 		return FALSE;
 	checksum = fu_sum16_bytes(fw);
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32(req, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16(req, checksum, G_LITTLE_ENDIAN);
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
 		version = fu_firmware_get_version(firmware);
 		if (!fu_memcpy_safe(fw_version,
 				    sizeof(fw_version),
@@ -621,13 +629,13 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 	g_byte_array_append(req, fw_version, sizeof(fw_version));
 
 	/* send fw upgrade command */
-	if (!fu_pxi_ble_device_set_feature(self, req, error))
+	if (!fu_pixart_rf_ble_device_set_feature(self, req, error))
 		return FALSE;
 
 	fu_dump_raw(G_LOG_DOMAIN, "fw upgrade", req->data, req->len);
 
 	/* wait fw upgrade command result */
-	if (!fu_pxi_ble_device_wait_notify(self, 0x1, &opcode, NULL, error)) {
+	if (!fu_pixart_rf_ble_device_wait_notify(self, 0x1, &opcode, NULL, error)) {
 		g_prefix_error(error,
 			       "FwUpgrade command fail, "
 			       "fw-checksum: 0x%04x fw-size: %" G_GSIZE_FORMAT ": ",
@@ -635,7 +643,7 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 			       g_bytes_get_size(fw));
 		return FALSE;
 	}
-	if (opcode != FU_PXI_DEVICE_CMD_FW_UPGRADE) {
+	if (opcode != FU_PIXART_RF_DEVICE_CMD_FW_UPGRADE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -649,13 +657,13 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 }
 
 static gboolean
-fu_pxi_ble_device_write_firmware(FuDevice *device,
-				 FuFirmware *firmware,
-				 FuProgress *progress,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_pixart_rf_ble_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
-	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
+	FuPixartRfBleDevice *self = FU_PIXART_RF_BLE_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -674,14 +682,14 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* send fw ota retransmit command to reset status */
-	if (!fu_pxi_ble_device_fw_ota_check_retransmit(self, error)) {
+	if (!fu_pixart_rf_ble_device_fw_ota_check_retransmit(self, error)) {
 		g_prefix_error_literal(error, "failed to OTA check retransmit: ");
 		return FALSE;
 	}
 	/* send fw ota init command */
-	if (!fu_pxi_ble_device_fw_ota_init(self, error))
+	if (!fu_pixart_rf_ble_device_fw_ota_init(self, error))
 		return FALSE;
-	if (!fu_pxi_ble_device_fw_ota_init_new(self, g_bytes_get_size(fw), error))
+	if (!fu_pixart_rf_ble_device_fw_ota_init_new(self, g_bytes_get_size(fw), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -689,11 +697,11 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       FU_PXI_DEVICE_OBJECT_SIZE_MAX);
-	if (!fu_pxi_ble_device_check_support_resume(self,
-						    firmware,
-						    fu_progress_get_child(progress),
-						    &error_local)) {
+					       FU_PIXART_RF_DEVICE_OBJECT_SIZE_MAX);
+	if (!fu_pixart_rf_ble_device_check_support_resume(self,
+							  firmware,
+							  fu_progress_get_child(progress),
+							  &error_local)) {
 		g_debug("do not resume: %s", error_local->message);
 		self->fwstate.offset = 0;
 		self->fwstate.checksum = 0;
@@ -708,7 +716,7 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_pxi_ble_device_write_chunk(self, chk, error))
+		if (!fu_pixart_rf_ble_device_write_chunk(self, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)self->fwstate.offset + 1,
@@ -717,12 +725,15 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* fw upgrade command */
-	if (!fu_pxi_ble_device_fw_upgrade(self, firmware, fu_progress_get_child(progress), error))
+	if (!fu_pixart_rf_ble_device_fw_upgrade(self,
+						firmware,
+						fu_progress_get_child(progress),
+						error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* send device reset command */
-	if (!fu_pxi_ble_device_reset(self, error))
+	if (!fu_pixart_rf_ble_device_reset(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -732,9 +743,9 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_fw_get_info(FuPixartRfBleDevice *self, GError **error)
 {
-	guint8 res[FU_PXI_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
+	guint8 res[FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 opcode = 0x0;
 	guint16 checksum = 0;
 	guint16 hpac_ver = 0;
@@ -742,21 +753,24 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_GET_INFO);
-	if (!fu_pxi_ble_device_set_feature(self, req, error))
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_GET_INFO);
+	if (!fu_pixart_rf_ble_device_set_feature(self, req, error))
 		return FALSE;
 
 	/* delay for BLE device read command */
 	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
 	res[0] = self->feature_report_id;
-	res[1] = FU_PXI_DEVICE_CMD_FW_GET_INFO;
+	res[1] = FU_PIXART_RF_DEVICE_CMD_FW_GET_INFO;
 
-	if (!fu_pxi_ble_device_get_feature(self, res, FU_PXI_BLE_DEVICE_FW_INFO_RET_LEN + 3, error))
+	if (!fu_pixart_rf_ble_device_get_feature(self,
+						 res,
+						 FU_PIXART_RF_BLE_DEVICE_FW_INFO_RET_LEN + 3,
+						 error))
 		return FALSE;
 	if (!fu_memread_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
 		return FALSE;
-	if (opcode != FU_PXI_DEVICE_CMD_FW_GET_INFO) {
+	if (opcode != FU_PIXART_RF_DEVICE_CMD_FW_GET_INFO) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -765,18 +779,18 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 	}
 	/* set current version */
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
 		version_str = g_strndup((gchar *)res + 0x6, 5);
 	} else {
 		if (!fu_memread_uint16_safe(res,
-					    FU_PXI_BLE_DEVICE_OTA_BUF_SZ,
+					    FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ,
 					    9,
 					    &hpac_ver,
 					    G_BIG_ENDIAN,
 					    error))
 			return FALSE;
 
-		version_str = fu_pxi_hpac_version_info_parse(hpac_ver);
+		version_str = fu_pixart_rf_hpac_version_info_parse(hpac_ver);
 	}
 	fu_device_set_version(FU_DEVICE(self), version_str);
 
@@ -789,30 +803,30 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_get_model_info(FuPixartRfBleDevice *self, GError **error)
 {
-	guint8 res[FU_PXI_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
+	guint8 res[FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 opcode = 0x0;
-	guint8 model_name[FU_PXI_DEVICE_MODEL_NAME_LEN] = {0x0};
+	guint8 model_name[FU_PIXART_RF_DEVICE_MODEL_NAME_LEN] = {0x0};
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL);
+	fu_byte_array_append_uint8(req, FU_PIXART_RF_DEVICE_CMD_FW_OTA_GET_MODEL);
 
-	if (!fu_pxi_ble_device_set_feature(self, req, error))
+	if (!fu_pixart_rf_ble_device_set_feature(self, req, error))
 		return FALSE;
 
 	/* delay for BLE device read command */
 	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
 
 	res[0] = self->feature_report_id;
-	if (!fu_pxi_ble_device_get_feature(self, res, sizeof(res), error))
+	if (!fu_pixart_rf_ble_device_get_feature(self, res, sizeof(res), error))
 		return FALSE;
 	if (!fu_memread_uint8_safe(res, sizeof(res), 0x4, &opcode, error))
 		return FALSE;
 
 	/* old firmware */
-	if (opcode != FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL)
+	if (opcode != FU_PIXART_RF_DEVICE_CMD_FW_OTA_GET_MODEL)
 		return TRUE;
 
 	/* get model from res */
@@ -834,7 +848,7 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
+fu_pixart_rf_ble_device_setup_guid(FuPixartRfBleDevice *self, GError **error)
 {
 	FuDevice *device = FU_DEVICE(self);
 	g_autoptr(GString) dev_name = NULL;
@@ -863,36 +877,36 @@ fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_ble_device_setup(FuDevice *device, GError **error)
+fu_pixart_rf_ble_device_setup(FuDevice *device, GError **error)
 {
-	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
+	FuPixartRfBleDevice *self = FU_PIXART_RF_BLE_DEVICE(device);
 
-	if (!fu_pxi_ble_device_check_support_report_id(self, error)) {
+	if (!fu_pixart_rf_ble_device_check_support_report_id(self, error)) {
 		g_prefix_error_literal(error, "failed to check report id: ");
 		return FALSE;
 	}
-	if (!fu_pxi_ble_device_fw_ota_check_retransmit(self, error)) {
+	if (!fu_pixart_rf_ble_device_fw_ota_check_retransmit(self, error)) {
 		g_prefix_error_literal(error, "failed to OTA check retransmit: ");
 		return FALSE;
 	}
-	if (!fu_pxi_ble_device_fw_ota_init(self, error)) {
+	if (!fu_pixart_rf_ble_device_fw_ota_init(self, error)) {
 		g_prefix_error_literal(error, "failed to OTA init: ");
 		return FALSE;
 	}
-	if (!fu_pxi_ble_device_fw_get_info(self, error)) {
+	if (!fu_pixart_rf_ble_device_fw_get_info(self, error)) {
 		g_prefix_error_literal(error, "failed to get info: ");
 		return FALSE;
 	}
-	if (!fu_pxi_ble_device_get_model_info(self, error)) {
+	if (!fu_pixart_rf_ble_device_get_model_info(self, error)) {
 		g_prefix_error_literal(error, "failed to get model: ");
 		return FALSE;
 	}
 
 	/* FuHidrawDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_pxi_ble_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_pixart_rf_ble_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (!fu_pxi_ble_device_setup_guid(self, error)) {
+	if (!fu_pixart_rf_ble_device_setup_guid(self, error)) {
 		g_prefix_error_literal(error, "failed to setup GUID: ");
 		return FALSE;
 	}
@@ -901,7 +915,7 @@ fu_pxi_ble_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_pxi_ble_device_set_progress(FuDevice *device, FuProgress *progress)
+fu_pixart_rf_ble_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -912,7 +926,7 @@ fu_pxi_ble_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static void
-fu_pxi_ble_device_init(FuPxiBleDevice *self)
+fu_pixart_rf_ble_device_init(FuPixartRfBleDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -922,30 +936,30 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 50);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
-	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
-	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
-	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC);
+	self->retransmit_id = PIXART_RF_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
+	self->feature_report_id = PIXART_RF_HID_DEV_OTA_FEATURE_REPORT_ID;
+	self->input_report_id = PIXART_RF_HID_DEV_OTA_INPUT_REPORT_ID;
+	fu_device_register_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
-fu_pxi_ble_device_finalize(GObject *object)
+fu_pixart_rf_ble_device_finalize(GObject *object)
 {
-	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(object);
+	FuPixartRfBleDevice *self = FU_PIXART_RF_BLE_DEVICE(object);
 	g_free(self->model_name);
-	G_OBJECT_CLASS(fu_pxi_ble_device_parent_class)->finalize(object);
+	G_OBJECT_CLASS(fu_pixart_rf_ble_device_parent_class)->finalize(object);
 }
 
 static void
-fu_pxi_ble_device_class_init(FuPxiBleDeviceClass *klass)
+fu_pixart_rf_ble_device_class_init(FuPixartRfBleDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_pxi_ble_device_finalize;
-	device_class->setup = fu_pxi_ble_device_setup;
-	device_class->to_string = fu_pxi_ble_device_to_string;
-	device_class->write_firmware = fu_pxi_ble_device_write_firmware;
-	device_class->prepare_firmware = fu_pxi_ble_device_prepare_firmware;
-	device_class->set_progress = fu_pxi_ble_device_set_progress;
+	object_class->finalize = fu_pixart_rf_ble_device_finalize;
+	device_class->setup = fu_pixart_rf_ble_device_setup;
+	device_class->to_string = fu_pixart_rf_ble_device_to_string;
+	device_class->write_firmware = fu_pixart_rf_ble_device_write_firmware;
+	device_class->prepare_firmware = fu_pixart_rf_ble_device_prepare_firmware;
+	device_class->set_progress = fu_pixart_rf_ble_device_set_progress;
 }
