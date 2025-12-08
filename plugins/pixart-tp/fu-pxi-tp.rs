@@ -219,7 +219,7 @@ struct FuStructPxiTfWriteSimpleCmd {
 #[repr(C, packed)]
 struct FuStructPxiTfWritePacketCmd {
     report_id:     u8 = 0xCC,
-    preamble:      u8 = 0x5A,
+    preamble:      u8 = 0x5A, 
     target_addr:   u8 = 0x2C,
     func:          u8 = 0x04,
     addr:          u16le,
@@ -238,4 +238,49 @@ struct FuStructPxiTfReadCmd {
     addr:        u16le,
     datalen:     u16le,
     reply_len:   u16le,
+}
+
+// =====================================================================
+// ---- FWHD header offsets (on-disk layout, LE)
+// =====================================================================
+
+#[repr(u16)]
+enum FuPxiTpFwHeaderOffset {
+    Magic        = 0x0000,
+    HeaderLen    = 0x0004,
+    SectionsBase = 0x0014,
+}
+
+// =====================================================================
+// ---- Firmware header (Parse from bytes)
+// =====================================================================
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructPxiTpFirmwareHdr {
+    magic:         [u8; 4],
+    header_len:    u16le,
+    header_ver:    u16le,
+    file_ver:      u16le,
+    ic_part_id:    u16le,
+    flash_sectors: u16le,
+    file_crc32:    u32le,
+    num_sections:  u16le,
+}
+
+// =====================================================================
+// ---- Firmware section header (Parse from bytes)
+// =====================================================================
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructPxiTpFirmwareSectionHdr {
+    update_type:        u8,
+    update_info:        u8,
+    target_flash_start: u32le,
+    internal_file_start:u32le,
+    section_length:     u32le,
+    section_crc:        u32le,
+    reserved:           [u8; 12],
+    extname:            [u8; 34],
 }
