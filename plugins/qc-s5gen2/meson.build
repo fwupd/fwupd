@@ -26,6 +26,7 @@ enumeration_data += files(
 )
 
 device_tests += files(
+  'tests/google-gid8.json',
   'tests/qualcomm-qcc5171.json',
   'tests/ugreen-15765a.json',
 )

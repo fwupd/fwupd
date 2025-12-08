@@ -1,0 +1,18 @@
+{
+  "name": "Google GID8",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "866846396ac6e4b869651d405707186d6d003db97bb9e67f1d0f26503bbd0b60-GID8-Firmware-v300.cab",
+      "emulation-url": "dd55e2b2af04411c6ed7805362967b9ac3e0f4adb75b06a4524b1b4b23e3e210-gid8-reinstall-3.0.0-3.0.0.zip",
+      "components": [
+        {
+          "version": "3.0.0",
+          "guids": [
+            "7be16507-61bf-5931-808a-495277003392"
+          ]
+        }
+      ]
+    }
+  ]
+}
