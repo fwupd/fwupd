@@ -4,29 +4,24 @@ title: Plugin: PixArt Touchpad
 
 ## Introduction
 
-The **PixArt Touchpad** plugin (`pixart_tp`) updates PixArt touchpad firmware
-that enumerates as **HID** devices (either **USB-HID** or **I²C-HID** exposed via
-`hidraw`). The device can enter a lightweight bootloader (“engineer mode”)
-and is then flashed over the same HID interface.
+The PixArt Touchpad plugin (`pixart_tp`) updates PixArt touchpad firmware
+that enumerates as HID devices (either USB-HID or I²C-HID exposed via `hidraw`).
 
-This plugin sets the fwupd device protocol to **`com.pixart.tp`** and reports
-version numbers in **hex** format.
+The device can enter a lightweight bootloader (“engineer mode”) and is then flashed over the same
+HID interface.
+
+This plugin sets the fwupd device protocol to `com.pixart.tp` and reports version numbers in hex format.
 
 ## Firmware Format
 
-The update payload is shipped as a **CAB** that contains:
+The firmware is parsed by `FuPxiTpFirmware` and validated using:
 
-- `firmware.metainfo.xml` — metadata and release info
-- `firmware.bin` — a PixArt container with magic **`FWHD`** (header v1.0)
-
-The container is parsed by `FuPxiTpFirmware` and validated using:
-
+- **Magic** `FWHD` (header v1.0)
 - **Header CRC32** (over the header minus CRC field)
 - **Payload CRC32** (over the bytes after the header)
 
-Each updateable **internal** section defines a flash start address and a
-file offset/length. The plugin programs flash in **4 KiB sectors** with
-**256-byte pages** via a small SRAM window.
+Each updateable **internal** section defines a flash start address and a file offset/length.
+The plugin programs flash in **4 KiB sectors** with **256-byte pages** via a small SRAM window.
 
 This plugin supports the following protocol ID:
 
@@ -34,7 +29,7 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use the standard **HID** DeviceInstanceId values, e.g.
+These devices use the standard HID DeviceInstanceId values, e.g.
 
 - `HIDRAW\VEN_093A&DEV_0343`
 
@@ -63,51 +58,33 @@ High-level flow:
 
 OS reboot is required.
 
-## Vendor ID Security
-
-The vendor ID is derived from the HID layer; in this instance it will appear as:
-
-- `HIDRAW:0x093A`
-
-(If a USB parent is present, fwupd may also expose the USB VID/PID, but the
-primary identity for this plugin is the HID instance.)
-
 ## Quirk Use
 
-This plugin supports the following **plugin-specific** quirks (set in
-`/usr/share/fwupd/quirks.d/*.quirk`):
+This plugin supports the following plugin-specific quirks:
 
-### `HidVersionReg`
+### `PxiTpHidVersionBank`
 
-Defines where to read the **device firmware version** (2 bytes, **little-endian**):
+Defines which bank to read the device firmware version from.
+**Default**: `0x00`.
 
-- `bank` : 8-bit bank/index
-- `addr` : 16-bit base address; the plugin reads `addr+0` (lo) and `addr+1` (hi)
+### `PxiTpHidVersionAddr`
 
-**Defaults** (can be overridden by quirk): `bank=0x00`, `addr=0x0b`.
-
-**Example** (your current test unit):
-
-[HIDRAW\VEN_093A&DEV_0343]
-Plugin = pixart_tp
-GType = FuPxiTpDevice
-HidVersionReg = bank=0x00; addr=0xb2
-SramSelect = 0x0f
+Defines which address to read the device firmware version from; the plugin reads `addr+0` (lo) and `addr+1` (hi).
+**Default**: `0x0b`.
 
 ### `SramSelect`
 
-Selects the SRAM type used for 256-byte page programming:
-SramSelect = 0x0f
-
+Selects the SRAM type used for 256-byte page programming.
 **Default**: `0x0f`.
+
+## Vendor ID Security
+
+The vendor ID is set from the HID vendor, in this instance set to `HIDRAW:0x093A`
+
+## External Interface Access
+
+This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
 
-This plugin will be available in fwupd. (first release after merge).
-Until then, build from source and run with:
-
-```bash
-fwupdtool --plugins pixart-tp --verbose get-devices
-fwupdtool --plugins pixart-tp --verbose install ./pixart-tp-<ver>.cab \
-  --allow-older --allow-reinstall
-```
+This plugin has been available since fwupd version `2.0.19`.
