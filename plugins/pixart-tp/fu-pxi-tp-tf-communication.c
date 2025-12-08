@@ -567,7 +567,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		k = 0;
 
 		for (; k < FU_PXI_TF_FAILED_RETRY_TIMES; k++) {
-			g_autoptr(GError) local_error = NULL;
+			g_autoptr(GError) error_local = NULL;
 
 			if (fu_pxi_tp_tf_communication_write_rmi_with_packet(
 				self,
@@ -576,7 +576,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 				packet_index,
 				chunk_data,
 				count,
-				&local_error)) {
+				&error_local)) {
 				break; /* this packet succeeded */
 			}
 
@@ -584,7 +584,7 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 				packet_index,
 				k + 1,
 				FU_PXI_TF_FAILED_RETRY_TIMES,
-				local_error != NULL ? local_error->message : "unknown");
+				error_local != NULL ? error_local->message : "unknown");
 
 			if (k < FU_PXI_TF_FAILED_RETRY_TIMES - 1)
 				fu_device_sleep(FU_DEVICE(self),
@@ -751,7 +751,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 	}
 
 	for (attempt = 1; attempt <= FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS; attempt++) {
-		g_autoptr(GError) local_error = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		g_debug("firmware update attempt %" G_GSIZE_FORMAT "/%d",
 			attempt,
@@ -762,7 +762,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 							      send_interval,
 							      data_size,
 							      data,
-							      &local_error)) {
+							      &error_local)) {
 			/* read tf firmware version after successful update */
 			fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
 			{
@@ -814,7 +814,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 
 		g_debug("firmware update attempt %" G_GSIZE_FORMAT " failed: %s",
 			attempt,
-			local_error != NULL ? local_error->message : "unknown error");
+			error_local != NULL ? error_local->message : "unknown error");
 
 		if (attempt < FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS)
 			g_debug("retrying firmware update");
