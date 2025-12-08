@@ -26,11 +26,9 @@ expect_rc() {
 }
 
 run() {
-    if [ -x @bindir@/fwupdmgr ]; then
-        cmd="@bindir@/fwupdmgr $*"
-    else
-        # for the snap CI target
-        cmd="fwupdmgr $*"
+    cmd="@bindir@/fwupdmgr $*"
+    if [ -n "$SNAP" ]; then
+        cmd="$SNAP/$cmd"
     fi
     $cmd
 }
