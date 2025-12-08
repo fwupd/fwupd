@@ -150,7 +150,7 @@ class Builder:
                 out.write(blob)
         return dst
 
-    def compile(self, src: str) -> str:
+    def compile(self, src: str, argv_extra: Optional[list[str]] = None) -> str:
         """compile a specific source file"""
         argv = [self.cc]
         argv.extend(self.cflags)
@@ -159,6 +159,8 @@ class Builder:
             fullsrc = os.path.join(self.builddir, src)
         dst = os.path.basename(src).replace(".c", ".o")
         argv.extend(["-c", fullsrc, "-o", os.path.join(self.builddir, dst)])
+        if argv_extra:
+            argv.extend(argv_extra)
         print(f"building {src} into {dst}")
         try:
             subprocess.run(argv, cwd=self.srcdir, check=True)
@@ -284,6 +286,20 @@ class Fuzzer:
         self.srcdir = srcdir or name
         self.globstr = f"{name}*.bin"
         self.pattern = pattern or f"{name}-firmware"
+
+    @property
+    def name_camel(self) -> str:
+        acc: str = ""
+        hot: bool = True
+        for val in self.name:
+            if hot:
+                acc += val.upper()
+                hot = False
+            elif val in ["-", "_"]:
+                hot = True
+            else:
+                acc += val
+        return acc
 
     @property
     def new_gtype(self) -> str:
@@ -480,7 +496,11 @@ def _build(bld: Builder) -> None:
         fuzz_objs = []
         for obj in bld.grep_meson(f"fwupd/plugins/{fzr.srcdir}"):
             if obj.endswith(".c"):
-                fuzz_objs.append(bld.compile(obj))
+                fuzz_objs.append(
+                    bld.compile(
+                        obj, argv_extra=[f'-DG_LOG_DOMAIN="FuPlugin{fzr.name_camel}"']
+                    )
+                )
             elif obj.endswith(".rs"):
                 fuzz_objs.append(
                     bld.compile(bld.rustgen(obj, includes=["fwupdplugin.h"]))
