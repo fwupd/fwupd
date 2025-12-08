@@ -1,4 +1,4 @@
-<firmware gtype="FuPxiFirmware">
+<firmware gtype="FuPixartRfFirmware">
   <version_raw>0x00010203</version_raw>
   <model_name>Test</model_name>
   <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->

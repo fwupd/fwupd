@@ -7,11 +7,11 @@
 
 #include "config.h"
 
-#include "fu-pxi-common.h"
-#include "fu-pxi-struct.h"
+#include "fu-pixart-rf-common.h"
+#include "fu-pixart-rf-struct.h"
 
 void
-fu_pxi_ota_fw_state_to_string(FuPixartRfOtaFwState *fwstate, guint idt, GString *str)
+fu_pixart_rf_ota_fw_state_to_string(FuPixartRfOtaFwState *fwstate, guint idt, GString *str)
 {
 	fwupd_codec_string_append_hex(str, idt, "Status", fwstate->status);
 	fwupd_codec_string_append_hex(str, idt, "NewFlow", fwstate->new_flow);
@@ -27,47 +27,47 @@ fu_pxi_ota_fw_state_to_string(FuPixartRfOtaFwState *fwstate, guint idt, GString 
 	    str,
 	    idt,
 	    "SpecCheckResult",
-	    fu_pxi_ota_spec_check_result_to_string(fwstate->spec_check_result));
+	    fu_pixart_rf_ota_spec_check_result_to_string(fwstate->spec_check_result));
 }
 
 gboolean
-fu_pxi_ota_fw_state_parse(FuPixartRfOtaFwState *fwstate,
-			  const guint8 *buf,
-			  gsize bufsz,
-			  gsize offset,
-			  GError **error)
+fu_pixart_rf_ota_fw_state_parse(FuPixartRfOtaFwState *fwstate,
+				const guint8 *buf,
+				gsize bufsz,
+				gsize offset,
+				GError **error)
 {
-	g_autoptr(FuStructPxiOtaFwState) st = NULL;
+	g_autoptr(FuStructPixartRfOtaFwState) st = NULL;
 
-	st = fu_struct_pxi_ota_fw_state_parse(buf, bufsz, offset, error);
+	st = fu_struct_pixart_rf_ota_fw_state_parse(buf, bufsz, offset, error);
 	if (st == NULL)
 		return FALSE;
-	fwstate->status = fu_struct_pxi_ota_fw_state_get_status(st);
-	fwstate->new_flow = fu_struct_pxi_ota_fw_state_get_new_flow(st);
-	fwstate->offset = fu_struct_pxi_ota_fw_state_get_offset(st);
-	fwstate->checksum = fu_struct_pxi_ota_fw_state_get_checksum(st);
-	fwstate->max_object_size = fu_struct_pxi_ota_fw_state_get_max_object_size(st);
-	fwstate->mtu_size = fu_struct_pxi_ota_fw_state_get_mtu_size(st);
-	fwstate->prn_threshold = fu_struct_pxi_ota_fw_state_get_prn_threshold(st);
-	fwstate->spec_check_result = fu_struct_pxi_ota_fw_state_get_spec_check_result(st);
+	fwstate->status = fu_struct_pixart_rf_ota_fw_state_get_status(st);
+	fwstate->new_flow = fu_struct_pixart_rf_ota_fw_state_get_new_flow(st);
+	fwstate->offset = fu_struct_pixart_rf_ota_fw_state_get_offset(st);
+	fwstate->checksum = fu_struct_pixart_rf_ota_fw_state_get_checksum(st);
+	fwstate->max_object_size = fu_struct_pixart_rf_ota_fw_state_get_max_object_size(st);
+	fwstate->mtu_size = fu_struct_pixart_rf_ota_fw_state_get_mtu_size(st);
+	fwstate->prn_threshold = fu_struct_pixart_rf_ota_fw_state_get_prn_threshold(st);
+	fwstate->spec_check_result = fu_struct_pixart_rf_ota_fw_state_get_spec_check_result(st);
 
 	/* success */
 	return TRUE;
 }
 gboolean
-fu_pxi_composite_receiver_cmd(guint8 opcode,
-			      guint8 sn,
-			      guint8 target,
-			      GByteArray *wireless_mod_cmd,
-			      GByteArray *ota_cmd,
-			      GError **error)
+fu_pixart_rf_composite_receiver_cmd(guint8 opcode,
+				    guint8 sn,
+				    guint8 target,
+				    GByteArray *wireless_mod_cmd,
+				    GByteArray *ota_cmd,
+				    GError **error)
 {
 	guint8 checksum = 0x0;
 	guint8 hid_sn = sn;
 	guint8 len = 0x0;
 	guint8 ota_sn = sn + 1;
-	guint8 rf_cmd_code = FU_PXI_BLE_DEVICE_RF_CMD_CODE;
-	guint8 rid = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
+	guint8 rf_cmd_code = FU_PIXART_RF_BLE_DEVICE_RF_CMD_CODE;
+	guint8 rid = PIXART_RF_HID_WIRELESS_DEV_OTA_REPORT_ID;
 
 	if (ota_cmd == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "ota cmd is NULL");
@@ -102,7 +102,7 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 }
 
 gchar *
-fu_pxi_hpac_version_info_parse(const guint16 hpac_ver)
+fu_pixart_rf_hpac_version_info_parse(const guint16 hpac_ver)
 {
 	return g_strdup_printf("%u%u.%u%u.%u",
 			       (guint)(hpac_ver / 10000),

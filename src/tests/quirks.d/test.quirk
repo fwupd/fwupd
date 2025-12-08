@@ -1,6 +1,6 @@
 [HIDRAW\VEN_093A&DEV_2862]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 [USB\VID_093A&PID_2862]
 Plugin = hughski_colorhug

@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "fu-pxi-common.h"
-#include "fu-pxi-firmware.h"
+#include "fu-pixart-rf-common.h"
+#include "fu-pixart-rf-firmware.h"
 
 #define PIXART_RF_FW_HEADER_SIZE       32 /* bytes */
 #define PIXART_RF_FW_HEADER_TAG_OFFSET 24
@@ -17,33 +17,36 @@
 
 #define PIXART_RF_FW_HEADER_MAGIC 0x55AA55AA55AA55AA
 
-struct _FuPxiFirmware {
+struct _FuPixartRfFirmware {
 	FuFirmware parent_instance;
 	gchar *model_name;
 	gboolean is_hpac;
 };
 
-G_DEFINE_TYPE(FuPxiFirmware, fu_pxi_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuPixartRfFirmware, fu_pixart_rf_firmware, FU_TYPE_FIRMWARE)
 
 const gchar *
-fu_pxi_firmware_get_model_name(FuPxiFirmware *self)
+fu_pixart_rf_firmware_get_model_name(FuPixartRfFirmware *self)
 {
-	g_return_val_if_fail(FU_IS_PXI_FIRMWARE(self), NULL);
+	g_return_val_if_fail(FU_IS_PIXART_RF_FIRMWARE(self), NULL);
 	return self->model_name;
 }
 
 static void
-fu_pxi_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_pixart_rf_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
-	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kv(bn, "model_name", self->model_name);
 }
 
 static gboolean
-fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_pixart_rf_firmware_validate(FuFirmware *firmware,
+			       GInputStream *stream,
+			       gsize offset,
+			       GError **error)
 {
 	guint64 magic = 0;
-	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
 	gsize streamsz = 0;
 
 	/* is a footer, in normal bin file, the header is starts from the 32nd byte from the end. */
@@ -94,23 +97,23 @@ fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 }
 
 static gboolean
-fu_pxi_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
-		      FuFirmwareParseFlags flags,
-		      GError **error)
+fu_pixart_rf_firmware_parse(FuFirmware *firmware,
+			    GInputStream *stream,
+			    FuFirmwareParseFlags flags,
+			    GError **error)
 {
-	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
 	gsize streamsz = 0;
 	guint32 version_raw = 0;
 	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE] = {0};
-	guint8 model_name[FU_PXI_DEVICE_MODEL_NAME_LEN] = {0x0};
+	guint8 model_name[FU_PIXART_RF_DEVICE_MODEL_NAME_LEN] = {0x0};
 	guint16 hpac_ver = 0;
 	g_autofree gchar *version = NULL;
 
 	/* get fw header from buf */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (fu_pxi_firmware_is_hpac(self)) {
+	if (fu_pixart_rf_firmware_is_hpac(self)) {
 		if (streamsz < PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -151,7 +154,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	fu_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
 
 	/* set fw version */
-	if (fu_pxi_firmware_is_hpac(self)) {
+	if (fu_pixart_rf_firmware_is_hpac(self)) {
 		if (!fu_input_stream_read_u16(stream,
 					      streamsz -
 						  PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END,
@@ -161,7 +164,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		version_raw = hpac_ver;
-		version = fu_pxi_hpac_version_info_parse(hpac_ver);
+		version = fu_pixart_rf_hpac_version_info_parse(hpac_ver);
 	} else {
 		version_raw = (((guint32)(fw_header[0] - '0')) << 16) +
 			      (((guint32)(fw_header[2] - '0')) << 8) +
@@ -190,9 +193,9 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 }
 
 static gboolean
-fu_pxi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_pixart_rf_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
-	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
 	const gchar *tmp;
 
 	/* optional properties */
@@ -205,9 +208,9 @@ fu_pxi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static GByteArray *
-fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
+fu_pixart_rf_firmware_write(FuFirmware *firmware, GError **error)
 {
-	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
 	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE] = {0x0};
 	guint64 version_raw = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GByteArray) buf = NULL;
@@ -228,7 +231,7 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 	if (blob == NULL)
 		return NULL;
 
-	if (fu_pxi_firmware_is_hpac(self)) {
+	if (fu_pixart_rf_firmware_is_hpac(self)) {
 		buf = g_byte_array_sized_new(g_bytes_get_size(blob));
 		fu_byte_array_append_bytes(buf, blob);
 		return g_steal_pointer(&buf);
@@ -262,7 +265,8 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	}
 	if (self->model_name != NULL) {
-		gsize model_namesz = MIN(strlen(self->model_name), FU_PXI_DEVICE_MODEL_NAME_LEN);
+		gsize model_namesz =
+		    MIN(strlen(self->model_name), FU_PIXART_RF_DEVICE_MODEL_NAME_LEN);
 		if (!fu_memcpy_safe(fw_header,
 				    sizeof(fw_header),
 				    0x05, /* dst */
@@ -281,39 +285,39 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_pxi_firmware_init(FuPxiFirmware *self)
+fu_pixart_rf_firmware_init(FuPixartRfFirmware *self)
 {
 }
 
 static void
-fu_pxi_firmware_finalize(GObject *object)
+fu_pixart_rf_firmware_finalize(GObject *object)
 {
-	FuPxiFirmware *self = FU_PXI_FIRMWARE(object);
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(object);
 	g_free(self->model_name);
-	G_OBJECT_CLASS(fu_pxi_firmware_parent_class)->finalize(object);
+	G_OBJECT_CLASS(fu_pixart_rf_firmware_parent_class)->finalize(object);
 }
 
 static void
-fu_pxi_firmware_class_init(FuPxiFirmwareClass *klass)
+fu_pixart_rf_firmware_class_init(FuPixartRfFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	object_class->finalize = fu_pxi_firmware_finalize;
-	firmware_class->validate = fu_pxi_firmware_validate;
-	firmware_class->parse = fu_pxi_firmware_parse;
-	firmware_class->build = fu_pxi_firmware_build;
-	firmware_class->write = fu_pxi_firmware_write;
-	firmware_class->export = fu_pxi_firmware_export;
+	object_class->finalize = fu_pixart_rf_firmware_finalize;
+	firmware_class->validate = fu_pixart_rf_firmware_validate;
+	firmware_class->parse = fu_pixart_rf_firmware_parse;
+	firmware_class->build = fu_pixart_rf_firmware_build;
+	firmware_class->write = fu_pixart_rf_firmware_write;
+	firmware_class->export = fu_pixart_rf_firmware_export;
 }
 
 FuFirmware *
-fu_pxi_firmware_new(void)
+fu_pixart_rf_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_PXI_FIRMWARE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_PIXART_RF_FIRMWARE, NULL));
 }
 
 gboolean
-fu_pxi_firmware_is_hpac(FuPxiFirmware *self)
+fu_pixart_rf_firmware_is_hpac(FuPixartRfFirmware *self)
 {
 	return self->is_hpac;
 }

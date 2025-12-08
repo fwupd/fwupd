@@ -1,276 +1,274 @@
 # Pixart 2801
 [HIDRAW\VEN_093A&DEV_2801]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2860
 [HIDRAW\VEN_093A&DEV_2860]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2802
 [HIDRAW\VEN_093A&DEV_2802]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2822
 [HIDRAW\VEN_093A&DEV_2822]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2861
 [HIDRAW\VEN_093A&DEV_2861]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2862
 [HIDRAW\VEN_093A&DEV_2862]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2452
 [HIDRAW\VEN_093A&DEV_2452]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Primax Ryder Mouse
 [HIDRAW\VEN_0461&DEV_4F28]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax Ryder Mouse 2
 [HIDRAW\VEN_0461&DEV_4F31]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax Mouse
 [HIDRAW\VEN_0461&DEV_4EEF]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax US KB
 [HIDRAW\VEN_0461&DEV_4EEE]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax UK KB
 [HIDRAW\VEN_0461&DEV_4EF4]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax JP KB
 [HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Chicony Cheetos keyboard
 [HIDRAW\VEN_04F2&DEV_2051]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Chicony Cheetos keyboard v2
 [HIDRAW\VEN_04F2&DEV_2125]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Chicony Cheetos keyboard UK
 [HIDRAW\VEN_04F2&DEV_2188]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Chicony Cheetos keyboard v2 UK
 [HIDRAW\VEN_04F2&DEV_2189]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Chicony Cheetos mouse
 [HIDRAW\VEN_04F2&DEV_2103]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Elecom Bluetooth Keyboard
 [HIDRAW\VEN_056E&DEV_1095]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Targus BT Mouse AMB844
 [HIDRAW\VEN_1048&DEV_1013]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Targus BT Keyboard AKB872
 [HIDRAW\VEN_1048&DEV_3003]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Targus BT Keyboard AKB869
 [HIDRAW\VEN_1048&DEV_3004]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # AKR123 Bluetooth Keyboard US
 [HIDRAW\VEN_04F2&DEV_2199]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # AKR123 Bluetooth Keyboard UK
 [HIDRAW\VEN_04F2&DEV_2174]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # AMR120 Bluetooth Mouse
 [HIDRAW\VEN_04F2&DEV_2198]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # j5 Wireless Keyboard
 [HIDRAW\VEN_2DE5&DEV_2125]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # j5 Wireless Mouse
 [HIDRAW\VEN_2DE5&DEV_2103]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # CTL Bluetooth Keyboard
 [HIDRAW\VEN_04F2&DEV_2179]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # CTL Bluetooth Mouse
 [HIDRAW\VEN_04F2&DEV_2178]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # MW150BT
 [HIDRAW\VEN_04F2&DEV_2177]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # CKW150BTUK
 [HIDRAW\VEN_04F2&DEV_2176]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # CKW150BTUS
 [HIDRAW\VEN_04F2&DEV_2175]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax Black Mocha KB
 [HIDRAW\VEN_0461&DEV_4EFA]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Primax Vivaldi2 Mouse
 [HIDRAW\VEN_03F0&DEV_614A]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # HP 320 BTKB
 [HIDRAW\VEN_0461&DEV_4F01]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2403
 [HIDRAW\VEN_093A&DEV_2403]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2463
 [HIDRAW\VEN_093A&DEV_2463]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2832
 [HIDRAW\VEN_093A&DEV_2832]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2851
 [HIDRAW\VEN_093A&DEV_2851]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2852
 [HIDRAW\VEN_093A&DEV_2852]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Twinkies Mouse
 [HIDRAW\VEN_03F0&DEV_6D4A]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 Flags = is-hpac
 
 # Twinkies Keyboard
 [HIDRAW\VEN_03F0&DEV_7C4A]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 Flags = is-hpac
 
 # Twinkies Dongle
 [HIDRAW\VEN_03F0&DEV_6841]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 Flags = is-hpac
 
 # Rata BLE Mouse
 [HIDRAW\VEN_03F0&DEV_7F4A]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 Flags = is-hpac
 
 # Remi BLE Mouse
 [HIDRAW\VEN_03F0&DEV_804A]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 Flags = is-hpac
 
 # Pixart 2404
 [HIDRAW\VEN_093A&DEV_2404]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 4206
 [HIDRAW\VEN_093A&DEV_4206]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2440
 [HIDRAW\VEN_093A&DEV_2440]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2418
 [HIDRAW\VEN_093A&DEV_2418]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
+GType = FuPixartRfReceiverDevice
 
 # Pixart 2752
 [HIDRAW\VEN_093A&DEV_2752]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2840
 [HIDRAW\VEN_093A&DEV_2840]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # Pixart 2818
 [HIDRAW\VEN_093A&DEV_2818]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # HP 400/405
 [HIDRAW\VEN_03F0&DEV_9E4A]
 Plugin = pixart_rf
-GType = FuPxiBleDevice
+GType = FuPixartRfBleDevice
 
 # HP Dongle
 [HIDRAW\VEN_03F0&DEV_9F4A]
 Plugin = pixart_rf
-GType = FuPxiReceiverDevice
-
-
+GType = FuPixartRfReceiverDevice
