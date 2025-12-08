@@ -247,7 +247,9 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuStructPxiTpFirmwareSectionHdr) st_section_hdr = NULL;
 		FuPxiTpSection *s = NULL;
 		const guint8 *name_src = NULL;
+		const guint8 *reserved_src = NULL;
 		gsize name_bufsz = 0;
+		gsize reserved_bufsz = 0;
 
 		st_section_hdr = fu_struct_pxi_tp_firmware_section_hdr_parse(d, sz, off, error);
 		if (st_section_hdr == NULL)
@@ -271,7 +273,25 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		s->section_crc =
 		    fu_struct_pxi_tp_firmware_section_hdr_get_section_crc(st_section_hdr);
 
-		/* reserved: no getter; keep zero from g_new0(s) */
+		/* reserved: copy raw bytes into section struct */
+		reserved_src = fu_struct_pxi_tp_firmware_section_hdr_get_shared(st_section_hdr,
+										&reserved_bufsz);
+		if (reserved_src != NULL && reserved_bufsz > 0) {
+			/* copy min(shared_len, struct_len) */
+			gsize copy_len = MIN((gsize)PXI_TP_S_RESERVED_LEN, reserved_bufsz);
+
+			if (!fu_memcpy_safe(s->reserved,
+					    sizeof s->reserved,
+					    0, /* dst offset */
+					    reserved_src,
+					    reserved_bufsz,
+					    0, /* src offset */
+					    copy_len,
+					    error)) {
+				g_free(s);
+				return FALSE;
+			}
+		}
 
 		/* external_file_name[PXI_TP_S_EXTNAME_LEN + 1] */
 		name_src =

@@ -159,7 +159,35 @@ enum FuPxiTpProxyMode {
 // ---- TF (Touch Firmware) enums exported to C
 // =====================================================================
 
-// TF function command IDs
+// TF feature report / RMI frame constants
+#[repr(u8)]
+enum FuPxiTfFrameConst {
+    Preamble      = 0x5a,
+    Tail          = 0xa5,
+    ExceptionFlag = 0x80,
+}
+
+// TF HID report IDs
+#[repr(u8)]
+enum FuPxiTfReportId {
+    PassThrough = 0xcc,
+}
+
+// TF RMI target address
+#[repr(u8)]
+enum FuPxiTfTargetAddr {
+    RmiFrame = 0x2c,
+}
+
+// TF RMI function codes (func field)
+#[repr(u8)]
+enum FuPxiTfRmiFunc {
+    WriteSimple = 0x00,
+    WritePacket = 0x04,
+    Read        = 0x0b,
+}
+
+// TF function command IDs (high-level TF commands)
 #[repr(u16)]
 enum FuPxiTfCmd {
     SetUpgradeMode    = 0x0001,
@@ -192,25 +220,17 @@ enum FuPxiTfFwMode {
     Algo = 3,
 }
 
-// TF frame constants
-#[repr(u8)]
-enum FuPxiTfFrameConst {
-    Preamble      = 0x5A,
-    Tail          = 0xA5,
-    ExceptionFlag = 0x80,
-}
-
 // =====================================================================
-// ---- TF struct definitions (unchanged)
+// ---- TF struct definitions (using enums instead of raw u8)
 // =====================================================================
 
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfWriteSimpleCmd {
-    report_id:   u8 = 0xCC,
-    preamble:    u8 = 0x5A,
-    target_addr: u8 = 0x2C,
-    func:        u8 = 0x00,
+    report_id:   FuPxiTfReportId   = PassThrough,
+    preamble:    FuPxiTfFrameConst = Preamble,
+    target_addr: FuPxiTfTargetAddr = RmiFrame,
+    func:        FuPxiTfRmiFunc    = WriteSimple,
     addr:        u16le,
     len:         u16le,
 }
@@ -218,23 +238,23 @@ struct FuStructPxiTfWriteSimpleCmd {
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfWritePacketCmd {
-    report_id:     u8 = 0xCC,
-    preamble:      u8 = 0x5A, 
-    target_addr:   u8 = 0x2C,
-    func:          u8 = 0x04,
-    addr:          u16le,
-    datalen:       u16le,
-    packet_total:  u16le,
-    packet_index:  u16le,
+    report_id:    FuPxiTfReportId   = PassThrough,
+    preamble:     FuPxiTfFrameConst = Preamble,
+    target_addr:  FuPxiTfTargetAddr = RmiFrame,
+    func:         FuPxiTfRmiFunc    = WritePacket,
+    addr:         u16le,
+    datalen:      u16le,
+    packet_total: u16le,
+    packet_index: u16le,
 }
 
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructPxiTfReadCmd {
-    report_id:   u8 = 0xCC,
-    preamble:    u8 = 0x5A,
-    target_addr: u8 = 0x2C,
-    func:        u8 = 0x0B,
+    report_id:   FuPxiTfReportId   = PassThrough,
+    preamble:    FuPxiTfFrameConst = Preamble,
+    target_addr: FuPxiTfTargetAddr = RmiFrame,
+    func:        FuPxiTfRmiFunc    = Read,
     addr:        u16le,
     datalen:     u16le,
     reply_len:   u16le,
@@ -275,12 +295,12 @@ struct FuStructPxiTpFirmwareHdr {
 #[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructPxiTpFirmwareSectionHdr {
-    update_type:        u8,
-    update_info:        u8,
-    target_flash_start: u32le,
-    internal_file_start:u32le,
-    section_length:     u32le,
-    section_crc:        u32le,
-    reserved:           [u8; 12],
-    extname:            [u8; 34],
+    update_type:         u8,
+    update_info:         u8,
+    target_flash_start:  u32le,
+    internal_file_start: u32le,
+    section_length:      u32le,
+    section_crc:         u32le,
+    shared:              [u8; 12],
+    extname:             [u8; 34],
 }

@@ -647,6 +647,10 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_DOWNLOAD_POST_WAIT_MS);
 	g_debug("download status indicates success, exiting upgrade mode");
 
+	/* exit upgrade mode (best-effort) to get the fw version not bootloader version */
+	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, NULL))
+		g_debug("failed to exit upgrade mode (ignored)");
+
 	return TRUE;
 }
 
