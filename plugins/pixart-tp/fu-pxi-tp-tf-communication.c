@@ -73,9 +73,13 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 					 gsize in_bufsz,
 					 GError **error)
 {
+	g_autoptr(FuStructPxiTfWriteSimpleCmd) st_write_simple = NULL;
+	guint8 crc;
+	guint8 tail;
+	gsize need;
+
 	/* build header using rustgen struct (endian-safe) */
-	g_autoptr(FuStructPxiTfWriteSimpleCmd) st_write_simple =
-	    fu_struct_pxi_tf_write_simple_cmd_new();
+	st_write_simple = fu_struct_pxi_tf_write_simple_cmd_new();
 	if (st_write_simple == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -101,15 +105,15 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	 * - CRC is computed from index 2 (preamble) to end of payload+header
 	 * - tail is TF frame magic byte (0xA5)
 	 */
-	guint8 crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
-			     st_write_simple->buf->data + 2,
-			     st_write_simple->buf->len - 2);
+	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
+		      st_write_simple->buf->data + 2,
+		      st_write_simple->buf->len - 2);
 	g_byte_array_append(st_write_simple->buf, &crc, 1);
 
-	guint8 tail = FU_PXI_TF_FRAME_CONST_TAIL;
+	tail = FU_PXI_TF_FRAME_CONST_TAIL;
 	g_byte_array_append(st_write_simple->buf, &tail, 1);
 
-	gsize need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_simple->buf->len;
+	need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_simple->buf->len;
 	if (need > 0) {
 		guint8 zeros[64] = {0}; /* safe, max 64 */
 		g_byte_array_append(st_write_simple->buf, zeros, need);
@@ -130,11 +134,16 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 						 gsize in_bufsz,
 						 GError **error)
 {
-	gsize datalen = in_bufsz + 4; /* 2 bytes total + 2 bytes index */
+	gsize datalen;
+	g_autoptr(FuStructPxiTfWritePacketCmd) st_write_packet = NULL;
+	guint8 crc;
+	guint8 tail;
+	gsize need;
+
+	datalen = in_bufsz + 4; /* 2 bytes total + 2 bytes index */
 
 	/* build header using rustgen struct (endian-safe) */
-	g_autoptr(FuStructPxiTfWritePacketCmd) st_write_packet =
-	    fu_struct_pxi_tf_write_packet_cmd_new();
+	st_write_packet = fu_struct_pxi_tf_write_packet_cmd_new();
 	if (st_write_packet == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -159,15 +168,15 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 		g_byte_array_append(st_write_packet->buf, in_buf, (guint)in_bufsz);
 
 	/* CRC + tail */
-	guint8 crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
-			     st_write_packet->buf->data + 2,
-			     st_write_packet->buf->len - 2);
+	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
+		      st_write_packet->buf->data + 2,
+		      st_write_packet->buf->len - 2);
 	g_byte_array_append(st_write_packet->buf, &crc, 1);
 
-	guint8 tail = FU_PXI_TF_FRAME_CONST_TAIL;
+	tail = FU_PXI_TF_FRAME_CONST_TAIL;
 	g_byte_array_append(st_write_packet->buf, &tail, 1);
 
-	gsize need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_packet->buf->len;
+	need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_packet->buf->len;
 	if (need > 0) {
 		guint8 zeros[64] = {0}; /* safe, max 64 */
 		g_byte_array_append(st_write_packet->buf, zeros, need);
@@ -191,6 +200,8 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 {
 	gsize offset = 0;
 	gsize datalen;
+	g_autoptr(FuStructPxiTfReadCmd) st_read = NULL;
+	guint8 crc;
 
 	g_return_val_if_fail(out_buf != NULL, FALSE);
 	g_return_val_if_fail(out_bufsz >= FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH, FALSE);
@@ -198,7 +209,7 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	memset(out_buf, 0, out_bufsz);
 
 	/* build header using rustgen struct (endian-safe) */
-	g_autoptr(FuStructPxiTfReadCmd) st_read = fu_struct_pxi_tf_read_cmd_new();
+	st_read = fu_struct_pxi_tf_read_cmd_new();
 	if (st_read == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -256,7 +267,8 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	}
 
 	/* crc + tail */
-	out_buf[offset++] = fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, offset - 2);
+	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, offset - 2);
+	out_buf[offset++] = crc;
 	out_buf[offset++] = FU_PXI_TF_FRAME_CONST_TAIL;
 
 	if (!fu_pxi_tp_common_send_feature(self,
@@ -540,12 +552,16 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	for (idx = 0; idx < num; idx++) {
 		guint32 packet_index = idx + 1;
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx, error);
+		gsize count;
+		const guint8 *chunk_data;
+		guint32 k;
+
 		if (chk == NULL)
 			return FALSE;
 
-		gsize count = fu_chunk_get_data_sz(chk);
-		const guint8 *chunk_data = fu_chunk_get_data(chk);
-		guint32 k = 0;
+		count = fu_chunk_get_data_sz(chk);
+		chunk_data = fu_chunk_get_data(chk);
+		k = 0;
 
 		for (; k < FU_PXI_TF_FAILED_RETRY_TIMES; k++) {
 			g_autoptr(GError) local_error = NULL;
@@ -635,7 +651,9 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 static gint
 fu_pxi_tp_tf_communication_version_cmp(const guint8 a[3], const guint8 b[3])
 {
-	for (gsize i = 0; i < 3; i++) {
+	gsize i;
+
+	for (i = 0; i < 3; i++) {
 		if (a[i] < b[i])
 			return -1;
 		if (a[i] > b[i])
@@ -664,6 +682,8 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 {
 	guint8 ver_before[3] = {0};
 	g_autoptr(GError) ver_err = NULL;
+	gsize i;
+	gsize attempt;
 
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
 
@@ -711,9 +731,9 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 	g_debug("validate ROM header (bytes [%d, %d) must be 0x%02x)",
 		FU_PXI_TF_ROM_HEADER_SKIP_BYTES,
 		FU_PXI_TF_ROM_HEADER_CHECK_END,
-		FU_PXI_TF_ROM_HEADER_ZERO);
+		(guint)FU_PXI_TF_ROM_HEADER_ZERO);
 
-	for (gsize i = FU_PXI_TF_ROM_HEADER_SKIP_BYTES; i < FU_PXI_TF_ROM_HEADER_CHECK_END; i++) {
+	for (i = FU_PXI_TF_ROM_HEADER_SKIP_BYTES; i < FU_PXI_TF_ROM_HEADER_CHECK_END; i++) {
 		if (data->data[i] != FU_PXI_TF_ROM_HEADER_ZERO) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -723,7 +743,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 		}
 	}
 
-	for (gsize attempt = 1; attempt <= FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS; attempt++) {
+	for (attempt = 1; attempt <= FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS; attempt++) {
 		g_autoptr(GError) local_error = NULL;
 
 		g_debug("firmware update attempt %" G_GSIZE_FORMAT "/%d",
