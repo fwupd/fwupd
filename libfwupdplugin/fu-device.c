@@ -3079,7 +3079,8 @@ fu_device_add_instance_id_full(FuDevice *self,
 	if (priv->done_setup) {
 		if (item->instance_id != NULL)
 			fwupd_device_add_instance_id(FWUPD_DEVICE(self), item->instance_id);
-		fwupd_device_add_guid(FWUPD_DEVICE(self), item->guid);
+		if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
+			fwupd_device_add_guid(FWUPD_DEVICE(self), item->guid);
 	}
 }
 
