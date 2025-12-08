@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-device.h"
 #include "fu-pxi-tp-struct.h"
 

@@ -25,7 +25,11 @@ fu_pxi_tp_register_write(FuPxiTpDevice *self,
 
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 
-	if (!fu_pxi_tp_common_send_feature(self, buf, sizeof(buf), error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  sizeof(buf),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error,
 			       "register write failed: bank=0x%02x addr=0x%02x val=0x%02x: ",
 			       bank,
@@ -50,7 +54,11 @@ fu_pxi_tp_register_read(FuPxiTpDevice *self,
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 	g_return_val_if_fail(out_val != NULL, FALSE);
 
-	if (!fu_pxi_tp_common_send_feature(self, cmd, sizeof(cmd), error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  cmd,
+					  sizeof(cmd),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error,
 			       "register read command failed: bank=0x%02x addr=0x%02x: ",
 			       bank,
@@ -58,7 +66,11 @@ fu_pxi_tp_register_read(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	if (!fu_pxi_tp_common_get_feature(self, REPORT_ID_SINGLE, resp, sizeof(resp), error)) {
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  resp,
+					  sizeof(resp),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error,
 			       "register read response failed: bank=0x%02x addr=0x%02x: ",
 			       bank,
@@ -82,7 +94,11 @@ fu_pxi_tp_register_user_write(FuPxiTpDevice *self,
 
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 
-	if (!fu_pxi_tp_common_send_feature(self, buf, sizeof(buf), error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  sizeof(buf),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error,
 			       "user register write failed: bank=0x%02x addr=0x%02x val=0x%02x: ",
 			       bank,
@@ -107,7 +123,11 @@ fu_pxi_tp_register_user_read(FuPxiTpDevice *self,
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 	g_return_val_if_fail(out_val != NULL, FALSE);
 
-	if (!fu_pxi_tp_common_send_feature(self, cmd, sizeof(cmd), error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  cmd,
+					  sizeof(cmd),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error,
 			       "user register read command failed: bank=0x%02x addr=0x%02x: ",
 			       bank,
@@ -115,7 +135,11 @@ fu_pxi_tp_register_user_read(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	if (!fu_pxi_tp_common_get_feature(self, REPORT_ID_USER, resp, sizeof(resp), error)) {
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  resp,
+					  sizeof(resp),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error,
 			       "user register read response failed: bank=0x%02x addr=0x%02x: ",
 			       bank,
@@ -157,7 +181,11 @@ fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize buf
 		return FALSE;
 	}
 
-	if (!fu_pxi_tp_common_send_feature(self, payload, sizeof(payload), error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  payload,
+					  sizeof(payload),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error_literal(error, "burst write feature report failed: ");
 		return FALSE;
 	}
@@ -174,7 +202,11 @@ fu_pxi_tp_register_burst_read(FuPxiTpDevice *self, guint8 *buf, gsize bufsz, GEr
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 
-	if (!fu_pxi_tp_common_get_feature(self, REPORT_ID_BURST, payload, sizeof(payload), error)) {
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  payload,
+					  sizeof(payload),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error_literal(error, "burst read feature report failed: ");
 		return FALSE;
 	}

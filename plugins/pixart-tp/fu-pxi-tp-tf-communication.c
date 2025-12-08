@@ -119,10 +119,11 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 		g_byte_array_append(st_write_simple->buf, zeros, need);
 	}
 
-	return fu_pxi_tp_common_send_feature(self,
-					     st_write_simple->buf->data,
-					     st_write_simple->buf->len,
-					     error);
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					    st_write_simple->buf->data,
+					    st_write_simple->buf->len,
+					    FU_IOCTL_FLAG_NONE,
+					    error);
 }
 
 static gboolean
@@ -182,10 +183,11 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 		g_byte_array_append(st_write_packet->buf, zeros, need);
 	}
 
-	return fu_pxi_tp_common_send_feature(self,
-					     st_write_packet->buf->data,
-					     st_write_packet->buf->len,
-					     error);
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					    st_write_packet->buf->data,
+					    st_write_packet->buf->len,
+					    FU_IOCTL_FLAG_NONE,
+					    error);
 }
 
 static gboolean
@@ -271,18 +273,19 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 	out_buf[offset++] = crc;
 	out_buf[offset++] = FU_PXI_TF_FRAME_CONST_TAIL;
 
-	if (!fu_pxi_tp_common_send_feature(self,
-					   out_buf,
-					   FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
-					   error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  out_buf,
+					  FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
+					  FU_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_RMI_REPLY_WAIT_MS);
 
-	if (!fu_pxi_tp_common_get_feature(self,
-					  FU_PXI_TF_WRITE_SIMPLE_CMD_REPORT_ID, /* 0xCC */
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  out_buf,
 					  FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
