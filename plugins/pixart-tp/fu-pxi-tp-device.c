@@ -6,6 +6,7 @@
  */
 
 #include "config.h"
+
 #include "fu-pxi-tp-device.h"
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-fw-struct.h"
@@ -952,8 +953,7 @@ fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 		(guint)hi,
 		(guint)ver_u16);
 
-	ver_str = g_strdup_printf("0x%04x", ver_u16);
-	fu_device_set_version(device, ver_str);
+	fu_device_set_version_raw(device, ver_u16);
 	return TRUE;
 }
 
@@ -1362,16 +1362,24 @@ fu_pxi_tp_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
+static gchar *
+fu_pxi_tp_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	guint16 v = (guint16)version_raw; /* ensure correct width */
+	return g_strdup_printf("0x%04x", v);
+}
+
 static void
 fu_pxi_tp_device_class_init(FuPxiTpDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_pxi_tp_device_setup;
-	klass_device->write_firmware = fu_pxi_tp_device_write_firmware;
-	klass_device->attach = fu_pxi_tp_device_attach;
-	klass_device->detach = fu_pxi_tp_device_detach;
-	klass_device->cleanup = fu_pxi_tp_device_cleanup;
-	klass_device->set_progress = fu_pxi_tp_device_set_progress;
-	klass_device->set_quirk_kv = fu_pxi_tp_device_set_quirk_kv;
-	klass_device->prepare_firmware = fu_pxi_tp_device_prepare_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_pxi_tp_device_setup;
+	device_class->write_firmware = fu_pxi_tp_device_write_firmware;
+	device_class->attach = fu_pxi_tp_device_attach;
+	device_class->detach = fu_pxi_tp_device_detach;
+	device_class->cleanup = fu_pxi_tp_device_cleanup;
+	device_class->set_progress = fu_pxi_tp_device_set_progress;
+	device_class->set_quirk_kv = fu_pxi_tp_device_set_quirk_kv;
+	device_class->prepare_firmware = fu_pxi_tp_device_prepare_firmware;
+	device_class->convert_version = fu_pxi_tp_device_convert_version;
 }
