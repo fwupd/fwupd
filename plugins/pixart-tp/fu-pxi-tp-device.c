@@ -71,6 +71,31 @@ fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 }
 
 static gboolean
+fu_pxi_tp_device_flash_execute_wait_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	guint8 *out_val = user_data;
+
+	if (!fu_pxi_tp_register_read(self,
+				     FU_PXI_TP_SYSTEM_BANK_BANK4,
+				     FU_PXI_TP_REG_SYS4_FLASH_EXECUTE,
+				     out_val,
+				     error))
+		return FALSE;
+
+	if (*out_val != FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS) {
+		/* not ready yet, ask fu_device_retry_full() to try again */
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "flash execute still in progress");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 			       guint8 inst_cmd,
 			       guint32 ccr_cmd,
@@ -135,25 +160,51 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 				      error))
 		return FALSE;
 
-	for (guint i = 0; i < flash_execute_retry_max; i++) {
-		fu_device_sleep(FU_DEVICE(self), flash_execute_retry_delay_ms);
-
-		if (!fu_pxi_tp_register_read(self,
-					     FU_PXI_TP_SYSTEM_BANK_BANK4,
-					     FU_PXI_TP_REG_SYS4_FLASH_EXECUTE,
-					     &out_val,
-					     error))
-			return FALSE;
-
-		if (out_val == FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS)
-			break;
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_device_flash_execute_wait_cb,
+				  flash_execute_retry_max,
+				  flash_execute_retry_delay_ms,
+				  &out_val,
+				  error)) {
+		g_prefix_error_literal(error, "flash executes failure: ");
+		return FALSE;
 	}
 
-	if (out_val != FU_PXI_TP_FLASH_EXEC_STATE_SUCCESS) {
+	return TRUE;
+}
+
+static gboolean
+fu_pxi_tp_device_flash_write_enable_wait_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	guint8 *out_val = user_data;
+	const guint flash_write_enable_status_delay_ms = 1;
+
+	/* send READ_STATUS command */
+	if (!fu_pxi_tp_device_flash_execute(self,
+					    FU_PXI_TP_FLASH_INST_CMD1,
+					    FU_PXI_TP_FLASH_CCR_READ_STATUS,
+					    1,
+					    error))
+		return FALSE;
+
+	/* small delay between command and status read */
+	fu_device_sleep(device, flash_write_enable_status_delay_ms);
+
+	/* read FLASH_STATUS register */
+	if (!fu_pxi_tp_register_read(self,
+				     FU_PXI_TP_SYSTEM_BANK_BANK4,
+				     FU_PXI_TP_REG_SYS4_FLASH_STATUS,
+				     out_val,
+				     error))
+		return FALSE;
+
+	/* check WEL bit */
+	if ((*out_val & FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
-				    "flash executes failure");
+				    "flash write enable still not set");
 		return FALSE;
 	}
 
@@ -164,10 +215,11 @@ static gboolean
 fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 {
 	const guint flash_write_enable_retry_max = 10;
-	const guint flash_write_enable_retry_delay_ms = 1;
+	const guint flash_write_enable_retry_delay_ms = 0;
 
 	guint8 out_val = 0;
 
+	/* send WRITE_ENABLE once */
 	if (!fu_pxi_tp_device_flash_execute(self,
 					    FU_PXI_TP_FLASH_INST_CMD0,
 					    FU_PXI_TP_FLASH_CCR_WRITE_ENABLE,
@@ -175,33 +227,50 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 					    error))
 		return FALSE;
 
-	for (guint i = 0; i < flash_write_enable_retry_max; i++) {
-		if (!fu_pxi_tp_device_flash_execute(self,
-						    FU_PXI_TP_FLASH_INST_CMD1,
-						    FU_PXI_TP_FLASH_CCR_READ_STATUS,
-						    1,
-						    error))
-			return FALSE;
-
-		fu_device_sleep(FU_DEVICE(self), flash_write_enable_retry_delay_ms);
-
-		if (!fu_pxi_tp_register_read(self,
-					     FU_PXI_TP_SYSTEM_BANK_BANK4,
-					     FU_PXI_TP_REG_SYS4_FLASH_STATUS,
-					     &out_val,
-					     error))
-			return FALSE;
-
-		if ((out_val & FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) != 0)
-			break;
+	/* poll WEL bit using fu_device_retry_full() */
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_device_flash_write_enable_wait_cb,
+				  flash_write_enable_retry_max,
+				  flash_write_enable_retry_delay_ms,
+				  &out_val,
+				  error)) {
+		g_prefix_error_literal(error, "flash write enable failure: ");
+		g_debug("flash write enable failure");
+		return FALSE;
 	}
 
-	if ((out_val & FU_PXI_TP_FLASH_WRITE_ENABLE_SUCCESS) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "flash write enable failure");
-		g_debug("flash write enable failure");
+	return TRUE;
+}
+
+static gboolean
+fu_pxi_tp_device_flash_wait_busy_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	guint8 *out_val = user_data;
+	const guint flash_busy_status_delay_ms = 1;
+
+	/* send READ_STATUS command */
+	if (!fu_pxi_tp_device_flash_execute(self,
+					    FU_PXI_TP_FLASH_INST_CMD1,
+					    FU_PXI_TP_FLASH_CCR_READ_STATUS,
+					    1,
+					    error))
+		return FALSE;
+
+	/* small delay before reading status */
+	fu_device_sleep(device, flash_busy_status_delay_ms);
+
+	/* read FLASH_STATUS register */
+	if (!fu_pxi_tp_register_read(self,
+				     FU_PXI_TP_SYSTEM_BANK_BANK4,
+				     FU_PXI_TP_REG_SYS4_FLASH_STATUS,
+				     out_val,
+				     error))
+		return FALSE;
+
+	/* busy bit cleared? */
+	if ((*out_val & FU_PXI_TP_FLASH_STATUS_BUSY) != 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "flash still busy");
 		return FALSE;
 	}
 
@@ -212,37 +281,16 @@ static gboolean
 fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 {
 	const guint flash_busy_retry_max = 1000;
-	const guint flash_busy_retry_delay_ms = 1;
-
+	const guint flash_busy_retry_delay_ms = 0;
 	guint8 out_val = 0;
 
-	for (guint i = 0; i < flash_busy_retry_max; i++) {
-		if (!fu_pxi_tp_device_flash_execute(self,
-						    FU_PXI_TP_FLASH_INST_CMD1,
-						    FU_PXI_TP_FLASH_CCR_READ_STATUS,
-						    1,
-						    error))
-			return FALSE;
-
-		fu_device_sleep(FU_DEVICE(self), flash_busy_retry_delay_ms);
-
-		if (!fu_pxi_tp_register_read(self,
-					     FU_PXI_TP_SYSTEM_BANK_BANK4,
-					     FU_PXI_TP_REG_SYS4_FLASH_STATUS,
-					     &out_val,
-					     error))
-			return FALSE;
-
-		/* busy bit cleared? */
-		if ((out_val & FU_PXI_TP_FLASH_STATUS_BUSY) == 0)
-			break;
-	}
-
-	if ((out_val & FU_PXI_TP_FLASH_STATUS_BUSY) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "flash wait busy failure");
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_device_flash_wait_busy_cb,
+				  flash_busy_retry_max,
+				  flash_busy_retry_delay_ms,
+				  &out_val,
+				  error)) {
+		g_prefix_error_literal(error, "flash wait busy failure: ");
 		return FALSE;
 	}
 
@@ -444,7 +492,32 @@ fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *ctn, GErro
 	return TRUE;
 }
 
-static guint32
+static gboolean
+fu_pxi_tp_device_crc_firmware_wait_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	guint8 *out_val = user_data;
+
+	if (!fu_pxi_tp_register_user_read(self,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_CTRL,
+					  out_val,
+					  error))
+		return FALSE;
+
+	/* busy bit cleared? */
+	if ((*out_val & FU_PXI_TP_CRC_CTRL_BUSY) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "firmware CRC still busy");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+guint32
 fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 {
 	const guint crc_fw_retry_max = 1000;
@@ -514,26 +587,13 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 	}
 
 	/* wait CRC calculation completed */
-	for (guint i = 0; i < crc_fw_retry_max; i++) {
-		fu_device_sleep(FU_DEVICE(self), crc_fw_retry_delay_ms);
-
-		if (!fu_pxi_tp_register_user_read(self,
-						  FU_PXI_TP_USER_BANK_BANK0,
-						  FU_PXI_TP_REG_USER0_CRC_CTRL,
-						  &out_val,
-						  error))
-			return 0;
-
-		/* busy bit cleared? */
-		if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) == 0)
-			break;
-	}
-
-	if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "firmware CRC wait busy failure");
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_device_crc_firmware_wait_cb,
+				  crc_fw_retry_max,
+				  crc_fw_retry_delay_ms,
+				  &out_val,
+				  error)) {
+		g_prefix_error_literal(error, "firmware CRC wait busy failure: ");
 		return 0;
 	}
 
