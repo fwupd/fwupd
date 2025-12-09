@@ -928,30 +928,32 @@ static gboolean
 fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
-	guint8 lo = 0;
-	guint8 hi = 0;
+	guint8 buf[2] = {0}; /* buf[0] = lo, buf[1] = hi */
 	guint16 ver_u16 = 0;
-	g_autofree gchar *ver_str = NULL;
 
+	/* read low byte */
 	if (!fu_pxi_tp_register_user_read(self,
 					  self->ver_bank,
 					  (guint8)(self->ver_addr + 0),
-					  &lo,
+					  &buf[0],
 					  error))
 		return FALSE;
+
+	/* read high byte */
 	if (!fu_pxi_tp_register_user_read(self,
 					  self->ver_bank,
 					  (guint8)(self->ver_addr + 1),
-					  &hi,
+					  &buf[1],
 					  error))
 		return FALSE;
 
-	ver_u16 = (guint16)lo | ((guint16)hi << 8); /* low byte first */
+	/* parse LE uint16 using fwupd helper */
+	ver_u16 = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
-	g_debug("pxi-tp setup: read version bytes: lo=0x%02x hi=0x%02x (LE) -> ver=0x%04x",
-		(guint)lo,
-		(guint)hi,
-		(guint)ver_u16);
+	g_debug("pxi-tp setup: version bytes: lo=0x%02x hi=0x%02x -> ver=0x%04x",
+		buf[0],
+		buf[1],
+		ver_u16);
 
 	fu_device_set_version_raw(device, ver_u16);
 	return TRUE;
