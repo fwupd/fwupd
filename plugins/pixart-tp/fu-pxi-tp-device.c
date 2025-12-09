@@ -517,8 +517,8 @@ fu_pxi_tp_device_crc_firmware_wait_cb(FuDevice *device, gpointer user_data, GErr
 	return TRUE;
 }
 
-guint32
-fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
+gboolean
+fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, guint32 *crc, GError **error)
 {
 	const guint crc_fw_retry_max = 1000;
 	const guint crc_fw_retry_delay_ms = 10;
@@ -528,13 +528,16 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 	guint16 part_id = 0;
 	guint32 return_value = 0;
 
+	g_return_val_if_fail(crc != NULL, FALSE);
+	*crc = 0;
+
 	/* read swap_flag from system bank4 */
 	if (!fu_pxi_tp_register_read(self,
 				     FU_PXI_TP_SYSTEM_BANK_BANK4,
 				     FU_PXI_TP_REG_SYS4_SWAP_FLAG,
 				     &out_val,
 				     error))
-		return 0;
+		return FALSE;
 	swap_flag = out_val;
 
 	/* read part_id from user bank0 (little-endian) */
@@ -543,7 +546,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_PART_ID0,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	part_id = out_val;
 
 	if (!fu_pxi_tp_register_user_read(self,
@@ -551,7 +554,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_PART_ID1,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	part_id |= (guint16)out_val << 8;
 
 	switch (part_id) {
@@ -563,7 +566,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_FW_BANK1,
 							   error))
-				return 0;
+				return FALSE;
 		} else {
 			/* PJP274 normal boot → firmware on bank0 */
 			if (!fu_pxi_tp_register_user_write(self,
@@ -571,7 +574,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_FW_BANK0,
 							   error))
-				return 0;
+				return FALSE;
 		}
 		break;
 
@@ -582,7 +585,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 						   FU_PXI_TP_REG_USER0_CRC_CTRL,
 						   FU_PXI_TP_CRC_CTRL_FW_BANK0,
 						   error))
-			return 0;
+			return FALSE;
 		break;
 	}
 
@@ -594,7 +597,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 				  &out_val,
 				  error)) {
 		g_prefix_error_literal(error, "firmware CRC wait busy failure: ");
-		return 0;
+		return FALSE;
 	}
 
 	/* read CRC result (32-bit, little-endian) */
@@ -603,7 +606,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_CRC_RESULT0,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	return_value |= (guint32)out_val;
 
 	if (!fu_pxi_tp_register_user_read(self,
@@ -611,7 +614,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_CRC_RESULT1,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	return_value |= (guint32)out_val << 8;
 
 	if (!fu_pxi_tp_register_user_read(self,
@@ -619,7 +622,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_CRC_RESULT2,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	return_value |= (guint32)out_val << 16;
 
 	if (!fu_pxi_tp_register_user_read(self,
@@ -627,15 +630,42 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_CRC_RESULT3,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	return_value |= (guint32)out_val << 24;
 
-	g_debug("firmware CRC: 0x%08x", (guint)return_value);
-	return return_value;
+	*crc = return_value;
+	g_debug("firmware CRC: 0x%08x", (guint)*crc);
+
+	return TRUE;
 }
 
-static guint32
-fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
+static gboolean
+fu_pxi_tp_device_crc_parameter_wait_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	guint8 *out_val = user_data;
+
+	if (!fu_pxi_tp_register_user_read(self,
+					  FU_PXI_TP_USER_BANK_BANK0,
+					  FU_PXI_TP_REG_USER0_CRC_CTRL,
+					  out_val,
+					  error))
+		return FALSE;
+
+	/* busy bit cleared? */
+	if ((*out_val & FU_PXI_TP_CRC_CTRL_BUSY) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "parameter CRC still busy");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean
+fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, guint32 *crc, GError **error)
 {
 	const guint crc_param_retry_max = 1000;
 	const guint crc_param_retry_delay_ms = 10;
@@ -643,7 +673,10 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 	guint8 out_val = 0;
 	guint8 swap_flag = 0;
 	guint16 part_id = 0;
-	guint32 return_value = 0;
+	guint32 result = 0;
+
+	g_return_val_if_fail(crc != NULL, FALSE);
+	*crc = 0;
 
 	/* read swap_flag from system bank4 */
 	if (!fu_pxi_tp_register_read(self,
@@ -651,7 +684,7 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 				     FU_PXI_TP_REG_SYS4_SWAP_FLAG,
 				     &out_val,
 				     error))
-		return 0;
+		return FALSE;
 	swap_flag = out_val;
 
 	/* read part_id from user bank0 (little-endian) */
@@ -660,7 +693,7 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_PART_ID0,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	part_id = out_val;
 
 	if (!fu_pxi_tp_register_user_read(self,
@@ -668,100 +701,87 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, GError **error)
 					  FU_PXI_TP_REG_USER0_PART_ID1,
 					  &out_val,
 					  error))
-		return 0;
+		return FALSE;
 	part_id |= (guint16)out_val << 8;
 
+	/* select CRC source */
 	switch (part_id) {
 	case FU_PXI_TP_PART_ID_PJP274:
 		if (swap_flag != 0) {
-			/* PJP274 + swap enabled → parameter on bank1 */
 			if (!fu_pxi_tp_register_user_write(self,
 							   FU_PXI_TP_USER_BANK_BANK0,
 							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_PARAM_BANK1,
 							   error))
-				return 0;
+				return FALSE;
 		} else {
-			/* PJP274 normal boot → parameter on bank0 */
 			if (!fu_pxi_tp_register_user_write(self,
 							   FU_PXI_TP_USER_BANK_BANK0,
 							   FU_PXI_TP_REG_USER0_CRC_CTRL,
 							   FU_PXI_TP_CRC_CTRL_PARAM_BANK0,
 							   error))
-				return 0;
+				return FALSE;
 		}
 		break;
 
 	default:
-		/* other part_id: always use bank0 parameter CRC */
 		if (!fu_pxi_tp_register_user_write(self,
 						   FU_PXI_TP_USER_BANK_BANK0,
 						   FU_PXI_TP_REG_USER0_CRC_CTRL,
 						   FU_PXI_TP_CRC_CTRL_PARAM_BANK0,
 						   error))
-			return 0;
+			return FALSE;
 		break;
 	}
 
 	/* wait CRC calculation completed */
-	for (guint i = 0; i < crc_param_retry_max; i++) {
-		fu_device_sleep(FU_DEVICE(self), crc_param_retry_delay_ms);
-
-		if (!fu_pxi_tp_register_user_read(self,
-						  FU_PXI_TP_USER_BANK_BANK0,
-						  FU_PXI_TP_REG_USER0_CRC_CTRL,
-						  &out_val,
-						  error))
-			return 0;
-
-		/* busy bit cleared? */
-		if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) == 0)
-			break;
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_pxi_tp_device_crc_parameter_wait_cb,
+				  crc_param_retry_max,
+				  crc_param_retry_delay_ms,
+				  &out_val,
+				  error)) {
+		g_prefix_error_literal(error, "parameter CRC wait busy failure: ");
+		return FALSE;
 	}
 
-	if ((out_val & FU_PXI_TP_CRC_CTRL_BUSY) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "parameter CRC wait busy failure");
-		return 0;
-	}
-
-	/* read CRC result (32-bit, little-endian) */
+	/* read CRC result (32-bit LE) */
 	if (!fu_pxi_tp_register_user_read(self,
 					  FU_PXI_TP_USER_BANK_BANK0,
 					  FU_PXI_TP_REG_USER0_CRC_RESULT0,
 					  &out_val,
 					  error))
-		return 0;
-	return_value |= (guint32)out_val;
+		return FALSE;
+	result |= (guint32)out_val;
 
 	if (!fu_pxi_tp_register_user_read(self,
 					  FU_PXI_TP_USER_BANK_BANK0,
 					  FU_PXI_TP_REG_USER0_CRC_RESULT1,
 					  &out_val,
 					  error))
-		return 0;
-	return_value |= (guint32)out_val << 8;
+		return FALSE;
+	result |= (guint32)out_val << 8;
 
 	if (!fu_pxi_tp_register_user_read(self,
 					  FU_PXI_TP_USER_BANK_BANK0,
 					  FU_PXI_TP_REG_USER0_CRC_RESULT2,
 					  &out_val,
 					  error))
-		return 0;
-	return_value |= (guint32)out_val << 16;
+		return FALSE;
+	result |= (guint32)out_val << 16;
 
 	if (!fu_pxi_tp_register_user_read(self,
 					  FU_PXI_TP_USER_BANK_BANK0,
 					  FU_PXI_TP_REG_USER0_CRC_RESULT3,
 					  &out_val,
 					  error))
-		return 0;
-	return_value |= (guint32)out_val << 24;
+		return FALSE;
+	result |= (guint32)out_val << 24;
 
-	g_debug("parameter CRC: 0x%08x", (guint)return_value);
-	return return_value;
+	*crc = result;
+	g_debug("parameter CRC: 0x%08x", result);
+
+	return TRUE;
 }
 
 static gboolean
@@ -1076,99 +1096,24 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 }
 
 static gboolean
-fu_pxi_tp_device_write_firmware(FuDevice *device,
-				FuFirmware *firmware,
-				FuProgress *progress,
-				FwupdInstallFlags flags,
-				GError **error)
+fu_pxi_tp_device_verify_crc(FuPxiTpDevice *self,
+			    FuPxiTpFirmware *ctn,
+			    FuProgress *progress,
+			    GError **error)
 {
-	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
-	FuPxiTpFirmware *ctn = NULL;
-	const GPtrArray *secs = NULL;
-	FuProgress *prog_write = NULL;
 	FuProgress *prog_verify = NULL;
-	guint64 total_bytes = 0;
-	guint64 written = 0;
 	guint32 crc_value = 0;
-	guint i = 0;
-
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
-
-	ctn = fu_pxi_tp_device_wrap_or_parse_ctn(firmware, error);
-	if (ctn == NULL)
-		return FALSE;
-
-	secs = fu_pxi_tp_firmware_get_sections(ctn);
-	if (secs == NULL || secs->len == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no sections to write");
-		return FALSE;
-	}
-
-	for (i = 0; i < secs->len; i++) {
-		FuPxiTpSection *s = g_ptr_array_index((GPtrArray *)secs, i);
-
-		if (s->is_valid_update && !s->is_external && s->section_length > 0)
-			total_bytes += (guint64)s->section_length;
-	}
-
-	if (total_bytes == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no internal/valid sections to write");
-		return FALSE;
-	}
-
-	prog_write = fu_progress_get_child(progress);
-	fu_progress_set_id(prog_write, G_STRLOC);
-	fu_progress_set_steps(prog_write, secs->len);
-
-	/* erase old firmware */
-	if (!fu_pxi_tp_device_firmware_clear(self, ctn, error))
-		return FALSE;
-
-	for (i = 0; i < secs->len; i++) {
-		FuPxiTpSection *s = g_ptr_array_index((GPtrArray *)secs, i);
-		guint8 start_sector = 0;
-
-		/* skip sections we do not update */
-		if (!s->is_valid_update || s->is_external || s->section_length == 0) {
-			fu_progress_step_done(prog_write);
-			continue;
-		}
-
-		start_sector = (guint8)(s->target_flash_start / PXI_TP_SECTOR_SIZE);
-
-		if (!fu_pxi_tp_device_process_section(self,
-						      ctn,
-						      s,
-						      i, /* section_index */
-						      prog_write,
-						      start_sector,
-						      &written,
-						      error)) {
-			return FALSE;
-		}
-	}
-
-	fu_progress_step_done(progress);
 
 	prog_verify = fu_progress_get_child(progress);
 	fu_progress_set_id(prog_verify, G_STRLOC);
 	fu_progress_set_steps(prog_verify, 2);
 
-	/* crc check */
+	/* reset to bootloader before CRC check */
 	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_BOOTLOADER, error))
 		return FALSE;
 
-	crc_value = fu_pxi_tp_device_crc_firmware(self, error);
-	if (error != NULL && *error != NULL)
+	/* firmware CRC */
+	if (!fu_pxi_tp_device_crc_firmware(self, &crc_value, error))
 		return FALSE;
 
 	if (crc_value != fu_pxi_tp_firmware_get_file_firmware_crc(ctn)) {
@@ -1182,8 +1127,8 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 
 	fu_progress_step_done(prog_verify);
 
-	crc_value = fu_pxi_tp_device_crc_parameter(self, error);
-	if (error != NULL && *error != NULL)
+	/* parameter CRC */
+	if (!fu_pxi_tp_device_crc_parameter(self, &crc_value, error))
 		return FALSE;
 
 	if (crc_value != fu_pxi_tp_firmware_get_file_parameter_crc(ctn)) {
@@ -1197,10 +1142,104 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 
 	fu_progress_step_done(prog_verify);
 
+	return TRUE;
+}
+
+static gboolean
+fu_pxi_tp_device_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	FuPxiTpFirmware *fw_container = NULL;
+	const GPtrArray *sections = NULL;
+	FuProgress *progress_write = NULL;
+	guint64 total_update_bytes = 0;
+	guint64 total_written_bytes = 0;
+	guint section_idx = 0;
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
+
+	fw_container = fu_pxi_tp_device_wrap_or_parse_ctn(firmware, error);
+	if (fw_container == NULL)
+		return FALSE;
+
+	sections = fu_pxi_tp_firmware_get_sections(fw_container);
+	if (sections == NULL || sections->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no sections to write");
+		return FALSE;
+	}
+
+	/* calculate total bytes for valid internal sections */
+	for (section_idx = 0; section_idx < sections->len; section_idx++) {
+		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, section_idx);
+
+		if (section->is_valid_update && !section->is_external &&
+		    section->section_length > 0)
+			total_update_bytes += (guint64)section->section_length;
+	}
+
+	if (total_update_bytes == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no internal/valid sections to write");
+		return FALSE;
+	}
+
+	progress_write = fu_progress_get_child(progress);
+	fu_progress_set_id(progress_write, G_STRLOC);
+	fu_progress_set_steps(progress_write, sections->len);
+
+	/* erase old firmware */
+	if (!fu_pxi_tp_device_firmware_clear(self, fw_container, error))
+		return FALSE;
+
+	/* program all sections */
+	for (section_idx = 0; section_idx < sections->len; section_idx++) {
+		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, section_idx);
+
+		/* skip non-updatable sections */
+		if (!section->is_valid_update || section->is_external ||
+		    section->section_length == 0) {
+			fu_progress_step_done(progress_write);
+			continue;
+		}
+
+		guint8 flash_sector_start =
+		    (guint8)(section->target_flash_start / PXI_TP_SECTOR_SIZE);
+
+		if (!fu_pxi_tp_device_process_section(self,
+						      fw_container,
+						      section,
+						      section_idx,
+						      progress_write,
+						      flash_sector_start,
+						      &total_written_bytes,
+						      error))
+			return FALSE;
+	}
+
 	fu_progress_step_done(progress);
+
+	/* verify CRC (firmware + parameter) */
+	if (!fu_pxi_tp_device_verify_crc(self, fw_container, progress, error))
+		return FALSE;
+
+	fu_progress_step_done(progress);
+
 	g_debug("update success (written=%" G_GUINT64_FORMAT " / total=%" G_GUINT64_FORMAT ")",
-		written,
-		total_bytes);
+		total_written_bytes,
+		total_update_bytes);
+
 	return TRUE;
 }
 
