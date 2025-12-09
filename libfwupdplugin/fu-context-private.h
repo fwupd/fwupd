@@ -60,6 +60,8 @@ void
 fu_context_add_esp_volume(FuContext *self, FuVolume *volume) G_GNUC_NON_NULL(1);
 FuSmbios *
 fu_context_get_smbios(FuContext *self) G_GNUC_NON_NULL(1);
+void
+fu_context_set_smbios(FuContext *self, FuSmbios *smbios) G_GNUC_NON_NULL(1, 2);
 FuHwids *
 fu_context_get_hwids(FuContext *self) G_GNUC_NON_NULL(1);
 FuConfig *

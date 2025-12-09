@@ -1,0 +1,248 @@
+{
+  "FwupdVersion": "2.1.1",
+  "UsbDevices": [
+    {
+      "Created": "2025-12-11T10:37:11.814106Z",
+      "GType": "FuPciDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+      "DeviceFile": "/sys/devices/pci0000:00/0000:00:16.0/config",
+      "Subsystem": "pci",
+      "Driver": "mei_me",
+      "BindId": "0000:00:16.0",
+      "Vendor": 32902,
+      "Model": 31336,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "mei"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=235\nMINOR=0\nDEVNAME=mei0"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "mei0"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:16.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_me"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:7A68\nPCI_SUBSYS_ID=1043:8882\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d00007A68sv00001043sd00008882bc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x7a68"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:7A68\nPCI_SUBSYS_ID=1043:8882\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d00007A68sv00001043sd00008882bc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x7a68"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x11"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x1043"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x8882"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:16.0"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=(null)",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:16.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_me"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:7A68\nPCI_SUBSYS_ID=1043:8882\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d00007A68sv00001043sd00008882bc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x7a68"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:7A68\nPCI_SUBSYS_ID=1043:8882\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d00007A68sv00001043sd00008882bc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x7a68"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x11"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x1043"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x8882"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:16.0"
+        },
+        {
+          "Id": "ListAttr",
+          "Data": "uevent\npower_state\nbroken_parity_status\nsubsystem_device\n0000:00:16.0-6861ec7b-d07a-4673-856c-7f22b4d55769\ndma_mask_bits\n0000:00:16.0-3c4852d6-d47b-4f46-b05e-b5edc1aa440e\nvendor\niommu_group\nlocal_cpus\nfirmware_node\npower\n0000:00:16.0-dba4d603-d7ed-4931-8823-17ad585705d5\nclass\n0000:00:16.0-dd17041c-09ea-4b17-a271-5b989867ec65\nnuma_node\nresource\nrescan\nmei\nmsi_bus\ndevice\n0000:00:16.0-082ee5a7-7c25-470a-9643-0c06f0466ea1\naer\n0000:00:16.0-42b3ce2f-bd9f-485a-96ae-26406230b1ff\n0000:00:16.0-309dcde8-ccb1-4062-8f78-600115a34327\n0000:00:16.0-55213584-9a29-4916-badf-0fb7ed682aeb\ndriver\n0000:00:16.0-8e6a6715-9abc-4043-88ef-9e39c6f63e0f\nlocal_cpulist\n0000:00:16.0-8c2f4425-77d6-4755-aca3-891fdbc66a58\ndriver_override\nsubsystem\nd3cold_allowed\nirq\nrevision\n0000:00:16.0-fbf6fcf1-96cf-4e2e-a6a6-1bab8cbe36b1\nconsistent_dma_mask_bits\nresource0\nconfig\nari_enabled\nmsi_irqs\nremove\n0000:00:16.0-b638ab7e-94e2-4ea2-a552-d1c54b627f04\niommu\nenable\nlink\nmodalias\nsubsystem_vendor\n0000:00:16.0-5565a099-7fe2-45c1-a22b-d7e9dfea9a2e"
+        },
+        {
+          "Id": "Pread:Port=0x40,Length=0x4",
+          "Data": "RQIAkA=="
+        },
+        {
+          "Id": "Pread:Port=0x48,Length=0x4",
+          "Data": "BgXxAA=="
+        },
+        {
+          "Id": "Pread:Port=0x60,Length=0x4",
+          "Data": "IAAAAA=="
+        },
+        {
+          "Id": "Pread:Port=0x64,Length=0x4",
+          "Data": "AEQAAA=="
+        },
+        {
+          "Id": "Pread:Port=0x68,Length=0x4",
+          "Data": "AAAAAA=="
+        },
+        {
+          "Id": "Pread:Port=0x6c,Length=0x4",
+          "Data": "AgAgQA=="
+        },
+        {
+          "Id": "ReadAttr:Attr=mei/mei0/fw_ver",
+          "Data": "0:16.1.32.2473\n0:16.1.32.2473\n0:16.1.25.2035"
+        }
+      ]
+    }
+  ]
+}
