@@ -38,6 +38,7 @@ fu_pxi_tp_register_write(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -78,6 +79,7 @@ fu_pxi_tp_register_read(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
+	/* success */
 	*out_val = resp[3];
 	return TRUE;
 }
@@ -107,6 +109,7 @@ fu_pxi_tp_register_user_write(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -147,6 +150,7 @@ fu_pxi_tp_register_user_read(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
+	/* success */
 	*out_val = resp[3];
 	return TRUE;
 }
@@ -190,6 +194,7 @@ fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize buf
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -226,5 +231,6 @@ fu_pxi_tp_register_burst_read(FuPxiTpDevice *self, guint8 *buf, gsize bufsz, GEr
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }

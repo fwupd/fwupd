@@ -30,23 +30,18 @@ G_DEFINE_TYPE(FuPxiTpDevice, fu_pxi_tp_device, FU_TYPE_HIDRAW_DEVICE)
 #define PXI_TP_PAGES_COUNT_PER_SECTOR 16
 
 static gboolean
-fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
+fu_pxi_tp_device_reset(FuPxiTpDevice *self, FuPxiTpResetMode mode, GError **error)
 {
-	guint8 key1 = FU_PXI_TP_RESET_KEY1_SUSPEND;
-	guint8 key2 = 0;
+	FuPxiTpResetKey1 key1 = FU_PXI_TP_RESET_KEY1_SUSPEND;
+	FuPxiTpResetKey2 key2 = 0;
 	guint delay_ms = 0;
 
-	switch (mode) {
-	case FU_PXI_TP_RESET_MODE_APPLICATION:
+	if (mode == FU_PXI_TP_RESET_MODE_APPLICATION) {
 		key2 = FU_PXI_TP_RESET_KEY2_REGULAR;
 		delay_ms = 500;
-		break;
-	case FU_PXI_TP_RESET_MODE_BOOTLOADER:
+	} else {
 		key2 = FU_PXI_TP_RESET_KEY2_BOOTLOADER;
 		delay_ms = 10;
-		break;
-	default:
-		g_return_val_if_reached(FALSE);
 	}
 
 	if (!fu_pxi_tp_register_write(self,
@@ -55,7 +50,6 @@ fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 				      key1,
 				      error))
 		return FALSE;
-
 	fu_device_sleep(FU_DEVICE(self), 30);
 
 	if (!fu_pxi_tp_register_write(self,
@@ -64,9 +58,9 @@ fu_pxi_tp_device_reset(FuPxiTpDevice *self, guint8 mode, GError **error)
 				      key2,
 				      error))
 		return FALSE;
-
 	fu_device_sleep(FU_DEVICE(self), delay_ms);
 
+	/* success */
 	return TRUE;
 }
 
@@ -92,6 +86,7 @@ fu_pxi_tp_device_flash_execute_wait_cb(FuDevice *device, gpointer user_data, GEr
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -105,7 +100,6 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 	const guint flash_execute_retry_max = 10;
 	const guint flash_execute_retry_delay_ms = 1;
 	const guint8 flash_execute_start = 0x01;
-
 	guint8 out_val = 0;
 
 	if (!fu_pxi_tp_register_write(self,
@@ -170,6 +164,7 @@ fu_pxi_tp_device_flash_execute(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -208,6 +203,7 @@ fu_pxi_tp_device_flash_write_enable_wait_cb(FuDevice *device, gpointer user_data
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -239,6 +235,7 @@ fu_pxi_tp_device_flash_write_enable(FuPxiTpDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -274,6 +271,7 @@ fu_pxi_tp_device_flash_wait_busy_cb(FuDevice *device, gpointer user_data, GError
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -294,6 +292,7 @@ fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -340,6 +339,7 @@ fu_pxi_tp_device_flash_erase_sector(FuPxiTpDevice *self, guint8 sector, GError *
 					    error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -403,6 +403,7 @@ fu_pxi_tp_device_flash_program_256b_to_flash(FuPxiTpDevice *self,
 					    error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -449,9 +450,7 @@ fu_pxi_tp_device_write_sram_256b(FuPxiTpDevice *self, const guint8 *data, GError
 		return FALSE;
 
 	if (!fu_pxi_tp_register_burst_write(self, data, PXI_TP_PAGE_SIZE, error)) {
-		if (error != NULL && *error != NULL)
-			g_prefix_error_literal(error, "burst write buffer failure: ");
-		g_debug("burst write buffer failure");
+		g_prefix_error_literal(error, "burst write buffer failure: ");
 		return FALSE;
 	}
 
@@ -463,15 +462,16 @@ fu_pxi_tp_device_write_sram_256b(FuPxiTpDevice *self, const guint8 *data, GError
 				      error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *ctn, GError **error)
+fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *firmware, GError **error)
 {
 	guint32 start_address = 0;
 
-	if (ctn == NULL) {
+	if (firmware == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -479,16 +479,15 @@ fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *ctn, GErro
 		return FALSE;
 	}
 
-	start_address = fu_pxi_tp_firmware_get_firmware_address(ctn);
-
+	start_address = fu_pxi_tp_firmware_get_firmware_address(firmware);
 	if (!fu_pxi_tp_device_flash_erase_sector(self,
 						 (guint8)(start_address / PXI_TP_SECTOR_SIZE),
 						 error)) {
-		if (error != NULL && *error != NULL)
-			g_prefix_error_literal(error, "clear firmware failure: ");
+		g_prefix_error_literal(error, "clear firmware failure: ");
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -514,6 +513,7 @@ fu_pxi_tp_device_crc_firmware_wait_cb(FuDevice *device, gpointer user_data, GErr
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -522,7 +522,6 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, guint32 *crc, GError **error)
 {
 	const guint crc_fw_retry_max = 1000;
 	const guint crc_fw_retry_delay_ms = 10;
-
 	guint8 out_val = 0;
 	guint8 swap_flag = 0;
 	guint16 part_id = 0;
@@ -636,6 +635,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, guint32 *crc, GError **error)
 	*crc = return_value;
 	g_debug("firmware CRC: 0x%08x", (guint)*crc);
 
+	/* success */
 	return TRUE;
 }
 
@@ -661,6 +661,7 @@ fu_pxi_tp_device_crc_parameter_wait_cb(FuDevice *device, gpointer user_data, GEr
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -781,6 +782,7 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, guint32 *crc, GError **error
 	*crc = result;
 	g_debug("parameter CRC: 0x%08x", result);
 
+	/* success */
 	return TRUE;
 }
 
@@ -810,6 +812,7 @@ fu_pxi_tp_device_write_page(FuPxiTpDevice *self,
 	if (!fu_pxi_tp_device_flash_program_256b_to_flash(self, sector, page, error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -825,15 +828,6 @@ fu_pxi_tp_device_update_flash_process(FuPxiTpDevice *self,
 	gsize total_sz = 0;
 	guint8 max_sector_cnt = 0;
 	FuProgress *update_progress = NULL;
-
-	/* ---- basic validation / normalization ---- */
-	if (self == NULL || progress == NULL || data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "update_flash: invalid args (self/progress/data is NULL)");
-		return FALSE;
-	}
 
 	/* never read past provided payload */
 	if ((gsize)data_size > data->len)
@@ -921,6 +915,7 @@ fu_pxi_tp_device_update_flash_process(FuPxiTpDevice *self,
 		fu_progress_step_done(update_progress);
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -956,6 +951,8 @@ fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 		ver_u16);
 
 	fu_device_set_version_raw(device, ver_u16);
+
+	/* success */
 	return TRUE;
 }
 
@@ -1052,6 +1049,8 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 	}
 
 	fu_progress_step_done(prog_write);
+
+	/* success */
 	return TRUE;
 }
 
@@ -1102,6 +1101,7 @@ fu_pxi_tp_device_verify_crc(FuPxiTpDevice *self,
 
 	fu_progress_step_done(prog_verify);
 
+	/* success */
 	return TRUE;
 }
 
@@ -1197,6 +1197,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 		total_written_bytes,
 		total_update_bytes);
 
+	/* success */
 	return TRUE;
 }
 
@@ -1213,7 +1214,6 @@ fu_pxi_tp_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->ver_bank = (guint8)tmp;
-		g_debug("quirk: PxiTpHidVersionBank => 0x%02x", self->ver_bank);
 		return TRUE;
 	}
 
@@ -1221,7 +1221,6 @@ fu_pxi_tp_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, 0xffff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->ver_addr = (guint16)tmp;
-		g_debug("quirk: PxiTpHidVersionAddr => 0x%04x", self->ver_addr);
 		return TRUE;
 	}
 
@@ -1229,7 +1228,6 @@ fu_pxi_tp_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->sram_select = (guint8)tmp;
-		g_debug("quirk: PxiTpSramSelect => 0x%02x", self->sram_select);
 		return TRUE;
 	}
 
@@ -1267,14 +1265,15 @@ fu_pxi_tp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	 * do NOT emit warnings here, as G_DEBUG=fatal-criticals would abort.
 	 */
 	{
-		g_autoptr(GError) local_error = NULL;
+		g_autoptr(GError) error_local = NULL;
 
-		if (!fu_pxi_tp_device_setup(device, &local_error)) {
+		if (!fu_pxi_tp_device_setup(device, &error_local)) {
 			g_debug("failed to refresh version after attach: %s",
-				local_error != NULL ? local_error->message : "unknown");
+				error_local != NULL ? error_local->message : "unknown");
 		}
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -1289,8 +1288,8 @@ fu_pxi_tp_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 				    error))
 		return FALSE;
 
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	g_debug("enter bootloader");
 	return TRUE;
 }
 
@@ -1301,22 +1300,22 @@ fu_pxi_tp_device_cleanup(FuDevice *device,
 			 GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	g_autoptr(GError) error_local = NULL;
 
 	g_debug("fu_pxi_tp_tf_device_cleanup");
 
 	/* exit upgrade mode (best-effort) */
-	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, NULL))
-		g_debug("failed to exit upgrade mode (ignored)");
+	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, &error_local))
+		g_debug("ignoring failure to exit upgrade mode: %s", error_local->message);
 
-	g_debug("fu_pxi_tp_device_cleanup");
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
 			return FALSE;
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		g_debug("exit bootloader");
 	}
 
-	return TRUE; /* cleanup should avoid reporting errors if possible */
+	/* success */
+	return TRUE;
 }
 
 static void
