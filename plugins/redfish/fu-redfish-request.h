@@ -24,10 +24,10 @@ gboolean
 fu_redfish_request_perform_full(FuRedfishRequest *self,
 				const gchar *path,
 				const gchar *request,
-				JsonBuilder *builder,
+				FwupdJsonObject *json_obj,
 				FuRedfishRequestPerformFlags flags,
 				GError **error);
-JsonObject *
+FwupdJsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self);
 CURL *
 fu_redfish_request_get_curl(FuRedfishRequest *self);
