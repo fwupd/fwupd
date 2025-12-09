@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <json-glib/json-glib.h>
 #include <string.h>
 
 #include "fu-logitech-bulkcontroller-child.h"
@@ -650,39 +649,28 @@ fu_logitech_bulkcontroller_device_update_state_to_status(
 
 static gboolean
 fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *self,
-					       JsonObject *json_device,
+					       FwupdJsonObject *json_device,
 					       GError **error)
 {
 	FuLogitechBulkcontrollerDeviceState status;
 	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
 	g_autoptr(FuDevice) child = NULL;
 	const gchar *name;
-	const gchar *required_members[] = {
-	    "make",
-	    "model",
-	    "name",
-	    "status",
-	    "sw",
-	    "type",
-	    "vid",
-	};
+	const gchar *tmp;
+	const gchar *version;
+	gint64 tmpi = 0;
 
 	/* sanity check */
-	for (guint i = 0; i < G_N_ELEMENTS(required_members); i++) {
-		if (!json_object_has_member(json_device, required_members[i])) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no %s",
-				    required_members[i]);
-			return FALSE;
-		}
-	}
-	if (g_strcmp0(json_object_get_string_member(json_device, "type"), "Sentinel") != 0)
+	tmp = fwupd_json_object_get_string(json_device, "type", error);
+	if (tmp == NULL)
+		return FALSE;
+	if (g_strcmp0(tmp, "Sentinel") != 0)
 		return TRUE;
 
 	/* check status */
-	status = json_object_get_int_member(json_device, "status");
+	if (!fwupd_json_object_get_integer(json_device, "status", &tmpi, error))
+		return FALSE;
+	status = tmpi;
 	if (status != FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_ONLINE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -692,14 +680,20 @@ fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *s
 		return FALSE;
 	}
 
+	/* version must exist */
+	version = fwupd_json_object_get_string(json_device, "sw", error);
+	if (version == NULL)
+		return FALSE;
+
 	/* child already exists */
-	name = json_object_get_string_member(json_device, "name");
+	name = fwupd_json_object_get_string(json_device, "name", error);
+	if (name == NULL)
+		return FALSE;
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child_tmp = g_ptr_array_index(children, i);
 		if (g_strcmp0(fu_device_get_logical_id(child_tmp), name) == 0) {
 			g_debug("found existing %s device, just updating version", name);
-			fu_device_set_version(child_tmp,
-					      json_object_get_string_member(json_device, "sw"));
+			fu_device_set_version(child_tmp, version);
 			return TRUE;
 		}
 	}
@@ -708,14 +702,19 @@ fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *s
 	child = g_object_new(FU_TYPE_LOGITECH_BULKCONTROLLER_CHILD, "proxy", self, NULL);
 	fu_device_add_private_flag(child, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_set_name(child, name);
-	fu_device_set_vendor(child, json_object_get_string_member(json_device, "make"));
+	tmp = fwupd_json_object_get_string(json_device, "make", error);
+	if (tmp == NULL)
+		return FALSE;
+	fu_device_set_vendor(child, tmp);
 	fu_device_set_logical_id(child, name);
-	fu_device_set_version(child, json_object_get_string_member(json_device, "sw"));
-	if (json_object_has_member(json_device, "serial"))
-		fu_device_set_serial(child, json_object_get_string_member(json_device, "serial"));
-	fu_device_add_instance_strup(child,
-				     "MODEL",
-				     json_object_get_string_member(json_device, "model"));
+	fu_device_set_version(child, version);
+	tmp = fwupd_json_object_get_string(json_device, "serial", NULL);
+	if (tmp != NULL)
+		fu_device_set_serial(child, tmp);
+	tmp = fwupd_json_object_get_string(json_device, "model", error);
+	if (tmp == NULL)
+		return FALSE;
+	fu_device_add_instance_strup(child, "MODEL", tmp);
 	if (!fu_device_build_instance_id(child, error, "LOGI", "MODEL", NULL))
 		return FALSE;
 	fu_device_add_child(FU_DEVICE(self), child);
@@ -726,80 +725,85 @@ fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *s
 
 static gboolean
 fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *self,
-					      GByteArray *decoded_pkt,
+					      const gchar *json,
 					      GError **error)
 {
-	JsonArray *json_devices;
-	JsonNode *json_root;
-	JsonObject *json_device;
-	JsonObject *json_object;
-	JsonObject *json_payload;
-	g_autoptr(JsonParser) json_parser = json_parser_new();
+	const gchar *tmp;
+	gint64 tmpi = 0;
+	g_autoptr(FwupdJsonArray) json_devices = NULL;
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_device = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonObject) json_payload = NULL;
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
 	/* parse JSON reply */
-	if (!json_parser_load_from_data(json_parser,
-					(const gchar *)decoded_pkt->data,
-					decoded_pkt->len,
-					error)) {
-		g_prefix_error_literal(error, "failed to parse json data: ");
+	json_node =
+	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	if (json_node == NULL)
 		return FALSE;
-	}
-	json_root = json_parser_get_root(json_parser);
-	if (json_root == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "did not get JSON root");
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
 		return FALSE;
-	}
-	json_object = json_node_get_object(json_root);
-	json_payload = json_object_get_object_member(json_object, "payload");
-	if (json_payload == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "did not get JSON payload");
+	json_payload = fwupd_json_object_get_object(json_obj, "payload", error);
+	if (json_payload == NULL)
 		return FALSE;
-	}
-	json_devices = json_object_get_array_member(json_payload, "devices");
-	if (json_devices == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "did not get JSON devices");
+	json_devices = fwupd_json_object_get_array(json_payload, "devices", error);
+	if (json_devices == NULL)
 		return FALSE;
-	}
-	json_device = json_array_get_object_element(json_devices, 0);
-	if (json_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "did not get JSON device");
+	json_device = fwupd_json_array_get_object(json_devices, 0, error);
+	if (json_device == NULL)
 		return FALSE;
-	}
-	if (json_object_has_member(json_device, "name"))
-		fu_device_set_name(FU_DEVICE(self),
-				   json_object_get_string_member(json_device, "name"));
-	if (json_object_has_member(json_device, "sw"))
-		fu_device_set_version(FU_DEVICE(self),
-				      json_object_get_string_member(json_device, "sw"));
-	if (json_object_has_member(json_device, "type")) {
+
+	tmp = fwupd_json_object_get_string(json_device, "name", NULL);
+	if (tmp != NULL)
+		fu_device_set_name(FU_DEVICE(self), tmp);
+	tmp = fwupd_json_object_get_string(json_device, "sw", NULL);
+	if (tmp != NULL)
+		fu_device_set_version(FU_DEVICE(self), tmp);
+	tmp = fwupd_json_object_get_string(json_device, "type", NULL);
+	if (tmp != NULL) {
 		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       json_object_get_string_member(json_device, "type"),
+					       tmp,
 					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 	}
-	if (json_object_has_member(json_device, "status"))
-		self->status = json_object_get_int_member(json_device, "status");
-	if (json_object_has_member(json_device, "updateStatus"))
-		self->update_status = json_object_get_int_member(json_device, "updateStatus");
+	if (!fwupd_json_object_get_integer_with_default(
+		json_device,
+		"status",
+		&tmpi,
+		FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_UNKNOWN,
+		error))
+		return FALSE;
+	if (tmpi != FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_UNKNOWN)
+		self->status = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(
+		json_device,
+		"updateStatus",
+		&tmpi,
+		FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_UNKNOWN,
+		error))
+		return FALSE;
+	if (tmpi != FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_UNKNOWN)
+		self->update_status = tmpi;
+
 	/* updateProgress only available while firmware upgrade is going on */
-	if (json_object_has_member(json_device, "updateProgress"))
-		self->update_progress = json_object_get_int_member(json_device, "updateProgress");
+	if (!fwupd_json_object_get_integer_with_default(json_device,
+							"updateProgress",
+							&tmpi,
+							-1,
+							error))
+		return FALSE;
+	if (tmpi != -1)
+		self->update_progress = tmpi;
 
 	/* ensure child pheripheral devices exist */
-	for (guint i = 1; i < json_array_get_length(json_devices); i++) {
-		JsonObject *json_child = json_array_get_object_element(json_devices, i);
+	for (guint i = 1; i < fwupd_json_array_get_size(json_devices); i++) {
+		g_autoptr(FwupdJsonObject) json_child = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		json_child = fwupd_json_array_get_object(json_devices, i, error);
+		if (json_child == NULL)
+			return FALSE;
 		if (!fu_logitech_bulkcontroller_device_ensure_child(self, json_child, &error_local))
 			g_warning("failed to add child: %s", error_local->message);
 	}
@@ -814,7 +818,7 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 					     GError **error)
 {
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
-	g_autofree gchar *bufstr = NULL;
+	g_autofree gchar *json = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
 	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
@@ -825,11 +829,8 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 		g_prefix_error_literal(error, "failed to unpack packet for device info request: ");
 		return FALSE;
 	}
-	bufstr = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-	g_debug("received device response: id: %u, length %u, data: %s",
-		proto_id,
-		buf->len,
-		bufstr);
+	json = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+	g_debug("received device response: id: %u, length %u, data: %s", proto_id, buf->len, json);
 	if (proto_id != kProtoId_GetDeviceInfoResponse && proto_id != kProtoId_KongEvent) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -837,11 +838,11 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 				    "incorrect response for device info request");
 		return FALSE;
 	}
-	if (!fu_logitech_bulkcontroller_device_json_parser(self, decoded_pkt, error))
+	if (!fu_logitech_bulkcontroller_device_json_parser(self, json, error))
 		return FALSE;
 
 	/* success */
-	g_string_assign(self->device_info_response_json, bufstr);
+	g_string_assign(self->device_info_response_json, json);
 	return TRUE;
 }
 
