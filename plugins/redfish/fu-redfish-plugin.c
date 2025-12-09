@@ -70,7 +70,7 @@ fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* select correct, falling back to default for old fwupd versions */
 	uri = fu_plugin_get_config_value(plugin, "UserUri");
@@ -82,14 +82,11 @@ fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 
 	/* now use Redfish to change the temporary password to the actual password */
 	request = fu_redfish_backend_request_new(self->backend);
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Password");
-	json_builder_add_string_value(builder, password_new);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_string(json_obj, "Password", password_new);
 	if (!fu_redfish_request_perform_full(request,
 					     uri,
 					     "PATCH",
-					     builder,
+					     json_obj,
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
 						 FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					     error))
@@ -343,7 +340,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* create device */
 	locker = fu_device_locker_new(FU_DEVICE(device), error);
@@ -401,14 +398,11 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	/* now use Redfish to change the temporary password to the actual password */
 	request = fu_redfish_backend_request_new(self->backend);
 	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id);
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Password");
-	json_builder_add_string_value(builder, password_new);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_string(json_obj, "Password", password_new);
 	if (!fu_redfish_request_perform_full(request,
 					     uri,
 					     "PATCH",
-					     builder,
+					     json_obj,
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
 						 FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					     error))
@@ -608,15 +602,12 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 
 	/* ask the BMC to reboot */
 	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST)) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		json_builder_begin_object(builder);
-		json_builder_set_member_name(builder, "ResetType");
-		json_builder_add_string_value(builder, "ForceRestart");
-		json_builder_end_object(builder);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		fwupd_json_object_add_string(json_obj, "ResetType", "ForceRestart");
 		if (!fu_redfish_request_perform_full(request,
 						     "/redfish/v1/Managers/1/Actions/Manager.Reset",
 						     "POST",
-						     builder,
+						     json_obj,
 						     FU_REDFISH_REQUEST_PERFORM_FLAG_NONE,
 						     error)) {
 			g_prefix_error_literal(error, "failed to reset manager: ");

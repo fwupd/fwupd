@@ -20,87 +20,74 @@ G_DEFINE_TYPE(FuRedfishSmcDevice, fu_redfish_smc_device, FU_TYPE_REDFISH_DEVICE)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 static const gchar *
-fu_redfish_smc_device_get_task(JsonObject *json_obj)
+fu_redfish_smc_device_get_task(FwupdJsonObject *json_obj)
 {
-	JsonObject *tmp_obj;
-	JsonArray *tmp_ary;
 	const gchar *msgid;
+	g_autoptr(FwupdJsonArray) json_array_messages = NULL;
+	g_autoptr(FwupdJsonArray) json_array_msgargs = NULL;
+	g_autoptr(FwupdJsonObject) json_object_accepted = NULL;
+	g_autoptr(FwupdJsonObject) json_object_message = NULL;
 
-	if (!json_object_has_member(json_obj, "Accepted"))
+	json_object_accepted = fwupd_json_object_get_object(json_obj, "Accepted", NULL);
+	if (json_object_accepted == NULL)
 		return NULL;
-	tmp_obj = json_object_get_object_member(json_obj, "Accepted");
-	if (tmp_obj == NULL || !json_object_has_member(tmp_obj, "@Message.ExtendedInfo"))
+	json_array_messages =
+	    fwupd_json_object_get_array(json_object_accepted, "@Message.ExtendedInfo", NULL);
+	if (json_array_messages == NULL || fwupd_json_array_get_size(json_array_messages) != 1)
 		return NULL;
-	tmp_ary = json_object_get_array_member(tmp_obj, "@Message.ExtendedInfo");
-	if (tmp_ary == NULL || json_array_get_length(tmp_ary) != 1)
+	json_object_message = fwupd_json_array_get_object(json_array_messages, 0, NULL);
+	if (json_object_message == NULL)
 		return NULL;
-	tmp_obj = json_array_get_object_element(tmp_ary, 0);
-	if (tmp_obj == NULL)
-		return NULL;
-	msgid = json_object_get_string_member(tmp_obj, "MessageId");
+	msgid = fwupd_json_object_get_string(json_object_message, "MessageId", NULL);
 	if (g_strcmp0(msgid, "SMC.1.0.OemSimpleupdateAcceptedMessage") != 0)
 		return NULL;
-	tmp_ary = json_object_get_array_member(tmp_obj, "MessageArgs");
-	if (tmp_ary == NULL)
+	json_array_msgargs = fwupd_json_object_get_array(json_object_message, "MessageArgs", NULL);
+	if (json_array_msgargs == NULL)
 		return NULL;
-	if (json_array_get_length(tmp_ary) != 1)
+	if (fwupd_json_array_get_size(json_array_msgargs) != 1)
 		return NULL;
-	return json_array_get_string_element(tmp_ary, 0);
+	return fwupd_json_array_get_string(json_array_msgargs, 0, NULL);
 }
 
 static GString *
 fu_redfish_smc_device_get_parameters(FuRedfishSmcDevice *self)
 {
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_array_targets = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_oem = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_oem_supermicro = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_oem_supermicro_bios = fwupd_json_object_new();
 
 	/* create header */
 	/* https://supermicro.com/manuals/other/RedishRefGuide.pdf */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Targets");
-	json_builder_begin_array(builder);
-	json_builder_add_string_value(builder, "/redfish/v1/Systems/1/Bios");
-	json_builder_end_array(builder);
-	json_builder_set_member_name(builder, "@Redfish.OperationApplyTime");
-	json_builder_add_string_value(builder, "OnStartUpdateRequest");
-	json_builder_set_member_name(builder, "Oem");
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Supermicro");
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "BIOS");
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "PreserveME");
-	json_builder_add_boolean_value(builder, TRUE);
-	json_builder_set_member_name(builder, "PreserveNVRAM");
-	json_builder_add_boolean_value(builder, TRUE);
-	json_builder_set_member_name(builder, "PreserveSMBIOS");
-	json_builder_add_boolean_value(builder, TRUE);
-	json_builder_set_member_name(builder, "BackupBIOS");
-	json_builder_add_boolean_value(builder, FALSE);
-	json_builder_end_object(builder);
-	json_builder_end_object(builder);
-	json_builder_end_object(builder);
-	json_builder_end_object(builder);
+	fwupd_json_array_add_string(json_array_targets, "/redfish/v1/Systems/1/Bios");
+	fwupd_json_object_add_array(json_obj, "Targets", json_array_targets);
+
+	fwupd_json_object_add_string(json_obj,
+				     "@Redfish.OperationApplyTime",
+				     "OnStartUpdateRequest");
+
+	fwupd_json_object_add_boolean(json_oem_supermicro_bios, "PreserveME", TRUE);
+	fwupd_json_object_add_boolean(json_oem_supermicro_bios, "PreserveNVRAM", TRUE);
+	fwupd_json_object_add_boolean(json_oem_supermicro_bios, "PreserveSMBIOS", TRUE);
+	fwupd_json_object_add_boolean(json_oem_supermicro_bios, "BackupBIOS", FALSE);
+
+	fwupd_json_object_add_object(json_oem_supermicro, "BIOS", json_oem_supermicro_bios);
+	fwupd_json_object_add_object(json_oem, "Supermicro", json_oem_supermicro);
+	fwupd_json_object_add_object(json_obj, "Oem", json_oem);
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, str);
-
-	return g_steal_pointer(&str);
+	return fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_NONE);
 }
 
 static gboolean
 fu_redfish_smc_device_start_update(FuRedfishSmcDevice *self, FuProgress *progress, GError **error)
 {
 	FuRedfishBackend *backend;
-	JsonObject *json_obj;
 	CURL *curl;
 	const gchar *location = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
@@ -144,7 +131,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 	FuRedfishSmcDevice *self = FU_REDFISH_SMC_DEVICE(device);
 	FuRedfishBackend *backend;
 	CURL *curl;
-	JsonObject *json_obj;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	curl_mimepart *part;
 	const gchar *location = NULL;
 	g_autoptr(curl_mime) mime = NULL;

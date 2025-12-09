@@ -25,8 +25,9 @@ fu_redfish_hpe_device_attach(FuDevice *dev, FuProgress *progress, GError **error
 {
 	FuRedfishHpeDevice *self = FU_REDFISH_HPE_DEVICE(dev);
 	FuRedfishBackend *backend;
-	JsonObject *json_obj;
 	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonObject) json_oem = NULL;
 
 	/* create URI and poll */
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
@@ -41,11 +42,13 @@ fu_redfish_hpe_device_attach(FuDevice *dev, FuProgress *progress, GError **error
 
 	/* percentage is optional */
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (json_object_has_member(json_obj, "Oem")) {
-		JsonObject *oem = json_object_get_object_member(json_obj, "Oem");
-		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
-			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
-			const gchar *status = json_object_get_string_member(hpe, "State");
+	json_oem = fwupd_json_object_get_object(json_obj, "Oem", NULL);
+	if (json_oem != NULL) {
+		g_autoptr(FwupdJsonObject) json_oem_hpe = NULL;
+		json_oem_hpe = fwupd_json_object_get_object(json_oem, "Hpe", NULL);
+		if (json_oem_hpe != NULL) {
+			const gchar *status =
+			    fwupd_json_object_get_string(json_oem_hpe, "State", NULL);
 
 			/* if we are in an idle-ish state, we can proceed */
 			if (g_strcmp0(status, "Idle") == 0 || g_strcmp0(status, "Error") == 0 ||
@@ -92,9 +95,12 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 				     GError **error)
 {
 	FuRedfishBackend *backend;
-	JsonObject *json_obj;
-	const gchar *message = "Unknown failure";
+	const gchar *status;
+	gint64 pc = 0;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_oem = NULL;
+	g_autoptr(FwupdJsonObject) json_oem_hpe = NULL;
 
 	/* create URI and poll */
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
@@ -109,60 +115,56 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 
 	/* percentage is optional */
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (json_object_has_member(json_obj, "Oem")) {
-		JsonObject *oem = json_object_get_object_member(json_obj, "Oem");
-		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
-			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
 
-			const gchar *status = json_object_get_string_member(hpe, "State");
-			if (g_strcmp0(status, "Error") == 0) {
-				/* default error, will be replaced by something more fitting
-				 * in fu_redfish_device_parse_message_id if we can
-				 */
-				if (json_object_has_member(hpe, "Result")) {
-					JsonObject *result =
-					    json_object_get_object_member(hpe, "Result");
-					const gchar *message_id = NULL;
+	json_oem = fwupd_json_object_get_object(json_obj, "Oem", NULL);
+	if (json_oem == NULL)
+		return TRUE;
+	json_oem_hpe = fwupd_json_object_get_object(json_oem, "Hpe", NULL);
+	if (json_oem_hpe == NULL)
+		return TRUE;
 
-					if (json_object_has_member(result, "MessageId"))
-						message_id =
-						    json_object_get_string_member(result,
-										  "MessageId");
-					if (json_object_has_member(result, "Message"))
-						message = json_object_get_string_member(result,
-											"Message");
-					/* use the message */
-					g_debug("message [%s]: %s", message_id, message);
-					if (!fu_redfish_device_parse_message_id(self,
-										message_id,
-										message,
-										ctx->progress,
-										error))
-						return FALSE;
-				}
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INTERNAL,
-						    message);
+	status = fwupd_json_object_get_string(json_oem_hpe, "State", NULL);
+	if (g_strcmp0(status, "Error") == 0) {
+		const gchar *message = NULL;
+		g_autoptr(FwupdJsonObject) json_result = NULL;
+		/* default error, will be replaced by something more fitting
+		 * in fu_redfish_device_parse_message_id if we can
+		 */
+		json_result = fwupd_json_object_get_object(json_oem_hpe, "Result", NULL);
+		if (json_result != NULL) {
+			const gchar *message_id;
+			message_id = fwupd_json_object_get_string(json_result, "MessageId", NULL);
+			message = fwupd_json_object_get_string(json_result, "Message", NULL);
+			g_debug("message [%s]: %s", message_id, message);
+			if (!fu_redfish_device_parse_message_id(self,
+								message_id,
+								message,
+								ctx->progress,
+								error))
 				return FALSE;
-			}
-
-			if (json_object_has_member(hpe, "FlashProgressPercent")) {
-				gint64 pc = json_object_get_int_member(hpe, "FlashProgressPercent");
-				if (pc >= 0 && pc <= 100)
-					fu_progress_set_percentage(ctx->progress, (guint)pc);
-			}
-
-			if (g_strcmp0(status, "Writing") == 0 ||
-			    g_strcmp0(status, "Updating") == 0) {
-				fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_WRITE);
-			} else if (g_strcmp0(status, "Verifying") == 0) {
-				fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_VERIFY);
-			} else if (g_strcmp0(status, "Complete") == 0) {
-				ctx->completed = TRUE;
-				fu_progress_set_status(ctx->progress, FWUPD_STATUS_IDLE);
-			}
 		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    message != NULL ? message : "Unknown failure");
+		return FALSE;
+	}
+	if (!fwupd_json_object_get_integer_with_default(json_oem_hpe,
+							"FlashProgressPercent",
+							&pc,
+							-1,
+							error))
+		return FALSE;
+	if (pc >= 0 && pc <= 100)
+		fu_progress_set_percentage(ctx->progress, (guint)pc);
+
+	if (g_strcmp0(status, "Writing") == 0 || g_strcmp0(status, "Updating") == 0) {
+		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_WRITE);
+	} else if (g_strcmp0(status, "Verifying") == 0) {
+		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_VERIFY);
+	} else if (g_strcmp0(status, "Complete") == 0) {
+		ctx->completed = TRUE;
+		fu_progress_set_status(ctx->progress, FWUPD_STATUS_IDLE);
 	}
 
 	/* try again */
@@ -213,10 +215,8 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	g_autoptr(_curl_slist) hs = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GString) json_str = g_string_new(NULL);
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GString) json_str = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -245,20 +245,12 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	mime = curl_mime_init(curl);
 
 	/* create header */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "UpdateRepository");
-	json_builder_add_boolean_value(builder, FALSE);
-	json_builder_set_member_name(builder, "UpdateTarget");
-	json_builder_add_boolean_value(builder, TRUE);
-	json_builder_set_member_name(builder, "ETag");
-	json_builder_add_string_value(builder, "atag");
-	json_builder_end_object(builder);
+	fwupd_json_object_add_boolean(json_obj, "UpdateRepository", FALSE);
+	fwupd_json_object_add_boolean(json_obj, "UpdateTarget", TRUE);
+	fwupd_json_object_add_string(json_obj, "ETag", "atag");
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, json_str);
+	json_str = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
 
 	part = curl_mime_addpart(mime);
 	curl_mime_name(part, "sessionKey");

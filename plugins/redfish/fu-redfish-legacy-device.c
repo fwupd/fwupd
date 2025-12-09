@@ -18,63 +18,62 @@ struct _FuRedfishLegacyDevice {
 G_DEFINE_TYPE(FuRedfishLegacyDevice, fu_redfish_legacy_device, FU_TYPE_REDFISH_DEVICE)
 
 static gboolean
-fu_redfish_legacy_device_detach(FuDevice *dev, FuProgress *progress, GError **error)
+fu_redfish_legacy_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(dev);
 	FuRedfishBackend *backend;
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+
+	/* sanity check */
+	if (fu_device_get_logical_id(device) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no HttpPushUriTargets defined");
+		return FALSE;
+	}
 
 	/* create header */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "HttpPushUriTargetsBusy");
-	json_builder_add_boolean_value(builder, TRUE);
-	json_builder_set_member_name(builder, "HttpPushUriTargets");
-	json_builder_begin_array(builder);
-	json_builder_add_string_value(builder, fu_device_get_logical_id(FU_DEVICE(self)));
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_boolean(json_obj, "HttpPushUriTargetsBusy", TRUE);
+	fwupd_json_array_add_string(json_arr, fu_device_get_logical_id(device));
+	fwupd_json_object_add_array(json_obj, "HttpPushUriTargets", json_arr);
 
 	/* patch the two fields */
-	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
 	if (backend == NULL)
 		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	return fu_redfish_request_perform_full(request,
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
-					       builder,
+					       json_obj,
 					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
 						   FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					       error);
 }
 
 static gboolean
-fu_redfish_legacy_device_attach(FuDevice *dev, FuProgress *progress, GError **error)
+fu_redfish_legacy_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(dev);
 	FuRedfishBackend *backend;
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* create header */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "HttpPushUriTargetsBusy");
-	json_builder_add_boolean_value(builder, FALSE);
-	json_builder_set_member_name(builder, "HttpPushUriTargets");
-	json_builder_begin_array(builder);
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_boolean(json_obj, "HttpPushUriTargetsBusy", FALSE);
+	fwupd_json_object_add_array(json_obj, "HttpPushUriTargets", json_arr);
 
 	/* patch the two fields */
-	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device), error);
 	if (backend == NULL)
 		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	return fu_redfish_request_perform_full(request,
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
-					       builder,
+					       json_obj,
 					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
 						   FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					       error);
@@ -90,8 +89,8 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(device);
 	FuRedfishBackend *backend;
 	CURL *curl;
-	JsonObject *json_obj;
 	const gchar *location;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -118,15 +117,13 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 
 	/* poll the task for progress */
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (!json_object_has_member(json_obj, "@odata.id")) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no task returned for %s",
-			    fu_redfish_backend_get_push_uri_path(backend));
+	location = fwupd_json_object_get_string(json_obj, "@odata.id", error);
+	if (location == NULL) {
+		g_prefix_error(error,
+			       "no task returned for %s: ",
+			       fu_redfish_backend_get_push_uri_path(backend));
 		return FALSE;
 	}
-	location = json_object_get_string_member(json_obj, "@odata.id");
 	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
 

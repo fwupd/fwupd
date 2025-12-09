@@ -12,7 +12,7 @@
 
 typedef struct {
 	FuRedfishBackend *backend;
-	JsonObject *member;
+	FwupdJsonObject *json_obj_member;
 	guint64 milestone;
 	gchar *build;
 	guint reset_pre_delay;	/* default of 0ms */
@@ -66,7 +66,8 @@ static gboolean
 fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *uri, GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	JsonObject *json_obj;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	const gchar *tmp;
 	guint64 vendor_id = 0x0;
 	guint64 model_id = 0x0;
 	guint64 subsystem_vendor_id = 0x0;
@@ -83,58 +84,38 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* optional properties */
-	if (json_object_has_member(json_obj, "DeviceClass")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "DeviceClass");
-		if (tmp != NULL && tmp[0] != '\0')
-			fu_redfish_device_set_device_class(self, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "DeviceClass", NULL);
+	if (tmp != NULL && tmp[0] != '\0')
+		fu_redfish_device_set_device_class(self, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "VendorId", NULL);
+	if (tmp != NULL && tmp[0] != '\0') {
+		if (!fu_strtoull(tmp, &vendor_id, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
 	}
-	if (json_object_has_member(json_obj, "VendorId")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "VendorId");
-		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_strtoull(tmp,
-					 &vendor_id,
-					 0,
-					 G_MAXUINT16,
-					 FU_INTEGER_BASE_AUTO,
-					 error))
-				return FALSE;
-		}
+	tmp = fwupd_json_object_get_string(json_obj, "DeviceId", NULL);
+	if (tmp != NULL && tmp[0] != '\0') {
+		if (!fu_strtoull(tmp, &model_id, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
 	}
-	if (json_object_has_member(json_obj, "DeviceId")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "DeviceId");
-		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_strtoull(tmp,
-					 &model_id,
-					 0,
-					 G_MAXUINT16,
-					 FU_INTEGER_BASE_AUTO,
-					 error))
-				return FALSE;
-		}
+	tmp = fwupd_json_object_get_string(json_obj, "SubsystemVendorId", NULL);
+	if (tmp != NULL && tmp[0] != '\0') {
+		if (!fu_strtoull(tmp,
+				 &subsystem_vendor_id,
+				 0,
+				 G_MAXUINT16,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
 	}
-	if (json_object_has_member(json_obj, "SubsystemVendorId")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "SubsystemVendorId");
-		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_strtoull(tmp,
-					 &subsystem_vendor_id,
-					 0,
-					 G_MAXUINT16,
-					 FU_INTEGER_BASE_AUTO,
-					 error))
-				return FALSE;
-		}
-	}
-	if (json_object_has_member(json_obj, "SubsystemId")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "SubsystemId");
-		if (tmp != NULL && tmp[0] != '\0') {
-			if (!fu_strtoull(tmp,
-					 &subsystem_model_id,
-					 0,
-					 G_MAXUINT16,
-					 FU_INTEGER_BASE_AUTO,
-					 error))
-				return FALSE;
-		}
+	tmp = fwupd_json_object_get_string(json_obj, "SubsystemId", NULL);
+	if (tmp != NULL && tmp[0] != '\0') {
+		if (!fu_strtoull(tmp,
+				 &subsystem_model_id,
+				 0,
+				 G_MAXUINT16,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
 	}
 
 	/* add vendor ID */
@@ -165,8 +146,9 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 					       GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	JsonObject *json_obj;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FwupdJsonArray) members_array = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -176,15 +158,17 @@ fu_redfish_device_probe_related_pcie_functions(FuRedfishDevice *self,
 					error))
 		return FALSE;
 	json_obj = fu_redfish_request_get_json_object(request);
+	members_array = fwupd_json_object_get_array(json_obj, "Members", NULL);
+	if (members_array != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(members_array); i++) {
+			const gchar *id;
+			g_autoptr(FwupdJsonObject) json_obj_member = NULL;
 
-	if (json_object_has_member(json_obj, "Members")) {
-		JsonArray *members_array = json_object_get_array_member(json_obj, "Members");
-		for (guint i = 0; i < json_array_get_length(members_array); i++) {
-			JsonObject *related_item;
-			related_item = json_array_get_object_element(members_array, i);
-			if (json_object_has_member(related_item, "@odata.id")) {
-				const gchar *id =
-				    json_object_get_string_member(related_item, "@odata.id");
+			json_obj_member = fwupd_json_array_get_object(members_array, i, error);
+			if (json_obj_member == NULL)
+				return FALSE;
+			id = fwupd_json_object_get_string(json_obj_member, "@odata.id", NULL);
+			if (id != NULL) {
 				if (!fu_redfish_device_probe_related_pcie_item(self, id, error))
 					return FALSE;
 			}
@@ -199,8 +183,10 @@ static gboolean
 fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	JsonObject *json_obj;
+	const gchar *tmp;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FwupdJsonObject) json_pcie = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
 	/* get URI */
 	if (!fu_redfish_request_perform(request,
@@ -212,31 +198,28 @@ fu_redfish_device_probe_related_item(FuRedfishDevice *self, const gchar *uri, GE
 	json_obj = fu_redfish_request_get_json_object(request);
 
 	/* optional properties */
-	if (json_object_has_member(json_obj, "SerialNumber")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "SerialNumber");
-		if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "N/A") != 0)
-			fu_device_set_serial(FU_DEVICE(self), tmp);
-	}
-	if (json_object_has_member(json_obj, "HotPluggable")) {
-		/* this is better than the heuristic we get from the device name */
-		if (json_object_get_boolean_member(json_obj, "HotPluggable"))
+	tmp = fwupd_json_object_get_string(json_obj, "SerialNumber", NULL);
+	if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "N/A") != 0)
+		fu_device_set_serial(FU_DEVICE(self), tmp);
+
+	/* this is better than the heuristic we get from the device name */
+	if (fwupd_json_object_has_node(json_obj, "HotPluggable")) {
+		gboolean hotpluggable = FALSE;
+		if (!fwupd_json_object_get_boolean(json_obj, "HotPluggable", &hotpluggable, error))
+			return FALSE;
+		if (hotpluggable)
 			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 		else
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	}
 
 	/* sometimes an array, sometimes an object! */
-	if (json_object_has_member(json_obj, "PCIeFunctions")) {
-		JsonNode *pcie_functions = json_object_get_member(json_obj, "PCIeFunctions");
-		if (JSON_NODE_HOLDS_OBJECT(pcie_functions)) {
-			JsonObject *obj = json_node_get_object(pcie_functions);
-			if (json_object_has_member(obj, "@odata.id")) {
-				const gchar *id = json_object_get_string_member(obj, "@odata.id");
-				if (!fu_redfish_device_probe_related_pcie_functions(self,
-										    id,
-										    error))
-					return FALSE;
-			}
+	json_pcie = fwupd_json_object_get_object(json_obj, "PCIeFunctions", NULL);
+	if (json_pcie != NULL) {
+		const gchar *id = fwupd_json_object_get_string(json_pcie, "@odata.id", NULL);
+		if (id != NULL) {
+			if (!fu_redfish_device_probe_related_pcie_functions(self, id, error))
+				return FALSE;
 		}
 	}
 	return TRUE;
@@ -395,49 +378,46 @@ fu_redfish_device_smc_license_check(FuRedfishDevice *self, GError **error)
 }
 
 static gboolean
-fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, JsonObject *json_object, GError **error)
+fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, FwupdJsonObject *json_obj, GError **error)
 {
-	if (json_object_has_member(json_object, "DeviceClass")) {
-		const gchar *guid = json_object_get_string_member(json_object, "DeviceClass");
-		if (guid != NULL)
-			fu_device_add_instance_id(FU_DEVICE(self), guid);
-	}
-	if (json_object_has_member(json_object, "Targets")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "Targets");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			const gchar *guid = json_array_get_string_element(json_array, i);
-			if (guid != NULL)
-				fu_device_add_instance_id(FU_DEVICE(self), guid);
+	const gchar *tmp;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
+
+	tmp = fwupd_json_object_get_string(json_obj, "DeviceClass", NULL);
+	if (tmp != NULL)
+		fu_device_add_instance_id(FU_DEVICE(self), tmp);
+	json_arr = fwupd_json_object_get_array(json_obj, "Targets", NULL);
+	if (json_arr != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+			tmp = fwupd_json_array_get_string(json_arr, i, NULL);
+			if (tmp != NULL)
+				fu_device_add_instance_id(FU_DEVICE(self), tmp);
 		}
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, JsonObject *json_object, GError **error)
+fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_obj, GError **error)
 {
-	JsonObject *software_info;
+	const gchar *tmp;
+	g_autoptr(FwupdJsonObject) software_info = NULL;
 
 	/* ignore */
-	if (!json_object_has_member(json_object, "DellSoftwareInventory"))
+	software_info = fwupd_json_object_get_object(json_obj, "DellSoftwareInventory", NULL);
+	if (software_info == NULL)
 		return TRUE;
-	software_info = json_object_get_object_member(json_object, "DellSoftwareInventory");
-	if (json_object_has_member(software_info, "Status")) {
-		const gchar *status = json_object_get_string_member(software_info, "Status");
-		if (g_strcmp0(status, "AvailableForInstallation") == 0)
-			fu_device_add_private_flag(FU_DEVICE(self),
-						   FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
-	}
 
-	if (json_object_has_member(software_info, "Id")) {
-		const gchar *status = json_object_get_string_member(software_info, "Id");
-		if (g_ascii_strncasecmp(status, "DCIM:INSTALLED", 12) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "firmware is in repository");
-			return FALSE;
-		}
+	tmp = fwupd_json_object_get_string(software_info, "Status", NULL);
+	if (g_strcmp0(tmp, "AvailableForInstallation") == 0)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
+	tmp = fwupd_json_object_get_string(software_info, "Id", NULL);
+	if (tmp != NULL && g_ascii_strncasecmp(tmp, "DCIM:INSTALLED", 12) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware is in repository");
+		return FALSE;
 	}
 
 	/* it does not seem that Dell allows targeting a device when updating */
@@ -466,68 +446,58 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 {
 	FuRedfishDevice *self = FU_REDFISH_DEVICE(dev);
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	JsonObject *member = priv->member;
-	const gchar *software_id = NULL;
+	const gchar *tmp;
+	const gchar *software_id;
+	gboolean updateable = FALSE;
+	g_autoptr(FwupdJsonObject) json_oem = NULL;
 
 	/* sanity check */
-	if (priv->member == NULL) {
+	if (priv->json_obj_member == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no member");
 		return FALSE;
 	}
 
 	/* required to POST later */
-	if (!json_object_has_member(member, "@odata.id")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no @odata.id string");
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "@odata.id", error);
+	if (tmp == NULL)
 		return FALSE;
-	}
 	fu_device_set_physical_id(dev, "Redfish-Inventory");
-	fu_device_set_logical_id(dev, json_object_get_string_member(member, "@odata.id"));
-	if (json_object_has_member(member, "Id")) {
-		const gchar *tmp = json_object_get_string_member(member, "Id");
-		if (tmp != NULL)
-			fu_device_set_backend_id(dev, tmp);
-	}
+	fu_device_set_logical_id(dev, tmp);
+
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "Id", NULL);
+	if (tmp != NULL)
+		fu_device_set_backend_id(dev, tmp);
 	fu_device_add_instance_str(dev, "ID", fu_device_get_backend_id(dev));
 
 	/* device properties */
-	if (json_object_has_member(member, "Manufacturer")) {
-		const gchar *tmp = json_object_get_string_member(member, "Manufacturer");
-		if (tmp != NULL && tmp[0] != '\0')
-			fu_redfish_device_set_vendor(self, tmp);
-	} else {
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "Manufacturer", NULL);
+	if (tmp != NULL && tmp[0] != '\0')
+		fu_redfish_device_set_vendor(self, tmp);
+	else
 		fu_redfish_device_set_vendor(self, fu_redfish_backend_get_vendor(priv->backend));
-	}
 	fu_device_add_instance_strsafe(dev, "VENDOR", fu_device_get_vendor(dev));
 
 	/* the version can encode the instance ID suffix */
-	if (json_object_has_member(member, "Version")) {
-		const gchar *tmp = json_object_get_string_member(member, "Version");
-		if (tmp != NULL && tmp[0] != '\0')
-			fu_redfish_device_set_version(self, tmp);
-	}
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "Version", NULL);
+	if (tmp != NULL && tmp[0] != '\0')
+		fu_redfish_device_set_version(self, tmp);
 
 	/* ReleaseDate may or may not have a timezone */
-	if (json_object_has_member(member, "ReleaseDate")) {
-		const gchar *tmp = json_object_get_string_member(member, "ReleaseDate");
-		if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "00:00:00Z") != 0) {
-			g_autoptr(GDateTime) dt = NULL;
-			g_autoptr(GTimeZone) tz = g_time_zone_new_utc();
-			dt = g_date_time_new_from_iso8601(tmp, tz);
-			if (dt != NULL) {
-				guint64 unixtime = (guint64)g_date_time_to_unix(dt);
-				fu_device_set_version_build_date(dev, unixtime);
-			} else {
-				g_warning("failed to parse ISO8601 %s", tmp);
-			}
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "ReleaseDate", NULL);
+	if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "00:00:00Z") != 0) {
+		g_autoptr(GDateTime) dt = NULL;
+		g_autoptr(GTimeZone) tz = g_time_zone_new_utc();
+		dt = g_date_time_new_from_iso8601(tmp, tz);
+		if (dt != NULL) {
+			guint64 unixtime = (guint64)g_date_time_to_unix(dt);
+			fu_device_set_version_build_date(dev, unixtime);
+		} else {
+			g_warning("failed to parse ISO8601 %s", tmp);
 		}
 	}
 
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
-	if (json_object_has_member(member, "SoftwareId"))
-		software_id = json_object_get_string_member(member, "SoftwareId");
+	software_id = fwupd_json_object_get_string(priv->json_obj_member, "SoftwareId", NULL);
 	if (software_id != NULL) {
 		g_autofree gchar *software_id_lower = g_ascii_strdown(software_id, -1);
 		if (fwupd_guid_is_valid(software_id_lower)) {
@@ -547,16 +517,19 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	}
 
 	/* get vendor-specific properties too */
-	if (json_object_has_member(member, "Oem")) {
-		JsonObject *oem = json_object_get_object_member(member, "Oem");
-		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
-			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
-			if (!fu_redfish_device_probe_oem_hpe(self, hpe, error))
+	json_oem = fwupd_json_object_get_object(priv->json_obj_member, "Oem", NULL);
+	if (json_oem != NULL) {
+		g_autoptr(FwupdJsonObject) json_dell = NULL;
+		g_autoptr(FwupdJsonObject) json_hpe = NULL;
+
+		json_hpe = fwupd_json_object_get_object(json_oem, "Hpe", NULL);
+		if (json_hpe != NULL) {
+			if (!fu_redfish_device_probe_oem_hpe(self, json_hpe, error))
 				return FALSE;
 		}
-		if (oem != NULL && json_object_has_member(oem, "Dell")) {
-			JsonObject *json_oem = json_object_get_object_member(oem, "Dell");
-			if (!fu_redfish_device_probe_oem_dell(self, json_oem, error))
+		json_dell = fwupd_json_object_get_object(json_oem, "Dell", NULL);
+		if (json_dell != NULL) {
+			if (!fu_redfish_device_probe_oem_dell(self, json_dell, error))
 				return FALSE;
 		}
 	}
@@ -570,27 +543,25 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 					 "ID",
 					 NULL);
 
-	if (json_object_has_member(member, "Name")) {
-		const gchar *tmp = json_object_get_string_member(member, "Name");
-		if (tmp != NULL && tmp[0] != '\0')
-			fu_redfish_device_set_name(self, tmp);
-	}
-	if (json_object_has_member(member, "LowestSupportedVersion")) {
-		const gchar *tmp = json_object_get_string_member(member, "LowestSupportedVersion");
-		if (tmp != NULL && tmp[0] != '\0')
-			fu_redfish_device_set_version_lowest(self, tmp);
-	}
-	if (json_object_has_member(member, "Description")) {
-		const gchar *tmp = json_object_get_string_member(member, "Description");
-		if (tmp != NULL && tmp[0] != '\0')
-			fu_device_set_summary(dev, tmp);
-	}
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "Name", NULL);
+	if (tmp != NULL && tmp[0] != '\0')
+		fu_redfish_device_set_name(self, tmp);
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "LowestSupportedVersion", NULL);
+	if (tmp != NULL && tmp[0] != '\0')
+		fu_redfish_device_set_version_lowest(self, tmp);
+	tmp = fwupd_json_object_get_string(priv->json_obj_member, "Description", NULL);
+	if (tmp != NULL && tmp[0] != '\0')
+		fu_device_set_summary(dev, tmp);
 
 	/* reasons why the device might not be updatable */
-	if (json_object_has_member(member, "Updateable")) {
-		if (json_object_get_boolean_member(member, "Updateable"))
-			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-	}
+	if (!fwupd_json_object_get_boolean_with_default(priv->json_obj_member,
+							"Updateable",
+							&updateable,
+							TRUE,
+							error))
+		return FALSE;
+	if (updateable)
+		fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* not useful to export */
 	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP)) {
@@ -603,16 +574,24 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	}
 
 	/* use related items to set extra instance IDs */
-	if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    json_object_has_member(member, "RelatedItem")) {
-		JsonArray *related_item_array = json_object_get_array_member(member, "RelatedItem");
-		for (guint i = 0; i < json_array_get_length(related_item_array); i++) {
-			JsonObject *related_item;
-			related_item = json_array_get_object_element(related_item_array, i);
-			if (json_object_has_member(related_item, "@odata.id")) {
-				const gchar *id =
-				    json_object_get_string_member(related_item, "@odata.id");
-				if (!fu_redfish_device_probe_related_item(self, id, error))
+	if (updateable && fwupd_json_object_has_node(priv->json_obj_member, "RelatedItem")) {
+		g_autoptr(FwupdJsonArray) json_array_related = NULL;
+		json_array_related =
+		    fwupd_json_object_get_array(priv->json_obj_member, "RelatedItem", NULL);
+		if (json_array_related != NULL) {
+			for (guint i = 0; i < fwupd_json_array_get_size(json_array_related); i++) {
+				g_autoptr(FwupdJsonObject) json_object_related = NULL;
+
+				json_object_related =
+				    fwupd_json_array_get_object(json_array_related, i, error);
+				if (json_object_related == NULL)
+					return FALSE;
+				tmp = fwupd_json_object_get_string(json_object_related,
+								   "@odata.id",
+								   NULL);
+				if (tmp == NULL)
+					continue;
+				if (!fu_redfish_device_probe_related_item(self, tmp, error))
 					return FALSE;
 			}
 		}
@@ -653,6 +632,10 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
+	/* fallback */
+	if (message == NULL)
+		message = "Unknown failure";
+
 	/* ignore */
 	if (g_pattern_match_simple("TaskEvent.*.TaskProgressChanged", message_id) ||
 	    g_pattern_match_simple("TaskEvent.*.TaskCompletedWarning", message_id) ||
@@ -746,10 +729,12 @@ static gboolean
 fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *ctx, GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	JsonObject *json_obj;
 	const gchar *message = "Unknown failure";
 	const gchar *state_tmp;
+	gint64 pc = 0;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(priv->backend);
+	g_autoptr(FwupdJsonArray) json_msgs = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
 	/* create URI and poll */
 	if (!fu_redfish_request_perform(request,
@@ -760,28 +745,29 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 
 	/* percentage is optional */
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (json_object_has_member(json_obj, "PercentComplete")) {
-		gint64 pc = json_object_get_int_member(json_obj, "PercentComplete");
-		if (pc >= 0 && pc <= 100)
-			fu_progress_set_percentage(ctx->progress, (guint)pc);
-	}
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"PercentComplete",
+							&pc,
+							-1,
+							error))
+		return FALSE;
+	if (pc >= 0 && pc <= 100)
+		fu_progress_set_percentage(ctx->progress, (guint)pc);
 
 	/* print all messages we've not seen yet */
-	if (json_object_has_member(json_obj, "Messages")) {
-		JsonArray *json_msgs = json_object_get_array_member(json_obj, "Messages");
-		guint json_msgs_sz = json_array_get_length(json_msgs);
-
-		for (guint i = 0; i < json_msgs_sz; i++) {
-			JsonObject *json_message = json_array_get_object_element(json_msgs, i);
-			const gchar *message_id = NULL;
+	json_msgs = fwupd_json_object_get_array(json_obj, "Messages", NULL);
+	if (json_msgs != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_msgs); i++) {
+			const gchar *message_id;
 			g_autofree gchar *message_key = NULL;
+			g_autoptr(FwupdJsonObject) json_message = NULL;
 
 			/* set additional device properties */
-			if (json_object_has_member(json_message, "MessageId"))
-				message_id =
-				    json_object_get_string_member(json_message, "MessageId");
-			if (json_object_has_member(json_message, "Message"))
-				message = json_object_get_string_member(json_message, "Message");
+			json_message = fwupd_json_array_get_object(json_msgs, i, error);
+			if (json_message == NULL)
+				return FALSE;
+			message_id = fwupd_json_object_get_string(json_message, "MessageId", NULL);
+			message = fwupd_json_object_get_string(json_message, "Message", NULL);
 
 			/* ignore messages we've seen before */
 			message_key = g_strdup_printf("%s;%s", message_id, message);
@@ -803,14 +789,14 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	}
 
 	/* use taskstate to set context */
-	if (!json_object_has_member(json_obj, "TaskState")) {
+	if (!fwupd_json_object_has_node(json_obj, "TaskState")) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "no TaskState for task manager");
 		return FALSE;
 	}
-	state_tmp = json_object_get_string_member(json_obj, "TaskState");
+	state_tmp = fwupd_json_object_get_string(json_obj, "TaskState", NULL);
 	g_debug("TaskState now %s", state_tmp);
 	if (g_strcmp0(state_tmp, "Completed") == 0 ||
 	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
@@ -939,7 +925,7 @@ fu_redfish_device_get_property(GObject *object, guint prop_id, GValue *value, GP
 		g_value_set_object(value, priv->backend);
 		break;
 	case PROP_MEMBER:
-		g_value_set_pointer(value, priv->member);
+		g_value_set_pointer(value, priv->json_obj_member);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -948,15 +934,15 @@ fu_redfish_device_get_property(GObject *object, guint prop_id, GValue *value, GP
 }
 
 static void
-fu_redfish_device_set_member(FuRedfishDevice *self, JsonObject *member)
+fu_redfish_device_set_member(FuRedfishDevice *self, FwupdJsonObject *json_obj_member)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->member != NULL) {
-		json_object_unref(priv->member);
-		priv->member = NULL;
+	if (priv->json_obj_member != NULL) {
+		fwupd_json_object_unref(priv->json_obj_member);
+		priv->json_obj_member = NULL;
 	}
-	if (member != NULL)
-		priv->member = json_object_ref(member);
+	if (json_obj_member != NULL)
+		priv->json_obj_member = fwupd_json_object_ref(json_obj_member);
 }
 
 static void
@@ -1006,8 +992,8 @@ fu_redfish_device_finalize(GObject *object)
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	if (priv->backend != NULL)
 		g_object_unref(priv->backend);
-	if (priv->member != NULL)
-		json_object_unref(priv->member);
+	if (priv->json_obj_member != NULL)
+		fwupd_json_object_unref(priv->json_obj_member);
 	g_free(priv->build);
 	G_OBJECT_CLASS(fu_redfish_device_parent_class)->finalize(object);
 }

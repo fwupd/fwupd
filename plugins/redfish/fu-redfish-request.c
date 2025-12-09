@@ -14,8 +14,8 @@ struct _FuRedfishRequest {
 	CURLU *uri;
 	GByteArray *buf;
 	glong status_code;
-	JsonParser *json_parser;
-	JsonObject *json_obj;
+	FwupdJsonParser *json_parser;
+	FwupdJsonObject *json_obj;
 	GHashTable *cache; /* nullable */
 };
 
@@ -24,11 +24,11 @@ G_DEFINE_TYPE(FuRedfishRequest, fu_redfish_request, G_TYPE_OBJECT)
 typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 
-JsonObject *
+FwupdJsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self)
 {
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), NULL);
-	return self->json_obj;
+	return fwupd_json_object_ref(self->json_obj);
 }
 
 CURL *
@@ -55,9 +55,9 @@ fu_redfish_request_get_status_code(FuRedfishRequest *self)
 static gboolean
 fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **error)
 {
-	JsonNode *json_root;
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_error = NULL;
+	g_autoptr(GString) str = NULL;
 
 	/* load */
 	if (buf->data == NULL || buf->len == 0) {
@@ -67,66 +67,41 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 				    "there was no JSON payload");
 		return FALSE;
 	}
-	if (!json_parser_load_from_data(self->json_parser,
-					(const gchar *)buf->data,
-					(gssize)buf->len,
-					error)) {
+	json_node = fwupd_json_parser_load_from_data(self->json_parser,
+						     (const gchar *)buf->data,
+						     (gssize)buf->len,
+						     error);
+	if (json_node == NULL)
 		return FALSE;
-	}
-	json_root = json_parser_get_root(self->json_parser);
-	if (json_root == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no JSON root node");
+	self->json_obj = fwupd_json_node_get_object(json_node, error);
+	if (self->json_obj == NULL)
 		return FALSE;
-	}
-	if (!JSON_NODE_HOLDS_OBJECT(json_root)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no JSON root object");
-		return FALSE;
-	}
-	self->json_obj = json_node_get_object(json_root);
-	if (self->json_obj == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no JSON object");
-		return FALSE;
-	}
 
 	/* dump for humans */
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, str);
+	str = fwupd_json_object_to_string(self->json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
 	g_debug("response: %s", str->str);
 
 	/* unauthorized */
-	if (json_object_has_member(self->json_obj, "error")) {
+	json_error = fwupd_json_object_get_object(self->json_obj, "error", NULL);
+	if (json_error != NULL) {
 		FwupdError error_code = FWUPD_ERROR_INTERNAL;
-		JsonObject *json_error;
-		const gchar *id = NULL;
-		const gchar *msg = "Unknown failure";
+		const gchar *id;
+		const gchar *msg;
+		g_autoptr(FwupdJsonArray) json_error_array = NULL;
 
 		/* extended error present */
-		json_error = json_object_get_object_member(self->json_obj, "error");
-		if (json_object_has_member(json_error, "@Message.ExtendedInfo")) {
-			JsonArray *json_error_array;
-			json_error_array =
-			    json_object_get_array_member(json_error, "@Message.ExtendedInfo");
-			if (json_array_get_length(json_error_array) > 0) {
-				JsonObject *json_error2;
-				json_error2 = json_array_get_object_element(json_error_array, 0);
-				if (json_object_has_member(json_error2, "MessageId"))
-					id =
-					    json_object_get_string_member(json_error2, "MessageId");
-				if (json_object_has_member(json_error2, "Message"))
-					msg = json_object_get_string_member(json_error2, "Message");
-			}
+		json_error_array =
+		    fwupd_json_object_get_array(json_error, "@Message.ExtendedInfo", NULL);
+		if (json_error_array != NULL && fwupd_json_array_get_size(json_error_array) > 0) {
+			g_autoptr(FwupdJsonObject) json_error2 = NULL;
+			json_error2 = fwupd_json_array_get_object(json_error_array, 0, error);
+			if (json_error2 == NULL)
+				return FALSE;
+			id = fwupd_json_object_get_string(json_error2, "MessageId", NULL);
+			msg = fwupd_json_object_get_string(json_error2, "Message", NULL);
 		} else {
-			if (json_object_has_member(json_error, "code"))
-				id = json_object_get_string_member(json_error, "code");
-			if (json_object_has_member(json_error, "message"))
-				msg = json_object_get_string_member(json_error, "message");
+			id = fwupd_json_object_get_string(json_error, "code", NULL);
+			msg = fwupd_json_object_get_string(json_error, "message", NULL);
 		}
 		if (g_strcmp0(id, "Base.1.8.AccessDenied") == 0)
 			error_code = FWUPD_ERROR_AUTH_FAILED;
@@ -138,7 +113,10 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 			 g_strcmp0(id, "SMC.1.0.OemBiosUpdateIsInProgress") == 0 ||
 			 g_pattern_match_simple("IDRAC.*.RED014", id))
 			error_code = FWUPD_ERROR_ALREADY_PENDING;
-		g_set_error_literal(error, FWUPD_ERROR, error_code, msg);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    error_code,
+				    msg != NULL ? msg : "Unknown failure");
 		return FALSE;
 	}
 
@@ -232,24 +210,23 @@ gboolean
 fu_redfish_request_perform_full(FuRedfishRequest *self,
 				const gchar *path,
 				const gchar *request,
-				JsonBuilder *builder,
+				FwupdJsonObject *json_obj,
 				FuRedfishRequestPerformFlags flags,
 				GError **error)
 {
 	g_autofree gchar *etag_header = NULL;
 	g_autoptr(_curl_slist) hs = NULL;
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GString) str = NULL;
 
 	g_return_val_if_fail(FU_IS_REDFISH_REQUEST(self), FALSE);
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(request != NULL, FALSE);
-	g_return_val_if_fail(builder != NULL, FALSE);
+	g_return_val_if_fail(json_obj != NULL, FALSE);
 
 	/* get etag */
 	if (flags & FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG) {
-		JsonObject *json_obj;
+		const gchar *etag;
+		g_autoptr(FwupdJsonObject) json_obj2 = NULL;
 		if (!fu_redfish_request_perform(self,
 						path,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -257,22 +234,17 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 			g_prefix_error_literal(error, "failed to request etag: ");
 			return FALSE;
 		}
-		json_obj = fu_redfish_request_get_json_object(self);
-		if (json_object_has_member(json_obj, "@odata.etag")) {
-			etag_header =
-			    g_strdup_printf("If-Match: %s",
-					    json_object_get_string_member(json_obj, "@odata.etag"));
-		}
+		json_obj2 = fu_redfish_request_get_json_object(self);
+		etag = fwupd_json_object_get_string(json_obj2, "@odata.etag", NULL);
+		if (etag != NULL)
+			etag_header = g_strdup_printf("If-Match: %s", etag);
 
 		/* allow us to reuse the request */
 		fu_redfish_request_reset(self);
 	}
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, str);
+	str = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
 	g_debug("request to %s: %s", path, str->str);
 
 	/* patch */
@@ -318,7 +290,7 @@ fu_redfish_request_init(FuRedfishRequest *self)
 	self->curl = curl_easy_init();
 	self->uri = curl_url();
 	self->buf = g_byte_array_new();
-	self->json_parser = json_parser_new();
+	self->json_parser = fwupd_json_parser_new();
 	(void)curl_easy_setopt(self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_request_write_cb);
 	(void)curl_easy_setopt(self->curl, CURLOPT_WRITEDATA, self->buf);
 }
