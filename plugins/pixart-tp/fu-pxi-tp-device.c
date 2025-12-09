@@ -1055,6 +1055,51 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 }
 
 static gboolean
+fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
+				GPtrArray *sections,
+				FuPxiTpFirmware *firmware,
+				guint64 *written,
+				FuProgress *progress,
+				GError **error)
+{
+	guint section_idx = 0;
+	FuProgress *progress_write = NULL;
+	progress_write = fu_progress_get_child(progress);
+	fu_progress_set_id(progress_write, G_STRLOC);
+	fu_progress_set_steps(progress_write, sections->len);
+
+	g_debug("Section len: %u", sections->len);
+
+	for (section_idx = 0; section_idx < sections->len; section_idx++) {
+		guint8 flash_sector_start = 0;
+		FuPxiTpSection *section = g_ptr_array_index(sections, section_idx);
+
+		/* skip non-updatable sections */
+		if (!section->is_valid_update || section->is_external ||
+		    section->section_length == 0) {
+			fu_progress_step_done(progress_write);
+			continue;
+		}
+
+		flash_sector_start =
+		    (guint8)(section->target_flash_start / PXI_TP_SECTOR_SIZE);
+
+		if (!fu_pxi_tp_device_process_section(self,
+						      firmware,
+						      section,
+						      section_idx,
+						      progress_write,
+						      flash_sector_start,
+						      written,
+						      error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_pxi_tp_device_verify_crc(FuPxiTpDevice *self,
 			    FuPxiTpFirmware *ctn,
 			    FuProgress *progress,
@@ -1115,7 +1160,6 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 	FuPxiTpFirmware *fw_container = NULL;
 	const GPtrArray *sections = NULL;
-	FuProgress *progress_write = NULL;
 	guint64 total_update_bytes = 0;
 	guint64 total_written_bytes = 0;
 	guint section_idx = 0;
@@ -1152,38 +1196,18 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	progress_write = fu_progress_get_child(progress);
-	fu_progress_set_id(progress_write, G_STRLOC);
-	fu_progress_set_steps(progress_write, sections->len);
-
 	/* erase old firmware */
 	if (!fu_pxi_tp_device_firmware_clear(self, fw_container, error))
 		return FALSE;
 
 	/* program all sections */
-	for (section_idx = 0; section_idx < sections->len; section_idx++) {
-		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, section_idx);
-
-		/* skip non-updatable sections */
-		if (!section->is_valid_update || section->is_external ||
-		    section->section_length == 0) {
-			fu_progress_step_done(progress_write);
-			continue;
-		}
-
-		guint8 flash_sector_start =
-		    (guint8)(section->target_flash_start / PXI_TP_SECTOR_SIZE);
-
-		if (!fu_pxi_tp_device_process_section(self,
-						      fw_container,
-						      section,
-						      section_idx,
-						      progress_write,
-						      flash_sector_start,
-						      &total_written_bytes,
-						      error))
-			return FALSE;
-	}
+	if (!fu_pxi_tp_device_write_sections(self,
+					     sections,
+					     fw_container,
+					     &total_written_bytes,
+					     progress,
+					     error))
+		return FALSE;
 
 	fu_progress_step_done(progress);
 
