@@ -395,8 +395,7 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	g_autoptr(GBytes) fw = NULL;
 	const guint8 *d = NULL;
 	gsize sz = 0;
-
-	(void)flags;
+	(void)flags; /* fix no used warning */
 
 	/* bytes for optional recompute / hexdumps */
 	fw = fu_firmware_get_bytes_with_patches(firmware, NULL);
@@ -503,6 +502,7 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 			    (s->internal_file_start + s->section_length <= sz);
 			fu_xmlb_builder_insert_kv(bn, p_in_range, in_range ? "true" : "false");
 			if (in_range) {
+				g_autofree gchar *hex = NULL;
 				guint32 calc = fu_crc32(FU_CRC_KIND_B32_STANDARD,
 							d + s->internal_file_start,
 							s->section_length);
@@ -512,10 +512,9 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 							  (calc == s->section_crc) ? "true"
 										   : "false");
 
-				g_autofree gchar *hex =
-				    fu_pxi_tp_firmware_hexdump_slice(d + s->internal_file_start,
-								     s->section_length,
-								     32);
+				hex = fu_pxi_tp_firmware_hexdump_slice(d + s->internal_file_start,
+								       s->section_length,
+								       32);
 				fu_xmlb_builder_insert_kv(bn, p_sample_hex, hex);
 			}
 		} else {

@@ -517,7 +517,7 @@ fu_pxi_tp_device_crc_firmware_wait_cb(FuDevice *device, gpointer user_data, GErr
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, guint32 *crc, GError **error)
 {
 	const guint crc_fw_retry_max = 1000;
@@ -665,7 +665,7 @@ fu_pxi_tp_device_crc_parameter_wait_cb(FuDevice *device, gpointer user_data, GEr
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, guint32 *crc, GError **error)
 {
 	const guint crc_param_retry_max = 1000;
@@ -795,18 +795,27 @@ fu_pxi_tp_device_write_page(FuPxiTpDevice *self,
 			    gsize off,
 			    GError **error)
 {
-	guint8 page_buf[PXI_TP_PAGE_SIZE] = {0};
+	g_autoptr(GByteArray) page_buf = g_byte_array_new();
 	gsize remain = total_sz - off;
-	gsize copy_len = MIN(remain, sizeof(page_buf));
+	gsize copy_len = MIN(remain, PXI_TP_PAGE_SIZE);
 
 	/* initialize all bytes to 0xFF */
-	memset(page_buf, 0xFF, sizeof(page_buf));
+	fu_byte_array_set_size(page_buf, PXI_TP_PAGE_SIZE, 0xFF);
 
-	/* copy actual payload */
-	if (!fu_memcpy_safe(page_buf, sizeof(page_buf), 0, src, total_sz, off, copy_len, error))
+	/* copy actual payload into the backing buffer */
+	if (!fu_memcpy_safe(page_buf->data, /* dst */
+			    page_buf->len,  /* dst_sz */
+			    0,		    /* dst_off */
+			    src,	    /* src */
+			    total_sz,	    /* src_sz */
+			    off,	    /* src_off */
+			    copy_len,	    /* copy_len */
+			    error)) {
 		return FALSE;
+	}
 
-	if (!fu_pxi_tp_device_write_sram_256b(self, page_buf, error))
+	/* write to SRAM using the 256-byte buffer */
+	if (!fu_pxi_tp_device_write_sram_256b(self, page_buf->data, error))
 		return FALSE;
 
 	if (!fu_pxi_tp_device_flash_program_256b_to_flash(self, sector, page, error))
@@ -1056,7 +1065,7 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 
 static gboolean
 fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
-				GPtrArray *sections,
+				const GPtrArray *sections,
 				FuPxiTpFirmware *firmware,
 				guint64 *written,
 				FuProgress *progress,
@@ -1068,7 +1077,7 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 	fu_progress_set_id(progress_write, G_STRLOC);
 	fu_progress_set_steps(progress_write, sections->len);
 
-	g_debug("Section len: %u", sections->len);
+	g_debug("section len: %u", sections->len);
 
 	for (section_idx = 0; section_idx < sections->len; section_idx++) {
 		guint8 flash_sector_start = 0;
