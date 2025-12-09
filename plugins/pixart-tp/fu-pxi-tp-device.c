@@ -795,30 +795,14 @@ fu_pxi_tp_device_write_page(FuPxiTpDevice *self,
 {
 	guint8 page_buf[PXI_TP_PAGE_SIZE] = {0};
 	gsize remain = total_sz - off;
-	gsize copy_len = remain < sizeof(page_buf) ? remain : sizeof(page_buf);
+	gsize copy_len = MIN(remain, sizeof(page_buf));
 
-	if (copy_len == sizeof(page_buf)) {
-		if (!fu_memcpy_safe(page_buf,
-				    sizeof(page_buf),
-				    0,
-				    src,
-				    total_sz,
-				    off,
-				    sizeof(page_buf),
-				    error))
-			return FALSE;
-	} else {
-		memset(page_buf, 0xFF, sizeof(page_buf));
-		if (!fu_memcpy_safe(page_buf,
-				    sizeof(page_buf),
-				    0,
-				    src,
-				    total_sz,
-				    off,
-				    copy_len,
-				    error))
-			return FALSE;
-	}
+	/* initialize all bytes to 0xFF */
+	memset(page_buf, 0xFF, sizeof(page_buf));
+
+	/* copy actual payload */
+	if (!fu_memcpy_safe(page_buf, sizeof(page_buf), 0, src, total_sz, off, copy_len, error))
+		return FALSE;
 
 	if (!fu_pxi_tp_device_write_sram_256b(self, page_buf, error))
 		return FALSE;
