@@ -935,6 +935,7 @@ fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 	guint8 buf[2] = {0}; /* buf[0] = lo, buf[1] = hi */
 	guint16 ver_u16 = 0;
 
+	g_debug("fu_pxi_tp_device_setup");
 	/* read low byte */
 	if (!fu_pxi_tp_register_user_read(self,
 					  self->ver_bank,
@@ -1090,8 +1091,7 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 			continue;
 		}
 
-		flash_sector_start =
-		    (guint8)(section->target_flash_start / PXI_TP_SECTOR_SIZE);
+		flash_sector_start = (guint8)(section->target_flash_start / PXI_TP_SECTOR_SIZE);
 
 		if (!fu_pxi_tp_device_process_section(self,
 						      firmware,
@@ -1278,51 +1278,57 @@ fu_pxi_tp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 
-	/* Normal runtime attach:
-	 * - Version should already be set in ->setup()
-	 * - Do not talk to hardware again here, and certainly do not warn
-	 *   if the device is already attached or emulated.
-	 */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("attach: device is not in bootloader, nothing to do");
 		return TRUE;
-
-	/* coming back from bootloader into application mode */
-	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
-		return FALSE;
-
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	g_debug("exit bootloader");
-
-	/* Best-effort refresh of the version string.
-	 * In self-tests or emulated environments this may fail, and that's fine:
-	 * do NOT emit warnings here, as G_DEBUG=fatal-criticals would abort.
-	 */
-	{
-		g_autoptr(GError) error_local = NULL;
-
-		if (!fu_pxi_tp_device_setup(device, &error_local)) {
-			g_debug("failed to refresh version after attach: %s",
-				error_local != NULL ? error_local->message : "unknown");
-		}
 	}
 
-	/* success */
+	g_debug("attach: exiting bootloader, resetting to application mode");
+	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error)) {
+		g_debug("attach: failed to reset from bootloader to application");
+		return FALSE;
+	}
+
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	g_debug("attach: exit bootloader success, flag cleared");
+	return TRUE;
+}
+
+static gboolean
+fu_pxi_tp_device_reload(FuDevice *device, GError **error)
+{
+	g_autoptr(GError) local_error = NULL;
+
+	g_debug("reload: refreshing firmware version from hardware");
+	if (!fu_pxi_tp_device_setup(device, &local_error)) {
+		g_debug("reload: failed to refresh version: %s",
+			local_error != NULL ? local_error->message : "unknown");
+		/* best-effort: do not fail the whole update just because reload failed */
+		return TRUE;
+	}
+
+	g_debug("reload: version refreshed successfully");
 	return TRUE;
 }
 
 static gboolean
 fu_pxi_tp_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug("detach: device already in bootloader, skipping");
 		return TRUE;
+	}
 
+	g_debug("detach: entering bootloader mode");
 	if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device),
 				    FU_PXI_TP_RESET_MODE_BOOTLOADER,
-				    error))
+				    error)) {
+		g_debug("detach: failed to reset to bootloader mode");
 		return FALSE;
+	}
 
-	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	g_debug("detach: entered bootloader mode, flag set");
 	return TRUE;
 }
 
@@ -1335,19 +1341,29 @@ fu_pxi_tp_device_cleanup(FuDevice *device,
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
-	g_debug("fu_pxi_tp_tf_device_cleanup");
+	g_debug("cleanup: start cleanup for PixArt TP/TF device");
 
-	/* exit upgrade mode (best-effort) */
-	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, &error_local))
-		g_debug("ignoring failure to exit upgrade mode: %s", error_local->message);
-
+	/* ensure we are not stuck in bootloader */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
+		g_debug("cleanup: device still in bootloader, resetting to application mode");
+		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error)) {
+			g_debug("cleanup: failed to reset from bootloader to application");
 			return FALSE;
+		}
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		g_debug("cleanup: cleared bootloader flag after reset");
+	} else {
+		g_debug("cleanup: device not in bootloader, no reset needed");
 	}
 
-	/* success */
+	/* exit TF upgrade/engineer mode (best-effort) */
+	g_debug("cleanup: exiting TF upgrade/engineer mode (best-effort)");
+	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, &error_local)) {
+		g_debug("cleanup: ignoring failure to exit upgrade mode: %s",
+			error_local != NULL ? error_local->message : "unknown");
+	}
+
+	g_debug("cleanup: finished");
 	return TRUE;
 }
 
@@ -1416,4 +1432,5 @@ fu_pxi_tp_device_class_init(FuPxiTpDeviceClass *klass)
 	device_class->set_quirk_kv = fu_pxi_tp_device_set_quirk_kv;
 	device_class->prepare_firmware = fu_pxi_tp_device_prepare_firmware;
 	device_class->convert_version = fu_pxi_tp_device_convert_version;
+	device_class->reload = fu_pxi_tp_device_reload;
 }
