@@ -6,7 +6,6 @@
  */
 
 #include "config.h"
-
 #include "fu-pxi-tp-device.h"
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-fw-struct.h"
@@ -958,31 +957,6 @@ fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuPxiTpFirmware *
-fu_pxi_tp_device_wrap_or_parse_ctn(FuFirmware *maybe_generic, GError **error)
-{
-	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(GInputStream) istream = NULL;
-	FuFirmware *ctn = NULL;
-
-	if (FU_IS_PXI_TP_FIRMWARE(maybe_generic))
-		return FU_PXI_TP_FIRMWARE(maybe_generic);
-
-	bytes = fu_firmware_get_bytes_with_patches(maybe_generic, error);
-	if (bytes == NULL)
-		return NULL;
-
-	istream = g_memory_input_stream_new_from_bytes(bytes);
-	ctn = FU_FIRMWARE(g_object_new(FU_TYPE_PXI_TP_FIRMWARE, NULL));
-	if (!fu_firmware_parse_stream(ctn, istream, 0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
-		if (error != NULL && *error != NULL)
-			g_prefix_error_literal(error, "pxi-tp parse failed: ");
-		g_object_unref(ctn);
-		return NULL;
-	}
-	return FU_PXI_TP_FIRMWARE(ctn);
-}
-
 static gboolean
 fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 				 FuPxiTpFirmware *ctn,
@@ -1149,10 +1123,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
 
-	fw_container = fu_pxi_tp_device_wrap_or_parse_ctn(firmware, error);
-	if (fw_container == NULL)
-		return FALSE;
-
+	fw_container = FU_PXI_TP_FIRMWARE(firmware);
 	sections = fu_pxi_tp_firmware_get_sections(fw_container);
 	if (sections == NULL || sections->len == 0) {
 		g_set_error_literal(error,
@@ -1375,6 +1346,22 @@ fu_pxi_tp_device_init(FuPxiTpDevice *self)
 	self->ver_addr = 0x0b;
 }
 
+static FuFirmware *
+fu_pxi_tp_device_prepare_firmware(FuDevice *device,
+				  GInputStream *stream,
+				  FuProgress *progress,
+				  FuFirmwareParseFlags flags,
+				  GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_pxi_tp_firmware_new();
+
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+
+	/* success */
+	return g_steal_pointer(&firmware);
+}
+
 static void
 fu_pxi_tp_device_class_init(FuPxiTpDeviceClass *klass)
 {
@@ -1386,4 +1373,5 @@ fu_pxi_tp_device_class_init(FuPxiTpDeviceClass *klass)
 	klass_device->cleanup = fu_pxi_tp_device_cleanup;
 	klass_device->set_progress = fu_pxi_tp_device_set_progress;
 	klass_device->set_quirk_kv = fu_pxi_tp_device_set_quirk_kv;
+	klass_device->prepare_firmware = fu_pxi_tp_device_prepare_firmware;
 }
