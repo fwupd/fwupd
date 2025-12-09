@@ -2,24 +2,32 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ToString)]
-enum FuMeiFamily {
+enum FuIntelMeFamily {
     Unknown,
     Sps,
     Txe,
     Me,
-    Csme, // 11 to 17
+    Csme11,
+    Csme16,
     Csme18,
 }
 
 #[derive(ToString)]
-enum FuMeiIssue {
+enum FuIntelMeIssue {
     Unknown,
     NotVulnerable,
     Vulnerable,
     Patched,
 }
 
+#[derive(New, NewInternal, ValidateInternal, Parse, ToString)]
+#[repr(C, packed)]
+struct FuStructIntelMeHfsts {
+    value: u32le,
+}
+
 # HFS1 Current Working State Values
+#[derive(ToString)]
 #[repr(u4)]
 enum FuMeHfsCws {
     Reset,
@@ -86,10 +94,10 @@ enum FuMeiFirmwareSku {
 }
 
 /* CSME11 - Host Firmware Status register 1 */
-#[derive(Parse)]
+#[derive(Parse, ToString)]
 #[repr(C, packed)]
 struct FuMeiCsme11Hfsts1 {
-    _working_state: FuMeHfsCws,
+    working_state: FuMeHfsCws,
     mfg_mode: u1,
     _fpt_bad: u1,
     _operation_state: FuMeHfsState,
