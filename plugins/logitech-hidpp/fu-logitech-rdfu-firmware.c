@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-logitech-rdfu-firmware.h"
-#include "json-glib/json-glib.h"
 
 #define FU_LOGITECH_RDFU_FIRMWARE_VERSION 1
 #define FU_LOGITECH_RDFU_MAGIC_ASCII_SIZE 22 /* 0x + 10 hex */
@@ -41,41 +40,17 @@ fu_logitech_rdfu_firmware_get_blocks(FuLogitechRdfuFirmware *self, GError **erro
 }
 
 static gboolean
-fu_logitech_rdfu_firmware_block_add(FuLogitechRdfuFirmware *self, JsonNode *node, GError **error)
+fu_logitech_rdfu_firmware_block_add(FuLogitechRdfuFirmware *self,
+				    FwupdJsonObject *json_obj,
+				    GError **error)
 {
-	JsonObject *json_obj;
 	const gchar *block_str;
 	g_autoptr(GByteArray) block = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	if (node == NULL || !JSON_NODE_HOLDS_OBJECT(node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "RDFU firmware contains incorrect payloads node");
+	block_str = fwupd_json_object_get_string(json_obj, "data", error);
+	if (block_str == NULL)
 		return FALSE;
-	}
-
-	json_obj = json_node_get_object(node);
-	if (!json_object_has_member(json_obj, "data")) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "payload %s has no data key",
-			    self->payload_name);
-		return FALSE;
-	}
-
-	block_str = json_object_get_string_member_with_default(json_obj, "data", NULL);
-	if (block_str == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "payload %s has no data",
-			    self->payload_name);
-		return FALSE;
-	}
-
 	if (strlen(block_str) % 2) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -101,10 +76,11 @@ fu_logitech_rdfu_firmware_block_add(FuLogitechRdfuFirmware *self, JsonNode *node
 }
 
 static gboolean
-fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self, JsonNode *node, GError **error)
+fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self,
+				    FwupdJsonObject *json_obj,
+				    GError **error)
 
 {
-	JsonObject *json_obj;
 	guint str_offset = 0;
 	guint64 entity;
 	guint64 revision;
@@ -120,26 +96,15 @@ fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self, JsonNode *node
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(GByteArray) model_id = NULL;
 
-	if (node == NULL || !JSON_NODE_HOLDS_OBJECT(node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "incorrect contents node");
+	entity_str = fwupd_json_object_get_string(json_obj, "entity", error);
+	if (entity_str == NULL)
 		return FALSE;
-	}
-
-	json_obj = json_node_get_object(node);
-	if (!json_object_has_member(json_obj, "entity")) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "has no entity");
-		return FALSE;
-	}
-	entity_str = json_object_get_string_member_with_default(json_obj, "entity", NULL);
 	if (!fu_strtoull(entity_str, &entity, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 
 	fu_firmware_set_id(FU_FIRMWARE(self), entity_str);
 
-	magic_str = json_object_get_string_member_with_default(json_obj, "magicStr", NULL);
+	magic_str = fwupd_json_object_get_string(json_obj, "magicStr", NULL);
 	if (magic_str == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "has no magic");
 		return FALSE;
@@ -152,18 +117,14 @@ fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self, JsonNode *node
 		return FALSE;
 	}
 
-	payload_str = json_object_get_string_member_with_default(json_obj, "payload", NULL);
-	if (payload_str == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "has no payload");
+	payload_str = fwupd_json_object_get_string(json_obj, "payload", error);
+	if (payload_str == NULL)
 		return FALSE;
-	}
 	g_debug("RDFU firmware for entity %u payload = %s", (guint)entity, payload_str);
 
-	if (!json_object_has_member(json_obj, "modelId")) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "has no modelId");
+	model_id_str = fwupd_json_object_get_string(json_obj, "modelId", error);
+	if (model_id_str == NULL)
 		return FALSE;
-	}
-	model_id_str = json_object_get_string_member_with_default(json_obj, "modelId", NULL);
 	/* just to validate if modelId is in a hexadecimal string format */
 	if (g_str_has_prefix(model_id_str, "0x"))
 		str_offset = 2;
@@ -171,28 +132,19 @@ fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self, JsonNode *node
 	if (model_id == NULL)
 		return FALSE;
 
-	if (!json_object_has_member(json_obj, "name")) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "has no name");
+	name_str = fwupd_json_object_get_string(json_obj, "name", error);
+	if (name_str == NULL)
 		return FALSE;
-	}
-	name_str = json_object_get_string_member_with_default(json_obj, "name", NULL);
 
-	if (!json_object_has_member(json_obj, "revision")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "has no revision");
+	revision_str = fwupd_json_object_get_string(json_obj, "revision", error);
+	if (revision_str == NULL)
 		return FALSE;
-	}
-	revision_str = json_object_get_string_member_with_default(json_obj, "revision", NULL);
 	if (!fu_strtoull(revision_str, &revision, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 
-	if (!json_object_has_member(json_obj, "build")) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "has no build");
+	build_str = fwupd_json_object_get_string(json_obj, "build", error);
+	if (build_str == NULL)
 		return FALSE;
-	}
-	build_str = json_object_get_string_member_with_default(json_obj, "build", NULL);
 	/* should be in BCD format already but let's be tolerant to absent leading 0 */
 	if (!fu_strtoull(build_str, &build, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
@@ -229,15 +181,15 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
-	JsonNode *json_root_node;
-	JsonObject *json_obj;
-	JsonObject *json_payloads_obj;
-	JsonArray *contents;
 	const gchar *firmware_str;
 	guint64 firmware_ver;
 	gsize streamsz;
-	g_autoptr(JsonParser) parser = json_parser_new();
-	g_autoptr(GList) payloads_list = NULL;
+	g_autoptr(FwupdJsonArray) contents = NULL;
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonObject) json_obj_payloads = NULL;
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(GPtrArray) keys = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
@@ -246,27 +198,16 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	if (!json_parser_load_from_stream(parser, stream, NULL, error)) {
-		g_prefix_error_literal(error, "failed to parse RDFU firmware: ");
+	json_node =
+	    fwupd_json_parser_load_from_stream(parser, stream, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	if (json_node == NULL)
 		return FALSE;
-	}
-	json_root_node = json_parser_get_root(parser);
-	if (json_root_node == NULL || !JSON_NODE_HOLDS_OBJECT(json_root_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "RDFU firmware has no root");
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
 		return FALSE;
-	}
-	json_obj = json_node_get_object(json_root_node);
-	if (!json_object_has_member(json_obj, "fileVersion")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "RDFU firmware has invalid format");
+	firmware_str = fwupd_json_object_get_string(json_obj, "fileVersion", error);
+	if (firmware_str == NULL)
 		return FALSE;
-	}
-	firmware_str = json_object_get_string_member_with_default(json_obj, "fileVersion", "0");
 	if (!fu_strtoull(firmware_str,
 			 &firmware_ver,
 			 1,
@@ -275,15 +216,10 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 			 error))
 		return FALSE;
 
-	if (!json_object_has_member(json_obj, "contents")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "unable to find contents");
+	contents = fwupd_json_object_get_array(json_obj, "contents", error);
+	if (contents == NULL)
 		return FALSE;
-	}
-	contents = json_object_get_array_member(json_obj, "contents");
-	if (json_array_get_length(contents) < 1) {
+	if (fwupd_json_array_get_size(contents) < 1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -291,11 +227,14 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	/* adding blocks to the entity FW */
-	for (guint i = 0; i < json_array_get_length(contents); i++) {
-		JsonNode *node = json_array_get_element(contents, i);
+	for (guint i = 0; i < fwupd_json_array_get_size(contents); i++) {
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 		g_autoptr(FuLogitechRdfuFirmware) entity_fw =
 		    FU_LOGITECH_RDFU_FIRMWARE(g_object_new(FU_TYPE_LOGITECH_RDFU_FIRMWARE, NULL));
-		if (!fu_logitech_rdfu_firmware_entry_add(entity_fw, node, error)) {
+		json_obj_tmp = fwupd_json_array_get_object(contents, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fu_logitech_rdfu_firmware_entry_add(entity_fw, json_obj_tmp, error)) {
 			g_prefix_error(error, "RDFU firmware contents[%u]: ", i);
 			return FALSE;
 		}
@@ -303,57 +242,57 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 	}
 
-	if (!json_object_has_member(json_obj, "payloads")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "unable to find payloads");
+	json_obj_payloads = fwupd_json_object_get_object(json_obj, "payloads", error);
+	if (json_obj_payloads == NULL)
 		return FALSE;
-	}
 
-	json_payloads_obj = json_object_get_object_member(json_obj, "payloads");
-	payloads_list = json_object_get_members(json_payloads_obj);
-
-	for (GList *l = payloads_list; l != NULL; l = g_list_next(l)) {
+	keys = fwupd_json_object_get_keys(json_obj_payloads);
+	for (guint j = 0; j < keys->len; j++) {
+		const gchar *payload_id = g_ptr_array_index(keys, j);
 		guint index = 0;
-		JsonArray *blocks;
 		FuLogitechRdfuFirmware *entity_fw = NULL;
+		g_autoptr(FwupdJsonArray) json_arr_blocks = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_payload = NULL;
 		g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 		if (!g_ptr_array_find_with_equal_func(images,
-						      l->data,
+						      payload_id,
 						      fu_logitech_rdfu_firmware_compare_payload,
 						      &index))
 			continue;
 
 		entity_fw = (FuLogitechRdfuFirmware *)images->pdata[index];
 		g_debug("found payload %s for entity %s",
-			(gchar *)l->data,
+			payload_id,
 			fu_firmware_get_id(FU_FIRMWARE(entity_fw)));
 
-		json_obj = json_object_get_object_member(json_payloads_obj, l->data);
-
-		if (!json_object_has_member(json_obj, "blocks")) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "payload %s has no blocks",
-				    (gchar *)l->data);
+		json_obj_payload =
+		    fwupd_json_object_get_object(json_obj_payloads, payload_id, error);
+		if (json_obj_payload == NULL)
+			return FALSE;
+		json_arr_blocks = fwupd_json_object_get_array(json_obj_payload, "blocks", error);
+		if (json_arr_blocks == NULL) {
+			g_prefix_error(error, "failed to parse payload %s: ", payload_id);
 			return FALSE;
 		}
-		blocks = json_object_get_array_member(json_obj, "blocks");
-		if (json_array_get_length(contents) < 1) {
+		if (fwupd_json_array_get_size(json_arr_blocks) < 1) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "empty blocks for payload %s",
-				    (gchar *)l->data);
+				    payload_id);
 			return FALSE;
 		}
 		/* adding blocks to the entity FW */
-		for (guint i = 0; i < json_array_get_length(blocks); i++) {
-			JsonNode *block = json_array_get_element(blocks, i);
-			if (!fu_logitech_rdfu_firmware_block_add(entity_fw, block, error)) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr_blocks); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_block = NULL;
+
+			json_obj_block = fwupd_json_array_get_object(json_arr_blocks, i, error);
+			if (json_obj_block == NULL)
+				return FALSE;
+			if (!fu_logitech_rdfu_firmware_block_add(entity_fw,
+								 json_obj_block,
+								 error)) {
 				g_prefix_error(error, "unable to parse block %u: ", i);
 				return FALSE;
 			}
