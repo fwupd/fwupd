@@ -385,6 +385,8 @@ fu_pefile_firmware_section_free(FuPefileSection *section)
 	g_free(section);
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuPefileSection, fu_pefile_firmware_section_free)
+
 static GByteArray *
 fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 {
@@ -402,13 +404,17 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	offset += st->buf->len + st_hdr->buf->len + st_opt->buf->len;
 	offset += FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
-		g_autofree FuPefileSection *section = g_new0(FuPefileSection, 1);
+		g_autoptr(FuPefileSection) section = g_new0(FuPefileSection, 1);
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 
 		section->offset = offset;
 		section->blob = fu_firmware_write(img, error);
 		if (section->blob == NULL)
 			return NULL;
+		if (g_bytes_get_size(section->blob) == 0) {
+			g_debug("skipping zero length section %u", i);
+			continue;
+		}
 		section->id = g_strdup(fu_firmware_get_id(img));
 		section->blobsz_aligned = fu_common_align_up(g_bytes_get_size(section->blob), 4);
 		offset += section->blobsz_aligned;
