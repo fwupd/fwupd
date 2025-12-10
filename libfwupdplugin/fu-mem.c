@@ -10,6 +10,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-common.h"
 #include "fu-mem-private.h"
 #include "fu-string.h"
 
@@ -334,6 +335,15 @@ fu_memchk_read(gsize bufsz, gsize offset, gsize n, GError **error)
 			    (guint)bufsz);
 		return FALSE;
 	}
+	if (fu_size_checked_add(offset, n) == G_MAXSIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "offset 0x%02x + 0x%02x overflowed",
+			    (guint)offset,
+			    (guint)n);
+		return FALSE;
+	}
 	if (offset > bufsz || n + offset > bufsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -378,6 +388,15 @@ fu_memchk_write(gsize bufsz, gsize offset, gsize n, GError **error)
 			    "attempted to write 0x%02x bytes to buffer of 0x%02x",
 			    (guint)n,
 			    (guint)bufsz);
+		return FALSE;
+	}
+	if (fu_size_checked_add(offset, n) == G_MAXSIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "offset 0x%02x + 0x%02x overflowed",
+			    (guint)offset,
+			    (guint)n);
 		return FALSE;
 	}
 	if (offset > bufsz || n + offset > bufsz) {
