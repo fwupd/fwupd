@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "e4d7583121800aaa7cf2d0b43c6a56fd7f387aef5535f1c08594ba03236f4218-touchpad_v0011.cab",
-      "emulation-file": "35484a92a730fc811d402c04c75407b6f283d9f996883fd4c97f3be6810ceaf5-touchpad_v0011.zip",
+      "emulation-file": "@enumeration_datadir@/pxi-tp-setup.json",
       "components": [
         {
           "version": "0x0011",
