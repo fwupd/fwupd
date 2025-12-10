@@ -1005,9 +1005,9 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 		(guint)data->len);
 
 	switch (s->update_type) {
-	case PXI_TP_UPDATE_TYPE_GENERAL:
-	case PXI_TP_UPDATE_TYPE_FW_SECTION:
-	case PXI_TP_UPDATE_TYPE_PARAM:
+	case FU_PXI_TP_UPDATE_TYPE_GENERAL:
+	case FU_PXI_TP_UPDATE_TYPE_FW_SECTION:
+	case FU_PXI_TP_UPDATE_TYPE_PARAM:
 		if (!fu_pxi_tp_device_update_flash_process(self,
 							   prog_write,
 							   (guint)s->section_length,
@@ -1019,7 +1019,7 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 		*written += (guint64)s->section_length;
 		break;
 
-	case PXI_TP_UPDATE_TYPE_TF_FORCE:
+	case FU_PXI_TP_UPDATE_TYPE_TF_FORCE:
 		/* target TF version is stored in s->reserved[0..2] */
 		target_ver[0] = s->reserved[0];
 		target_ver[1] = s->reserved[1];

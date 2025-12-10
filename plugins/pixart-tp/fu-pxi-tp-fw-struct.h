@@ -22,15 +22,6 @@ extern const char PXI_TP_MAGIC[5]; /* "FWHD" + NUL */
 #define PXI_TP_S_RESERVED_LEN 0x0c /* reserved bytes length */
 #define PXI_TP_S_EXTNAME_LEN  34   /* extname bytes length (no NUL) */
 
-/* ---- update types (semantic enum) -------------------------------------- */
-typedef enum {
-	PXI_TP_UPDATE_TYPE_GENERAL = 0u,    /* standard flash update process */
-	PXI_TP_UPDATE_TYPE_FW_SECTION = 1u, /* firmware section update */
-	PXI_TP_UPDATE_TYPE_BOOTLOADER = 2u, /* bootloader section update */
-	PXI_TP_UPDATE_TYPE_PARAM = 3u,	    /* parameter section update */
-	PXI_TP_UPDATE_TYPE_TF_FORCE = 16u   /* TF Force (via DLL) */
-} FuPxiTpUpdateType;
-
 /* ---- update information bit definitions -------------------------------- */
 enum {
 	PXI_TP_UI_VALID = (1u << 0),   /* 1 = execute this section */

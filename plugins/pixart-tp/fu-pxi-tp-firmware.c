@@ -312,11 +312,11 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		}
 		s->external_file_name[PXI_TP_S_EXTNAME_LEN] = '\0';
 
-		if (s->update_type == PXI_TP_UPDATE_TYPE_FW_SECTION) {
+		if (s->update_type == FU_PXI_TP_UPDATE_TYPE_FW_SECTION) {
 			saw_fw = TRUE;
 			if (s->is_valid_update)
 				saw_fw_valid = TRUE;
-		} else if (s->update_type == PXI_TP_UPDATE_TYPE_PARAM) {
+		} else if (s->update_type == FU_PXI_TP_UPDATE_TYPE_PARAM) {
 			saw_param = TRUE;
 			if (s->is_valid_update)
 				saw_param_valid = TRUE;
@@ -352,25 +352,6 @@ fu_pxi_tp_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
 	return fu_version_from_uint16((guint16)version_raw,
 				      fu_firmware_get_version_format(firmware));
-}
-
-static const char *
-fu_pxi_tp_firmware_update_type_to_str(guint8 t)
-{
-	switch (t) {
-	case PXI_TP_UPDATE_TYPE_GENERAL:
-		return "GENERAL";
-	case PXI_TP_UPDATE_TYPE_FW_SECTION:
-		return "FW_SECTION";
-	case PXI_TP_UPDATE_TYPE_BOOTLOADER:
-		return "BOOTLOADER";
-	case PXI_TP_UPDATE_TYPE_PARAM:
-		return "PARAM";
-	case PXI_TP_UPDATE_TYPE_TF_FORCE:
-		return "TF_FORCE";
-	default:
-		return "UNKNOWN";
-	}
 }
 
 static gchar *
@@ -473,9 +454,10 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		    fu_pxi_tp_firmware_update_info_to_flags(s->update_info);
 
 		fu_xmlb_builder_insert_kx(bn, p_type, s->update_type);
-		fu_xmlb_builder_insert_kv(bn,
-					  p_type_name,
-					  fu_pxi_tp_firmware_update_type_to_str(s->update_type));
+		fu_xmlb_builder_insert_kv(
+		    bn,
+		    p_type_name,
+		    fu_pxi_tp_update_type_to_string((FuPxiTpUpdateType)s->update_type));
 		fu_xmlb_builder_insert_kx(bn, p_info, s->update_info);
 		fu_xmlb_builder_insert_kv(bn, p_info_flags, flags_str);
 
@@ -780,7 +762,7 @@ guint32
 fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
-	    fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_FW_SECTION);
+	    fu_pxi_tp_firmware_find_section_by_type(self, FU_PXI_TP_UPDATE_TYPE_FW_SECTION);
 	g_debug("file firmware CRC: 0x%08x", (guint)(s ? s->section_crc : 0));
 	return s ? s->section_crc : 0;
 }
@@ -788,7 +770,8 @@ fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self)
 guint32
 fu_pxi_tp_firmware_get_file_parameter_crc(FuPxiTpFirmware *self)
 {
-	FuPxiTpSection *s = fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_PARAM);
+	FuPxiTpSection *s =
+	    fu_pxi_tp_firmware_find_section_by_type(self, FU_PXI_TP_UPDATE_TYPE_PARAM);
 	g_debug("file parameter CRC: 0x%08x", (guint)(s ? s->section_crc : 0));
 	return s ? s->section_crc : 0;
 }
@@ -799,6 +782,6 @@ guint32
 fu_pxi_tp_firmware_get_firmware_address(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
-	    fu_pxi_tp_firmware_find_section_by_type(self, PXI_TP_UPDATE_TYPE_FW_SECTION);
+	    fu_pxi_tp_firmware_find_section_by_type(self, FU_PXI_TP_UPDATE_TYPE_FW_SECTION);
 	return s ? s->target_flash_start : 0;
 }

@@ -1,13 +1,16 @@
-// Copyright 2025 Harris Tai <harris_tai@pixart.com>
-// Copyright 2025 Micky Hsieh
-//
-// SPDX-License-Identifier: LGPL-2.1-or-later
+/* Copyright 2025 Harris Tai <harris_tai@pixart.com> */
+/* Copyright 2025 Micky Hsieh */
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 
-// =====================================================================
-// ---- TP protocol enums exported to C via rustgen
-// =====================================================================
+/*
+ * =====================================================================
+ * TP protocol enums exported to C via rustgen
+ * =====================================================================
+ */
 
-// ---- Bank IDs ----
+/* ---- Bank IDs ---- */
 #[repr(u8)]
 enum FuPxiTpSystemBank {
     Bank0 = 0x00,
@@ -24,7 +27,7 @@ enum FuPxiTpUserBank {
     Bank2 = 0x02,
 }
 
-// ---- System bank 4 (flash engine registers) ----
+/* ---- System bank 4 (flash engine registers) ---- */
 #[repr(u8)]
 enum FuPxiTpRegSys4 {
     FlashStatus   = 0x1c,
@@ -45,7 +48,7 @@ enum FuPxiTpRegSys4 {
     FlashExecute  = 0x56,
 }
 
-// ---- System bank 6 (SRAM buffer) ----
+/* ---- System bank 6 (SRAM buffer) ---- */
 #[repr(u8)]
 enum FuPxiTpRegSys6 {
     SramGainSelect = 0x08,
@@ -57,20 +60,20 @@ enum FuPxiTpRegSys6 {
     SramAddr1      = 0x11,
 }
 
-// ---- System bank 1 (reset control registers) ----
+/* ---- System bank 1 (reset control registers) ---- */
 #[repr(u8)]
 enum FuPxiTpRegSys1 {
     ResetKey1 = 0x2c,
     ResetKey2 = 0x2d,
 }
 
-// ---- System bank 2 (update mode) ----
+/* ---- System bank 2 (update mode) ---- */
 #[repr(u8)]
 enum FuPxiTpRegSys2 {
     UpdateMode = 0x0d,
 }
 
-// ---- User bank 0 (part ID + CRC registers) ----
+/* ---- User bank 0 (part ID + CRC registers) ---- */
 #[repr(u8)]
 enum FuPxiTpRegUser0 {
     ProxyMode  = 0x56,
@@ -83,9 +86,11 @@ enum FuPxiTpRegUser0 {
     CrcResult3 = 0x87,
 }
 
-// =====================================================================
-// ---- TP enums previously defined (kept unchanged)
-// =====================================================================
+/*
+ * =====================================================================
+ * TP enums previously defined (kept unchanged)
+ * =====================================================================
+ */
 
 #[repr(u8)]
 enum FuPxiTpResetMode {
@@ -148,18 +153,20 @@ enum FuPxiTpCrcCtrl {
     Busy       = 0x01,
 }
 
-// Host <-> TF pass-through proxy mode
+/* Host <-> TF pass-through proxy mode */
 #[repr(u8)]
 enum FuPxiTpProxyMode {
     Normal   = 0x00,
     TfUpdate = 0x01,
 }
 
-// =====================================================================
-// ---- TF (Touch Firmware) enums exported to C
-// =====================================================================
+/*
+ * =====================================================================
+ * TF (Touch Firmware) enums exported to C
+ * =====================================================================
+ */
 
-// TF feature report / RMI frame constants
+/* TF feature report / RMI frame constants */
 #[repr(u8)]
 enum FuPxiTfFrameConst {
     Preamble      = 0x5a,
@@ -167,19 +174,19 @@ enum FuPxiTfFrameConst {
     ExceptionFlag = 0x80,
 }
 
-// TF HID report IDs
+/* TF HID report IDs */
 #[repr(u8)]
 enum FuPxiTfReportId {
     PassThrough = 0xcc,
 }
 
-// TF RMI target address
+/* TF RMI target address */
 #[repr(u8)]
 enum FuPxiTfTargetAddr {
     RmiFrame = 0x2c,
 }
 
-// TF RMI function codes (func field)
+/* TF RMI function codes (func field) */
 #[repr(u8)]
 enum FuPxiTfRmiFunc {
     WriteSimple = 0x00,
@@ -187,7 +194,7 @@ enum FuPxiTfRmiFunc {
     Read        = 0x0b,
 }
 
-// TF function command IDs (high-level TF commands)
+/* TF function command IDs (high-level TF commands) */
 #[repr(u16)]
 enum FuPxiTfCmd {
     SetUpgradeMode    = 0x0001,
@@ -197,7 +204,7 @@ enum FuPxiTfCmd {
     TouchControl      = 0x0303,
 }
 
-// TF upgrade mode payload
+/* TF upgrade mode payload */
 #[repr(u8)]
 enum FuPxiTfUpgradeMode {
     Exit       = 0x00,
@@ -205,14 +212,14 @@ enum FuPxiTfUpgradeMode {
     EraseFlash = 0x02,
 }
 
-// TF touch control
+/* TF touch control */
 #[repr(u8)]
 enum FuPxiTfTouchControl {
     Enable  = 0x00,
     Disable = 0x01,
 }
 
-// TF firmware version mode
+/* TF firmware version mode */
 #[repr(u8)]
 enum FuPxiTfFwMode {
     App  = 1,
@@ -220,9 +227,11 @@ enum FuPxiTfFwMode {
     Algo = 3,
 }
 
-// =====================================================================
-// ---- TF struct definitions (using enums instead of raw u8)
-// =====================================================================
+/*
+ * =====================================================================
+ * TF struct definitions (using enums instead of raw u8)
+ * =====================================================================
+ */
 
 #[derive(New, Default)]
 #[repr(C, packed)]
@@ -260,9 +269,11 @@ struct FuStructPxiTfReadCmd {
     reply_len:   u16le,
 }
 
-// =====================================================================
-// ---- FWHD header offsets (on-disk layout, LE)
-// =====================================================================
+/*
+ * =====================================================================
+ * FWHD header offsets (on-disk layout, LE)
+ * =====================================================================
+ */
 
 #[repr(u16)]
 enum FuPxiTpFwHeaderOffset {
@@ -271,9 +282,26 @@ enum FuPxiTpFwHeaderOffset {
     SectionsBase = 0x0014,
 }
 
-// =====================================================================
-// ---- Firmware header (Parse from bytes)
-// =====================================================================
+/*
+ * =====================================================================
+ * FWHD update types (on-disk values)
+ * =====================================================================
+ */
+#[derive(ToString)]
+#[repr(u8)]
+enum FuPxiTpUpdateType {
+    General    = 0,
+    FwSection  = 1,
+    Bootloader = 2,
+    Param      = 3,
+    TfForce    = 16,
+}
+
+/*
+ * =====================================================================
+ * Firmware header (Parse from bytes)
+ * =====================================================================
+ */
 
 #[derive(Parse)]
 #[repr(C, packed)]
@@ -288,14 +316,16 @@ struct FuStructPxiTpFirmwareHdr {
     num_sections:  u16le,
 }
 
-// =====================================================================
-// ---- Firmware section header (Parse from bytes)
-// =====================================================================
+/*
+ * =====================================================================
+ * Firmware section header (Parse from bytes)
+ * =====================================================================
+ */
 
 #[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructPxiTpFirmwareSectionHdr {
-    update_type:         u8,
+    update_type:         FuPxiTpUpdateType,
     update_info:         u8,
     target_flash_start:  u32le,
     internal_file_start: u32le,
