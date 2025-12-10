@@ -64,6 +64,13 @@ typedef struct {
 	guint16 *packet_number;
 } FuPxiTpTfReadDlStatusCtx;
 
+typedef struct {
+	guint32 packet_total;
+	guint32 packet_index;
+	const guint8 *chunk_data;
+	gsize chunk_len;
+} FuPxiTpTfWritePacketCtx;
+
 /* --- tf Standard Communication helpers --- */
 
 static gboolean
@@ -407,6 +414,21 @@ fu_pxi_tp_tf_communication_read_download_status_cb(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_pxi_tp_tf_communication_write_packet_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	FuPxiTpTfWritePacketCtx *ctx = user_data;
+
+	return fu_pxi_tp_tf_communication_write_rmi_with_packet(self,
+								FU_PXI_TF_CMD_WRITE_UPGRADE_DATA,
+								ctx->packet_total,
+								ctx->packet_index,
+								ctx->chunk_data,
+								ctx->chunk_len,
+								error);
+}
+
 /* mode: 1=APP, 2=BOOT, 3=ALGO (according to original protocol) */
 static gboolean
 fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
@@ -559,54 +581,42 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx, error);
 		gsize count;
 		const guint8 *chunk_data;
-		guint32 k;
 
 		if (chk == NULL)
 			return FALSE;
 
 		count = fu_chunk_get_data_sz(chk);
 		chunk_data = fu_chunk_get_data(chk);
-		k = 0;
 
-		for (; k < FU_PXI_TF_FAILED_RETRY_TIMES; k++) {
-			g_autoptr(GError) error_local = NULL;
+		/* retry a single packet using fu_device_retry_full() */
+		{
+			FuPxiTpTfWritePacketCtx ctx = {
+			    .packet_total = num,
+			    .packet_index = packet_index,
+			    .chunk_data = chunk_data,
+			    .chunk_len = count,
+			};
+			guint retry_interval =
+			    send_interval > 0 ? send_interval : FU_PXI_TF_DEFAULT_SEND_INTERVAL_MS;
 
-			if (fu_pxi_tp_tf_communication_write_rmi_with_packet(
-				self,
-				FU_PXI_TF_CMD_WRITE_UPGRADE_DATA,
-				num,
-				packet_index,
-				chunk_data,
-				count,
-				&error_local)) {
-				break; /* this packet succeeded */
+			if (!fu_device_retry_full(FU_DEVICE(self),
+						  fu_pxi_tp_tf_communication_write_packet_cb,
+						  FU_PXI_TF_FAILED_RETRY_TIMES,
+						  retry_interval,
+						  &ctx,
+						  error)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_WRITE,
+					    "failed to write flash packet %u after %d retries",
+					    packet_index,
+					    FU_PXI_TF_FAILED_RETRY_TIMES);
+				fu_progress_reset(progress);
+				return FALSE;
 			}
-
-			g_debug("packet %u write failed, attempt %u/%d: %s",
-				packet_index,
-				k + 1,
-				FU_PXI_TF_FAILED_RETRY_TIMES,
-				error_local != NULL ? error_local->message : "unknown");
-
-			if (k < FU_PXI_TF_FAILED_RETRY_TIMES - 1)
-				fu_device_sleep(FU_DEVICE(self),
-						send_interval > 0
-						    ? send_interval
-						    : FU_PXI_TF_DEFAULT_SEND_INTERVAL_MS);
 		}
 
-		if (k == FU_PXI_TF_FAILED_RETRY_TIMES) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "failed to write flash packet %u after %d retries",
-				    packet_index,
-				    FU_PXI_TF_FAILED_RETRY_TIMES);
-			fu_progress_reset(progress);
-			return FALSE;
-		}
-
-		/* small delay between packets */
+		/* small delay between packets (separate from retry delay) */
 		if (send_interval > 0)
 			fu_device_sleep(FU_DEVICE(self), send_interval);
 
