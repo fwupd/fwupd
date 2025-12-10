@@ -23,10 +23,6 @@ The firmware is parsed by `FuPxiTpFirmware` and validated using:
 Each updateable **internal** section defines a flash start address and a file offset/length.
 The plugin programs flash in **4 KiB sectors** with **256-byte pages** via a small SRAM window.
 
-This plugin supports the following protocol ID:
-
-- `com.pixart.tp`
-
 ## GUID Generation
 
 These devices use the standard HID DeviceInstanceId values, e.g.
@@ -72,7 +68,7 @@ Defines which bank to read the device firmware version from.
 Defines which address to read the device firmware version from; the plugin reads `addr+0` (lo) and `addr+1` (hi).
 **Default**: `0x0b`.
 
-### `SramSelect`
+### `PxiTpSramSelect`
 
 Selects the SRAM type used for 256-byte page programming.
 **Default**: `0x0f`.
@@ -80,10 +76,6 @@ Selects the SRAM type used for 256-byte page programming.
 ## Vendor ID Security
 
 The vendor ID is set from the HID vendor, in this instance set to `HIDRAW:0x093A`
-
-## External Interface Access
-
-This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
 
