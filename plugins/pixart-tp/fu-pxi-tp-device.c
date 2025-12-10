@@ -935,7 +935,6 @@ fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 	guint8 buf[2] = {0}; /* buf[0] = lo, buf[1] = hi */
 	guint16 ver_u16 = 0;
 
-	g_debug("fu_pxi_tp_device_setup");
 	/* read low byte */
 	if (!fu_pxi_tp_register_user_read(self,
 					  self->ver_bank,
@@ -1274,57 +1273,47 @@ fu_pxi_tp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("attach: device is not in bootloader, nothing to do");
+	/* nothing to do if already in application mode */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
-	}
 
-	g_debug("attach: exiting bootloader, resetting to application mode");
-	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error)) {
-		g_debug("attach: failed to reset from bootloader to application");
+	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
 		return FALSE;
-	}
 
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	g_debug("attach: exit bootloader success, flag cleared");
 	return TRUE;
 }
 
 static gboolean
 fu_pxi_tp_device_reload(FuDevice *device, GError **error)
 {
-	g_autoptr(GError) local_error = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	g_debug("reload: refreshing firmware version from hardware");
-	if (!fu_pxi_tp_device_setup(device, &local_error)) {
-		g_debug("reload: failed to refresh version: %s",
-			local_error != NULL ? local_error->message : "unknown");
-		/* best-effort: do not fail the whole update just because reload failed */
-		return TRUE;
+	/* best-effort: do not fail the whole update just because reload failed */
+	if (!fu_pxi_tp_device_setup(device, &error_local)) {
+		if (error_local != NULL) {
+			/* single debug for ignored failure */
+			g_debug("failed to refresh firmware version: %s", error_local->message);
+			g_clear_error(&error_local);
+		}
 	}
 
-	g_debug("reload: version refreshed successfully");
 	return TRUE;
 }
 
 static gboolean
 fu_pxi_tp_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("detach: device already in bootloader, skipping");
-		return TRUE;
-	}
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 
-	g_debug("detach: entering bootloader mode");
-	if (!fu_pxi_tp_device_reset(FU_PXI_TP_DEVICE(device),
-				    FU_PXI_TP_RESET_MODE_BOOTLOADER,
-				    error)) {
-		g_debug("detach: failed to reset to bootloader mode");
+	/* already in bootloader, nothing to do */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
+
+	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_BOOTLOADER, error))
 		return FALSE;
-	}
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	g_debug("detach: entered bootloader mode, flag set");
 	return TRUE;
 }
 
@@ -1337,29 +1326,23 @@ fu_pxi_tp_device_cleanup(FuDevice *device,
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
-	g_debug("cleanup: start cleanup for PixArt TP/TF device");
-
 	/* ensure we are not stuck in bootloader */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("cleanup: device still in bootloader, resetting to application mode");
-		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error)) {
-			g_debug("cleanup: failed to reset from bootloader to application");
+		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
 			return FALSE;
-		}
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		g_debug("cleanup: cleared bootloader flag after reset");
-	} else {
-		g_debug("cleanup: device not in bootloader, no reset needed");
 	}
 
 	/* exit TF upgrade/engineer mode (best-effort) */
-	g_debug("cleanup: exiting TF upgrade/engineer mode (best-effort)");
 	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, &error_local)) {
-		g_debug("cleanup: ignoring failure to exit upgrade mode: %s",
-			error_local != NULL ? error_local->message : "unknown");
+		if (error_local != NULL) {
+			/* single debug for ignored failure */
+			g_debug("ignoring failure to exit TF upgrade mode: %s",
+				error_local->message);
+			g_clear_error(&error_local);
+		}
 	}
 
-	g_debug("cleanup: finished");
 	return TRUE;
 }
 
