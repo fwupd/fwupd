@@ -477,8 +477,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	guint32 num = 0;
 	guint32 idx;
 
-	(void)progress; /* currently unused, can be wired to progress if needed */
-
 	/* disable touch function while updating TF */
 	g_debug("disabling touch");
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
@@ -550,6 +548,10 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	/* total number of packets */
 	num = (guint32)num_chunks;
 
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_set_steps(progress, num);
+
 	g_debug("start writing flash, packets=%u, total_size=%u", num, data_size);
 
 	for (idx = 0; idx < num; idx++) {
@@ -600,12 +602,15 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 				    "failed to write flash packet %u after %d retries",
 				    packet_index,
 				    FU_PXI_TF_FAILED_RETRY_TIMES);
+			fu_progress_reset(progress);
 			return FALSE;
 		}
 
 		/* small delay between packets */
 		if (send_interval > 0)
 			fu_device_sleep(FU_DEVICE(self), send_interval);
+
+		fu_progress_step_done(progress);
 	}
 
 	g_debug("all packets sent, checking download status");
@@ -758,7 +763,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS);
 
 		if (fu_pxi_tp_tf_communication_write_firmware(self,
-							      progress,
+							      fu_progress_get_child(progress),
 							      send_interval,
 							      data_size,
 							      data,
