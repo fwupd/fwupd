@@ -10,6 +10,7 @@
 
 #include "fwupd-codec.h"
 
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
@@ -184,7 +185,7 @@ fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GErr
 		}
 		self->size = base_sz - offset;
 	} else {
-		if (offset + size > base_sz) {
+		if (fu_size_checked_add(offset, size) > base_sz) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
