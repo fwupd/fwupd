@@ -224,12 +224,14 @@ static gboolean
 fu_snapd_uefi_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
+
+	/* only for UEFI updates */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (fu_snapd_uefi_plugin_device_to_key_database(self, device) == NULL) {
-			if (!fu_snapd_uefi_plugin_cleanup(self, device, error))
-				return FALSE;
-		}
+		if (fu_snapd_uefi_plugin_device_to_key_database(self, device) == NULL)
+			continue;
+		if (!fu_snapd_uefi_plugin_cleanup(self, device, error))
+			return FALSE;
 	}
 	return TRUE;
 }
