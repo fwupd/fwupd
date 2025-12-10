@@ -1073,12 +1073,8 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 				GError **error)
 {
 	guint section_idx = 0;
-	FuProgress *progress_write = NULL;
-	progress_write = fu_progress_get_child(progress);
-	fu_progress_set_id(progress_write, G_STRLOC);
-	fu_progress_set_steps(progress_write, sections->len);
-
-	g_debug("section len: %u", sections->len);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, sections->len);
 
 	for (section_idx = 0; section_idx < sections->len; section_idx++) {
 		guint8 flash_sector_start = 0;
@@ -1087,7 +1083,7 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 		/* skip non-updatable sections */
 		if (!section->is_valid_update || section->is_external ||
 		    section->section_length == 0) {
-			fu_progress_step_done(progress_write);
+			fu_progress_step_done(progress);
 			continue;
 		}
 
@@ -1097,7 +1093,7 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 						      firmware,
 						      section,
 						      section_idx,
-						      progress_write,
+						      progress,
 						      flash_sector_start,
 						      written,
 						      error))
@@ -1214,7 +1210,7 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 					     sections,
 					     fw_container,
 					     &total_written_bytes,
-					     progress,
+					     fu_progress_get_child(progress),
 					     error))
 		return FALSE;
 
