@@ -581,35 +581,6 @@ fu_pxi_tp_firmware_new(void)
 }
 
 /* -------------------------- getters ----------------------- */
-
-guint16
-fu_pxi_tp_firmware_get_header_version(FuPxiTpFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), 0);
-	return self->header_ver;
-}
-
-guint16
-fu_pxi_tp_firmware_get_ic_part_id(FuPxiTpFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), 0);
-	return self->ic_part_id;
-}
-
-guint16
-fu_pxi_tp_firmware_get_total_flash_sectors(FuPxiTpFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), 0);
-	return self->flash_sectors;
-}
-
-guint16
-fu_pxi_tp_firmware_get_num_valid_sections(FuPxiTpFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), 0);
-	return self->num_sections;
-}
-
 const GPtrArray *
 fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self)
 {
@@ -655,89 +626,6 @@ fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 		guint8 *mem = g_bytes_unref_to_data(child, &out_len);
 		return g_byte_array_new_take(mem, out_len);
 	}
-}
-
-/* returns a segment of data according to the flash address offset (GByteArray*; full transfer) */
-GByteArray *
-fu_pxi_tp_firmware_get_slice_by_flash(FuPxiTpFirmware *self,
-				      guint32 flash_addr,
-				      gsize len,
-				      GError **error)
-{
-	gsize sz = 0;
-	const GPtrArray *secs = NULL;
-	g_autoptr(GBytes) fw = NULL;
-
-	fw = fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
-	if (fw == NULL)
-		return NULL;
-
-	(void)g_bytes_get_data(fw, &sz);
-
-	if (len == 0)
-		return g_byte_array_new();
-
-	secs = fu_pxi_tp_firmware_get_sections(self);
-	if (secs == NULL) {
-		g_debug("no sections available when mapping flash slice");
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "no sections available");
-		return NULL;
-	}
-
-	for (guint i = 0; i < secs->len; i++) {
-		FuPxiTpSection *s = g_ptr_array_index((GPtrArray *)secs, i);
-		guint64 sec_flash_begin;
-		guint64 sec_flash_end;
-		guint64 req_flash_begin;
-		guint64 req_flash_end;
-
-		if (!s->is_valid_update || s->is_external)
-			continue;
-
-		sec_flash_begin = (guint64)s->target_flash_start;
-		sec_flash_end = sec_flash_begin + (guint64)s->section_length;
-		req_flash_begin = (guint64)flash_addr;
-		req_flash_end = req_flash_begin + (guint64)len;
-
-		if (req_flash_begin >= sec_flash_begin && req_flash_end <= sec_flash_end) {
-			guint64 off_in_sec = req_flash_begin - sec_flash_begin;
-			guint64 file_off_64 = (guint64)s->internal_file_start + off_in_sec;
-
-			if (file_off_64 + (guint64)len > (guint64)sz) {
-				g_debug("mapped slice out of file range: sec=%u "
-					"file_off=%" G_GUINT64_FORMAT " len=%" G_GSIZE_FORMAT
-					" size=%" G_GSIZE_FORMAT,
-					i,
-					file_off_64,
-					len,
-					sz);
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_FILE,
-						    "mapped flash slice out of file range");
-				return NULL;
-			}
-
-			{
-				GBytes *child = g_bytes_new_from_bytes(fw, (gsize)file_off_64, len);
-				gsize out_len = 0;
-				guint8 *mem = g_bytes_unref_to_data(child, &out_len);
-				return g_byte_array_new_take(mem, out_len);
-			}
-		}
-	}
-
-	g_debug("flash range [0x%08x..0x%08x) not covered by a single internal section",
-		flash_addr,
-		(guint32)(flash_addr + (len ? (len - 1) : 0)));
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "flash range not covered by a single internal section");
-	return NULL;
 }
 
 /* find the first internal & valid section of the specified type; return NULL if not found */

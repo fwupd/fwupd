@@ -40,6 +40,3 @@ fu_pxi_tp_register_user_read(FuPxiTpDevice *self,
 
 gboolean
 fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize bufsz, GError **error);
-
-gboolean
-fu_pxi_tp_register_burst_read(FuPxiTpDevice *self, guint8 *buf, gsize bufsz, GError **error);
