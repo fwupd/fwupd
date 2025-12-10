@@ -149,9 +149,6 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(FuFirmware) firmware_current = g_object_ref(FU_FIRMWARE(self));
 
-	/* debug */
-	fu_dump_bytes(G_LOG_DOMAIN, "dt_struct", fw);
-
 	/* parse */
 	while (offset < bufsz) {
 		guint32 token = 0;
