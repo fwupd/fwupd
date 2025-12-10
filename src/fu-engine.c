@@ -2997,7 +2997,8 @@ fu_engine_device_check_power(FuEngine *self,
 		return TRUE;
 
 	/* not charging */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		g_set_error_literal(error,
@@ -3009,7 +3010,8 @@ fu_engine_device_check_power(FuEngine *self,
 	}
 
 	/* not enough just in case */
-	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
