@@ -14,6 +14,7 @@
 
 #define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS     "reset-cmos"
 #define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK "fn-m-me-unlock"
+#define FU_FLASHROM_BCR_SMM_BWP                (1 << 5)
 
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
@@ -401,6 +402,16 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 			    (guint)sz,
 			    (guint)fu_device_get_firmware_size_max(device));
 		return FALSE;
+	}
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
+		guint64 bcr_value = fu_device_get_metadata_integer(device, "PciBcrValue");
+		if (bcr_value != G_MAXUINT && (bcr_value & FU_FLASHROM_BCR_SMM_BWP) > 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "BIOS region locked by SMM_BWP; disable BIOS lock or flash from SMM");
+			return FALSE;
+		}
 	}
 	if (self->fmap_regions != NULL) {
 		gboolean matches = TRUE;
