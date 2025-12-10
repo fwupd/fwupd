@@ -88,11 +88,11 @@ fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 	parent = fu_genesys_plugin_get_device_by_physical_id(self,
 							     fu_device_get_physical_id(usb_parent));
 	if (parent == NULL) {
-		g_warning("hubhid cannot find parent, platform_id(%s)",
+		g_warning("hubhid cannot find parent, physical_id(%s)",
 			  fu_device_get_physical_id(usb_parent));
 		fu_plugin_device_remove(self, device);
 	} else {
-		fu_genesys_usbhub_device_set_hid_channel(FU_GENESYS_USBHUB_DEVICE(parent), device);
+		fu_genesys_usbhub_device_set_proxy(FU_GENESYS_USBHUB_DEVICE(parent), device);
 		fu_device_add_child(parent, device);
 	}
 }
