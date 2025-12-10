@@ -1071,13 +1071,12 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 				FuProgress *progress,
 				GError **error)
 {
-	guint section_idx = 0;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, sections->len);
 
-	for (section_idx = 0; section_idx < sections->len; section_idx++) {
+	for (guint i = 0; i < sections->len; i++) {
 		guint8 flash_sector_start = 0;
-		FuPxiTpSection *section = g_ptr_array_index(sections, section_idx);
+		FuPxiTpSection *section = g_ptr_array_index(sections, i);
 
 		/* skip non-updatable sections */
 		if (!section->is_valid_update || section->is_external ||
@@ -1091,7 +1090,7 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 		if (!fu_pxi_tp_device_process_section(self,
 						      firmware,
 						      section,
-						      section_idx,
+						      i,
 						      progress,
 						      flash_sector_start,
 						      written,
@@ -1166,7 +1165,6 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 	const GPtrArray *sections = NULL;
 	guint64 total_update_bytes = 0;
 	guint64 total_written_bytes = 0;
-	guint section_idx = 0;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -1184,8 +1182,8 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 	}
 
 	/* calculate total bytes for valid internal sections */
-	for (section_idx = 0; section_idx < sections->len; section_idx++) {
-		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, section_idx);
+	for (guint i = 0; i < sections->len; i++) {
+		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, i);
 
 		if (section->is_valid_update && !section->is_external &&
 		    section->section_length > 0)
