@@ -652,13 +652,12 @@ fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *s
 					       FwupdJsonObject *json_device,
 					       GError **error)
 {
-	FuLogitechBulkcontrollerDeviceState status;
 	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
 	g_autoptr(FuDevice) child = NULL;
 	const gchar *name;
 	const gchar *tmp;
 	const gchar *version;
-	gint64 tmpi = 0;
+	gint64 status = 0;
 
 	/* sanity check */
 	tmp = fwupd_json_object_get_string(json_device, "type", error);
@@ -668,15 +667,15 @@ fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *s
 		return TRUE;
 
 	/* check status */
-	if (!fwupd_json_object_get_integer(json_device, "status", &tmpi, error))
+	if (!fwupd_json_object_get_integer(json_device, "status", &status, error))
 		return FALSE;
-	status = tmpi;
 	if (status != FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_ONLINE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "status is %s",
-			    fu_logitech_bulkcontroller_device_state_to_string(status));
+			    "status is %s [0x%x]",
+			    fu_logitech_bulkcontroller_device_state_to_string(status),
+			    (guint)status);
 		return FALSE;
 	}
 
