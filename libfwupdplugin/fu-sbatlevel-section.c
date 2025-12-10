@@ -33,6 +33,15 @@ fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
 	/* stop at the null terminator */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (offset >= streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "offset 0x%x exceeds stream size 0x%x",
+			    (guint)offset,
+			    (guint)streamsz);
+		return FALSE;
+	}
 	for (guint i = offset; i < streamsz; i++) {
 		guint8 value = 0;
 		if (!fu_input_stream_read_u8(stream, i, &value, error))
