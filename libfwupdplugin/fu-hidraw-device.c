@@ -35,10 +35,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE
 
 #define FU_HIDRAW_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
 
-#ifndef HIDIOCGINPUT
-#define HIDIOCGINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
-#endif
-
 static void
 fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
 {
