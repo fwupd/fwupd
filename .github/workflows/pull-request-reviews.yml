@@ -1,7 +1,7 @@
 name: Pull Request reviews
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ 2_0_X ]
 
 jobs:
   pre-commit:

@@ -2,9 +2,9 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ 2_0_X ]
   pull_request:
-    branches: [ main ]
+    branches: [ 2_0_X ]
 
 permissions:
   contents: read
