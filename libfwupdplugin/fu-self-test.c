@@ -352,6 +352,17 @@ fu_common_align_up_func(void)
 }
 
 static void
+fu_common_checked_add_func(void)
+{
+	g_assert_cmpint(fu_size_checked_add(0, 0), ==, 0);
+	g_assert_cmpint(fu_size_checked_add(0, 42), ==, 42);
+	g_assert_cmpint(fu_size_checked_add(42, 0), ==, 42);
+	g_assert_cmpint(fu_size_checked_add(G_MAXSIZE / 2, G_MAXSIZE / 2), ==, G_MAXSIZE - 1);
+	g_assert_cmpint(fu_size_checked_add(G_MAXSIZE, 1), ==, G_MAXSIZE);
+	g_assert_cmpint(fu_size_checked_add(G_MAXSIZE, G_MAXSIZE), ==, G_MAXSIZE);
+}
+
+static void
 fu_common_error_map_func(void)
 {
 	const FuErrorMapEntry entries[] = {
@@ -6089,6 +6100,7 @@ fu_partial_input_stream_simple_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GInputStream) stream2 = NULL;
 
 	/* use G_MAXSIZE for "rest of the stream" */
 	stream = fu_partial_input_stream_new(base_stream, 4, G_MAXSIZE, &error);
@@ -6105,6 +6117,11 @@ fu_partial_input_stream_simple_func(void)
 	g_assert_cmpint(rc, ==, 2);
 	g_assert_cmpint(buf[0], ==, '7');
 	g_assert_cmpint(buf[1], ==, '8');
+
+	/* overflow */
+	stream2 = fu_partial_input_stream_new(base_stream, 4, G_MAXSIZE - 1, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(stream2);
 }
 
 static void
@@ -7416,6 +7433,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func("/fwupd/chunk-null", fu_chunk_array_null_func);
 	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
+	g_test_add_func("/fwupd/common{checked-add}", fu_common_checked_add_func);
 	g_test_add_func("/fwupd/common{error-map}", fu_common_error_map_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);

@@ -78,6 +78,8 @@ gsize
 fu_common_align_up(gsize value, guint8 alignment);
 gboolean
 fu_power_state_is_ac(FuPowerState power_state);
+gsize
+fu_size_checked_add(gsize a, gsize b);
 
 typedef struct {
 	guint value;
