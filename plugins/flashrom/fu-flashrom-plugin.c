@@ -275,10 +275,7 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
 
-	/* any coreboot */
-	if (g_strcmp0(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), "coreboot") == 0)
-		return g_strdup(FWUPD_DEVICE_ID_ANY);
-
+	/* prefer a specific flashrom quirk if one exists */
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *guid = g_ptr_array_index(hwids, i);
 		const gchar *plugin_name =
@@ -286,6 +283,10 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 		if (g_strcmp0(plugin_name, "flashrom") == 0)
 			return guid;
 	}
+
+	/* otherwise allow any coreboot */
+	if (g_strcmp0(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), "coreboot") == 0)
+		return g_strdup(FWUPD_DEVICE_ID_ANY);
 
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no HwIDs found");
 	return NULL;
