@@ -164,7 +164,7 @@ fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize buf
 	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 
-	if (bufsz > 256) {
+	if (bufsz > sizeof(payload) - 1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
