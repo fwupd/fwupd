@@ -97,7 +97,7 @@ fu_intel_usb4_device_get_mmio(FuIntelUsb4Device *self,
 	}
 	/* verify status for specific hub mailbox register */
 	if (mbox_reg == MBOX_REG) {
-		g_autoptr(GByteArray) st_regex = NULL;
+		g_autoptr(FuStructIntelUsb4Mbox) st_regex = NULL;
 
 		st_regex = fu_struct_intel_usb4_mbox_parse(buf, bufsz, 0x0, error);
 		if (st_regex == NULL)
@@ -226,9 +226,9 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 			       GError **error)
 {
 	gint max_tries = 100;
-	g_autoptr(GByteArray) st_regex = fu_struct_intel_usb4_mbox_new();
+	g_autoptr(FuStructIntelUsb4Mbox) st_regex = fu_struct_intel_usb4_mbox_new();
 
-	/* Write metadata register for operations that use it */
+	/* write metadata register for operations that use it */
 	switch (opcode) {
 	case FU_INTEL_USB4_OPCODE_NVM_WRITE:
 	case FU_INTEL_USB4_OPCODE_NVM_AUTH_WRITE:
@@ -262,7 +262,11 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 	/* write the operation and poll completion or error */
 	fu_struct_intel_usb4_mbox_set_opcode(st_regex, opcode);
 	fu_struct_intel_usb4_mbox_set_status(st_regex, MBOX_OPVALID);
-	if (!fu_intel_usb4_device_set_mmio(self, MBOX_REG, st_regex->data, st_regex->len, error))
+	if (!fu_intel_usb4_device_set_mmio(self,
+					   MBOX_REG,
+					   st_regex->buf->data,
+					   st_regex->buf->len,
+					   error))
 		return FALSE;
 
 	/* leave early as successful USB4 AUTH resets the device immediately */
@@ -273,8 +277,8 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 		g_autoptr(GError) error_local = NULL;
 		if (fu_intel_usb4_device_get_mmio(self,
 						  MBOX_REG,
-						  st_regex->data,
-						  st_regex->len,
+						  st_regex->buf->data,
+						  st_regex->buf->len,
 						  &error_local))
 			return TRUE;
 		if (i == max_tries) {
@@ -310,8 +314,8 @@ fu_intel_usb4_device_nvm_read(FuIntelUsb4Device *self,
 								  fu_chunk_get_data_sz(chk) / 4);
 		if (!fu_intel_usb4_device_operation(self,
 						    FU_INTEL_USB4_OPCODE_NVM_READ,
-						    st->data,
-						    st->len,
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 			g_prefix_error_literal(error, "hub NVM read error: ");
 			return FALSE;
@@ -562,7 +566,7 @@ fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
-fu_intel_usb4_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_intel_usb4_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

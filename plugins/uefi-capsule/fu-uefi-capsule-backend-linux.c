@@ -88,8 +88,8 @@ static gboolean
 fu_uefi_capsule_backend_linux_check_efivarfs(FuUefiCapsuleBackendLinux *self, GError **error)
 {
 	gboolean is_readonly;
-	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	g_autofree gchar *sysfsefivardir = g_build_filename(sysfsfwdir, "efi", "efivars", NULL);
+	g_autofree gchar *sysfsefivardir =
+	    fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "efivars", NULL);
 	g_autoptr(GUnixMountEntry) mount = NULL;
 
 	/* in the self tests */
@@ -139,7 +139,6 @@ fu_uefi_capsule_backend_linux_coldplug(FuBackend *backend, FuProgress *progress,
 	const gchar *fn;
 	g_autofree gchar *esrt_entries = NULL;
 	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) dir = NULL;
 
 	/* make sure that efivarfs is suitable */
@@ -147,8 +146,7 @@ fu_uefi_capsule_backend_linux_coldplug(FuBackend *backend, FuProgress *progress,
 		return FALSE;
 
 	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
+	esrt_path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
 	esrt_entries = g_build_filename(esrt_path, "entries", NULL);
 	dir = g_dir_open(esrt_entries, 0, error);
 	if (dir == NULL)
@@ -167,78 +165,34 @@ fu_uefi_capsule_backend_linux_coldplug(FuBackend *backend, FuProgress *progress,
 }
 
 static gboolean
-fu_uefi_capsule_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
-{
-	GBytes *bios_blob;
-	const guint8 *data;
-	gsize sz;
-	g_autoptr(GPtrArray) bios_tables = NULL;
-
-	bios_tables = fu_context_get_smbios_data(ctx, 0, FU_SMBIOS_STRUCTURE_LENGTH_ANY, NULL);
-	if (bios_tables == NULL) {
-		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
-		if (tmp != NULL)
-			return TRUE;
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "SMBIOS not supported");
-		return FALSE;
-	}
-	bios_blob = g_ptr_array_index(bios_tables, 0);
-	data = g_bytes_get_data(bios_blob, &sz);
-	if (sz < 0x14) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "offset bigger than size %" G_GSIZE_FORMAT,
-			    sz);
-		return FALSE;
-	}
-	if (data[1] < 0x14) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "SMBIOS 2.3 not supported");
-		return FALSE;
-	}
-	if (!(data[0x13] & (1 << 3))) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "System does not support UEFI mode");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_uefi_capsule_backend_linux_setup(FuBackend *backend,
 				    FuBackendSetupFlags flags,
 				    FuProgress *progress,
 				    GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
+	FuContext *ctx = fu_backend_get_context(backend);
 
 	/* using a pre-cooked SMBIOS */
 	if (g_getenv("FWUPD_SYSFSFWDIR") != NULL)
 		return TRUE;
 
 	/* check SMBIOS for 'UEFI Specification is supported' */
-	if (!fu_uefi_capsule_backend_linux_check_smbios_enabled(fu_backend_get_context(backend),
-								&error_local)) {
-		g_autofree gchar *fw = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-		g_autofree gchar *fn = g_build_filename(fw, "efi", NULL);
+	if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED)) {
+		g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
 		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
 			g_warning("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
-				  "UEFI Specification is unsupported, but %s exists: %s",
-				  fn,
-				  error_local->message);
+				  "UEFI specification is unsupported, but %s exists!",
+				  fn);
 			return TRUE;
 		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "system does not support UEFI mode");
 		return FALSE;
 	}
+
+	/* success */
 	return TRUE;
 }
 

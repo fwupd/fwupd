@@ -8,7 +8,11 @@ cfu_rs = custom_target('fu-cfu-rs',
   command: [
     python3,
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
-    '@INPUT@', '@OUTPUT0@', '@OUTPUT1@',
+    '@INPUT@',
+    '--outc', '@OUTPUT0@',
+    '--outh', '@OUTPUT1@',
+    '--prefix',
+    'Fu',
   ],
 )
 

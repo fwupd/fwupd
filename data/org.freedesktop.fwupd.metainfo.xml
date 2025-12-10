@@ -22,7 +22,7 @@
   </description>
   <url type="bugtracker">https://github.com/fwupd/fwupd/issues</url>
   <url type="homepage">https://fwupd.org/</url>
-  <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
+  <url type="translate">https://hosted.weblate.org/projects/fwupd/fwupd/</url>
   <url type="vcs-browser">https://github.com/fwupd/fwupd</url>
   <update_contact>richard_at_hughsie.com</update_contact>
   <developer_name>The fwupd authors</developer_name>
@@ -38,6 +38,108 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.18" date="2025-12-01">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a MOTD message for devices needing reboot after staged updates</li>
+          <li>Create the reboot-required file when a firmware update requires reboot</li>
+          <li>Record the system state for each composite emulation</li>
+          <li>Update USI docking station firmware without requiring a manual replug</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a MTD device problem if the Intel SPI BIOS lock is set</li>
+          <li>Allow changing the child name when using PARENT_NAME_PREFIX</li>
+          <li>Allow UpdateCapsule to work on systems that do not support SecureBoot</li>
+          <li>Correctly parse the EFI_CAPSULE_RESULT_VARIABLE_HEADER</li>
+          <li>Fall back to the SMBIOS version for BIOS MTD devices</li>
+          <li>Fix a crash when trying to record an i2c emulation</li>
+          <li>Fixed Huddly upgrade problems with major version changes</li>
+          <li>Fix man page compatibility with apropos and whatis</li>
+          <li>Fix parsing USB BOS descriptors</li>
+          <li>Fix up the x86_64-specific capsule flags when deploying UEFI firmware</li>
+          <li>Improve firmware stream searching speed by a huge amount</li>
+          <li>Only convert the release uint32_t to device version format for UEFI devices</li>
+          <li>Only handle SIGINT in fwupdtool when required</li>
+          <li>Refactor the hypervisor and container detection to be usable from plugins</li>
+          <li>Set PlatformArchitecture as the CPU architecture for RISC-V machines</li>
+          <li>Use a sensible timeout when doing qc-s5gen2 HID requests</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP Portable USB-C 4K HDMI Hub</li>
+          <li>Lenovo Legion Go 2 (as a HID device)</li>
+          <li>Synaptics HapticsPad</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.0.17" date="2025-11-05">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for client-side phased update deployment</li>
+          <li>Add support for post-quantum signatures</li>
+          <li>Allow clearing the cache dirirectory</li>
+          <li>Allow fwupdtpmevlog to dump the raw eventlog data</li>
+          <li>Build a NVMe GUID derived from the serial number</li>
+          <li>Make fwupdtool extract work with deeply nested images</li>
+          <li>Parse VSS and FTW variable stores from EFI volumes</li>
+          <li>Reintroduce the FreeBSD CI target</li>
+          <li>Support very old versions of UDisks</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add 'fwupdmgr hwids' by exposing another daemon property</li>
+          <li>Add offline hashes for the Microsoft 20250902 dbx</li>
+          <li>Add the Framework-specific KEK and db hashes</li>
+          <li>Allow updating IFD BIOS region via parent MTD</li>
+          <li>Avoid showing reinstall prompts for composite devices</li>
+          <li>Clean up the fwupdtool lock file in all cases</li>
+          <li>Correctly match the correct historical composite component</li>
+          <li>Do not allow PK or KEK updates when system has a test key installed</li>
+          <li>Do not allow reinstalling when using ONLY_VERSION_UPGRADE</li>
+          <li>Do not require AC power to run the installed tests</li>
+          <li>Do not scan EFI volumes when constructing MTD BIOS devices</li>
+          <li>Ensure REGION is always set for MTD IFD children</li>
+          <li>Ensure SCSI instance IDs are valid ASCII values</li>
+          <li>Fix a critical warning when parsing invalid Jabra firmware</li>
+          <li>Fix an Ilitek parsing crash found when fuzzing</li>
+          <li>Fix an inotify race when refreshing metadata</li>
+          <li>Fix a pending-activation problem with Dell docking stations</li>
+          <li>Fix a potential hang when creating a chunk array with aligned sizes</li>
+          <li>Fix MTD emulation recording for PCI-backed devices</li>
+          <li>Fix the device order when the parent specifies install-parent-first</li>
+          <li>Fix the FLMSTR layout when reading IFD partitions</li>
+          <li>Fix the thunderbolt controller rushing to finalize before onlining retimers</li>
+          <li>Fix writing Intel GPU OptionROM data and OptionROM code</li>
+          <li>Flush stale events to make the Logitech Rallybar more reliable</li>
+          <li>Ignore all the Intel GPU MTD devices</li>
+          <li>Ignore errors when writing the last page of Dell dock firmware</li>
+          <li>Make an error message more specific</li>
+          <li>Modify the Dell dock needs-activation flag after updates are installed</li>
+          <li>Only add one devlink device for each PCI card</li>
+          <li>Parse the FMAP SBOM area as uSWID when required</li>
+          <li>Relax the USI dock DMC child device checks for new firmware</li>
+          <li>Revert back to the flashrom deprecated API as the new API is unusable</li>
+          <li>Rewrite the fwupdmgr manpage to be more useful</li>
+          <li>Use higher delay when update status for Logitech peripheral devices</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>ASUS CX9406 (touch controller)</li>
+          <li>Framework Copilot keyboard</li>
+          <li>Genesys GL352530 and GL352360</li>
+          <li>Huddly C1</li>
+          <li>Lexar and Maxio NVMe SSDs</li>
+          <li>Primax Ryder mouse 2</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.16" date="2025-09-12">
       <description>
         <p>

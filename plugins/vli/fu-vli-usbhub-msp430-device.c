@@ -113,11 +113,14 @@ fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubDevice *self,
 static gboolean
 fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuVliUsbhubDevice *parent;
 	guint8 buf[11] = {0x0};
 	g_autofree gchar *version = NULL;
 
 	/* get versions */
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_vli_usbhub_msp430_device_i2c_read(parent,
 						  I2C_CMD_READ_VERSIONS,
 						  buf,
@@ -144,7 +147,7 @@ fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuVliUsbhubDevice *parent;
 	FuVliUsbhubI2cStatus status = 0xff;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	const guint8 buf[] = {
@@ -153,6 +156,9 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GErro
 	};
 
 	/* open device */
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
@@ -181,10 +187,13 @@ static gboolean
 fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuVliUsbhubDeviceRequest *req = (FuVliUsbhubDeviceRequest *)user_data;
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuVliUsbhubDevice *parent;
 	FuVliUsbhubI2cStatus status = 0xff;
 
 	fu_device_sleep(device, 5); /* ms */
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
 	if (fu_usb_device_get_spec(FU_USB_DEVICE(parent)) >= 0x0300 || req->bufsz <= 32) {
 		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent,
 								0,
@@ -224,11 +233,14 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuVliUsbhubDevice *parent;
 	GPtrArray *records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
@@ -301,7 +313,7 @@ static gboolean
 fu_vli_usbhub_msp430_device_probe(FuDevice *device, GError **error)
 {
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_MSP430;
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, NULL));
 
 	fu_device_set_name(device, fu_vli_device_kind_to_string(device_kind));
 	if (parent != NULL) {
@@ -316,7 +328,7 @@ fu_vli_usbhub_msp430_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_vli_usbhub_msp430_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_vli_usbhub_msp430_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

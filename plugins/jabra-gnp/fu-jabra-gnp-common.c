@@ -11,6 +11,12 @@
 #include "fu-jabra-gnp-device.h"
 #include "fu-jabra-gnp-firmware.h"
 #include "fu-jabra-gnp-image.h"
+#include "fu-jabra-gnp-struct.h"
+
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=400
+ */
 
 static guint64
 fu_jabra_gnp_update_crc(guint64 acc, guint64 delta)
@@ -77,20 +83,13 @@ fu_jabra_gnp_calculate_crc(GBytes *bytes)
 	return crc;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_ensure_name(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x00,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -99,7 +98,14 @@ fu_jabra_gnp_ensure_name(FuDevice *self, guint8 address, guint8 seq, GError **er
 	};
 	g_autofree gchar *name = NULL;
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x00);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -108,7 +114,7 @@ fu_jabra_gnp_ensure_name(FuDevice *self, guint8 address, guint8 seq, GError **er
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -124,24 +130,17 @@ fu_jabra_gnp_ensure_name(FuDevice *self, guint8 address, guint8 seq, GError **er
 			     error);
 	if (name == NULL)
 		return FALSE;
-	fu_device_set_name(FU_DEVICE(self), name);
+	fu_device_set_name(device, name);
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_ensure_battery_level(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x12,
-		    0x02,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -150,7 +149,14 @@ fu_jabra_gnp_ensure_battery_level(FuDevice *self, guint8 address, guint8 seq, GE
 	};
 	guint8 battery_level = 0;
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x12);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x02);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -159,7 +165,7 @@ fu_jabra_gnp_ensure_battery_level(FuDevice *self, guint8 address, guint8 seq, GE
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -177,29 +183,22 @@ fu_jabra_gnp_ensure_battery_level(FuDevice *self, guint8 address, guint8 seq, GE
 				    "battery level was 0");
 		return FALSE;
 	}
-	fu_device_set_battery_level(FU_DEVICE(self), battery_level);
-	fu_device_set_battery_threshold(FU_DEVICE(self), 30);
+	fu_device_set_battery_level(device, battery_level);
+	fu_device_set_battery_threshold(device, 30);
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_read_dfu_pid(FuDevice *self,
+fu_jabra_gnp_read_dfu_pid(FuDevice *device,
 			  guint8 address,
 			  guint8 seq,
 			  guint16 *dfu_pid,
 			  GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x13,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -207,7 +206,14 @@ fu_jabra_gnp_read_dfu_pid(FuDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x13);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -216,7 +222,7 @@ fu_jabra_gnp_read_dfu_pid(FuDevice *self,
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -229,20 +235,13 @@ fu_jabra_gnp_read_dfu_pid(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_ensure_version(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x03,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -251,7 +250,14 @@ fu_jabra_gnp_ensure_version(FuDevice *self, guint8 address, guint8 seq, GError *
 	};
 	g_autofree gchar *version = NULL;
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x03);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -260,7 +266,7 @@ fu_jabra_gnp_ensure_version(FuDevice *self, guint8 address, guint8 seq, GError *
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -288,28 +294,21 @@ fu_jabra_gnp_ensure_version(FuDevice *self, guint8 address, guint8 seq, GError *
 		 g_str_has_suffix(version, "8") || g_str_has_suffix(version, "9")))
 		version[strlen(version) - 1] = '\0';
 
-	fu_device_set_version(FU_DEVICE(self), version);
+	fu_device_set_version(device, version);
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_read_fwu_protocol(FuDevice *self,
+fu_jabra_gnp_read_fwu_protocol(FuDevice *device,
 			       guint8 address,
 			       guint8 seq,
 			       guint8 *fwu_protocol,
 			       GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x14,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -317,7 +316,14 @@ fu_jabra_gnp_read_fwu_protocol(FuDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x14);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -326,7 +332,7 @@ fu_jabra_gnp_read_fwu_protocol(FuDevice *self,
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -348,25 +354,17 @@ fu_jabra_gnp_read_fwu_protocol(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_write_partition(FuDevice *self,
+fu_jabra_gnp_write_partition(FuDevice *device,
 			     guint8 address,
 			     guint8 seq,
 			     guint8 part,
 			     GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x87,
-		    0x0F,
-		    0x2D,
-		    part,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -374,7 +372,16 @@ fu_jabra_gnp_write_partition(FuDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x87);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x2D);
+	fu_byte_array_append_uint8(st->buf, part);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -383,7 +390,7 @@ fu_jabra_gnp_write_partition(FuDevice *self,
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -404,20 +411,13 @@ fu_jabra_gnp_write_partition(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_start(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_start(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x86,
-		    0x0F,
-		    0x17,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -425,7 +425,15 @@ fu_jabra_gnp_start(FuDevice *self, guint8 address, guint8 seq, GError **error)
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x86);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x17);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -434,7 +442,7 @@ fu_jabra_gnp_start(FuDevice *self, guint8 address, guint8 seq, GError **error)
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -455,8 +463,9 @@ fu_jabra_gnp_start(FuDevice *self, guint8 address, guint8 seq, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_flash_erase_done(FuDevice *self, guint8 address, GError **error)
+fu_jabra_gnp_flash_erase_done(FuDevice *device, guint8 address, GError **error)
 {
 	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] = {
 	    FU_JABRA_GNP_IFACE,
@@ -472,7 +481,7 @@ fu_jabra_gnp_flash_erase_done(FuDevice *self, guint8 address, GError **error)
 	    .timeout = FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_cb
 				      : fu_jabra_gnp_device_rx_cb,
@@ -491,8 +500,9 @@ fu_jabra_gnp_flash_erase_done(FuDevice *self, guint8 address, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_write_crc(FuDevice *self,
+fu_jabra_gnp_write_crc(FuDevice *device,
 		       guint8 address,
 		       guint8 seq,
 		       guint32 crc,
@@ -500,17 +510,9 @@ fu_jabra_gnp_write_crc(FuDevice *self,
 		       guint preload_count,
 		       GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x8E,
-		    0x0F,
-		    0x19,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -518,11 +520,19 @@ fu_jabra_gnp_write_crc(FuDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	fu_memwrite_uint32(tx_data.txbuf + 7, crc, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 11, total_chunks, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 13, preload_count, G_LITTLE_ENDIAN);
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x8E);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x19);
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	fu_byte_array_append_uint32(st->buf, crc, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, total_chunks, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, preload_count, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -531,7 +541,7 @@ fu_jabra_gnp_write_crc(FuDevice *self,
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -552,8 +562,9 @@ fu_jabra_gnp_write_crc(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_write_extended_crc(FuDevice *self,
+fu_jabra_gnp_write_extended_crc(FuDevice *device,
 				guint8 address,
 				guint8 seq,
 				guint32 crc,
@@ -561,17 +572,9 @@ fu_jabra_gnp_write_extended_crc(FuDevice *self,
 				guint preload_count,
 				GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x92,
-		    0x0F,
-		    0x19,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -579,12 +582,19 @@ fu_jabra_gnp_write_extended_crc(FuDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	fu_memwrite_uint32(tx_data.txbuf + 7, crc, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 11, 0x00, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 13, preload_count, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(tx_data.txbuf + 15, total_chunks, G_LITTLE_ENDIAN);
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x92);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x19);
+	fu_byte_array_append_uint32(st->buf, crc, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, 0x00, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, preload_count, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(st->buf, total_chunks, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -593,7 +603,7 @@ fu_jabra_gnp_write_extended_crc(FuDevice *self,
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -614,8 +624,9 @@ fu_jabra_gnp_write_extended_crc(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 static gboolean
-fu_jabra_gnp_write_chunk(FuDevice *self,
+fu_jabra_gnp_write_chunk(FuDevice *device,
 			 guint8 address,
 			 guint32 chunk_number,
 			 const guint8 *buf,
@@ -623,32 +634,24 @@ fu_jabra_gnp_write_chunk(FuDevice *self,
 			 GError **error)
 {
 	guint8 write_length = 0x00 + bufsz + 10;
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    0x00,
-		    write_length,
-		    0x0F,
-		    0x1A,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 
-	fu_memwrite_uint16(tx_data.txbuf + 7, chunk_number, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 9, bufsz, G_LITTLE_ENDIAN);
-	if (!fu_memcpy_safe(tx_data.txbuf,
-			    sizeof(tx_data.txbuf),
-			    11,
-			    buf,
-			    bufsz,
-			    0x0,
-			    bufsz,
-			    error))
-		return FALSE;
-	return fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, 0x00);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, write_length);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x1A);
+	fu_byte_array_append_uint16(st->buf, chunk_number, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, bufsz, G_LITTLE_ENDIAN);
+	g_byte_array_append(st->buf, buf, bufsz);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	return fu_device_retry_full(device,
 				    address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 					? fu_jabra_gnp_child_device_tx_cb
 					: fu_jabra_gnp_device_tx_cb,
@@ -658,8 +661,9 @@ fu_jabra_gnp_write_chunk(FuDevice *self,
 				    error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_write_chunks(FuDevice *self,
+fu_jabra_gnp_write_chunks(FuDevice *device,
 			  guint8 address,
 			  FuChunkArray *chunks,
 			  FuProgress *progress,
@@ -692,7 +696,7 @@ fu_jabra_gnp_write_chunks(FuDevice *self,
 		chk = fu_chunk_array_index(chunks, chunk_number, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_jabra_gnp_write_chunk(self,
+		if (!fu_jabra_gnp_write_chunk(device,
 					      address,
 					      chunk_number,
 					      fu_chunk_get_data(chk),
@@ -701,7 +705,7 @@ fu_jabra_gnp_write_chunks(FuDevice *self,
 			return FALSE;
 		if (((chunk_number % FU_JABRA_GNP_PRELOAD_COUNT) == 0) ||
 		    (guint)chunk_number == fu_chunk_array_length(chunks) - 1) {
-			if (!fu_device_retry_full(FU_DEVICE(self),
+			if (!fu_device_retry_full(device,
 						  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 						      ? fu_jabra_gnp_child_device_rx_cb
 						      : fu_jabra_gnp_device_rx_cb,
@@ -734,8 +738,9 @@ fu_jabra_gnp_write_chunks(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_read_verify_status(FuDevice *self, guint8 address, GError **error)
+fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error)
 {
 	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] = {
 	    FU_JABRA_GNP_IFACE,
@@ -751,7 +756,7 @@ fu_jabra_gnp_read_verify_status(FuDevice *self, guint8 address, GError **error)
 	    .timeout = FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_cb
 				      : fu_jabra_gnp_device_rx_cb,
@@ -770,27 +775,17 @@ fu_jabra_gnp_read_verify_status(FuDevice *self, guint8 address, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_write_version(FuDevice *self,
+fu_jabra_gnp_write_version(FuDevice *device,
 			   guint8 address,
 			   guint8 seq,
 			   FuJabraGnpVersionData *version_data,
 			   GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x89,
-		    0x0F,
-		    0x1E,
-		    version_data->major,
-		    version_data->minor,
-		    version_data->micro,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -798,7 +793,18 @@ fu_jabra_gnp_write_version(FuDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x89);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x1E);
+	fu_byte_array_append_uint8(st->buf, version_data->major);
+	fu_byte_array_append_uint8(st->buf, version_data->minor);
+	fu_byte_array_append_uint8(st->buf, version_data->micro);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -807,7 +813,7 @@ fu_jabra_gnp_write_version(FuDevice *self,
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,
@@ -828,20 +834,13 @@ fu_jabra_gnp_write_version(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_jabra_gnp_write_dfu_from_squif(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x86,
-		    0x0F,
-		    0x1D,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -849,7 +848,15 @@ fu_jabra_gnp_write_dfu_from_squif(FuDevice *self, guint8 address, guint8 seq, GE
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x86);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x1D);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_tx_cb
 				      : fu_jabra_gnp_device_tx_cb,
@@ -858,7 +865,7 @@ fu_jabra_gnp_write_dfu_from_squif(FuDevice *self, guint8 address, guint8 seq, GE
 				  &tx_data,
 				  error))
 		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
+	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				      ? fu_jabra_gnp_child_device_rx_with_sequence_cb
 				      : fu_jabra_gnp_device_rx_with_sequence_cb,

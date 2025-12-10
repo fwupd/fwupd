@@ -45,6 +45,7 @@ fu_dfu_target_init(FuDfuTarget *self)
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	priv->sectors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DFU_DEVICE);
 }
 
 static void
@@ -99,6 +100,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	FuDfuSectorCap cap = FU_DFU_SECTOR_CAP_NONE;
+	FuDevice *proxy;
 	gchar *tmp;
 	guint32 addr_offset = 0;
 	guint64 nr_sectors;
@@ -137,8 +139,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	}
 
 	/* handle weirdness */
-	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)),
-				       FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE)) {
 		if (tmp[1] == '\0') {
 			tmp[1] = tmp[0];
 			tmp[0] = 'B';
@@ -150,10 +154,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	case 'B': /* byte */
 	case ' ': /* byte, ST reference bootloader :/ */
 		break;
-	case 'K': /* Kilo */
+	case 'K': /* kilo */
 		sector_size *= 0x400;
 		break;
-	case 'M': /* Mega */
+	case 'M': /* mega */
 		sector_size *= 0x100000;
 		break;
 	default:
@@ -226,7 +230,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 	if (alt_name == NULL)
 		return TRUE;
 
-	/* From the Neo Freerunner */
+	/* from the Neo Freerunner */
 	if (g_str_has_prefix(alt_name, "RAM 0x")) {
 		FuDfuSector *sector;
 		guint64 addr_tmp = 0;
@@ -409,16 +413,19 @@ fu_dfu_target_status_to_error_msg(FuDfuStatus status)
 static gboolean
 fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	guint polling_count = 0;
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(device, 0, error))
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dfu_device_refresh(proxy, 0, error))
 		return FALSE;
 
 	/* wait for FU_DFU_STATE_DFU_MANIFEST to not be set */
-	while (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_MANIFEST_SYNC ||
-	       fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_MANIFEST) {
+	while (fu_dfu_device_get_state(proxy) == FU_DFU_STATE_DFU_MANIFEST_SYNC ||
+	       fu_dfu_device_get_state(proxy) == FU_DFU_STATE_DFU_MANIFEST) {
 		g_debug("waiting for FU_DFU_STATE_DFU_MANIFEST to clear");
 
 		if (polling_count++ > DFU_TARGET_MANIFEST_MAX_POLLING_TRIES) {
@@ -429,19 +436,18 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 			return FALSE;
 		}
 
-		fu_device_sleep(FU_DEVICE(device),
-				fu_dfu_device_get_download_timeout(device) + 1000);
-		if (!fu_dfu_device_refresh(device, 0, error))
+		fu_device_sleep(FU_DEVICE(proxy), fu_dfu_device_get_download_timeout(proxy) + 1000);
+		if (!fu_dfu_device_refresh(proxy, 0, error))
 			return FALSE;
 	}
 
 	/* in an error state */
-	if (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_ERROR) {
+	if (fu_dfu_device_get_state(proxy) == FU_DFU_STATE_DFU_ERROR) {
 		g_set_error_literal(
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INTERNAL,
-		    fu_dfu_target_status_to_error_msg(fu_dfu_device_get_status(device)));
+		    fu_dfu_target_status_to_error_msg(fu_dfu_device_get_status(proxy)));
 		return FALSE;
 	}
 
@@ -451,19 +457,22 @@ fu_dfu_target_manifest_wait(FuDfuTarget *self, GError **error)
 gboolean
 fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	FuDfuStatus status;
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* get the status */
-	if (!fu_dfu_device_refresh(device, 0, error))
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dfu_device_refresh(proxy, 0, error))
 		return FALSE;
 
 	/* wait for dfuDNBUSY to not be set */
-	while (fu_dfu_device_get_state(device) == FU_DFU_STATE_DFU_DNBUSY) {
+	while (fu_dfu_device_get_state(proxy) == FU_DFU_STATE_DFU_DNBUSY) {
 		g_debug("waiting for FU_DFU_STATE_DFU_DNBUSY to clear");
-		fu_device_sleep(FU_DEVICE(device), fu_dfu_device_get_download_timeout(device));
-		if (!fu_dfu_device_refresh(device, 0, error))
+		fu_device_sleep(FU_DEVICE(proxy), fu_dfu_device_get_download_timeout(proxy));
+		if (!fu_dfu_device_refresh(proxy, 0, error))
 			return FALSE;
 		/* this is a really long time to save fwupd in case
 		 * the device has got wedged */
@@ -477,12 +486,12 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 	}
 
 	/* not in an error state */
-	if (fu_dfu_device_get_state(device) != FU_DFU_STATE_DFU_ERROR)
+	if (fu_dfu_device_get_state(proxy) != FU_DFU_STATE_DFU_ERROR)
 		return TRUE;
 
 	/* STM32-specific long errors */
-	status = fu_dfu_device_get_status(device);
-	if (fu_dfu_device_get_version(device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
+	status = fu_dfu_device_get_status(proxy);
+	if (fu_dfu_device_get_version(proxy) == FU_DFU_FIRMARE_VERSION_DFUSE) {
 		if (status == FU_DFU_STATUS_ERR_VENDOR) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -519,17 +528,20 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 static gboolean
 fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDfuDevice *proxy;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* use the correct setting */
-	if (fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_usb_device_set_interface_alt(FU_USB_DEVICE(device),
-						     fu_dfu_device_get_interface(device),
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_device_has_flag(FU_DEVICE(proxy), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		if (!fu_usb_device_set_interface_alt(FU_USB_DEVICE(proxy),
+						     fu_dfu_device_get_interface(proxy),
 						     priv->alt_setting,
 						     &error_local)) {
 			g_set_error(error,
@@ -537,7 +549,7 @@ fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "cannot set alternate setting 0x%02x on interface %i: %s",
 				    priv->alt_setting,
-				    fu_dfu_device_get_interface(device),
+				    fu_dfu_device_get_interface(proxy),
 				    error_local->message);
 			return FALSE;
 		}
@@ -560,7 +572,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 {
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	FuDevice *device = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -576,14 +588,17 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	}
 
 	/* GD32VF103 devices features and peripheral list */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	if (priv->alt_setting == 0x0 &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_GD32)) {
+	    fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_GD32)) {
 		/*             RB R8 R6 R4  VB V8
 		 * Flash (KB) 128 64 32 16 128 64
 		 *             TB T8 T6 T4  CB C8 C6 C4
 		 * Flash (KB) 128 64 32 16 128 64 32 16
 		 */
-		const gchar *serial = fu_device_get_serial(device);
+		const gchar *serial = fu_device_get_serial(proxy);
 		if (serial == NULL || strlen(serial) < 4 || serial[3] != 'J') {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -624,7 +639,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	if (priv->alt_idx != 0x00 && fu_device_get_logical_id(FU_DEVICE(self)) == NULL) {
 		g_autofree gchar *alt_name = NULL;
 		alt_name =
-		    fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), priv->alt_idx, NULL);
+		    fu_usb_device_get_string_descriptor(FU_USB_DEVICE(proxy), priv->alt_idx, NULL);
 		fu_device_set_logical_id(FU_DEVICE(self), alt_name);
 	}
 
@@ -662,23 +677,26 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     FuProgress *progress,
 			     GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
 	/* fall back to default */
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	if (timeout_ms == 0)
-		timeout_ms = fu_dfu_device_get_timeout(device);
+		timeout_ms = fu_dfu_device_get_timeout(proxy);
 
 	/* low level packet debugging */
 	fu_dump_raw(G_LOG_DOMAIN, "Message", buf->data, buf->len);
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
 					    FU_USB_RECIPIENT_INTERFACE,
 					    FU_DFU_REQUEST_DNLOAD,
 					    index,
-					    fu_dfu_device_get_interface(device),
+					    fu_dfu_device_get_interface(proxy),
 					    buf->data,
 					    buf->len,
 					    &actual_length,
@@ -686,7 +704,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
-		fu_dfu_device_error_fixup(device, &error_local);
+		fu_dfu_device_error_fixup(proxy, &error_local);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -697,17 +715,17 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 
 	/* for STM32 devices, the action only occurs when we do GetStatus --
 	 * and it can take a long time to complete! */
-	if (fu_dfu_device_get_version(device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
-		if (!fu_dfu_device_refresh(device, 35000, error))
+	if (fu_dfu_device_get_version(proxy) == FU_DFU_FIRMARE_VERSION_DFUSE) {
+		if (!fu_dfu_device_refresh(proxy, 35000, error))
 			return FALSE;
 	}
 
 	/* wait for the device to write contents to the EEPROM */
-	if (buf->len == 0 && fu_dfu_device_get_download_timeout(device) > 0)
+	if (buf->len == 0 && fu_dfu_device_get_download_timeout(proxy) > 0)
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-	if (fu_dfu_device_get_download_timeout(device) > 0) {
-		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(device));
-		fu_device_sleep(FU_DEVICE(device), fu_dfu_device_get_download_timeout(device));
+	if (fu_dfu_device_get_download_timeout(proxy) > 0) {
+		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(proxy));
+		fu_device_sleep(FU_DEVICE(proxy), fu_dfu_device_get_download_timeout(proxy));
 	}
 
 	/* find out if the write was successful, waiting for BUSY to clear */
@@ -727,31 +745,34 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 			   FuProgress *progress,
 			   GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
 
 	/* unset */
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return NULL;
 	if (buf_sz == 0)
-		buf_sz = (gsize)fu_dfu_device_get_transfer_size(device);
+		buf_sz = (gsize)fu_dfu_device_get_transfer_size(proxy);
 
 	buf = g_new0(guint8, buf_sz);
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_CLASS,
 					    FU_USB_RECIPIENT_INTERFACE,
 					    FU_DFU_REQUEST_UPLOAD,
 					    index,
-					    fu_dfu_device_get_interface(device),
+					    fu_dfu_device_get_interface(proxy),
 					    buf,
 					    buf_sz,
 					    &actual_length,
-					    fu_dfu_device_get_timeout(device),
+					    fu_dfu_device_get_timeout(proxy),
 					    NULL,
 					    &error_local)) {
 		/* refresh the error code */
-		fu_dfu_device_error_fixup(device, &error_local);
+		fu_dfu_device_error_fixup(proxy, &error_local);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -783,7 +804,7 @@ fu_dfu_target_set_alt_setting(FuDfuTarget *self, guint8 alt_setting)
 gboolean
 fu_dfu_target_attach(FuDfuTarget *self, FuProgress *progress, GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
 	/* ensure populated */
@@ -795,7 +816,10 @@ fu_dfu_target_attach(FuDfuTarget *self, FuProgress *progress, GError **error)
 		return klass->attach(self, progress, error);
 
 	/* normal DFU mode just needs a bus reset */
-	return fu_dfu_device_reset(device, progress, error);
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	return fu_dfu_device_reset(proxy, progress, error);
 }
 
 static FuChunk *
@@ -806,13 +830,16 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 				 FuProgress *progress,
 				 GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	GBytes *chunk_tmp;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
-	guint16 transfer_size = fu_dfu_device_get_transfer_size(device);
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return NULL;
 
 	/* update UI */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
@@ -846,7 +873,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 			fu_progress_set_percentage_full(progress, total_size, percentage_size);
 
 		/* detect short write as EOF */
-		if (chunk_size < transfer_size)
+		if (chunk_size < fu_dfu_device_get_transfer_size(proxy))
 			break;
 	}
 
@@ -918,6 +945,7 @@ fu_dfu_target_upload(FuDfuTarget *self,
 		     GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
+	FuDevice *proxy;
 	FuDfuSector *sector;
 	guint16 zone_cur;
 	guint32 zone_size = 0;
@@ -932,8 +960,10 @@ fu_dfu_target_upload(FuDfuTarget *self,
 		return FALSE;
 
 	/* can the target do this? */
-	if (!fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)),
-					FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -994,39 +1024,7 @@ fu_dfu_target_upload(FuDfuTarget *self,
 	}
 
 	/* success */
-	fu_firmware_add_image(firmware, image);
-	return TRUE;
-}
-
-static gchar *
-_g_bytes_compare_verbose(GBytes *bytes1, GBytes *bytes2)
-{
-	const guint8 *data1;
-	const guint8 *data2;
-	gsize length1;
-	gsize length2;
-
-	data1 = g_bytes_get_data(bytes1, &length1);
-	data2 = g_bytes_get_data(bytes2, &length2);
-
-	/* not the same length */
-	if (length1 != length2) {
-		return g_strdup_printf("got %" G_GSIZE_FORMAT " bytes, "
-				       "expected %" G_GSIZE_FORMAT,
-				       length1,
-				       length2);
-	}
-
-	/* return 00 01 02 03 */
-	for (guint i = 0; i < length1; i++) {
-		if (data1[i] != data2[i]) {
-			return g_strdup_printf("got 0x%02x, expected 0x%02x @ 0x%04x",
-					       data1[i],
-					       data2[i],
-					       i);
-		}
-	}
-	return NULL;
+	return fu_firmware_add_image(firmware, image, error);
 }
 
 static gboolean
@@ -1036,10 +1034,15 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuDfuDevice *proxy;
 	guint32 nr_chunks;
-	guint16 transfer_size = fu_dfu_device_get_transfer_size(device);
+	guint16 transfer_size;
 	g_autoptr(GBytes) bytes = NULL;
+
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	transfer_size = fu_dfu_device_get_transfer_size(proxy);
 
 	/* round up as we have to transfer incomplete blocks */
 	bytes = fu_chunk_get_bytes(chk);
@@ -1092,12 +1095,12 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 			       FuDfuTargetTransferFlags flags,
 			       GError **error)
 {
-	FuDevice *device = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
 	/* progress */
 	if (flags & FU_DFU_TARGET_TRANSFER_FLAG_VERIFY &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
+	    fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 4, NULL);
@@ -1126,7 +1129,7 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 
 	/* verify */
 	if (flags & FU_DFU_TARGET_TRANSFER_FLAG_VERIFY &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
+	    fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		g_autoptr(GBytes) bytes = NULL;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 		g_autoptr(FuChunk) chunk_tmp = NULL;
@@ -1140,14 +1143,8 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 		if (chunk_tmp == NULL)
 			return FALSE;
 		bytes_tmp = fu_chunk_get_bytes(chunk_tmp);
-		if (g_bytes_compare(bytes_tmp, bytes) != 0) {
-			g_autofree gchar *bytes_cmp_str = NULL;
-			bytes_cmp_str = _g_bytes_compare_verbose(bytes_tmp, bytes);
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "verify failed: %s",
-				    bytes_cmp_str);
+		if (!fu_bytes_compare(bytes_tmp, bytes, error)) {
+			g_prefix_error_literal(error, "verify failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -1175,7 +1172,7 @@ fu_dfu_target_download(FuDfuTarget *self,
 		       FuDfuTargetTransferFlags flags,
 		       GError **error)
 {
-	FuDevice *device = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -1188,7 +1185,10 @@ fu_dfu_target_download(FuDfuTarget *self,
 		return FALSE;
 
 	/* can the target do this? */
-	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1239,8 +1239,8 @@ fu_dfu_target_download(FuDfuTarget *self,
 		fu_progress_step_done(progress);
 	}
 
-	if (fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_MANIFEST_TOL))
+	if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&
+	    fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_MANIFEST_TOL))
 		if (!fu_dfu_target_manifest_wait(self, error))
 			return FALSE;
 
@@ -1260,7 +1260,7 @@ guint8
 fu_dfu_target_get_alt_setting(FuDfuTarget *self)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_TARGET(self), 0xff);
+	g_return_val_if_fail(FU_IS_DFU_TARGET(self), G_MAXUINT8);
 	return priv->alt_setting;
 }
 

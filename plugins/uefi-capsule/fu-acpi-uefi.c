@@ -38,7 +38,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 {
 	const gchar *needle = "$QUIRK";
 	gsize data_offset = 0;
-	g_autoptr(GByteArray) st_qrk = NULL;
+	g_autoptr(FuStructAcpiInsydeQuirk) st_qrk = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
@@ -50,7 +50,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 			    strlen(needle),
 			    &data_offset,
 			    error)) {
-		g_prefix_error_literal(error, "$QUIRK not found");
+		g_prefix_error_literal(error, "$QUIRK not found: ");
 		return FALSE;
 	}
 
@@ -58,7 +58,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 	st_qrk = fu_struct_acpi_insyde_quirk_parse_stream(stream, data_offset, error);
 	if (st_qrk == NULL)
 		return FALSE;
-	if (fu_struct_acpi_insyde_quirk_get_size(st_qrk) < st_qrk->len) {
+	if (fu_struct_acpi_insyde_quirk_get_size(st_qrk) < st_qrk->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,

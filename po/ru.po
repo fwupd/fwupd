@@ -8,16 +8,21 @@
 # Serge Vylekzhanin <vylekzhanin@mail.ru>, 2015-2019
 # Sergej A. <Ser82-png@yandex.ru>, 2022-2023
 # Sergej A. <Ser82-png@yandex.ru>, 2022
+# Aleksandr Melentev <alex239@gmail.com>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Russian (http://app.transifex.com/freedesktop/fwupd/language/ru/)\n"
+"PO-Revision-Date: 2025-10-24 10:33+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Russian <https://hosted.weblate.org/projects/fwupd/fwupd/ru/>\n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ru\n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -356,7 +361,7 @@ msgstr "Для обновления хранимых контрольных су
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
-msgstr "Обновления BIOS доставляются через LVFS или Центр обновления Windows."
+msgstr "Обновления BIOS доставляются через LVFS или Центр обновления Windows"
 
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
@@ -516,7 +521,7 @@ msgstr "Устройства, которые не были правильно о
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Устройства без доступных обновлений прошивки:"
+msgstr "Устройства без доступных обновлений прошивки: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -595,7 +600,7 @@ msgstr "Скачать файл"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "Получение..."
+msgstr "Получение…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
@@ -1033,7 +1038,7 @@ msgstr "Новая версия"
 
 #. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
-msgstr "Не определено никаких действий."
+msgstr "Не определено никаких действий!"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -1137,7 +1142,7 @@ msgstr "Прежде чем продолжить, убедитесь, что у 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Пожалуйста, введите число от 0 до %u:"
+msgstr "Пожалуйста, введите число от 0 до %u: "
 
 #. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
 #. * 'N'

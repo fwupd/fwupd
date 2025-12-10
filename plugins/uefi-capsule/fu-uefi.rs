@@ -1,6 +1,10 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+use fwupd::efi::FuEfiCapsuleHeaderFlags
+use fwupd::efi::FuEfiStatus
+use fwupd::efi::FuStructEfiTime
+
 #[derive(New, Getters, Default)]
 #[repr(C, packed)]
 struct FuStructEfiUxCapsuleHeader {
@@ -13,7 +17,7 @@ struct FuStructEfiUxCapsuleHeader {
     y_offset: u32le,
 }
 
-#[derive(New, Getters, Default)]
+#[derive(New, Getters, ToBytes, Default)]
 #[repr(C, packed)]
 struct FuStructEfiCapsuleHeader {
     guid: Guid,
@@ -37,9 +41,19 @@ struct FuStructEfiUpdateInfo {
     guid: Guid,
     flags: u32le,
     hw_inst: u64le,
-    time_attempted: [u8; 16], // a EFI_TIME_T
+    time_attempted: FuStructEfiTime,
     status: FuUefiUpdateInfoStatus,
     // EFI_DEVICE_PATH goes here
+}
+
+#[derive(New, ParseBytes, ToBytes)]
+#[repr(C, packed)]
+struct FuStructEfiCapsuleResultVariableHeader {
+   total_size: u32le,
+   reserved: u32le,
+   guid: Guid,
+   processed: FuStructEfiTime,
+   status: FuEfiStatus,
 }
 
 #[derive(ParseStream)]

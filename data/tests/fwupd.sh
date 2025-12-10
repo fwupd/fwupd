@@ -12,7 +12,7 @@ run_test() {
 run_device_tests() {
     if [ -n "$CI_NETWORK" ] && [ -d @devicetestdir@ ]; then
         for f in $(grep --files-with-matches -r emulation- @devicetestdir@); do
-            echo "Emulating for $f"
+            echo " ● Emulating for $f"
             fwupdmgr device-emulate \
                 --download-retries=5 \
                 --no-unreported-check \
@@ -50,6 +50,7 @@ run_test mtd-self-test
 run_test nitrokey-self-test
 run_test nvme-self-test
 run_test redfish-self-test
+run_test snap-self-test
 run_test synaptics-prometheus-self-test
 run_test tpm-self-test
 run_test uefi-dbx-self-test

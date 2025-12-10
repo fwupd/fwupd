@@ -17,16 +17,10 @@ G_DEFINE_TYPE(FuUsiDockDmcDevice, fu_usi_dock_dmc_device, FU_TYPE_USB_DEVICE)
 static void
 fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, NULL);
 	if (parent != NULL) {
 		g_autoptr(GError) error = NULL;
 		const gchar *serialnum;
-
-		/* slightly odd: the MCU device uses the DMC version number */
-		g_info("absorbing DMC version into MCU");
-		fu_device_set_version_format(parent, fu_device_get_version_format(device));
-		fu_device_set_version(parent, fu_device_get_version(device));
-		fu_device_set_serial(parent, fu_device_get_serial(device));
 
 		/* allow matching firmware */
 		fu_device_add_instance_str(parent, "CID", fu_device_get_name(device));
@@ -78,6 +72,12 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 				return;
 			}
 		}
+
+		/* slightly odd: the MCU device uses the DMC version number */
+		g_info("absorbing DMC version into MCU");
+		fu_device_set_version_format(parent, fu_device_get_version_format(device));
+		fu_device_set_version(parent, fu_device_get_version(device));
+		fu_device_set_serial(parent, fu_device_get_serial(device));
 
 		/* use a better device name */
 		fu_device_set_name(device, "Dock Management Controller Information");

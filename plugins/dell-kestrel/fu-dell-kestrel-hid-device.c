@@ -48,38 +48,40 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 					FuDellKestrelEcDevType dev_type,
 					guint8 dev_identifier)
 {
-	g_autoptr(FuStructDellKestrelHidFwUpdatePkg) fwbuf =
+	g_autoptr(FuStructDellKestrelHidFwUpdatePkg) st_fwbuf =
 	    fu_struct_dell_kestrel_hid_fw_update_pkg_new();
 	gsize chk_datasz = fu_chunk_get_data_sz(chk);
 
 	/* header */
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_cmd(fwbuf, FU_DELL_KESTREL_HID_CMD_FWUPDATE);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_ext(fwbuf, FU_DELL_KESTREL_HID_EXT_FWUPDATE);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_cmd(st_fwbuf,
+							 FU_DELL_KESTREL_HID_CMD_FWUPDATE);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_ext(st_fwbuf,
+							 FU_DELL_KESTREL_HID_EXT_FWUPDATE);
 	fu_struct_dell_kestrel_hid_fw_update_pkg_set_chunk_sz(
-	    fwbuf,
-	    7 + chk_datasz); // 7 = sizeof(command)
+	    st_fwbuf,
+	    7 + chk_datasz); /* 7 = sizeof(command) */
 
 	/* command */
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_sub_cmd(fwbuf,
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_sub_cmd(st_fwbuf,
 							     FU_DELL_KESTREL_HID_SUBCMD_FWUPDATE);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_type(fwbuf, dev_type);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_identifier(fwbuf, dev_identifier);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_fw_sz(fwbuf, fw_size);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_type(st_fwbuf, dev_type);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_identifier(st_fwbuf, dev_identifier);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_fw_sz(st_fwbuf, fw_size);
 
 	/* data */
-	fu_byte_array_append_bytes(fwbuf, fu_chunk_get_bytes(chk));
+	fu_byte_array_append_bytes(st_fwbuf->buf, fu_chunk_get_bytes(chk));
 
-	return g_bytes_new(fwbuf->data, fwbuf->len);
+	return fu_struct_dell_kestrel_hid_fw_update_pkg_to_bytes(st_fwbuf);
 }
 
 static gboolean
-fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	guint8 *outbuffer = (guint8 *)user_data;
-	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+	GByteArray *buf = (GByteArray *)user_data;
+	return fu_hid_device_set_report(FU_HID_DEVICE(device),
 					0x0,
-					outbuffer,
-					192,
+					buf->data,
+					buf->len,
 					FU_DELL_KESTREL_HID_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
@@ -87,21 +89,21 @@ fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *self, gpointer user_data,
 
 static gboolean
 fu_dell_kestrel_hid_device_hid_set_report(FuDellKestrelHidDevice *self,
-					  guint8 *outbuffer,
+					  GByteArray *buf,
 					  GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_dell_kestrel_hid_device_hid_set_report_cb,
 			       DELL_KESTREL_MAX_RETRIES,
-			       outbuffer,
+			       buf,
 			       error);
 }
 
 static gboolean
-fu_dell_kestrel_hid_device_get_report_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_dell_kestrel_hid_device_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint8 *inbuffer = (guint8 *)user_data;
-	return fu_hid_device_get_report(FU_HID_DEVICE(self),
+	return fu_hid_device_get_report(FU_HID_DEVICE(device),
 					0x0,
 					inbuffer,
 					192,
@@ -128,21 +130,20 @@ fu_dell_kestrel_hid_device_i2c_write(FuDellKestrelHidDevice *self,
 				     GByteArray *cmd_buf,
 				     GError **error)
 {
-	g_autoptr(FuStructDellKestrelHidCmdBuffer) buf =
-	    fu_struct_dell_kestrel_hid_cmd_buffer_new();
+	g_autoptr(FuStructDellKestrelHidCmdBuffer) st = fu_struct_dell_kestrel_hid_cmd_buffer_new();
 
 	g_return_val_if_fail(cmd_buf->len <= FU_DELL_KESTREL_HID_I2C_MAX_WRITE, FALSE);
 
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(buf, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(buf, FU_DELL_KESTREL_HID_CMD_EXT_I2C_WRITE);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(buf, 0x00);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(buf, cmd_buf->len);
-	if (!fu_struct_dell_kestrel_hid_cmd_buffer_set_databytes(buf,
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(st, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(st, FU_DELL_KESTREL_HID_CMD_EXT_I2C_WRITE);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(st, 0x00);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(st, cmd_buf->len);
+	if (!fu_struct_dell_kestrel_hid_cmd_buffer_set_databytes(st,
 								 cmd_buf->data,
 								 cmd_buf->len,
 								 error))
 		return FALSE;
-	return fu_dell_kestrel_hid_device_hid_set_report(self, buf->data, error);
+	return fu_dell_kestrel_hid_device_hid_set_report(self, st->buf, error);
 }
 
 gboolean
@@ -152,15 +153,14 @@ fu_dell_kestrel_hid_device_i2c_read(FuDellKestrelHidDevice *self,
 				    guint delayms,
 				    GError **error)
 {
-	g_autoptr(FuStructDellKestrelHidCmdBuffer) buf =
-	    fu_struct_dell_kestrel_hid_cmd_buffer_new();
+	g_autoptr(FuStructDellKestrelHidCmdBuffer) st = fu_struct_dell_kestrel_hid_cmd_buffer_new();
 	guint8 inbuf[FU_DELL_KESTREL_HID_I2C_MAX_READ] = {0xff};
 
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(buf, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(buf, FU_DELL_KESTREL_HID_CMD_EXT_I2C_READ);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(buf, cmd);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(buf, res->len + 1);
-	if (!fu_dell_kestrel_hid_device_hid_set_report(self, buf->data, error))
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(st, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(st, FU_DELL_KESTREL_HID_CMD_EXT_I2C_READ);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(st, cmd);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(st, res->len + 1);
+	if (!fu_dell_kestrel_hid_device_hid_set_report(self, st->buf, error))
 		return FALSE;
 
 	if (delayms > 0)
@@ -226,7 +226,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 		if (page == NULL)
 			return FALSE;
 
-		g_debug("sending chunk: %u/%u, page: %u/%u.",
+		g_debug("sending chunk: %u/%u, page: %u/%u",
 			chunk_idx,
 			chunks_num - 1,
 			j,

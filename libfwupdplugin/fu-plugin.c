@@ -737,7 +737,6 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		g_autoptr(GBytes) fw_old = NULL;
 		g_autofree gchar *path = NULL;
 		g_autofree gchar *fn = NULL;
-		g_autofree gchar *localstatedir = NULL;
 
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
@@ -750,10 +749,9 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			g_prefix_error_literal(error, "failed to backup old firmware: ");
 			return FALSE;
 		}
-		localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
-		path = g_build_filename(
-		    localstatedir,
+		path = fu_path_build(
+		    FU_PATH_KIND_LOCALSTATEDIR_PKG,
 		    "backup",
 		    fu_device_get_id(device),
 		    fu_device_get_serial(device) != NULL ? fu_device_get_serial(device) : "default",
@@ -1750,7 +1748,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	}
 
 	/* open */
-	proxy = fu_device_get_proxy(dev);
+	proxy = fu_device_get_proxy_internal(dev);
 	if (proxy != NULL) {
 		g_autoptr(FuDeviceLocker) locker_proxy = NULL;
 		locker_proxy = fu_device_locker_new(proxy, error);
@@ -2261,6 +2259,66 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
 		GPtrArray *checksums = fu_device_get_checksums(device);
 		g_ptr_array_set_size(checksums, 0);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_plugin_runner_composite_peek_firmware:
+ * @self: a #FuPlugin
+ * @device: a device
+ * @firmware: a #FuFirmware
+ * @progress: a #FuProgress
+ * @flags: install flags
+ * @error: (nullable): optional return location for an error
+ *
+ * Notify when the firmware has been parsed and the update is ready to be deployed
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 2.0.19
+ **/
+gboolean
+fu_plugin_runner_composite_peek_firmware(FuPlugin *self,
+					 FuDevice *device,
+					 FuFirmware *firmware,
+					 FuProgress *progress,
+					 FwupdInstallFlags flags,
+					 GError **error)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not enabled */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED)) {
+		g_debug("plugin not enabled, skipping");
+		return TRUE;
+	}
+
+	/* optional */
+	if (vfuncs->composite_peek_firmware == NULL)
+		return TRUE;
+	if (!vfuncs
+		 ->composite_peek_firmware(self, device, firmware, progress, flags, &error_local)) {
+		if (error_local == NULL) {
+			g_critical("unset plugin error in update(%s)", fu_plugin_get_name(self));
+			g_set_error_literal(&error_local,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "unspecified error");
+			return FALSE;
+		}
+		fu_device_set_update_error(device, error_local->message);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
 
 	/* success */

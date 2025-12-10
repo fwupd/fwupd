@@ -34,6 +34,15 @@ Additionally, an extra instance IDs containing the version may be added.
 
 * `NVME\VEN_1179&DEV_010F&VER_3B2QGXA7`
 
+Additionally, an extra instance IDs containing the serial number suffix may be added.
+
+* `NVME\VEN_1179&DEV_010F&SNSUFFIX_12345`
+
+When the model name can be read from the controller data the instance ID also
+includes it:
+
+* `NVME\VEN_1179&DEV_010F&SNSUFFIX_12345&NAME_Lexar-SSD-NM790-1TB`
+
 Additionally, for NVMe drives with Dell vendor firmware two extra GUIDs are
 added:
 
@@ -55,6 +64,12 @@ This plugin uses the following plugin-specific quirks:
 The block size used for NVMe writes
 
 Since: 1.1.3
+
+### NvmeSerialSuffixChars
+
+The number of characters of the serial number to use for `SNSUFFIX` in the instance ID. Defaults to 0.
+
+Since: 2.0.17
 
 ### `Flags=force-align`
 

@@ -43,7 +43,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint16 rcdlen;
 	guint32 dataoff;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAcpiPhatHealthRecord) st = NULL;
 
 	/* sanity check record length */
 	st = fu_struct_acpi_phat_health_record_parse_stream(stream, 0x0, error);
@@ -103,7 +103,7 @@ static GByteArray *
 fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
-	g_autoptr(GByteArray) st = fu_struct_acpi_phat_health_record_new();
+	g_autoptr(FuStructAcpiPhatHealthRecord) st = fu_struct_acpi_phat_health_record_new();
 
 	/* convert device path ahead of time */
 	if (self->device_path != NULL) {
@@ -113,7 +113,7 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 									error);
 		if (buf == NULL)
 			return NULL;
-		g_byte_array_append(st, buf->data, buf->len);
+		g_byte_array_append(st->buf, buf->data, buf->len);
 	}
 
 	/* data record */
@@ -123,12 +123,12 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_struct_acpi_phat_health_record_set_device_signature(st, &guid);
 	}
-	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->len);
+	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->buf->len);
 	fu_struct_acpi_phat_health_record_set_version(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_acpi_phat_health_record_set_flags(st, self->am_healthy);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

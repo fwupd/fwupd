@@ -42,6 +42,7 @@
 
 #define RMI_F01_CMD_DEVICE_RESET       1
 #define RMI_F01_DEFAULT_RESET_DELAY_MS 100
+#define RMI_F01_BLV10_RESET_DELAY_MS   5000
 
 typedef struct {
 	FuSynapticsRmiFlash flash;
@@ -52,6 +53,7 @@ typedef struct {
 	guint16 sig_size; /* 0x0 for non-secure update */
 	guint8 max_page;
 	gboolean in_iep_mode;
+	guint16 previous_sbl_version;
 } FuSynapticsRmiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU_TYPE_UDEV_DEVICE)
@@ -79,6 +81,9 @@ fu_synaptics_rmi_device_flash_to_string(FuSynapticsRmiFlash *flash, guint idt, G
 	fwupd_codec_string_append_hex(str, idt, "FlashConfigLength", flash->config_length);
 	fwupd_codec_string_append_hex(str, idt, "PayloadLength", flash->payload_length);
 	fwupd_codec_string_append_hex(str, idt, "BuildID", flash->build_id);
+	fwupd_codec_string_append_hex(str, idt, "HasSBL", flash->has_sbl);
+	fwupd_codec_string_append_hex(str, idt, "SBLVersion", flash->sbl_version);
+	fwupd_codec_string_append_hex(str, idt, "HasSecurity", flash->has_security);
 }
 
 static void
@@ -90,6 +95,7 @@ fu_synaptics_rmi_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "InIepMode", priv->in_iep_mode);
 	fwupd_codec_string_append_hex(str, idt, "MaxPage", priv->max_page);
 	fwupd_codec_string_append_hex(str, idt, "SigSize", priv->sig_size);
+	fwupd_codec_string_append_hex(str, idt, "PreviousSBLVersion", priv->previous_sbl_version);
 	if (priv->f34 != NULL) {
 		fwupd_codec_string_append_hex(str, idt, "BlVer", priv->f34->function_version + 0x5);
 	}
@@ -191,7 +197,9 @@ fu_synaptics_rmi_device_reset(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) req = g_byte_array_new();
-
+	priv->f01 = fu_synaptics_rmi_device_get_function(self, 0x01, error);
+	if (priv->f01 == NULL)
+		return FALSE;
 	fu_byte_array_append_uint8(req, RMI_F01_CMD_DEVICE_RESET);
 	if (!fu_synaptics_rmi_device_write(self,
 					   priv->f01->command_base,
@@ -199,11 +207,16 @@ fu_synaptics_rmi_device_reset(FuSynapticsRmiDevice *self, GError **error)
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					   error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), RMI_F01_DEFAULT_RESET_DELAY_MS);
+	if (priv->flash.bootloader_id[1] >= 10) {
+		fu_device_sleep(FU_DEVICE(self), RMI_F01_BLV10_RESET_DELAY_MS);
+		g_info("wait %d ms for BLV10+ reset", RMI_F01_BLV10_RESET_DELAY_MS);
+	} else {
+		fu_device_sleep(FU_DEVICE(self), RMI_F01_DEFAULT_RESET_DELAY_MS);
+	}
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
@@ -558,6 +571,13 @@ fu_synaptics_rmi_device_prepare_firmware(FuDevice *device,
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
+	if (priv->flash.bootloader_id[1] >= 10) {
+		g_info("bootloader >= 10 (%d.%d), skip checking firmware size.",
+		       priv->flash.bootloader_id[1],
+		       priv->flash.bootloader_id[0]);
+
+		return g_steal_pointer(&firmware);
+	}
 
 	/* check sizes */
 	bytes_bin = fu_firmware_get_image_by_id_bytes(firmware, "ui", error);
@@ -670,7 +690,7 @@ fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 gboolean
 fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 				      guint timeout_ms,
-				      RmiDeviceWaitForIdleFlags flags,
+				      FuSynapticsRmiDeviceWaitForIdleFlags flags,
 				      GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
@@ -679,6 +699,11 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 	guint8 f34_status;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* refresh */
+	priv->f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
+	if (priv->f34 == NULL)
+		return FALSE;
 
 	/* try to get report without requesting */
 	if (timeout_ms > 0 && !fu_synaptics_rmi_device_wait_for_attr(self,
@@ -691,10 +716,13 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 						   "failed to wait for attr: ");
 			return FALSE;
 		}
-	} else if ((flags & RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34) == 0) {
+	} else if ((flags & FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34) == 0) {
 		/* device reported idle via an event */
 		return TRUE;
 	}
+
+	if (flags & FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_DETACH_DEVICE)
+		fu_device_sleep(FU_DEVICE(self), RMI_F34_ENABLE_SBL_WAIT_MS);
 
 	/* if for some reason we are not getting attention reports for HID devices
 	 * then we can still continue after the timeout and read F34 status
@@ -812,14 +840,14 @@ fu_synaptics_rmi_device_write_firmware(FuDevice *device,
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	if (priv->f34->function_version == 0x0 || priv->f34->function_version == 0x1) {
-		return fu_synaptics_rmi_v5_device_write_firmware(device,
+		return fu_synaptics_rmi_v5_device_write_firmware(self,
 								 firmware,
 								 progress,
 								 flags,
 								 error);
 	}
 	if (priv->f34->function_version == 0x2) {
-		return fu_synaptics_rmi_v7_device_write_firmware(device,
+		return fu_synaptics_rmi_v7_device_write_firmware(self,
 								 firmware,
 								 progress,
 								 flags,
@@ -855,6 +883,18 @@ fu_synaptics_rmi_device_finalize(GObject *object)
 }
 
 static void
+fu_synaptics_rmi_device_replace(FuDevice *device, FuDevice *donor)
+{
+	FuSynapticsRmiDevice *old_self = FU_SYNAPTICS_RMI_DEVICE(donor);
+	FuSynapticsRmiDevicePrivate *old_priv = GET_PRIVATE(old_self);
+
+	FuSynapticsRmiDevice *new_self = FU_SYNAPTICS_RMI_DEVICE(device);
+	FuSynapticsRmiDevicePrivate *new_priv = GET_PRIVATE(new_self);
+
+	new_priv->previous_sbl_version = old_priv->previous_sbl_version;
+}
+
+static void
 fu_synaptics_rmi_device_class_init(FuSynapticsRmiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -864,4 +904,19 @@ fu_synaptics_rmi_device_class_init(FuSynapticsRmiDeviceClass *klass)
 	device_class->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
 	device_class->setup = fu_synaptics_rmi_device_setup;
 	device_class->write_firmware = fu_synaptics_rmi_device_write_firmware;
+	device_class->replace = fu_synaptics_rmi_device_replace;
+}
+
+void
+fu_synaptics_rmi_device_set_previous_sbl_version(FuSynapticsRmiDevice *self, guint16 sbl_version)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
+	priv->previous_sbl_version = sbl_version;
+}
+
+guint16
+fu_synaptics_rmi_device_get_previous_sbl_version(FuSynapticsRmiDevice *self)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->previous_sbl_version;
 }

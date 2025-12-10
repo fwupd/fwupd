@@ -60,7 +60,7 @@ fu_common_get_block_devices(GError **error)
 					error);
 	if (output == NULL) {
 		if (error != NULL)
-			g_dbus_error_strip_remote_error(*error);
+			g_dbus_error_strip_remote_error(*error); /* nocheck:error */
 		g_prefix_error(error,
 			       "failed to call %s.%s(): ",
 			       UDISKS_DBUS_MANAGER_INTERFACE,

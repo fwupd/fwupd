@@ -220,7 +220,7 @@ fu_debug_verbose_arg_cb(const gchar *option_name,
 		self->log_level = G_LOG_LEVEL_DEBUG;
 		return TRUE;
 	}
-	g_set_error_literal(error,
+	g_set_error_literal(error, /* nocheck:error */
 			    G_OPTION_ERROR,
 			    G_OPTION_ERROR_FAILED,
 			    "No further debug level supported");
@@ -304,7 +304,7 @@ fu_debug_setup_event_source(FuDebug *self)
 {
 	HKEY key;
 	gchar msgfile[MAX_PATH];
-	DWORD dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+	DWORD data = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
 
 	if (RegCreateKeyExA(HKEY_LOCAL_MACHINE,
 			    "SYSTEM\\CurrentControlSet\\Services\\"
@@ -326,7 +326,7 @@ fu_debug_setup_event_source(FuDebug *self)
 		       REG_EXPAND_SZ,
 		       (BYTE *)msgfile,
 		       strlen(msgfile) + 1);
-	RegSetValueExA(key, "TypesSupported", 0, REG_DWORD, (BYTE *)&dwData, sizeof(dwData));
+	RegSetValueExA(key, "TypesSupported", 0, REG_DWORD, (BYTE *)&data, sizeof(data));
 	RegCloseKey(key);
 
 	/* good to go */

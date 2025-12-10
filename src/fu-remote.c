@@ -91,6 +91,12 @@ fu_remote_load_from_filename(FwupdRemote *self,
 		else
 			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 	}
+	if (g_key_file_has_key(kf, group, "NoPhasedUpdates", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "NoPhasedUpdates", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES);
+	}
 	if (g_key_file_has_key(kf, group, "Title", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);
@@ -225,6 +231,51 @@ fu_remote_save_to_filename(FwupdRemote *self,
 
 	/* save file */
 	return g_key_file_save_to_file(kf, filename, error);
+}
+
+/**
+ * fu_remote_clean:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Cleans all files in the remote cachedir.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_remote_clean(FwupdRemote *self, GError **error)
+{
+	g_autofree gchar *dirname = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	dirname = g_path_get_dirname(fwupd_remote_get_filename_cache(self));
+	files = fu_path_get_files(dirname, &error_local);
+	if (files == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+			return TRUE;
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index(files, i);
+		g_autoptr(GFile) file = g_file_new_for_path(fn);
+
+		/* cache */
+		if (!g_file_delete(file, NULL, error)) {
+			fwupd_error_convert(error);
+			g_prefix_error(error, "failed to delete %s: ", fn);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	if (!fwupd_remote_ensure_checksum_sig(self, error))
+		return FALSE;
+	return fwupd_remote_ensure_mtime(self, error);
 }
 
 static void

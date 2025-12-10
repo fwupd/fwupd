@@ -22,27 +22,6 @@ fu_mm_qdu_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **er
 	return TRUE;
 }
 
-static GArray *
-fu_mm_qdu_mbim_device_get_checksum(GBytes *blob)
-{
-	gsize file_size;
-	gsize hash_size;
-	GArray *digest;
-	g_autoptr(GChecksum) checksum = NULL;
-
-	/* get checksum, to be used as unique id */
-	file_size = g_bytes_get_size(blob);
-	hash_size = g_checksum_type_get_length(G_CHECKSUM_SHA256);
-	checksum = g_checksum_new(G_CHECKSUM_SHA256);
-	g_checksum_update(checksum, g_bytes_get_data(blob, NULL), file_size);
-
-	/* libqmi expects a GArray of bytes, not a GByteArray */
-	digest = g_array_sized_new(FALSE, FALSE, sizeof(guint8), hash_size);
-	g_array_set_size(digest, hash_size);
-	g_checksum_get_digest(checksum, (guint8 *)digest->data, &hash_size);
-	return digest;
-}
-
 static gboolean
 fu_mm_qdu_mbim_device_write_chunk(FuMmQduMbimDevice *self, FuChunk *chk, GError **error)
 {
@@ -99,7 +78,6 @@ fu_mm_qdu_mbim_device_write(FuMmQduMbimDevice *self,
 {
 	guint32 out_max_transfer_size = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GArray) checksum = fu_mm_qdu_mbim_device_get_checksum(blob);
 	g_autoptr(MbimMessage) action_start_req = NULL;
 	g_autoptr(MbimMessage) action_start_res = NULL;
 	g_autoptr(MbimMessage) file_open_req = NULL;
@@ -221,7 +199,6 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 	const gchar *filename = NULL;
 	const gchar *csum;
 	g_autofree gchar *csum_actual = NULL;
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) data_part = NULL;
 	g_autoptr(GBytes) data_xml = NULL;

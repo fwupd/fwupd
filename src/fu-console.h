@@ -28,7 +28,7 @@ typedef enum {
 	FU_CONSOLE_PRINT_FLAG_WARNING = 1 << 1,
 	FU_CONSOLE_PRINT_FLAG_LIST_ITEM = 1 << 2,
 	FU_CONSOLE_PRINT_FLAG_NEWLINE = 1 << 3,
-} FuConsolePrintFlags;
+} G_GNUC_FLAG_ENUM FuConsolePrintFlags;
 
 gchar *
 fu_console_color_format(const gchar *text, FuConsoleColor fg_color) G_GNUC_NON_NULL(1);

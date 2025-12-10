@@ -1,0 +1,20 @@
+{
+  "name": "ZDN Chromebook",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "3ca67d641eaa59e5197dda263c947035e85a53c0791351818c2c3a78b27eccaf-GenesysLogic_ZDN_Chromebook_GL3523_65.08.cab",
+      "emulation-url": "6c710a5171528c39277648d9798ee96537057c416b17964fa2e9dfe1ea047323-zdn_gl352330_emu.zip",
+      "components": [
+        {
+          "name": "GL352330",
+          "version": "65.8",
+          "guids": [
+            "b4c454aa-eb70-5bdd-82c9-dde4577500b3",
+            "50ebd712-6f74-5df7-8881-0da89056c936"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -8,40 +8,14 @@
 
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
-#include "fu-uefi-dbx-snapd-notifier.h"
 
 struct _FuUefiDbxDevice {
 	FuUefiDevice parent_instance;
-	FuUefiDbxSnapdNotifier *snapd_notifier;
 };
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_UEFI_DEVICE)
 
 #define FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE (30 * 1024) /* bytes */
-
-void
-fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotifier *obs)
-{
-	g_set_object(&self->snapd_notifier, obs);
-}
-
-static gboolean
-fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *data, GError **error)
-{
-	if (self->snapd_notifier == NULL)
-		return TRUE;
-
-	return fu_uefi_dbx_snapd_notifier_dbx_update_prepare(self->snapd_notifier, data, error);
-}
-
-static gboolean
-fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **error)
-{
-	if (self->snapd_notifier == NULL)
-		return TRUE;
-
-	return fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(self->snapd_notifier, error);
-}
 
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
@@ -57,9 +31,6 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	if (!fu_uefi_dbx_device_maybe_notify_snapd_prepare(FU_UEFI_DBX_DEVICE(device), fw, error))
-		return FALSE;
-
 	/* write entire chunk to efivarsfs */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_uefi_device_set_efivar_bytes(
@@ -67,10 +38,10 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 		FU_EFIVARS_GUID_SECURITY_DATABASE,
 		"dbx",
 		fw,
-		FU_EFIVARS_ATTR_APPEND_WRITE |
-		    FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-		    FU_EFIVARS_ATTR_RUNTIME_ACCESS | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-		    FU_EFIVARS_ATTR_NON_VOLATILE,
+		FU_EFI_VARIABLE_ATTR_APPEND_WRITE |
+		    FU_EFI_VARIABLE_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS | FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+		    FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 		error)) {
 		return FALSE;
 	}
@@ -258,7 +229,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_dbx_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -266,18 +237,6 @@ fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
-}
-
-static gboolean
-fu_uefi_dbx_device_cleanup(FuDevice *self,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
-{
-	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error))
-		return FALSE;
-
-	return TRUE;
 }
 
 static gchar *
@@ -320,28 +279,13 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 }
 
 static void
-fu_uefi_dbx_device_finalize(GObject *object)
-{
-	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(object);
-
-	if (self->snapd_notifier != NULL)
-		g_object_unref(self->snapd_notifier);
-
-	G_OBJECT_CLASS(fu_uefi_dbx_device_parent_class)->finalize(object);
-}
-
-static void
 fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_uefi_dbx_device_probe;
 	device_class->reload = fu_uefi_dbx_device_reload;
 	device_class->write_firmware = fu_uefi_dbx_device_write_firmware;
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
-	device_class->cleanup = fu_uefi_dbx_device_cleanup;
 	device_class->convert_version = fu_uefi_dbx_device_convert_version;
-
-	object_class->finalize = fu_uefi_dbx_device_finalize;
 }

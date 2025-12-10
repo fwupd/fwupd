@@ -1352,7 +1352,7 @@ guint32
 fwupd_device_get_battery_level(FwupdDevice *self)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), G_MAXUINT);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), G_MAXUINT32);
 	return priv->battery_level;
 }
 
@@ -1401,7 +1401,7 @@ fwupd_device_get_battery_threshold(FwupdDevice *self)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), G_MAXUINT32);
 
 	/* default value */
 	if (priv->battery_threshold == FWUPD_BATTERY_LEVEL_INVALID)
@@ -3046,9 +3046,11 @@ fwupd_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags f
 	fwupd_codec_json_append(builder,
 				FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
 				priv->version_bootloader);
-	fwupd_codec_json_append(builder,
-				FWUPD_RESULT_KEY_VERSION_FORMAT,
-				fwupd_version_format_to_string(priv->version_format));
+	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		fwupd_codec_json_append(builder,
+					FWUPD_RESULT_KEY_VERSION_FORMAT,
+					fwupd_version_format_to_string(priv->version_format));
+	}
 	if (priv->flashes_left > 0) {
 		fwupd_codec_json_append_int(builder,
 					    FWUPD_RESULT_KEY_FLASHES_LEFT,
@@ -3523,10 +3525,12 @@ fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 				  idt,
 				  FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
 				  priv->version_bootloader);
-	fwupd_codec_string_append(str,
-				  idt,
-				  FWUPD_RESULT_KEY_VERSION_FORMAT,
-				  fwupd_version_format_to_string(priv->version_format));
+	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  FWUPD_RESULT_KEY_VERSION_FORMAT,
+					  fwupd_version_format_to_string(priv->version_format));
+	}
 	if (priv->flashes_left < 2) {
 		fwupd_codec_string_append_int(str,
 					      idt,

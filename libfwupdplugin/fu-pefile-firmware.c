@@ -96,7 +96,7 @@ fu_pefile_firmware_region_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_pefile_firmware_parse_section(FuFirmware *firmware,
+fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 				 GInputStream *stream,
 				 guint idx,
 				 gsize hdr_offset,
@@ -108,7 +108,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	g_autofree gchar *sect_id = NULL;
 	g_autofree gchar *sect_id_tmp = NULL;
 	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructPeCoffSection) st = NULL;
 
 	st = fu_struct_pe_coff_section_parse_stream(stream, hdr_offset, error);
 	if (st == NULL) {
@@ -206,7 +206,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	}
 
 	/* success */
-	return fu_firmware_add_image_full(firmware, img, error);
+	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 }
 
 static gboolean
@@ -243,7 +243,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to read COFF header: ");
 		return FALSE;
 	}
-	offset += st_coff->len;
+	offset += st_coff->buf->len;
 
 	regions = g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_region_free);
 
@@ -269,7 +269,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	    "chksum->cert-table",
 	    offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM,
 	    FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_CERTIFICATE_TABLE -
-		FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM); // end
+		FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM); /* end */
 
 	/* verify optional extra header */
 	if (fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff) > 0) {
@@ -312,7 +312,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 
 	/* read out each section */
 	for (guint idx = 0; idx < nr_sections; idx++) {
-		if (!fu_pefile_firmware_parse_section(firmware,
+		if (!fu_pefile_firmware_parse_section(self,
 						      stream,
 						      idx,
 						      offset,
@@ -346,7 +346,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 
 		if (r->size == 0)
 			continue;
-		g_debug("Authenticode region %s: 0x%04x -> 0x%04x [0x%04x]",
+		g_debug("authenticode region %s: 0x%04x -> 0x%04x [0x%04x]",
 			r->name,
 			(guint)r->offset,
 			(guint)(r->offset + r->size),
@@ -385,29 +385,36 @@ fu_pefile_firmware_section_free(FuPefileSection *section)
 	g_free(section);
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuPefileSection, fu_pefile_firmware_section_free)
+
 static GByteArray *
 fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize offset = 0;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
-	g_autoptr(GByteArray) st = fu_struct_pe_dos_header_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_pe_coff_file_header_new();
-	g_autoptr(GByteArray) st_opt = fu_struct_pe_coff_optional_header64_new();
+	g_autoptr(FuStructPeDosHeader) st = fu_struct_pe_dos_header_new();
+	g_autoptr(FuStructPeCoffFileHeader) st_hdr = fu_struct_pe_coff_file_header_new();
+	g_autoptr(FuStructPeCoffOptionalHeader64) st_opt =
+	    fu_struct_pe_coff_optional_header64_new();
 	g_autoptr(GByteArray) strtab = g_byte_array_new();
 	g_autoptr(GPtrArray) sections =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_section_free);
 
 	/* calculate the offset for each of the sections */
-	offset += st->len + st_hdr->len + st_opt->len;
+	offset += st->buf->len + st_hdr->buf->len + st_opt->buf->len;
 	offset += FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
-		g_autofree FuPefileSection *section = g_new0(FuPefileSection, 1);
+		g_autoptr(FuPefileSection) section = g_new0(FuPefileSection, 1);
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 
 		section->offset = offset;
 		section->blob = fu_firmware_write(img, error);
 		if (section->blob == NULL)
 			return NULL;
+		if (g_bytes_get_size(section->blob) == 0) {
+			g_debug("skipping zero length section %u", i);
+			continue;
+		}
 		section->id = g_strdup(fu_firmware_get_id(img));
 		section->blobsz_aligned = fu_common_align_up(g_bytes_get_size(section->blob), 4);
 		offset += section->blobsz_aligned;
@@ -418,16 +425,16 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_pe_coff_optional_header64_set_number_of_rva_and_sizes(st_opt, 7);
 
 	/* COFF file header */
-	fu_struct_pe_coff_file_header_set_size_of_optional_header(st_hdr, st_opt->len);
+	fu_struct_pe_coff_file_header_set_size_of_optional_header(st_hdr, st_opt->buf->len);
 	fu_struct_pe_coff_file_header_set_number_of_sections(st_hdr, sections->len);
 	fu_struct_pe_coff_file_header_set_pointer_to_symbol_table(st_hdr, offset);
-	g_byte_array_append(st, st_hdr->data, st_hdr->len);
-	g_byte_array_append(st, st_opt->data, st_opt->len);
+	fu_byte_array_append_array(st->buf, st_hdr->buf);
+	fu_byte_array_append_array(st->buf, st_opt->buf);
 
 	/* add sections */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPefileSection *section = g_ptr_array_index(sections, i);
-		g_autoptr(GByteArray) st_sect = fu_struct_pe_coff_section_new();
+		g_autoptr(FuStructPeCoffSection) st_sect = fu_struct_pe_coff_section_new();
 
 		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect,
 							       g_bytes_get_size(section->blob));
@@ -469,7 +476,7 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 			fu_byte_array_set_size(strtab_buf, FU_PEFILE_SECTION_ID_STRTAB_SIZE, 0x0);
 			g_byte_array_append(strtab, strtab_buf->data, strtab_buf->len);
 		}
-		g_byte_array_append(st, st_sect->data, st_sect->len);
+		fu_byte_array_append_array(st->buf, st_sect->buf);
 	}
 
 	/* add the section data itself */
@@ -477,14 +484,14 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		FuPefileSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(GBytes) blob_aligned =
 		    fu_bytes_pad(section->blob, section->blobsz_aligned, 0xFF);
-		fu_byte_array_append_bytes(st, blob_aligned);
+		fu_byte_array_append_bytes(st->buf, blob_aligned);
 	}
 
 	/* string table comes last */
-	g_byte_array_append(st, strtab->data, strtab->len);
+	g_byte_array_append(st->buf, strtab->data, strtab->len);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gchar *
@@ -512,6 +519,8 @@ fu_pefile_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 static void
 fu_pefile_firmware_init(FuPefileFirmware *self)
 {
+	g_type_ensure(FU_TYPE_CSV_FIRMWARE);
+	g_type_ensure(FU_TYPE_SBATLEVEL_SECTION);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
 }
 

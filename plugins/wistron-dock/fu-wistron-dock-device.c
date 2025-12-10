@@ -381,11 +381,14 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 
 	/* success */
 	fu_firmware_set_id(fw_wsig, FU_FIRMWARE_ID_SIGNATURE);
-	fu_firmware_add_image(fw_new, fw_wsig);
+	if (!fu_firmware_add_image(fw_new, fw_wsig, error))
+		return NULL;
 	fu_firmware_set_id(fw_wdfl, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(fw_new, fw_wdfl);
+	if (!fu_firmware_add_image(fw_new, fw_wdfl, error))
+		return NULL;
 	fu_firmware_set_id(fw_cbin, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(fw_new, fw_cbin);
+	if (!fu_firmware_add_image(fw_new, fw_cbin, error))
+		return NULL;
 	return g_steal_pointer(&fw_new);
 }
 
@@ -539,7 +542,7 @@ fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 		g_autofree gchar *version0 = NULL;
 		g_autofree gchar *version1 = NULL;
 		g_autofree gchar *version2 = NULL;
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructWistronDockWditImg) st = NULL;
 
 		/* parse */
 		st = fu_struct_wistron_dock_wdit_img_parse(buf, bufsz, offset, error);
@@ -567,7 +570,7 @@ fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 			(guint)status & 0x0F,
 			(guint)(status & 0xF0) >> 4);
 
-		offset += st->len;
+		offset += st->buf->len;
 	}
 
 	/* success */
@@ -579,7 +582,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 {
 	guint8 update_state = 0x0;
 	guint8 buf[FU_WISTRON_DOCK_WDIT_SIZE + 1] = {FU_WISTRON_DOCK_ID_DOCK_WDIT};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructWistronDockWdit) st = NULL;
 
 	/* get WDIT */
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
@@ -655,7 +658,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		self,
 		buf,
 		sizeof(buf),
-		st->len + 0x1,
+		st->buf->len + 0x1,
 		MIN(fu_struct_wistron_dock_wdit_get_device_cnt(st), 32),
 		error)) {
 		g_prefix_error_literal(error, "failed to parse imgs: ");
@@ -792,7 +795,7 @@ fu_wistron_dock_device_attach(FuDevice *device, FuProgress *progress, GError **e
 }
 
 static void
-fu_wistron_dock_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_wistron_dock_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -815,6 +818,7 @@ fu_wistron_dock_device_init(FuWistronDockDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 5 * 60 * 1000);
 }

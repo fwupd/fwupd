@@ -289,6 +289,21 @@ fu_release_set_remote(FuRelease *self, FwupdRemote *remote)
 }
 
 /**
+ * fu_release_get_remote:
+ * @self: a #FuRelease
+ *
+ * Gets the remote this release should use when loading.
+ *
+ * Returns: (transfer none): a #FwupdRemote, or %NULL if never set
+ **/
+FwupdRemote *
+fu_release_get_remote(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+	return self->remote;
+}
+
+/**
  * fu_release_set_config:
  * @self: a #FuRelease
  * @config: (nullable): a #FuEngineConfig
@@ -326,31 +341,26 @@ fu_release_get_localized_xpath(FuRelease *self, const gchar *element)
 static gchar *
 fu_release_get_release_version(FuRelease *self, const gchar *version, GError **error)
 {
-	FwupdVersionFormat fmt = fu_device_get_version_format(self->device);
-	guint64 ver_uint32;
-	g_autoptr(GError) error_local = NULL;
-
 	/* already dotted notation */
 	if (g_strstr_len(version, -1, ".") != NULL)
 		return g_strdup(version);
 
-	/* don't touch my version! */
-	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
-		return g_strdup(version);
-
-	/* parse as integer */
-	if (!fu_strtoull(version,
-			 &ver_uint32,
-			 1,
-			 G_MAXUINT32,
-			 FU_INTEGER_BASE_AUTO,
-			 &error_local)) {
-		g_warning("invalid release version %s: %s", version, error_local->message);
-		return g_strdup(version);
+	/* fallback for ESRT-derived UEFI devices */
+	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT)) {
+		guint64 version_raw = 0;
+		if (!fu_strtoull(version,
+				 &version_raw,
+				 1,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
+			return NULL;
+		}
+		return fu_device_convert_version(self->device, version_raw, error);
 	}
 
-	/* convert to dotted decimal */
-	return fu_version_from_uint32((guint32)ver_uint32, fmt);
+	/* fallback */
+	return g_strdup(version);
 }
 
 static gboolean
@@ -669,12 +679,14 @@ fu_release_check_requirements(FuRelease *self,
 	    !fu_device_has_protocol(self->device, protocol) &&
 	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_autofree gchar *str = NULL;
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
+
 		str = fu_strjoin("|", fu_device_get_protocols(self->device));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Device %s does not support %s, only %s",
-			    fu_device_get_name(self->device),
+			    id_display,
 			    protocol,
 			    str);
 		return FALSE;
@@ -682,12 +694,12 @@ fu_release_check_requirements(FuRelease *self,
 
 	/* check the device is not locked */
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_LOCKED)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s [%s] is locked",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device));
+			    "Device %s is locked",
+			    id_display);
 		return FALSE;
 	}
 
@@ -696,12 +708,12 @@ fu_release_check_requirements(FuRelease *self,
 	branch_old = fu_device_get_branch(self->device);
 	if ((install_flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) == 0 &&
 	    g_strcmp0(branch_old, branch_new) != 0) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s [%s] would switch firmware branch from %s to %s",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device),
+			    "Device %s would switch firmware branch from %s to %s",
+			    id_display,
 			    branch_old != NULL ? branch_old : "default",
 			    branch_new != NULL ? branch_new : "default");
 		return FALSE;
@@ -710,11 +722,11 @@ fu_release_check_requirements(FuRelease *self,
 	/* no update abilities */
 	if (!fu_engine_request_has_feature_flag(self->request, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS) &&
 	    !fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_autoptr(GString) str = g_string_new(NULL);
 		g_string_append_printf(str,
-				       "Device %s [%s] does not currently allow updates",
-				       fu_device_get_name(self->device),
-				       fu_device_get_id(self->device));
+				       "Device %s does not currently allow updates",
+				       id_display);
 		if (fu_device_get_update_error(self->device) != NULL) {
 			g_string_append_printf(str,
 					       ": %s",
@@ -762,15 +774,30 @@ fu_release_check_version(FuRelease *self,
 		return TRUE;
 	}
 
+	/* allow using no-version-expected on emulated devices, or when not build as supported */
+	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED)) {
+#ifdef SUPPORTED_BUILD
+		if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "only emulated devices can install releases with no "
+					    "version when -Dsupported_build");
+			return FALSE;
+		}
+#endif
+		return TRUE;
+	}
+
 	/* ensure device has a version */
 	version = fu_device_get_version(self->device);
 	if (version == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "Device %s [%s] has no firmware version",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device));
+			    "Device %s has no firmware version",
+			    id_display);
 		return FALSE;
 	}
 
@@ -807,7 +834,7 @@ fu_release_check_version(FuRelease *self,
 				    fu_release_get_version(self),
 				    fu_device_get_version_format(self->device));
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) &&
-	    vercmp > 0) {
+	    vercmp >= 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ToString)]
-#[repr(u16le)]
+#[repr(u8)]
 enum FuRmiPartitionId {
     None = 0x00,
     Bootloader = 0x01,
@@ -24,7 +24,7 @@ enum FuRmiPartitionId {
 #[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructRmiPartitionTbl {
-    partition_id: FuRmiPartitionId,
+    partition_id: u16le, // but actually a FuRmiPartitionId...
     partition_len: u16le,
     partition_addr: u16le,
     partition_prop: u16le,
@@ -169,4 +169,79 @@ enum FuRmiStickDeviceType {
     JytSyna = 5,
     Synaptics = 6,
     Unknown = 0xFFFFFFFF,
+}
+
+#[repr(u8)]
+enum FuSynapticsRmiFlashCmd {
+    Idle,
+    EnterBl,
+    Read,
+    Write,
+    Erase,
+    EraseAp,
+    SensorId,
+    Signature,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructSynapticsRmiV7F34x {
+    bootloader_id0: u8,
+    bootloader_id1: u8,
+    build_id: u32le,
+    reserved: u8,
+    block_size: u16le,
+    reserved: [u8; 4],
+    config_length: u16le,
+    payload_length: u16le,
+    supported_partitions: u16le,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructSynapticsRmiV7EnterSbl {
+    partition_id: FuRmiPartitionId == Bootloader,
+    reserved: u32le,
+    cmd: FuSynapticsRmiFlashCmd == EnterBl,
+    bootloader_id0: u8,
+    bootloader_id1: u8,
+    unknown: u8 == 0x1,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructSynapticsRmiV7EnterBl {
+    partition_id: FuRmiPartitionId == Bootloader,
+    reserved: u32le,
+    cmd: FuSynapticsRmiFlashCmd == EnterBl,
+    bootloader_id0: u8,
+    bootloader_id1: u8,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructSynapticsRmiV7Erase {
+    partition_id: FuRmiPartitionId,
+    reserved: u32le,
+    cmd: FuSynapticsRmiFlashCmd == Erase,
+    bootloader_id0: u8,
+    bootloader_id1: u8,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructSynapticsRmiV7EraseCoreCode {
+    partition_id: FuRmiPartitionId == CoreCode,
+    reserved: u32le,
+    cmd: FuSynapticsRmiFlashCmd = EraseAp,
+    bootloader_id0: u8,
+    bootloader_id1: u8,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructSynapticsRmiV7EraseCoreConfig {
+    partition_id: FuRmiPartitionId == CoreConfig,
+    reserved: u32le,
+    cmd: FuSynapticsRmiFlashCmd == Erase,
 }

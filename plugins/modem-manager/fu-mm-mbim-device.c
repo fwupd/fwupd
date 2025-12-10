@@ -562,7 +562,8 @@ fu_mm_mbim_device_finalize(GObject *object)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(object);
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
-	g_warn_if_fail(priv->mbim_device == NULL);
+	if (priv->mbim_device != NULL)
+		g_object_unref(priv->mbim_device);
 	g_main_context_unref(priv->main_ctx);
 	G_OBJECT_CLASS(fu_mm_mbim_device_parent_class)->finalize(object);
 }

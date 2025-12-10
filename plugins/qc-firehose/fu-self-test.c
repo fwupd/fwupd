@@ -12,7 +12,7 @@ typedef struct {
 	guint cnt;
 	guint cnt_done;
 	FwupdError error_code;
-} FooHelper;
+} FuQcFirehoseHelper;
 
 static gboolean
 fu_qc_firehose_retry_cb(FuQcFirehoseImpl *self,
@@ -21,7 +21,7 @@ fu_qc_firehose_retry_cb(FuQcFirehoseImpl *self,
 			gpointer user_data,
 			GError **error)
 {
-	FooHelper *helper = (FooHelper *)user_data;
+	FuQcFirehoseHelper *helper = (FuQcFirehoseHelper *)user_data;
 	helper->cnt++;
 	if (helper->cnt_done > 0 && helper->cnt == helper->cnt_done)
 		*done = TRUE;
@@ -33,7 +33,7 @@ fu_qc_firehose_retry_true_func(void)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	FooHelper helper = {0};
+	FuQcFirehoseHelper helper = {0};
 
 	ret = fu_qc_firehose_impl_retry(NULL, 2500, fu_qc_firehose_retry_cb, &helper, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
@@ -46,7 +46,7 @@ fu_qc_firehose_retry_done_func(void)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	FooHelper helper = {
+	FuQcFirehoseHelper helper = {
 	    .cnt_done = 10,
 	};
 
@@ -63,7 +63,7 @@ fu_qc_firehose_retry_error_cb(FuQcFirehoseImpl *self,
 			      gpointer user_data,
 			      GError **error)
 {
-	FooHelper *helper = (FooHelper *)user_data;
+	FuQcFirehoseHelper *helper = (FuQcFirehoseHelper *)user_data;
 	helper->cnt++;
 	g_set_error_literal(error, FWUPD_ERROR, (gint)helper->error_code, "timeout");
 	return FALSE;
@@ -74,7 +74,7 @@ fu_qc_firehose_retry_timeout_func(void)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	FooHelper helper = {
+	FuQcFirehoseHelper helper = {
 	    .error_code = FWUPD_ERROR_TIMED_OUT,
 	};
 
@@ -89,7 +89,7 @@ fu_qc_firehose_retry_invalid_func(void)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	FooHelper helper = {
+	FuQcFirehoseHelper helper = {
 	    .error_code = FWUPD_ERROR_INVALID_DATA,
 	};
 

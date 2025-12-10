@@ -23,7 +23,7 @@ fu_dell_kestrel_rmm_convert_version(FuDevice *device, guint64 version_raw)
 gboolean
 fu_dell_kestrel_rmm_fix_version(FuDellKestrelRmm *self, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), NULL);
 
 	/* RMM version is given by the parent EC device */
 	if (parent != NULL && FU_IS_DELL_KESTREL_EC(parent)) {
@@ -78,7 +78,7 @@ fu_dell_kestrel_rmm_write(FuDevice *device,
 }
 
 static void
-fu_dell_kestrel_rmm_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_kestrel_rmm_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

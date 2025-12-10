@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "fu-logitech-tap-hdmi-device.h"
+#include "fu-logitech-tap-sensor-device.h"
 
 #define FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 #define XU_INPUT_DATA_LEN			  8
@@ -511,7 +512,7 @@ fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_logitech_tap_hdmi_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_tap_hdmi_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -526,6 +527,7 @@ fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.hardware.tap");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_LOGITECH_TAP_SENSOR_DEVICE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);

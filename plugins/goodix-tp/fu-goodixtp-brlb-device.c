@@ -273,7 +273,7 @@ fu_goodixtp_brlb_device_wait_flash_cb(FuDevice *device, gpointer user_data, GErr
 	guint8 hidbuf[1] = {0};
 
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x10011, hidbuf, 1, error)) {
-		g_prefix_error_literal(error, "failed to read 0x10011");
+		g_prefix_error_literal(error, "failed to read 0x10011: ");
 		return FALSE;
 	}
 	if (hidbuf[0] != 0xAA) {
@@ -473,7 +473,7 @@ fu_goodixtp_brlb_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);
-	guint32 fw_ver = fu_goodixtp_firmware_get_version(FU_GOODIXTP_FIRMWARE(firmware));
+	guint32 fw_ver = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* progress */

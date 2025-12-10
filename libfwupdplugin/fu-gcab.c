@@ -40,7 +40,14 @@ main(int argc, char **argv)
 				return EXIT_FAILURE;
 			}
 			fu_firmware_set_bytes(FU_FIRMWARE(img), img_blob);
-			fu_firmware_add_image(FU_FIRMWARE(cab_firmware), FU_FIRMWARE(img));
+			if (!fu_firmware_add_image(FU_FIRMWARE(cab_firmware),
+						   FU_FIRMWARE(img),
+						   &error)) {
+				g_printerr("Failed to add image to %s: %s\n",
+					   argv[1],
+					   error->message);
+				return EXIT_FAILURE;
+			}
 		}
 		if (!fu_firmware_write_file(FU_FIRMWARE(cab_firmware), file, &error)) {
 			g_printerr("Failed to write file %s: %s\n", argv[1], error->message);

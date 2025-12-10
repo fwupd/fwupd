@@ -81,64 +81,6 @@ typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 
-/**
- * fwupd_remote_flag_to_string:
- * @flag: remote attribute flags, e.g. %FWUPD_REMOTE_FLAG_ENABLED
- *
- * Returns the printable string for the flag.
- *
- * Returns: string, or %NULL
- *
- * Since: 1.9.4
- **/
-const gchar *
-fwupd_remote_flag_to_string(FwupdRemoteFlags flag)
-{
-	if (flag == FWUPD_REMOTE_FLAG_NONE)
-		return "none";
-	if (flag == FWUPD_REMOTE_FLAG_ENABLED)
-		return "enabled";
-	if (flag == FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)
-		return "approval-required";
-	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)
-		return "automatic-reports";
-	if (flag == FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)
-		return "automatic-security-reports";
-	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA)
-		return "allow-p2p-metadata";
-	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)
-		return "allow-p2p-firmware";
-	return NULL;
-}
-
-/**
- * fwupd_remote_flag_from_string:
- * @flag: (nullable): a string, e.g. `enabled`
- *
- * Converts a string to an enumerated flag.
- *
- * Returns: enumerated value
- *
- * Since: 1.9.4
- **/
-FwupdRemoteFlags
-fwupd_remote_flag_from_string(const gchar *flag)
-{
-	if (g_strcmp0(flag, "enabled") == 0)
-		return FWUPD_REMOTE_FLAG_ENABLED;
-	if (g_strcmp0(flag, "approval-required") == 0)
-		return FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED;
-	if (g_strcmp0(flag, "automatic-reports") == 0)
-		return FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS;
-	if (g_strcmp0(flag, "automatic-security-reports") == 0)
-		return FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS;
-	if (g_strcmp0(flag, "allow-p2p-metadata") == 0)
-		return FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA;
-	if (g_strcmp0(flag, "allow-p2p-firmware") == 0)
-		return FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE;
-	return FWUPD_REMOTE_FLAG_NONE;
-}
-
 static void
 fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
@@ -545,7 +487,7 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		}
 		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_basename(path);
-		path_new = g_build_filename(priv->firmware_base_uri, basename, path_suffix, NULL);
+		path_new = g_build_path("/", priv->firmware_base_uri, basename, path_suffix, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
 	} else if (g_strstr_len(url_noauth, -1, "/") == NULL) {
@@ -564,11 +506,11 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		}
 		(void)curl_url_get(uri, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_dirname(path);
-		path_new = g_build_filename(basename, url_noauth, NULL);
+		path_new = g_build_path("/", basename, url_noauth, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
 	} else {
-		g_autofree gchar *url = g_build_filename(url_noauth, path_suffix, NULL);
+		g_autofree gchar *url = g_build_path("/", url_noauth, path_suffix, NULL);
 
 		/* a normal URI */
 		if (curl_url_set(uri, CURLUPART_URL, url, 0) != CURLUE_OK) {
@@ -670,50 +612,6 @@ fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri)
 
 	g_free(priv->report_uri);
 	priv->report_uri = g_steal_pointer(&report_uri_safe);
-}
-
-/**
- * fwupd_remote_kind_from_string:
- * @kind: (nullable): a string, e.g. `download`
- *
- * Converts an printable string to an enumerated type.
- *
- * Returns: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
- *
- * Since: 0.9.6
- **/
-FwupdRemoteKind
-fwupd_remote_kind_from_string(const gchar *kind)
-{
-	if (g_strcmp0(kind, "download") == 0)
-		return FWUPD_REMOTE_KIND_DOWNLOAD;
-	if (g_strcmp0(kind, "local") == 0)
-		return FWUPD_REMOTE_KIND_LOCAL;
-	if (g_strcmp0(kind, "directory") == 0)
-		return FWUPD_REMOTE_KIND_DIRECTORY;
-	return FWUPD_REMOTE_KIND_UNKNOWN;
-}
-
-/**
- * fwupd_remote_kind_to_string:
- * @kind: a #FwupdRemoteKind, e.g. %FWUPD_REMOTE_KIND_DOWNLOAD
- *
- * Converts an enumerated type to a printable string.
- *
- * Returns: a string, e.g. `download`
- *
- * Since: 0.9.6
- **/
-const gchar *
-fwupd_remote_kind_to_string(FwupdRemoteKind kind)
-{
-	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD)
-		return "download";
-	if (kind == FWUPD_REMOTE_KIND_LOCAL)
-		return "local";
-	if (kind == FWUPD_REMOTE_KIND_DIRECTORY)
-		return "directory";
-	return NULL;
 }
 
 /**
@@ -855,20 +753,8 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 	}
 
 	/* load the signature checksum */
-	if (priv->filename_cache_sig != NULL &&
-	    g_file_test(priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
-		gsize sz = 0;
-		g_autofree gchar *buf = NULL;
-		g_autoptr(GChecksum) checksum_sig = g_checksum_new(G_CHECKSUM_SHA256);
-		if (!g_file_get_contents(priv->filename_cache_sig, &buf, &sz, error)) {
-			g_prefix_error_literal(error, "failed to get signature checksum: ");
-			return FALSE;
-		}
-		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);
-		fwupd_remote_set_checksum_sig(self, g_checksum_get_string(checksum_sig));
-	} else {
-		fwupd_remote_set_checksum_sig(self, NULL);
-	}
+	if (!fwupd_remote_ensure_checksum_sig(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -878,7 +764,7 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
  * fwupd_remote_get_order_after:
  * @self: a #FwupdRemote
  *
- * Gets the list of remotes this plugin should be ordered after.
+ * Gets the list of remotes this remote should be ordered after.
  *
  * Returns: (transfer none): an array
  *
@@ -896,7 +782,7 @@ fwupd_remote_get_order_after(FwupdRemote *self)
  * fwupd_remote_get_order_before:
  * @self: a #FwupdRemote
  *
- * Gets the list of remotes this plugin should be ordered before.
+ * Gets the list of remotes this remote should be ordered before.
  *
  * Returns: (transfer none): an array
  *
@@ -1050,7 +936,7 @@ fwupd_remote_set_remotes_dir(FwupdRemote *self, const gchar *directory)
  * @self: a #FwupdRemote
  * @priority: an integer, where 1 is better
  *
- * Sets the plugin priority.
+ * Sets the remote priority.
  *
  * Since: 0.9.5
  **/
@@ -1063,11 +949,29 @@ fwupd_remote_set_priority(FwupdRemote *self, gint priority)
 }
 
 /**
+ * fwupd_remote_get_mtime:
+ * @self: a #FwupdRemote
+ *
+ * Gets the remote mtime in seconds.
+ *
+ * Returns: value in seconds
+ *
+ * Since: 2.0.17
+ **/
+guint64
+fwupd_remote_get_mtime(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), G_MAXUINT64);
+	return priv->mtime;
+}
+
+/**
  * fwupd_remote_set_mtime:
  * @self: a #FwupdRemote
  * @mtime: a UNIX timestamp
  *
- * Sets the plugin modification time.
+ * Sets the remote modification time.
  *
  * Since: 0.9.5
  **/
@@ -1080,10 +984,94 @@ fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime)
 }
 
 /**
+ * fwupd_remote_ensure_checksum_sig:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Calculates the signature checksum of the remote using the filename cache.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.17
+ **/
+gboolean
+fwupd_remote_ensure_checksum_sig(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->filename_cache_sig != NULL &&
+	    g_file_test(priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
+		gsize sz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autoptr(GChecksum) checksum_sig = g_checksum_new(G_CHECKSUM_SHA256);
+		if (!g_file_get_contents(priv->filename_cache_sig, &buf, &sz, error)) {
+			g_prefix_error_literal(error, "failed to get signature checksum: ");
+			return FALSE;
+		}
+		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);
+		fwupd_remote_set_checksum_sig(self, g_checksum_get_string(checksum_sig));
+	} else {
+		fwupd_remote_set_checksum_sig(self, NULL);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fwupd_remote_ensure_mtime:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Calculates the mtime of the remote using the filename cache.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.17
+ **/
+gboolean
+fwupd_remote_ensure_mtime(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInfo) info = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->filename_cache == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no filename cache set");
+		return FALSE;
+	}
+	file = g_file_new_for_path(priv->filename_cache);
+	if (!g_file_query_exists(file, NULL)) {
+		priv->mtime = G_MAXUINT64;
+		return TRUE;
+	}
+	info = g_file_query_info(file,
+				 G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				 G_FILE_QUERY_INFO_NONE,
+				 NULL,
+				 error);
+	if (info == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	priv->mtime = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+	return TRUE;
+}
+
+/**
  * fwupd_remote_get_refresh_interval:
  * @self: a #FwupdRemote
  *
- * Gets the plugin refresh interval in seconds.
+ * Gets the remote refresh interval in seconds.
  *
  * Returns: value in seconds
  *
@@ -1102,7 +1090,7 @@ fwupd_remote_get_refresh_interval(FwupdRemote *self)
  * @self: a #FwupdRemote
  * @refresh_interval: value in seconds
  *
- * Sets the plugin refresh interval in seconds.
+ * Sets the remote refresh interval in seconds.
  *
  * Since: 2.0.0
  **/

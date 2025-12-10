@@ -107,7 +107,7 @@ fu_mm_qmi_device_qmi_device_open_cb(GObject *qmi_device, GAsyncResult *res, gpoi
 static void
 fu_mm_qmi_device_qmi_device_open_attempt(FuMmQmiDeviceOpenContext *ctx)
 {
-	g_debug("trying to open QMI device...");
+	g_debug("trying to open QMI device…");
 	qmi_device_open(
 	    ctx->qmi_device,
 	    QMI_DEVICE_OPEN_FLAGS_AUTO |		   /* detect QMI and MBIM ports */
@@ -305,7 +305,7 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 			return;
 		}
 
-		g_set_error(&ctx->error,
+		g_set_error(&ctx->error, /* nocheck:error-false-return */
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "couldn't load mcfg: %s",
@@ -585,7 +585,7 @@ fu_mm_qmi_device_activate_config(FuMmQmiDeviceActivateContext *ctx)
 							      NULL);
 	qmi_message_pdc_activate_config_input_set_token(input, ctx->token++, NULL);
 
-	g_debug("activating selected configuration...");
+	g_debug("activating selected configuration…");
 	qmi_client_pdc_activate_config(ctx->qmi_client,
 				       input,
 				       5,
@@ -641,7 +641,7 @@ fu_mm_qmi_device_set_selected_config_indication(QmiClientPdc *client,
 		return;
 	}
 
-	g_debug("current configuration successfully selected...");
+	g_debug("current configuration successfully selected…");
 
 	/* now activate config */
 	fu_mm_qmi_device_activate_config(ctx);
@@ -695,7 +695,7 @@ fu_mm_qmi_device_set_selected_config(FuMmQmiDeviceActivateContext *ctx)
 	    NULL);
 	qmi_message_pdc_set_selected_config_input_set_token(input, ctx->token++, NULL);
 
-	g_debug("selecting current configuration...");
+	g_debug("selecting current configuration…");
 	qmi_client_pdc_set_selected_config(ctx->qmi_client,
 					   input,
 					   10,
@@ -918,7 +918,7 @@ fu_mm_qmi_device_cleanup(FuDevice *device,
 }
 
 static void
-fu_mm_qmi_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_mm_qmi_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

@@ -44,10 +44,10 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	guint16 phentsize;
 	guint16 phnum;
 	guint16 shnum;
-	g_autoptr(GByteArray) st_fhdr = NULL;
+	g_autoptr(FuStructElfFileHeader64le) st_fhdr = NULL;
 	g_autoptr(GByteArray) shstrndx_buf = NULL;
 	g_autoptr(GPtrArray) sections =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_elf_section_header64le_unref);
 
 	/* file header */
 	st_fhdr = fu_struct_elf_file_header64le_parse_stream(stream, 0x0, error);
@@ -59,7 +59,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	phentsize = fu_struct_elf_file_header64le_get_phentsize(st_fhdr);
 	phnum = fu_struct_elf_file_header64le_get_phnum(st_fhdr);
 	for (guint i = 0; i < phnum; i++) {
-		g_autoptr(GByteArray) st_phdr =
+		g_autoptr(FuStructElfProgramHeader64le) st_phdr =
 		    fu_struct_elf_program_header64le_parse_stream(stream, offset_proghdr, error);
 		if (st_phdr == NULL)
 			return FALSE;
@@ -124,7 +124,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 		}
 		fu_firmware_set_idx(img, i);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 	}
 
@@ -288,7 +288,7 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* calculate the offset of each section */
-	section_offset = st_filehdr->len + st_proghdr->len + shstrtab->len;
+	section_offset = st_filehdr->buf->len + st_proghdr->buf->len + shstrtab->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		fu_firmware_set_offset(img, section_offset);
@@ -305,7 +305,7 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	if (imgs->len > 0) {
 		g_autoptr(FuStructElfSectionHeader64le) st_secthdr =
 		    fu_struct_elf_section_header64le_new();
-		g_byte_array_append(section_hdr, st_secthdr->data, st_secthdr->len);
+		fu_byte_array_append_array(section_hdr, st_secthdr->buf);
 	}
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -323,7 +323,7 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_elf_section_header64le_set_offset(st_secthdr,
 							    fu_firmware_get_offset(img));
 		fu_struct_elf_section_header64le_set_size(st_secthdr, fu_firmware_get_size(img));
-		g_byte_array_append(section_hdr, st_secthdr->data, st_secthdr->len);
+		fu_byte_array_append_array(section_hdr, st_secthdr->buf);
 	}
 	if (shstrtab->len > 0) {
 		g_autoptr(FuStructElfSectionHeader64le) st_secthdr =
@@ -333,15 +333,16 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_elf_section_header64le_set_type(st_secthdr,
 							  FU_ELF_SECTION_HEADER_TYPE_STRTAB);
 		fu_struct_elf_section_header64le_set_offset(st_secthdr,
-							    st_filehdr->len + st_proghdr->len);
+							    st_filehdr->buf->len +
+								st_proghdr->buf->len);
 		fu_struct_elf_section_header64le_set_size(st_secthdr, shstrtab->len);
-		g_byte_array_append(section_hdr, st_secthdr->data, st_secthdr->len);
+		fu_byte_array_append_array(section_hdr, st_secthdr->buf);
 	}
 
 	/* update with the new totals */
 	fu_struct_elf_file_header64le_set_entry(st_filehdr, physical_addr + 0x60);
 	fu_struct_elf_file_header64le_set_shoff(st_filehdr,
-						st_filehdr->len + st_proghdr->len +
+						st_filehdr->buf->len + st_proghdr->buf->len +
 						    section_data->len);
 	fu_struct_elf_file_header64le_set_phentsize(st_filehdr,
 						    FU_STRUCT_ELF_PROGRAM_HEADER64LE_SIZE);
@@ -353,17 +354,17 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_elf_program_header64le_set_vaddr(st_proghdr, physical_addr);
 	fu_struct_elf_program_header64le_set_paddr(st_proghdr, physical_addr);
 	fu_struct_elf_program_header64le_set_filesz(st_proghdr,
-						    st_filehdr->len + st_proghdr->len +
+						    st_filehdr->buf->len + st_proghdr->buf->len +
 							section_data->len + section_hdr->len);
 	fu_struct_elf_program_header64le_set_memsz(st_proghdr,
-						   st_filehdr->len + st_proghdr->len +
+						   st_filehdr->buf->len + st_proghdr->buf->len +
 						       section_data->len + section_hdr->len);
 
 	/* add file header, sections, then section headers */
-	g_byte_array_append(buf, st_filehdr->data, st_filehdr->len);
-	g_byte_array_append(buf, st_proghdr->data, st_proghdr->len);
-	g_byte_array_append(buf, section_data->data, section_data->len);
-	g_byte_array_append(buf, section_hdr->data, section_hdr->len);
+	fu_byte_array_append_array(buf, st_filehdr->buf);
+	fu_byte_array_append_array(buf, st_proghdr->buf);
+	fu_byte_array_append_array(buf, section_data);
+	fu_byte_array_append_array(buf, section_hdr);
 	return g_steal_pointer(&buf);
 }
 

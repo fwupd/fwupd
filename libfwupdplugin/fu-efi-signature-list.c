@@ -104,7 +104,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	guint32 list_size;
 	guint32 size;
 	g_autofree gchar *sig_type = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSignatureList) st = NULL;
 
 	/* read EFI_SIGNATURE_LIST */
 	st = fu_struct_efi_signature_list_parse_stream(stream, *offset, error);
@@ -158,7 +158,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		fu_firmware_set_size(FU_FIRMWARE(sig), size);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig), stream, offset_tmp, flags, error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
 		offset_tmp += size;
 	}
@@ -240,14 +240,14 @@ fu_efi_signature_list_write_x509(FuEfiSignature *sig, GError **error)
 	blob = fu_firmware_write(FU_FIRMWARE(sig), error);
 	if (blob == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(st, blob);
+	fu_byte_array_append_bytes(st->buf, blob);
 	fu_struct_efi_signature_list_set_size(st, g_bytes_get_size(blob));
 	fu_struct_efi_signature_list_set_list_size(st,
 						   FU_STRUCT_EFI_SIGNATURE_LIST_SIZE +
 						       g_bytes_get_size(blob));
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static GByteArray *
@@ -272,15 +272,15 @@ fu_efi_signature_list_write_sha256(GPtrArray *sigs, GError **error)
 		img_blob = fu_firmware_write(FU_FIRMWARE(sig), error);
 		if (img_blob == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st, img_blob);
+		fu_byte_array_append_bytes(st->buf, img_blob);
 	}
 
 	/* fix up header */
 	fu_struct_efi_signature_list_set_size(st, sizeof(fwupd_guid_t) + 32); /* SHA256 */
-	fu_struct_efi_signature_list_set_list_size(st, st->len);
+	fu_struct_efi_signature_list_set_list_size(st, st->buf->len);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static GByteArray *
@@ -327,6 +327,22 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	return g_steal_pointer(&buf);
 }
 
+static void
+fu_efi_signature_list_add_magic(FuFirmware *firmware)
+{
+	fwupd_guid_t guid = {0};
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_SHA256,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
+	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_X509,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
+	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
+}
+
 /**
  * fu_efi_signature_list_new:
  *
@@ -347,6 +363,7 @@ fu_efi_signature_list_class_init(FuEfiSignatureListClass *klass)
 	firmware_class->validate = fu_efi_signature_list_validate;
 	firmware_class->parse = fu_efi_signature_list_parse;
 	firmware_class->write = fu_efi_signature_list_write;
+	firmware_class->add_magic = fu_efi_signature_list_add_magic;
 }
 
 static void

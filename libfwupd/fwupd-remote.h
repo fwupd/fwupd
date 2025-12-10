@@ -8,6 +8,8 @@
 
 #include <glib-object.h>
 
+#include "fwupd-remote-struct.h"
+
 G_BEGIN_DECLS
 
 #define FWUPD_TYPE_REMOTE (fwupd_remote_get_type())
@@ -24,115 +26,6 @@ struct _FwupdRemoteClass {
 	void (*_fwupd_reserved6)(void);
 	void (*_fwupd_reserved7)(void);
 };
-
-/**
- * FwupdRemoteKind:
- *
- * The kind of remote.
- **/
-typedef enum {
-	/**
-	 * FWUPD_REMOTE_KIND_UNKNOWN:
-	 *
-	 * Unknown kind.
-	 */
-	FWUPD_REMOTE_KIND_UNKNOWN,
-	/**
-	 * FWUPD_REMOTE_KIND_DOWNLOAD:
-	 *
-	 * Requires files to be downloaded.
-	 */
-	FWUPD_REMOTE_KIND_DOWNLOAD,
-	/**
-	 * FWUPD_REMOTE_KIND_LOCAL:
-	 *
-	 * Reads files from the local machine.
-	 */
-	FWUPD_REMOTE_KIND_LOCAL,
-	/**
-	 * FWUPD_REMOTE_KIND_DIRECTORY:
-	 *
-	 * Reads directory from the local machine.
-	 *
-	 * Since: 1.2.4
-	 */
-	FWUPD_REMOTE_KIND_DIRECTORY,
-	/*< private >*/
-	FWUPD_REMOTE_KIND_LAST
-} FwupdRemoteKind;
-
-/**
- * FwupdRemoteFlags:
- *
- * The flags available for the remote.
- **/
-typedef enum {
-	/**
-	 * FWUPD_REMOTE_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_REMOTE_FLAG_NONE = 0,
-	/**
-	 * FWUPD_REMOTE_FLAG_ENABLED:
-	 *
-	 * Is enabled.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_REMOTE_FLAG_ENABLED = 1 << 0,
-	/**
-	 * FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED:
-	 *
-	 * Requires approval for each firmware.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED = 1 << 1,
-	/**
-	 * FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS:
-	 *
-	 * Send firmware reports automatically.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS = 1 << 2,
-	/**
-	 * FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS:
-	 *
-	 * Send security reports automatically.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS = 1 << 3,
-	/**
-	 * FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA:
-	 *
-	 * Use peer-to-peer locations for metadata.
-	 *
-	 * Since: 1.9.5
-	 */
-	FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA = 1 << 4,
-	/**
-	 * FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE:
-	 *
-	 * Use peer-to-peer locations for firmware.
-	 *
-	 * Since: 1.9.5
-	 */
-	FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE = 1 << 5,
-} FwupdRemoteFlags;
-
-FwupdRemoteKind
-fwupd_remote_kind_from_string(const gchar *kind);
-const gchar *
-fwupd_remote_kind_to_string(FwupdRemoteKind kind);
-const gchar *
-fwupd_remote_flag_to_string(FwupdRemoteFlags flag);
-FwupdRemoteFlags
-fwupd_remote_flag_from_string(const gchar *flag);
 
 FwupdRemote *
 fwupd_remote_new(void);

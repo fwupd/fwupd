@@ -50,6 +50,10 @@ def test_files() -> int:
             continue
         if fnmatch.fnmatch(symb, "fu_struct_*_get_*"):
             continue
+        if fnmatch.fnmatch(symb, "fu_*_ref"):
+            continue
+        if fnmatch.fnmatch(symb, "fu_*_unref"):
+            continue
         if symb.find("__proto__") != -1:
             continue
         if symb in ["main", "fu_plugin_init_vfuncs"]:

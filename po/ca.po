@@ -5,16 +5,21 @@
 # Translators:
 # Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2025
 # Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
+# Richard Hughes <hughsient@gmail.com>, 2025.
+# Xusi Fons <xusi@keemail.me>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Catalan (http://app.transifex.com/freedesktop/fwupd/language/ca/)\n"
+"PO-Revision-Date: 2025-12-02 23:02+0000\n"
+"Last-Translator: Xusi Fons <xusi@keemail.me>\n"
+"Language-Team: Catalan <https://hosted.weblate.org/projects/fwupd/fwupd/ca/>\n"
+"Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ca\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.15-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -293,7 +298,7 @@ msgstr[1] "%u dies"
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] " %u dispositiu té una actualització de microprogramari disponible."
+msgstr[0] "%u dispositiu té una actualització de microprogramari disponible."
 msgstr[1] "%u dispositius tenen una actualització de microprogramari disponible."
 
 #. TRANSLATORS: this is shown in the MOTD
@@ -367,11 +372,11 @@ msgstr "Acció requerida:"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
-msgstr "Activa els dispositius."
+msgstr "Activa els dispositius"
 
 #. TRANSLATORS: command description
 msgid "Activate pending devices"
-msgstr "Activa els dispositius pendents."
+msgstr "Activa els dispositius pendents"
 
 msgid "Activate the new firmware on the device"
 msgstr "Activa el microprogramari nou al dispositiu"
@@ -457,11 +462,11 @@ msgstr "Respon sí a totes les preguntes"
 
 #. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
-msgstr "Aplica una actualització fins i tot quan no se us aconselli."
+msgstr "Aplica una actualització fins i tot quan no se us aconselli"
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
-msgstr "Aplica els fitxers d'actualització."
+msgstr "Aplica els fitxers d'actualització"
 
 #. TRANSLATORS: actually sending the update to the hardware
 msgid "Applying update…"
@@ -480,11 +485,11 @@ msgstr "Demana al dimoni sortir"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
-msgstr "Adjunta al mode microprogramari."
+msgstr "Adjunta al mode microprogramari"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
-msgstr "S'està autenticant..."
+msgstr "S'està autenticant…"
 
 #. TRANSLATORS: user needs to run a command
 msgid "Authentication details are required"
@@ -613,7 +618,7 @@ msgstr "Bateria"
 
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
-msgstr "Vincula el controlador actual."
+msgstr "Vincula el controlador actual"
 
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
@@ -629,7 +634,7 @@ msgstr "Microprogramari bloquejat:"
 
 #. TRANSLATORS: command description
 msgid "Blocks a specific firmware from being installed"
-msgstr "Bloqueja la instal·lació d'un microprogramari específic."
+msgstr "Bloqueja la instal·lació d'un microprogramari específic"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -645,7 +650,7 @@ msgstr "Construeix un arxiu Cabinet a partir d’un blob de microprogramari i me
 
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
-msgstr "Construeix un fitxer de microprogramari."
+msgstr "Compila un fitxer de microprogramari"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * Utilized by OS means the distribution enabled it
@@ -688,7 +693,7 @@ msgstr "Comprova si hi ha dispositius pendents de reiniciar per a completar l'ac
 
 #. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
-msgstr "Comprova que la suma criptogràfica coincideix amb el microprogramari."
+msgstr "Comprova que la suma criptogràfica es idèntica a la del microprogramari"
 
 #. TRANSLATORS: hash to that exact firmware archive
 #. TRANSLATORS: remote checksum
@@ -718,7 +723,7 @@ msgstr "Tria un volum"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr "Esborra els resultats de l'última actualització."
+msgstr "Esborra els resultats de l'última actualització"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -750,7 +755,7 @@ msgstr "Tecnologia de compliment del flux de control"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
-msgstr "Converteix un fitxer de microprogramari."
+msgstr "Converteix un fitxer de microprogramari"
 
 #. TRANSLATORS: command description
 msgid "Create an EFI boot entry"
@@ -786,7 +791,7 @@ msgstr "Opcions per a la depuració"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr "S'està descomprimint..."
+msgstr "S'està descomprimint…"
 
 #. TRANSLATORS: command description
 msgid "Delete an EFI boot entry"
@@ -799,7 +804,7 @@ msgstr "Descripció"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
-msgstr "Separa del mode carregador d'arrencada."
+msgstr "Separa del mode carregador d'arrencada"
 
 #. TRANSLATORS: more details about the update link
 msgid "Details"
@@ -983,7 +988,7 @@ msgstr "Inhabilitada"
 
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
-msgstr "Inhabilita un remot indicat."
+msgstr "Inhabilita un remot indicat"
 
 #. TRANSLATORS: command description
 msgid "Disables virtual testing devices"
@@ -1078,7 +1083,7 @@ msgstr "Voleu desactualitzar %s des de la %s a la %s?"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
-msgstr "Desactualitza el microprogramari en un dispositiu."
+msgstr "Degrada el microprogramari d'un dispositiu"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1091,11 +1096,11 @@ msgstr "Descarrega un fitxer"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "S'està descarregant..."
+msgstr "S'està descarregant…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
-msgstr "Aboca les dades al SMBIOS des d'un fitxer."
+msgstr "Aboca les dades del SMBIOS des d'un fitxer"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -1146,7 +1151,7 @@ msgstr "Activat si hi ha cap coincidència de maquinari"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
-msgstr "Habilita un remot indicat."
+msgstr "Habilita un remot indicat"
 
 #. TRANSLATORS: command description
 msgid "Enables virtual testing devices"
@@ -1184,11 +1189,11 @@ msgstr "Enumeració"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
-msgstr "Esborra tot l'historial de les actualitzacions de microprogramari."
+msgstr "Esborra tot l'historial de les actualitzacions de microprogramari"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "S'està esborrant..."
+msgstr "S'està esborrant…"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -1208,7 +1213,7 @@ msgstr "Exporta l'historial del microprogramari per a la càrrega manual"
 
 #. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
-msgstr "Extreu un blob de microprogramari en imatges."
+msgstr "Extreu un blob de microprogramari en imatges"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1486,15 +1491,15 @@ msgstr "Obtén les opcions de configuració del BIOS"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
-msgstr "Obté totes les etiquetes admeses per «fwupd»."
+msgstr "Obtén totes les etiquetes admeses per «fwupd»"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr "Obté tots els dispositius que admeten actualitzacions de microprogramari."
+msgstr "Obtén tots els dispositius que admeten actualitzacions de microprogramari"
 
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
-msgstr "Obté tots els connectors habilitats registrats amb el sistema."
+msgstr "Obtén tots els connectors habilitats registrats amb el sistema"
 
 #. TRANSLATORS: command description
 msgid "Get all known version formats"
@@ -1506,15 +1511,15 @@ msgstr "Obtén les metadades de l'informe del dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "Obté la informació sobre un fitxer de microprogramari."
+msgstr "Obtén detalls sobre un fitxer de microprogramari"
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
-msgstr "Obté els remots configurats."
+msgstr "Obtén els remots configurats"
 
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
-msgstr "Obté els atributs de seguretat de l'amfitrió."
+msgstr "Obtén els atributs de seguretat de l'amfitrió"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware"
@@ -1522,7 +1527,7 @@ msgstr "Obtén la llista del microprogramari aprovat"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
-msgstr "Obté la llista del microprogramari bloquejat."
+msgstr "Obtén la llista del microprogramari bloquejat"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
@@ -1530,11 +1535,11 @@ msgstr "Obtén la llista d'actualitzacions per a tots els dispositius especifica
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
-msgstr "Obté els alliberaments per a un dispositiu."
+msgstr "Obtén els alliberaments per a un dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr "Obté els resultats de l'última actualització."
+msgstr "Obtén els resultats de l'última actualització"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "HWIDS-FILE"
@@ -1608,7 +1613,7 @@ msgstr "Està habilitada la protecció IOMMU de dispositius"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr "Està ociós..."
+msgstr "Està ociós…"
 
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
@@ -1693,7 +1698,7 @@ msgstr "Es requereix explícitament la instal·lació d'una versió específica"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "S'està instal·lant l'actualització de microprogramari..."
+msgstr "S'està instal·lant l'actualització de microprogramari…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1927,7 +1932,7 @@ msgstr "Llista les variables EFI amb un GUID específic"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
-msgstr "Llista les entrades a la dbx."
+msgstr "Llista les entrades a la dbx"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware GTypes"
@@ -1935,11 +1940,11 @@ msgstr "Llista els GTipus de microprogramari disponibles"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
-msgstr "Llista els tipus de microprogramari disponibles."
+msgstr "Llista els tipus de microprogramari disponibles"
 
 #. TRANSLATORS: command description
 msgid "Lists files on the ESP"
-msgstr "Llista els fitxers en l'ESP."
+msgstr "Llista els fitxers en l'ESP"
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
@@ -1951,7 +1956,7 @@ msgstr "Carregat des d'un mòdul extern"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr "S'està carregant..."
+msgstr "S'està carregant…"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Locked"
@@ -2049,7 +2054,7 @@ msgstr "Modifica un valor de la configuració del dimoni"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
-msgstr "Modifica un remot indicat."
+msgstr "Modifica un remot indicat"
 
 msgid "Modify a configured remote"
 msgstr "Modifica un remot configurat"
@@ -2059,11 +2064,11 @@ msgstr "Modifica la configuració del dimoni"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr "Monitora el dimoni per als esdeveniments."
+msgstr "Monitora el dimoni per als esdeveniments"
 
 #. TRANSLATORS: command description
 msgid "Mounts the ESP"
-msgstr "Munta l'ESP."
+msgstr "Munta l'ESP"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
@@ -2198,15 +2203,15 @@ msgstr "CAMÍ"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
-msgstr "Analitza i mostra els detalls sobre un fitxer de microprogramari."
+msgstr "Analitza i mostra els detalls sobre un fitxer de microprogramari"
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr "S'està analitzant l'actualització de la dbx..."
+msgstr "S'està analitzant l'actualització de la dbx…"
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
-msgstr "S'està analitzant la dbx del sistema..."
+msgstr "S'està analitzant la dbx del sistema…"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -2332,7 +2337,7 @@ msgstr "Només lectura"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
-msgstr "Llegeix un blob de microprogramari des d'un dispositiu."
+msgstr "Llegeix un blob de microprogramari des d'un dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware from a device"
@@ -2345,7 +2350,7 @@ msgstr "Llegint des de %s…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
-msgstr "S'està llegint..."
+msgstr "S'està llegint…"
 
 #. TRANSLATORS: Plugin is active and in use
 msgid "Ready"
@@ -2357,7 +2362,7 @@ msgstr "Interval de refresc"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr "Refresca les metadades des del servidor remot."
+msgstr "Refresca les metadades des del servidor remot"
 
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 is a version string
@@ -2367,11 +2372,11 @@ msgstr "Voleu reinstal·lar %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
-msgstr "Torna a instal·lar el microprogramari actual en el dispositiu."
+msgstr "Torna a instal·lar el microprogramari actual al dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
-msgstr "Torna a instal·lar el microprogramari a un dispositiu."
+msgstr "Torna a instal·lar el microprogramari a un dispositiu"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -2435,7 +2440,7 @@ msgstr "Voleu reiniciar el dimoni per a fer efectiu el canvi?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr "S'està reiniciant el dispositiu..."
+msgstr "S'està reiniciant el dispositiu…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -2443,7 +2448,7 @@ msgstr "Es recuperen les opcions de configuració del BIOS. Si no es transmeten 
 
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
-msgstr "Retorna tots els ID del maquinari de la màquina."
+msgstr "Retorna tots els identificadors del maquinari de la màquina"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Review and upload report now?"
@@ -2560,7 +2565,7 @@ msgstr "Augment escalar"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
-msgstr "Planificació..."
+msgstr "Planificació…"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"
@@ -2641,7 +2646,7 @@ msgstr "La configuració s'aplicarà després de reiniciar el sistema"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
-msgstr "Comparteix l'historial de microprogramari amb els desenvolupadors."
+msgstr "Comparteix l'historial de microprogramari amb els desenvolupadors"
 
 #. TRANSLATORS: command line option
 msgid "Show all results"
@@ -2669,15 +2674,15 @@ msgstr "Mostra els dispositius que no són actualitzables"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "Mostra informació de depuració addicional."
+msgstr "Mostra informació de depuració addicional"
 
 #. TRANSLATORS: command description
 msgid "Show history of firmware updates"
-msgstr "Mostra l'historial de les actualitzacions de microprogramari."
+msgstr "Mostra l'historial de les actualitzacions de microprogramari"
 
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
-msgstr "Mostra la versió calculada de la dbx."
+msgstr "Mostra la versió calculada de la dbx"
 
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
@@ -2720,7 +2725,7 @@ msgstr "Origen"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
-msgstr "Especifica el fitxer de base de dades dbx."
+msgstr "Especifica el fitxer de base de dades dbx"
 
 msgid "Stop the fwupd service"
 msgstr "Atura el servei del «fwupd»"
@@ -2859,7 +2864,7 @@ msgstr "Voleu canviar la branca des de %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
-msgstr "Canvia la branca de microprogramari en el dispositiu."
+msgstr "Canvia la branca del microprogramari al dispositiu"
 
 #. TRANSLATORS: command description
 msgid "Sync firmware versions to the chosen configuration"
@@ -3050,7 +3055,7 @@ msgstr "Hi ha dispositius amb problemes:"
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
-msgstr "No hi ha cap fitxer de microprogramari bloquejat."
+msgstr "No hi ha cap fitxer de microprogramari bloquejat"
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
@@ -3232,7 +3237,7 @@ msgstr "No es pot trobar atribut"
 
 #. TRANSLATORS: command description
 msgid "Unbind current driver"
-msgstr "Desvincula el controlador actual."
+msgstr "Desvincula el controlador actual"
 
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
@@ -3240,7 +3245,7 @@ msgstr "Microprogramari desbloquejat:"
 
 #. TRANSLATORS: command description
 msgid "Unblocks a specific firmware from being installed"
-msgstr "Desbloqueja la instal·lació d'un microprogramari específic."
+msgstr "Desbloqueja la instal·lació d'un microprogramari específic"
 
 #. TRANSLATORS: command description
 msgid "Undo the host security attribute fix"
@@ -3274,7 +3279,7 @@ msgstr "Desblocada"
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
-msgstr "Desbloqueja el dispositiu per a accedir al microprogramari."
+msgstr "Desbloqueja el dispositiu per a accedir al microprogramari"
 
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
@@ -3327,14 +3332,14 @@ msgstr "Voleu actualitzar ara?"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
-msgstr "Actualitza la suma criptogràfica emmagatzemada amb el contingut actual de la ROM."
+msgstr "Actualitza la suma criptogràfica emmagatzemada amb el contingut actual de la ROM"
 
 msgid "Update the stored device verification information"
 msgstr "Actualitza la informació de verificació dels dispositius emmagatzemats"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
-msgstr "Actualitza les metadades emmagatzemades amb el contingut actual."
+msgstr "Actualitza les metadades emmagatzemades amb el contingut actual"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
@@ -3412,7 +3417,7 @@ msgstr "Vàlid"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "S'està validant el contingut ESP..."
+msgstr "S'està validant el contingut ESP…"
 
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
@@ -3424,7 +3429,7 @@ msgstr "Venedor"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "S'està verificant..."
+msgstr "S'està verificant…"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -3448,7 +3453,7 @@ msgstr "S'està esperant…"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
-msgstr "Mira per a canvis al maquinari."
+msgstr "Vigila els canvis al maquinari"
 
 #. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
 #. update
@@ -3461,7 +3466,7 @@ msgstr "Fitxer d'escriptura:"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr "S'està escrivint..."
+msgstr "S'està escrivint…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."

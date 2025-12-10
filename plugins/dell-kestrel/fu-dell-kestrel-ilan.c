@@ -23,11 +23,16 @@ fu_dell_kestrel_ilan_convert_version(FuDevice *device, guint64 version_raw)
 static gboolean
 fu_dell_kestrel_ilan_setup(FuDevice *device, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
-	FuDellDockBaseType dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(proxy));
+	FuDevice *proxy;
+	FuDellDockBaseType dock_type;
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_LAN;
 	guint32 version_raw;
 	g_autofree gchar *devname = NULL;
+
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
+	dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(proxy));
 
 	/* name */
 	devname = g_strdup_printf("%s", fu_dell_kestrel_ec_devicetype_to_str(dev_type, 0, 0));
@@ -52,7 +57,9 @@ fu_dell_kestrel_ilan_write(FuDevice *device,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_dell_kestrel_hid_device_write_firmware(FU_DELL_KESTREL_HID_DEVICE(proxy),
 							 firmware,
 							 progress,
@@ -62,7 +69,7 @@ fu_dell_kestrel_ilan_write(FuDevice *device,
 }
 
 static void
-fu_dell_kestrel_ilan_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_kestrel_ilan_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -79,6 +86,7 @@ fu_dell_kestrel_ilan_init(FuDellKestrelIlan *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRED);
 	fu_device_set_summary(FU_DEVICE(self), "Dell Dock LAN");
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DELL_KESTREL_EC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);

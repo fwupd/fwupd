@@ -18,6 +18,7 @@
 #include "fu-dell-dock-common.h"
 #include "fu-dell-dock-ec.h"
 
+/* nocheck:name */
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error)
 {
@@ -26,8 +27,7 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 
 	g_return_val_if_fail(device != NULL, FALSE);
 
-	parent = FU_IS_DELL_DOCK_EC(device) ? device : fu_device_get_parent(device);
-
+	parent = FU_IS_DELL_DOCK_EC(device) ? device : fu_device_get_parent(device, NULL);
 	if (parent == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -41,5 +41,5 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 	if (locker == NULL)
 		return FALSE;
 
-	return fu_dell_dock_ec_modify_lock(parent, target, enabled, error);
+	return fu_dell_dock_ec_modify_lock(FU_DELL_DOCK_EC(parent), target, enabled, error);
 }

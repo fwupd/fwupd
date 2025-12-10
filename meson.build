@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.0.17',
+  version: '2.1.1',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -232,11 +232,13 @@ if host_machine.system() == 'windows'
   sysconfdir = get_option('sysconfdir')
   localstatedir = get_option('localstatedir')
   datadir = get_option('datadir')
+  includedir = get_option('includedir')
   installed_test_bindir = get_option('libexecdir')
   installed_test_datadir = get_option('datadir')
   daemon_dir = get_option('libexecdir')
 else
   datadir = join_paths(prefix, get_option('datadir'))
+  includedir = join_paths(prefix, get_option('includedir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
@@ -669,12 +671,6 @@ if build_standalone
   )
     conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
   endif
-  if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
-    'flashrom_flash_probe_v2',
-    dependencies: libflashrom,
-  )
-    conf.set('HAVE_FLASHROM_FLASH_PROBE_V2' , '1')
-  endif
 endif
 
 if libsystemd.found()
@@ -839,11 +835,31 @@ endif
 rustgen = generator(
   python3,
   output: ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
+  # fake custom target to ensure the generator reruns if these input files change
+  depends: custom_target(
+    'rustgen-files-timestamp',
+    input: files(
+      'libfwupdplugin/fu-rustgen-enum.c.in',
+      'libfwupdplugin/fu-rustgen-enum.h.in',
+      'libfwupdplugin/fu-rustgen-struct.c.in',
+      'libfwupdplugin/fu-rustgen-struct.h.in',
+      'libfwupdplugin/fu-rustgen.c.in',
+      'libfwupdplugin/fu-rustgen.h.in',
+      'libfwupdplugin/rustgen.py',
+    ),
+    output: 'rustgen-files-timestamp',
+    command: [python3, '-c', 'from pathlib import Path\nPath("@OUTPUT@").touch()'],
+  ),
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '--use', 'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
     '@INPUT@',
-    '@OUTPUT0@',
-    '@OUTPUT1@',
+    '--outc', '@OUTPUT0@',
+    '--outh', '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
+    '--prefix',
+    'Fu',
   ],
 )
 

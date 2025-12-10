@@ -11,6 +11,11 @@
 #include "fu-vli-pd-parade-device.h"
 #include "fu-vli-struct.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=100
+ */
+
 struct _FuVliPdParadeDevice {
 	FuUsbDevice parent_instance;
 	FuVliDeviceKind device_kind;
@@ -465,7 +470,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	guint8 buf[0x20] = {0};
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -489,6 +494,9 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* open device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
@@ -649,13 +657,16 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 static GBytes *
 fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) fw = g_byte_array_new();
 	g_autoptr(GPtrArray) blocks = NULL;
 
 	/* open device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return NULL;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return NULL;
@@ -698,7 +709,7 @@ fu_vli_pd_parade_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_vli_pd_parade_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_vli_pd_parade_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

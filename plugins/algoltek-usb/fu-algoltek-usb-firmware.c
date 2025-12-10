@@ -37,7 +37,7 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAlgoltekProductIdentity) st = NULL;
 	g_autoptr(GInputStream) stream_isp = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 
@@ -55,7 +55,8 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_isp, stream_isp, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_isp, "isp");
-	fu_firmware_add_image(firmware, img_isp);
+	if (!fu_firmware_add_image(firmware, img_isp, error))
+		return FALSE;
 	offset += AG_ISP_SIZE;
 
 	/* payload */
@@ -66,7 +67,8 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	fu_firmware_set_version(img_payload, version);
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
+	if (!fu_firmware_add_image(firmware, img_payload, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

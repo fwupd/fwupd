@@ -18,54 +18,47 @@ struct _FuUefiCodDevice {
 G_DEFINE_TYPE(FuUefiCodDevice, fu_uefi_cod_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
-fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **error)
+fu_uefi_cod_device_get_results_for_idx(FuUefiCodDevice *self, guint idx, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(device);
-	fwupd_guid_t guid = {0x0};
-	gsize bufsz = 0;
-	guint32 status = 0;
-	guint32 total_size = 0;
+	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(self);
 	g_autofree gchar *guidstr = NULL;
 	g_autofree gchar *name = NULL;
-	g_autofree guint8 *buf = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuStructEfiCapsuleResultVariableHeader) st = NULL;
 
 	/* read out result */
 	name = g_strdup_printf("Capsule%04u", idx);
-	if (!fu_efivars_get_data(efivars,
-				 FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
-				 name,
-				 &buf,
-				 &bufsz,
-				 NULL,
-				 error)) {
+	blob = fu_efivars_get_data_bytes(efivars,
+					 FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+					 name,
+					 NULL,
+					 error);
+	if (blob == NULL) {
 		g_prefix_error(error, "failed to read %s: ", name);
+		return FALSE;
+	}
+	st = fu_struct_efi_capsule_result_variable_header_parse_bytes(blob, 0x0, error);
+	if (st == NULL) {
+		g_prefix_error(error, "failed to parse %s: ", name);
 		return FALSE;
 	}
 
 	/* sanity check */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x00, &total_size, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (total_size < 0x3A) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "EFI_CAPSULE_RESULT_VARIABLE_HEADER too small");
+	if (fu_struct_efi_capsule_result_variable_header_get_total_size(st) <
+	    FU_STRUCT_EFI_CAPSULE_RESULT_VARIABLE_HEADER_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "EFI_CAPSULE_RESULT_VARIABLE_HEADER too small: 0x%x",
+			    (guint)fu_struct_efi_capsule_result_variable_header_get_total_size(st));
 		return FALSE;
 	}
 
 	/* verify guid */
-	if (!fu_memcpy_safe(guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    0x08, /* src */
-			    sizeof(guid),
-			    error))
-		return FALSE;
-	guidstr = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	guidstr = fwupd_guid_to_string(fu_struct_efi_capsule_result_variable_header_get_guid(st),
+				       FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	if (g_strcmp0(guidstr, fu_uefi_capsule_device_get_guid(device_uefi)) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -76,10 +69,42 @@ fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **err
 		return FALSE;
 	}
 
-	/* get status */
-	if (!fu_memread_uint32_safe(buf, bufsz, 0x28, &status, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	fu_uefi_capsule_device_set_status(device_uefi, status);
+	/* map status to capsule device status */
+	switch (fu_struct_efi_capsule_result_variable_header_get_status(st)) {
+	case FU_EFI_STATUS_SUCCESS:
+		fu_uefi_capsule_device_set_status(device_uefi,
+						  FU_UEFI_CAPSULE_DEVICE_STATUS_SUCCESS);
+		break;
+	case FU_EFI_STATUS_OUT_OF_RESOURCES:
+	case FU_EFI_STATUS_VOLUME_FULL:
+		fu_uefi_capsule_device_set_status(
+		    device_uefi,
+		    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_INSUFFICIENT_RESOURCES);
+		break;
+	case FU_EFI_STATUS_INCOMPATIBLE_VERSION:
+		fu_uefi_capsule_device_set_status(
+		    device_uefi,
+		    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_INCORRECT_VERSION);
+		break;
+	case FU_EFI_STATUS_LOAD_ERROR:
+	case FU_EFI_STATUS_UNSUPPORTED:
+	case FU_EFI_STATUS_BAD_BUFFER_SIZE:
+	case FU_EFI_STATUS_INVALID_PARAMETER:
+	case FU_EFI_STATUS_BUFFER_TOO_SMALL:
+		fu_uefi_capsule_device_set_status(
+		    device_uefi,
+		    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_INVALID_FORMAT);
+		break;
+	case FU_EFI_STATUS_ACCESS_DENIED:
+	case FU_EFI_STATUS_SECURITY_VIOLATION:
+		fu_uefi_capsule_device_set_status(device_uefi,
+						  FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_AUTH_ERROR);
+		break;
+	default:
+		fu_uefi_capsule_device_set_status(device_uefi,
+						  FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_UNSUCCESSFUL);
+		break;
+	}
 	return TRUE;
 }
 
@@ -140,7 +165,7 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 		return FALSE;
 	for (guint i = 0; i <= capsule_last; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (fu_uefi_cod_device_get_results_for_idx(device, i, &error_local))
+		if (fu_uefi_cod_device_get_results_for_idx(self, i, &error_local))
 			return TRUE;
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -290,9 +315,9 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 					 "OsIndications",
 					 (guint8 *)&os_indications,
 					 sizeof(os_indications),
-					 FU_EFIVARS_ATTR_NON_VOLATILE |
-					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+					     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					 error)) {
 			g_prefix_error_literal(error, "Could not set OsIndications: ");
 			return FALSE;

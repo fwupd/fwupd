@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-cfu-device.h"
 #include "fu-cfu-module.h"
 #include "fu-cfu-struct.h"
 
@@ -36,7 +37,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 {
 	FuDevice *device = FU_DEVICE(self);
 	g_autofree gchar *logical_id = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCfuGetVersionRspComponent) st = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_get_version_rsp_component_parse(buf, bufsz, offset, error);
@@ -108,7 +109,8 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_bytes(offer, blob_offer, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(offer, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, offer);
+	if (!fu_firmware_add_image(firmware, offer, error))
+		return NULL;
 
 	/* payload */
 	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
@@ -122,7 +124,8 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_bytes(payload, blob_payload, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, payload);
+	if (!fu_firmware_add_image(firmware, payload, error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&firmware);
@@ -139,20 +142,15 @@ fu_cfu_module_write_firmware(FuDevice *device,
 	FuDeviceClass *device_class;
 
 	/* process by the parent */
-	proxy = fu_device_get_proxy(device);
-	if (proxy == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no proxy device assigned");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	device_class = FU_DEVICE_GET_CLASS(proxy);
 	return device_class->write_firmware(proxy, firmware, progress, flags, error);
 }
 
 static void
-fu_cfu_module_set_progress(FuDevice *self, FuProgress *progress)
+fu_cfu_module_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -175,6 +173,7 @@ fu_cfu_module_init(FuCfuModule *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.cfu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_SURFACE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_CFU_DEVICE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);

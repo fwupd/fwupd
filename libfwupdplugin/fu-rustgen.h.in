@@ -1,8 +1,19 @@
-/* auto-generated, do not modify */
+/*
+ * This file is auto-generated, do not modify!
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
 #pragma once
 
 {%- if struct_objs %}
 #include <fu-input-stream.h>
 {%- else %}
-#include <fwupd.h>
+{%- for include in includes %}
+#include <{{include}}>
+{%- endfor %}
 {%- endif %}
+
+{%- for header_basename in import_headers %}
+#include "{{header_basename}}"
+{%- endfor %}

@@ -46,12 +46,12 @@ gboolean
 fu_console_setup(FuConsole *self, GError **error)
 {
 #ifdef _WIN32
-	HANDLE hOut;
-	DWORD dwMode = 0;
+	HANDLE out;
+	DWORD mode = 0;
 
 	/* enable VT sequences */
-	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hOut == INVALID_HANDLE_VALUE) {
+	out = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (out == INVALID_HANDLE_VALUE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -59,7 +59,7 @@ fu_console_setup(FuConsole *self, GError **error)
 			    (guint)GetLastError());
 		return FALSE;
 	}
-	if (!GetConsoleMode(hOut, &dwMode)) {
+	if (!GetConsoleMode(out, &mode)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -67,8 +67,8 @@ fu_console_setup(FuConsole *self, GError **error)
 			    (guint)GetLastError());
 		return FALSE;
 	}
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	if (!SetConsoleMode(hOut, dwMode)) {
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(out, mode)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -190,8 +190,14 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 			break;
 
 		if (prompt == NULL) {
-			/* TRANSLATORS: the user isn't reading the question */
-			prompt = g_strdup_printf(_("Please enter a number from 0 to %u: "), maxnum);
+			g_autoptr(GString) str = g_string_new(NULL);
+			g_string_append_printf(
+			    str,
+			    /* TRANSLATORS: the user isn't reading the question */
+			    _("Please enter a number from 0 to %u:"),
+			    maxnum);
+			g_string_append(str, " ");
+			prompt = g_string_free(g_steal_pointer(&str), FALSE);
 		}
 	} while (TRUE);
 	return answer;
@@ -226,9 +232,15 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 			return FALSE;
 
 		if (prompt == NULL) {
-			/* TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
-			 * 'N' */
-			prompt = g_strdup_printf(_("Please enter either %s or %s: "), "Y", "N");
+			g_autoptr(GString) str = g_string_new(NULL);
+			g_string_append_printf(str,
+					       /* TRANSLATORS: the user isn't reading the question
+						  -- %1 is 'Y' and %2 is 'N' */
+					       _("Please enter either %s or %s:"),
+					       "Y",
+					       "N");
+			g_string_append(str, " ");
+			prompt = g_string_free(g_steal_pointer(&str), FALSE);
 		}
 	} while (TRUE);
 	return FALSE;

@@ -6,7 +6,8 @@ removed when branching for new minor versions.
 
 Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 
-Remember: Plugins should be upstream!
+> [!IMPORTANT]
+> Plugins should be upstream!
 
 ## 1.5.5
 
@@ -193,3 +194,14 @@ Remember: Plugins should be upstream!
 ## 2.0.14
 
 * `fu_error_convert()`: Use `fwupd_error_convert()` instead
+
+## 2.0.17
+
+* `fu_firmware_add_image_full()`: Use `fu_firmware_add_image()` instead.
+* `fu_firmware_add_image()`: Add a `GError` and check the return value.
+
+## 2.0.18
+
+* `fu_input_stream_find()`: Add a start offset, typically `0x0`.
+* `fu_device_get_parent()`: Add a `GError`
+* `fu_device_get_proxy()`: Add a `GError`

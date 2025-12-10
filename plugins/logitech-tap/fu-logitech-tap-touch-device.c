@@ -8,7 +8,6 @@
 
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-
 #include <string.h>
 
 #include "fu-logitech-tap-struct.h"
@@ -62,10 +61,7 @@ fu_logitech_tap_touch_device_get_feature_cb(FuDevice *device, gpointer user_data
 				   0x00U,
 				   &report_id,
 				   error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to read report id: ");
+		g_prefix_error_literal(error, "failed to read report id: ");
 		return FALSE;
 	}
 	if (!ret) {
@@ -89,15 +85,15 @@ fu_logitech_tap_touch_device_get_feature_cb(FuDevice *device, gpointer user_data
 
 static gboolean
 fu_logitech_tap_touch_device_hid_transfer(FuLogitechTapTouchDevice *self,
-					  GByteArray *st_req,
+					  FuStructLogitechTapTouchHidReq *st_req,
 					  guint delay,
 					  GByteArray *buf_res,
 					  GError **error)
 {
-	fu_byte_array_set_size(st_req, FU_LOGITECH_TAP_TOUCH_HID_SET_DATA_LEN, 0x0);
+	fu_byte_array_set_size(st_req->buf, FU_LOGITECH_TAP_TOUCH_HID_SET_DATA_LEN, 0x0);
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_req->data,
-					  st_req->len,
+					  st_req->buf->data,
+					  st_req->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		g_prefix_error_literal(error, "failed to send packet to touch panel: ");
@@ -125,7 +121,7 @@ fu_logitech_tap_touch_device_hid_transfer(FuLogitechTapTouchDevice *self,
 }
 
 static gboolean
-fu_logitech_tap_touch_device_enable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_touch_device_enable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapTouchDevice *self = FU_LOGITECH_TAP_TOUCH_DEVICE(device);
 	g_autoptr(FuStructLogitechTapTouchHidReq) st = fu_struct_logitech_tap_touch_hid_req_new();
@@ -136,12 +132,12 @@ fu_logitech_tap_touch_device_enable_tde(FuDevice *device, GError **error)
 	fu_struct_logitech_tap_touch_hid_req_set_cmd(
 	    st,
 	    FU_STRUCT_LOGITECH_TAP_TOUCH_HID_CMD_SET_TDE_TEST_MODE);
-	fu_byte_array_append_uint8(st, 0x01);
+	fu_byte_array_append_uint8(st->buf, 0x01);
 	return fu_logitech_tap_touch_device_hid_transfer(self, st, 0, NULL, error);
 }
 
 static gboolean
-fu_logitech_tap_touch_device_disable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_touch_device_disable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapTouchDevice *self = FU_LOGITECH_TAP_TOUCH_DEVICE(device);
 	g_autoptr(FuStructLogitechTapTouchHidReq) st = fu_struct_logitech_tap_touch_hid_req_new();
@@ -151,7 +147,7 @@ fu_logitech_tap_touch_device_disable_tde(FuDevice *device, GError **error)
 	fu_struct_logitech_tap_touch_hid_req_set_cmd(
 	    st,
 	    FU_STRUCT_LOGITECH_TAP_TOUCH_HID_CMD_SET_TDE_TEST_MODE);
-	fu_byte_array_append_uint8(st, 0x00);
+	fu_byte_array_append_uint8(st->buf, 0x00);
 	return fu_logitech_tap_touch_device_hid_transfer(self, st, 0, NULL, error);
 }
 
@@ -177,12 +173,12 @@ fu_logitech_tap_touch_device_write_enable(FuLogitechTapTouchDevice *self,
 	fu_struct_logitech_tap_touch_hid_req_set_cmd(
 	    st,
 	    FU_STRUCT_LOGITECH_TAP_TOUCH_HID_CMD_WRITE_ENABLE);
-	fu_byte_array_append_uint8(st, 0x5A);
-	fu_byte_array_append_uint8(st, 0xA5);
+	fu_byte_array_append_uint8(st->buf, 0x5A);
+	fu_byte_array_append_uint8(st->buf, 0xA5);
 	if (end > 0) {
-		fu_byte_array_append_uint8(st, write_ap ? 0x00 : 0x01);
-		fu_byte_array_append_uint24(st, end, G_BIG_ENDIAN);
-		fu_byte_array_append_uint24(st, checksum, G_BIG_ENDIAN);
+		fu_byte_array_append_uint8(st->buf, write_ap ? 0x00 : 0x01);
+		fu_byte_array_append_uint24(st->buf, end, G_BIG_ENDIAN);
+		fu_byte_array_append_uint24(st->buf, checksum, G_BIG_ENDIAN);
 	}
 
 	/* hid report to enable writing */
@@ -463,11 +459,10 @@ fu_logitech_tap_touch_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(FU_DEVICE(self),
+					   fu_logitech_tap_touch_device_enable_tde_cb,
+					   fu_logitech_tap_touch_device_disable_tde_cb,
+					   error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -497,7 +492,7 @@ fu_logitech_tap_touch_device_detach(FuDevice *device, FuProgress *progress, GErr
 	}
 
 	/* cannot use locker, device goes into bootloader mode here, looses connectivity */
-	if (!fu_logitech_tap_touch_device_enable_tde(device, error))
+	if (!fu_logitech_tap_touch_device_enable_tde_cb(device, error))
 		return FALSE;
 
 	if (!fu_logitech_tap_touch_device_get_mcu_mode(self, &mcu_mode, error))
@@ -633,11 +628,11 @@ fu_logitech_tap_touch_device_write_blocks(FuLogitechTapTouchDevice *self,
 		fu_struct_logitech_tap_touch_hid_req_set_cmd(
 		    st,
 		    FU_STRUCT_LOGITECH_TAP_TOUCH_HID_CMD_WRITE_DATA);
-		g_byte_array_append(st, chunk_buf->data, chunk_buf->len);
+		g_byte_array_append(st->buf, chunk_buf->data, chunk_buf->len);
 		/* resize the last packet */
 		if ((i == (fu_chunk_array_length(chunks) - 1)) &&
 		    (fu_chunk_get_data_sz(chk) < FU_LOGITECH_TAP_TOUCH_TRANSFER_BLOCK_SIZE))
-			fu_byte_array_set_size(st, 37, in_ap ? 0xFF : 0x0);
+			fu_byte_array_set_size(st->buf, 37, in_ap ? 0xFF : 0x0);
 		if (!fu_logitech_tap_touch_device_hid_transfer(self, st, 0, NULL, error))
 			return FALSE;
 		fu_device_sleep(FU_DEVICE(self), 2);
@@ -734,7 +729,7 @@ fu_logitech_tap_touch_device_write_chunks_cb(FuDevice *device, gpointer user_dat
 	fu_struct_logitech_tap_touch_hid_req_set_cmd(
 	    st,
 	    FU_STRUCT_LOGITECH_TAP_TOUCH_HID_CMD_WRITE_DATA);
-	fu_byte_array_set_size(st,
+	fu_byte_array_set_size(st->buf,
 			       37,
 			       0xFF); /* 4 (req header) + 1 (cmd) +
 					 FU_LOGITECH_TAP_TOUCH_TRANSFER_BLOCK_SIZE (data buffer) */
@@ -781,11 +776,11 @@ fu_logitech_tap_touch_device_write_firmware(FuDevice *device,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(
+	    FU_DEVICE(self),
+	    (FuDeviceLockerFunc)fu_logitech_tap_touch_device_enable_tde_cb,
+	    (FuDeviceLockerFunc)fu_logitech_tap_touch_device_disable_tde_cb,
+	    error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -799,7 +794,7 @@ fu_logitech_tap_touch_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_logitech_tap_touch_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_tap_touch_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

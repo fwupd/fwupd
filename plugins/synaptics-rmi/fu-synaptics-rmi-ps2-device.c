@@ -23,16 +23,15 @@ G_DEFINE_TYPE(FuSynapticsRmiPs2Device, fu_synaptics_rmi_ps2_device, FU_TYPE_SYNA
 static gboolean
 fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf, GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	for (guint i = 0; i < 60; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_io_channel_read_raw(io_channel,
-					    pbuf,
-					    0x1,
-					    NULL,
-					    10,
-					    FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					    &error_local)) {
+		if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
+					 pbuf,
+					 0x1,
+					 NULL,
+					 10,
+					 FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+					 &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 				g_warning("read timed out: %u", i);
 				fu_device_sleep(FU_DEVICE(self), 1); /* ms */
@@ -54,15 +53,14 @@ fu_synaptics_rmi_ps2_device_read_byte(FuSynapticsRmiPs2Device *self,
 				      guint timeout,
 				      GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_return_val_if_fail(timeout > 0, FALSE);
-	return fu_io_channel_read_raw(io_channel,
-				      pbuf,
-				      0x1,
-				      NULL,
-				      timeout,
-				      FU_IO_CHANNEL_FLAG_NONE,
-				      error);
+	return fu_udev_device_read(FU_UDEV_DEVICE(self),
+				   pbuf,
+				   0x1,
+				   NULL,
+				   timeout,
+				   FU_IO_CHANNEL_FLAG_NONE,
+				   error);
 }
 
 /* write a single byte to the touchpad and the read the acknowledge */
@@ -73,20 +71,19 @@ fu_synaptics_rmi_ps2_device_write_byte(FuSynapticsRmiPs2Device *self,
 				       FuSynapticsRmiDeviceFlags flags,
 				       GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	gboolean do_write = TRUE;
 	g_return_val_if_fail(timeout > 0, FALSE);
 	for (guint i = 0;; i++) {
 		guint8 res = 0;
 		g_autoptr(GError) error_local = NULL;
 		if (do_write) {
-			if (!fu_io_channel_write_raw(io_channel,
-						     &buf,
-						     sizeof(buf),
-						     timeout,
-						     FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
-							 FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-						     error))
+			if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+						  &buf,
+						  sizeof(buf),
+						  timeout,
+						  FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
+						      FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+						  error))
 				return FALSE;
 		}
 		do_write = FALSE;
@@ -154,7 +151,7 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 			return FALSE;
 	}
 	for (gint i = 3; i >= 0; --i) {
-		guint8 ucTwoBitArg = (arg >> (i * 2)) & 0x3;
+		guint8 uc_two_bit = (arg >> (i * 2)) & 0x3;
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
 							    FU_RMI_EDP_COMMAND_AUX_SET_RESOLUTION,
 							    50,
@@ -163,7 +160,7 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 			return FALSE;
 		}
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    ucTwoBitArg,
+							    uc_two_bit,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error))
@@ -547,12 +544,10 @@ fu_synaptics_rmi_ps2_device_query_status(FuSynapticsRmiDevice *rmi_device, GErro
 	f34 = fu_synaptics_rmi_device_get_function(rmi_device, 0x34, error);
 	if (f34 == NULL)
 		return FALSE;
-	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
+	if (f34->function_version == 0x0 || f34->function_version == 0x1)
 		return fu_synaptics_rmi_v5_device_query_status(rmi_device, error);
-	}
-	if (f34->function_version == 0x2) {
+	if (f34->function_version == 0x2)
 		return fu_synaptics_rmi_v7_device_query_status(rmi_device, error);
-	}
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
@@ -804,10 +799,10 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GErro
 	if (f34 == NULL)
 		return FALSE;
 	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
-		if (!fu_synaptics_rmi_v5_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v5_device_detach(self, progress, error))
 			return FALSE;
 	} else if (f34->function_version == 0x2) {
-		if (!fu_synaptics_rmi_v7_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v7_device_detach(self, progress, error))
 			return FALSE;
 	} else {
 		g_set_error(error,

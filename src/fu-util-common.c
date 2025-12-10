@@ -1013,9 +1013,8 @@ fu_util_time_to_str(guint64 tmp)
 static gchar *
 fu_util_device_flag_to_string(guint64 device_flag)
 {
-	if (device_flag == FWUPD_DEVICE_FLAG_NONE) {
+	if (device_flag == FWUPD_DEVICE_FLAG_NONE)
 		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_INTERNAL) {
 		/* TRANSLATORS: Device cannot be removed easily*/
 		return _("Internal device");
@@ -1165,14 +1164,13 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: we can save all device enumeration events for emulation */
 		return _("Can tag for emulation");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
+	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return NULL;
-	}
 	return NULL;
 }
 
-static gchar *
-fu_util_request_flag_to_string(guint64 request_flag)
+const gchar *
+fu_util_request_flag_to_string(FwupdRequestFlags request_flag)
 {
 	if (request_flag == FWUPD_REQUEST_FLAG_NONE)
 		return NULL;
@@ -1272,7 +1270,7 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		return g_strdup(_("Device is emulated"));
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_MISSING_LICENSE) {
-		/* TRANSLATORS: The device cannot be updated due to missing vendor's license." */
+		/* TRANSLATORS: The device cannot be updated due to missing vendor's license. */
 		return g_strdup(_("Device requires a software license to update"));
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT) {
@@ -1294,6 +1292,14 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	if (problem == FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY) {
 		/* TRANSLATORS: we have two ways of communicating with the device, so we hide one */
 		return g_strdup(_("Device is lower priority than an equivalent device"));
+	}
+	if (problem == FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM) {
+		/* TRANSLATORS: firmware is signed with insecure key */
+		return g_strdup(_("System has been signed with an insecure key"));
+	}
+	if (problem == FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED) {
+		/* TRANSLATORS: firmware is locked from the BIOS */
+		return g_strdup(_("Device firmware has been locked "));
 	}
 	return NULL;
 }
@@ -1769,7 +1775,7 @@ fu_util_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 	return _("Unknown");
 }
 
-static const gchar *
+const gchar *
 fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 {
 	if (release_flag == FWUPD_RELEASE_FLAG_NONE)
@@ -2061,8 +2067,7 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	fwupd_codec_string_append(str, idt + 1, _("Checksum"), fwupd_remote_get_checksum(remote));
 
 	/* optional parameters */
-	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) > 0 &&
-	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) != G_MAXUINT64) {
 		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
 		fwupd_codec_string_append(str, idt + 1, _("Age"), age_str);

@@ -17,44 +17,36 @@
 struct _FuUsiDockPlugin {
 	FuPlugin parent_instance;
 	FuDevice *device_tbt;
+	FuDevice *device_usb2;
 };
 
 G_DEFINE_TYPE(FuUsiDockPlugin, fu_usi_dock_plugin, FU_TYPE_PLUGIN)
 
-static FuDevice *
-fu_usi_dock_plugin_find_tbt_device(FuPlugin *plugin, FuDevice *device)
-{
-	GPtrArray *children = fu_device_get_children(device);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *device_tmp = g_ptr_array_index(children, i);
-		if (fu_usi_dock_child_device_get_chip_idx(FU_USI_DOCK_CHILD_DEVICE(device_tmp)) ==
-		    FU_USI_DOCK_FIRMWARE_IDX_TBT4) {
-			return g_object_ref(device_tmp);
-		}
-	}
-	return NULL;
-}
-
-static FuDevice *
+static FuUsiDockMcuDevice *
 fu_usi_dock_plugin_find_mcu_device(FuPlugin *plugin)
 {
 	GPtrArray *devices = fu_plugin_get_devices(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (FU_IS_USI_DOCK_MCU_DEVICE(device_tmp))
-			return fu_usi_dock_plugin_find_tbt_device(plugin, device_tmp);
+			return FU_USI_DOCK_MCU_DEVICE(g_object_ref(device_tmp));
 	}
 	return NULL;
 }
 
 static void
-fu_usi_dock_plugin_ensure_equivalent_id(FuPlugin *plugin)
+fu_usi_dock_plugin_ensure_tbt4(FuPlugin *plugin)
 {
 	FuUsiDockPlugin *self = FU_USI_DOCK_PLUGIN(plugin);
 	g_autoptr(FuDevice) device_usi = NULL;
+	g_autoptr(FuUsiDockMcuDevice) device_mcu = NULL;
+
 	if (self->device_tbt == NULL)
 		return;
-	device_usi = fu_usi_dock_plugin_find_mcu_device(plugin);
+	device_mcu = fu_usi_dock_plugin_find_mcu_device(plugin);
+	if (device_mcu == NULL)
+		return;
+	device_usi = fu_usi_dock_mcu_device_find_child(device_mcu, FU_USI_DOCK_FIRMWARE_IDX_TBT4);
 	if (device_usi == NULL)
 		return;
 	fu_device_set_priority(device_usi, fu_device_get_priority(self->device_tbt) + 1);
@@ -63,9 +55,28 @@ fu_usi_dock_plugin_ensure_equivalent_id(FuPlugin *plugin)
 }
 
 static void
+fu_usi_dock_plugin_ensure_usb2(FuPlugin *plugin)
+{
+	FuUsiDockPlugin *self = FU_USI_DOCK_PLUGIN(plugin);
+	g_autoptr(FuDevice) device_usi = NULL;
+	g_autoptr(FuUsiDockMcuDevice) device_mcu = NULL;
+
+	if (self->device_usb2 == NULL)
+		return;
+	device_mcu = fu_usi_dock_plugin_find_mcu_device(plugin);
+	if (device_mcu == NULL)
+		return;
+	device_usi = fu_usi_dock_mcu_device_find_child(device_mcu, FU_USI_DOCK_FIRMWARE_IDX_USB2);
+	if (device_usi == NULL)
+		return;
+	fu_device_set_proxy(device_usi, self->device_usb2);
+}
+
+static void
 fu_usi_dock_plugin_device_added(FuPlugin *plugin, FuDevice *device)
 {
-	fu_usi_dock_plugin_ensure_equivalent_id(plugin);
+	fu_usi_dock_plugin_ensure_tbt4(plugin);
+	fu_usi_dock_plugin_ensure_usb2(plugin);
 }
 
 static void
@@ -77,7 +88,13 @@ fu_usi_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") == 0 &&
 	    fu_device_has_guid(device, USI_DOCK_TBT_INSTANCE_ID)) {
 		g_set_object(&self->device_tbt, device);
-		fu_usi_dock_plugin_ensure_equivalent_id(plugin);
+		fu_usi_dock_plugin_ensure_tbt4(plugin);
+	}
+
+	/* we may need to reset this manually */
+	if (fu_device_get_vid(device) == 0x17EF && fu_device_get_pid(device) == 0x30BA) {
+		g_set_object(&self->device_usb2, device);
+		fu_usi_dock_plugin_ensure_usb2(plugin);
 	}
 }
 
@@ -91,6 +108,7 @@ static void
 fu_usi_dock_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_USI_DOCK_MCU_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_USI_DOCK_DMC_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_USI_DOCK_CHILD_DEVICE); /* coverage */
@@ -101,6 +119,7 @@ fu_usi_dock_plugin_finalize(GObject *obj)
 {
 	FuUsiDockPlugin *self = FU_USI_DOCK_PLUGIN(obj);
 	g_clear_object(&self->device_tbt);
+	g_clear_object(&self->device_usb2);
 	G_OBJECT_CLASS(fu_usi_dock_plugin_parent_class)->finalize(obj);
 }
 

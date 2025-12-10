@@ -27,6 +27,7 @@ fu_fastboot_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "FastbootBlockSize");
 	fu_context_add_quirk_key(ctx, "FastbootOperationDelay");
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FASTBOOT_DEVICE);
 }
 

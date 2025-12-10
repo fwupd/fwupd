@@ -778,50 +778,6 @@ fwupd_report_has_flag(FwupdReport *self, FwupdReportFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
-/**
- * fwupd_report_flag_to_string:
- * @report_flag: report flags, e.g. %FWUPD_REPORT_FLAG_FROM_OEM
- *
- * Converts an enumerated report flag to a string.
- *
- * Returns: identifier string
- *
- * Since: 1.9.1
- **/
-const gchar *
-fwupd_report_flag_to_string(FwupdReportFlags report_flag)
-{
-	if (report_flag == FWUPD_REPORT_FLAG_NONE)
-		return "none";
-	if (report_flag == FWUPD_REPORT_FLAG_FROM_OEM)
-		return "from-oem";
-	if (report_flag == FWUPD_REPORT_FLAG_IS_UPGRADE)
-		return "is-upgrade";
-	return NULL;
-}
-
-/**
- * fwupd_report_flag_from_string:
- * @report_flag: (nullable): a string, e.g. `from-oem`
- *
- * Converts a string to an enumerated report flag.
- *
- * Returns: enumerated value
- *
- * Since: 1.9.1
- **/
-FwupdReportFlags
-fwupd_report_flag_from_string(const gchar *report_flag)
-{
-	if (g_strcmp0(report_flag, "none") == 0)
-		return FWUPD_REPORT_FLAG_NONE;
-	if (g_strcmp0(report_flag, "from-oem") == 0)
-		return FWUPD_REPORT_FLAG_FROM_OEM;
-	if (g_strcmp0(report_flag, "is-upgrade") == 0)
-		return FWUPD_REPORT_FLAG_IS_UPGRADE;
-	return FWUPD_REPORT_FLAG_UNKNOWN;
-}
-
 static void
 fwupd_report_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {

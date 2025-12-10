@@ -65,6 +65,7 @@ fu_efi_guid_to_name(const gchar *guid)
 		return "Section:Acpi2Table";
 	return NULL;
 }
+
 /**
  * fu_efi_parse_sections:
  * @firmware: #FuFirmware
@@ -121,7 +122,7 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		}
 
 		fu_firmware_set_offset(img, offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* next! */

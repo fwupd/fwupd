@@ -31,7 +31,7 @@ typedef enum {
 	 * Since: 2.0.0
 	 **/
 	FU_BACKEND_SETUP_FLAG_USE_HOTPLUG = 1 << 0,
-} FuBackendSetupFlags;
+} G_GNUC_FLAG_ENUM FuBackendSetupFlags;
 
 struct _FuBackendClass {
 	GObjectClass parent_class;

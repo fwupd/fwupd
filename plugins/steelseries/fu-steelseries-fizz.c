@@ -67,11 +67,9 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 static gboolean
 fu_steelseries_fizz_request(FuSteelseriesFizz *self, GByteArray *buf, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	fu_dump_raw(G_LOG_DOMAIN,
 		    fu_steelseries_fizz_cmd_to_string(buf->data[0]),
 		    buf->data,
@@ -82,11 +80,9 @@ fu_steelseries_fizz_request(FuSteelseriesFizz *self, GByteArray *buf, GError **e
 static GByteArray *
 fu_steelseries_fizz_response(FuSteelseriesFizz *self, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return NULL;
-	}
 	return fu_steelseries_fizz_impl_response(FU_STEELSERIES_FIZZ_IMPL(proxy), error);
 }
 
@@ -170,7 +166,7 @@ fu_steelseries_fizz_write_fs(FuSteelseriesFizz *self,
 			fu_chunk_get_data_sz(chk),
 			error))
 			return FALSE;
-		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+		buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 		if (buf_res == NULL)
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -198,7 +194,7 @@ fu_steelseries_fizz_erase_fs(FuSteelseriesFizz *self,
 	fu_struct_steelseries_fizz_erase_file_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_erase_file_req_set_filesystem(st_req, fs);
 	fu_struct_steelseries_fizz_erase_file_req_set_id(st_req, id);
-	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+	buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 	return buf_res != NULL;
 }
 
@@ -217,7 +213,7 @@ fu_steelseries_fizz_reset(FuSteelseriesFizz *self,
 	st_req = fu_struct_steelseries_fizz_reset_req_new();
 	fu_struct_steelseries_fizz_reset_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_reset_req_set_mode(st_req, mode);
-	return fu_steelseries_fizz_request(self, st_req, error);
+	return fu_steelseries_fizz_request(self, st_req->buf, error);
 }
 
 gboolean
@@ -241,7 +237,7 @@ fu_steelseries_fizz_get_crc32_fs(FuSteelseriesFizz *self,
 	fu_struct_steelseries_fizz_file_crc32_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_file_crc32_req_set_filesystem(st_req, fs);
 	fu_struct_steelseries_fizz_file_crc32_req_set_id(st_req, id);
-	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+	buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 	if (buf_res == NULL)
 		return FALSE;
 	st_res = fu_struct_steelseries_fizz_file_crc32_res_parse(buf_res->data,
@@ -295,7 +291,7 @@ fu_steelseries_fizz_read_fs(FuSteelseriesFizz *self,
 		fu_struct_steelseries_fizz_read_access_file_req_set_offset(
 		    st_req,
 		    fu_chunk_get_address(chk));
-		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+		buf_res = fu_steelseries_fizz_request_response(self, st_req->buf, error);
 		if (buf_res == NULL)
 			return FALSE;
 		st_res = fu_struct_steelseries_fizz_read_access_file_res_parse(buf_res->data,
@@ -325,11 +321,9 @@ fu_steelseries_fizz_read_fs(FuSteelseriesFizz *self,
 static gboolean
 fu_steelseries_fizz_get_paired_status(FuSteelseriesFizz *self, guint8 *status, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	return fu_steelseries_fizz_impl_get_paired_status(FU_STEELSERIES_FIZZ_IMPL(proxy),
 							  status,
 							  error);
@@ -340,11 +334,9 @@ fu_steelseries_fizz_get_connection_status(FuSteelseriesFizz *self,
 					  FuSteelseriesFizzConnectionStatus *status,
 					  GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	return fu_steelseries_fizz_impl_get_connection_status(FU_STEELSERIES_FIZZ_IMPL(proxy),
 							      status,
 							      error);
@@ -354,12 +346,6 @@ static gboolean
 fu_steelseries_fizz_ensure_children(FuSteelseriesFizz *self, GError **error)
 {
 	guint8 status;
-
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
-		return FALSE;
-	}
 
 	/* not a USB receiver */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER))
@@ -375,10 +361,14 @@ fu_steelseries_fizz_ensure_children(FuSteelseriesFizz *self, GError **error)
 	}
 
 	if (status != 0) {
+		FuDevice *proxy;
 		g_autoptr(FuSteelseriesFizzTunnel) paired_device =
 		    fu_steelseries_fizz_tunnel_new(self);
 
-		fu_device_set_proxy(FU_DEVICE(paired_device), FU_DEVICE(proxy));
+		proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+		if (proxy == NULL)
+			return FALSE;
+		fu_device_set_proxy(FU_DEVICE(paired_device), proxy);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(paired_device));
 	}
 
@@ -442,15 +432,10 @@ static gboolean
 fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 {
 	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
+	FuDevice *proxy;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *serial = NULL;
 	g_autoptr(GError) error_local = NULL;
-
-	FuDevice *proxy = fu_device_get_proxy(device);
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
-		return FALSE;
-	}
 
 	/* in bootloader mode */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
@@ -461,6 +446,9 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 			return FALSE;
 	}
 
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	version =
 	    fu_steelseries_fizz_impl_get_version(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
 	if (version == NULL) {
@@ -566,7 +554,7 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	guint8 fs;
 	gboolean is_receiver = FALSE;
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy;
 	guint8 id = 0;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -574,11 +562,9 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	if (locker == NULL)
 		return FALSE;
 
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
-
 	is_receiver = fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 	if (!fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
 						is_receiver,
@@ -652,10 +638,10 @@ static FuFirmware *
 fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
+	FuDevice *proxy;
 	guint8 fs = 0;
 	guint8 id = 0;
 	gboolean is_receiver;
-	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -663,10 +649,9 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	if (locker == NULL)
 		return NULL;
 
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return NULL;
-	}
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
@@ -699,7 +684,7 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 }
 
 static void
-fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
+fu_steelseries_fizz_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -738,5 +723,6 @@ fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_STEELSERIES_FIRMWARE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_STEELSERIES_FIZZ_IMPL);
 	fu_device_set_priority(FU_DEVICE(self), 10); /* better than tunneled device */
 }

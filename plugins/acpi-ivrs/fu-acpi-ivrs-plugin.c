@@ -20,7 +20,6 @@ static void
 fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *path = NULL;
 	g_autoptr(FuAcpiIvrs) ivrs = fu_acpi_ivrs_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -36,8 +35,7 @@ fu_acpi_ivrs_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	/* load IVRS table */
-	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename(path, "IVRS", NULL);
+	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "IVRS", NULL);
 	stream = fu_input_stream_from_path(fn, &error_local);
 	if (stream == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);

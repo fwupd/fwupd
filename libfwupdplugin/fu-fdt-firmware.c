@@ -149,9 +149,6 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(FuFirmware) firmware_current = g_object_ref(FU_FIRMWARE(self));
 
-	/* debug */
-	fu_dump_bytes(G_LOG_DOMAIN, "dt_struct", fw);
-
 	/* parse */
 	while (offset < bufsz) {
 		guint32 token = 0;
@@ -209,7 +206,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			if (str->len > 0)
 				fu_firmware_set_id(image, str->str);
 			fu_firmware_set_offset(image, offset);
-			if (!fu_firmware_add_image_full(firmware_current, image, error))
+			if (!fu_firmware_add_image(firmware_current, image, error))
 				return FALSE;
 			g_set_object(&firmware_current, image);
 			continue;
@@ -236,7 +233,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			guint32 prop_nameoff;
 			g_autoptr(GBytes) blob = NULL;
 			g_autoptr(GString) str = NULL;
-			g_autoptr(GByteArray) st_prp = NULL;
+			g_autoptr(FuStructFdtProp) st_prp = NULL;
 
 			/* sanity check */
 			if (firmware_current == FU_FIRMWARE(self)) {
@@ -253,7 +250,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 				return FALSE;
 			prop_len = fu_struct_fdt_prop_get_len(st_prp);
 			prop_nameoff = fu_struct_fdt_prop_get_nameoff(st_prp);
-			offset += st_prp->len;
+			offset += st_prp->buf->len;
 
 			/* add property */
 			str = fu_fdt_firmware_string_new_safe(strtab->data,
@@ -304,7 +301,7 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 	for (; offset < streamsz; offset += FU_STRUCT_FDT_RESERVE_ENTRY_SIZE) {
 		guint64 address = 0;
 		guint64 size = 0;
-		g_autoptr(GByteArray) st_res = NULL;
+		g_autoptr(FuStructFdtReserveEntry) st_res = NULL;
 		st_res = fu_struct_fdt_reserve_entry_parse_stream(stream, offset, error);
 		if (st_res == NULL)
 			return FALSE;
@@ -336,7 +333,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	guint32 totalsize;
 	gsize streamsz = 0;
 	guint32 off_mem_rsvmap = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructFdt) st_hdr = NULL;
 
 	/* sanity check */
 	st_hdr = fu_struct_fdt_parse_stream(stream, 0x0, error);
@@ -470,7 +467,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	for (guint i = 0; i < attrs->len; i++) {
 		const gchar *key = g_ptr_array_index(attrs, i);
 		g_autoptr(GBytes) blob = NULL;
-		g_autoptr(GByteArray) st_prp = fu_struct_fdt_prop_new();
+		g_autoptr(FuStructFdtProp) st_prp = fu_struct_fdt_prop_new();
 
 		blob = fu_fdt_image_get_attr(img, key, error);
 		if (blob == NULL)
@@ -479,7 +476,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 		fu_struct_fdt_prop_set_len(st_prp, g_bytes_get_size(blob));
 		fu_struct_fdt_prop_set_nameoff(st_prp,
 					       fu_fdt_firmware_append_to_strtab(helper, key));
-		g_byte_array_append(helper->dt_struct, st_prp->data, st_prp->len);
+		fu_byte_array_append_array(helper->dt_struct, st_prp->buf);
 		fu_byte_array_append_bytes(helper->dt_struct, blob);
 		fu_byte_array_align_up(helper->dt_struct, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 	}
@@ -508,20 +505,20 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) dt_struct = g_byte_array_new();
 	g_autoptr(GHashTable) strtab = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
-	g_autoptr(GByteArray) st_hdr = fu_struct_fdt_new();
-	g_autoptr(GByteArray) mem_rsvmap = fu_struct_fdt_reserve_entry_new();
+	g_autoptr(FuStructFdt) st_hdr = fu_struct_fdt_new();
+	g_autoptr(FuStructFdtReserveEntry) st_rsvmap = fu_struct_fdt_reserve_entry_new();
 	FuFdtFirmwareBuildHelper helper = {
 	    .dt_strings = dt_strings,
 	    .dt_struct = dt_struct,
 	    .strtab = strtab,
 	};
 
-	/* empty mem_rsvmap */
-	off_mem_rsvmap = fu_common_align_up(st_hdr->len, FU_FIRMWARE_ALIGNMENT_4);
+	/* empty st_rsvmap */
+	off_mem_rsvmap = fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_4);
 
 	/* dt_struct */
 	off_dt_struct =
-	    fu_common_align_up(off_mem_rsvmap + mem_rsvmap->len, FU_FIRMWARE_ALIGNMENT_4);
+	    fu_common_align_up(off_mem_rsvmap + st_rsvmap->buf->len, FU_FIRMWARE_ALIGNMENT_4);
 
 	/* only one root node supported */
 	if (images->len != 1) {
@@ -549,18 +546,18 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_fdt_set_boot_cpuid_phys(st_hdr, priv->cpuid);
 	fu_struct_fdt_set_size_dt_strings(st_hdr, dt_strings->len);
 	fu_struct_fdt_set_size_dt_struct(st_hdr, dt_struct->len);
-	fu_byte_array_align_up(st_hdr, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	fu_byte_array_align_up(st_hdr->buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 
-	/* write mem_rsvmap, dt_struct, dt_strings */
-	g_byte_array_append(st_hdr, mem_rsvmap->data, mem_rsvmap->len);
-	fu_byte_array_align_up(st_hdr, FU_FIRMWARE_ALIGNMENT_4, 0x0);
-	g_byte_array_append(st_hdr, dt_struct->data, dt_struct->len);
-	fu_byte_array_align_up(st_hdr, FU_FIRMWARE_ALIGNMENT_4, 0x0);
-	g_byte_array_append(st_hdr, dt_strings->data, dt_strings->len);
-	fu_byte_array_align_up(st_hdr, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	/* write st_rsvmap, dt_struct, dt_strings */
+	fu_byte_array_append_array(st_hdr->buf, st_rsvmap->buf);
+	fu_byte_array_align_up(st_hdr->buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	fu_byte_array_append_array(st_hdr->buf, dt_struct);
+	fu_byte_array_align_up(st_hdr->buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
+	fu_byte_array_append_array(st_hdr->buf, dt_strings);
+	fu_byte_array_align_up(st_hdr->buf, FU_FIRMWARE_ALIGNMENT_4, 0x0);
 
 	/* success */
-	return g_steal_pointer(&st_hdr);
+	return g_steal_pointer(&st_hdr->buf);
 }
 
 static gboolean

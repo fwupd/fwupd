@@ -8,7 +8,7 @@
 
 #include <gio/gio.h>
 
-#include "fwupd-build.h"
+#include "fwupd-client-struct.h"
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 #include "fwupd-remote.h"
@@ -35,58 +35,6 @@ struct _FwupdClientClass {
 	void (*_fwupd_reserved5)(void);
 	void (*_fwupd_reserved6)(void);
 };
-
-/**
- * FwupdClientDownloadFlags:
- *
- * The options to use for downloading.
- **/
-typedef enum {
-	/**
-	 * FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE = 0,
-	/**
-	 * FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P:
-	 *
-	 * Only use peer-to-peer when downloading URIs.
-	 *
-	 * Since: 1.9.4
-	 */
-	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0,
-	/*< private >*/
-	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
-} FwupdClientDownloadFlags;
-
-/**
- * FwupdClientUploadFlags:
- *
- * The options to use for uploading.
- **/
-typedef enum {
-	/**
-	 * FWUPD_CLIENT_UPLOAD_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_UPLOAD_FLAG_NONE = 0,
-	/**
-	 * FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:
-	 *
-	 * Always use multipart/form-data.
-	 *
-	 * Since: 1.4.5
-	 */
-	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0,
-	/*< private >*/
-	FWUPD_CLIENT_UPLOAD_FLAG_LAST
-} FwupdClientUploadFlags;
 
 FwupdClient *
 fwupd_client_new(void);
@@ -421,6 +369,16 @@ gboolean
 fwupd_client_modify_remote_finish(FwupdClient *self,
 				  GAsyncResult *res,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_clean_remote_async(FwupdClient *self,
+				const gchar *remote_id,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fwupd_client_clean_remote_finish(FwupdClient *self,
+				 GAsyncResult *res,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_modify_device_async(FwupdClient *self,
 				 const gchar *device_id,

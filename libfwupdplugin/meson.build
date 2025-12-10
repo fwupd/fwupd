@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
   'fu-common.rs', # fuzzing
   'fu-acpi-table.rs', # fuzzing
@@ -7,6 +8,7 @@ fwupdplugin_structs = [
   'fu-cfi.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
+  'fu-context.rs', # fuzzing
   'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
@@ -50,8 +52,12 @@ foreach fwupdplugin_struct : fwupdplugin_structs
       python3,
       join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
       '@INPUT@',
-      '@OUTPUT0@',
-      '@OUTPUT1@',
+      '--outc', '@OUTPUT0@',
+      '--outh', '@OUTPUT1@',
+      '--include',
+      'fwupd.h',
+      '--prefix',
+      'Fu',
     ],
   )
 endforeach
@@ -147,6 +153,7 @@ fwupdplugin_src = [
   'fu-intel-thunderbolt-nvm.c', # fuzzing
   'fu-io-channel.c', # fuzzing
   'fu-ioctl.c', # fuzzing
+  'fu-json-firmware.c', # fuzzing
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
   'fu-kernel-search-path.c', # fuzzing
@@ -298,6 +305,7 @@ fwupdplugin_headers = [
   'fu-intel-thunderbolt-nvm.h',
   'fu-io-channel.h',
   'fu-ioctl.h',
+  'fu-json-firmware.h',
   'fu-kenv.h',
   'fu-kernel.h',
   'fu-kernel-search-path.h',
@@ -449,11 +457,13 @@ if get_option('tests')
 
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
+    colorhug_test_firmware,
     rustgen.process('fu-self-test.rs'),
-    sources: ['fu-test-device.c', 'fu-self-test.c'],
+    sources: ['fu-self-test-device.c', 'fu-self-test.c'],
     include_directories: [root_incdir, fwupd_incdir],
     dependencies: [library_deps, fwupdplugin_rs_dep],
     link_with: [fwupd, fwupdplugin],

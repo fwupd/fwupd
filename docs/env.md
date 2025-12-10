@@ -32,13 +32,12 @@ with a non-standard filesystem layout.
 ## Self Tests
 
 * `CI_NETWORK` if CI is running with network access
-* `TPM_SERVER_RUNNING` if an emulated TPM is running
+* `TPM2TOOLS_TCTI` if a TPM2.0 TPM is available (even if emulated)
 * `UMOCKDEV_DIR` if set, running under umockdev
 
 Other variables, include:
 
 * `FWUPD_DELL_FAKE_SMBIOS` if set, use fake SMBIOS information for tests
-* `FWUPD_FORCE_TPM2` ignores a TPM 1.2 device detected in the TPM self tests
 * `FWUPD_REDFISH_SELF_TEST` if set, do destructive tests on the actual device BMC
 * `FWUPD_REDFISH_SMBIOS_DATA` use this filename to emulate a specific SMBIOS blob
 * `FWUPD_SOLOKEY_EMULATE` emulates a fake device for testing

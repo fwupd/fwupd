@@ -69,8 +69,8 @@ fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
 {
 	return fu_hid_device_get_report(FU_HID_DEVICE(self),
 					FU_SYNAPTICS_CAPE_CMD_HID_REPORT_DEFAULT_REPORT_ID,
-					st_report->data,
-					st_report->len,
+					st_report->buf->data,
+					st_report->buf->len,
 					FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_READ_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
@@ -187,7 +187,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 			    (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 			     g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL))) {
 				g_debug("ignoring: %s", error_local->message);
-				return g_byte_array_ref(st_msg_req);
+				return fu_synaptics_cape_msg_ref(st_msg_req);
 			}
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
@@ -211,7 +211,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_INTERNAL))) {
 					g_debug("ignoring: %s", error_local->message);
-					g_byte_array_ref(st_msg_req);
+					return fu_synaptics_cape_msg_ref(st_msg_req);
 				}
 				g_propagate_prefixed_error(error,
 							   g_steal_pointer(&error_local),
@@ -631,7 +631,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_synaptics_cape_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_synaptics_cape_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

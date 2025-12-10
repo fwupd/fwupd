@@ -65,21 +65,24 @@ G_DEFINE_TYPE_EXTENDED(FuDeviceList,
 static void
 fu_device_list_emit_device_added(FuDeviceList *self, FuDevice *device)
 {
-	g_info("::added %s [%s]", fu_device_get_id(device), fu_device_get_name(device));
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
+	g_info("::added %s", id_display);
 	g_signal_emit(self, signals[SIGNAL_ADDED], 0, device);
 }
 
 static void
 fu_device_list_emit_device_removed(FuDeviceList *self, FuDevice *device)
 {
-	g_info("::removed %s [%s]", fu_device_get_id(device), fu_device_get_name(device));
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
+	g_info("::removed %s", id_display);
 	g_signal_emit(self, signals[SIGNAL_REMOVED], 0, device);
 }
 
 static void
 fu_device_list_emit_device_changed(FuDeviceList *self, FuDevice *device)
 {
-	g_info("::changed %s [%s]", fu_device_get_id(device), fu_device_get_name(device));
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
+	g_info("::changed %s", id_display);
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0, device);
 }
 
@@ -126,7 +129,7 @@ fu_device_list_get_children(FuDeviceList *self, FuDevice *device)
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (device == fu_device_get_parent(item->device))
+		if (device == fu_device_get_parent_internal(item->device))
 			g_ptr_array_add(devices, g_object_ref(item->device));
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
@@ -146,6 +149,8 @@ fu_device_list_depsolve_order_full(FuDeviceList *self, FuDevice *device, guint d
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
 		if (fu_device_has_private_flag(child,
+					       FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST) ||
+		    fu_device_has_private_flag(device,
 					       FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST)) {
 			fu_device_list_depsolve_order_full(self, child, depth + 1);
 		} else {
@@ -513,16 +518,18 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 static void
 fu_device_list_remove_with_delay(FuDeviceItem *item)
 {
+	g_autofree gchar *id_display = fu_device_get_id_display(item->device);
 	/* give the hardware time to re-enumerate or the user time to
 	 * re-insert the device with a magic button pressed */
 	g_info("waiting %ums for %s device removal",
 	       fu_device_get_remove_delay(item->device),
-	       fu_device_get_name(item->device));
+	       id_display);
 	item->remove_id = g_timeout_add(fu_device_get_remove_delay(item->device),
 					fu_device_list_device_delayed_remove_cb,
 					item);
 }
 
+/* nocheck:name */
 static gboolean
 fu_device_list_should_remove_with_delay(FuDevice *device)
 {
@@ -712,9 +719,10 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 
 	/* debug */
 	str = fwupd_codec_to_string(FWUPD_CODEC(self));
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 }
 
+/* nocheck:name */
 static void
 _fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
 {
@@ -783,10 +791,11 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 
 	/* copy the parent if not already set */
-	if (fu_device_get_parent(item->device) != NULL &&
-	    fu_device_get_parent(item->device) != device &&
-	    fu_device_get_parent(device) != item->device && fu_device_get_parent(device) == NULL) {
-		FuDevice *parent = fu_device_get_parent(item->device);
+	if (fu_device_get_parent_internal(item->device) != NULL &&
+	    fu_device_get_parent_internal(item->device) != device &&
+	    fu_device_get_parent_internal(device) != item->device &&
+	    fu_device_get_parent_internal(device) == NULL) {
+		FuDevice *parent = fu_device_get_parent_internal(item->device);
 		g_info("copying parent %s to new device", fu_device_get_id(parent));
 		fu_device_set_parent(device, parent);
 	}
@@ -805,7 +814,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 
 	/* debug */
 	str = fwupd_codec_to_string(FWUPD_CODEC(self));
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 
 	/* we were waiting for this... */
 	fu_device_list_clear_wait_for_replug(self, item);
@@ -1050,7 +1059,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 
 		/* dump to console */
 		str = fwupd_codec_to_string(FWUPD_CODEC(self));
-		g_debug("\n%s", str);
+		g_debug("%s", str);
 
 		/* unset and build error string */
 		for (guint i = 0; i < devices_wfr2->len; i++) {

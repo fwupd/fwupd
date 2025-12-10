@@ -12,36 +12,6 @@
 #include "fu-common-struct.h"
 
 /**
- * FuCpuVendor:
- *
- * The CPU vendor.
- **/
-
-/**
- * FuPowerState:
- *
- * The system power state.
- *
- * This does not have to be exactly what the battery is doing, but is supposed to represent the
- * 40,000ft view of the system power state.
- *
- * For example, it is perfectly correct to set %FU_POWER_STATE_AC if the system is connected to
- * AC power, but the battery cells are discharging for health or for other performance reasons.
- **/
-
-/**
- * FuLidState:
- *
- * The device lid state.
- **/
-
-/**
- * FuDisplayState:
- *
- * The device lid state.
- **/
-
-/**
  * FU_BIT_SET:
  * @val: integer value
  * @pos: bit position, where 0 is the least significant byte
@@ -108,6 +78,8 @@ gsize
 fu_common_align_up(gsize value, guint8 alignment);
 gboolean
 fu_power_state_is_ac(FuPowerState power_state);
+gsize
+fu_size_checked_add(gsize a, gsize b);
 
 typedef struct {
 	guint value;
@@ -138,6 +110,3 @@ void
 fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
 void
 fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);
-
-gboolean
-fu_snap_is_in_snap(void);

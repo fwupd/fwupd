@@ -77,11 +77,31 @@ These devices use several different generation schemes, e.g.
 
 ## Update Behavior
 
-This dock is a composite device with inclusion of various components, the
-update takes particular order to completion.
+This dock contains multiple components and updates in a specific sequence.
 
-All updates will be staged on the device until the user manually disconnects
-the dock's Type-C cable from the host, at which point they will take effect.
+Components don't reboot during firmware writing; updates are staged and managed
+activation according to the plugin-defined process during the `composite_cleanup`
+phase. The Power Button LED of the dock will flash three times to indicate the
+update is completed.
+
+There are two ways to trigger the staged firmware, and the update behavior can
+be adjusted via the plugin configuration `UpdateOnDisconnect`.
+
+### Update on Connected (UOC)
+
+When all the component updates are installed and staged to the dock, the dock
+reboots the devices to activate the new version immediately. The connected
+peripherals on the dock side will be disconnected from the host, and take a few
+minutes to finish.
+
+Starting from fwupd `2.0.17`, or `1.9.33`, this is the default update behavior.
+
+### Update on Disconnected (UOD)
+
+Staged updates are activated when the dock's Type-C cable is disconnected from
+the host, while the power cable must remain connected to support the update process.
+This design ensures devices remain usable during firmware installation in the
+user's OS runtime session.
 
 ## Plugin Configuration
 
@@ -91,15 +111,8 @@ of `/etc/fwupd/fwupd.conf`.
 ### UpdateOnDisconnect
 
 The firmware updates are staged to the devices in the dell dock and activated
-when the user manually unplugs the dock cable. Default: true.
+when the user manually unplugs the dock cable. Default: false.
 
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Crag Wang: @CragW

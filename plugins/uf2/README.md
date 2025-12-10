@@ -20,10 +20,9 @@ manually puts the device back in programming mode.
 Match the block devices using the VID, PID and UUID, and then create a
 UF2 device which can be used to flash firmware.
 
-Note: We only read metadata from allow-listed IDs to avoid causing regressions
-on non-UF2 volumes. To get the UUID you can use commands like:
-
-    udisksctl info -b /dev/sda1
+> [!IMPORTANT]
+> We only read metadata from allow-listed IDs to avoid causing regressions on non-UF2 volumes.
+> To get the UUID you can use commands like `udisksctl info -b /dev/sda1`
 
 ## Firmware Format
 

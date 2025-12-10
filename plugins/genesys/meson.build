@@ -1,7 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginGenesys"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-plugin_quirks += files('genesys.quirk')
+plugin_quirks += files('genesys.quirk', 'genesys-usbhub-fwbank.quirk')
 plugin_builtins += static_library('fu_plugin_genesys',
   rustgen.process(
     'fu-genesys-usbhub.rs', # fuzzing
@@ -21,4 +21,11 @@ plugin_builtins += static_library('fu_plugin_genesys',
   link_with: plugin_libs,
   c_args: cargs,
   dependencies: plugin_deps,
+)
+
+device_tests += files(
+  'tests/genesys-evb.json',
+#  'tests/genesys-evb-failure.json', # cannot emulate two devices(usb hub + child hid).
+  'tests/genesys-servo-dock.json',
+  'tests/genesys-zdn-chromebook.json',
 )

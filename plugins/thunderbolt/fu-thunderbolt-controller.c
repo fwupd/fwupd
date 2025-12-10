@@ -203,7 +203,11 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 	if (self->host_online_timer_id > 0)
 		g_source_remove(self->host_online_timer_id);
 	self->host_online_timer_id =
-	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_online_cb, self);
+	    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
+				       5, /* seconds */
+				       fu_thunderbolt_controller_set_port_online_cb,
+				       g_object_ref(self),
+				       g_object_unref);
 	return TRUE;
 }
 
@@ -263,7 +267,8 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 					      "device_name",
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      NULL);
-		fu_device_set_name(device, attr_device_name);
+		if (attr_device_name != NULL)
+			fu_device_set_name(device, attr_device_name);
 	}
 
 	/* set the controller name */

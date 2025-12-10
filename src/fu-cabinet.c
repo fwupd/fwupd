@@ -79,23 +79,24 @@ fu_cabinet_get_silo(FuCabinet *self, GError **error)
  * @self: a #FuCabinet
  * @basename: filename
  * @data: file data
+ * @error: (nullable): optional return location for an error
  *
  * Adds a file to the silo.
  *
- * Since: 1.6.0
+ * Returns: %TRUE for success
  **/
-void
-fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
+gboolean
+fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data, GError **error)
 {
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
 
-	g_return_if_fail(FU_IS_CABINET(self));
-	g_return_if_fail(basename != NULL);
-	g_return_if_fail(data != NULL);
+	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
+	g_return_val_if_fail(basename != NULL, FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
 
 	fu_firmware_set_bytes(FU_FIRMWARE(img), data);
 	fu_firmware_set_id(FU_FIRMWARE(img), basename);
-	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img));
+	return fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error);
 }
 
 /* sets the firmware and signature blobs on XbNode */
@@ -935,8 +936,7 @@ fu_cabinet_sign(FuCabinet *self,
 	if (!jcat_file_export_stream(jcat_file, ostr, JCAT_EXPORT_FLAG_NONE, NULL, error))
 		return FALSE;
 	new_bytes = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(ostr));
-	fu_cabinet_add_file(self, "firmware.jcat", new_bytes);
-	return TRUE;
+	return fu_cabinet_add_file(self, "firmware.jcat", new_bytes, error);
 }
 
 static gboolean

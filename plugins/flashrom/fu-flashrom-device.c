@@ -249,13 +249,11 @@ fu_flashrom_device_prepare(FuDevice *device,
 {
 	gboolean exists_orig = FALSE;
 	g_autofree gchar *firmware_orig = NULL;
-	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *basename = NULL;
 
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf("flashrom-%s.bin", fu_device_get_id(device));
-	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	firmware_orig = g_build_filename(localstatedir, "builder", basename, NULL);
+	firmware_orig = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "builder", basename, NULL);
 	if (!fu_path_mkdir_parent(firmware_orig, error))
 		return FALSE;
 	if (!fu_device_query_file_exists(device, firmware_orig, &exists_orig, error))
@@ -332,7 +330,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	/* Check if CMOS needs a reset */
+	/* check if CMOS needs a reset */
 	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
 		g_debug("attempting CMOS reset");
 		if (!fu_flashrom_cmos_reset(error)) {
@@ -346,7 +344,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_flashrom_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_flashrom_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

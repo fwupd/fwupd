@@ -27,6 +27,10 @@ plugin_builtin_synaptics_rmi = static_library('fu_plugin_synaptics_rmi',
 )
 plugin_builtins += plugin_builtin_synaptics_rmi
 
+device_tests += files(
+  'tests/synaptics-rmi-tm4066.json',
+)
+
 if get_option('tests')
   install_data(['tests/synaptics-rmi-0x.builder.xml','tests/synaptics-rmi-10.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))

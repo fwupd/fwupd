@@ -62,7 +62,7 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		return FALSE;
 
 	/* determine the dock type */
-	dock_type = fu_dell_dock_ec_get_dock_type(FU_DEVICE(ec_device));
+	dock_type = fu_dell_dock_ec_get_dock_type(ec_device);
 
 	/* create mst endpoint */
 	mst_device = fu_dell_dock_mst_new(ctx, dock_type);
@@ -73,7 +73,7 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		return FALSE;
 
 	/* create package version endpoint */
-	dock_usb4_present = fu_dell_dock_ec_module_is_usb4(FU_DEVICE(ec_device));
+	dock_usb4_present = fu_dell_dock_ec_module_is_usb4(ec_device);
 	status_device = fu_dell_dock_status_new(ctx, dock_type, dock_usb4_present);
 	if (!fu_device_probe(FU_DEVICE(status_device), error))
 		return FALSE;
@@ -82,7 +82,7 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		return FALSE;
 
 	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
-	if (fu_dell_dock_ec_needs_tbt(FU_DEVICE(ec_device))) {
+	if (fu_dell_dock_ec_needs_tbt(ec_device)) {
 		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new(proxy);
 		fu_device_add_instance_id(FU_DEVICE(tbt_device), DELL_DOCK_TBT_INSTANCE_ID);
 		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
@@ -94,18 +94,18 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 }
 
 /* prefer to use EC if in the transaction and parent if it is not */
-static FuDevice *
+static FuDellDockEc *
 fu_dell_dock_plugin_get_ec(GPtrArray *devices)
 {
-	FuDevice *ec_parent = NULL;
+	FuDellDockEc *ec_parent = NULL;
 	for (gint i = devices->len - 1; i >= 0; i--) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		FuDevice *parent;
 		if (FU_IS_DELL_DOCK_EC(dev))
-			return dev;
-		parent = fu_device_get_parent(dev);
+			return FU_DELL_DOCK_EC(dev);
+		parent = fu_device_get_parent(dev, NULL);
 		if (parent != NULL && FU_IS_DELL_DOCK_EC(parent))
-			ec_parent = parent;
+			ec_parent = FU_DELL_DOCK_EC(parent);
 	}
 
 	return ec_parent;
@@ -121,7 +121,7 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 	g_autoptr(FuDellDockHub) hub = NULL;
 	const gchar *hub_cache_key = "hub-usb3-gen1";
 	GPtrArray *devices;
-	FuDevice *ec_device;
+	FuDellDockEc *ec_device;
 	FuDevice *hub_dev;
 	guint8 dock_type;
 
@@ -157,13 +157,13 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 				    "can't read base dock type from EC");
 		return FALSE;
 	}
-	fu_dell_dock_hub_add_instance(FU_DEVICE(hub), dock_type);
+	fu_dell_dock_hub_add_instance(hub, dock_type);
 	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
 	/* add hub instance id for the cached device */
 	hub_dev = fu_plugin_cache_lookup(plugin, hub_cache_key);
 	if (hub_dev != NULL) {
-		fu_dell_dock_hub_add_instance(FU_DEVICE(hub_dev), dock_type);
+		fu_dell_dock_hub_add_instance(FU_DELL_DOCK_HUB(hub_dev), dock_type);
 		fu_plugin_device_add(plugin, FU_DEVICE(hub_dev));
 		fu_plugin_cache_remove(plugin, hub_cache_key);
 	}
@@ -226,10 +226,28 @@ fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, G
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
 
-	parent = fu_device_get_parent(device);
-	if (parent != NULL && FU_IS_DELL_DOCK_EC(parent)) {
-		g_debug("Removing %s (%s)", fu_device_get_name(parent), fu_device_get_id(parent));
+	/* device will be activated on disconnected */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		g_debug("dropped needs-activation flag: %s", fu_device_get_name(device));
+	}
+
+	/* remove the dock device tree */
+	parent = fu_device_get_parent(device, NULL);
+	if (parent == NULL)
+		return TRUE;
+	if (FU_IS_DELL_DOCK_EC(parent)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(parent);
+
+		/* device will be activated on disconnected */
+		if (fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			fu_device_remove_flag(parent, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			g_debug("dropped needs-activation flag: %s", id_display);
+		}
+
+		/* remove parent */
 		fu_plugin_device_remove(plugin, parent);
+		g_debug("removed device: %s", id_display);
 	}
 
 	return TRUE;
@@ -238,7 +256,7 @@ fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, G
 static gboolean
 fu_dell_dock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	FuDevice *parent = fu_dell_dock_plugin_get_ec(devices);
+	FuDellDockEc *parent = fu_dell_dock_plugin_get_ec(devices);
 	const gchar *sku;
 	if (parent == NULL)
 		return TRUE;
@@ -252,7 +270,7 @@ fu_dell_dock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GErr
 static gboolean
 fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	FuDevice *parent = fu_dell_dock_plugin_get_ec(devices);
+	FuDellDockEc *parent = fu_dell_dock_plugin_get_ec(devices);
 	FuDevice *dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	gboolean needs_activation = FALSE;
@@ -281,7 +299,7 @@ fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 	/* separate activation flag between usb4 and ec device */
 	fu_dell_dock_plugin_separate_activation(plugin);
 
-	locker = fu_device_locker_new(parent, error);
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -321,6 +339,8 @@ fu_dell_dock_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "DellDockInstallDurationI2C");
 	fu_context_add_quirk_key(ctx, "DellDockUnlockTarget");
 	fu_context_add_quirk_key(ctx, "DellDockVersionLowest");
+
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 
 	/* allow these to be built by quirks */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_STATUS);

@@ -233,7 +233,7 @@ fu_pci_mei_plugin_add_attrs_csme11_manufacturing_mode(FuPlugin *plugin,
 		return;
 	}
 
-	/* Manufacturing Mode */
+	/* manufacturing mode */
 	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
 	if (fu_mei_csme11_hfsts1_get_mfg_mode(hfsts1)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
@@ -264,7 +264,7 @@ fu_pci_mei_plugin_add_attrs_csme18_manufacturing_mode(FuPlugin *plugin,
 		return;
 	}
 
-	/* Manufacturing Mode, BIOS has access to the SPI descriptor */
+	/* manufacturing mode, BIOS has access to the SPI descriptor */
 	if (fu_mei_csme18_hfsts1_get_spi_protection_mode(hfsts1)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
@@ -302,7 +302,7 @@ fu_pci_mei_plugin_add_attrs_csme11_override_strap(FuPlugin *plugin,
 		return;
 	}
 
-	/* Flash Descriptor Security Override Strap */
+	/* flash descriptor security override strap */
 	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
 	if (fu_mei_csme11_hfsts1_get_operation_mode(hfsts1) == FU_ME_HFS_MODE_OVERRIDE_JUMPER) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
@@ -333,7 +333,7 @@ fu_pci_mei_plugin_add_attrs_csme18_override_strap(FuPlugin *plugin,
 		return;
 	}
 
-	/* Flash Descriptor Security Override Strap */
+	/* flash descriptor security override strap */
 	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
 	if (fu_mei_csme18_hfsts1_get_operation_mode(hfsts1) == FU_ME_HFS_MODE_OVERRIDE_JUMPER) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
@@ -650,7 +650,7 @@ fu_pci_mei_plugin_add_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attrs
 	fwupd_security_attr_add_metadata(attr, "version", version);
 	fwupd_security_attr_add_metadata(attr, "kind", fu_mei_family_to_string(self->family));
 
-	/* Flash Descriptor Security Override Strap */
+	/* flash descriptor security override strap */
 	if (self->issue == FU_MEI_ISSUE_VULNERABLE) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);

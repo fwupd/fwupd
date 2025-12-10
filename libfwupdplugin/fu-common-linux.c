@@ -19,6 +19,8 @@
 #define UDISKS_DBUS_MANAGER_PATH      "/org/freedesktop/UDisks2/Manager"
 #define UDISKS_DBUS_MANAGER_INTERFACE "org.freedesktop.UDisks2.Manager"
 
+#define UDISKS_METHOD_TIMEOUT 10000 /* ms */
+
 /* required for udisks <= 2.1.7 */
 static GPtrArray *
 fu_common_get_block_devices_legacy(GError **error)
@@ -114,7 +116,7 @@ fu_common_get_block_devices(GError **error)
 					"GetBlockDevices",
 					g_variant_new("(a{sv})", &builder),
 					G_DBUS_CALL_FLAGS_NONE,
-					-1,
+					UDISKS_METHOD_TIMEOUT,
 					NULL,
 					&error_local);
 	if (output == NULL) {

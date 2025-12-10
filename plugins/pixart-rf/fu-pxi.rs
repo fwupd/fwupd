@@ -53,3 +53,16 @@ enum FuPxiDeviceCmd {
     FwOtaInitNewCheck   = 0x42,
     FwOtaPreceding	    = 0x44,
 }
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructPxiOtaFwState {
+    status: u8,
+    new_flow: u8,
+    offset: u16le,
+    checksum: u16le,
+    max_object_size: u32le,
+    mtu_size: u16le,
+    prn_threshold: u16le,
+    spec_check_result: u8,
+}

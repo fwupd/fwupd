@@ -11,6 +11,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-nvm.h"
@@ -558,7 +559,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_payload, stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	if (!fu_firmware_add_image_full(firmware, img_payload, error))
+	if (!fu_firmware_add_image(firmware, img_payload, error))
 		return FALSE;
 
 	/* success */
@@ -571,10 +572,11 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st = fu_intel_thunderbolt_nvm_digital_new();
-	g_autoptr(GByteArray) st_drom = fu_intel_thunderbolt_nvm_drom_new();
-	g_autoptr(GByteArray) st_arc = fu_intel_thunderbolt_nvm_arc_params_new();
-	g_autoptr(GByteArray) st_dram = fu_intel_thunderbolt_nvm_dram_new();
+	g_autoptr(FuIntelThunderboltNvmDigital) st = fu_intel_thunderbolt_nvm_digital_new();
+	g_autoptr(FuIntelThunderboltNvmDrom) st_drom = fu_intel_thunderbolt_nvm_drom_new();
+	g_autoptr(FuIntelThunderboltNvmArcParams) st_arc =
+	    fu_intel_thunderbolt_nvm_arc_params_new();
+	g_autoptr(FuIntelThunderboltNvmDram) st_dram = fu_intel_thunderbolt_nvm_dram_new();
 
 	/* digital section */
 	fu_intel_thunderbolt_nvm_digital_set_available_sections(
@@ -587,22 +589,22 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 	fu_intel_thunderbolt_nvm_digital_set_flags_is_native(st, priv->is_native ? 0x20 : 0x0);
 
 	/* drom section */
-	fu_intel_thunderbolt_nvm_digital_set_drom(st, st->len);
+	fu_intel_thunderbolt_nvm_digital_set_drom(st, st->buf->len);
 	fu_intel_thunderbolt_nvm_drom_set_vendor_id(st_drom, priv->vendor_id);
 	fu_intel_thunderbolt_nvm_drom_set_model_id(st_drom, priv->model_id);
-	g_byte_array_append(st, st_drom->data, st_drom->len);
+	fu_byte_array_append_array(st->buf, st_drom->buf);
 
 	/* ARC param section */
-	fu_intel_thunderbolt_nvm_digital_set_arc_params(st, st->len);
+	fu_intel_thunderbolt_nvm_digital_set_arc_params(st, st->buf->len);
 	fu_intel_thunderbolt_nvm_arc_params_set_pd_pointer(st_arc, priv->has_pd ? 0x1 : 0x0);
-	g_byte_array_append(st, st_arc->data, st_arc->len);
+	fu_byte_array_append_array(st->buf, st_arc->buf);
 
 	/* dram section */
-	fu_intel_thunderbolt_nvm_digital_set_ucode(st, st->len);
-	g_byte_array_append(st, st_dram->data, st_dram->len);
+	fu_intel_thunderbolt_nvm_digital_set_ucode(st, st->buf->len);
+	fu_byte_array_append_array(st->buf, st_dram->buf);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

@@ -166,6 +166,23 @@ fu_byte_array_append_bytes(GByteArray *array, GBytes *bytes)
 }
 
 /**
+ * fu_byte_array_append_array:
+ * @array: a #GByteArray
+ * @array2: another #GByteArray
+ *
+ * Adds the content of @array2 to @array.
+ *
+ * Since: 2.0.17
+ **/
+void
+fu_byte_array_append_array(GByteArray *array, GByteArray *array2)
+{
+	g_return_if_fail(array != NULL);
+	g_return_if_fail(array2 != NULL);
+	g_byte_array_append(array, array2->data, array2->len);
+}
+
+/**
  * fu_byte_array_set_size:
  * @array: a #GByteArray
  * @length:  the new size of the GByteArray

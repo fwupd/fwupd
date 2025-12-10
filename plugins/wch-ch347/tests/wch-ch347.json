@@ -1,0 +1,17 @@
+{
+  "name": "WinChipHead CH347",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/wch-ch347-setup.json",
+      "components": [
+        {
+          "version": "1.40",
+          "guids": [
+            "114d0d9f-3a6a-55f1-9f67-4ba7ec653071"
+          ]
+        }
+      ]
+    }
+  ]
+}

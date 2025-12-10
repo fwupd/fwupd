@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include "fu-ccgx-dmc-device.h"
 #include "fu-ccgx-dmc-devx-device.h"
 
 #define DMC_FW_WRITE_STATUS_RETRY_COUNT	   3
@@ -14,7 +15,7 @@
 
 struct _FuCcgxDmcDevxDevice {
 	FuDevice parent_instance;
-	GByteArray *status; /* DmcDevxStatus */
+	FuStructCcgxDmcDevxStatus *status;
 };
 
 G_DEFINE_TYPE(FuCcgxDmcDevxDevice, fu_ccgx_dmc_devx_device, FU_TYPE_DEVICE)
@@ -198,8 +199,11 @@ fu_ccgx_dmc_devx_device_set_quirk_kv(FuDevice *device,
 {
 	if (g_strcmp0(key, "CcgxDmcCompositeVersion") == 0) {
 		guint64 tmp = 0;
-		FuDevice *proxy = fu_device_get_proxy(device);
+		FuDevice *proxy;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		proxy = fu_device_get_proxy(device, error);
+		if (proxy == NULL)
 			return FALSE;
 		if (fu_device_get_version_raw(proxy) != tmp) {
 			g_debug("overriding composite version from %u to %u from %s",
@@ -268,7 +272,7 @@ static gboolean
 fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 {
 	FuCcgxDmcDevxDevice *self = FU_CCGX_DMC_DEVX_DEVICE(device);
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy;
 	FuCcgxDmcDevxDeviceType device_version_type = fu_ccgx_dmc_devx_device_version_type(self);
 	gsize offset = 0;
 	guint8 device_type;
@@ -311,6 +315,9 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs */
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	fu_device_add_instance_strup(device,
 				     "TYPE",
 				     fu_ccgx_dmc_devx_device_type_to_string(device_type));
@@ -353,6 +360,7 @@ static void
 fu_ccgx_dmc_devx_device_init(FuCcgxDmcDevxDevice *self)
 {
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_CCGX_DMC_DEVICE);
 }
 
 static void

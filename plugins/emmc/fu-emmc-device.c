@@ -339,6 +339,15 @@ fu_emmc_device_prepare_firmware(FuDevice *device,
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
+	/* sanity check */
+	if (self->sect_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sector size invalid");
+		return NULL;
+	}
+
 	/* check alignment */
 	if (fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
@@ -393,8 +402,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	check_sect_done = (ext_csd[EXT_CSD_FFU_FEATURES] & 1) > 0;
 
 	/* set CMD ARG */
-	arg = ext_csd[EXT_CSD_FFU_ARG_0] | ext_csd[EXT_CSD_FFU_ARG_1] << 8 |
-	      ext_csd[EXT_CSD_FFU_ARG_2] << 16 | ext_csd[EXT_CSD_FFU_ARG_3] << 24;
+	arg = fu_memread_uint32(ext_csd + EXT_CSD_FFU_ARG_0, G_LITTLE_ENDIAN);
 
 	/* prepare multi_cmd to be sent */
 	multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) + 4 * sizeof(struct mmc_ioc_cmd);
@@ -484,11 +492,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		if (!fu_emmc_device_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
 			return FALSE;
 
-		sect_done = ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_0] |
-			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_1] << 8 |
-			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_2] << 16 |
-			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_3] << 24;
-
+		sect_done =
+		    fu_memread_uint32(ext_csd + EXT_CSD_NUM_OF_FW_SEC_PROG_0, G_LITTLE_ENDIAN);
 		if (sect_done != 0)
 			break;
 
@@ -546,7 +551,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				      FU_IOCTL_FLAG_NONE,
 				      error)) {
 			g_autoptr(GError) error_local = NULL;
-			/* In case multi-cmd ioctl failed before exiting from ffu mode */
+			/* in case multi-cmd ioctl failed before exiting from ffu mode */
 			g_prefix_error_literal(error, "multi-cmd failed setting install mode: ");
 			if (!fu_ioctl_execute(ioctl,
 					      MMC_IOC_CMD,
@@ -598,7 +603,7 @@ fu_emmc_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 }
 
 static void
-fu_emmc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_emmc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

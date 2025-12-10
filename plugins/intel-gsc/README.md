@@ -100,7 +100,6 @@ This plugin is used to update the Intel graphics system controller via the Intel
 
 ### OPROMCODE
 
-* This must be only the *first* oprom image in the payload.
 * The oprom expansion header is formatted as a `FuIfwiCpdFirmware` image
 * The `OROM.man` section has two unknown (and unparsed) extension types
 
@@ -134,8 +133,6 @@ This plugin is used to update the Intel graphics system controller via the Intel
 ```
 
 ### OPROMDATA
-
-* This must be only the *first* oprom image in the payload.
 
 ```xml
 <firmware gtype="FuIgscOpromFirmware">
@@ -226,10 +223,3 @@ This plugin requires read/write access to `/dev/mei*`.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.8.7`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Frank Scarbrough: @Fscarbr

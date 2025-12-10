@@ -15,15 +15,14 @@
 #include "fu-synaptics-rmi-struct.h"
 
 typedef enum {
-	RMI_FIRMWARE_KIND_UNKNOWN = 0x00,
-	RMI_FIRMWARE_KIND_0X = 0x01,
-	RMI_FIRMWARE_KIND_10 = 0x10,
-	RMI_FIRMWARE_KIND_LAST,
-} RmiFirmwareKind;
+	FU_SYNAPTICS_RMI_FIRMWARE_KIND_UNKNOWN = 0x00,
+	FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X = 0x01,
+	FU_SYNAPTICS_RMI_FIRMWARE_KIND_10 = 0x10,
+} FuSynapticsRmiFirmwareKind;
 
 struct _FuSynapticsRmiFirmware {
 	FuFirmware parent_instance;
-	RmiFirmwareKind kind;
+	FuSynapticsRmiFirmwareKind kind;
 	guint32 checksum;
 	guint8 io;
 	guint8 bootloader_version;
@@ -42,7 +41,16 @@ G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWAR
 #define RMI_IMG_MAX_CONTAINERS	     1024
 
 static gboolean
-fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
+fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
+						  GInputStream *stream,
+						  const guint8 *buf,
+						  gsize bufsz,
+						  guint32 start_offset,
+						  FuFirmwareParseFlags flags,
+						  GError **error);
+
+static gboolean
+fu_synaptics_rmi_firmware_add_image(FuSynapticsRmiFirmware *self,
 				    const gchar *id,
 				    GInputStream *stream,
 				    gsize offset,
@@ -58,11 +66,11 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img, id);
-	return fu_firmware_add_image_full(firmware, img, error);
+	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
+fu_synaptics_rmi_firmware_add_image_v10(FuSynapticsRmiFirmware *self,
 					const gchar *id,
 					GInputStream *stream,
 					gsize offset,
@@ -71,7 +79,7 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 					FuFirmwareParseFlags flags,
 					GError **error)
 {
-	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, stream, offset, bufsz, flags, error))
+	if (!fu_synaptics_rmi_firmware_add_image(self, id, stream, offset, bufsz, flags, error))
 		return FALSE;
 	if (sig_sz != 0) {
 		g_autoptr(GInputStream) partial_stream = NULL;
@@ -85,7 +93,8 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 			return FALSE;
 		sig_id = g_strdup_printf("%s-signature", id);
 		fu_firmware_set_id(img, sig_id);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -110,12 +119,11 @@ fu_synaptics_rmi_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
+fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 				    GInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
-	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	guint16 container_id;
 	guint32 cntrs_len;
 	guint32 offset;
@@ -124,7 +132,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf;
 	guint32 signature_size;
-	g_autoptr(GByteArray) st_dsc = NULL;
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
@@ -146,7 +154,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 		g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
 	}
-	if (bufsz < sizeof(guint32) + st_dsc->len) {
+	if (bufsz < sizeof(guint32) + st_dsc->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -164,7 +172,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 		return FALSE;
 	}
 	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
-	if (offset > bufsz - sizeof(guint32) - st_dsc->len) {
+	if (offset > bufsz - sizeof(guint32) - st_dsc->buf->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -189,7 +197,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 		guint32 content_addr;
 		guint32 addr;
 		guint32 length;
-		g_autoptr(GByteArray) st_dsc2 = NULL;
+		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
 
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
@@ -234,10 +242,18 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 						   &self->bootloader_version,
 						   error))
 				return FALSE;
+			if (!fu_synaptics_rmi_firmware_parse_sbl_container_v10(self,
+									       stream,
+									       buf,
+									       bufsz,
+									       offset,
+									       flags,
+									       error))
+				return FALSE;
 			break;
 		case FU_RMI_CONTAINER_ID_UI:
 		case FU_RMI_CONTAINER_ID_CORE_CODE:
-			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
 								     "ui",
 								     stream,
 								     content_addr,
@@ -248,7 +264,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 				return FALSE;
 			break;
 		case FU_RMI_CONTAINER_ID_FLASH_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
 								     "flash-config",
 								     stream,
 								     content_addr,
@@ -260,7 +276,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 			break;
 		case FU_RMI_CONTAINER_ID_UI_CONFIG:
 		case FU_RMI_CONTAINER_ID_CORE_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
 								     "config",
 								     stream,
 								     content_addr,
@@ -271,7 +287,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 				return FALSE;
 			break;
 		case FU_RMI_CONTAINER_ID_FIXED_LOCATION_DATA:
-			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
 								     "fixed-location-data",
 								     stream,
 								     content_addr,
@@ -282,7 +298,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 				return FALSE;
 			break;
 		case FU_RMI_CONTAINER_ID_EXTERNAL_TOUCH_AFE_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
 								     "afe-config",
 								     stream,
 								     content_addr,
@@ -293,7 +309,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 				return FALSE;
 			break;
 		case FU_RMI_CONTAINER_ID_DISPLAY_CONFIG:
-			if (!fu_synaptics_rmi_firmware_add_image_v10(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
 								     "display-config",
 								     stream,
 								     content_addr,
@@ -355,15 +371,14 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware,
+fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 				    GInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
-	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	guint32 cfg_sz;
 	guint32 img_sz;
-	g_autoptr(GByteArray) st_img = NULL;
+	g_autoptr(FuStructRmiImg) st_img = NULL;
 
 	/* main firmware */
 	st_img = fu_struct_rmi_img_parse_stream(stream, 0x0, error);
@@ -374,7 +389,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware,
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
 			guint32 sig_offset = img_sz - self->sig_size;
-			if (!fu_synaptics_rmi_firmware_add_image(firmware,
+			if (!fu_synaptics_rmi_firmware_add_image(self,
 								 "sig",
 								 stream,
 								 RMI_IMG_FW_OFFSET + sig_offset,
@@ -383,7 +398,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware,
 								 error))
 				return FALSE;
 		}
-		if (!fu_synaptics_rmi_firmware_add_image(firmware,
+		if (!fu_synaptics_rmi_firmware_add_image(self,
 							 "ui",
 							 stream,
 							 RMI_IMG_FW_OFFSET,
@@ -396,7 +411,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware,
 	/* config */
 	cfg_sz = fu_struct_rmi_img_get_config_size(st_img);
 	if (cfg_sz > 0) {
-		if (!fu_synaptics_rmi_firmware_add_image(firmware,
+		if (!fu_synaptics_rmi_firmware_add_image(self,
 							 "config",
 							 stream,
 							 RMI_IMG_FW_OFFSET + img_sz,
@@ -417,7 +432,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st_img = NULL;
+	g_autoptr(FuStructRmiImg) st_img = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
@@ -482,15 +497,15 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	case 6:
 		if ((self->io & 0x10) >> 1)
 			self->sig_size = fu_struct_rmi_img_get_signature_size(st_img);
-		if (!fu_synaptics_rmi_firmware_parse_v0x(firmware, stream, flags, error))
+		if (!fu_synaptics_rmi_firmware_parse_v0x(self, stream, flags, error))
 			return FALSE;
-		self->kind = RMI_FIRMWARE_KIND_0X;
+		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X;
 		break;
 	case 16:
 	case 17:
-		if (!fu_synaptics_rmi_firmware_parse_v10(firmware, stream, flags, error))
+		if (!fu_synaptics_rmi_firmware_parse_v10(self, stream, flags, error))
 			return FALSE;
-		self->kind = RMI_FIRMWARE_KIND_10;
+		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_10;
 		break;
 	default:
 		g_set_error(error,
@@ -512,18 +527,17 @@ fu_synaptics_rmi_firmware_get_sig_size(FuSynapticsRmiFirmware *self)
 }
 
 static GByteArray *
-fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
+fu_synaptics_rmi_firmware_write_v0x(FuSynapticsRmiFirmware *self, GError **error)
 {
-	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_img = fu_struct_rmi_img_new();
+	g_autoptr(FuStructRmiImg) st_img = fu_struct_rmi_img_new();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* default image */
-	img = fu_firmware_get_image_by_id(firmware, "ui", error);
+	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "ui", error);
 	if (img == NULL)
 		return NULL;
 	buf_blob = fu_firmware_write(img, error);
@@ -540,7 +554,7 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 	fu_struct_rmi_img_set_product_info(st_img, 0x1234);
 	fu_struct_rmi_img_set_image_size(st_img, bufsz);
 	fu_struct_rmi_img_set_config_size(st_img, bufsz);
-	g_byte_array_append(buf, st_img->data, st_img->len);
+	fu_byte_array_append_array(buf, st_img->buf);
 	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x4 + bufsz, 0x00);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET, 0xDEAD, G_LITTLE_ENDIAN); /* img */
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + bufsz,
@@ -556,33 +570,35 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 }
 
 static GByteArray *
-fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
+fu_synaptics_rmi_firmware_write_v10(FuSynapticsRmiFirmware *self, GError **error)
 {
-	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	gsize bufsz;
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) desc_hdr = fu_struct_rmi_container_descriptor_new();
-	g_autoptr(GByteArray) desc = fu_struct_rmi_container_descriptor_new();
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 =
+	    fu_struct_rmi_container_descriptor_new();
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc = fu_struct_rmi_container_descriptor_new();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* header | desc_hdr | offset_table | desc | flash_config |
 	 *        \0x0       \0x20          \0x24  \0x44          |0x48 */
 	guint32 offset_table[] = {/* offset to first descriptor */
-				  GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* nocheck:blocked */
-	fu_struct_rmi_container_descriptor_set_container_id(desc, FU_RMI_CONTAINER_ID_FLASH_CONFIG);
-	fu_struct_rmi_container_descriptor_set_content_address(desc, RMI_IMG_FW_OFFSET + 0x44);
+				  GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24),
+				  /* nocheck:blocked */};
+	fu_struct_rmi_container_descriptor_set_container_id(st_dsc,
+							    FU_RMI_CONTAINER_ID_FLASH_CONFIG);
+	fu_struct_rmi_container_descriptor_set_content_address(st_dsc, RMI_IMG_FW_OFFSET + 0x44);
 
 	/* default image */
-	img = fu_firmware_get_image_by_id(firmware, "ui", error);
+	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "ui", error);
 	if (img == NULL)
 		return NULL;
 	buf_blob = fu_firmware_write(img, error);
 	if (buf_blob == NULL)
 		return NULL;
 	bufsz = g_bytes_get_size(buf_blob);
-	fu_struct_rmi_container_descriptor_set_content_length(desc, bufsz);
+	fu_struct_rmi_container_descriptor_set_content_length(st_dsc, bufsz);
 
 	/* create empty block */
 	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x48, 0x00);
@@ -600,6 +616,7 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 				    error))
 			return NULL;
 	}
+	/* nocheck:memread */
 	fu_memwrite_uint32(buf->data + FU_STRUCT_RMI_IMG_OFFSET_FW_BUILD_ID,
 			   0x1234,
 			   G_LITTLE_ENDIAN);
@@ -618,21 +635,20 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 			   G_LITTLE_ENDIAN);
 
 	/* hierarchical section */
-	fu_struct_rmi_container_descriptor_set_container_id(desc_hdr,
-							    FU_RMI_CONTAINER_ID_TOP_LEVEL);
-	fu_struct_rmi_container_descriptor_set_content_length(desc_hdr, 0x1 * 4); /* bytes */
-	fu_struct_rmi_container_descriptor_set_content_address(desc_hdr,
+	fu_struct_rmi_container_descriptor_set_container_id(st_dsc2, FU_RMI_CONTAINER_ID_TOP_LEVEL);
+	fu_struct_rmi_container_descriptor_set_content_length(st_dsc2, 0x1 * 4); /* bytes */
+	fu_struct_rmi_container_descriptor_set_content_address(st_dsc2,
 							       RMI_IMG_FW_OFFSET +
 								   0x20); /* offset to table */
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00,			  /* nocheck:blocked */
-	       desc_hdr->data,
-	       desc_hdr->len);
+	       st_dsc2->buf->data,
+	       st_dsc2->buf->len);
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, /* nocheck:blocked */
 	       offset_table,
 	       sizeof(offset_table));
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, /* nocheck:blocked */
-	       desc->data,
-	       desc->len);
+	       st_dsc->buf->data,
+	       st_dsc->buf->len);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + 0x44,
 			   0xfeed,
 			   G_LITTLE_ENDIAN); /* flash_config */
@@ -684,10 +700,10 @@ fu_synaptics_rmi_firmware_write(FuFirmware *firmware, GError **error)
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 
 	/* two supported container formats */
-	if (self->kind == RMI_FIRMWARE_KIND_0X)
-		return fu_synaptics_rmi_firmware_write_v0x(firmware, error);
-	if (self->kind == RMI_FIRMWARE_KIND_10)
-		return fu_synaptics_rmi_firmware_write_v10(firmware, error);
+	if (self->kind == FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X)
+		return fu_synaptics_rmi_firmware_write_v0x(self, error);
+	if (self->kind == FU_SYNAPTICS_RMI_FIRMWARE_KIND_10)
+		return fu_synaptics_rmi_firmware_write_v10(self, error);
 
 	/* not supported */
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "kind not supported");
@@ -725,4 +741,93 @@ FuFirmware *
 fu_synaptics_rmi_firmware_new(void)
 {
 	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_RMI_FIRMWARE, NULL));
+}
+
+static gboolean
+fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
+						  GInputStream *stream,
+						  const guint8 *buf,
+						  gsize bufsz,
+						  guint32 start_offset,
+						  FuFirmwareParseFlags flags,
+						  GError **error)
+{
+	guint32 cntr_addr;
+	guint32 offset;
+	guint32 cntrs_len;
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc = NULL;
+
+	if (!fu_memread_uint32_safe(buf, bufsz, start_offset, &cntr_addr, G_LITTLE_ENDIAN, error))
+		return FALSE;
+
+	st_dsc = fu_struct_rmi_container_descriptor_parse_stream(stream, cntr_addr, error);
+	if (st_dsc == NULL) {
+		g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
+		return FALSE;
+	}
+
+	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
+	cntrs_len = fu_struct_rmi_container_descriptor_get_content_length(st_dsc) / 4;
+	if (cntrs_len > RMI_IMG_MAX_CONTAINERS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "too many containers in file [%u], maximum is %u",
+			    cntrs_len,
+			    (guint)RMI_IMG_MAX_CONTAINERS);
+		return FALSE;
+	}
+	for (guint32 i = 0; i < cntrs_len; i++) {
+		guint32 addr_offset = offset + i * 4;
+		guint16 container_id;
+		guint32 addr;
+		guint32 length;
+		guint32 content_addr;
+		guint32 signature_size;
+		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
+
+		if (!fu_memread_uint32_safe(buf, bufsz, addr_offset, &addr, G_LITTLE_ENDIAN, error))
+			return FALSE;
+
+		st_dsc2 = fu_struct_rmi_container_descriptor_parse_stream(stream, addr, error);
+		if (st_dsc2 == NULL) {
+			g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
+			return FALSE;
+		}
+
+		container_id = fu_struct_rmi_container_descriptor_get_container_id(st_dsc2);
+		content_addr = fu_struct_rmi_container_descriptor_get_content_address(st_dsc2);
+		length = fu_struct_rmi_container_descriptor_get_content_length(st_dsc2);
+		signature_size = fu_struct_rmi_container_descriptor_get_signature_size(st_dsc2);
+
+		g_debug("RmiContainerDescriptor 0x%02x @ 0x%x (len 0x%x) sig_size 0x%x",
+			container_id,
+			content_addr,
+			length,
+			signature_size);
+		if (length == 0) {
+			g_debug("no SBL image found");
+			continue;
+		}
+
+		if (container_id == FU_RMI_CONTAINER_ID_BL_IMAGE) {
+			if (signature_size != 0)
+				g_debug("SBL signature size : 0x%x", signature_size);
+
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
+								     "sbl",
+								     stream,
+								     content_addr,
+								     length,
+								     signature_size,
+								     flags,
+								     error)) {
+				g_prefix_error_literal(error, "failed to add SBL image: ");
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
 }

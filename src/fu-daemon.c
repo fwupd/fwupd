@@ -21,7 +21,6 @@
 typedef struct {
 	FuEngine *engine;
 	GMainLoop *loop;
-	FuDaemonMachineKind machine_kind;
 	guint housekeeping_id;
 	gboolean update_in_progress;
 	gboolean pending_stop;
@@ -39,22 +38,6 @@ fu_daemon_get_engine(FuDaemon *self)
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DAEMON(self), NULL);
 	return priv->engine;
-}
-
-void
-fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind)
-{
-	FuDaemonPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DAEMON(self));
-	priv->machine_kind = machine_kind;
-}
-
-FuDaemonMachineKind
-fu_daemon_get_machine_kind(FuDaemon *self)
-{
-	FuDaemonPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DAEMON(self), 0);
-	return priv->machine_kind;
 }
 
 void
@@ -166,9 +149,7 @@ gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	FuDaemonClass *klass = FU_DAEMON_GET_CLASS(self);
-	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	FuEngine *engine = fu_daemon_get_engine(self);
-	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
 	guint timer_max_ms;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GTimer) timer = g_timer_new();
@@ -180,19 +161,6 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	/* check that the process manager is preventing access to dangerous system calls */
 	if (!fu_daemon_check_syscall_filtering(error))
 		return FALSE;
-
-	/* allow overriding for development */
-	if (machine_kind != NULL) {
-		priv->machine_kind = fu_daemon_machine_kind_from_string(machine_kind);
-		if (priv->machine_kind == FU_DAEMON_MACHINE_KIND_UNKNOWN) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid machine kind specified: %s",
-				    machine_kind);
-			return FALSE;
-		}
-	}
 
 	/* proxy on */
 	if (!klass->setup(self, socket_address, progress, error))

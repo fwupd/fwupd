@@ -292,6 +292,36 @@ fu_strstrip(const gchar *str)
 }
 
 /**
+ * fu_string_strip:
+ * @str: a #GString, e.g. ` test `
+ *
+ * Removes leading and trailing whitespace from a mutable string.
+ *
+ * Since: 2.0.17
+ **/
+void
+fu_string_strip(GString *str)
+{
+	guint i;
+
+	/* leading whitespace */
+	for (i = 0; i < str->len; i++) {
+		if (!g_ascii_isspace(str->str[i]))
+			break;
+	}
+	if (i > 0)
+		g_string_erase(str, 0, i);
+
+	/* trailing whitespace */
+	for (i = 0; i < str->len; i++) {
+		if (!g_ascii_isspace(str->str[str->len - (i + 1)]))
+			break;
+	}
+	if (i < str->len)
+		g_string_truncate(str, str->len - i);
+}
+
+/**
  * fu_strdup:
  * @str: a string, e.g. ` test `
  * @bufsz: the maximum size of @str

@@ -31,28 +31,31 @@ G_DEFINE_TYPE(FuSynapromConfig, fu_synaprom_config, FU_TYPE_DEVICE)
 static gboolean
 fu_synaprom_config_setup(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
 	g_autofree gchar *configid1_str = NULL;
 	g_autofree gchar *configid2_str = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) reply = NULL;
-	g_autoptr(GByteArray) st_request = fu_struct_synaprom_request_new();
-	g_autoptr(GByteArray) st_cfg = NULL;
-	g_autoptr(GByteArray) st_hdr = NULL;
-	g_autoptr(GByteArray) st_cmd = fu_struct_synaprom_cmd_iota_find_new();
+	g_autoptr(FuStructSynapromRequest) st_request = fu_struct_synaprom_request_new();
+	g_autoptr(FuStructSynapromIotaConfigVersion) st_cfg = NULL;
+	g_autoptr(FuStructSynapromReplyIotaFindHdr) st_hdr = NULL;
+	g_autoptr(FuStructSynapromCmdIotaFind) st_cmd = fu_struct_synaprom_cmd_iota_find_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* get IOTA */
 	fu_struct_synaprom_cmd_iota_find_set_itype(st_cmd, FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION);
 	fu_struct_synaprom_cmd_iota_find_set_flags(st_cmd, FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX);
 	fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_IOTA_FIND);
-	g_byte_array_append(st_request, st_cmd->data, st_cmd->len);
+	fu_byte_array_append_array(st_request->buf, st_cmd->buf);
 
 	reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_IOTA_FIND_HDR_SIZE +
 				      FU_SYNAPROM_MAX_IOTA_READ_SIZE);
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_synaprom_device_cmd_send(FU_SYNAPROM_DEVICE(parent),
-					 st_request,
+					 st_request->buf,
 					 reply,
 					 progress,
 					 5000,
@@ -81,7 +84,7 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	}
 	st_cfg = fu_struct_synaprom_iota_config_version_parse(reply->data,
 							      reply->len,
-							      st_hdr->len,
+							      st_hdr->buf->len,
 							      error);
 	if (st_cfg == NULL)
 		return FALSE;
@@ -114,11 +117,17 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
-	FuDevice *parent = fu_device_get_parent(device);
-	g_autoptr(GByteArray) st_hdr = NULL;
+	FuDevice *parent = fu_device_get_parent(device, error);
+	g_autoptr(FuStructSynapromCfgHdr) st_hdr = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
 	g_autoptr(FuFirmware) img_hdr = NULL;
+
+	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+		return NULL;
+	}
 
 	if (fu_synaprom_device_get_product_type(FU_SYNAPROM_DEVICE(parent)) ==
 	    FU_SYNAPROM_PRODUCT_TYPE_TRITON) {
@@ -194,7 +203,7 @@ fu_synaprom_config_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
@@ -203,6 +212,9 @@ fu_synaprom_config_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* I assume the CFG/MFW difference is detected in the device...*/
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	return fu_synaprom_device_write_fw(FU_SYNAPROM_DEVICE(parent), fw, progress, error);
 }
 
@@ -226,7 +238,7 @@ static void
 fu_synaprom_config_constructed(GObject *obj)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(obj);
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), NULL);
 
 	/* append the firmware kind to the generated GUID */
 	if (parent != NULL) {
@@ -243,14 +255,18 @@ fu_synaprom_config_constructed(GObject *obj)
 static gboolean
 fu_synaprom_config_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	return fu_device_attach_full(parent, progress, error);
 }
 
 static gboolean
 fu_synaprom_config_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	return fu_device_detach_full(parent, progress, error);
 }
 

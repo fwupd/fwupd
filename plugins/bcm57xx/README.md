@@ -27,10 +27,6 @@ The device usually presents in runtime mode, and the firmware is written to the
 device without disconnecting the working kernel driver. Once complete the APE
 is reset which may cause a brief link reconnection.
 
-On flash failure the device is nonfunctional, but is recoverable using direct
-BAR writes, which is typically much slower than updating the device using the
-kernel driver and the ethtool API.
-
 ## Vendor ID Security
 
 The vendor ID is set from the PCI vendor, in this instance set to `PCI:0x14E4`
@@ -42,10 +38,3 @@ This plugin requires the `SIOCETHTOOL` ioctl interface.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.5.0`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Evan Lojewski: @meklort

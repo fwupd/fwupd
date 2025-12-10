@@ -94,15 +94,19 @@ fu_redfish_smc_device_get_parameters(FuRedfishSmcDevice *self)
 }
 
 static gboolean
-fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GError **error)
+fu_redfish_smc_device_start_update(FuRedfishSmcDevice *self, FuProgress *progress, GError **error)
 {
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device));
+	FuRedfishBackend *backend;
 	JsonObject *json_obj;
 	CURL *curl;
 	const gchar *location = NULL;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 
@@ -112,7 +116,7 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 		FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 		&error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
-			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+			fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
@@ -127,7 +131,7 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 			    fu_redfish_backend_get_push_uri_path(backend));
 		return FALSE;
 	}
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(device), location, progress, error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
 
 static gboolean
@@ -138,7 +142,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuRedfishSmcDevice *self = FU_REDFISH_SMC_DEVICE(device);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	CURL *curl;
 	JsonObject *json_obj;
 	curl_mimepart *part;
@@ -160,6 +164,9 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* create the multipart for uploading the image request */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	mime = curl_mime_init(curl);
@@ -217,14 +224,14 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_redfish_smc_device_start_update(device, fu_progress_get_child(progress), error))
+	if (!fu_redfish_smc_device_start_update(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 	return TRUE;
 }
 
 static void
-fu_redfish_smc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_redfish_smc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

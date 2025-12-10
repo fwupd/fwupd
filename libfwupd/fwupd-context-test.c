@@ -31,7 +31,7 @@ fwupd_thread_test_thread_cb(gpointer user_data)
 	g_autoptr(GMainContextPusher) pusher = g_main_context_pusher_new(context);
 
 	g_assert_nonnull(pusher);
-	g_message("Calling fwupd_client_get_devices() in thread %p with main context %p",
+	g_message("calling fwupd_client_get_devices() in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
 	if (!fwupd_client_connect(self->client, NULL, &error_local))
@@ -95,10 +95,10 @@ main(void)
 
 	/* only some of the CI targets have a DBus daemon */
 	if (!fwupd_thread_test_has_system_bus()) {
-		g_message("D-Bus system bus unavailable, skipping tests.");
+		g_message("D-Bus system bus unavailable, skipping tests");
 		return 0;
 	}
-	g_message("Created FwupdClient in thread %p with main context %p",
+	g_message("created FwupdClient in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
 	g_signal_connect(FWUPD_CLIENT(client),

@@ -85,7 +85,7 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	g_autoptr(GBytes) fw = NULL;
 
-	/* Get Report Descriptor Size */
+	/* get report descriptor size */
 	if (!fu_ioctl_execute(ioctl,
 			      HIDIOCGRDESCSIZE,
 			      (guint8 *)&desc_size,
@@ -427,6 +427,60 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 			      error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature[res]", buf, bufsz);
+
+	/* success */
+	return TRUE;
+#else
+	/* failed */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/hidraw.h> not available");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_hidraw_device_get_input:
+ * @self: a #FuHidrawDevice
+ * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
+ * @bufsz: the size of @buf
+ * @flags: some #FuIoctlFlags, e.g. %FU_IOCTL_FLAG_RETRY
+ * @error: (nullable): optional return location for an error
+ *
+ * Do a HID GetInput request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.19
+ **/
+gboolean
+fu_hidraw_device_get_input(FuHidrawDevice *self,
+			   guint8 *buf,
+			   gsize bufsz,
+			   FuIoctlFlags flags,
+			   GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+#endif
+
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+#ifdef HAVE_HIDRAW_H
+	fu_dump_raw(G_LOG_DOMAIN, "GetInput[req]", buf, bufsz);
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGINPUT(bufsz), /* nocheck:blocked */
+			      buf,
+			      bufsz,
+			      NULL,
+			      FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+			      flags,
+			      error))
+		return FALSE;
+	fu_dump_raw(G_LOG_DOMAIN, "GetInput[res]", buf, bufsz);
 
 	/* success */
 	return TRUE;

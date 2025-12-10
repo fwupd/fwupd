@@ -36,9 +36,9 @@ fu_bcm57xx_create_verbuf(guint8 *bufver, gsize bufsz, const gchar *version)
 static void
 fu_bcm57xx_common_veritem_func(void)
 {
-	g_autoptr(Bcm57xxVeritem) veritem1 = NULL;
-	g_autoptr(Bcm57xxVeritem) veritem2 = NULL;
-	g_autoptr(Bcm57xxVeritem) veritem3 = NULL;
+	g_autoptr(FuBcm57xxVeritem) veritem1 = NULL;
+	g_autoptr(FuBcm57xxVeritem) veritem2 = NULL;
+	g_autoptr(FuBcm57xxVeritem) veritem3 = NULL;
 	guint8 bufver[16] = {0x0};
 
 	fu_bcm57xx_create_verbuf(bufver, sizeof(bufver), "5719-v1.43");

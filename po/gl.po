@@ -4,23 +4,27 @@
 #
 # Translators:
 # Fran Diéguez <frandieguez@ubuntu.com>, 2020
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Galician (http://app.transifex.com/freedesktop/fwupd/language/gl/)\n"
+"PO-Revision-Date: 2025-10-24 10:08+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Galician <https://hosted.weblate.org/projects/fwupd/fwupd/gl/>\n"
+"Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: gl\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
-msgstr[0] " Falta %.0f minuto"
-msgstr[1] " Faltan %.0f minutos"
+msgstr[0] "Falta %.0f minuto"
+msgstr[1] "Faltan %.0f minutos"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -166,7 +170,7 @@ msgstr "Dispositivo engadido:"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr "Dispositivo cambiado"
+msgstr "Dispositivo cambiado:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
@@ -200,7 +204,7 @@ msgstr "Feito!"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Downgrading %s…"
-msgstr "Desactualizando %s"
+msgstr "Desactualizando %s…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -208,7 +212,7 @@ msgstr "Descargando…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
-msgstr "Volcar os datos da SMBIOS desde un ficheiro "
+msgstr "Volcar os datos da SMBIOS desde un ficheiro"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"

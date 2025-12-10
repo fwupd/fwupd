@@ -18,6 +18,26 @@
 #include "fu-string.h"
 
 /**
+ * fu_size_checked_add:
+ * @a: The #gsize left operand
+ * @b: The #gsize right operand
+ *
+ * Performs a checked addition of a and b, ensuring the result does not overflow.
+ *
+ * Returns: @a+@b, or %G_MAXSIZE on overflow
+ *
+ * Since: 2.0.19
+ **/
+gsize
+fu_size_checked_add(gsize a, gsize b)
+{
+	gsize tmp = 0;
+	if (!g_size_checked_add(&tmp, a, b))
+		return G_MAXSIZE;
+	return tmp;
+}
+
+/**
  * fu_error_map_entry_to_gerror:
  * @value: the value to look up
  * @entries: the #FuErrorMapEntry map
@@ -117,8 +137,7 @@ fu_cpu_get_attrs(GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *procpath = fu_path_from_kind(FU_PATH_KIND_PROCFS);
-	g_autofree gchar *fn = g_build_filename(procpath, "cpuinfo", NULL);
+	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
 	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -355,7 +374,7 @@ fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value)
 	g_autofree gchar *value_hex = NULL;
 	if (value == 0)
 		return;
-	value_hex = g_strdup_printf("0x%x", (guint)value);
+	value_hex = g_strdup_printf("0x%lx", (gulong)value);
 	xb_builder_node_insert_text(bn, key, value_hex, NULL);
 }
 
@@ -373,19 +392,4 @@ void
 fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value)
 {
 	xb_builder_node_insert_text(bn, key, value ? "true" : "false", NULL);
-}
-
-/**
- * fu_snap_is_in_snap:
- *
- * Check whether the current process is running inside a snap.
- *
- * Returns: TRUE if current process is running inside a snap.
- *
- * Since: 2.0.4
- **/
-gboolean
-fu_snap_is_in_snap(void)
-{
-	return getenv("SNAP") != NULL;
 }

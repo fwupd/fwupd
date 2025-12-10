@@ -33,7 +33,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	guint8 cfg_ver = 0;
 	gsize bufsz = 0;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructGoodixBrlbHdr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	st = fu_struct_goodix_brlb_hdr_parse_stream(stream, 0x0, error);
@@ -61,7 +61,8 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 		if (fw_img == NULL)
 			return FALSE;
 		fu_firmware_set_bytes(img, fw_img);
-		fu_firmware_add_image(FU_FIRMWARE(self), img);
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
+			return FALSE;
 		if (!fu_memread_uint8_safe(buf, bufsz, firmware_size + 64 + 34, &cfg_ver, error))
 			return FALSE;
 		g_debug("config size:0x%x, config ver:0x%02x",
@@ -93,10 +94,10 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 				    "invalid subsys_num");
 		return FALSE;
 	}
-	offset_hdr = st->len;
+	offset_hdr = st->buf->len;
 	for (guint i = 0; i < subsys_num; i++) {
 		guint32 img_size;
-		g_autoptr(GByteArray) st_img = NULL;
+		g_autoptr(FuStructGoodixBrlbImg) st_img = NULL;
 
 		st_img = fu_struct_goodix_brlb_img_parse_stream(stream, offset_hdr, error);
 		if (st_img == NULL)
@@ -113,15 +114,15 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 			if (fw_img == NULL)
 				return FALSE;
 			fu_firmware_set_bytes(img, fw_img);
-			if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+			if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 				return FALSE;
 		}
-		offset_hdr += st_img->len;
+		offset_hdr += st_img->buf->len;
 		offset_payload += img_size;
 	}
 
 	version = (fu_struct_goodix_brlb_hdr_get_vid(st) << 8) | cfg_ver;
-	fu_goodixtp_firmware_set_version(self, version);
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
 	return TRUE;
 }
 

@@ -1,6 +1,19 @@
 {%- set export = obj.export('ToString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 {%- if obj.is_bitfield %}
+/**
+ * {{obj.c_method('ToString')}}:
+ * @val: value, e.g. %{{obj.items[1].c_define}}
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Returns: identifier string
+ *
+{%- if obj.since('ToString') %}
+ *
+ * Since: {{obj.since('ToString')}}
+{%- endif %}
+ **/
 {{export.value}}gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
@@ -15,10 +28,22 @@
     return g_strjoinv(",", (gchar **)data);
 }
 {%- else %}
+/**
+ * {{obj.c_method('ToString')}}:
+ * @val: value{%- if obj.items|length > 1 %}, e.g. %{{obj.items[1].c_define}}{%- endif %}
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Returns: identifier string
+{%- if obj.since('ToString') %}
+ *
+ * Since: {{obj.since('ToString')}}
+{%- endif %}
+ **/
 {{export.value}}const gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
-{%- for item in obj.items %}
+{%- for item in obj.items|rejectattr('name', 'equalto', 'Unknown') %}
     if (val == {{item.c_define}})
         return "{{item.value}}";
 {%- endfor %}
@@ -29,6 +54,18 @@
 
 {%- set export = obj.export('FromString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('FromString')}}:
+ * @val: (nullable): a string{%- if obj.items|length > 1 %}, e.g. `{{obj.items[1].value}}`{%- endif %}
+ *
+ * Converts a string to an enumerated value.
+ *
+ * Returns: enumerated value
+{%- if obj.since('FromString') %}
+ *
+ * Since: {{obj.since('FromString')}}
+{%- endif %}
+ **/
 {{export.value}}{{obj.c_type}}
 {{obj.c_method('FromString')}}(const gchar *val)
 {
@@ -47,11 +84,16 @@
     }
     return value;
 {%- else %}
-{%- for item in obj.items %}
+{%- for item in obj.items|rejectattr('name', 'equalto', 'Unknown') %}
     if (g_strcmp0(val, "{{item.value}}") == 0)
         return {{item.c_define}};
 {%- endfor %}
+{%- set item_unknown = obj.item('Unknown') %}
+{%- if item_unknown %}
+    return {{item_unknown.c_define}};
+{%- else %}
     return {{obj.items[0].c_define}};
+{%- endif %}
 {%- endif %}
 }
 {%- endif %}

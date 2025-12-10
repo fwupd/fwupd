@@ -29,7 +29,7 @@ repos:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 25.9.0
+    rev: 25.12.0
     hooks:
     - id: black
 -   repo: local
@@ -54,7 +54,7 @@ repos:
                   BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416)|
-              plugins/ch341a/ch341a-vmod\.png|
+              plugins/wch-ch341a/wch-ch341a-vmod\.png|
               plugins/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c)|
               plugins/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
@@ -66,18 +66,10 @@ repos:
               src/tests/history_v[12]\.db|
               src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors
             )$
-    - id: check-null-false-returns
-      name: check for null / false return mismatch
-      language: script
-      entry: ./contrib/ci/check-null-false-returns.py
     - id: check-potfiles
       name: check for missing translated files from potfiles
       language: script
       entry: ./contrib/ci/check-potfiles.py
-    - id: check-finalizers
-      name: check for missing GObject parent finalize
-      language: script
-      entry: ./contrib/ci/check-finalizers.py
     - id: check-headers
       name: check for superfluous includes
       language: script
@@ -95,11 +87,13 @@ repos:
       language: system
       entry: shellcheck --severity=warning -e SC2068
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: shfmt
       name: format shell scripts with shfmt
       language: system
       entry: shfmt --write --indent 4
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: run-tests
       name: run tests before pushing
       language: system

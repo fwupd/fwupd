@@ -213,12 +213,12 @@ fu_corsair_bp_write_chunk(FuCorsairBp *self, FuChunk *chunk, GError **error)
 }
 
 static void
-fu_corsair_bp_incorporate(FuDevice *self, FuDevice *donor)
+fu_corsair_bp_incorporate(FuDevice *device, FuDevice *donor)
 {
-	FuCorsairBp *bp_self = FU_CORSAIR_BP(self);
+	FuCorsairBp *bp_self = FU_CORSAIR_BP(device);
 	FuCorsairBp *bp_donor = FU_CORSAIR_BP(donor);
 
-	g_return_if_fail(FU_IS_CORSAIR_BP(self));
+	g_return_if_fail(FU_IS_CORSAIR_BP(device));
 	g_return_if_fail(FU_IS_CORSAIR_BP(donor));
 
 	bp_self->epin = bp_donor->epin;

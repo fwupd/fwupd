@@ -8,7 +8,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fwupd-build.h"
 #include "fwupd-security-attr.h"
 
 G_BEGIN_DECLS

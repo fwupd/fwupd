@@ -25,7 +25,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 {
 	gsize offset = 0;
 	guint32 record_count = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAcpiPhatVersionRecord) st = NULL;
 
 	st = fu_struct_acpi_phat_version_record_parse_stream(stream, offset, error);
 	if (st == NULL)
@@ -35,19 +35,19 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();
 		g_autoptr(GInputStream) stream_tmp = NULL;
 		stream_tmp = fu_partial_input_stream_new(stream,
-							 offset + st->len,
+							 offset + st->buf->len,
 							 FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE,
 							 error);
 		if (stream_tmp == NULL)
 			return FALSE;
-		fu_firmware_set_offset(firmware_tmp, offset + st->len);
+		fu_firmware_set_offset(firmware_tmp, offset + st->buf->len);
 		if (!fu_firmware_parse_stream(firmware_tmp,
 					      stream_tmp,
 					      0x0,
 					      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))
+		if (!fu_firmware_add_image(firmware, firmware_tmp, error))
 			return FALSE;
 		offset += fu_firmware_get_size(firmware_tmp);
 	}
@@ -58,7 +58,7 @@ static GByteArray *
 fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf2 = g_byte_array_new();
-	g_autoptr(GByteArray) st = fu_struct_acpi_phat_version_record_new();
+	g_autoptr(FuStructAcpiPhatVersionRecord) st = fu_struct_acpi_phat_version_record_new();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* write each element so we get the image size */
@@ -71,13 +71,13 @@ fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* data record */
-	fu_struct_acpi_phat_version_record_set_rcdlen(st, st->len + buf2->len);
+	fu_struct_acpi_phat_version_record_set_rcdlen(st, st->buf->len + buf2->len);
 	fu_struct_acpi_phat_version_record_set_version(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_acpi_phat_version_record_set_record_count(st, images->len);
 
 	/* element data */
-	g_byte_array_append(st, buf2->data, buf2->len);
-	return g_steal_pointer(&st);
+	g_byte_array_append(st->buf, buf2->data, buf2->len);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

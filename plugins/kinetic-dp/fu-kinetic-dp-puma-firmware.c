@@ -109,7 +109,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	guint8 checksum_actual;
 	guint8 cmdb_sig[FU_KINETIC_DP_PUMA_REQUEST_FW_CMDB_SIG_SIZE] = {'P', 'M', 'D', 'B'};
 	g_autoptr(GByteArray) cmdb_tmp = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpPumaHeader) st = NULL;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -127,16 +127,16 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	st = fu_struct_kinetic_dp_puma_header_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	offset += st->len;
+	offset += st->buf->len;
 	code_size += FU_STRUCT_KINETIC_DP_PUMA_HEADER_SIZE;
 	for (guint i = 0; i < FU_STRUCT_KINETIC_DP_PUMA_HEADER_DEFAULT_OBJECT_COUNT; i++) {
-		g_autoptr(GByteArray) st_obj =
+		g_autoptr(FuStructKineticDpPumaHeaderInfo) st_obj =
 		    fu_struct_kinetic_dp_puma_header_info_parse_stream(stream, offset, error);
 		if (st_obj == NULL)
 			return FALSE;
 		code_size += fu_struct_kinetic_dp_puma_header_info_get_length(st_obj) +
 			     FU_STRUCT_KINETIC_DP_PUMA_HEADER_INFO_SIZE;
-		offset += st_obj->len;
+		offset += st_obj->buf->len;
 	}
 	if (code_size < (512 * 1024) + offset) {
 		g_set_error(error,
@@ -249,7 +249,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(isp_drv_img, isp_drv_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_idx(isp_drv_img, FU_KINETIC_DP_FIRMWARE_IDX_ISP_DRV);
-	if (!fu_firmware_add_image_full(firmware, isp_drv_img, error))
+	if (!fu_firmware_add_image(firmware, isp_drv_img, error))
 		return FALSE;
 
 	/* add App FW as a new image into firmware */
@@ -272,7 +272,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(app_fw_img, app_fw_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_idx(app_fw_img, FU_KINETIC_DP_FIRMWARE_IDX_APP_FW);
-	if (!fu_firmware_add_image_full(firmware, app_fw_img, error))
+	if (!fu_firmware_add_image(firmware, app_fw_img, error))
 		return FALSE;
 
 	/* figure out which chip App FW it is for */

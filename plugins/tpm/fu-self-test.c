@@ -30,6 +30,12 @@ fu_tpm_device_1_2_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
+
+	if (tpm_server_running != NULL) {
+		g_test_skip("Skipping TPM1.2 tests when simulator running");
+		return;
+	}
 
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -39,6 +45,9 @@ fu_tpm_device_1_2_func(void)
 	/* load the plugin */
 	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -72,7 +81,7 @@ fu_tpm_device_1_2_func(void)
 						      &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(attr1);
-	/* Some PCRs are empty, but PCRs 0-7 are set (tests/tpm0/pcrs) */
+	/* some PCRs are empty, but PCRs 0-7 are set (tests/tpm0/pcrs) */
 	g_assert_cmpint(fwupd_security_attr_get_result(attr1),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_VALID);
@@ -82,43 +91,49 @@ static void
 fu_tpm_device_2_0_func(void)
 {
 	gboolean ret;
+	FuTpmV2Device *device;
+	GPtrArray *devices;
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuTpmDevice) device = fu_tpm_v2_device_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
-	const gchar *tpm_server_running = g_getenv("TPM_SERVER_RUNNING");
-	(void)g_setenv("FWUPD_FORCE_TPM2", "1", TRUE);
 
-#ifdef HAVE_GETUID
-	if (tpm_server_running == NULL && (getuid() != 0 || geteuid() != 0)) {
-		g_test_skip("TPM2.0 tests require simulated TPM2.0 running or need root access "
-			    "with physical TPM");
-		g_unsetenv("FWUPD_FORCE_TPM2");
+	if (tpm_server_running == NULL) {
+		g_test_skip("TPM2.0 tests require simulated TPM2.0 running");
 		return;
 	}
-#endif
-	fu_device_set_physical_id(FU_DEVICE(device), "dummy");
-	locker = fu_device_locker_new(FU_DEVICE(device), &error);
-	if (locker == NULL && tpm_server_running == NULL &&
-	    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-		g_test_skip("no physical or simulated TPM 2.0 device available");
-		g_unsetenv("FWUPD_FORCE_TPM2");
-		return;
-	}
-	g_assert_no_error(error);
-	g_assert_nonnull(locker);
-	ret = fu_device_setup(FU_DEVICE(device), &error);
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	pcr0s = fu_tpm_device_get_checksums(device, 0);
+
+	/* load the plugin */
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get the v2.0 device */
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpint(devices->len, ==, 1);
+	device = g_ptr_array_index(devices, 0);
+	g_assert_true(FU_IS_TPM_V2_DEVICE(device));
+
+	pcr0s = fu_tpm_device_get_checksums(FU_TPM_DEVICE(device), 0);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, >=, 1);
-	pcrXs = fu_tpm_device_get_checksums(device, 999);
+	pcrXs = fu_tpm_device_get_checksums(FU_TPM_DEVICE(device), 999);
 	g_assert_nonnull(pcrXs);
 	g_assert_cmpint(pcrXs->len, ==, 0);
-	g_unsetenv("FWUPD_FORCE_TPM2");
 }
 
 static void
@@ -203,6 +218,12 @@ fu_tpm_empty_pcr_func(void)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
+
+	if (tpm_server_running != NULL) {
+		g_test_skip("Skipping empty PCR tests when simulator running");
+		return;
+	}
 
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -217,6 +238,9 @@ fu_tpm_empty_pcr_func(void)
 	/* load the plugin */
 	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -247,6 +271,7 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSFSDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);

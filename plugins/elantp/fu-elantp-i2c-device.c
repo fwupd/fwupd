@@ -32,7 +32,7 @@ G_DEFINE_TYPE(FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_I2C_DEVICE)
 #define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
 static gboolean
-fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **error);
+fu_elantp_i2c_device_detach(FuElantpI2cDevice *self, FuProgress *progress, GError **error);
 
 static void
 fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -456,7 +456,7 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* detach */
-	if (!fu_elantp_i2c_device_detach(device, fu_progress_get_child(progress), error))
+	if (!fu_elantp_i2c_device_detach(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -557,23 +557,22 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_elantp_i2c_device_detach(FuElantpI2cDevice *self, FuProgress *progress, GError **error)
 {
 	guint16 iap_ver;
 	guint16 ic_type;
 	guint8 buf[2] = {0x0};
 	guint16 tmp;
-	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
 
 	/* sanity check */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_info("in bootloader mode, reset IC");
 		if (!fu_elantp_i2c_device_write_cmd(self,
 						    FU_ETP_CMD_I2C_IAP_RESET,
 						    ETP_I2C_IAP_RESET,
 						    error))
 			return FALSE;
-		fu_device_sleep(device, ELANTP_DELAY_RESET);
+		fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
 	}
 	/* get OSM version */
 	if (!fu_elantp_i2c_device_read_cmd(self,
@@ -669,7 +668,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	}
 	if (!fu_elantp_i2c_device_write_cmd(self, FU_ETP_CMD_I2C_IAP, self->iap_password, error))
 		return FALSE;
-	fu_device_sleep(device, ELANTP_DELAY_UNLOCK);
+	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_UNLOCK);
 	if (!fu_elantp_i2c_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 	if ((self->iap_ctrl & ETP_FW_IAP_CHECK_PW) == 0) {
@@ -777,7 +776,7 @@ fu_elantp_i2c_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_elantp_i2c_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_elantp_i2c_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

@@ -25,7 +25,6 @@
 #include "fu-bcm57xx-device.h"
 #include "fu-bcm57xx-dict-image.h"
 #include "fu-bcm57xx-firmware.h"
-#include "fu-bcm57xx-recovery-device.h"
 
 #define FU_BCM57XX_BLOCK_SZ 0x4000 /* 16kb */
 
@@ -381,14 +380,20 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 
 	/* merge in all the provided images into the existing firmware */
 	img_stage1 = fu_firmware_get_image_by_id(firmware_tmp, "stage1", NULL);
-	if (img_stage1 != NULL)
-		fu_firmware_add_image(firmware, img_stage1);
+	if (img_stage1 != NULL) {
+		if (!fu_firmware_add_image(firmware, img_stage1, error))
+			return NULL;
+	}
 	img_stage2 = fu_firmware_get_image_by_id(firmware_tmp, "stage2", NULL);
-	if (img_stage2 != NULL)
-		fu_firmware_add_image(firmware, img_stage2);
+	if (img_stage2 != NULL) {
+		if (!fu_firmware_add_image(firmware, img_stage2, error))
+			return NULL;
+	}
 	img_ape = fu_firmware_get_image_by_id(firmware_tmp, "ape", NULL);
-	if (img_ape != NULL)
-		fu_firmware_add_image(firmware, img_ape);
+	if (img_ape != NULL) {
+		if (!fu_firmware_add_image(firmware, img_ape, error))
+			return NULL;
+	}
 
 	/* the src and dst dictionaries may be in different order */
 	images = fu_firmware_get_images(firmware);
@@ -522,7 +527,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 	} else {
 		guint8 bufver[16] = {0x0};
 		guint32 veraddr = 0;
-		g_autoptr(Bcm57xxVeritem) veritem = NULL;
+		g_autoptr(FuBcm57xxVeritem) veritem = NULL;
 
 		/* fall back to the string, e.g. '5719-v1.43' */
 		if (!fu_bcm57xx_device_nvram_read(self,
@@ -590,7 +595,7 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 }
 
 static void
-fu_bcm57xx_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_bcm57xx_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

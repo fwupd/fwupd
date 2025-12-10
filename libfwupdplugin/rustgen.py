@@ -67,16 +67,37 @@ def _camel_to_snake(name: str) -> str:
 class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
+        self._since: Optional[str] = None
+        self.comments: list[str] = []
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
+        self.is_imported: bool = False
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
             "FromString": Export.NONE,
         }
+        self._c_methods: Dict[str, Export] = {}
+        self._derives_since: Dict[str, str] = {}
         self._is_bitfield = False
+        self._is_force_enum = False
 
     def c_method(self, suffix: str):
-        return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+        # override
+        if suffix in self._c_methods:
+            return self._c_methods[suffix]
+
+        name_snake = _camel_to_snake(self.name)
+        if self._is_force_enum:
+            if name_snake.endswith("flags"):
+                name_snake = name_snake[:-1]
+
+        return f"{name_snake}_{_camel_to_snake(suffix)}"
+
+    def since(self, derive: str) -> Optional[str]:
+        if derive in self._derives_since:
+            return self._derives_since[derive]
+        return self._since
 
     @property
     def c_type(self):
@@ -95,15 +116,17 @@ class EnumObj:
 
     @property
     def is_bitfield(self) -> bool:
+        if self._is_force_enum:
+            return False
         for item in self.items:
             if item.is_bitfield:
                 return True
         return self._is_bitfield
 
-    def check(self):
+    def check(self, prefix: Optional[str] = None):
         # check we're prefixed with something sane
-        if not self.name.startswith("Fu"):
-            raise ValueError(f"enum {self.name} does not have 'Fu' prefix")
+        if prefix and not self.name.startswith(prefix):
+            raise ValueError(f"enum {self.name} does not have '{prefix}' prefix")
 
         # check we'd not just done ZERO=0, ONE=1, TWO=2, etc
         indexed = True
@@ -125,7 +148,29 @@ class EnumObj:
             return
         self._exports[derive] = Export.PRIVATE
 
+    def add_export_param(self, derive: str, value: str):
+
+        if derive in ["FromString", "ToString"] and value == "enum":
+            self._is_force_enum = True
+            return
+        if value.startswith("since="):
+            self._derives_since[derive] = value[6:]
+            return
+        if value.startswith("name="):
+            self._c_methods[derive] = value[5:]
+            return
+        raise ValueError(f"derive {derive} parameter {value} unknown")
+
     def add_public_export(self, derive: str) -> None:
+
+        # split out the any derive params
+        idx = derive.find("(")
+        if idx != -1:
+            params = derive[idx + 1 : -1].split(";")
+            derive = derive[:idx]
+            for param in params:
+                self.add_export_param(derive, param)
+
         if derive == "Bitfield":
             self._is_bitfield = True
             return
@@ -144,12 +189,14 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.comments: list[str] = []
+        self.since: Optional[str] = None
         self.is_bitfield = False
 
     @property
     def c_define(self) -> str:
         name_snake = _camel_to_snake(self.obj.name)
-        if name_snake.endswith("flags"):
+        if name_snake.endswith("flags") or name_snake.endswith("attrs"):
             name_snake = name_snake[:-1]
         return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
@@ -160,8 +207,17 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
-        if val.find("<<") != -1:
+
+        # parse bitfield shifts
+        try:
+            number, bitshift = val.split("<<", maxsplit=1)
+        except ValueError:
+            pass
+        else:
             self.is_bitfield = True
+            # make sure we promote to a larger integer type
+            if int(bitshift) >= 31:
+                val = f"{int(number)}ull<<{bitshift}"
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):
@@ -180,6 +236,7 @@ class StructObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
         self.items: List[StructItem] = []
+        self.is_imported: bool = False
         self._exports: Dict[str, Export] = {
             "Validate": Export.NONE,
             "ValidateBytes": Export.NONE,
@@ -190,7 +247,9 @@ class StructObj:
             "ParseStream": Export.NONE,
             "ParseInternal": Export.NONE,
             "New": Export.NONE,
+            "NewInternal": Export.NONE,
             "ToString": Export.NONE,
+            "ToBytes": Export.NONE,
             "Default": Export.NONE,
         }
 
@@ -223,10 +282,10 @@ class StructObj:
                 return True
         return False
 
-    def check(self):
+    def check(self, prefix: Optional[str] = None):
         # check we're prefixed with something sane
-        if not self.name.startswith("Fu"):
-            raise ValueError(f"struct {self.name} does not have 'Fu' prefix")
+        if prefix and not self.name.startswith(prefix):
+            raise ValueError(f"struct {self.name} does not have '{prefix}' prefix")
 
     def add_private_export(self, derive: str) -> None:
         if self._exports[derive] == Export.PUBLIC:
@@ -235,6 +294,7 @@ class StructObj:
         if derive == "Validate":
             self.add_private_export("ValidateInternal")
         elif derive == "ValidateStream":
+            self.add_private_export("NewInternal")
             self.add_private_export("ValidateInternal")
         elif derive == "ValidateBytes":
             self.add_private_export("Validate")
@@ -242,6 +302,8 @@ class StructObj:
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Getters")
+                if item.constant and item.enum_obj:
+                    item.enum_obj.add_private_export("ToString")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "ToString":
@@ -251,8 +313,10 @@ class StructObj:
                 if item.enum_obj and not item.constant and item.enabled:
                     item.enum_obj.add_private_export("ToString")
         elif derive == "Parse":
+            self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseStream":
+            self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseBytes":
             self.add_private_export("Parse")
@@ -269,6 +333,7 @@ class StructObj:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
+            self.add_private_export("NewInternal")
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Setters")
@@ -281,6 +346,8 @@ class StructObj:
             for item in self.items:
                 if not item.constant:
                     item.add_public_export(derive)
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("NewInternal")
         else:
             self.add_private_export(derive)
             self._exports[derive] = Export.PUBLIC
@@ -588,8 +655,18 @@ class StructItem:
 
 
 class Generator:
-    def __init__(self, basename) -> None:
+    def __init__(
+        self,
+        basename,
+        modules_map: Dict[str, str],
+        prefix: Optional[str] = None,
+        includes=[],
+    ) -> None:
         self.basename: str = basename
+        self.prefix: Optional[str] = prefix
+        self.import_headers: list[str] = []
+        self.modules_map: Dict[str, str] = modules_map
+        self.includes: list[str] = includes
         self.struct_objs: Dict[str, StructObj] = {}
         self.enum_objs: Dict[str, EnumObj] = {}
         self._env = Environment(
@@ -620,22 +697,73 @@ class Generator:
         template_c = self._env.get_template(os.path.basename("fu-rustgen-struct.c.in"))
         return template_c.render(subst), template_h.render(subst)
 
-    def process_input(self, contents: str) -> Tuple[str, str]:
+    def _use_import(self, where: str, module: str, what: str) -> None:
+
+        try:
+            fn = os.path.join(self.modules_map[where], f"fu-{module}.rs")
+        except KeyError:
+            raise ValueError(f"invalid module name: {where}")
+        child = Generator(self.basename, self.modules_map, prefix=self.prefix)
+        with open(fn, "rb") as f:
+            child._parse_input(f.read().decode())
+
+        # header includes
+        header_basename: str = f"fu-{module}-struct.h"
+        if header_basename not in self.import_headers:
+            self.import_headers.append(header_basename)
+
+        # is enum
+        if what in child.enum_objs:
+            enum_obj = child.enum_objs[what]
+            enum_obj.is_imported = True
+            self.enum_objs[what] = enum_obj
+            return
+
+        # is struct
+        if what in child.struct_objs:
+            struct_obj = child.struct_objs[what]
+            struct_obj.is_imported = True
+            self.struct_objs[what] = struct_obj
+            return
+
+        # not found
+        raise ValueError(f"invalid struct or enum name: {what}")
+
+    def _parse_input(self, contents: str) -> None:
         name = None
         repr_type: Optional[str] = None
         derives: List[str] = []
         offset: int = 0
         struct_seen_b32: bool = False
         bits_offset: int = 0
+        since: Optional[str] = None
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
+        comments_cur: list[str] = []
 
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
             line = line.replace("\t", "  ")
 
+            # import one file into another
+            if line.startswith("use "):
+                where, why, what = line[4:].split("::", maxsplit=3)
+                self._use_import(where, why, what)
+
             # remove comments and indent
-            line = line.split("//")[0].strip()
+            try:
+                line, comment = line.split("//", maxsplit=1)
+            except ValueError:
+                pass
+            else:
+                comment = comment.strip()
+                if comment.startswith("Since:"):
+                    since = comment[6:].strip()
+                elif comment.startswith("SPDX") or comment.startswith("Copyright"):
+                    pass
+                elif comment:
+                    comments_cur.append(comment.strip())
+            line = line.strip()
             if not line:
                 continue
 
@@ -655,7 +783,10 @@ class Generator:
                     raise ValueError(f"enum {name} already defined on line {line_num}")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
+                enum_cur._since = since
+                enum_cur.comments.extend(comments_cur)
                 self.enum_objs[name] = enum_cur
+                comments_cur.clear()
                 continue
 
             # the enum type
@@ -676,7 +807,7 @@ class Generator:
             # end of structure
             if line.startswith("}"):
                 if struct_cur:
-                    struct_cur.check()
+                    struct_cur.check(prefix=self.prefix)
                     for derive in derives:
                         struct_cur.add_public_export(derive)
                     for item in struct_cur.items:
@@ -685,12 +816,14 @@ class Generator:
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
                 if enum_cur:
-                    enum_cur.check()
+                    enum_cur.check(prefix=self.prefix)
                     for derive in derives:
                         enum_cur.add_public_export(derive)
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
+                comments_cur.clear()
+                since = None
                 derives.clear()
                 offset = 0
                 bits_offset = 0
@@ -707,11 +840,14 @@ class Generator:
             # split enumeration into sections
             if enum_cur:
                 enum_item = EnumItem(enum_cur)
+                enum_item._since = since
+                enum_item.comments.extend(comments_cur)
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
                     enum_item.parse_default(parts[1])
                 enum_cur.items.append(enum_item)
+                comments_cur.clear()
 
             # split structure into sections
             if struct_cur:
@@ -753,21 +889,32 @@ class Generator:
                 bits_offset += item.bits_size
                 struct_cur.items.append(item)
 
+    def process_input(self, contents: str) -> Tuple[str, str]:
+
+        # parse input
+        self._parse_input(contents)
+
         # process the templates here
         subst = {
             "basename": self.basename,
             "enum_objs": self.enum_objs,
             "struct_objs": self.struct_objs,
+            "import_headers": self.import_headers,
+            "includes": self.includes,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
         dst_h = template_h.render(subst)
         dst_c = template_c.render(subst)
         for enum_obj in self.enum_objs.values():
+            if enum_obj.is_imported:
+                continue
             str_c, str_h = self._process_enums(enum_obj)
             dst_c += str_c
             dst_h += str_h
         for struct_obj in self.struct_objs.values():
+            if struct_obj.is_imported:
+                continue
             str_c, str_h = self._process_structs(struct_obj)
             dst_c += str_c
             dst_h += str_h
@@ -779,17 +926,40 @@ class Generator:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("src", action="store", type=str, help="source")
-    parser.add_argument("dst_c", action="store", type=str, help="destination .c")
-    parser.add_argument("dst_h", action="store", type=str, help="destination .h")
+    parser.add_argument("--outc", action="store", type=str, help="destination .c")
+    parser.add_argument("--outh", action="store", type=str, help="destination .h")
+    parser.add_argument("--prefix", action="store", type=str, default="", help="prefix")
+    parser.add_argument("--use", action="append", default=[], help="module:path")
+    parser.add_argument(
+        "--include", action="append", default=[], help="fwupd.h|fwupdplugin.h"
+    )
     args = parser.parse_args()
 
-    g = Generator(basename=os.path.basename(args.dst_h))
+    # parse map from module to path
+    modules_map: dict[str, str] = {}
+    for entry in args.use:
+        try:
+            split = entry.split(":", maxsplit=1)
+            modules_map[split[0]] = split[1]
+        except IndexError:
+            sys.exit(f"expected module:path, got {entry}")
+
+    g = Generator(
+        basename=os.path.basename(args.outh or args.outc.replace(".c", ".h")),
+        modules_map=modules_map,
+        includes=args.include,
+        prefix=args.prefix,
+    )
     with open(args.src, "rb") as f:
         try:
-            dst_c, dst_h = g.process_input(f.read().decode())
+            dst_c, dst_h = g.process_input(
+                f.read().decode(),
+            )
         except ValueError as e:
             sys.exit(f"cannot process {args.src}: {str(e)}")
-    with open(args.dst_c, "wb") as f:  # type: ignore
-        f.write(dst_c.encode())
-    with open(args.dst_h, "wb") as f:  # type: ignore
-        f.write(dst_h.encode())
+    if args.outc:
+        with open(args.outc, "wb") as f:  # type: ignore
+            f.write(dst_c.encode())
+    if args.outh:
+        with open(args.outh, "wb") as f:  # type: ignore
+            f.write(dst_h.encode())

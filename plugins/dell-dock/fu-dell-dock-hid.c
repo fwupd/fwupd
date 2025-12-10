@@ -74,10 +74,10 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 } FuTbtCmdBuffer;
 
 static gboolean
-fu_dell_dock_hid_set_report_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_dell_dock_hid_set_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint8 *outbuffer = (guint8 *)user_data;
-	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+	return fu_hid_device_set_report(FU_HID_DEVICE(device),
 					0x0,
 					outbuffer,
 					192,
@@ -86,10 +86,11 @@ fu_dell_dock_hid_set_report_cb(FuDevice *self, gpointer user_data, GError **erro
 					error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 static gboolean
-fu_dell_dock_hid_set_report(FuDevice *self, guint8 *outbuffer, GError **error)
+fu_dell_dock_hid_set_report(FuDevice *device, guint8 *outbuffer, GError **error)
 {
-	return fu_device_retry(self,
+	return fu_device_retry(device,
 			       fu_dell_dock_hid_set_report_cb,
 			       HID_MAX_RETRIES,
 			       outbuffer,
@@ -97,10 +98,10 @@ fu_dell_dock_hid_set_report(FuDevice *self, guint8 *outbuffer, GError **error)
 }
 
 static gboolean
-fu_dell_dock_hid_get_report_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_dell_dock_hid_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint8 *inbuffer = (guint8 *)user_data;
-	return fu_hid_device_get_report(FU_HID_DEVICE(self),
+	return fu_hid_device_get_report(FU_HID_DEVICE(device),
 					0x0,
 					inbuffer,
 					192,
@@ -109,18 +110,20 @@ fu_dell_dock_hid_get_report_cb(FuDevice *self, gpointer user_data, GError **erro
 					error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 static gboolean
-fu_dell_dock_hid_get_report(FuDevice *self, guint8 *inbuffer, GError **error)
+fu_dell_dock_hid_get_report(FuDevice *device, guint8 *inbuffer, GError **error)
 {
-	return fu_device_retry(self,
+	return fu_device_retry(device,
 			       fu_dell_dock_hid_get_report_cb,
 			       HID_MAX_RETRIES,
 			       inbuffer,
 			       error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_get_hub_version(FuDevice *self, GError **error)
+fu_dell_dock_hid_get_hub_version(FuDevice *device, GError **error)
 {
 	g_autofree gchar *version = NULL;
 	FuHIDCmdBuffer cmd_buffer = {
@@ -135,23 +138,24 @@ fu_dell_dock_hid_get_hub_version(FuDevice *self, GError **error)
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error_literal(error, "failed to query hub version: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
+	if (!fu_dell_dock_hid_get_report(device, cmd_buffer.data, error)) {
 		g_prefix_error_literal(error, "failed to query hub version: ");
 		return FALSE;
 	}
 
 	version = g_strdup_printf("%02x.%02x", cmd_buffer.data[10], cmd_buffer.data[11]);
-	fu_device_set_version_format(self, FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_set_version(self, version);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version(device, version);
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error)
+fu_dell_dock_hid_raise_mcu_clock(FuDevice *device, gboolean enable, GError **error)
 {
 	FuHIDCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_WRITE_DATA,
@@ -165,7 +169,7 @@ fu_dell_dock_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error(error, "failed to set mcu clock to %d: ", enable);
 		return FALSE;
 	}
@@ -173,8 +177,9 @@ fu_dell_dock_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error)
+fu_dell_dock_hid_erase_bank(FuDevice *device, guint8 idx, GError **error)
 {
 	FuHIDCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_WRITE_DATA,
@@ -188,7 +193,7 @@ fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error)
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error_literal(error, "failed to erase bank: ");
 		return FALSE;
 	}
@@ -196,8 +201,9 @@ fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_write_flash(FuDevice *self,
+fu_dell_dock_hid_write_flash(FuDevice *device,
 			     guint32 dwAddr,
 			     const guint8 *input,
 			     gsize write_size,
@@ -215,7 +221,7 @@ fu_dell_dock_hid_write_flash(FuDevice *self,
 	g_return_val_if_fail(write_size <= HIDI2C_MAX_WRITE, FALSE);
 
 	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error(error,
 			       "failed to write %" G_GSIZE_FORMAT " flash to %x: ",
 			       write_size,
@@ -226,8 +232,9 @@ fu_dell_dock_hid_write_flash(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_verify_update(FuDevice *self, gboolean *result, GError **error)
+fu_dell_dock_hid_verify_update(FuDevice *device, gboolean *result, GError **error)
 {
 	FuHIDCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_WRITE_DATA,
@@ -241,11 +248,11 @@ fu_dell_dock_hid_verify_update(FuDevice *self, gboolean *result, GError **error)
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error_literal(error, "failed to verify update: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
+	if (!fu_dell_dock_hid_get_report(device, cmd_buffer.data, error)) {
 		g_prefix_error_literal(error, "failed to verify update: ");
 		return FALSE;
 	}
@@ -254,8 +261,9 @@ fu_dell_dock_hid_verify_update(FuDevice *self, gboolean *result, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_i2c_write(FuDevice *self,
+fu_dell_dock_hid_i2c_write(FuDevice *device,
 			   const guint8 *input,
 			   gsize write_size,
 			   const FuHIDI2CParameters *parameters,
@@ -276,11 +284,12 @@ fu_dell_dock_hid_i2c_write(FuDevice *self,
 
 	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 
-	return fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error);
+	return fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_i2c_read(FuDevice *self,
+fu_dell_dock_hid_i2c_read(FuDevice *device,
 			  guint32 cmd,
 			  gsize read_size,
 			  GBytes **bytes,
@@ -303,9 +312,9 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(parameters->regaddrlen < HIDI2C_MAX_REGISTER, FALSE);
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error))
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error))
 		return FALSE;
-	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error))
+	if (!fu_dell_dock_hid_get_report(device, cmd_buffer.data, error))
 		return FALSE;
 
 	*bytes = g_bytes_new(cmd_buffer.data, read_size);
@@ -313,8 +322,9 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_tbt_wake(FuDevice *self, const FuHIDI2CParameters *parameters, GError **error)
+fu_dell_dock_hid_tbt_wake(FuDevice *device, const FuHIDI2CParameters *parameters, GError **error)
 {
 	FuTbtCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_READ_DATA, /* special write command that reads status result */
@@ -327,11 +337,11 @@ fu_dell_dock_hid_tbt_wake(FuDevice *self, const FuHIDI2CParameters *parameters, 
 	    .data[0 ... 191] = 0,
 	};
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error_literal(error, "failed to set wake thunderbolt: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
+	if (!fu_dell_dock_hid_get_report(device, cmd_buffer.data, error)) {
 		g_prefix_error_literal(error, "failed to get wake thunderbolt status: ");
 		return FALSE;
 	}
@@ -351,8 +361,9 @@ fu_dell_dock_hid_tbt_map_error(guint32 code)
 	return fwupd_strerror(EIO);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_tbt_write(FuDevice *self,
+fu_dell_dock_hid_tbt_write(FuDevice *device,
 			   guint32 start_addr,
 			   const guint8 *input,
 			   gsize write_size,
@@ -360,7 +371,7 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 			   GError **error)
 {
 	FuTbtCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_READ_DATA, /* It's a special write command that reads status result */
+	    .cmd = HUB_CMD_READ_DATA, /* a special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
 	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
@@ -376,11 +387,11 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
-		if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+		if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 			g_prefix_error_literal(error, "failed to run TBT update: ");
 			return FALSE;
 		}
-		if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
+		if (!fu_dell_dock_hid_get_report(device, cmd_buffer.data, error)) {
 			g_prefix_error_literal(error, "failed to get TBT flash status: ");
 			return FALSE;
 		}
@@ -402,13 +413,14 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
-fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
+fu_dell_dock_hid_tbt_authenticate(FuDevice *device,
 				  const FuHIDI2CParameters *parameters,
 				  GError **error)
 {
 	FuTbtCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_READ_DATA, /* It's a special write command that reads status result */
+	    .cmd = HUB_CMD_READ_DATA, /* a special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
 	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
@@ -418,7 +430,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 	};
 	guint8 result;
 
-	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error_literal(error, "failed to send authentication: ");
 		return FALSE;
 	}
@@ -426,13 +438,13 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 	cmd_buffer.tbt_command =
 	    GUINT32_TO_LE(TBT_COMMAND_AUTHENTICATE_STATUS); /* nocheck:blocked */
 	/* needs at least 2 seconds */
-	fu_device_sleep(self, 2000);
+	fu_device_sleep(device, 2000);
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
-		if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
+		if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
 			g_prefix_error_literal(error, "failed to set check authentication: ");
 			return FALSE;
 		}
-		if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
+		if (!fu_dell_dock_hid_get_report(device, cmd_buffer.data, error)) {
 			g_prefix_error_literal(error, "failed to get check authentication: ");
 			return FALSE;
 		}
@@ -443,7 +455,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 			i,
 			TBT_MAX_RETRIES,
 			result);
-		fu_device_sleep(self, 500); /* ms */
+		fu_device_sleep(device, 500); /* ms */
 	}
 	if (result != 0) {
 		g_set_error(error,

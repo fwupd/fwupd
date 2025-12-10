@@ -24,16 +24,18 @@ static void
 fu_tpm_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	if (self->tpm_device != NULL)
+	if (self->tpm_device != NULL) {
 		fwupd_codec_string_append(str,
 					  idt,
 					  "TpmDevice",
 					  fu_device_get_id(self->tpm_device));
-	if (self->bios_device != NULL)
+	}
+	if (self->bios_device != NULL) {
 		fwupd_codec_string_append(str,
 					  idt,
 					  "BiosDevice",
 					  fu_device_get_id(self->bios_device));
+	}
 }
 
 static void
@@ -295,16 +297,15 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
 	g_autofree guint8 *buf = NULL;
 
 	/* do not show a warning if no TPM exists, or the kernel is too old */
-	fn = g_build_filename(sysfsdir,
-			      "kernel",
-			      "security",
-			      "tpm0",
-			      "binary_bios_measurements",
-			      NULL);
+	fn = fu_path_build(FU_PATH_KIND_SYSFSDIR,
+			   "kernel",
+			   "security",
+			   "tpm0",
+			   "binary_bios_measurements",
+			   NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("no %s, so skipping", fn);
 		return TRUE;
@@ -333,28 +334,32 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 static gboolean
 fu_tpm_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *fn_pcrs = NULL;
+
+	/* look for TPM v2.0 via software TCTI */
+	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		self->tpm_device = fu_tpm_v2_device_new(ctx);
+		fu_device_set_physical_id(FU_DEVICE(self->tpm_device), "TCTI");
+		locker = fu_device_locker_new(FU_DEVICE(self->tpm_device), error);
+		if (locker == NULL)
+			return FALSE;
+		fu_plugin_device_add(plugin, FU_DEVICE(self->tpm_device));
+		return TRUE;
+	}
 
 	/* best effort */
 	if (!fu_tpm_plugin_coldplug_eventlog(plugin, &error_local))
 		g_warning("failed to load eventlog: %s", error_local->message);
 
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_tpm_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
-{
-	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	g_autofree gchar *sysfstpmdir = NULL;
-	g_autofree gchar *fn_pcrs = NULL;
-
 	/* look for TPM v1.2 */
-	sysfstpmdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_TPM);
-	fn_pcrs = g_build_filename(sysfstpmdir, "tpm0", "pcrs", NULL);
-	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS) && g_getenv("FWUPD_FORCE_TPM2") == NULL) {
-		self->tpm_device = fu_tpm_v1_device_new(fu_plugin_get_context(plugin));
+	fn_pcrs = fu_path_build(FU_PATH_KIND_SYSFSDIR_TPM, "tpm0", "pcrs", NULL);
+	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS)) {
+		self->tpm_device = fu_tpm_v1_device_new(ctx);
 		g_object_set(self->tpm_device, "device-file", fn_pcrs, NULL);
 		fu_device_set_physical_id(FU_DEVICE(self->tpm_device), "tpm");
 		if (!fu_device_probe(FU_DEVICE(self->tpm_device), error))
@@ -378,7 +383,8 @@ fu_tpm_plugin_constructed(GObject *obj)
 
 	/* old name */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "tpm_eventlog");
-	fu_plugin_add_device_udev_subsystem(plugin, "tpm");
+	if (g_getenv("TPM2TOOLS_TCTI") == NULL)
+		fu_plugin_add_device_udev_subsystem(plugin, "tpm");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_TPM_V2_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TPM_V1_DEVICE); /* coverage */
 }
@@ -405,7 +411,6 @@ fu_tpm_plugin_class_init(FuTpmPluginClass *klass)
 	object_class->finalize = fu_tpm_plugin_finalize;
 	plugin_class->constructed = fu_tpm_plugin_constructed;
 	plugin_class->to_string = fu_tpm_plugin_to_string;
-	plugin_class->startup = fu_tpm_plugin_startup;
 	plugin_class->coldplug = fu_tpm_plugin_coldplug;
 	plugin_class->device_added = fu_tpm_plugin_device_added;
 	plugin_class->device_registered = fu_tpm_plugin_device_registered;

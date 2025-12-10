@@ -210,28 +210,6 @@ fu_uefi_capsule_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError 
 	return fu_uefi_capsule_device_clear_status(device_uefi, error);
 }
 
-static gchar *
-fu_uefi_capsule_plugin_efivars_attrs_to_string(guint32 attrs)
-{
-	const gchar *data[7] = {0};
-	guint idx = 0;
-	if (attrs & FU_EFIVARS_ATTR_NON_VOLATILE)
-		data[idx++] = "non-volatile";
-	if (attrs & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS)
-		data[idx++] = "bootservice-access";
-	if (attrs & FU_EFIVARS_ATTR_RUNTIME_ACCESS)
-		data[idx++] = "runtime-access";
-	if (attrs & FU_EFIVARS_ATTR_HARDWARE_ERROR_RECORD)
-		data[idx++] = "hardware-error-record";
-	if (attrs & FU_EFIVARS_ATTR_AUTHENTICATED_WRITE_ACCESS)
-		data[idx++] = "authenticated-write-access";
-	if (attrs & FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)
-		data[idx++] = "time-based-authenticated-write-access";
-	if (attrs & FU_EFIVARS_ATTR_APPEND_WRITE)
-		data[idx++] = "append-write";
-	return g_strjoinv(",", (gchar **)data);
-}
-
 static void
 fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
@@ -300,10 +278,10 @@ fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecur
 					  error_local->message);
 				continue;
 			}
-			if ((data_attr & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS) > 0 &&
-			    (data_attr & FU_EFIVARS_ATTR_RUNTIME_ACCESS) == 0) {
+			if ((data_attr & FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS) > 0 &&
+			    (data_attr & FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS) == 0) {
 				g_autofree gchar *flags =
-				    fu_uefi_capsule_plugin_efivars_attrs_to_string(data_attr);
+				    fu_efi_variable_attrs_to_string(data_attr);
 				g_debug("%s-%s attr of size 0x%x had flags %s",
 					name,
 					guids[j],
@@ -338,15 +316,13 @@ static GBytes *
 fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error)
 {
 	const gchar *const *langs = g_get_language_names();
-	g_autofree gchar *datadir_pkg = NULL;
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
-	datadir_pkg = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
-	filename_archive = g_build_filename(datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
+	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.tar.xz", NULL);
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
@@ -376,7 +352,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "failed to get splash file for %s in %s",
 		    langs_str,
-		    datadir_pkg);
+		    filename_archive);
 	return NULL;
 }
 
@@ -396,8 +372,8 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
-	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
-	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
+	g_autoptr(FuStructEfiCapsuleHeader) st_cap = fu_struct_efi_capsule_header_new();
+	g_autoptr(FuStructEfiUxCapsuleHeader) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* get screen dimensions */
@@ -424,7 +400,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 		return FALSE;
 
 	fu_struct_efi_capsule_header_set_flags(st_cap,
-					       EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET);
+					       FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET);
 	if (!fwupd_guid_from_string(FU_EFIVARS_GUID_UX_CAPSULE,
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
@@ -448,16 +424,16 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	};
 
 	/* header, payload and image has to add to zero */
-	csum += fu_sum8(st_cap->data, st_cap->len);
-	csum += fu_sum8(st_uxh->data, st_uxh->len);
+	csum += fu_sum8(st_cap->buf->data, st_cap->buf->len);
+	csum += fu_sum8(st_uxh->buf->data, st_uxh->buf->len);
 	csum += fu_sum8_bytes(blob);
 	fu_struct_efi_ux_capsule_header_set_checksum(st_uxh, 0x100 - csum);
 
 	/* write capsule file */
-	size = g_output_stream_write(ostream, st_cap->data, st_cap->len, NULL, error);
+	size = g_output_stream_write(ostream, st_cap->buf->data, st_cap->buf->len, NULL, error);
 	if (size < 0)
 		return FALSE;
-	size = g_output_stream_write(ostream, st_uxh->data, st_uxh->len, NULL, error);
+	size = g_output_stream_write(ostream, st_uxh->buf->data, st_uxh->buf->len, NULL, error);
 	if (size < 0)
 		return FALSE;
 	if (!fu_output_stream_write_bytes(ostream, blob, NULL, error))
@@ -824,13 +800,11 @@ static FuFirmware *
 fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *path = NULL;
 	g_autoptr(FuFirmware) firmware = fu_acpi_uefi_new();
 	g_autoptr(GFile) file = NULL;
 
 	/* if we have a table, parse it and validate it */
-	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename(path, "UEFI", NULL);
+	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "UEFI", NULL);
 	file = g_file_new_for_path(fn);
 	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
@@ -989,6 +963,7 @@ fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec
 {
 	FuDevice *device = FU_DEVICE(object);
 	GPtrArray *devices;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autofree gchar *msg = NULL;
 
 	/* device is not in needs-reboot state */
@@ -1000,9 +975,7 @@ fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec
 		return;
 
 	/* mark every other device for this plugin as non-updatable */
-	msg = g_strdup_printf("Cannot update as %s [%s] needs reboot",
-			      fu_device_get_name(device),
-			      fu_device_get_id(device));
+	msg = g_strdup_printf("Cannot update as %s needs reboot", id_display);
 	devices = fu_plugin_get_devices(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
@@ -1075,7 +1048,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
 	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
-	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -1154,7 +1126,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	g_info("UX capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
 	str = bootloader_supports_fwupd ? "True" : "False";
-	g_info("Bootloader supports fwupd: %s", str);
+	g_info("bootloader supports fwupd: %s", str);
 	fu_plugin_add_report_metadata(plugin, "BootloaderSupportsFwupd", str);
 	fu_progress_step_done(progress);
 

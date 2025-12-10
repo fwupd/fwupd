@@ -12,7 +12,7 @@
 #include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-struct.h"
 
-#define FU_ILITEK_ITS_HID_ACK_BYTE	  0xAC
+#define FU_ILITEK_ITS_HID_ACK_BYTE 0xAC
 
 #define FU_ILITEK_ITS_LOOKUP_TYPE_EDID	    0x1
 #define FU_ILITEK_ITS_LOOKUP_TYPE_SENSOR_ID 0x2
@@ -90,7 +90,7 @@ fu_ilitek_its_device_read_cb(FuDevice *device, gpointer data, GError **error)
 		return FALSE;
 	}
 
-	fu_dump_raw(G_LOG_DOMAIN, "HidReadReport", st_res->data, st_res->len);
+	fu_dump_raw(G_LOG_DOMAIN, "HidReadReport", st_res->buf->data, st_res->buf->len);
 
 	if (helper->rbuf != NULL)
 		g_byte_array_append(helper->rbuf, buf_data, bufsz_data);
@@ -112,8 +112,8 @@ fu_ilitek_its_device_send_cmd(FuIlitekItsDevice *self,
 	};
 
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_cmd->data,
-					  st_cmd->len,
+					  st_cmd->buf->data,
+					  st_cmd->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		g_prefix_error_literal(error, "failed to send HID cmd: ");
@@ -170,8 +170,8 @@ fu_ilitek_its_device_send_long_cmd_then_wake_ack(FuIlitekItsDevice *self,
 	};
 
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_cmd->data,
-					  st_cmd->len,
+					  st_cmd->buf->data,
+					  st_cmd->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		g_prefix_error_literal(error, "failed to send long HID cmd: ");
@@ -196,11 +196,11 @@ fu_ilitek_its_device_recalculate_crc(FuIlitekItsDevice *self,
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 8);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_GET_BLOCK_CRC);
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_RECALCULATE;
-	fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1,
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_RECALCULATE;
+	fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1,
 			   start,
 			   G_LITTLE_ENDIAN);
-	fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 4,
+	fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 4,
 			   end,
 			   G_LITTLE_ENDIAN);
 
@@ -216,7 +216,7 @@ fu_ilitek_its_device_get_block_crc(FuIlitekItsDevice *self, guint16 *crc, GError
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 2);
 	fu_struct_ilitek_its_hid_cmd_set_read_len(st_cmd, 2);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_GET_BLOCK_CRC);
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_GET;
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_GET;
 
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, rbuf, error))
 		return FALSE;
@@ -235,14 +235,14 @@ fu_ilitek_its_device_flash_enable(FuIlitekItsDevice *self,
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, in_ap ? 3 : 9);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_FLASH_ENABLE);
-	fu_memwrite_uint16(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 0,
+	fu_memwrite_uint16(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 0,
 			   FU_ILITEK_ITS_WRITE_ENABLE_KEY,
 			   G_BIG_ENDIAN);
 	if (!in_ap) {
-		fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 2,
+		fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 2,
 				   start,
 				   G_LITTLE_ENDIAN);
-		fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 5,
+		fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 5,
 				   end,
 				   G_LITTLE_ENDIAN);
 	}
@@ -259,8 +259,8 @@ fu_ilitek_its_device_set_ctrl_mode(FuIlitekItsDevice *self,
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 3);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_SET_CTRL_MODE);
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = mode;
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1] = 0x0;
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = mode;
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1] = 0x0;
 
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, NULL, error))
 		return FALSE;
@@ -286,6 +286,7 @@ static gboolean
 fu_ilitek_its_device_get_fwid(FuIlitekItsDevice *self, guint16 *fwid, GError **error)
 {
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsFwid) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	/* check fwid protocol is supported */
@@ -304,7 +305,10 @@ fu_ilitek_its_device_get_fwid(FuIlitekItsDevice *self, guint16 *fwid, GError **e
 		return FALSE;
 
 	/* success */
-	*fwid = fu_struct_ilitek_its_fwid_get_fwid(rbuf);
+	st_resp = fu_struct_ilitek_its_fwid_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	*fwid = fu_struct_ilitek_its_fwid_get_fwid(st_resp);
 	return TRUE;
 }
 
@@ -312,6 +316,7 @@ static gboolean
 fu_ilitek_its_device_get_sensor_id(FuIlitekItsDevice *self, guint8 *sensor_id, GError **error)
 {
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsSensorId) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	/* check sensor-id protocol is supported */
@@ -330,7 +335,10 @@ fu_ilitek_its_device_get_sensor_id(FuIlitekItsDevice *self, guint8 *sensor_id, G
 		return FALSE;
 
 	/* success */
-	*sensor_id = fu_struct_ilitek_its_sensor_id_get_sensor_id(rbuf);
+	st_resp = fu_struct_ilitek_its_sensor_id_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	*sensor_id = fu_struct_ilitek_its_sensor_id_get_sensor_id(st_resp);
 	return TRUE;
 }
 
@@ -413,6 +421,7 @@ fu_ilitek_its_device_ensure_ic_name_old(FuIlitekItsDevice *self, GError **error)
 {
 	g_autofree gchar *name = NULL;
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsMcuVersion) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 1);
@@ -421,7 +430,11 @@ fu_ilitek_its_device_ensure_ic_name_old(FuIlitekItsDevice *self, GError **error)
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, rbuf, error))
 		return FALSE;
 
-	self->ic_name = g_strdup_printf("%04x", fu_struct_ilitek_its_mcu_version_get_ic_name(rbuf));
+	st_resp = fu_struct_ilitek_its_mcu_version_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	self->ic_name =
+	    g_strdup_printf("%04x", fu_struct_ilitek_its_mcu_version_get_ic_name(st_resp));
 	name = g_strdup_printf("Touchscreen ILI%s", self->ic_name);
 	fu_device_set_name(FU_DEVICE(self), name);
 
@@ -434,6 +447,7 @@ fu_ilitek_its_device_ensure_ic_name(FuIlitekItsDevice *self, GError **error)
 {
 	g_autofree gchar *name = NULL;
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsMcuInfo) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	/* check new protocol is supported */
@@ -449,7 +463,10 @@ fu_ilitek_its_device_ensure_ic_name(FuIlitekItsDevice *self, GError **error)
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, rbuf, error))
 		return FALSE;
 
-	self->ic_name = fu_struct_ilitek_its_mcu_info_get_ic_name(rbuf);
+	st_resp = fu_struct_ilitek_its_mcu_info_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	self->ic_name = fu_struct_ilitek_its_mcu_info_get_ic_name(st_resp);
 	name = g_strdup_printf("Touchscreen ILI%s", self->ic_name);
 	fu_device_set_name(FU_DEVICE(self), name);
 
@@ -474,15 +491,15 @@ fu_ilitek_its_device_io_channel_write(const gchar *fn, const gchar *buf, GError 
 }
 
 static FuDevice *
-fu_ilitek_its_device_get_backend_parent(FuDevice *device, GError **error)
+fu_ilitek_its_device_get_backend_parent(FuIlitekItsDevice *self, GError **error)
 {
-	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(device))) {
+	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
 	case FU_HIDRAW_BUS_TYPE_I2C:
-		return fu_device_get_backend_parent_with_subsystem(device, "i2c", error);
+		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
 	case FU_HIDRAW_BUS_TYPE_PCI:
-		return fu_device_get_backend_parent_with_subsystem(device, "pci", error);
+		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
 	case FU_HIDRAW_BUS_TYPE_USB:
-		return fu_device_get_backend_parent_with_subsystem(device, "usb", error);
+		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", error);
 	default:
 		break;
 	}
@@ -491,12 +508,12 @@ fu_ilitek_its_device_get_backend_parent(FuDevice *device, GError **error)
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "unexpected bus type: 0x%x",
-		    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(device)));
+		    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
 	return NULL;
 }
 
 static gboolean
-fu_ilitek_its_device_rebind_driver(FuDevice *device, GError **error)
+fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 {
 	const gchar *hid_id;
 	const gchar *driver;
@@ -507,10 +524,10 @@ fu_ilitek_its_device_rebind_driver(FuDevice *device, GError **error)
 	g_autoptr(FuUdevDevice) parent = NULL;
 
 	/* skip */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
-	parent = FU_UDEV_DEVICE(fu_ilitek_its_device_get_backend_parent(device, error));
+	parent = FU_UDEV_DEVICE(fu_ilitek_its_device_get_backend_parent(self, error));
 	if (parent == NULL)
 		return FALSE;
 
@@ -531,7 +548,7 @@ fu_ilitek_its_device_rebind_driver(FuDevice *device, GError **error)
 	fn_bind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "bind", NULL);
 	fn_unbind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "unbind", NULL);
 
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	if (!fu_ilitek_its_device_io_channel_write(fn_unbind, hid_id, error))
 		return FALSE;
 	if (!fu_ilitek_its_device_io_channel_write(fn_bind, hid_id, error))
@@ -656,7 +673,7 @@ fu_ilitek_its_device_attach(FuDevice *device, FuProgress *progress, GError **err
 		}
 
 		/* rebind driver to update report descriptor */
-		if (!fu_ilitek_its_device_rebind_driver(device, error))
+		if (!fu_ilitek_its_device_rebind_driver(self, error))
 			return FALSE;
 
 		break;
@@ -969,7 +986,7 @@ fu_ilitek_its_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_ilitek_its_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_ilitek_its_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

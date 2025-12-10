@@ -160,21 +160,19 @@ fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 {
 	fwupd_guid_t guid = {0x0};
 	gboolean ret;
-	guint8 timestamp[16] = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuStructEfiCapsuleResultVariableHeader) st =
+	    fu_struct_efi_capsule_result_variable_header_new();
 
-	fu_byte_array_append_uint32(buf, 0x3A, G_LITTLE_ENDIAN); /* VariableTotalSize */
-	fu_byte_array_append_uint32(buf, 0xFF, G_LITTLE_ENDIAN); /* Reserved */
+	fu_struct_efi_capsule_result_variable_header_set_total_size(
+	    st,
+	    FU_STRUCT_EFI_CAPSULE_RESULT_VARIABLE_HEADER_SIZE);
 	ret = fwupd_guid_from_string(guidstr, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_byte_array_append(buf, guid, sizeof(guid));		/* CapsuleGuid */
-	g_byte_array_append(buf, timestamp, sizeof(timestamp)); /* CapsuleProcessed */
-	fu_byte_array_append_uint32(buf,
-				    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT,
-				    G_LITTLE_ENDIAN); /* Status */
-	return g_bytes_new(buf->data, buf->len);
+	fu_struct_efi_capsule_result_variable_header_set_guid(st, &guid);
+	fu_struct_efi_capsule_result_variable_header_set_status(st, FU_EFI_STATUS_ACCESS_DENIED);
+	return fu_struct_efi_capsule_result_variable_header_to_bytes(st);
 }
 
 static void
@@ -254,13 +252,13 @@ fu_uefi_cod_device_func(void)
 	/* debug */
 	str = fu_device_to_string(dev);
 	g_debug("%s", str);
-	g_assert_cmpint(fu_device_get_update_state(dev), ==, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+	g_assert_cmpint(fu_device_get_update_state(dev), ==, FWUPD_UPDATE_STATE_FAILED);
 	g_assert_cmpstr(fu_device_get_update_error(dev),
 			==,
-			"failed to update to 0: error-pwr-evt-batt");
+			"failed to update to 0: error-auth-error");
 	g_assert_cmpint(fu_uefi_capsule_device_get_status(FU_UEFI_CAPSULE_DEVICE(dev)),
 			==,
-			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT);
+			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_AUTH_ERROR);
 }
 
 #ifndef EFI_OS_DIR
@@ -352,7 +350,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev1), ==, 65586);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_lowest(dev1), ==, 65582);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_error(dev1), ==, 18472960);
-	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev1), ==, 0xfe);
+	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev1) & 0xFF, ==, 0xFE);
 	g_assert_cmpint(fu_uefi_capsule_device_get_status(dev1),
 			==,
 			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_UNSUCCESSFUL);
@@ -369,7 +367,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev2), ==, 3090287969);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_lowest(dev2), ==, 1);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_error(dev2), ==, 0);
-	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev2), ==, 32784);
+	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev2) & 0xFF, ==, 0x10);
 	g_assert_cmpint(fu_uefi_capsule_device_get_status(dev2),
 			==,
 			FU_UEFI_CAPSULE_DEVICE_STATUS_SUCCESS);
@@ -464,7 +462,6 @@ fu_uefi_plugin_no_flashes_func(void)
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
-	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(GError) error = NULL;
 
 	/* override ESP */
@@ -537,7 +534,6 @@ fu_uefi_plugin_nvram_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -705,7 +701,6 @@ fu_uefi_plugin_cod_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -818,12 +813,10 @@ fu_uefi_plugin_grub_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
-	g_autoptr(GByteArray) buf_last = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __x86_64__

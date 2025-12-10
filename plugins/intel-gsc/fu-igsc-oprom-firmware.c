@@ -135,6 +135,7 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 				    "CPD was not FuIfwiCpdFirmware");
 		return FALSE;
 	}
+	self->major_version = fu_firmware_get_version_raw(fw_cpd) >> 48;
 
 	/* parse all the manifest extensions */
 	man_img = fu_firmware_get_image_by_id(fw_cpd, "OROM.man", error);
@@ -154,7 +155,6 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 static void
 fu_igsc_oprom_firmware_init(FuIgscOpromFirmware *self)
 {
-	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_IS_LAST_IMAGE);
 	self->device_infos =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_igsc_fwdata_device_info4_unref);
 }

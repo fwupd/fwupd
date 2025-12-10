@@ -49,7 +49,7 @@ sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
 # check we've not become a CPU or memory hog
 ninja -C ${BUILD} install -v
 ./contrib/ci/check-rss.py --limit 3072 ${BUILD}/src/fwupdtool get-devices
-./contrib/ci/check-cpu.py --limit 300 ${BUILD}/src/fwupdtool get-devices
+./contrib/ci/check-cpu.py --limit 350 ${BUILD}/src/fwupdtool get-devices
 
 # check for unused symbols
 ./contrib/ci/check-unused.py

@@ -42,7 +42,7 @@ G_DEFINE_TYPE(FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 static gboolean
 fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) st_id = fu_struct_ccgx_dmc_dock_identity_new();
+	g_autoptr(FuStructCcgxDmcDockIdentity) st_id = fu_struct_ccgx_dmc_dock_identity_new();
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -50,8 +50,8 @@ fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 					    FU_CCGX_DMC_RQT_CODE_DOCK_IDENTITY, /* request */
 					    0,					/* value */
 					    0,					/* index */
-					    st_id->data,
-					    st_id->len,
+					    st_id->buf->data,
+					    st_id->buf->len,
 					    NULL, /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
@@ -70,10 +70,10 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 	gsize bufsz;
 	gsize offset = FU_STRUCT_CCGX_DMC_DOCK_STATUS_SIZE;
 	g_autofree guint8 *buf = NULL;
-	g_autoptr(GByteArray) st = fu_struct_ccgx_dmc_dock_status_new();
+	g_autoptr(FuStructCcgxDmcDockStatus) st = fu_struct_ccgx_dmc_dock_status_new();
 
 	/* read minimum status length */
-	fu_byte_array_set_size(st, 32, 0x0);
+	fu_byte_array_set_size(st->buf, 32, 0x0);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -81,8 +81,8 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 					    FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
 					    0,				      /* value */
 					    0,				      /* index */
-					    st->data,
-					    st->len,
+					    st->buf->data,
+					    st->buf->len,
 					    NULL, /* actual length */
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
@@ -97,7 +97,14 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 	buf = g_malloc0(bufsz);
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		/* copying the old buffer preserves compatibility with old emulation files */
-		if (!fu_memcpy_safe(buf, bufsz, 0x0, st->data, st->len, 0x0, st->len, error))
+		if (!fu_memcpy_safe(buf,
+				    bufsz,
+				    0x0,
+				    st->buf->data,
+				    st->buf->len,
+				    0x0,
+				    st->buf->len,
+				    error))
 			return FALSE;
 	}
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
@@ -278,7 +285,9 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 }
 
 static gboolean
-fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, GByteArray *intr_rqt, GError **error)
+fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self,
+				 FuStructCcgxDmcIntRqt *intr_rqt,
+				 GError **error)
 {
 	guint8 rqt_opcode;
 	g_autofree gchar *title = NULL;
@@ -287,8 +296,8 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, GByteArray *intr_rqt, GE
 
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      self->ep_intr_in,
-					      intr_rqt->data,
-					      intr_rqt->len,
+					      intr_rqt->buf->data,
+					      intr_rqt->buf->len,
 					      NULL,
 					      DMC_GET_REQUEST_TIMEOUT,
 					      NULL,
@@ -380,16 +389,16 @@ fu_ccgx_dmc_device_get_image_write_status_cb(FuDevice *device, gpointer user_dat
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	const guint8 *req_data;
 	guint8 req_opcode;
-	g_autoptr(GByteArray) dmc_int_req = fu_struct_ccgx_dmc_int_rqt_new();
+	g_autoptr(FuStructCcgxDmcIntRqt) st_rqt = fu_struct_ccgx_dmc_int_rqt_new();
 
 	/* get interrupt request */
-	if (!fu_ccgx_dmc_device_read_intr_req(self, dmc_int_req, error)) {
+	if (!fu_ccgx_dmc_device_read_intr_req(self, st_rqt, error)) {
 		g_prefix_error_literal(error, "failed to read intr req in image write status: ");
 		return FALSE;
 	}
 
 	/* check opcode for fw write */
-	req_opcode = fu_struct_ccgx_dmc_int_rqt_get_opcode(dmc_int_req);
+	req_opcode = fu_struct_ccgx_dmc_int_rqt_get_opcode(st_rqt);
 	if (req_opcode != FU_CCGX_DMC_INT_OPCODE_IMG_WRITE_STATUS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -401,7 +410,7 @@ fu_ccgx_dmc_device_get_image_write_status_cb(FuDevice *device, gpointer user_dat
 	}
 
 	/* retry if data[0] is 1 otherwise error */
-	req_data = fu_struct_ccgx_dmc_int_rqt_get_data(dmc_int_req, NULL);
+	req_data = fu_struct_ccgx_dmc_int_rqt_get_data(st_rqt, NULL);
 	if (req_data[0] != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -471,14 +480,13 @@ fu_ccgx_dmc_device_write_firmware_record(FuCcgxDmcDevice *self,
 }
 
 static gboolean
-fu_ccgx_dmc_device_write_firmware_image(FuDevice *device,
+fu_ccgx_dmc_device_write_firmware_image(FuCcgxDmcDevice *self,
 					FuCcgxDmcFirmwareRecord *img_rcd,
 					gsize *fw_data_written,
 					const gsize fw_data_size,
 					FuProgress *progress,
 					GError **error)
 {
-	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	GPtrArray *seg_records;
 
 	g_return_val_if_fail(img_rcd != NULL, FALSE);
@@ -520,7 +528,7 @@ fu_ccgx_dmc_device_write_firmware(FuDevice *device,
 	gsize fw_data_written = 0;
 	guint8 img_index = 0;
 	guint8 rqt_opcode;
-	g_autoptr(GByteArray) dmc_int_rqt = fu_struct_ccgx_dmc_int_rqt_new();
+	g_autoptr(FuStructCcgxDmcIntRqt) st_rqt = fu_struct_ccgx_dmc_int_rqt_new();
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -563,12 +571,12 @@ fu_ccgx_dmc_device_write_firmware(FuDevice *device,
 	fw_data_size = fu_ccgx_dmc_firmware_get_fw_data_size(FU_CCGX_DMC_FIRMWARE(firmware));
 	while (1) {
 		/* get interrupt request */
-		if (!fu_ccgx_dmc_device_read_intr_req(self, dmc_int_rqt, error))
+		if (!fu_ccgx_dmc_device_read_intr_req(self, st_rqt, error))
 			return FALSE;
-		rqt_data = fu_struct_ccgx_dmc_int_rqt_get_data(dmc_int_rqt, NULL);
+		rqt_data = fu_struct_ccgx_dmc_int_rqt_get_data(st_rqt, NULL);
 
 		/* fw upgrade request */
-		rqt_opcode = fu_struct_ccgx_dmc_int_rqt_get_opcode(dmc_int_rqt);
+		rqt_opcode = fu_struct_ccgx_dmc_int_rqt_get_opcode(st_rqt);
 		if (rqt_opcode != FU_CCGX_DMC_INT_OPCODE_FW_UPGRADE_RQT)
 			break;
 		img_index = rqt_data[0];
@@ -585,7 +593,7 @@ fu_ccgx_dmc_device_write_firmware(FuDevice *device,
 		/* write image */
 		g_debug("writing image index %u/%u", img_index, image_records->len - 1);
 		img_rcd = g_ptr_array_index(image_records, img_index);
-		if (!fu_ccgx_dmc_device_write_firmware_image(device,
+		if (!fu_ccgx_dmc_device_write_firmware_image(self,
 							     img_rcd,
 							     &fw_data_written,
 							     fw_data_size,
@@ -800,7 +808,7 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_ccgx_dmc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_ccgx_dmc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE); /* actually 0, 20, 0, 80! */
@@ -826,6 +834,7 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx.dmc");
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx.dmc");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);

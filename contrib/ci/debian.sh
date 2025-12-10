@@ -49,7 +49,7 @@ debuild --no-lintian --preserve-envvar CI --preserve-envvar CC \
 lintian ../*changes \
     -IE \
     --pedantic \
-    --no-tag-display-limit \
+    --tag-display-limit 0 \
     --suppress-tags missing-build-dependency-for-dh-addon \
     --suppress-tags library-not-linked-against-libc \
     --suppress-tags bad-distribution-in-changes-file \

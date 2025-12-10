@@ -52,6 +52,8 @@ gchar *
 fu_release_to_string(FuRelease *self) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_release_get_device(FuRelease *self) G_GNUC_NON_NULL(1);
+FwupdRemote *
+fu_release_get_remote(FuRelease *self) G_GNUC_NON_NULL(1);
 GInputStream *
 fu_release_get_stream(FuRelease *self) G_GNUC_NON_NULL(1);
 void

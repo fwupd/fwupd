@@ -9,6 +9,7 @@
 
 #include "fu-nordic-hid-archive.h"
 #include "fu-nordic-hid-cfg-channel.h"
+#include "fu-nordic-hid-struct.h"
 
 #define HID_REPORT_ID	     6
 #define REPORT_SIZE	     30
@@ -516,7 +517,7 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 		return TRUE;
 	}
 
-	/* Peers available */
+	/* peers available */
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
 		g_prefix_error_literal(error, "INDEX_PEERS cmd_receive failed: ");
 		return FALSE;
@@ -786,7 +787,7 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 		if (self->bl_name != NULL) {
 			g_autofree gchar *tmp = g_strndup((const gchar *)res->data, res->data_len);
 
-			g_debug("Bootloader readout '%s' overrides bootloader from quirk '%s'",
+			g_debug("bootloader readout '%s' overrides bootloader from quirk '%s'",
 				tmp,
 				self->bl_name);
 			g_free(self->bl_name);
@@ -1018,10 +1019,9 @@ fu_nordic_hid_cfg_channel_get_modinfo(FuNordicHidCfgChannel *self, GError **erro
 static gboolean
 fu_nordic_hid_cfg_channel_dfu_fwinfo(FuNordicHidCfgChannel *self, GError **error)
 {
-	guint16 ver_rev;
-	guint32 ver_build_nr;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
+	g_autoptr(FuStructNordicHidDfuFwinfo) st = NULL;
 
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						"dfu",
@@ -1035,34 +1035,29 @@ fu_nordic_hid_cfg_channel_dfu_fwinfo(FuNordicHidCfgChannel *self, GError **error
 		return FALSE;
 
 	/* parsing fwinfo answer */
+	st = fu_struct_nordic_hid_dfu_fwinfo_parse(res->data, REPORT_SIZE, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	self->flashed_image_len = fu_struct_nordic_hid_dfu_fwinfo_get_flashed_image_len(st);
+
 	/* TODO: add banks amount into quirk */
-	if (res->data[0] > 1) {
+	if (fu_struct_nordic_hid_dfu_fwinfo_get_flash_area_id(st) > 1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "invalid flash area returned by device");
 		return FALSE;
 	}
-	/* set the target flash ID area */
-	self->flash_area_id = res->data[0] ^ 1;
 
-	if (!fu_memread_uint32_safe(res->data,
-				    REPORT_SIZE,
-				    0x01,
-				    &self->flashed_image_len,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(res->data, REPORT_SIZE, 0x07, &ver_rev, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(res->data,
-				    REPORT_SIZE,
-				    0x09,
-				    &ver_build_nr,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	version = g_strdup_printf("%u.%u.%u.%u", res->data[4], res->data[5], ver_rev, ver_build_nr);
+	/* set the target flash ID area */
+	self->flash_area_id = fu_struct_nordic_hid_dfu_fwinfo_get_flash_area_id(st) ^ 1;
+
+	/* build the version */
+	version = g_strdup_printf("%u.%u.%u.%u",
+				  fu_struct_nordic_hid_dfu_fwinfo_get_ver_major(st),
+				  fu_struct_nordic_hid_dfu_fwinfo_get_ver_minor(st),
+				  fu_struct_nordic_hid_dfu_fwinfo_get_ver_rev(st),
+				  fu_struct_nordic_hid_dfu_fwinfo_get_ver_build_nr(st));
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* success */
@@ -1402,7 +1397,7 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_nordic_hid_cfg_channel_set_progress(FuDevice *self, FuProgress *progress)
+fu_nordic_hid_cfg_channel_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

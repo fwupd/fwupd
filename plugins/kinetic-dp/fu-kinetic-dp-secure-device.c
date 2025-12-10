@@ -137,7 +137,7 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd_cb(FuDevice *device,
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_INVALID_DATA,
-						    "chunk data CRC failed: ");
+						    "chunk data CRC failed");
 				return FALSE;
 			}
 			g_set_error(error,
@@ -516,7 +516,7 @@ fu_kinetic_dp_secure_device_execute_isp_drv(FuKineticDpSecureDevice *self, GErro
 	guint8 status;
 	guint8 read_len;
 	guint8 reply_data[6] = {0};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
 	/* in Jaguar, it takes about FU_KINETIC_DP_DEVICE_TIMEOUT ms to boot up and initialize */
 	self->flash_id = 0;
@@ -598,7 +598,7 @@ fu_kinetic_dp_secure_device_send_isp_drv(FuKineticDpSecureDevice *self,
 		return FALSE;
 	}
 
-	g_debug("sending ISP driver payload...");
+	g_debug("sending ISP driver payload…");
 	if (!fu_kinetic_dp_secure_device_execute_isp_drv(self, error)) {
 		g_prefix_error_literal(error, "ISP driver booting up failed: ");
 		return FALSE;
@@ -844,7 +844,7 @@ fu_kinetic_dp_secure_device_install_fw_images(FuKineticDpSecureDevice *self, GEr
 				  INSTALL_IMAGE_POLL_INTERVAL_MS,
 				  NULL,
 				  error)) {
-		g_prefix_error_literal(error, "timeout waiting for install to be processed ");
+		g_prefix_error_literal(error, "timeout waiting for install to be processed: ");
 		return FALSE;
 	}
 
@@ -1005,7 +1005,7 @@ fu_kinetic_dp_secure_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_kinetic_dp_secure_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_kinetic_dp_secure_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

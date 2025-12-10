@@ -41,23 +41,26 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTargetAvr, fu_dfu_target_avr, FU_TYPE_DFU_TARGET
 
 /* Atmel AVR32 version of DFU:
  * http://www.atmel.com/images/doc32131.pdf */
-#define DFU_AVR32_GROUP_SELECT		    0x06 /** SELECT */
-#define DFU_AVR32_CMD_SELECT_MEMORY	    0x03
 
-#define DFU_AVR32_MEMORY_UNIT		    0x00
-#define DFU_AVR32_MEMORY_PAGE		    0x01
+/* SELECT */
+#define DFU_AVR32_CMD_SELECT_MEMORY 0x03
 
-#define DFU_AVR32_GROUP_DOWNLOAD	    0x01 /** DOWNLOAD */
-#define DFU_AVR32_CMD_PROGRAM_START	    0x00
-#define DFU_AVR32_GROUP_UPLOAD		    0x03 /** UPLOAD */
-#define DFU_AVR32_CMD_READ_MEMORY	    0x00
-#define DFU_AVR32_CMD_BLANK_CHECK	    0x01
-#define DFU_AVR32_GROUP_EXEC		    0x04 /** EXEC */
-#define DFU_AVR32_CMD_ERASE		    0x00
-#define DFU_AVR32_ERASE_EVERYTHING	    0xff
-#define DFU_AVR32_CMD_START_APPLI	    0x03
-#define DFU_AVR32_START_APPLI_RESET	    0x00
-#define DFU_AVR32_START_APPLI_NO_RESET	    0x01
+#define DFU_AVR32_MEMORY_UNIT 0x00
+#define DFU_AVR32_MEMORY_PAGE 0x01
+
+/* DOWNLOAD */
+#define DFU_AVR32_CMD_PROGRAM_START 0x00
+
+/* UPLOAD */
+#define DFU_AVR32_CMD_READ_MEMORY 0x00
+#define DFU_AVR32_CMD_BLANK_CHECK 0x01
+
+/* EXEC */
+#define DFU_AVR32_CMD_ERASE	       0x00
+#define DFU_AVR32_ERASE_EVERYTHING     0xff
+#define DFU_AVR32_CMD_START_APPLI      0x03
+#define DFU_AVR32_START_APPLI_RESET    0x00
+#define DFU_AVR32_START_APPLI_NO_RESET 0x01
 
 #define ATMEL_64KB_PAGE		       0x10000
 #define ATMEL_MAX_TRANSFER_SIZE	       0x0400
@@ -73,7 +76,7 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_EXEC);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_EXEC);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_ERASE);
 	fu_byte_array_append_uint8(buf, 0xFF);
 	if (!fu_dfu_target_download_chunk(target, 0, buf, 5000, progress, error)) {
@@ -96,7 +99,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-zero");
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_EXEC);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_EXEC);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_START_APPLI);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_START_APPLI_RESET);
 	if (!fu_dfu_target_download_chunk(target,
@@ -154,17 +157,20 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 				     FuProgress *progress,
 				     GError **error)
 {
+	FuDevice *proxy;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* check legacy protocol quirk */
-	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		g_debug("ignoring select memory unit as legacy protocol");
 		return TRUE;
 	}
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_SELECT);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_SELECT);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_SELECT_MEMORY);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_MEMORY_UNIT);
 	fu_byte_array_append_uint8(buf, memory_unit);
@@ -237,7 +243,7 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_SELECT);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_SELECT);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_SELECT_MEMORY);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_MEMORY_PAGE);
 	fu_byte_array_append_uint16(buf, memory_page, G_BIG_ENDIAN);
@@ -270,7 +276,7 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_UPLOAD);
+	fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_UPLOAD);
 	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_READ_MEMORY);
 	fu_byte_array_append_uint16(buf, addr_start, G_BIG_ENDIAN);
 	fu_byte_array_append_uint16(buf, addr_end, G_BIG_ENDIAN);
@@ -460,6 +466,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 {
 	FuDfuDevice *device;
 	FuDfuTargetAvr *self = FU_DFU_TARGET_AVR(target);
+	FuDevice *proxy;
 	FuDfuTargetAvrPrivate *priv = GET_PRIVATE(self);
 	const gchar *chip_id;
 	const guint8 *buf;
@@ -473,8 +480,10 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 		return TRUE;
 
 	/* different methods for AVR vs. AVR32 */
-	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		chunk_sig = fu_dfu_target_avr_get_chip_signature(target, progress, error);
 		if (chunk_sig == NULL)
 			return FALSE;
@@ -511,16 +520,14 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	}
 
 	/* set the alt-name using the chip ID via a quirk */
-	device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
+	device = FU_DFU_DEVICE(proxy);
 	fu_device_add_instance_str(FU_DEVICE(device), "CID", chip_id_guid);
 	if (!fu_device_build_instance_id(FU_DEVICE(device), error, "DFU_AVR", "CID", NULL))
 		return FALSE;
 	chip_id = fu_dfu_device_get_chip_id(device);
 	if (chip_id == NULL) {
-		fu_device_remove_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-					      FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
-		fu_device_remove_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-					      FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+		fu_device_remove_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+		fu_device_remove_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -541,6 +548,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 					  FuProgress *progress,
 					  GError **error)
 {
+	FuDevice *proxy;
 	const guint8 footer[] = {0x00,
 				 0x00,
 				 0x00,
@@ -558,6 +566,10 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 				 0xff,
 				 0xff}; /* release */
 
+	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
+	if (proxy == NULL)
+		return FALSE;
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
@@ -569,8 +581,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		/* select page if required */
 		if (fu_chunk_get_page(chk) != *page_last) {
 			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
-			if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-						       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
+			if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page(target,
 									  fu_chunk_get_page(chk),
 									  progress_tmp,
@@ -587,7 +598,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		}
 
 		/* create chunk with header and footer */
-		fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_DOWNLOAD);
+		fu_byte_array_append_uint8(buf, FU_DFU_AVR32_GROUP_DOWNLOAD);
 		fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_PROGRAM_START);
 		fu_byte_array_append_uint16(buf, fu_chunk_get_address(chk), G_BIG_ENDIAN);
 		fu_byte_array_append_uint16(buf,
@@ -625,6 +636,7 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
+	FuDevice *proxy;
 	FuDfuSector *sector;
 	const guint8 *data;
 	gsize header_sz = ATMEL_AVR32_CONTROL_BLOCK_SIZE;
@@ -678,10 +690,11 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 	}
 
 	/* the original AVR protocol uses a half-size control block */
-	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL))
 		header_sz = ATMEL_AVR_CONTROL_BLOCK_SIZE;
-	}
 
 	/* chunk up the memory space into pages */
 	data = g_bytes_get_data(blob, NULL);
@@ -751,6 +764,7 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 					FuProgress *progress,
 					GError **error)
 {
+	FuDevice *proxy;
 	guint16 page_last = G_MAXUINT16;
 	guint chunk_valid = G_MAXUINT;
 	g_autoptr(FuChunk) chk2 = NULL;
@@ -763,6 +777,9 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 	fu_progress_set_steps(progress, chunks->len);
 
 	/* process each chunk */
+	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
+	if (proxy == NULL)
+		return NULL;
 	blobs = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	for (guint i = 0; i < chunks->len; i++) {
 		GBytes *blob_tmp = NULL;
@@ -771,8 +788,7 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 		/* select page if required */
 		if (fu_chunk_get_page(chk) != page_last) {
 			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
-			if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
-						       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
+			if (fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page(target,
 									  fu_chunk_get_page(chk),
 									  progress_tmp,

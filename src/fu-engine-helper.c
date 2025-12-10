@@ -13,6 +13,7 @@
 
 #include <glib/gi18n.h>
 
+#include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
@@ -25,6 +26,7 @@ fu_engine_add_firmware_gtypes(FuEngine *self)
 	FuContext *ctx = fu_engine_get_context(self);
 	fu_context_add_firmware_gtype(ctx, "raw", FU_TYPE_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "cab", FU_TYPE_CAB_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "cabinet", FU_TYPE_CABINET);
 	fu_context_add_firmware_gtype(ctx, "dfu", FU_TYPE_DFU_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "fdt", FU_TYPE_FDT_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "csv", FU_TYPE_CSV_FIRMWARE);
@@ -58,6 +60,7 @@ fu_engine_add_firmware_gtypes(FuEngine *self)
 	fu_context_add_firmware_gtype(ctx,
 				      "efi-vss2-variable-store",
 				      FU_TYPE_EFI_VSS2_VARIABLE_STORE);
+	fu_context_add_firmware_gtype(ctx, "json", FU_TYPE_JSON_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "cfu-offer", FU_TYPE_CFU_OFFER);
@@ -109,6 +112,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 	const gchar *host_bkc = fu_engine_get_host_bkc(self);
 	guint upgrade_count = 0;
 	guint sync_count = 0;
+	guint reboot_count = 0;
 	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -127,6 +131,19 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			FwupdDevice *dev = g_ptr_array_index(devices, i);
 			g_autoptr(GPtrArray) rels = NULL;
 
+			/* check if device needs reboot to complete update */
+			if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+				reboot_count++;
+				continue;
+			}
+
+			/* skip devices with failed updates */
+			if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED ||
+			    fwupd_device_get_update_state(dev) ==
+				FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+				continue;
+			}
+
 			/* get the releases for this device */
 			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 				continue;
@@ -140,6 +157,15 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			for (guint i = 0; i < devices->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices, i);
 				g_autoptr(FwupdRelease) rel = NULL;
+
+				/* skip devices with failed updates */
+				if (fwupd_device_get_update_state(dev) ==
+					FWUPD_UPDATE_STATE_FAILED ||
+				    fwupd_device_get_update_state(dev) ==
+					FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+					continue;
+				}
+
 				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 					continue;
 				rel = fu_engine_get_release_with_tag(self,
@@ -156,21 +182,33 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		}
 	}
 
-	/* If running under systemd unit, use the directory as a base */
+	/* if running under systemd unit, use the directory as a base */
 	if (g_getenv("RUNTIME_DIRECTORY") != NULL) {
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
 	} else {
-		g_autofree gchar *directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-		target = g_build_filename(directory, MOTD_DIR, MOTD_FILE, NULL);
+		target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, MOTD_DIR, MOTD_FILE, NULL);
 	}
 
 	/* create the directory and file, even if zero devices; we want an empty file then */
 	if (!fu_path_mkdir_parent(target, error))
 		return FALSE;
 
-	/* nag about syncing or updating, but never both */
-	if (sync_count > 0) {
+	/* nag about reboot first, then syncing or updating, but never both */
+	if (reboot_count > 0) {
+		g_string_append(str, "\n");
+		g_string_append_printf(str,
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       ngettext("%u device has been updated and needs a reboot.",
+						"%u devices have been updated and need a reboot.",
+						reboot_count),
+				       reboot_count);
+		g_string_append(str, "\n");
+		g_string_append_printf(str,
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       _("Reboot to complete the update."));
+		g_string_append(str, "\n\n");
+	} else if (sync_count > 0) {
 		g_string_append(str, "\n");
 		g_string_append_printf(str,
 				       /* TRANSLATORS: this is shown in the MOTD */
@@ -217,7 +255,6 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 	g_autoptr(JsonNode) root = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autofree gchar *data = NULL;
-	g_autofree gchar *directory = NULL;
 	g_autofree gchar *target = NULL;
 
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
@@ -243,8 +280,7 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 		return FALSE;
 	}
 
-	directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	target = g_build_filename(directory, "devices.json", NULL);
+	target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
 	return g_file_set_contents(target, data, (gssize)len, error);
 }
 
@@ -258,7 +294,6 @@ fu_engine_integrity_add_measurement(GHashTable *self, const gchar *id, GBytes *b
 static void
 fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 {
-	g_autofree gchar *path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	const gchar *tables[] = {
 	    "SLIC",
 	    "MSDM",
@@ -266,7 +301,7 @@ fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(tables); i++) {
-		g_autofree gchar *fn = g_build_filename(path, tables[i], NULL);
+		g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, tables[i], NULL);
 		g_autoptr(GBytes) blob = NULL;
 
 		blob = fu_bytes_get_contents(fn, NULL);
@@ -312,7 +347,7 @@ fu_engine_integrity_measure_uefi(FuContext *ctx, GHashTable *self)
 		}
 	}
 
-	/* Boot#### */
+	/* UEFI Boot#### */
 	for (guint i = 0; i < 0xFF; i++) {
 		g_autoptr(GBytes) blob = fu_efivars_get_boot_data(efivars, i, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0) {

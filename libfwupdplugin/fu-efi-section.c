@@ -69,8 +69,7 @@ fu_efi_section_parse_volume_image(FuEfiSection *self,
 				      error)) {
 		return FALSE;
 	}
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
-	return TRUE;
+	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 }
 
 static gboolean
@@ -161,20 +160,24 @@ fu_efi_section_parse_compression_sections(FuEfiSection *self,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSectionCompression) st = NULL;
 	st = fu_struct_efi_section_compression_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	if (fu_struct_efi_section_compression_get_compression_type(st) ==
 	    FU_EFI_COMPRESSION_TYPE_NOT_COMPRESSED) {
-		if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream, st->len, flags, error)) {
+		if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream, st->buf->len, flags, error)) {
 			g_prefix_error_literal(error, "failed to parse sections: ");
 			return FALSE;
 		}
 	} else {
 		g_autoptr(FuFirmware) lz77_decompressor = fu_efi_lz77_decompressor_new();
 		g_autoptr(GInputStream) lz77_stream = NULL;
-		if (!fu_firmware_parse_stream(lz77_decompressor, stream, st->len, flags, error))
+		if (!fu_firmware_parse_stream(lz77_decompressor,
+					      stream,
+					      st->buf->len,
+					      flags,
+					      error))
 			return FALSE;
 		lz77_stream = fu_firmware_get_stream(lz77_decompressor, error);
 		if (lz77_stream == NULL)
@@ -225,7 +228,7 @@ fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
 {
 	const gchar *guid_ui;
 	g_autofree gchar *guid_str = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSectionFreeformSubtypeGuid) st = NULL;
 
 	st = fu_struct_efi_section_freeform_subtype_guid_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -253,8 +256,9 @@ fu_efi_section_parse(FuFirmware *firmware,
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	gsize offset = 0;
 	gsize streamsz = 0;
+	gsize stlen = 0;
 	guint32 size;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSection) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
@@ -264,13 +268,17 @@ fu_efi_section_parse(FuFirmware *firmware,
 
 	/* use extended size */
 	if (fu_struct_efi_section_get_size(st) == 0xFFFFFF) {
-		fu_struct_efi_section_unref(st);
-		st = fu_struct_efi_section2_parse_stream(stream, offset, error);
-		if (st == NULL)
+		g_autoptr(FuStructEfiSection2) st2 = NULL;
+		st2 = fu_struct_efi_section2_parse_stream(stream, offset, error);
+		if (st2 == NULL)
 			return FALSE;
-		size = fu_struct_efi_section2_get_extended_size(st);
+		priv->type = fu_struct_efi_section2_get_type(st2);
+		size = fu_struct_efi_section2_get_extended_size(st2);
+		stlen = st2->buf->len;
 	} else {
+		priv->type = fu_struct_efi_section_get_type(st);
 		size = fu_struct_efi_section_get_size(st);
+		stlen = st->buf->len;
 	}
 	if (size < FU_STRUCT_EFI_SECTION_SIZE) {
 		g_set_error(error,
@@ -295,17 +303,16 @@ fu_efi_section_parse(FuFirmware *firmware,
 	}
 
 	/* name */
-	priv->type = fu_struct_efi_section_get_type(st);
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		g_autofree gchar *guid_str = NULL;
-		g_autoptr(GByteArray) st_def = NULL;
-		st_def = fu_struct_efi_section_guid_defined_parse_stream(stream, st->len, error);
+		g_autoptr(FuStructEfiSectionGuidDefined) st_def = NULL;
+		st_def = fu_struct_efi_section_guid_defined_parse_stream(stream, stlen, error);
 		if (st_def == NULL)
 			return FALSE;
 		guid_str = fwupd_guid_to_string(fu_struct_efi_section_guid_defined_get_name(st_def),
 						FWUPD_GUID_FLAG_MIXED_ENDIAN);
 		fu_firmware_set_id(firmware, guid_str);
-		if (fu_struct_efi_section_guid_defined_get_offset(st_def) < st_def->len) {
+		if (fu_struct_efi_section_guid_defined_get_offset(st_def) < st_def->buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -313,11 +320,11 @@ fu_efi_section_parse(FuFirmware *firmware,
 				    (guint)fu_struct_efi_section_guid_defined_get_offset(st_def));
 			return FALSE;
 		}
-		offset += fu_struct_efi_section_guid_defined_get_offset(st_def) - st->len;
+		offset += fu_struct_efi_section_guid_defined_get_offset(st_def) - stlen;
 	}
 
 	/* create blob */
-	offset += st->len;
+	offset += stlen;
 	partial_stream = fu_partial_input_stream_new(stream, offset, size - offset, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to cut data: ");
@@ -399,7 +406,7 @@ fu_efi_section_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = fu_struct_efi_section_new();
+	g_autoptr(FuStructEfiSection) st = fu_struct_efi_section_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	/* simple blob for now */
@@ -410,22 +417,24 @@ fu_efi_section_write(FuFirmware *firmware, GError **error)
 	/* header */
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		fwupd_guid_t guid = {0x0};
-		g_autoptr(GByteArray) st_def = fu_struct_efi_section_guid_defined_new();
+		g_autoptr(FuStructEfiSectionGuidDefined) st_def =
+		    fu_struct_efi_section_guid_defined_new();
 		if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
 					    &guid,
 					    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 					    error))
 			return NULL;
 		fu_struct_efi_section_guid_defined_set_name(st_def, &guid);
-		fu_struct_efi_section_guid_defined_set_offset(st_def, buf->len + st_def->len);
-		g_byte_array_append(buf, st_def->data, st_def->len);
+		fu_struct_efi_section_guid_defined_set_offset(st_def,
+							      st->buf->len + st_def->buf->len);
+		fu_byte_array_append_array(st->buf, st_def->buf);
 	}
-	fu_struct_efi_section_set_type(buf, priv->type);
-	fu_struct_efi_section_set_size(buf, buf->len + g_bytes_get_size(blob));
+	fu_struct_efi_section_set_type(st, priv->type);
+	fu_struct_efi_section_set_size(st, st->buf->len + g_bytes_get_size(blob));
 
 	/* blob */
-	fu_byte_array_append_bytes(buf, blob);
-	return g_steal_pointer(&buf);
+	fu_byte_array_append_bytes(st->buf, blob);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

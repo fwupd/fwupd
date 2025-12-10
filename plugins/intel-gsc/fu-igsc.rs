@@ -67,7 +67,7 @@ struct FuStructIgscFwuIupData {
     vcn: u32le,
 }
 
-#[derive(Getters, Default)]
+#[derive(Getters, Default, New, ToBytes)]
 #[repr(C, packed)]
 struct FuStructIgscFwuHeciImageMetadata {
     version_format: u32le = 0x1,
@@ -91,12 +91,19 @@ enum FuIgscFwuHeciPartitionVersion {
     OpromCode,
 }
 
+#[repr(u32le)]
 enum FuIgscFwuHeciPayloadType {
     Invalid,
     GfxFw,
     OpromData,
     OpromCode,
     Fwdata = 5,
+}
+
+enum FuIgscOpromIdx {
+    Unknown = 0x0,
+    Data    = 0xF0,
+    Code    = 0xF1,
 }
 
 #[repr(u8)]
@@ -293,7 +300,7 @@ struct FuIgscFwuHeciStartReq {
     hdr_flags: FuIgscFwuHeciHdrFlags == None,
     _hdr_reserved: [u8; 2],
     update_img_length: u32le,
-    payload_type: u32le,
+    payload_type: FuIgscFwuHeciPayloadType,
     flags: FuIgscFwuHeciStartFlags,
     _reserved: [u32le; 8],
 }

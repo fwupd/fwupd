@@ -1,6 +1,7 @@
 # fwupd
 
 [![Build Status](https://github.com/fwupd/fwupd/actions/workflows/ci.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/ci.yml)
+[![Translation Status](https://hosted.weblate.org/widget/fwupd/svg-badge.svg)](https://hosted.weblate.org/engage/fwupd/)
 [![CodeQL](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
@@ -20,9 +21,10 @@ Additional information is available [at the website](https://fwupd.org/).
 
 See [Building and Debugging](docs/building.md) for how to build the fwupd development environment.
 
-**NOTE:** In most cases, end users should not compile fwupd from scratch; it's a
-complicated project with dozens of dependencies (and as many configuration options)
-and there's just too many things that can go wrong.
+> [!TIP]
+> In most cases, end users should not compile fwupd from scratch; it's a
+> complicated project with dozens of dependencies (and as many configuration options)
+> and there's just too many things that can go wrong.
 
 Users should just have fwupd installed and updated by their distro, managed and
 tested by the package maintainer.
@@ -41,7 +43,7 @@ distro-provided system version.
 analysis plugin built to analyze GLib code. It can be installed and then run using:
 
     mkdir build-tartan
-    CC=clang-17 meson ../
+    CC=clang-18 meson ../
     SCANBUILD=../contrib/tartan.sh ninja scan-build
 
 ## LVFS

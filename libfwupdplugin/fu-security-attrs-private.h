@@ -18,7 +18,7 @@ typedef enum {
 	FU_SECURITY_ATTRS_FLAG_ADD_VERSION = 1 << 0,
 	/*< private >*/
 	FU_SECURITY_ATTRS_FLAG_LAST
-} FuSecurityAttrsFlags;
+} G_GNUC_FLAG_ENUM FuSecurityAttrsFlags;
 
 #include "fu-security-attrs.h"
 

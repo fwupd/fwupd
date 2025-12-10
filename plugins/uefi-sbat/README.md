@@ -130,10 +130,3 @@ This plugin has been available since fwupd version `2.0.0`.
     $ sudo fwupdtool firmware-build ../plugins/uefi-sbat/revocation.builder.xml revocation.efi
     Decompressing…           [************                           ]
     SBAT level is too old on /boot/efi/EFI/fedora/grubx64.efi: ESP file /boot/efi/EFI/fedora/shimx64.efi has SBAT entry sbat v1, but revocation has v2
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Peter Jones: @vathpela

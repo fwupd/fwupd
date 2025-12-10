@@ -28,7 +28,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	FuSynapticsCapeSnglFirmware *self = FU_SYNAPTICS_CAPE_SNGL_FIRMWARE(firmware);
 	gsize streamsz = 0;
 	guint16 num_fw_file;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructSynapticsCapeSnglHdr) st = NULL;
 	g_autofree gchar *version_str = NULL;
 
 	/* sanity check */
@@ -111,18 +111,18 @@ static GByteArray *
 fu_synaptics_cape_sngl_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsCapeSnglFirmware *self = FU_SYNAPTICS_CAPE_SNGL_FIRMWARE(firmware);
-	g_autoptr(GByteArray) buf = fu_struct_synaptics_cape_sngl_hdr_new();
+	g_autoptr(FuStructSynapticsCapeSnglHdr) st = fu_struct_synaptics_cape_sngl_hdr_new();
 
 	/* pack */
 	fu_struct_synaptics_cape_sngl_hdr_set_vid(
-	    buf,
+	    st,
 	    fu_synaptics_cape_firmware_get_vid(FU_SYNAPTICS_CAPE_FIRMWARE(self)));
 	fu_struct_synaptics_cape_sngl_hdr_set_pid(
-	    buf,
+	    st,
 	    fu_synaptics_cape_firmware_get_pid(FU_SYNAPTICS_CAPE_FIRMWARE(self)));
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

@@ -867,6 +867,26 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='CleanRemote'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Deletes metadata from a remote.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='remote_id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Remote ID, e.g. 'lvfs-testing'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='FixHostSecurityAttr'>
       <doc:doc>
         <doc:description>

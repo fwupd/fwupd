@@ -43,7 +43,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE(firmware);
 	gsize streamsz = 0;
 	guint32 fwver;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructVliPdHdr) st = NULL;
 
 	/* parse */
 	st = fu_struct_vli_pd_hdr_parse_stream(stream, VLI_USBHUB_PD_FLASHMAP_ADDR, error);

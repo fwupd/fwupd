@@ -10,9 +10,10 @@ Additionally, the `1.8.x` branch is supported just for security fixes.
 
 | Version | Supported          | EOL        |
 | ------- | ------------------ | ---------- |
+| 2.1.x   | :heavy_check_mark: | 2029-01-01 |
 | 2.0.x   | :heavy_check_mark: | 2028-01-01 |
-| 1.9.x   | :heavy_check_mark: | 2027-01-01 |
-| 1.8.x   | :white_check_mark: | 2025-01-01 |
+| 1.9.x   | :white_check_mark: | 2027-01-01 |
+| 1.8.x   | :x:                | 2026-01-01 |
 | 1.7.x   | :x:                | 2024-06-01 |
 | 1.6.x   | :x:                | 2024-01-01 |
 | 1.5.x   | :x:                | 2022-01-01 |

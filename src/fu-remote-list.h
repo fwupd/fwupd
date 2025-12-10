@@ -29,7 +29,7 @@ typedef enum {
 	FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI = 1 << 3,
 	/*< private >*/
 	FU_REMOTE_LIST_LOAD_FLAG_LAST
-} FuRemoteListLoadFlags;
+} G_GNUC_FLAG_ENUM FuRemoteListLoadFlags;
 
 FuRemoteList *
 fu_remote_list_new(void);
@@ -48,7 +48,8 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 GPtrArray *
 fu_remote_list_get_all(FuRemoteList *self) G_GNUC_NON_NULL(1);
 FwupdRemote *
-fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id) G_GNUC_NON_NULL(1, 2);
+fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 void
 fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_metadata_format);
 

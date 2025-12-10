@@ -14,7 +14,6 @@ plugin_builtin_bcm57xx = static_library('fu_plugin_bcm57xx',
     'fu-bcm57xx-device.c',
     'fu-bcm57xx-dict-image.c',      # fuzzing
     'fu-bcm57xx-firmware.c',        # fuzzing
-    'fu-bcm57xx-recovery-device.c',
     'fu-bcm57xx-stage1-image.c',    # fuzzing
     'fu-bcm57xx-stage2-image.c',    # fuzzing
   ],
