@@ -20,16 +20,14 @@ plugin_builtin_pxi_tp = static_library('fu_plugin_pxi_tp',
 )
 plugin_builtins += plugin_builtin_pxi_tp
 
-device_tests += files(
-  'tests/pxi-tp.json',
-  'tests/pxi-tp-setup.json',
-)
+enumeration_data += files('tests/pxi-tp-setup.json')
+device_tests += files('tests/pxi-tp.json')
 
 if get_option('tests')
   install_data(
     ['tests/pxi-tp.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
-    install_tag: 'tests',   # ★ add tag for installed-test data
+    install_tag: 'tests',
   )
 
   env = environment()
@@ -50,7 +48,7 @@ if get_option('tests')
     install: true,
     install_rpath: libdir_pkg,
     install_dir: installed_test_bindir,
-    install_tag: 'tests',   # ★ add tag for installed-test binary
+    install_tag: 'tests',
     c_args: [
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
