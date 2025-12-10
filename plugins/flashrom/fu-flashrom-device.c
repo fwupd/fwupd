@@ -196,6 +196,101 @@ fu_flashrom_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_flashrom_device_fmap_regions_match(FuFlashromDevice *self,
+				      const guint8 *buf,
+				      gsize bufsz,
+				      gboolean *matches,
+				      GError **error)
+{
+	g_auto(GStrv) fmap_regions = NULL;
+	g_autoptr(_flashrom_layout) layout_firmware = NULL;
+
+	g_return_val_if_fail(matches != NULL, FALSE);
+
+	*matches = TRUE;
+
+	if (self->layout == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no FMAP layout");
+		return FALSE;
+	}
+	if (flashrom_layout_read_fmap_from_buffer(&layout_firmware, self->flashctx, buf, bufsz)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to parse FMAP layout from firmware image");
+		return FALSE;
+	}
+
+	fmap_regions = g_strsplit(self->fmap_regions, ",", 0);
+	for (guint i = 0; fmap_regions != NULL && fmap_regions[i] != NULL; i++) {
+		unsigned int start_device = 0;
+		unsigned int len_device = 0;
+		unsigned int start_firmware = 0;
+		unsigned int len_firmware = 0;
+		gchar *region = g_strstrip(fmap_regions[i]);
+
+		if (region[0] == '\0') {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "FMAP region name cannot be empty");
+			return FALSE;
+		}
+		if (flashrom_layout_get_region_range(layout_firmware,
+						     region,
+						     &start_firmware,
+						     &len_firmware)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "FMAP region %s missing from firmware image",
+				    region);
+			return FALSE;
+		}
+		if (flashrom_layout_get_region_range(self->layout, region, &start_device, &len_device)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "FMAP region %s missing from device layout",
+				    region);
+			return FALSE;
+		}
+		if (start_firmware != start_device || len_firmware != len_device) {
+			g_debug("FMAP region %s moved, device 0x%x/0x%x vs firmware 0x%x/0x%x",
+				region,
+				start_device,
+				len_device,
+				start_firmware,
+				len_firmware);
+			*matches = FALSE;
+			return TRUE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_flashrom_device_fallback_to_ifd(FuFlashromDevice *self, GError **error)
+{
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "cannot fall back to IFD layout on non-Intel CPU");
+		return FALSE;
+	}
+
+	flashrom_layout_set(self->flashctx, NULL);
+	if (self->layout != NULL) {
+		flashrom_layout_release(self->layout);
+		self->layout = NULL;
+	}
+
+	return fu_flashrom_device_open_ifd(self, error);
+}
+
 #ifdef HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2
 static void
 fu_flashrom_device_progress_cb(enum flashrom_progress_stage stage,
@@ -306,6 +401,16 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 			    (guint)sz,
 			    (guint)fu_device_get_firmware_size_max(device));
 		return FALSE;
+	}
+	if (self->fmap_regions != NULL) {
+		gboolean matches = TRUE;
+		if (!fu_flashrom_device_fmap_regions_match(self, buf, sz, &matches, error))
+			return FALSE;
+		if (!matches) {
+			g_info("FMAP layout does not match firmware, falling back to IFD BIOS region");
+			if (!fu_flashrom_device_fallback_to_ifd(self, error))
+				return FALSE;
+		}
 	}
 #ifdef HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2
 	flashrom_set_progress_callback_v2(self->flashctx, fu_flashrom_device_progress_cb, progress);
