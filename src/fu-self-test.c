@@ -5920,8 +5920,10 @@ fu_security_attr_func(gconstpointer user_data)
 
 	fwupd_security_attr_set_plugin(attr1, "foo");
 	fwupd_security_attr_set_created(attr1, 0);
+	fwupd_security_attr_set_level(attr1, 1);
 	fwupd_security_attr_set_plugin(attr2, "bar");
 	fwupd_security_attr_set_created(attr2, 0);
+	fwupd_security_attr_set_level(attr2, 2);
 	fu_security_attrs_append(attrs1, attr1);
 	fu_security_attrs_append(attrs1, attr2);
 
@@ -5933,14 +5935,14 @@ fu_security_attr_func(gconstpointer user_data)
 			"  \"SecurityAttributes\" : [\n"
 			"    {\n"
 			"      \"AppstreamId\" : \"org.fwupd.hsi.foo\",\n"
-			"      \"HsiLevel\" : 0,\n"
+			"      \"HsiLevel\" : 1,\n"
 			"      \"Plugin\" : \"foo\",\n"
 			"      \"Uri\" : "
 			"\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.foo\"\n"
 			"    },\n"
 			"    {\n"
 			"      \"AppstreamId\" : \"org.fwupd.hsi.bar\",\n"
-			"      \"HsiLevel\" : 0,\n"
+			"      \"HsiLevel\" : 2,\n"
 			"      \"Plugin\" : \"bar\",\n"
 			"      \"Uri\" : "
 			"\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.bar\"\n"
