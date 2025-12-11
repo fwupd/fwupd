@@ -76,6 +76,7 @@ static guint quarks[QUARK_LAST] = {0};
 
 #define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
 #define FU_USB_DEVICE_OPEN_DELAY	50  /* ms */
+#define FU_USB_DEVICE_OPEN_RETRY_DELAY  50 /* ms */
 
 static gboolean
 fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
@@ -534,8 +535,22 @@ fu_usb_device_open(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* FuUdevDevice->open */
-	if (!FU_DEVICE_CLASS(fu_usb_device_parent_class)->open(device, error))
-		return FALSE;
+        if (!FU_DEVICE_CLASS(fu_usb_device_parent_class)->open(device, error)) {
+                /* if error is not permission denied, fail immediately */
+                if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED))
+                        return FALSE;
+
+                /* Permission denied: udev might be applying the group change.
+                 * Clear the previous error, wait, and retry once. */
+                g_debug("permission denied while opening device, retrying in %ums",
+                FU_USB_DEVICE_OPEN_RETRY_DELAY);
+
+                g_clear_error(error);
+                g_usleep(FU_USB_DEVICE_OPEN_RETRY_DELAY*1000);
+                if (!FU_DEVICE_CLASS(fu_usb_device_parent_class)->open(device, error))
+                        return FALSE;
+                g_debug("opened device successfully after retry");
+        }
 
 	/* open */
 	if (!fu_usb_device_open_internal(self, error)) {
