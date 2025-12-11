@@ -526,6 +526,7 @@ fu_usb_device_open(FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+        g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -535,17 +536,18 @@ fu_usb_device_open(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* FuUdevDevice->open */
-        if (!FU_DEVICE_CLASS(fu_usb_device_parent_class)->open(device, error)) {
+        if (!FU_DEVICE_CLASS(fu_usb_device_parent_class)->open(device, error_local)) {
                 /* if error is not permission denied, fail immediately */
-                if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED))
+                if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED)) {
+                        g_propagate_error(error, g_steal_pointer(&error_local));
                         return FALSE;
+                }
 
                 /* Permission denied: udev might be applying the group change.
                  * Clear the previous error, wait, and retry once. */
                 g_debug("permission denied while opening device, retrying in %ums",
                 FU_USB_DEVICE_OPEN_RETRY_DELAY);
 
-                g_clear_error(error);
                 g_usleep(FU_USB_DEVICE_OPEN_RETRY_DELAY*1000);
                 if (!FU_DEVICE_CLASS(fu_usb_device_parent_class)->open(device, error))
                         return FALSE;
