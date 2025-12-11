@@ -3,13 +3,13 @@
   "interactive": false,
   "steps": [
     {
-      "url": "e4d7583121800aaa7cf2d0b43c6a56fd7f387aef5535f1c08594ba03236f4218-touchpad_v0011.cab",
+      "url": "aa139735e30f875c5de8b3befb0b18208b8c69de9eae78f34a8364367394a89f-touchpad_test_firmware_ff02.cab",
       "emulation-file": "@enumeration_datadir@/pxi-tp-setup.json",
       "components": [
         {
-          "version": "0x0011",
+          "version": "0xff02",
           "guids": [
-            "88ee5fdf-7f9b-58db-b158-ea7f99d433a9"
+            "86407e75-7d7f-5d09-97db-700776490493"
           ]
         }
       ]
