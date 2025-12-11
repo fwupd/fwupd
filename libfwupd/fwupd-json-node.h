@@ -22,7 +22,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdJsonNode, fwupd_json_node_unref)
 FwupdJsonNode *
 fwupd_json_node_new_raw(const gchar *value) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 FwupdJsonNode *
-fwupd_json_node_new_string(const gchar *value) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_json_node_new_string(const gchar *value) G_GNUC_WARN_UNUSED_RESULT;
 FwupdJsonNode *
 fwupd_json_node_new_object(FwupdJsonObject *json_obj) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 FwupdJsonNode *

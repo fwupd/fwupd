@@ -358,25 +358,9 @@ fwupd_json_array_append_string(FwupdJsonArray *self,
 
 	for (guint i = 0; i < self->nodes->len; i++) {
 		FwupdJsonNode *json_node = g_ptr_array_index(self->nodes, i);
-		FwupdJsonNodeKind kind = fwupd_json_node_get_kind(json_node);
 		if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT)
 			fwupd_json_indent(str, depth + 1);
-		if (kind == FWUPD_JSON_NODE_KIND_OBJECT) {
-			g_autoptr(FwupdJsonObject) json_obj =
-			    fwupd_json_node_get_object(json_node, NULL);
-			fwupd_json_object_append_string(json_obj, str, depth + 1, flags);
-		} else if (kind == FWUPD_JSON_NODE_KIND_ARRAY) {
-			g_autoptr(FwupdJsonArray) json_arr =
-			    fwupd_json_node_get_array(json_node, NULL);
-			fwupd_json_array_append_string(json_arr, str, depth + 1, flags);
-		} else if (kind == FWUPD_JSON_NODE_KIND_STRING) {
-			g_autofree gchar *json_str =
-			    fwupd_json_node_get_string_safe(json_node, NULL);
-			g_string_append_printf(str, "\"%s\"", json_str);
-		} else if (kind == FWUPD_JSON_NODE_KIND_RAW) {
-			const gchar *json_str = fwupd_json_node_get_raw(json_node, NULL);
-			g_string_append(str, json_str);
-		}
+		fwupd_json_node_append_string(json_node, str, depth + 1, flags);
 		if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT) {
 			if (i != self->nodes->len - 1)
 				g_string_append_c(str, ',');

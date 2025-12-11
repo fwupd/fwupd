@@ -190,12 +190,41 @@ fwupd_json_parser_stream_func(void)
 }
 
 static void
+fwupd_json_parser_null_func(void)
+{
+	g_autoptr(FwupdJsonNode) json_node2 = NULL;
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GString) str = NULL;
+
+	json_node = fwupd_json_parser_load_from_data(parser,
+						     "{\"seven\": null}",
+						     FWUPD_JSON_LOAD_FLAG_NONE,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json_node);
+	json_obj = fwupd_json_node_get_object(json_node, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json_obj);
+
+	/* ensure 'null' is tagged as a string */
+	json_node2 = fwupd_json_object_get_node(json_obj, "seven", &error);
+	g_assert_cmpint(fwupd_json_node_get_kind(json_node2), ==, FWUPD_JSON_NODE_KIND_STRING);
+
+	str = fwupd_json_node_to_string(json_node2, FWUPD_JSON_EXPORT_FLAG_NONE);
+	g_assert_cmpstr(str->str, ==, "null");
+}
+
+static void
 fwupd_json_parser_valid_func(void)
 {
 	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
 	const gchar *data[] = {
 	    "{\"one\": \"alice\", \"two\": \"bob\"}",
 	    "{\"one\": True, \"two\": 123}",
+	    "{\"one\": null}",
 	    "\"one\"",
 	    "\"one\\ttwo\"",
 	    "\"two\\nthree\"",
@@ -282,7 +311,8 @@ fwupd_json_object_func(void)
 	fwupd_json_object_add_integer(json_obj, "three", 3);
 	fwupd_json_object_add_string(json_obj, "four", "");
 	fwupd_json_object_add_boolean(json_obj, "six", TRUE);
-	g_assert_cmpint(fwupd_json_object_get_size(json_obj), ==, 5);
+	fwupd_json_object_add_string(json_obj, "seven", NULL);
+	g_assert_cmpint(fwupd_json_object_get_size(json_obj), ==, 6);
 
 	tmp = fwupd_json_object_get_string(json_obj, "one", &error);
 	g_assert_no_error(error);
@@ -302,10 +332,10 @@ fwupd_json_object_func(void)
 
 	json_nodes = fwupd_json_object_get_nodes(json_obj);
 	g_assert_nonnull(json_nodes);
-	g_assert_cmpint(json_nodes->len, ==, 5);
+	g_assert_cmpint(json_nodes->len, ==, 6);
 	json_keys = fwupd_json_object_get_keys(json_obj);
 	g_assert_nonnull(json_keys);
-	g_assert_cmpint(json_keys->len, ==, 5);
+	g_assert_cmpint(json_keys->len, ==, 6);
 
 	tmp = fwupd_json_object_get_string(json_obj, "four", &error);
 	g_assert_no_error(error);
@@ -325,6 +355,13 @@ fwupd_json_object_func(void)
 	g_assert_no_error(error);
 	g_assert_cmpstr(tmp, ==, "bob");
 
+	/* exists, but is unget-able */
+	g_assert_true(fwupd_json_object_has_node(json_obj, "seven"));
+	tmp = fwupd_json_object_get_string(json_obj, "seven", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_cmpstr(tmp, ==, NULL);
+	g_clear_error(&error);
+
 	/* export */
 	str2 = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
 	g_debug("%s", str2->str);
@@ -334,7 +371,8 @@ fwupd_json_object_func(void)
 				    "  \"two\": \"clara\\ndave\",\n"
 				    "  \"three\": 3,\n"
 				    "  \"four\": \"\",\n"
-				    "  \"six\": true\n"
+				    "  \"six\": true,\n"
+				    "  \"seven\": null\n"
 				    "}",
 				    &error);
 	g_assert_no_error(error);
@@ -381,6 +419,7 @@ fwupd_json_object_func(void)
 				    "  \"three\": 3,\n"
 				    "  \"four\": \"\",\n"
 				    "  \"six\": true,\n"
+				    "  \"seven\": null,\n"
 				    "  \"array\": [\n"
 				    "    \"dave\"\n"
 				    "  ],\n"
@@ -1811,6 +1850,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/json{object}", fwupd_json_object_func);
 	g_test_add_func("/fwupd/json{parser-valid}", fwupd_json_parser_valid_func);
 	g_test_add_func("/fwupd/json{parser-invalid}", fwupd_json_parser_invalid_func);
+	g_test_add_func("/fwupd/json{parser-null}", fwupd_json_parser_null_func);
 	g_test_add_func("/fwupd/json{parser-depth}", fwupd_json_parser_depth_func);
 	g_test_add_func("/fwupd/json{parser-items}", fwupd_json_parser_items_func);
 	g_test_add_func("/fwupd/json{parser-stream}", fwupd_json_parser_stream_func);
