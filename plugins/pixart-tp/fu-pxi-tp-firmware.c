@@ -9,10 +9,11 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-fw-struct.h"
+#include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
-
 struct _FuPxiTpFirmware {
 	FuFirmware parent_instance;
 
@@ -25,26 +26,9 @@ struct _FuPxiTpFirmware {
 	guint32 file_crc32;
 	guint32 header_crc32;
 	guint16 num_sections;
-	GPtrArray *sections; /* FuPxiTpSection*, free with g_free */
 };
 
 G_DEFINE_TYPE(FuPxiTpFirmware, fu_pxi_tp_firmware, FU_TYPE_FIRMWARE)
-
-/* handy: short hexdump for export fields */
-static gchar *
-fu_pxi_tp_firmware_hexdump_slice(const guint8 *p, gsize n, gsize maxbytes)
-{
-	GString *g = NULL;
-	gsize m = n < maxbytes ? n : maxbytes;
-
-	if (m == 0)
-		return g_strdup("");
-
-	g = g_string_sized_new(m * 3);
-	for (gsize i = 0; i < m; i++)
-		g_string_append_printf(g, "%02X%s", p[i], (i + 1 == m) ? "" : " ");
-	return g_string_free(g, FALSE);
-}
 
 /* ---------------------- FuFirmware vfuncs ------------------ */
 /**
@@ -71,6 +55,7 @@ fu_pxi_tp_firmware_validate(FuFirmware *firmware,
 	g_autoptr(GBytes) hdr = NULL;
 
 	/* we only support offset 0; quiet FALSE on others */
+	(void)firmware;
 	if (offset != 0)
 		return FALSE;
 
@@ -110,11 +95,11 @@ fu_pxi_tp_firmware_validate(FuFirmware *firmware,
  * @error: return location for a #GError, or %NULL
  *
  * parses the FWHD v1.0 header, verifies header CRC32 and payload CRC32,
- * and decodes up to 8 section descriptors into a private array.
+ * and decodes up to PXI_TP_MAX_SECTIONS section descriptors into FuPxiTpSection
+ * child images (metadata holder; payload still owned by the container bytes).
  *
  * Returns: %TRUE on success, %FALSE with @error set on failure.
  */
-/* nocheck:memread */
 static gboolean
 fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
@@ -136,9 +121,7 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 	if (fw == NULL)
 		return FALSE;
 
-	d = g_bytes_get_data(fw, NULL);
-	sz = g_bytes_get_size(fw);
-
+	d = g_bytes_get_data(fw, &sz);
 	fu_firmware_set_bytes(firmware, fw);
 
 	if (sz < PXI_TP_HEADER_V1_LEN) {
@@ -149,24 +132,10 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* ---------------------------------------------------------------
-	 * parse FWHD header via rustgen struct (bytes-based)
-	 * --------------------------------------------------------------- */
+	/* parse FWHD header via rustgen struct */
 	st_hdr = fu_struct_pxi_tp_firmware_hdr_parse(d, sz, 0, error);
 	if (st_hdr == NULL)
 		return FALSE;
-
-	/* check magic */
-	{
-		const guint8 *magic = fu_struct_pxi_tp_firmware_hdr_get_magic(st_hdr, NULL);
-		if (memcmp(magic, "FWHD", 4) != 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "invalid FWHD magic");
-			return FALSE;
-		}
-	}
 
 	self->header_len = fu_struct_pxi_tp_firmware_hdr_get_header_len(st_hdr);
 	self->header_ver = fu_struct_pxi_tp_firmware_hdr_get_header_ver(st_hdr);
@@ -225,14 +194,7 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 		}
 	}
 
-	/* ---------------------------------------------------------------
-	 * parse section headers
-	 * --------------------------------------------------------------- */
-	if (self->sections == NULL)
-		self->sections = g_ptr_array_new_with_free_func(g_free);
-	else
-		g_ptr_array_set_size(self->sections, 0);
-
+	/* parse section headers into FuPxiTpSection child images */
 	if (self->num_sections > PXI_TP_MAX_SECTIONS) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -244,85 +206,50 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 	for (guint i = 0; i < self->num_sections; i++) {
 		gsize off = FU_PXI_TP_FW_HEADER_OFFSET_SECTIONS_BASE +
 			    i * FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_SIZE;
-		g_autoptr(FuStructPxiTpFirmwareSectionHdr) st_section_hdr = NULL;
+		const guint8 *sect_buf = NULL;
+		gsize sect_bufsz = 0;
 		FuPxiTpSection *s = NULL;
-		const guint8 *name_src = NULL;
-		const guint8 *reserved_src = NULL;
-		gsize name_bufsz = 0;
-		gsize reserved_bufsz = 0;
+		FuPxiTpUpdateType update_type;
 
-		st_section_hdr = fu_struct_pxi_tp_firmware_section_hdr_parse(d, sz, off, error);
-		if (st_section_hdr == NULL)
+		if (off + FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_SIZE > sz) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "section header out of range");
 			return FALSE;
-
-		s = g_new0(FuPxiTpSection, 1);
-
-		s->update_type =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_update_type(st_section_hdr);
-		s->update_info =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_update_info(st_section_hdr);
-		s->is_valid_update = (s->update_info & PXI_TP_UI_VALID) != 0;
-		s->is_external = (s->update_info & PXI_TP_UI_EXTERNAL) != 0;
-
-		s->target_flash_start =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_target_flash_start(st_section_hdr);
-		s->internal_file_start =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_internal_file_start(st_section_hdr);
-		s->section_length =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_section_length(st_section_hdr);
-		s->section_crc =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_section_crc(st_section_hdr);
-
-		/* reserved: copy raw bytes into section struct */
-		reserved_src = fu_struct_pxi_tp_firmware_section_hdr_get_shared(st_section_hdr,
-										&reserved_bufsz);
-		if (reserved_src != NULL && reserved_bufsz > 0) {
-			/* copy min(shared_len, struct_len) */
-			gsize copy_len = MIN((gsize)PXI_TP_S_RESERVED_LEN, reserved_bufsz);
-
-			if (!fu_memcpy_safe(s->reserved,
-					    sizeof s->reserved,
-					    0, /* dst offset */
-					    reserved_src,
-					    reserved_bufsz,
-					    0, /* src offset */
-					    copy_len,
-					    error)) {
-				g_free(s);
-				return FALSE;
-			}
 		}
 
-		/* external_file_name[PXI_TP_S_EXTNAME_LEN + 1] */
-		name_src =
-		    fu_struct_pxi_tp_firmware_section_hdr_get_extname(st_section_hdr, &name_bufsz);
-		if (name_src != NULL && name_bufsz > 0) {
-			gsize copy_len = MIN((gsize)PXI_TP_S_EXTNAME_LEN, name_bufsz);
-			if (!fu_memcpy_safe((guint8 *)s->external_file_name,
-					    sizeof s->external_file_name,
-					    0,
-					    name_src,
-					    name_bufsz,
-					    0,
-					    copy_len,
-					    error)) {
-				g_free(s);
-				return FALSE;
-			}
-		}
-		s->external_file_name[PXI_TP_S_EXTNAME_LEN] = '\0';
+		sect_buf = d + off;
+		sect_bufsz = sz - off;
 
-		if (s->update_type == FU_PXI_TP_UPDATE_TYPE_FW_SECTION) {
+		s = fu_pxi_tp_section_new();
+		if (!fu_pxi_tp_section_process_descriptor(s, sect_buf, sect_bufsz, error)) {
+			g_object_unref(s);
+			return FALSE;
+		}
+
+		update_type = fu_pxi_tp_section_get_update_type(s);
+		if (update_type == FU_PXI_TP_UPDATE_TYPE_FW_SECTION) {
 			saw_fw = TRUE;
-			if (s->is_valid_update)
+			if (fu_pxi_tp_section_has_flag(s, FU_PXI_TP_FIRMWARE_FLAG_VALID))
 				saw_fw_valid = TRUE;
-		} else if (s->update_type == FU_PXI_TP_UPDATE_TYPE_PARAM) {
+		} else if (update_type == FU_PXI_TP_UPDATE_TYPE_PARAM) {
 			saw_param = TRUE;
-			if (s->is_valid_update)
+			if (fu_pxi_tp_section_has_flag(s, FU_PXI_TP_FIRMWARE_FLAG_VALID))
 				saw_param_valid = TRUE;
 		}
 
-		g_ptr_array_add(self->sections, s);
+		if (!fu_pxi_tp_section_attach_payload_stream(s, stream, sz, error)) {
+			g_object_unref(s);
+			return FALSE;
+		}
+
+		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(s), error)) {
+			g_object_unref(s);
+			return FALSE;
+		}
+
+		g_object_unref(s);
 	}
 
 	/* required section checks */
@@ -354,158 +281,20 @@ fu_pxi_tp_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 				      fu_firmware_get_version_format(firmware));
 }
 
-static gchar *
-fu_pxi_tp_firmware_update_info_to_flags(guint8 ui)
-{
-	GString *s = g_string_new(NULL);
-
-	if (ui & PXI_TP_UI_VALID)
-		g_string_append(s, "VALID|");
-	if (ui & PXI_TP_UI_EXTERNAL)
-		g_string_append(s, "EXTERNAL|");
-	if (s->len > 0)
-		s->str[s->len - 1] = '\0';
-
-	return s->str[0] ? g_string_free(s, FALSE) : (g_string_free(s, TRUE), g_strdup("0"));
-}
-
 static void
 fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuPxiTpFirmware *self = FU_PXI_TP_FIRMWARE(firmware);
-	g_autoptr(GBytes) fw = NULL;
-	const guint8 *d = NULL;
-	gsize sz = 0;
-	(void)flags; /* fix no used warning */
 
-	/* bytes for optional recompute / hexdumps */
-	fw = fu_firmware_get_bytes_with_patches(firmware, NULL);
-	if (fw != NULL) {
-		d = g_bytes_get_data(fw, NULL);
-		sz = g_bytes_get_size(fw);
-	}
-
-	/* top-level identity and sizes */
 	fu_xmlb_builder_insert_kv(bn, "magic", "FWHD");
-	fu_xmlb_builder_insert_kx(bn, "file_size", sz);
-	fu_xmlb_builder_insert_kx(bn, "header_length", self->header_len);
-	/* payload size = total - header_len, bound to 0 */
-	fu_xmlb_builder_insert_kx(bn,
-				  "payload_size",
-				  (sz > self->header_len) ? (sz - self->header_len) : 0);
-
-	/* header core fields */
 	fu_xmlb_builder_insert_kx(bn, "header_version", self->header_ver);
 	fu_xmlb_builder_insert_kx(bn, "file_version", self->file_ver);
 	fu_xmlb_builder_insert_kx(bn, "ic_part_id", self->ic_part_id);
 	fu_xmlb_builder_insert_kx(bn, "flash_sectors", self->flash_sectors);
 	fu_xmlb_builder_insert_kx(bn, "num_sections", self->num_sections);
 
-	/* crcs (stored) */
 	fu_xmlb_builder_insert_kx(bn, "header_crc32", self->header_crc32);
 	fu_xmlb_builder_insert_kx(bn, "file_crc32", self->file_crc32);
-
-	/* crcs (recomputed) + status */
-	if (d != NULL && self->header_len >= 4 && self->header_len <= sz) {
-		guint32 hdr_crc_calc = fu_crc32(FU_CRC_KIND_B32_STANDARD, d, self->header_len - 4);
-		fu_xmlb_builder_insert_kx(bn, "header_crc32_calc", hdr_crc_calc);
-		fu_xmlb_builder_insert_kv(bn,
-					  "header_crc32_ok",
-					  (hdr_crc_calc == self->header_crc32) ? "true" : "false");
-	}
-	if (d != NULL && sz > self->header_len) {
-		guint32 file_crc_calc =
-		    fu_crc32(FU_CRC_KIND_B32_STANDARD, d + self->header_len, sz - self->header_len);
-		fu_xmlb_builder_insert_kx(bn, "file_crc32_calc", file_crc_calc);
-		fu_xmlb_builder_insert_kv(bn,
-					  "file_crc32_ok",
-					  (file_crc_calc == self->file_crc32) ? "true" : "false");
-	}
-
-	/* ranges (handy for quick eyeballing) */
-	if (self->header_len <= sz) {
-		fu_xmlb_builder_insert_kx(bn, "range_header_begin", 0);
-		fu_xmlb_builder_insert_kx(bn, "range_header_end", self->header_len);
-		fu_xmlb_builder_insert_kx(bn, "range_payload_begin", self->header_len);
-		fu_xmlb_builder_insert_kx(bn, "range_payload_end", sz);
-	}
-
-	/* sections */
-	for (guint i = 0; self->sections != NULL && i < self->sections->len; i++) {
-		FuPxiTpSection *s = g_ptr_array_index(self->sections, i);
-		g_autofree gchar *p_type = g_strdup_printf("section%u_update_type", i);
-		g_autofree gchar *p_type_name = g_strdup_printf("section%u_update_type_name", i);
-		g_autofree gchar *p_info = g_strdup_printf("section%u_update_info", i);
-		g_autofree gchar *p_info_flags = g_strdup_printf("section%u_update_info_flags", i);
-		g_autofree gchar *p_is_valid = g_strdup_printf("section%u_is_valid", i);
-		g_autofree gchar *p_is_ext = g_strdup_printf("section%u_is_external", i);
-		g_autofree gchar *p_flash_start =
-		    g_strdup_printf("section%u_target_flash_start", i);
-		g_autofree gchar *p_int_start = g_strdup_printf("section%u_internal_file_start", i);
-		g_autofree gchar *p_len = g_strdup_printf("section%u_section_length", i);
-		g_autofree gchar *p_crc = g_strdup_printf("section%u_section_crc", i);
-		g_autofree gchar *p_crc_calc = g_strdup_printf("section%u_section_crc_calc", i);
-		g_autofree gchar *p_crc_ok = g_strdup_printf("section%u_section_crc_ok", i);
-		g_autofree gchar *p_in_range = g_strdup_printf("section%u_in_file_range", i);
-		g_autofree gchar *p_extname = g_strdup_printf("section%u_external_file", i);
-		g_autofree gchar *p_sample_hex = g_strdup_printf("section%u_sample_hex_0_32", i);
-		g_autofree gchar *p_reserved_hex = g_strdup_printf("section%u_reserved_hex", i);
-		g_autofree gchar *flags_str =
-		    fu_pxi_tp_firmware_update_info_to_flags(s->update_info);
-
-		fu_xmlb_builder_insert_kx(bn, p_type, s->update_type);
-		fu_xmlb_builder_insert_kv(
-		    bn,
-		    p_type_name,
-		    fu_pxi_tp_update_type_to_string((FuPxiTpUpdateType)s->update_type));
-		fu_xmlb_builder_insert_kx(bn, p_info, s->update_info);
-		fu_xmlb_builder_insert_kv(bn, p_info_flags, flags_str);
-
-		/* bools readable as true/false */
-		fu_xmlb_builder_insert_kv(bn, p_is_valid, s->is_valid_update ? "true" : "false");
-		fu_xmlb_builder_insert_kv(bn, p_is_ext, s->is_external ? "true" : "false");
-
-		fu_xmlb_builder_insert_kx(bn, p_flash_start, s->target_flash_start);
-		fu_xmlb_builder_insert_kx(bn, p_int_start, s->internal_file_start);
-		fu_xmlb_builder_insert_kx(bn, p_len, s->section_length);
-		fu_xmlb_builder_insert_kx(bn, p_crc, s->section_crc);
-
-		/* reserved bytes as hex (zeroed if not present) */
-		{
-			g_autofree gchar *rhex =
-			    fu_pxi_tp_firmware_hexdump_slice(s->reserved,
-							     sizeof s->reserved,
-							     sizeof s->reserved);
-			fu_xmlb_builder_insert_kv(bn, p_reserved_hex, rhex);
-		}
-
-		if (!s->is_external && s->is_valid_update && d != NULL) {
-			const gboolean in_range =
-			    (s->internal_file_start + s->section_length <= sz);
-			fu_xmlb_builder_insert_kv(bn, p_in_range, in_range ? "true" : "false");
-			if (in_range) {
-				g_autofree gchar *hex = NULL;
-				guint32 calc = fu_crc32(FU_CRC_KIND_B32_STANDARD,
-							d + s->internal_file_start,
-							s->section_length);
-				fu_xmlb_builder_insert_kx(bn, p_crc_calc, calc);
-				fu_xmlb_builder_insert_kv(bn,
-							  p_crc_ok,
-							  (calc == s->section_crc) ? "true"
-										   : "false");
-
-				hex = fu_pxi_tp_firmware_hexdump_slice(d + s->internal_file_start,
-								       s->section_length,
-								       32);
-				fu_xmlb_builder_insert_kv(bn, p_sample_hex, hex);
-			}
-		} else {
-			fu_xmlb_builder_insert_kv(bn, p_in_range, "n/a");
-		}
-
-		/* extname (already trimmed / NUL-terminated on C side) */
-		fu_xmlb_builder_insert_kv(bn, p_extname, s->external_file_name);
-	}
 }
 
 /**
@@ -541,7 +330,7 @@ fu_pxi_tp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_pxi_tp_firmware_init(FuPxiTpFirmware *self)
 {
-	self->sections = g_ptr_array_new_with_free_func(g_free);
+	(void)self;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
 }
@@ -549,12 +338,6 @@ fu_pxi_tp_firmware_init(FuPxiTpFirmware *self)
 static void
 fu_pxi_tp_firmware_finalize(GObject *obj)
 {
-	FuPxiTpFirmware *self = FU_PXI_TP_FIRMWARE(obj);
-
-	if (self->sections != NULL) {
-		g_ptr_array_unref(self->sections);
-		self->sections = NULL;
-	}
 	G_OBJECT_CLASS(fu_pxi_tp_firmware_parent_class)->finalize(obj);
 }
 
@@ -580,12 +363,12 @@ fu_pxi_tp_firmware_new(void)
 	return FU_FIRMWARE(g_object_new(FU_TYPE_PXI_TP_FIRMWARE, NULL));
 }
 
-/* -------------------------- getters ----------------------- */
+/* -------------------------- helpers / getters ----------------------- */
 const GPtrArray *
 fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), NULL);
-	return self->sections;
+	return fu_firmware_get_images(FU_FIRMWARE(self));
 }
 
 /* returns a segment of data according to the file address offset (GByteArray*; full transfer) */
@@ -597,6 +380,8 @@ fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 {
 	gsize sz = 0;
 	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), NULL);
 
 	fw = fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
 	if (fw == NULL)
@@ -628,7 +413,7 @@ fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
 	}
 }
 
-/* find the first internal & valid section of the specified type; return NULL if not found */
+/* find the first valid section of the specified type; return NULL if not found */
 static FuPxiTpSection *
 fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
 {
@@ -638,8 +423,9 @@ fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
 		return NULL;
 
 	for (guint i = 0; i < secs->len; i++) {
-		FuPxiTpSection *s = g_ptr_array_index((GPtrArray *)secs, i);
-		if (s->update_type == type)
+		FuPxiTpSection *s = FU_PXI_TP_SECTION(g_ptr_array_index((GPtrArray *)secs, i));
+		if (fu_pxi_tp_section_get_update_type(s) == type &&
+		    fu_pxi_tp_section_has_flag(s, FU_PXI_TP_FIRMWARE_FLAG_VALID))
 			return s;
 	}
 	g_debug("cannot find section of type %u", type);
@@ -651,8 +437,9 @@ fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
 	    fu_pxi_tp_firmware_find_section_by_type(self, FU_PXI_TP_UPDATE_TYPE_FW_SECTION);
-	g_debug("file firmware CRC: 0x%08x", (guint)(s ? s->section_crc : 0));
-	return s ? s->section_crc : 0;
+	guint32 crc = s != NULL ? fu_pxi_tp_section_get_section_crc(s) : 0;
+	g_debug("file firmware CRC: 0x%08x", (guint)crc);
+	return crc;
 }
 
 guint32
@@ -660,16 +447,16 @@ fu_pxi_tp_firmware_get_file_parameter_crc(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
 	    fu_pxi_tp_firmware_find_section_by_type(self, FU_PXI_TP_UPDATE_TYPE_PARAM);
-	g_debug("file parameter CRC: 0x%08x", (guint)(s ? s->section_crc : 0));
-	return s ? s->section_crc : 0;
+	guint32 crc = s != NULL ? fu_pxi_tp_section_get_section_crc(s) : 0;
+	g_debug("file parameter CRC: 0x%08x", (guint)crc);
+	return crc;
 }
 
-/* get the target_flash_start of the first section where update_type == FW_SECTION and is
- * internal & valid */
+/* get the target_flash_start of the first FW_SECTION section that is valid */
 guint32
 fu_pxi_tp_firmware_get_firmware_address(FuPxiTpFirmware *self)
 {
 	FuPxiTpSection *s =
 	    fu_pxi_tp_firmware_find_section_by_type(self, FU_PXI_TP_UPDATE_TYPE_FW_SECTION);
-	return s ? s->target_flash_start : 0;
+	return s != NULL ? fu_pxi_tp_section_get_target_flash_start(s) : 0;
 }

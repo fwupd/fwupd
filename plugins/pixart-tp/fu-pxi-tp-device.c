@@ -11,6 +11,7 @@
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-register.h"
+#include "fu-pxi-tp-section.h" /* child-image type */
 #include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
 
@@ -928,47 +929,10 @@ fu_pxi_tp_device_update_flash_process(FuPxiTpDevice *self,
 	return TRUE;
 }
 
-static gboolean
-fu_pxi_tp_device_setup(FuDevice *device, GError **error)
-{
-	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
-	guint8 buf[2] = {0}; /* buf[0] = lo, buf[1] = hi */
-	guint16 ver_u16 = 0;
-
-	/* read low byte */
-	if (!fu_pxi_tp_register_user_read(self,
-					  self->ver_bank,
-					  (guint8)(self->ver_addr + 0),
-					  &buf[0],
-					  error))
-		return FALSE;
-
-	/* read high byte */
-	if (!fu_pxi_tp_register_user_read(self,
-					  self->ver_bank,
-					  (guint8)(self->ver_addr + 1),
-					  &buf[1],
-					  error))
-		return FALSE;
-
-	/* parse LE uint16 using fwupd helper */
-	ver_u16 = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-
-	g_debug("pxi-tp setup: version bytes: lo=0x%02x hi=0x%02x -> ver=0x%04x",
-		buf[0],
-		buf[1],
-		ver_u16);
-
-	fu_device_set_version_raw(device, ver_u16);
-
-	/* success */
-	return TRUE;
-}
-
+/* ---- section processing using child-image API ---- */
 static gboolean
 fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
-				 FuPxiTpFirmware *ctn,
-				 FuPxiTpSection *s,
+				 FuPxiTpSection *section,
 				 guint section_index,
 				 FuProgress *prog_write,
 				 guint8 start_sector,
@@ -976,13 +940,21 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 				 GError **error)
 {
 	g_autoptr(GByteArray) data = NULL;
-	guint32 send_interval = 0;
+	FuPxiTpUpdateType update_type = FU_PXI_TP_UPDATE_TYPE_GENERAL;
+	guint32 section_length = 0;
+	guint32 target_flash_start = 0;
 	guint8 target_ver[3] = {0};
+	guint32 send_interval = 0;
+	const guint8 *reserved = NULL;
+	gsize reserved_len = 0;
 
-	data = fu_pxi_tp_firmware_get_slice_by_file(ctn,
-						    (gsize)s->internal_file_start,
-						    (gsize)s->section_length,
-						    error);
+	g_return_val_if_fail(section != NULL, FALSE);
+
+	update_type = fu_pxi_tp_section_get_update_type(section);
+	section_length = fu_pxi_tp_section_get_section_length(section);
+	target_flash_start = fu_pxi_tp_section_get_target_flash_start(section);
+
+	data = fu_pxi_tp_section_get_payload(section, error);
 	if (data == NULL)
 		return FALSE;
 
@@ -995,36 +967,46 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	g_debug("pxi-tp write section %u: flash=0x%08x, "
-		"file_off=0x%08" G_GINT64_MODIFIER "x, len=%u, sector=%u, data_len=%u",
+	g_debug("pxi-tp write section %u: update_type=%u, flash=0x%08x, "
+		"len=%u, sector=%u, data_len=%u",
 		section_index,
-		s->target_flash_start,
-		(guint64)s->internal_file_start,
-		(guint)s->section_length,
+		(guint)update_type,
+		target_flash_start,
+		(guint)section_length,
 		start_sector,
 		(guint)data->len);
 
-	switch (s->update_type) {
+	switch (update_type) {
 	case FU_PXI_TP_UPDATE_TYPE_GENERAL:
 	case FU_PXI_TP_UPDATE_TYPE_FW_SECTION:
 	case FU_PXI_TP_UPDATE_TYPE_PARAM:
 		if (!fu_pxi_tp_device_update_flash_process(self,
 							   prog_write,
-							   (guint)s->section_length,
+							   section_length,
 							   start_sector,
 							   data,
 							   error)) {
 			return FALSE;
 		}
-		*written += (guint64)s->section_length;
+		*written += (guint64)section_length;
 		break;
 
 	case FU_PXI_TP_UPDATE_TYPE_TF_FORCE:
-		/* target TF version is stored in s->reserved[0..2] */
-		target_ver[0] = s->reserved[0];
-		target_ver[1] = s->reserved[1];
-		target_ver[2] = s->reserved[2];
-		send_interval = (guint32)s->reserved[3]; /* ms */
+		/* target TF version and send interval come from reserved bytes */
+		reserved = fu_pxi_tp_section_get_reserved(section, &reserved_len);
+		if (reserved == NULL || reserved_len < 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "reserved bytes too short for TF_FORCE section %u",
+				    section_index);
+			return FALSE;
+		}
+
+		target_ver[0] = reserved[0];
+		target_ver[1] = reserved[1];
+		target_ver[2] = reserved[2];
+		send_interval = (guint32)reserved[3]; /* ms */
 
 		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
 			return FALSE;
@@ -1075,20 +1057,28 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 	fu_progress_set_steps(progress, sections->len);
 
 	for (guint i = 0; i < sections->len; i++) {
+		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, i);
+		guint32 section_length = 0;
+		guint32 target_flash_start = 0;
 		guint8 flash_sector_start = 0;
-		FuPxiTpSection *section = g_ptr_array_index(sections, i);
 
 		/* skip non-updatable sections */
-		if (!section->is_valid_update || section->is_external ||
-		    section->section_length == 0) {
+		if (!fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_VALID) ||
+		    fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_IS_EXTERNAL)) {
 			fu_progress_step_done(progress);
 			continue;
 		}
 
-		flash_sector_start = (guint8)(section->target_flash_start / PXI_TP_SECTOR_SIZE);
+		section_length = fu_pxi_tp_section_get_section_length(section);
+		if (section_length == 0) {
+			fu_progress_step_done(progress);
+			continue;
+		}
+
+		target_flash_start = fu_pxi_tp_section_get_target_flash_start(section);
+		flash_sector_start = (guint8)(target_flash_start / PXI_TP_SECTOR_SIZE);
 
 		if (!fu_pxi_tp_device_process_section(self,
-						      firmware,
 						      section,
 						      i,
 						      progress,
@@ -1154,6 +1144,43 @@ fu_pxi_tp_device_verify_crc(FuPxiTpDevice *self,
 }
 
 static gboolean
+fu_pxi_tp_device_setup(FuDevice *device, GError **error)
+{
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
+	guint8 buf[2] = {0}; /* buf[0] = lo, buf[1] = hi */
+	guint16 ver_u16 = 0;
+
+	/* read low byte */
+	if (!fu_pxi_tp_register_user_read(self,
+					  self->ver_bank,
+					  (guint8)(self->ver_addr + 0),
+					  &buf[0],
+					  error))
+		return FALSE;
+
+	/* read high byte */
+	if (!fu_pxi_tp_register_user_read(self,
+					  self->ver_bank,
+					  (guint8)(self->ver_addr + 1),
+					  &buf[1],
+					  error))
+		return FALSE;
+
+	/* parse LE uint16 using fwupd helper */
+	ver_u16 = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+
+	g_debug("pxi-tp setup: version bytes: lo=0x%02x hi=0x%02x -> ver=0x%04x",
+		buf[0],
+		buf[1],
+		ver_u16);
+
+	fu_device_set_version_raw(device, ver_u16);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_pxi_tp_device_write_firmware(FuDevice *device,
 				FuFirmware *firmware,
 				FuProgress *progress,
@@ -1184,10 +1211,15 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 	/* calculate total bytes for valid internal sections */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, i);
+		guint32 section_length = 0;
 
-		if (section->is_valid_update && !section->is_external &&
-		    section->section_length > 0)
-			total_update_bytes += (guint64)section->section_length;
+		if (!fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_VALID) ||
+		    fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_IS_EXTERNAL))
+			continue;
+
+		section_length = fu_pxi_tp_section_get_section_length(section);
+		if (section_length > 0)
+			total_update_bytes += (guint64)section_length;
 	}
 
 	if (total_update_bytes == 0) {
