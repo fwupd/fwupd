@@ -11,11 +11,9 @@
 FwupdJsonNode *
 fwupd_json_node_new_raw_internal(GRefString *value) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 FwupdJsonNode *
-fwupd_json_node_new_string_internal(GRefString *value) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_json_node_new_string_internal(GRefString *value) G_GNUC_WARN_UNUSED_RESULT;
 void
 fwupd_json_node_append_string(FwupdJsonNode *self,
 			      GString *str,
 			      guint depth,
 			      FwupdJsonExportFlags flags) G_GNUC_NON_NULL(1, 2);
-gchar *
-fwupd_json_node_get_string_safe(FwupdJsonNode *self, GError **error) G_GNUC_NON_NULL(1);

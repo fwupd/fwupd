@@ -748,7 +748,7 @@ fwupd_json_object_add_string_internal(FwupdJsonObject *self,
  * fwupd_json_object_add_string:
  * @self: a #FwupdJsonObject
  * @key: (not nullable): dictionary key
- * @value: (not nullable): value
+ * @value: (nullable): value, or %NULL
  *
  * Adds a string value to the JSON object. If the node already exists the old one is replaced.
  *
@@ -761,7 +761,6 @@ fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gcha
 
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(value != NULL);
 
 	json_node = fwupd_json_node_new_string(value);
 	fwupd_json_object_add_node(self, key, json_node);
@@ -920,33 +919,11 @@ fwupd_json_object_append_string(FwupdJsonObject *self,
 
 	for (guint i = 0; i < self->items->len; i++) {
 		FwupdJsonObjectEntry *entry = g_ptr_array_index(self->items, i);
-		FwupdJsonNode *json_node = entry->json_node;
-		FwupdJsonNodeKind kind = fwupd_json_node_get_kind(json_node);
 
 		if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT)
 			fwupd_json_indent(str, depth + 1);
-		g_string_append_printf(str, "\"%s\":", entry->key);
-
-		if (kind == FWUPD_JSON_NODE_KIND_OBJECT) {
-			g_autoptr(FwupdJsonObject) json_obj =
-			    fwupd_json_node_get_object(json_node, NULL);
-			g_string_append_c(str, ' ');
-			fwupd_json_object_append_string(json_obj, str, depth + 1, flags);
-		} else if (kind == FWUPD_JSON_NODE_KIND_ARRAY) {
-			g_autoptr(FwupdJsonArray) json_arr =
-			    fwupd_json_node_get_array(json_node, NULL);
-			g_string_append_c(str, ' ');
-			fwupd_json_array_append_string(json_arr, str, depth + 1, flags);
-		} else if (kind == FWUPD_JSON_NODE_KIND_STRING) {
-			g_autofree gchar *json_str =
-			    fwupd_json_node_get_string_safe(json_node, NULL);
-			g_string_append_c(str, ' ');
-			g_string_append_printf(str, "\"%s\"", json_str);
-		} else if (kind == FWUPD_JSON_NODE_KIND_RAW) {
-			const gchar *json_str = fwupd_json_node_get_raw(json_node, NULL);
-			g_string_append_c(str, ' ');
-			g_string_append(str, json_str);
-		}
+		g_string_append_printf(str, "\"%s\": ", entry->key);
+		fwupd_json_node_append_string(entry->json_node, str, depth + 1, flags);
 		if (flags & FWUPD_JSON_EXPORT_FLAG_INDENT) {
 			if (i != self->items->len - 1)
 				g_string_append_c(str, ',');

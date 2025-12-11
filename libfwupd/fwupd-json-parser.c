@@ -122,9 +122,13 @@ fwupd_json_parser_helper_dump_acc(FwupdJsonParserHelper *helper,
 	} else {
 		if (helper->acc->len == 0)
 			return;
-		*token = FWUPD_JSON_PARSER_TOKEN_RAW;
-		if (str != NULL)
-			*str = g_ref_string_new_len(helper->acc->str, helper->acc->len);
+		if (g_ascii_strncasecmp(helper->acc->str, "null", helper->acc->len) == 0) {
+			*token = FWUPD_JSON_PARSER_TOKEN_STRING;
+		} else {
+			*token = FWUPD_JSON_PARSER_TOKEN_RAW;
+			if (str != NULL)
+				*str = g_ref_string_new_len(helper->acc->str, helper->acc->len);
+		}
 	}
 	g_string_truncate(helper->acc, 0);
 }
@@ -408,14 +412,6 @@ fwupd_json_parser_load_object(FwupdJsonParser *self, FwupdJsonParserHelper *help
 				return NULL;
 			fwupd_json_object_add_array_internal(json_obj, key, json_array2);
 		} else if (token3 == FWUPD_JSON_PARSER_TOKEN_STRING) {
-			if (G_UNLIKELY(val == NULL)) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "did not find string value on line %u",
-					    helper->linecnt);
-				return NULL;
-			}
 			fwupd_json_object_add_string_internal(json_obj, key, val, helper->flags);
 		} else {
 			if (G_UNLIKELY(val == NULL)) {

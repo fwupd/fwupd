@@ -101,12 +101,11 @@ FwupdJsonNode *
 fwupd_json_node_new_string(const gchar *value)
 {
 	g_autoptr(FwupdJsonNode) self = fwupd_json_node_new_internal();
-
-	g_return_val_if_fail(value != NULL, NULL);
-
 	self->kind = FWUPD_JSON_NODE_KIND_STRING;
-	self->data = g_ref_string_new(value);
-	self->destroy_func = (GDestroyNotify)g_ref_string_release;
+	if (value != NULL) {
+		self->data = g_ref_string_new(value);
+		self->destroy_func = (GDestroyNotify)g_ref_string_release;
+	}
 	return g_steal_pointer(&self);
 }
 
@@ -115,8 +114,10 @@ fwupd_json_node_new_string_internal(GRefString *value)
 {
 	FwupdJsonNode *self = fwupd_json_node_new_internal();
 	self->kind = FWUPD_JSON_NODE_KIND_STRING;
-	self->data = g_ref_string_acquire(value);
-	self->destroy_func = (GDestroyNotify)g_ref_string_release;
+	if (value != NULL) {
+		self->data = g_ref_string_acquire(value);
+		self->destroy_func = (GDestroyNotify)g_ref_string_release;
+	}
 	return self;
 }
 
@@ -308,10 +309,17 @@ fwupd_json_node_get_string(FwupdJsonNode *self, GError **error)
 			    fwupd_json_node_kind_to_string(self->kind));
 		return NULL;
 	}
+	if (self->data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "value was null");
+		return NULL;
+	}
 	return (GRefString *)self->data;
 }
 
-gchar *
+static gchar *
 fwupd_json_node_get_string_safe(FwupdJsonNode *self, GError **error)
 {
 	const gchar *tmp;
@@ -341,18 +349,22 @@ fwupd_json_node_append_string(FwupdJsonNode *self,
 		return;
 	}
 	if (self->kind == FWUPD_JSON_NODE_KIND_STRING) {
-		g_autofree gchar *str_safe = fwupd_json_node_get_string_safe(self, NULL);
-		g_string_append_printf(str, "\"%s\"", str_safe);
+		if (self->data == NULL) {
+			g_string_append(str, "null");
+		} else {
+			g_autofree gchar *str_safe = fwupd_json_node_get_string_safe(self, NULL);
+			g_string_append_printf(str, "\"%s\"", str_safe);
+		}
 		return;
 	}
 	if (self->kind == FWUPD_JSON_NODE_KIND_OBJECT) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_node_get_object(self, NULL);
-		fwupd_json_object_append_string(json_obj, str, depth + 1, flags);
+		fwupd_json_object_append_string(json_obj, str, depth, flags);
 		return;
 	}
 	if (self->kind == FWUPD_JSON_NODE_KIND_ARRAY) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_node_get_array(self, NULL);
-		fwupd_json_array_append_string(json_arr, str, depth + 1, flags);
+		fwupd_json_array_append_string(json_arr, str, depth, flags);
 		return;
 	}
 }

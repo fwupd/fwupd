@@ -81,7 +81,7 @@ fwupd_json_object_add_raw(FwupdJsonObject *self, const gchar *key, const gchar *
     G_GNUC_NON_NULL(1, 2, 3);
 void
 fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gchar *value)
-    G_GNUC_NON_NULL(1, 2, 3);
+    G_GNUC_NON_NULL(1, 2);
 void
 fwupd_json_object_add_integer(FwupdJsonObject *self, const gchar *key, gint64 value)
     G_GNUC_NON_NULL(1, 2);

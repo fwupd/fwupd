@@ -22,7 +22,7 @@ void
 fwupd_json_object_add_string_internal(FwupdJsonObject *self,
 				      GRefString *key,
 				      GRefString *value,
-				      FwupdJsonLoadFlags flags) G_GNUC_NON_NULL(1, 2, 3);
+				      FwupdJsonLoadFlags flags) G_GNUC_NON_NULL(1, 2);
 void
 fwupd_json_object_add_object_internal(FwupdJsonObject *self,
 				      GRefString *key,
