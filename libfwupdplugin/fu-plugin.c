@@ -1142,7 +1142,8 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 
 	/* progress */
-	fu_progress_set_name(progress, fu_plugin_get_name(self));
+	if (fu_plugin_get_name(self) != NULL)
+		fu_progress_set_name(progress, fu_plugin_get_name(self));
 
 	/* not enabled */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_DISABLED))
