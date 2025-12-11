@@ -371,8 +371,10 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	g_autoptr(GPtrArray) devices_remove = NULL;
 
 	/* no registered specialized GType */
-	if (priv->device_gtype == FU_TYPE_DEVICE)
+	if (priv->device_gtype == FU_TYPE_DEVICE) {
+		g_debug("no registered device GType");
 		return TRUE;
+	}
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
@@ -434,8 +436,11 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 				    device_gtypestr);
 			return FALSE;
 		}
-		if (!g_type_is_a(device_gtype, priv->device_gtype))
+		if (!g_type_is_a(device_gtype, priv->device_gtype)) {
+			g_debug("ignoring device backend GType %s",
+				g_type_name(priv->device_gtype));
 			continue;
+		}
 
 		/* create device */
 		device_tmp = g_object_new(device_gtype, "context", priv->ctx, NULL);
