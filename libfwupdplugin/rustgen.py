@@ -699,8 +699,9 @@ class Generator:
 
     def _use_import(self, where: str, module: str, what: str) -> None:
 
+        module_basename = module.replace("_", "-")
         try:
-            fn = os.path.join(self.modules_map[where], f"fu-{module}.rs")
+            fn = os.path.join(self.modules_map[where], f"fu-{module_basename}.rs")
         except KeyError:
             raise ValueError(f"invalid module name: {where}")
         child = Generator(self.basename, self.modules_map, prefix=self.prefix)
@@ -708,7 +709,7 @@ class Generator:
             child._parse_input(f.read().decode())
 
         # header includes
-        header_basename: str = f"fu-{module}-struct.h"
+        header_basename: str = f"fu-{module_basename}-struct.h"
         if header_basename not in self.import_headers:
             self.import_headers.append(header_basename)
 
