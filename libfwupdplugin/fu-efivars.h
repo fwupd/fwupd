@@ -56,6 +56,7 @@ struct _FuEfivarsClass {
 #define FU_EFIVARS_GUID_SECURITY_DATABASE  "d719b2cb-3d3a-4596-a3bc-dad00e67656f"
 #define FU_EFIVARS_GUID_EFI_CAPSULE_REPORT "39b68c46-f7fb-441b-b6ec-16b0f69821f3"
 #define FU_EFIVARS_GUID_SHIM		   "605dab50-e046-4300-abb6-3dd810dd8b23"
+#define FU_EFIVARS_GUID_FLASH_CAPABILITY   "6841Cab8-8618-4d02-a3fa-9c86d1726e1f"
 
 FuEfivars *
 fu_efivars_new(void);
