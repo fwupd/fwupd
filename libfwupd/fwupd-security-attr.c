@@ -1634,7 +1634,8 @@ fwupd_security_attr_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodec
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	if (priv->created > 0)
 		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
+	if (priv->level > 0)
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
 	fwupd_codec_json_append(builder,
 				FWUPD_RESULT_KEY_HSI_RESULT,
 				fwupd_security_attr_result_to_string(priv->result));
