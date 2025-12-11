@@ -747,7 +747,9 @@ class Generator:
 
             # import one file into another
             if line.startswith("use "):
-                where, why, what = line[4:].split("::", maxsplit=3)
+                if not line.endswith(";"):
+                    raise ValueError(f"use requires a semicolon on line {line_num}")
+                where, why, what = line[4:-1].split("::", maxsplit=3)
                 self._use_import(where, why, what)
 
             # remove comments and indent
