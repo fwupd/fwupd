@@ -263,6 +263,9 @@ gmodule = dependency('gmodule-2.0')
 if host_machine.system() == 'linux'
   conf.set('HAVE_UDEV', '1')
 endif
+if get_option('udev_hotplug')
+  conf.set('HAVE_UDEV_HOTPLUG' , '1')
+endif
 if build_standalone
   bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
   if bluez.allowed()
