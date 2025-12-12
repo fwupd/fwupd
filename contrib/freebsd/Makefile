@@ -23,7 +23,6 @@ LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libgpgme.so:security/gpgme \
 		libusb.so:devel/libusb \
 		libjcat.so:textproc/libjcat \
-		libjson-glib-1.0.so:devel/json-glib \
 		libprotobuf-c.so:devel/protobuf-c \
 		libcbor.so:devel/libcbor \
 		libxmlb.so:textproc/libxmlb \

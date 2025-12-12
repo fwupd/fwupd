@@ -94,7 +94,6 @@ find $MINGW32BINDIR \
     -o -name "libhogweed-*.dll" \
     -o -name libidn2-0.dll \
     -o -name libintl-8.dll \
-    -o -name libjson-glib-1.0-0.dll \
     -o -name liblzma-5.dll \
     -o -name "libnettle-*.dll" \
     -o -name libp11-kit-0.dll \

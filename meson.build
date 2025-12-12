@@ -365,11 +365,6 @@ libjcat = dependency(
   version: '>= 0.2.0',
   fallback: ['libjcat', 'libjcat_dep'],
 )
-libjsonglib = dependency(
-  'json-glib-1.0',
-  version: '>= 1.6.0',
-  fallback: ['libjsonglib', 'libjsonglib_dep'],
-)
 libblkid = dependency(
   'blkid',
   required: get_option('blkid'),
