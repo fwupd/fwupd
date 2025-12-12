@@ -18,6 +18,11 @@ struct _FuPxiTpPlugin {
 G_DEFINE_TYPE(FuPxiTpPlugin, fu_pxi_tp_plugin, FU_TYPE_PLUGIN)
 
 static void
+fu_pxi_tp_plugin_init(FuPxiTpPlugin *self)
+{
+}
+
+static void
 fu_pxi_tp_plugin_object_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
@@ -47,9 +52,4 @@ fu_pxi_tp_plugin_class_init(FuPxiTpPluginClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->constructed = fu_pxi_tp_plugin_object_constructed;
 	plugin_class->constructed = fu_pxi_tp_plugin_constructed;
-}
-
-static void
-fu_pxi_tp_plugin_init(FuPxiTpPlugin *self)
-{
 }

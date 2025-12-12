@@ -13,7 +13,6 @@
 
 #include "fu-pxi-tp-fw-struct.h" /* FuPxiTpFirmwareFlag, FuPxiTpUpdateType */
 #include "fu-pxi-tp-struct.h"
-/* PXI_TP_S_RESERVED_LEN / PXI_TP_S_EXTNAME_LEN 也可從這或 struct.h 來 */
 
 G_BEGIN_DECLS
 

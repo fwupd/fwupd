@@ -28,8 +28,7 @@ struct _FuPxiTpSection {
 	gchar external_file_name[PXI_TP_S_EXTNAME_LEN + 1];
 };
 
-G_DEFINE_FINAL_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU_TYPE_FIRMWARE)
-
+G_DEFINE_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU_TYPE_FIRMWARE)
 /* ---------------------- internal helpers ---------------------- */
 
 static void
@@ -78,7 +77,7 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 		return FALSE;
 	}
 
-	/* 對這個 section header 做 rustgen parse，offset = 0 */
+	/* section header do rustgen parse，offset = 0 */
 	st = fu_struct_pxi_tp_firmware_section_hdr_parse(buf, bufsz, 0, error);
 	if (st == NULL)
 		return FALSE;

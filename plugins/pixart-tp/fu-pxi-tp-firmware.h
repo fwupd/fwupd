@@ -20,11 +20,7 @@ fu_pxi_tp_firmware_new(void);
 /* Lightweight getters useful for the device plugin */
 const GPtrArray *
 fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self); /* element-type: FuPxiTpSection* */
-GByteArray *
-fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
-				     gsize file_address,
-				     gsize len,
-				     GError **error);
+
 guint32
 fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self);
 

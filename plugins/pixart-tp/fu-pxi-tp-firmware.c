@@ -371,48 +371,6 @@ fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self)
 	return fu_firmware_get_images(FU_FIRMWARE(self));
 }
 
-/* returns a segment of data according to the file address offset (GByteArray*; full transfer) */
-GByteArray *
-fu_pxi_tp_firmware_get_slice_by_file(FuPxiTpFirmware *self,
-				     gsize file_address,
-				     gsize len,
-				     GError **error)
-{
-	gsize sz = 0;
-	g_autoptr(GBytes) fw = NULL;
-
-	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), NULL);
-
-	fw = fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
-	if (fw == NULL)
-		return NULL;
-
-	(void)g_bytes_get_data(fw, &sz);
-
-	if (len == 0)
-		return g_byte_array_new();
-
-	if (file_address >= sz || (guint64)file_address + (guint64)len > (guint64)sz) {
-		g_debug("file slice out of range: off=%" G_GSIZE_FORMAT ", len=%" G_GSIZE_FORMAT
-			", size=%" G_GSIZE_FORMAT,
-			file_address,
-			len,
-			sz);
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "file slice out of range");
-		return NULL;
-	}
-
-	{
-		GBytes *child = g_bytes_new_from_bytes(fw, file_address, len);
-		gsize out_len = 0;
-		guint8 *mem = g_bytes_unref_to_data(child, &out_len);
-		return g_byte_array_new_take(mem, out_len);
-	}
-}
-
 /* find the first valid section of the specified type; return NULL if not found */
 static FuPxiTpSection *
 fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
