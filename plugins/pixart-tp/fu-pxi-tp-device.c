@@ -9,17 +9,18 @@
 
 #include "fu-pxi-tp-device.h"
 #include "fu-pxi-tp-firmware.h"
-#include "fu-pxi-tp-fw-struct.h"
+#include "fu-pxi-tp-haptic-device.h"
 #include "fu-pxi-tp-register.h"
-#include "fu-pxi-tp-section.h" /* child-image type */
+#include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
-#include "fu-pxi-tp-tf-communication.h"
 
 struct _FuPxiTpDevice {
 	FuHidrawDevice parent_instance;
+
 	guint8 sram_select;
 	guint8 ver_bank;
 	guint16 ver_addr;
+	gboolean has_tf_child;
 };
 
 G_DEFINE_TYPE(FuPxiTpDevice, fu_pxi_tp_device, FU_TYPE_HIDRAW_DEVICE)
@@ -300,7 +301,7 @@ fu_pxi_tp_device_flash_wait_busy(FuPxiTpDevice *self, GError **error)
 static gboolean
 fu_pxi_tp_device_flash_erase_sector(FuPxiTpDevice *self, guint8 sector, GError **error)
 {
-	guint32 flash_address = (guint32)(sector)*PXI_TP_SECTOR_SIZE;
+	guint32 flash_address = (guint32)sector * PXI_TP_SECTOR_SIZE;
 
 	if (!fu_pxi_tp_device_flash_wait_busy(self, error))
 		return FALSE;
@@ -333,6 +334,8 @@ fu_pxi_tp_device_flash_erase_sector(FuPxiTpDevice *self, guint8 sector, GError *
 				      error))
 		return FALSE;
 
+	g_debug("pxi-tp: erase sector %u (addr=0x%08x)", (guint)sector, flash_address);
+
 	if (!fu_pxi_tp_device_flash_execute(self,
 					    FU_PXI_TP_FLASH_INST_CMD0,
 					    FU_PXI_TP_FLASH_CCR_ERASE_SECTOR,
@@ -351,7 +354,7 @@ fu_pxi_tp_device_flash_program_256b_to_flash(FuPxiTpDevice *self,
 					     GError **error)
 {
 	guint32 flash_address =
-	    (guint32)(sector)*PXI_TP_SECTOR_SIZE + (guint32)(page)*PXI_TP_PAGE_SIZE;
+	    (guint32)sector * PXI_TP_SECTOR_SIZE + (guint32)page * PXI_TP_PAGE_SIZE;
 
 	if (!fu_pxi_tp_device_flash_wait_busy(self, error))
 		return FALSE;
@@ -407,6 +410,10 @@ fu_pxi_tp_device_flash_program_256b_to_flash(FuPxiTpDevice *self,
 	/* success */
 	return TRUE;
 }
+
+/* ========================================================================== */
+/*                           SRAM write (256 bytes)                           */
+/* ========================================================================== */
 
 static gboolean
 fu_pxi_tp_device_write_sram_256b(FuPxiTpDevice *self, const guint8 *data, GError **error)
@@ -467,6 +474,10 @@ fu_pxi_tp_device_write_sram_256b(FuPxiTpDevice *self, const guint8 *data, GError
 	return TRUE;
 }
 
+/* ========================================================================== */
+/*                             Firmware erase/CRC                             */
+/* ========================================================================== */
+
 static gboolean
 fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *firmware, GError **error)
 {
@@ -481,6 +492,8 @@ fu_pxi_tp_device_firmware_clear(FuPxiTpDevice *self, FuPxiTpFirmware *firmware, 
 	}
 
 	start_address = fu_pxi_tp_firmware_get_firmware_address(firmware);
+	g_debug("pxi-tp: clear firmware at start address 0x%08x", start_address);
+
 	if (!fu_pxi_tp_device_flash_erase_sector(self,
 						 (guint8)(start_address / PXI_TP_SECTOR_SIZE),
 						 error)) {
@@ -523,6 +536,7 @@ fu_pxi_tp_device_crc_firmware(FuPxiTpDevice *self, guint32 *crc, GError **error)
 {
 	const guint crc_fw_retry_max = 1000;
 	const guint crc_fw_retry_delay_ms = 10;
+
 	guint8 out_val = 0;
 	guint8 swap_flag = 0;
 	guint16 part_id = 0;
@@ -673,7 +687,7 @@ fu_pxi_tp_device_crc_parameter(FuPxiTpDevice *self, guint32 *crc, GError **error
 	const guint crc_param_retry_delay_ms = 10;
 
 	guint8 out_val = 0;
-	guint8 swap_flag = 0;
+	guint8 swap_flag;
 	guint16 part_id = 0;
 	guint32 result = 0;
 
@@ -857,6 +871,11 @@ fu_pxi_tp_device_update_flash_process(FuPxiTpDevice *self,
 	if (max_sector_cnt == 0)
 		return TRUE;
 
+	g_debug("pxi-tp: update flash: size=%" G_GSIZE_FORMAT " start_sector=%u count=%u",
+		total_sz,
+		(guint)start_sector,
+		(guint)max_sector_cnt);
+
 	/* device-specific pre-write toggle (original behavior) */
 	if (!fu_pxi_tp_register_write(self,
 				      FU_PXI_TP_SYSTEM_BANK_BANK2,
@@ -930,6 +949,7 @@ fu_pxi_tp_device_update_flash_process(FuPxiTpDevice *self,
 }
 
 /* ---- section processing using child-image API ---- */
+
 static gboolean
 fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 				 FuPxiTpSection *section,
@@ -941,12 +961,8 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 {
 	g_autoptr(GByteArray) data = NULL;
 	FuPxiTpUpdateType update_type = FU_PXI_TP_UPDATE_TYPE_GENERAL;
-	guint32 section_length = 0;
-	guint32 target_flash_start = 0;
-	guint8 target_ver[3] = {0};
-	guint32 send_interval = 0;
-	const guint8 *reserved = NULL;
-	gsize reserved_len = 0;
+	guint32 section_length;
+	guint32 target_flash_start;
 
 	g_return_val_if_fail(section != NULL, FALSE);
 
@@ -991,50 +1007,16 @@ fu_pxi_tp_device_process_section(FuPxiTpDevice *self,
 		*written += (guint64)section_length;
 		break;
 
-	case FU_PXI_TP_UPDATE_TYPE_TF_FORCE:
-		/* target TF version and send interval come from reserved bytes */
-		reserved = fu_pxi_tp_section_get_reserved(section, &reserved_len);
-		if (reserved == NULL || reserved_len < 4) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "reserved bytes too short for TF_FORCE section %u",
-				    section_index);
-			return FALSE;
-		}
-
-		target_ver[0] = reserved[0];
-		target_ver[1] = reserved[1];
-		target_ver[2] = reserved[2];
-		send_interval = (guint32)reserved[3]; /* ms */
-
-		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
-			return FALSE;
-
-		g_debug("send interval (ms): %u", send_interval);
-		g_debug("update TF firmware, section %u, len=%u", section_index, (guint)data->len);
-
-		if (!fu_pxi_tp_tf_communication_write_firmware_process(self,
-								       prog_write,
-								       send_interval,
-								       (guint32)data->len,
-								       data,
-								       target_ver,
-								       error)) {
-			return FALSE;
-		}
-
-		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_BOOTLOADER, error))
-			return FALSE;
-
-		*written += (guint64)data->len;
-		break;
+		/* TF_FORCE is now handled by the haptic child-device.
+		 * It should be filtered out before calling this function.
+		 */
 
 	default:
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "not support update type for section %u",
+			    "unsupported update type %u for TP section %u",
+			    (guint)update_type,
 			    section_index);
 		return FALSE;
 	}
@@ -1059,12 +1041,25 @@ fu_pxi_tp_device_write_sections(FuPxiTpDevice *self,
 	for (guint i = 0; i < sections->len; i++) {
 		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, i);
 		guint32 section_length = 0;
-		guint32 target_flash_start = 0;
+		guint32 target_flash_start;
 		guint8 flash_sector_start = 0;
+		FuPxiTpUpdateType update_type = FU_PXI_TP_UPDATE_TYPE_GENERAL;
 
 		/* skip non-updatable sections */
 		if (!fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_VALID) ||
 		    fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_IS_EXTERNAL)) {
+			fu_progress_step_done(progress);
+			continue;
+		}
+
+		update_type = fu_pxi_tp_section_get_update_type(section);
+
+		/* skip TF_FORCE sections:
+		 *   - handled by TF/haptic child device using its own image
+		 *   - parent TP only handles TP firmware/parameter sections
+		 */
+		if (update_type == FU_PXI_TP_UPDATE_TYPE_TF_FORCE) {
+			g_debug("skip TF_FORCE section %u for TP parent device", i);
 			fu_progress_step_done(progress);
 			continue;
 		}
@@ -1099,11 +1094,13 @@ fu_pxi_tp_device_verify_crc(FuPxiTpDevice *self,
 			    GError **error)
 {
 	FuProgress *prog_verify = NULL;
-	guint32 crc_value = 0;
+	guint32 crc_value;
 
 	prog_verify = fu_progress_get_child(progress);
 	fu_progress_set_id(prog_verify, G_STRLOC);
 	fu_progress_set_steps(prog_verify, 2);
+
+	g_debug("pxi-tp: verify firmware + parameter CRC");
 
 	/* reset to bootloader before CRC check */
 	if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_BOOTLOADER, error))
@@ -1143,12 +1140,16 @@ fu_pxi_tp_device_verify_crc(FuPxiTpDevice *self,
 	return TRUE;
 }
 
+/* ========================================================================== */
+/*                               Device vfuncs                                */
+/* ========================================================================== */
+
 static gboolean
 fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 	guint8 buf[2] = {0}; /* buf[0] = lo, buf[1] = hi */
-	guint16 ver_u16 = 0;
+	guint16 ver_u16;
 
 	/* read low byte */
 	if (!fu_pxi_tp_register_user_read(self,
@@ -1175,7 +1176,6 @@ fu_pxi_tp_device_setup(FuDevice *device, GError **error)
 		ver_u16);
 
 	fu_device_set_version_raw(device, ver_u16);
-
 	/* success */
 	return TRUE;
 }
@@ -1208,13 +1208,22 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	/* calculate total bytes for valid internal sections */
+	/* calculate total bytes for valid internal TP sections
+	 * NOTE:
+	 *   - TF_FORCE sections are skipped here; they are handled by the
+	 *     TF/haptic child-device using its own firmware image.
+	 */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPxiTpSection *section = g_ptr_array_index((GPtrArray *)sections, i);
 		guint32 section_length = 0;
+		FuPxiTpUpdateType update_type = FU_PXI_TP_UPDATE_TYPE_GENERAL;
 
 		if (!fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_VALID) ||
 		    fu_pxi_tp_section_has_flag(section, FU_PXI_TP_FIRMWARE_FLAG_IS_EXTERNAL))
+			continue;
+
+		update_type = fu_pxi_tp_section_get_update_type(section);
+		if (update_type == FU_PXI_TP_UPDATE_TYPE_TF_FORCE)
 			continue;
 
 		section_length = fu_pxi_tp_section_get_section_length(section);
@@ -1226,15 +1235,17 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "no internal/valid sections to write");
+				    "no internal/valid TP sections to write");
 		return FALSE;
 	}
+
+	g_debug("pxi-tp: total TP update bytes=%" G_GUINT64_FORMAT, total_update_bytes);
 
 	/* erase old firmware */
 	if (!fu_pxi_tp_device_firmware_clear(self, fw_container, error))
 		return FALSE;
 
-	/* program all sections */
+	/* program all TP sections (TF_FORCE handled by child device) */
 	if (!fu_pxi_tp_device_write_sections(self,
 					     sections,
 					     fw_container,
@@ -1251,7 +1262,8 @@ fu_pxi_tp_device_write_firmware(FuDevice *device,
 
 	fu_progress_step_done(progress);
 
-	g_debug("update success (written=%" G_GUINT64_FORMAT " / total=%" G_GUINT64_FORMAT ")",
+	g_debug("pxi-tp: update success (written=%" G_GUINT64_FORMAT " / total=%" G_GUINT64_FORMAT
+		")",
 		total_written_bytes,
 		total_update_bytes);
 
@@ -1286,6 +1298,14 @@ fu_pxi_tp_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->sram_select = (guint8)tmp;
+		return TRUE;
+	}
+
+	/* new quirk: whether this TP has a TF/haptic child IC */
+	if (g_strcmp0(key, "PxiTpHasTfChild") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, 1, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->has_tf_child = (tmp != 0);
 		return TRUE;
 	}
 
@@ -1358,19 +1378,16 @@ fu_pxi_tp_device_cleanup(FuDevice *device,
 
 	/* ensure we are not stuck in bootloader */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, error))
+		if (!fu_pxi_tp_device_reset(self, FU_PXI_TP_RESET_MODE_APPLICATION, &error_local)) {
+			if (error_local != NULL) {
+				g_debug("failed to exit bootloader after update: %s",
+					error_local->message);
+			}
+			/* still return FALSE to propagate the error */
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	}
-
-	/* exit TF upgrade/engineer mode (best-effort) */
-	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, &error_local)) {
-		if (error_local != NULL) {
-			/* single debug for ignored failure */
-			g_debug("ignoring failure to exit TF upgrade mode: %s",
-				error_local->message);
-			g_clear_error(&error_local);
 		}
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
 
 	return TRUE;
@@ -1388,21 +1405,25 @@ fu_pxi_tp_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 43, "reload");
 }
 
-static void
-fu_pxi_tp_device_init(FuPxiTpDevice *self)
+static gboolean
+fu_pxi_tp_device_probe(FuDevice *device, GError **error)
 {
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.tp");
-	fu_device_set_summary(FU_DEVICE(self), "Touchpad");
-	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	g_autoptr(FuPxiTpHapticDevice) child = NULL;
+	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
 
-	/* quirk default value */
-	self->sram_select = 0x0f;
-	self->ver_bank = 0x00;
-	self->ver_addr = 0x0b;
+	if (!self->has_tf_child)
+		return TRUE;
+
+	child = fu_pxi_tp_haptic_device_new(device);
+	if (child == NULL) {
+		g_debug("pxi-tp: failed to create TF/haptic child device");
+		return TRUE;
+	}
+
+	fu_device_add_child(device, FU_DEVICE(child));
+
+	/* success */
+	return TRUE;
 }
 
 static FuFirmware *
@@ -1429,9 +1450,29 @@ fu_pxi_tp_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static void
+fu_pxi_tp_device_init(FuPxiTpDevice *self)
+{
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.tp");
+	fu_device_set_summary(FU_DEVICE(self), "Touchpad");
+	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	/* quirk default value */
+	self->sram_select = 0x0f;
+	self->ver_bank = 0x00;
+	self->ver_addr = 0x0b;
+
+	self->has_tf_child = FALSE;
+}
+
+static void
 fu_pxi_tp_device_class_init(FuPxiTpDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+
+	device_class->probe = fu_pxi_tp_device_probe;
 	device_class->setup = fu_pxi_tp_device_setup;
 	device_class->write_firmware = fu_pxi_tp_device_write_firmware;
 	device_class->attach = fu_pxi_tp_device_attach;

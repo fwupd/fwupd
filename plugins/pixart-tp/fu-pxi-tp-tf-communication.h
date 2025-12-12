@@ -19,4 +19,10 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  GError **error);
 
 gboolean
+fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
+						 guint8 mode,
+						 guint8 *version,
+						 GError **error);
+
+gboolean
 fu_pxi_tp_tf_communication_exit_upgrade_mode(FuPxiTpDevice *self, GError **error);

@@ -18,3 +18,4 @@ GType = FuPxiTpDevice
 PxiTpHidVersionBank = 0x00
 PxiTpHidVersionAddr = 0xb2
 PxiTpSramSelect = 0x0f
+PxiTpHasTfChild = 1

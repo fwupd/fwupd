@@ -14,6 +14,7 @@
 #include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
+
 struct _FuPxiTpFirmware {
 	FuFirmware parent_instance;
 
@@ -30,19 +31,6 @@ struct _FuPxiTpFirmware {
 
 G_DEFINE_TYPE(FuPxiTpFirmware, fu_pxi_tp_firmware, FU_TYPE_FIRMWARE)
 
-/* ---------------------- FuFirmware vfuncs ------------------ */
-/**
- * fu_pxi_tp_firmware_validate:
- * @firmware: the firmware container object
- * @stream: unused (fwupd vfunc signature)
- * @offset: vfunc signature; we only accept 0
- * @error: return location for a #GError, or %NULL
- *
- * quick sanity checks to determine whether a blob looks like a pixart
- * FWHD v1.0 container. verifies magic string and header length.
- *
- * Returns: %TRUE if the blob looks parseable, %FALSE otherwise.
- */
 static gboolean
 fu_pxi_tp_firmware_validate(FuFirmware *firmware,
 			    GInputStream *stream,
@@ -87,19 +75,6 @@ fu_pxi_tp_firmware_validate(FuFirmware *firmware,
 	return TRUE;
 }
 
-/**
- * fu_pxi_tp_firmware_parse:
- * @firmware: the firmware container object
- * @stream: input stream
- * @flags: parse flags
- * @error: return location for a #GError, or %NULL
- *
- * parses the FWHD v1.0 header, verifies header CRC32 and payload CRC32,
- * and decodes up to PXI_TP_MAX_SECTIONS section descriptors into FuPxiTpSection
- * child images (metadata holder; payload still owned by the container bytes).
- *
- * Returns: %TRUE on success, %FALSE with @error set on failure.
- */
 static gboolean
 fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
@@ -237,6 +212,9 @@ fu_pxi_tp_firmware_parse(FuFirmware *firmware,
 			saw_param = TRUE;
 			if (fu_pxi_tp_section_has_flag(s, FU_PXI_TP_FIRMWARE_FLAG_VALID))
 				saw_param_valid = TRUE;
+		} else if (update_type == FU_PXI_TP_UPDATE_TYPE_TF_FORCE) {
+			/* used by FuPxiTpHapticDevice via fu_firmware_get_image_by_id() */
+			fu_firmware_set_id(FU_FIRMWARE(s), "com.pixart.tf-force");
 		}
 
 		if (!fu_pxi_tp_section_attach_payload_stream(s, stream, sz, error)) {
@@ -297,13 +275,6 @@ fu_pxi_tp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	fu_xmlb_builder_insert_kx(bn, "file_crc32", self->file_crc32);
 }
 
-/**
- * fu_pxi_tp_firmware_write:
- * @firmware: the container object
- * @error: return location for a #GError, or %NULL
- *
- * Returns: a new #GByteArray on success, or %NULL on error.
- */
 static GByteArray *
 fu_pxi_tp_firmware_write(FuFirmware *firmware, GError **error)
 {
@@ -320,7 +291,6 @@ fu_pxi_tp_firmware_write(FuFirmware *firmware, GError **error)
 static gboolean
 fu_pxi_tp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
-	/* suppress unused-parameter warnings; this build vfunc is intentionally empty */
 	(void)firmware;
 	(void)n;
 	(void)error;
@@ -363,30 +333,28 @@ fu_pxi_tp_firmware_new(void)
 	return FU_FIRMWARE(g_object_new(FU_TYPE_PXI_TP_FIRMWARE, NULL));
 }
 
-/* -------------------------- helpers / getters ----------------------- */
-const GPtrArray *
+GPtrArray *
 fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_FIRMWARE(self), NULL);
 	return fu_firmware_get_images(FU_FIRMWARE(self));
 }
 
-/* find the first valid section of the specified type; return NULL if not found */
 static FuPxiTpSection *
-fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, guint8 type)
+fu_pxi_tp_firmware_find_section_by_type(FuPxiTpFirmware *self, FuPxiTpUpdateType update_type)
 {
-	const GPtrArray *secs = fu_pxi_tp_firmware_get_sections(self);
+	GPtrArray *secs = fu_pxi_tp_firmware_get_sections(self);
 
 	if (secs == NULL)
 		return NULL;
 
 	for (guint i = 0; i < secs->len; i++) {
-		FuPxiTpSection *s = FU_PXI_TP_SECTION(g_ptr_array_index((GPtrArray *)secs, i));
-		if (fu_pxi_tp_section_get_update_type(s) == type &&
+		FuPxiTpSection *s = FU_PXI_TP_SECTION(g_ptr_array_index(secs, i));
+		if (fu_pxi_tp_section_get_update_type(s) == update_type &&
 		    fu_pxi_tp_section_has_flag(s, FU_PXI_TP_FIRMWARE_FLAG_VALID))
 			return s;
 	}
-	g_debug("cannot find section of type %u", type);
+	g_debug("cannot find section of type %u", (guint)update_type);
 	return NULL;
 }
 
@@ -410,7 +378,6 @@ fu_pxi_tp_firmware_get_file_parameter_crc(FuPxiTpFirmware *self)
 	return crc;
 }
 
-/* get the target_flash_start of the first FW_SECTION section that is valid */
 guint32
 fu_pxi_tp_firmware_get_firmware_address(FuPxiTpFirmware *self)
 {

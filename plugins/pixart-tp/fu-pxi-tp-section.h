@@ -11,10 +11,8 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-pxi-tp-fw-struct.h" /* FuPxiTpFirmwareFlag, FuPxiTpUpdateType */
+#include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-struct.h"
-
-G_BEGIN_DECLS
 
 #define FU_TYPE_PXI_TP_SECTION (fu_pxi_tp_section_get_type())
 
@@ -24,12 +22,6 @@ G_DECLARE_FINAL_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU, PXI_TP_SECTION, FuFi
 FuPxiTpSection *
 fu_pxi_tp_section_new(void) G_GNUC_WARN_UNUSED_RESULT;
 
-/*
- * Decode one FWHD section descriptor into this child image.
- *
- * @buf:   pointer to the section header bytes (starting at the struct)
- * @bufsz: length of @buf; must be >= FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_SIZE
- */
 gboolean
 fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 				     const guint8 *buf,
@@ -55,4 +47,3 @@ fu_pxi_tp_section_attach_payload_stream(FuPxiTpSection *self,
 					GInputStream *stream,
 					gsize file_size,
 					GError **error);
-G_END_DECLS

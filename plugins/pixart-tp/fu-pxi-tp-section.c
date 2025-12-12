@@ -29,7 +29,6 @@ struct _FuPxiTpSection {
 };
 
 G_DEFINE_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU_TYPE_FIRMWARE)
-/* ---------------------- internal helpers ---------------------- */
 
 static void
 fu_pxi_tp_section_update_flags(FuPxiTpSection *self)
@@ -43,8 +42,6 @@ fu_pxi_tp_section_update_flags(FuPxiTpSection *self)
 
 	self->flags = flags;
 }
-
-/* ---------------------- public API ---------------------------- */
 
 FuPxiTpSection *
 fu_pxi_tp_section_new(void)
@@ -139,8 +136,6 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 
 	return TRUE;
 }
-
-/* ---------------------- getters ---------------------------- */
 
 FuPxiTpUpdateType
 fu_pxi_tp_section_get_update_type(FuPxiTpSection *self)

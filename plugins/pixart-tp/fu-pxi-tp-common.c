@@ -11,6 +11,23 @@
 
 #include "fu-pxi-tp-common.h"
 
+/**
+ * fu_pxi_tp_common_hexdump_slice:
+ * @p: pointer to byte array
+ * @n: total available bytes
+ * @maxbytes: maximum number of bytes to dump
+ *
+ * Returns a newly-allocated string containing a hex dump
+ * of at most @maxbytes bytes, formatted as:
+ *
+ *    "AA BB CC DD ..."
+ *
+ * If @n or @maxbytes is zero, returns an empty string.
+ *
+ * The caller must free the return value with g_free().
+ *
+ * Returns: (transfer full): newly-allocated printable hex string
+ */
 gchar *
 fu_pxi_tp_common_hexdump_slice(const guint8 *p, gsize n, gsize maxbytes)
 {

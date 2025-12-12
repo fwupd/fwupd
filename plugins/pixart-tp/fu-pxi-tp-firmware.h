@@ -16,16 +16,11 @@ G_DECLARE_FINAL_TYPE(FuPxiTpFirmware, fu_pxi_tp_firmware, FU, PXI_TP_FIRMWARE, F
 
 FuFirmware *
 fu_pxi_tp_firmware_new(void);
-
-/* Lightweight getters useful for the device plugin */
-const GPtrArray *
-fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self); /* element-type: FuPxiTpSection* */
-
+GPtrArray *
+fu_pxi_tp_firmware_get_sections(FuPxiTpFirmware *self);
 guint32
 fu_pxi_tp_firmware_get_file_firmware_crc(FuPxiTpFirmware *self);
-
 guint32
 fu_pxi_tp_firmware_get_file_parameter_crc(FuPxiTpFirmware *self);
-
 guint32
 fu_pxi_tp_firmware_get_firmware_address(FuPxiTpFirmware *self);

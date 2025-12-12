@@ -430,7 +430,7 @@ fu_pxi_tp_tf_communication_write_packet_cb(FuDevice *device, gpointer user_data,
 }
 
 /* mode: 1=APP, 2=BOOT, 3=ALGO (according to original protocol) */
-static gboolean
+gboolean
 fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 						 guint8 mode,
 						 guint8 *version,
@@ -731,19 +731,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			ver_before[0],
 			ver_before[1],
 			ver_before[2]);
-
-		/* if current version >= target, skip update */
-		if (target_ver != NULL &&
-		    fu_pxi_tp_tf_communication_version_cmp(ver_before, target_ver) >= 0) {
-			g_debug("current FW %u.%u.%u >= target %u.%u.%u, skip update",
-				ver_before[0],
-				ver_before[1],
-				ver_before[2],
-				target_ver[0],
-				target_ver[1],
-				target_ver[2]);
-			return TRUE;
-		}
 	} else {
 		g_debug("failed to read firmware version before update: %s",
 			ver_err != NULL ? ver_err->message : "unknown error");
@@ -773,7 +760,7 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS);
 
 		if (fu_pxi_tp_tf_communication_write_firmware(self,
-							      fu_progress_get_child(progress),
+							      progress,
 							      send_interval,
 							      data_size,
 							      data,
