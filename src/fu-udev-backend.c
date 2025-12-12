@@ -429,7 +429,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 {
 	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
 	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-#ifdef HAVE_SYSTEMD
+#ifdef HAVE_UDEV_HOTPLUG
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -618,7 +618,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
 	    .nl_pid = getpid(),
-#ifdef HAVE_SYSTEMD
+#ifdef HAVE_UDEV_HOTPLUG
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_UDEV,
 #else
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL,
