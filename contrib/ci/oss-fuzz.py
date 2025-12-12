@@ -347,19 +347,6 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libglib-2.0.a")
     bld.add_build_ldflag("lib/libgthread-2.0.a")
 
-    # JSON-GLib
-    src = bld.checkout_source(
-        "json-glib",
-        url="https://github.com/GNOME/json-glib.git",
-        commit="1.8.0-actual",
-    )
-    bld.build_meson_project(
-        src, ["-Dgtk_doc=disabled", "-Dtests=false", "-Dintrospection=disabled"]
-    )
-    bld.add_work_includedir("include/json-glib-1.0/json-glib")
-    bld.add_work_includedir("include/json-glib-1.0")
-    bld.add_build_ldflag("lib/libjson-glib-1.0.a")
-
     # libxmlb
     src = bld.checkout_source("libxmlb", url="https://github.com/hughsie/libxmlb.git")
     bld.build_meson_project(
