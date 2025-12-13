@@ -23,6 +23,7 @@ fwupdplugin_structs = [
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-ihex.rs', # fuzzing
+  'fu-intel-me.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-io-channel.rs', # fuzzing
   'fu-heci.rs', # fuzzing
@@ -149,6 +150,7 @@ fwupdplugin_src = [
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-ihex-firmware.c', # fuzzing
   'fu-input-stream.c', # fuzzing
+  'fu-intel-me-device.c', # fuzzing
   'fu-intel-thunderbolt-firmware.c', # fuzzing
   'fu-intel-thunderbolt-nvm.c', # fuzzing
   'fu-io-channel.c', # fuzzing
@@ -301,6 +303,7 @@ fwupdplugin_headers = [
   'fu-ifwi-fpt-firmware.h',
   'fu-ihex-firmware.h',
   'fu-input-stream.h',
+  'fu-intel-me-device.h',
   'fu-intel-thunderbolt-firmware.h',
   'fu-intel-thunderbolt-nvm.h',
   'fu-io-channel.h',

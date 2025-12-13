@@ -20,3 +20,5 @@ FwupdSecurityAttr *
 fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
 				      const gchar *appstream_id,
 				      GError **error) G_GNUC_NON_NULL(1, 2);
+GPtrArray *
+fu_security_attrs_get_all_mutable(FuSecurityAttrs *self) G_GNUC_NON_NULL(1);

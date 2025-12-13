@@ -222,6 +222,16 @@ fu_security_attrs_get_all(FuSecurityAttrs *self, const gchar *fwupd_version)
 }
 
 /**
+ * fu_security_attrs_get_all_mutable: (skip):
+ **/
+GPtrArray *
+fu_security_attrs_get_all_mutable(FuSecurityAttrs *self)
+{
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	return g_ptr_array_ref(self->attrs);
+}
+
+/**
  * fu_security_attrs_remove_all:
  * @self: a #FuSecurityAttrs
  *

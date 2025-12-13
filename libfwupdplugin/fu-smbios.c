@@ -50,6 +50,25 @@ typedef struct {
 G_DEFINE_TYPE(FuSmbios, fu_smbios, FU_TYPE_FIRMWARE)
 
 static FuSmbiosItem *
+fu_smbios_item_new(void)
+{
+	FuSmbiosItem *item = g_new0(FuSmbiosItem, 1);
+	item->strings = g_ptr_array_new_with_free_func(g_free);
+	return item;
+}
+
+static void
+fu_smbios_item_free(FuSmbiosItem *item)
+{
+	if (item->buf != NULL)
+		g_byte_array_unref(item->buf);
+	g_ptr_array_unref(item->strings);
+	g_free(item);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSmbiosItem, fu_smbios_item_free)
+
+static FuSmbiosItem *
 fu_smbios_get_item_for_type_length(FuSmbios *self, guint8 type, guint8 length)
 {
 	for (guint i = 0; i < self->items->len; i++) {
@@ -99,11 +118,10 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 		}
 
 		/* create a new result */
-		item = g_new0(FuSmbiosItem, 1);
+		item = fu_smbios_item_new();
 		item->type = fu_struct_smbios_structure_get_type(st_str);
 		item->handle = fu_struct_smbios_structure_get_handle(st_str);
 		item->buf = g_byte_array_sized_new(length);
-		item->strings = g_ptr_array_new_with_free_func(g_free);
 		g_byte_array_append(item->buf, buf + i, length);
 		g_ptr_array_add(self->items, item);
 
@@ -456,6 +474,82 @@ fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNod
 	}
 }
 
+static gboolean
+fu_smbios_build_item(FuSmbios *self, XbNode *n, GError **error)
+{
+	const gchar *str;
+	guint64 tmp;
+	g_autoptr(FuSmbiosItem) item = fu_smbios_item_new();
+	g_autoptr(GPtrArray) xb_strings = NULL;
+
+	/* optional type */
+	tmp = xb_node_query_text_as_uint(n, "type", NULL);
+	if (tmp != G_MAXUINT64) {
+		if (tmp > G_MAXUINT8) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid item type");
+			return FALSE;
+		}
+		item->type = tmp;
+	}
+
+	/* optional handle */
+	tmp = xb_node_query_text_as_uint(n, "handle", NULL);
+	if (tmp != G_MAXUINT64) {
+		if (tmp > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid item handle");
+			return FALSE;
+		}
+		item->handle = tmp;
+	}
+
+	/* optional data buffer */
+	str = xb_node_query_text(n, "buf", NULL);
+	if (str != NULL) {
+		item->buf = fu_byte_array_from_string(str, error);
+		if (item->buf == NULL)
+			return FALSE;
+	}
+
+	/* optional string table */
+	xb_strings = xb_node_query(n, "string", 0, NULL);
+	if (xb_strings != NULL) {
+		for (guint i = 0; i < xb_strings->len; i++) {
+			XbNode *c = g_ptr_array_index(xb_strings, i);
+			g_ptr_array_add(item->strings, g_strdup(xb_node_get_text(c)));
+		}
+	}
+
+	/* success */
+	g_ptr_array_add(self->items, g_steal_pointer(&item));
+	return TRUE;
+}
+
+static gboolean
+fu_smbios_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuSmbios *self = FU_SMBIOS(firmware);
+	g_autoptr(GPtrArray) xb_items = NULL;
+
+	/* optional items */
+	xb_items = xb_node_query(n, "item", 0, NULL);
+	if (xb_items != NULL) {
+		for (guint i = 0; i < xb_items->len; i++) {
+			XbNode *c = g_ptr_array_index(xb_items, i);
+			if (!fu_smbios_build_item(self, c, error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_smbios_get_data:
  * @self: a #FuSmbios
@@ -611,14 +705,6 @@ fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 length, guint8 offset, 
 }
 
 static void
-fu_smbios_item_free(FuSmbiosItem *item)
-{
-	g_byte_array_unref(item->buf);
-	g_ptr_array_unref(item->strings);
-	g_free(item);
-}
-
-static void
 fu_smbios_finalize(GObject *object)
 {
 	FuSmbios *self = FU_SMBIOS(object);
@@ -633,6 +719,7 @@ fu_smbios_class_init(FuSmbiosClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_smbios_finalize;
 	firmware_class->parse = fu_smbios_parse;
+	firmware_class->build = fu_smbios_build;
 	firmware_class->export = fu_smbios_export;
 }
 
