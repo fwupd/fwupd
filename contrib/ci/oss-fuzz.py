@@ -504,7 +504,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
         Fuzzer("uf2"),
-        Fuzzer("wacom-usb", pattern="wac-firmware"),
+        Fuzzer("wacom-usb"),
     ]:
         fuzz_objs = []
         for obj in bld.grep_meson(f"fwupd/plugins/{fzr.srcdir}"):

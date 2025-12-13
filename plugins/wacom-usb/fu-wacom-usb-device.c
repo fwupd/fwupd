@@ -8,28 +8,28 @@
 
 #include <string.h>
 
-#include "fu-wac-common.h"
-#include "fu-wac-device.h"
-#include "fu-wac-firmware.h"
-#include "fu-wac-module-bluetooth-id6.h"
-#include "fu-wac-module-bluetooth-id9.h"
-#include "fu-wac-module-bluetooth.h"
-#include "fu-wac-module-scaler.h"
-#include "fu-wac-module-sub-cpu.h"
-#include "fu-wac-module-touch-id7.h"
-#include "fu-wac-module-touch.h"
-#include "fu-wac-struct.h"
+#include "fu-wacom-usb-common.h"
+#include "fu-wacom-usb-device.h"
+#include "fu-wacom-usb-firmware.h"
+#include "fu-wacom-usb-module-bluetooth-id6.h"
+#include "fu-wacom-usb-module-bluetooth-id9.h"
+#include "fu-wacom-usb-module-bluetooth.h"
+#include "fu-wacom-usb-module-scaler.h"
+#include "fu-wacom-usb-module-sub-cpu.h"
+#include "fu-wacom-usb-module-touch-id7.h"
+#include "fu-wacom-usb-module-touch.h"
+#include "fu-wacom-usb-struct.h"
 
 typedef struct {
 	guint32 start_addr;
 	guint32 block_sz;
 	guint16 write_sz; /* bit 15 is write protection flag */
-} FuWacFlashDescriptor;
+} FuWacomUsbFlashDescriptor;
 
-#define FU_WAC_DEVICE_TIMEOUT		 5000 /* ms */
-#define FU_WAC_DEVICE_MODULE_RETRY_DELAY 100  /* ms */
+#define FU_WACOM_USB_DEVICE_TIMEOUT	       5000 /* ms */
+#define FU_WACOM_USB_DEVICE_MODULE_RETRY_DELAY 100  /* ms */
 
-struct _FuWacDevice {
+struct _FuWacomUsbDevice {
 	FuHidDevice parent_instance;
 	GPtrArray *flash_descriptors;
 	GArray *checksums;
@@ -43,16 +43,18 @@ struct _FuWacDevice {
 	guint16 configuration;
 };
 
-G_DEFINE_TYPE(FuWacDevice, fu_wac_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuWacomUsbDevice, fu_wacom_usb_device, FU_TYPE_HID_DEVICE)
 
 static gboolean
-fu_wac_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
+fu_wacom_usb_device_flash_descriptor_is_wp(const FuWacomUsbFlashDescriptor *fd)
 {
 	return fd->write_sz & 0x8000;
 }
 
 static void
-fu_wac_device_flash_descriptor_to_string(FuWacFlashDescriptor *fd, guint idt, GString *str)
+fu_wacom_usb_device_flash_descriptor_to_string(FuWacomUsbFlashDescriptor *fd,
+					       guint idt,
+					       GString *str)
 {
 	fwupd_codec_string_append_hex(str, idt, "StartAddr", fd->start_addr);
 	fwupd_codec_string_append_hex(str, idt, "BlockSize", fd->block_sz);
@@ -60,13 +62,13 @@ fu_wac_device_flash_descriptor_to_string(FuWacFlashDescriptor *fd, guint idt, GS
 	fwupd_codec_string_append_bool(str,
 				       idt,
 				       "Protected",
-				       fu_wac_device_flash_descriptor_is_wp(fd));
+				       fu_wacom_usb_device_flash_descriptor_is_wp(fd));
 }
 
 static void
-fu_wac_device_to_string(FuDevice *device, guint idt, GString *str)
+fu_wacom_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuWacDevice *self = FU_WAC_DEVICE(device);
+	FuWacomUsbDevice *self = FU_WACOM_USB_DEVICE(device);
 	g_autofree gchar *status_str = NULL;
 
 	if (self->firmware_index != 0xffff) {
@@ -98,21 +100,21 @@ fu_wac_device_to_string(FuDevice *device, guint idt, GString *str)
 		fwupd_codec_string_append(str, idt, "Configuration", tmp);
 	}
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
+		FuWacomUsbFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		g_autofree gchar *title = g_strdup_printf("FlashDescriptor%02u", i);
 		fwupd_codec_string_append(str, idt, title, "");
-		fu_wac_device_flash_descriptor_to_string(fd, idt + 1, str);
+		fu_wacom_usb_device_flash_descriptor_to_string(fd, idt + 1, str);
 	}
-	status_str = fu_wac_device_status_to_string(self->status_word);
+	status_str = fu_wacom_usb_device_status_to_string(self->status_word);
 	fwupd_codec_string_append(str, idt, "Status", status_str);
 }
 
 gboolean
-fu_wac_device_get_feature_report(FuWacDevice *self,
-				 guint8 *buf,
-				 gsize bufsz,
-				 FuHidDeviceFlags flags,
-				 GError **error)
+fu_wacom_usb_device_get_feature_report(FuWacomUsbDevice *self,
+				       guint8 *buf,
+				       gsize bufsz,
+				       FuHidDeviceFlags flags,
+				       GError **error)
 {
 	guint8 cmd = buf[0];
 
@@ -121,7 +123,7 @@ fu_wac_device_get_feature_report(FuWacDevice *self,
 				      cmd,
 				      buf,
 				      bufsz,
-				      FU_WAC_DEVICE_TIMEOUT,
+				      FU_WACOM_USB_DEVICE_TIMEOUT,
 				      flags | FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error))
 		return FALSE;
@@ -140,24 +142,24 @@ fu_wac_device_get_feature_report(FuWacDevice *self,
 }
 
 gboolean
-fu_wac_device_set_feature_report(FuWacDevice *self,
-				 guint8 *buf,
-				 gsize bufsz,
-				 FuHidDeviceFlags flags,
-				 GError **error)
+fu_wacom_usb_device_set_feature_report(FuWacomUsbDevice *self,
+				       guint8 *buf,
+				       gsize bufsz,
+				       FuHidDeviceFlags flags,
+				       GError **error)
 {
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					buf[0],
 					buf,
 					bufsz,
-					FU_WAC_DEVICE_TIMEOUT,
+					FU_WACOM_USB_DEVICE_TIMEOUT,
 					flags | FU_HID_DEVICE_FLAG_IS_FEATURE |
 					    FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 					error);
 }
 
 static gboolean
-fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_ensure_flash_descriptors(FuWacomUsbDevice *self, GError **error)
 {
 	gsize sz = (self->nr_flash_blocks * 10) + 1;
 	g_autofree guint8 *buf = NULL;
@@ -169,13 +171,13 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 	/* hit hardware */
 	buf = g_malloc(sz);
 	memset(buf, 0xff, sz);
-	buf[0] = FU_WAC_REPORT_ID_GET_FLASH_DESCRIPTOR;
-	if (!fu_wac_device_get_feature_report(self, buf, sz, FU_HID_DEVICE_FLAG_NONE, error))
+	buf[0] = FU_WACOM_USB_REPORT_ID_GET_FLASH_DESCRIPTOR;
+	if (!fu_wacom_usb_device_get_feature_report(self, buf, sz, FU_HID_DEVICE_FLAG_NONE, error))
 		return FALSE;
 
 	/* parse */
 	for (guint i = 0; i < self->nr_flash_blocks; i++) {
-		g_autofree FuWacFlashDescriptor *fd = g_new0(FuWacFlashDescriptor, 1);
+		g_autofree FuWacomUsbFlashDescriptor *fd = g_new0(FuWacomUsbFlashDescriptor, 1);
 		const guint blksz = 0x0A;
 		if (!fu_memread_uint32_safe(buf,
 					    sz,
@@ -214,28 +216,28 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_ensure_status(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_ensure_status(FuWacomUsbDevice *self, GError **error)
 {
 	g_autofree gchar *str = NULL;
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_STATUS, [1 ... 4] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_GET_STATUS, [1 ... 4] = 0xff};
 
 	/* hit hardware */
-	if (!fu_wac_device_get_feature_report(self,
-					      buf,
-					      sizeof(buf),
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error))
+	if (!fu_wacom_usb_device_get_feature_report(self,
+						    buf,
+						    sizeof(buf),
+						    FU_HID_DEVICE_FLAG_NONE,
+						    error))
 		return FALSE;
 
 	/* parse */
 	self->status_word = fu_memread_uint32(buf + 1, G_LITTLE_ENDIAN);
-	str = fu_wac_device_status_to_string(self->status_word);
+	str = fu_wacom_usb_device_status_to_string(self->status_word);
 	g_debug("status now: %s", str);
 	return TRUE;
 }
 
 static gboolean
-fu_wac_device_ensure_checksums(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_ensure_checksums(FuWacomUsbDevice *self, GError **error)
 {
 	gsize sz = (self->nr_flash_blocks * 4) + 5;
 	guint32 updater_version;
@@ -243,8 +245,8 @@ fu_wac_device_ensure_checksums(FuWacDevice *self, GError **error)
 
 	/* hit hardware */
 	memset(buf, 0xff, sz);
-	buf[0] = FU_WAC_REPORT_ID_GET_CHECKSUMS;
-	if (!fu_wac_device_get_feature_report(self, buf, sz, FU_HID_DEVICE_FLAG_NONE, error))
+	buf[0] = FU_WACOM_USB_REPORT_ID_GET_CHECKSUMS;
+	if (!fu_wacom_usb_device_get_feature_report(self, buf, sz, FU_HID_DEVICE_FLAG_NONE, error))
 		return FALSE;
 
 	/* parse */
@@ -264,16 +266,16 @@ fu_wac_device_ensure_checksums(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_ensure_firmware_index(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_ensure_firmware_index(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_CURRENT_FIRMWARE_IDX, [1 ... 2] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_GET_CURRENT_FIRMWARE_IDX, [1 ... 2] = 0xff};
 
 	/* hit hardware */
-	if (!fu_wac_device_get_feature_report(self,
-					      buf,
-					      sizeof(buf),
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error))
+	if (!fu_wacom_usb_device_get_feature_report(self,
+						    buf,
+						    sizeof(buf),
+						    FU_HID_DEVICE_FLAG_NONE,
+						    error))
 		return FALSE;
 
 	/* parse */
@@ -282,16 +284,16 @@ fu_wac_device_ensure_firmware_index(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_ensure_parameters(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_ensure_parameters(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_PARAMETERS, [1 ... 12] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_GET_PARAMETERS, [1 ... 12] = 0xff};
 
 	/* hit hardware */
-	if (!fu_wac_device_get_feature_report(self,
-					      buf,
-					      sizeof(buf),
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error))
+	if (!fu_wacom_usb_device_get_feature_report(self,
+						    buf,
+						    sizeof(buf),
+						    FU_HID_DEVICE_FLAG_NONE,
+						    error))
 		return FALSE;
 
 	/* parse */
@@ -305,7 +307,7 @@ fu_wac_device_ensure_parameters(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_write_block(FuWacDevice *self, guint32 addr, GBytes *blob, GError **error)
+fu_wacom_usb_device_write_block(FuWacomUsbDevice *self, guint32 addr, GBytes *blob, GError **error)
 {
 	const guint8 *tmp;
 	gsize bufsz = self->write_block_sz + 5;
@@ -326,7 +328,7 @@ fu_wac_device_write_block(FuWacDevice *self, guint32 addr, GBytes *blob, GError 
 	/* build packet */
 	buf = g_malloc(bufsz);
 	memset(buf, 0xff, bufsz);
-	buf[0] = FU_WAC_REPORT_ID_WRITE_BLOCK;
+	buf[0] = FU_WACOM_USB_REPORT_ID_WRITE_BLOCK;
 	fu_memwrite_uint32(buf + 1, addr, G_LITTLE_ENDIAN);
 	if (sz > 0) {
 		if (!fu_memcpy_safe(buf,
@@ -341,108 +343,116 @@ fu_wac_device_write_block(FuWacDevice *self, guint32 addr, GBytes *blob, GError 
 	}
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self, buf, bufsz, FU_HID_DEVICE_FLAG_NONE, error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      bufsz,
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 static gboolean
-fu_wac_device_erase_block(FuWacDevice *self, guint32 addr, GError **error)
+fu_wacom_usb_device_erase_block(FuWacomUsbDevice *self, guint32 addr, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_ERASE_BLOCK, [1 ... 4] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_ERASE_BLOCK, [1 ... 4] = 0xff};
 
 	/* build packet */
 	fu_memwrite_uint32(buf + 1, addr, G_LITTLE_ENDIAN);
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self,
-						buf,
-						sizeof(buf),
-						FU_HID_DEVICE_FLAG_NONE,
-						error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      sizeof(buf),
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 gboolean
-fu_wac_device_update_reset(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_update_reset(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_UPDATE_RESET, [1 ... 4] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_UPDATE_RESET, [1 ... 4] = 0xff};
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self,
-						buf,
-						sizeof(buf),
-						FU_HID_DEVICE_FLAG_NONE,
-						error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      sizeof(buf),
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 static gboolean
-fu_wac_device_set_checksum_of_block(FuWacDevice *self,
-				    guint16 block_nr,
-				    guint32 checksum,
-				    GError **error)
+fu_wacom_usb_device_set_checksum_of_block(FuWacomUsbDevice *self,
+					  guint16 block_nr,
+					  guint32 checksum,
+					  GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_SET_CHECKSUM_FOR_BLOCK, [1 ... 6] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_SET_CHECKSUM_FOR_BLOCK, [1 ... 6] = 0xff};
 
 	/* build packet */
 	fu_memwrite_uint16(buf + 1, block_nr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint32(buf + 3, checksum, G_LITTLE_ENDIAN);
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self,
-						buf,
-						sizeof(buf),
-						FU_HID_DEVICE_FLAG_NONE,
-						error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      sizeof(buf),
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 static gboolean
-fu_wac_device_calculate_checksum_of_block(FuWacDevice *self, guint16 block_nr, GError **error)
+fu_wacom_usb_device_calculate_checksum_of_block(FuWacomUsbDevice *self,
+						guint16 block_nr,
+						GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_CALCULATE_CHECKSUM_FOR_BLOCK, [1 ... 2] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_CALCULATE_CHECKSUM_FOR_BLOCK,
+			[1 ... 2] = 0xff};
 
 	/* build packet */
 	fu_memwrite_uint16(buf + 1, block_nr, G_LITTLE_ENDIAN);
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self,
-						buf,
-						sizeof(buf),
-						FU_HID_DEVICE_FLAG_NONE,
-						error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      sizeof(buf),
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 static gboolean
-fu_wac_device_write_checksum_table(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_write_checksum_table(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_WRITE_CHECKSUM_TABLE, [1 ... 4] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_WRITE_CHECKSUM_TABLE, [1 ... 4] = 0xff};
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self,
-						buf,
-						sizeof(buf),
-						FU_HID_DEVICE_FLAG_NONE,
-						error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      sizeof(buf),
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 gboolean
-fu_wac_device_switch_to_flash_loader(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_switch_to_flash_loader(FuWacomUsbDevice *self, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_SWITCH_TO_FLASH_LOADER, [1] = 0x05, [2] = 0x6a};
+	guint8 buf[] =
+	    {[0] = FU_WACOM_USB_REPORT_ID_SWITCH_TO_FLASH_LOADER, [1] = 0x05, [2] = 0x6a};
 
 	/* hit hardware */
-	return fu_wac_device_set_feature_report(self,
-						buf,
-						sizeof(buf),
-						FU_HID_DEVICE_FLAG_NONE,
-						error);
+	return fu_wacom_usb_device_set_feature_report(self,
+						      buf,
+						      sizeof(buf),
+						      FU_HID_DEVICE_FLAG_NONE,
+						      error);
 }
 
 static gboolean
-fu_wac_device_write_firmware(FuDevice *device,
-			     FuFirmware *firmware,
-			     FuProgress *progress,
-			     FwupdInstallFlags flags,
-			     GError **error)
+fu_wacom_usb_device_write_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
-	FuWacDevice *self = FU_WAC_DEVICE(device);
+	FuWacomUsbDevice *self = FU_WACOM_USB_DEVICE(device);
 	gsize blocks_done = 0;
 	gsize blocks_total = 0;
 	g_autofree guint32 *csum_local = NULL;
@@ -458,7 +468,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 
 	/* get current selected device */
-	if (!fu_wac_device_ensure_firmware_index(self, error))
+	if (!fu_wacom_usb_device_ensure_firmware_index(self, error))
 		return FALSE;
 
 	/* use the correct image from the firmware */
@@ -468,24 +478,24 @@ fu_wac_device_write_firmware(FuDevice *device,
 	g_debug("using image at addr 0x%0x", (guint)fu_firmware_get_addr(img));
 
 	/* get firmware parameters (page sz and transfer sz) */
-	if (!fu_wac_device_ensure_parameters(self, error))
+	if (!fu_wacom_usb_device_ensure_parameters(self, error))
 		return FALSE;
 
 	/* get the current flash descriptors */
-	if (!fu_wac_device_ensure_flash_descriptors(self, error))
+	if (!fu_wacom_usb_device_ensure_flash_descriptors(self, error))
 		return FALSE;
 
 	/* get the updater protocol version */
-	if (!fu_wac_device_ensure_checksums(self, error))
+	if (!fu_wacom_usb_device_ensure_checksums(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* clear all checksums of pages */
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
-		if (fu_wac_device_flash_descriptor_is_wp(fd))
+		FuWacomUsbFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
+		if (fu_wacom_usb_device_flash_descriptor_is_wp(fd))
 			continue;
-		if (!fu_wac_device_set_checksum_of_block(self, i, 0x0, error))
+		if (!fu_wacom_usb_device_set_checksum_of_block(self, i, 0x0, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -496,11 +506,11 @@ fu_wac_device_write_firmware(FuDevice *device,
 					 NULL,
 					 (GDestroyNotify)g_bytes_unref);
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
+		FuWacomUsbFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
 		g_autoptr(GBytes) blob_tmp = NULL;
 
-		if (fu_wac_device_flash_descriptor_is_wp(fd))
+		if (fu_wacom_usb_device_flash_descriptor_is_wp(fd))
 			continue;
 		blob_tmp = fu_firmware_write_chunk(img, fd->start_addr, fd->block_sz, NULL);
 		if (blob_tmp == NULL)
@@ -515,12 +525,12 @@ fu_wac_device_write_firmware(FuDevice *device,
 	/* write the data into the flash page */
 	csum_local = g_new0(guint32, self->flash_descriptors->len);
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
+		FuWacomUsbFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
 		g_autoptr(FuChunkArray) chunks = NULL;
 
 		/* if page is protected */
-		if (fu_wac_device_flash_descriptor_is_wp(fd))
+		if (fu_wacom_usb_device_flash_descriptor_is_wp(fd))
 			continue;
 
 		/* get data for page */
@@ -538,7 +548,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		}
 
 		/* erase entire block */
-		if (!fu_wac_device_erase_block(self, i, error))
+		if (!fu_wacom_usb_device_erase_block(self, i, error))
 			return FALSE;
 
 		/* write block in chunks */
@@ -555,10 +565,10 @@ fu_wac_device_write_firmware(FuDevice *device,
 			if (chk == NULL)
 				return FALSE;
 			blob_chunk = fu_chunk_get_bytes(chk);
-			if (!fu_wac_device_write_block(self,
-						       fu_chunk_get_address(chk),
-						       blob_chunk,
-						       error))
+			if (!fu_wacom_usb_device_write_block(self,
+							     fu_chunk_get_address(chk),
+							     blob_chunk,
+							     error))
 				return FALSE;
 		}
 
@@ -566,7 +576,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		csum_local[i] = GUINT32_TO_LE(/* nocheck:blocked */
 					      fu_sum32w_bytes(blob_block, G_LITTLE_ENDIAN));
 		g_debug("block checksum %02u: 0x%08x", i, csum_local[i]);
-		if (!fu_wac_device_set_checksum_of_block(self, i, csum_local[i], error))
+		if (!fu_wacom_usb_device_set_checksum_of_block(self, i, csum_local[i], error))
 			return FALSE;
 
 		/* update device progress */
@@ -587,20 +597,20 @@ fu_wac_device_write_firmware(FuDevice *device,
 
 	/* calculate CRC inside device */
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		if (!fu_wac_device_calculate_checksum_of_block(self, i, error))
+		if (!fu_wacom_usb_device_calculate_checksum_of_block(self, i, error))
 			return FALSE;
 	}
 
 	/* read all CRC of all pages and verify with local CRC */
-	if (!fu_wac_device_ensure_checksums(self, error))
+	if (!fu_wacom_usb_device_ensure_checksums(self, error))
 		return FALSE;
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
+		FuWacomUsbFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
 		guint32 csum_rom;
 
 		/* if page is protected */
-		if (fu_wac_device_flash_descriptor_is_wp(fd))
+		if (fu_wacom_usb_device_flash_descriptor_is_wp(fd))
 			continue;
 
 		/* no more written pages */
@@ -628,7 +638,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* store host CRC into flash */
-	if (!fu_wac_device_write_checksum_table(self, error))
+	if (!fu_wacom_usb_device_write_checksum_table(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -637,21 +647,21 @@ fu_wac_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_add_modules_bluetooth(FuWacomUsbDevice *self, GError **error)
 {
-	g_autoptr(FuWacModule) module = NULL;
-	g_autoptr(FuWacModule) module_id6 = NULL;
+	g_autoptr(FuWacomUsbModule) module = NULL;
+	g_autoptr(FuWacomUsbModule) module_id6 = NULL;
 	guint16 fw_ver;
 
 	/* it can take up to 5s to get the new version after a fw update */
 	for (guint i = 0; i < 5; i++) {
-		guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
+		guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
 				[1 ... 14] = 0xff};
-		if (!fu_wac_device_get_feature_report(self,
-						      buf,
-						      sizeof(buf),
-						      FU_HID_DEVICE_FLAG_NONE,
-						      error)) {
+		if (!fu_wacom_usb_device_get_feature_report(self,
+							    buf,
+							    sizeof(buf),
+							    FU_HID_DEVICE_FLAG_NONE,
+							    error)) {
 			g_prefix_error_literal(error,
 					       "failed to get GetFirmwareVersionBluetooth: ");
 			return FALSE;
@@ -667,12 +677,12 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	 * Initialize both and rely on the firmware update containing the appropriate
 	 * package.
 	 */
-	module = fu_wac_module_bluetooth_new(FU_DEVICE(self));
+	module = fu_wacom_usb_module_bluetooth_new(FU_DEVICE(self));
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 	fu_device_set_name(FU_DEVICE(module), "Legacy Bluetooth Module");
 	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
 
-	module_id6 = fu_wac_module_bluetooth_id6_new(FU_DEVICE(self));
+	module_id6 = fu_wacom_usb_module_bluetooth_id6_new(FU_DEVICE(self));
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module_id6));
 	fu_device_set_name(FU_DEVICE(module_id6), "Legacy Bluetooth Module ID6");
 	fu_device_set_version_raw(FU_DEVICE(module_id6), fw_ver);
@@ -680,28 +690,28 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_add_modules_legacy(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_add_modules_legacy(FuWacomUsbDevice *self, GError **error)
 {
 	g_autoptr(GError) error_bt = NULL;
 
 	/* optional bluetooth */
-	if (!fu_wac_device_add_modules_bluetooth(self, &error_bt))
+	if (!fu_wacom_usb_device_add_modules_bluetooth(self, &error_bt))
 		g_debug("no bluetooth hardware: %s", error_bt->message);
 
 	return TRUE;
 }
 
 static gboolean
-fu_wac_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_wacom_usb_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_FW_DESCRIPTOR, [1 ... 31] = 0xff};
+	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_FW_DESCRIPTOR, [1 ... 31] = 0xff};
 	GByteArray *out = (GByteArray *)user_data;
 
-	if (!fu_wac_device_get_feature_report(FU_WAC_DEVICE(device),
-					      buf,
-					      sizeof(buf),
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error)) {
+	if (!fu_wacom_usb_device_get_feature_report(FU_WACOM_USB_DEVICE(device),
+						    buf,
+						    sizeof(buf),
+						    FU_HID_DEVICE_FLAG_NONE,
+						    error)) {
 		g_prefix_error_literal(error, "failed to get DeviceFirmwareDescriptor: ");
 		return FALSE;
 	}
@@ -755,22 +765,23 @@ fu_wac_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **erro
 }
 
 static gboolean
-fu_wac_device_add_modules(FuWacDevice *self, GError **error)
+fu_wacom_usb_device_add_modules(FuWacomUsbDevice *self, GError **error)
 {
 	g_autofree gchar *version_bootloader = NULL;
 	guint16 boot_ver;
 	guint8 number_modules;
 	gsize offset = 0;
-	g_autoptr(FuStructModuleDesc) st_desc = NULL;
+	g_autoptr(FuStructWacomUsbModuleDesc) st_desc = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
 	g_byte_array_set_size(buf, 32);
 	/* wait for all modules started successfully */
 	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_wac_device_add_modules_cb,
-				  FU_WAC_DEVICE_MODULE_RETRY_DELAY,
-				  FU_WAC_DEVICE_TIMEOUT / FU_WAC_DEVICE_MODULE_RETRY_DELAY,
+				  fu_wacom_usb_device_add_modules_cb,
+				  FU_WACOM_USB_DEVICE_MODULE_RETRY_DELAY,
+				  FU_WACOM_USB_DEVICE_TIMEOUT /
+				      FU_WACOM_USB_DEVICE_MODULE_RETRY_DELAY,
 				  buf,
 				  &error_local)) {
 		if (error_local->code != FWUPD_ERROR_INVALID_DATA) {
@@ -782,32 +793,32 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 	fu_dump_raw(G_LOG_DOMAIN, "modules", buf->data, buf->len);
 
 	/* bootloader version */
-	st_desc = fu_struct_module_desc_parse(buf->data, buf->len, offset, error);
+	st_desc = fu_struct_wacom_usb_module_desc_parse(buf->data, buf->len, offset, error);
 	if (st_desc == NULL)
 		return FALSE;
-	boot_ver = fu_struct_module_desc_get_bootloader_version(st_desc);
+	boot_ver = fu_struct_wacom_usb_module_desc_get_bootloader_version(st_desc);
 	version_bootloader = fu_version_from_uint16(boot_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 
 	/* no padding */
-	offset += FU_STRUCT_MODULE_DESC_SIZE;
+	offset += FU_STRUCT_WACOM_USB_MODULE_DESC_SIZE;
 
 	/* get versions of each module */
-	number_modules = fu_struct_module_desc_get_number_modules(st_desc);
+	number_modules = fu_struct_wacom_usb_module_desc_get_number_modules(st_desc);
 	for (guint8 i = 0; i < number_modules; i++) {
 		guint32 ver;
 		guint16 ver2;
-		FuWacModuleFwType fw_type;
-		g_autoptr(FuStructModuleItem) st_item = NULL;
-		g_autoptr(FuWacModule) module = NULL;
+		FuWacomUsbModuleFwType fw_type;
+		g_autoptr(FuStructWacomUsbModuleItem) st_item = NULL;
+		g_autoptr(FuWacomUsbModule) module = NULL;
 
-		st_item = fu_struct_module_item_parse(buf->data, buf->len, offset, error);
+		st_item = fu_struct_wacom_usb_module_item_parse(buf->data, buf->len, offset, error);
 		if (st_item == NULL)
 			return FALSE;
 
-		ver = fu_struct_module_item_get_version(st_item);
-		ver2 = fu_struct_module_item_get_version2(st_item);
+		ver = fu_struct_wacom_usb_module_item_get_version(st_item);
+		ver2 = fu_struct_wacom_usb_module_item_get_version2(st_item);
 
 		/*
 		 * When ver2 is available and not 0, it is appended to ver in order to make it BCD
@@ -818,84 +829,84 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			ver |= (ver2 << 8);
 		}
 
-		fw_type = fu_struct_module_item_get_kind(st_item) & 0x7F;
+		fw_type = fu_struct_wacom_usb_module_item_get_kind(st_item) & 0x7F;
 		switch (fw_type) {
-		case FU_WAC_MODULE_FW_TYPE_TOUCH:
-			module = fu_wac_module_touch_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_TOUCH:
+			module = fu_wacom_usb_module_touch_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Touch Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_TOUCH_ID7:
-			module = fu_wac_module_touch_id7_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_TOUCH_ID7:
+			module = fu_wacom_usb_module_touch_id7_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Touch Module");
 			fu_device_set_summary(FU_DEVICE(module), "ID7");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
-			module = fu_wac_module_bluetooth_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_BLUETOOTH:
+			module = fu_wacom_usb_module_bluetooth_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Bluetooth Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6:
-			module = fu_wac_module_bluetooth_id6_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_BLUETOOTH_ID6:
+			module = fu_wacom_usb_module_bluetooth_id6_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Bluetooth Module");
 			fu_device_set_summary(FU_DEVICE(module), "ID6");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_SCALER:
-			module = fu_wac_module_scaler_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_SCALER:
+			module = fu_wacom_usb_module_scaler_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Scaler Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID9:
-			module = fu_wac_module_bluetooth_id9_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_BLUETOOTH_ID9:
+			module = fu_wacom_usb_module_bluetooth_id9_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Bluetooth Module");
 			fu_device_set_summary(FU_DEVICE(module), "ID9");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_SUB_CPU:
-			module = fu_wac_module_sub_cpu_new(FU_DEVICE(self));
+		case FU_WACOM_USB_MODULE_FW_TYPE_SUB_CPU:
+			module = fu_wacom_usb_module_sub_cpu_new(FU_DEVICE(self));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), "Sub CPU Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
-		case FU_WAC_MODULE_FW_TYPE_MAIN:
+		case FU_WACOM_USB_MODULE_FW_TYPE_MAIN:
 			fu_device_set_version_raw(FU_DEVICE(self), ver);
 			break;
 		default:
 			g_warning("unknown submodule type 0x%0x", fw_type);
 			break;
 		}
-		offset += FU_STRUCT_MODULE_ITEM_SIZE;
+		offset += FU_STRUCT_WACOM_USB_MODULE_ITEM_SIZE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_wac_device_setup(FuDevice *device, GError **error)
+fu_wacom_usb_device_setup(FuDevice *device, GError **error)
 {
-	FuWacDevice *self = FU_WAC_DEVICE(device);
+	FuWacomUsbDevice *self = FU_WACOM_USB_DEVICE(device);
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_wac_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_wacom_usb_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get current status */
-	if (!fu_wac_device_ensure_status(self, error))
+	if (!fu_wacom_usb_device_ensure_status(self, error))
 		return FALSE;
 
 	/* get version of each sub-module */
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION)) {
-		if (!fu_wac_device_add_modules_legacy(self, error))
+		if (!fu_wacom_usb_device_add_modules_legacy(self, error))
 			return FALSE;
 	} else {
-		if (!fu_wac_device_add_modules(self, error))
+		if (!fu_wacom_usb_device_add_modules(self, error))
 			return FALSE;
 	}
 
@@ -904,7 +915,7 @@ fu_wac_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_wac_device_close(FuDevice *device, GError **error)
+fu_wacom_usb_device_close(FuDevice *device, GError **error)
 {
 	/* reattach wacom.ko */
 	if (!fu_usb_device_release_interface(FU_USB_DEVICE(device),
@@ -923,11 +934,11 @@ fu_wac_device_close(FuDevice *device, GError **error)
 	fu_device_sleep(device, 20); /* ms */
 
 	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_wac_device_parent_class)->close(device, error);
+	return FU_DEVICE_CLASS(fu_wacom_usb_device_parent_class)->close(device, error);
 }
 
 static void
-fu_wac_device_set_progress(FuDevice *device, FuProgress *progress)
+fu_wacom_usb_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -938,7 +949,7 @@ fu_wac_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static gchar *
-fu_wac_device_convert_version(FuDevice *device, guint64 version_raw)
+fu_wacom_usb_device_convert_version(FuDevice *device, guint64 version_raw)
 {
 	if (version_raw > G_MAXUINT16)
 		return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
@@ -947,7 +958,7 @@ fu_wac_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static void
-fu_wac_device_init(FuWacDevice *self)
+fu_wacom_usb_device_init(FuWacomUsbDevice *self)
 {
 	self->flash_descriptors = g_ptr_array_new_with_free_func(g_free);
 	self->checksums = g_array_new(FALSE, FALSE, sizeof(guint32));
@@ -961,31 +972,31 @@ fu_wac_device_init(FuWacDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_WAC_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_WACOM_USB_FIRMWARE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 30); /* ms */
 }
 
 static void
-fu_wac_device_finalize(GObject *object)
+fu_wacom_usb_device_finalize(GObject *object)
 {
-	FuWacDevice *self = FU_WAC_DEVICE(object);
+	FuWacomUsbDevice *self = FU_WACOM_USB_DEVICE(object);
 
 	g_ptr_array_unref(self->flash_descriptors);
 	g_array_unref(self->checksums);
 
-	G_OBJECT_CLASS(fu_wac_device_parent_class)->finalize(object);
+	G_OBJECT_CLASS(fu_wacom_usb_device_parent_class)->finalize(object);
 }
 
 static void
-fu_wac_device_class_init(FuWacDeviceClass *klass)
+fu_wacom_usb_device_class_init(FuWacomUsbDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_wac_device_finalize;
-	device_class->write_firmware = fu_wac_device_write_firmware;
-	device_class->to_string = fu_wac_device_to_string;
-	device_class->setup = fu_wac_device_setup;
-	device_class->close = fu_wac_device_close;
-	device_class->set_progress = fu_wac_device_set_progress;
-	device_class->convert_version = fu_wac_device_convert_version;
+	object_class->finalize = fu_wacom_usb_device_finalize;
+	device_class->write_firmware = fu_wacom_usb_device_write_firmware;
+	device_class->to_string = fu_wacom_usb_device_to_string;
+	device_class->setup = fu_wacom_usb_device_setup;
+	device_class->close = fu_wacom_usb_device_close;
+	device_class->set_progress = fu_wacom_usb_device_set_progress;
+	device_class->convert_version = fu_wacom_usb_device_convert_version;
 }

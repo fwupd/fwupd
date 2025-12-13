@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuWacPlugin, fu_wac_plugin, FU, WAC_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuWacomUsbPlugin, fu_wacom_usb_plugin, FU, WACOM_USB_PLUGIN, FuPlugin)
