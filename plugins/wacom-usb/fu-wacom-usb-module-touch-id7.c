@@ -9,12 +9,12 @@
 
 #include <string.h>
 
-#include "fu-wac-device.h"
-#include "fu-wac-module-touch-id7.h"
-#include "fu-wac-struct.h"
+#include "fu-wacom-usb-device.h"
+#include "fu-wacom-usb-module-touch-id7.h"
+#include "fu-wacom-usb-struct.h"
 
-struct _FuWacModuleTouchId7 {
-	FuWacModule parent_instance;
+struct _FuWacomUsbModuleTouchId7 {
+	FuWacomUsbModule parent_instance;
 };
 
 typedef struct {
@@ -22,12 +22,12 @@ typedef struct {
 	const guint8 *buf;
 	gsize bufsz;
 	gsize offset;
-} FuWacWtaInfo;
+} FuWacomUsbWtaInfo;
 
 typedef struct {
 	guint32 header_size;
 	guint16 firmware_number;
-} FuWacWtaFileHeader;
+} FuWacomUsbWtaFileHeader;
 
 typedef struct {
 	guint32 file_name_length;
@@ -35,9 +35,9 @@ typedef struct {
 	guint8 ic_id;
 	guint8 ma_id;
 	guint32 block_count;
-} FuWacWtaRecordHeader;
+} FuWacomUsbWtaRecordHeader;
 
-G_DEFINE_TYPE(FuWacModuleTouchId7, fu_wac_module_touch_id7, FU_TYPE_WAC_MODULE)
+G_DEFINE_TYPE(FuWacomUsbModuleTouchId7, fu_wacom_usb_module_touch_id7, FU_TYPE_WACOM_USB_MODULE)
 
 /**
  * Read and advance past a WTA file header.
@@ -53,9 +53,9 @@ G_DEFINE_TYPE(FuWacModuleTouchId7, fu_wac_module_touch_id7, FU_TYPE_WAC_MODULE)
  *
  */
 static gboolean
-fu_wac_module_touch_id7_read_file_header(FuWacWtaFileHeader *header,
-					 FuWacWtaInfo *info,
-					 GError **error)
+fu_wacom_usb_module_touch_id7_read_file_header(FuWacomUsbWtaFileHeader *header,
+					       FuWacomUsbWtaInfo *info,
+					       GError **error)
 {
 	info->offset += 4;
 
@@ -80,7 +80,7 @@ fu_wac_module_touch_id7_read_file_header(FuWacWtaFileHeader *header,
 }
 
 /**
- * fu_wac_module_touch_id7_read_record_header:
+ * fu_wacom_usb_module_touch_id7_read_record_header:
  *
  * Read and advance past a WTA record header.
  *
@@ -101,9 +101,9 @@ fu_wac_module_touch_id7_read_file_header(FuWacWtaFileHeader *header,
  *
  */
 static gboolean
-fu_wac_module_touch_id7_read_record_header(FuWacWtaRecordHeader *header,
-					   FuWacWtaInfo *info,
-					   GError **error)
+fu_wacom_usb_module_touch_id7_read_record_header(FuWacomUsbWtaRecordHeader *header,
+						 FuWacomUsbWtaInfo *info,
+						 GError **error)
 {
 	if (!fu_memread_uint32_safe(info->buf,
 				    info->bufsz,
@@ -145,8 +145,8 @@ fu_wac_module_touch_id7_read_record_header(FuWacWtaRecordHeader *header,
 }
 
 /**
- * fu_wac_module_touch_id7_generate_command:
- * @header: A #FuWacWtaRecordHeader
+ * fu_wacom_usb_module_touch_id7_generate_command:
+ * @header: A #FuWacomUsbWtaRecordHeader
  * @cmd: The type of command to be sent
  * @op_id: The operation serial number
  * @buf: The buffer to write the command into
@@ -155,10 +155,10 @@ fu_wac_module_touch_id7_read_record_header(FuWacWtaRecordHeader *header,
  *
  */
 static void
-fu_wac_module_touch_id7_generate_command(const FuWacWtaRecordHeader *header,
-					 guint8 cmd,
-					 guint16 op_id,
-					 guint8 *buf)
+fu_wacom_usb_module_touch_id7_generate_command(const FuWacomUsbWtaRecordHeader *header,
+					       guint8 cmd,
+					       guint16 op_id,
+					       guint8 *buf)
 {
 	buf[0] = cmd;
 	buf[1] = header->ic_id;
@@ -168,17 +168,17 @@ fu_wac_module_touch_id7_generate_command(const FuWacWtaRecordHeader *header,
 }
 
 /**
- * fu_wac_module_touch_id7_write_block:
+ * fu_wacom_usb_module_touch_id7_write_block:
  *
  * Write the data of a single firmware block to the device.
  *
  */
 static gboolean
-fu_wac_module_touch_id7_write_block(FuWacModule *self,
-				    FuWacWtaInfo *info,
-				    FuProgress *progress,
-				    FuWacWtaRecordHeader *record_hdr,
-				    GError **error)
+fu_wacom_usb_module_touch_id7_write_block(FuWacomUsbModule *self,
+					  FuWacomUsbWtaInfo *info,
+					  FuProgress *progress,
+					  FuWacomUsbWtaRecordHeader *record_hdr,
+					  GError **error)
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(FuStructWtaBlockHeader) st_blk = NULL;
@@ -191,31 +191,31 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 	chunks = fu_chunk_array_new(info->buf + info->offset,
 				    fu_struct_wta_block_header_get_block_size(st_blk),
 				    fu_struct_wta_block_header_get_block_start(st_blk),
-				    0x0,		       /* page_sz */
-				    FU_WAC_MODULE_CHUNK_SIZE); /* packet_sz */
+				    0x0,			     /* page_sz */
+				    FU_WACOM_USB_MODULE_CHUNK_SIZE); /* packet_sz */
 
 	/* write data */
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		guint8 buf[11 + FU_WAC_MODULE_CHUNK_SIZE] = {0};
+		guint8 buf[11 + FU_WACOM_USB_MODULE_CHUNK_SIZE] = {0};
 		g_autoptr(GBytes) blob_chunk = NULL;
 
-		buf[0] = FU_WAC_MODULE_COMMAND_DATA;
+		buf[0] = FU_WACOM_USB_MODULE_COMMAND_DATA;
 		buf[1] = record_hdr->ic_id;
 		buf[2] = record_hdr->ma_id;
 		fu_memwrite_uint32(&buf[3], info->op_id, G_LITTLE_ENDIAN);
 		fu_memwrite_uint32(&buf[7], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		memcpy(&buf[11], /* nocheck:blocked */
 		       fu_chunk_get_data(chk),
-		       FU_WAC_MODULE_CHUNK_SIZE);
+		       FU_WACOM_USB_MODULE_CHUNK_SIZE);
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
-		if (!fu_wac_module_set_feature(self,
-					       FU_WAC_MODULE_COMMAND_DATA,
-					       blob_chunk,
-					       fu_progress_get_child(progress),
-					       FU_WAC_MODULE_POLL_INTERVAL,
-					       FU_WAC_MODULE_DATA_TIMEOUT,
-					       error)) {
+		if (!fu_wacom_usb_module_set_feature(self,
+						     FU_WACOM_USB_MODULE_COMMAND_DATA,
+						     blob_chunk,
+						     fu_progress_get_child(progress),
+						     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+						     FU_WACOM_USB_MODULE_DATA_TIMEOUT,
+						     error)) {
 			g_prefix_error(error, "failed to write block %u: ", info->op_id);
 			return FALSE;
 		}
@@ -226,7 +226,7 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		 * record start and end commands */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						info->op_id,
-						info->bufsz / FU_WAC_MODULE_CHUNK_SIZE + 10);
+						info->bufsz / FU_WACOM_USB_MODULE_CHUNK_SIZE + 10);
 	}
 
 	/* incrementing data to the next block */
@@ -236,7 +236,7 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 }
 
 /**
- * fu_wac_module_touch_id7_write_record:
+ * fu_wacom_usb_module_touch_id7_write_record:
  *
  * Start and end the write process for a single touch id7 firmware record and
  * the block(s) it contains.
@@ -246,56 +246,60 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
  * the raw data for writing.
  */
 static gboolean
-fu_wac_module_touch_id7_write_record(FuWacModule *self,
-				     FuWacWtaInfo *info,
-				     FuProgress *progress,
-				     GError **error)
+fu_wacom_usb_module_touch_id7_write_record(FuWacomUsbModule *self,
+					   FuWacomUsbWtaInfo *info,
+					   FuProgress *progress,
+					   GError **error)
 {
-	FuWacWtaRecordHeader record_hdr = {0x0};
+	FuWacomUsbWtaRecordHeader record_hdr = {0x0};
 	g_autoptr(GBytes) blob_start = NULL;
 	g_autoptr(GBytes) blob_end = NULL;
 	guint8 command[11] = {0};
 
-	if (!fu_wac_module_touch_id7_read_record_header(&record_hdr, info, error))
+	if (!fu_wacom_usb_module_touch_id7_read_record_header(&record_hdr, info, error))
 		return FALSE;
 
 	/* start firmware record command */
-	fu_wac_module_touch_id7_generate_command(&record_hdr,
-						 FU_WAC_MODULE_COMMAND_START,
-						 info->op_id,
-						 command);
+	fu_wacom_usb_module_touch_id7_generate_command(&record_hdr,
+						       FU_WACOM_USB_MODULE_COMMAND_START,
+						       info->op_id,
+						       command);
 	blob_start = g_bytes_new(command, sizeof(command));
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_DATA,
-				       blob_start,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_DATA_TIMEOUT,
-				       error))
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_DATA,
+					     blob_start,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_DATA_TIMEOUT,
+					     error))
 		return FALSE;
 
 	info->op_id++;
 
 	/* write each block */
 	for (guint32 i = 0; i < record_hdr.block_count; i++) {
-		if (!fu_wac_module_touch_id7_write_block(self, info, progress, &record_hdr, error))
+		if (!fu_wacom_usb_module_touch_id7_write_block(self,
+							       info,
+							       progress,
+							       &record_hdr,
+							       error))
 			return FALSE;
 	}
 
 	/* end firmware record command */
-	fu_wac_module_touch_id7_generate_command(&record_hdr,
-						 FU_WAC_MODULE_COMMAND_END,
-						 info->op_id,
-						 command);
+	fu_wacom_usb_module_touch_id7_generate_command(&record_hdr,
+						       FU_WACOM_USB_MODULE_COMMAND_END,
+						       info->op_id,
+						       command);
 
 	blob_end = g_bytes_new(command, sizeof(command));
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_DATA,
-				       blob_end,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_DATA_TIMEOUT,
-				       error))
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_DATA,
+					     blob_end,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_DATA_TIMEOUT,
+					     error))
 		return FALSE;
 
 	info->op_id++;
@@ -304,7 +308,7 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 }
 
 /**
- * fu_wac_module_touch_id7_write_firmware:
+ * fu_wacom_usb_module_touch_id7_write_firmware:
  *
  * Start and End the overall update process for touch id7 firmware and the
  * record(s) it contains.
@@ -312,16 +316,16 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
  * potentially have less or more.
  */
 static gboolean
-fu_wac_module_touch_id7_write_firmware(FuDevice *device,
-				       FuFirmware *firmware,
-				       FuProgress *progress,
-				       FwupdInstallFlags flags,
-				       GError **error)
+fu_wacom_usb_module_touch_id7_write_firmware(FuDevice *device,
+					     FuFirmware *firmware,
+					     FuProgress *progress,
+					     FwupdInstallFlags flags,
+					     GError **error)
 {
-	FuWacModule *self = FU_WAC_MODULE(device);
+	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
 	g_autoptr(GBytes) blob = NULL;
-	FuWacWtaInfo info;
-	FuWacWtaFileHeader file_hdr;
+	FuWacomUsbWtaInfo info;
+	FuWacomUsbWtaFileHeader file_hdr;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -337,13 +341,13 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* start, which will erase the module */
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_START,
-				       NULL,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_START_TIMEOUT,
-				       error))
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_START,
+					     NULL,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_START_TIMEOUT,
+					     error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -351,12 +355,12 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 	info.offset = 0x0;
 	info.buf = g_bytes_get_data(blob, &info.bufsz);
 	info.op_id = 1;
-	if (!fu_wac_module_touch_id7_read_file_header(&file_hdr, &info, error))
+	if (!fu_wacom_usb_module_touch_id7_read_file_header(&file_hdr, &info, error))
 		return FALSE;
 
 	/* write each firmware record */
 	for (guint i = 0; i < file_hdr.firmware_number; i++) {
-		if (!fu_wac_module_touch_id7_write_record(self, &info, progress, error))
+		if (!fu_wacom_usb_module_touch_id7_write_record(self, &info, progress, error))
 			return FALSE;
 
 		/* increment data to the next firmware record */
@@ -365,13 +369,13 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* end */
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_END,
-				       NULL,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_END_TIMEOUT,
-				       error))
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_END,
+					     NULL,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_END_TIMEOUT,
+					     error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -380,28 +384,28 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 }
 
 static void
-fu_wac_module_touch_id7_init(FuWacModuleTouchId7 *self)
+fu_wacom_usb_module_touch_id7_init(FuWacomUsbModuleTouchId7 *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration(FU_DEVICE(self), 90);
 }
 
 static void
-fu_wac_module_touch_id7_class_init(FuWacModuleTouchId7Class *klass)
+fu_wacom_usb_module_touch_id7_class_init(FuWacomUsbModuleTouchId7Class *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_wac_module_touch_id7_write_firmware;
+	device_class->write_firmware = fu_wacom_usb_module_touch_id7_write_firmware;
 }
 
-FuWacModule *
-fu_wac_module_touch_id7_new(FuDevice *proxy)
+FuWacomUsbModule *
+fu_wacom_usb_module_touch_id7_new(FuDevice *proxy)
 {
-	FuWacModule *module = NULL;
-	module = g_object_new(FU_TYPE_WAC_MODULE_TOUCH_ID7,
+	FuWacomUsbModule *module = NULL;
+	module = g_object_new(FU_TYPE_WACOM_USB_MODULE_TOUCH_ID7,
 			      "proxy",
 			      proxy,
 			      "fw-type",
-			      FU_WAC_MODULE_FW_TYPE_TOUCH_ID7,
+			      FU_WACOM_USB_MODULE_FW_TYPE_TOUCH_ID7,
 			      NULL);
 	return module;
 }

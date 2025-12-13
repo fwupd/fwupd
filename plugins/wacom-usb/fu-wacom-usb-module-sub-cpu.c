@@ -8,22 +8,24 @@
 
 #include <string.h>
 
-#include "fu-wac-common.h"
-#include "fu-wac-device.h"
-#include "fu-wac-module-sub-cpu.h"
-#include "fu-wac-struct.h"
+#include "fu-wacom-usb-common.h"
+#include "fu-wacom-usb-device.h"
+#include "fu-wacom-usb-module-sub-cpu.h"
+#include "fu-wacom-usb-struct.h"
 
-struct _FuWacModuleSubCpu {
-	FuWacModule parent_instance;
+struct _FuWacomUsbModuleSubCpu {
+	FuWacomUsbModule parent_instance;
 };
 
-G_DEFINE_TYPE(FuWacModuleSubCpu, fu_wac_module_sub_cpu, FU_TYPE_WAC_MODULE)
+G_DEFINE_TYPE(FuWacomUsbModuleSubCpu, fu_wacom_usb_module_sub_cpu, FU_TYPE_WACOM_USB_MODULE)
 
-#define FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ   256
-#define FU_WAC_MODULE_SUB_CPU_START_NORMAL 0x00
+#define FU_WACOM_USB_MODULE_SUB_CPU_PAYLOAD_SZ	 256
+#define FU_WACOM_USB_MODULE_SUB_CPU_START_NORMAL 0x00
 
 static FuChunk *
-fu_wac_module_sub_cpu_create_chunk(GPtrArray *srec_records, guint32 *record_num, GError **error)
+fu_wacom_usb_module_sub_cpu_create_chunk(GPtrArray *srec_records,
+					 guint32 *record_num,
+					 GError **error)
 {
 	FuChunk *chunk;
 	guint32 base_addr = 0;
@@ -54,7 +56,7 @@ fu_wac_module_sub_cpu_create_chunk(GPtrArray *srec_records, guint32 *record_num,
 
 		/* Stop appending data to this block if we've run out of
 		 * available space */
-		if (data->len + src->len > FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ) {
+		if (data->len + src->len > FU_WACOM_USB_MODULE_SUB_CPU_PAYLOAD_SZ) {
 			if (data->len == 0) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
@@ -77,7 +79,9 @@ fu_wac_module_sub_cpu_create_chunk(GPtrArray *srec_records, guint32 *record_num,
 }
 
 static GPtrArray *
-fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_len, GError **error)
+fu_wacom_usb_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware,
+					 guint32 *data_len,
+					 GError **error)
 {
 	GPtrArray *chunks = g_ptr_array_new_with_free_func(g_free);
 	guint record_num = 0;
@@ -86,7 +90,7 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 	*data_len = 0;
 	while (record_num < records->len) {
 		g_autofree FuChunk *chunk =
-		    fu_wac_module_sub_cpu_create_chunk(records, &record_num, error);
+		    fu_wacom_usb_module_sub_cpu_create_chunk(records, &record_num, error);
 		if (chunk == NULL)
 			return NULL;
 		*data_len += fu_chunk_get_data_sz(chunk);
@@ -98,9 +102,9 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 }
 
 static GBytes *
-fu_wac_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
+fu_wacom_usb_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
 {
-	guint8 buf[FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ + 5]; /* nocheck:zero-init */
+	guint8 buf[FU_WACOM_USB_MODULE_SUB_CPU_PAYLOAD_SZ + 5]; /* nocheck:zero-init */
 
 	memset(buf, 0xff, sizeof(buf));
 	fu_memwrite_uint32(&buf[0], fu_chunk_get_address(chunk), G_BIG_ENDIAN);
@@ -121,13 +125,13 @@ fu_wac_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
 }
 
 static gboolean
-fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
-				     FuFirmware *firmware,
-				     FuProgress *progress,
-				     FwupdInstallFlags flags,
-				     GError **error)
+fu_wacom_usb_module_sub_cpu_write_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuProgress *progress,
+					   FwupdInstallFlags flags,
+					   GError **error)
 {
-	FuWacModule *self = FU_WAC_MODULE(device);
+	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
 	guint8 buf_start[4] = {};
 	guint32 firmware_len = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -140,8 +144,9 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
 
 	/* build each data packet */
-	chunks =
-	    fu_wac_module_sub_cpu_parse_chunks(FU_SREC_FIRMWARE(firmware), &firmware_len, error);
+	chunks = fu_wacom_usb_module_sub_cpu_parse_chunks(FU_SREC_FIRMWARE(firmware),
+							  &firmware_len,
+							  error);
 	if (chunks == NULL)
 		return FALSE;
 
@@ -150,13 +155,13 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 	blob_start = g_bytes_new_static(buf_start, sizeof(buf_start));
 
 	/* start, which will erase the module */
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_START,
-				       blob_start,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_START_TIMEOUT,
-				       error)) {
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_START,
+					     blob_start,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_START_TIMEOUT,
+					     error)) {
 		g_prefix_error_literal(error, "wacom sub_cpu module failed to erase: ");
 		return FALSE;
 	}
@@ -166,18 +171,19 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 	/* data */
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chunk = g_ptr_array_index(chunks, i);
-		g_autoptr(GBytes) blob_chunk = fu_wac_module_sub_cpu_build_packet(chunk, error);
+		g_autoptr(GBytes) blob_chunk =
+		    fu_wacom_usb_module_sub_cpu_build_packet(chunk, error);
 
 		if (blob_chunk == NULL)
 			return FALSE;
 
-		if (!fu_wac_module_set_feature(self,
-					       FU_WAC_MODULE_COMMAND_DATA,
-					       blob_chunk,
-					       fu_progress_get_child(progress),
-					       FU_WAC_MODULE_POLL_INTERVAL,
-					       FU_WAC_MODULE_DATA_TIMEOUT,
-					       error)) {
+		if (!fu_wacom_usb_module_set_feature(self,
+						     FU_WACOM_USB_MODULE_COMMAND_DATA,
+						     blob_chunk,
+						     fu_progress_get_child(progress),
+						     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+						     FU_WACOM_USB_MODULE_DATA_TIMEOUT,
+						     error)) {
 			g_prefix_error_literal(error, "wacom sub_cpu module failed to write: ");
 			return FALSE;
 		}
@@ -189,13 +195,13 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* end */
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_END,
-				       NULL,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_END_TIMEOUT,
-				       error)) {
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_END,
+					     NULL,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_END_TIMEOUT,
+					     error)) {
 		g_prefix_error_literal(error, "wacom sub_cpu module failed to end: ");
 		return FALSE;
 	}
@@ -206,11 +212,11 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 }
 
 static FuFirmware *
-fu_wac_module_sub_cpu_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
-				       FuProgress *progress,
-				       FuFirmwareParseFlags flags,
-				       GError **error)
+fu_wacom_usb_module_sub_cpu_prepare_firmware(FuDevice *device,
+					     GInputStream *stream,
+					     FuProgress *progress,
+					     FuFirmwareParseFlags flags,
+					     GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new();
 	if (!fu_firmware_parse_stream(firmware,
@@ -225,29 +231,29 @@ fu_wac_module_sub_cpu_prepare_firmware(FuDevice *device,
 }
 
 static void
-fu_wac_module_sub_cpu_init(FuWacModuleSubCpu *self)
+fu_wacom_usb_module_sub_cpu_init(FuWacomUsbModuleSubCpu *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
 }
 
 static void
-fu_wac_module_sub_cpu_class_init(FuWacModuleSubCpuClass *klass)
+fu_wacom_usb_module_sub_cpu_class_init(FuWacomUsbModuleSubCpuClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_wac_module_sub_cpu_write_firmware;
-	device_class->prepare_firmware = fu_wac_module_sub_cpu_prepare_firmware;
+	device_class->write_firmware = fu_wacom_usb_module_sub_cpu_write_firmware;
+	device_class->prepare_firmware = fu_wacom_usb_module_sub_cpu_prepare_firmware;
 }
 
-FuWacModule *
-fu_wac_module_sub_cpu_new(FuDevice *proxy)
+FuWacomUsbModule *
+fu_wacom_usb_module_sub_cpu_new(FuDevice *proxy)
 {
-	FuWacModule *module = NULL;
-	module = g_object_new(FU_TYPE_WAC_MODULE_SUB_CPU,
+	FuWacomUsbModule *module = NULL;
+	module = g_object_new(FU_TYPE_WACOM_USB_MODULE_SUB_CPU,
 			      "proxy",
 			      proxy,
 			      "fw-type",
-			      FU_WAC_MODULE_FW_TYPE_SUB_CPU,
+			      FU_WACOM_USB_MODULE_FW_TYPE_SUB_CPU,
 			      NULL);
 	return module;
 }

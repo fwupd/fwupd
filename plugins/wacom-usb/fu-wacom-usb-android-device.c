@@ -6,16 +6,16 @@
 
 #include "config.h"
 
-#include "fu-wac-android-device.h"
+#include "fu-wacom-usb-android-device.h"
 
-struct _FuWacAndroidDevice {
+struct _FuWacomUsbAndroidDevice {
 	FuHidDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuWacAndroidDevice, fu_wac_android_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuWacomUsbAndroidDevice, fu_wacom_usb_android_device, FU_TYPE_HID_DEVICE)
 
 static void
-fu_wac_android_device_init(FuWacAndroidDevice *self)
+fu_wacom_usb_android_device_init(FuWacomUsbAndroidDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.wacom.usb");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
@@ -27,6 +27,6 @@ fu_wac_android_device_init(FuWacAndroidDevice *self)
 }
 
 static void
-fu_wac_android_device_class_init(FuWacAndroidDeviceClass *klass)
+fu_wacom_usb_android_device_class_init(FuWacomUsbAndroidDeviceClass *klass)
 {
 }
