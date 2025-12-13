@@ -8,24 +8,24 @@
 
 #include <string.h>
 
-#include "fu-wac-device.h"
-#include "fu-wac-module-touch.h"
-#include "fu-wac-struct.h"
+#include "fu-wacom-usb-device.h"
+#include "fu-wacom-usb-module-touch.h"
+#include "fu-wacom-usb-struct.h"
 
-struct _FuWacModuleTouch {
-	FuWacModule parent_instance;
+struct _FuWacomUsbModuleTouch {
+	FuWacomUsbModule parent_instance;
 };
 
-G_DEFINE_TYPE(FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
+G_DEFINE_TYPE(FuWacomUsbModuleTouch, fu_wacom_usb_module_touch, FU_TYPE_WACOM_USB_MODULE)
 
 static gboolean
-fu_wac_module_touch_write_firmware(FuDevice *device,
-				   FuFirmware *firmware,
-				   FuProgress *progress,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_wacom_usb_module_touch_write_firmware(FuDevice *device,
+					 FuFirmware *firmware,
+					 FuProgress *progress,
+					 FwupdInstallFlags flags,
+					 GError **error)
 {
-	FuWacModule *self = FU_WAC_MODULE(device);
+	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -53,13 +53,13 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* start, which will erase the module */
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_START,
-				       NULL,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_START_TIMEOUT,
-				       error)) {
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_START,
+					     NULL,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_START_TIMEOUT,
+					     error)) {
 		g_prefix_error_literal(error, "wacom touch module failed to erase: ");
 		return FALSE;
 	}
@@ -94,13 +94,13 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
-		if (!fu_wac_module_set_feature(self,
-					       FU_WAC_MODULE_COMMAND_DATA,
-					       blob_chunk,
-					       fu_progress_get_child(progress),
-					       FU_WAC_MODULE_POLL_INTERVAL,
-					       FU_WAC_MODULE_DATA_TIMEOUT,
-					       error)) {
+		if (!fu_wacom_usb_module_set_feature(self,
+						     FU_WACOM_USB_MODULE_COMMAND_DATA,
+						     blob_chunk,
+						     fu_progress_get_child(progress),
+						     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+						     FU_WACOM_USB_MODULE_DATA_TIMEOUT,
+						     error)) {
 			g_prefix_error(error, "failed to write block %u: ", fu_chunk_get_idx(chk));
 			return FALSE;
 		}
@@ -113,13 +113,13 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* end */
-	if (!fu_wac_module_set_feature(self,
-				       FU_WAC_MODULE_COMMAND_END,
-				       NULL,
-				       fu_progress_get_child(progress),
-				       FU_WAC_MODULE_POLL_INTERVAL,
-				       FU_WAC_MODULE_END_TIMEOUT,
-				       error)) {
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_END,
+					     NULL,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_END_TIMEOUT,
+					     error)) {
 		g_prefix_error_literal(error, "wacom touch module failed to end: ");
 		return FALSE;
 	}
@@ -130,7 +130,7 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 }
 
 static void
-fu_wac_module_touch_init(FuWacModuleTouch *self)
+fu_wacom_usb_module_touch_init(FuWacomUsbModuleTouch *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration(FU_DEVICE(self), 30);
@@ -138,21 +138,21 @@ fu_wac_module_touch_init(FuWacModuleTouch *self)
 }
 
 static void
-fu_wac_module_touch_class_init(FuWacModuleTouchClass *klass)
+fu_wacom_usb_module_touch_class_init(FuWacomUsbModuleTouchClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_wac_module_touch_write_firmware;
+	device_class->write_firmware = fu_wacom_usb_module_touch_write_firmware;
 }
 
-FuWacModule *
-fu_wac_module_touch_new(FuDevice *proxy)
+FuWacomUsbModule *
+fu_wacom_usb_module_touch_new(FuDevice *proxy)
 {
-	FuWacModule *module = NULL;
-	module = g_object_new(FU_TYPE_WAC_MODULE_TOUCH,
+	FuWacomUsbModule *module = NULL;
+	module = g_object_new(FU_TYPE_WACOM_USB_MODULE_TOUCH,
 			      "proxy",
 			      proxy,
 			      "fw-type",
-			      FU_WAC_MODULE_FW_TYPE_TOUCH,
+			      FU_WACOM_USB_MODULE_FW_TYPE_TOUCH,
 			      NULL);
 	return module;
 }

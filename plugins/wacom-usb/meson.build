@@ -2,24 +2,24 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
 plugin_quirks += files('wacom-usb.quirk')
-plugin_builtin_wac = static_library('fu_plugin_wac',
+plugin_builtin_wac = static_library('fu_plugin_wacom_usb',
   rustgen.process(
-    'fu-wac.rs',              # fuzzing
+    'fu-wacom-usb.rs',              # fuzzing
   ),
   sources: [
-    'fu-wac-common.c',
-    'fu-wac-android-device.c',
-    'fu-wac-device.c',
-    'fu-wac-firmware.c',          # fuzzing
-    'fu-wac-module.c',
-    'fu-wac-module-bluetooth.c',
-    'fu-wac-module-bluetooth-id6.c',
-    'fu-wac-module-bluetooth-id9.c',
-    'fu-wac-module-scaler.c',
-    'fu-wac-module-sub-cpu.c',
-    'fu-wac-module-touch.c',
-    'fu-wac-module-touch-id7.c',
-    'fu-wac-plugin.c',
+    'fu-wacom-usb-common.c',
+    'fu-wacom-usb-android-device.c',
+    'fu-wacom-usb-device.c',
+    'fu-wacom-usb-firmware.c',          # fuzzing
+    'fu-wacom-usb-module.c',
+    'fu-wacom-usb-module-bluetooth.c',
+    'fu-wacom-usb-module-bluetooth-id6.c',
+    'fu-wacom-usb-module-bluetooth-id9.c',
+    'fu-wacom-usb-module-scaler.c',
+    'fu-wacom-usb-module-sub-cpu.c',
+    'fu-wacom-usb-module-touch.c',
+    'fu-wacom-usb-module-touch-id7.c',
+    'fu-wacom-usb-plugin.c',
   ],
   include_directories: plugin_incdirs,
   c_args: cargs,
@@ -46,7 +46,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
-    rustgen.process('fu-wac.rs'),
+    rustgen.process('fu-wacom-usb.rs'),
     sources: [
       'fu-self-test.c',
     ],
