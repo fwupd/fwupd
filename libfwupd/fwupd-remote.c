@@ -145,8 +145,10 @@ fwupd_remote_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 	fwupd_json_object_add_integer(json_obj, "RefreshInterval", priv->refresh_interval);
 	if (priv->remotes_dir != NULL)
 		fwupd_json_object_add_string(json_obj, "RemotesDir", priv->remotes_dir);
-	fwupd_codec_json_append_strv(json_obj, "OrderAfter", priv->order_after);
-	fwupd_codec_json_append_strv(json_obj, "OrderBefore", priv->order_before);
+	if (priv->order_after != NULL)
+		fwupd_json_object_add_array_strv(json_obj, "OrderAfter", priv->order_after);
+	if (priv->order_before != NULL)
+		fwupd_json_object_add_array_strv(json_obj, "OrderBefore", priv->order_before);
 }
 
 /**

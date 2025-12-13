@@ -2076,7 +2076,7 @@ fu_util_get_report_metadata_as_json(FuUtil *self, FwupdJsonObject *json_obj, GEr
 	metadata = fu_engine_get_report_metadata(self->engine, error);
 	if (metadata == NULL)
 		return FALSE;
-	fwupd_codec_json_append_map(json_obj, "daemon", metadata);
+	fwupd_json_object_add_object_map(json_obj, "daemon", metadata);
 
 	/* device metadata */
 	devices = fu_engine_get_devices(self->engine, error);
@@ -2100,12 +2100,12 @@ fu_util_get_report_metadata_as_json(FuUtil *self, FwupdJsonObject *json_obj, GEr
 
 		if (metadata_pre != NULL) {
 			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_json_append_map(json_obj_tmp, "pre", metadata_pre);
+			fwupd_json_object_add_object_map(json_obj_tmp, "pre", metadata_pre);
 			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 		if (metadata_post != NULL) {
 			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_json_append_map(json_obj_tmp, "post", metadata_post);
+			fwupd_json_object_add_object_map(json_obj_tmp, "post", metadata_post);
 			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 		fwupd_json_object_add_array(json_object_device, fu_device_get_id(device), json_arr);
@@ -2122,9 +2122,9 @@ fu_util_get_report_metadata_as_json(FuUtil *self, FwupdJsonObject *json_obj, GEr
 			continue;
 		if (fu_plugin_get_report_metadata(plugin) == NULL)
 			continue;
-		fwupd_codec_json_append_map(json_obj,
-					    fu_plugin_get_name(plugin),
-					    fu_plugin_get_report_metadata(plugin));
+		fwupd_json_object_add_object_map(json_obj,
+						 fu_plugin_get_name(plugin),
+						 fu_plugin_get_report_metadata(plugin));
 		fwupd_json_array_add_object(json_array_plugins, json_obj_tmp);
 	}
 	fwupd_json_object_add_array(json_obj, "plugins", json_array_plugins);

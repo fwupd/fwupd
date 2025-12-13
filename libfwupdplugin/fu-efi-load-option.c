@@ -572,17 +572,8 @@ fu_efi_load_option_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
 					     "Kind",
 					     fu_efi_load_option_kind_to_string(self->kind));
 	}
-	if (g_hash_table_size(self->metadata) > 0) {
-		GHashTableIter iter;
-		const gchar *key;
-		const gchar *value;
-		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-
-		g_hash_table_iter_init(&iter, self->metadata);
-		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
-			fwupd_json_object_add_string(json_obj_tmp, key, value);
-		fwupd_json_object_add_object(json_obj, "Metadata", json_obj_tmp);
-	}
+	if (g_hash_table_size(self->metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", self->metadata);
 	dp_list =
 	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH_LIST, NULL);
 	if (dp_list != NULL)

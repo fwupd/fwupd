@@ -6996,20 +6996,6 @@ fwupd_client_undo_host_security_attr_finish(FwupdClient *self, GAsyncResult *res
 	return g_task_propagate_boolean(G_TASK(res), error);
 }
 
-static FwupdJsonObject *
-fwupd_client_build_report_metadata(GHashTable *metadata)
-{
-	GHashTableIter iter;
-	const gchar *key;
-	const gchar *value;
-	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
-
-	g_hash_table_iter_init(&iter, metadata);
-	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
-		fwupd_json_object_add_string(json_obj, key, value);
-	return g_steal_pointer(&json_obj);
-}
-
 /**
  * fwupd_client_build_report_devices:
  * @self: a #FwupdClient
@@ -7051,11 +7037,8 @@ fwupd_client_build_report_devices(FwupdClient *self,
 		fwupd_json_object_add_string(json_obj, "MachineId", priv->host_machine_id);
 
 	/* this is system metadata not stored in the database */
-	if (g_hash_table_size(metadata) > 0) {
-		g_autoptr(FwupdJsonObject) json_metadata =
-		    fwupd_client_build_report_metadata(metadata);
-		fwupd_json_object_add_object(json_obj, "Metadata", json_metadata);
-	}
+	if (g_hash_table_size(metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
 
 	/* devices */
 	for (guint i = 0; i < devices->len; i++) {
@@ -7171,11 +7154,8 @@ fwupd_client_build_report_history_device(FwupdDevice *dev)
 	fwupd_json_object_add_integer(json_obj, "Modified", fwupd_device_get_modified(dev));
 
 	/* add saved metadata to the report */
-	if (g_hash_table_size(metadata) > 0) {
-		g_autoptr(FwupdJsonObject) json_metadata =
-		    fwupd_client_build_report_metadata(metadata);
-		fwupd_json_object_add_object(json_obj, "Metadata", json_metadata);
-	}
+	if (g_hash_table_size(metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
 
 	/* success */
 	return g_steal_pointer(&json_obj);
@@ -7235,11 +7215,8 @@ fwupd_client_build_report_history(FwupdClient *self,
 		fwupd_json_object_add_string(json_obj, "MachineId", priv->host_machine_id);
 
 	/* this is system metadata not stored in the database */
-	if (g_hash_table_size(metadata) > 0) {
-		g_autoptr(FwupdJsonObject) json_metadata =
-		    fwupd_client_build_report_metadata(metadata);
-		fwupd_json_object_add_object(json_obj, "Metadata", json_metadata);
-	}
+	if (g_hash_table_size(metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
 
 	/* add each device */
 	for (guint i = 0; i < devices->len; i++) {
@@ -7337,9 +7314,7 @@ fwupd_client_build_report_security(FwupdClient *self,
 
 	/* this is system metadata not stored in the database */
 	if (g_hash_table_size(metadata) > 0 || fwupd_client_get_host_security_id(self) != NULL) {
-		g_autoptr(FwupdJsonObject) json_metadata =
-		    fwupd_client_build_report_metadata(metadata);
-		fwupd_json_object_add_object(json_obj, "Metadata", json_metadata);
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
 		fwupd_json_object_add_string(json_obj,
 					     "HostSecurityId",
 					     fwupd_client_get_host_security_id(self));

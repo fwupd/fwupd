@@ -638,7 +638,10 @@ fwupd_codec_string_append_size(GString *str, guint idt, const gchar *key, guint6
  *
  * Appends a key and value to a JSON object.
  *
+ * Deprecated for fwupd_json_object_add_string().
+ *
  * Since: 2.0.0
+ * Deprecated: 2.1.1
  */
 void
 fwupd_codec_json_append(FwupdJsonObject *json_obj, const gchar *key, const gchar *value)
@@ -661,7 +664,7 @@ fwupd_codec_json_append(FwupdJsonObject *json_obj, const gchar *key, const gchar
  * Deprecated for fwupd_json_object_add_integer().
  *
  * Since: 2.0.0
- * Deprecated: 2.1.0
+ * Deprecated: 2.1.1
  */
 void
 fwupd_codec_json_append_int(FwupdJsonObject *json_obj, const gchar *key, guint64 value)
@@ -682,7 +685,7 @@ fwupd_codec_json_append_int(FwupdJsonObject *json_obj, const gchar *key, guint64
  * Deprecated for fwupd_json_object_add_boolean().
  *
  * Since: 2.0.0
- * Deprecated: 2.1.0
+ * Deprecated: 2.1.1
  */
 void
 fwupd_codec_json_append_bool(FwupdJsonObject *json_obj, const gchar *key, gboolean value)
@@ -700,21 +703,20 @@ fwupd_codec_json_append_bool(FwupdJsonObject *json_obj, const gchar *key, gboole
  *
  * Appends a key and string array to a JSON object.
  *
+ * Deprecated for fwupd_json_object_add_array_strv().
+ *
  * Since: 2.0.0
+ * Deprecated: 2.1.1
  */
 void
 fwupd_codec_json_append_strv(FwupdJsonObject *json_obj, const gchar *key, gchar **value)
 {
-	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-
 	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
 
 	if (value == NULL)
 		return;
-	for (guint i = 0; value[i] != NULL; i++)
-		fwupd_json_array_add_string(json_arr, value[i]);
-	fwupd_json_object_add_array(json_obj, key, json_arr);
+	return fwupd_json_object_add_array_strv(json_obj, key, value);
 }
 
 /**
@@ -725,25 +727,18 @@ fwupd_codec_json_append_strv(FwupdJsonObject *json_obj, const gchar *key, gchar 
  *
  * Appends a key and string hash map to a JSON object.
  *
+ * Deprecated for fwupd_json_object_add_object_map().
+ *
  * Since: 2.0.10
+ * Deprecated: 2.1.1
  */
 void
 fwupd_codec_json_append_map(FwupdJsonObject *json_obj, const gchar *key, GHashTable *value)
 {
-	GHashTableIter iter;
-	gpointer hash_key, hash_value;
-	g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-
 	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
 
 	if (value == NULL)
 		return;
-	g_hash_table_iter_init(&iter, value);
-	while (g_hash_table_iter_next(&iter, &hash_key, &hash_value)) {
-		fwupd_json_object_add_string(json_obj_tmp,
-					     (const gchar *)hash_key,
-					     (const gchar *)hash_value);
-	}
-	fwupd_json_object_add_object(json_obj, key, json_obj_tmp);
+	fwupd_json_object_add_object_map(json_obj, key, value);
 }
