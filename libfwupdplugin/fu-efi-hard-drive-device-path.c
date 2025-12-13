@@ -77,12 +77,13 @@ fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
 	fwupd_json_object_add_integer(json_obj, "PartitionNumber", self->partition_number);
 	fwupd_json_object_add_integer(json_obj, "PartitionStart", self->partition_start);
 	fwupd_json_object_add_integer(json_obj, "PartitionSize", self->partition_size);
-	fwupd_codec_json_append(json_obj, "PartitionSignature", partition_signature);
-	fwupd_codec_json_append(
+	if (partition_signature != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionSignature", partition_signature);
+	fwupd_json_object_add_string(
 	    json_obj,
 	    "PartitionFormat",
 	    fu_efi_hard_drive_device_path_partition_format_to_string(self->partition_format));
-	fwupd_codec_json_append(
+	fwupd_json_object_add_string(
 	    json_obj,
 	    "SignatureType",
 	    fu_efi_hard_drive_device_path_signature_type_to_string(self->signature_type));

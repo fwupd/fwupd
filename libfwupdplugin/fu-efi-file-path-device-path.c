@@ -120,7 +120,8 @@ fu_efi_file_path_device_path_add_json(FwupdCodec *codec,
 {
 	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(codec);
 	g_autofree gchar *name = fu_efi_file_path_device_path_get_name(self, NULL);
-	fwupd_codec_json_append(json_obj, "Name", name);
+	if (name != NULL)
+		fwupd_json_object_add_string(json_obj, "Name", name);
 }
 
 static gboolean

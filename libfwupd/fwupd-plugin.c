@@ -246,7 +246,8 @@ fwupd_plugin_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 	g_return_if_fail(FWUPD_IS_PLUGIN(self));
 	g_return_if_fail(json_obj != NULL);
 
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->name != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
 	if (priv->flags != FWUPD_PLUGIN_FLAG_NONE) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < 64; i++) {

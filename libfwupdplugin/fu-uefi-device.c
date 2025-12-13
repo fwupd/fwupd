@@ -285,7 +285,7 @@ fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
-	fwupd_codec_json_append(json_obj, "GType", "FuUefiDevice");
+	fwupd_json_object_add_string(json_obj, "GType", "FuUefiDevice");
 	if (fu_device_get_backend_id(device) != NULL)
 		fwupd_json_object_add_string(json_obj,
 					     "BackendId",

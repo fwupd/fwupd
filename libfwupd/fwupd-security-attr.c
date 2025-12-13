@@ -1612,39 +1612,73 @@ fwupd_security_attr_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwupd
 	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	if (priv->appstream_id != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_APPSTREAM_ID,
+					     priv->appstream_id);
 	if (priv->created > 0)
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->level > 0)
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_HSI_RESULT,
-				fwupd_security_attr_result_to_string(priv->result));
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
-				fwupd_security_attr_result_to_string(priv->result_fallback));
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
-				fwupd_security_attr_result_to_string(priv->result_success));
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_SUMMARY, priv->title);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_VERSION, priv->fwupd_version);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_URI, priv->url);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
-				priv->bios_setting_target_value);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-				priv->bios_setting_current_value);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->bios_setting_id);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
-				priv->kernel_current_value);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
-				priv->kernel_target_value);
+	if (priv->result != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_HSI_RESULT,
+					     fwupd_security_attr_result_to_string(priv->result));
+	if (priv->result_fallback != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		fwupd_json_object_add_string(
+		    json_obj,
+		    FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+		    fwupd_security_attr_result_to_string(priv->result_fallback));
+	}
+	if (priv->result_success != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		fwupd_json_object_add_string(
+		    json_obj,
+		    FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+		    fwupd_security_attr_result_to_string(priv->result_success));
+	}
+	if (priv->name != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->title != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, priv->title);
+	if (priv->description != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DESCRIPTION,
+					     priv->description);
+	}
+	if (priv->plugin != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	if (priv->fwupd_version != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_VERSION,
+					     priv->fwupd_version);
+	}
+	if (priv->url != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_URI, priv->url);
+	if (priv->bios_setting_target_value != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+					     priv->bios_setting_target_value);
+	}
+	if (priv->bios_setting_current_value != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+					     priv->bios_setting_current_value);
+	}
+	if (priv->bios_setting_id != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_ID,
+					     priv->bios_setting_id);
+	}
+	if (priv->kernel_current_value != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+					     priv->kernel_current_value);
+	}
+	if (priv->kernel_target_value != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+					     priv->kernel_target_value);
+	}
 
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -1670,7 +1704,7 @@ fwupd_security_attr_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwupd
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fwupd_codec_json_append(json_obj, key, value);
+			fwupd_json_object_add_string(json_obj, key, value);
 		}
 	}
 }

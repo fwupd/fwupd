@@ -2380,7 +2380,7 @@ fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
-	fwupd_codec_json_append(json_obj, "GType", "FuUdevDevice");
+	fwupd_json_object_add_string(json_obj, "GType", "FuUdevDevice");
 	if (fu_udev_device_get_sysfs_path(self) != NULL) {
 		fwupd_json_object_add_string(json_obj,
 					     "BackendId",

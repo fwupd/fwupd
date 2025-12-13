@@ -974,13 +974,21 @@ fwupd_bios_setting_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
 	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_FILENAME, priv->path);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-				priv->current_value);
+	if (priv->name != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->description != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DESCRIPTION,
+					     priv->description);
+	if (priv->path != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_FILENAME, priv->path);
+	if (priv->id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	if (priv->current_value != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+					     priv->current_value);
+	}
 	fwupd_json_object_add_boolean(json_obj,
 				      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 				      priv->read_only);

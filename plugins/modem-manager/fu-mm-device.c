@@ -888,13 +888,16 @@ fu_mm_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFla
 	FU_DEVICE_CLASS(fu_mm_device_parent_class)->add_json(device, json_obj, flags);
 
 	/* optional properties */
-	fwupd_codec_json_append(json_obj, "GType", G_OBJECT_TYPE_NAME(self));
+	fwupd_json_object_add_string(json_obj, "GType", G_OBJECT_TYPE_NAME(self));
 	if (fu_device_get_version(device) != NULL)
-		fwupd_codec_json_append(json_obj, "Version", fu_device_get_version(device));
-	if (fu_device_get_physical_id(device) != NULL)
-		fwupd_codec_json_append(json_obj, "PhysicalId", fu_device_get_physical_id(device));
+		fwupd_json_object_add_string(json_obj, "Version", fu_device_get_version(device));
+	if (fu_device_get_physical_id(device) != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     "PhysicalId",
+					     fu_device_get_physical_id(device));
+	}
 	if (priv->branch_at != NULL)
-		fwupd_codec_json_append(json_obj, "BranchAt", priv->branch_at);
+		fwupd_json_object_add_string(json_obj, "BranchAt", priv->branch_at);
 
 	/* specified by ModemManager, unusually */
 	for (guint i = 0; i < instance_ids->len; i++) {

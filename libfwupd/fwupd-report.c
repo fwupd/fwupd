@@ -602,13 +602,32 @@ fwupd_report_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DISTRO_VARIANT, priv->distro_variant);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DISTRO_VERSION, priv->distro_version);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	if (priv->device_name != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DEVICE_NAME,
+					     priv->device_name);
+	}
+	if (priv->distro_id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
+	if (priv->distro_variant != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DISTRO_VARIANT,
+					     priv->distro_variant);
+	}
+	if (priv->distro_version != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DISTRO_VERSION,
+					     priv->distro_version);
+	}
+	if (priv->version_old != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_VERSION_OLD,
+					     priv->version_old);
+	}
+	if (priv->vendor != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	if (priv->remote_id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	if (priv->vendor_id > 0) {
 		fwupd_json_object_add_integer(json_obj,
 					      FWUPD_RESULT_KEY_VENDOR_ID,
@@ -632,7 +651,7 @@ fwupd_report_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_codec_json_append(json_obj, key, value);
+		fwupd_json_object_add_string(json_obj, key, value);
 	}
 }
 

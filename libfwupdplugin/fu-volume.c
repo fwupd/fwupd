@@ -71,9 +71,12 @@ fu_volume_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags
 	fwupd_json_object_add_boolean(json_obj, "IsEncrypted", fu_volume_is_encrypted(self));
 	fwupd_json_object_add_integer(json_obj, "Size", fu_volume_get_size(self));
 	fwupd_json_object_add_integer(json_obj, "BlockSize", fu_volume_get_block_size(self, NULL));
-	fwupd_codec_json_append(json_obj, "MountPoint", mount_point);
-	fwupd_codec_json_append(json_obj, "PartitionKind", partition_kind);
-	fwupd_codec_json_append(json_obj, "PartitionName", partition_name);
+	if (mount_point != NULL)
+		fwupd_json_object_add_string(json_obj, "MountPoint", mount_point);
+	if (partition_kind != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionKind", partition_kind);
+	if (partition_name != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionName", partition_name);
 	fwupd_json_object_add_integer(json_obj,
 				      "PartitionSize",
 				      fu_volume_get_partition_size(self));
@@ -83,7 +86,8 @@ fu_volume_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags
 	fwupd_json_object_add_integer(json_obj,
 				      "PartitionNumber",
 				      fu_volume_get_partition_number(self));
-	fwupd_codec_json_append(json_obj, "PartitionUuid", partition_uuid);
+	if (partition_uuid != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionUuid", partition_uuid);
 }
 
 static void

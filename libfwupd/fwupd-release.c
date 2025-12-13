@@ -2063,19 +2063,37 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_codec_json_append(json_obj,
-				FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
-				priv->name_variant_suffix);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_FILENAME, priv->filename);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	if (priv->appstream_id != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_APPSTREAM_ID,
+					     priv->appstream_id);
+	}
+	if (priv->id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
+	if (priv->remote_id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	if (priv->name != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->name_variant_suffix != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+					     priv->name_variant_suffix);
+	}
+	if (priv->summary != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	if (priv->description != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DESCRIPTION,
+					     priv->description);
+	}
+	if (priv->branch != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	if (priv->version != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_VERSION, priv->version);
+	if (priv->filename != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	if (priv->protocol != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->categories != NULL && priv->categories->len > 0) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < priv->categories->len; i++) {
@@ -2108,7 +2126,8 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 		}
 		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_TAGS, json_arr);
 	}
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	if (priv->license != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	if (priv->size > 0)
 		fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_SIZE, priv->size);
 	if (priv->created > 0)
@@ -2121,11 +2140,22 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 		}
 		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_LOCATIONS, json_arr);
 	}
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_SBOM_URL, priv->sbom_url);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	if (priv->homepage != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	if (priv->details_url != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DETAILS_URL,
+					     priv->details_url);
+	}
+	if (priv->source_url != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_SOURCE_URL,
+					     priv->source_url);
+	}
+	if (priv->sbom_url != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SBOM_URL, priv->sbom_url);
+	if (priv->vendor != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < 64; i++) {
@@ -2142,10 +2172,26 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 					      FWUPD_RESULT_KEY_INSTALL_DURATION,
 					      priv->install_duration);
 	}
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_codec_json_append(json_obj, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	if (priv->detach_caption != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DETACH_CAPTION,
+					     priv->detach_caption);
+	}
+	if (priv->detach_image != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DETACH_IMAGE,
+					     priv->detach_image);
+	}
+	if (priv->update_message != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_UPDATE_MESSAGE,
+					     priv->update_message);
+	}
+	if (priv->update_image != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_UPDATE_IMAGE,
+					     priv->update_image);
+	}
 
 	/* metadata */
 	if (priv->metadata != NULL) {
@@ -2153,7 +2199,7 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fwupd_codec_json_append(json_obj, key, value);
+			fwupd_json_object_add_string(json_obj, key, value);
 		}
 	}
 

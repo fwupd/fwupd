@@ -563,11 +563,14 @@ fu_efi_load_option_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(codec);
 	g_autoptr(FuFirmware) dp_list = NULL;
 
-	fwupd_codec_json_append(json_obj, "Name", fu_firmware_get_id(FU_FIRMWARE(self)));
+	if (fu_firmware_get_id(FU_FIRMWARE(self)) != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     "Name",
+					     fu_firmware_get_id(FU_FIRMWARE(self)));
 	if (self->kind != FU_EFI_LOAD_OPTION_KIND_UNKNOWN) {
-		fwupd_codec_json_append(json_obj,
-					"Kind",
-					fu_efi_load_option_kind_to_string(self->kind));
+		fwupd_json_object_add_string(json_obj,
+					     "Kind",
+					     fu_efi_load_option_kind_to_string(self->kind));
 	}
 	if (g_hash_table_size(self->metadata) > 0) {
 		GHashTableIter iter;
@@ -577,7 +580,7 @@ fu_efi_load_option_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdC
 
 		g_hash_table_iter_init(&iter, self->metadata);
 		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
-			fwupd_codec_json_append(json_obj_tmp, key, value);
+			fwupd_json_object_add_string(json_obj_tmp, key, value);
 		fwupd_json_object_add_object(json_obj, "Metadata", json_obj_tmp);
 	}
 	dp_list =

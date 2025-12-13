@@ -93,7 +93,7 @@ fu_mm_fastboot_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, Fwup
 
 	/* optional properties */
 	if (self->detach_at != NULL)
-		fwupd_codec_json_append(json_obj, "DetachAt", self->detach_at);
+		fwupd_json_object_add_string(json_obj, "DetachAt", self->detach_at);
 }
 
 static void

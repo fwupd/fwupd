@@ -519,7 +519,7 @@ fu_backend_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlag
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
 	/* remain compatible with all the old emulation files */
-	fwupd_codec_json_append(json_obj, "FwupdVersion", PACKAGE_VERSION);
+	fwupd_json_object_add_string(json_obj, "FwupdVersion", PACKAGE_VERSION);
 	devices = g_hash_table_get_values(priv->devices);
 	for (GList *l = devices; l != NULL; l = l->next) {
 		FuDevice *device = FU_DEVICE(l->data);
