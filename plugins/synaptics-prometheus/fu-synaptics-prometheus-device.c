@@ -9,13 +9,13 @@
 
 #include <string.h>
 
-#include "fu-synaprom-common.h"
-#include "fu-synaprom-config.h"
-#include "fu-synaprom-device.h"
-#include "fu-synaprom-firmware.h"
-#include "fu-synaprom-struct.h"
+#include "fu-synaptics-prometheus-common.h"
+#include "fu-synaptics-prometheus-config.h"
+#include "fu-synaptics-prometheus-device.h"
+#include "fu-synaptics-prometheus-firmware.h"
+#include "fu-synaptics-prometheus-struct.h"
 
-struct _FuSynapromDevice {
+struct _FuSynapticsPrometheusDevice {
 	FuUsbDevice parent_instance;
 	guint8 vmajor;
 	guint8 vminor;
@@ -23,27 +23,27 @@ struct _FuSynapromDevice {
 };
 
 /* vendor-specific USB control requests to write DFT word (Hayes) */
-#define FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT 21
+#define FU_SYNAPTICS_PROMETHEUS_USB_CTRLREQUEST_VENDOR_WRITEDFT 21
 
 /* endpoint addresses for command and fingerprint data */
-#define FU_SYNAPROM_USB_REQUEST_EP     0x01
-#define FU_SYNAPROM_USB_REPLY_EP       0x81
-#define FU_SYNAPROM_USB_FINGERPRINT_EP 0x82
-#define FU_SYNAPROM_USB_INTERRUPT_EP   0x83
+#define FU_SYNAPTICS_PROMETHEUS_USB_REQUEST_EP	   0x01
+#define FU_SYNAPTICS_PROMETHEUS_USB_REPLY_EP	   0x81
+#define FU_SYNAPTICS_PROMETHEUS_USB_FINGERPRINT_EP 0x82
+#define FU_SYNAPTICS_PROMETHEUS_USB_INTERRUPT_EP   0x83
 
 /* the following bits describe security options in
-** FuStructSynapromReplyGetVersion::security[1] bit-field */
-#define FU_SYNAPROM_SECURITY1_PROD_SENSOR (1 << 5)
+** FuStructSynapticsPrometheusReplyGetVersion::security[1] bit-field */
+#define FU_SYNAPTICS_PROMETHEUS_SECURITY1_PROD_SENSOR (1 << 5)
 
-G_DEFINE_TYPE(FuSynapromDevice, fu_synaprom_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuSynapticsPrometheusDevice, fu_synaptics_prometheus_device, FU_TYPE_USB_DEVICE)
 
 gboolean
-fu_synaprom_device_cmd_send(FuSynapromDevice *self,
-			    GByteArray *request,
-			    GByteArray *reply,
-			    FuProgress *progress,
-			    guint timeout_ms,
-			    GError **error)
+fu_synaptics_prometheus_device_cmd_send(FuSynapticsPrometheusDevice *self,
+					GByteArray *request,
+					GByteArray *reply,
+					FuProgress *progress,
+					guint timeout_ms,
+					GError **error)
 {
 	gsize actual_len = 0;
 
@@ -60,7 +60,7 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *self,
 		     16,
 		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 FU_SYNAPROM_USB_REQUEST_EP,
+					 FU_SYNAPTICS_PROMETHEUS_USB_REQUEST_EP,
 					 request->data,
 					 request->len,
 					 &actual_len,
@@ -82,7 +82,7 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *self,
 	fu_progress_step_done(progress);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-					 FU_SYNAPROM_USB_REPLY_EP,
+					 FU_SYNAPTICS_PROMETHEUS_USB_REPLY_EP,
 					 reply->data,
 					 reply->len,
 					 NULL, /* allowed to return short read */
@@ -100,15 +100,17 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *self,
 		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	fu_progress_step_done(progress);
 
-	/* parse as FuSynapromReplyGeneric */
-	if (reply->len >= FU_STRUCT_SYNAPROM_REPLY_GENERIC_SIZE) {
-		g_autoptr(FuStructSynapromReplyGeneric) st_reply = NULL;
-		st_reply =
-		    fu_struct_synaprom_reply_generic_parse(reply->data, reply->len, 0x0, error);
+	/* parse as FuSynapticsPrometheusReplyGeneric */
+	if (reply->len >= FU_STRUCT_SYNAPTICS_PROMETHEUS_REPLY_GENERIC_SIZE) {
+		g_autoptr(FuStructSynapticsPrometheusReplyGeneric) st_reply = NULL;
+		st_reply = fu_struct_synaptics_prometheus_reply_generic_parse(reply->data,
+									      reply->len,
+									      0x0,
+									      error);
 		if (st_reply == NULL)
 			return FALSE;
-		return fu_synaprom_error_from_status(
-		    fu_struct_synaprom_reply_generic_get_status(st_reply),
+		return fu_synaptics_prometheus_error_from_status(
+		    fu_struct_synaptics_prometheus_reply_generic_get_status(st_reply),
 		    error);
 	}
 
@@ -117,16 +119,16 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *self,
 }
 
 guint32
-fu_synaprom_device_get_product_type(FuSynapromDevice *self)
+fu_synaptics_prometheus_device_get_product_type(FuSynapticsPrometheusDevice *self)
 {
 	return self->product_type;
 }
 
 void
-fu_synaprom_device_set_version(FuSynapromDevice *self,
-			       guint8 vmajor,
-			       guint8 vminor,
-			       guint32 buildnum)
+fu_synaptics_prometheus_device_set_version(FuSynapticsPrometheusDevice *self,
+					   guint8 vmajor,
+					   guint8 vminor,
+					   guint32 buildnum)
 {
 	g_autofree gchar *str = NULL;
 
@@ -148,7 +150,8 @@ fu_synaprom_device_set_version(FuSynapromDevice *self,
 }
 
 static void
-fu_synaprom_device_set_serial_number(FuSynapromDevice *self, guint64 serial_number)
+fu_synaptics_prometheus_device_set_serial_number(FuSynapticsPrometheusDevice *self,
+						 guint64 serial_number)
 {
 	g_autofree gchar *str = NULL;
 	str = g_strdup_printf("%" G_GUINT64_FORMAT, serial_number);
@@ -156,49 +159,62 @@ fu_synaprom_device_set_serial_number(FuSynapromDevice *self, guint64 serial_numb
 }
 
 static gboolean
-fu_synaprom_device_setup(FuDevice *device, GError **error)
+fu_synaptics_prometheus_device_setup(FuDevice *device, GError **error)
 {
-	FuSynapromDevice *self = FU_SYNAPROM_DEVICE(device);
+	FuSynapticsPrometheusDevice *self = FU_SYNAPTICS_PROMETHEUS_DEVICE(device);
 	guint32 product;
 	guint64 serial_number = 0;
-	g_autoptr(FuStructSynapromReplyGetVersion) st_reply = NULL;
-	g_autoptr(FuStructSynapromRequest) st_request = fu_struct_synaprom_request_new();
+	g_autoptr(FuStructSynapticsPrometheusReplyGetVersion) st_reply = NULL;
+	g_autoptr(FuStructSynapticsPrometheusRequest) st_request =
+	    fu_struct_synaptics_prometheus_request_new();
 	g_autoptr(GByteArray) reply = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_synaprom_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_synaptics_prometheus_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get version */
-	fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_GET_VERSION);
-	reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_GET_VERSION_SIZE);
-	if (!fu_synaprom_device_cmd_send(self, st_request->buf, reply, progress, 250, error)) {
+	fu_struct_synaptics_prometheus_request_set_cmd(st_request,
+						       FU_SYNAPTICS_PROMETHEUS_CMD_GET_VERSION);
+	reply = fu_synaptics_prometheus_reply_new(
+	    FU_STRUCT_SYNAPTICS_PROMETHEUS_REPLY_GET_VERSION_SIZE);
+	if (!fu_synaptics_prometheus_device_cmd_send(self,
+						     st_request->buf,
+						     reply,
+						     progress,
+						     250,
+						     error)) {
 		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
-	st_reply = fu_struct_synaprom_reply_get_version_parse(reply->data, reply->len, 0x0, error);
+	st_reply = fu_struct_synaptics_prometheus_reply_get_version_parse(reply->data,
+									  reply->len,
+									  0x0,
+									  error);
 	if (st_reply == NULL)
 		return FALSE;
-	fu_synaprom_device_set_version(self,
-				       fu_struct_synaprom_reply_get_version_get_vmajor(st_reply),
-				       fu_struct_synaprom_reply_get_version_get_vminor(st_reply),
-				       fu_struct_synaprom_reply_get_version_get_buildnum(st_reply));
+	fu_synaptics_prometheus_device_set_version(
+	    self,
+	    fu_struct_synaptics_prometheus_reply_get_version_get_vmajor(st_reply),
+	    fu_struct_synaptics_prometheus_reply_get_version_get_vminor(st_reply),
+	    fu_struct_synaptics_prometheus_reply_get_version_get_buildnum(st_reply));
 
 	/* get 48-bit serial number */
 	memcpy(&serial_number, /* nocheck:blocked */
-	       fu_struct_synaprom_reply_get_version_get_serial_number(st_reply, NULL),
-	       FU_STRUCT_SYNAPROM_REPLY_GET_VERSION_SIZE_SERIAL_NUMBER);
-	fu_synaprom_device_set_serial_number(self, serial_number);
+	       fu_struct_synaptics_prometheus_reply_get_version_get_serial_number(st_reply, NULL),
+	       FU_STRUCT_SYNAPTICS_PROMETHEUS_REPLY_GET_VERSION_SIZE_SERIAL_NUMBER);
+	fu_synaptics_prometheus_device_set_serial_number(self, serial_number);
 
 	/* check device type */
-	product = fu_struct_synaprom_reply_get_version_get_product(st_reply);
-	if (product == FU_SYNAPROM_PRODUCT_PROMETHEUS || product == FU_SYNAPROM_PRODUCT_TRITON) {
+	product = fu_struct_synaptics_prometheus_reply_get_version_get_product(st_reply);
+	if (product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_PROMETHEUS ||
+	    product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITON) {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	} else if (product == FU_SYNAPROM_PRODUCT_PROMETHEUSPBL ||
-		   product == FU_SYNAPROM_PRODUCT_PROMETHEUSMSBL ||
-		   product == FU_SYNAPROM_PRODUCT_TRITONPBL ||
-		   product == FU_SYNAPROM_PRODUCT_TRITONMSBL) {
+	} else if (product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_PROMETHEUSPBL ||
+		   product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_PROMETHEUSMSBL ||
+		   product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITONPBL ||
+		   product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITONMSBL) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		g_set_error(error,
@@ -209,18 +225,20 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (product == FU_SYNAPROM_PRODUCT_TRITON || product == FU_SYNAPROM_PRODUCT_TRITONPBL ||
-	    product == FU_SYNAPROM_PRODUCT_TRITONMSBL)
-		self->product_type = FU_SYNAPROM_PRODUCT_TYPE_TRITON;
+	if (product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITON ||
+	    product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITONPBL ||
+	    product == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITONMSBL)
+		self->product_type = FU_SYNAPTICS_PROMETHEUS_PRODUCT_TYPE_TRITON;
 	else
-		self->product_type = FU_SYNAPROM_PRODUCT_TYPE_PROMETHEUS;
+		self->product_type = FU_SYNAPTICS_PROMETHEUS_PRODUCT_TYPE_PROMETHEUS;
 
 	/* add updatable config child, if this is a production sensor */
 	if (fu_device_get_children(device)->len == 0 &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
-	    fu_struct_synaprom_reply_get_version_get_security1(st_reply) &
-		FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
-		g_autoptr(FuSynapromConfig) cfg = fu_synaprom_config_new(self);
+	    fu_struct_synaptics_prometheus_reply_get_version_get_security1(st_reply) &
+		FU_SYNAPTICS_PROMETHEUS_SECURITY1_PROD_SENSOR) {
+		g_autoptr(FuSynapticsPrometheusConfig) cfg =
+		    fu_synaptics_prometheus_config_new(self);
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
@@ -229,34 +247,36 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 }
 
 FuFirmware *
-fu_synaprom_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
-				    FuProgress *progress,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
+fu_synaptics_prometheus_device_prepare_firmware(FuDevice *device,
+						GInputStream *stream,
+						FuProgress *progress,
+						FuFirmwareParseFlags flags,
+						GError **error)
 {
 	guint32 product_id;
-	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
-	FuSynapromDevice *self = FU_SYNAPROM_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_synaptics_prometheus_firmware_new();
+	FuSynapticsPrometheusDevice *self = FU_SYNAPTICS_PROMETHEUS_DEVICE(device);
 
-	if (self->product_type == FU_SYNAPROM_PRODUCT_TYPE_TRITON) {
-		if (!fu_synaprom_firmware_set_signature_size(FU_SYNAPROM_FIRMWARE(firmware),
-							     FU_SYNAPROM_FIRMWARE_TRITON_SIGSIZE))
+	if (self->product_type == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TYPE_TRITON) {
+		if (!fu_synaptics_prometheus_firmware_set_signature_size(
+			FU_SYNAPTICS_PROMETHEUS_FIRMWARE(firmware),
+			FU_SYNAPTICS_PROMETHEUS_FIRMWARE_TRITON_SIGSIZE))
 			return NULL;
 	}
 
 	/* check the update header product and version */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
-	product_id = fu_synaprom_firmware_get_product_id(FU_SYNAPROM_FIRMWARE(firmware));
-	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS &&
-	    product_id != FU_SYNAPROM_PRODUCT_TRITON) {
+	product_id = fu_synaptics_prometheus_firmware_get_product_id(
+	    FU_SYNAPTICS_PROMETHEUS_FIRMWARE(firmware));
+	if (product_id != FU_SYNAPTICS_PROMETHEUS_PRODUCT_PROMETHEUS &&
+	    product_id != FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITON) {
 		if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
 			g_warning("MFW metadata not compatible, "
 				  "got 0x%02x expected 0x%02x or 0x%02x",
 				  product_id,
-				  (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS,
-				  (guint)FU_SYNAPROM_PRODUCT_TRITON);
+				  (guint)FU_SYNAPTICS_PROMETHEUS_PRODUCT_PROMETHEUS,
+				  (guint)FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITON);
 		} else {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -264,8 +284,8 @@ fu_synaprom_device_prepare_firmware(FuDevice *device,
 				    "MFW metadata not compatible, "
 				    "got 0x%02x expected 0x%02x or 0x%02x",
 				    product_id,
-				    (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS,
-				    (guint)FU_SYNAPROM_PRODUCT_TRITON);
+				    (guint)FU_SYNAPTICS_PROMETHEUS_PRODUCT_PROMETHEUS,
+				    (guint)FU_SYNAPTICS_PROMETHEUS_PRODUCT_TRITON);
 			return NULL;
 		}
 	}
@@ -275,29 +295,33 @@ fu_synaprom_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_synaprom_device_write_chunks(FuSynapromDevice *self,
-				GPtrArray *chunks,
-				FuProgress *progress,
-				GError **error)
+fu_synaptics_prometheus_device_write_chunks(FuSynapticsPrometheusDevice *self,
+					    GPtrArray *chunks,
+					    FuProgress *progress,
+					    GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		GByteArray *chunk = g_ptr_array_index(chunks, i);
-		g_autoptr(FuStructSynapromRequest) st_request = fu_struct_synaprom_request_new();
+		g_autoptr(FuStructSynapticsPrometheusRequest) st_request =
+		    fu_struct_synaptics_prometheus_request_new();
 		g_autoptr(GByteArray) reply = NULL;
 
 		/* patch */
-		fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_BOOTLDR_PATCH);
+		fu_struct_synaptics_prometheus_request_set_cmd(
+		    st_request,
+		    FU_SYNAPTICS_PROMETHEUS_CMD_BOOTLDR_PATCH);
 		g_byte_array_append(st_request->buf, chunk->data, chunk->len);
-		reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_GENERIC_SIZE);
-		if (!fu_synaprom_device_cmd_send(self,
-						 st_request->buf,
-						 reply,
-						 fu_progress_get_child(progress),
-						 20000,
-						 error))
+		reply = fu_synaptics_prometheus_reply_new(
+		    FU_STRUCT_SYNAPTICS_PROMETHEUS_REPLY_GENERIC_SIZE);
+		if (!fu_synaptics_prometheus_device_cmd_send(self,
+							     st_request->buf,
+							     reply,
+							     fu_progress_get_child(progress),
+							     20000,
+							     error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
@@ -307,10 +331,10 @@ fu_synaprom_device_write_chunks(FuSynapromDevice *self,
 }
 
 gboolean
-fu_synaprom_device_write_fw(FuSynapromDevice *self,
-			    GBytes *fw,
-			    FuProgress *progress,
-			    GError **error)
+fu_synaptics_prometheus_device_write_fw(FuSynapticsPrometheusDevice *self,
+					GBytes *fw,
+					FuProgress *progress,
+					GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -355,7 +379,10 @@ fu_synaprom_device_write_fw(FuSynapromDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write chunks */
-	if (!fu_synaprom_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
+	if (!fu_synaptics_prometheus_device_write_chunks(self,
+							 chunks,
+							 fu_progress_get_child(progress),
+							 error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -364,13 +391,13 @@ fu_synaprom_device_write_fw(FuSynapromDevice *self,
 }
 
 static gboolean
-fu_synaprom_device_write_firmware(FuDevice *device,
-				  FuFirmware *firmware,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_synaptics_prometheus_device_write_firmware(FuDevice *device,
+					      FuFirmware *firmware,
+					      FuProgress *progress,
+					      FwupdInstallFlags flags,
+					      GError **error)
 {
-	FuSynapromDevice *self = FU_SYNAPROM_DEVICE(device);
+	FuSynapticsPrometheusDevice *self = FU_SYNAPTICS_PROMETHEUS_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
@@ -378,11 +405,11 @@ fu_synaprom_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	return fu_synaprom_device_write_fw(self, fw, progress, error);
+	return fu_synaptics_prometheus_device_write_fw(self, fw, progress, error);
 }
 
 static gboolean
-fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_synaptics_prometheus_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	gboolean ret;
 	gsize actual_len = 0;
@@ -394,19 +421,20 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		return TRUE;
 	}
 
-	ret = fu_usb_device_control_transfer(FU_USB_DEVICE(device),
-					     FU_USB_DIRECTION_HOST_TO_DEVICE,
-					     FU_USB_REQUEST_TYPE_VENDOR,
-					     FU_USB_RECIPIENT_DEVICE,
-					     FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT,
-					     0x0000,
-					     0x0000,
-					     data,
-					     sizeof(data),
-					     &actual_len,
-					     2000,
-					     NULL,
-					     error);
+	ret =
+	    fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					   FU_USB_DIRECTION_HOST_TO_DEVICE,
+					   FU_USB_REQUEST_TYPE_VENDOR,
+					   FU_USB_RECIPIENT_DEVICE,
+					   FU_SYNAPTICS_PROMETHEUS_USB_CTRLREQUEST_VENDOR_WRITEDFT,
+					   0x0000,
+					   0x0000,
+					   data,
+					   sizeof(data),
+					   &actual_len,
+					   2000,
+					   NULL,
+					   error);
 	if (!ret)
 		return FALSE;
 	if (actual_len != sizeof(data)) {
@@ -427,7 +455,7 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static gboolean
-fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_synaptics_prometheus_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	gsize actual_len = 0;
 	guint8 data[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
@@ -442,7 +470,7 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
-					    FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT,
+					    FU_SYNAPTICS_PROMETHEUS_USB_CTRLREQUEST_VENDOR_WRITEDFT,
 					    0x0000,
 					    0x0000,
 					    data,
@@ -471,7 +499,7 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static void
-fu_synaprom_device_set_progress(FuDevice *device, FuProgress *progress)
+fu_synaptics_prometheus_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -482,7 +510,7 @@ fu_synaprom_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static void
-fu_synaprom_device_init(FuSynapromDevice *self)
+fu_synaptics_prometheus_device_init(FuSynapticsPrometheusDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY);
@@ -499,27 +527,27 @@ fu_synaprom_device_init(FuSynapromDevice *self)
 }
 
 static void
-fu_synaprom_device_class_init(FuSynapromDeviceClass *klass)
+fu_synaptics_prometheus_device_class_init(FuSynapticsPrometheusDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_synaprom_device_write_firmware;
-	device_class->prepare_firmware = fu_synaprom_device_prepare_firmware;
-	device_class->setup = fu_synaprom_device_setup;
-	device_class->reload = fu_synaprom_device_setup;
-	device_class->attach = fu_synaprom_device_attach;
-	device_class->detach = fu_synaprom_device_detach;
-	device_class->set_progress = fu_synaprom_device_set_progress;
+	device_class->write_firmware = fu_synaptics_prometheus_device_write_firmware;
+	device_class->prepare_firmware = fu_synaptics_prometheus_device_prepare_firmware;
+	device_class->setup = fu_synaptics_prometheus_device_setup;
+	device_class->reload = fu_synaptics_prometheus_device_setup;
+	device_class->attach = fu_synaptics_prometheus_device_attach;
+	device_class->detach = fu_synaptics_prometheus_device_detach;
+	device_class->set_progress = fu_synaptics_prometheus_device_set_progress;
 }
 
-FuSynapromDevice *
-fu_synaprom_device_new(FuUsbDevice *device)
+FuSynapticsPrometheusDevice *
+fu_synaptics_prometheus_device_new(FuUsbDevice *device)
 {
-	FuSynapromDevice *self;
-	self = g_object_new(FU_TYPE_SYNAPROM_DEVICE, NULL);
+	FuSynapticsPrometheusDevice *self;
+	self = g_object_new(FU_TYPE_SYNAPTICS_PROMETHEUS_DEVICE, NULL);
 	if (device != NULL) {
 		fu_device_incorporate(FU_DEVICE(self),
 				      FU_DEVICE(device),
 				      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	}
-	return FU_SYNAPROM_DEVICE(self);
+	return FU_SYNAPTICS_PROMETHEUS_DEVICE(self);
 }

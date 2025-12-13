@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[repr(u8)]
-enum FuSynapromCmd {
+enum FuSynapticsPrometheusCmd {
     GetVersion      = 0x01,
     BootldrPatch    = 0x7d,
     IotaFind        = 0x8e,
@@ -10,18 +10,18 @@ enum FuSynapromCmd {
 
 #[derive(New)]
 #[repr(C, packed)]
-struct FuStructSynapromRequest {
-    cmd: FuSynapromCmd,
+struct FuStructSynapticsPrometheusRequest {
+    cmd: FuSynapticsPrometheusCmd,
 }
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructSynapromReplyGeneric {
+struct FuStructSynapticsPrometheusReplyGeneric {
     status: u16le,
 }
 
 #[repr(u8)]
-enum FuSynapromProduct {
+enum FuSynapticsPrometheusProduct {
     Prometheus      = 65, // b1422
     Prometheuspbl   = 66,
     Prometheusmsbl  = 67,
@@ -32,14 +32,14 @@ enum FuSynapromProduct {
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructSynapromReplyGetVersion {
+struct FuStructSynapticsPrometheusReplyGetVersion {
     status: u16le,
     buildtime: u32le,
     buildnum: u32le,
     vmajor: u8,
     vminor: u8,
     target: u8,             // e.g. VCSFW_TARGET_ROM
-    product: FuSynapromProduct,
+    product: FuSynapticsPrometheusProduct,
     siliconrev: u8,
     formalrel: u8,          // boolean: non-zero -> formal release
     platform: u8,           // PCB revision
@@ -56,7 +56,7 @@ struct FuStructSynapromReplyGetVersion {
 }
 
 #[derive(ToString)]
-enum FuSynapromResult {
+enum FuSynapticsPrometheusResult {
     Ok                      = 0,
     GenOperationCanceled    = 103,
     GenInvalid              = 110,
@@ -70,7 +70,7 @@ enum FuSynapromResult {
     SysOutOfMemory          = 602,
 }
 
-enum FuSynapromProductType {
+enum FuSynapticsPrometheusProductType {
     Denali,
     Hayes,
     Shasta,
@@ -85,7 +85,7 @@ enum FuSynapromProductType {
 
 #[derive(New, ParseStream, Default)]
 #[repr(C, packed)]
-struct FuStructSynapromMfwHdr {
+struct FuStructSynapticsPrometheusMfwHdr {
     product: u32le,
     id: u32le = 0xFF,		// MFW unique id used for compat verification
     buildtime: u32le = 0xFF,	// unix-style
@@ -97,7 +97,7 @@ struct FuStructSynapromMfwHdr {
 
 #[derive(ToString)]
 #[repr(u16le)]
-enum FuSynapromFirmwareTag {
+enum FuSynapticsPrometheusFirmwareTag {
     MfwUpdateHeader  = 0x0001,
     MfwUpdatePayload = 0x0002,
     CfgUpdateHeader  = 0x0003,
@@ -106,14 +106,14 @@ enum FuSynapromFirmwareTag {
 
 #[derive(New, ParseStream)]
 #[repr(C, packed)]
-struct FuStructSynapromHdr {
-    tag: FuSynapromFirmwareTag,
+struct FuStructSynapticsPrometheusHdr {
+    tag: FuSynapticsPrometheusFirmwareTag,
     bufsz: u32le,
 }
 
 #[derive(ParseStream, Default)]
 #[repr(C, packed)]
-struct FuStructSynapromCfgHdr {
+struct FuStructSynapticsPrometheusCfgHdr {
     product: u32le = 65, // Prometheus (b1422)
     id1: u32le,
     id2: u32le,
@@ -123,7 +123,7 @@ struct FuStructSynapromCfgHdr {
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructSynapromIotaConfigVersion {
+struct FuStructSynapticsPrometheusIotaConfigVersion {
     config_id1: u32le, // YYMMDD
     config_id2: u32le, // HHMMSS
     version: u16le,
@@ -132,7 +132,7 @@ struct FuStructSynapromIotaConfigVersion {
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructSynapromReplyIotaFindHdr {
+struct FuStructSynapticsPrometheusReplyIotaFindHdr {
     status: u16le,
     fullsize: u32le,
     nbytes: u16le,
@@ -143,7 +143,7 @@ struct FuStructSynapromReplyIotaFindHdr {
 // IOTA_FIND command supports transferring iotas with multiple commands
 #[derive(New, Getters)]
 #[repr(C, packed)]
-struct FuStructSynapromCmdIotaFind {
+struct FuStructSynapticsPrometheusCmdIotaFind {
     itype: u16le,    // type of iotas to find
     flags: u16le,
     maxniotas: u8,   // maximum number of iotas to return, 0 = unlimited
