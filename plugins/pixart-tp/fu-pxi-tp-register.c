@@ -1,0 +1,199 @@
+/*
+ * Copyright 2025 Harris Tai <harris_tai@pixart.com>
+ * Copyright 2025 Micky Hsieh <micky_hsieh@pixart.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include "fu-pxi-tp-register.h"
+
+#define REPORT_ID_SINGLE 0x42
+#define REPORT_ID_BURST	 0x41
+#define REPORT_ID_USER	 0x43
+#define OP_READ		 0x10
+
+gboolean
+fu_pxi_tp_register_write(FuPxiTpDevice *self,
+			 FuPxiTpSystemBank bank,
+			 guint8 addr,
+			 guint8 val,
+			 GError **error)
+{
+	guint8 buf[4] = {REPORT_ID_SINGLE, addr, bank, val};
+
+	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
+
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  sizeof(buf),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error(error,
+			       "register write failed: bank=0x%02x addr=0x%02x val=0x%02x: ",
+			       bank,
+			       addr,
+			       val);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_pxi_tp_register_read(FuPxiTpDevice *self,
+			FuPxiTpSystemBank bank,
+			guint8 addr,
+			guint8 *out_val,
+			GError **error)
+{
+	guint8 cmd[4] = {REPORT_ID_SINGLE, addr, (guint8)(bank | OP_READ), 0x00};
+	guint8 resp[4] = {REPORT_ID_SINGLE};
+
+	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
+	g_return_val_if_fail(out_val != NULL, FALSE);
+
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  cmd,
+					  sizeof(cmd),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error(error,
+			       "register read command failed: bank=0x%02x addr=0x%02x: ",
+			       bank,
+			       addr);
+		return FALSE;
+	}
+
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  resp,
+					  sizeof(resp),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error(error,
+			       "register read response failed: bank=0x%02x addr=0x%02x: ",
+			       bank,
+			       addr);
+		return FALSE;
+	}
+
+	/* success */
+	*out_val = resp[3];
+	return TRUE;
+}
+
+/* --- User Register --- */
+gboolean
+fu_pxi_tp_register_user_write(FuPxiTpDevice *self,
+			      FuPxiTpUserBank bank,
+			      guint8 addr,
+			      guint8 val,
+			      GError **error)
+{
+	guint8 buf[4] = {REPORT_ID_USER, addr, bank, val};
+
+	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
+
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  sizeof(buf),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error(error,
+			       "user register write failed: bank=0x%02x addr=0x%02x val=0x%02x: ",
+			       bank,
+			       addr,
+			       val);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_pxi_tp_register_user_read(FuPxiTpDevice *self,
+			     FuPxiTpUserBank bank,
+			     guint8 addr,
+			     guint8 *out_val,
+			     GError **error)
+{
+	guint8 cmd[4] = {REPORT_ID_USER, addr, (guint8)(bank | OP_READ), 0x00};
+	guint8 resp[4] = {REPORT_ID_USER};
+
+	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
+	g_return_val_if_fail(out_val != NULL, FALSE);
+
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  cmd,
+					  sizeof(cmd),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error(error,
+			       "user register read command failed: bank=0x%02x addr=0x%02x: ",
+			       bank,
+			       addr);
+		return FALSE;
+	}
+
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  resp,
+					  sizeof(resp),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error(error,
+			       "user register read response failed: bank=0x%02x addr=0x%02x: ",
+			       bank,
+			       addr);
+		return FALSE;
+	}
+
+	/* success */
+	*out_val = resp[3];
+	return TRUE;
+}
+
+/* --- Burst --- */
+gboolean
+fu_pxi_tp_register_burst_write(FuPxiTpDevice *self, const guint8 *buf, gsize bufsz, GError **error)
+{
+	guint8 payload[257] = {REPORT_ID_BURST};
+
+	g_return_val_if_fail(FU_IS_PXI_TP_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+
+	if (bufsz > sizeof(payload) - 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "burst write size too big: %" G_GSIZE_FORMAT " (max 256)",
+			    bufsz);
+		return FALSE;
+	}
+
+	if (!fu_memcpy_safe(payload,
+			    sizeof(payload),
+			    1, /* dst offset: payload[1..] */
+			    buf,
+			    bufsz,
+			    0, /* src offset: buf[0..] */
+			    bufsz,
+			    error)) {
+		g_prefix_error_literal(error, "burst write memcpy failed: ");
+		return FALSE;
+	}
+
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  payload,
+					  sizeof(payload),
+					  FU_IOCTL_FLAG_NONE,
+					  error)) {
+		g_prefix_error_literal(error, "burst write feature report failed: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}

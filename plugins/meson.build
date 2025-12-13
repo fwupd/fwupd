@@ -102,6 +102,7 @@ plugins = {
   'pci-mei': false,
   'pci-psp': false,
   'pixart-rf': false,
+  'pixart-tp':false,
   'powerd': false,
   'qc-firehose': false,
   'qc-s5gen2': false,
