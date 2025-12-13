@@ -556,7 +556,11 @@ endif
 if cc.has_header('mtd/mtd-user.h')
   conf.set('HAVE_MTD_USER_H', '1')
 endif
-if cc.has_header('linux/hidraw.h')
+has_HIDIOCGINPUT = cc.has_header_symbol('linux/hidraw.h',
+  'HIDIOCGINPUT',
+   required: false,
+)
+if has_HIDIOCGINPUT
   conf.set('HAVE_HIDRAW_H', '1')
 endif
 if cc.has_header('sys/mman.h')
