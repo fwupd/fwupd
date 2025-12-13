@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <json-glib/json-glib.h>
-
 #include "fwupd-build.h"
 #include "fwupd-remote.h"
 

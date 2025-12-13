@@ -455,39 +455,37 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, Fwupd
 	}
 }
 
-static gboolean
-fu_util_get_releases_as_json(FuUtil *self, GPtrArray *rels, GError **error)
+static void
+fu_util_get_releases_as_json(FuUtil *self, GPtrArray *rels)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Releases");
-	json_builder_begin_array(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index(rels, i);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 		if (!fwupd_release_match_flags(rel,
 					       self->filter_release_include,
 					       self->filter_release_exclude))
 			continue;
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(rel), builder, FWUPD_CODEC_FLAG_NONE);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj_tmp, FWUPD_CODEC_FLAG_NONE);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	fwupd_json_object_add_array(json_obj, "Releases", json_arr);
+	fu_util_print_json_object(self->console, json_obj);
 }
 
-static gboolean
-fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
+static void
+fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 
 		/* filter */
 		if (!fwupd_device_match_flags(dev,
@@ -514,13 +512,11 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), json_obj_tmp, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	fwupd_json_object_add_array(json_obj, "Devices", json_arr);
+	fu_util_print_json_object(self->console, json_obj);
 }
 
 static gboolean
@@ -591,8 +587,10 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* not for human consumption */
-	if (self->as_json)
-		return fu_util_get_devices_as_json(self, devs, error);
+	if (self->as_json) {
+		fu_util_get_devices_as_json(self, devs);
+		return TRUE;
+	}
 
 	/* print */
 	if (devs->len > 0)
@@ -625,11 +623,10 @@ fu_util_get_plugins(FuUtil *self, gchar **values, GError **error)
 	if (plugins == NULL)
 		return FALSE;
 	if (self->as_json) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		json_builder_begin_object(builder);
-		fwupd_codec_array_to_json(plugins, "Plugins", builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		return fu_util_print_builder(self->console, builder, error);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		fwupd_codec_array_to_json(plugins, "Plugins", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
 	}
 
 	/* print */
@@ -695,7 +692,6 @@ typedef struct {
 	guint nr_success;
 	guint nr_missing;
 	guint nr_skipped;
-	JsonBuilder *builder;
 	const gchar *name;
 	gboolean use_emulation;
 	GHashTable *report_metadata;
@@ -706,8 +702,6 @@ fu_util_device_test_helper_free(FuUtilDeviceTestHelper *helper)
 {
 	if (helper->report_metadata != NULL)
 		g_hash_table_unref(helper->report_metadata);
-	if (helper->builder != NULL)
-		g_object_unref(helper->builder);
 	g_free(helper);
 }
 
@@ -715,7 +709,6 @@ static FuUtilDeviceTestHelper *
 fu_util_device_test_helper_new(void)
 {
 	FuUtilDeviceTestHelper *helper = g_new0(FuUtilDeviceTestHelper, 1);
-	helper->builder = json_builder_new();
 	return helper;
 }
 
@@ -747,43 +740,39 @@ fu_util_filter_devices(FuUtil *self, GPtrArray *devices, GError **error)
 static gboolean
 fu_util_device_test_component(FuUtil *self,
 			      FuUtilDeviceTestHelper *helper,
-			      JsonObject *json_obj,
+			      FwupdJsonObject *json_obj,
+			      FwupdJsonObject *json_object_result,
 			      GError **error)
 {
-	JsonArray *json_array;
-	const gchar *name = "component";
-	const gchar *protocol = NULL;
+	const gchar *name;
+	const gchar *protocol;
+	const gchar *version;
 	g_autoptr(FwupdDevice) device = NULL;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* some elements are optional */
-	if (json_object_has_member(json_obj, "name")) {
-		name = json_object_get_string_member(json_obj, "name");
-		json_builder_set_member_name(helper->builder, "name");
-		json_builder_add_string_value(helper->builder, name);
-	}
-	if (json_object_has_member(json_obj, "protocol")) {
-		protocol = json_object_get_string_member(json_obj, "protocol");
-		json_builder_set_member_name(helper->builder, "protocol");
-		json_builder_add_string_value(helper->builder, protocol);
-	}
+	name = fwupd_json_object_get_string_with_default(json_obj, "name", "component", error);
+	if (name == NULL)
+		return FALSE;
+	fwupd_json_object_add_string(json_object_result, "name", name);
+	protocol = fwupd_json_object_get_string(json_obj, "protocol", NULL);
+	if (protocol != NULL)
+		fwupd_json_object_add_string(json_object_result, "protocol", protocol);
 
 	/* find the device with any of the matching GUIDs */
-	if (!json_object_has_member(json_obj, "guids")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "JSON invalid as has no 'guids'");
+	json_arr = fwupd_json_object_get_array(json_obj, "guids", error);
+	if (json_arr == NULL)
 		return FALSE;
-	}
-	json_array = json_object_get_array_member(json_obj, "guids");
-	json_builder_set_member_name(helper->builder, "guids");
-	json_builder_begin_array(helper->builder);
-	for (guint i = 0; i < json_array_get_length(json_array); i++) {
-		JsonNode *json_node = json_array_get_element(json_array, i);
+	fwupd_json_object_add_array(json_object_result, "guids", json_arr);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
 		FwupdDevice *device_tmp;
-		const gchar *guid = json_node_get_string(json_node);
+		const gchar *guid;
 		g_autoptr(GPtrArray) devices = NULL;
 		g_autoptr(GPtrArray) devices_filtered = NULL;
+
+		guid = fwupd_json_array_get_string(json_arr, i, error);
+		if (guid == NULL)
+			return FALSE;
 
 		g_debug("looking for guid %s", guid);
 		devices =
@@ -805,10 +794,8 @@ fu_util_device_test_component(FuUtil *self,
 		if (protocol != NULL && !fwupd_device_has_protocol(device_tmp, protocol))
 			continue;
 		device = g_object_ref(device_tmp);
-		json_builder_add_string_value(helper->builder, guid);
 		break;
 	}
-	json_builder_end_array(helper->builder);
 	if (device == NULL) {
 		if (!self->as_json) {
 			g_autofree gchar *msg = NULL;
@@ -823,8 +810,8 @@ fu_util_device_test_component(FuUtil *self,
 	}
 
 	/* verify the version matches what we expected */
-	if (json_object_has_member(json_obj, "version")) {
-		const gchar *version = json_object_get_string_member(json_obj, "version");
+	version = fwupd_json_object_get_string(json_obj, "version", NULL);
+	if (version != NULL) {
 		if (g_strcmp0(version, fwupd_device_get_version(device)) != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -837,9 +824,8 @@ fu_util_device_test_component(FuUtil *self,
 	}
 
 	/* verify the bootloader version matches what we expected */
-	if (json_object_has_member(json_obj, "version-bootloader")) {
-		const gchar *version =
-		    json_object_get_string_member(json_obj, "version-bootloader");
+	version = fwupd_json_object_get_string(json_obj, "version-bootloader", NULL);
+	if (version != NULL) {
 		if (g_strcmp0(version, fwupd_device_get_version_bootloader(device)) != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -852,8 +838,8 @@ fu_util_device_test_component(FuUtil *self,
 	}
 
 	/* verify the branch matches what we expected */
-	if (json_object_has_member(json_obj, "branch")) {
-		const gchar *version = json_object_get_string_member(json_obj, "branch");
+	version = fwupd_json_object_get_string(json_obj, "branch", NULL);
+	if (version != NULL) {
 		if (g_strcmp0(version, fwupd_device_get_branch(device)) != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -938,10 +924,12 @@ fu_util_maybe_expand_basename(FuUtil *self, const gchar *maybe_basename, GError 
 static gboolean
 fu_util_device_test_step(FuUtil *self,
 			 FuUtilDeviceTestHelper *helper,
-			 JsonObject *json_obj,
+			 FwupdJsonObject *json_obj,
+			 FwupdJsonObject *json_object_result,
 			 GError **error)
 {
-	JsonArray *json_array;
+	const gchar *url_tmp;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
@@ -949,11 +937,9 @@ fu_util_device_test_step(FuUtil *self,
 		g_autofree gchar *emulation_url = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		/* just ignore anything without emulation data */
-		if (json_object_has_member(json_obj, "emulation-url")) {
-			const gchar *url_tmp =
-			    json_object_get_string_member(json_obj, "emulation-url");
-
+		/* ignore anything without emulation data */
+		url_tmp = fwupd_json_object_get_string(json_obj, "emulation-url", NULL);
+		if (url_tmp != NULL) {
 			emulation_url = fu_util_maybe_expand_basename(self, url_tmp, error);
 			if (emulation_url == NULL)
 				return FALSE;
@@ -963,20 +949,22 @@ fu_util_device_test_step(FuUtil *self,
 				g_prefix_error(error, "failed to download %s: ", emulation_url);
 				return FALSE;
 			}
-		} else if (json_object_has_member(json_obj, "emulation-file")) {
-			emulation_filename =
-			    g_strdup(json_object_get_string_member(json_obj, "emulation-file"));
 		} else {
-			return TRUE;
+			emulation_filename = g_strdup(
+			    fwupd_json_object_get_string(json_obj, "emulation-file", NULL));
+			if (emulation_filename == NULL)
+				return TRUE;
 		}
 
 		/* log */
 		if (emulation_url != NULL) {
-			json_builder_set_member_name(helper->builder, "emulation-url");
-			json_builder_add_string_value(helper->builder, emulation_url);
+			fwupd_json_object_add_string(json_object_result,
+						     "emulation-url",
+						     emulation_url);
 		}
-		json_builder_set_member_name(helper->builder, "emulation-file");
-		json_builder_add_string_value(helper->builder, emulation_filename);
+		fwupd_json_object_add_string(json_object_result,
+					     "emulation-file",
+					     emulation_filename);
 		if (!fwupd_client_emulation_load(self->client,
 						 emulation_filename,
 						 self->cancellable,
@@ -995,8 +983,8 @@ fu_util_device_test_step(FuUtil *self,
 	}
 
 	/* download file if required */
-	if (json_object_has_member(json_obj, "url")) {
-		const gchar *url_tmp = json_object_get_string_member(json_obj, "url");
+	url_tmp = fwupd_json_object_get_string(json_obj, "url", NULL);
+	if (url_tmp != NULL) {
 		g_autofree gchar *filename = NULL;
 		g_autofree gchar *url = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -1011,8 +999,7 @@ fu_util_device_test_step(FuUtil *self,
 		}
 
 		/* log */
-		json_builder_set_member_name(helper->builder, "url");
-		json_builder_add_string_value(helper->builder, url);
+		fwupd_json_object_add_string(json_object_result, "url", url);
 
 		/* install file */
 		self->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
@@ -1025,9 +1012,9 @@ fu_util_device_test_step(FuUtil *self,
 					  &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				if (self->as_json) {
-					json_builder_set_member_name(helper->builder, "info");
-					json_builder_add_string_value(helper->builder,
-								      error_local->message);
+					fwupd_json_object_add_string(json_object_result,
+								     "info",
+								     error_local->message);
 				} else {
 					g_autofree gchar *msg = NULL;
 					msg = fu_console_color_format(error_local->message,
@@ -1046,18 +1033,19 @@ fu_util_device_test_step(FuUtil *self,
 	}
 
 	/* process each step */
-	if (!json_object_has_member(json_obj, "components")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "JSON invalid as has no 'components'");
+	json_arr = fwupd_json_object_get_array(json_obj, "components", error);
+	if (json_arr == NULL)
 		return FALSE;
-	}
-	json_array = json_object_get_array_member(json_obj, "components");
-	for (guint i = 0; i < json_array_get_length(json_array); i++) {
-		JsonNode *json_node = json_array_get_element(json_array, i);
-		JsonObject *json_obj_tmp = json_node_get_object(json_node);
-		if (!fu_util_device_test_component(self, helper, json_obj_tmp, error))
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fu_util_device_test_component(self,
+						   helper,
+						   json_obj_tmp,
+						   json_object_result,
+						   error))
 			return FALSE;
 	}
 
@@ -1070,8 +1058,7 @@ fu_util_device_test_step(FuUtil *self,
 	}
 
 	/* success */
-	json_builder_set_member_name(helper->builder, "success");
-	json_builder_add_boolean_value(helper->builder, TRUE);
+	fwupd_json_object_add_boolean(json_object_result, "success", TRUE);
 	return TRUE;
 }
 
@@ -1079,65 +1066,57 @@ static gboolean
 fu_util_device_test_filename(FuUtil *self,
 			     FuUtilDeviceTestHelper *helper,
 			     const gchar *filename,
+			     FwupdJsonObject *json_object_result,
 			     GError **error)
 {
-	JsonNode *json_root;
-	JsonNode *json_steps;
-	JsonObject *json_obj;
-	guint repeat = 1;
-	g_autoptr(JsonParser) parser = json_parser_new();
+	gint64 repeat = 1;
+	gboolean interactive = FALSE;
+	g_autoptr(FwupdJsonArray) json_archs_cpu = NULL;
+	g_autoptr(FwupdJsonArray) json_archs_plat = NULL;
+	g_autoptr(FwupdJsonArray) json_steps = NULL;
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(GBytes) blob = NULL;
 
 	/* log */
-	json_builder_set_member_name(helper->builder, "filename");
-	json_builder_add_string_value(helper->builder, filename);
+	fwupd_json_object_add_string(json_object_result, "filename", filename);
 
 	/* parse JSON */
-	if (!json_parser_load_from_file(parser, filename, error)) {
+	blob = fu_bytes_get_contents(filename, error);
+	if (blob == NULL)
+		return FALSE;
+	json_node =
+	    fwupd_json_parser_load_from_bytes(parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	if (json_node == NULL) {
 		g_prefix_error_literal(error, "test not in JSON format: ");
 		return FALSE;
 	}
-	json_root = json_parser_get_root(parser);
-	if (json_root == NULL || !JSON_NODE_HOLDS_OBJECT(json_root)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "JSON invalid as has no root");
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
 		return FALSE;
-	}
-	json_obj = json_node_get_object(json_root);
-	if (!json_object_has_member(json_obj, "steps")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "JSON invalid as has no 'steps'");
-		return FALSE;
-	}
-	json_steps = json_object_get_member(json_obj, "steps");
-	if (!JSON_NODE_HOLDS_ARRAY(json_steps)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "JSON invalid as has 'steps' is not an array");
-		return FALSE;
-	}
 
 	/* some elements are optional */
-	if (json_object_has_member(json_obj, "name")) {
-		helper->name = json_object_get_string_member(json_obj, "name");
-		json_builder_set_member_name(helper->builder, "name");
-		json_builder_add_string_value(helper->builder, helper->name);
-	}
-	if (json_object_has_member(json_obj, "interactive")) {
-		gboolean interactive = json_object_get_boolean_member(json_obj, "interactive");
-		json_builder_set_member_name(helper->builder, "interactive");
-		json_builder_add_boolean_value(helper->builder, interactive);
-	}
-	if (json_object_has_member(json_obj, "cpu-architectures")) {
-		JsonArray *json_array = json_object_get_array_member(json_obj, "cpu-architectures");
+	helper->name = fwupd_json_object_get_string(json_obj, "name", NULL);
+	if (helper->name != NULL)
+		fwupd_json_object_add_string(json_object_result, "name", helper->name);
+	if (!fwupd_json_object_get_boolean_with_default(json_obj,
+							"interactive",
+							&interactive,
+							FALSE,
+							error))
+		return FALSE;
+	fwupd_json_object_add_boolean(json_object_result, "interactive", interactive);
+
+	json_archs_cpu = fwupd_json_object_get_array(json_obj, "cpu-architectures", NULL);
+	if (json_archs_cpu != NULL) {
 		gboolean matched = FALSE;
 		const gchar *arch = g_hash_table_lookup(helper->report_metadata, "CpuArchitecture");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			const gchar *arch_tmp = json_array_get_string_element(json_array, i);
+		for (guint i = 0; i < fwupd_json_array_get_size(json_archs_cpu); i++) {
+			const gchar *arch_tmp;
+			arch_tmp = fwupd_json_array_get_string(json_archs_cpu, i, error);
+			if (arch_tmp == NULL)
+				return FALSE;
 			if (g_strcmp0(arch, arch_tmp) == 0) {
 				matched = TRUE;
 				break;
@@ -1148,14 +1127,17 @@ fu_util_device_test_filename(FuUtil *self,
 			return TRUE;
 		}
 	}
-	if (json_object_has_member(json_obj, "platform-architectures")) {
-		JsonArray *json_array =
-		    json_object_get_array_member(json_obj, "platform-architectures");
+
+	json_archs_plat = fwupd_json_object_get_array(json_obj, "platform-architectures", NULL);
+	if (json_archs_plat != NULL) {
 		gboolean matched = FALSE;
 		const gchar *arch =
 		    g_hash_table_lookup(helper->report_metadata, "PlatformArchitecture");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			const gchar *arch_tmp = json_array_get_string_element(json_array, i);
+		for (guint i = 0; i < fwupd_json_array_get_size(json_archs_plat); i++) {
+			const gchar *arch_tmp;
+			arch_tmp = fwupd_json_array_get_string(json_archs_plat, i, error);
+			if (arch_tmp == NULL)
+				return FALSE;
 			if (g_strcmp0(arch, arch_tmp) == 0) {
 				matched = TRUE;
 				break;
@@ -1168,25 +1150,27 @@ fu_util_device_test_filename(FuUtil *self,
 	}
 
 	/* process each step */
-	if (json_object_has_member(json_obj, "repeat")) {
-		repeat = json_object_get_int_member(json_obj, "repeat");
-		json_builder_set_member_name(helper->builder, "repeat");
-		json_builder_add_int_value(helper->builder, repeat);
-	}
-	json_builder_set_member_name(helper->builder, "steps");
-	json_builder_begin_array(helper->builder);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "repeat", &repeat, 1, error))
+		return FALSE;
+	fwupd_json_object_add_integer(json_object_result, "repeat", repeat);
+
+	json_steps = fwupd_json_object_get_array(json_obj, "steps", error);
+	if (json_steps == NULL)
+		return FALSE;
 	for (guint j = 0; j < repeat; j++) {
-		JsonArray *json_array = json_node_get_array(json_steps);
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *json_node = json_array_get_element(json_array, i);
-			json_obj = json_node_get_object(json_node);
-			json_builder_begin_object(helper->builder);
-			if (!fu_util_device_test_step(self, helper, json_obj, error))
+		for (guint i = 0; i < fwupd_json_array_get_size(json_steps); i++) {
+			g_autoptr(FwupdJsonObject) json_step = NULL;
+			json_step = fwupd_json_array_get_object(json_steps, i, error);
+			if (json_step == NULL)
 				return FALSE;
-			json_builder_end_object(helper->builder);
+			if (!fu_util_device_test_step(self,
+						      helper,
+						      json_step,
+						      json_object_result,
+						      error))
+				return FALSE;
 		}
 	}
-	json_builder_end_array(helper->builder);
 
 	/* success */
 	return TRUE;
@@ -1390,6 +1374,9 @@ fu_util_device_test_full(FuUtil *self,
 			 FuUtilDeviceTestHelper *helper,
 			 GError **error)
 {
+	g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_array_results = fwupd_json_array_new();
+
 	/* required for interactive devices */
 	self->current_operation = FU_UTIL_OPERATION_UPDATE;
 
@@ -1408,27 +1395,24 @@ fu_util_device_test_full(FuUtil *self,
 	if (helper->report_metadata == NULL)
 		return FALSE;
 
-	/* prepare to save the data as JSON */
-	json_builder_begin_object(helper->builder);
-
 	/* process all the files */
-	json_builder_set_member_name(helper->builder, "results");
-	json_builder_begin_array(helper->builder);
 	for (guint i = 0; values[i] != NULL; i++) {
-		json_builder_begin_object(helper->builder);
-		if (!fu_util_device_test_filename(self, helper, values[i], error)) {
+		g_autoptr(FwupdJsonObject) json_object_result = fwupd_json_object_new();
+		fwupd_json_array_add_object(json_array_results, json_object_result);
+		if (!fu_util_device_test_filename(self,
+						  helper,
+						  values[i],
+						  json_object_result,
+						  error)) {
 			g_prefix_error(error, "%s failed: ", values[i]);
 			return FALSE;
 		}
-		json_builder_end_object(helper->builder);
 	}
-	json_builder_end_array(helper->builder);
 
 	/* dump to screen as JSON format */
-	json_builder_end_object(helper->builder);
 	if (self->as_json) {
-		if (!fu_util_print_builder(self->console, helper->builder, error))
-			return FALSE;
+		fu_util_print_json_object(self->console, json_object_results);
+		return TRUE;
 	}
 
 	/* just warning */
@@ -1606,11 +1590,9 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 	if (array == NULL)
 		return FALSE;
 	if (self->as_json) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		json_builder_begin_object(builder);
-		fwupd_codec_array_to_json(array, "Devices", builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		return fu_util_print_builder(self->console, builder, error);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		fwupd_codec_array_to_json(array, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fu_util_print_json_object(self->console, json_obj);
 	}
 
 	fu_util_build_device_tree(self, root, array, NULL);
@@ -1995,11 +1977,9 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 
 	/* not for human consumption */
 	if (self->as_json) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		json_builder_begin_object(builder);
-		fwupd_codec_array_to_json(devices, "Devices", builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		return fu_util_print_builder(self->console, builder, error);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		fwupd_codec_array_to_json(devices, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fu_util_print_json_object(self->console, json_obj);
 	}
 
 	/* show each device */
@@ -2407,11 +2387,9 @@ fu_util_get_results(FuUtil *self, gchar **values, GError **error)
 	if (rel == NULL)
 		return FALSE;
 	if (self->as_json) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(rel), builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		return fu_util_print_builder(self->console, builder, error);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fu_util_print_json_object(self->console, json_obj);
 	}
 	tmp = fu_util_device_to_string(self->client, rel, 0);
 	fu_console_print_literal(self->console, tmp);
@@ -2438,8 +2416,10 @@ fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json)
-		return fu_util_get_releases_as_json(self, rels, error);
+	if (self->as_json) {
+		fu_util_get_releases_as_json(self, rels);
+		return TRUE;
+	}
 
 	if (rels->len == 0) {
 		/* TRANSLATORS: no repositories to download from */
@@ -2493,8 +2473,10 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* not for human consumption */
-	if (self->as_json)
-		return fu_util_get_releases_as_json(self, rels, error);
+	if (self->as_json) {
+		fu_util_get_releases_as_json(self, rels);
+		return TRUE;
+	}
 
 	if (rels->len == 0) {
 		g_set_error_literal(error,
@@ -2664,17 +2646,17 @@ fu_util_perhaps_refresh_remotes(FuUtil *self, GError **error)
 	return fu_util_download_metadata(self, error);
 }
 
-static gboolean
-fu_util_get_updates_as_json(FuUtil *self, GPtrArray *devices, GError **error)
+static void
+fu_util_get_updates_as_json(FuUtil *self, GPtrArray *devices)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 
 		/* not going to have results, so save a D-Bus round-trip */
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
@@ -2699,13 +2681,11 @@ fu_util_get_updates_as_json(FuUtil *self, GPtrArray *devices, GError **error)
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), json_obj_tmp, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	fwupd_json_object_add_array(json_obj, "Devices", json_arr);
+	fu_util_print_json_object(self->console, json_obj);
 }
 
 static gboolean
@@ -2744,8 +2724,10 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
 
 	/* not for human consumption */
-	if (self->as_json)
-		return fu_util_get_updates_as_json(self, devices, error);
+	if (self->as_json) {
+		fu_util_get_updates_as_json(self, devices);
+		return TRUE;
+	}
 
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
@@ -2852,11 +2834,9 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 	if (remotes == NULL)
 		return FALSE;
 	if (self->as_json) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		json_builder_begin_object(builder);
-		fwupd_codec_array_to_json(remotes, "Remotes", builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		return fu_util_print_builder(self->console, builder, error);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		fwupd_codec_array_to_json(remotes, "Remotes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fu_util_print_json_object(self->console, json_obj);
 	}
 
 	if (remotes->len == 0) {
@@ -3940,18 +3920,16 @@ fu_util_set_approved_firmware(FuUtil *self, gchar **values, GError **error)
 						  error);
 }
 
-static gboolean
-fu_util_get_checksums_as_json(FuUtil *self, gchar **csums, GError **error)
+static void
+fu_util_get_checksums_as_json(FuUtil *self, gchar **csums)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Checksums");
-	json_builder_begin_array(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
 	for (guint i = 0; csums[i] != NULL; i++)
-		json_builder_add_string_value(builder, csums[i]);
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+		fwupd_json_array_add_string(json_arr, csums[i]);
+	fwupd_json_object_add_array(json_obj, "Checksums", json_arr);
+	fu_util_print_json_object(self->console, json_obj);
 }
 
 static gboolean
@@ -3972,8 +3950,10 @@ fu_util_get_approved_firmware(FuUtil *self, gchar **values, GError **error)
 	checksums = fwupd_client_get_approved_firmware(self->client, self->cancellable, error);
 	if (checksums == NULL)
 		return FALSE;
-	if (self->as_json)
-		return fu_util_get_checksums_as_json(self, checksums, error);
+	if (self->as_json) {
+		fu_util_get_checksums_as_json(self, checksums);
+		return TRUE;
+	}
 	if (g_strv_length(checksums) == 0) {
 		/* TRANSLATORS: approved firmware has been checked by
 		 * the domain administrator */
@@ -4207,26 +4187,20 @@ fu_util_upload_security(FuUtil *self, GPtrArray *attrs, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_util_security_as_json(FuUtil *self,
-			 GPtrArray *attrs,
-			 GPtrArray *events,
-			 GPtrArray *devices,
-			 GError **error)
+static void
+fu_util_security_as_json(FuUtil *self, GPtrArray *attrs, GPtrArray *events, GPtrArray *devices)
 {
 	g_autoptr(GPtrArray) devices_issues = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-
-	json_builder_begin_object(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* attrs */
-	fwupd_codec_array_to_json(attrs, "SecurityAttributes", builder, FWUPD_CODEC_FLAG_TRUSTED);
+	fwupd_codec_array_to_json(attrs, "SecurityAttributes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 
 	/* events */
 	if (events != NULL && events->len > 0) {
 		fwupd_codec_array_to_json(events,
 					  "SecurityEvents",
-					  builder,
+					  json_obj,
 					  FWUPD_CODEC_FLAG_TRUSTED);
 	}
 
@@ -4242,12 +4216,10 @@ fu_util_security_as_json(FuUtil *self,
 	if (devices_issues->len > 0) {
 		fwupd_codec_array_to_json(devices_issues,
 					  "Devices",
-					  builder,
+					  json_obj,
 					  FWUPD_CODEC_FLAG_TRUSTED);
 	}
-
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	fu_util_print_json_object(self->console, json_obj);
 }
 
 static gboolean
@@ -4463,8 +4435,10 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* not for human consumption */
-	if (self->as_json)
-		return fu_util_security_as_json(self, attrs, events, devices, error);
+	if (self->as_json) {
+		fu_util_security_as_json(self, attrs, events, devices);
+		return TRUE;
+	}
 
 	fu_console_print(self->console,
 			 "%s \033[1m%s\033[0m",
@@ -4779,8 +4753,10 @@ fu_util_get_blocked_firmware(FuUtil *self, gchar **values, GError **error)
 	csums = fwupd_client_get_blocked_firmware(self->client, self->cancellable, error);
 	if (csums == NULL)
 		return FALSE;
-	if (self->as_json)
-		return fu_util_get_checksums_as_json(self, csums, error);
+	if (self->as_json) {
+		fu_util_get_checksums_as_json(self, csums);
+		return TRUE;
+	}
 
 	/* empty list */
 	if (g_strv_length(csums) == 0) {
@@ -4899,8 +4875,10 @@ fu_util_get_bios_setting(FuUtil *self, gchar **values, GError **error)
 	attrs = fwupd_client_get_bios_settings(self->client, self->cancellable, error);
 	if (attrs == NULL)
 		return FALSE;
-	if (self->as_json)
-		return fu_util_bios_setting_console_print(self->console, values, attrs, error);
+	if (self->as_json) {
+		fu_util_bios_setting_console_print(self->console, values, attrs);
+		return TRUE;
+	}
 
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdBiosSetting *attr = g_ptr_array_index(attrs, i);
@@ -4961,17 +4939,13 @@ fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_util_hwids_as_json(FuUtil *self, GStrv hwids_keys, GStrv hwids_values, GError **error)
+static void
+fu_util_hwids_as_json(FuUtil *self, GStrv hwids_keys, GStrv hwids_values)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	for (guint i = 0; hwids_keys[i] != NULL; i++) {
-		json_builder_set_member_name(builder, hwids_keys[i]);
-		json_builder_add_string_value(builder, hwids_values[i]);
-	}
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	for (guint i = 0; hwids_keys[i] != NULL; i++)
+		fwupd_json_object_add_string(json_obj, hwids_keys[i], hwids_values[i]);
+	fu_util_print_json_object(self->console, json_obj);
 }
 
 static gboolean
@@ -4981,8 +4955,10 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 	g_auto(GStrv) hwids_values = NULL;
 
 	fwupd_client_get_hwids(self->client, &hwids_keys, &hwids_values);
-	if (self->as_json)
-		return fu_util_hwids_as_json(self, hwids_keys, hwids_values, error);
+	if (self->as_json) {
+		fu_util_hwids_as_json(self, hwids_keys, hwids_values);
+		return TRUE;
+	}
 
 	/* show debug output */
 	fu_console_print_literal(self->console, "Computer Information");
@@ -5207,8 +5183,10 @@ fu_util_version(FuUtil *self, GError **error)
 		return FALSE;
 
 	/* dump to the screen in the most appropriate format */
-	if (self->as_json)
-		return fu_util_project_versions_as_json(self->console, metadata, error);
+	if (self->as_json) {
+		fu_util_project_versions_as_json(self->console, metadata);
+		return TRUE;
+	}
 	str = fu_util_project_versions_to_string(metadata);
 	fu_console_print_literal(self->console, str);
 	return TRUE;
