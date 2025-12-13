@@ -10,6 +10,6 @@
 #include <glib.h>
 
 GByteArray *
-fu_synaprom_reply_new(gsize cmdlen);
+fu_synaptics_prometheus_reply_new(gsize cmdlen);
 gboolean
-fu_synaprom_error_from_status(guint16 status, GError **error);
+fu_synaptics_prometheus_error_from_status(guint16 status, GError **error);

@@ -2,23 +2,23 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsPrometheus"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('synaptics-prometheus.quirk')
-plugin_builtin_synaprom = static_library('fu_plugin_synaprom',
+plugin_builtin_synaptics_prometheus = static_library('fu_plugin_synaptics_prometheus',
   rustgen.process(
-    'fu-synaprom.rs',           # fuzzing
+    'fu-synaptics-prometheus.rs',           # fuzzing
   ),
   sources: [
-    'fu-synaprom-plugin.c',
-    'fu-synaprom-common.c',
-    'fu-synaprom-config.c',
-    'fu-synaprom-device.c',
-    'fu-synaprom-firmware.c',       # fuzzing
+    'fu-synaptics-prometheus-plugin.c',
+    'fu-synaptics-prometheus-common.c',
+    'fu-synaptics-prometheus-config.c',
+    'fu-synaptics-prometheus-device.c',
+    'fu-synaptics-prometheus-firmware.c',       # fuzzing
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
   dependencies: plugin_deps,
 )
-plugin_builtins += plugin_builtin_synaprom
+plugin_builtins += plugin_builtin_synaptics_prometheus
 
 if get_option('tests')
   install_data(['tests/synaptics-prometheus.builder.xml'],
@@ -35,7 +35,7 @@ if get_option('tests')
     dependencies: plugin_deps,
     link_with: [
       plugin_libs,
-      plugin_builtin_synaprom,
+      plugin_builtin_synaptics_prometheus,
     ],
     install: true,
     install_rpath: libdir_pkg,
