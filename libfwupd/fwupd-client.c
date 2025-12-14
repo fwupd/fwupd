@@ -943,6 +943,7 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 			g_task_return_boolean(task, TRUE);
 			return;
 		}
+		fwupd_client_fixup_dbus_error(error);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -1313,11 +1314,39 @@ fwupd_client_quit_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 }
 
 static void
+fwupd_client_strip_error(GError *error)
+{
+	gchar *last_section; /* really const */
+	gchar *last_section_mut;
+
+	if (error == NULL || error->message == NULL)
+		return;
+	last_section = g_strrstr(error->message, ": ");
+	if (last_section == NULL)
+		return;
+
+	/* strip all but the last section of the string -- as it may be shown to the user */
+	last_section_mut = g_strdup(last_section + 2);
+	g_free(error->message);
+	error->message = last_section_mut;
+}
+
+static void
 fwupd_client_fixup_dbus_error(GError *error)
 {
 	g_autofree gchar *name = NULL;
 
 	g_return_if_fail(error != NULL);
+
+	/* client-side D-Bus error */
+	if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
+	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_NAME_HAS_NO_OWNER) ||
+	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_DBUS_ERROR)) {
+		error->domain = FWUPD_ERROR;
+		error->code = FWUPD_ERROR_NOT_SUPPORTED;
+		fwupd_client_strip_error(error);
+		return;
+	}
 
 	/* is a remote error? */
 	if (!g_dbus_error_is_remote_error(error))
@@ -1330,10 +1359,6 @@ fwupd_client_fixup_dbus_error(GError *error)
 	if (g_str_has_prefix(name, FWUPD_DBUS_INTERFACE)) {
 		error->domain = FWUPD_ERROR;
 		error->code = fwupd_error_from_string(name);
-	} else if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
-		   g_error_matches(error, G_IO_ERROR, G_IO_ERROR_DBUS_ERROR)) {
-		error->domain = FWUPD_ERROR;
-		error->code = FWUPD_ERROR_NOT_SUPPORTED;
 	} else {
 		error->domain = FWUPD_ERROR;
 		error->code = FWUPD_ERROR_INTERNAL;
