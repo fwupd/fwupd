@@ -1507,7 +1507,7 @@ fu_udev_device_read(FuUdevDevice *self,
 		    gsize bufsz,
 		    gsize *bytes_read,
 		    guint timeout_ms,
-		    FuIOChannelFlags flags,
+		    FuIoChannelFlags flags,
 		    GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1590,7 +1590,7 @@ GBytes *
 fu_udev_device_read_bytes(FuUdevDevice *self,
 			  gsize count,
 			  guint timeout_ms,
-			  FuIOChannelFlags flags,
+			  FuIoChannelFlags flags,
 			  GError **error)
 {
 	gsize bytes_read = 0;
@@ -1624,7 +1624,7 @@ GByteArray *
 fu_udev_device_read_byte_array(FuUdevDevice *self,
 			       gsize count,
 			       guint timeout_ms,
-			       FuIOChannelFlags flags,
+			       FuIoChannelFlags flags,
 			       GError **error)
 {
 	gsize bytes_read = 0;
@@ -1661,7 +1661,7 @@ fu_udev_device_write(FuUdevDevice *self,
 		     const guint8 *buf,
 		     gsize bufsz,
 		     guint timeout_ms,
-		     FuIOChannelFlags flags,
+		     FuIoChannelFlags flags,
 		     GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1727,7 +1727,7 @@ gboolean
 fu_udev_device_write_bytes(FuUdevDevice *self,
 			   GBytes *blob,
 			   guint timeout_ms,
-			   FuIOChannelFlags flags,
+			   FuIoChannelFlags flags,
 			   GError **error)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
@@ -1759,7 +1759,7 @@ gboolean
 fu_udev_device_write_byte_array(FuUdevDevice *self,
 				GByteArray *buf,
 				guint timeout_ms,
-				FuIOChannelFlags flags,
+				FuIoChannelFlags flags,
 				GError **error)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
