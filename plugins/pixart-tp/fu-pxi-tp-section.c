@@ -260,11 +260,6 @@ fu_pxi_tp_section_parse(FuFirmware *firmware,
 {
 	FuPxiTpSection *self = FU_PXI_TP_SECTION(firmware);
 	g_autoptr(GInputStream) substream = NULL;
-	gsize file_size = 0;
-	guint64 end = 0;
-
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 
 	if (self->section_length == 0)
 		return TRUE;
