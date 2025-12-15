@@ -499,7 +499,7 @@ fu_hidraw_device_get_input(FuHidrawDevice *self,
  * @self: a #FuHidrawDevice
  * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
  * @bufsz: the size of @buf
- * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @flags: some #FuIoChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
  * @error: (nullable): optional return location for an error
  *
  * Do a HID SetOutputReport request.
@@ -512,7 +512,7 @@ gboolean
 fu_hidraw_device_set_report(FuHidrawDevice *self,
 			    const guint8 *buf,
 			    gsize bufsz,
-			    FuIOChannelFlags flags,
+			    FuIoChannelFlags flags,
 			    GError **error)
 {
 	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
@@ -533,7 +533,7 @@ fu_hidraw_device_set_report(FuHidrawDevice *self,
  * @self: a #FuHidrawDevice
  * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
  * @bufsz: the size of @buf
- * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @flags: some #FuIoChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
  * @error: (nullable): optional return location for an error
  *
  * Do a HID GetInputReport request.
@@ -546,7 +546,7 @@ gboolean
 fu_hidraw_device_get_report(FuHidrawDevice *self,
 			    guint8 *buf,
 			    gsize bufsz,
-			    FuIOChannelFlags flags,
+			    FuIoChannelFlags flags,
 			    GError **error)
 {
 	gsize bytes_read = 0;

@@ -159,7 +159,7 @@ gboolean
 fu_io_channel_write_bytes(FuIOChannel *self,
 			  GBytes *bytes,
 			  guint timeout_ms,
-			  FuIOChannelFlags flags,
+			  FuIoChannelFlags flags,
 			  GError **error)
 {
 	gsize bufsz = 0;
@@ -170,7 +170,7 @@ fu_io_channel_write_bytes(FuIOChannel *self,
 typedef struct {
 	FuIOChannel *self;
 	guint timeout_ms;
-	FuIOChannelFlags flags;
+	FuIoChannelFlags flags;
 } FuIOChannelWriteStreamHelper;
 
 static gboolean
@@ -203,7 +203,7 @@ gboolean
 fu_io_channel_write_stream(FuIOChannel *self,
 			   GInputStream *stream,
 			   guint timeout_ms,
-			   FuIOChannelFlags flags,
+			   FuIoChannelFlags flags,
 			   GError **error)
 {
 	FuIOChannelWriteStreamHelper helper = {.self = self,
@@ -233,7 +233,7 @@ gboolean
 fu_io_channel_write_byte_array(FuIOChannel *self,
 			       GByteArray *buf,
 			       guint timeout_ms,
-			       FuIOChannelFlags flags,
+			       FuIoChannelFlags flags,
 			       GError **error)
 {
 	return fu_io_channel_write_raw(self, buf->data, buf->len, timeout_ms, flags, error);
@@ -259,7 +259,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 			const guint8 *data,
 			gsize datasz,
 			guint timeout_ms,
-			FuIOChannelFlags flags,
+			FuIoChannelFlags flags,
 			GError **error)
 {
 	gsize idx = 0;
@@ -370,7 +370,7 @@ GBytes *
 fu_io_channel_read_bytes(FuIOChannel *self,
 			 gssize count,
 			 guint timeout_ms,
-			 FuIOChannelFlags flags,
+			 FuIoChannelFlags flags,
 			 GError **error)
 {
 	g_autoptr(GByteArray) buf =
@@ -398,7 +398,7 @@ GByteArray *
 fu_io_channel_read_byte_array(FuIOChannel *self,
 			      gssize count,
 			      guint timeout_ms,
-			      FuIOChannelFlags flags,
+			      FuIoChannelFlags flags,
 			      GError **error)
 {
 	GPollFD fds = {
@@ -551,7 +551,7 @@ fu_io_channel_read_raw(FuIOChannel *self,
 		       gsize bufsz,
 		       gsize *bytes_read,
 		       guint timeout_ms,
-		       FuIOChannelFlags flags,
+		       FuIoChannelFlags flags,
 		       GError **error)
 {
 	g_autoptr(GByteArray) tmp = NULL;
