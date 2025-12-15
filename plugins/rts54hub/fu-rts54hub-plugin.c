@@ -24,13 +24,6 @@ fu_rts54hub_plugin_init(FuRts54hubPlugin *self)
 }
 
 static void
-fu_rts54hub_plugin_object_constructed(GObject *obj)
-{
-	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_set_name(plugin, "rts54hub");
-}
-
-static void
 fu_rts54hub_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
@@ -50,7 +43,5 @@ static void
 fu_rts54hub_plugin_class_init(FuRts54hubPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_rts54hub_plugin_object_constructed;
 	plugin_class->constructed = fu_rts54hub_plugin_constructed;
 }
