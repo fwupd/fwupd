@@ -25,6 +25,16 @@ enum FuLogitechBulkcontrollerUpdateState {
     Error,
 }
 
+enum FuLogitechBulkcontrollerProtoId {
+    UnknownId,
+    GetDeviceInfoResponse,
+    TransitionToDeviceModeResponse,
+    Ack,
+    KongEvent,
+    HandshakeEvent,
+    CrashDumpAvailableEvent,
+}
+
 #[repr(u32le)]
 #[derive(ToString)]
 enum FuLogitechBulkcontrollerCmd {

@@ -816,7 +816,7 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 					     GByteArray *buf,
 					     GError **error)
 {
-	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	FuLogitechBulkcontrollerProtoId proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_UNKNOWN_ID;
 	g_autofree gchar *json = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
@@ -830,7 +830,8 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 	}
 	json = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
 	g_debug("received device response: id: %u, length %u, data: %s", proto_id, buf->len, json);
-	if (proto_id != kProtoId_GetDeviceInfoResponse && proto_id != kProtoId_KongEvent) {
+	if (proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_GET_DEVICE_INFO_RESPONSE &&
+	    proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_KONG_EVENT) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -1217,7 +1218,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_send_time_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	FuLogitechBulkcontrollerProtoId proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_UNKNOWN_ID;
 	g_autofree gchar *bufstr = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 	g_autoptr(GByteArray) device_request = NULL;
@@ -1244,7 +1245,7 @@ fu_logitech_bulkcontroller_device_send_time_cb(FuDevice *device, gpointer user_d
 		proto_id,
 		buf->len,
 		bufstr);
-	if (proto_id != kProtoId_Ack) {
+	if (proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_ACK) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -1272,7 +1273,7 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 							       GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	FuLogitechBulkcontrollerProtoId proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_UNKNOWN_ID;
 	g_autoptr(GByteArray) req = NULL;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
@@ -1292,7 +1293,7 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 		return FALSE;
 	}
 	g_debug("received transition mode response: id: %u, length %u", proto_id, res->len);
-	if (proto_id != kProtoId_TransitionToDeviceModeResponse) {
+	if (proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_TRANSITION_TO_DEVICE_MODE_RESPONSE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
