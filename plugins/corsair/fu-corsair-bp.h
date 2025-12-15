@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-corsair-common.h"
+#include "fu-corsair-struct.h"
 
 #define FU_TYPE_CORSAIR_BP (fu_corsair_bp_get_type())
 G_DECLARE_FINAL_TYPE(FuCorsairBp, fu_corsair_bp, FU, CORSAIR_BP, FuUsbDevice)
