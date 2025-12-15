@@ -89,17 +89,6 @@ fu_synaptics_cxaudio_device_input_report(FuSynapticsCxaudioDevice *self,
 					error);
 }
 
-typedef enum {
-	FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
-	FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
-	FU_SYNAPTICS_CXAUDIO_OPERATION_LAST
-} FuSynapticsCxaudioOperation;
-
-typedef enum {
-	FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE = 0,
-	FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_VERIFY = (1 << 4),
-} FuSynapticsCxaudioOperationFlags;
-
 static gboolean
 fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 				      FuSynapticsCxaudioOperation operation,
