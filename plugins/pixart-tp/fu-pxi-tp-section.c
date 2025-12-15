@@ -26,7 +26,6 @@ struct _FuPxiTpSection {
 	guint32 section_crc;
 
 	GByteArray *reserved; /* fixed-length blob: PXI_TP_S_RESERVED_LEN */
-	gchar external_file_name[PXI_TP_S_EXTNAME_LEN + 1];
 };
 
 G_DEFINE_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU_TYPE_FIRMWARE)
@@ -117,26 +116,15 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 		memset(self->reserved->data, 0, self->reserved->len);
 	}
 
-	/* external_file_name[] */
-	memset(self->external_file_name, 0, sizeof self->external_file_name);
+	/* extname -> baseclass filename (preferred by fwupdtool firmware-extract) */
 	name_src = fu_struct_pxi_tp_firmware_section_hdr_get_extname(st, &name_len);
 	if (name_src != NULL && name_len > 0) {
-		copy_len = MIN((gsize)PXI_TP_S_EXTNAME_LEN, name_len);
-		if (!fu_memcpy_safe((guint8 *)self->external_file_name,
-				    sizeof self->external_file_name,
-				    0, /* dst offset */
-				    name_src,
-				    name_len,
-				    0, /* src offset */
-				    copy_len,
-				    error)) {
-			return FALSE;
-		}
-		/* ensure NUL-termination */
-		if (copy_len >= (gsize)PXI_TP_S_EXTNAME_LEN)
-			self->external_file_name[PXI_TP_S_EXTNAME_LEN] = '\0';
-		else
-			self->external_file_name[copy_len] = '\0';
+		g_autofree gchar *name =
+		    g_strndup((const gchar *)name_src, MIN(name_len, (gsize)PXI_TP_S_EXTNAME_LEN));
+		fu_firmware_set_filename(FU_FIRMWARE(self), name);
+	} else {
+		/* optional: clear filename if not provided */
+		fu_firmware_set_filename(FU_FIRMWARE(self), NULL);
 	}
 
 	return TRUE;
@@ -302,10 +290,11 @@ fu_pxi_tp_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 		fu_xmlb_builder_insert_kv(bn, "reserved_hex", rhex);
 	}
 
-	fu_xmlb_builder_insert_kv(bn,
-				  "external_file",
-				  self->external_file_name[0] != '\0' ? self->external_file_name
-								      : "");
+	/*
+	 * Do NOT export external file name here.
+	 * Use fu_firmware_set_filename()/get_filename() on the base class,
+	 * so fwupdtool firmware-extract does the right thing automatically.
+	 */
 }
 
 static void
