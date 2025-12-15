@@ -26,7 +26,7 @@
  */
 
 typedef struct {
-	FuHidrawBusType bus_type;
+	FuHidBusType bus_type;
 } FuHidrawDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
@@ -40,10 +40,7 @@ fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
 	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
-	fwupd_codec_string_append(str,
-				  idt,
-				  "BusType",
-				  fu_hidraw_bus_type_to_string(priv->bus_type));
+	fwupd_codec_string_append(str, idt, "BusType", fu_hid_bus_type_to_string(priv->bus_type));
 }
 
 /**
@@ -52,15 +49,15 @@ fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
  *
  * Gets the bus type.
  *
- * Returns: a #FuHidrawBusType, e.g. %FU_HIDRAW_BUS_TYPE_USB
+ * Returns: a #FuHidBusType, e.g. %FU_HID_BUS_TYPE_USB
  *
  * Since: 2.0.14
  **/
-FuHidrawBusType
+FuHidBusType
 fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
 {
 	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FU_HIDRAW_BUS_TYPE_UNKNOWN);
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FU_HID_BUS_TYPE_UNKNOWN);
 	return priv->bus_type;
 }
 
