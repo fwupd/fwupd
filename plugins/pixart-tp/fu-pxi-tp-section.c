@@ -285,10 +285,13 @@ fu_pxi_tp_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 	fu_xmlb_builder_insert_kx(bn, "section_crc", self->section_crc);
 
 	/* reserved bytes as hex */
-	if (sizeof self->reserved > 0) {
-		g_autofree gchar *rhex = fu_pxi_tp_common_hexdump_slice(self->reserved,
-									sizeof self->reserved,
-									sizeof self->reserved);
+	{
+		g_autoptr(GByteArray) arr = g_byte_array_sized_new(sizeof(self->reserved));
+		g_autofree gchar *rhex = NULL;
+
+		g_byte_array_append(arr, self->reserved, sizeof(self->reserved));
+		rhex = fu_byte_array_to_string(arr);
+
 		fu_xmlb_builder_insert_kv(bn, "reserved_hex", rhex);
 	}
 
