@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
@@ -23,7 +25,7 @@ struct _FuPxiTpSection {
 	guint32 section_length;
 	guint32 section_crc;
 
-	guint8 reserved[PXI_TP_S_RESERVED_LEN];
+	GByteArray *reserved; /* fixed-length blob: PXI_TP_S_RESERVED_LEN */
 	gchar external_file_name[PXI_TP_S_EXTNAME_LEN + 1];
 };
 
@@ -73,7 +75,7 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 		return FALSE;
 	}
 
-	/* section header do rustgen parse，offset = 0 */
+	/* section header parsed by rustgen, offset = 0 */
 	st = fu_struct_pxi_tp_firmware_section_hdr_parse(buf, bufsz, 0, error);
 	if (st == NULL)
 		return FALSE;
@@ -90,13 +92,12 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 	/* flags from update_info bitfield */
 	fu_pxi_tp_section_update_flags(self);
 
-	/* reserved[] */
-	memset(self->reserved, 0, sizeof self->reserved);
+	/* reserved */
 	reserved_src = fu_struct_pxi_tp_firmware_section_hdr_get_shared(st, &reserved_len);
 	if (reserved_src != NULL && reserved_len > 0) {
 		copy_len = MIN((gsize)PXI_TP_S_RESERVED_LEN, reserved_len);
-		if (!fu_memcpy_safe(self->reserved,
-				    sizeof self->reserved,
+		if (!fu_memcpy_safe(self->reserved->data,
+				    self->reserved->len,
 				    0, /* dst offset */
 				    reserved_src,
 				    reserved_len,
@@ -105,11 +106,15 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 				    error)) {
 			return FALSE;
 		}
+		/* clear tail if short */
 		if (copy_len < (gsize)PXI_TP_S_RESERVED_LEN) {
-			memset(self->reserved + copy_len,
+			memset(self->reserved->data + copy_len,
 			       0,
 			       (gsize)PXI_TP_S_RESERVED_LEN - copy_len);
 		}
+	} else {
+		/* deterministic reset when missing */
+		memset(self->reserved->data, 0, self->reserved->len);
 	}
 
 	/* external_file_name[] */
@@ -119,14 +124,15 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 		copy_len = MIN((gsize)PXI_TP_S_EXTNAME_LEN, name_len);
 		if (!fu_memcpy_safe((guint8 *)self->external_file_name,
 				    sizeof self->external_file_name,
-				    0,
+				    0, /* dst offset */
 				    name_src,
 				    name_len,
-				    0,
+				    0, /* src offset */
 				    copy_len,
 				    error)) {
 			return FALSE;
 		}
+		/* ensure NUL-termination */
 		if (copy_len >= (gsize)PXI_TP_S_EXTNAME_LEN)
 			self->external_file_name[PXI_TP_S_EXTNAME_LEN] = '\0';
 		else
@@ -176,8 +182,8 @@ fu_pxi_tp_section_get_reserved(FuPxiTpSection *self, gsize *len_out)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), NULL);
 	if (len_out != NULL)
-		*len_out = (gsize)PXI_TP_S_RESERVED_LEN;
-	return self->reserved;
+		*len_out = (self->reserved != NULL) ? self->reserved->len : 0;
+	return (self->reserved != NULL) ? self->reserved->data : NULL;
 }
 
 gboolean
@@ -189,12 +195,16 @@ fu_pxi_tp_section_attach_payload_stream(FuPxiTpSection *self,
 	guint32 internal_file_start = 0;
 	guint32 section_length = 0;
 	g_autoptr(GInputStream) substream = NULL;
+
 	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+
 	internal_file_start = self->internal_file_start;
 	section_length = self->section_length;
+
 	if (section_length == 0)
 		return TRUE;
+
 	if ((guint64)internal_file_start + (guint64)section_length > (guint64)file_size) {
 		g_set_error(
 		    error,
@@ -207,14 +217,17 @@ fu_pxi_tp_section_attach_payload_stream(FuPxiTpSection *self,
 		    file_size);
 		return FALSE;
 	}
+
 	substream = fu_partial_input_stream_new(stream,
 						(goffset)internal_file_start,
 						(gsize)section_length,
 						error);
 	if (substream == NULL)
 		return FALSE;
+
 	if (!fu_firmware_set_stream(FU_FIRMWARE(self), substream, error))
 		return FALSE;
+
 	return TRUE;
 }
 
@@ -254,6 +267,9 @@ fu_pxi_tp_section_get_payload(FuPxiTpSection *self, GError **error)
 static void
 fu_pxi_tp_section_init(FuPxiTpSection *self)
 {
+	/* fixed-length reserved blob */
+	self->reserved = g_byte_array_sized_new(PXI_TP_S_RESERVED_LEN);
+	fu_byte_array_set_size(self->reserved, PXI_TP_S_RESERVED_LEN, 0x00);
 }
 
 static void
@@ -281,13 +297,8 @@ fu_pxi_tp_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 	fu_xmlb_builder_insert_kx(bn, "section_crc", self->section_crc);
 
 	/* reserved bytes as hex */
-	{
-		g_autoptr(GByteArray) arr = g_byte_array_sized_new(sizeof(self->reserved));
-		g_autofree gchar *rhex = NULL;
-
-		g_byte_array_append(arr, self->reserved, sizeof(self->reserved));
-		rhex = fu_byte_array_to_string(arr);
-
+	if (self->reserved != NULL) {
+		g_autofree gchar *rhex = fu_byte_array_to_string(self->reserved);
 		fu_xmlb_builder_insert_kv(bn, "reserved_hex", rhex);
 	}
 
@@ -298,8 +309,21 @@ fu_pxi_tp_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static void
+fu_pxi_tp_section_finalize(GObject *obj)
+{
+	FuPxiTpSection *self = FU_PXI_TP_SECTION(obj);
+
+	g_clear_pointer(&self->reserved, g_byte_array_unref);
+
+	G_OBJECT_CLASS(fu_pxi_tp_section_parent_class)->finalize(obj);
+}
+
+static void
 fu_pxi_tp_section_class_init(FuPxiTpSectionClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
 	firmware_class->export = fu_pxi_tp_section_export;
+	object_class->finalize = fu_pxi_tp_section_finalize;
 }
