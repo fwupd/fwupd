@@ -36,6 +36,7 @@ fwupdplugin_structs = [
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
+  'fu-srec.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
