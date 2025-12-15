@@ -47,6 +47,52 @@ fu_pxi_tp_section_new(void)
 	return g_object_new(FU_TYPE_PXI_TP_SECTION, NULL);
 }
 
+FuPxiTpUpdateType
+fu_pxi_tp_section_get_update_type(FuPxiTpSection *self)
+{
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
+	return self->update_type;
+}
+
+gboolean
+fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlags flag)
+{
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
+	return (self->flags & flag) != 0;
+}
+
+guint32
+fu_pxi_tp_section_get_target_flash_start(FuPxiTpSection *self)
+{
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
+	return self->target_flash_start;
+}
+
+guint32
+fu_pxi_tp_section_get_section_length(FuPxiTpSection *self)
+{
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
+	return self->section_length;
+}
+
+guint32
+fu_pxi_tp_section_get_section_crc(FuPxiTpSection *self)
+{
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
+	return self->section_crc;
+}
+
+GByteArray *
+fu_pxi_tp_section_get_reserved(FuPxiTpSection *self)
+{
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), NULL);
+
+	if (self->reserved == NULL)
+		return NULL;
+
+	return g_byte_array_ref(self->reserved);
+}
+
 gboolean
 fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 				     const guint8 *buf,
@@ -131,97 +177,6 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 	return TRUE;
 }
 
-FuPxiTpUpdateType
-fu_pxi_tp_section_get_update_type(FuPxiTpSection *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
-	return self->update_type;
-}
-
-gboolean
-fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlags flag)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
-	return (self->flags & flag) != 0;
-}
-
-guint32
-fu_pxi_tp_section_get_target_flash_start(FuPxiTpSection *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
-	return self->target_flash_start;
-}
-
-guint32
-fu_pxi_tp_section_get_section_length(FuPxiTpSection *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
-	return self->section_length;
-}
-
-guint32
-fu_pxi_tp_section_get_section_crc(FuPxiTpSection *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), 0);
-	return self->section_crc;
-}
-
-GByteArray *
-fu_pxi_tp_section_get_reserved(FuPxiTpSection *self)
-{
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), NULL);
-
-	if (self->reserved == NULL)
-		return NULL;
-
-	return g_byte_array_ref(self->reserved);
-}
-
-gboolean
-fu_pxi_tp_section_attach_payload_stream(FuPxiTpSection *self,
-					GInputStream *stream,
-					gsize file_size,
-					GError **error)
-{
-	guint32 internal_file_start = 0;
-	guint32 section_length = 0;
-	g_autoptr(GInputStream) substream = NULL;
-
-	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
-
-	internal_file_start = self->internal_file_start;
-	section_length = self->section_length;
-
-	if (section_length == 0)
-		return TRUE;
-
-	if ((guint64)internal_file_start + (guint64)section_length > (guint64)file_size) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_FILE,
-		    "section payload out of range (off=0x%08x len=0x%08x, file=%" G_GSIZE_FORMAT
-		    ")",
-		    internal_file_start,
-		    section_length,
-		    file_size);
-		return FALSE;
-	}
-
-	substream = fu_partial_input_stream_new(stream,
-						(goffset)internal_file_start,
-						(gsize)section_length,
-						error);
-	if (substream == NULL)
-		return FALSE;
-
-	if (!fu_firmware_set_stream(FU_FIRMWARE(self), substream, error))
-		return FALSE;
-
-	return TRUE;
-}
-
 GByteArray *
 fu_pxi_tp_section_get_payload(FuPxiTpSection *self, GError **error)
 {
@@ -295,12 +250,33 @@ fu_pxi_tp_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 		g_autofree gchar *rhex = fu_byte_array_to_string(self->reserved);
 		fu_xmlb_builder_insert_kv(bn, "reserved_hex", rhex);
 	}
+}
 
-	/*
-	 * Do NOT export external file name here.
-	 * Use fu_firmware_set_filename()/get_filename() on the base class,
-	 * so fwupdtool firmware-extract does the right thing automatically.
-	 */
+static gboolean
+fu_pxi_tp_section_parse(FuFirmware *firmware,
+			GInputStream *stream,
+			FuFirmwareParseFlags flags,
+			GError **error)
+{
+	FuPxiTpSection *self = FU_PXI_TP_SECTION(firmware);
+	g_autoptr(GInputStream) substream = NULL;
+	gsize file_size = 0;
+	guint64 end = 0;
+
+	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+
+	if (self->section_length == 0)
+		return TRUE;
+
+	substream = fu_partial_input_stream_new(stream,
+						(goffset)self->internal_file_start,
+						(gsize)self->section_length,
+						error);
+	if (substream == NULL)
+		return FALSE;
+
+	return fu_firmware_set_stream(FU_FIRMWARE(self), substream, error);
 }
 
 static void
@@ -320,5 +296,6 @@ fu_pxi_tp_section_class_init(FuPxiTpSectionClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
 	firmware_class->export = fu_pxi_tp_section_export;
+	firmware_class->parse = fu_pxi_tp_section_parse;
 	object_class->finalize = fu_pxi_tp_section_finalize;
 }

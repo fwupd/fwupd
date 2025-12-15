@@ -17,7 +17,6 @@
 
 G_DECLARE_FINAL_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU, PXI_TP_SECTION, FuFirmware)
 
-/* ctor */
 FuPxiTpSection *
 fu_pxi_tp_section_new(void) G_GNUC_WARN_UNUSED_RESULT;
 
@@ -41,8 +40,3 @@ GByteArray *
 fu_pxi_tp_section_get_reserved(FuPxiTpSection *self);
 GByteArray *
 fu_pxi_tp_section_get_payload(FuPxiTpSection *self, GError **error);
-gboolean
-fu_pxi_tp_section_attach_payload_stream(FuPxiTpSection *self,
-					GInputStream *stream,
-					gsize file_size,
-					GError **error);
