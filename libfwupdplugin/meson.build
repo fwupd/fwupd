@@ -30,6 +30,7 @@ fwupdplugin_structs = [
   'fu-heci.rs', # fuzzing
   'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
+  'fu-path.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
   'fu-quirks.rs', # fuzzing
