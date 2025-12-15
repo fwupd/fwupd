@@ -491,8 +491,6 @@ typedef struct FuPluginData FuPluginData;
 /* for plugins to use */
 const gchar *
 fu_plugin_get_name(FuPlugin *self) G_GNUC_NON_NULL(1);
-void
-fu_plugin_set_name(FuPlugin *self, const gchar *name) G_GNUC_NON_NULL(1);
 FuPluginData *
 fu_plugin_get_data(FuPlugin *self) G_GNUC_NON_NULL(1);
 FuPluginData *
