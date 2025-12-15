@@ -31,7 +31,7 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 FuPxiTpUpdateType
 fu_pxi_tp_section_get_update_type(FuPxiTpSection *self);
 gboolean
-fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlag flag);
+fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlags flag);
 guint32
 fu_pxi_tp_section_get_target_flash_start(FuPxiTpSection *self);
 guint32

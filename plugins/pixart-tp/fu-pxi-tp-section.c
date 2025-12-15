@@ -18,8 +18,7 @@ struct _FuPxiTpSection {
 
 	FuPxiTpUpdateType update_type;
 	guint8 update_info;
-	guint32 flags; /* FuPxiTpFirmwareFlag bitmask */
-
+	FuPxiTpFirmwareFlags flags;
 	guint32 target_flash_start;
 	guint32 internal_file_start;
 	guint32 section_length;
@@ -138,7 +137,7 @@ fu_pxi_tp_section_get_update_type(FuPxiTpSection *self)
 }
 
 gboolean
-fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlag flag)
+fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlags flag)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
 	return (self->flags & (guint32)flag) != 0;

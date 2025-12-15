@@ -20,13 +20,3 @@ extern const char PXI_TP_MAGIC[5]; /* "FWHD" + NUL */
 /* ---- section layout constants (on-disk layout, LE) ---------------------- */
 #define PXI_TP_S_RESERVED_LEN 0x0c /* reserved bytes length */
 #define PXI_TP_S_EXTNAME_LEN  34   /* extname bytes length (no NUL) */
-
-/* This enum cannot be moved to the .rs file yet, since fu-pxi-tp-section.h
- * is included before the rustgen header and would not see the generated
- * C constants. Keeping it in C avoids ordering issues for now.
- */
-typedef enum {
-	FU_PXI_TP_FIRMWARE_FLAG_NONE = 0,
-	FU_PXI_TP_FIRMWARE_FLAG_VALID = 1 << 0,
-	FU_PXI_TP_FIRMWARE_FLAG_IS_EXTERNAL = 1 << 1,
-} FuPxiTpFirmwareFlag;
