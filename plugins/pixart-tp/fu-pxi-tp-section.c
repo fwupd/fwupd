@@ -9,7 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
 
@@ -24,7 +23,7 @@ struct _FuPxiTpSection {
 	guint32 section_length;
 	guint32 section_crc;
 
-	GByteArray *reserved; /* fixed-length blob: PXI_TP_S_RESERVED_LEN */
+	GByteArray *reserved;
 };
 
 G_DEFINE_TYPE(FuPxiTpSection, fu_pxi_tp_section, FU_TYPE_FIRMWARE)
@@ -93,7 +92,8 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 	/* reserved */
 	reserved_src = fu_struct_pxi_tp_firmware_section_hdr_get_shared(st, &reserved_len);
 	if (reserved_src != NULL && reserved_len > 0) {
-		copy_len = MIN((gsize)PXI_TP_S_RESERVED_LEN, reserved_len);
+		copy_len = MIN((gsize)FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED,
+			       reserved_len);
 		if (!fu_memcpy_safe(self->reserved->data,
 				    self->reserved->len,
 				    0, /* dst offset */
@@ -105,10 +105,11 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 			return FALSE;
 		}
 		/* clear tail if short */
-		if (copy_len < (gsize)PXI_TP_S_RESERVED_LEN) {
+		if (copy_len < (gsize)FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED) {
 			memset(self->reserved->data + copy_len,
 			       0,
-			       (gsize)PXI_TP_S_RESERVED_LEN - copy_len);
+			       (gsize)FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED -
+				   copy_len);
 		}
 	} else {
 		/* deterministic reset when missing */
@@ -118,8 +119,9 @@ fu_pxi_tp_section_process_descriptor(FuPxiTpSection *self,
 	/* extname -> baseclass filename (preferred by fwupdtool firmware-extract) */
 	name_src = fu_struct_pxi_tp_firmware_section_hdr_get_extname(st, &name_len);
 	if (name_src != NULL && name_len > 0) {
-		g_autofree gchar *name =
-		    g_strndup((const gchar *)name_src, MIN(name_len, (gsize)PXI_TP_S_EXTNAME_LEN));
+		g_autofree gchar *name = g_strndup(
+		    (const gchar *)name_src,
+		    MIN(name_len, (gsize)FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_EXTNAME));
 		fu_firmware_set_filename(FU_FIRMWARE(self), name);
 	} else {
 		/* optional: clear filename if not provided */
@@ -140,7 +142,7 @@ gboolean
 fu_pxi_tp_section_has_flag(FuPxiTpSection *self, FuPxiTpFirmwareFlags flag)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), FALSE);
-	return (self->flags & (guint32)flag) != 0;
+	return (self->flags & flag) != 0;
 }
 
 guint32
@@ -164,13 +166,15 @@ fu_pxi_tp_section_get_section_crc(FuPxiTpSection *self)
 	return self->section_crc;
 }
 
-const guint8 *
-fu_pxi_tp_section_get_reserved(FuPxiTpSection *self, gsize *len_out)
+GByteArray *
+fu_pxi_tp_section_get_reserved(FuPxiTpSection *self)
 {
 	g_return_val_if_fail(FU_IS_PXI_TP_SECTION(self), NULL);
-	if (len_out != NULL)
-		*len_out = (self->reserved != NULL) ? self->reserved->len : 0;
-	return (self->reserved != NULL) ? self->reserved->data : NULL;
+
+	if (self->reserved == NULL)
+		return NULL;
+
+	return g_byte_array_ref(self->reserved);
 }
 
 gboolean
@@ -255,8 +259,11 @@ static void
 fu_pxi_tp_section_init(FuPxiTpSection *self)
 {
 	/* fixed-length reserved blob */
-	self->reserved = g_byte_array_sized_new(PXI_TP_S_RESERVED_LEN);
-	fu_byte_array_set_size(self->reserved, PXI_TP_S_RESERVED_LEN, 0x00);
+	self->reserved =
+	    g_byte_array_sized_new(FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED);
+	fu_byte_array_set_size(self->reserved,
+			       FU_STRUCT_PXI_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED,
+			       0x00);
 }
 
 static void

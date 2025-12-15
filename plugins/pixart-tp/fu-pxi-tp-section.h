@@ -11,7 +11,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-struct.h"
 
 #define FU_TYPE_PXI_TP_SECTION (fu_pxi_tp_section_get_type())
@@ -38,8 +37,8 @@ guint32
 fu_pxi_tp_section_get_section_length(FuPxiTpSection *self);
 guint32
 fu_pxi_tp_section_get_section_crc(FuPxiTpSection *self);
-const guint8 *
-fu_pxi_tp_section_get_reserved(FuPxiTpSection *self, gsize *len_out);
+GByteArray *
+fu_pxi_tp_section_get_reserved(FuPxiTpSection *self);
 GByteArray *
 fu_pxi_tp_section_get_payload(FuPxiTpSection *self, GError **error);
 gboolean

@@ -10,9 +10,15 @@
 #include <fwupdplugin.h>
 
 #include "fu-pxi-tp-firmware.h"
-#include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
+
+/* ---- magic string ------------------------------------------------------- */
+const char PXI_TP_MAGIC[5] = "FWHD";
+
+#define PXI_TP_HEADER_V1_LEN 0x0218 /* header size for v1.0 */
+#define PXI_TP_MAX_SECTIONS  8	    /* max number of section descriptors */
+#define PXI_TP_SECTION_SIZE  64	    /* size of each section header */
 
 struct _FuPxiTpFirmware {
 	FuFirmware parent_instance;

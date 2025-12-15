@@ -155,8 +155,7 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 	FuPxiTpHapticDevice *self = FU_PXI_TP_HAPTIC_DEVICE(device);
 	FuPxiTpDevice *parent_tp = NULL;
 	FuPxiTpSection *section = NULL;
-	const guint8 *reserved = NULL;
-	gsize reserved_len = 0;
+	g_autoptr(GByteArray) reserved = NULL;
 	guint8 target_ver[3] = {0};
 	guint32 send_interval = 0;
 	g_autoptr(GByteArray) payload = NULL;
@@ -179,8 +178,8 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 	section = FU_PXI_TP_SECTION(firmware);
 
 	/* ---- read version + send interval from reserved bytes ---- */
-	reserved = fu_pxi_tp_section_get_reserved(section, &reserved_len);
-	if (reserved == NULL || reserved_len < 4) {
+	reserved = fu_pxi_tp_section_get_reserved(section);
+	if (reserved == NULL || reserved->len < 4) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -188,10 +187,10 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	target_ver[0] = reserved[0];
-	target_ver[1] = reserved[1];
-	target_ver[2] = reserved[2];
-	send_interval = (guint32)reserved[3]; /* ms */
+	target_ver[0] = reserved->data[0];
+	target_ver[1] = reserved->data[1];
+	target_ver[2] = reserved->data[2];
+	send_interval = (guint32)reserved->data[3]; /* ms */
 
 	/* ---- read TF payload ---- */
 	payload = fu_pxi_tp_section_get_payload(section, error);

@@ -229,7 +229,7 @@ enum FuPxiTfFwMode {
 
 /*
  * =====================================================================
- * TF struct definitions (using enums instead of raw u8)
+ * TF struct definitions
  * =====================================================================
  */
 

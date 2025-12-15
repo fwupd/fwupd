@@ -9,8 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-pxi-tp-fw-struct.h"
-
 #define FU_TYPE_PXI_TP_FIRMWARE (fu_pxi_tp_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuPxiTpFirmware, fu_pxi_tp_firmware, FU, PXI_TP_FIRMWARE, FuFirmware)
 
