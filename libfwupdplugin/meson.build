@@ -20,7 +20,6 @@ fwupdplugin_structs = [
   'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
-  'fu-hidraw.rs', # fuzzing
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-ihex.rs', # fuzzing
