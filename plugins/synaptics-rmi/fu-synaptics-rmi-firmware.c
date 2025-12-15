@@ -14,12 +14,6 @@
 #include "fu-synaptics-rmi-firmware.h"
 #include "fu-synaptics-rmi-struct.h"
 
-typedef enum {
-	FU_SYNAPTICS_RMI_FIRMWARE_KIND_UNKNOWN = 0x00,
-	FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X = 0x01,
-	FU_SYNAPTICS_RMI_FIRMWARE_KIND_10 = 0x10,
-} FuSynapticsRmiFirmwareKind;
-
 struct _FuSynapticsRmiFirmware {
 	FuFirmware parent_instance;
 	FuSynapticsRmiFirmwareKind kind;
@@ -499,13 +493,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 			self->sig_size = fu_struct_rmi_img_get_signature_size(st_img);
 		if (!fu_synaptics_rmi_firmware_parse_v0x(self, stream, flags, error))
 			return FALSE;
-		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X;
+		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_V0X;
 		break;
 	case 16:
 	case 17:
 		if (!fu_synaptics_rmi_firmware_parse_v10(self, stream, flags, error))
 			return FALSE;
-		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_10;
+		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_V10;
 		break;
 	default:
 		g_set_error(error,
@@ -700,9 +694,9 @@ fu_synaptics_rmi_firmware_write(FuFirmware *firmware, GError **error)
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 
 	/* two supported container formats */
-	if (self->kind == FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X)
+	if (self->kind == FU_SYNAPTICS_RMI_FIRMWARE_KIND_V0X)
 		return fu_synaptics_rmi_firmware_write_v0x(self, error);
-	if (self->kind == FU_SYNAPTICS_RMI_FIRMWARE_KIND_10)
+	if (self->kind == FU_SYNAPTICS_RMI_FIRMWARE_KIND_V10)
 		return fu_synaptics_rmi_firmware_write_v10(self, error);
 
 	/* not supported */

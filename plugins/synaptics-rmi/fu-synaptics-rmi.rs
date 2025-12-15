@@ -1,6 +1,18 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuSynapticsRmiFirmwareKind {
+    Unknown = 0x00,
+    V0X = 0x01,
+    V10 = 0x10,
+}
+
+enum FuSynapticsRmiDeviceFlags {
+    None = 0,
+    AllowFailure = 1 << 0,
+    Force = 1 << 1,
+}
+
 #[derive(ToString)]
 #[repr(u8)]
 enum FuRmiPartitionId {
