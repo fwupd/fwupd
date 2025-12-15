@@ -36,13 +36,6 @@ fu_synaptics_vmm9_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "ActiveBank", self->active_bank);
 }
 
-typedef enum {
-	FU_SYNAPTICS_VMM9_COMMAND_FLAG_NONE = 0,
-	FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER = 1 << 0,
-	FU_SYNAPTICS_VMM9_COMMAND_FLAG_NO_REPLY = 1 << 1,
-	FU_SYNAPTICS_VMM9_COMMAND_FLAG_IGNORE_REPLY = 1 << 2,
-} G_GNUC_FLAG_ENUM FuSynapticsVmm9DeviceCommandFlags;
-
 typedef struct {
 	guint8 *buf;
 	gsize bufsz;
@@ -128,7 +121,7 @@ fu_synaptics_vmm9_device_command(FuSynapticsVmm9Device *self,
 				 gsize src_bufsz,
 				 guint8 *dst_buf,
 				 gsize dst_bufsz,
-				 FuSynapticsVmm9DeviceCommandFlags flags,
+				 FuSynapticsVmm9CommandFlags flags,
 				 GError **error)
 {
 	FuSynapticsVmm9DeviceCommandHelper helper = {.buf = dst_buf, .bufsz = dst_bufsz};

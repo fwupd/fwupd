@@ -7,6 +7,13 @@ struct FuStructSynapticsVmm9 {
     signature: [char; 7] == "CARRERA",
 }
 
+enum FuSynapticsVmm9CommandFlags {
+    None = 0,
+    FullBuffer = 1 << 0,
+    NoReply = 1 << 1,
+    IgnoreReply = 1 << 2,
+}
+
 #[repr(u8)]
 enum FuSynapticsVmm9RcCtrl {
     EnableRc = 0x01,
