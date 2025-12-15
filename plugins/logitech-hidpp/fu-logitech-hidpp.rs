@@ -1,6 +1,17 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuLogitechHidppDeviceKind {
+    Keyboard,
+    Remote_control,
+    Numpad,
+    Mouse,
+    Touchpad,
+    Trackball,
+    Presenter,
+    Receiver,
+}
+
 #[derive(ToString)]
 enum FuLogitechHidppFeature {
     Root                  = 0x0000,
