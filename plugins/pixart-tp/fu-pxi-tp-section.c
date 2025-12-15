@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
@@ -255,9 +254,6 @@ fu_pxi_tp_section_get_payload(FuPxiTpSection *self, GError **error)
 static void
 fu_pxi_tp_section_init(FuPxiTpSection *self)
 {
-	memset(self->reserved, 0, sizeof self->reserved);
-	memset(self->external_file_name, 0, sizeof self->external_file_name);
-	self->flags = 0;
 }
 
 static void

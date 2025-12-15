@@ -9,7 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-pxi-tp-common.h"
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-fw-struct.h"
 #include "fu-pxi-tp-section.h"
