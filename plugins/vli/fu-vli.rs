@@ -149,3 +149,12 @@ enum FuVliUsbhubRtd21xxIspCmd {
     FwUpdateExit,
     FwUpdateReset,
 }
+
+enum FuVliUsbhubI2cStatus {
+    Ok = 0x00,
+    Header = 0x51,
+    Command = 0x52,
+    Address = 0x53,
+    Packetsize = 0x54,
+    Checksum = 0x55,
+}
