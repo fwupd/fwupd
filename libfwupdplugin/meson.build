@@ -32,6 +32,7 @@ fwupdplugin_structs = [
   'fu-oprom.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
+  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
