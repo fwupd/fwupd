@@ -15,7 +15,6 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  guint32 send_interval,
 						  guint32 data_size,
 						  GByteArray *data,
-						  const guint8 target_ver[3],
 						  GError **error);
 
 gboolean

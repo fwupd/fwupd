@@ -6,7 +6,6 @@
  */
 
 #pragma once
-
 #include <fwupdplugin.h>
 
 #define FU_TYPE_PXI_TP_DEVICE (fu_pxi_tp_device_get_type())

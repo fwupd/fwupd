@@ -12,7 +12,6 @@
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-section.h"
 #include "fu-pxi-tp-struct.h"
-
 /* ---- magic string ------------------------------------------------------- */
 const char PXI_TP_MAGIC[5] = "FWHD";
 

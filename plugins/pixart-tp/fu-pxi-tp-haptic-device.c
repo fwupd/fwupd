@@ -12,6 +12,7 @@
 #include "fu-pxi-tp-firmware.h"
 #include "fu-pxi-tp-haptic-device.h"
 #include "fu-pxi-tp-section.h"
+#include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
 
 struct _FuPxiTpHapticDevice {
@@ -86,17 +87,14 @@ static gboolean
 fu_pxi_tp_haptic_device_reload(FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-
-	/* best-effort: do not fail the whole update just because reload failed */
+	/* refresh version / state (best-effort) */
 	if (!fu_pxi_tp_haptic_device_setup(device, &error_local)) {
 		if (error_local != NULL) {
-			g_debug("haptic: failed to refresh TF firmware version: %s",
-				error_local->message);
+			g_debug("haptic: setup failed in reload: %s", error_local->message);
 			g_clear_error(&error_local);
 		}
 	}
 
-	(void)error;
 	return TRUE;
 }
 
@@ -110,9 +108,6 @@ fu_pxi_tp_haptic_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) container = NULL;
 	FuFirmware *img = NULL;
 	g_autoptr(GError) error_local = NULL;
-
-	(void)device;
-	(void)progress;
 
 	/* parse the TP FWHD container */
 	container = fu_pxi_tp_firmware_new();
@@ -156,12 +151,9 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 	FuPxiTpDevice *parent_tp = NULL;
 	FuPxiTpSection *section = NULL;
 	g_autoptr(GByteArray) reserved = NULL;
-	guint8 target_ver[3] = {0};
 	guint32 send_interval = 0;
 	g_autoptr(GByteArray) payload = NULL;
 	gsize len = 0;
-
-	(void)flags;
 
 	parent_tp = fu_pxi_tp_haptic_device_get_parent_tp(self, error);
 	if (parent_tp == NULL)
@@ -177,7 +169,7 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 
 	section = FU_PXI_TP_SECTION(firmware);
 
-	/* ---- read version + send interval from reserved bytes ---- */
+	/* ---- read send interval from reserved bytes ---- */
 	reserved = fu_pxi_tp_section_get_reserved(section);
 	if (reserved == NULL || reserved->len < 4) {
 		g_set_error_literal(error,
@@ -187,9 +179,6 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	target_ver[0] = reserved->data[0];
-	target_ver[1] = reserved->data[1];
-	target_ver[2] = reserved->data[2];
 	send_interval = (guint32)reserved->data[3]; /* ms */
 
 	/* ---- read TF payload ---- */
@@ -212,7 +201,6 @@ fu_pxi_tp_haptic_device_write_firmware(FuDevice *device,
 							       send_interval,
 							       (guint32)len,
 							       payload,
-							       target_ver,
 							       error)) {
 		return FALSE;
 	}
@@ -224,8 +212,6 @@ static gboolean
 fu_pxi_tp_haptic_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device, NULL);
-
-	(void)progress;
 
 	if (parent == NULL)
 		return TRUE;
@@ -245,17 +231,12 @@ fu_pxi_tp_haptic_device_detach(FuDevice *device, FuProgress *progress, GError **
 static gboolean
 fu_pxi_tp_haptic_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	/* TF upgrade/bootloader transitions are handled in
-	 * fu_pxi_tp_tf_communication_write_firmware_process() and cleanup().
-	 */
 	return TRUE;
 }
 
 static void
 fu_pxi_tp_haptic_device_set_progress(FuDevice *device, FuProgress *progress)
 {
-	(void)device;
-
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
@@ -273,10 +254,6 @@ fu_pxi_tp_haptic_device_cleanup(FuDevice *device,
 	FuPxiTpHapticDevice *self = FU_PXI_TP_HAPTIC_DEVICE(device);
 	FuPxiTpDevice *parent_tp = NULL;
 	g_autoptr(GError) error_local = NULL;
-
-	(void)progress;
-	(void)flags;
-	(void)error;
 
 	parent_tp = fu_pxi_tp_haptic_device_get_parent_tp(self, &error_local);
 	if (parent_tp == NULL) {

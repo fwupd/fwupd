@@ -11,52 +11,9 @@
 #include "fu-pxi-tp-struct.h"
 #include "fu-pxi-tp-tf-communication.h"
 
-/* ---- basic TF constants ---- */
-#define FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH   64
-#define FU_PXI_TF_WRITE_SIMPLE_CMD_REPORT_ID   0xCC
-#define FU_PXI_TF_WRITE_SIMPLE_CMD_TARGET_ADDR 0x2C
-
-#define FU_PXI_TF_FAILED_RETRY_TIMES	3
-#define FU_PXI_TF_FAILED_RETRY_INTERVAL 10 /* ms */
-
-/* ---- tf RMI frame layout ---- */
-/* note: index 0 is REPORT_ID_PASS_THROUGH (0xCC) */
-#define FU_PXI_TF_HDR_OFFSET_PREAMBLE	 1
-#define FU_PXI_TF_HDR_OFFSET_TARGET_ADDR 2
-#define FU_PXI_TF_HDR_OFFSET_FUNC_CODE	 3
-#define FU_PXI_TF_HDR_OFFSET_DLEN0	 4
-#define FU_PXI_TF_HDR_OFFSET_DLEN1	 5
-#define FU_PXI_TF_HDR_HEADER_BYTES	 8 /* header up to len + replylen */
-
-#define FU_PXI_TF_PAYLOAD_OFFSET_APP	 6 /* first app payload byte */
-#define FU_PXI_TF_TAIL_CRC_OFFSET_BIAS	 6 /* CRC index = datalen + 6 */
-#define FU_PXI_TF_TAIL_MAGIC_BYTE_OFFSET 7 /* tail index = datalen + 7 */
-
-#define FU_PXI_TF_VERSION_BYTES		3
-#define FU_PXI_TF_DOWNLOAD_STATUS_BYTES 3 /* status(1) + packet_number(2) */
-
-/* ---- tf timing constants ---- */
-#define FU_PXI_TF_RMI_REPLY_WAIT_MS	   10	/* wait for RMI reply */
-#define FU_PXI_TF_BOOTLOADER_ENTER_WAIT_MS 100	/* after enter bootloader */
-#define FU_PXI_TF_ERASE_WAIT_MS		   2000 /* erase flash wait time */
-#define FU_PXI_TF_DOWNLOAD_POST_WAIT_MS	   50	/* after download status OK */
-#define FU_PXI_TF_APP_VERSION_WAIT_MS	   1000 /* before/after app version read */
-#define FU_PXI_TF_DEFAULT_SEND_INTERVAL_MS 50	/* fallback when send_interval==0 */
-#define FU_PXI_TF_MAX_PACKET_DATA_LEN	   32	/* bytes per upgrade packet */
-
-/* ---- rom header check spec ---- */
-#define FU_PXI_TF_ROM_HEADER_SKIP_BYTES 6   /* bytes reserved for TF header */
-#define FU_PXI_TF_ROM_HEADER_CHECK_END	128 /* check [6, 128) */
-#define FU_PXI_TF_ROM_HEADER_ZERO	0x00
-
-/* ---- tf update flow retry ---- */
-#define FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS 3
-
-/* ---- retry helper contexts ---- */
-
 typedef struct {
 	guint8 mode;
-	guint8 *version;
+	guint8 *version; /* len = FU_PXI_TF_PAYLOAD_SIZE_VERSION */
 } FuPxiTpTfReadFwVersionCtx;
 
 typedef struct {
@@ -71,8 +28,6 @@ typedef struct {
 	gsize chunk_len;
 } FuPxiTpTfWritePacketCtx;
 
-/* --- tf Standard Communication helpers --- */
-
 static gboolean
 fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 					 guint16 addr,
@@ -80,55 +35,37 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 					 gsize in_bufsz,
 					 GError **error)
 {
-	g_autoptr(FuStructPxiTfWriteSimpleCmd) st_write_simple = NULL;
+	const gsize crc_off = (gsize)FU_PXI_TF_FRAME_OFFSET_CRC_START;
+	g_autoptr(FuStructPxiTfWriteSimpleCmd) st = NULL;
 	guint8 crc;
-	guint8 tail;
 	gsize need;
 
-	/* build header using rustgen struct (endian-safe) */
-	st_write_simple = fu_struct_pxi_tf_write_simple_cmd_new();
-	if (st_write_simple == NULL) {
+	st = fu_struct_pxi_tf_write_simple_cmd_new();
+	if (st == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "failed to allocate TF write simple header");
+				    "failed to allocate tf write simple cmd");
 		return FALSE;
 	}
 
-	/* defaults are already set in the struct:
-	 *   report_id  = 0xCC
-	 *   preamble   = 0x5A
-	 *   target_addr = 0x2C
-	 *   func       = 0x00 (TF_FUNC_WRITE_SIMPLE)
-	 */
-	fu_struct_pxi_tf_write_simple_cmd_set_addr(st_write_simple, addr);
-	fu_struct_pxi_tf_write_simple_cmd_set_len(st_write_simple, (guint16)in_bufsz);
+	fu_struct_pxi_tf_write_simple_cmd_set_addr(st, addr);
+	fu_struct_pxi_tf_write_simple_cmd_set_len(st, (guint16)in_bufsz);
 
-	/* append payload directly into existing byte array */
 	if (in_bufsz > 0 && in_buf != NULL)
-		g_byte_array_append(st_write_simple->buf, in_buf, (guint)in_bufsz);
+		g_byte_array_append(st->buf, in_buf, (guint)in_bufsz);
 
-	/* CRC + tail:
-	 * - CRC is computed from index 2 (preamble) to end of payload+header
-	 * - tail is TF frame magic byte (0xA5)
-	 */
-	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
-		      st_write_simple->buf->data + 2,
-		      st_write_simple->buf->len - 2);
-	g_byte_array_append(st_write_simple->buf, &crc, 1);
+	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, st->buf->data + crc_off, st->buf->len - crc_off);
+	g_byte_array_append(st->buf, &crc, 1);
+	g_byte_array_append(st->buf, (const guint8 *)&(guint8){FU_PXI_TF_FRAME_CONST_TAIL}, 1);
 
-	tail = FU_PXI_TF_FRAME_CONST_TAIL;
-	g_byte_array_append(st_write_simple->buf, &tail, 1);
-
-	need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_simple->buf->len;
-	if (need > 0) {
-		guint8 zeros[64] = {0}; /* safe, max 64 */
-		g_byte_array_append(st_write_simple->buf, zeros, need);
-	}
+	need = FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN - st->buf->len;
+	if (need > 0)
+		g_byte_array_set_size(st->buf, FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN);
 
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    st_write_simple->buf->data,
-					    st_write_simple->buf->len,
+					    st->buf->data,
+					    st->buf->len,
 					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
@@ -142,57 +79,44 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 						 gsize in_bufsz,
 						 GError **error)
 {
-	gsize datalen;
-	g_autoptr(FuStructPxiTfWritePacketCmd) st_write_packet = NULL;
+	const gsize crc_off = (gsize)FU_PXI_TF_FRAME_OFFSET_CRC_START;
+	g_autoptr(FuStructPxiTfWritePacketCmd) st = NULL;
+	const gsize payload_overhead = sizeof(guint16) * 2;
 	guint8 crc;
-	guint8 tail;
+	gsize datalen;
 	gsize need;
 
-	datalen = in_bufsz + 4; /* 2 bytes total + 2 bytes index */
-
-	/* build header using rustgen struct (endian-safe) */
-	st_write_packet = fu_struct_pxi_tf_write_packet_cmd_new();
-	if (st_write_packet == NULL) {
+	st = fu_struct_pxi_tf_write_packet_cmd_new();
+	if (st == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "failed to allocate TF write packet header");
+				    "failed to allocate tf write packet cmd");
 		return FALSE;
 	}
 
-	/* defaults:
-	 *   report_id  = 0xCC
-	 *   preamble   = 0x5A
-	 *   target_addr = 0x2C
-	 *   func       = 0x04 (TF_FUNC_WRITE_WITH_PACK)
-	 */
-	fu_struct_pxi_tf_write_packet_cmd_set_addr(st_write_packet, addr);
-	fu_struct_pxi_tf_write_packet_cmd_set_datalen(st_write_packet, (guint16)datalen);
-	fu_struct_pxi_tf_write_packet_cmd_set_packet_total(st_write_packet, (guint16)packet_total);
-	fu_struct_pxi_tf_write_packet_cmd_set_packet_index(st_write_packet, (guint16)packet_index);
+	/* protocol overhead: packet_total (2) + packet_index (2) */
+	datalen = in_bufsz + payload_overhead;
 
-	/* append payload directly into existing byte array */
+	fu_struct_pxi_tf_write_packet_cmd_set_addr(st, addr);
+	fu_struct_pxi_tf_write_packet_cmd_set_datalen(st, (guint16)datalen);
+	fu_struct_pxi_tf_write_packet_cmd_set_packet_total(st, (guint16)packet_total);
+	fu_struct_pxi_tf_write_packet_cmd_set_packet_index(st, (guint16)packet_index);
+
 	if (in_bufsz > 0 && in_buf != NULL)
-		g_byte_array_append(st_write_packet->buf, in_buf, (guint)in_bufsz);
+		g_byte_array_append(st->buf, in_buf, (guint)in_bufsz);
 
-	/* CRC + tail */
-	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
-		      st_write_packet->buf->data + 2,
-		      st_write_packet->buf->len - 2);
-	g_byte_array_append(st_write_packet->buf, &crc, 1);
+	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, st->buf->data + crc_off, st->buf->len - crc_off);
+	g_byte_array_append(st->buf, &crc, 1);
+	g_byte_array_append(st->buf, (const guint8 *)&(guint8){FU_PXI_TF_FRAME_CONST_TAIL}, 1);
 
-	tail = FU_PXI_TF_FRAME_CONST_TAIL;
-	g_byte_array_append(st_write_packet->buf, &tail, 1);
-
-	need = FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH - st_write_packet->buf->len;
-	if (need > 0) {
-		guint8 zeros[64] = {0}; /* safe, max 64 */
-		g_byte_array_append(st_write_packet->buf, zeros, need);
-	}
+	need = FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN - st->buf->len;
+	if (need > 0)
+		g_byte_array_set_size(st->buf, FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN);
 
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    st_write_packet->buf->data,
-					    st_write_packet->buf->len,
+					    st->buf->data,
+					    st->buf->len,
 					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
@@ -202,40 +126,34 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 				    guint16 addr,
 				    const guint8 *in_buf,
 				    gsize in_bufsz,
-				    guint8 *out_buf,
-				    gsize out_bufsz,
+				    guint8 *io_buf,
+				    gsize io_bufsz,
 				    gsize *n_bytes_returned,
 				    GError **error)
 {
-	gsize offset = 0;
-	gsize datalen;
 	g_autoptr(FuStructPxiTfReadCmd) st_read = NULL;
+	g_autoptr(FuStructPxiTfReplyHdr) st_hdr = NULL;
+	gsize offset;
+	gsize datalen;
 	guint8 crc;
 
-	g_return_val_if_fail(out_buf != NULL, FALSE);
-	g_return_val_if_fail(out_bufsz >= FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH, FALSE);
+	g_return_val_if_fail(io_buf != NULL, FALSE);
+	g_return_val_if_fail(io_bufsz >= (gsize)FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN, FALSE);
 
-	memset(out_buf, 0, out_bufsz);
+	memset(io_buf, 0, io_bufsz);
 
-	/* build header using rustgen struct (endian-safe) */
 	st_read = fu_struct_pxi_tf_read_cmd_new();
 	if (st_read == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "failed to allocate TF read header");
+				    "failed to allocate tf read cmd");
 		return FALSE;
 	}
 
-	/* nDataLen = input length + 2 bytes for reply length (low/high) */
-	datalen = in_bufsz + 2;
+	/* datalen = input length + 2 bytes reply length (low/high) */
+	datalen = in_bufsz + sizeof(guint16);
 
-	/* defaults:
-	 *   report_id  = 0xCC
-	 *   preamble   = 0x5A
-	 *   target_addr = 0x2C
-	 *   func       = 0x0B (TF_FUNC_READ_WITH_LEN)
-	 */
 	fu_struct_pxi_tf_read_cmd_set_addr(st_read, addr);
 	fu_struct_pxi_tf_read_cmd_set_datalen(st_read, (guint16)datalen);
 
@@ -248,96 +166,118 @@ fu_pxi_tp_tf_communication_read_rmi(FuPxiTpDevice *self,
 		fu_struct_pxi_tf_read_cmd_set_reply_len(st_read, 0);
 	}
 
-	/* copy header into out_buf */
-	if (!fu_memcpy_safe(out_buf,
-			    out_bufsz,
-			    0, /* dst_offset */
+	/* copy header */
+	if (!fu_memcpy_safe(io_buf,
+			    io_bufsz,
+			    0,
 			    st_read->buf->data,
-			    st_read->buf->len, /* src_sz */
-			    0,		       /* src_offset */
-			    st_read->buf->len, /* n */
+			    st_read->buf->len,
+			    0,
+			    st_read->buf->len,
 			    error))
 		return FALSE;
 
 	offset = FU_STRUCT_PXI_TF_READ_CMD_SIZE;
 
-	/* copy extra input payload (if any) */
+	/* append payload (optional) */
 	if (in_bufsz > 0 && in_buf != NULL) {
-		if (!fu_memcpy_safe(out_buf,
-				    out_bufsz,
-				    offset,
-				    in_buf,
-				    in_bufsz, /* src_sz */
-				    0,	      /* src_offset */
-				    in_bufsz, /* n */
-				    error))
+		if (!fu_memcpy_safe(io_buf, io_bufsz, offset, in_buf, in_bufsz, 0, in_bufsz, error))
 			return FALSE;
 		offset += in_bufsz;
 	}
 
-	/* crc + tail */
-	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, offset - 2);
-	out_buf[offset++] = crc;
-	out_buf[offset++] = FU_PXI_TF_FRAME_CONST_TAIL;
+	/* append crc + tail */
+	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD,
+		      io_buf + (gsize)FU_PXI_TF_FRAME_OFFSET_CRC_START,
+		      offset - (gsize)FU_PXI_TF_FRAME_OFFSET_CRC_START);
+	io_buf[offset++] = crc;
+	io_buf[offset++] = FU_PXI_TF_FRAME_CONST_TAIL;
 
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  out_buf,
-					  FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
+					  io_buf,
+					  (gsize)FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN,
 					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
-	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_RMI_REPLY_WAIT_MS);
+	fu_device_sleep(FU_DEVICE(self), (guint)FU_PXI_TF_TIMING_RMI_REPLY_WAIT);
 
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
-					  out_buf,
-					  FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH,
+					  io_buf,
+					  (gsize)FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN,
 					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
 	/* parse reply header */
-	if (out_buf[FU_PXI_TF_HDR_OFFSET_PREAMBLE] != FU_PXI_TF_FRAME_CONST_PREAMBLE ||
-	    out_buf[FU_PXI_TF_HDR_OFFSET_TARGET_ADDR] != FU_PXI_TF_WRITE_SIMPLE_CMD_TARGET_ADDR) {
+	st_hdr = fu_struct_pxi_tf_reply_hdr_parse(io_buf,
+						  (gsize)FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN,
+						  0,
+						  error);
+	if (st_hdr == NULL)
+		return FALSE;
+
+	if (fu_struct_pxi_tf_reply_hdr_get_preamble(st_hdr) != FU_PXI_TF_FRAME_CONST_PREAMBLE ||
+	    fu_struct_pxi_tf_reply_hdr_get_target_addr(st_hdr) != FU_PXI_TF_TARGET_ADDR_RMI_FRAME) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "TF RMI read: invalid header 0x%02x 0x%02x",
-			    out_buf[FU_PXI_TF_HDR_OFFSET_PREAMBLE],
-			    out_buf[FU_PXI_TF_HDR_OFFSET_TARGET_ADDR]);
+			    "tf rmi read: invalid header 0x%02x 0x%02x",
+			    fu_struct_pxi_tf_reply_hdr_get_preamble(st_hdr),
+			    fu_struct_pxi_tf_reply_hdr_get_target_addr(st_hdr));
 		return FALSE;
 	}
 
 	/* exception frame? */
-	if ((out_buf[FU_PXI_TF_HDR_OFFSET_FUNC_CODE] & FU_PXI_TF_FRAME_CONST_EXCEPTION_FLAG) != 0) {
+	if ((fu_struct_pxi_tf_reply_hdr_get_func(st_hdr) & FU_PXI_TF_FRAME_CONST_EXCEPTION_FLAG) !=
+	    0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "TF RMI read: device returned exception 0x%02x",
-			    out_buf[FU_PXI_TF_HDR_OFFSET_FUNC_CODE]);
+			    "tf rmi read: device returned exception 0x%02x",
+			    fu_struct_pxi_tf_reply_hdr_get_func(st_hdr));
 		return FALSE;
 	}
 
-	/* datalen is payload length reported by device */
-	datalen =
-	    out_buf[FU_PXI_TF_HDR_OFFSET_DLEN0] + ((gsize)out_buf[FU_PXI_TF_HDR_OFFSET_DLEN1] << 8);
-	if (fu_crc8(FU_CRC_KIND_B8_STANDARD, out_buf + 2, datalen + 4) !=
-		out_buf[datalen + FU_PXI_TF_TAIL_CRC_OFFSET_BIAS] ||
-	    out_buf[datalen + FU_PXI_TF_TAIL_MAGIC_BYTE_OFFSET] != FU_PXI_TF_FRAME_CONST_TAIL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "TF RMI read: CRC or tail mismatch");
-		return FALSE;
-	}
+	datalen = (gsize)fu_struct_pxi_tf_reply_hdr_get_datalen(st_hdr);
 
-	if (n_bytes_returned != NULL)
-		*n_bytes_returned = datalen + FU_PXI_TF_HDR_HEADER_BYTES;
+	/* validate crc + tail */
+	{
+		const gsize hdr_sz = (gsize)FU_PXI_TF_REPLY_LAYOUT_REPLY_HDR_BYTES;
+		const gsize trailer_sz = (gsize)FU_PXI_TF_REPLY_LAYOUT_TRAILER_BYTES;
+		const gsize crc_bytes = (gsize)FU_PXI_TF_FRAME_SIZE_CRC_BYTES;
+		const gsize crc_idx = hdr_sz + datalen;
+		const gsize tail_idx = crc_idx + crc_bytes;
+		const gsize frame_sz = hdr_sz + datalen + trailer_sz;
+		const gsize crc_len = (hdr_sz - (gsize)FU_PXI_TF_FRAME_OFFSET_CRC_START) + datalen;
+
+		if (frame_sz > (gsize)FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_WRITE,
+					    "tf rmi read: frame exceeds feature report size");
+			return FALSE;
+		}
+
+		if (fu_crc8(FU_CRC_KIND_B8_STANDARD,
+			    io_buf + (gsize)FU_PXI_TF_FRAME_OFFSET_CRC_START,
+			    crc_len) != io_buf[crc_idx] ||
+		    io_buf[tail_idx] != FU_PXI_TF_FRAME_CONST_TAIL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_WRITE,
+					    "tf rmi read: crc or tail mismatch");
+			return FALSE;
+		}
+
+		if (n_bytes_returned != NULL)
+			*n_bytes_returned = frame_sz;
+	}
 
 	return TRUE;
 }
 
-/* --- fu_device_retry() callbacks --- */
+/* fu_device_retry_full() callbacks */
 
 static gboolean
 fu_pxi_tp_tf_communication_read_firmware_version_cb(FuDevice *device,
@@ -345,32 +285,31 @@ fu_pxi_tp_tf_communication_read_firmware_version_cb(FuDevice *device,
 						    GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
-	FuPxiTpTfReadFwVersionCtx *ctx = user_data;
-	guint8 in_buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize len = FU_PXI_TF_VERSION_BYTES; /* expected payload length = 3 bytes (version) */
+	FuPxiTpTfReadFwVersionCtx *ctx = (FuPxiTpTfReadFwVersionCtx *)user_data;
+	guint8 io_buf[FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0};
+	gsize len = FU_PXI_TF_PAYLOAD_SIZE_VERSION;
+	g_autoptr(FuStructPxiTfVersionPayload) st_ver = NULL;
 
 	if (!fu_pxi_tp_tf_communication_read_rmi(self,
 						 FU_PXI_TF_CMD_READ_VERSION,
 						 &ctx->mode,
 						 1,
-						 in_buf,
-						 sizeof(in_buf),
+						 io_buf,
+						 sizeof(io_buf),
 						 &len,
-						 error)) {
+						 error))
 		return FALSE;
-	}
 
-	/* version bytes are at offset 6: [major, minor, patch] */
-	if (!fu_memcpy_safe(ctx->version,
-			    FU_PXI_TF_VERSION_BYTES, /* dst_sz */
-			    0,			     /* dst_offset */
-			    in_buf,
-			    sizeof(in_buf),		  /* src_sz */
-			    FU_PXI_TF_PAYLOAD_OFFSET_APP, /* src_offset */
-			    FU_PXI_TF_VERSION_BYTES,	  /* n */
-			    error)) {
+	st_ver = fu_struct_pxi_tf_version_payload_parse(io_buf,
+							sizeof(io_buf),
+							FU_STRUCT_PXI_TF_REPLY_HDR_SIZE,
+							error);
+	if (st_ver == NULL)
 		return FALSE;
-	}
+
+	ctx->version[0] = fu_struct_pxi_tf_version_payload_get_major(st_ver);
+	ctx->version[1] = fu_struct_pxi_tf_version_payload_get_minor(st_ver);
+	ctx->version[2] = fu_struct_pxi_tf_version_payload_get_patch(st_ver);
 
 	return TRUE;
 }
@@ -381,35 +320,47 @@ fu_pxi_tp_tf_communication_read_download_status_cb(FuDevice *device,
 						   GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
-	FuPxiTpTfReadDlStatusCtx *ctx = user_data;
-	guint8 in_buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
-	gsize len = FU_PXI_TF_DOWNLOAD_STATUS_BYTES; /* payload len: status(1)+packet_number(2) */
+	FuPxiTpTfReadDlStatusCtx *ctx = (FuPxiTpTfReadDlStatusCtx *)user_data;
+	guint8 io_buf[FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0};
+	gsize len = FU_PXI_TF_PAYLOAD_SIZE_DOWNLOAD_STATUS;
+	g_autoptr(FuStructPxiTfDownloadStatusPayload) st_st = NULL;
 
 	if (!fu_pxi_tp_tf_communication_read_rmi(self,
 						 FU_PXI_TF_CMD_READ_UPGRADE_STATUS,
 						 NULL,
 						 0,
-						 in_buf,
-						 sizeof(in_buf),
+						 io_buf,
+						 sizeof(io_buf),
 						 &len,
-						 error)) {
+						 error))
 		return FALSE;
+
+	/* hdr + payload + trailer */
+	{
+		const gsize hdr_sz = (gsize)FU_PXI_TF_REPLY_LAYOUT_REPLY_HDR_BYTES;
+		const gsize trailer_sz = (gsize)FU_PXI_TF_REPLY_LAYOUT_TRAILER_BYTES;
+		const gsize min_len =
+		    hdr_sz + (gsize)FU_PXI_TF_PAYLOAD_SIZE_DOWNLOAD_STATUS + trailer_sz;
+		if (len < min_len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "download status reply has unexpected length: %" G_GSIZE_FORMAT,
+				    len);
+			return FALSE;
+		}
 	}
 
-	/* total frame length should be header(8) + payload(3) = 11 */
-	if (len < FU_PXI_TF_HDR_HEADER_BYTES + FU_PXI_TF_DOWNLOAD_STATUS_BYTES ||
-	    len - FU_PXI_TF_HDR_HEADER_BYTES != FU_PXI_TF_DOWNLOAD_STATUS_BYTES) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "download status reply has unexpected length: %" G_GSIZE_FORMAT,
-			    len);
+	st_st = fu_struct_pxi_tf_download_status_payload_parse(io_buf,
+							       sizeof(io_buf),
+							       FU_STRUCT_PXI_TF_REPLY_HDR_SIZE,
+							       error);
+	if (st_st == NULL)
 		return FALSE;
-	}
 
-	*(ctx->status) = in_buf[FU_PXI_TF_PAYLOAD_OFFSET_APP];
-	*(ctx->packet_number) = (guint16)in_buf[FU_PXI_TF_PAYLOAD_OFFSET_APP + 1] +
-				((guint16)in_buf[FU_PXI_TF_PAYLOAD_OFFSET_APP + 2] << 8);
+	*(ctx->status) = fu_struct_pxi_tf_download_status_payload_get_status(st_st);
+	*(ctx->packet_number) =
+	    (guint16)fu_struct_pxi_tf_download_status_payload_get_packet_number(st_st);
 
 	return TRUE;
 }
@@ -418,33 +369,33 @@ static gboolean
 fu_pxi_tp_tf_communication_write_packet_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuPxiTpDevice *self = FU_PXI_TP_DEVICE(device);
-	FuPxiTpTfWritePacketCtx *ctx = user_data;
+	FuPxiTpTfWritePacketCtx *ctx = (FuPxiTpTfWritePacketCtx *)user_data;
 
 	return fu_pxi_tp_tf_communication_write_rmi_with_packet(self,
 								FU_PXI_TF_CMD_WRITE_UPGRADE_DATA,
-								ctx->packet_total,
-								ctx->packet_index,
+								(gsize)ctx->packet_total,
+								(gsize)ctx->packet_index,
 								ctx->chunk_data,
 								ctx->chunk_len,
 								error);
 }
 
-/* mode: 1=APP, 2=BOOT, 3=ALGO (according to original protocol) */
+/* mode: 1=APP, 2=BOOT, 3=ALGO */
 gboolean
 fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 						 guint8 mode,
 						 guint8 *version,
 						 GError **error)
 {
-	FuPxiTpTfReadFwVersionCtx ctx = {
-	    .mode = mode,
-	    .version = version,
-	};
+	FuPxiTpTfReadFwVersionCtx ctx;
+
+	ctx.mode = mode;
+	ctx.version = version;
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_pxi_tp_tf_communication_read_firmware_version_cb,
-				  FU_PXI_TF_FAILED_RETRY_TIMES,
-				  FU_PXI_TF_FAILED_RETRY_INTERVAL,
+				  (guint)FU_PXI_TF_RETRY_TIMES,
+				  (guint)FU_PXI_TF_RETRY_INTERVAL_MS,
 				  &ctx,
 				  error)) {
 		if (error != NULL && *error != NULL)
@@ -455,22 +406,21 @@ fu_pxi_tp_tf_communication_read_firmware_version(FuPxiTpDevice *self,
 	return TRUE;
 }
 
-/* read TF upgrade download status (status + number of packets accepted by MCU) */
 static gboolean
 fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 						guint8 *status,
 						guint16 *packet_number,
 						GError **error)
 {
-	FuPxiTpTfReadDlStatusCtx ctx = {
-	    .status = status,
-	    .packet_number = packet_number,
-	};
+	FuPxiTpTfReadDlStatusCtx ctx;
+
+	ctx.status = status;
+	ctx.packet_number = packet_number;
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_pxi_tp_tf_communication_read_download_status_cb,
-				  FU_PXI_TF_FAILED_RETRY_TIMES,
-				  FU_PXI_TF_FAILED_RETRY_INTERVAL,
+				  (guint)FU_PXI_TF_RETRY_TIMES,
+				  (guint)FU_PXI_TF_RETRY_INTERVAL_MS,
 				  &ctx,
 				  error)) {
 		if (error != NULL && *error != NULL)
@@ -481,7 +431,18 @@ fu_pxi_tp_tf_communication_read_download_status(FuPxiTpDevice *self,
 	return TRUE;
 }
 
-/* perform one TF firmware update attempt: no outer retries here */
+gboolean
+fu_pxi_tp_tf_communication_exit_upgrade_mode(FuPxiTpDevice *self, GError **error)
+{
+	guint8 mode = FU_PXI_TF_UPGRADE_MODE_EXIT;
+
+	return fu_pxi_tp_tf_communication_write_rmi_cmd(self,
+							FU_PXI_TF_CMD_SET_UPGRADE_MODE,
+							&mode,
+							1,
+							error);
+}
+
 static gboolean
 fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 					  FuProgress *progress,
@@ -490,16 +451,17 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 					  const GByteArray *data,
 					  GError **error)
 {
-	const guint32 max_packet_data_len = FU_PXI_TF_MAX_PACKET_DATA_LEN;
-	guint8 touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_DISABLE;
-	guint8 tmp_buf[FU_PXI_TF_FEATURE_REPORT_BYTE_LENGTH] = {0};
+	guint8 touch_operate_buf;
+	guint8 tmp_buf[FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0};
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	gsize num_chunks = 0;
-	guint32 num = 0;
+	gsize num_chunks;
+	guint32 num;
 	guint32 idx;
 
-	/* disable touch function while updating TF */
+	touch_operate_buf = FU_PXI_TF_TOUCH_CONTROL_DISABLE;
+	memset(tmp_buf, 0, sizeof(tmp_buf));
+
 	g_debug("disabling touch");
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
 						      FU_PXI_TF_CMD_TOUCH_CONTROL,
@@ -513,7 +475,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	/* enter TF bootloader / upgrade mode */
 	g_debug("enter bootloader mode");
 	tmp_buf[0] = FU_PXI_TF_UPGRADE_MODE_ENTER_BOOT;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
@@ -528,9 +489,8 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_BOOTLOADER_ENTER_WAIT_MS);
+	fu_device_sleep(FU_DEVICE(self), (guint)FU_PXI_TF_TIMING_BOOTLOADER_ENTER_WAIT);
 
-	/* erase flash before programming */
 	g_debug("erase flash");
 	tmp_buf[0] = FU_PXI_TF_UPGRADE_MODE_ERASE_FLASH;
 	if (!fu_pxi_tp_tf_communication_write_rmi_cmd(self,
@@ -545,14 +505,13 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return FALSE;
 	}
 
-	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_ERASE_WAIT_MS);
+	fu_device_sleep(FU_DEVICE(self), (guint)FU_PXI_TF_TIMING_ERASE_WAIT);
 
-	/* build chunk array from firmware payload */
 	blob = g_bytes_new(data->data, data_size);
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       max_packet_data_len);
+					       (gsize)FU_PXI_TF_LIMIT_MAX_PACKET_DATA_LEN);
 	if (chunks == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -567,7 +526,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 		return TRUE;
 	}
 
-	/* total number of packets */
 	num = (guint32)num_chunks;
 
 	fu_progress_set_id(progress, G_STRLOC);
@@ -577,46 +535,47 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 	g_debug("start writing flash, packets=%u, total_size=%u", num, data_size);
 
 	for (idx = 0; idx < num; idx++) {
-		guint32 packet_index = idx + 1;
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx, error);
+		guint32 packet_index;
+		g_autoptr(FuChunk) chk = NULL;
 		gsize count;
 		const guint8 *chunk_data;
+		guint retry_interval;
+		FuPxiTpTfWritePacketCtx ctx;
 
+		packet_index = idx + 1;
+
+		chk = fu_chunk_array_index(chunks, (gsize)idx, error);
 		if (chk == NULL)
 			return FALSE;
 
 		count = fu_chunk_get_data_sz(chk);
 		chunk_data = fu_chunk_get_data(chk);
 
-		/* retry a single packet using fu_device_retry_full() */
-		{
-			FuPxiTpTfWritePacketCtx ctx = {
-			    .packet_total = num,
-			    .packet_index = packet_index,
-			    .chunk_data = chunk_data,
-			    .chunk_len = count,
-			};
-			guint retry_interval =
-			    send_interval > 0 ? send_interval : FU_PXI_TF_DEFAULT_SEND_INTERVAL_MS;
+		ctx.packet_total = num;
+		ctx.packet_index = packet_index;
+		ctx.chunk_data = chunk_data;
+		ctx.chunk_len = count;
 
-			if (!fu_device_retry_full(FU_DEVICE(self),
-						  fu_pxi_tp_tf_communication_write_packet_cb,
-						  FU_PXI_TF_FAILED_RETRY_TIMES,
-						  retry_interval,
-						  &ctx,
-						  error)) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_WRITE,
-					    "failed to write flash packet %u after %d retries",
-					    packet_index,
-					    FU_PXI_TF_FAILED_RETRY_TIMES);
-				fu_progress_reset(progress);
-				return FALSE;
-			}
+		retry_interval = (send_interval > 0)
+				     ? send_interval
+				     : (guint)FU_PXI_TF_TIMING_DEFAULT_SEND_INTERVAL;
+
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_pxi_tp_tf_communication_write_packet_cb,
+					  (guint)FU_PXI_TF_RETRY_TIMES,
+					  retry_interval,
+					  &ctx,
+					  error)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "failed to write flash packet %u after %u retries",
+				    packet_index,
+				    (guint)FU_PXI_TF_RETRY_TIMES);
+			fu_progress_reset(progress);
+			return FALSE;
 		}
 
-		/* small delay between packets (separate from retry delay) */
 		if (send_interval > 0)
 			fu_device_sleep(FU_DEVICE(self), send_interval);
 
@@ -625,7 +584,6 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 
 	g_debug("all packets sent, checking download status");
 
-	/* read back download status from device */
 	{
 		guint8 status = 0;
 		guint16 mcu_packet_number = 0;
@@ -641,75 +599,46 @@ fu_pxi_tp_tf_communication_write_firmware(FuPxiTpDevice *self,
 			return FALSE;
 		}
 
-		g_debug("download status OK, expected_packets=%u, device_packets=%u, status=%u",
+		g_debug("download status: expected_packets=%u, device_packets=%u, status=%u",
 			num,
 			mcu_packet_number,
 			status);
 
-		if (status != 0 || mcu_packet_number != num) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "upgrade failed, status=%u, device_packets=%u, "
-				    "expected_packets=%u",
-				    status,
-				    mcu_packet_number,
-				    num);
+		if (status != 0 || mcu_packet_number != (guint16)num) {
+			g_set_error(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "upgrade failed, status=%u, device_packets=%u, expected_packets=%u",
+			    status,
+			    mcu_packet_number,
+			    num);
 			return FALSE;
 		}
 	}
 
-	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_DOWNLOAD_POST_WAIT_MS);
-	g_debug("download status indicates success, exiting upgrade mode");
+	fu_device_sleep(FU_DEVICE(self), (guint)FU_PXI_TF_TIMING_DOWNLOAD_POST_WAIT);
 
-	/* exit upgrade mode (best-effort) to get the fw version not bootloader version */
+	g_debug("download status indicates success, exiting upgrade mode");
 	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, NULL))
 		g_debug("failed to exit upgrade mode (ignored)");
 
+	fu_device_sleep(FU_DEVICE(self), (guint)FU_PXI_TF_TIMING_APP_VERSION_WAIT);
 	return TRUE;
 }
 
-/* compare TF firmware version: returns <0 if a<b, 0 if a==b, >0 if a>b */
-static gint
-fu_pxi_tp_tf_communication_version_cmp(const guint8 a[3], const guint8 b[3])
-{
-	gsize i;
-
-	for (i = 0; i < 3; i++) {
-		if (a[i] < b[i])
-			return -1;
-		if (a[i] > b[i])
-			return 1;
-	}
-	return 0;
-}
-
-/* Public entry point used by the main plugin:
- * - reads TF version before update (mode=APP)
- * - skips update if current version >= target version
- * - validates TF image
- * - stops touchpad report
- * - retries the TF update a few times at high level
- * - reads TF version after successful update
- * - verifies TF version matches target version
- */
 gboolean
 fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 						  FuProgress *progress,
 						  guint32 send_interval,
 						  guint32 data_size,
 						  GByteArray *data,
-						  const guint8 target_ver[3],
 						  GError **error)
 {
-	guint8 ver_before[3] = {0};
-	g_autoptr(GError) ver_err = NULL;
 	gsize i;
-	gsize attempt;
+	g_autoptr(GError) ver_err = NULL;
+	guint8 ver_before[3] = {0};
 
-	fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
-
-	/* stop touchpad reports while updating TF */
 	g_debug("stop touchpad report");
 	if (!fu_pxi_tp_register_user_write(self,
 					   FU_PXI_TP_USER_BANK_BANK0,
@@ -718,11 +647,9 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 					   error))
 		return FALSE;
 
-	/* exit upgrade mode (best-effort) to get the fw version not bootloader version */
 	if (!fu_pxi_tp_tf_communication_exit_upgrade_mode(self, NULL))
 		g_debug("failed to exit upgrade mode (ignored)");
 
-	/* try to read TF firmware version before update (mode=APP) */
 	if (fu_pxi_tp_tf_communication_read_firmware_version(self,
 							     FU_PXI_TF_FW_MODE_APP,
 							     ver_before,
@@ -736,109 +663,35 @@ fu_pxi_tp_tf_communication_write_firmware_process(FuPxiTpDevice *self,
 			ver_err != NULL ? ver_err->message : "unknown error");
 	}
 
-	/* sanity check: bytes [6, 128) must be zero (ROM header rule) */
-	g_debug("validate ROM header (bytes [%d, %d) must be 0x%02x)",
-		FU_PXI_TF_ROM_HEADER_SKIP_BYTES,
-		FU_PXI_TF_ROM_HEADER_CHECK_END,
-		(guint)FU_PXI_TF_ROM_HEADER_ZERO);
+	g_debug("validate rom header (bytes [%u, %u) must be 0x%02x)",
+		(guint)FU_PXI_TF_LIMIT_ROM_HEADER_SKIP,
+		(guint)FU_PXI_TF_LIMIT_ROM_HEADER_CHECK_END,
+		(guint)FU_PXI_TF_LIMIT_ROM_HEADER_ZERO);
 
-	for (i = FU_PXI_TF_ROM_HEADER_SKIP_BYTES; i < FU_PXI_TF_ROM_HEADER_CHECK_END; i++) {
-		if (data->data[i] != FU_PXI_TF_ROM_HEADER_ZERO) {
+	if (data->len < (gsize)FU_PXI_TF_LIMIT_ROM_HEADER_CHECK_END) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid firmware file: size too small for header check");
+		return FALSE;
+	}
+
+	for (i = (gsize)FU_PXI_TF_LIMIT_ROM_HEADER_SKIP;
+	     i < (gsize)FU_PXI_TF_LIMIT_ROM_HEADER_CHECK_END;
+	     i++) {
+		if (data->data[i] != (guint8)FU_PXI_TF_LIMIT_ROM_HEADER_ZERO) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
-					    "invalid ROM file, non-zero data in header region");
+					    "invalid rom file, non-zero data in header region");
 			return FALSE;
 		}
 	}
 
-	for (attempt = 1; attempt <= FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS; attempt++) {
-		g_autoptr(GError) error_local = NULL;
-
-		g_debug("firmware update attempt %" G_GSIZE_FORMAT "/%d",
-			attempt,
-			FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS);
-
-		if (fu_pxi_tp_tf_communication_write_firmware(self,
-							      progress,
-							      send_interval,
-							      data_size,
-							      data,
-							      &error_local)) {
-			/* read tf firmware version after successful update */
-			fu_device_sleep(FU_DEVICE(self), FU_PXI_TF_APP_VERSION_WAIT_MS);
-			{
-				guint8 ver_after[3] = {0};
-				g_autoptr(GError) ver_after_err = NULL;
-
-				if (!fu_pxi_tp_tf_communication_read_firmware_version(
-					self,
-					FU_PXI_TF_FW_MODE_APP,
-					ver_after,
-					&ver_after_err)) {
-					g_set_error(
-					    error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "failed to read firmware version after update: %s",
-					    ver_after_err != NULL ? ver_after_err->message
-								  : "unknown error");
-					return FALSE;
-				}
-
-				g_debug("firmware version after update (mode=APP): %u.%u.%u",
-					ver_after[0],
-					ver_after[1],
-					ver_after[2]);
-
-				/* verify version matches target version */
-				if (target_ver != NULL &&
-				    fu_pxi_tp_tf_communication_version_cmp(ver_after, target_ver) !=
-					0) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_FILE,
-						    "firmware version after update (%u.%u.%u) "
-						    "does not match target (%u.%u.%u)",
-						    ver_after[0],
-						    ver_after[1],
-						    ver_after[2],
-						    target_ver[0],
-						    target_ver[1],
-						    target_ver[2]);
-					return FALSE;
-				}
-			}
-
-			g_debug("firmware update succeeded on attempt %" G_GSIZE_FORMAT, attempt);
-			return TRUE;
-		}
-
-		g_debug("firmware update attempt %" G_GSIZE_FORMAT " failed: %s",
-			attempt,
-			error_local != NULL ? error_local->message : "unknown error");
-
-		if (attempt < FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS)
-			g_debug("retrying firmware update");
-	}
-
-	/* all attempts failed, report a single error to caller */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_WRITE,
-		    "firmware update failed after %" G_GSIZE_FORMAT " attempts",
-		    (gsize)FU_PXI_TF_UPDATE_FLOW_MAX_ATTEMPTS);
-	return FALSE;
-}
-
-gboolean
-fu_pxi_tp_tf_communication_exit_upgrade_mode(FuPxiTpDevice *self, GError **error)
-{
-	guint8 mode = FU_PXI_TF_UPGRADE_MODE_EXIT;
-
-	return fu_pxi_tp_tf_communication_write_rmi_cmd(self,
-							FU_PXI_TF_CMD_SET_UPGRADE_MODE,
-							&mode,
-							1,
-							error);
+	return fu_pxi_tp_tf_communication_write_firmware(self,
+							 progress,
+							 send_interval,
+							 data_size,
+							 data,
+							 error);
 }
