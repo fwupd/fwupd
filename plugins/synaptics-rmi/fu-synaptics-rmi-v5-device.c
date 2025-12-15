@@ -212,7 +212,7 @@ fu_synaptics_rmi_v5_device_secure_check(FuSynapticsRmiDevice *self,
 		     pubkey_buf->data,
 		     pubkey_buf->len,
 		     16,
-		     FU_DUMP_FLAGS_NONE);
+		     FU_DUMP_FLAG_NONE);
 
 	/* sanity check size */
 	if (rsa_pubkey_len != pubkey_buf->len) {

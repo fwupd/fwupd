@@ -58,7 +58,7 @@ fu_synaptics_prometheus_device_cmd_send(FuSynapticsPrometheusDevice *self,
 		     request->data,
 		     request->len,
 		     16,
-		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
+		     FU_DUMP_FLAG_SHOW_ADDRESSES);
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_SYNAPTICS_PROMETHEUS_USB_REQUEST_EP,
 					 request->data,
@@ -97,7 +97,7 @@ fu_synaptics_prometheus_device_cmd_send(FuSynapticsPrometheusDevice *self,
 		     reply->data,
 		     actual_len,
 		     16,
-		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
+		     FU_DUMP_FLAG_SHOW_ADDRESSES);
 	fu_progress_step_done(progress);
 
 	/* parse as FuSynapticsPrometheusReplyGeneric */
