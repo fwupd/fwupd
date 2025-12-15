@@ -3,6 +3,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('qsi-dock.quirk')
 plugin_builtins += static_library('fu_plugin_qsi_dock',
+  rustgen.process('fu-qsi-dock.rs'),
   sources: [
     'fu-qsi-dock-child-device.c',
     'fu-qsi-dock-mcu-device.c',
