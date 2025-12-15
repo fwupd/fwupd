@@ -618,7 +618,7 @@ fu_synaptics_rmi_ps2_device_read(FuSynapticsRmiDevice *rmi_device,
 		break;
 	}
 	dump = g_strdup_printf("R %x", addr);
-	fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAG_NONE);
 	return g_steal_pointer(&buf);
 }
 
@@ -643,7 +643,7 @@ fu_synaptics_rmi_ps2_device_read_packet_register(FuSynapticsRmiDevice *rmi_devic
 		return NULL;
 	}
 
-	fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, dump, buf->data, buf->len, 80, FU_DUMP_FLAG_NONE);
 	return g_steal_pointer(&buf);
 }
 
@@ -671,7 +671,7 @@ fu_synaptics_rmi_ps2_device_write(FuSynapticsRmiDevice *rmi_device,
 		g_prefix_error(error, "failed to write register %x: ", addr);
 		return FALSE;
 	}
-	fu_dump_full(G_LOG_DOMAIN, str, req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, str, req->data, req->len, 80, FU_DUMP_FLAG_NONE);
 	return TRUE;
 }
 

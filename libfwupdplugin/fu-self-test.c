@@ -4491,7 +4491,7 @@ fu_firmware_dfu_patch_func(void)
 		     g_bytes_get_data(data_new, NULL),
 		     g_bytes_get_size(data_new),
 		     20,
-		     FU_DUMP_FLAGS_SHOW_ASCII | FU_DUMP_FLAGS_SHOW_ADDRESSES);
+		     FU_DUMP_FLAG_SHOW_ASCII | FU_DUMP_FLAG_SHOW_ADDRESSES);
 	csum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_new);
 	g_assert_cmpstr(csum, ==, "676c039e8cb1d2f51831fcb77be36db24bb8ecf8");
 }
