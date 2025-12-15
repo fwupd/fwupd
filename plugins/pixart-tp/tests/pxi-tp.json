@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "aa139735e30f875c5de8b3befb0b18208b8c69de9eae78f34a8364367394a89f-touchpad_test_firmware_ff02.cab",
-      "emulation-url": "c60a9d0120681f0bb836c507a15006ecc5fde383a5f3299d14b964fbfb85f9f1-pixart-touchpad-vff02.zip",
+      "url": "f4cfe7e15d7a33e66e8357c9fb924633bc85ef411ff9d4c789fb67478461d3b9-firmware.cab",
+      "emulation-url": "ed77c0d104c4a30f4e0b42fae59668920d10309e22cc8a89acee3936c18564a0-pxi-tp-update.zip",
       "components": [
         {
           "version": "0xff02",

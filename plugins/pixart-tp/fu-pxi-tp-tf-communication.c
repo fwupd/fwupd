@@ -60,8 +60,10 @@ fu_pxi_tp_tf_communication_write_rmi_cmd(FuPxiTpDevice *self,
 	g_byte_array_append(st->buf, (const guint8 *)&(guint8){FU_PXI_TF_FRAME_CONST_TAIL}, 1);
 
 	need = FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN - st->buf->len;
-	if (need > 0)
-		g_byte_array_set_size(st->buf, FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN);
+	if (need > 0) {
+		guint8 zeros[FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0}; /* safe, max 64 */
+		g_byte_array_append(st->buf, zeros, need);
+	}
 
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    st->buf->data,
@@ -111,8 +113,10 @@ fu_pxi_tp_tf_communication_write_rmi_with_packet(FuPxiTpDevice *self,
 	g_byte_array_append(st->buf, (const guint8 *)&(guint8){FU_PXI_TF_FRAME_CONST_TAIL}, 1);
 
 	need = FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN - st->buf->len;
-	if (need > 0)
-		g_byte_array_set_size(st->buf, FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN);
+	if (need > 0) {
+		guint8 zeros[FU_PXI_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0}; /* safe, max 64 */
+		g_byte_array_append(st->buf, zeros, need);
+	}
 
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    st->buf->data,

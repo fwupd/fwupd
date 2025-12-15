@@ -2,9 +2,9 @@
   "FwupdVersion": "2.0.19",
   "UsbDevices": [
     {
-      "Created": "2025-12-11T12:22:26.301915Z",
+      "Created": "2025-12-15T10:28:50.802551Z",
       "GType": "FuUdevDevice",
-      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:4F07.0017/hidraw/hidraw2",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:4F07.0009/hidraw/hidraw2",
       "DeviceFile": "/dev/hidraw2",
       "Subsystem": "hidraw",
       "Vendor": 2362,
@@ -43,7 +43,7 @@
         {
           "Id": "GetBackendParent:Subsystem=hid",
           "GType": "FuUdevDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:4F07.0017"
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:4F07.0009"
         },
         {
           "Id": "GetSymlinkTarget:Attr=subsystem",
@@ -58,7 +58,7 @@
         },
         {
           "Id": "ReadAttr:Attr=uevent",
-          "Data": "DRIVER=hid-multitouch\nHID_ID=0003:0000093A:00004F07\nHID_NAME=Pixart Imaging, Inc. HID Bridge:15 0001 093A 4F07 0201\nHID_PHYS=usb-0000:00:14.0-5/input0\nHID_UNIQ=P000000001\nMODALIAS=hid:b0003g0004v0000093Ap00004F07"
+          "Data": "DRIVER=hid-multitouch\nHID_ID=0003:0000093A:00004F07\nHID_NAME=Pixart Imaging, Inc. HID Bridge:15 0001 093A 4F07 FF02\nHID_PHYS=usb-0000:00:14.0-5/input0\nHID_UNIQ=P000000001\nMODALIAS=hid:b0003g0004v0000093Ap00004F07"
         },
         {
           "Id": "ReadProp:Key=DEVNAME"
@@ -81,7 +81,7 @@
         },
         {
           "Id": "ReadProp:Key=HID_NAME",
-          "Data": "Pixart Imaging, Inc. HID Bridge:15 0001 093A 4F07 0201"
+          "Data": "Pixart Imaging, Inc. HID Bridge:15 0001 093A 4F07 FF02"
         },
         {
           "Id": "ReadProp:Key=HID_UNIQ",
@@ -111,11 +111,11 @@
         },
         {
           "Id": "ReadAttr:Attr=uevent",
-          "Data": "MAJOR=189\nMINOR=290\nDEVNAME=bus/usb/003/035\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=93a/4f07/201\nTYPE=0/0/0\nBUSNUM=003\nDEVNUM=035"
+          "Data": "MAJOR=189\nMINOR=271\nDEVNAME=bus/usb/003/016\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=93a/4f07/ff02\nTYPE=0/0/0\nBUSNUM=003\nDEVNUM=016"
         },
         {
           "Id": "ReadProp:Key=DEVNAME",
-          "Data": "bus/usb/003/035"
+          "Data": "bus/usb/003/016"
         },
         {
           "Id": "ReadAttr:Attr=vendor"
@@ -136,60 +136,18 @@
         },
         {
           "Id": "ReadAttr:Attr=uevent",
-          "Data": "MAJOR=189\nMINOR=290\nDEVNAME=bus/usb/003/035\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=93a/4f07/201\nTYPE=0/0/0\nBUSNUM=003\nDEVNUM=035"
+          "Data": "MAJOR=189\nMINOR=271\nDEVNAME=bus/usb/003/016\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=93a/4f07/ff02\nTYPE=0/0/0\nBUSNUM=003\nDEVNUM=016"
         },
         {
           "Id": "ReadProp:Key=DEVNUM",
-          "Data": "035"
+          "Data": "016"
         },
         {
           "Id": "LoadDescriptor:basename=descriptors",
-          "Data": "EgEAAgAAAEA6CQdPAQIBAgMBCQIiAAEBAIAyCQQAAAEDAAAACSEQAQABIsQDBwWBAwACAQ=="
+          "Data": "EgEAAgAAAEA6CQdPAv8BAgMBCQIiAAEBAIAyCQQAAAEDAAAACSEQAQABIsQDBwWBAwACAQ=="
         },
         {
           "Id": "LoadDescriptor:basename=bos_descriptors"
-        },
-        {
-          "Id": "ReadProp:Key=HID_FIRMWARE_VERSION"
-        },
-        {
-          "Id": "GetBackendParent:Subsystem=hid",
-          "GType": "FuUdevDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/0003:093A:4F07.0017"
-        },
-        {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
-          "Data": "hid"
-        },
-        {
-          "Id": "GetSymlinkTarget:Attr=driver",
-          "Data": "hid-multitouch"
-        },
-        {
-          "Id": "ReadProp:Key=DEVTYPE"
-        },
-        {
-          "Id": "ReadAttr:Attr=uevent",
-          "Data": "DRIVER=hid-multitouch\nHID_ID=0003:0000093A:00004F07\nHID_NAME=Pixart Imaging, Inc. HID Bridge:15 0001 093A 4F07 0201\nHID_PHYS=usb-0000:00:14.0-5/input0\nHID_UNIQ=P000000001\nMODALIAS=hid:b0003g0004v0000093Ap00004F07"
-        },
-        {
-          "Id": "ReadProp:Key=DEVNAME"
-        },
-        {
-          "Id": "ReadAttr:Attr=vendor"
-        },
-        {
-          "Id": "ReadAttr:Attr=device"
-        },
-        {
-          "Id": "ReadAttr:Attr=class"
-        },
-        {
-          "Id": "ReadProp:Key=DEVTYPE"
-        },
-        {
-          "Id": "ReadProp:Key=HID_ID",
-          "Data": "0003:0000093A:00004F07"
         },
         {
           "Id": "ReadProp:Key=HID_FIRMWARE_VERSION"
@@ -200,7 +158,7 @@
         },
         {
           "Id": "Ioctl:Request=0xc0044807,Data=QwAAAA==,Length=0x4",
-          "DataOut": "Q7IAAQ=="
+          "DataOut": "Q7IAAg=="
         },
         {
           "Id": "Ioctl:Request=0xc0044806,Data=Q7MQAA==,Length=0x4",
@@ -209,6 +167,14 @@
         {
           "Id": "Ioctl:Request=0xc0044807,Data=QwAAAA==,Length=0x4",
           "DataOut": "Q7MA/w=="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0404806,Data=zFosCwcAAwADAAGNpQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "DataOut": "zFosCwcAAwADAAGNpQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0404807,Data=zFosCwcAAwADAAGNpQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "DataOut": "zFosAwMAAQkOH6UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANA=="
         }
       ]
     }
