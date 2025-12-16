@@ -1,0 +1,10 @@
+[HIDRAW\VEN_093A&DEV_0343]
+Plugin = pixart_tp
+
+[HIDRAW\VEN_093A&DEV_3307]
+Plugin = pixart_tp
+PixartTpSramSelect = 0x08
+
+[HIDRAW\VEN_093A&DEV_4F07]
+Plugin = pixart_tp
+PixartTpHasHaptic = true
