@@ -118,6 +118,7 @@ fu_elan_kbd_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elan_kbd_firmware_init(FuElanKbdFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

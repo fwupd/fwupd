@@ -276,6 +276,7 @@ static void
 fu_archive_firmware_init(FuArchiveFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

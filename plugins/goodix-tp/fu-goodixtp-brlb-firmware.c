@@ -129,6 +129,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 static void
 fu_goodixtp_brlb_firmware_init(FuGoodixtpBrlbFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 

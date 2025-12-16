@@ -3927,6 +3927,7 @@ fu_firmware_build_func(void)
 	g_assert_nonnull(n);
 
 	/* build object */
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 	ret = fu_firmware_build(firmware, n, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4062,6 +4063,7 @@ fu_firmware_sorted_func(void)
 	fu_firmware_set_idx(firmware2, 0x200);
 	fu_firmware_set_idx(firmware3, 0x100);
 
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 	ret = fu_firmware_add_image(firmware, firmware1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4588,6 +4590,8 @@ fu_firmware_func(void)
 	g_autoptr(GPtrArray) images = NULL;
 	g_autofree gchar *str = NULL;
 
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
+
 	fu_firmware_set_addr(img1, 0x200);
 	fu_firmware_set_idx(img1, 13);
 	fu_firmware_set_id(img1, "primary");
@@ -4633,6 +4637,9 @@ fu_firmware_func(void)
 	g_assert_cmpstr(str,
 			==,
 			"<firmware>\n"
+			"  <image_gtypes>\n"
+			"    <gtype>FuFirmware</gtype>\n"
+			"  </image_gtypes>\n"
 			"  <firmware>\n"
 			"    <id>primary</id>\n"
 			"    <idx>0xd</idx>\n"
@@ -4706,6 +4713,7 @@ fu_firmware_dedupe_func(void)
 
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(firmware, 2);
 
 	fu_firmware_set_idx(img1_old, 13);
@@ -5685,7 +5693,6 @@ fu_firmware_builder_round_trip_func(void)
 	    },
 #endif
 	};
-	g_type_ensure(FU_TYPE_COSWID_FIRMWARE);
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		gboolean ret;
 		g_autofree gchar *csum1 = NULL;
@@ -7362,7 +7369,6 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_type_ensure(FU_TYPE_IFD_BIOS);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);

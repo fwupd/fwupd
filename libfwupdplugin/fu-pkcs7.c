@@ -131,6 +131,7 @@ fu_pkcs7_parse(FuFirmware *firmware,
 static void
 fu_pkcs7_init(FuPkcs7 *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_X509_CERTIFICATE);
 }
 
 static void

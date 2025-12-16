@@ -290,6 +290,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 static void
 fu_kinetic_dp_puma_firmware_init(FuKineticDpPumaFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

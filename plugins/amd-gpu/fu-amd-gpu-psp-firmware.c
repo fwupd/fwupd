@@ -164,6 +164,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 				    fu_struct_image_slot_header_get_fw_id(st_hdr));
 			return FALSE;
 		}
+		fu_firmware_add_image_gtype(l2_img, FU_TYPE_AMD_GPU_ATOM_FIRMWARE);
 		if (!fu_firmware_add_image(l2_img, csm_img, error))
 			return FALSE;
 
@@ -173,6 +174,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 		fu_firmware_set_addr(l2_img, loc);
 		if (!fu_firmware_parse_stream(l2_img, l2_stream, 0x0, flags, error))
 			return FALSE;
+		fu_firmware_add_image_gtype(ish_img, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(ish_img, l2_img, error))
 			return FALSE;
 
@@ -207,6 +209,7 @@ fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 static void
 fu_amd_gpu_psp_firmware_init(FuAmdGpuPspFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

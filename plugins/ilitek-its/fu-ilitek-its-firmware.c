@@ -198,6 +198,7 @@ static void
 fu_ilitek_its_firmware_init(FuIlitekItsFirmware *self)
 {
 	fu_ihex_firmware_set_padding_value(FU_IHEX_FIRMWARE(self), 0xFF);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ILITEK_ITS_BLOCK);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }

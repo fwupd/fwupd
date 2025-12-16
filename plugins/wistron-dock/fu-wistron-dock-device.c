@@ -380,6 +380,7 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* success */
+	fu_firmware_add_image_gtype(fw_new, FU_TYPE_FIRMWARE);
 	fu_firmware_set_id(fw_wsig, FU_FIRMWARE_ID_SIGNATURE);
 	if (!fu_firmware_add_image(fw_new, fw_wsig, error))
 		return NULL;

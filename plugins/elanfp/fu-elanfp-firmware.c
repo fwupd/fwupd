@@ -201,8 +201,8 @@ static void
 fu_elanfp_firmware_init(FuElanfpFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 256);
-	g_type_ensure(FU_TYPE_CFU_OFFER);
-	g_type_ensure(FU_TYPE_CFU_PAYLOAD);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CFU_OFFER);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CFU_PAYLOAD);
 }
 
 static void
