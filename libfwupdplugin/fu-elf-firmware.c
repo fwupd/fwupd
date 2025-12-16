@@ -371,6 +371,7 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elf_firmware_init(FuElfFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 

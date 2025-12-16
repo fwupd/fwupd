@@ -519,8 +519,9 @@ fu_pefile_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 static void
 fu_pefile_firmware_init(FuPefileFirmware *self)
 {
-	g_type_ensure(FU_TYPE_CSV_FIRMWARE);
-	g_type_ensure(FU_TYPE_SBATLEVEL_SECTION);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_SBATLEVEL_SECTION);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
 }
 

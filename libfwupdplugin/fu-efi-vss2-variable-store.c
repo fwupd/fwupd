@@ -146,7 +146,7 @@ fu_efi_vss2_variable_store_write(FuFirmware *firmware, GError **error)
 static void
 fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 {
-	g_type_ensure(FU_TYPE_EFI_VSS_AUTH_VARIABLE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 #ifdef HAVE_FUZZER

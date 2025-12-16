@@ -97,6 +97,7 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 static void
 fu_legion_hid_firmware_init(FuLegionHidFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

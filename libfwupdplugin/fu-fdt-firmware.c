@@ -579,7 +579,7 @@ fu_fdt_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_fdt_firmware_init(FuFdtFirmware *self)
 {
-	g_type_ensure(FU_TYPE_FDT_IMAGE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FDT_IMAGE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 

@@ -97,6 +97,7 @@ fu_algoltek_usb_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_algoltek_usb_firmware_init(FuAlgoltekUsbFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

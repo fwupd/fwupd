@@ -45,6 +45,7 @@ typedef struct {
 	gsize size;
 	gsize size_max;
 	guint images_max;
+	GArray *image_gtypes; /* nullable, element-type GType */
 	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
@@ -1284,6 +1285,12 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	g_return_val_if_fail(XB_IS_NODE(n), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* subclassed */
+	if (klass->build != NULL) {
+		if (!klass->build(self, n, error))
+			return FALSE;
+	}
+
 	/* set attributes */
 	tmp = xb_node_query_text(n, "version", NULL);
 	if (tmp != NULL)
@@ -1407,12 +1414,6 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			if (!fu_firmware_build(img, xb_image, error))
 				return FALSE;
 		}
-	}
-
-	/* subclassed */
-	if (klass->build != NULL) {
-		if (!klass->build(self, n, error))
-			return FALSE;
 	}
 
 	/* success */
@@ -1759,6 +1760,55 @@ fu_firmware_get_depth(FuFirmware *self)
 }
 
 /**
+ * fu_firmware_add_image_gtype:
+ * @self: a #FuFirmware
+ * @type: a #GType, e.g. %FU_TYPE_ELF_FIRMWARE
+ *
+ * Adds a possible image GType.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_firmware_add_image_gtype(FuFirmware *self, GType type)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(type != G_TYPE_INVALID);
+
+	g_type_ensure(type);
+	if (priv->image_gtypes == NULL)
+		priv->image_gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
+	g_array_append_val(priv->image_gtypes, type);
+}
+
+static gboolean
+fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	if (priv->image_gtypes == NULL) {
+#ifndef SUPPORTED_BUILD
+		g_critical("%s did not add image GType %s with fu_firmware_add_image_gtype()",
+			   G_OBJECT_TYPE_NAME(self),
+			   g_type_name(gtype));
+#endif
+		return TRUE;
+	}
+	for (guint i = 0; i < priv->image_gtypes->len; i++) {
+		GType gtype_tmp = g_array_index(priv->image_gtypes, GType, i);
+		if (gtype_tmp == gtype)
+			return TRUE;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "cannot add %s to %s",
+		    g_type_name(gtype),
+		    G_OBJECT_TYPE_NAME(self));
+	return FALSE;
+}
+
+/**
  * fu_firmware_add_image:
  * @self: a #FuPlugin
  * @img: a child firmware image
@@ -1792,6 +1842,10 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 			    (guint)FU_FIRMWARE_IMAGE_DEPTH_MAX);
 		return FALSE;
 	}
+
+	/* check image is a permissible GType */
+	if (!fu_firmware_check_image_gtype(self, G_OBJECT_TYPE(img), error))
+		return FALSE;
 
 	/* dedupe */
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID) {
@@ -2416,6 +2470,16 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		}
 	}
 
+	/* image gtypes */
+	if ((flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) > 0 && priv->image_gtypes != NULL &&
+	    priv->image_gtypes->len > 0) {
+		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "image_gtypes", NULL);
+		for (guint i = 0; i < priv->image_gtypes->len; i++) {
+			GType gtype_tmp = g_array_index(priv->image_gtypes, GType, i);
+			xb_builder_node_insert_text(bp, "gtype", g_type_name(gtype_tmp), NULL);
+		}
+	}
+
 	/* vfunc */
 	if (klass->export != NULL)
 		klass->export(self, flags, bn);
@@ -2541,6 +2605,8 @@ fu_firmware_finalize(GObject *object)
 		g_object_unref(priv->stream);
 	if (priv->chunks != NULL)
 		g_ptr_array_unref(priv->chunks);
+	if (priv->image_gtypes != NULL)
+		g_array_unref(priv->image_gtypes);
 	if (priv->patches != NULL)
 		g_ptr_array_unref(priv->patches);
 	if (priv->magic != NULL)

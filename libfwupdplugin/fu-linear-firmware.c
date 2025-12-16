@@ -79,6 +79,7 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 				    tmp);
 			return FALSE;
 		}
+		fu_firmware_add_image_gtype(firmware, priv->image_gtype);
 	}
 
 	/* success */
@@ -190,6 +191,7 @@ fu_linear_firmware_set_property(GObject *object,
 	switch (prop_id) {
 	case PROP_IMAGE_GTYPE:
 		priv->image_gtype = g_value_get_gtype(value);
+		fu_firmware_add_image_gtype(FU_FIRMWARE(self), priv->image_gtype);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);

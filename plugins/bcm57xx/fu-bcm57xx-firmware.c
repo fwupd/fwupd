@@ -633,9 +633,10 @@ fu_bcm57xx_firmware_init(FuBcm57xxFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	g_type_ensure(FU_TYPE_BCM57XX_STAGE1_IMAGE);
-	g_type_ensure(FU_TYPE_BCM57XX_STAGE2_IMAGE);
-	g_type_ensure(FU_TYPE_BCM57XX_DICT_IMAGE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE1_IMAGE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE2_IMAGE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_DICT_IMAGE);
 }
 
 static void

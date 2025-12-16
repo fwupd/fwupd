@@ -917,7 +917,7 @@ fu_cab_firmware_class_init(FuCabFirmwareClass *klass)
 static void
 fu_cab_firmware_init(FuCabFirmware *self)
 {
-	g_type_ensure(FU_TYPE_CAB_IMAGE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CAB_IMAGE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);

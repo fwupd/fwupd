@@ -207,6 +207,7 @@ static void
 fu_synaptics_prometheus_firmware_init(FuSynapticsPrometheusFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_SYNAPTICS_PROMETHEUS_FIRMWARE_COUNT_MAX);
 	self->signature_size = FU_SYNAPTICS_PROMETHEUS_FIRMWARE_PROMETHEUS_SIGSIZE;
 }

@@ -195,6 +195,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 static void
 fu_telink_dfu_archive_init(FuTelinkDfuArchive *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

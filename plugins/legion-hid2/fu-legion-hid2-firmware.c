@@ -73,6 +73,7 @@ static void
 fu_legion_hid2_firmware_init(FuLegionHid2Firmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static gchar *

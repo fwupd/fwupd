@@ -314,6 +314,8 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_archive_init(FuNordicHidArchive *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_NORDIC_HID_FIRMWARE_B0);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 

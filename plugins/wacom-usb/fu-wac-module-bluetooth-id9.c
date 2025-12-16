@@ -203,6 +203,7 @@ fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 		return NULL;
 	payload_fw = fu_firmware_new_from_bytes(payload_bytes);
 	fu_firmware_set_id(payload_fw, FU_FIRMWARE_ID_PAYLOAD);
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 	if (!fu_firmware_add_image(firmware, payload_fw, error))
 		return NULL;
 
