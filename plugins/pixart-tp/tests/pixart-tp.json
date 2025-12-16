@@ -1,0 +1,18 @@
+{
+  "name": "PixArt POCO 4802 Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "f4cfe7e15d7a33e66e8357c9fb924633bc85ef411ff9d4c789fb67478461d3b9-firmware.cab",
+      "emulation-url": "b8c9243c0a5dc14f36a56874564c57d0515168bb9da59dab7b1e957db36b606f-pxi-tp-update.zip",
+      "components": [
+        {
+          "version": "0xff02",
+          "guids": [
+            "86407e75-7d7f-5d09-97db-700776490493"
+          ]
+        }
+      ]
+    }
+  ]
+}
