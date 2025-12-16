@@ -42,6 +42,9 @@ The vendor ID is set from the HID vendor, for example set to `HIDRAW:0x2808`
 
 This plugin uses the following plugin-specific quirks:
 
+* `VerifyId1`: The first byte of the hardware verification ID.
+* `VerifyId2`: The second byte of the hardware verification ID.
+
 ## External Interface Access
 
 This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.
