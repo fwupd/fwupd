@@ -3317,6 +3317,89 @@ fu_engine_history_modify_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_history_convert_version_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	FuDevice *device_tmp;
+	FwupdRelease *release_tmp;
+	gboolean ret;
+	g_autofree gchar *device_str = NULL;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* add the fake metadata */
+	ret = xb_builder_source_load_xml(
+	    source,
+	    "<?xml version=\"1.0\"?>\n"
+	    "<components>\n"
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <custom>\n"
+	    "  </custom>\n"
+	    "  <releases>\n"
+	    "    <release id=\"1\" version=\"0x01020004\">\n"
+	    "      <checksum type=\"sha1\" target=\"content\">abcd</checksum>\n"
+	    "      <artifacts>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>\n"
+	    "</components>",
+	    XB_BUILDER_SOURCE_FLAG_NONE,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	fu_device_set_id(device, "abc");
+	fu_device_set_version(device, "1.2.3");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	fu_release_set_appstream_id(release, "com.acme.example.firmware");
+	fu_release_add_checksum(release, "abcd");
+	fu_release_set_version(release, "1.2.4");
+
+	ret = fu_history_remove_all(history, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_add_device(history, device, release, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* do not overwrite the history-saved 1.2.4 with the release-provided 0x01020004 */
+	devices = fu_engine_get_history(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	device_tmp = g_ptr_array_index(devices, 0);
+
+	device_str = fu_device_to_string(device_tmp);
+	g_debug("%s", device_str);
+
+	g_assert_cmpstr(fu_device_get_id(device_tmp),
+			==,
+			"a9993e364706816aba3e25717850c26c9cd0d89d");
+	g_assert_cmpstr(fu_device_get_version(device_tmp), ==, "1.2.3");
+	g_assert_true(fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_true(fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_HISTORICAL));
+	release_tmp = fu_device_get_release_default(device_tmp);
+	g_assert_cmpstr(fwupd_release_get_version(release_tmp), ==, "1.2.4");
+}
+
+static void
 fu_engine_history_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -8285,6 +8368,9 @@ main(int argc, char **argv)
 			     self,
 			     fu_engine_install_needs_reboot);
 	g_test_add_data_func("/fwupd/engine{history-inherit}", self, fu_engine_history_inherit);
+	g_test_add_data_func("/fwupd/engine{history-convert-version}",
+			     self,
+			     fu_engine_history_convert_version_func);
 	g_test_add_data_func("/fwupd/engine{partial-hash}", self, fu_engine_partial_hash_func);
 	g_test_add_data_func("/fwupd/engine{downgrade}", self, fu_engine_downgrade_func);
 	g_test_add_data_func("/fwupd/engine{md-verfmt}", self, fu_engine_md_verfmt_func);

@@ -1010,7 +1010,9 @@ fu_release_load(FuRelease *self,
 			return FALSE;
 		fwupd_release_set_version(FWUPD_RELEASE(self), version_rel);
 	} else {
-		fwupd_release_set_version(FWUPD_RELEASE(self), tmp);
+		/* historical releases have ->convert_version() already done */
+		if (fu_release_get_version(self) == NULL)
+			fu_release_set_version(self, tmp);
 	}
 
 	/* optional release ID -- currently a integer but maybe namespaced in the future */
