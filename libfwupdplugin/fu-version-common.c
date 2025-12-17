@@ -412,8 +412,18 @@ _g_ascii_is_xdigits(const gchar *str)
 	return TRUE;
 }
 
-static guint
-fu_version_format_number_sections(FwupdVersionFormat fmt)
+/**
+ * fu_version_format_get_sections:
+ * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Returns the number or "dotted" sections for the given version format.
+ *
+ * Returns: integer, e.g. `1.2.3` would return 3, or 0 if the version format was not valid
+ *
+ * Since: 2.1.1
+ */
+guint
+fu_version_format_get_sections(FwupdVersionFormat fmt)
 {
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_NUMBER ||
 	    fmt == FWUPD_VERSION_FORMAT_HEX)
@@ -446,7 +456,7 @@ gchar *
 fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 {
 	guint sections_actual;
-	guint sections_expected = fu_version_format_number_sections(fmt);
+	guint sections_expected = fu_version_format_get_sections(fmt);
 	g_autofree gchar *tmp = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);

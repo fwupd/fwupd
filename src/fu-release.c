@@ -1005,6 +1005,23 @@ fu_release_load(FuRelease *self,
 	}
 	if (self->device != NULL) {
 		g_autofree gchar *version_rel = NULL;
+		FwupdVersionFormat verfmt = fu_device_get_version_format(self->device);
+
+		/* auto-detect missing lazy-verfmt */
+		if (fu_version_format_get_sections(verfmt) > 1 &&
+		    g_strstr_len(tmp, -1, ".") == NULL) {
+#ifdef SUPPORTED_BUILD
+			g_autofree gchar *id_display = fu_device_get_id_display(self->device);
+			g_critical("device %s has a release with un-dotted release version of %s, "
+				   "use 'fu_device_add_private_flag(device, "
+				   "FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT)' in the %s plugin",
+				   id_display,
+				   tmp,
+				   fu_device_get_plugin(self->device));
+#endif
+			fu_device_add_private_flag(self->device,
+						   FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT);
+		}
 		version_rel = fu_release_get_release_version(self, tmp, error);
 		if (version_rel == NULL)
 			return FALSE;

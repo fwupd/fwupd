@@ -33,3 +33,5 @@ gboolean
 fu_version_verify_format(const gchar *version,
 			 FwupdVersionFormat fmt,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+guint
+fu_version_format_get_sections(FwupdVersionFormat fmt);
