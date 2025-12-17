@@ -5285,6 +5285,9 @@ fu_engine_fixup_history_device_for_rel(FuEngine *self,
 		return TRUE;
 	}
 
+
+        /* set the device so version format is applied correctly */
+        fu_release_set_device(FU_RELEASE(release), device);
 	if (!fu_release_load(FU_RELEASE(release),
 			     NULL,
 			     component,
