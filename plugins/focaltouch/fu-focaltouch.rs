@@ -1,4 +1,4 @@
-// Copyright 2025 Richard Hughes <richard@hughsie.com>
+// Copyright 2025 Shihwei Huang <shihwei.huang@focaltech-electronics.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 enum FuFocaltouchCmd {
@@ -17,4 +17,34 @@ enum FuFocaltouchCmd {
     BinLength = 0x7A,
     Ack = 0xF0,
     Nack = 0xFF,
+}
+
+#[derive(New, Getters)]
+#[repr(C, packed)]
+struct FuStructFocaltouchBinLengthReq {
+    cmd: u8,
+    reg: u8,
+    size_h: u8, // High byte of size
+    size_m: u8, // Middle byte of size
+    size_l: u8, // Low byte of size
+}
+
+#[derive(Parse, Getters)] 
+#[repr(C, packed)]
+struct FuStructFocaltouchReadyForUpgradeRes {
+    report_id: u8,      // Offset 0
+    _pad: [u8; 2],      // Offset 1-2
+    len: u8,            // Offset 3
+    cmd: u8,            // Offset 4
+    status: u8,         // Offset 5
+}
+
+#[derive(Parse, Getters)]
+#[repr(C, packed)]
+struct FuStructFocaltouchUsbReadUpgradeIdRes {
+    report_id: u8,      // Offset 0
+    _pad: [u8; 2],      // Offset 1-2
+    len: u8,            // Offset 3
+    cmd: u8,            // Offset 4
+    upgrade_id: u16be,  // Offset 5-6
 }

@@ -39,16 +39,6 @@ fu_focaltouch_hid_device_probe(FuDevice *device, GError **error)
 			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
 		return FALSE;
 	}
-
-	if (fu_device_get_pid(device) != 0x0301 && fu_device_get_pid(device) != 0x4001 &&
-	    fu_device_get_pid(device) != 0x0350 && fu_device_get_pid(device) != 0x3003) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not i2c-hid touch device");
-		return FALSE;
-	}
-
 	/* success */
 	return TRUE;
 }
@@ -110,6 +100,24 @@ fu_focaltouch_hid_device_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cm
 	guint8 csum = 0;
 	guint8 csum_actual;
 
+	if (bufsz < 5) {
+		g_set_error(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_INVALID_DATA,
+			"buffer too small for header, got %" G_GSIZE_FORMAT,
+			bufsz);
+		return FALSE;
+	}
+
+	if (buf[3] > bufsz || buf[3] < 5) {
+		g_set_error(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_INVALID_DATA,
+			"invalid packet length in header: 0x%02x (bufsz=%" G_GSIZE_FORMAT ")",
+			buf[3],
+			bufsz);
+		return FALSE;
+	}
 	/* check crc */
 	if (!fu_memread_uint8_safe(buf, bufsz, buf[3], &csum, error))
 		return FALSE;
@@ -142,6 +150,24 @@ fu_focaltouch_hid_device_check_crc(const guint8 *buf, gsize bufsz, GError **erro
 {
 	guint8 csum = 0;
 	guint8 csum_actual;
+
+	if (bufsz < 4) {
+		g_set_error(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_INVALID_DATA,
+			"buffer too small for header, got %" G_GSIZE_FORMAT,
+			bufsz);
+		return FALSE;
+	}
+	if (buf[3] >= bufsz || buf[3] == 0) {
+		g_set_error(error,
+			FWUPD_ERROR,
+			FWUPD_ERROR_INVALID_DATA,
+			"invalid checksum offset in header: 0x%02x (bufsz=%" G_GSIZE_FORMAT ")",
+			buf[3],
+			bufsz);
+		return FALSE;
+	}
 	/* check crc */
 	if (!fu_memread_uint8_safe(buf, bufsz, buf[3], &csum, error))
 		return FALSE;
@@ -186,10 +212,10 @@ fu_focaltouch_hid_device_read_reg(FuFocaltouchHidDevice *self,
 				  guint8 *val, /* out */
 				  GError **error)
 {
-	guint8 buf[64] = {FU_FOCALTOUCH_CMD_READ_REGISTER, reg_address};
+	guint8 buf[] = {FU_FOCALTOUCH_CMD_READ_REGISTER, reg_address};
 
 	/* write */
-	if (!fu_focaltouch_hid_device_io(self, buf, 2, NULL, 0, error))
+	if (!fu_focaltouch_hid_device_io(self, buf, sizeof(buf), NULL, 0, error))
 		return FALSE;
 
 	/* read */
@@ -201,37 +227,45 @@ fu_focaltouch_hid_device_read_reg(FuFocaltouchHidDevice *self,
 				    error);
 }
 
-/* enter upgrade mode */
+/* send bin length */
 static gboolean
-fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice *self,
-					  gsize firmware_Size,
-					  GError **error)
+fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice* self,
+	gsize firmware_size,
+	GError** error)
 {
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_WRITE_REGISTER,
-			   FU_FOCALTOUCH_CMD_BIN_LENGTH,
-			   (firmware_Size >> 16) & 0xFF,
-			   (firmware_Size >> 8) & 0xFF,
-			   firmware_Size & 0xFF};
-	guint8 rbuf[64] = {0x0};
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 5, rbuf, 6, error)) {
+	g_autoptr(GByteArray) st = fu_struct_focaltouch_bin_length_req_new();
+	guint8 rbuf[64] = { 0x0 };
+
+	fu_struct_focaltouch_bin_length_req_set_cmd(st, FU_FOCALTOUCH_CMD_WRITE_REGISTER);
+	fu_struct_focaltouch_bin_length_req_set_reg(st, FU_FOCALTOUCH_CMD_BIN_LENGTH);
+
+	fu_struct_focaltouch_bin_length_req_set_size_h(st, (firmware_size >> 16) & 0xFF);
+	fu_struct_focaltouch_bin_length_req_set_size_m(st, (firmware_size >> 8) & 0xFF);
+	fu_struct_focaltouch_bin_length_req_set_size_l(st, firmware_size & 0xFF);
+
+	if (!fu_focaltouch_hid_device_io(self,
+		st->data,
+		st->len,
+		rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to write bin length: ");
 		return FALSE;
 	}
-	/* check was correct response */
+
+
 	return fu_focaltouch_hid_device_check_cmd_crc(rbuf,
-						      sizeof(rbuf),
-						      FU_FOCALTOUCH_CMD_ACK,
-						      error);
+		sizeof(rbuf),
+		FU_FOCALTOUCH_CMD_ACK,
+		error);
 }
 
 /* enter upgrade mode */
 static gboolean
 fu_focaltouch_hid_device_enter_upgrade_mode(FuFocaltouchHidDevice *self, GError **error)
 {
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
 
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 6, error)) {
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
@@ -248,10 +282,10 @@ fu_focaltouch_hid_device_check_current_state(FuFocaltouchHidDevice *self,
 					     guint8 *val,
 					     GError **error)
 {
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_CHECK_CURRENT_STATE};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_CHECK_CURRENT_STATE};
 	guint8 rbuf[64] = {0x0};
 
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 7, error))
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 7, error))
 		return FALSE;
 	/* check was correct response */
 	if (!fu_focaltouch_hid_device_check_cmd_crc(rbuf,
@@ -273,6 +307,7 @@ fu_focaltouch_hid_device_wait_for_upgrade_ready_cb(FuDevice *device,
 	FuFocaltouchHidDevice *self = FU_FOCALTOUCH_HID_DEVICE(device);
 	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_READY_FOR_UPGRADE};
 	guint8 rbuf[64] = {0x0};
+	g_autoptr(FuStructFocaltouchReadyForUpgradeRes) st = NULL;
 
 	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 7, error))
 		return FALSE;
@@ -283,13 +318,17 @@ fu_focaltouch_hid_device_wait_for_upgrade_ready_cb(FuDevice *device,
 						    error))
 		return FALSE;
 
+	st = fu_struct_focaltouch_ready_for_upgrade_res_parse(rbuf, sizeof(rbuf), 0x0, error);
+	if (st == NULL)
+		return FALSE;
+
 	/* check Status Byte (Offset 5) is 0x02 */
-	if (rbuf[5] != 0x02) {
+	if (fu_struct_focaltouch_ready_for_upgrade_res_get_status(st) != 0x02) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "device busy, status 0x%02x",
-			    rbuf[5]);
+			    fu_struct_focaltouch_ready_for_upgrade_res_get_status(st));
 		return FALSE;
 	}
 
@@ -315,10 +354,11 @@ fu_focaltouch_hid_device_read_update_id_cb(FuDevice *device, gpointer user_data,
 {
 	FuFocaltouchHidDevice *self = FU_FOCALTOUCH_HID_DEVICE(device);
 	guint16 *us_ic_id = (guint16 *)user_data;
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_USB_READ_UPGRADE_ID};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_USB_READ_UPGRADE_ID};
 	guint8 rbuf[64] = {0x0};
+	g_autoptr(FuStructFocaltouchUsbReadUpgradeIdRes) st = NULL;
 
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 8, error))
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 8, error))
 		return FALSE;
 	/* check was correct response */
 	if (!fu_focaltouch_hid_device_check_cmd_crc(rbuf,
@@ -328,7 +368,10 @@ fu_focaltouch_hid_device_read_update_id_cb(FuDevice *device, gpointer user_data,
 		return FALSE;
 
 	/* success */
-	*us_ic_id = fu_memread_uint16(rbuf + 5, G_BIG_ENDIAN);
+	st = fu_struct_focaltouch_usb_read_upgrade_id_res_parse(rbuf, sizeof(rbuf), 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	*us_ic_id = fu_struct_focaltouch_usb_read_upgrade_id_res_get_upgrade_id(st);
 	return TRUE;
 }
 
@@ -350,10 +393,10 @@ fu_focaltouch_hid_device_read_update_id(FuFocaltouchHidDevice *self,
 static gboolean
 fu_focaltouch_hid_device_erase_flash(FuFocaltouchHidDevice *self, GError **error)
 {
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_USB_ERASE_FLASH};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_USB_ERASE_FLASH};
 	guint8 rbuf[64] = {0x0};
 
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 6, error))
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 6, error))
 		return FALSE;
 	/* check was correct response */
 	return TRUE;
@@ -409,10 +452,10 @@ fu_focaltouch_hid_device_send_data(FuFocaltouchHidDevice *self,
 static gboolean
 fu_focaltouch_hid_device_checksum_upgrade(FuFocaltouchHidDevice *self, guint32 *val, GError **error)
 {
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_UPGRADE_CHECKSUM};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_UPGRADE_CHECKSUM};
 	guint8 rbuf[64] = {0x0};
 
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 7 + 3, error))
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 7 + 3, error))
 		return FALSE;
 	/* check was correct response */
 	if (!fu_focaltouch_hid_device_check_cmd_crc(rbuf,
@@ -686,7 +729,6 @@ fu_focaltouch_hid_device_upgrade_3c83(FuFocaltouchHidDevice *device,
 	guint32 checksum = 0;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	const guint8 *buf = NULL;
 	gsize buf_size = 0;
 	gsize max_length = 0;
 	GInputStream *stream;
@@ -708,7 +750,7 @@ fu_focaltouch_hid_device_upgrade_3c83(FuFocaltouchHidDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	buf = g_bytes_get_data(fw, &buf_size);
+	buf_size = g_bytes_get_size(fw);
 	max_length = (buf_size + 3) / 4 * 4;
 
 	/* check chip id and erase flash */
@@ -863,10 +905,10 @@ static gboolean
 fu_focaltouch_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuFocaltouchHidDevice *self = FU_FOCALTOUCH_HID_DEVICE(device);
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
 	/* command to go from APP --> Bootloader -- but we do not check crc */
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 6, error)) {
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
@@ -889,10 +931,10 @@ static gboolean
 fu_focaltouch_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuFocaltouchHidDevice *self = FU_FOCALTOUCH_HID_DEVICE(device);
-	guint8 wbuf[64] = {FU_FOCALTOUCH_CMD_EXIT_UPGRADE_MODE};
+	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_EXIT_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
 
-	if (!fu_focaltouch_hid_device_io(self, wbuf, 1, rbuf, 6, error))
+	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 6, error))
 		return FALSE;
 	/* check was correct response */
 	if (!fu_focaltouch_hid_device_check_cmd_crc(rbuf,
