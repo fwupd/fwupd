@@ -2224,16 +2224,6 @@ fu_plugin_runner_verify(FuPlugin *self,
 	checksums = fu_device_get_checksums(device);
 	g_ptr_array_set_size(checksums, 0);
 
-	/* run additional detach */
-	if (!fu_plugin_runner_device_generic_progress(
-		self,
-		device,
-		progress,
-		"fu_plugin_detach",
-		vfuncs->detach != NULL ? vfuncs->detach : fu_plugin_device_detach,
-		error))
-		return FALSE;
-
 	/* run vfunc */
 	g_debug("verify(%s)", fu_plugin_get_name(self));
 	if (!vfuncs->verify(self, device, progress, flags, &error_local)) {
@@ -2250,29 +2240,8 @@ fu_plugin_runner_verify(FuPlugin *self,
 					   g_steal_pointer(&error_local),
 					   "failed to verify using %s: ",
 					   fu_plugin_get_name(self));
-		/* make the device "work" again, but don't prefix the error */
-		if (!fu_plugin_runner_device_generic_progress(
-			self,
-			device,
-			progress,
-			"fu_plugin_attach",
-			vfuncs->attach != NULL ? vfuncs->attach : fu_plugin_device_attach,
-			&error_attach)) {
-			g_warning("failed to attach whilst aborting verify(): %s",
-				  error_attach->message);
-		}
 		return FALSE;
 	}
-
-	/* run optional attach */
-	if (!fu_plugin_runner_device_generic_progress(
-		self,
-		device,
-		progress,
-		"fu_plugin_attach",
-		vfuncs->attach != NULL ? vfuncs->attach : fu_plugin_device_attach,
-		error))
-		return FALSE;
 
 	/* success */
 	return TRUE;
