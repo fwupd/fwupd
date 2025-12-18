@@ -2944,11 +2944,8 @@ fu_engine_device_prepare(FuEngine *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
-	if (locker == NULL) {
-		g_prefix_error_literal(error, "failed to open device for prepare: ");
-		return FALSE;
-	}
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* check battery level is sane */
 	if (fu_device_get_battery_level(device) > 0 &&
@@ -2961,6 +2958,15 @@ fu_engine_device_prepare(FuEngine *self,
 		return FALSE;
 	}
 
+	/* nothing to do */
+	if (device_class->prepare == NULL)
+		return TRUE;
+
+	locker = fu_device_locker_new(device, error);
+	if (locker == NULL) {
+		g_prefix_error_literal(error, "failed to open device for prepare: ");
+		return FALSE;
+	}
 	return fu_device_prepare(device, progress, flags, error);
 }
 
@@ -2972,12 +2978,17 @@ fu_engine_device_cleanup(FuEngine *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 		g_info("skipping device cleanup due to will-disappear flag");
 		return TRUE;
 	}
+
+	/* nothing to do */
+	if (device_class->cleanup == NULL)
+		return TRUE;
 
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL) {
