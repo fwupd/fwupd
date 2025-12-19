@@ -34,6 +34,8 @@ G_DEFINE_TYPE(FwupdJsonParser, fwupd_json_parser, G_TYPE_OBJECT)
 
 #define FWUPD_JSON_PARSER_NEWLINE_MAX 5
 
+#define FWUPD_JSON_PARSER_INDENT_MAX 8 /* per depth */
+
 /**
  * fwupd_json_parser_set_max_depth:
  * @self: a #FwupdJsonParser
@@ -104,6 +106,7 @@ typedef struct {
 	gboolean is_escape;
 	guint linecnt;
 	guint newlinecnt;
+	guint whitespacecnt;
 	guint depth;
 } FwupdJsonParserHelper;
 
@@ -216,6 +219,7 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 		}
 		helper->is_quoted = TRUE;
 		helper->newlinecnt = 0;
+		helper->whitespacecnt = 0;
 		return TRUE;
 	}
 	if (helper->is_quoted) {
@@ -240,6 +244,7 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 
 		/* save acc */
 		helper->newlinecnt = 0;
+		helper->whitespacecnt = 0;
 		g_string_append_c(helper->acc, data);
 		if (G_UNLIKELY(helper->max_quoted > 0 && helper->acc->len > helper->max_quoted)) {
 			g_set_error(error,
@@ -287,12 +292,23 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 		}
 		*token = data;
 		helper->newlinecnt = 0;
+		helper->whitespacecnt = 0;
 		return TRUE;
 	}
 
 	/* whitespace */
-	if (g_ascii_isspace(data))
+	if (g_ascii_isspace(data)) {
+		guint whitespace_max = FWUPD_JSON_PARSER_INDENT_MAX * (helper->depth + 1);
+		if (helper->whitespacecnt++ >= whitespace_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too much whitespace, limit was %u",
+				    whitespace_max);
+			return FALSE;
+		}
 		return TRUE;
+	}
 
 	/* strip control chars */
 	if (g_ascii_iscntrl(data)) {
@@ -306,6 +322,7 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 
 	/* save acc */
 	g_string_append_c(helper->acc, data);
+	helper->whitespacecnt = 0;
 	return TRUE;
 }
 
