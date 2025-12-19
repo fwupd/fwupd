@@ -5,10 +5,8 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('cpu.quirk')
 plugin_builtins += static_library('fu_plugin_cpu',
-  rustgen.process('fu-cpu.rs'),
   sources: [
     'fu-cpu-plugin.c',
-    'fu-cpu-device.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

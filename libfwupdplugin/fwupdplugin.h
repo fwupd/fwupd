@@ -112,6 +112,7 @@
 #include <libfwupdplugin/fu-pkcs7.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
 #include <libfwupdplugin/fu-plugin.h>
+#include <libfwupdplugin/fu-processor-device.h>
 #include <libfwupdplugin/fu-progress.h>
 #include <libfwupdplugin/fu-sbatlevel-section.h>
 #include <libfwupdplugin/fu-security-attr.h>

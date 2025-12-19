@@ -10,34 +10,109 @@
 #include <sys/utsname.h>
 #endif
 
-#include "fu-cpu-device.h"
-#include "fu-cpu-struct.h"
+#include "fwupd-security-attr-private.h"
 
-struct _FuCpuDevice {
+#include "fu-mem.h"
+#include "fu-path.h"
+#include "fu-processor-device.h"
+#include "fu-string.h"
+
+struct _FuProcessorDevice {
 	FuDevice parent_instance;
-	FuCpuDeviceFlag flags;
+	FuProcessorKind kind;
+	FuProcessorFeatureFlags feature_flags;
+	FuProcessorMitigationFlags mitigation_flags;
+	guint32 sinkclose_microcode_ver;
 };
 
-G_DEFINE_TYPE(FuCpuDevice, fu_cpu_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuProcessorDevice, fu_processor_device, FU_TYPE_DEVICE)
 
 static gboolean
-fu_cpu_device_has_flag(FuCpuDevice *self, FuCpuDeviceFlag flag)
+fu_processor_device_has_feature(FuProcessorDevice *self, FuProcessorFeatureFlags flag)
 {
-	return (self->flags & flag) > 0;
+	return (self->feature_flags & flag) > 0;
+}
+
+/**
+ * fu_processor_device_get_kind:
+ * @self: a #FuProcessorDevice
+ *
+ * Returns the CPU kind.
+ *
+ * Returns: kind, or %FU_PROCESSOR_KIND_UNKNOWN if invalid
+ *
+ * Since: 2.1.1
+ **/
+FuProcessorKind
+fu_processor_device_get_kind(FuProcessorDevice *self)
+{
+	g_return_val_if_fail(FU_IS_PROCESSOR_DEVICE(self), FU_PROCESSOR_KIND_UNKNOWN);
+	return self->kind;
+}
+
+/**
+ * fu_processor_device_needs_mitigation:
+ * @self: a #FuProcessorDevice
+ * @mitigation_flag: a #FuProcessorMitigationFlags, e.g. %FU_PROCESSOR_MITIGATION_FLAG_GDS
+ *
+ * Returns if the CPU needs a specific mitigation.
+ *
+ * Returns: %TRUE if required
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_processor_device_needs_mitigation(FuProcessorDevice *self,
+				     FuProcessorMitigationFlags mitigation_flag)
+{
+	g_return_val_if_fail(FU_IS_PROCESSOR_DEVICE(self), FALSE);
+	return (self->mitigation_flags & mitigation_flag) > 0;
+}
+
+/**
+ * fu_processor_device_get_sinkclose_microcode_ver:
+ * @self: a #FuProcessorDevice
+ *
+ * Returns the microcode version required to mitigate Sinkclose.
+ *
+ * Returns: version, or 0% if invalid
+ *
+ * Since: 2.1.1
+ **/
+guint32
+fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self)
+{
+	g_return_val_if_fail(FU_IS_PROCESSOR_DEVICE(self), 0);
+	return self->sinkclose_microcode_ver;
 }
 
 static void
-fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
+fu_processor_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuCpuDevice *self = FU_CPU_DEVICE(device);
-	if (self->flags != FU_CPU_DEVICE_FLAG_NONE) {
-		g_autofree gchar *flags_str = fu_cpu_device_flag_to_string(self->flags);
-		fwupd_codec_string_append(str, idt, "Flags", flags_str);
+	FuProcessorDevice *self = FU_PROCESSOR_DEVICE(device);
+	if (self->kind != FU_PROCESSOR_KIND_UNKNOWN) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  "Kind",
+					  fu_processor_kind_to_string(self->kind));
 	}
+	if (self->feature_flags != FU_PROCESSOR_FEATURE_FLAG_NONE) {
+		g_autofree gchar *tmp = fu_processor_feature_flags_to_string(self->feature_flags);
+		fwupd_codec_string_append(str, idt, "FeatureFlags", tmp);
+	}
+	if (self->mitigation_flags != FU_PROCESSOR_MITIGATION_FLAG_NONE) {
+		g_autofree gchar *tmp =
+		    fu_processor_mitigation_flags_to_string(self->mitigation_flags);
+		fwupd_codec_string_append(str, idt, "MitigationFlags", tmp);
+	}
+	fwupd_codec_string_append_int(str,
+				      idt,
+				      "SinkcloseMicrocodeVer",
+				      self->sinkclose_microcode_ver);
 }
 
 static const gchar *
-fu_cpu_device_convert_vendor(const gchar *vendor)
+fu_processor_device_convert_vendor(const gchar *vendor)
 {
 	if (g_strcmp0(vendor, "GenuineIntel") == 0)
 		return "Intel";
@@ -92,18 +167,8 @@ fu_cpu_device_convert_vendor(const gchar *vendor)
 	return vendor;
 }
 
-static void
-fu_cpu_device_init(FuCpuDevice *self)
-{
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU);
-	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_physical_id(FU_DEVICE(self), "cpu:0");
-}
-
 static gboolean
-fu_cpu_device_add_instance_ids(FuCpuDevice *self, GError **error)
+fu_processor_device_add_instance_ids(FuProcessorDevice *self, GError **error)
 {
 	guint32 eax = 0;
 	guint32 family_id;
@@ -156,7 +221,7 @@ fu_cpu_device_add_instance_ids(FuCpuDevice *self, GError **error)
 }
 
 static gboolean
-fu_cpu_device_probe_manufacturer_id(FuCpuDevice *self, GError **error)
+fu_processor_device_probe_manufacturer_id(FuProcessorDevice *self, GError **error)
 {
 	guint32 ebx = 0;
 	guint32 ecx = 0;
@@ -191,12 +256,12 @@ fu_cpu_device_probe_manufacturer_id(FuCpuDevice *self, GError **error)
 			    sizeof(guint32),
 			    error))
 		return FALSE;
-	fu_device_set_vendor(FU_DEVICE(self), fu_cpu_device_convert_vendor(str));
+	fu_device_set_vendor(FU_DEVICE(self), fu_processor_device_convert_vendor(str));
 	return TRUE;
 }
 
 static gboolean
-fu_cpu_device_probe_model(FuCpuDevice *self, GError **error)
+fu_processor_device_probe_model(FuProcessorDevice *self, GError **error)
 {
 	guint32 eax = 0;
 	guint32 ebx = 0;
@@ -249,7 +314,7 @@ fu_cpu_device_probe_model(FuCpuDevice *self, GError **error)
 }
 
 static gboolean
-fu_cpu_device_probe_extended_features(FuCpuDevice *self, GError **error)
+fu_processor_device_probe_extended_features(FuProcessorDevice *self, GError **error)
 {
 	guint32 ebx = 0;
 	guint32 ecx = 0;
@@ -258,38 +323,42 @@ fu_cpu_device_probe_extended_features(FuCpuDevice *self, GError **error)
 	if (!fu_cpuid(0x7, NULL, &ebx, &ecx, &edx, error))
 		return FALSE;
 	if ((ebx >> 20) & 0x1)
-		self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
+		self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_SMAP;
 	if ((ecx >> 7) & 0x1)
-		self->flags |= FU_CPU_DEVICE_FLAG_SHSTK;
+		self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_SHSTK;
 
 	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
 		if ((ecx >> 13) & 0x1)
-			self->flags |= FU_CPU_DEVICE_FLAG_TME;
+			self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_TME;
 		if ((edx >> 20) & 0x1)
-			self->flags |= FU_CPU_DEVICE_FLAG_IBT;
+			self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_IBT;
 	}
 
 	return TRUE;
 }
 
 static gboolean
-fu_cpu_device_probe(FuDevice *device, GError **error)
+fu_processor_device_probe(FuDevice *device, GError **error)
 {
-	FuCpuDevice *self = FU_CPU_DEVICE(device);
-	if (!fu_cpu_device_probe_manufacturer_id(self, error))
+	FuProcessorDevice *self = FU_PROCESSOR_DEVICE(device);
+	if (!fu_processor_device_probe_manufacturer_id(self, error))
 		return FALSE;
-	if (!fu_cpu_device_probe_model(self, error))
+	if (!fu_processor_device_probe_model(self, error))
 		return FALSE;
-	if (!fu_cpu_device_probe_extended_features(self, error))
+	if (!fu_processor_device_probe_extended_features(self, error))
 		return FALSE;
-	if (!fu_cpu_device_add_instance_ids(self, error))
+	if (!fu_processor_device_add_instance_ids(self, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+fu_processor_device_set_quirk_kv(FuDevice *device,
+				 const gchar *key,
+				 const gchar *value,
+				 GError **error)
 {
+	FuProcessorDevice *self = FU_PROCESSOR_DEVICE(device);
 	if (g_strcmp0(key, "PciBcrAddr") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
@@ -297,17 +366,19 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		fu_device_set_metadata_integer(device, "PciBcrAddr", tmp);
 		return TRUE;
 	}
-	if (g_strcmp0(key, "CpuMitigationsRequired") == 0) {
-		fu_device_set_metadata(device, "CpuMitigationsRequired", value);
+	if (g_strcmp0(key, "ProcessorMitigationsRequired") == 0) {
+		self->mitigation_flags = fu_processor_mitigation_flags_from_string(value);
 		return TRUE;
 	}
-	if (g_strcmp0(key, "CpuSinkcloseMicrocodeVersion") == 0) {
+	if (g_strcmp0(key, "ProcessorKind") == 0) {
+		self->kind = fu_processor_kind_from_string(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "ProcessorSinkcloseMicrocodeVersion") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error))
 			return FALSE;
-		fu_device_set_metadata_integer(device,
-					       FU_DEVICE_METADATA_CPU_SINKCLOSE_MICROCODE_VER,
-					       tmp);
+		self->sinkclose_microcode_ver = (guint32)tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no supported");
@@ -315,7 +386,7 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 }
 
 static void
-fu_cpu_device_add_security_attrs_cet_enabled(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
@@ -326,14 +397,14 @@ fu_cpu_device_add_security_attrs_cet_enabled(FuCpuDevice *self, FuSecurityAttrs 
 
 	switch (fu_cpu_get_vendor()) {
 	case FU_CPU_VENDOR_INTEL:
-		if (fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK) &&
-		    fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT)) {
+		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK) &&
+		    fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_IBT)) {
 			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			return;
 		}
 		break;
 	case FU_CPU_VENDOR_AMD:
-		if (fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK)) {
+		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK)) {
 			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			return;
 		}
@@ -346,7 +417,7 @@ fu_cpu_device_add_security_attrs_cet_enabled(FuCpuDevice *self, FuSecurityAttrs 
 }
 
 static void
-fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
@@ -385,7 +456,7 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 }
 
 static void
-fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_processor_device_add_security_attrs_intel_tme(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
@@ -395,7 +466,7 @@ fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *a
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for TME */
-	if (!fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_TME)) {
+	if (!fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_TME)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
@@ -405,7 +476,7 @@ fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *a
 }
 
 static void
-fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_processor_device_add_security_attrs_smap(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
@@ -415,7 +486,7 @@ fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	/* check for SMEP and SMAP */
-	if (!fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SMAP)) {
+	if (!fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SMAP)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
@@ -426,22 +497,22 @@ fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
 
 #ifdef HAVE_UTSNAME_H
 static void
-fu_cpu_device_add_x86_64_security_attrs(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_processor_device_add_x86_64_security_attrs(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
 	/* only Intel */
 	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL)
-		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
-	fu_cpu_device_add_security_attrs_cet_enabled(self, attrs);
-	fu_cpu_device_add_security_attrs_cet_active(self, attrs);
-	fu_cpu_device_add_security_attrs_smap(self, attrs);
+		fu_processor_device_add_security_attrs_intel_tme(self, attrs);
+	fu_processor_device_add_security_attrs_cet_enabled(self, attrs);
+	fu_processor_device_add_security_attrs_cet_active(self, attrs);
+	fu_processor_device_add_security_attrs_smap(self, attrs);
 }
 #endif
 
 static void
-fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+fu_processor_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 #ifdef HAVE_UTSNAME_H
-	FuCpuDevice *self = FU_CPU_DEVICE(device);
+	FuProcessorDevice *self = FU_PROCESSOR_DEVICE(device);
 	struct utsname name_tmp = {0};
 
 	if (uname(&name_tmp) < 0) {
@@ -450,31 +521,49 @@ fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	}
 
 	if (g_strcmp0(name_tmp.machine, "x86_64") == 0)
-		fu_cpu_device_add_x86_64_security_attrs(self, attrs);
+		fu_processor_device_add_x86_64_security_attrs(self, attrs);
 #endif
 }
 
 static gchar *
-fu_cpu_device_convert_version(FuDevice *device, guint64 version_raw)
+fu_processor_device_convert_version(FuDevice *device, guint64 version_raw)
 {
 	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static void
-fu_cpu_device_class_init(FuCpuDeviceClass *klass)
+fu_processor_device_init(FuProcessorDevice *self)
 {
-	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->to_string = fu_cpu_device_to_string;
-	device_class->probe = fu_cpu_device_probe;
-	device_class->set_quirk_kv = fu_cpu_device_set_quirk_kv;
-	device_class->add_security_attrs = fu_cpu_device_add_security_attrs;
-	device_class->convert_version = fu_cpu_device_convert_version;
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU);
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_physical_id(FU_DEVICE(self), "cpu:0");
 }
 
-FuCpuDevice *
-fu_cpu_device_new(FuContext *ctx)
+static void
+fu_processor_device_class_init(FuProcessorDeviceClass *klass)
 {
-	FuCpuDevice *device = NULL;
-	device = g_object_new(FU_TYPE_CPU_DEVICE, "context", ctx, NULL);
-	return device;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_processor_device_to_string;
+	device_class->probe = fu_processor_device_probe;
+	device_class->set_quirk_kv = fu_processor_device_set_quirk_kv;
+	device_class->add_security_attrs = fu_processor_device_add_security_attrs;
+	device_class->convert_version = fu_processor_device_convert_version;
+}
+
+/**
+ * fu_processor_device_new:
+ * @ctx: a #FuContext
+ *
+ * Creates a new #FuProcessorDevice.
+ *
+ * Returns: (transfer full): a #FuProcessorDevice
+ *
+ * Since: 2.1.1
+ **/
+FuProcessorDevice *
+fu_processor_device_new(FuContext *ctx)
+{
+	return g_object_new(FU_TYPE_PROCESSOR_DEVICE, "context", ctx, NULL);
 }
