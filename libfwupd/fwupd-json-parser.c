@@ -27,6 +27,7 @@ struct _FwupdJsonParser {
 	GObject parent_instance;
 	guint max_depth;
 	guint max_items;
+	guint max_quoted;
 };
 
 G_DEFINE_TYPE(FwupdJsonParser, fwupd_json_parser, G_TYPE_OBJECT)
@@ -63,6 +64,22 @@ fwupd_json_parser_set_max_items(FwupdJsonParser *self, guint max_items)
 	self->max_items = max_items;
 }
 
+/**
+ * fwupd_json_parser_set_max_quoted:
+ * @self: a #FwupdJsonParser
+ * @max_quoted: maximum size of a quoted string
+ *
+ * Sets the maximum size of a quoted string. By default there is no limit.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_parser_set_max_quoted(FwupdJsonParser *self, guint max_quoted)
+{
+	g_return_if_fail(FWUPD_IS_JSON_PARSER(self));
+	self->max_quoted = max_quoted;
+}
+
 typedef enum {
 	FWUPD_JSON_PARSER_TOKEN_INVALID = 0,
 	FWUPD_JSON_PARSER_TOKEN_RAW = 'b',
@@ -80,6 +97,7 @@ typedef struct {
 	gsize buf_offset; /* into @buf */
 	GInputStream *stream;
 	GString *acc;
+	guint max_quoted;
 	gboolean is_quoted;
 	gboolean is_escape;
 	guint linecnt;
@@ -87,9 +105,10 @@ typedef struct {
 } FwupdJsonParserHelper;
 
 static FwupdJsonParserHelper *
-fwupd_json_parser_helper_new(void)
+fwupd_json_parser_helper_new(FwupdJsonParser *self)
 {
 	FwupdJsonParserHelper *helper = g_new0(FwupdJsonParserHelper, 1);
+	helper->max_quoted = self->max_quoted;
 	helper->linecnt = 1;
 	helper->buf = g_byte_array_new();
 	helper->acc = g_string_sized_new(128);
@@ -506,7 +525,7 @@ fwupd_json_parser_load_from_bytes(FwupdJsonParser *self,
 				  FwupdJsonLoadFlags flags,
 				  GError **error)
 {
-	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new();
+	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new(self);
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
 	g_return_val_if_fail(blob != NULL, NULL);
@@ -536,7 +555,7 @@ fwupd_json_parser_load_from_data(FwupdJsonParser *self,
 				 FwupdJsonLoadFlags flags,
 				 GError **error)
 {
-	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new();
+	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new(self);
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
 	g_return_val_if_fail(text != NULL, NULL);
@@ -566,7 +585,7 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
 				   FwupdJsonLoadFlags flags,
 				   GError **error)
 {
-	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new();
+	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new(self);
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
