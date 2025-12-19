@@ -1,0 +1,76 @@
+// Copyright 2024 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
+#[derive(Bitfield, ToString)]
+enum FuProcessorFeatureFlags {
+    None    = 0,
+    Shstk   = 1 << 0,
+    Ibt     = 1 << 1,
+    Tme     = 1 << 2,
+    Smap    = 1 << 3,
+}
+
+#[derive(Bitfield, ToString, FromString)]
+enum FuProcessorMitigationFlags {
+    None = 0,
+    Gds = 1 << 0,
+    Sinkclose = 1 << 1,
+}
+
+#[derive(ToString, FromString)]
+enum FuProcessorKind {
+    Unknown,
+    IntelPentium,
+    IntelPentiumMmx,
+    IntelQuarkX1000,
+    IntelPentiumPro,
+    IntelPentium2Klamath,
+    IntelPentium3Deschutes,
+    IntelPentium3Tualatin,
+    IntelPentium3Dothan,
+    IntelCoreYonah,
+    IntelCore2Merom,
+    IntelCore2Penryn,
+    IntelCore2Dunnington,
+    IntelNehalem,
+    IntelWestmere,
+    IntelSandybridge,
+    IntelIvybridge,
+    IntelHaswell,
+    IntelBroadwell,
+    IntelSkylake,
+    IntelKabylake,
+    IntelCometlake,
+    IntelCannonlake,
+    IntelIcelake,
+    IntelRocketlake,
+    IntelTigerlake,
+    IntelSapphirerapids,
+    IntelEmeraldrapids,
+    IntelGraniterapids,
+    IntelDiamondrapids,
+    IntelBartlettlake,
+    IntelLakefield,
+    IntelAlderlake,
+    IntelRaptorlake,
+    IntelMeteorlake,
+    IntelArrowlake,
+    IntelLunarlake,
+    IntelPantherlake,
+    IntelWildcatlake,
+    IntelNovalake,
+    IntelAtomBonnell,
+    IntelAtomSaltwell,
+    IntelAtomSilvermont,
+    IntelAtomAirmont,
+    IntelAtomGoldmont,
+    IntelAtomGoldmontPlus,
+    IntelAtomTremont,
+    IntelAtomGracemont,
+    IntelAtomCrestmont,
+    IntelAtomDarkmont,
+    IntelXeonPhi,
+    IntelP4Willamette,
+    IntelP4Prescott,
+    IntelP4Cedarmill,
+}
