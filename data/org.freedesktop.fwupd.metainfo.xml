@@ -38,6 +38,30 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.19" date="2025-12-19">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add two commands to fwupdtool to calculate and find CRCs</li>
+          <li>Allow systems to use the udev event source without using systemd</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always show the correct new firmware version in 'fwupdmgr get-history'</li>
+          <li>Fix an integer underflow when parsing a malicious PE file</li>
+          <li>Fix a regression when enumerating the dell-dock status component</li>
+          <li>Fix the fuzzer timeout when parsing a synaptics-rmi SBL container</li>
+          <li>Fix updating the Intel GPU FWDATA section</li>
+          <li>Respect 'fwupdmgr --force' when installing firmware</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Lenovo Sapphire Folio Keyboard</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.18" date="2025-12-01">
       <description>
         <p>
