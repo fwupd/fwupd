@@ -251,6 +251,16 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 	if (g_ascii_isspace(data))
 		return TRUE;
 
+	/* strip control chars */
+	if (g_ascii_iscntrl(data)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "ASCII control character detected 0x%x",
+			    (guint)data);
+		return FALSE;
+	}
+
 	/* save acc */
 	g_string_append_c(helper->acc, data);
 	return TRUE;
