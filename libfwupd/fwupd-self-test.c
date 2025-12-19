@@ -169,6 +169,21 @@ fwupd_json_parser_items_func(void)
 }
 
 static void
+fwupd_json_parser_quoted_func(void)
+{
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *json = "\"hello\"";
+
+	fwupd_json_parser_set_max_quoted(parser, 3);
+	json_node =
+	    fwupd_json_parser_load_from_data(parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(json_node);
+}
+
+static void
 fwupd_json_parser_stream_func(void)
 {
 	const gchar *json = "\"one\"";
@@ -1854,6 +1869,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/json{parser-null}", fwupd_json_parser_null_func);
 	g_test_add_func("/fwupd/json{parser-depth}", fwupd_json_parser_depth_func);
 	g_test_add_func("/fwupd/json{parser-items}", fwupd_json_parser_items_func);
+	g_test_add_func("/fwupd/json{parser-quoted}", fwupd_json_parser_quoted_func);
 	g_test_add_func("/fwupd/json{parser-stream}", fwupd_json_parser_stream_func);
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);
