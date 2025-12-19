@@ -233,7 +233,8 @@ fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice* self,
 	gsize firmware_size,
 	GError** error)
 {
-	g_autoptr(GByteArray) st = fu_struct_focaltouch_bin_length_req_new();
+	g_autoptr(FuStructFocaltouchBinLengthReq) st = fu_struct_focaltouch_bin_length_req_new();
+	GByteArray *st_array = NULL;
 	guint8 rbuf[64] = { 0x0 };
 
 	fu_struct_focaltouch_bin_length_req_set_cmd(st, FU_FOCALTOUCH_CMD_WRITE_REGISTER);
@@ -242,10 +243,11 @@ fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice* self,
 	fu_struct_focaltouch_bin_length_req_set_size_h(st, (firmware_size >> 16) & 0xFF);
 	fu_struct_focaltouch_bin_length_req_set_size_m(st, (firmware_size >> 8) & 0xFF);
 	fu_struct_focaltouch_bin_length_req_set_size_l(st, firmware_size & 0xFF);
-
+	
+	st_array =(GByteArray *)st;
 	if (!fu_focaltouch_hid_device_io(self,
-		st->data,
-		st->len,
+		st_array->data,
+		st_array->len,
 		rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to write bin length: ");
 		return FALSE;
