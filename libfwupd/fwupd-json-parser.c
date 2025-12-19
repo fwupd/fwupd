@@ -32,6 +32,8 @@ struct _FwupdJsonParser {
 
 G_DEFINE_TYPE(FwupdJsonParser, fwupd_json_parser, G_TYPE_OBJECT)
 
+#define FWUPD_JSON_PARSER_NEWLINE_MAX 5
+
 /**
  * fwupd_json_parser_set_max_depth:
  * @self: a #FwupdJsonParser
@@ -101,6 +103,7 @@ typedef struct {
 	gboolean is_quoted;
 	gboolean is_escape;
 	guint linecnt;
+	guint newlinecnt;
 	guint depth;
 } FwupdJsonParserHelper;
 
@@ -212,12 +215,14 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 			return TRUE;
 		}
 		helper->is_quoted = TRUE;
+		helper->newlinecnt = 0;
 		return TRUE;
 	}
 	if (helper->is_quoted) {
 		/* escape char */
 		if (!helper->is_escape && data == '\\') {
 			helper->is_escape = TRUE;
+			helper->newlinecnt = 0;
 			return TRUE;
 		}
 		if (G_UNLIKELY(helper->is_escape)) {
@@ -234,16 +239,34 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 		}
 
 		/* save acc */
+		helper->newlinecnt = 0;
 		g_string_append_c(helper->acc, data);
+		if (G_UNLIKELY(helper->max_quoted > 0 && helper->acc->len > helper->max_quoted)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "token too long, limit was %u",
+				    helper->max_quoted);
+			return FALSE;
+		}
 		return TRUE;
 	}
 
 	/* newline, for error messages */
 	if (data == '\n') {
 		helper->linecnt++;
+		if (helper->newlinecnt++ > FWUPD_JSON_PARSER_NEWLINE_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too many newlines, limit was %u",
+				    (guint)FWUPD_JSON_PARSER_NEWLINE_MAX);
+			return FALSE;
+		}
 		fwupd_json_parser_helper_dump_acc(helper, token, str);
 		return TRUE;
 	}
+	helper->newlinecnt = 0;
 
 	/* split */
 	if (data == ',') {
@@ -263,6 +286,7 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 			return TRUE;
 		}
 		*token = data;
+		helper->newlinecnt = 0;
 		return TRUE;
 	}
 
