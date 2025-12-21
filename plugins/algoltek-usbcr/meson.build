@@ -14,3 +14,6 @@ plugin_builtins += static_library('fu_plugin_algoltek_usbcr',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/algoltek-au84612-setup.json')
+device_tests += files('tests/algoltek-au84612.json')
