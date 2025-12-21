@@ -24,25 +24,6 @@ typedef struct {
 	guint8 val;
 } FuAgUsbcrRegSetup;
 
-static GByteArray *
-fu_algoltek_usbcr_device_cmd_get_ver(FuAlgoltekUsbcrDevice *self, GError **error)
-{
-	guint8 cdb[FU_AG_USBCR_MAX_CDB_LEN] = {0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-
-	cdb[0] = FU_AG_USBCR_SCSIOP_VENDOR_FIRMWARE_REVISION;
-	fu_byte_array_set_size(buf, FU_AG_USBCR_MAX_BUFFER_SIZE, 0x0);
-	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
-					    cdb,
-					    sizeof(cdb),
-					    buf->data,
-					    buf->len,
-					    error))
-		return NULL;
-
-	return g_steal_pointer(&buf);
-}
-
 static gboolean
 fu_algoltek_usbcr_device_write_reg(FuAlgoltekUsbcrDevice *self,
 				   guint16 addr,
@@ -410,27 +391,24 @@ fu_algoltek_usbcr_device_ensure_version(FuAlgoltekUsbcrDevice *self, GError **er
 {
 	guint16 app_ver = 0;
 	guint16 boot_ver = 0;
-	g_autoptr(GByteArray) ver_array = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(FuStructAgUsbcrFirmwareRevisionCdb) st =
+	    fu_struct_ag_usbcr_firmware_revision_cdb_new();
 
-	ver_array = fu_algoltek_usbcr_device_cmd_get_ver(self, error);
-	if (ver_array == NULL) {
+	fu_byte_array_set_size(buf, FU_AG_USBCR_MAX_BUFFER_SIZE, 0x0);
+	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					    st->buf->data,
+					    st->buf->len,
+					    buf->data,
+					    buf->len,
+					    error)) {
 		g_prefix_error_literal(error, "failed to read version: ");
 		return FALSE;
 	}
-	if (!fu_memread_uint16_safe(ver_array->data,
-				    ver_array->len,
-				    130,
-				    &app_ver,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 130, &app_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version_raw(FU_DEVICE(self), app_ver);
-	if (!fu_memread_uint16_safe(ver_array->data,
-				    ver_array->len,
-				    132,
-				    &boot_ver,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 132, &boot_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 	return TRUE;
