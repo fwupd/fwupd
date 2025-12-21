@@ -9,6 +9,7 @@ enum FuAgUsbcrOffset {
     EmmcSupportVerFromBootVer = 0x2A,
 }
 
+#[repr(u8)]
 enum FuAgUsbcrScsiopVendor {
     EepromRd = 0xC0,
     EepromWr,
@@ -16,11 +17,27 @@ enum FuAgUsbcrScsiopVendor {
     GenericCmd = 0xC7,
 }
 
+#[repr(u8)]
 enum FuAgUsbcr {
     Wrsr = 0x01,
     Rdsr = 0x05,
     Wren,
     Erase = 0xC7,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructAgUsbcrFirmwareRevisionCdb {
+    opcode: FuAgUsbcrScsiopVendor == FirmwareRevision,
+    subopcode: u8 == 0x1F,
+    sig: u16be == 0x058F,
+    cmd: u8,
+    subcmd: u8,
+    sig2: u32be == 0x30353846,
+    ramdest: u8,
+    addr:u16be,
+    val:u8,
+    reserved:[u8; 2],
 }
 
 #[derive(New, Default)]
