@@ -1,0 +1,17 @@
+{
+  "name": "Algoltek AU84612",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/algoltek-au84612-setup.json",
+      "components": [
+        {
+          "version": "277",
+          "guids": [
+            "d0ab2cc3-c842-50ea-a8dd-344cd16f2181"
+          ]
+        }
+      ]
+    }
+  ]
+}
