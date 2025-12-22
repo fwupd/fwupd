@@ -243,7 +243,7 @@ fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice* self,
 	fu_struct_focaltouch_bin_length_req_set_size_h(st, (firmware_size >> 16) & 0xFF);
 	fu_struct_focaltouch_bin_length_req_set_size_m(st, (firmware_size >> 8) & 0xFF);
 	fu_struct_focaltouch_bin_length_req_set_size_l(st, firmware_size & 0xFF);
-	
+
 	st_array =(GByteArray *)st;
 	if (!fu_focaltouch_hid_device_io(self,
 		st_array->data,
