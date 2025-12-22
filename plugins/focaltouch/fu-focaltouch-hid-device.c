@@ -989,7 +989,10 @@ fu_focaltouch_hid_device_set_quirk_kv(FuDevice *device,
 		self->verify_id2 = (guint)value_tmp;
 		return TRUE;
 	}
-
+	g_set_error_literal(error,
+				FWUPD_ERROR,
+				FWUPD_ERROR_NOT_SUPPORTED,
+				"quirk key not supported");
 	return FALSE;
 }
 static void
