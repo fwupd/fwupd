@@ -10,30 +10,103 @@
 #include <sys/utsname.h>
 #endif
 
+#include "fwupd-security-attr-private.h"
+
 #include "fu-cpu-device.h"
-#include "fu-cpu-struct.h"
+#include "fu-mem.h"
+#include "fu-path.h"
+#include "fu-string.h"
 
 struct _FuCpuDevice {
 	FuDevice parent_instance;
-	FuCpuDeviceFlag flags;
+	FuCpuFamily family;
+	FuCpuDeviceFlags flags;
+	FuCpuMitigationFlags mitigation_flags;
+	guint32 sinkclose_microcode_ver;
 };
 
 G_DEFINE_TYPE(FuCpuDevice, fu_cpu_device, FU_TYPE_DEVICE)
 
 static gboolean
-fu_cpu_device_has_flag(FuCpuDevice *self, FuCpuDeviceFlag flag)
+fu_cpu_device_has_flag(FuCpuDevice *self, FuCpuDeviceFlags flag)
 {
 	return (self->flags & flag) > 0;
+}
+
+/**
+ * fu_cpu_device_get_family:
+ * @self: a #FuCpuDevice
+ *
+ * Returns the CPU family.
+ *
+ * Returns: family, or %FU_CPU_FAMILY_UNKNOWN if invalid
+ *
+ * Since: 2.1.1
+ **/
+FuCpuFamily
+fu_cpu_device_get_family(FuCpuDevice *self)
+{
+	g_return_val_if_fail(FU_IS_CPU_DEVICE(self), FU_CPU_FAMILY_UNKNOWN);
+	return self->family;
+}
+
+/**
+ * fu_cpu_device_needs_mitigation:
+ * @self: a #FuCpuDevice
+ * @mitigation_flag: a #FuCpuMitigationFlags, e.g. %FU_CPU_MITIGATION_FLAG_GDS
+ *
+ * Returns if the CPU needs a specific mitigation.
+ *
+ * Returns: %TRUE if required
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_cpu_device_needs_mitigation(FuCpuDevice *self, FuCpuMitigationFlags mitigation_flag)
+{
+	g_return_val_if_fail(FU_IS_CPU_DEVICE(self), FALSE);
+	return (self->mitigation_flags & mitigation_flag) > 0;
+}
+
+/**
+ * fu_cpu_device_get_sinkclose_microcode_ver:
+ * @self: a #FuCpuDevice
+ *
+ * Returns the microcode version required to mitigate Sinkclose.
+ *
+ * Returns: version, or 0% if invalid
+ *
+ * Since: 2.1.1
+ **/
+guint32
+fu_cpu_device_get_sinkclose_microcode_ver(FuCpuDevice *self)
+{
+	g_return_val_if_fail(FU_IS_CPU_DEVICE(self), 0);
+	return self->sinkclose_microcode_ver;
 }
 
 static void
 fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
-	if (self->flags != FU_CPU_DEVICE_FLAG_NONE) {
-		g_autofree gchar *flags_str = fu_cpu_device_flag_to_string(self->flags);
-		fwupd_codec_string_append(str, idt, "Flags", flags_str);
+	if (self->family != FU_CPU_FAMILY_UNKNOWN) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  "Family",
+					  fu_cpu_family_to_string(self->family));
 	}
+	if (self->flags != FU_CPU_DEVICE_FLAG_NONE) {
+		g_autofree gchar *tmp = fu_cpu_device_flags_to_string(self->flags);
+		fwupd_codec_string_append(str, idt, "DeviceFlags", tmp);
+	}
+	if (self->mitigation_flags != FU_CPU_MITIGATION_FLAG_NONE) {
+		g_autofree gchar *tmp = fu_cpu_mitigation_flags_to_string(self->mitigation_flags);
+		fwupd_codec_string_append(str, idt, "MitigationFlags", tmp);
+	}
+	fwupd_codec_string_append_int(str,
+				      idt,
+				      "SinkcloseMicrocodeVer",
+				      self->sinkclose_microcode_ver);
 }
 
 static const gchar *
@@ -90,16 +163,6 @@ fu_cpu_device_convert_vendor(const gchar *vendor)
 	if (g_strcmp0(vendor, "VirtualApple") == 0)
 		return "Apple";
 	return vendor;
-}
-
-static void
-fu_cpu_device_init(FuCpuDevice *self)
-{
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU);
-	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_physical_id(FU_DEVICE(self), "cpu:0");
 }
 
 static gboolean
@@ -290,6 +353,7 @@ fu_cpu_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
 {
+	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	if (g_strcmp0(key, "PciBcrAddr") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
@@ -298,16 +362,18 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CpuMitigationsRequired") == 0) {
-		fu_device_set_metadata(device, "CpuMitigationsRequired", value);
+		self->mitigation_flags = fu_cpu_mitigation_flags_from_string(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CpuFamily") == 0) {
+		self->family = fu_cpu_family_from_string(value);
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CpuSinkcloseMicrocodeVersion") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error))
 			return FALSE;
-		fu_device_set_metadata_integer(device,
-					       FU_DEVICE_METADATA_CPU_SINKCLOSE_MICROCODE_VER,
-					       tmp);
+		self->sinkclose_microcode_ver = (guint32)tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no supported");
@@ -461,6 +527,16 @@ fu_cpu_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static void
+fu_cpu_device_init(FuCpuDevice *self)
+{
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU);
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_physical_id(FU_DEVICE(self), "cpu:0");
+}
+
+static void
 fu_cpu_device_class_init(FuCpuDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
@@ -471,10 +547,18 @@ fu_cpu_device_class_init(FuCpuDeviceClass *klass)
 	device_class->convert_version = fu_cpu_device_convert_version;
 }
 
+/**
+ * fu_cpu_device_new:
+ * @ctx: a #FuContext
+ *
+ * Creates a new #FuCpuDevice.
+ *
+ * Returns: (transfer full): a #FuCpuDevice
+ *
+ * Since: 2.1.1
+ **/
 FuCpuDevice *
 fu_cpu_device_new(FuContext *ctx)
 {
-	FuCpuDevice *device = NULL;
-	device = g_object_new(FU_TYPE_CPU_DEVICE, "context", ctx, NULL);
-	return device;
+	return g_object_new(FU_TYPE_CPU_DEVICE, "context", ctx, NULL);
 }
