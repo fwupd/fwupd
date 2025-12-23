@@ -21,7 +21,6 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
-	guint32 payload_len;
 	guint32 version;
 	gsize streamsz = 0;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
@@ -35,16 +34,6 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	payload_len = (guint32)(streamsz - st->buf->len);
-	if (payload_len != fu_struct_ebitdo_hdr_get_destination_len(st)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "file size incorrect, expected 0x%04x got 0x%04x",
-			    (guint)fu_struct_ebitdo_hdr_get_destination_len(st),
-			    (guint)payload_len);
-		return FALSE;
-	}
 
 	/* parse version */
 	version = fu_struct_ebitdo_hdr_get_version(st);
@@ -61,13 +50,17 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* add payload */
-	stream_payload = fu_partial_input_stream_new(stream, st->buf->len, payload_len, error);
+	stream_payload = fu_partial_input_stream_new(stream,
+						     st->buf->len,
+						     fu_struct_ebitdo_hdr_get_destination_len(st),
+						     error);
 	if (stream_payload == NULL)
 		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_payload, error))
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_set_addr(firmware, fu_struct_ebitdo_hdr_get_destination_addr(st));
+	fu_firmware_set_size(firmware, st->buf->len + fu_struct_ebitdo_hdr_get_destination_len(st));
 	return TRUE;
 }
 
@@ -99,6 +92,8 @@ fu_ebitdo_firmware_init(FuEbitdoFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 }
 
 static void
