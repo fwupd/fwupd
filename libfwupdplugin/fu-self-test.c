@@ -5430,271 +5430,223 @@ fu_security_attrs_compare_func(void)
 	g_assert_false(fu_security_attrs_equal(attrs2, attrs1));
 }
 
-typedef enum {
-	FU_FIRMWARE_BUILDER_FLAG_NONE,
-	FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE = 1 << 0,
-} G_GNUC_FLAG_ENUM FuFirmwareBuilderFlags;
-
 static void
 fu_firmware_builder_round_trip_func(void)
 {
 	struct {
-		GType gtype;
 		const gchar *xml_fn;
 		const gchar *checksum;
 		FuFirmwareBuilderFlags flags;
 	} map[] = {
 	    {
-		FU_TYPE_CAB_FIRMWARE,
 		"cab.builder.xml",
 		"a708f47b1a46377f1ea420597641ffe9a40abd75",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_CAB_FIRMWARE,
 		"cab-compressed.builder.xml",
 		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_ELF_FIRMWARE,
 		"elf.builder.xml",
 		"99ea60b8dd46085dcbf1ecd5e72b4cb73a3b6faa",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_DFUSE_FIRMWARE,
 		"dfuse.builder.xml",
 		"c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_PEFILE_FIRMWARE,
 		"pefile.builder.xml",
 		"73b0e0dc9f6175b7bc27b77f20e0d9eca2d2d141",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_LINEAR_FIRMWARE,
 		"linear.builder.xml",
 		"18fa8201652c82dc717df1905d8ab72e46e3d82b",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_HID_REPORT_ITEM,
 		"hid-report-item.builder.xml",
 		"5b18c07399fc8968ce22127df38d8d923089ec92",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_HID_DESCRIPTOR,
 		"hid-descriptor.builder.xml",
 		"6bb23f7c9fedc21f05528b3b63ad5837f4a16a92",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_SBATLEVEL_SECTION,
 		"sbatlevel.builder.xml",
 		"8204ef9477b4305748a0de6e667547cb6ce5e426",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_CSV_FIRMWARE,
 		"csv.builder.xml",
 		"986cbf8cde5bc7d8b49ee94cceae3f92efbd2eef",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_FDT_FIRMWARE,
 		"fdt.builder.xml",
 		"40f7fbaff684a6bcf67c81b3079422c2529741e1",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_FIT_FIRMWARE,
 		"fit.builder.xml",
 		"293ce07351bb7d76631c4e2ba47243db1e150f3c",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		FU_TYPE_SREC_FIRMWARE,
 		"srec.builder.xml",
 		"c8b405b7995d5934086c56b091a4c5df47b3b0d7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		FU_TYPE_IHEX_FIRMWARE,
 		"ihex.builder.xml",
 		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 #ifdef HAVE_CBOR
 	    {
-		FU_TYPE_FMAP_FIRMWARE,
 		"fmap.builder.xml",
 		"0db91efb987353ffb779d259b130d63d1b8bcbec",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 #endif
 	    {
-		FU_TYPE_EFI_LOAD_OPTION,
 		"efi-load-option.builder.xml",
 		"7ef696d22902ae97ef5f73ad9c85a28095ad56f1",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_LOAD_OPTION,
 		"efi-load-option-hive.builder.xml",
 		"76a378752b7ccdf3d68365d83784053356fa7e0a",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_LOAD_OPTION,
 		"efi-load-option-data.builder.xml",
 		"6e6190dc6b1bf45bc6e30ba7a6a98d891d692dd0",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EDID,
 		"edid.builder.xml",
 		"64cef10b75ccce684a483d576dd4a4ce6bef8165",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_SECTION,
 		"efi-section.builder.xml",
 		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_SECTION,
 		"efi-section.builder.xml",
 		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_FILE,
 		"efi-file.builder.xml",
 		"90374d97cf6bc70059d24c816c188c10bd250ed7",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_FILESYSTEM,
 		"efi-filesystem.builder.xml",
 		"d6fbadc1c303a3b4eede9db7fb0ddb353efffc86",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_SIGNATURE,
 		"efi-signature.builder.xml",
 		"ff7b862504262ce4853db29690b683bb06ce7d1f",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_SIGNATURE_LIST,
 		"efi-signature-list.builder.xml",
 		"450111ea0f77a0ede5b6a6305cd2e02b44b5f1e9",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_VARIABLE_AUTHENTICATION2,
 		"efi-variable-authentication2.builder.xml",
 		"bd08e81e9c86490dc1ffb32b1e3332606eb0fa97",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_FTW_STORE,
 		"efi-ftw-store.builder.xml",
 		"9bdb363e31e00d7fb0b42eacdc95771a3795b7ec",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_VSS_AUTH_VARIABLE,
 		"efi-vss-auth-variable.builder.xml",
 		"de6391f8b09653859b4ff93a7d5004c52c35d5c2",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_VSS2_VARIABLE_STORE,
 		"efi-vss2-variable-store.builder.xml",
 		"25ef7bf7ea600c8a739ff4dc6876bcd2f9d8d30d",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
 		"d0f658bce79c8468458e0b64e7de24f45c063076",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_EFI_VOLUME,
 		"efi-volume-sized.builder.xml",
 		"d7087ea16218d700b9175a9cd0c27bd56b07a6d4",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_IFD_FIRMWARE,
 		"ifd.builder.xml",
 		"494e7be6a72e743e6738c0ecdbdcddbf27d1dbd7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		FU_TYPE_CFU_OFFER,
 		"cfu-offer.builder.xml",
 		"c10223887ff6cdf4475ad07c65b1f0f3a2d0d5ca",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_CFU_PAYLOAD,
 		"cfu-payload.builder.xml",
 		"5da829f5fd15a28970aed98ebb26ebf2f88ed6f2",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_IFWI_CPD_FIRMWARE,
 		"ifwi-cpd.builder.xml",
 		"91e348d17cb91ef7a528e85beb39d15a0532dca5",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_IFWI_FPT_FIRMWARE,
 		"ifwi-fpt.builder.xml",
 		"d1f0fb2c2a7a99441bf4a825d060642315a94d91",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_OPROM_FIRMWARE,
 		"oprom.builder.xml",
 		"2e8387c1ef14ed4038e6bc637146b86b4d702fa8",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_INTEL_THUNDERBOLT_NVM,
 		"intel-thunderbolt.builder.xml",
 		"b3a73baf05078dfdd833b407a0a6afb239ec2f23",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
-		FU_TYPE_USB_BOS_DESCRIPTOR,
 		"usb-bos-descriptor.builder.xml",
 		"a305749853781c6899c4b28039cb4c7d9059b910",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_JSON_FIRMWARE,
 		"json.builder.xml",
 		"845be24c3f31c4e8f0feeadfe356b3156628ba99",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 #ifdef HAVE_CBOR
 	    {
-		FU_TYPE_USWID_FIRMWARE,
 		"uswid.builder.xml",
 		"b473fbdbe00f860c4da43f9499569394bac81f14",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
-		FU_TYPE_USWID_FIRMWARE,
 		"uswid-compressed.builder.xml",
 		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
@@ -5703,70 +5655,16 @@ fu_firmware_builder_round_trip_func(void)
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		gboolean ret;
-		g_autofree gchar *csum1 = NULL;
-		g_autofree gchar *csum2 = NULL;
 		g_autofree gchar *filename = NULL;
-		g_autofree gchar *xml1 = NULL;
-		g_autofree gchar *xml2 = NULL;
-		g_autoptr(FuFirmware) firmware1 = NULL;
-		g_autoptr(FuFirmware) firmware2 = NULL;
-		g_autoptr(FuFirmware) firmware3 = g_object_new(map[i].gtype, NULL);
 		g_autoptr(GError) error = NULL;
-		g_autoptr(GBytes) blob = NULL;
 
-		/* build and write */
-		g_debug("%s", map[i].xml_fn);
 		filename = g_test_build_filename(G_TEST_DIST, "tests", map[i].xml_fn, NULL);
-		ret = g_file_get_contents(filename, &xml1, NULL, &error);
+		ret = fu_firmware_roundtrip_from_filename(filename,
+							  map[i].checksum,
+							  map[i].flags,
+							  &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
-		firmware1 = fu_firmware_new_from_xml(xml1, &error);
-		g_assert_no_error(error);
-		g_assert_nonnull(firmware1);
-		csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
-		g_assert_no_error(error);
-		g_assert_nonnull(csum1);
-		if (map[i].checksum != NULL)
-			g_assert_cmpstr(csum1, ==, map[i].checksum);
-
-		/* ensure we can write and then parse what we just wrote */
-		blob = fu_firmware_write(firmware1, &error);
-		g_assert_no_error(error);
-		g_assert_nonnull(blob);
-		ret = fu_firmware_parse_bytes(firmware3,
-					      blob,
-					      0x0,
-					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
-						  FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-					      &error);
-		if (!ret)
-			g_prefix_error(&error, "%s: ", map[i].xml_fn);
-		g_assert_no_error(error);
-		g_assert_true(ret);
-
-		/* ensure we can write back the binary blob */
-		if ((map[i].flags & FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE) == 0) {
-			g_autoptr(GBytes) blob2 = fu_firmware_write(firmware3, &error);
-			g_assert_nonnull(blob2);
-			g_assert_no_error(error);
-			ret = fu_bytes_compare(blob2, blob, &error);
-			if (!ret)
-				g_prefix_error(&error, "%s: ", map[i].xml_fn);
-			g_assert_no_error(error);
-			g_assert_true(ret);
-		}
-
-		/* ensure we can round-trip to XML */
-		xml2 = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
-		g_assert_no_error(error);
-		firmware2 = fu_firmware_new_from_xml(xml2, &error);
-		g_assert_no_error(error);
-		g_assert_nonnull(firmware2);
-		csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
-		g_assert_nonnull(csum2);
-		g_assert_no_error(error);
-		if (map[i].checksum != NULL)
-			g_assert_cmpstr(csum2, ==, map[i].checksum);
 	}
 }
 
@@ -7399,6 +7297,7 @@ main(int argc, char **argv)
 
 	/* register all the GTypes manually */
 	fu_context_add_firmware_gtypes(ctx);
+	g_type_ensure(FU_TYPE_USB_BOS_DESCRIPTOR);
 
 	g_test_add_func("/fwupd/cab{checksum}", fu_cab_checksum_func);
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
