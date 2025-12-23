@@ -34,9 +34,9 @@ fu_goodixtp_plugin_constructed(GObject *obj)
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_GOODIXTP_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GOODIXTP_GTX8_DEVICE); /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GOODIXTP_BRLB_DEVICE); /* coverage */
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GOODIXTP_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GOODIXTP_GTX8_FIRMWARE); /* coverage */
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GOODIXTP_BRLB_FIRMWARE); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_GTX8_FIRMWARE); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_BRLB_FIRMWARE); /* coverage */
 }
 
 static FuGoodixtpIcType

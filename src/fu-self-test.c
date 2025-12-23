@@ -1451,6 +1451,7 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
 	g_autoptr(GError) error = NULL;
 	const gchar *noxml[] = {
+	    "FuFirmware",
 	    "FuArchiveFirmware",
 	    "FuGenesysUsbhubFirmware",
 	    "FuIntelThunderboltFirmware",
@@ -1495,9 +1496,9 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 		    FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG | FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
 		    NULL);
 		if (xml != NULL) {
-			ret = fu_firmware_build_from_xml(firmware, xml, &error);
+			g_autoptr(FuFirmware) firmware2 = fu_firmware_new_from_xml(xml, &error);
 			g_assert_no_error(error);
-			g_assert_true(ret);
+			g_assert_nonnull(firmware2);
 		}
 	}
 }

@@ -32,7 +32,7 @@ fu_legion_hid2_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LEGION_HID2_SIPO_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LEGION_HID2_BL_DEVICE);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_LEGION_HID2_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_LEGION_HID2_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_LEGION_HID2_FIRMWARE);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 }
 

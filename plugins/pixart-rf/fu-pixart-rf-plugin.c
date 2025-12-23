@@ -31,7 +31,7 @@ fu_pixart_rf_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_RF_BLE_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_RF_RECEIVER_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_RF_WIRELESS_DEVICE); /* coverage */
-	fu_plugin_add_firmware_gtype(plugin, "pixart", FU_TYPE_PIXART_RF_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_PIXART_RF_FIRMWARE);
 }
 
 static void

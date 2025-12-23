@@ -31,7 +31,7 @@ fu_telink_dfu_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "TelinkHidToolVer");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TELINK_DFU_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TELINK_DFU_BLE_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_TELINK_DFU_ARCHIVE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_TELINK_DFU_ARCHIVE);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 }
 

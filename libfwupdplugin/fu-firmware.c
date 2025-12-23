@@ -1424,8 +1424,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 }
 
 /**
- * fu_firmware_build_from_xml:
- * @self: a #FuFirmware
+ * fu_firmware_new_from_xml:
  * @xml: XML text
  * @error: (nullable): optional return location for an error
  *
@@ -1465,68 +1464,90 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
  * subclassed object `FuFirmware->build` vfunc for the specific additional
  * options supported.
  *
- * Plugins should manually g_type_ensure() subclassed image objects if not
- * constructed as part of the plugin fu_plugin_init() or fu_plugin_setup()
- * functions.
+ * Firmware subclasses should use fu_firmware_add_image_gtype() for subclassed image objects.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.6.0
+ * Since: 2.1.1
  **/
-gboolean
-fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
+FuFirmware *
+fu_firmware_new_from_xml(const gchar *xml, GError **error)
 {
+	GType gtype;
+	const gchar *gtypestr = NULL;
+	g_autoptr(FuFirmware) self = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbNode) n = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
+	g_return_val_if_fail(xml != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* parse XML */
 	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
 		g_prefix_error_literal(error, "could not parse XML: ");
 		fwupd_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL) {
 		fwupd_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
 
 	/* create FuFirmware of specific GType */
 	n = xb_silo_query_first(silo, "firmware", error);
 	if (n == NULL) {
 		fwupd_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
-	return fu_firmware_build(self, n, error);
+	gtypestr = xb_node_get_attr(n, "gtype");
+	if (gtypestr == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "expected gtype for <firmware>");
+		return NULL;
+	}
+	gtype = g_type_from_name(gtypestr);
+	if (gtype == G_TYPE_INVALID) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "GType %s not registered",
+			    gtypestr);
+		return NULL;
+	}
+	self = g_object_new(gtype, NULL);
+	if (!fu_firmware_build(self, n, error))
+		return NULL;
+	return g_steal_pointer(&self);
 }
 
 /**
- * fu_firmware_build_from_filename:
- * @self: a #FuFirmware
+ * fu_firmware_new_from_filename:
  * @filename: filename of XML builder
  * @error: (nullable): optional return location for an error
  *
  * Builds a firmware from an XML manifest.
  *
- * Returns: %TRUE for success
+ * Returns: a #FuFirmware on success, else %NULL
  *
- * Since: 2.0.0
+ * Since: 2.1.1
  **/
-gboolean
-fu_firmware_build_from_filename(FuFirmware *self, const gchar *filename, GError **error)
+FuFirmware *
+fu_firmware_new_from_filename(const gchar *filename, GError **error)
 {
 	g_autofree gchar *xml = NULL;
 
-	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (!g_file_get_contents(filename, &xml, NULL, error))
-		return FALSE;
-	return fu_firmware_build_from_xml(self, xml, error);
+		return NULL;
+	return fu_firmware_new_from_xml(xml, error);
 }
 
 /**

@@ -510,7 +510,7 @@ fu_plugin_get_device_gtype_default(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
 fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype) G_GNUC_NON_NULL(1);
 void
-fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype) G_GNUC_NON_NULL(1);
+fu_plugin_add_firmware_gtype(FuPlugin *self, GType gtype) G_GNUC_NON_NULL(1);
 void
 fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem) G_GNUC_NON_NULL(1, 2);
 void

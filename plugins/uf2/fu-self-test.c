@@ -17,7 +17,7 @@ fu_uf2_firmware_xml_func(void)
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
 	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = fu_uf2_firmware_new();
+	g_autoptr(FuFirmware) firmware1 = NULL;
 	g_autoptr(FuFirmware) firmware2 = fu_uf2_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
@@ -27,9 +27,9 @@ fu_uf2_firmware_xml_func(void)
 	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
+	firmware1 = fu_firmware_new_from_xml(xml_src, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert_nonnull(firmware1);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(csum1, ==, "4e130c6617496bee0dfbdff48f7248eccb1c696d");
@@ -60,6 +60,7 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* tests go here */
+	g_type_ensure(FU_TYPE_UF2_FIRMWARE);
 	g_test_add_func("/uf2/firmware{xml}", fu_uf2_firmware_xml_func);
 	return g_test_run();
 }

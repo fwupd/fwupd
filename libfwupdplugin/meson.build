@@ -86,6 +86,7 @@ fwupdplugin_src = [
   'fu-composite-input-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
+  'fu-context-helper.c',
   'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
   'fu-crc.c', # fuzzing
