@@ -1306,9 +1306,9 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
-	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
-	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
-	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_BITMAP_IMAGE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_UEFI);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_UEFI_UPDATE_INFO);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_BITMAP_IMAGE);
 	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_COD_DEVICE);	/* coverage */
 	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_GRUB_DEVICE);	/* coverage */
 	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_NVRAM_DEVICE); /* coverage */

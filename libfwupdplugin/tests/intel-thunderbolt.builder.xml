@@ -1,4 +1,4 @@
-<firmware gtype="FuIntelNvmFirmware">
+<firmware gtype="FuIntelThunderboltNvm">
   <offset>0x10</offset>
   <vendor_id>0xd4</vendor_id>
   <device_id>0x15ef</device_id>

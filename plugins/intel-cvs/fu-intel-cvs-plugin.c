@@ -31,7 +31,7 @@ fu_intel_cvs_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "IntelCvsMaxRetryCount");
 	fu_plugin_add_udev_subsystem(plugin, "i2c");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_CVS_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_INTEL_CVS_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_INTEL_CVS_FIRMWARE);
 }
 
 static void

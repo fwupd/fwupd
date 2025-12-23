@@ -892,8 +892,8 @@ fu_uefi_update_info_xml_func(void)
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
 	g_autofree gchar *xml_src = NULL;
-	g_autoptr(FuFirmware) firmware1 = FU_FIRMWARE(fu_uefi_update_info_new());
-	g_autoptr(FuFirmware) firmware2 = FU_FIRMWARE(fu_uefi_update_info_new());
+	g_autoptr(FuFirmware) firmware1 = NULL;
+	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware3 = FU_FIRMWARE(fu_uefi_update_info_new());
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
@@ -904,9 +904,9 @@ fu_uefi_update_info_xml_func(void)
 	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
+	firmware1 = fu_firmware_new_from_xml(xml_src, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert_nonnull(firmware1);
 	fw = fu_firmware_write(firmware1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fw);
@@ -922,9 +922,9 @@ fu_uefi_update_info_xml_func(void)
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	ret = fu_firmware_build_from_xml(firmware2, xml_out, &error);
+	firmware2 = fu_firmware_new_from_xml(xml_out, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert_nonnull(firmware2);
 	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, &error);
 	g_assert_cmpstr(csum1, ==, csum2);
 }

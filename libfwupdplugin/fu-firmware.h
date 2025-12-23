@@ -82,6 +82,12 @@ fu_firmware_new(void);
 FuFirmware *
 fu_firmware_new_from_bytes(GBytes *fw);
 FuFirmware *
+fu_firmware_new_from_xml(const gchar *xml, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+FuFirmware *
+fu_firmware_new_from_filename(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+FuFirmware *
 fu_firmware_new_from_gtypes(GInputStream *stream,
 			    gsize offset,
 			    FuFirmwareParseFlags flags,
@@ -181,14 +187,6 @@ fu_firmware_tokenize(FuFirmware *self,
 gboolean
 fu_firmware_build(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
-gboolean
-fu_firmware_build_from_xml(FuFirmware *self,
-			   const gchar *xml,
-			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
-gboolean
-fu_firmware_build_from_filename(FuFirmware *self,
-				const gchar *filename,
-				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,
 			 GInputStream *stream,

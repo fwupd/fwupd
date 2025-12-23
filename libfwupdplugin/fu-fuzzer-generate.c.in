@@ -11,7 +11,7 @@
 int
 main(int argc, char **argv)
 {
-	g_autoptr(FuFirmware) firmware = FU_FIRMWARE(@FIRMWARENEW@);
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob_dst = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -21,7 +21,9 @@ main(int argc, char **argv)
 		g_printerr("Invalid arguments, expected %s XML BIN\n", argv[0]);
 		return EXIT_FAILURE;
 	}
-	if (!fu_firmware_build_from_filename(firmware, argv[1], &error)) {
+	g_type_ensure(@GTYPE@);
+	firmware = fu_firmware_new_from_filename(argv[1], &error);
+	if (firmware == NULL) {
 		g_printerr("Failed to build: %s\n", error->message);
 		return EXIT_FAILURE;
 	}

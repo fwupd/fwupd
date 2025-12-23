@@ -30,7 +30,7 @@ fu_aver_hid_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AVER_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AVER_SAFEISP_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AVER_HID_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AVER_HID_FIRMWARE);
 }
 
 static void
