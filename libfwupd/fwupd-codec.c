@@ -8,6 +8,9 @@
 
 #include "fwupd-codec.h"
 #include "fwupd-error.h"
+#include "fwupd-json-array.h"
+#include "fwupd-json-node-private.h"
+#include "fwupd-json-parser.h"
 
 /**
  * FwupdCodec:
@@ -25,47 +28,48 @@ fwupd_codec_default_init(FwupdCodecInterface *iface)
 static void
 fwupd_codec_add_string_from_json_node(FwupdCodec *self,
 				      const gchar *member_name,
-				      JsonNode *json_node,
+				      FwupdJsonNode *json_node,
 				      guint idt,
 				      GString *str)
 {
-	JsonNodeType node_type = json_node_get_node_type(json_node);
-	if (node_type == JSON_NODE_VALUE) {
-		GType gtype = json_node_get_value_type(json_node);
-		if (gtype == G_TYPE_STRING) {
-			fwupd_codec_string_append(str,
-						  idt,
-						  member_name,
-						  json_node_get_string(json_node));
-		} else if (gtype == G_TYPE_INT64) {
-			fwupd_codec_string_append_hex(str,
-						      idt,
-						      member_name,
-						      json_node_get_int(json_node));
-		} else if (gtype == G_TYPE_BOOLEAN) {
-			fwupd_codec_string_append_bool(str,
-						       idt,
-						       member_name,
-						       json_node_get_boolean(json_node));
-		} else {
-			fwupd_codec_string_append(str, idt, member_name, "GType value unknown");
+	FwupdJsonNodeKind node_kind;
+
+	g_return_if_fail(FWUPD_IS_CODEC(self));
+	g_return_if_fail(json_node != NULL);
+	g_return_if_fail(str != NULL);
+
+	node_kind = fwupd_json_node_get_kind(json_node);
+	if (node_kind == FWUPD_JSON_NODE_KIND_RAW) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  member_name,
+					  fwupd_json_node_get_raw(json_node, NULL));
+	} else if (node_kind == FWUPD_JSON_NODE_KIND_STRING) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  member_name,
+					  fwupd_json_node_get_string(json_node, NULL));
+	} else if (node_kind == FWUPD_JSON_NODE_KIND_ARRAY) {
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_node_get_array(json_node, NULL);
+		if (g_strcmp0(member_name, "") != 0)
+			fwupd_codec_string_append(str, idt, member_name, "");
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+			g_autoptr(FwupdJsonNode) json_child =
+			    fwupd_json_array_get_node(json_arr, i, NULL);
+			fwupd_codec_add_string_from_json_node(self, "", json_child, idt + 1, str);
 		}
-	} else if (node_type == JSON_NODE_ARRAY) {
-		JsonArray *json_array = json_node_get_array(json_node);
-		g_autoptr(GList) json_nodes = json_array_get_elements(json_array);
+	} else if (node_kind == FWUPD_JSON_NODE_KIND_OBJECT) {
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_node_get_object(json_node, NULL);
 		if (g_strcmp0(member_name, "") != 0)
 			fwupd_codec_string_append(str, idt, member_name, "");
-		for (GList *l = json_nodes; l != NULL; l = l->next)
-			fwupd_codec_add_string_from_json_node(self, "", l->data, idt + 1, str);
-	} else if (node_type == JSON_NODE_OBJECT) {
-		JsonObjectIter iter;
-		json_object_iter_init(&iter, json_node_get_object(json_node));
-		if (g_strcmp0(member_name, "") != 0)
-			fwupd_codec_string_append(str, idt, member_name, "");
-		while (json_object_iter_next(&iter, &member_name, &json_node)) {
+		for (guint i = 0; i < fwupd_json_object_get_size(json_obj); i++) {
+			const gchar *member_child =
+			    fwupd_json_object_get_key_for_index(json_obj, i, NULL);
+			g_autoptr(FwupdJsonNode) json_child =
+			    fwupd_json_object_get_node_for_index(json_obj, i, NULL);
 			fwupd_codec_add_string_from_json_node(self,
-							      member_name,
-							      json_node,
+							      member_child,
+							      json_child,
 							      idt + 1,
 							      str);
 		}
@@ -97,13 +101,10 @@ fwupd_codec_add_string(FwupdCodec *self, guint idt, GString *str)
 		return;
 	}
 	if (iface->add_json != NULL) {
-		g_autoptr(JsonBuilder) builder = json_builder_new();
-		g_autoptr(JsonNode) root_node = NULL;
-		json_builder_begin_object(builder);
-		iface->add_json(self, builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		root_node = json_builder_get_root(builder);
-		fwupd_codec_add_string_from_json_node(self, "", root_node, idt + 1, str);
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		g_autoptr(FwupdJsonNode) json_node = fwupd_json_node_new_object(json_obj);
+		iface->add_json(self, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_codec_add_string_from_json_node(self, "", json_node, idt + 1, str);
 		return;
 	}
 	g_critical("FwupdCodec->add_string or iface->add_json not implemented");
@@ -141,7 +142,7 @@ fwupd_codec_to_string(FwupdCodec *self)
 /**
  * fwupd_codec_from_json:
  * @self: a #FwupdCodec
- * @json_node: (not nullable): a JSON node
+ * @json_obj: (not nullable): a JSON object
  * @error: (nullable): optional return location for an error
  *
  * Converts an object that implements #FwupdCodec from a JSON object.
@@ -151,12 +152,12 @@ fwupd_codec_to_string(FwupdCodec *self)
  * Since: 2.0.0
  */
 gboolean
-fwupd_codec_from_json(FwupdCodec *self, JsonNode *json_node, GError **error)
+fwupd_codec_from_json(FwupdCodec *self, FwupdJsonObject *json_obj, GError **error)
 {
 	FwupdCodecInterface *iface;
 
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), FALSE);
-	g_return_val_if_fail(json_node != NULL, FALSE);
+	g_return_val_if_fail(json_obj != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
@@ -167,7 +168,7 @@ fwupd_codec_from_json(FwupdCodec *self, JsonNode *json_node, GError **error)
 				    "FwupdCodec->from_json not implemented");
 		return FALSE;
 	}
-	return (*iface->from_json)(self, json_node, error);
+	return (*iface->from_json)(self, json_obj, error);
 }
 
 /**
@@ -185,23 +186,29 @@ fwupd_codec_from_json(FwupdCodec *self, JsonNode *json_node, GError **error)
 gboolean
 fwupd_codec_from_json_string(FwupdCodec *self, const gchar *json, GError **error)
 {
-	g_autoptr(JsonParser) parser = json_parser_new();
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), FALSE);
 	g_return_val_if_fail(json != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!json_parser_load_from_data(parser, json, -1, error)) {
+	json_node = fwupd_json_parser_load_from_data(parser, json, -1, error);
+	if (json_node == NULL) {
 		g_prefix_error(error, "failed to load '%s': ", json);
 		return FALSE;
 	}
-	return fwupd_codec_from_json(self, json_parser_get_root(parser), error);
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
+		return FALSE;
+	return fwupd_codec_from_json(self, json_obj, error);
 }
 
 /**
  * fwupd_codec_to_json:
  * @self: a #FwupdCodec
- * @builder: (not nullable): a JSON builder
+ * @json_obj: (not nullable): a JSON builder
  * @flags: a #FwupdCodecFlags, e.g. %FWUPD_CODEC_FLAG_TRUSTED
  *
  * Converts an object that implements #FwupdCodec to a JSON builder object.
@@ -209,19 +216,19 @@ fwupd_codec_from_json_string(FwupdCodec *self, const gchar *json, GError **error
  * Since: 2.0.0
  */
 void
-fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_codec_to_json(FwupdCodec *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FwupdCodecInterface *iface;
 
 	g_return_if_fail(FWUPD_IS_CODEC(self));
-	g_return_if_fail(builder != NULL);
+	g_return_if_fail(json_obj != NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
 	if (iface->add_json == NULL) {
 		g_critical("FwupdCodec->add_json not implemented");
 		return;
 	}
-	iface->add_json(self, builder, flags);
+	iface->add_json(self, json_obj, flags);
 }
 
 /**
@@ -239,30 +246,15 @@ fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flag
 gchar *
 fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **error)
 {
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GString) data = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	json_builder_begin_object(builder);
-	fwupd_codec_to_json(self, builder, flags);
-	json_builder_end_object(builder);
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to convert to json");
-		return NULL;
-	}
-	return g_steal_pointer(&data);
+	fwupd_codec_to_json(self, json_obj, flags);
+	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&data), FALSE);
 }
 
 /**
@@ -356,7 +348,7 @@ fwupd_codec_array_from_variant(GVariant *value, GType gtype, GError **error)
  * fwupd_codec_array_to_json:
  * @array: (element-type GObject): (not nullable): array of objects that much implement `FwupdCodec`
  * @member_name: (not nullable): member name of the array
- * @builder: (not nullable): a #JsonBuilder
+ * @json_obj: (not nullable): a #FwupdJsonObject
  * @flags: a #FwupdCodecFlags, e.g. %FWUPD_CODEC_FLAG_TRUSTED
  *
  * Converts an array of objects into a #GVariant value.
@@ -366,22 +358,22 @@ fwupd_codec_array_from_variant(GVariant *value, GType gtype, GError **error)
 void
 fwupd_codec_array_to_json(GPtrArray *array,
 			  const gchar *member_name,
-			  JsonBuilder *builder,
+			  FwupdJsonObject *json_obj,
 			  FwupdCodecFlags flags)
 {
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
 	g_return_if_fail(array != NULL);
 	g_return_if_fail(member_name != NULL);
-	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(json_obj != NULL);
 
-	json_builder_set_member_name(builder, member_name);
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < array->len; i++) {
 		FwupdCodec *codec = FWUPD_CODEC(g_ptr_array_index(array, i));
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(codec, builder, flags);
-		json_builder_end_object(builder);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+		fwupd_codec_to_json(codec, json_obj_tmp, flags);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
+	fwupd_json_object_add_array(json_obj, member_name, json_arr);
 }
 
 /**
@@ -640,115 +632,113 @@ fwupd_codec_string_append_size(GString *str, guint idt, const gchar *key, guint6
 
 /**
  * fwupd_codec_json_append:
- * @builder: (not nullable): a #JsonBuilder
+ * @json_obj: (not nullable): a #FwupdJsonObject
  * @key: (not nullable): a string
  * @value: a string to append
  *
- * Appends a key and value to a JSON builder.
+ * Appends a key and value to a JSON object.
+ *
+ * Deprecated for fwupd_json_object_add_string().
  *
  * Since: 2.0.0
+ * Deprecated: 2.1.1
  */
 void
-fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *value)
+fwupd_codec_json_append(FwupdJsonObject *json_obj, const gchar *key, const gchar *value)
 {
-	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
 	if (value == NULL)
 		return;
-	json_builder_set_member_name(builder, key);
-	json_builder_add_string_value(builder, value);
+	fwupd_json_object_add_string(json_obj, key, value);
 }
 
 /**
  * fwupd_codec_json_append_int:
- * @builder: (not nullable): a #JsonBuilder
+ * @json_obj: (not nullable): a #FwupdJsonObject
  * @key: (not nullable): a string
  * @value: guint64
  *
- * Appends a key and unsigned integer to a JSON builder.
+ * Appends a key and unsigned integer to a JSON object.
+ *
+ * Deprecated for fwupd_json_object_add_integer().
  *
  * Since: 2.0.0
+ * Deprecated: 2.1.1
  */
 void
-fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)
+fwupd_codec_json_append_int(FwupdJsonObject *json_obj, const gchar *key, guint64 value)
 {
-	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
-	json_builder_set_member_name(builder, key);
-	json_builder_add_int_value(builder, value);
+	fwupd_json_object_add_integer(json_obj, key, value);
 }
 
 /**
  * fwupd_codec_json_append_bool:
- * @builder: (not nullable): a #JsonBuilder
+ * @json_obj: (not nullable): a #FwupdJsonObject
  * @key: (not nullable): a string
  * @value: boolean
  *
- * Appends a key and boolean value to a JSON builder.
+ * Appends a key and boolean value to a JSON object.
+ *
+ * Deprecated for fwupd_json_object_add_boolean().
  *
  * Since: 2.0.0
+ * Deprecated: 2.1.1
  */
 void
-fwupd_codec_json_append_bool(JsonBuilder *builder, const gchar *key, gboolean value)
+fwupd_codec_json_append_bool(FwupdJsonObject *json_obj, const gchar *key, gboolean value)
 {
-	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
-	json_builder_set_member_name(builder, key);
-	json_builder_add_boolean_value(builder, value);
+	fwupd_json_object_add_boolean(json_obj, key, value);
 }
 
 /**
  * fwupd_codec_json_append_strv:
- * @builder: (not nullable): a #JsonBuilder
+ * @json_obj: (not nullable): a #FwupdJsonObject
  * @key: (not nullable): a string
  * @value: a #GStrv
  *
- * Appends a key and string array to a JSON builder.
+ * Appends a key and string array to a JSON object.
+ *
+ * Deprecated for fwupd_json_object_add_array_strv().
  *
  * Since: 2.0.0
+ * Deprecated: 2.1.1
  */
 void
-fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
+fwupd_codec_json_append_strv(FwupdJsonObject *json_obj, const gchar *key, gchar **value)
 {
-	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
+
 	if (value == NULL)
 		return;
-	json_builder_set_member_name(builder, key);
-	json_builder_begin_array(builder);
-	for (guint i = 0; value[i] != NULL; i++)
-		json_builder_add_string_value(builder, value[i]);
-	json_builder_end_array(builder);
+	return fwupd_json_object_add_array_strv(json_obj, key, value);
 }
 
 /**
  * fwupd_codec_json_append_map:
- * @builder: (not nullable): a #JsonBuilder
+ * @json_obj: (not nullable): a #FwupdJsonObject
  * @key: (not nullable): a string
  * @value: (element-type utf8 utf8): a hash table
  *
- * Appends a key and string hash map to a JSON builder.
+ * Appends a key and string hash map to a JSON object.
+ *
+ * Deprecated for fwupd_json_object_add_object_map().
  *
  * Since: 2.0.10
+ * Deprecated: 2.1.1
  */
 void
-fwupd_codec_json_append_map(JsonBuilder *builder, const gchar *key, GHashTable *value)
+fwupd_codec_json_append_map(FwupdJsonObject *json_obj, const gchar *key, GHashTable *value)
 {
-	GHashTableIter iter;
-	gpointer hash_key, hash_value;
-
-	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(json_obj != NULL);
 	g_return_if_fail(key != NULL);
 
 	if (value == NULL)
 		return;
-	json_builder_set_member_name(builder, key);
-	json_builder_begin_object(builder);
-	g_hash_table_iter_init(&iter, value);
-	while (g_hash_table_iter_next(&iter, &hash_key, &hash_value)) {
-		fwupd_codec_json_append(builder,
-					(const gchar *)hash_key,
-					(const gchar *)hash_value);
-	}
-	json_builder_end_object(builder);
+	fwupd_json_object_add_object_map(json_obj, key, value);
 }

@@ -59,7 +59,7 @@ G_DEFINE_TYPE_EXTENDED(FuVolume,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_volume_codec_iface_init))
 
 static void
-fu_volume_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_volume_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuVolume *self = FU_VOLUME(codec);
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(self);
@@ -67,21 +67,27 @@ fu_volume_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flag
 	g_autofree gchar *partition_name = fu_volume_get_partition_name(self);
 	g_autofree gchar *partition_uuid = fu_volume_get_partition_uuid(self);
 
-	fwupd_codec_json_append_bool(builder, "IsMounted", fu_volume_is_mounted(self));
-	fwupd_codec_json_append_bool(builder, "IsEncrypted", fu_volume_is_encrypted(self));
-	fwupd_codec_json_append_int(builder, "Size", fu_volume_get_size(self));
-	fwupd_codec_json_append_int(builder, "BlockSize", fu_volume_get_block_size(self, NULL));
-	fwupd_codec_json_append(builder, "MountPoint", mount_point);
-	fwupd_codec_json_append(builder, "PartitionKind", partition_kind);
-	fwupd_codec_json_append(builder, "PartitionName", partition_name);
-	fwupd_codec_json_append_int(builder, "PartitionSize", fu_volume_get_partition_size(self));
-	fwupd_codec_json_append_int(builder,
-				    "PartitionOffset",
-				    fu_volume_get_partition_offset(self));
-	fwupd_codec_json_append_int(builder,
-				    "PartitionNumber",
-				    fu_volume_get_partition_number(self));
-	fwupd_codec_json_append(builder, "PartitionUuid", partition_uuid);
+	fwupd_json_object_add_boolean(json_obj, "IsMounted", fu_volume_is_mounted(self));
+	fwupd_json_object_add_boolean(json_obj, "IsEncrypted", fu_volume_is_encrypted(self));
+	fwupd_json_object_add_integer(json_obj, "Size", fu_volume_get_size(self));
+	fwupd_json_object_add_integer(json_obj, "BlockSize", fu_volume_get_block_size(self, NULL));
+	if (mount_point != NULL)
+		fwupd_json_object_add_string(json_obj, "MountPoint", mount_point);
+	if (partition_kind != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionKind", partition_kind);
+	if (partition_name != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionName", partition_name);
+	fwupd_json_object_add_integer(json_obj,
+				      "PartitionSize",
+				      fu_volume_get_partition_size(self));
+	fwupd_json_object_add_integer(json_obj,
+				      "PartitionOffset",
+				      fu_volume_get_partition_offset(self));
+	fwupd_json_object_add_integer(json_obj,
+				      "PartitionNumber",
+				      fu_volume_get_partition_number(self));
+	if (partition_uuid != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionUuid", partition_uuid);
 }
 
 static void

@@ -767,6 +767,30 @@ fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gcha
 }
 
 /**
+ * fwupd_json_object_add_array_strv:
+ * @self: a #FwupdJsonObject
+ * @key: (not nullable): dictionary key
+ * @value: (not nullable): value
+ *
+ * Adds a string array to the JSON object. If the node already exists the old one is replaced.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_object_add_array_strv(FwupdJsonObject *self, const gchar *key, gchar **value)
+{
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
+	g_return_if_fail(self != NULL);
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+
+	for (guint i = 0; value[i] != NULL; i++)
+		fwupd_json_array_add_string(json_arr, value[i]);
+	fwupd_json_object_add_array(self, key, json_arr);
+}
+
+/**
  * fwupd_json_object_add_integer:
  * @self: a #FwupdJsonObject
  * @key: (not nullable): dictionary key
@@ -851,6 +875,36 @@ fwupd_json_object_add_object(FwupdJsonObject *self, const gchar *key, FwupdJsonO
 
 	json_node = fwupd_json_node_new_object(json_obj);
 	fwupd_json_object_add_node(self, key, json_node);
+}
+
+/**
+ * fwupd_json_object_add_object_map:
+ * @self: a #FwupdJsonObject
+ * @key: (not nullable): dictionary key
+ * @value: (element-type utf8 utf8): a hash table
+ *
+ * Adds a  object to the JSON object.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_object_add_object_map(FwupdJsonObject *self, const gchar *key, GHashTable *value)
+{
+	GHashTableIter iter;
+	gpointer hash_key, hash_value;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+
+	g_return_if_fail(self != NULL);
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+
+	g_hash_table_iter_init(&iter, value);
+	while (g_hash_table_iter_next(&iter, &hash_key, &hash_value)) {
+		fwupd_json_object_add_string(json_obj,
+					     (const gchar *)hash_key,
+					     (const gchar *)hash_value);
+	}
+	fwupd_json_object_add_object(self, key, json_obj);
 }
 
 void

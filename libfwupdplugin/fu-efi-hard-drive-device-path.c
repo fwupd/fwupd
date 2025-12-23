@@ -67,23 +67,24 @@ fu_efi_hard_drive_device_path_export(FuFirmware *firmware,
 
 static void
 fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
-				       JsonBuilder *builder,
+				       FwupdJsonObject *json_obj,
 				       FwupdCodecFlags flags)
 {
 	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(codec);
 	g_autofree gchar *partition_signature =
 	    fwupd_guid_to_string(&self->partition_signature, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
-	fwupd_codec_json_append_int(builder, "PartitionNumber", self->partition_number);
-	fwupd_codec_json_append_int(builder, "PartitionStart", self->partition_start);
-	fwupd_codec_json_append_int(builder, "PartitionSize", self->partition_size);
-	fwupd_codec_json_append(builder, "PartitionSignature", partition_signature);
-	fwupd_codec_json_append(
-	    builder,
+	fwupd_json_object_add_integer(json_obj, "PartitionNumber", self->partition_number);
+	fwupd_json_object_add_integer(json_obj, "PartitionStart", self->partition_start);
+	fwupd_json_object_add_integer(json_obj, "PartitionSize", self->partition_size);
+	if (partition_signature != NULL)
+		fwupd_json_object_add_string(json_obj, "PartitionSignature", partition_signature);
+	fwupd_json_object_add_string(
+	    json_obj,
 	    "PartitionFormat",
 	    fu_efi_hard_drive_device_path_partition_format_to_string(self->partition_format));
-	fwupd_codec_json_append(
-	    builder,
+	fwupd_json_object_add_string(
+	    json_obj,
 	    "SignatureType",
 	    fu_efi_hard_drive_device_path_signature_type_to_string(self->signature_type));
 }
