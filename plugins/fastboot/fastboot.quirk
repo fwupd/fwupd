@@ -44,3 +44,4 @@ FastbootBlockSize = 16384
 FastbootOperationDelay = 0
 Summary = Rolling RW101 Modem (fastboot)
 CounterpartGuid = USB\VID_33F8&PID_0301
+CounterpartGuid = USB\VID_33F8&PID_0302
