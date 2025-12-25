@@ -219,3 +219,10 @@ GType = FuMmFastbootDevice
 Summary = Rolling RW101-GL Module
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_33F8&PID_D00D
+
+# Rolling RW101-CAT12
+[USB\VID_33F8&PID_0302]
+GType = FuMmFastbootDevice
+Summary = Rolling RW101-GL Module
+Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
+CounterpartGuid = USB\VID_33F8&PID_D00D
