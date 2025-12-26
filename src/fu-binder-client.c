@@ -387,6 +387,49 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, Fwupd
 }
 
 static gboolean
+fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devs, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* filter */
+		if (!fwupd_device_match_flags(dev,
+					      self->filter_device_include,
+					      self->filter_device_exclude))
+			continue;
+
+		/* add all releases that could be applied */
+		rels = fu_util_get_upgrades_call(self, fwupd_device_get_id(dev), &error_local);
+		if (rels == NULL) {
+			g_debug("not adding releases to device: %s", error_local->message);
+		} else {
+			for (guint j = 0; j < rels->len; j++) {
+				FwupdRelease *rel = g_ptr_array_index(rels, j);
+				if (!fwupd_release_match_flags(rel,
+							       self->filter_release_include,
+							       self->filter_release_exclude))
+					continue;
+				fwupd_device_add_release(dev, rel);
+			}
+		}
+
+		/* add to builder */
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(self->console, builder, error);
+}
+
+static gboolean
 fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -394,6 +437,10 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 
 	if (devs == NULL)
 		return FALSE;
+
+	/* not for human consumption */
+	if (self->as_json)
+		return fu_util_get_devices_as_json(self, devs, error);
 
 	/* print */
 	if (devs->len > 0)
