@@ -235,7 +235,6 @@ fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice *self,
 					  gsize firmware_size,
 					  GError **error)
 {
-	// g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuStructFocaltouchBinLengthReq) st = fu_struct_focaltouch_bin_length_req_new();
 	GByteArray *st_array = NULL;
 	guint8 rbuf[64] = {0x0};
