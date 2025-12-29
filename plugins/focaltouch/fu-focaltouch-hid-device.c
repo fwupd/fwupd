@@ -30,19 +30,21 @@ fu_focaltouch_hid_device_detach(FuDevice *device, FuProgress *progress, GError *
 static gboolean
 fu_focaltouch_hid_device_probe(FuDevice *device, GError **error)
 {
-	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
+	const gchar *subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
+
+	/* check is valid - handle NULL subsystem */
+	if (subsystem == NULL || g_strcmp0(subsystem, "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    subsystem != NULL ? subsystem : "(null)");
 		return FALSE;
 	}
+
 	/* success */
 	return TRUE;
 }
-
 static guint8
 fu_focaltouch_hid_device_generate_checksum(const guint8 *buf, gsize bufsz)
 {
@@ -102,20 +104,20 @@ fu_focaltouch_hid_device_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cm
 
 	if (bufsz < 5) {
 		g_set_error(error,
-			FWUPD_ERROR,
-			FWUPD_ERROR_INVALID_DATA,
-			"buffer too small for header, got %" G_GSIZE_FORMAT,
-			bufsz);
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "buffer too small for header, got %" G_GSIZE_FORMAT,
+			    bufsz);
 		return FALSE;
 	}
 
 	if (buf[3] > bufsz || buf[3] < 5) {
 		g_set_error(error,
-			FWUPD_ERROR,
-			FWUPD_ERROR_INVALID_DATA,
-			"invalid packet length in header: 0x%02x (bufsz=%" G_GSIZE_FORMAT ")",
-			buf[3],
-			bufsz);
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid packet length in header: 0x%02x (bufsz=%" G_GSIZE_FORMAT ")",
+			    buf[3],
+			    bufsz);
 		return FALSE;
 	}
 	/* check crc */
@@ -153,19 +155,19 @@ fu_focaltouch_hid_device_check_crc(const guint8 *buf, gsize bufsz, GError **erro
 
 	if (bufsz < 4) {
 		g_set_error(error,
-			FWUPD_ERROR,
-			FWUPD_ERROR_INVALID_DATA,
-			"buffer too small for header, got %" G_GSIZE_FORMAT,
-			bufsz);
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "buffer too small for header, got %" G_GSIZE_FORMAT,
+			    bufsz);
 		return FALSE;
 	}
 	if (buf[3] >= bufsz || buf[3] == 0) {
 		g_set_error(error,
-			FWUPD_ERROR,
-			FWUPD_ERROR_INVALID_DATA,
-			"invalid checksum offset in header: 0x%02x (bufsz=%" G_GSIZE_FORMAT ")",
-			buf[3],
-			bufsz);
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid checksum offset in header: 0x%02x (bufsz=%" G_GSIZE_FORMAT ")",
+			    buf[3],
+			    bufsz);
 		return FALSE;
 	}
 	/* check crc */
@@ -229,35 +231,30 @@ fu_focaltouch_hid_device_read_reg(FuFocaltouchHidDevice *self,
 
 /* send bin length */
 static gboolean
-fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice* self,
-	gsize firmware_size,
-	GError** error)
+fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice *self,
+					  gsize firmware_size,
+					  GError **error)
 {
+	// g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuStructFocaltouchBinLengthReq) st = fu_struct_focaltouch_bin_length_req_new();
 	GByteArray *st_array = NULL;
-	guint8 rbuf[64] = { 0x0 };
+	guint8 rbuf[64] = {0x0};
 
 	fu_struct_focaltouch_bin_length_req_set_cmd(st, FU_FOCALTOUCH_CMD_WRITE_REGISTER);
 	fu_struct_focaltouch_bin_length_req_set_reg(st, FU_FOCALTOUCH_CMD_BIN_LENGTH);
+	fu_struct_focaltouch_bin_length_req_set_size(st, firmware_size);
 
-	fu_struct_focaltouch_bin_length_req_set_size_h(st, (firmware_size >> 16) & 0xFF);
-	fu_struct_focaltouch_bin_length_req_set_size_m(st, (firmware_size >> 8) & 0xFF);
-	fu_struct_focaltouch_bin_length_req_set_size_l(st, firmware_size & 0xFF);
+	st_array = (GByteArray *)st;
 
-	st_array =(GByteArray *)st;
-	if (!fu_focaltouch_hid_device_io(self,
-		st_array->data,
-		st_array->len,
-		rbuf, 6, error)) {
+	if (!fu_focaltouch_hid_device_io(self, st_array->data, st_array->len, rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to write bin length: ");
 		return FALSE;
 	}
 
-
 	return fu_focaltouch_hid_device_check_cmd_crc(rbuf,
-		sizeof(rbuf),
-		FU_FOCALTOUCH_CMD_ACK,
-		error);
+						      sizeof(rbuf),
+						      FU_FOCALTOUCH_CMD_ACK,
+						      error);
 }
 
 /* enter upgrade mode */
@@ -976,23 +973,24 @@ fu_focaltouch_hid_device_set_quirk_kv(FuDevice *device,
 	FuFocaltouchHidDevice *self = FU_FOCALTOUCH_HID_DEVICE(device);
 	guint64 value_tmp;
 
-	if (g_strcmp0(key, "VerifyId1") == 0) {
+	if (g_strcmp0(key, "FocalTouchVerifyId1") == 0) {
 		if (!fu_strtoull(value, &value_tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error))
 			return FALSE;
+
 		self->verify_id1 = (guint)value_tmp;
 		return TRUE;
 	}
 
-	if (g_strcmp0(key, "VerifyId2") == 0) {
+	if (g_strcmp0(key, "FocalTouchVerifyId2") == 0) {
 		if (!fu_strtoull(value, &value_tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error))
 			return FALSE;
 		self->verify_id2 = (guint)value_tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"quirk key not supported");
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 static void
@@ -1003,7 +1001,7 @@ fu_focaltouch_hid_device_init(FuFocaltouchHidDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_FOCALTOUCH_FIRMWARE);
 	fu_device_set_summary(FU_DEVICE(self), "Touch Device");
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
-	fu_device_add_protocol(FU_DEVICE(self), "unknown");
+	fu_device_add_protocol(FU_DEVICE(self), "tw.com.focal.tp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);

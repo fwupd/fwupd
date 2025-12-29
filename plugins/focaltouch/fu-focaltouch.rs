@@ -24,9 +24,7 @@ enum FuFocaltouchCmd {
 struct FuStructFocaltouchBinLengthReq {
     cmd: u8,
     reg: u8,
-    size_h: u8, // High byte of size
-    size_m: u8, // Middle byte of size
-    size_l: u8, // Low byte of size
+    size: u24be,	// size
 }
 
 #[derive(Parse, Getters)] 

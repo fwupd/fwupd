@@ -2,17 +2,17 @@
 Plugin = focaltouch
 GType = FuFocaltouchHidDevice
 Flags = enforce-requires
-VerifyId1 = 3c
-VerifyId2 = 83
+FocalTouchVerifyId1 = 3c
+FocalTouchVerifyId2 = 83
 [HIDRAW\VEN_2808&DEV_3002]
 Plugin = focaltouch
 GType = FuFocaltouchHidDevice
 Flags = enforce-requires
-VerifyId1 = 58
-VerifyId2 = 22
+FocalTouchVerifyId1 = 58
+FocalTouchVerifyId2 = 22
 [HIDRAW\VEN_2808&DEV_0301]
 Plugin = focaltouch
 GType = FuFocaltouchHidDevice
 Flags = enforce-requires
-VerifyId1 = 54
-VerifyId2 = 56
+FocalTouchVerifyId1 = 54
+FocalTouchVerifyId2 = 56

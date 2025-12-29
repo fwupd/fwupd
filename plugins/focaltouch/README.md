@@ -14,7 +14,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* `unknown`
+* `tw.com.focal.tp`
 
 ## GUID Generation
 
@@ -51,7 +51,7 @@ This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `1.8.6`.
+This plugin has been available since fwupd version `2.1.1`.
 
 ## Owners
 
