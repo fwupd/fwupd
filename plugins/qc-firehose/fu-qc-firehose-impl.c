@@ -749,6 +749,10 @@ fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error)
 		}
 	}
 
+	/* ensure there are no logs left to prevent device release failure */
+	if (!fu_qc_firehose_impl_read_xml(self, 500, &helper, &error_local))
+		g_debug("ignoring: %s", error_local->message);
+
 	/* success */
 	return TRUE;
 }
