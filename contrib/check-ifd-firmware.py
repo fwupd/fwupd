@@ -16,33 +16,34 @@ import argparse
 from collections import defaultdict
 from termcolor import colored
 
-
+FWUPDTOOL = os.environ.get("FWUPDTOOL", "./src/fwupdtool")
 def _scan_file(fn: str) -> Dict[str, int]:
     new_map: Dict[str, int] = defaultdict(int)
     try:
         print(f"loading {fn}…")
         args = [
-            "./src/fwupdtool",
+            FWUPDTOOL,
             "firmware-parse",
             fn,
             "ifd-firmware",
             "--json",
             "--no-timestamp",
         ]
-        p = subprocess.run(args, check=True, capture_output=True)
+        p = subprocess.run(args, check=True, capture_output=True, text = True)
     except subprocess.CalledProcessError as e:
         print(f"{' '.join(args)}: {e}")
     else:
-        for line in p.stdout.decode().split("\n"):
+        for line in p.stdout.splitlines():
+            if not line.strip():
+                continue
             new_map["Lines"] += 1
             if line.find("gtype=") == -1:
                 continue
             sections = line.split('"')
-            if not sections[1].startswith("Fu"):
-                continue
-            new_map[sections[1]] += 1
-        for line in p.stderr.decode().split("\n"):
-            if not line:
+            if len(sections) > 1 and sections[1].startswith("Fu"):
+                new_map[sections[1]] += 1
+        for line in p.stderr.splitlines():
+            if not line.strip():
                 continue
             new_map["WarningLines"] += 1
             print(line)
@@ -57,7 +58,7 @@ def _scan_dir(path: str, force_save: bool = False) -> bool:
 
     # support folders or paths
     if os.path.isdir(path):
-        for fn in glob.glob(f"{path}/*.bin"):
+        for fn in glob.glob(os.path.join(path, "*.bin")):
             results[fn] = _scan_file(fn)
     else:
         results[path] = _scan_file(path)
@@ -66,12 +67,12 @@ def _scan_dir(path: str, force_save: bool = False) -> bool:
     print(f"    {os.path.basename(sys.argv[0])}:")
     for fn, new_map in results.items():
         try:
-            with open(f"{fn}.json", "rb") as f:
-                old_map = json.loads(f.read().decode())
+            with open(f"{fn}.json", "r") as f:
+                old_map = json.load(f)
         except FileNotFoundError:
             old_map = {}
         print(f"    {fn}")
-        for key in sorted(set(list(old_map.keys()) + list(new_map.keys()))):
+        for key in sorted(set(old_map) | set(new_map)):
             cnt_old = old_map.get(key, 0)
             cnt_new = new_map.get(key, 0)
             if cnt_new > cnt_old:
@@ -88,9 +89,10 @@ def _scan_dir(path: str, force_save: bool = False) -> bool:
     # save new results if all better
     if (needs_save and all_okay) or force_save:
         for fn, new_map in results.items():
-            with open(f"{fn}.json", "wb") as f:
-                f.write(json.dumps(new_map, sort_keys=True, indent=4).encode())
-
+            with open(f"{fn}.json", "w") as f:
+                json.dump(new_map, f, sort_keys= True, indent=4)
+                f.write("\n")
+    
     return all_okay
 
 
