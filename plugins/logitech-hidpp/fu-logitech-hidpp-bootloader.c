@@ -86,21 +86,20 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 			return NULL;
 		payload->addr = addr;
 		payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
-
-		rec_type = fu_logitech_hidpp_buffer_read_uint8(tmp + 0x07);
+		if (!fu_firmware_strparse_uint8_safe(tmp, linesz, 0x07, &rec_type, error))
+			return NULL;
 
 		switch (rec_type) {
-		case 0x00: /* data */
+		case FU_IHEX_FIRMWARE_RECORD_TYPE_DATA:
 			break;
-		case 0x01: /* EOF */
+		case FU_IHEX_FIRMWARE_RECORD_TYPE_EOF:
 			exit = TRUE;
 			break;
-		case 0x03: /* start segment address */
-			/* this is used to specify the start address,
-			it is doesn't matter in this context so we can
-			safely ignore it */
+		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT:
+			/* it is doesn't matter in this context so we can
+			 * safely ignore it */
 			continue;
-		case 0x04: /* extended linear address */
+		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR:
 			if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x09, &offset, error))
 				return NULL;
 			if (offset != 0x0000) {
@@ -112,13 +111,11 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 				return NULL;
 			}
 			continue;
-		case 0x05: /* start linear address */
-			/* this is used to specify the start address,
-			it is doesn't matter in this context so we can
-			safely ignore it */
+		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR:
+			/* it doesn't matter in this context so we can
+			 * safely ignore it */
 			continue;
-		case 0xFD: /* custom - vendor */
-			/* record type of 0xFD indicates signature data */
+		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
 			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE;
 			break;
 		default:
