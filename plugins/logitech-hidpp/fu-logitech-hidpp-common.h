@@ -26,10 +26,5 @@
 
 #define FU_LOGITECH_HIDPP_VERSION_BLE 0xFE
 
-guint8
-fu_logitech_hidpp_buffer_read_uint8(const gchar *str);
-guint16
-fu_logitech_hidpp_buffer_read_uint16(const gchar *str);
-
 gchar *
 fu_logitech_hidpp_format_version(const gchar *name, guint8 major, guint8 minor, guint16 build);
