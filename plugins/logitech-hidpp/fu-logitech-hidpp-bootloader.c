@@ -72,7 +72,8 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 			continue;
 
 		payload = fu_logitech_hidpp_bootloader_request_new();
-		payload->len = fu_logitech_hidpp_buffer_read_uint8(tmp + 0x01);
+		if (!fu_firmware_strparse_uint8_safe(tmp, linesz, 0x01, &payload->len, error))
+			return NULL;
 		if (payload->len > 28) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -134,16 +135,16 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 
 		/* read the data, but skip the checksum byte */
 		for (guint j = 0; j < payload->len; j++) {
-			const gchar *ptr = tmp + 0x09 + (j * 2);
-			if (ptr[0] == '\0') {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "firmware data invalid: expected %u bytes",
-					    payload->len);
+			if (!fu_firmware_strparse_uint8_safe(tmp,
+							     linesz,
+							     0x09 + (j * 2),
+							     &payload->data[j],
+							     error)) {
+				g_prefix_error(error,
+					       "expected %u bytes: ",
+					       payload->len);
 				return NULL;
 			}
-			payload->data[j] = fu_logitech_hidpp_buffer_read_uint8(ptr);
 		}
 
 		/* no need to bound check signature addresses */
@@ -226,9 +227,9 @@ fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GErr
 static gboolean
 fu_logitech_hidpp_bootloader_ensure_bl_version(FuLogitechHidppBootloader *self, GError **error)
 {
-	guint16 build;
-	guint8 major;
-	guint8 minor;
+	guint16 build = 0;
+	guint8 major = 0;
+	guint8 minor = 0;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuLogitechHidppBootloaderRequest) req =
 	    fu_logitech_hidpp_bootloader_request_new();
@@ -242,10 +243,16 @@ fu_logitech_hidpp_bootloader_ensure_bl_version(FuLogitechHidppBootloader *self, 
 
 	/* BOTxx.yy_Bzzzz
 	 * 012345678901234 */
-	build = (guint16)fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 10) << 8;
-	build += fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 12);
-	major = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 3);
-	minor = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 6);
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 3, &major, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 6, &minor, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint16_safe((const gchar *)req->data,
+					      req->len,
+					      10,
+					      &build,
+					      error))
+		return FALSE;
 	version = fu_logitech_hidpp_format_version("BOT", major, minor, build);
 	if (version == NULL) {
 		g_set_error_literal(error,
