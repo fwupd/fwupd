@@ -228,9 +228,9 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 						   GError **error)
 {
 	FuLogitechHidppBootloader *self = FU_LOGITECH_HIDPP_BOOTLOADER(device);
+	GPtrArray *records;
 	const FuLogitechHidppBootloaderRequest *payload;
 	guint16 addr;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
 
 	/* progress */
@@ -247,11 +247,6 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 6, "reset-vector");
 	}
 
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
 	/* erase firmware pages up to the bootloader */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 	for (addr = fu_logitech_hidpp_bootloader_get_addr_lo(self);
@@ -263,7 +258,8 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* transfer payload */
-	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, fw, error);
+	records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
+	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, records, error);
 	if (reqs == NULL)
 		return FALSE;
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);

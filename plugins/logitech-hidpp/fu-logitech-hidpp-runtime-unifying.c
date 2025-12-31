@@ -152,6 +152,19 @@ fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 	return FALSE;
 }
 
+static FuFirmware *
+fu_logitech_hidpp_runtime_unifying_prepare_firmware(FuDevice *device,
+						    GInputStream *stream,
+						    FuProgress *progress,
+						    FuFirmwareParseFlags flags,
+						    GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
+	if (!fu_firmware_tokenize(firmware, stream, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
 static void
 fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *device, FuProgress *progress)
 {
@@ -170,6 +183,7 @@ fu_logitech_hidpp_runtime_unifying_class_init(FuLogitechHidppRuntimeUnifyingClas
 
 	device_class->detach = fu_logitech_hidpp_runtime_unifying_detach;
 	device_class->setup = fu_logitech_hidpp_runtime_unifying_setup;
+	device_class->prepare_firmware = fu_logitech_hidpp_runtime_unifying_prepare_firmware;
 	device_class->set_progress = fu_logitech_hidpp_runtime_unifying_set_progress;
 }
 

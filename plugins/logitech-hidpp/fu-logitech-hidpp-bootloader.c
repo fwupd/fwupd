@@ -47,33 +47,21 @@ fu_logitech_hidpp_bootloader_request_new(void)
 
 GPtrArray *
 fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
-					    GBytes *fw,
+					    GPtrArray *records,
 					    GError **error)
 {
-	const gchar *tmp;
-	g_auto(GStrv) lines = NULL;
-	g_autoptr(GPtrArray) reqs = NULL;
 	guint32 last_addr = 0;
+	g_autoptr(GPtrArray) reqs = g_ptr_array_new_with_free_func(g_free);
 
-	reqs = g_ptr_array_new_with_free_func(g_free);
-	tmp = g_bytes_get_data(fw, NULL);
-	lines = g_strsplit_set(tmp, "\n\r", -1);
-	for (guint i = 0; lines[i] != NULL; i++) {
+	for (guint i = 0; i < records->len; i++) {
+		FuIhexFirmwareRecord *rcd = g_ptr_array_index(records, i);
 		g_autoptr(FuLogitechHidppBootloaderRequest) payload = NULL;
-		guint8 rec_type = 0x00;
-		guint16 offset = 0x0000;
-		guint16 addr = 0x0;
-		gboolean exit = FALSE;
-		gsize linesz = strlen(lines[i]);
 
-		/* skip empty lines */
-		tmp = lines[i];
-		if (linesz < 5)
-			continue;
+		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EOF)
+			break;
 
 		payload = fu_logitech_hidpp_bootloader_request_new();
-		if (!fu_firmware_strparse_uint8_safe(tmp, linesz, 0x01, &payload->len, error))
-			return NULL;
+		payload->len = rcd->byte_cnt;
 		if (payload->len > 28) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -82,66 +70,23 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 				    payload->len);
 			return NULL;
 		}
-		if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x03, &addr, error))
-			return NULL;
-		payload->addr = addr;
-		payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
-		if (!fu_firmware_strparse_uint8_safe(tmp, linesz, 0x07, &rec_type, error))
-			return NULL;
-
-		switch (rec_type) {
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_DATA:
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_EOF:
-			exit = TRUE;
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT:
-			/* it is doesn't matter in this context so we can
-			 * safely ignore it */
-			continue;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR:
-			if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x09, &offset, error))
-				return NULL;
-			if (offset != 0x0000) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_DATA,
-						    "extended linear addresses with offset "
-						    "different from 0 are not supported");
-				return NULL;
-			}
-			continue;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR:
-			/* it doesn't matter in this context so we can
-			 * safely ignore it */
-			continue;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
+		payload->addr = rcd->addr;
+		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE)
 			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE;
-			break;
-		default:
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "intel hex file record type %02x not supported",
-				    rec_type);
-			return NULL;
-		}
-
-		if (exit)
-			break;
+		else
+			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
 
 		/* read the data, but skip the checksum byte */
-		for (guint j = 0; j < payload->len; j++) {
-			if (!fu_firmware_strparse_uint8_safe(tmp,
-							     linesz,
-							     0x09 + (j * 2),
-							     &payload->data[j],
-							     error)) {
-				g_prefix_error(error,
-					       "expected %u bytes: ",
-					       payload->len);
-				return NULL;
-			}
+		if (!fu_memcpy_safe(payload->data,
+				    sizeof(payload->data),
+				    0x0,
+				    rcd->data->data,
+				    rcd->data->len,
+				    0x0,
+				    rcd->data->len,
+				    error)) {
+			g_prefix_error_literal(error, "failed to copy data: ");
+			return NULL;
 		}
 
 		/* no need to bound check signature addresses */
