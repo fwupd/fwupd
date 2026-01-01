@@ -243,6 +243,7 @@ fwupd_json_parser_valid_func(void)
 	    "\"one\"",
 	    "\"one\\ttwo\"",
 	    "\"two\\nthree\"",
+	    "\"four\\\"five\"",
 	    "[]",
 	    "[\"one\", \"two\\n\", [{\"three\": [true]}]]",
 	};
