@@ -339,6 +339,8 @@ fwupd_json_node_append_string_safe(FwupdJsonNode *self, GString *str)
 			g_string_append(str, "\\n");
 		} else if (tmp[i] == '\t') {
 			g_string_append(str, "\\t");
+		} else if (tmp[i] == '\"') {
+			g_string_append(str, "\\\"");
 		} else {
 			g_string_append_c(str, tmp[i]);
 		}
