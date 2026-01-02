@@ -224,8 +224,33 @@ fu_uefi_cod_device_get_filename(FuUefiCapsuleDevice *self, GError **error)
 		return fu_uefi_cod_device_get_indexed_filename(self, error);
 
 	/* Dell Inc. */
-	if (fu_device_has_private_flag(FU_DEVICE(self),
-				       FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY)) {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	gsize read_data_sz = 0;
+	g_autofree guint8 *read_data = NULL;
+
+	fu_efivars_get_data(efivars,
+			    FU_EFIVARS_GUID_FLASH_CAPABILITY,
+			    "DellFwuCapSupported",
+			    &read_data,
+			    &read_data_sz,
+			    NULL,
+			    error);
+
+	/* check if COD supported */
+	if (data[0] == 1) {
+		const guint8 write_data = 1;
+
+		/* write to EFI variable to boot from recovery partition */
+		fu_efivars_set_data(efivars,
+				    FU_EFIVARS_GUID_FLASH_CAPABILITY,
+				    "DellFwuCap",
+				    &write_data,
+				    sizeof(write_data),
+				    0x0,
+				    error);
+
+		/* return .rcv location */
 		return g_build_filename(esp_path,
 					"EFI",
 					"dell",
