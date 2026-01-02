@@ -500,7 +500,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("pixart-rf"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus"),
-        Fuzzer("synaptics-cape"),
+        Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
         Fuzzer("uf2"),
