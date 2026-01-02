@@ -152,6 +152,18 @@ class TestCTokenize(unittest.TestCase):
                 "0x123",
             ],
         )
+        self._compare_tokens(
+            'g_string_append(str, "\\"");',
+            [
+                "g_string_append",
+                "(",
+                "str",
+                ",",
+                '"\\""',
+                ")",
+                ";",
+            ],
+        )
 
     def test_token_list(self):
 
