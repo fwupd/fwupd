@@ -35,68 +35,86 @@ G_DEFINE_TYPE_EXTENDED(FuUsbEndpoint,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_endpoint_codec_iface_init));
 
 static gboolean
-fu_usb_endpoint_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_usb_endpoint_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbEndpoint *self = FU_USB_ENDPOINT(codec);
-	JsonObject *json_object;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_node);
+	gint64 tmpi = 0;
 
 	/* optional properties */
-	self->endpoint_descriptor.bDescriptorType =
-	    json_object_get_int_member_with_default(json_object, "DescriptorType", 0x0);
-	self->endpoint_descriptor.bEndpointAddress =
-	    json_object_get_int_member_with_default(json_object, "EndpointAddress", 0x0);
-	self->endpoint_descriptor.bRefresh =
-	    json_object_get_int_member_with_default(json_object, "Refresh", 0x0);
-	self->endpoint_descriptor.bInterval =
-	    json_object_get_int_member_with_default(json_object, "Interval", 0x0);
-	self->endpoint_descriptor.bSynchAddress =
-	    json_object_get_int_member_with_default(json_object, "SynchAddress", 0x0);
-	self->endpoint_descriptor.wMaxPacketSize =
-	    json_object_get_int_member_with_default(json_object, "MaxPacketSize", 0x0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"DescriptorType",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->endpoint_descriptor.bDescriptorType = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"EndpointAddress",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->endpoint_descriptor.bEndpointAddress = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Refresh", &tmpi, 0x0, error))
+		return FALSE;
+	self->endpoint_descriptor.bRefresh = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Interval", &tmpi, 0x0, error))
+		return FALSE;
+	self->endpoint_descriptor.bInterval = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"SynchAddress",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->endpoint_descriptor.bSynchAddress = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"MaxPacketSize",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->endpoint_descriptor.wMaxPacketSize = tmpi;
 
 	/* success */
 	return TRUE;
 }
 
 static void
-fu_usb_endpoint_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_endpoint_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUsbEndpoint *self = FU_USB_ENDPOINT(codec);
 
 	/* optional properties */
 	if (self->endpoint_descriptor.bDescriptorType != 0) {
-		json_builder_set_member_name(builder, "DescriptorType");
-		json_builder_add_int_value(builder, self->endpoint_descriptor.bDescriptorType);
+		fwupd_json_object_add_integer(json_obj,
+					      "DescriptorType",
+					      self->endpoint_descriptor.bDescriptorType);
 	}
 	if (self->endpoint_descriptor.bEndpointAddress != 0) {
-		json_builder_set_member_name(builder, "EndpointAddress");
-		json_builder_add_int_value(builder, self->endpoint_descriptor.bEndpointAddress);
+		fwupd_json_object_add_integer(json_obj,
+					      "EndpointAddress",
+					      self->endpoint_descriptor.bEndpointAddress);
 	}
 	if (self->endpoint_descriptor.bRefresh != 0) {
-		json_builder_set_member_name(builder, "Refresh");
-		json_builder_add_int_value(builder, self->endpoint_descriptor.bRefresh);
+		fwupd_json_object_add_integer(json_obj,
+					      "Refresh",
+					      self->endpoint_descriptor.bRefresh);
 	}
 	if (self->endpoint_descriptor.bInterval != 0) {
-		json_builder_set_member_name(builder, "Interval");
-		json_builder_add_int_value(builder, self->endpoint_descriptor.bInterval);
+		fwupd_json_object_add_integer(json_obj,
+					      "Interval",
+					      self->endpoint_descriptor.bInterval);
 	}
 	if (self->endpoint_descriptor.bSynchAddress != 0) {
-		json_builder_set_member_name(builder, "SynchAddress");
-		json_builder_add_int_value(builder, self->endpoint_descriptor.bSynchAddress);
+		fwupd_json_object_add_integer(json_obj,
+					      "SynchAddress",
+					      self->endpoint_descriptor.bSynchAddress);
 	}
 	if (self->endpoint_descriptor.wMaxPacketSize != 0) {
-		json_builder_set_member_name(builder, "MaxPacketSize");
-		json_builder_add_int_value(builder, self->endpoint_descriptor.wMaxPacketSize);
+		fwupd_json_object_add_integer(json_obj,
+					      "MaxPacketSize",
+					      self->endpoint_descriptor.wMaxPacketSize);
 	}
 }
 

@@ -1079,10 +1079,12 @@ LIBFWUPD_2.1.1 {
     fwupd_json_node_to_string;
     fwupd_json_node_unref;
     fwupd_json_object_add_array;
+    fwupd_json_object_add_array_strv;
     fwupd_json_object_add_boolean;
     fwupd_json_object_add_integer;
     fwupd_json_object_add_node;
     fwupd_json_object_add_object;
+    fwupd_json_object_add_object_map;
     fwupd_json_object_add_raw;
     fwupd_json_object_add_string;
     fwupd_json_object_clear;

@@ -843,47 +843,48 @@ fu_devlink_device_cleanup(FuDevice *device,
 }
 
 static void
-fu_devlink_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* add device type identifier */
-	fwupd_codec_json_append(builder, "GType", "FuDevlinkDevice");
+	fwupd_json_object_add_string(json_obj, "GType", "FuDevlinkDevice");
 
 	/* add devlink-specific properties for regular devices */
-	fwupd_codec_json_append(builder, "BusName", self->bus_name);
-	fwupd_codec_json_append(builder, "DevName", self->dev_name);
+	if (self->bus_name != NULL)
+		fwupd_json_object_add_string(json_obj, "BusName", self->bus_name);
+	if (self->dev_name != NULL)
+		fwupd_json_object_add_string(json_obj, "DevName", self->dev_name);
 
 	/* serialize recorded events */
 	if (events->len > 0) {
-		json_builder_set_member_name(builder, "Events");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
-
-			json_builder_begin_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    builder,
+					    json_obj_tmp,
 					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
 							       : flags);
-			json_builder_end_object(builder);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "Events", json_arr);
 	}
 }
 
 static gboolean
-fu_devlink_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 	const gchar *bus_name;
 	const gchar *dev_name;
 	g_autofree gchar *device_id = NULL;
+	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	/* devlink-specific properties */
-	bus_name = json_object_get_string_member_with_default(json_object, "BusName", NULL);
-	dev_name = json_object_get_string_member_with_default(json_object, "DevName", NULL);
+	bus_name = fwupd_json_object_get_string(json_obj, "BusName", NULL);
+	dev_name = fwupd_json_object_get_string(json_obj, "DevName", NULL);
 
 	if (bus_name == NULL || dev_name == NULL) {
 		g_set_error_literal(error,
@@ -902,14 +903,16 @@ fu_devlink_device_from_json(FuDevice *device, JsonObject *json_object, GError **
 	fu_device_set_backend_id(device, device_id);
 
 	/* array of events */
-	if (json_object_has_member(json_object, "Events")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "Events");
-
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
+	if (json_array_events != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
 			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), node_tmp, error))
+			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
 				return FALSE;
 			fu_device_add_event(device, event);
 		}

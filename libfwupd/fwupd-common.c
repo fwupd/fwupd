@@ -20,7 +20,6 @@
 #include <sys/mman.h>
 #endif
 
-#include <json-glib/json-glib.h>
 #include <string.h>
 
 /**
