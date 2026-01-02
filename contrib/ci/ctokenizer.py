@@ -10,6 +10,7 @@
 from typing import Optional
 from enum import Enum
 from fnmatch import fnmatch
+import sys
 import copy
 
 
@@ -404,6 +405,8 @@ class Tokenizer:
                 tokens_acc.clear()
                 depth += 1
             elif token.data == "}":
+                if not stack:
+                    raise ValueError(f"unequal nesting on line {token.linecnt}")
                 node_parent = stack.pop()
                 node_parent.tokens.extend(tokens_acc)
                 node_parent.linecnt_end = token.linecnt
@@ -441,3 +444,12 @@ class Tokenizer:
         if not self._nodes:
             self._ensure_nodes()
         return self._nodes
+
+
+if __name__ == "__main__":
+
+    for fn in sys.argv[1:]:
+        with open(fn, "rb") as f:
+            tok = Tokenizer(f.read().decode())
+            print(tok.tokens)
+            print(tok.nodes)
