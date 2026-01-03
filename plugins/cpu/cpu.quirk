@@ -1,8 +1,85 @@
-# Intel Atom Bay Trail [Silvermont]
-[CPUID\PRO_0&FAM_06&MOD_37]
-PciBcrAddr = 0x0
+# values from https://elixir.bootlin.com/linux/v6.18.1/source/arch/x86/include/asm/intel-family.h
 
-# affected by Gather Data Sampling bug
+[CPUID\PRO_0&FAM_05&MOD_02]
+CpuFamily = intel-pentium
+[CPUID\PRO_0&FAM_05&MOD_04]
+CpuFamily = intel-pentium-mmx
+[CPUID\PRO_0&FAM_05&MOD_09]
+CpuFamily = intel-quark-x1000
+
+[CPUID\PRO_0&FAM_06&MOD_01]
+CpuFamily = intel-pentium-pro
+
+[CPUID\PRO_0&FAM_06&MOD_03]
+CpuFamily = intel-pentium2-klamath
+[CPUID\PRO_0&FAM_06&MOD_05]
+CpuFamily = intel-pentium3-deschutes
+[CPUID\PRO_0&FAM_06&MOD_0B]
+CpuFamily = intel-pentium3-tualatin
+[CPUID\PRO_0&FAM_06&MOD_0D]
+CpuFamily = intel-pentium3-m-dothan
+
+[CPUID\PRO_0&FAM_06&MOD_0E]
+CpuFamily = intel-core-yonah
+
+[CPUID\PRO_0&FAM_06&MOD_0F]
+CpuFamily = intel-core2-merom
+[CPUID\PRO_0&FAM_06&MOD_16]
+CpuFamily = intel-core2-merom
+[CPUID\PRO_0&FAM_06&MOD_17]
+CpuFamily = intel-core2-penryn
+[CPUID\PRO_0&FAM_06&MOD_1D]
+CpuFamily = intel-core2-dunnington
+
+[CPUID\PRO_0&FAM_06&MOD_1E]
+CpuFamily = intel-nehalem
+[CPUID\PRO_0&FAM_06&MOD_1F]
+CpuFamily = intel-nehalem
+[CPUID\PRO_0&FAM_06&MOD_1A]
+CpuFamily = intel-nehalem
+[CPUID\PRO_0&FAM_06&MOD_2E]
+CpuFamily = intel-nehalem
+
+[CPUID\PRO_0&FAM_06&MOD_25]
+CpuFamily = intel-westmere
+[CPUID\PRO_0&FAM_06&MOD_2C]
+CpuFamily = intel-westmere
+[CPUID\PRO_0&FAM_06&MOD_2F]
+CpuFamily = intel-westmere
+
+[CPUID\PRO_0&FAM_06&MOD_2A]
+CpuFamily = intel-sandybridge
+[CPUID\PRO_0&FAM_06&MOD_2D]
+CpuFamily = intel-sandybridge
+[CPUID\PRO_0&FAM_06&MOD_3A]
+CpuFamily = intel-ivybridge
+[CPUID\PRO_0&FAM_06&MOD_3E]
+CpuFamily = intel-ivybridge
+
+[CPUID\PRO_0&FAM_06&MOD_3C]
+CpuFamily = intel-haswell
+[CPUID\PRO_0&FAM_06&MOD_3F]
+CpuFamily = intel-haswell
+[CPUID\PRO_0&FAM_06&MOD_45]
+CpuFamily = intel-haswell
+[CPUID\PRO_0&FAM_06&MOD_46]
+CpuFamily = intel-haswell
+
+[CPUID\PRO_0&FAM_06&MOD_3D]
+CpuFamily = intel-broadwell
+[CPUID\PRO_0&FAM_06&MOD_47]
+CpuFamily = intel-broadwell
+[CPUID\PRO_0&FAM_06&MOD_4F]
+CpuFamily = intel-broadwell
+[CPUID\PRO_0&FAM_06&MOD_56]
+CpuFamily = intel-broadwell
+
+[CPUID\PRO_0&FAM_06&MOD_4E]
+CpuFamily = intel-skylake
+[CPUID\PRO_0&FAM_06&MOD_5E]
+CpuFamily = intel-skylake
+[CPUID\PRO_0&FAM_06&MOD_55]
+CpuFamily = intel-skylake
 [CPUID\PRO_0&FAM_06&MOD_55&STP_3]
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_4]
@@ -15,26 +92,9 @@ CpuMitigationsRequired = gds
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_B]
 CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6A&STP_4]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6A&STP_5]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6A&STP_6]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6C&STP_1]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_7E&STP_5]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8C&STP_0]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8C&STP_1]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8C&STP_2]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8D&STP_0]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8D&STP_1]
-CpuMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_8E]
+CpuFamily = intel-kabylake
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_9]
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_A]
@@ -43,6 +103,9 @@ CpuMitigationsRequired = gds
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_C]
 CpuMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_9E]
+CpuFamily = intel-kabylake
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_9]
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_A]
@@ -53,6 +116,9 @@ CpuMitigationsRequired = gds
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_D]
 CpuMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_A5]
+CpuFamily = intel-cometlake
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_0]
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_1]
@@ -63,12 +129,180 @@ CpuMitigationsRequired = gds
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_5]
 CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A6]
+CpuFamily = intel-cometlake
 [CPUID\PRO_0&FAM_06&MOD_A6&STP_0]
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A6&STP_1]
 CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_A7]
+
+[CPUID\PRO_0&FAM_06&MOD_66]
+CpuFamily = intel-cannonlake
+
+[CPUID\PRO_0&FAM_06&MOD_6A]
+CpuFamily = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_4]
 CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_5]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_6]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6C]
+CpuFamily = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_6C&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_7D]
+CpuFamily = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_7E]
+CpuFamily = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_7E&STP_5]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9D]
+CpuFamily = intel-icelake
+
+[CPUID\PRO_0&FAM_06&MOD_A7]
+CpuFamily = intel-rocketlake
+CpuMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_8C]
+CpuFamily = intel-tigerlake
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_0]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_1]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_2]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8D]
+CpuFamily = intel-tigerlake
+[CPUID\PRO_0&FAM_06&MOD_8D&STP_0]
+CpuMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8D&STP_1]
+CpuMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_8F]
+CpuFamily = intel-sapphirerapids
+
+[CPUID\PRO_0&FAM_06&MOD_CF]
+CpuFamily = intel-emeraldrapids
+
+[CPUID\PRO_0&FAM_06&MOD_AD]
+CpuFamily = intel-graniterapids
+[CPUID\PRO_0&FAM_06&MOD_AE]
+CpuFamily = intel-graniterapids
+
+[CPUID\PRO_0&FAM_19&MOD_01]
+CpuFamily = intel-diamondrapids
+
+[CPUID\PRO_0&FAM_06&MOD_D7]
+CpuFamily = intel-bartlettlake
+
+[CPUID\PRO_0&FAM_06&MOD_8A]
+CpuFamily = intel-lakefield
+
+[CPUID\PRO_0&FAM_06&MOD_97]
+CpuFamily = intel-alderlake
+[CPUID\PRO_0&FAM_06&MOD_9A]
+CpuFamily = intel-alderlake
+
+[CPUID\PRO_0&FAM_06&MOD_B7]
+CpuFamily = intel-raptorlake
+[CPUID\PRO_0&FAM_06&MOD_BA]
+CpuFamily = intel-raptorlake
+[CPUID\PRO_0&FAM_06&MOD_BF]
+CpuFamily = intel-raptorlake
+
+[CPUID\PRO_0&FAM_06&MOD_AC]
+CpuFamily = intel-meteorlake
+[CPUID\PRO_0&FAM_06&MOD_AA]
+CpuFamily = intel-meteorlake
+
+[CPUID\PRO_0&FAM_06&MOD_C5]
+CpuFamily = intel-arrowlake
+[CPUID\PRO_0&FAM_06&MOD_C6]
+CpuFamily = intel-arrowlake
+[CPUID\PRO_0&FAM_06&MOD_B5]
+CpuFamily = intel-arrowlake
+
+[CPUID\PRO_0&FAM_06&MOD_BD]
+CpuFamily = intel-lunarlake
+
+[CPUID\PRO_0&FAM_06&MOD_CC]
+CpuFamily = intel-pantherlake
+
+[CPUID\PRO_0&FAM_06&MOD_D5]
+CpuFamily = intel-wildcatlake
+
+[CPUID\PRO_0&FAM_18&MOD_01]
+CpuFamily = intel-novalake
+[CPUID\PRO_0&FAM_18&MOD_03]
+CpuFamily = intel-novalake
+
+[CPUID\PRO_0&FAM_06&MOD_1C]
+CpuFamily = intel-atom-bonnell
+[CPUID\PRO_0&FAM_06&MOD_26]
+CpuFamily = intel-atom-bonnell
+
+[CPUID\PRO_0&FAM_06&MOD_36]
+CpuFamily = intel-atom-saltwell
+[CPUID\PRO_0&FAM_06&MOD_27]
+CpuFamily = intel-atom-saltwell
+[CPUID\PRO_0&FAM_06&MOD_35]
+CpuFamily = intel-atom-saltwell
+
+[CPUID\PRO_0&FAM_06&MOD_37]
+CpuFamily = intel-atom-silvermont
+PciBcrAddr = 0x0
+[CPUID\PRO_0&FAM_06&MOD_4D]
+CpuFamily = intel-atom-silvermont
+[CPUID\PRO_0&FAM_06&MOD_4A]
+CpuFamily = intel-atom-silvermont
+[CPUID\PRO_0&FAM_06&MOD_5A]
+CpuFamily = intel-atom-silvermont
+
+[CPUID\PRO_0&FAM_06&MOD_4C]
+CpuFamily = intel-atom-airmont
+[CPUID\PRO_0&FAM_06&MOD_75]
+CpuFamily = intel-atom-airmont
+
+[CPUID\PRO_0&FAM_06&MOD_5C]
+CpuFamily = intel-atom-goldmont
+[CPUID\PRO_0&FAM_06&MOD_5F]
+CpuFamily = intel-atom-goldmont
+
+[CPUID\PRO_0&FAM_06&MOD_7A]
+CpuFamily = intel-atom-goldmont-plus
+
+[CPUID\PRO_0&FAM_06&MOD_86]
+CpuFamily = intel-atom-tremont
+[CPUID\PRO_0&FAM_06&MOD_96]
+CpuFamily = intel-atom-tremont
+[CPUID\PRO_0&FAM_06&MOD_9C]
+CpuFamily = intel-atom-tremont
+
+[CPUID\PRO_0&FAM_06&MOD_BE]
+CpuFamily = intel-atom-gracemont
+
+[CPUID\PRO_0&FAM_06&MOD_AF]
+CpuFamily = intel-atom-crestmont
+[CPUID\PRO_0&FAM_06&MOD_B6]
+CpuFamily = intel-atom-crestmont
+
+[CPUID\PRO_0&FAM_06&MOD_DD]
+CpuFamily = intel-atom-darkmont
+
+[CPUID\PRO_0&FAM_06&MOD_57]
+CpuFamily = intel-xeon-phi
+[CPUID\PRO_0&FAM_06&MOD_85]
+CpuFamily = intel-xeon-phi
+
+[CPUID\PRO_0&FAM_15&MOD_01]
+CpuFamily = intel-p4-willamette
+[CPUID\PRO_0&FAM_15&MOD_03]
+CpuFamily = intel-p4-prescott
+[CPUID\PRO_0&FAM_15&MOD_04]
+CpuFamily = intel-p4-prescott
+[CPUID\PRO_0&FAM_15&MOD_06]
+CpuFamily = intel-p4-cedarmill
 
 # Affected by Sinkclose
 [CPUID\PRO_0&FAM_17&MOD_01&STP_2]

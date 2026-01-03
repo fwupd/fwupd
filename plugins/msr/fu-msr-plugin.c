@@ -458,7 +458,6 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
-	const gchar *mitigations_required;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
@@ -468,9 +467,7 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 		return;
 
 	/* only specific CPUs are affected by GDS */
-	mitigations_required =
-	    fu_device_get_metadata(device, FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED);
-	if (g_strcmp0(mitigations_required, "gds") != 0)
+	if (fu_cpu_device_needs_mitigation(FU_CPU_DEVICE(device), FU_CPU_MITIGATION_FLAG_GDS))
 		return;
 
 	/* create attr */
@@ -686,31 +683,18 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	if (!self->amd64_hwcfg_supported)
 		return;
 
-	if (device != NULL) {
-		const gchar *needed =
-		    fu_device_get_metadata(device, FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED);
-		if (needed != NULL)
-			mitigations = g_strsplit(needed, ",", -1);
-	}
-	if (mitigations != NULL) {
-		for (guint i = 0; mitigations[i] != NULL; i++) {
-			/* check for sinkclose vulnerability */
-			if (g_strcmp0(mitigations[i], "sinkclose") == 0) {
-				guint64 min = fu_device_get_metadata_integer(
-				    device,
-				    FU_DEVICE_METADATA_CPU_SINKCLOSE_MICROCODE_VER);
-				g_debug("microcode version: %" G_GUINT64_FORMAT
-					", sinkclose microcode version: %" G_GUINT64_FORMAT,
-					fu_device_get_version_raw(device),
-					min);
-				if (fu_device_get_version_raw(device) < min) {
-					g_info("vulnerable to sinkclose");
-					sinkclose_vuln = TRUE;
-				}
-				continue;
-			}
+	if (device != NULL && fu_cpu_device_needs_mitigation(FU_CPU_DEVICE(device),
+							     FU_CPU_MITIGATION_FLAG_SINKCLOSE)) {
+		guint32 min = fu_cpu_device_get_sinkclose_microcode_ver(FU_CPU_DEVICE(device));
+		g_debug("microcode version: %u, sinkclose microcode version: %u",
+			(guint)fu_device_get_version_raw(device),
+			min);
+		if (fu_device_get_version_raw(device) < min) {
+			g_info("vulnerable to sinkclose");
+			sinkclose_vuln = TRUE;
 		}
 	}
+
 	/* create attr */
 	attr1 = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED);
 	if (device != NULL)
