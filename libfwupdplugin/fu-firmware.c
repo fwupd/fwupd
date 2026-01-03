@@ -2770,3 +2770,141 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 	g_propagate_error(error, g_steal_pointer(&error_all));
 	return NULL;
 }
+
+/**
+ * fu_firmware_roundtrip_from_xml:
+ * @builder_xml: (not nullable): XML describing the firmware
+ * @checksum_expected: (nullable): Expected SHA1 hash of the built binary blob
+ * @flags: #FuFirmwareBuilderFlags, e.g. %FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE
+ * @error: (nullable): optional return location for an error
+ *
+ * Roundtrip a firmware from builder XML to binary and back to XML.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
+			       const gchar *checksum_expected,
+			       FuFirmwareBuilderFlags flags,
+			       GError **error)
+{
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autoptr(FuFirmware) firmware1 = NULL;
+	g_autoptr(FuFirmware) firmware2 = NULL;
+
+	g_return_val_if_fail(builder_xml != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* build and write */
+	firmware1 = fu_firmware_new_from_xml(builder_xml, error);
+	if (firmware1 == NULL) {
+		g_prefix_error(error, "failed to build %s: ", builder_xml);
+		return FALSE;
+	}
+	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, error);
+	if (csum1 == NULL)
+		return FALSE;
+	if (checksum_expected != NULL && g_strcmp0(csum1, checksum_expected) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "got checksum %s and expected %s",
+			    csum1,
+			    checksum_expected);
+		return FALSE;
+	}
+
+	/* ensure we can write and then parse what we just wrote */
+	if ((flags & FU_FIRMWARE_BUILDER_FLAG_NO_WRITE) == 0) {
+		g_autoptr(FuFirmware) firmware3 =
+		    g_object_new(G_TYPE_FROM_INSTANCE(firmware1), NULL);
+		g_autoptr(GBytes) fw = NULL;
+
+		fw = fu_firmware_write(firmware1, error);
+		if (fw == NULL) {
+			g_prefix_error(error, "failed to write %s: ", builder_xml);
+			return FALSE;
+		}
+		if (!fu_firmware_parse_bytes(firmware3,
+					     fw,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						 FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					     error)) {
+			g_prefix_error(error, "failed to parse %s: ", builder_xml);
+			return FALSE;
+		}
+		if ((flags & FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE) == 0) {
+			g_autoptr(GBytes) fw2 = NULL;
+			fw2 = fu_firmware_write(firmware3, error);
+			if (fw2 == NULL) {
+				g_prefix_error(error, "failed to write %s: ", builder_xml);
+				return FALSE;
+			}
+			if (!fu_bytes_compare(fw2, fw, error)) {
+				g_prefix_error(error, "failed to compare %s: ", builder_xml);
+				return FALSE;
+			}
+		}
+	}
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, error);
+	if (xml_out == NULL) {
+		g_prefix_error(error, "cannot export %s: ", builder_xml);
+		return FALSE;
+	}
+	firmware2 = fu_firmware_new_from_xml(xml_out, error);
+	if (firmware2 == NULL)
+		return FALSE;
+	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, error);
+	if (csum2 == NULL)
+		return FALSE;
+	if (checksum_expected != NULL && g_strcmp0(csum2, checksum_expected) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "got round-trip checksum %s and expected %s",
+			    csum2,
+			    checksum_expected);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_firmware_roundtrip_from_filename:
+ * @builder_fn: (not nullable): XML filename describing the firmware
+ * @checksum_expected: (nullable): Expected SHA1 hash of the built binary blob
+ * @flags: #FuFirmwareBuilderFlags, e.g. %FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE
+ * @error: (nullable): optional return location for an error
+ *
+ * Roundtrip a firmware from builder XML filename to binary and back to XML.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
+				    const gchar *checksum_expected,
+				    FuFirmwareBuilderFlags flags,
+				    GError **error)
+{
+	g_autofree gchar *xml = NULL;
+
+	g_return_val_if_fail(builder_fn != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_get_contents(builder_fn, &xml, NULL, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	return fu_firmware_roundtrip_from_xml(xml, checksum_expected, flags, error);
+}

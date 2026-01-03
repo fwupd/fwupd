@@ -19,6 +19,12 @@ enum FuFirmwareParseFlags {
     OnlyPartitionLayout = 1 << 13,
 }
 
+enum FuFirmwareBuilderFlags {
+    None = 0,
+    NoBinaryCompare = 1 << 0,
+    NoWrite = 1 << 1,
+}
+
 #[derive(ToString)]
 enum FuFirmwareFlags {
     None = 0,

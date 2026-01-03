@@ -210,6 +210,13 @@ fu_efi_vss_auth_variable_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* name */
+	if (fu_firmware_get_id(firmware) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware ID is required");
+		return NULL;
+	}
 	name = fu_utf8_to_utf16_bytes(fu_firmware_get_id(firmware),
 				      G_LITTLE_ENDIAN,
 				      FU_UTF_CONVERT_FLAG_APPEND_NUL,
