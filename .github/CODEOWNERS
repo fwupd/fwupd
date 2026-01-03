@@ -28,6 +28,7 @@ plugins/elan-kbd/ @hughsie
 plugins/elanfp/ @MichaelCheng04
 plugins/elantp/ @jinglewu @josh-chen-elan
 plugins/focalfp/ @waynehuang2022
+plugins/focaltouch/ @waynehuang2022
 plugins/fpc/ @jimzhang2
 plugins/framework-qmk/ @JohnAZoidberg
 plugins/genesys/ @adamgene
