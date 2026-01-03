@@ -57,6 +57,7 @@ fu_pci_bcr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 	    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE)) {
 		/* PCI\VEN_8086 added first */
 		if (self->has_device) {
+			fu_device_set_metadata_integer(dev, "PciBcrValue", self->bcr);
 			fu_pci_bcr_plugin_set_updatable(plugin, dev);
 			return;
 		}
@@ -196,8 +197,10 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 
 	/* main-system-firmware device added first, probably from flashrom */
 	device_msf = fu_plugin_cache_lookup(plugin, "main-system-firmware");
-	if (device_msf != NULL)
+	if (device_msf != NULL) {
+		fu_device_set_metadata_integer(device_msf, "PciBcrValue", self->bcr);
 		fu_pci_bcr_plugin_set_updatable(plugin, device_msf);
+	}
 
 	/* success */
 	self->has_device = TRUE;
