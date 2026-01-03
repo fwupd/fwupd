@@ -13,7 +13,8 @@
     "not-valid": "affected by one of the critical CVEs"
   },
   "success-results": {
-    "valid": "is not affected by the most critical CVEs"
+    "valid": "is not affected by the most critical CVEs",
+    "not-enabled": "has been disabled using HAP"
   },
   "hsi-level": 1,
   "resolution": "Update your Management Engine firmware",

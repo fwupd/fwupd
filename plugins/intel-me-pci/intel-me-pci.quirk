@@ -1,0 +1,2 @@
+[PCI\DRIVER_mei_me]
+Plugin = intel_me_pci
