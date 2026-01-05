@@ -19,7 +19,7 @@ Name = Bolt Receiver
 GType = FuLogitechHidppDevice
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
 InstallDuration = 30
-Flags = rebind-attach,force-receiver-id,replug-match-guid,add-radio,counterpart-visible
+Flags = rebind-attach,force-receiver-id,replug-match-guid,counterpart-visible
 LogitechHidppModelId = B601C5480000
 
 # Bolt receiver radio (bootloader)
@@ -87,117 +87,115 @@ InstallDuration = 150
 [HIDRAW\VEN_046D&MOD_B02800000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio
 InstallDuration = 270
 
 # MR0077 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B028]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach
+Flags = ble,rebind-attach
 InstallDuration = 270
 
 # YR0073
 [HIDRAW\VEN_046D&MOD_B36300000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio
 InstallDuration = 270
 
 # YR0073 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B363]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach
+Flags = ble,rebind-attach
 InstallDuration = 270
 
 # M650
 [HIDRAW\VEN_046D&MOD_B02A00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,no-request-required
+Flags = no-request-required
 InstallDuration = 270
 
 # M650 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B02A]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach,no-request-required
+Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
 # M750
 [HIDRAW\VEN_046D&MOD_B02C00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,no-request-required
+Flags = no-request-required
 InstallDuration = 270
 
 # M750 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B02C]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach,no-request-required
+Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
 # M650 For Business
 [HIDRAW\VEN_046D&MOD_B03200000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,no-request-required
+Flags = no-request-required
 InstallDuration = 270
 
 # M650 For Business (BLE direct)
 [HIDRAW\VEN_046D&DEV_B032]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach,no-request-required
+Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
 # M550
 [HIDRAW\VEN_046D&MOD_B02B00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,no-request-required
+Flags = no-request-required
 InstallDuration = 270
 
 # M550 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B02B]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach,no-request-required
+Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
 # K650
 [HIDRAW\VEN_046D&MOD_B36F00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,no-request-required
+Flags = no-request-required
 InstallDuration = 270
 
 # K650 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B36F]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach,no-request-required
+Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
 # K650 For Business
 [HIDRAW\VEN_046D&MOD_B37000000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,no-request-required
+Flags = no-request-required
 InstallDuration = 270
 
 # K650 For Business (BLE direct)
 [HIDRAW\VEN_046D&DEV_B370]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = add-radio,ble,rebind-attach,no-request-required
+Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
 # MX Mechanical (BLE direct)
 [HIDRAW\VEN_046D&DEV_B34E]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
-Flags = ~add-radio,ble,no-request-required
+Flags = ble,no-request-required
 InstallDuration = 650
