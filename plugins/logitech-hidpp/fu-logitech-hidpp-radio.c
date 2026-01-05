@@ -95,6 +95,12 @@ fu_logitech_hidpp_radio_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3, "reload");
 }
 
+static gchar *
+fu_logitech_hidpp_radio_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return g_strdup_printf("0x%.4x", (guint)version_raw);
+}
+
 static void
 fu_logitech_hidpp_radio_init(FuLogitechHidppRadio *self)
 {
@@ -120,6 +126,7 @@ fu_logitech_hidpp_radio_class_init(FuLogitechHidppRadioClass *klass)
 	device_class->write_firmware = fu_logitech_hidpp_radio_write_firmware;
 	device_class->to_string = fu_logitech_hidpp_radio_to_string;
 	device_class->set_progress = fu_logitech_hidpp_radio_set_progress;
+	device_class->convert_version = fu_logitech_hidpp_radio_convert_version;
 }
 
 FuLogitechHidppRadio *

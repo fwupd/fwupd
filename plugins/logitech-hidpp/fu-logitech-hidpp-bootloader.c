@@ -10,7 +10,6 @@
 
 #include "fu-logitech-hidpp-bootloader.h"
 #include "fu-logitech-hidpp-common.h"
-#include "fu-logitech-hidpp-hidpp.h"
 
 typedef struct {
 	guint16 flash_addr_lo;

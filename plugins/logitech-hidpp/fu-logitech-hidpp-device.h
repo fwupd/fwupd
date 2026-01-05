@@ -27,15 +27,17 @@ struct _FuLogitechHidppDeviceClass {
 #define FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO		  "add-radio"
 
 void
-fu_logitech_hidpp_device_set_device_idx(FuLogitechHidppDevice *self, guint8 device_idx);
+fu_logitech_hidpp_device_set_device_idx(FuLogitechHidppDevice *self, guint8 device_idx)
+    G_GNUC_NON_NULL(1);
 guint16
-fu_logitech_hidpp_device_get_hidpp_pid(FuLogitechHidppDevice *self);
+fu_logitech_hidpp_device_get_hidpp_pid(FuLogitechHidppDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidppDevice *self, guint16 hidpp_pid);
+fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidppDevice *self, guint16 hidpp_pid)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 				guint8 entity,
 				FuProgress *progress,
-				GError **error);
+				GError **error) G_GNUC_NON_NULL(1);
 FuLogitechHidppDevice *
-fu_logitech_hidpp_device_new(FuUdevDevice *parent);
+fu_logitech_hidpp_device_new(FuUdevDevice *parent) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

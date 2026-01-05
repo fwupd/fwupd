@@ -1,398 +1,391 @@
 {
+  "FwupdVersion": "2.1.1",
   "UsbDevices": [
     {
+      "Created": "2026-01-06T15:15:49.201750Z",
       "GType": "FuUdevDevice",
-      "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
-      "DeviceFile": "/dev/hidraw8",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.3/1-8.3:1.2/0003:046D:C548.007D/hidraw/hidraw12",
+      "DeviceFile": "/dev/hidraw12",
       "Subsystem": "hidraw",
       "Vendor": 1133,
       "Model": 50504,
-      "Created": "2025-02-10T14:37:09.457851Z",
       "Events": [
         {
-          "Id": "#d5a801ad",
+          "Id": "GetSymlinkTarget:Attr=subsystem",
           "Data": "hidraw"
         },
         {
-          "Id": "#ad8c58d3"
+          "Id": "GetSymlinkTarget:Attr=driver"
         },
         {
-          "Id": "#1075ed5c"
+          "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "MAJOR=241\nMINOR=8\nDEVNAME=hidraw8"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=241\nMINOR=12\nDEVNAME=hidraw12"
         },
         {
-          "Id": "#d432c663",
-          "Data": "hidraw8"
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "hidraw12"
         },
         {
-          "Id": "#9b895db2"
+          "Id": "ReadAttr:Attr=vendor"
         },
         {
-          "Id": "#66f3e150"
+          "Id": "ReadAttr:Attr=device"
         },
         {
-          "Id": "#d410b6c7"
+          "Id": "ReadAttr:Attr=class"
         },
         {
-          "Id": "#1075ed5c"
+          "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "#193a680c",
+          "Id": "GetBackendParent:Subsystem=hid",
           "GType": "FuUdevDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8"
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.3/1-8.3:1.2/0003:046D:C548.007D"
         },
         {
-          "Id": "#d5a801ad",
+          "Id": "GetSymlinkTarget:Attr=subsystem",
           "Data": "hid"
         },
         {
-          "Id": "#ad8c58d3",
+          "Id": "GetSymlinkTarget:Attr=driver",
           "Data": "hid-generic"
         },
         {
-          "Id": "#1075ed5c"
+          "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "DRIVER=hid-generic\nHID_ID=0003:0000046D:0000C548\nHID_NAME=Logitech USB Receiver\nHID_PHYS=usb-0000:c5:00.3-1/input2\nHID_UNIQ=\nMODALIAS=hid:b0003g0001v0000046Dp0000C548"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=hid-generic\nHID_ID=0003:0000046D:0000C548\nHID_NAME=Logitech USB Receiver\nHID_PHYS=usb-0000:00:14.0-8.3/input2\nHID_UNIQ=\nMODALIAS=hid:b0003g0001v0000046Dp0000C548"
         },
         {
-          "Id": "#d432c663"
+          "Id": "ReadProp:Key=DEVNAME"
         },
         {
-          "Id": "#9b895db2"
+          "Id": "ReadAttr:Attr=vendor"
         },
         {
-          "Id": "#66f3e150"
+          "Id": "ReadAttr:Attr=device"
         },
         {
-          "Id": "#d410b6c7"
+          "Id": "ReadAttr:Attr=class"
         },
         {
-          "Id": "#1075ed5c"
+          "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "#b8e66ef6",
+          "Id": "ReadProp:Key=HID_ID",
           "Data": "0003:0000046D:0000C548"
         },
         {
-          "Id": "#89cef97f",
+          "Id": "ReadProp:Key=HID_NAME",
           "Data": "Logitech USB Receiver"
         },
         {
-          "Id": "#3e5408a4",
+          "Id": "ReadProp:Key=HID_UNIQ",
           "Data": ""
         },
         {
-          "Id": "#00f97b18",
-          "Data": "usb-0000:c5:00.3-1/input2"
+          "Id": "ReadProp:Key=HID_PHYS",
+          "Data": "usb-0000:00:14.0-8.3/input2"
         },
         {
-          "Id": "#19c26604",
+          "Id": "GetBackendParent:Subsystem=usb:usb_device",
           "GType": "FuUsbDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
-          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.3",
+          "PhysicalId": "1-8.3"
         },
         {
-          "Id": "#d5a801ad",
+          "Id": "GetSymlinkTarget:Attr=subsystem",
           "Data": "usb"
         },
         {
-          "Id": "#ad8c58d3",
+          "Id": "GetSymlinkTarget:Attr=driver",
           "Data": "usb"
         },
         {
-          "Id": "#1075ed5c",
+          "Id": "ReadProp:Key=DEVTYPE",
           "Data": "usb_device"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=60\nDEVNAME=bus/usb/001/061\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=061"
         },
         {
-          "Id": "#d432c663",
-          "Data": "bus/usb/001/046"
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/061"
         },
         {
-          "Id": "#9b895db2"
+          "Id": "ReadAttr:Attr=vendor"
         },
         {
-          "Id": "#66f3e150"
+          "Id": "ReadAttr:Attr=device"
         },
         {
-          "Id": "#d410b6c7"
+          "Id": "ReadAttr:Attr=class"
         },
         {
-          "Id": "#1075ed5c",
+          "Id": "ReadProp:Key=DEVTYPE",
           "Data": "usb_device"
         },
         {
-          "Id": "#4693935e",
+          "Id": "ReadProp:Key=BUSNUM",
           "Data": "001"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=60\nDEVNAME=bus/usb/001/061\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=061"
         },
         {
-          "Id": "#1ab3ae0a",
-          "Data": "046"
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "061"
         },
         {
-          "Id": "#9a347f1f",
+          "Id": "LoadDescriptor:basename=descriptors",
           "Data": "EgEAAgAAAEBtBEjFAAUBAgABCQJUAAMBBKAxCQQAAAEDAQEACSERAQABIkMABwWBA0AAAQkEAQABAwECAAkhEQEAASKFAAcFggNAAAEJBAIAAQMAAAAJIREBAAEiNgAHBYMDQAAB"
         },
         {
-          "Id": "#624d3a4d"
+          "Id": "LoadDescriptor:basename=bos_descriptors"
         },
         {
-          "Id": "#193a680c",
+          "Id": "ReadProp:Key=HID_FIRMWARE_VERSION"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=hid",
           "GType": "FuUdevDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
-          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.3/1-8.3:1.2/0003:046D:C548.007D"
         },
         {
-          "Id": "#d5a801ad",
+          "Id": "GetSymlinkTarget:Attr=subsystem",
           "Data": "hid"
         },
         {
-          "Id": "#ad8c58d3",
+          "Id": "GetSymlinkTarget:Attr=driver",
           "Data": "hid-generic"
         },
         {
-          "Id": "#1075ed5c"
+          "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "DRIVER=hid-generic\nHID_ID=0003:0000046D:0000C548\nHID_NAME=Logitech USB Receiver\nHID_PHYS=usb-0000:c5:00.3-1/input2\nHID_UNIQ=\nMODALIAS=hid:b0003g0001v0000046Dp0000C548"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=hid-generic\nHID_ID=0003:0000046D:0000C548\nHID_NAME=Logitech USB Receiver\nHID_PHYS=usb-0000:00:14.0-8.3/input2\nHID_UNIQ=\nMODALIAS=hid:b0003g0001v0000046Dp0000C548"
         },
         {
-          "Id": "#d432c663"
+          "Id": "ReadProp:Key=DEVNAME"
         },
         {
-          "Id": "#9b895db2"
+          "Id": "ReadAttr:Attr=vendor"
         },
         {
-          "Id": "#66f3e150"
+          "Id": "ReadAttr:Attr=device"
         },
         {
-          "Id": "#d410b6c7"
+          "Id": "ReadAttr:Attr=class"
         },
         {
-          "Id": "#1075ed5c"
+          "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "#b8e66ef6",
+          "Id": "ReadProp:Key=HID_ID",
           "Data": "0003:0000046D:0000C548"
         },
         {
-          "Id": "#3e5408a4",
+          "Id": "ReadProp:Key=HID_UNIQ",
           "Data": ""
         },
         {
-          "Id": "#19c26604",
+          "Id": "ReadProp:Key=HID_FIRMWARE_VERSION"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=usb:usb_device",
           "GType": "FuUsbDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
-          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.3",
+          "PhysicalId": "1-8.3"
         },
         {
-          "Id": "#d5a801ad",
+          "Id": "GetSymlinkTarget:Attr=subsystem",
           "Data": "usb"
         },
         {
-          "Id": "#ad8c58d3",
+          "Id": "GetSymlinkTarget:Attr=driver",
           "Data": "usb"
         },
         {
-          "Id": "#1075ed5c",
+          "Id": "ReadProp:Key=DEVTYPE",
           "Data": "usb_device"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=60\nDEVNAME=bus/usb/001/061\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=061"
         },
         {
-          "Id": "#d432c663",
-          "Data": "bus/usb/001/046"
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/061"
         },
         {
-          "Id": "#9b895db2"
+          "Id": "ReadAttr:Attr=vendor"
         },
         {
-          "Id": "#66f3e150"
+          "Id": "ReadAttr:Attr=device"
         },
         {
-          "Id": "#d410b6c7"
+          "Id": "ReadAttr:Attr=class"
         },
         {
-          "Id": "#1075ed5c",
+          "Id": "ReadProp:Key=DEVTYPE",
           "Data": "usb_device"
         },
         {
-          "Id": "#4693935e",
+          "Id": "ReadProp:Key=BUSNUM",
           "Data": "001"
         },
         {
-          "Id": "#bddbca22",
-          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=60\nDEVNAME=bus/usb/001/061\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=061"
         },
         {
-          "Id": "#1ab3ae0a",
-          "Data": "046"
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "061"
         },
         {
-          "Id": "#9a347f1f",
+          "Id": "LoadDescriptor:basename=descriptors",
           "Data": "EgEAAgAAAEBtBEjFAAUBAgABCQJUAAMBBKAxCQQAAAEDAQEACSERAQABIkMABwWBA0AAAQkEAQABAwECAAkhEQEAASKFAAcFggNAAAEJBAIAAQMAAAAJIREBAAEiNgAHBYMDQAAB"
         },
         {
-          "Id": "#624d3a4d"
+          "Id": "LoadDescriptor:basename=bos_descriptors"
         },
         {
-          "Id": "#d0550a1a",
+          "Id": "GetBackendParent:Subsystem=usb:usb_interface",
           "GType": "FuUdevDevice",
-          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
-          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-8/1-8.3/1-8.3:1.2"
         },
         {
-          "Id": "#d5a801ad",
+          "Id": "GetSymlinkTarget:Attr=subsystem",
           "Data": "usb"
         },
         {
-          "Id": "#ad8c58d3",
+          "Id": "GetSymlinkTarget:Attr=driver",
           "Data": "usbhid"
         },
         {
-          "Id": "#1075ed5c",
+          "Id": "ReadProp:Key=DEVTYPE",
           "Data": "usb_interface"
         },
         {
-          "Id": "#bddbca22",
+          "Id": "ReadAttr:Attr=uevent",
           "Data": "DEVTYPE=usb_interface\nDRIVER=usbhid\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nINTERFACE=3/0/0\nMODALIAS=usb:v046DpC548d0500dc00dsc00dp00ic03isc00ip00in02"
         },
         {
-          "Id": "#d432c663"
+          "Id": "ReadProp:Key=DEVNAME"
         },
         {
-          "Id": "#9b895db2"
+          "Id": "ReadAttr:Attr=vendor"
         },
         {
-          "Id": "#66f3e150"
+          "Id": "ReadAttr:Attr=device"
         },
         {
-          "Id": "#d410b6c7"
+          "Id": "ReadAttr:Attr=class"
         },
         {
-          "Id": "#1075ed5c",
+          "Id": "ReadProp:Key=DEVTYPE",
           "Data": "usb_interface"
         },
         {
-          "Id": "#44482569",
+          "Id": "ReadProp:Key=INTERFACE",
           "Data": "3/0/0"
         },
         {
-          "Id": "#502ea0ea"
+          "Id": "Write:Data=EP+DtQIAAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "Ef+DtQIFAAAIAbYQBgAAAAAAAAA="
         },
         {
-          "Id": "#dea3d98a"
+          "Id": "Write:Data=EP+D9AAAAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "Ef+D9AEwAAAFslGYrgAAAAAAAAA="
         },
         {
-          "Id": "#c334b520"
+          "Id": "Write:Data=EP+D9AEAAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "Ef+D9AAFAAAINbP2iwAAAAAAAAA="
         },
         {
-          "Id": "#47582770"
+          "Id": "Write:Data=EP+D9AIAAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
-          "Data": "Ef+D9AUFAAESAAAAAAAAAAAAAAA="
+          "Id": "Read:Length=0x33",
+          "Data": "Ef+D9AUAAAESAAAAAAAAAAAAAAA="
         },
         {
-          "Id": "#e2a16343",
-          "Error": 19,
-          "ErrorMsg": "timeout"
+          "Id": "Write:Data=EP+AAAAFAA==,Length=0x7"
         },
         {
-          "Id": "#182845d0"
-        },
-        {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "EP+AAAAAAA=="
         },
         {
-          "Id": "#27c22eeb"
+          "Id": "Write:Data=EP+DtWEBAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "Ef+DtWEBDU1YIE1hc3RlciAzIEI="
         },
         {
-          "Id": "#ff7e60c1"
+          "Id": "Write:Data=EP+DtVEAAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "Ef+DtVECKLDTI8oFAQACCgEAAAA="
         },
         {
-          "Id": "#6c9a3379"
+          "Id": "Write:Data=EP+DtWIBAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
-          "Data": "Ef+DtWIBCU1YIEtleXMgQgAAAAA="
+          "Id": "Read:Length=0x33",
+          "Data": "Ef+DtWIBBlBvbGx1eAAAAAAAAAA="
         },
         {
-          "Id": "#98dfc13f"
+          "Id": "Write:Data=EP+DtVIAAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
-          "Data": "Ef+DtVJBY7MSIKuDAQABFAEAAAA="
+          "Id": "Read:Length=0x33",
+          "Data": "Ef+DtVJBTrOtHRBEAgABFAEAAAA="
         },
         {
-          "Id": "#e4075abf"
+          "Id": "Write:Data=EP+DtWMBAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
-          "Data": "Ef+DtWMBC1BvbGx1eCBBUFAxAAA="
-        },
-        {
-          "Id": "#dcaa5ab3"
-        },
-        {
-          "Id": "#e2a16343",
-          "Data": "Ef+DtVNBTrOtHRBEAgABFAEAAAA="
-        },
-        {
-          "Id": "#49152771"
-        },
-        {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "EP+Pg7UIAA=="
         },
         {
-          "Id": "#f507d0bf"
+          "Id": "Write:Data=EP+DtWQBAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
           "Data": "EP+Pg7UIAA=="
         },
         {
-          "Id": "#cdc373b0"
+          "Id": "Write:Data=EP+DtWUBAA==,Length=0x7"
         },
         {
-          "Id": "#e2a16343",
+          "Id": "Read:Length=0x33",
+          "Data": "EP+Pg7UIAA=="
+        },
+        {
+          "Id": "Write:Data=EP+DtWYBAA==,Length=0x7"
+        },
+        {
+          "Id": "Read:Length=0x33",
           "Data": "EP+Pg7UIAA=="
         }
       ]
