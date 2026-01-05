@@ -8,7 +8,6 @@
 
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
-#include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-rdfu-struct.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 #include "fu-logitech-hidpp-struct.h"
@@ -134,7 +133,6 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuStructLogitechHidppMsg) st_req = fu_struct_logitech_hidpp_msg_new();
 	g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
-	GPtrArray *children = NULL;
 	const guint8 buf[] = {
 	    0x00,
 	    0x00,
@@ -169,11 +167,6 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 
 	/* device no longer asleep */
 	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE);
-	children = fu_device_get_children(FU_DEVICE(self));
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *radio = g_ptr_array_index(children, i);
-		fu_device_remove_flag(radio, FWUPD_DEVICE_FLAG_UNREACHABLE);
-	}
 
 	/* if the device index is unset, grab it from the reply */
 	if (priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED &&
@@ -287,75 +280,6 @@ fu_logitech_hidpp_device_feature_get_idx(FuLogitechHidppDevice *self, guint16 fe
 }
 
 static gboolean
-fu_logitech_hidpp_device_create_radio_child(FuLogitechHidppDevice *self,
-					    guint8 entity,
-					    guint16 build,
-					    GError **error)
-{
-	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	g_autoptr(FuLogitechHidppRadio) radio = NULL;
-	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
-
-	/* sanity check */
-	if (priv->model_id == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "model ID not set");
-		return FALSE;
-	}
-
-	radio = fu_logitech_hidpp_radio_new(ctx, entity);
-	fu_device_incorporate(FU_DEVICE(radio),
-			      FU_DEVICE(self),
-			      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-	/*
-	 * Use the parent logical id as well as the model id for the
-	 * logical id of the radio child device. This allows the radio
-	 * devices of two devices of the same type (same device type,
-	 * BLE mode) to coexist correctly.
-	 */
-	if (fu_device_get_logical_id(FU_DEVICE(self)) != NULL) {
-		g_autofree gchar *logical_id =
-		    g_strdup_printf("%s-%s",
-				    fu_device_get_logical_id(FU_DEVICE(self)),
-				    priv->model_id);
-		fu_device_set_logical_id(FU_DEVICE(radio), logical_id);
-	} else {
-		fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
-	}
-	fu_device_add_instance_u16(FU_DEVICE(radio), "VEN", fu_device_get_vid(FU_DEVICE(self)));
-	fu_device_add_instance_str(FU_DEVICE(radio), "MOD", priv->model_id);
-	fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", entity);
-	if (!fu_device_build_instance_id(FU_DEVICE(radio),
-					 error,
-					 "HIDRAW",
-					 "VEN",
-					 "MOD",
-					 "ENT",
-					 NULL))
-		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(radio), build);
-	if (!fu_device_setup(FU_DEVICE(radio), error))
-		return FALSE;
-
-	/* remove old radio device if it already existed */
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index(children, i);
-		if (g_strcmp0(fu_device_get_physical_id(FU_DEVICE(radio)),
-			      fu_device_get_physical_id(child)) == 0 &&
-		    g_strcmp0(fu_device_get_logical_id(FU_DEVICE(radio)),
-			      fu_device_get_logical_id(child)) == 0) {
-			fu_device_remove_child(FU_DEVICE(self), child);
-			break;
-		}
-	}
-	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(radio));
-	return TRUE;
-}
-
-static gboolean
 fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
@@ -363,7 +287,6 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 	guint8 entity_count;
 	g_autoptr(FuStructLogitechHidppMsg) st_count = fu_struct_logitech_hidpp_msg_new();
 	g_autoptr(FuStructLogitechHidppMsg) st_count_rsp = NULL;
-	gboolean radio_ok = FALSE;
 	gboolean app_ok = FALSE;
 	const guint8 *data;
 
@@ -442,25 +365,6 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 			fu_device_set_version_bootloader(FU_DEVICE(self), version);
 		} else if (data[0] == 2) {
 			fu_device_set_metadata(FU_DEVICE(self), "version-hw", version);
-		} else if (data[0] == 5 &&
-			   fu_device_has_private_flag(FU_DEVICE(self),
-						      FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO)) {
-			if (!fu_logitech_hidpp_device_create_radio_child(self, i, build, error)) {
-				g_prefix_error_literal(error, "failed to create radio: ");
-				return FALSE;
-			}
-			radio_ok = TRUE;
-		}
-	}
-
-	/* the device is probably in bootloader mode and the last SoftDevice FW upgrade failed */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO) &&
-	    !fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU) &&
-	    !radio_ok) {
-		g_debug("no radio found, creating a fake one for recovery");
-		if (!fu_logitech_hidpp_device_create_radio_child(self, 1, 0, error)) {
-			g_prefix_error_literal(error, "failed to create radio: ");
-			return FALSE;
 		}
 	}
 
@@ -708,6 +612,11 @@ fu_logitech_hidpp_device_ensure_battery_level(FuLogitechHidppDevice *self, GErro
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
+
+	/* this does not make sense */
+	if (priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED ||
+	    priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER)
+		return TRUE;
 
 	/* HID++1.0 */
 	if (priv->hidpp_version == 1)
@@ -1819,13 +1728,11 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
-					    FuFirmware *firmware,
-					    FuProgress *progress,
-					    FwupdInstallFlags flags,
-					    GError **error)
+fu_logitech_hidpp_device_write_firmware_dfu_img(FuLogitechHidppDevice *self,
+						FuFirmware *firmware,
+						FuProgress *progress,
+						GError **error)
 {
-	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 cmd = 0x04;
 	guint8 fw_entity = 0;
 	guint8 idx;
@@ -1850,13 +1757,9 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 	if (chunks == NULL)
 		return FALSE;
 
-	/* flash hardware -- the first data byte is the fw entity */
+	/* flash hardware */
 	if (!fu_input_stream_read_u8(stream, 0x0, &fw_entity, error))
 		return FALSE;
-	if (priv->cached_fw_entity != fw_entity) {
-		g_debug("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, fw_entity);
-		priv->cached_fw_entity = fw_entity;
-	}
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -1874,8 +1777,9 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 								 fu_chunk_get_data_sz(chk),
 								 error)) {
 			g_prefix_error(error,
-				       "failed to write @0x%04x: ",
-				       (guint)fu_chunk_get_address(chk));
+				       "failed to write @0x%04x for entity 0x%x: ",
+				       (guint)fu_chunk_get_address(chk),
+				       fw_entity);
 			return FALSE;
 		}
 
@@ -1883,6 +1787,34 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 		cmd = (cmd + 1) % 4;
 
 		/* update progress-bar */
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
+					    FuFirmware *firmware,
+					    FuProgress *progress,
+					    FwupdInstallFlags flags,
+					    GError **error)
+{
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+
+	/* write each image in the zip archive */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_steps(progress, imgs->len);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (!fu_logitech_hidpp_device_write_firmware_dfu_img(
+			self,
+			img,
+			fu_progress_get_child(progress),
+			error))
+			return FALSE;
 		fu_progress_step_done(progress);
 	}
 
@@ -2037,18 +1969,16 @@ fu_logitech_hidpp_device_reprobe_cb(FuDevice *device, gpointer user_data, GError
 	return fu_logitech_hidpp_device_setup(device, error);
 }
 
-gboolean
-fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
-				guint8 entity,
-				FuProgress *progress,
-				GError **error)
+static gboolean
+fu_logitech_hidpp_device_attach_cached(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
-		const guint8 buf[] = {entity}; /* fwEntity */
+		const guint8 buf[] = {priv->cached_fw_entity}; /* fwEntity */
 		g_autoptr(FuStructLogitechHidppMsg) st_req = fu_struct_logitech_hidpp_msg_new();
 		g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -2087,6 +2017,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 		    &error_local);
 		if (st_rsp == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_debug("ignoring '%s' on reset", error_local->message);
 			} else {
@@ -2098,6 +2029,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 		}
 	}
 
+	/* device will reset? */
 	if (fu_device_has_private_flag(FU_DEVICE(self),
 				       FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
 		fu_device_set_poll_interval(FU_DEVICE(self), 0);
@@ -2114,17 +2046,8 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 
 	/* success */
 	return TRUE;
-}
 
-static gboolean
-fu_logitech_hidpp_device_attach_cached(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
-	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH))
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, progress, error);
 }
 
 static gboolean
@@ -2220,7 +2143,6 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 	g_signal_connect(FU_DEVICE(self),

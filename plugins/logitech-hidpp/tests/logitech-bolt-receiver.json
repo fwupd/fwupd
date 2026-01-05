@@ -3,19 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/logitech-bolt-receiver-setup.json",
-      "components": [
-        {
-          "version": "MPR05.00_B0008",
-          "protocol": "com.logitech.unifyingsigned",
-          "guids": [
-            "f70d9241-2656-546b-a8e4-211bac348667"
-          ]
-        }
-      ]
-    },
-    {
-      "url": "c35ade1237da4e1ff90d031cc2b2218c32ee53c01b92b014aae2d2226aed2e35-Logitech-MPR05-MPR05.00_B0009.cab",
+      "url": "708d59d527ca242deb15d62da51894ec8270f261971dc88a388e847e94d7c6dd-Logitech-MPR05-MPR05.00_B0009.cab",
+      "emulation-url": "6248de295104a58e4fc2b1414f636bfd6c0e1e76634f4817e481c016027406fb-Logitech-MPR05-MPR05.00_B0009.zip",
       "components": [
         {
           "version": "MPR05.00_B0009",
@@ -27,7 +16,8 @@
       ]
     },
     {
-      "url": "f1e3ba268ae4e1d3c029392d4f203a976970b162521296a2e9a9a31f314c0c46-Logitech-MPR05-MPR05.01_B0010.cab",
+      "url": "939997c91c42fafca9e41e6a1c8e6c90a9f5bbf14cc06e99cc701f9ead4380af-Logitech-MPR05-MPR05.01_B0010.cab",
+      "emulation-url": "ec01a048730725d84fcb5e7a21013f65976a13b1a9db1c434f5b5e42ca77eafc-Logitech-MPR05-MPR05.01_B0010.zip",
       "components": [
         {
           "version": "MPR05.01_B0010",

@@ -17,7 +17,6 @@ plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-runtime.c',
     'fu-logitech-hidpp-runtime-unifying.c',
     'fu-logitech-hidpp-runtime-bolt.c',
-    'fu-logitech-hidpp-radio.c',
     'fu-logitech-rdfu-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
@@ -37,9 +36,6 @@ device_tests += files(
   'tests/logitech-rqr12-signed.json',
   'tests/logitech-rqr24.json',
   'tests/logitech-rqr24-signed.json',
-)
-enumeration_data += files(
-  'tests/logitech-bolt-receiver-setup.json',
 )
 
 if get_option('tests')

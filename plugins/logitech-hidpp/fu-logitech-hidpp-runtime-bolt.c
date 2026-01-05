@@ -8,7 +8,6 @@
 
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
-#include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 #include "fu-logitech-hidpp-struct.h"
 
@@ -173,14 +172,8 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 			}
 			fu_device_remove_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		} else {
-			GPtrArray *children = NULL;
 			/* any successful 'ping' will clear this */
 			fu_device_add_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_UNREACHABLE);
-			children = fu_device_get_children(FU_DEVICE(child));
-			for (guint i = 0; i < children->len; i++) {
-				FuDevice *radio = g_ptr_array_index(children, i);
-				fu_device_add_flag(radio, FWUPD_DEVICE_FLAG_UNREACHABLE);
-			}
 		}
 	} else if (reachable) {
 		g_autofree gchar *name = NULL;
@@ -258,8 +251,6 @@ fu_logitech_hidpp_runtime_bolt_poll_peripheral(FuLogitechHidppRuntime *self,
 		g_autoptr(FuLogitechHidppDevice) child = NULL;
 		child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
 		fu_device_set_install_duration(FU_DEVICE(child), 270);
-		fu_device_add_private_flag(FU_DEVICE(child),
-					   FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
 		fu_device_set_name(FU_DEVICE(child), name);
 		fu_logitech_hidpp_device_set_device_idx(child, i);
 		fu_logitech_hidpp_device_set_hidpp_pid(child, hidpp_pid);
@@ -409,7 +400,6 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_runtime_bolt_setup_slot(FuLogitechHidppRuntime *self, guint i, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	const guint8 *data;
 	gsize datasz = 0;
 	guint16 version_raw = 0;
@@ -470,36 +460,6 @@ fu_logitech_hidpp_runtime_bolt_setup_slot(FuLogitechHidppRuntime *self, guint i,
 			return FALSE;
 		version = fu_logitech_hidpp_format_version("BOT", vmaj, vmin, version_raw);
 		fu_device_set_version_bootloader(FU_DEVICE(self), version);
-		return TRUE;
-	}
-
-	/* SoftDevice */
-	if (data[0] == 5) {
-		g_autoptr(FuLogitechHidppRadio) radio = fu_logitech_hidpp_radio_new(ctx, i);
-
-		fu_device_add_instance_u16(FU_DEVICE(radio),
-					   "VEN",
-					   fu_device_get_vid(FU_DEVICE(self)));
-		fu_device_add_instance_u16(FU_DEVICE(radio),
-					   "DEV",
-					   fu_device_get_pid(FU_DEVICE(self)));
-		fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", data[0]);
-		fu_device_incorporate(FU_DEVICE(radio),
-				      FU_DEVICE(self),
-				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-		fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
-		if (!fu_device_build_instance_id(FU_DEVICE(radio),
-						 error,
-						 "HIDRAW",
-						 "VEN",
-						 "DEV",
-						 "ENT",
-						 NULL))
-			return FALSE;
-		if (!fu_memread_uint16_safe(data, datasz, 0x03, &version_raw, G_BIG_ENDIAN, error))
-			return FALSE;
-		fu_device_set_version_raw(FU_DEVICE(radio), version_raw);
-		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(radio));
 		return TRUE;
 	}
 
@@ -582,6 +542,17 @@ fu_logitech_hidpp_runtime_bolt_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_logitech_hidpp_runtime_bolt_set_progress(FuDevice *device, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 16, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 84, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static void
 fu_logitech_hidpp_runtime_bolt_class_init(FuLogitechHidppRuntimeBoltClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
@@ -590,6 +561,7 @@ fu_logitech_hidpp_runtime_bolt_class_init(FuLogitechHidppRuntimeBoltClass *klass
 	device_class->setup = fu_logitech_hidpp_runtime_bolt_setup;
 	device_class->poll = fu_logitech_hidpp_runtime_bolt_poll;
 	device_class->to_string = fu_logitech_hidpp_runtime_bolt_to_string;
+	device_class->set_progress = fu_logitech_hidpp_runtime_bolt_set_progress;
 }
 
 static void
@@ -600,4 +572,5 @@ fu_logitech_hidpp_runtime_bolt_init(FuLogitechHidppRuntimeBolt *self)
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_set_name(FU_DEVICE(self), "Bolt Receiver");
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 }
