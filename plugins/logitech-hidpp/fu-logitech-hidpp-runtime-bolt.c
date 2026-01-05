@@ -27,6 +27,7 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 {
 	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
 	g_autoptr(GError) error_local = NULL;
 
 	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
@@ -52,6 +53,15 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 			return FALSE;
 		}
 	}
+
+	/* the user has to do something for Logitech "security" reasons */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
+
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -495,6 +505,7 @@ fu_logitech_hidpp_runtime_bolt_init(FuLogitechHidppRuntimeBolt *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_set_name(FU_DEVICE(self), "Bolt Receiver");
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 }
