@@ -16,4 +16,5 @@ G_DECLARE_FINAL_TYPE(FuLogitechHidppRadio,
 		     FuDevice)
 
 FuLogitechHidppRadio *
-fu_logitech_hidpp_radio_new(FuContext *ctx, guint8 entity);
+fu_logitech_hidpp_radio_new(FuContext *ctx, guint8 entity) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);

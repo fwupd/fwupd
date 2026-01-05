@@ -13,9 +13,7 @@ plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-bootloader-nordic.c',
     'fu-logitech-hidpp-bootloader-texas.c',
     'fu-logitech-hidpp-common.c',
-    'fu-logitech-hidpp-hidpp.c',
     'fu-logitech-hidpp-device.c',
-    'fu-logitech-hidpp-hidpp-msg.c',
     'fu-logitech-hidpp-runtime.c',
     'fu-logitech-hidpp-runtime-unifying.c',
     'fu-logitech-hidpp-runtime-bolt.c',
@@ -50,6 +48,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'logitech-hidpp-self-test',
+    rustgen.process('fu-logitech-hidpp.rs'),
     sources: [
       'fu-logitech-hidpp-self-test.c',
     ],

@@ -20,10 +20,13 @@ struct _FuLogitechRdfuFirmwareClass {
 };
 
 gchar *
-fu_logitech_rdfu_firmware_get_model_id(FuLogitechRdfuFirmware *self, GError **error);
+fu_logitech_rdfu_firmware_get_model_id(FuLogitechRdfuFirmware *self, GError **error)
+    G_GNUC_NON_NULL(1);
 
 GByteArray *
-fu_logitech_rdfu_firmware_get_magic(FuLogitechRdfuFirmware *self, GError **error);
+fu_logitech_rdfu_firmware_get_magic(FuLogitechRdfuFirmware *self,
+				    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 GPtrArray *
-fu_logitech_rdfu_firmware_get_blocks(FuLogitechRdfuFirmware *self, GError **error);
+fu_logitech_rdfu_firmware_get_blocks(FuLogitechRdfuFirmware *self,
+				     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-logitech-hidpp-common.h"
-#include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime-unifying.h"
 #include "fu-logitech-hidpp-struct.h"
 
@@ -24,21 +23,27 @@ static gboolean
 fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st = fu_struct_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
+	const guint8 buf[] = {
+	    'I',
+	    'C',
+	    'P',
+	};
 
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_REGISTER;
-	msg->function_id = FU_LOGITECH_HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE;
-	msg->data[0] = 'I';
-	msg->data[1] = 'C';
-	msg->data[2] = 'P';
-	msg->hidpp_version = 1;
-	msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
+	fu_struct_logitech_hidpp_msg_set_report_id(st, FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+	fu_struct_logitech_hidpp_msg_set_device_id(st, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st, FU_LOGITECH_HIDPP_SUBID_SET_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(
+	    st,
+	    FU_LOGITECH_HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st, buf, sizeof(buf), error))
+		return FALSE;
 	if (!fu_logitech_hidpp_send(FU_UDEV_DEVICE(self),
-				    msg,
-				    FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
+				    st,
+				    FU_LOGITECH_HIDPP_VERSION_1,
+				    FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS * 10,
+				    FU_LOGITECH_HIDPP_MSG_FLAG_NON_BLOCKING_IO,
 				    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
@@ -61,28 +66,43 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuLogitechHidppRuntime *self, 
 
 	/* read all 10 bytes of the version register */
 	for (guint i = 0x01; i < 0x05; i++) {
-		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+		g_autoptr(FuStructLogitechHidppMsg) st_req = fu_struct_logitech_hidpp_msg_new();
+		g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
+		const guint8 *data;
+		gsize datasz = 0;
+		const guint8 buf[] = {i};
 
 		/* workaround a bug in the 12.01 firmware, which fails with
 		 * INVALID_VALUE when reading MCU1_HW_VERSION */
 		if (i == 0x03)
 			continue;
 
-		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-		msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_REGISTER;
-		msg->function_id = FU_LOGITECH_HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
-		msg->data[0] = i;
-		msg->hidpp_version = 1;
-		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+		fu_struct_logitech_hidpp_msg_set_report_id(st_req,
+							   FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+		fu_struct_logitech_hidpp_msg_set_device_id(st_req,
+							   FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+		fu_struct_logitech_hidpp_msg_set_sub_id(st_req,
+							FU_LOGITECH_HIDPP_SUBID_GET_REGISTER);
+		fu_struct_logitech_hidpp_msg_set_function_id(
+		    st_req,
+		    FU_LOGITECH_HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION);
+		if (!fu_struct_logitech_hidpp_msg_set_data(st_req, buf, sizeof(buf), error))
+			return FALSE;
+		st_rsp = fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self),
+						    st_req,
+						    FU_LOGITECH_HIDPP_VERSION_1,
+						    FU_LOGITECH_HIDPP_MSG_FLAG_NONE,
+						    error);
+		if (st_rsp == NULL) {
 			g_prefix_error_literal(error, "failed to read device config: ");
 			return FALSE;
 		}
+		data = fu_struct_logitech_hidpp_msg_get_data(st_rsp, &datasz);
 		if (!fu_memcpy_safe(config,
 				    sizeof(config),
 				    i * 2, /* dst */
-				    msg->data,
-				    sizeof(msg->data),
+				    data,
+				    datasz,
 				    0x1, /* src */
 				    2,
 				    error))

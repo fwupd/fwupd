@@ -26,15 +26,17 @@ struct _FuLogitechHidppBootloaderClass {
 GPtrArray *
 fu_logitech_hidpp_bootloader_parse_pkts(FuLogitechHidppBootloader *self,
 					GPtrArray *records,
-					GError **error);
+					GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 FuStructLogitechHidppBootloaderPkt *
 fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 				     FuStructLogitechHidppBootloaderPkt *st_req,
-				     GError **error);
+				     GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 
 guint16
-fu_logitech_hidpp_bootloader_get_addr_lo(FuLogitechHidppBootloader *self);
+fu_logitech_hidpp_bootloader_get_addr_lo(FuLogitechHidppBootloader *self) G_GNUC_NON_NULL(1);
 guint16
-fu_logitech_hidpp_bootloader_get_addr_hi(FuLogitechHidppBootloader *self);
+fu_logitech_hidpp_bootloader_get_addr_hi(FuLogitechHidppBootloader *self) G_GNUC_NON_NULL(1);
 guint16
-fu_logitech_hidpp_bootloader_get_blocksize(FuLogitechHidppBootloader *self);
+fu_logitech_hidpp_bootloader_get_blocksize(FuLogitechHidppBootloader *self) G_GNUC_NON_NULL(1);
