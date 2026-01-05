@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <json-glib/json-glib.h>
-
 #include "fu-context.h"
 #include "fu-device.h"
 

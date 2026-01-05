@@ -54,8 +54,8 @@ fu_genesys_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_USBHUB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_HUBHID_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GENESYS_USBHUB_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GENESYS_SCALER_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_SCALER_FIRMWARE);
 }
 
 static FuDevice *

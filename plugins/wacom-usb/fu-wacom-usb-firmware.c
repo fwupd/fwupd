@@ -8,17 +8,17 @@
 
 #include <string.h>
 
-#include "fu-wac-firmware.h"
-#include "fu-wac-struct.h"
+#include "fu-wacom-usb-firmware.h"
+#include "fu-wacom-usb-struct.h"
 
-struct _FuWacFirmware {
+struct _FuWacomUsbFirmware {
 	FuFirmware parent_instance;
 };
 
-G_DEFINE_TYPE(FuWacFirmware, fu_wac_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuWacomUsbFirmware, fu_wacom_usb_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_WAC_FIRMWARE_TOKENS_MAX   100000 /* lines */
-#define FU_WAC_FIRMWARE_SECTIONS_MAX 10
+#define FU_WACOM_USB_FIRMWARE_TOKENS_MAX   100000 /* lines */
+#define FU_WACOM_USB_FIRMWARE_SECTIONS_MAX 10
 
 typedef struct {
 	guint32 addr;
@@ -32,16 +32,19 @@ typedef struct {
 	GPtrArray *header_infos;
 	GString *image_buffer;
 	guint8 images_cnt;
-} FuWacFirmwareTokenHelper;
+} FuWacomUsbFirmwareTokenHelper;
 
 static gboolean
-fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+fu_wacom_usb_firmware_tokenize_cb(GString *token,
+				  guint token_idx,
+				  gpointer user_data,
+				  GError **error)
 {
-	FuWacFirmwareTokenHelper *helper = (FuWacFirmwareTokenHelper *)user_data;
+	FuWacomUsbFirmwareTokenHelper *helper = (FuWacomUsbFirmwareTokenHelper *)user_data;
 	g_autofree gchar *cmd = NULL;
 
 	/* sanity check */
-	if (token_idx > FU_WAC_FIRMWARE_TOKENS_MAX) {
+	if (token_idx > FU_WACOM_USB_FIRMWARE_TOKENS_MAX) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -73,7 +76,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 			}
 
 			/* sanity check */
-			if (helper->header_infos->len > FU_WAC_FIRMWARE_SECTIONS_MAX) {
+			if (helper->header_infos->len > FU_WACOM_USB_FIRMWARE_SECTIONS_MAX) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
@@ -258,27 +261,35 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 }
 
 static gboolean
-fu_wac_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_wacom_usb_firmware_validate(FuFirmware *firmware,
+			       GInputStream *stream,
+			       gsize offset,
+			       GError **error)
 {
-	return fu_struct_wac_firmware_hdr_validate_stream(stream, offset, error);
+	return fu_struct_wacom_usb_firmware_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
-fu_wac_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
-		      FuFirmwareParseFlags flags,
-		      GError **error)
+fu_wacom_usb_firmware_parse(FuFirmware *firmware,
+			    GInputStream *stream,
+			    FuFirmwareParseFlags flags,
+			    GError **error)
 {
 	g_autoptr(GPtrArray) header_infos = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GString) image_buffer = g_string_new(NULL);
-	FuWacFirmwareTokenHelper helper = {.firmware = firmware,
-					   .flags = flags,
-					   .header_infos = header_infos,
-					   .image_buffer = image_buffer,
-					   .images_cnt = 0};
+	FuWacomUsbFirmwareTokenHelper helper = {.firmware = firmware,
+						.flags = flags,
+						.header_infos = header_infos,
+						.image_buffer = image_buffer,
+						.images_cnt = 0};
 
 	/* tokenize */
-	if (!fu_strsplit_stream(stream, 0x0, "\n", fu_wac_firmware_tokenize_cb, &helper, error))
+	if (!fu_strsplit_stream(stream,
+				0x0,
+				"\n",
+				fu_wacom_usb_firmware_tokenize_cb,
+				&helper,
+				error))
 		return FALSE;
 
 	/* verify data is complete */
@@ -306,13 +317,13 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 }
 
 static guint8
-fu_wac_firmware_calc_checksum(GByteArray *buf)
+fu_wacom_usb_firmware_calc_checksum(GByteArray *buf)
 {
 	return fu_sum8(buf->data, buf->len) ^ 0xFF;
 }
 
 static GByteArray *
-fu_wac_firmware_write(FuFirmware *firmware, GError **error)
+fu_wacom_usb_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -335,7 +346,7 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 	g_string_append_printf(str, "WACOM%u", images->len);
 	for (guint i = 0; i < buf_hdr->len; i++)
 		g_string_append_printf(str, "%02X", buf_hdr->data[i]);
-	g_string_append_printf(str, "%02X\n", fu_wac_firmware_calc_checksum(buf_hdr));
+	g_string_append_printf(str, "%02X\n", fu_wacom_usb_firmware_calc_checksum(buf_hdr));
 
 	/* payload */
 	for (guint i = 0; i < images->len; i++) {
@@ -348,7 +359,7 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_append_uint32(buf_img, fu_firmware_get_addr(img), G_BIG_ENDIAN);
 		for (guint j = 0; j < buf_img->len; j++)
 			g_string_append_printf(str, "%02X", buf_img->data[j]);
-		g_string_append_printf(str, "%02X\n", fu_wac_firmware_calc_checksum(buf_img));
+		g_string_append_printf(str, "%02X\n", fu_wacom_usb_firmware_calc_checksum(buf_img));
 
 		/* srec */
 		img_blob = fu_firmware_write(img, error);
@@ -365,7 +376,7 @@ fu_wac_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_wac_firmware_init(FuWacFirmware *self)
+fu_wacom_usb_firmware_init(FuWacomUsbFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
@@ -373,16 +384,16 @@ fu_wac_firmware_init(FuWacFirmware *self)
 }
 
 static void
-fu_wac_firmware_class_init(FuWacFirmwareClass *klass)
+fu_wacom_usb_firmware_class_init(FuWacomUsbFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_wac_firmware_validate;
-	firmware_class->parse = fu_wac_firmware_parse;
-	firmware_class->write = fu_wac_firmware_write;
+	firmware_class->validate = fu_wacom_usb_firmware_validate;
+	firmware_class->parse = fu_wacom_usb_firmware_parse;
+	firmware_class->write = fu_wacom_usb_firmware_write;
 }
 
 FuFirmware *
-fu_wac_firmware_new(void)
+fu_wacom_usb_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_WAC_FIRMWARE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_WACOM_USB_FIRMWARE, NULL));
 }

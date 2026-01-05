@@ -598,58 +598,45 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 }
 
 static void
-fu_security_attrs_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_security_attrs_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuSecurityAttrs *self = FU_SECURITY_ATTRS(codec);
-	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GPtrArray) items = fu_security_attrs_get_all(self, NULL);
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
-	json_builder_set_member_name(builder, "SecurityAttributes");
-	json_builder_begin_array(builder);
-	items = fu_security_attrs_get_all(self, NULL);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		guint64 created = fwupd_security_attr_get_created(attr);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
 			continue;
 		fwupd_security_attr_set_created(attr, 0);
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_NONE);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(attr), json_obj_tmp, FWUPD_CODEC_FLAG_NONE);
 		fwupd_security_attr_set_created(attr, created);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
+	fwupd_json_object_add_array(json_obj, "SecurityAttributes", json_arr);
 }
 
 static gboolean
-fu_security_attrs_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_security_attrs_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuSecurityAttrs *self = FU_SECURITY_ATTRS(codec);
-	JsonArray *array;
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	obj = json_node_get_object(json_node);
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* this has to exist */
-	if (!json_object_has_member(obj, "SecurityAttributes")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no SecurityAttributes property in object");
+	json_arr = fwupd_json_object_get_array(json_obj, "SecurityAttributes", error);
+	if (json_arr == NULL)
 		return FALSE;
-	}
-	array = json_object_get_array_member(obj, "SecurityAttributes");
-	for (guint i = 0; i < json_array_get_length(array); i++) {
-		JsonNode *node_tmp = json_array_get_element(array, i);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 		g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
-		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), node_tmp, error))
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), json_obj_tmp, error))
 			return FALSE;
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
 			continue;

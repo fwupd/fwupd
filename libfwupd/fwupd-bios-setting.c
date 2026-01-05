@@ -10,6 +10,8 @@
 #include "fwupd-codec.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-json-array.h"
+#include "fwupd-json-object.h"
 
 /**
  * FwupdBiosSetting:
@@ -892,118 +894,130 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 }
 
 static gboolean
-fwupd_bios_setting_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fwupd_bios_setting_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
-	JsonObject *obj;
+	gboolean tmpb = FALSE;
+	gint64 tmpi = 0;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							FWUPD_RESULT_KEY_BIOS_SETTING_TYPE,
+							&tmpi,
+							0,
+							error))
 		return FALSE;
-	}
-	obj = json_node_get_object(json_node);
-
-	fwupd_bios_setting_set_kind(
-	    self,
-	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, 0));
+	fwupd_bios_setting_set_kind(self, tmpi);
 	fwupd_bios_setting_set_id(
 	    self,
-	    json_object_get_string_member_with_default(obj,
-						       FWUPD_RESULT_KEY_BIOS_SETTING_ID,
-						       NULL));
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, NULL));
 
 	fwupd_bios_setting_set_name(
 	    self,
-	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_NAME, NULL));
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_NAME, NULL));
 	fwupd_bios_setting_set_description(
 	    self,
-	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_DESCRIPTION, NULL));
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DESCRIPTION, NULL));
 	fwupd_bios_setting_set_path(
 	    self,
-	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_FILENAME, NULL));
+	    fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_FILENAME, NULL));
 	fwupd_bios_setting_set_current_value(
 	    self,
-	    json_object_get_string_member_with_default(obj,
-						       FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-						       NULL));
-	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES)) {
-		JsonArray *array =
-		    json_object_get_array_member(obj,
-						 FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES);
-		for (guint i = 0; i < json_array_get_length(array); i++) {
-			const gchar *tmp = json_array_get_string_element(array, i);
+	    fwupd_json_object_get_string(json_obj,
+					 FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+					 NULL));
+	json_arr = fwupd_json_object_get_array(json_obj,
+					       FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
+					       NULL);
+	if (json_arr != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+			const gchar *tmp = fwupd_json_array_get_string(json_arr, i, NULL);
 			fwupd_bios_setting_add_possible_value(self, tmp);
 		}
 	}
-	fwupd_bios_setting_set_lower_bound(
-	    self,
-	    json_object_get_int_member_with_default(obj,
-						    FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
-						    0));
-	fwupd_bios_setting_set_upper_bound(
-	    self,
-	    json_object_get_int_member_with_default(obj,
-						    FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
-						    0));
-	fwupd_bios_setting_set_scalar_increment(
-	    self,
-	    json_object_get_int_member_with_default(obj,
-						    FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
-						    0));
-	fwupd_bios_setting_set_read_only(
-	    self,
-	    json_object_get_boolean_member_with_default(obj,
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
+							&tmpi,
+							0,
+							error))
+		return FALSE;
+	fwupd_bios_setting_set_lower_bound(self, tmpi);
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
+							&tmpi,
+							0,
+							error))
+		return FALSE;
+	fwupd_bios_setting_set_upper_bound(self, tmpi);
+	if (!fwupd_json_object_get_integer_with_default(
+		json_obj,
+		FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
+		&tmpi,
+		0,
+		error))
+		return FALSE;
+	fwupd_bios_setting_set_scalar_increment(self, tmpi);
+	if (!fwupd_json_object_get_boolean_with_default(json_obj,
 							FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
-							FALSE));
+							&tmpb,
+							FALSE,
+							error))
+		return FALSE;
+	fwupd_bios_setting_set_read_only(self, tmpb);
 	/* success */
 	return TRUE;
 }
 
 static void
-fwupd_bios_setting_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_bios_setting_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_FILENAME, priv->path);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
-	fwupd_codec_json_append(builder,
-				FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-				priv->current_value);
-	fwupd_codec_json_append_bool(builder,
-				     FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
-				     priv->read_only);
-	fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
+	if (priv->name != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->description != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DESCRIPTION,
+					     priv->description);
+	if (priv->path != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_FILENAME, priv->path);
+	if (priv->id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	if (priv->current_value != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+					     priv->current_value);
+	}
+	fwupd_json_object_add_boolean(json_obj,
+				      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
+				      priv->read_only);
+	fwupd_json_object_add_integer(json_obj, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
-			json_builder_set_member_name(builder,
-						     FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES);
-			json_builder_begin_array(builder);
+			g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 			for (guint i = 0; i < priv->possible_values->len; i++) {
 				const gchar *tmp = g_ptr_array_index(priv->possible_values, i);
-				json_builder_add_string_value(builder, tmp);
+				fwupd_json_array_add_string(json_arr, tmp);
 			}
-			json_builder_end_array(builder);
+			fwupd_json_object_add_array(json_obj,
+						    FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
+						    json_arr);
 		}
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
 	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
-		fwupd_codec_json_append_int(builder,
-					    FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
-					    priv->lower_bound);
-		fwupd_codec_json_append_int(builder,
-					    FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
-					    priv->upper_bound);
+		fwupd_json_object_add_integer(json_obj,
+					      FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
+					      priv->lower_bound);
+		fwupd_json_object_add_integer(json_obj,
+					      FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
+					      priv->upper_bound);
 		if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
-			fwupd_codec_json_append_int(builder,
-						    FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
-						    priv->scalar_increment);
+			fwupd_json_object_add_integer(
+			    json_obj,
+			    FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
+			    priv->scalar_increment);
 		}
 	}
 }

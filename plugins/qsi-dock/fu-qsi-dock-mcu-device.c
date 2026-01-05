@@ -8,8 +8,8 @@
 #include "config.h"
 
 #include "fu-qsi-dock-child-device.h"
-#include "fu-qsi-dock-common.h"
 #include "fu-qsi-dock-mcu-device.h"
+#include "fu-qsi-dock-struct.h"
 
 struct _FuQsiDockMcuDevice {
 	FuHidDevice parent_instance;
@@ -22,6 +22,8 @@ G_DEFINE_TYPE(FuQsiDockMcuDevice, fu_qsi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 #define FU_QSI_DOCK_TX_ISP_LENGTH	   61
 #define FU_QSI_DOCK_TX_ISP_LENGTH_MCU	   60
 #define FU_QSI_DOCK_EXTERN_FLASH_PAGE_SIZE 256
+
+#define FU_QSI_DOCK_REPORT_ID 5
 
 static gboolean
 fu_qsi_dock_mcu_device_tx(FuQsiDockMcuDevice *self,
@@ -115,10 +117,10 @@ fu_qsi_dock_mcu_device_enumerate_children(FuQsiDockMcuDevice *self, GError **err
 		guint8 chip_idx;
 		gsize offset;
 	} components[] = {
-	    {"MCU", FU_QSI_DOCK_FIRMWARE_IDX_MCU, G_STRUCT_OFFSET(FuQsiDockIspVersionInMcu, MCU)},
+	    {"MCU", FU_QSI_DOCK_FIRMWARE_IDX_MCU, FU_QSI_DOCK_ISP_VERSION_IN_MCU_OFFSET_MCU},
 	    {"bcdVersion",
 	     FU_QSI_DOCK_FIRMWARE_IDX_NONE,
-	     G_STRUCT_OFFSET(FuQsiDockIspVersionInMcu, bcdVersion)},
+	     FU_QSI_DOCK_ISP_VERSION_IN_MCU_OFFSET_BCD_VERSION},
 	    {NULL, 0, 0}};
 
 	for (guint i = 0; components[i].name != NULL; i++) {

@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-synaptics-rmi-common.h"
+#include "fu-synaptics-rmi-struct.h"
 
 #define FU_TYPE_SYNAPTICS_RMI_DEVICE (fu_synaptics_rmi_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuSynapticsRmiDevice,
@@ -16,12 +17,6 @@ G_DECLARE_DERIVABLE_TYPE(FuSynapticsRmiDevice,
 			 FU,
 			 SYNAPTICS_RMI_DEVICE,
 			 FuUdevDevice)
-
-typedef enum {
-	FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE = 0,
-	FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE = 1 << 0,
-	FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE = 1 << 1,
-} G_GNUC_FLAG_ENUM FuSynapticsRmiDeviceFlags;
 
 struct _FuSynapticsRmiDeviceClass {
 	FuUdevDeviceClass parent_class;

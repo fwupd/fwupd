@@ -83,6 +83,9 @@ void
 fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_json_object_add_array_strv(FwupdJsonObject *self, const gchar *key, gchar **value)
+    G_GNUC_NON_NULL(1, 2);
+void
 fwupd_json_object_add_integer(FwupdJsonObject *self, const gchar *key, gint64 value)
     G_GNUC_NON_NULL(1, 2);
 void
@@ -90,6 +93,9 @@ fwupd_json_object_add_boolean(FwupdJsonObject *self, const gchar *key, gboolean 
     G_GNUC_NON_NULL(1, 2);
 void
 fwupd_json_object_add_object(FwupdJsonObject *self, const gchar *key, FwupdJsonObject *json_obj)
+    G_GNUC_NON_NULL(1, 2, 3);
+void
+fwupd_json_object_add_object_map(FwupdJsonObject *self, const gchar *key, GHashTable *value)
     G_GNUC_NON_NULL(1, 2, 3);
 void
 fwupd_json_object_add_array(FwupdJsonObject *self, const gchar *key, FwupdJsonArray *json_arr)

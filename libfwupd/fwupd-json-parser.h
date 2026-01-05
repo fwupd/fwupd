@@ -22,6 +22,8 @@ void
 fwupd_json_parser_set_max_depth(FwupdJsonParser *self, guint max_depth) G_GNUC_NON_NULL(1);
 void
 fwupd_json_parser_set_max_items(FwupdJsonParser *self, guint max_items) G_GNUC_NON_NULL(1);
+void
+fwupd_json_parser_set_max_quoted(FwupdJsonParser *self, guint max_quoted) G_GNUC_NON_NULL(1);
 
 FwupdJsonNode *
 fwupd_json_parser_load_from_stream(FwupdJsonParser *self,

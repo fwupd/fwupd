@@ -1,4 +1,4 @@
-<firmware gtype="FuUsbDescriptor">
+<firmware gtype="FuUsbBosDescriptor">
   <dev_capability_type>bos</dev_capability_type>
   <firmware>
     <id>payload</id>

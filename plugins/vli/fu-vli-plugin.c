@@ -35,8 +35,8 @@ fu_vli_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "VliDeviceKind");
 	fu_context_add_quirk_key(ctx, "VliSpiAutoDetect");
 	fu_plugin_add_udev_subsystem(plugin, "usb");
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_VLI_USBHUB_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_VLI_PD_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_VLI_USBHUB_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_VLI_PD_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_USBHUB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_PD_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_PD_PARADE_DEVICE);      /* coverage */

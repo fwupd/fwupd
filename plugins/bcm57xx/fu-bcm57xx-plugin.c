@@ -84,30 +84,21 @@ fu_bcm57xx_plugin_init(FuBcm57xxPlugin *self)
 }
 
 static void
-fu_bcm57xx_plugin_object_constructed(GObject *obj)
-{
-	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_set_name(plugin, "bcm57xx");
-}
-
-static void
 fu_bcm57xx_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_BCM57XX_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_DICT_IMAGE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_STAGE1_IMAGE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_BCM57XX_STAGE2_IMAGE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_BCM57XX_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_BCM57XX_DICT_IMAGE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_BCM57XX_STAGE1_IMAGE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_BCM57XX_STAGE2_IMAGE);
 }
 
 static void
 fu_bcm57xx_plugin_class_init(FuBcm57xxPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->constructed = fu_bcm57xx_plugin_object_constructed;
 	plugin_class->constructed = fu_bcm57xx_plugin_constructed;
 	plugin_class->backend_device_added = fu_bcm57xx_plugin_backend_device_added;
 }

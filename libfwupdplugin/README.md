@@ -205,3 +205,9 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_input_stream_find()`: Add a start offset, typically `0x0`.
 * `fu_device_get_parent()`: Add a `GError`
 * `fu_device_get_proxy()`: Add a `GError`
+
+## 2.1.1
+
+* `fu_context_add_firmware_gtype()`: Drop the `id` parameter.
+* `fu_firmware_build_from_xml()`: Use `fu_firmware_new_from_xml()` instead.
+* `fu_firmware_build_from_filename()`: Use `fu_firmware_new_from_filename()` instead.

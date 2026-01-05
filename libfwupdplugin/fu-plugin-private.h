@@ -16,6 +16,8 @@ FuPlugin *
 fu_plugin_new_from_gtype(GType gtype, FuContext *ctx) G_GNUC_NON_NULL(2);
 void
 fu_plugin_set_context(FuPlugin *self, FuContext *ctx) G_GNUC_NON_NULL(1);
+void
+fu_plugin_set_name(FuPlugin *self, const gchar *name) G_GNUC_NON_NULL(1);
 gboolean
 fu_plugin_is_open(FuPlugin *self) G_GNUC_NON_NULL(1);
 guint

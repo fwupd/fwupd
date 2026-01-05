@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <json-glib/json-glib.h>
-
 #include "fu-console.h"
 
 /* custom return codes */
@@ -144,15 +142,13 @@ void
 fu_util_show_unsupported_warning(FuConsole *console) G_GNUC_NON_NULL(1);
 gboolean
 fu_util_is_url(const gchar *perhaps_url) G_GNUC_NON_NULL(1);
-gboolean
-fu_util_print_builder(FuConsole *console, JsonBuilder *builder, GError **error)
-    G_GNUC_NON_NULL(1, 2);
+void
+fu_util_print_json_object(FuConsole *console, FwupdJsonObject *json_obj) G_GNUC_NON_NULL(1, 2);
 void
 fu_util_print_error_as_json(FuConsole *console, const GError *error) G_GNUC_NON_NULL(1);
 gchar *
 fu_util_project_versions_to_string(GHashTable *metadata) G_GNUC_NON_NULL(1);
-gboolean
-fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error)
-    G_GNUC_NON_NULL(1, 2);
+void
+fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_util_get_prgname(const gchar *argv0) G_GNUC_NON_NULL(1);

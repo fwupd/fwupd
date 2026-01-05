@@ -39,7 +39,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuLogitechHidppBootloaderRequest, g_free);
 
 GPtrArray *
 fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
-					    GBytes *fw,
+					    GPtrArray *records,
 					    GError **error);
 gboolean
 fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,

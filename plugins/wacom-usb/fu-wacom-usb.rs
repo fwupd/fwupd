@@ -3,7 +3,7 @@
 
 #[derive(ValidateStream, Default)]
 #[repr(C, packed)]
-struct FuStructWacFirmwareHdr {
+struct FuStructWacomUsbFirmwareHdr {
     magic: [char; 5] == "WACOM",
 }
 
@@ -15,7 +15,7 @@ struct FuStructWtaBlockHeader {
 }
 
 #[derive(ToString)]
-enum FuWacReportId {
+enum FuWacomUsbReportId {
     FwDescriptor              = 0xCB, // GET_FEATURE
     SwitchToFlashLoader       = 0xCC, // SET_FEATURE
     QuitAndReset              = 0xCD, // SET_FEATURE
@@ -38,7 +38,7 @@ enum FuWacReportId {
 
 #[derive(ToString)]
 #[repr(u8)]
-enum FuWacModuleFwType {
+enum FuWacomUsbModuleFwType {
     Touch         = 0x00,
     Bluetooth     = 0x01,
     EmrCorrection = 0x02,
@@ -52,14 +52,14 @@ enum FuWacModuleFwType {
 }
 
 #[derive(ToString)]
-enum FuWacModuleCommand {
+enum FuWacomUsbModuleCommand {
     Start = 0x01,
     Data  = 0x02,
     End   = 0x03,
 }
 
 #[derive(ToString)]
-enum FuWacModuleStatus {
+enum FuWacomUsbModuleStatus {
     Ok,
     Busy,
     ErrCrc,
@@ -78,7 +78,7 @@ enum FuWacModuleStatus {
 }
 
 #[derive(ToString)]
-enum FuWacDeviceStatus {
+enum FuWacomUsbDeviceStatus {
     Unknown = 0,
     Writing = 1 << 0,
     Erasing = 1 << 1,
@@ -89,7 +89,7 @@ enum FuWacDeviceStatus {
 
 #[derive(New, Default)]
 #[repr(C, packed)]
-struct FuStructId9UnknownCmd {
+struct FuStructWacomUsbId9UnknownCmd {
     unknown1: u16be == 0x7050,
     unknown2: u32be == 0,
     size: u16be,                  // Size of payload to be transferred
@@ -97,35 +97,35 @@ struct FuStructId9UnknownCmd {
 
 #[derive(New, Default)]
 #[repr(C, packed)]
-struct FuStructId9SpiCmd {
+struct FuStructWacomUsbId9SpiCmd {
     command: u8 == 0x91,
     start_addr: u32be == 0,
     size: u16be,                  // sizeof(data) + size of payload
-    data: FuStructId9UnknownCmd,
+    data: FuStructWacomUsbId9UnknownCmd,
 }
 
 #[derive(New, Validate, ToBytes)]
 #[repr(C, packed)]
-struct FuStructId9LoaderCmd {
+struct FuStructWacomUsbId9LoaderCmd {
     command: u8,
     size: u16be,                  // sizeof(data) + size of payload
     crc: u32be,                   // CRC(concat(data, payload))
-    data: FuStructId9SpiCmd,
+    data: FuStructWacomUsbId9SpiCmd,
 }
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructModuleDesc {
+struct FuStructWacomUsbModuleDesc {
     _report_id: u8,
     bootloader_version: u16be,
     number_modules: u8,
-    // FuStructModuleItem[number_modules]
+    // FuStructWacomUsbModuleItem[number_modules]
 }
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructModuleItem {
-    kind: FuWacModuleFwType,
+struct FuStructWacomUsbModuleItem {
+    kind: FuWacomUsbModuleFwType,
     version: u16be,
     version2: u8,
 }

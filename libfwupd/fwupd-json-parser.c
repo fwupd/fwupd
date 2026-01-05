@@ -27,9 +27,14 @@ struct _FwupdJsonParser {
 	GObject parent_instance;
 	guint max_depth;
 	guint max_items;
+	guint max_quoted;
 };
 
 G_DEFINE_TYPE(FwupdJsonParser, fwupd_json_parser, G_TYPE_OBJECT)
+
+#define FWUPD_JSON_PARSER_NEWLINE_MAX 5
+
+#define FWUPD_JSON_PARSER_INDENT_MAX 8 /* per depth */
 
 /**
  * fwupd_json_parser_set_max_depth:
@@ -63,6 +68,22 @@ fwupd_json_parser_set_max_items(FwupdJsonParser *self, guint max_items)
 	self->max_items = max_items;
 }
 
+/**
+ * fwupd_json_parser_set_max_quoted:
+ * @self: a #FwupdJsonParser
+ * @max_quoted: maximum size of a quoted string
+ *
+ * Sets the maximum size of a quoted string. By default there is no limit.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_parser_set_max_quoted(FwupdJsonParser *self, guint max_quoted)
+{
+	g_return_if_fail(FWUPD_IS_JSON_PARSER(self));
+	self->max_quoted = max_quoted;
+}
+
 typedef enum {
 	FWUPD_JSON_PARSER_TOKEN_INVALID = 0,
 	FWUPD_JSON_PARSER_TOKEN_RAW = 'b',
@@ -80,16 +101,20 @@ typedef struct {
 	gsize buf_offset; /* into @buf */
 	GInputStream *stream;
 	GString *acc;
+	guint max_quoted;
 	gboolean is_quoted;
 	gboolean is_escape;
 	guint linecnt;
+	guint newlinecnt;
+	guint whitespacecnt;
 	guint depth;
 } FwupdJsonParserHelper;
 
 static FwupdJsonParserHelper *
-fwupd_json_parser_helper_new(void)
+fwupd_json_parser_helper_new(FwupdJsonParser *self)
 {
 	FwupdJsonParserHelper *helper = g_new0(FwupdJsonParserHelper, 1);
+	helper->max_quoted = self->max_quoted;
 	helper->linecnt = 1;
 	helper->buf = g_byte_array_new();
 	helper->acc = g_string_sized_new(128);
@@ -166,6 +191,8 @@ fwupd_json_parser_unescape_char(gchar data)
 		return '\t';
 	if (data == '\\')
 		return '\\';
+	if (data == '\"')
+		return '\"';
 	return 0;
 }
 
@@ -186,19 +213,22 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 	data = helper->buf->data[helper->buf_offset];
 
 	/* quotes */
-	if (data == '"') {
+	if (!helper->is_escape && data == '"') {
 		if (helper->is_quoted) {
 			fwupd_json_parser_helper_dump_acc(helper, token, str);
 			helper->is_quoted = FALSE;
 			return TRUE;
 		}
 		helper->is_quoted = TRUE;
+		helper->newlinecnt = 0;
+		helper->whitespacecnt = 0;
 		return TRUE;
 	}
 	if (helper->is_quoted) {
 		/* escape char */
 		if (!helper->is_escape && data == '\\') {
 			helper->is_escape = TRUE;
+			helper->newlinecnt = 0;
 			return TRUE;
 		}
 		if (G_UNLIKELY(helper->is_escape)) {
@@ -215,16 +245,35 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 		}
 
 		/* save acc */
+		helper->newlinecnt = 0;
+		helper->whitespacecnt = 0;
 		g_string_append_c(helper->acc, data);
+		if (G_UNLIKELY(helper->max_quoted > 0 && helper->acc->len > helper->max_quoted)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "token too long, limit was %u",
+				    helper->max_quoted);
+			return FALSE;
+		}
 		return TRUE;
 	}
 
 	/* newline, for error messages */
 	if (data == '\n') {
 		helper->linecnt++;
+		if (helper->newlinecnt++ > FWUPD_JSON_PARSER_NEWLINE_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too many newlines, limit was %u",
+				    (guint)FWUPD_JSON_PARSER_NEWLINE_MAX);
+			return FALSE;
+		}
 		fwupd_json_parser_helper_dump_acc(helper, token, str);
 		return TRUE;
 	}
+	helper->newlinecnt = 0;
 
 	/* split */
 	if (data == ',') {
@@ -244,15 +293,38 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 			return TRUE;
 		}
 		*token = data;
+		helper->newlinecnt = 0;
+		helper->whitespacecnt = 0;
 		return TRUE;
 	}
 
 	/* whitespace */
-	if (g_ascii_isspace(data))
+	if (g_ascii_isspace(data)) {
+		guint whitespace_max = FWUPD_JSON_PARSER_INDENT_MAX * (helper->depth + 1);
+		if (helper->whitespacecnt++ >= whitespace_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too much whitespace, limit was %u",
+				    whitespace_max);
+			return FALSE;
+		}
 		return TRUE;
+	}
+
+	/* strip control chars */
+	if (g_ascii_iscntrl(data)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "ASCII control character detected 0x%x",
+			    (guint)data);
+		return FALSE;
+	}
 
 	/* save acc */
 	g_string_append_c(helper->acc, data);
+	helper->whitespacecnt = 0;
 	return TRUE;
 }
 
@@ -496,7 +568,7 @@ fwupd_json_parser_load_from_bytes(FwupdJsonParser *self,
 				  FwupdJsonLoadFlags flags,
 				  GError **error)
 {
-	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new();
+	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new(self);
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
 	g_return_val_if_fail(blob != NULL, NULL);
@@ -526,7 +598,7 @@ fwupd_json_parser_load_from_data(FwupdJsonParser *self,
 				 FwupdJsonLoadFlags flags,
 				 GError **error)
 {
-	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new();
+	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new(self);
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
 	g_return_val_if_fail(text != NULL, NULL);
@@ -556,7 +628,7 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
 				   FwupdJsonLoadFlags flags,
 				   GError **error)
 {
-	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new();
+	g_autoptr(FwupdJsonParserHelper) helper = fwupd_json_parser_helper_new(self);
 
 	g_return_val_if_fail(FWUPD_IS_JSON_PARSER(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);

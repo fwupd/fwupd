@@ -36,7 +36,7 @@ fu_context_get_runtime_versions(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
 fu_context_get_compile_versions(FuContext *self) G_GNUC_NON_NULL(1);
 void
-fu_context_add_firmware_gtype(FuContext *self, const gchar *id, GType gtype) G_GNUC_NON_NULL(1, 2);
+fu_context_add_firmware_gtype(FuContext *self, GType gtype) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_context_get_firmware_gtype_ids(FuContext *self) G_GNUC_NON_NULL(1);
 GArray *

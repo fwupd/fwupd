@@ -11,19 +11,21 @@
 # Serdar Sağlam <teknomobil@msn.com>, 2020
 # yunus kaba <yunuskaba@gmail.com>, 2021
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Muhammet Kara <muhammet.kara@metu.edu.tr>, 2025.
+# Emir <bitigchi@me.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-24 10:39+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2025-12-23 16:00+0000\n"
+"Last-Translator: Emir <bitigchi@me.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/fwupd/fwupd/tr/>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.15.1\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -134,8 +136,8 @@ msgstr[1] "%u aygıtın donanım yazılımı yükseltmesi var."
 #, c-format
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
-msgstr[0] "%u aygıtı bilinen en iyi yapılandırma değildir"
-msgstr[1] "%u aygıtları bilinen en iyi yapılandırma değildir"
+msgstr[0] "%u aygıtı bilinen en iyi yapılandırma değildir."
+msgstr[1] "%u aygıtları bilinen en iyi yapılandırma değildir."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -239,7 +241,7 @@ msgstr "Bu makine üzerindeki donanım yazılımının sürümünü düşürmek 
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
-msgstr "Bir makine güvenlik sorununu düzeltmek için kimlik doğrulma gerekir"
+msgstr "Bir makine güvenlik sorununu düzeltmek için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -271,7 +273,7 @@ msgstr "Bu makine üzerindeki donanım yazılımını güncellemek için kimlik 
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
-msgstr "Bir makine güvenlik sorunu düzeltmesini geri almak için kimlik doğrulma gerekir"
+msgstr "Bir makine güvenlik sorunu düzeltmesini geri almak için kimlik doğrulama gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -295,7 +297,7 @@ msgstr "Otomatik Raporla"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS firmware updates"
-msgstr "BIOS donanım yazılımı güncellemeleri"
+msgstr "BIOS d. y. güncellemeleri"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -468,7 +470,7 @@ msgstr "Var olan en son donanım yazılımı sürümüne sahip aygıtlar:"
 #. TRANSLATORS: Plugin is inactive and not used
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
-msgstr "Devredışı"
+msgstr "Devre dışı"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -744,7 +746,7 @@ msgstr "Yüksek"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
-msgstr "Host Güvenlik Kimliği:"
+msgstr "Makine güvenlik kimliği:"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -1492,7 +1494,7 @@ msgstr "UEFI Güvenli Önyükleme"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI bootservice variables"
-msgstr "UEFI önyükleme hizmeti değişkenleri"
+msgstr "UEFI önyük. hiz. değişkenleri"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"

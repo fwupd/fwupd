@@ -38,6 +38,11 @@ fu_json_firmware_parse(FuFirmware *firmware,
 	/* make the fuzzer spend time on complexity, not depth or length -> OOM */
 	fwupd_json_parser_set_max_depth(json_parser, 5);
 	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
+#else
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 10000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 #endif
 
 	/* just load into memory, no extraction performed */

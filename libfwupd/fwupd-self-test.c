@@ -169,6 +169,21 @@ fwupd_json_parser_items_func(void)
 }
 
 static void
+fwupd_json_parser_quoted_func(void)
+{
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *json = "\"hello\"";
+
+	fwupd_json_parser_set_max_quoted(parser, 3);
+	json_node =
+	    fwupd_json_parser_load_from_data(parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(json_node);
+}
+
+static void
 fwupd_json_parser_stream_func(void)
 {
 	const gchar *json = "\"one\"";
@@ -228,6 +243,7 @@ fwupd_json_parser_valid_func(void)
 	    "\"one\"",
 	    "\"one\\ttwo\"",
 	    "\"two\\nthree\"",
+	    "\"four\\\"five\"",
 	    "[]",
 	    "[\"one\", \"two\\n\", [{\"three\": [true]}]]",
 	};
@@ -262,6 +278,9 @@ fwupd_json_parser_invalid_func(void)
 	    "{one, true}",
 	    "\"\\p\"",
 	    ":1",
+	    "\x02",
+	    "\n\n\n\n\n\n\n[]",
+	    "         []",
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
@@ -1085,6 +1104,7 @@ fwupd_client_api(void)
 static void
 fwupd_common_history_report_func(void)
 {
+	gboolean ret;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdClient) client = fwupd_client_new();
 	g_autoptr(FwupdDevice) dev = fwupd_device_new();
@@ -1116,38 +1136,40 @@ fwupd_common_history_report_func(void)
 	json = fwupd_client_build_report_history(client, devs, NULL, metadata, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	g_assert_cmpstr(json,
-			==,
-			"{\n"
-			"  \"ReportType\" : \"history\",\n"
-			"  \"ReportVersion\" : 2,\n"
-			"  \"Metadata\" : {\n"
-			"    \"DistroId\" : \"generic\",\n"
-			"    \"DistroVariant\" : \"workstation\",\n"
-			"    \"DistroVersion\" : \"39\"\n"
-			"  },\n"
-			"  \"Reports\" : [\n"
-			"    {\n"
-			"      \"Checksum\" : \"beefdead\",\n"
-			"      \"ChecksumDevice\" : [\n"
-			"        \"beefdead\"\n"
-			"      ],\n"
-			"      \"ReleaseId\" : \"123\",\n"
-			"      \"UpdateState\" : 3,\n"
-			"      \"UpdateError\" : \"device dead\",\n"
-			"      \"UpdateMessage\" : \"oops\",\n"
-			"      \"Guid\" : [\n"
-			"        \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\"\n"
-			"      ],\n"
-			"      \"Plugin\" : \"hughski_colorhug\",\n"
-			"      \"VersionOld\" : \"1.2.3\",\n"
-			"      \"VersionNew\" : \"1.2.4\",\n"
-			"      \"Flags\" : 0,\n"
-			"      \"Created\" : 0,\n"
-			"      \"Modified\" : 0\n"
-			"    }\n"
-			"  ]\n"
-			"}");
+	ret = fu_test_compare_lines(json,
+				    "{\n"
+				    "  \"ReportType\": \"history\",\n"
+				    "  \"ReportVersion\": 2,\n"
+				    "  \"Metadata\": {\n"
+				    "    \"DistroId\": \"generic\",\n"
+				    "    \"DistroVariant\": \"workstation\",\n"
+				    "    \"DistroVersion\": \"39\"\n"
+				    "  },\n"
+				    "  \"Reports\": [\n"
+				    "    {\n"
+				    "      \"Checksum\": \"beefdead\",\n"
+				    "      \"ChecksumDevice\": [\n"
+				    "        \"beefdead\"\n"
+				    "      ],\n"
+				    "      \"ReleaseId\": \"123\",\n"
+				    "      \"UpdateState\": 3,\n"
+				    "      \"UpdateError\": \"device dead\",\n"
+				    "      \"UpdateMessage\": \"oops\",\n"
+				    "      \"Guid\": [\n"
+				    "        \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\"\n"
+				    "      ],\n"
+				    "      \"Plugin\": \"hughski_colorhug\",\n"
+				    "      \"VersionOld\": \"1.2.3\",\n"
+				    "      \"VersionNew\": \"1.2.4\",\n"
+				    "      \"Flags\": 0,\n"
+				    "      \"Created\": 0,\n"
+				    "      \"Modified\": 0\n"
+				    "    }\n"
+				    "  ]\n"
+				    "}",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -1248,52 +1270,52 @@ fwupd_device_func(void)
 	ret =
 	    fu_test_compare_lines(data,
 				  "{\n"
-				  "  \"Name\" : \"ColorHug2\",\n"
-				  "  \"DeviceId\" : \"0000000000000000000000000000000000000000\",\n"
-				  "  \"InstanceIds\" : [\n"
+				  "  \"Name\": \"ColorHug2\",\n"
+				  "  \"DeviceId\": \"0000000000000000000000000000000000000000\",\n"
+				  "  \"InstanceIds\": [\n"
 				  "    \"USB\\\\VID_1234&PID_0001\"\n"
 				  "  ],\n"
-				  "  \"Guid\" : [\n"
+				  "  \"Guid\": [\n"
 				  "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
 				  "    \"00000000-0000-0000-0000-000000000000\"\n"
 				  "  ],\n"
-				  "  \"Branch\" : \"community\",\n"
-				  "  \"Flags\" : [\n"
+				  "  \"Branch\": \"community\",\n"
+				  "  \"Flags\": [\n"
 				  "    \"updatable\",\n"
 				  "    \"require-ac\"\n"
 				  "  ],\n"
-				  "  \"Checksums\" : [\n"
+				  "  \"Checksums\": [\n"
 				  "    \"beefdead\"\n"
 				  "  ],\n"
-				  "  \"VendorIds\" : [\n"
+				  "  \"VendorIds\": [\n"
 				  "    \"USB:0x1234\",\n"
 				  "    \"PCI:0x5678\"\n"
 				  "  ],\n"
-				  "  \"Icons\" : [\n"
+				  "  \"Icons\": [\n"
 				  "    \"input-gaming\",\n"
 				  "    \"input-mouse\"\n"
 				  "  ],\n"
-				  "  \"Created\" : 1,\n"
-				  "  \"Modified\" : 86400,\n"
-				  "  \"Releases\" : [\n"
+				  "  \"Created\": 1,\n"
+				  "  \"Modified\": 86400,\n"
+				  "  \"Releases\": [\n"
 				  "    {\n"
-				  "      \"AppstreamId\" : \"org.dave.ColorHug.firmware\",\n"
-				  "      \"Description\" : \"<p>Hi there!</p>\",\n"
-				  "      \"Version\" : \"1.2.3\",\n"
-				  "      \"Filename\" : \"firmware.bin\",\n"
-				  "      \"Checksum\" : [\n"
+				  "      \"AppstreamId\": \"org.dave.ColorHug.firmware\",\n"
+				  "      \"Description\": \"<p>Hi there!</p>\",\n"
+				  "      \"Version\": \"1.2.3\",\n"
+				  "      \"Filename\": \"firmware.bin\",\n"
+				  "      \"Checksum\": [\n"
 				  "        \"deadbeef\"\n"
 				  "      ],\n"
-				  "      \"Tags\" : [\n"
+				  "      \"Tags\": [\n"
 				  "        \"vendor-2021q1\",\n"
 				  "        \"vendor-2021q2\"\n"
 				  "      ],\n"
-				  "      \"Size\" : 1024,\n"
-				  "      \"Locations\" : [\n"
+				  "      \"Size\": 1024,\n"
+				  "      \"Locations\": [\n"
 				  "        \"http://foo.com\",\n"
 				  "        \"ftp://foo.com\"\n"
 				  "      ],\n"
-				  "      \"Flags\" : [\n"
+				  "      \"Flags\": [\n"
 				  "        \"trusted-payload\"\n"
 				  "      ]\n"
 				  "    }\n"
@@ -1640,20 +1662,20 @@ fwupd_security_attr_func(void)
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(json,
 				    "{\n"
-				    "  \"AppstreamId\" : \"org.fwupd.hsi.baz\",\n"
-				    "  \"HsiLevel\" : 2,\n"
-				    "  \"HsiResult\" : \"enabled\",\n"
-				    "  \"Name\" : \"DCI\",\n"
-				    "  \"Plugin\" : \"uefi-capsule\",\n"
-				    "  \"Version\" : \"2.0.7\",\n"
-				    "  \"Uri\" : \"https://foo.bar\",\n"
-				    "  \"Flags\" : [\n"
+				    "  \"AppstreamId\": \"org.fwupd.hsi.baz\",\n"
+				    "  \"HsiLevel\": 2,\n"
+				    "  \"HsiResult\": \"enabled\",\n"
+				    "  \"Name\": \"DCI\",\n"
+				    "  \"Plugin\": \"uefi-capsule\",\n"
+				    "  \"Version\": \"2.0.7\",\n"
+				    "  \"Uri\": \"https://foo.bar\",\n"
+				    "  \"Flags\": [\n"
 				    "    \"success\"\n"
 				    "  ],\n"
-				    "  \"Guid\" : [\n"
+				    "  \"Guid\": [\n"
 				    "    \"af3fc12c-d090-5783-8a67-845b90d3cfec\"\n"
 				    "  ],\n"
-				    "  \"KEY\" : \"VALUE\"\n"
+				    "  \"KEY\": \"VALUE\"\n"
 				    "}",
 				    &error);
 	g_assert_no_error(error);
@@ -1754,13 +1776,13 @@ fwupd_bios_settings_func(void)
 	g_assert_nonnull(json1);
 	ret = fu_test_compare_lines(json1,
 				    "{\n"
-				    "  \"Name\" : \"UEFISecureBoot\",\n"
-				    "  \"Description\" : \"Controls Secure boot\",\n"
-				    "  \"Filename\" : \"/path/to/bar\",\n"
-				    "  \"BiosSettingCurrentValue\" : \"Disabled\",\n"
-				    "  \"BiosSettingReadOnly\" : false,\n"
-				    "  \"BiosSettingType\" : 1,\n"
-				    "  \"BiosSettingPossibleValues\" : [\n"
+				    "  \"Name\": \"UEFISecureBoot\",\n"
+				    "  \"Description\": \"Controls Secure boot\",\n"
+				    "  \"Filename\": \"/path/to/bar\",\n"
+				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
+				    "  \"BiosSettingReadOnly\": false,\n"
+				    "  \"BiosSettingType\": 1,\n"
+				    "  \"BiosSettingPossibleValues\": [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"
 				    "  ]\n"
@@ -1808,13 +1830,13 @@ fwupd_bios_settings_func(void)
 	g_assert_nonnull(json2);
 	ret = fu_test_compare_lines(json2,
 				    "{\n"
-				    "  \"Name\" : \"UEFISecureBoot\",\n"
-				    "  \"Description\" : \"Controls Secure boot\",\n"
-				    "  \"Filename\" : \"/path/to/bar\",\n"
-				    "  \"BiosSettingCurrentValue\" : \"Disabled\",\n"
-				    "  \"BiosSettingReadOnly\" : false,\n"
-				    "  \"BiosSettingType\" : 1,\n"
-				    "  \"BiosSettingPossibleValues\" : [\n"
+				    "  \"Name\": \"UEFISecureBoot\",\n"
+				    "  \"Description\": \"Controls Secure boot\",\n"
+				    "  \"Filename\": \"/path/to/bar\",\n"
+				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
+				    "  \"BiosSettingReadOnly\": false,\n"
+				    "  \"BiosSettingType\": 1,\n"
+				    "  \"BiosSettingPossibleValues\": [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"
 				    "  ]\n"
@@ -1853,6 +1875,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/json{parser-null}", fwupd_json_parser_null_func);
 	g_test_add_func("/fwupd/json{parser-depth}", fwupd_json_parser_depth_func);
 	g_test_add_func("/fwupd/json{parser-items}", fwupd_json_parser_items_func);
+	g_test_add_func("/fwupd/json{parser-quoted}", fwupd_json_parser_quoted_func);
 	g_test_add_func("/fwupd/json{parser-stream}", fwupd_json_parser_stream_func);
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);

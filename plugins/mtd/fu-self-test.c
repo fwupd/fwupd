@@ -64,7 +64,7 @@ fu_test_mtd_prepare_mtdram_device(FuMtdDevice *device,
 {
 	gboolean ret;
 	gsize bufsz = fu_device_get_firmware_size_max(FU_DEVICE(device));
-	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
@@ -76,15 +76,16 @@ fu_test_mtd_prepare_mtdram_device(FuMtdDevice *device,
 
 		filename = g_test_build_filename(G_TEST_DIST, "tests", filename_xml, NULL);
 		g_debug("loading from %s", filename);
-		ret = fu_firmware_build_from_filename(firmware, filename, &error);
+		firmware = fu_firmware_new_from_filename(filename, &error);
 		g_assert_no_error(error);
-		g_assert_true(ret);
+		g_assert_nonnull(firmware);
 		blob_tmp = fu_firmware_write(firmware, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(blob_tmp);
 		blob = fu_bytes_pad(blob_tmp, bufsz, 0xFF);
 	} else {
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		firmware = fu_firmware_new();
 		fu_byte_array_set_size(buf, bufsz, 0xFF);
 		blob = g_bytes_new(buf->data, buf->len);
 	}
