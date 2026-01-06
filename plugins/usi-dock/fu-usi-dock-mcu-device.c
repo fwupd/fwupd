@@ -36,6 +36,7 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 #define FU_USI_DOCK_DEVICE_PHASE2_TIMEOUT 0x5A
 #define FU_USI_DOCK_DEVICE_40B0_DEVID		"USB\\VID_17EF&PID_30B4&CID_40B0"
 #define FU_USI_DOCK_DEVICE_NOREPLUG_MIN_VERSION "10.18"
+#define FU_USI_DOCK_DEVICE_NO_PHASE2_MAX_VERSION "10.13"
 
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
@@ -52,11 +53,6 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 		if (!fu_struct_usi_dock_mcu_cmd_req_set_buf(st, buf, bufsz, error))
 			return FALSE;
 	}
-
-	/* special cases */
-	if (st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
-	    FU_USI_DOCK_MCU_CMD_FW_UPDATE)
-		st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
@@ -926,16 +922,21 @@ fu_usi_dock_mcu_device_prepare(FuDevice *device,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-	if (fu_device_has_instance_id(device,
-				      FU_USI_DOCK_DEVICE_40B0_DEVID,
-				      FU_DEVICE_INSTANCE_FLAG_VISIBLE) &&
-	    fu_version_compare(fu_device_get_version(device),
-			       FU_USI_DOCK_DEVICE_NOREPLUG_MIN_VERSION,
-			       fu_device_get_version_format(device)) >= 0) {
+	gboolean has_id = fu_device_has_instance_id(device,
+						    FU_USI_DOCK_DEVICE_40B0_DEVID,
+						    FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+
+	gboolean no_replug = fu_version_compare(fu_device_get_version(device),
+						FU_USI_DOCK_DEVICE_NOREPLUG_MIN_VERSION,
+						fu_device_get_version_format(device)) >= 0 ||
+			     fu_version_compare(fu_device_get_version(device),
+						FU_USI_DOCK_DEVICE_NO_PHASE2_MAX_VERSION,
+						fu_device_get_version_format(device)) <= 0;
+
+	if (has_id && no_replug)
 		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
-	} else {
+	else
 		fu_device_remove_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
-	}
 
 	return TRUE;
 }
