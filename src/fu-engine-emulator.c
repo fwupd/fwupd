@@ -188,7 +188,9 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 	fn = fu_engine_emulator_phase_to_filename(composite_cnt, phase, write_cnt);
 	g_debug("saving %s", fn);
 	blob_old = g_hash_table_lookup(self->phase_blobs, fn);
-	blob_new = fwupd_json_object_to_bytes(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	blob_new = fwupd_json_object_to_bytes(json_obj,
+					      FWUPD_JSON_EXPORT_FLAG_INDENT |
+						  FWUPD_JSON_EXPORT_FLAG_TRAILING_NEWLINE);
 
 	if (g_bytes_get_size(blob_new) == 0) {
 		g_info("no data for phase %s [%u]",

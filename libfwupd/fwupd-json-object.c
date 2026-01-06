@@ -1010,6 +1010,8 @@ fwupd_json_object_to_string(FwupdJsonObject *self, FwupdJsonExportFlags flags)
 {
 	GString *str = g_string_new(NULL);
 	fwupd_json_object_append_string(self, str, 0, flags);
+	if (flags & FWUPD_JSON_EXPORT_FLAG_TRAILING_NEWLINE)
+		g_string_append_c(str, '\n');
 	return str;
 }
 
@@ -1029,5 +1031,7 @@ fwupd_json_object_to_bytes(FwupdJsonObject *self, FwupdJsonExportFlags flags)
 {
 	GString *str = g_string_new(NULL);
 	fwupd_json_object_append_string(self, str, 0, flags);
+	if (flags & FWUPD_JSON_EXPORT_FLAG_TRAILING_NEWLINE)
+		g_string_append_c(str, '\n');
 	return g_string_free_to_bytes(str);
 }
