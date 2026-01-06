@@ -1,0 +1,16 @@
+{
+  "name": "Framework Laptop Goodix MOC",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/framework-laptop-goodix-moc.json",
+      "components": [
+        {
+          "guids": [
+            "1e8c8470-a49c-571a-82fd-19c9fa32b8c3"
+          ]
+        }
+      ]
+    }
+  ]
+}
