@@ -11,7 +11,6 @@
 #include "fu-logitech-hidpp-bootloader.h"
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
-#include "fu-logitech-hidpp-struct.h"
 
 typedef struct {
 	guint16 flash_addr_lo;
@@ -38,93 +37,80 @@ fu_logitech_hidpp_bootloader_to_string(FuDevice *device, guint idt, GString *str
 	fwupd_codec_string_append_hex(str, idt, "FlashBlockSize", priv->flash_blocksize);
 }
 
-FuLogitechHidppBootloaderRequest *
-fu_logitech_hidpp_bootloader_request_new(void)
-{
-	FuLogitechHidppBootloaderRequest *req = g_new0(FuLogitechHidppBootloaderRequest, 1);
-	return req;
-}
-
 GPtrArray *
-fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
-					    GPtrArray *records,
-					    GError **error)
+fu_logitech_hidpp_bootloader_parse_pkts(FuLogitechHidppBootloader *self,
+					GPtrArray *records,
+					GError **error)
 {
 	guint32 last_addr = 0;
-	g_autoptr(GPtrArray) reqs = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) pkts = g_ptr_array_new_with_free_func(
+	    (GDestroyNotify)fu_struct_logitech_hidpp_bootloader_pkt_unref);
 
 	for (guint i = 0; i < records->len; i++) {
 		FuIhexFirmwareRecord *rcd = g_ptr_array_index(records, i);
-		g_autoptr(FuLogitechHidppBootloaderRequest) payload = NULL;
+		g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+		    fu_struct_logitech_hidpp_bootloader_pkt_new();
 
 		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EOF)
 			break;
 
-		payload = fu_logitech_hidpp_bootloader_request_new();
-		payload->len = rcd->byte_cnt;
-		if (payload->len > 28) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware data invalid: too large %u bytes",
-				    payload->len);
-			return NULL;
+		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE) {
+			fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(
+			    st_req,
+			    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE);
+		} else {
+			fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(
+			    st_req,
+			    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER);
 		}
-		payload->addr = rcd->addr;
-		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE)
-			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE;
-		else
-			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
+		fu_struct_logitech_hidpp_bootloader_pkt_set_addr(st_req, rcd->addr);
+		fu_struct_logitech_hidpp_bootloader_pkt_set_len(st_req, rcd->byte_cnt);
 
 		/* read the data, but skip the checksum byte */
-		if (!fu_memcpy_safe(payload->data,
-				    sizeof(payload->data),
-				    0x0,
-				    rcd->data->data,
-				    rcd->data->len,
-				    0x0,
-				    rcd->data->len,
-				    error)) {
+		if (!fu_struct_logitech_hidpp_bootloader_pkt_set_data(st_req,
+								      rcd->data->data,
+								      rcd->data->len,
+								      error)) {
 			g_prefix_error_literal(error, "failed to copy data: ");
 			return NULL;
 		}
 
 		/* no need to bound check signature addresses */
-		if (payload->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE) {
-			g_ptr_array_add(reqs, g_steal_pointer(&payload));
+		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE) {
+			g_ptr_array_add(pkts, g_steal_pointer(&st_req));
 			continue;
 		}
 
 		/* skip the bootloader */
-		if (payload->addr > fu_logitech_hidpp_bootloader_get_addr_hi(self)) {
-			g_debug("skipping write @ %04x", payload->addr);
+		if (rcd->addr > fu_logitech_hidpp_bootloader_get_addr_hi(self)) {
+			g_debug("skipping write @ %04x", rcd->addr);
 			continue;
 		}
 
 		/* skip the header */
-		if (payload->addr < fu_logitech_hidpp_bootloader_get_addr_lo(self)) {
-			g_debug("skipping write @ %04x", payload->addr);
+		if (rcd->addr < fu_logitech_hidpp_bootloader_get_addr_lo(self)) {
+			g_debug("skipping write @ %04x", rcd->addr);
 			continue;
 		}
 
 		/* make sure firmware addresses only go up */
-		if (payload->addr < last_addr) {
-			g_debug("skipping write @ %04x", payload->addr);
+		if (rcd->addr < last_addr) {
+			g_debug("skipping write @ %04x", rcd->addr);
 			continue;
 		}
-		last_addr = payload->addr;
+		last_addr = rcd->addr;
 
 		/* pending */
-		g_ptr_array_add(reqs, g_steal_pointer(&payload));
+		g_ptr_array_add(pkts, g_steal_pointer(&st_req));
 	}
-	if (reqs->len == 0) {
+	if (pkts->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware data invalid: no payloads found");
 		return NULL;
 	}
-	return g_steal_pointer(&reqs);
+	return g_steal_pointer(&pkts);
 }
 
 guint16
@@ -155,10 +141,14 @@ static gboolean
 fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidppBootloader *self = FU_LOGITECH_HIDPP_BOOTLOADER(device);
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_REBOOT;
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
+
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(st_req,
+							FU_LOGITECH_HIDPP_BOOTLOADER_CMD_REBOOT);
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
 		g_prefix_error_literal(error, "failed to attach back to runtime: ");
 		return FALSE;
 	}
@@ -169,31 +159,34 @@ fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GErr
 static gboolean
 fu_logitech_hidpp_bootloader_ensure_bl_version(FuLogitechHidppBootloader *self, GError **error)
 {
+	const guint8 *buf;
+	gsize bufsz = 0;
 	guint16 build = 0;
 	guint8 major = 0;
 	guint8 minor = 0;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
 
 	/* call into hardware */
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_BL_VERSION;
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(
+	    st_req,
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_BL_VERSION);
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
 		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return FALSE;
 	}
+	buf = fu_struct_logitech_hidpp_bootloader_pkt_get_data(st_rsp, &bufsz);
 
 	/* BOTxx.yy_Bzzzz
 	 * 012345678901234 */
-	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 3, &major, error))
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)buf, bufsz, 3, &major, error))
 		return FALSE;
-	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 6, &minor, error))
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)buf, bufsz, 6, &minor, error))
 		return FALSE;
-	if (!fu_firmware_strparse_uint16_safe((const gchar *)req->data,
-					      req->len,
-					      10,
-					      &build,
-					      error))
+	if (!fu_firmware_strparse_uint16_safe((const gchar *)buf, bufsz, 10, &build, error))
 		return FALSE;
 	version = fu_logitech_hidpp_format_version("BOT", major, minor, build);
 	if (version == NULL) {
@@ -220,131 +213,112 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 {
 	FuLogitechHidppBootloader *self = FU_LOGITECH_HIDPP_BOOTLOADER(device);
 	FuLogitechHidppBootloaderPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
+	const guint8 *buf;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_hidpp_bootloader_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get memory map */
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_MEMINFO;
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(
+	    st_req,
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_MEMINFO);
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
 		g_prefix_error_literal(error, "failed to get meminfo: ");
 		return FALSE;
 	}
-	if (req->len != 0x06) {
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_len(st_rsp) != 0x06) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to get meminfo: invalid size %02x",
-			    req->len);
+			    fu_struct_logitech_hidpp_bootloader_pkt_get_len(st_rsp));
 		return FALSE;
 	}
 
 	/* parse values */
-	priv->flash_addr_lo = fu_memread_uint16(req->data + 0, G_BIG_ENDIAN);
-	priv->flash_addr_hi = fu_memread_uint16(req->data + 2, G_BIG_ENDIAN);
-	priv->flash_blocksize = fu_memread_uint16(req->data + 4, G_BIG_ENDIAN);
+	buf = fu_struct_logitech_hidpp_bootloader_pkt_get_data(st_rsp, NULL);
+	priv->flash_addr_lo = fu_memread_uint16(buf + 0, G_BIG_ENDIAN);
+	priv->flash_addr_hi = fu_memread_uint16(buf + 2, G_BIG_ENDIAN);
+	priv->flash_blocksize = fu_memread_uint16(buf + 4, G_BIG_ENDIAN);
 
 	/* get bootloader version */
 	return fu_logitech_hidpp_bootloader_ensure_bl_version(self, error);
 }
 
-gboolean
+FuStructLogitechHidppBootloaderPkt *
 fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
-				     FuLogitechHidppBootloaderRequest *req,
+				     FuStructLogitechHidppBootloaderPkt *st_req,
 				     GError **error)
 {
 	gsize actual_length = 0;
-	guint8 buf_request[32] = {0};
-	guint8 buf_response[32] = {0};
-
-	/* build packet */
-	buf_request[0x00] = req->cmd;
-	buf_request[0x01] = req->addr >> 8;
-	buf_request[0x02] = req->addr & 0xff;
-	buf_request[0x03] = req->len;
-	if (!fu_memcpy_safe(buf_request,
-			    sizeof(buf_request),
-			    0x04, /* dst */
-			    req->data,
-			    sizeof(req->data),
-			    0x0, /* src */
-			    sizeof(req->data),
-			    error))
-		return FALSE;
+	guint8 buf[32] = {0};
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
 
 	/* send request */
-	fu_dump_raw(G_LOG_DOMAIN, "host->device", buf_request, sizeof(buf_request));
+	fu_dump_raw(G_LOG_DOMAIN, "host->device", st_req->buf->data, st_req->buf->len);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      buf_request,
-				      sizeof(buf_request),
+				      st_req->buf->data,
+				      st_req->buf->len,
 				      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
 		g_prefix_error_literal(error, "failed to send data: ");
-		return FALSE;
+		return NULL;
 	}
 
 	/* no response required when rebooting */
-	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_REBOOT) {
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_req) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_REBOOT) {
 		g_autoptr(GError) error_ignore = NULL;
 		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 						      FU_LOGITECH_HIDPP_DEVICE_EP1,
-						      buf_response,
-						      sizeof(buf_response),
+						      buf,
+						      sizeof(buf),
 						      &actual_length,
 						      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 						      NULL,
 						      &error_ignore)) {
 			g_debug("ignoring: %s", error_ignore->message);
 		} else {
-			fu_dump_raw(G_LOG_DOMAIN, "device->host", buf_response, actual_length);
+			fu_dump_raw(G_LOG_DOMAIN, "device->host", buf, actual_length);
 		}
-		return TRUE;
+		return fu_struct_logitech_hidpp_bootloader_pkt_new();
 	}
 
 	/* get response */
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      FU_LOGITECH_HIDPP_DEVICE_EP1,
-					      buf_response,
-					      sizeof(buf_response),
+					      buf,
+					      sizeof(buf),
 					      &actual_length,
 					      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 					      NULL,
 					      error)) {
 		g_prefix_error_literal(error, "failed to get data: ");
-		return FALSE;
+		return NULL;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "device->host", buf_response, actual_length);
+	fu_dump_raw(G_LOG_DOMAIN, "device->host", buf, actual_length);
 
 	/* parse response */
-	if ((buf_response[0x00] & 0xf0) != req->cmd) {
+	if ((buf[0x00] & 0xf0) != fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_req)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid command response of %02x, expected %02x",
-			    buf_response[0x00],
-			    req->cmd);
-		return FALSE;
+			    buf[0x00],
+			    fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_req));
+		return NULL;
 	}
-	req->cmd = buf_response[0x00];
-	req->addr = ((guint16)buf_response[0x01] << 8) + buf_response[0x02];
-	req->len = buf_response[0x03];
-	if (req->len > 28) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid data size of %02x",
-			    req->len);
-		return FALSE;
-	}
-	memset(req->data, 0x00, 28);
-	if (req->len > 0)
-		memcpy(req->data, buf_response + 0x04, req->len); /* nocheck:blocked */
-	return TRUE;
+	st_rsp = fu_struct_logitech_hidpp_bootloader_pkt_parse(buf, sizeof(buf), 0x0, error);
+	if (st_rsp == NULL)
+		return NULL;
+	return g_steal_pointer(&st_rsp);
 }
 
 static void
