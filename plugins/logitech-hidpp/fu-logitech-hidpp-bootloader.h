@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-logitech-hidpp-struct.h"
+
 #define FU_TYPE_LOGITECH_HIDPP_BOOTLOADER (fu_logitech_hidpp_bootloader_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuLogitechHidppBootloader,
 			 fu_logitech_hidpp_bootloader,
@@ -21,29 +23,13 @@ struct _FuLogitechHidppBootloaderClass {
 
 #define FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED "is-signed"
 
-/* packet to and from device */
-typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint8 cmd;
-	guint16 addr;
-	guint8 len;
-	guint8 data[28];
-} FuLogitechHidppBootloaderRequest;
-
-FuLogitechHidppBootloaderRequest *
-fu_logitech_hidpp_bootloader_request_new(void);
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuLogitechHidppBootloaderRequest, g_free);
-#pragma clang diagnostic pop
-
 GPtrArray *
-fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
-					    GPtrArray *records,
-					    GError **error);
-gboolean
+fu_logitech_hidpp_bootloader_parse_pkts(FuLogitechHidppBootloader *self,
+					GPtrArray *records,
+					GError **error);
+FuStructLogitechHidppBootloaderPkt *
 fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
-				     FuLogitechHidppBootloaderRequest *req,
+				     FuStructLogitechHidppBootloaderPkt *st_req,
 				     GError **error);
 
 guint16
