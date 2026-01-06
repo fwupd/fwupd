@@ -6,7 +6,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-dump.h"
 #include "fu-sunwinon-ble-hid-device.h"
 #include "fu-sunwinon-util-dfu-master.h"
 
@@ -31,10 +30,13 @@ typedef struct {
 	gboolean done;
 	gboolean failed;
 	char *fail_reason;
-} SwDfuCtx;
+} FuSwDfuCtx;
 
 static gboolean
-sw_hid_send(SwDfuCtx *self, const guint8 *payload, guint16 len, GError **error)
+fu_sunwinon_ble_hid_device_send(FuSwDfuCtx *self,
+				const guint8 *payload,
+				guint16 len,
+				GError **error)
 {
 	if (len > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
 		len = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
@@ -52,16 +54,18 @@ sw_hid_send(SwDfuCtx *self, const guint8 *payload, guint16 len, GError **error)
 }
 
 static gboolean
-sw_dfu_send_data(void *user_data, guint8 *data, guint16 len, GError **error)
+fu_sunwinon_ble_hid_device_dfu_send_data(void *user_data, guint8 *data, guint16 len, GError **error)
 {
-	SwDfuCtx *self = (SwDfuCtx *)user_data;
-	return sw_hid_send(self, data, len, error);
+	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	return fu_sunwinon_ble_hid_device_send(self, data, len, error);
 }
 
 static gboolean
-sw_dfu_get_img_info(void *user_data, FuSunwinonDfuImageInfo *img_info, GError **error)
+fu_sunwinon_ble_hid_device_dfu_get_img_info(void *user_data,
+					    FuSunwinonDfuImageInfo *img_info,
+					    GError **error)
 {
-	SwDfuCtx *self = (SwDfuCtx *)user_data;
+	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
 	return fu_memcpy_safe((guint8 *)img_info,
 			      sizeof(FuSunwinonDfuImageInfo),
 			      0,
@@ -73,9 +77,13 @@ sw_dfu_get_img_info(void *user_data, FuSunwinonDfuImageInfo *img_info, GError **
 }
 
 static gboolean
-sw_dfu_get_img_data(void *user_data, guint32 addr, guint8 *data, guint16 len, GError **error)
+fu_sunwinon_ble_hid_device_dfu_get_img_data(void *user_data,
+					    guint32 addr,
+					    guint8 *data,
+					    guint16 len,
+					    GError **error)
 {
-	SwDfuCtx *self = (SwDfuCtx *)user_data;
+	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
 	guint32 off = 0;
 	if (addr >= self->fw_save_addr)
 		off = addr - self->fw_save_addr;
@@ -95,15 +103,24 @@ sw_dfu_get_img_data(void *user_data, guint32 addr, guint8 *data, guint16 len, GE
 }
 
 static guint32
-sw_dfu_get_time(void *user_data)
+fu_sunwinon_ble_hid_device_dfu_get_time(void *user_data)
 {
 	return (guint32)(g_get_monotonic_time() / 1000);
 }
 
 static void
-sw_dfu_event_handler(void *user_data, FuSunwinonDfuEvent event, guint8 progress)
+fu_sunwinon_ble_hid_device_dfu_wait(void *user_data, guint32 ms)
 {
-	SwDfuCtx *self = (SwDfuCtx *)user_data;
+	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	fu_device_sleep(FU_DEVICE(self->device), ms);
+}
+
+static void
+fu_sunwinon_ble_hid_device_dfu_event_handler(void *user_data,
+					     FuSunwinonDfuEvent event,
+					     guint8 progress)
+{
+	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
 	switch (event) {
 	case FU_SUNWINON_DFU_EVENT_PRO_START_SUCCESS:
 		break;
@@ -135,13 +152,14 @@ sw_dfu_event_handler(void *user_data, FuSunwinonDfuEvent event, guint8 progress)
 }
 
 static void
-sw_dfu_setup_callbacks(FuSunwinonDfuCallback *callback)
+fu_sunwinon_ble_hid_device_dfu_setup_callbacks(FuSunwinonDfuCallback *callback)
 {
-	callback->dfu_m_send_data = sw_dfu_send_data;
-	callback->dfu_m_get_img_info = sw_dfu_get_img_info;
-	callback->dfu_m_get_img_data = sw_dfu_get_img_data;
-	callback->dfu_m_get_time = sw_dfu_get_time;
-	callback->dfu_m_event_handler = sw_dfu_event_handler;
+	callback->dfu_m_send_data = fu_sunwinon_ble_hid_device_dfu_send_data;
+	callback->dfu_m_get_img_info = fu_sunwinon_ble_hid_device_dfu_get_img_info;
+	callback->dfu_m_get_img_data = fu_sunwinon_ble_hid_device_dfu_get_img_data;
+	callback->dfu_m_get_time = fu_sunwinon_ble_hid_device_dfu_get_time;
+	callback->dfu_m_event_handler = fu_sunwinon_ble_hid_device_dfu_event_handler;
+	callback->dfu_m_wait = fu_sunwinon_ble_hid_device_dfu_wait;
 }
 
 static void
@@ -165,16 +183,17 @@ fu_sunwinon_ble_hid_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_sunwinon_ble_hid_device_fetch_fw_version(FuSunwinonBleHidDevice *device, GError **error)
 {
-	SwDfuCtx ctx = {0};
+	FuSwDfuCtx ctx = {0};
 	FuSunwinonDfuCallback cfg = {0};
 	ctx.device = FU_DEVICE(device);
 	cfg.user_data = &ctx;
-	sw_dfu_setup_callbacks(&cfg);
-	g_autoptr(FuDfuMaster) master = dfu_m_new(&cfg, FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN);
+	fu_sunwinon_ble_hid_device_dfu_setup_callbacks(&cfg);
+	g_autoptr(FuDfuMaster) master =
+	    fu_sunwinon_util_dfu_master_new(&cfg, FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN);
 	ctx.master = master;
-	if (!dfu_m_send_fw_info_get(master, error))
+	if (!fu_sunwinon_util_dfu_master_send_fw_info_get(master, error))
 		return FALSE;
-	// wait for response
+	/* wait for response */
 	g_autoptr(FuStructSunwinonHidIn) st_in = fu_struct_sunwinon_hid_in_new();
 	(void)fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(device),
 					  st_in->buf->data,
@@ -189,7 +208,7 @@ fu_sunwinon_ble_hid_device_fetch_fw_version(FuSunwinonBleHidDevice *device, GErr
 	if (inlen > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
 		inlen = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
 	const guint8 *payload = fu_struct_sunwinon_hid_in_get_data(st_in, NULL);
-	dfu_m_parse_fw_info(master, &fw_info, payload, inlen, error);
+	fu_sunwinon_util_dfu_master_parse_fw_info(master, &fw_info, payload, inlen, error);
 	g_debug("SunwinonHid: Firmware version fetched: %u.%u",
 		(guint)((fw_info.version >> 8) & 0xFF),
 		(guint)(fw_info.version & 0xFF));
@@ -235,7 +254,7 @@ fu_sunwinon_ble_hid_device_write_firmware(FuDevice *device,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
-	SwDfuCtx ctx = {0};
+	FuSwDfuCtx ctx = {0};
 	FuSunwinonDfuCallback cfg = {0};
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
@@ -274,18 +293,19 @@ fu_sunwinon_ble_hid_device_write_firmware(FuDevice *device,
 	g_clear_pointer(&ctx.fail_reason, g_free);
 	ctx.fw_save_addr = ctx.img_info.boot_info.load_addr;
 
-	sw_dfu_setup_callbacks(&cfg);
+	fu_sunwinon_ble_hid_device_dfu_setup_callbacks(&cfg);
 	cfg.user_data = &ctx;
-	g_autoptr(FuDfuMaster) master = dfu_m_new(&cfg, FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN);
+	g_autoptr(FuDfuMaster) master =
+	    fu_sunwinon_util_dfu_master_new(&cfg, FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN);
 	ctx.master = master;
-	dfu_m_fast_dfu_mode_set(master, FU_SUNWINON_FAST_DFU_MODE_DISABLE);
+	fu_sunwinon_util_dfu_master_fast_dfu_mode_set(master, FU_SUNWINON_FAST_DFU_MODE_DISABLE);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	if (!dfu_m_start(master, error))
+	if (!fu_sunwinon_util_dfu_master_start(master, error))
 		return FALSE;
 
 	g_autoptr(FuStructSunwinonHidIn) st_in = fu_struct_sunwinon_hid_in_new();
 	while (TRUE) {
-		if (!dfu_m_schedule(master, error))
+		if (!fu_sunwinon_util_dfu_master_schedule(master, error))
 			return FALSE;
 		if (ctx.done || ctx.failed)
 			break;
@@ -304,7 +324,7 @@ fu_sunwinon_ble_hid_device_write_firmware(FuDevice *device,
 		if (inlen > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
 			inlen = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
 		const guint8 *payload = fu_struct_sunwinon_hid_in_get_data(st_in, NULL);
-		dfu_m_cmd_parse(master, payload, inlen);
+		fu_sunwinon_util_dfu_master_cmd_parse(master, payload, inlen);
 	}
 
 	if (!ctx.done) {

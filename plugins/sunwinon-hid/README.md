@@ -4,7 +4,7 @@
 - Choose a branch other than dev branch. If you use a Linux desktop, you can check fwupd version of your own machine by running `fwupdmgr --version` command, then choose the version tag same as your local fwupd.
 - Make sure this directory and fwupd directory are in the same parent directory, so it looks like below:
 
-```
+```shell
 parent_directory/
   ├── fwupd/
   └── sunwinon-hid/
