@@ -330,7 +330,7 @@ void
 {
     g_autoptr(GString) str = g_string_new("{{obj.name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
-{%- for item in obj.items | selectattr('enabled') | rejectattr('constant') %}
+{%- for item in obj.items | selectattr('enabled') %}
 
 {%- if item.enum_obj %}
     {
