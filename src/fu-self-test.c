@@ -1677,6 +1677,46 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 			g_debug("ignoring: %s", error_local->message);
 	}
 
+	/* run the composite-prepare action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) devices = g_ptr_array_new();
+		g_ptr_array_add(devices, device_nop);
+		if (!fu_plugin_runner_composite_prepare(plugin, devices, &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* run the composite-cleanup action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) devices = g_ptr_array_new();
+		g_ptr_array_add(devices, device_nop);
+		if (!fu_plugin_runner_composite_cleanup(plugin, devices, &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* run the composite-peek-firmware action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(GBytes) blob = g_bytes_new_static("xxx", 3);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
+		g_autoptr(GError) error_local = NULL;
+
+		fu_device_set_plugin(device_nop, "uefi_dbx");
+		if (!fu_plugin_runner_composite_peek_firmware(plugin,
+							      device_nop,
+							      firmware,
+							      progress,
+							      FWUPD_INSTALL_FLAG_NONE,
+							      &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
 	/* run the device unlock action */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
@@ -8281,6 +8321,7 @@ main(int argc, char **argv)
 	/* do not save silo */
 	self->ctx = fu_context_new();
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD);
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
