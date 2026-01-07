@@ -616,6 +616,11 @@ class Checker:
                     f"do not use boxed comment lines, just use /* comment */",
                     linecnt=token.linecnt,
                 )
+            if token.data.find("/**@brief") != -1:
+                self.add_failure(
+                    f"do not use doxygen comment lines, just use /* comment */",
+                    linecnt=token.linecnt,
+                )
 
     def _test_comment_lower_case(self, node: Node) -> None:
         """single line comments are supposed to be lowercase"""
