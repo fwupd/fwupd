@@ -22,6 +22,8 @@ G_DEFINE_TYPE(FuFocalfpHidDevice, fu_focalfp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 #define REPORT_SIZE	    64
 #define MAX_USB_PACKET_SIZE 56
 
+#define UPGRADE_ID 0x582E
+
 static gboolean
 fu_focalfp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error);
 
@@ -439,7 +441,6 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
-	const guint32 UPGRADE_ID = 0x582E;
 	guint16 us_ic_id = 0;
 	guint32 checksum = 0;
 	g_autoptr(GInputStream) stream = NULL;

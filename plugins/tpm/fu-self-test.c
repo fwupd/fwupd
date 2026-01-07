@@ -29,7 +29,7 @@ fu_tpm_device_1_2_func(void)
 	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(GPtrArray) pcrXs = NULL;
+	g_autoptr(GPtrArray) pcrs = NULL;
 	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
 
 	if (tpm_server_running != NULL) {
@@ -61,9 +61,9 @@ fu_tpm_device_1_2_func(void)
 	pcr0s = fu_tpm_device_get_checksums(device, 0);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, ==, 1);
-	pcrXs = fu_tpm_device_get_checksums(device, 999);
-	g_assert_nonnull(pcrXs);
-	g_assert_cmpint(pcrXs->len, ==, 0);
+	pcrs = fu_tpm_device_get_checksums(device, 999);
+	g_assert_nonnull(pcrs);
+	g_assert_cmpint(pcrs->len, ==, 0);
 
 	/* verify HSI attributes */
 	fu_plugin_runner_add_security_attrs(plugin, attrs);
@@ -100,7 +100,7 @@ fu_tpm_device_2_0_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(GPtrArray) pcrXs = NULL;
+	g_autoptr(GPtrArray) pcrs = NULL;
 
 	if (tpm_server_running == NULL) {
 		g_test_skip("TPM2.0 tests require simulated TPM2.0 running");
@@ -131,9 +131,9 @@ fu_tpm_device_2_0_func(void)
 	pcr0s = fu_tpm_device_get_checksums(FU_TPM_DEVICE(device), 0);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, >=, 1);
-	pcrXs = fu_tpm_device_get_checksums(FU_TPM_DEVICE(device), 999);
-	g_assert_nonnull(pcrXs);
-	g_assert_cmpint(pcrXs->len, ==, 0);
+	pcrs = fu_tpm_device_get_checksums(FU_TPM_DEVICE(device), 999);
+	g_assert_nonnull(pcrs);
+	g_assert_cmpint(pcrs->len, ==, 0);
 }
 
 static void

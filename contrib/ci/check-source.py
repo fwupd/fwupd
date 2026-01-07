@@ -202,17 +202,20 @@ class Checker:
 
         if node.hint == NodeHint.ENUM:
             return
-        idx = node.tokens.find_fuzzy(["="])
-        if idx == -1:
-            return
-        token = node.tokens[idx - 1]
-        if token.data.find(".") != -1:
-            return
-        if token.data.lower() != token.data:
-            self.add_failure(
-                f"mixed case variable {token.data}",
-                linecnt=token.linecnt,
-            )
+
+        idx: int = 0
+        while True:
+            idx = node.tokens.find_fuzzy(["="], offset=idx + 1)
+            if idx == -1:
+                return
+            token = node.tokens[idx - 1]
+            if token.data.find(".") != -1:
+                continue
+            if token.data.lower() != token.data:
+                self.add_failure(
+                    f"mixed case variable {token.data}",
+                    linecnt=token.linecnt,
+                )
 
     def _test_struct_member_case(self, node: Node) -> None:
         """disallow non-lowercase struct members"""
