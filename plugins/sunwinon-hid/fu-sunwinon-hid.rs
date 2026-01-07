@@ -70,7 +70,7 @@ enum FuSunwinonDfuEvent {
 #[repr(u32)]
 enum FuSunwinonDfuConfig {
     // The flash start address of peripheral
-    PepherialFlashStartAddr = 0x0020_0000,
+    PeripheralFlashStartAddr = 0x0020_0000,
     // Flash program length for one frame
     OnceProgramLen = 464,
     // Maximum length of a single logical transmission in async mode
@@ -78,7 +78,7 @@ enum FuSunwinonDfuConfig {
     // DFU master wait ACK timeout (ms)
     AckWaitTimeout = 4000,
     // DFU peripheral chip reset time (ms)
-    PepherialResetTime = 2000,
+    PeripheralResetTime = 2000,
 }
 
 #[repr(u8)]
