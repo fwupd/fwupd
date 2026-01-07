@@ -310,8 +310,10 @@ class StructObj:
             for item in self.items:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ToString")
-                if item.enum_obj and not item.constant and item.enabled:
+                elif item.enum_obj and item.enabled:
                     item.enum_obj.add_private_export("ToString")
+                elif item.enabled:
+                    item.add_private_export("Getters")
         elif derive == "Parse":
             self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
@@ -324,12 +326,6 @@ class StructObj:
             self.add_private_export("ToString")
             self.add_private_export("ValidateInternal")
             for item in self.items:
-                if (
-                    item.constant
-                    and item.type != Type.STRING
-                    and not (item.type == Type.U8 and item.n_elements)
-                ):
-                    item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
