@@ -90,6 +90,10 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 	}
 
 	/* load file */
+	if (self->file == NULL) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
 	if (!g_file_load_contents(self->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path(self->file);
 		g_warning("could not open %s: %s", fn, error_local->message);

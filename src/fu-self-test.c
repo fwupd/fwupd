@@ -1610,12 +1610,6 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	g_autoptr(GArray) firmware_gtypes = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	const gchar *plugin_names_safe[] = {
-	    "linux_lockdown",
-	    "linux_sleep",
-	    "linux_swap",
-	    "linux_tainted",
-	};
 	const gchar *external_plugins[] = {
 	    "flashrom",
 	    "modem-manager",
@@ -1652,14 +1646,12 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	g_assert_nonnull(plugins);
 	g_assert_cmpint(plugins->len, >, 5);
 
-	/* start up some "safe" plugins */
-	for (guint i = 0; i < G_N_ELEMENTS(plugin_names_safe); i++) {
-		FuPlugin *plugin = fu_engine_get_plugin_by_name(engine, plugin_names_safe[i], NULL);
-		if (plugin != NULL) {
-			ret = fu_plugin_runner_startup(plugin, progress, &error);
-			g_assert_no_error(error);
-			g_assert_true(ret);
-		}
+	/* start up plugins */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_plugin_runner_startup(plugin, progress, &error_local))
+			g_debug("ignoring: %s", error_local->message);
 	}
 
 	/* add security attrs where possible */
