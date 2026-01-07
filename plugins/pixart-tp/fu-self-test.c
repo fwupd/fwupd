@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 Harris Tai <harris_tai@pixart.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 
 #include "config.h"
 
