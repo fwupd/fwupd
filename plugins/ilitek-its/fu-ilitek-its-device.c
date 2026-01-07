@@ -494,11 +494,11 @@ static FuDevice *
 fu_ilitek_its_device_get_backend_parent(FuIlitekItsDevice *self, GError **error)
 {
 	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
-	case FU_HIDRAW_BUS_TYPE_I2C:
+	case FU_HID_BUS_TYPE_I2C:
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
-	case FU_HIDRAW_BUS_TYPE_PCI:
+	case FU_HID_BUS_TYPE_PCI:
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
-	case FU_HIDRAW_BUS_TYPE_USB:
+	case FU_HID_BUS_TYPE_USB:
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", error);
 	default:
 		break;
@@ -622,8 +622,8 @@ fu_ilitek_its_device_detach(FuDevice *device, FuProgress *progress, GError **err
 		return FALSE;
 
 	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
-	case FU_HIDRAW_BUS_TYPE_I2C:
-	case FU_HIDRAW_BUS_TYPE_PCI:
+	case FU_HID_BUS_TYPE_I2C:
+	case FU_HID_BUS_TYPE_PCI:
 		if (!fu_device_retry_full(device,
 					  fu_ilitek_its_device_switch_mode_cb,
 					  5,
@@ -635,7 +635,7 @@ fu_ilitek_its_device_detach(FuDevice *device, FuProgress *progress, GError **err
 		}
 		break;
 
-	case FU_HIDRAW_BUS_TYPE_USB:
+	case FU_HID_BUS_TYPE_USB:
 		if (!fu_ilitek_its_device_switch_mode(self, to_bootloader, error))
 			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -660,8 +660,8 @@ fu_ilitek_its_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	gboolean to_bootloader = FALSE;
 
 	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
-	case FU_HIDRAW_BUS_TYPE_I2C:
-	case FU_HIDRAW_BUS_TYPE_PCI:
+	case FU_HID_BUS_TYPE_I2C:
+	case FU_HID_BUS_TYPE_PCI:
 		if (!fu_device_retry_full(device,
 					  fu_ilitek_its_device_switch_mode_cb,
 					  5,
@@ -678,7 +678,7 @@ fu_ilitek_its_device_attach(FuDevice *device, FuProgress *progress, GError **err
 
 		break;
 
-	case FU_HIDRAW_BUS_TYPE_USB:
+	case FU_HID_BUS_TYPE_USB:
 		if (!fu_ilitek_its_device_switch_mode(self, to_bootloader, error))
 			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

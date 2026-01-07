@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "fu-powerd-plugin.h"
+#include "fu-powerd-struct.h"
 
 struct _FuPowerdPlugin {
 	FuPlugin parent_instance;
@@ -17,21 +18,6 @@ struct _FuPowerdPlugin {
 };
 
 G_DEFINE_TYPE(FuPowerdPlugin, fu_powerd_plugin, FU_TYPE_PLUGIN)
-
-typedef enum {
-	FU_POWERD_BATTERY_STATE_UNKNOWN,
-	FU_POWERD_BATTERY_STATE_CHARGING,
-	FU_POWERD_BATTERY_STATE_DISCHARGING,
-	FU_POWERD_BATTERY_STATE_EMPTY,
-	FU_POWERD_BATTERY_STATE_FULLY_CHARGED,
-} FuPowerdBatteryState;
-
-typedef enum {
-	FU_POWERD_EXTERNAL_POWER_UNKNOWN,
-	FU_POWERD_EXTERNAL_POWER_AC,
-	FU_POWERD_EXTERNAL_POWER_USB,
-	FU_POWERD_EXTERNAL_POWER_DISCONNECTED
-} FuPowerdExternal;
 
 static gboolean
 fu_powerd_plugin_create_suspend_file(GError **error)

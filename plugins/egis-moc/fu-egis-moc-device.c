@@ -149,7 +149,7 @@ fu_egis_moc_device_cmd_recv_cb(FuDevice *device, gpointer user_data, GError **er
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid data");
 		return FALSE;
 	}
-	fu_dump_full(G_LOG_DOMAIN, "reply", buf->data, buf->len, 16, FU_DUMP_FLAGS_SHOW_ADDRESSES);
+	fu_dump_full(G_LOG_DOMAIN, "reply", buf->data, buf->len, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 	/* parse package header */
 	st_hdr = fu_struct_egis_moc_pkg_header_parse(buf->data, buf->len, 0x0, error);

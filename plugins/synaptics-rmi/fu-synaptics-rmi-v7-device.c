@@ -961,7 +961,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 	}
 
 	/* debugging */
-	fu_dump_full(G_LOG_DOMAIN, "FlashConfig", res->data, res->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, "FlashConfig", res->data, res->len, 80, FU_DUMP_FLAG_NONE);
 
 	if ((res->data[0] & 0x0f) == 1)
 		partition_size += 0x2;

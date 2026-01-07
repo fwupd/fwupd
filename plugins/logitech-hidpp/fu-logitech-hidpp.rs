@@ -1,6 +1,17 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuLogitechHidppDeviceKind {
+    Keyboard,
+    Remote_control,
+    Numpad,
+    Mouse,
+    Touchpad,
+    Trackball,
+    Presenter,
+    Receiver,
+}
+
 #[derive(ToString)]
 enum FuLogitechHidppFeature {
     Root                  = 0x0000,
@@ -102,6 +113,7 @@ enum FuLogitechHidppSubid {
     ErrorMsg_20 = 0xFF,
 }
 
+#[repr(u8)]
 enum FuLogitechHidppBootloaderCmd {
     GeneralError = 0x01,
     Read = 0x10,
@@ -194,4 +206,22 @@ enum FuLogitechHidppStatus {
     BadFirmware,
     FirmwareCheckFailure,
     BlockedCommand,
+}
+
+#[repr(u8)]
+enum FuStructLogitechHidppBootloaderTexasCmd {
+    EraseAll,
+    FlashRamBuffer = 1,
+    ClearRamBuffer = 2,
+    ComputeCrc = 3,
+}
+
+/* packet to and from device */
+#[repr(C, packed)]
+#[derive(New, Parse)]
+struct FuStructLogitechHidppBootloaderPkt {
+    cmd: FuLogitechHidppBootloaderCmd,
+    addr: u16be,
+    len: u8,
+    data: [u8; 28],
 }

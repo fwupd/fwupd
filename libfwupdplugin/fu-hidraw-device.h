@@ -7,7 +7,7 @@
 #pragma once
 
 #include "fu-hid-descriptor.h"
-#include "fu-hidraw-struct.h"
+#include "fu-hid-struct.h"
 #include "fu-udev-device.h"
 
 #define FU_TYPE_HIDRAW_DEVICE (fu_hidraw_device_get_type())
@@ -17,7 +17,7 @@ struct _FuHidrawDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
 
-FuHidrawBusType
+FuHidBusType
 fu_hidraw_device_get_bus_type(FuHidrawDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
@@ -42,13 +42,13 @@ gboolean
 fu_hidraw_device_set_report(FuHidrawDevice *self,
 			    const guint8 *buf,
 			    gsize bufsz,
-			    FuIOChannelFlags flags,
+			    FuIoChannelFlags flags,
 			    GError **error);
 gboolean
 fu_hidraw_device_get_report(FuHidrawDevice *self,
 			    guint8 *buf,
 			    gsize bufsz,
-			    FuIOChannelFlags flags,
+			    FuIoChannelFlags flags,
 			    GError **error);
 FuHidDescriptor *
 fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT

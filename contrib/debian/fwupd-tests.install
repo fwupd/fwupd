@@ -4,5 +4,4 @@
 #https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
 usr/share/installed-tests/*
 usr/libexec/installed-tests/fwupd/*-self-test
-debian/lintian/fwupd-tests usr/share/lintian/overrides
 usr/share/fwupd/remotes.d/fwupd-tests.conf

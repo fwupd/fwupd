@@ -9,3 +9,16 @@ enum FuIoChannelOpenFlags {
     Nonblock = 1 << 2,
     Sync = 1 << 3,
 }
+
+// Flags used when reading data from the TTY.
+// Since: 1.2.2
+enum FuIoChannelFlags {
+    // No flags are set.
+    None = 0,
+    // Only one read or write is expected.
+    SingleShot = 1 << 0,
+    // Flush pending input before writing.
+    FlushInput = 1 << 1,
+    // Block waiting for the TTY.
+    UseBlockingIo = 1 << 2,
+}

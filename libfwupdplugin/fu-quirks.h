@@ -8,27 +8,10 @@
 #pragma once
 
 #include "fu-context.h"
+#include "fu-quirks-struct.h"
 
 #define FU_TYPE_QUIRKS (fu_quirks_get_type())
 G_DECLARE_FINAL_TYPE(FuQuirks, fu_quirks, FU, QUIRKS, GObject)
-
-/**
- * FuQuirksLoadFlags:
- * @FU_QUIRKS_LOAD_FLAG_NONE:		No flags set
- * @FU_QUIRKS_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
- * @FU_QUIRKS_LOAD_FLAG_NO_CACHE:	Do not save to a persistent cache
- * @FU_QUIRKS_LOAD_FLAG_NO_VERIFY:	Do not check the key files for errors
- *
- * The flags to use when loading quirks.
- **/
-typedef enum {
-	FU_QUIRKS_LOAD_FLAG_NONE = 0,
-	FU_QUIRKS_LOAD_FLAG_READONLY_FS = 1 << 0,
-	FU_QUIRKS_LOAD_FLAG_NO_CACHE = 1 << 1,
-	FU_QUIRKS_LOAD_FLAG_NO_VERIFY = 1 << 2,
-	/*< private >*/
-	FU_QUIRKS_LOAD_FLAG_LAST
-} G_GNUC_FLAG_ENUM FuQuirksLoadFlags;
 
 /**
  * FuQuirksIter:

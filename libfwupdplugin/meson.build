@@ -7,11 +7,13 @@ fwupdplugin_structs = [
   'fu-cab.rs', # fuzzing
   'fu-cfi.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
+  'fu-config.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
   'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
+  'fu-dump.rs', # fuzzing
   'fu-edid.rs', # fuzzing
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
@@ -19,19 +21,23 @@ fwupdplugin_structs = [
   'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
-  'fu-hidraw.rs', # fuzzing
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-ihex.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-io-channel.rs', # fuzzing
+  'fu-ioctl.rs', # fuzzing
   'fu-heci.rs', # fuzzing
   'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
+  'fu-path.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
+  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
+  'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
+  'fu-srec.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing

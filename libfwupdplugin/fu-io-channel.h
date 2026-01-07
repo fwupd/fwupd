@@ -14,48 +14,6 @@
 
 G_DECLARE_FINAL_TYPE(FuIOChannel, fu_io_channel, FU, IO_CHANNEL, GObject)
 
-/**
- * FuIOChannelFlags:
- *
- * The flags used when reading data from the TTY.
- **/
-typedef enum {
-	/**
-	 * FU_IO_CHANNEL_FLAG_NONE:
-	 *
-	 * No flags are set.
-	 *
-	 * Since: 1.2.2
-	 */
-	FU_IO_CHANNEL_FLAG_NONE = 0,
-	/**
-	 * FU_IO_CHANNEL_FLAG_SINGLE_SHOT:
-	 *
-	 * Only one read or write is expected.
-	 *
-	 * Since: 1.2.2
-	 */
-	FU_IO_CHANNEL_FLAG_SINGLE_SHOT = 1 << 0,
-	/**
-	 * FU_IO_CHANNEL_FLAG_FLUSH_INPUT:
-	 *
-	 * Flush pending input before writing.
-	 *
-	 * Since: 1.2.2
-	 */
-	FU_IO_CHANNEL_FLAG_FLUSH_INPUT = 1 << 1,
-	/**
-	 * FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO:
-	 *
-	 * Block waiting for the TTY.
-	 *
-	 * Since: 1.2.2
-	 */
-	FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO = 1 << 2,
-	/*< private >*/
-	FU_IO_CHANNEL_FLAG_LAST
-} G_GNUC_FLAG_ENUM FuIOChannelFlags;
-
 FuIOChannel *
 fu_io_channel_unix_new(gint fd);
 FuIOChannel *
@@ -79,7 +37,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 			const guint8 *data,
 			gsize datasz,
 			guint timeout_ms,
-			FuIOChannelFlags flags,
+			FuIoChannelFlags flags,
 			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_io_channel_read_raw(FuIOChannel *self,
@@ -87,35 +45,35 @@ fu_io_channel_read_raw(FuIOChannel *self,
 		       gsize bufsz,
 		       gsize *bytes_read,
 		       guint timeout_ms,
-		       FuIOChannelFlags flags,
+		       FuIoChannelFlags flags,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_io_channel_write_bytes(FuIOChannel *self,
 			  GBytes *bytes,
 			  guint timeout_ms,
-			  FuIOChannelFlags flags,
+			  FuIoChannelFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_io_channel_write_stream(FuIOChannel *self,
 			   GInputStream *stream,
 			   guint timeout_ms,
-			   FuIOChannelFlags flags,
+			   FuIoChannelFlags flags,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_io_channel_write_byte_array(FuIOChannel *self,
 			       GByteArray *buf,
 			       guint timeout_ms,
-			       FuIOChannelFlags flags,
+			       FuIoChannelFlags flags,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_io_channel_read_bytes(FuIOChannel *self,
 			 gssize count,
 			 guint timeout_ms,
-			 FuIOChannelFlags flags,
+			 FuIoChannelFlags flags,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 GByteArray *
 fu_io_channel_read_byte_array(FuIOChannel *self,
 			      gssize count,
 			      guint timeout_ms,
-			      FuIOChannelFlags flags,
+			      FuIoChannelFlags flags,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
