@@ -16,6 +16,7 @@ struct _FuSunwinonHidDevice {
 G_DEFINE_TYPE(FuSunwinonHidDevice, fu_sunwinon_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define DFU_IMAGE_INFO_LEN 48
+#define HID_REPORT_DATA_LEN 480
 
 typedef struct {
 	FuDevice *device;
@@ -33,8 +34,8 @@ typedef struct {
 static gboolean
 fu_sunwinon_hid_device_send(FuSwHidDfuCtx *self, const guint8 *payload, guint16 len, GError **error)
 {
-	if (len > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
-		len = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
+	if (len > HID_REPORT_DATA_LEN)
+		len = HID_REPORT_DATA_LEN;
 	g_autoptr(FuStructSunwinonHidOut) st_out = fu_struct_sunwinon_hid_out_new();
 	fu_struct_sunwinon_hid_out_set_data_len(st_out, len);
 	if (!fu_struct_sunwinon_hid_out_set_data(st_out, payload, len, error))
@@ -181,8 +182,7 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 	ctx.device = FU_DEVICE(device);
 	cfg.user_data = &ctx;
 	fu_sunwinon_hid_device_dfu_setup_callbacks(&cfg);
-	g_autoptr(FuDfuMaster) master =
-	    fu_sunwinon_util_dfu_master_new(&cfg, FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN);
+	g_autoptr(FuDfuMaster) master = fu_sunwinon_util_dfu_master_new(&cfg, HID_REPORT_DATA_LEN);
 	ctx.master = master;
 	if (!fu_sunwinon_util_dfu_master_send_fw_info_get(master, error))
 		return FALSE;
@@ -198,10 +198,11 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 		return FALSE;
 	FuSunwinonDfuImageInfo fw_info = {0};
 	guint16 inlen = fu_struct_sunwinon_hid_in_get_data_len(st_in);
-	if (inlen > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
-		inlen = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
+	if (inlen > HID_REPORT_DATA_LEN)
+		inlen = HID_REPORT_DATA_LEN;
 	const guint8 *payload = fu_struct_sunwinon_hid_in_get_data(st_in, NULL);
-	fu_sunwinon_util_dfu_master_parse_fw_info(master, &fw_info, payload, inlen, error);
+	if (!fu_sunwinon_util_dfu_master_parse_fw_info(master, &fw_info, payload, inlen, error))
+		return FALSE;
 	g_debug("SunwinonHid: Firmware version fetched: %u.%u",
 		(guint)((fw_info.version >> 8) & 0xFF),
 		(guint)(fw_info.version & 0xFF));
@@ -213,16 +214,51 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 }
 
 static gboolean
+fu_sunwinon_hid_device_check_update_channel(FuHidDescriptor *desc, GError **error)
+{
+	g_return_val_if_fail(desc != NULL, FALSE);
+	g_autoptr(FuHidReport) report_out = fu_hid_descriptor_find_report(desc,
+									  error,
+									  "report-id",
+									  0x61,
+									  "usage",
+									  0x02,
+									  "output",
+									  0x00,
+									  NULL);
+	if (report_out == NULL)
+		return FALSE;
+
+	g_autoptr(FuHidReport) report_in = fu_hid_descriptor_find_report(desc,
+									 error,
+									 "report-id",
+									 0x61,
+									 "usage",
+									 0x02,
+									 "input",
+									 0x00,
+									 NULL);
+	if (report_in == NULL)
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
 fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor =
-	    fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), NULL);
+	    fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
 	if (descriptor == NULL)
-		g_debug("SunwinonHid: accepting hidraw without HID descriptor");
-	fu_device_add_instance_id(device, "SUNWINON_HID");
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		return FALSE;
+	g_debug("SunwinonHid: HID Descriptor parsed successfully");
+	if (!fu_sunwinon_hid_device_check_update_channel(descriptor, error))
+		return FALSE;
 	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
+	/* HID report descriptor and fw version confirmed, now device is ready to update */
+	fu_device_add_instance_id(device, "SUNWINON_HID");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	return TRUE;
 }
 
@@ -288,8 +324,7 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 
 	fu_sunwinon_hid_device_dfu_setup_callbacks(&cfg);
 	cfg.user_data = &ctx;
-	g_autoptr(FuDfuMaster) master =
-	    fu_sunwinon_util_dfu_master_new(&cfg, FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN);
+	g_autoptr(FuDfuMaster) master = fu_sunwinon_util_dfu_master_new(&cfg, HID_REPORT_DATA_LEN);
 	ctx.master = master;
 	fu_sunwinon_util_dfu_master_fast_dfu_mode_set(master, FU_SUNWINON_FAST_DFU_MODE_DISABLE);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
@@ -314,8 +349,8 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 							error))
 			return FALSE;
 		guint16 inlen = fu_struct_sunwinon_hid_in_get_data_len(st_in);
-		if (inlen > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
-			inlen = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
+		if (inlen > HID_REPORT_DATA_LEN)
+			inlen = HID_REPORT_DATA_LEN;
 		const guint8 *payload = fu_struct_sunwinon_hid_in_get_data(st_in, NULL);
 		fu_sunwinon_util_dfu_master_cmd_parse(master, payload, inlen);
 	}

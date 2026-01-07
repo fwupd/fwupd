@@ -2,14 +2,13 @@
 
 #[repr(u8)]
 enum FuSunwinonHidReport {
-    ReportId = 0x61,
-    ReportDataLen = 480,
+    channel_id = 0x61,
 }
 
 #[derive(New, Default, Getters)]
 #[repr(C, packed)]
 struct FuStructSunwinonHidOut {
-    report_id: FuSunwinonHidReport == ReportId,
+    report_id: FuSunwinonHidReport == channel_id,
     device_id: u8 = 0x00,
     sub_id: u8 = 0x01,
     data_len: u16le,
@@ -19,7 +18,7 @@ struct FuStructSunwinonHidOut {
 #[derive(Default, New, Validate, Getters)]
 #[repr(C, packed)]
 struct FuStructSunwinonHidIn {
-    report_id: FuSunwinonHidReport == ReportId,
+    report_id: FuSunwinonHidReport == channel_id,
     device_id: u8,
     sub_id: u8,
     data_len: u16le,
