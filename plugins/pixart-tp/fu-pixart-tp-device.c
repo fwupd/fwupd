@@ -1210,6 +1210,7 @@ fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
 	guint8 buf[2] = {0};
+	guint16 part_id = fu_device_get_pid(device);
 
 	/* read TP boot status*/
 	if (!fu_pixart_tp_device_register_user_read(self,
@@ -1225,21 +1226,41 @@ fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	/* read low byte */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    self->ver_bank,
-						    (guint8)(self->ver_addr + 0),
-						    &buf[0],
-						    error))
-		return FALSE;
+	switch (part_id) {
+	case FU_PIXART_TP_PART_ID_PJP239:
+		/* read low byte */
+		if (!fu_pixart_tp_device_register_read(self,
+							    self->ver_bank,
+							    (guint8)(self->ver_addr + 0),
+							    &buf[0],
+							    error))
+			return FALSE;
 
-	/* read high byte */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    self->ver_bank,
-						    (guint8)(self->ver_addr + 1),
-						    &buf[1],
-						    error))
-		return FALSE;
+		/* read high byte */
+		if (!fu_pixart_tp_device_register_read(self,
+							    self->ver_bank,
+							    (guint8)(self->ver_addr + 2),
+							    &buf[1],
+							    error))
+			return FALSE;
+		break;
+	default:
+		/* read low byte */
+		if (!fu_pixart_tp_device_register_user_read(self,
+							    self->ver_bank,
+							    (guint8)(self->ver_addr + 0),
+							    &buf[0],
+							    error))
+			return FALSE;
+
+		/* read high byte */
+		if (!fu_pixart_tp_device_register_user_read(self,
+							    self->ver_bank,
+							    (guint8)(self->ver_addr + 1),
+							    &buf[1],
+							    error))
+			return FALSE;
+	}
 
 	/* success */
 	fu_device_set_version_raw(device, fu_memread_uint16(buf, G_LITTLE_ENDIAN));

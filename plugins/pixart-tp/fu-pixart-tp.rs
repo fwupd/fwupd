@@ -142,6 +142,7 @@ enum FuPixartTpFlashCcr {
 
 #[repr(u16)]
 enum FuPixartTpPartId {
+    Pjp239 = 0x0239,
     Pjp274 = 0x0274,
 }
 
