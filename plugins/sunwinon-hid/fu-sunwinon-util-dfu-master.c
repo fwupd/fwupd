@@ -145,13 +145,6 @@ struct FuDfuMaster {
 	FuDfuMasterState state;
 };
 
-/**
- *****************************************************************************************
- * @brief Function for getting updated firmware information.
- *
- * @param[in]  img_info: Pointer of firmware information
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_get_img_info(FuDfuMaster *self,
 					 FuSunwinonDfuImageInfo *img_info,
@@ -165,15 +158,6 @@ fu_sunwinon_util_dfu_master_get_img_info(FuDfuMaster *self,
 						      error);
 }
 
-/**
- *****************************************************************************************
- * @brief Get the firmware data to be upgraded.
- *
- * @param[in]  addr: Get data address.
- * @param[in]  data: Pointer of get data.
- * @param[in]  len: Get data length
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_get_img_data(FuDfuMaster *self,
 					 guint32 addr,
@@ -191,14 +175,6 @@ fu_sunwinon_util_dfu_master_get_img_data(FuDfuMaster *self,
 						      error);
 }
 
-/**
- *****************************************************************************************
- * @brief Send data to peripheral.
- *
- * @param[in]  data: Pointer to data.
- * @param[in]  len: Length of data.
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_send_data(FuDfuMaster *self, guint8 *data, guint16 len, GError **error)
 {
@@ -208,14 +184,6 @@ fu_sunwinon_util_dfu_master_send_data(FuDfuMaster *self, guint8 *data, guint16 l
 	return dfu_state->func_cfg.dfu_m_send_data(dfu_state->func_cfg.user_data, data, len, error);
 }
 
-/**
- *****************************************************************************************
- * @brief DFU master event handler.
- *
- * @param[in]  event: DFU event.
- * @param[in]  progress: Firmware upgrade progress.
- *****************************************************************************************
- */
 static void
 fu_sunwinon_util_dfu_master_event_handler(FuDfuMaster *self,
 					  FuSunwinonDfuEvent event,
@@ -228,13 +196,6 @@ fu_sunwinon_util_dfu_master_event_handler(FuDfuMaster *self,
 							progress);
 }
 
-/**
- *****************************************************************************************
- * @brief Get the time in milliseconds for timeout.
- *
- * @retval The time in milliseconds.
- *****************************************************************************************
- */
 static guint32
 fu_sunwinon_util_dfu_master_get_time(FuDfuMaster *self)
 {
@@ -244,12 +205,6 @@ fu_sunwinon_util_dfu_master_get_time(FuDfuMaster *self)
 	return 0;
 }
 
-/**
- *****************************************************************************************
- * @brief Check command validity.
- *
- *****************************************************************************************
- */
 static void
 fu_sunwinon_util_dfu_master_cmd_check(FuDfuMaster *self)
 {
@@ -268,13 +223,6 @@ fu_sunwinon_util_dfu_master_cmd_check(FuDfuMaster *self)
 	}
 }
 
-/**
- *****************************************************************************************
- * @brief DFU master sends data to peripheral.
- *
- * @param[in]  len: Length of data.
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_send(FuDfuMaster *self, guint16 len, GError **error)
 {
@@ -301,15 +249,6 @@ fu_sunwinon_util_dfu_master_wait(FuDfuMaster *self, guint32 ms)
 		dfu_state->func_cfg.dfu_m_wait(dfu_state->func_cfg.user_data, ms);
 }
 
-/**
- *****************************************************************************************
- * @brief Make frame and send to peripheral.
- *
- * @param[in]  data: Pointer to send data.
- * @param[in]  len: Length of data.
- * @param[in]  cmd_type: Commander type.
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_send_frame(FuDfuMaster *self,
 				       const guint8 *p_data,
@@ -353,13 +292,6 @@ fu_sunwinon_util_dfu_master_send_frame(FuDfuMaster *self,
 	return TRUE;
 }
 
-/**
- *****************************************************************************************
- * @brief Program peripheral flash.
- *
- * @param[in]  len: Length of data written to flash.
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_program_flash(FuDfuMaster *self, guint16 len, GError **error)
 {
@@ -394,12 +326,6 @@ fu_sunwinon_util_dfu_master_program_flash(FuDfuMaster *self, guint16 len, GError
 	return TRUE;
 }
 
-/**
- *****************************************************************************************
- * @brief Program peripheral flash in fast mode.
- * Note: Fast mode can be used in BLE mode.
- *****************************************************************************************
- */
 static void
 fu_sunwinon_util_dfu_master_fast_program_flash(FuDfuMaster *self)
 {
@@ -453,14 +379,6 @@ fu_sunwinon_util_dfu_master_fast_program_flash(FuDfuMaster *self)
 	}
 }
 
-/**
- *****************************************************************************************
- * @brief Function for start update firmware.
- *
- * @param[in]  security: Upgrade firmware is encrypted?.
- * @param[in]  run_fw: Whether to run the firmware immediately after the upgrade.
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_program_start(FuDfuMaster *self,
 					  gboolean security,
@@ -478,9 +396,6 @@ fu_sunwinon_util_dfu_master_program_start(FuDfuMaster *self,
 	guint32 bank0_fw_end;
 	g_debug(__FUNCTION__);
 	dfu_state->run_fw_flag = run_fw;
-	/* Use new firmware load address from image info as master-side base */
-	/* This avoids relying on a global get_fw_save_addr() symbol. */
-	/* dfu_m_get_img_info fills dfu_state->now_img_info before this usage. */
 	dfu_state->all_check_sum = 0U;
 	dfu_state->programed_size = 0U;
 
@@ -630,12 +545,6 @@ fu_sunwinon_util_dfu_master_program_end(FuDfuMaster *self, GError **error)
 						      error);
 }
 
-/**
- *****************************************************************************************
- * @brief Function for getting security mode.
- * @return Result of security mode.
- *****************************************************************************************
- */
 static gboolean
 fu_sunwinon_util_dfu_master_get_sec_flag(FuDfuMaster *self)
 {
@@ -643,11 +552,6 @@ fu_sunwinon_util_dfu_master_get_sec_flag(FuDfuMaster *self)
 	return dfu_state->sec_flag;
 }
 
-/**
- *****************************************************************************************
- * @brief DFU timeout schedule. If no response is received for a long time, a timeout will occur.
- *****************************************************************************************
- */
 static void
 fu_sunwinon_util_dfu_master_timeout_schedule(FuDfuMaster *self)
 {
@@ -664,10 +568,6 @@ fu_sunwinon_util_dfu_master_timeout_schedule(FuDfuMaster *self)
 	}
 }
 
-/*
- * GLOBAL FUNCTION DEFINITIONS
- *****************************************************************************************
- */
 guint32
 fu_sunwinon_util_dfu_master_get_program_size(FuDfuMaster *self)
 {
