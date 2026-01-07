@@ -27,6 +27,7 @@
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-variable-authentication2.h>
 #include <libfwupdplugin/fu-efi-volume.h>
+#include <libfwupdplugin/fu-efi-vss-auth-variable.h>
 #include <libfwupdplugin/fu-efi-vss2-variable-store.h>
 #include <libfwupdplugin/fu-elf-firmware.h>
 #include <libfwupdplugin/fu-fdt-firmware.h>
@@ -86,6 +87,7 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_EFI_VOLUME);
 	fu_context_add_firmware_gtype(self, FU_TYPE_EFI_FTW_STORE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_EFI_VSS2_VARIABLE_STORE);
+	fu_context_add_firmware_gtype(self, FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_JSON_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(self, FU_TYPE_IFD_FIRMWARE);

@@ -449,7 +449,7 @@ fu_logitech_tap_touch_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_logitech_tap_touch_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)) != FU_HIDRAW_BUS_TYPE_USB) {
+	if (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)) != FU_HID_BUS_TYPE_USB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

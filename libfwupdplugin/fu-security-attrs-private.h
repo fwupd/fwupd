@@ -6,20 +6,7 @@
 
 #pragma once
 
-/**
- * FuSecurityAttrsFlags:
- * @FU_SECURITY_ATTRS_FLAG_NONE:		No flags set
- * @FU_SECURITY_ATTRS_FLAG_ADD_VERSION:		Add the daemon version to the HSI string
- *
- * The flags to use when calculating an HSI version.
- **/
-typedef enum {
-	FU_SECURITY_ATTRS_FLAG_NONE = 0,
-	FU_SECURITY_ATTRS_FLAG_ADD_VERSION = 1 << 0,
-	/*< private >*/
-	FU_SECURITY_ATTRS_FLAG_LAST
-} G_GNUC_FLAG_ENUM FuSecurityAttrsFlags;
-
+#include "fu-security-attrs-struct.h"
 #include "fu-security-attrs.h"
 
 FuSecurityAttrs *

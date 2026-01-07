@@ -115,7 +115,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSrecFirmwareRecord, fu_srec_firmware_record_free
  * Since: 1.3.2
  **/
 FuSrecFirmwareRecord *
-fu_srec_firmware_record_new(guint ln, FuFirmareSrecRecordKind kind, guint32 addr)
+fu_srec_firmware_record_new(guint ln, FuFirmwareSrecRecordKind kind, guint32 addr)
 {
 	FuSrecFirmwareRecord *rcd = g_new0(FuSrecFirmwareRecord, 1);
 	rcd->ln = ln;
@@ -543,7 +543,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 
 static void
 fu_srec_firmware_write_line(GString *str,
-			    FuFirmareSrecRecordKind kind,
+			    FuFirmwareSrecRecordKind kind,
 			    guint32 addr,
 			    const guint8 *buf,
 			    gsize bufsz)
@@ -592,9 +592,9 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) buf_blob = NULL;
 	const gchar *id = fu_firmware_get_id(firmware);
 	gsize id_strlen = id != NULL ? strlen(id) : 0;
-	FuFirmareSrecRecordKind kind_data = FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16;
-	FuFirmareSrecRecordKind kind_coun = FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16;
-	FuFirmareSrecRecordKind kind_term = FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16;
+	FuFirmwareSrecRecordKind kind_data = FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16;
+	FuFirmwareSrecRecordKind kind_coun = FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16;
+	FuFirmwareSrecRecordKind kind_term = FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16;
 
 	/* upgrade to longer addresses? */
 	if (fu_firmware_get_addr(firmware) >= (1ull << 24)) {

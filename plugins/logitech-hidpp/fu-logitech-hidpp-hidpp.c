@@ -64,7 +64,7 @@ fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 		       GError **error)
 {
 	gsize len = fu_logitech_hidpp_msg_get_payload_length(msg);
-	FuIOChannelFlags write_flags = FU_IO_CHANNEL_FLAG_FLUSH_INPUT;
+	FuIoChannelFlags write_flags = FU_IO_CHANNEL_FLAG_FLUSH_INPUT;
 	g_autofree gchar *str = NULL;
 
 	/* only for HID++2.0 */
