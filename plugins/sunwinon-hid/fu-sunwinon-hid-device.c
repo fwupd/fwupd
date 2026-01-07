@@ -15,9 +15,7 @@ struct _FuSunwinonHidDevice {
 
 G_DEFINE_TYPE(FuSunwinonHidDevice, fu_sunwinon_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
-#ifndef DFU_IMAGE_INFO_LEN
 #define DFU_IMAGE_INFO_LEN 48
-#endif
 
 typedef struct {
 	FuDevice *device;
@@ -30,10 +28,10 @@ typedef struct {
 	gboolean done;
 	gboolean failed;
 	char *fail_reason;
-} FuSwDfuCtx;
+} FuSwHidDfuCtx;
 
 static gboolean
-fu_sunwinon_hid_device_send(FuSwDfuCtx *self, const guint8 *payload, guint16 len, GError **error)
+fu_sunwinon_hid_device_send(FuSwHidDfuCtx *self, const guint8 *payload, guint16 len, GError **error)
 {
 	if (len > FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN)
 		len = FU_SUNWINON_HID_REPORT_REPORT_DATA_LEN;
@@ -53,7 +51,7 @@ fu_sunwinon_hid_device_send(FuSwDfuCtx *self, const guint8 *payload, guint16 len
 static gboolean
 fu_sunwinon_hid_device_dfu_send_data(void *user_data, guint8 *data, guint16 len, GError **error)
 {
-	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	FuSwHidDfuCtx *self = (FuSwHidDfuCtx *)user_data;
 	return fu_sunwinon_hid_device_send(self, data, len, error);
 }
 
@@ -62,7 +60,7 @@ fu_sunwinon_hid_device_dfu_get_img_info(void *user_data,
 					FuSunwinonDfuImageInfo *img_info,
 					GError **error)
 {
-	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	FuSwHidDfuCtx *self = (FuSwHidDfuCtx *)user_data;
 	return fu_memcpy_safe((guint8 *)img_info,
 			      sizeof(FuSunwinonDfuImageInfo),
 			      0,
@@ -80,7 +78,7 @@ fu_sunwinon_hid_device_dfu_get_img_data(void *user_data,
 					guint16 len,
 					GError **error)
 {
-	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	FuSwHidDfuCtx *self = (FuSwHidDfuCtx *)user_data;
 	guint32 off = 0;
 	if (addr >= self->fw_save_addr)
 		off = addr - self->fw_save_addr;
@@ -108,14 +106,14 @@ fu_sunwinon_hid_device_dfu_get_time(void *user_data)
 static void
 fu_sunwinon_hid_device_dfu_wait(void *user_data, guint32 ms)
 {
-	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	FuSwHidDfuCtx *self = (FuSwHidDfuCtx *)user_data;
 	fu_device_sleep(FU_DEVICE(self->device), ms);
 }
 
 static void
 fu_sunwinon_hid_device_dfu_event_handler(void *user_data, FuSunwinonDfuEvent event, guint8 progress)
 {
-	FuSwDfuCtx *self = (FuSwDfuCtx *)user_data;
+	FuSwHidDfuCtx *self = (FuSwHidDfuCtx *)user_data;
 	switch (event) {
 	case FU_SUNWINON_DFU_EVENT_PRO_START_SUCCESS:
 		break;
@@ -178,7 +176,7 @@ fu_sunwinon_hid_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **error)
 {
-	FuSwDfuCtx ctx = {0};
+	FuSwHidDfuCtx ctx = {0};
 	FuSunwinonDfuCallback cfg = {0};
 	ctx.device = FU_DEVICE(device);
 	cfg.user_data = &ctx;
@@ -249,7 +247,7 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
-	FuSwDfuCtx ctx = {0};
+	FuSwHidDfuCtx ctx = {0};
 	FuSunwinonDfuCallback cfg = {0};
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)

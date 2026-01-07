@@ -1,9 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Note: This file is derived from a BSD-licensed DFU master implementation
- * provided by GOODIX and has been relicensed to LGPL-2.1-or-later for fwupd.
- * See plugins/sunwinon-hid/GOODIX-BSD-LICENSE for the original terms.
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  */
 
 #include "config.h"
