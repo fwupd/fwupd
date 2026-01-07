@@ -63,13 +63,6 @@ fu_igsc_aux_firmware_match_device(FuIgscAuxFirmware *self,
 	return FALSE;
 }
 
-guint32
-fu_igsc_aux_firmware_get_oem_version(FuIgscAuxFirmware *self)
-{
-	g_return_val_if_fail(FU_IS_IGSC_AUX_FIRMWARE(self), G_MAXUINT32);
-	return self->oem_version;
-}
-
 guint16
 fu_igsc_aux_firmware_get_major_version(FuIgscAuxFirmware *self)
 {
