@@ -8,11 +8,8 @@
 
 #include "fu-sunwinon-util-dfu-master.h"
 
+/* commands */
 enum {
-	/* CMD header low byte */
-	CMD_FRAME_HEADER_L = 0x44U,
-	/* CMD header high byte */
-	CMD_FRAME_HEADER_H = 0x47U,
 	/* get info cmd */
 	GET_INFO = 0x01U,
 	/* program start cmd */
@@ -31,10 +28,11 @@ enum {
 	DFU_FAST_DFU_FLASH_SUCCESS = 0xFFU,
 };
 
-/* CMD ack success */
-#define ACK_SUCCESS 0x01U
-/* CMD ack error */
-#define ACK_ERROR 0x02U
+/* peripheral ack */
+enum {
+	ACK_SUCCESS = 0x01U,
+	ACK_ERROR = 0x02U,
+};
 
 /* firmware flags */
 #define FU_SUNWINON_DFU_FW_ENC_OR_SIGN_PATTERN 0xDEADBEEFU
@@ -44,6 +42,10 @@ enum {
 #define FLASH_OP_SECTOR_SIZE 0x1000U
 /* pattern value */
 #define PATTERN_VALUE 0x4744U
+/* CMD header low byte */
+#define CMD_FRAME_HEADER_L 0x44U
+/* CMD header high byte */
+#define CMD_FRAME_HEADER_H 0x47U
 
 /* firmware sign flag offset */
 #define FW_SIGN_FLAG_OFFSET 72U
