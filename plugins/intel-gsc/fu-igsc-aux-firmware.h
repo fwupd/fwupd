@@ -19,8 +19,6 @@ G_DECLARE_FINAL_TYPE(FuIgscAuxFirmware,
 FuFirmware *
 fu_igsc_aux_firmware_new(void);
 
-guint32
-fu_igsc_aux_firmware_get_oem_version(FuIgscAuxFirmware *self);
 guint16
 fu_igsc_aux_firmware_get_major_version(FuIgscAuxFirmware *self);
 guint16
