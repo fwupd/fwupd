@@ -771,6 +771,18 @@ class Checker:
             token = node.tokens_pre[idx]
             self.add_failure("use rustgen instead", linecnt=token.linecnt)
 
+    def _test_blocked_tokens(self, node: Node) -> None:
+
+        for search, msg in {
+            "__FUNCTION__": "Use G_STRFUNC instead",
+        }.items():
+            for token in node.tokens:
+                if token.data.find(search) != -1:
+                    self.add_failure(
+                        f"contains blocked token {token.data}: {msg}",
+                        linecnt=token.linecnt,
+                    )
+
     def _test_magic_numbers_defined(self, nodes: list[Node]) -> None:
 
         cnt: int = 0
@@ -1287,6 +1299,7 @@ class Checker:
             self._current_nocheck = "nocheck:blocked"
             if self._should_process_node(node):
                 self._test_blocked_funcs(node)
+                self._test_blocked_tokens(node)
                 self._test_blocked_goto(node)
                 self._test_device_display(node)
                 self._test_equals_true(node)
