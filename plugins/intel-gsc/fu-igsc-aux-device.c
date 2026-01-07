@@ -133,15 +133,6 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 			    self->major_vcn);
 		return NULL;
 	}
-	if (fu_igsc_aux_firmware_get_oem_version(firmware) <= self->oem_version) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid OEM version, got 0x%x, expected higher than 0x%x",
-			    fu_igsc_aux_firmware_get_oem_version(firmware),
-			    self->oem_version);
-		return NULL;
-	}
 
 	/* success, but return container, not CPD */
 	return FU_FIRMWARE(g_steal_pointer(&firmware));
