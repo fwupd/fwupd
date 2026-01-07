@@ -118,6 +118,7 @@ plugins = {
   'steelseries': false,
   'scsi': false,
   'snapd-uefi': false,
+  'sunwinon-hid': false,
   'synaptics-cape': false,
   'synaptics-cxaudio': false,
   'synaptics-mst': false,
