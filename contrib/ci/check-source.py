@@ -605,6 +605,15 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
+    def _test_comment_lines(self, node: Node) -> None:
+        """/**** not boxes *****/"""
+        for token in node.tokens_pre + node.tokens:
+            if token.data.find("/***") != -1:
+                self.add_failure(
+                    f"do not use boxed comment lines, just use /* comment */",
+                    linecnt=token.linecnt,
+                )
+
     def _test_comment_lower_case(self, node: Node) -> None:
         """single line comments are supposed to be lowercase"""
         idx: int = 0
@@ -1283,6 +1292,7 @@ class Checker:
                 self._test_debug_sentence_case(node)
                 self._test_comment_lower_case(node)
                 self._test_comment_cpp(node)
+                self._test_comment_lines(node)
 
             # not nesting too deep
             self._current_nocheck = "nocheck:depth"
