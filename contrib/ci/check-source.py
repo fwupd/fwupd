@@ -1381,11 +1381,16 @@ class Checker:
 
     def test_file(self, fn: str) -> None:
         self._current_fn = fn
+        self._current_nocheck = None
         with open(fn, "rb") as f:
             try:
                 data = f.read().decode()
             except UnicodeDecodeError as e:
                 print(f"failed to read {fn}: {e}")
+        if data.find("Copyright") == -1:
+            self.add_failure(f"does not have copyright assigned")
+        if data.find("Copyright") == -1:
+            self.add_failure(f"does not have a SPDX-License-Identifier")
         tokenizer = Tokenizer(data)
         nodes = tokenizer.nodes
         if self.verbose:
