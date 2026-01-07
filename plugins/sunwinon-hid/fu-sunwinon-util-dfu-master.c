@@ -8,85 +8,93 @@
 
 #include "fu-sunwinon-util-dfu-master.h"
 
-/* CMD header low byte. */
-#define CMD_FRAME_HEADER_L 0x44U
-/* CMD header high byte. */
-#define CMD_FRAME_HEADER_H 0x47U
-/* Get info cmd. */
-#define GET_INFO 0x01U
-/* Program start cmd. */
-#define PROGRAM_START 0x23U
-/* Program flash cmd. */
-#define PROGRAM_FLASH 0x24U
-/* Program end cmd. */
-#define PROGRAM_END 0x25U
-/* System information cmd. */
-#define SYSTEM_INFO 0x27U
-/* Dfu mode set cmd. */
-#define DFU_MODE_SET 0x41U
-/* Dfu fw info get cmd. */
-#define DFU_FW_INFO_GET 0x42U
+enum {
+	/* CMD header low byte */
+	CMD_FRAME_HEADER_L = 0x44U,
+	/* CMD header high byte */
+	CMD_FRAME_HEADER_H = 0x47U,
+	/* get info cmd */
+	GET_INFO = 0x01U,
+	/* program start cmd */
+	PROGRAM_START = 0x23U,
+	/* program flash cmd */
+	PROGRAM_FLASH = 0x24U,
+	/* program end cmd */
+	PROGRAM_END = 0x25U,
+	/* system information cmd */
+	SYSTEM_INFO = 0x27U,
+	/* DFU mode set cmd */
+	DFU_MODE_SET = 0x41U,
+	/* DFU fw info get cmd */
+	DFU_FW_INFO_GET = 0x42U,
+	/* fast DFU mode successfully end cmd */
+	DFU_FAST_DFU_FLASH_SUCCESS = 0xFFU,
+};
 
-/* CMD ack success. */
+/* CMD ack success */
 #define ACK_SUCCESS 0x01U
-/* CMD ack error. */
+/* CMD ack error */
 #define ACK_ERROR 0x02U
 
-/* Flash sector size. */
+/* firmware flags */
+#define FU_SUNWINON_DFU_FW_ENC_OR_SIGN_PATTERN 0xDEADBEEFU
+#define FU_SUNWINON_DFU_FW_SIGN_PATTERN	       0x4E474953U /* "SIGN" */
+
+/* flash sector size */
 #define FLASH_OP_SECTOR_SIZE 0x1000U
-/* Pattern value. */
+/* pattern value */
 #define PATTERN_VALUE 0x4744U
 
-/* Firmware sign flag offset. */
+/* firmware sign flag offset */
 #define FW_SIGN_FLAG_OFFSET 72U
-/* Sign Firmware Type. */
+/* sign Firmware Type */
 #define SIGN_FW_TYPE 0x10U
-/* Normal Firmware Type. */
+/* normal Firmware Type */
 #define NORMAL_FW_TYPE 0x00U
 
-/* Firmware signature length. */
+/* firmware signature length */
 #define DFU_SIGN_LEN 856U
-/* Image information length. */
+/* image information length */
 #define DFU_IMAGE_INFO_LEN 48U
 
-/* Get system information command data length. */
+/* get system information command data length */
 #define DFU_CMD_GET_SYSTEM_INFO_DATA_LEN 7U
-/* Get system information command data length low byte position. */
+/* get system information command data length low byte position */
 #define DFU_CMD_GET_SYSTEM_INFO_LEN_L_POS 5U
-/* Get system information command length high byte position. */
+/* get system information command length high byte position */
 #define DFU_CMD_GET_SYSTEM_INFO_LEN_H_POS 6U
-/* DFU mode set command data length. */
+/* DFU mode set command data length */
 #define DFU_CMD_MODE_SET_DATA_LEN 1U
-/* Program start command data length. */
+/* program start command data length */
 #define DFU_CMD_PRO_START_DATA_LEN 41U
-/* Program end command data length. */
+/* program end command data length */
 #define DFU_CMD_PRO_END_DATA_LEN 5U
-/* Program flash command header length. */
+/* program flash command header length */
 #define DFU_CMD_PRO_FLASH_HEAD_LEN 7U
-/* Program flash command data length low byte position. */
+/* program flash command data length low byte position */
 #define DFU_CMD_PRO_FLASH_LEN_L_POS 5U
-/* Program flash command data length high byte position. */
+/* program flash command data length high byte position */
 #define DFU_CMD_PRO_FLASH_LEN_H_POS 6U
-/* Get info command response DFU version position. */
+/* get info command response DFU version position */
 #define DFU_RSP_DFU_VERSION_POS 17U
-/* Get system info command response operation position. */
+/* get system info command response operation position */
 #define DFU_RSP_SYS_INFO_OP_POS 1U
-/* Get system info command response data position. */
+/* get system info command response data position */
 #define DFU_RSP_SYS_INFO_DATA_POS 8U
-/* Get firmware info command response firmware run position position. */
+/* get firmware info command response firmware run position position */
 #define DFU_RSP_RUN_POSITION_POS 5U
-/* Get firmware info command response image info position. */
+/* get firmware info command response image info position */
 #define DFU_RSP_IMG_INFO_POS 6U
-/* Program start command response erased sector position in fast mode. */
+/* program start command response erased sector position in fast mode */
 #define DFU_RSP_ERASE_POS 6U
 
-#define DFU_FRAME_HRD_L_POS  0U /* DFU frame header low byte position. */
-#define DFU_FRAME_HRD_H_POS  1U /* DFU frame header high byte position. */
-#define DFU_FRAME_TYPE_L_POS 2U /* DFU frame type low byte position. */
-#define DFU_FRAME_TYPE_H_POS 3U /* DFU frame type high byte position. */
-#define DFU_FRAME_LEN_L_POS  4U /* DFU frame length low byte position. */
-#define DFU_FRAME_LEN_H_POS  5U /* DFU frame length high byte position. */
-#define DFU_FRAME_DATA_POS   6U /* DFU frame data position. */
+#define DFU_FRAME_HRD_L_POS  0U /* DFU frame header low byte position */
+#define DFU_FRAME_HRD_H_POS  1U /* DFU frame header high byte position */
+#define DFU_FRAME_TYPE_L_POS 2U /* DFU frame type low byte position */
+#define DFU_FRAME_TYPE_H_POS 3U /* DFU frame type high byte position */
+#define DFU_FRAME_LEN_L_POS  4U /* DFU frame length low byte position */
+#define DFU_FRAME_LEN_H_POS  5U /* DFU frame length high byte position */
+#define DFU_FRAME_DATA_POS   6U /* DFU frame data position */
 
 typedef enum {
 	CHECK_FRAME_L_STATE = 0x00,
@@ -748,6 +756,14 @@ fu_sunwinon_util_dfu_master_fast_dfu_mode_get(FuDfuMaster *self)
 	return dfu_state->fast_dfu_mode;
 }
 
+#define DFU_ERASE_STATUS_REGION_NOT_ALIGNED 0x00U
+#define DFU_ERASE_STATUS_START_SUCCESS	    0x01U
+#define DFU_ERASE_STATUS_SUCCESS	    0x02U
+#define DFU_ERASE_STATUS_END_SUCCESS	    0x03U
+#define DFU_ERASE_STATUS_REGIONS_OVERLAP    0x04U
+#define DFU_ERASE_STATUS_FAIL		    0x05U
+#define DFU_ERASE_STATUS_REGIONS_NOT_EXIST  0x06U
+
 static gboolean
 fu_sunwinon_util_dfu_master_schedule_program_start(FuDfuMaster *self, GError **error)
 {
@@ -765,7 +781,7 @@ fu_sunwinon_util_dfu_master_schedule_program_start(FuDfuMaster *self, GError **e
 							  0);
 	} else if (FU_SUNWINON_FAST_DFU_MODE_ENABLE == dfu_state->fast_dfu_mode) {
 		switch (dfu_state->receive_frame.data[1]) {
-		case FU_SUNWINON_DFU_ERASE_STATUS_START_SUCCESS:
+		case DFU_ERASE_STATUS_START_SUCCESS:
 			dfu_state->erase_sectors =
 			    (guint16)(dfu_state->receive_frame.data[DFU_RSP_ERASE_POS]);
 			dfu_state->erase_sectors |=
@@ -777,7 +793,7 @@ fu_sunwinon_util_dfu_master_schedule_program_start(FuDfuMaster *self, GError **e
 			    0);
 			break;
 
-		case FU_SUNWINON_DFU_ERASE_STATUS_SUCCESS:
+		case DFU_ERASE_STATUS_SUCCESS:
 			erased_sectors =
 			    (guint16)(dfu_state->receive_frame.data[DFU_RSP_ERASE_POS]);
 			erased_sectors |=
@@ -790,7 +806,7 @@ fu_sunwinon_util_dfu_master_schedule_program_start(FuDfuMaster *self, GError **e
 			    progress);
 			break;
 
-		case FU_SUNWINON_DFU_ERASE_STATUS_END_SUCCESS:
+		case DFU_ERASE_STATUS_END_SUCCESS:
 			fu_sunwinon_util_dfu_master_event_handler(
 			    self,
 			    FU_SUNWINON_DFU_EVENT_ERASE_END_SUCCESS,
@@ -798,28 +814,28 @@ fu_sunwinon_util_dfu_master_schedule_program_start(FuDfuMaster *self, GError **e
 			fu_sunwinon_util_dfu_master_fast_program_flash(self);
 			break;
 
-		case FU_SUNWINON_DFU_ERASE_STATUS_REGION_NOT_ALIGNED:
+		case DFU_ERASE_STATUS_REGION_NOT_ALIGNED:
 			fu_sunwinon_util_dfu_master_event_handler(
 			    self,
 			    FU_SUNWINON_DFU_EVENT_ERASE_REGION_NOT_ALIGNED,
 			    0);
 			break;
 
-		case FU_SUNWINON_DFU_ERASE_STATUS_REGIONS_OVERLAP:
+		case DFU_ERASE_STATUS_REGIONS_OVERLAP:
 			fu_sunwinon_util_dfu_master_event_handler(
 			    self,
 			    FU_SUNWINON_DFU_EVENT_ERASE_REGION_OVERLAP,
 			    0);
 			break;
 
-		case FU_SUNWINON_DFU_ERASE_STATUS_FAIL:
+		case DFU_ERASE_STATUS_FAIL:
 			fu_sunwinon_util_dfu_master_event_handler(
 			    self,
 			    FU_SUNWINON_DFU_EVENT_ERASE_FLASH_FAIL,
 			    0);
 			break;
 
-		case FU_SUNWINON_DFU_ERASE_STATUS_REGIONS_NOT_EXIST:
+		case DFU_ERASE_STATUS_REGIONS_NOT_EXIST:
 			fu_sunwinon_util_dfu_master_event_handler(
 			    self,
 			    FU_SUNWINON_DFU_EVENT_ERASE_REGION_NOT_EXIST,
@@ -941,7 +957,7 @@ fu_sunwinon_util_dfu_master_schedule(FuDfuMaster *self, GError **error)
 					return FALSE;
 
 				/* The command DFU_MODE_SET has no response. Wait at least 100ms */
-				/* before sending the next command. */
+				/* before sending the next command */
 				fu_sunwinon_util_dfu_master_wait(self, 100U);
 				if (!fu_sunwinon_util_dfu_master_program_start(
 					self,
@@ -1010,7 +1026,7 @@ fu_sunwinon_util_dfu_master_schedule(FuDfuMaster *self, GError **error)
 
 			break;
 
-		case FU_SUNWINON_DFU_CMD_TYPE_FAST_DFU_FLASH_SUCCESS:
+		case DFU_FAST_DFU_FLASH_SUCCESS:
 			if (dfu_state->receive_frame.data[0] == ACK_SUCCESS) {
 				dfu_state->receive_frame.data[0] = (guint8)dfu_state->run_fw_flag;
 				fu_memwrite_uint32(&dfu_state->receive_frame.data[1],
