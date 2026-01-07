@@ -326,7 +326,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	gsize firmware_size;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(FuChunk) firstChunk = NULL;
+	g_autoptr(FuChunk) first_chunk = NULL;
 	g_autoptr(GBytes) rest_of_firmware = NULL;
 	FuCorsairBp *self = FU_CORSAIR_BP(device);
 	guint32 first_chunk_size = self->cmd_write_size - CORSAIR_FIRST_CHUNK_HEADER_SIZE;
@@ -351,7 +351,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	firstChunk = fu_chunk_new(0, 0, 0, g_bytes_get_data(blob, NULL), first_chunk_size);
+	first_chunk = fu_chunk_new(0, 0, 0, g_bytes_get_data(blob, NULL), first_chunk_size);
 	rest_of_firmware =
 	    fu_bytes_new_offset(blob, first_chunk_size, firmware_size - first_chunk_size, error);
 	if (rest_of_firmware == NULL) {
@@ -365,7 +365,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 					  self->cmd_write_size - CORSAIR_NEXT_CHUNKS_HEADER_SIZE);
 
 	if (!fu_corsair_bp_write_firmware_chunks(self,
-						 firstChunk,
+						 first_chunk,
 						 chunks,
 						 progress,
 						 g_bytes_get_size(blob),

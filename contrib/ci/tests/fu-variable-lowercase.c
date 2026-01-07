@@ -16,4 +16,5 @@ static void
 fu_variable_lowercase(void)
 {
 	guint16 Enter_SBL = 0;
+	guint8 *PRAM = NULL;
 }

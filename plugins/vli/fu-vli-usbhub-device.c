@@ -486,7 +486,7 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 	guint8 chipid22 = 0x0;
 	guint8 chipver = 0x0;
 	guint8 chipver2 = 0x0;
-	gint tPid = fu_device_get_pid(FU_DEVICE(self)) & 0x0fff;
+	gint t_pid = fu_device_get_pid(FU_DEVICE(self)) & 0x0fff;
 
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf88c, &chipver, error)) {
 		g_prefix_error_literal(error, "Read_ChipVer failed: ");
@@ -614,9 +614,9 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL120);
 	} else if (chipid22 == 0x35 && chipid12 == 0x92) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL122);
-	} else if (tPid == 0x810) {
+	} else if (t_pid == 0x810) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL810);
-	} else if (tPid == 0x811) {
+	} else if (t_pid == 0x811) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL811);
 	} else if ((b811p812 & ((1 << 5) | (1 << 4))) == 0) {
 		if (chipver == 0x10)
