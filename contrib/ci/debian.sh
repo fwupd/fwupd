@@ -52,7 +52,6 @@ lintian ../*changes \
     --pedantic \
     --tag-display-limit 0 \
     --suppress-tags missing-build-dependency-for-dh-addon \
-    --suppress-tags library-not-linked-against-libc \
     --suppress-tags bad-distribution-in-changes-file \
     --suppress-tags source-nmu-has-incorrect-version-number \
     --suppress-tags no-symbols-control-file \
