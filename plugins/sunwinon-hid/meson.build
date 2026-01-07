@@ -8,7 +8,7 @@ plugin_builtins += static_library('fu_plugin_sunwinon_hid',
 	),
 	sources: [
 		'fu-sunwinon-hid-plugin.c',
-		'fu-sunwinon-ble-hid-device.c',
+		'fu-sunwinon-hid-device.c',
 		'fu-sunwinon-util-dfu-master.c',
 	],
 	include_directories: plugin_incdirs,
