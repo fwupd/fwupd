@@ -10,6 +10,7 @@ fwupdplugin_structs = [
   'fu-config.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
+  'fu-cpu.rs', # fuzzing
   'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
@@ -85,6 +86,7 @@ fwupdplugin_src = [
   'fu-cfi-device.c',
   'fu-cfu-offer.c', # fuzzing
   'fu-cfu-payload.c', # fuzzing
+  'fu-cpu-device.c',
   'fu-chunk.c', # fuzzing
   'fu-chunk-array.c', # fuzzing
   'fu-common.c', # fuzzing
@@ -241,6 +243,7 @@ fwupdplugin_headers = [
   'fu-cfi-device.h',
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',
+  'fu-cpu-device.h',
   'fu-chunk.h',
   'fu-chunk-array.h',
   'fu-common-guid.h',
