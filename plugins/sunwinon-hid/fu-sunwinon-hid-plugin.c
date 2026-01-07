@@ -6,7 +6,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-sunwinon-ble-hid-device.h"
+#include "fu-sunwinon-hid-device.h"
 
 typedef struct {
 	FuPlugin parent_instance;
@@ -28,7 +28,7 @@ fu_sunwinon_hid_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_SUNWINON_BLE_HID_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_SUNWINON_HID_DEVICE);
 }
 
 static void

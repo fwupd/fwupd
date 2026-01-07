@@ -1,13 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Note: This file is derived from a BSD-licensed DFU master implementation
- * provided by GOODIX and has been relicensed to LGPL-2.1-or-later for fwupd.
- * See plugins/sunwinon-hid/GOODIX-BSD-LICENSE for the original terms.
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  */
+
 #pragma once
 
 #include "fu-sunwinon-hid-struct.h"
+
+/* DFU config */
+#define FU_SUNWINON_DFU_CONFIG_PERIPHERAL_FLASH_START_ADDR 0x00200000U
+#define FU_SUNWINON_DFU_CONFIG_ONCE_PROGRAM_LEN		   464U
+#define FU_SUNWINON_DFU_CONFIG_SEND_SIZE_MAX		   517U
+#define FU_SUNWINON_DFU_CONFIG_ACK_WAIT_TIMEOUT		   4000U
+#define FU_SUNWINON_DFU_CONFIG_PERIPHERAL_RESET_TIME	   2000U
+
+/* Frame size limits */
+#define FU_SUNWINON_DFU_FRAME_MAX_TX (FU_SUNWINON_DFU_CONFIG_ONCE_PROGRAM_LEN + 15)
+#define FU_SUNWINON_DFU_FRAME_MAX_RX 64U
 
 typedef struct {
 	guint32 bin_size;
