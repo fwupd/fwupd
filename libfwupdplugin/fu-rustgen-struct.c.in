@@ -452,7 +452,8 @@ void
                     FWUPD_ERROR,
                     FWUPD_ERROR_INVALID_DATA,
                     "constant {{obj.name}}.{{item.element_id}} was not valid, "
-                    "expected '{{item.enum_obj.name}}' and got '%s'",
+                    "expected '{{item.constant}}' and got 0x%x '%s'",
+                    {{item.c_getter}}(st),
                     {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st)));
         return FALSE;
 {%- elif item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
