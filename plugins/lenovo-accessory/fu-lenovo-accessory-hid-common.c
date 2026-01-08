@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-lenovo-accessory-hid-common.h"
-#include "fu-lenovo-accessory-struct.h"
 
 static gboolean
 fu_lenovo_accessory_hid_poll_cb(FuDevice *device, gpointer user_data, GError **error)
@@ -92,7 +91,9 @@ fu_lenovo_accessory_hid_get_fwversion(FuHidrawDevice *hidraw_device,
 }
 
 gboolean
-fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GError **error)
+fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device,
+				 FuLenovoDeviceMode mode,
+				 GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoHidDevicemode) lenovo_hid_mode =
@@ -111,7 +112,7 @@ fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GEr
 	if (!fu_struct_lenovo_hid_devicemode_set_cmd(lenovo_hid_mode, st_cmd, error))
 		return FALSE;
 	fu_struct_lenovo_hid_devicemode_set_mode(lenovo_hid_mode, mode);
-	if (mode == 0x02) {
+	if (mode == FU_LENOVO_DEVICE_MODE_DFU_MODE) {
 		return (fu_hidraw_device_set_feature(hidraw_device,
 						     lenovo_hid_mode->buf->data,
 						     lenovo_hid_mode->buf->len,
@@ -127,7 +128,9 @@ fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GEr
 
 /* @exit_code: the exit status code (e.g., 0x00 for success/reboot) */
 gboolean
-fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device, guint8 exit_code, GError **error)
+fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device,
+				 FuLenovoDfuExitCode exit_code,
+				 GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoHidDfuExit) lenovo_hid_dfuexit =
@@ -146,7 +149,7 @@ fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device, guint8 exit_code
 	fu_struct_lenovo_hid_dfu_exit_set_reportid(lenovo_hid_dfuexit, 0x00);
 	if (!fu_struct_lenovo_hid_dfu_exit_set_cmd(lenovo_hid_dfuexit, st_cmd, error))
 		return FALSE;
-
+	fu_struct_lenovo_hid_dfu_exit_set_exit_code(lenovo_hid_dfuexit, exit_code);
 	/*
 	 * The device performs an immediate reset/reboot as soon as it receives the
 	 * DFU_EXIT command and therefore never sends back an ACK. The resulting
@@ -218,7 +221,7 @@ fu_lenovo_accessory_hid_dfu_attribute(FuHidrawDevice *hidraw_device,
 
 gboolean
 fu_lenovo_accessory_hid_dfu_prepare(FuHidrawDevice *hidraw_device,
-				    guint8 file_type,
+				    FuLenovoDfuFileType file_type,
 				    guint32 start_address,
 				    guint32 end_address,
 				    guint32 crc32,
@@ -252,7 +255,7 @@ fu_lenovo_accessory_hid_dfu_prepare(FuHidrawDevice *hidraw_device,
 
 gboolean
 fu_lenovo_accessory_hid_dfu_file(FuHidrawDevice *hidraw_device,
-				 guint8 file_type,
+				 FuLenovoDfuFileType file_type,
 				 guint32 address,
 				 const guint8 *file_data,
 				 guint8 block_size,

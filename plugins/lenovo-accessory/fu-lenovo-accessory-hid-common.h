@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-lenovo-accessory-struct.h"
+
 gboolean
 fu_lenovo_accessory_hid_get_fwversion(FuHidrawDevice *hidraw_device,
 				      guint8 *major,
@@ -15,9 +17,13 @@ fu_lenovo_accessory_hid_get_fwversion(FuHidrawDevice *hidraw_device,
 				      guint8 *micro,
 				      GError **error);
 gboolean
-fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GError **error);
+fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device,
+				 FuLenovoDeviceMode mode,
+				 GError **error);
 gboolean
-fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device, guint8 exit_code, GError **error);
+fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device,
+				 FuLenovoDfuExitCode exit_code,
+				 GError **error);
 gboolean
 fu_lenovo_accessory_hid_dfu_attribute(FuHidrawDevice *hidraw_device,
 				      guint8 *major_ver,
@@ -29,14 +35,14 @@ fu_lenovo_accessory_hid_dfu_attribute(FuHidrawDevice *hidraw_device,
 				      GError **error);
 gboolean
 fu_lenovo_accessory_hid_dfu_prepare(FuHidrawDevice *hidraw_device,
-				    guint8 file_type,
+				    FuLenovoDfuFileType file_type,
 				    guint32 start_address,
 				    guint32 end_address,
 				    guint32 crc32,
 				    GError **error);
 gboolean
 fu_lenovo_accessory_hid_dfu_file(FuHidrawDevice *hidraw_device,
-				 guint8 file_type,
+				 FuLenovoDfuFileType file_type,
 				 guint32 address,
 				 const guint8 *file_data,
 				 guint8 block_size,

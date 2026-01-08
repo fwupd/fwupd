@@ -39,6 +39,25 @@ enum FuLenovoStatus {
     CommandNotSupport = 0x05,
 }
 
+#[repr(u8)]
+enum FuLenovoDeviceMode{
+    NormalMode = 0x00,
+    DriverMode = 0x01,
+    DfuMode = 0x02,
+}
+
+#[repr(u8)]
+enum FuLenovoDfuFileType{
+    HexFile = 0x00,
+    BinFile = 0x01,
+}
+
+#[repr(u8)]
+enum FuLenovoDfuExitCode{
+    DfuSuccess = 0x00,
+    Abort = 0x01,
+}
+
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
 struct FuStructLenovoAccessoryCmd {
@@ -63,7 +82,7 @@ struct FuStructLenovoHidData {
 struct FuStructLenovoHidDfuFw {
     reportid: u8,
     cmd: FuStructLenovoAccessoryCmd,
-    file_type: u8,
+    file_type: FuLenovoDfuFileType,
     offset_address: u32be,
     data: [u8; 32],
     reserved: [u8; 21],
@@ -74,7 +93,7 @@ struct FuStructLenovoHidDfuFw {
 struct FuStructLenovoHidDfuExit {
     reportid: u8,
     cmd: FuStructLenovoAccessoryCmd,
-    exit_code: u8,
+    exit_code: FuLenovoDfuExitCode,
     reserved: [u8; 57],
 }
 
@@ -97,7 +116,7 @@ struct FuStructLenovoHidDfuAttribute {
 struct FuStructLenovoHidDfuPrepare {
     reportid: u8,
     cmd: FuStructLenovoAccessoryCmd,
-    file_type: u8,
+    file_type: FuLenovoDfuFileType,
     start_address: u32be,
     end_address: u32be,
     crc32: u32be,
@@ -109,7 +128,7 @@ struct FuStructLenovoHidDfuPrepare {
 struct FuStructLenovoHidDevicemode {
     reportid: u8,
     cmd: FuStructLenovoAccessoryCmd,
-    mode: u8,
+    mode: FuLenovoDeviceMode,
     reserved: [u8; 57],
 }
 
@@ -135,7 +154,7 @@ struct FuStructLenovoBleData {
 #[repr(C,packed)]
 struct FuStructLenovoBleDfuFw {
     cmd: FuStructLenovoAccessoryCmd,
-    file_type: u8,
+    file_type: FuLenovoDfuFileType,
     offset_address: u32be,
     data: [u8; 32],
 }
@@ -144,7 +163,7 @@ struct FuStructLenovoBleDfuFw {
 #[repr(C,packed)]
 struct FuStructLenovoBleDfuExit {
     cmd: FuStructLenovoAccessoryCmd,
-    exit_code: u8,
+    exit_code: FuLenovoDfuExitCode,
 }
 
 #[derive(New,Validate,Parse,Default)]
@@ -163,7 +182,7 @@ struct FuStructLenovoBleDfuAttribute {
 #[repr(C,packed)]
 struct FuStructLenovoBleDfuPrepare {
     cmd: FuStructLenovoAccessoryCmd,
-    file_type: u8,
+    file_type: FuLenovoDfuFileType,
     start_address: u32be,
     end_address: u32be,
     crc32: u32be,
@@ -180,7 +199,7 @@ struct FuStructLenovoBleDfuCrc {
 #[repr(C,packed)]
 struct FuStructLenovoBleDevicemode {
     cmd: FuStructLenovoAccessoryCmd,
-    mode: u8,
+    mode: FuLenovoDeviceMode,
 }
 
 #[derive(New,Validate,Parse,Default)]

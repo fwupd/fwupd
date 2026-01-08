@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-lenovo-accessory-ble-common.h"
-#include "fu-lenovo-accessory-struct.h"
 
 #define UUID_WRITE "c1d02501-2d1f-400a-95d2-6a2f7bca0c25"
 #define UUID_READ  "c1d02502-2d1f-400a-95d2-6a2f7bca0c25"
@@ -104,7 +103,9 @@ fu_lenovo_accessory_ble_get_fwversion(FuBluezDevice *ble_device,
 }
 
 gboolean
-fu_lenovo_accessory_ble_get_mode(FuBluezDevice *ble_device, guint8 *mode, GError **error)
+fu_lenovo_accessory_ble_get_mode(FuBluezDevice *ble_device,
+				 FuLenovoDeviceMode *mode,
+				 GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleDevicemode) st_mode = fu_struct_lenovo_ble_devicemode_new();
@@ -133,10 +134,10 @@ fu_lenovo_accessory_ble_get_mode(FuBluezDevice *ble_device, guint8 *mode, GError
 }
 
 gboolean
-fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, guint8 mode, GError **error)
+fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, FuLenovoDeviceMode mode, GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
-	g_autoptr(FuStructLenovoBleData) st_data = fu_struct_lenovo_ble_data_new();
+	g_autoptr(FuStructLenovoBleDevicemode) st_data = fu_struct_lenovo_ble_devicemode_new();
 
 	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x01);
@@ -147,11 +148,10 @@ fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, guint8 mode, GError 
 	    st_cmd,
 	    FU_LENOVO_ACCESSORY_INFO_ID_DEVICE_MODE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
 
-	if (!fu_struct_lenovo_ble_data_set_cmd(st_data, st_cmd, error))
+	if (!fu_struct_lenovo_ble_devicemode_set_cmd(st_data, st_cmd, error))
 		return FALSE;
-	if (!fu_struct_lenovo_ble_data_set_data(st_data, &mode, 1, error))
-		return FALSE;
-	if (mode == 0x02)
+	fu_struct_lenovo_ble_devicemode_set_mode(st_data, mode);
+	if (mode == FU_LENOVO_DEVICE_MODE_DFU_MODE)
 		return fu_bluez_device_write(ble_device, UUID_WRITE, st_data->buf, error);
 	return fu_lenovo_accessory_ble_process(ble_device,
 					       st_data->buf,
@@ -160,10 +160,12 @@ fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, guint8 mode, GError 
 }
 
 gboolean
-fu_lenovo_accessory_ble_dfu_exit(FuBluezDevice *ble_device, guint8 exit_code, GError **error)
+fu_lenovo_accessory_ble_dfu_exit(FuBluezDevice *ble_device,
+				 FuLenovoDfuExitCode exit_code,
+				 GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
-	g_autoptr(FuStructLenovoBleData) st_data = fu_struct_lenovo_ble_data_new();
+	g_autoptr(FuStructLenovoBleDfuExit) st_data = fu_struct_lenovo_ble_dfu_exit_new();
 
 	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x01);
@@ -174,15 +176,13 @@ fu_lenovo_accessory_ble_dfu_exit(FuBluezDevice *ble_device, guint8 exit_code, GE
 	    st_cmd,
 	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_EXIT | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
 
-	if (!fu_struct_lenovo_ble_data_set_cmd(st_data, st_cmd, error))
+	if (!fu_struct_lenovo_ble_dfu_exit_set_cmd(st_data, st_cmd, error))
 		return FALSE;
-	if (!fu_struct_lenovo_ble_data_set_data(st_data, &exit_code, 1, error))
-		return FALSE;
+	fu_struct_lenovo_ble_dfu_exit_set_exit_code(st_data, exit_code);
 	if (!fu_bluez_device_write(ble_device, UUID_WRITE, st_data->buf, error)) {
 		g_prefix_error_literal(error, "failed to write cmd: ");
 		return FALSE;
 	}
-
 	/* success */
 	return TRUE;
 }
@@ -236,7 +236,7 @@ fu_lenovo_accessory_ble_dfu_attribute(FuBluezDevice *ble_device,
 
 gboolean
 fu_lenovo_accessory_ble_dfu_prepare(FuBluezDevice *ble_device,
-				    guint8 file_type,
+				    FuLenovoDfuFileType file_type,
 				    guint32 start_address,
 				    guint32 end_address,
 				    guint32 crc32,
@@ -267,7 +267,7 @@ fu_lenovo_accessory_ble_dfu_prepare(FuBluezDevice *ble_device,
 
 gboolean
 fu_lenovo_accessory_ble_dfu_file(FuBluezDevice *ble_device,
-				 guint8 file_type,
+				 FuLenovoDfuFileType file_type,
 				 guint32 address,
 				 const guint8 *buf,
 				 gsize bufsz,

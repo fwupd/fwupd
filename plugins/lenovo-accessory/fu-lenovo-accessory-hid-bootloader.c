@@ -48,7 +48,9 @@ fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *s
 static gboolean
 fu_lenovo_accessory_hid_bootloader_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_lenovo_accessory_hid_dfu_exit(FU_HIDRAW_DEVICE(device), 0, error))
+	if (!fu_lenovo_accessory_hid_dfu_exit(FU_HIDRAW_DEVICE(device),
+					      FU_LENOVO_DFU_EXIT_CODE_DFU_SUCCESS,
+					      error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -140,7 +142,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 	fw_size = g_bytes_get_size(blob);
 	file_crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, blob);
 	if (!fu_lenovo_accessory_hid_dfu_prepare(FU_HIDRAW_DEVICE(device),
-						 1,
+						 FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
 						 0,
 						 (guint32)fw_size,
 						 file_crc,
@@ -150,7 +152,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 
 	if (!fu_lenovo_accessory_hid_bootloader_write_files(
 		FU_LENOVO_ACCESSORY_HID_BOOTLOADER(device),
-		1,
+		FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
 		blob,
 		fu_progress_get_child(progress),
 		error))

@@ -8,6 +8,7 @@
 
 #include "fu-lenovo-accessory-hid-common.h"
 #include "fu-lenovo-accessory-hid-device.h"
+#include "fu-lenovo-accessory-struct.h"
 
 struct _FuLenovoAccessoryHidDevice {
 	FuHidrawDevice parent_instance;
@@ -45,12 +46,6 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 					       NULL);
 	if (report == NULL)
 		return FALSE;
-	usb_parent = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", error);
-	if (usb_parent == NULL)
-		return FALSE;
-	if (!fu_device_probe(usb_parent, error))
-		return FALSE;
-	fu_device_set_version_raw(device, fu_usb_device_get_release(FU_USB_DEVICE(usb_parent)));
 	if (!fu_lenovo_accessory_hid_get_fwversion(FU_HIDRAW_DEVICE(device),
 						   &major,
 						   &minor,
@@ -75,7 +70,9 @@ fu_lenovo_accessory_hid_device_detach(FuDevice *device, FuProgress *progress, GE
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_lenovo_accessory_hid_set_mode(FU_HIDRAW_DEVICE(self), 2, error))
+	if (!fu_lenovo_accessory_hid_set_mode(FU_HIDRAW_DEVICE(self),
+					      FU_LENOVO_DEVICE_MODE_DFU_MODE,
+					      error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;

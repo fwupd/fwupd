@@ -75,7 +75,7 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 	if (!fu_lenovo_accessory_ble_dfu_entry(FU_BLUEZ_DEVICE(device), error))
 		return FALSE;
 	if (!fu_lenovo_accessory_ble_dfu_prepare(FU_BLUEZ_DEVICE(device),
-						 1,
+						 FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
 						 0,
 						 (guint32)fw_size,
 						 file_crc,
@@ -83,7 +83,7 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 	if (!fu_lenovo_accessory_ble_device_write_files(FU_LENOVO_ACCESSORY_BLE_DEVICE(device),
-							1,
+							FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
 							blob,
 							fu_progress_get_child(progress),
 							error))
@@ -110,7 +110,9 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 static gboolean
 fu_lenovo_accessory_ble_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_lenovo_accessory_ble_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error)) {
+	if (!fu_lenovo_accessory_ble_dfu_exit(FU_BLUEZ_DEVICE(device),
+					      FU_LENOVO_DFU_EXIT_CODE_DFU_SUCCESS,
+					      error)) {
 		g_prefix_error_literal(error, "failed to exit: ");
 		return FALSE;
 	}
