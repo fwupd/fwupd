@@ -1,0 +1,3 @@
+[HIDRAW\VEN_2386]
+Plugin = raydium-tp
+GType = FuRaydiumtpHidDevice
