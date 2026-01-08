@@ -40,7 +40,7 @@ struct FuStructGoodixMocPkgRsp {
     result: FuGoodixMocResult,
 }
 
-#[derive(Parse)]
+// seems unused
 struct FuStructGoodixMocPkgAckRsp {
     result: FuGoodixMocResult,
     cmd: u8,
