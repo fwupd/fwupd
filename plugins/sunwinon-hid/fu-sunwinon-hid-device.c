@@ -174,6 +174,29 @@ fu_sunwinon_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static gboolean
+fu_sunwinon_hid_device_fetch_fw_version_2(FuSunwinonHidDevice *device, GError **error)
+{
+	FuSunwinonDfuImageInfo fw_info = {0};
+	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
+
+	/* TODO: implement */
+	dfu_master = fu_sunwinon_util_dfu_master_new_2(NULL, 0, FU_DEVICE(device));
+	if (fu_sunwinon_util_dfu_master_fetch_fw_version_2(dfu_master,
+							   &fw_info,
+							   error)) /* TODO: implement */
+		return FALSE;
+	g_debug("firmware version fetched: %u.%u",
+		(guint)((fw_info.version >> 8) & 0xFF),
+		(guint)(fw_info.version & 0xFF));
+	/* TODO: finalize after version format is decided by the firmware guy */
+	fu_device_set_version(FU_DEVICE(device),
+			      g_strdup_printf("%u.%u",
+					      (guint)((fw_info.version >> 8) & 0xFF),
+					      (guint)(fw_info.version & 0xFF)));
+	return TRUE;
+}
+
+static gboolean
 fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **error)
 {
 	FuSwHidDfuCtx ctx = {0};
@@ -292,6 +315,48 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 }
 
 static gboolean
+fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
+					FuFirmware *firmware,
+					FuProgress *progress,
+					FwupdInstallFlags flags,
+					GError **error)
+{
+	gconstpointer fw = NULL;
+	gsize fw_sz = 0;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuSwDfuMaster) dfu_master = NULL; /* TODO: implement */
+
+	locker = fu_device_locker_new(device, error);
+	if (locker == NULL)
+		return FALSE;
+
+	blob = fu_firmware_get_bytes(firmware, error);
+	if (blob == NULL)
+		return FALSE;
+
+	fw = g_bytes_get_data(blob, &fw_sz);
+	if (fw_sz < DFU_IMAGE_INFO_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware too small");
+		return FALSE;
+	}
+
+	fu_sunwinon_util_dfu_master_new_2(fw, fw_sz, device); /* TODO: implement */
+	fu_sunwinon_util_dfu_master_start_2(dfu_master,
+					    progress,
+					    FU_SUNWINON_FAST_DFU_MODE_DISABLE,
+					    error); /* TODO: implement */
+	if (!fu_sunwinon_util_dfu_master_write_firmware_2(dfu_master,
+							  progress,
+							  error)) /* TODO: implement */
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
 fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 				      FuFirmware *firmware,
 				      FuProgress *progress,
@@ -400,6 +465,7 @@ fu_sunwinon_hid_device_class_init(FuSunwinonHidDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_sunwinon_hid_device_probe;
 	device_class->setup = fu_sunwinon_hid_device_setup;
-	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware;
+	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware_2;
+	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware; /* TODO: remove */
 	device_class->set_progress = fu_sunwinon_hid_device_set_progress;
 }

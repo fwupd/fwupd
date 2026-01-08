@@ -493,6 +493,62 @@ fu_sunwinon_util_dfu_master_program_start(FuDfuMaster *self,
 	return TRUE;
 }
 
+struct FuSwDfuMaster {
+	int _unused;
+};
+
+FuSwDfuMaster *
+fu_sunwinon_util_dfu_master_new_2(const guint8 *fw, gsize fw_sz, FuDevice *device)
+{
+	(void)fw;
+	(void)fw_sz;
+	(void)device;
+	return g_new0(FuSwDfuMaster, 1);
+}
+
+void
+fu_sunwinon_util_dfu_master_free_2(FuSwDfuMaster *self)
+{
+	g_free(self);
+}
+
+gboolean
+fu_sunwinon_util_dfu_master_fetch_fw_version_2(FuSwDfuMaster *self,
+					       FuSunwinonDfuImageInfo *out,
+					       GError **error)
+{
+	(void)self;
+	(void)out;
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not implemented");
+	return FALSE;
+}
+
+gboolean
+fu_sunwinon_util_dfu_master_start_2(FuSwDfuMaster *self,
+				    FuProgress *progress,
+				    guint8 mode_setting,
+				    GError **error)
+{
+	(void)self;
+	(void)progress;
+	(void)mode_setting;
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not implemented");
+	return FALSE;
+}
+
+gboolean
+fu_sunwinon_util_dfu_master_write_firmware_2(FuSwDfuMaster *self,
+					     FuProgress *progress,
+					     GError **error)
+{
+	(void)self;
+	(void)progress;
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not implemented");
+	return FALSE;
+}
+
+/* fast_dfu_mode_set_2 removed: merged into start_2 */
+
 static gboolean
 fu_sunwinon_util_dfu_master_get_info(FuDfuMaster *self, GError **error)
 {

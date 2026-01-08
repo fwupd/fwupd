@@ -109,3 +109,40 @@ fu_sunwinon_util_dfu_master_parse_fw_info(FuDfuMaster *self,
 					  const guint8 *data,
 					  guint16 len,
 					  GError **error);
+
+/*
+ * Experimental v2 API (stubs): allow parallel integration without
+ * affecting existing call sites. Implementations are provided in the
+ * corresponding .c file and currently act as no-op placeholders.
+ */
+
+typedef struct FuSwDfuMaster FuSwDfuMaster;
+
+/* forward declarations for types used in prototypes */
+typedef struct _FuDevice FuDevice;
+typedef struct _FuProgress FuProgress;
+
+FuSwDfuMaster *
+fu_sunwinon_util_dfu_master_new_2(const guint8 *fw, gsize fw_sz, FuDevice *device);
+
+void
+fu_sunwinon_util_dfu_master_free_2(FuSwDfuMaster *self);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSwDfuMaster, fu_sunwinon_util_dfu_master_free_2)
+
+gboolean
+fu_sunwinon_util_dfu_master_fetch_fw_version_2(FuSwDfuMaster *self,
+					       FuSunwinonDfuImageInfo *out,
+					       GError **error);
+
+gboolean
+fu_sunwinon_util_dfu_master_start_2(FuSwDfuMaster *self,
+				    FuProgress *progress,
+				    guint8 mode_setting,
+				    GError **error);
+
+gboolean
+fu_sunwinon_util_dfu_master_write_firmware_2(FuSwDfuMaster *self,
+					     FuProgress *progress,
+					     GError **error);
+
+// Removed fast_dfu_mode_set_2 as per requirement to merge mode set into start.
