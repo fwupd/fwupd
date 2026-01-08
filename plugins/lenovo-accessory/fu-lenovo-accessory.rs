@@ -1,3 +1,6 @@
+// Copyright 2026 Yuchao Li <liyc44@lenovo.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
 #[repr(u8)]
 enum FuLenovoAccessoryCommandClass {
     DeviceInformation = 0x00,
@@ -27,7 +30,7 @@ enum FuLenovoAccessoryCmdDir {
 }
 
 #[repr(u8)]
-enum FuLenovoStatus{
+enum FuLenovoStatus {
     NewCommand = 0x00,
     CommandBusy = 0x01,
     CommandSuccessful = 0x02,
@@ -38,48 +41,48 @@ enum FuLenovoStatus{
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoAccessoryCmd{
-    target_status:u8,
-    data_size:u8,
-    command_class:u8,
-    command_id:u8,
-    flag_profile:u8,
-    reserved:u8,
+struct FuStructLenovoAccessoryCmd {
+    target_status: u8,
+    data_size: u8,
+    command_class: u8,
+    command_id: u8,
+    flag_profile: u8,
+    reserved: u8,
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidData{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidData {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     data: [u8; 58],
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidDfuFw{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidDfuFw {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     file_type: u8,
-    offset_address:u32be,
+    offset_address: u32be,
     data: [u8; 32],
     reserved: [u8; 21],
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidDfuExit{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidDfuExit {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     exit_code: u8,
     reserved: [u8; 57],
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidDfuAttribute{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidDfuAttribute {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     major_ver: u8,
     minor_ver: u8,
     product_pid: u16be,
@@ -91,9 +94,9 @@ struct FuLenovoHidDfuAttribute{
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidDfuPrepare{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidDfuPrepare {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     file_type: u8,
     start_address: u32be,
     end_address: u32be,
@@ -103,18 +106,18 @@ struct FuLenovoHidDfuPrepare{
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidDevicemode{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidDevicemode {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     mode: u8,
     reserved: [u8; 57],
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoHidFwVersion{
-    reportid:u8,
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoHidFwVersion {
+    reportid: u8,
+    cmd: FuStructLenovoAccessoryCmd,
     major: u8,
     minor: u8,
     internal: u8,
@@ -123,31 +126,31 @@ struct FuLenovoHidFwVersion{
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleData{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleData {
+    cmd: FuStructLenovoAccessoryCmd,
     data: [u8; 58],
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleDfuFw{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleDfuFw {
+    cmd: FuStructLenovoAccessoryCmd,
     file_type: u8,
-    offset_address:u32be,
+    offset_address: u32be,
     data: [u8; 32],
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleDfuExit{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleDfuExit {
+    cmd: FuStructLenovoAccessoryCmd,
     exit_code: u8,
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleDfuAttribute{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleDfuAttribute {
+    cmd: FuStructLenovoAccessoryCmd,
     major_ver: u8,
     minor_ver: u8,
     product_pid: u16be,
@@ -158,8 +161,8 @@ struct FuLenovoBleDfuAttribute{
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleDfuPrepare{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleDfuPrepare {
+    cmd: FuStructLenovoAccessoryCmd,
     file_type: u8,
     start_address: u32be,
     end_address: u32be,
@@ -168,22 +171,22 @@ struct FuLenovoBleDfuPrepare{
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleDfuCrc{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleDfuCrc {
+    cmd: FuStructLenovoAccessoryCmd,
     crc32: u32be,
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleDevicemode{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleDevicemode {
+    cmd: FuStructLenovoAccessoryCmd,
     mode: u8,
 }
 
 #[derive(New,Validate,Parse,Default)]
 #[repr(C,packed)]
-struct FuLenovoBleFwVersion{
-    cmd:FuLenovoAccessoryCmd,
+struct FuStructLenovoBleFwVersion {
+    cmd: FuStructLenovoAccessoryCmd,
     major: u8,
     minor: u8,
     internal: u8,

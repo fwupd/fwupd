@@ -2,33 +2,25 @@
 [HIDRAW\VEN_17EF&DEV_6194]
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryHidBootloader
-FirmwareSizeMin = 0x4000
-InstallDuration = 18
 
 # Lenovo_HID
 [HIDRAW\VEN_17EF&DEV_629D]
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryHidDevice
-VendorId = USB:0x17EF
 CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
-InstallDuration = 30
 
 # Lenovo_HID
 [HIDRAW\VEN_17EF&DEV_6201]
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryHidDevice
-VendorId = USB:0x17EF
 CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
-InstallDuration = 30
 
 # Lenovo_BLE
 [BLUETOOTH\VID_17EF&PID_61FE]
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryBleDevice
-InstallDuration = 60
 
 # Lenovo_BLE
 [BLUETOOTH\VID_17EF&PID_629A]
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryBleDevice
-InstallDuration = 60

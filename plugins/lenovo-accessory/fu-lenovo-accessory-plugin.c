@@ -30,7 +30,6 @@ fu_lenovo_accessory_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_HID_BOOTLOADER);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LENOVO_ACCESSORY_BLE_DEVICE);
-	/*fu_plugin_set_device_gtype_default(plugin, FU_TYPE_LENOVO_HID_DEVICE);*/
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 }

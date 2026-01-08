@@ -12,105 +12,79 @@
 static gboolean
 fu_lenovo_accessory_hid_poll_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuHidrawDevice *hidraw_device = FU_HIDRAW_DEVICE(device);
-	GByteArray *st_buf = (GByteArray *)user_data;
-	g_autofree guint8 *rsp = g_malloc0(st_buf->len);
+	GByteArray *buf = (GByteArray *)user_data;
 	guint8 status;
-	if (!fu_hidraw_device_get_feature(hidraw_device,
-					  rsp,
-					  st_buf->len,
+
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(device),
+					  buf->data,
+					  buf->len,
 					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
-	status = rsp[1] & 0x0F;
-	if (status == FU_LENOVO_STATUS_COMMAND_SUCCESSFUL) {
-		if (!fu_memcpy_safe(st_buf->data,
-				    st_buf->len,
-				    0,
-				    rsp,
-				    st_buf->len,
-				    0,
-				    st_buf->len,
-				    error))
-			return FALSE;
-		return TRUE;
-	}
+	status = buf->data[1] & 0x0F;
 	if (status == FU_LENOVO_STATUS_COMMAND_BUSY) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command busy");
 		return FALSE;
 	}
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_WRITE,
-		    "command failed with status 0x%02x",
-		    status);
-	return FALSE;
+	if (status != FU_LENOVO_STATUS_COMMAND_SUCCESSFUL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "command failed with status 0x%02x",
+			    status);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
 fu_lenovo_accessory_hid_process(FuHidrawDevice *hidraw_device,
-				guint8 *req,
-				gsize req_sz,
+				GByteArray *buf,
 				FuIoctlFlags flags,
 				GError **error)
 {
-	g_autoptr(GByteArray) st_buf = g_byte_array_new_take(req, req_sz);
-	if (!fu_hidraw_device_set_feature(hidraw_device, req, req_sz, flags, error)) {
-		g_byte_array_steal(st_buf, NULL);
+	if (!fu_hidraw_device_set_feature(hidraw_device, buf->data, buf->len, flags, error))
 		return FALSE;
-	}
-	if (!fu_device_retry_full(FU_DEVICE(hidraw_device),
-				  fu_lenovo_accessory_hid_poll_cb,
-				  5,
-				  10,
-				  st_buf,
-				  error)) {
-		g_byte_array_steal(st_buf, NULL);
-		if (g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_BUSY)) {
-			g_clear_error(error);
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_WRITE,
-					    "command timeout (device always busy)");
-			return FALSE;
-		}
-		return FALSE;
-	}
-	g_byte_array_steal(st_buf, NULL);
-	return TRUE;
+	return fu_device_retry_full(FU_DEVICE(hidraw_device),
+				    fu_lenovo_accessory_hid_poll_cb,
+				    5,
+				    10,
+				    buf,
+				    error);
 }
 
 gboolean
 fu_lenovo_accessory_hid_fwversion(FuHidrawDevice *hidraw_device,
 				  guint8 *major,
 				  guint8 *minor,
-				  guint8 *internal,
+				  guint8 *micro,
 				  GError **error)
 {
-	g_autoptr(FuLenovoAccessoryCmd) lenovo_hid_cmd = fu_lenovo_accessory_cmd_new();
-	g_autoptr(FuLenovoHidFwVersion) lenovo_hid_fwversion = fu_lenovo_hid_fw_version_new();
-	fu_lenovo_accessory_cmd_set_target_status(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_data_size(lenovo_hid_cmd, 0x03);
-	fu_lenovo_accessory_cmd_set_command_class(
-	    lenovo_hid_cmd,
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoHidFwVersion) st_fwversion = fu_struct_lenovo_hid_fw_version_new();
+
+	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x03);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
 	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DEVICE_INFORMATION);
-	fu_lenovo_accessory_cmd_set_command_id(lenovo_hid_cmd,
-					       FU_LENOVO_ACCESSORY_INFO_ID_FIRMWARE_VERSION |
-						   (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
-	fu_lenovo_accessory_cmd_set_flag_profile(lenovo_hid_cmd, 0x00);
-	fu_lenovo_hid_fw_version_set_reportid(lenovo_hid_fwversion, 0x00);
-	if (!fu_lenovo_hid_fw_version_set_cmd(lenovo_hid_fwversion, lenovo_hid_cmd, error))
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_INFO_ID_FIRMWARE_VERSION |
+		(FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
+	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
+	fu_struct_lenovo_hid_fw_version_set_reportid(st_fwversion, 0x00);
+	if (!fu_struct_lenovo_hid_fw_version_set_cmd(st_fwversion, st_cmd, error))
 		return FALSE;
 	if (!fu_lenovo_accessory_hid_process(hidraw_device,
-					     lenovo_hid_fwversion->buf->data,
-					     lenovo_hid_fwversion->buf->len,
+					     st_fwversion->buf,
 					     FU_IOCTL_FLAG_RETRY,
 					     error)) {
 		return FALSE;
 	}
-	*major = fu_lenovo_hid_fw_version_get_major(lenovo_hid_fwversion);
-	*minor = fu_lenovo_hid_fw_version_get_minor(lenovo_hid_fwversion);
-	*internal = fu_lenovo_hid_fw_version_get_internal(lenovo_hid_fwversion);
+	*major = fu_struct_lenovo_hid_fw_version_get_major(st_fwversion);
+	*minor = fu_struct_lenovo_hid_fw_version_get_minor(st_fwversion);
+	*micro = fu_struct_lenovo_hid_fw_version_get_internal(st_fwversion);
 	return TRUE;
 }
 
@@ -119,21 +93,23 @@ fu_lenovo_accessory_hid_dfu_set_devicemode(FuHidrawDevice *hidraw_device,
 					   guint8 mode,
 					   GError **error)
 {
-	g_autoptr(FuLenovoAccessoryCmd) lenovo_hid_cmd = fu_lenovo_accessory_cmd_new();
-	g_autoptr(FuLenovoHidDevicemode) lenovo_hid_mode = fu_lenovo_hid_devicemode_new();
-	fu_lenovo_accessory_cmd_set_target_status(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_data_size(lenovo_hid_cmd, 0x01);
-	fu_lenovo_accessory_cmd_set_command_class(
-	    lenovo_hid_cmd,
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoHidDevicemode) lenovo_hid_mode =
+	    fu_struct_lenovo_hid_devicemode_new();
+
+	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x01);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
 	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DEVICE_INFORMATION);
-	fu_lenovo_accessory_cmd_set_command_id(lenovo_hid_cmd,
-					       FU_LENOVO_ACCESSORY_INFO_ID_DEVICE_MODE |
-						   (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
-	fu_lenovo_accessory_cmd_set_flag_profile(lenovo_hid_cmd, 0x00);
-	fu_lenovo_hid_devicemode_set_reportid(lenovo_hid_mode, 0x00);
-	if (!fu_lenovo_hid_devicemode_set_cmd(lenovo_hid_mode, lenovo_hid_cmd, error))
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_INFO_ID_DEVICE_MODE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
+	fu_struct_lenovo_hid_devicemode_set_reportid(lenovo_hid_mode, 0x00);
+	if (!fu_struct_lenovo_hid_devicemode_set_cmd(lenovo_hid_mode, st_cmd, error))
 		return FALSE;
-	fu_lenovo_hid_devicemode_set_mode(lenovo_hid_mode, mode);
+	fu_struct_lenovo_hid_devicemode_set_mode(lenovo_hid_mode, mode);
 	if (mode == 0x02) {
 		return (fu_hidraw_device_set_feature(hidraw_device,
 						     lenovo_hid_mode->buf->data,
@@ -142,53 +118,49 @@ fu_lenovo_accessory_hid_dfu_set_devicemode(FuHidrawDevice *hidraw_device,
 						     error));
 	} else {
 		return fu_lenovo_accessory_hid_process(hidraw_device,
-						       lenovo_hid_mode->buf->data,
-						       lenovo_hid_mode->buf->len,
+						       lenovo_hid_mode->buf,
 						       FU_IOCTL_FLAG_RETRY,
 						       error);
 	}
 }
 
-/**
- * fu_lenovo_accessory_hid_dfu_exit:
- * @hidraw_device: a #FuHidrawDevice
- * @exit_code: the exit status code (e.g., 0x00 for success/reboot)
- *
- * Sends the DFU_EXIT command to the device to finalize the update.
- * Since this command triggers an immediate hardware reset/reboot, the
- * device will disconnect from the USB bus before it can send an ACK.
- * Consequently, the set_feature call is expected to return an error
- * (e.g., Broken pipe or I/O error), which we intentionally ignore.
- */
+/* @exit_code: the exit status code (e.g., 0x00 for success/reboot) */
 gboolean
 fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device, guint8 exit_code, GError **error)
 {
-	g_autoptr(FuLenovoAccessoryCmd) lenovo_hid_cmd = fu_lenovo_accessory_cmd_new();
-	g_autoptr(FuLenovoHidDfuExit) lenovo_hid_dfuexit = fu_lenovo_hid_dfu_exit_new();
-	fu_lenovo_accessory_cmd_set_target_status(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_data_size(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_command_class(lenovo_hid_cmd,
-						  FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
-	fu_lenovo_accessory_cmd_set_command_id(lenovo_hid_cmd,
-					       FU_LENOVO_ACCESSORY_DFU_ID_DFU_EXIT |
-						   (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
-	fu_lenovo_accessory_cmd_set_flag_profile(lenovo_hid_cmd, 0x00);
-	fu_lenovo_hid_dfu_exit_set_reportid(lenovo_hid_dfuexit, 0x00);
-	if (!fu_lenovo_hid_dfu_exit_set_cmd(lenovo_hid_dfuexit, lenovo_hid_cmd, error))
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoHidDfuExit) lenovo_hid_dfuexit =
+	    fu_struct_lenovo_hid_dfu_exit_new();
+	g_autoptr(GError) error_local = NULL;
+
+	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_EXIT | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
+	fu_struct_lenovo_hid_dfu_exit_set_reportid(lenovo_hid_dfuexit, 0x00);
+	if (!fu_struct_lenovo_hid_dfu_exit_set_cmd(lenovo_hid_dfuexit, st_cmd, error))
 		return FALSE;
+
 	/*
-	 * Note: fu_hidraw_device_set_feature() is guaranteed to return FALSE here.
 	 * The device performs an immediate reset/reboot as soon as it receives the
 	 * DFU_EXIT command and therefore never sends back an ACK. The resulting
 	 * error (e.g., -EPIPE or -EIO) is expected and indicates that the reboot
 	 * was successfully triggered.
 	 */
-	if (fu_hidraw_device_set_feature(hidraw_device,
-					 lenovo_hid_dfuexit->buf->data,
-					 lenovo_hid_dfuexit->buf->len,
-					 FU_IOCTL_FLAG_NONE,
-					 error))
-		return TRUE;
+	if (!fu_hidraw_device_set_feature(hidraw_device,
+					  lenovo_hid_dfuexit->buf->data,
+					  lenovo_hid_dfuexit->buf->len,
+					  FU_IOCTL_FLAG_NONE,
+					  &error_local)) {
+		g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -202,37 +174,44 @@ fu_lenovo_accessory_hid_dfu_attribute(FuHidrawDevice *hidraw_device,
 				      guint32 *page_size,
 				      GError **error)
 {
-	g_autoptr(FuLenovoAccessoryCmd) lenovo_hid_cmd = fu_lenovo_accessory_cmd_new();
-	g_autoptr(FuLenovoHidDfuAttribute) lenovo_hid_attribute = fu_lenovo_hid_dfu_attribute_new();
-	fu_lenovo_accessory_cmd_set_target_status(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_data_size(lenovo_hid_cmd, 0x0D);
-	fu_lenovo_accessory_cmd_set_command_class(lenovo_hid_cmd,
-						  FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
-	fu_lenovo_accessory_cmd_set_command_id(lenovo_hid_cmd,
-					       FU_LENOVO_ACCESSORY_DFU_ID_DFU_ATTRIBUTE |
-						   (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
-	fu_lenovo_accessory_cmd_set_flag_profile(lenovo_hid_cmd, 0x00);
-	fu_lenovo_hid_dfu_attribute_set_reportid(lenovo_hid_attribute, 0x00);
-	if (!fu_lenovo_hid_dfu_attribute_set_cmd(lenovo_hid_attribute, lenovo_hid_cmd, error))
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoHidDfuAttribute) lenovo_hid_attribute =
+	    fu_struct_lenovo_hid_dfu_attribute_new();
+
+	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x0D);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_ATTRIBUTE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
+	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
+	fu_struct_lenovo_hid_dfu_attribute_set_reportid(lenovo_hid_attribute, 0x00);
+	if (!fu_struct_lenovo_hid_dfu_attribute_set_cmd(lenovo_hid_attribute, st_cmd, error))
 		return FALSE;
 	if (!fu_lenovo_accessory_hid_process(hidraw_device,
-					     lenovo_hid_attribute->buf->data,
-					     lenovo_hid_attribute->buf->len,
+					     lenovo_hid_attribute->buf,
 					     FU_IOCTL_FLAG_RETRY,
 					     error))
 		return FALSE;
+
+	/* success */
 	if (major_ver != NULL)
-		*major_ver = fu_lenovo_hid_dfu_attribute_get_major_ver(lenovo_hid_attribute);
+		*major_ver = fu_struct_lenovo_hid_dfu_attribute_get_major_ver(lenovo_hid_attribute);
 	if (minor_ver != NULL)
-		*minor_ver = fu_lenovo_hid_dfu_attribute_get_minor_ver(lenovo_hid_attribute);
+		*minor_ver = fu_struct_lenovo_hid_dfu_attribute_get_minor_ver(lenovo_hid_attribute);
 	if (product_pid != NULL)
-		*product_pid = fu_lenovo_hid_dfu_attribute_get_product_pid(lenovo_hid_attribute);
+		*product_pid =
+		    fu_struct_lenovo_hid_dfu_attribute_get_product_pid(lenovo_hid_attribute);
 	if (processor_id != NULL)
-		*processor_id = fu_lenovo_hid_dfu_attribute_get_processor_id(lenovo_hid_attribute);
+		*processor_id =
+		    fu_struct_lenovo_hid_dfu_attribute_get_processor_id(lenovo_hid_attribute);
 	if (app_max_size != NULL)
-		*app_max_size = fu_lenovo_hid_dfu_attribute_get_app_max_size(lenovo_hid_attribute);
+		*app_max_size =
+		    fu_struct_lenovo_hid_dfu_attribute_get_app_max_size(lenovo_hid_attribute);
 	if (page_size != NULL)
-		*page_size = fu_lenovo_hid_dfu_attribute_get_page_size(lenovo_hid_attribute);
+		*page_size = fu_struct_lenovo_hid_dfu_attribute_get_page_size(lenovo_hid_attribute);
 	return TRUE;
 }
 
@@ -244,26 +223,28 @@ fu_lenovo_accessory_hid_dfu_prepare(FuHidrawDevice *hidraw_device,
 				    guint32 crc32,
 				    GError **error)
 {
-	g_autoptr(FuLenovoAccessoryCmd) lenovo_hid_cmd = fu_lenovo_accessory_cmd_new();
-	g_autoptr(FuLenovoHidDfuPrepare) lenovo_hid_prepare = fu_lenovo_hid_dfu_prepare_new();
-	fu_lenovo_accessory_cmd_set_target_status(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_data_size(lenovo_hid_cmd, 0x0D);
-	fu_lenovo_accessory_cmd_set_command_class(lenovo_hid_cmd,
-						  FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
-	fu_lenovo_accessory_cmd_set_command_id(lenovo_hid_cmd,
-					       FU_LENOVO_ACCESSORY_DFU_ID_DFU_PREPARE |
-						   (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
-	fu_lenovo_accessory_cmd_set_flag_profile(lenovo_hid_cmd, 0x00);
-	fu_lenovo_hid_dfu_prepare_set_reportid(lenovo_hid_prepare, 0x00);
-	if (!fu_lenovo_hid_dfu_prepare_set_cmd(lenovo_hid_prepare, lenovo_hid_cmd, error))
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoHidDfuPrepare) lenovo_hid_prepare =
+	    fu_struct_lenovo_hid_dfu_prepare_new();
+
+	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x0D);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_PREPARE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
+	fu_struct_lenovo_hid_dfu_prepare_set_reportid(lenovo_hid_prepare, 0x00);
+	if (!fu_struct_lenovo_hid_dfu_prepare_set_cmd(lenovo_hid_prepare, st_cmd, error))
 		return FALSE;
-	fu_lenovo_hid_dfu_prepare_set_file_type(lenovo_hid_prepare, file_type);
-	fu_lenovo_hid_dfu_prepare_set_start_address(lenovo_hid_prepare, start_address);
-	fu_lenovo_hid_dfu_prepare_set_end_address(lenovo_hid_prepare, end_address);
-	fu_lenovo_hid_dfu_prepare_set_crc32(lenovo_hid_prepare, crc32);
+	fu_struct_lenovo_hid_dfu_prepare_set_file_type(lenovo_hid_prepare, file_type);
+	fu_struct_lenovo_hid_dfu_prepare_set_start_address(lenovo_hid_prepare, start_address);
+	fu_struct_lenovo_hid_dfu_prepare_set_end_address(lenovo_hid_prepare, end_address);
+	fu_struct_lenovo_hid_dfu_prepare_set_crc32(lenovo_hid_prepare, crc32);
 	return fu_lenovo_accessory_hid_process(hidraw_device,
-					       lenovo_hid_prepare->buf->data,
-					       lenovo_hid_prepare->buf->len,
+					       lenovo_hid_prepare->buf,
 					       FU_IOCTL_FLAG_RETRY,
 					       error);
 }
@@ -276,26 +257,27 @@ fu_lenovo_accessory_hid_dfu_file(FuHidrawDevice *hidraw_device,
 				 guint8 block_size,
 				 GError **error)
 {
-	g_autoptr(FuLenovoAccessoryCmd) lenovo_hid_cmd = fu_lenovo_accessory_cmd_new();
-	g_autoptr(FuLenovoHidDfuFw) lenovo_hid_fw = fu_lenovo_hid_dfu_fw_new();
-	fu_lenovo_accessory_cmd_set_target_status(lenovo_hid_cmd, 0x00);
-	fu_lenovo_accessory_cmd_set_data_size(lenovo_hid_cmd, block_size + 5);
-	fu_lenovo_accessory_cmd_set_command_class(lenovo_hid_cmd,
-						  FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
-	fu_lenovo_accessory_cmd_set_command_id(lenovo_hid_cmd,
-					       FU_LENOVO_ACCESSORY_DFU_ID_DFU_FILE |
-						   (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
-	fu_lenovo_accessory_cmd_set_flag_profile(lenovo_hid_cmd, 0x00);
-	fu_lenovo_hid_dfu_fw_set_reportid(lenovo_hid_fw, 0x00);
-	if (!fu_lenovo_hid_dfu_fw_set_cmd(lenovo_hid_fw, lenovo_hid_cmd, error))
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoHidDfuFw) lenovo_hid_fw = fu_struct_lenovo_hid_dfu_fw_new();
+
+	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, block_size + 5);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_DFU_ID_DFU_FILE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
+	fu_struct_lenovo_hid_dfu_fw_set_reportid(lenovo_hid_fw, 0x00);
+	if (!fu_struct_lenovo_hid_dfu_fw_set_cmd(lenovo_hid_fw, st_cmd, error))
 		return FALSE;
-	fu_lenovo_hid_dfu_fw_set_file_type(lenovo_hid_fw, file_type);
-	fu_lenovo_hid_dfu_fw_set_offset_address(lenovo_hid_fw, address);
-	if (!fu_lenovo_hid_dfu_fw_set_data(lenovo_hid_fw, file_data, block_size, error))
+	fu_struct_lenovo_hid_dfu_fw_set_file_type(lenovo_hid_fw, file_type);
+	fu_struct_lenovo_hid_dfu_fw_set_offset_address(lenovo_hid_fw, address);
+	if (!fu_struct_lenovo_hid_dfu_fw_set_data(lenovo_hid_fw, file_data, block_size, error))
 		return FALSE;
 	return fu_lenovo_accessory_hid_process(hidraw_device,
-					       lenovo_hid_fw->buf->data,
-					       lenovo_hid_fw->buf->len,
+					       lenovo_hid_fw->buf,
 					       FU_IOCTL_FLAG_RETRY,
 					       error);
 }
