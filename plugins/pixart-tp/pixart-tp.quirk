@@ -1,3 +1,7 @@
+[HIDRAW\VEN_093A&DEV_0274]
+Plugin = pixart_tp
+PixartTpSramSelect = 0x08
+
 [HIDRAW\VEN_093A&DEV_0343]
 Plugin = pixart_tp
 
