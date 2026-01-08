@@ -357,6 +357,30 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
+    def _test_function_name_suffix(self, node: Node) -> None:
+        """verb_noun, not noun_verb"""
+
+        if node.depth != 0:
+            return
+
+        # ACTION_set
+        idx = node.tokens_pre.find_fuzzy(["~fu_*_set@FUNCTION"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            self.add_failure(
+                "function should be called set_ACTION, not ACTION_set",
+                linecnt=token.linecnt,
+            )
+
+        # ACTION_get
+        idx = node.tokens_pre.find_fuzzy(["~fu_*_get@FUNCTION"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            self.add_failure(
+                "function should be called get_ACTION, not ACTION_get",
+                linecnt=token.linecnt,
+            )
+
     def _test_function_names_prefix(self, node: Node) -> None:
 
         if node.depth != 0:
@@ -1325,6 +1349,7 @@ class Checker:
             if self._should_process_node(node):
                 self._test_function_names_prefix(node)
                 self._test_function_names_ensure(node)
+                self._test_function_name_suffix(node)
                 self._test_param_self_device(node)
                 self._test_param_self_firmware(node)
                 self._test_param_self_native_device(node)

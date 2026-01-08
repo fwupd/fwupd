@@ -6,6 +6,7 @@
  * nocheck:expect: invalid function name
  * nocheck:expect: mixed case function name
  * nocheck:expect: function should be called ensure
+ * nocheck:expect: function should be called set_ACTION, not ACTION_set
  */
 
 #define FU_COMMON_VERSION_DECODE_BCD(val) 43
@@ -26,6 +27,11 @@ wrong_name_test(void)
 
 static gboolean
 fu_function_name_set_version(FuExample *self, GError **error)
+{
+}
+
+static gboolean
+fu_function_name_protocol_set(FuExample *self, guint dummy, GError **error)
 {
 }
 
