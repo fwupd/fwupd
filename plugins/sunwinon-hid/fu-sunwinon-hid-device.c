@@ -9,6 +9,7 @@
 #include "fu-sunwinon-hid-device.h"
 #include "fu-sunwinon-hid-struct.h"
 #include "fu-sunwinon-util-dfu-master.h"
+#include "string.h"
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -201,7 +202,7 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 					  st_in->buf->len,
 					  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 					  NULL);
-	fu_dump_raw(G_LOG_DOMAIN, "raw Input Report", st_in->buf->data, st_in->buf->len);
+	fu_dump_raw(G_LOG_DOMAIN, "raw input report", st_in->buf->data, st_in->buf->len);
 	if (!fu_struct_sunwinon_hid_in_validate(st_in->buf->data, st_in->buf->len, 0x0, error))
 		return FALSE;
 	inlen = fu_struct_sunwinon_hid_in_get_data_len(st_in);
@@ -355,22 +356,22 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 			return FALSE;
 		if (ctx.done || ctx.failed)
 			break;
+
 		(void)fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(device),
 						  st_in->buf->data,
 						  st_in->buf->len,
 						  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 						  NULL);
-		fu_dump_raw(G_LOG_DOMAIN, "Raw Input Report", st_in->buf->data, st_in->buf->len);
+		fu_dump_raw(G_LOG_DOMAIN, "raw input report", st_in->buf->data, st_in->buf->len);
 		if (!fu_struct_sunwinon_hid_in_validate(st_in->buf->data,
 							st_in->buf->len,
 							0x0,
 							error))
 			return FALSE;
 		inlen = fu_struct_sunwinon_hid_in_get_data_len(st_in);
-		if (inlen > HID_REPORT_DATA_LEN)
-			inlen = HID_REPORT_DATA_LEN;
 		payload = fu_struct_sunwinon_hid_in_get_data(st_in, NULL);
 		fu_sunwinon_util_dfu_master_cmd_parse(master, payload, inlen);
+		memset(st_in->buf->data, 0, st_in->buf->len);
 	}
 
 	if (!ctx.done) {
