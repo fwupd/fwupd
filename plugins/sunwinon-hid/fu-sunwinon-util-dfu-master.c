@@ -318,7 +318,7 @@ fu_sunwinon_util_dfu_master_program_flash(FuDfuMaster *self, guint16 len, GError
 	for (guint32 i = 0; i < len; i++) {
 		dfu_state->all_check_sum += data[i + DFU_CMD_PRO_FLASH_HEAD_LEN];
 	}
-	data[0] = 0x01U; /* write flash base on image Info */
+	data[0] = 0x01U; /* write flash based on image info */
 
 	fu_memwrite_uint32(&data[1], dfu_state->dfu_save_addr, G_LITTLE_ENDIAN);
 
