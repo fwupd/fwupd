@@ -6,10 +6,11 @@
 
 #include <fwupdplugin.h>
 
+#include <string.h>
+
 #include "fu-sunwinon-hid-device.h"
 #include "fu-sunwinon-hid-struct.h"
 #include "fu-sunwinon-util-dfu-master.h"
-#include "string.h"
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -173,13 +174,6 @@ fu_sunwinon_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static gboolean
-fu_sunwinon_hid_device_probe(FuDevice *device, GError **error)
-{
-	fu_device_add_instance_id(device, "SUNWINON_HID");
-	return TRUE;
-}
-
-static gboolean
 fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **error)
 {
 	FuSwHidDfuCtx ctx = {0};
@@ -271,7 +265,12 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
-	/* HID report descriptor and fw version confirmed, now device is ready to update */
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_hid_device_probe(FuDevice *device, GError **error)
+{
 	fu_device_add_instance_id(device, "SUNWINON_HID");
 	return TRUE;
 }
