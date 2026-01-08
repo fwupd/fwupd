@@ -702,9 +702,12 @@ fu_sunwinon_util_dfu_master_cmd_parse(FuDfuMaster *self, const guint8 *data, gui
 FuDfuMaster *
 fu_sunwinon_util_dfu_master_new(const FuSunwinonDfuCallback *dfu_m_func_cfg, guint16 once_send_size)
 {
+	g_autoptr(FuDfuMaster) self = NULL;
+	FuDfuMasterState *dfu_state = NULL;
+
 	g_return_val_if_fail(dfu_m_func_cfg != NULL, NULL);
-	g_autoptr(FuDfuMaster) self = g_new0(FuDfuMaster, 1);
-	FuDfuMasterState *dfu_state = &self->state;
+	self = g_new0(FuDfuMaster, 1);
+	dfu_state = &self->state;
 	dfu_state->fast_dfu_mode = FU_SUNWINON_FAST_DFU_MODE_DISABLE;
 	dfu_state->parse_state = CHECK_FRAME_L_STATE;
 	if (once_send_size != 0U)
