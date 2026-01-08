@@ -754,7 +754,8 @@ fu_util_device_test_component(FuUtil *self,
 	name = fwupd_json_object_get_string_with_default(json_obj, "name", "component", error);
 	if (name == NULL)
 		return FALSE;
-	fwupd_json_object_add_string(json_object_result, "name", name);
+	if (g_strcmp0(name, "component") != 0)
+		fwupd_json_object_add_string(json_object_result, "name", name);
 	protocol = fwupd_json_object_get_string(json_obj, "protocol", NULL);
 	if (protocol != NULL)
 		fwupd_json_object_add_string(json_object_result, "protocol", protocol);
@@ -1074,6 +1075,7 @@ fu_util_device_test_filename(FuUtil *self,
 	g_autoptr(FwupdJsonArray) json_archs_cpu = NULL;
 	g_autoptr(FwupdJsonArray) json_archs_plat = NULL;
 	g_autoptr(FwupdJsonArray) json_steps = NULL;
+	g_autoptr(FwupdJsonArray) json_steps_result = fwupd_json_array_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
@@ -1152,21 +1154,24 @@ fu_util_device_test_filename(FuUtil *self,
 	/* process each step */
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "repeat", &repeat, 1, error))
 		return FALSE;
-	fwupd_json_object_add_integer(json_object_result, "repeat", repeat);
 
 	json_steps = fwupd_json_object_get_array(json_obj, "steps", error);
 	if (json_steps == NULL)
 		return FALSE;
+	fwupd_json_object_add_array(json_object_result, "steps", json_steps_result);
 	for (guint j = 0; j < repeat; j++) {
 		for (guint i = 0; i < fwupd_json_array_get_size(json_steps); i++) {
 			g_autoptr(FwupdJsonObject) json_step = NULL;
+			g_autoptr(FwupdJsonObject) json_step_result = fwupd_json_object_new();
+
 			json_step = fwupd_json_array_get_object(json_steps, i, error);
 			if (json_step == NULL)
 				return FALSE;
+			fwupd_json_array_add_object(json_steps_result, json_step_result);
 			if (!fu_util_device_test_step(self,
 						      helper,
 						      json_step,
-						      json_object_result,
+						      json_step_result,
 						      error))
 				return FALSE;
 		}
@@ -1374,7 +1379,6 @@ fu_util_device_test_full(FuUtil *self,
 			 FuUtilDeviceTestHelper *helper,
 			 GError **error)
 {
-	g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_array_results = fwupd_json_array_new();
 
 	/* required for interactive devices */
@@ -1411,6 +1415,8 @@ fu_util_device_test_full(FuUtil *self,
 
 	/* dump to screen as JSON format */
 	if (self->as_json) {
+		g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
+		fwupd_json_object_add_array(json_object_results, "results", json_array_results);
 		fu_util_print_json_object(self->console, json_object_results);
 		return TRUE;
 	}
