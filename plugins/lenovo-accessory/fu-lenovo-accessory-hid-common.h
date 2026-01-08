@@ -9,15 +9,13 @@
 #include <fwupdplugin.h>
 
 gboolean
-fu_lenovo_accessory_hid_fwversion(FuHidrawDevice *hidraw_device,
-				  guint8 *major,
-				  guint8 *minor,
-				  guint8 *micro,
-				  GError **error);
+fu_lenovo_accessory_hid_get_fwversion(FuHidrawDevice *hidraw_device,
+				      guint8 *major,
+				      guint8 *minor,
+				      guint8 *micro,
+				      GError **error);
 gboolean
-fu_lenovo_accessory_hid_dfu_set_devicemode(FuHidrawDevice *hidraw_device,
-					   guint8 mode,
-					   GError **error);
+fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GError **error);
 gboolean
 fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device, guint8 exit_code, GError **error);
 gboolean

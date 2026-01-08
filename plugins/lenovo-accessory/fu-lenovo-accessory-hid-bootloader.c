@@ -104,11 +104,11 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* ensure always recoverable */
-	if (!fu_lenovo_accessory_hid_fwversion(FU_HIDRAW_DEVICE(device),
-					       &major,
-					       &minor,
-					       &micro,
-					       error))
+	if (!fu_lenovo_accessory_hid_get_fwversion(FU_HIDRAW_DEVICE(device),
+						   &major,
+						   &minor,
+						   &micro,
+						   error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u", major, minor, micro);
 	fu_device_set_version_bootloader(device, version);

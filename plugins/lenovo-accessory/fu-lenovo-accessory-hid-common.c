@@ -54,11 +54,11 @@ fu_lenovo_accessory_hid_process(FuHidrawDevice *hidraw_device,
 }
 
 gboolean
-fu_lenovo_accessory_hid_fwversion(FuHidrawDevice *hidraw_device,
-				  guint8 *major,
-				  guint8 *minor,
-				  guint8 *micro,
-				  GError **error)
+fu_lenovo_accessory_hid_get_fwversion(FuHidrawDevice *hidraw_device,
+				      guint8 *major,
+				      guint8 *minor,
+				      guint8 *micro,
+				      GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoHidFwVersion) st_fwversion = fu_struct_lenovo_hid_fw_version_new();
@@ -82,16 +82,17 @@ fu_lenovo_accessory_hid_fwversion(FuHidrawDevice *hidraw_device,
 					     error)) {
 		return FALSE;
 	}
-	*major = fu_struct_lenovo_hid_fw_version_get_major(st_fwversion);
-	*minor = fu_struct_lenovo_hid_fw_version_get_minor(st_fwversion);
-	*micro = fu_struct_lenovo_hid_fw_version_get_internal(st_fwversion);
+	if (major != NULL)
+		*major = fu_struct_lenovo_hid_fw_version_get_major(st_fwversion);
+	if (minor != NULL)
+		*minor = fu_struct_lenovo_hid_fw_version_get_minor(st_fwversion);
+	if (micro != NULL)
+		*micro = fu_struct_lenovo_hid_fw_version_get_internal(st_fwversion);
 	return TRUE;
 }
 
 gboolean
-fu_lenovo_accessory_hid_dfu_set_devicemode(FuHidrawDevice *hidraw_device,
-					   guint8 mode,
-					   GError **error)
+fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoHidDevicemode) lenovo_hid_mode =

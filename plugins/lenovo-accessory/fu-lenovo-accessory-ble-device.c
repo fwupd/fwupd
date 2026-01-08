@@ -126,11 +126,11 @@ fu_lenovo_accessory_ble_device_setup(FuDevice *device, GError **error)
 	guint8 micro = 0;
 	g_autofree gchar *version = NULL;
 
-	if (!fu_lenovo_accessory_ble_fwversion(FU_BLUEZ_DEVICE(device),
-					       &major,
-					       &minor,
-					       &micro,
-					       error))
+	if (!fu_lenovo_accessory_ble_get_fwversion(FU_BLUEZ_DEVICE(device),
+						   &major,
+						   &minor,
+						   &micro,
+						   error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%02u", major, minor, micro);
 	fu_device_set_version(device, version);

@@ -65,11 +65,11 @@ fu_lenovo_accessory_ble_process(FuBluezDevice *ble_device,
 }
 
 gboolean
-fu_lenovo_accessory_ble_fwversion(FuBluezDevice *ble_device,
-				  guint8 *major,
-				  guint8 *minor,
-				  guint8 *micro,
-				  GError **error)
+fu_lenovo_accessory_ble_get_fwversion(FuBluezDevice *ble_device,
+				      guint8 *major,
+				      guint8 *minor,
+				      guint8 *micro,
+				      GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleFwVersion) st_fwversion = fu_struct_lenovo_ble_fw_version_new();
@@ -104,7 +104,7 @@ fu_lenovo_accessory_ble_fwversion(FuBluezDevice *ble_device,
 }
 
 gboolean
-fu_lenovo_accessory_ble_get_devicemode(FuBluezDevice *ble_device, guint8 *mode, GError **error)
+fu_lenovo_accessory_ble_get_mode(FuBluezDevice *ble_device, guint8 *mode, GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleDevicemode) st_mode = fu_struct_lenovo_ble_devicemode_new();
@@ -133,7 +133,7 @@ fu_lenovo_accessory_ble_get_devicemode(FuBluezDevice *ble_device, guint8 *mode, 
 }
 
 gboolean
-fu_lenovo_accessory_ble_dfu_set_devicemode(FuBluezDevice *ble_device, guint8 mode, GError **error)
+fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, guint8 mode, GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleData) st_data = fu_struct_lenovo_ble_data_new();

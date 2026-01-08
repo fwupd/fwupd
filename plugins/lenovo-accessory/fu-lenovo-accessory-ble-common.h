@@ -9,15 +9,15 @@
 #include <fwupdplugin.h>
 
 gboolean
-fu_lenovo_accessory_ble_fwversion(FuBluezDevice *ble_device,
-				  guint8 *major,
-				  guint8 *minor,
-				  guint8 *micro,
-				  GError **error);
+fu_lenovo_accessory_ble_get_fwversion(FuBluezDevice *ble_device,
+				      guint8 *major,
+				      guint8 *minor,
+				      guint8 *micro,
+				      GError **error);
 gboolean
-fu_lenovo_accessory_ble_get_devicemode(FuBluezDevice *ble_device, guint8 *mode, GError **error);
+fu_lenovo_accessory_ble_get_mode(FuBluezDevice *ble_device, guint8 *mode, GError **error);
 gboolean
-fu_lenovo_accessory_ble_dfu_set_devicemode(FuBluezDevice *ble_device, guint8 mode, GError **error);
+fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, guint8 mode, GError **error);
 gboolean
 fu_lenovo_accessory_ble_dfu_exit(FuBluezDevice *ble_device, guint8 exit_code, GError **error);
 gboolean
