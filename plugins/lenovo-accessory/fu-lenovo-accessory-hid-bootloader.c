@@ -7,7 +7,7 @@
 #include "config.h"
 
 #include "fu-lenovo-accessory-hid-bootloader.h"
-#include "fu-lenovo-accessory-hid-command.h"
+#include "fu-lenovo-accessory-hid-common.h"
 
 struct _FuLenovoAccessoryHidBootloader {
 	FuHidrawDevice parent_instance;
@@ -32,12 +32,12 @@ fu_lenovo_accessory_hid_bootloader_write_file_data(FuLenovoAccessoryHidBootloade
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_lenovo_accessory_hid_command_dfu_file(FU_HIDRAW_DEVICE(self),
-							      file_type,
-							      fu_chunk_get_address(chk),
-							      fu_chunk_get_data(chk),
-							      (guint8)fu_chunk_get_data_sz(chk),
-							      error))
+		if (!fu_lenovo_accessory_hid_dfu_file(FU_HIDRAW_DEVICE(self),
+						      file_type,
+						      fu_chunk_get_address(chk),
+						      fu_chunk_get_data(chk),
+						      (guint8)fu_chunk_get_data_sz(chk),
+						      error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i,
@@ -49,7 +49,7 @@ fu_lenovo_accessory_hid_bootloader_write_file_data(FuLenovoAccessoryHidBootloade
 static gboolean
 fu_lenovo_accessory_hid_bootloader_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_lenovo_accessory_hid_command_dfu_exit(FU_HIDRAW_DEVICE(device), 0, error))
+	if (!fu_lenovo_accessory_hid_dfu_exit(FU_HIDRAW_DEVICE(device), 0, error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -83,14 +83,14 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 					       NULL);
 	if (report == NULL)
 		return FALSE;
-	if (!fu_lenovo_accessory_hid_command_dfu_attribute(FU_HIDRAW_DEVICE(device),
-							   NULL,
-							   NULL,
-							   &usb_pid,
-							   NULL,
-							   NULL,
-							   NULL,
-							   error))
+	if (!fu_lenovo_accessory_hid_dfu_attribute(FU_HIDRAW_DEVICE(device),
+						   NULL,
+						   NULL,
+						   &usb_pid,
+						   NULL,
+						   NULL,
+						   NULL,
+						   error))
 		return FALSE;
 	if (usb_pid == 0x629d)
 		fu_device_add_instance_id(device, "HIDRAW\\VEN_17EF&DEV_629D");
@@ -105,11 +105,11 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_lenovo_accessory_hid_command_fwversion(FU_HIDRAW_DEVICE(device),
-						       &major,
-						       &minor,
-						       &internal,
-						       error))
+	if (!fu_lenovo_accessory_hid_fwversion(FU_HIDRAW_DEVICE(device),
+					       &major,
+					       &minor,
+					       &internal,
+					       error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u", major, minor, internal);
 	fu_device_set_version_bootloader(device, version);
@@ -140,12 +140,12 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "prepare");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "write");
-	if (!fu_lenovo_accessory_hid_command_dfu_prepare(FU_HIDRAW_DEVICE(device),
-							 1,
-							 0,
-							 (guint32)fw_size,
-							 file_crc,
-							 error))
+	if (!fu_lenovo_accessory_hid_dfu_prepare(FU_HIDRAW_DEVICE(device),
+						 1,
+						 0,
+						 (guint32)fw_size,
+						 file_crc,
+						 error))
 		return FALSE;
 	fu_progress_step_done(progress);
 	if (!fu_lenovo_accessory_hid_bootloader_write_file_data(

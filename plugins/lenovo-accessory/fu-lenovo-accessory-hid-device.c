@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-lenovo-accessory-hid-command.h"
+#include "fu-lenovo-accessory-hid-common.h"
 #include "fu-lenovo-accessory-hid-device.h"
 
 struct _FuLenovoAccessoryHidDevice {
@@ -51,11 +51,11 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_device_probe(usb_parent, error))
 		return FALSE;
 	fu_device_set_version_raw(device, fu_usb_device_get_release(FU_USB_DEVICE(usb_parent)));
-	if (!fu_lenovo_accessory_hid_command_fwversion(FU_HIDRAW_DEVICE(device),
-						       &major,
-						       &minor,
-						       &internal,
-						       error))
+	if (!fu_lenovo_accessory_hid_fwversion(FU_HIDRAW_DEVICE(device),
+					       &major,
+					       &minor,
+					       &internal,
+					       error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u", major, minor, internal);
 	fu_device_set_version(device, version);
@@ -90,7 +90,7 @@ fu_lenovo_accessory_hid_device_detach(FuDevice *device, FuProgress *progress, GE
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 100, "switch-dfu");
-	fu_lenovo_accessory_hid_command_dfu_set_devicemode(FU_HIDRAW_DEVICE(self), 2, error);
+	fu_lenovo_accessory_hid_dfu_set_devicemode(FU_HIDRAW_DEVICE(self), 2, error);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	fu_progress_step_done(progress);
 	return TRUE;

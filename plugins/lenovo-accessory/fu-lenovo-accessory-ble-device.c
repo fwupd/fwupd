@@ -5,7 +5,7 @@
  */
 #include "config.h"
 
-#include "fu-lenovo-accessory-ble-command.h"
+#include "fu-lenovo-accessory-ble-common.h"
 #include "fu-lenovo-accessory-ble-device.h"
 
 struct _FuLenovoAccessoryBleDevice {
@@ -32,12 +32,12 @@ fu_lenovo_accessory_ble_device_write_file_data(FuLenovoAccessoryBleDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_lenovo_accessory_ble_command_dfu_file(FU_BLUEZ_DEVICE(self),
-							      file_type,
-							      fu_chunk_get_address(chk),
-							      fu_chunk_get_data(chk),
-							      (guint8)fu_chunk_get_data_sz(chk),
-							      error))
+		if (!fu_lenovo_accessory_ble_dfu_file(FU_BLUEZ_DEVICE(self),
+						      file_type,
+						      fu_chunk_get_address(chk),
+						      fu_chunk_get_data(chk),
+						      (guint8)fu_chunk_get_data_sz(chk),
+						      error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i,
@@ -64,18 +64,18 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "prepare");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "write");
-	if (!fu_lenovo_accessory_ble_command_dfu_entry(FU_BLUEZ_DEVICE(device), error)) {
-		if (!fu_lenovo_accessory_ble_command_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error))
+	if (!fu_lenovo_accessory_ble_dfu_entry(FU_BLUEZ_DEVICE(device), error)) {
+		if (!fu_lenovo_accessory_ble_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error))
 			return FALSE;
 		return FALSE;
 	}
-	if (!fu_lenovo_accessory_ble_command_dfu_prepare(FU_BLUEZ_DEVICE(device),
-							 1,
-							 0,
-							 (guint32)fw_size,
-							 file_crc,
-							 error)) {
-		if (!fu_lenovo_accessory_ble_command_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error))
+	if (!fu_lenovo_accessory_ble_dfu_prepare(FU_BLUEZ_DEVICE(device),
+						 1,
+						 0,
+						 (guint32)fw_size,
+						 file_crc,
+						 error)) {
+		if (!fu_lenovo_accessory_ble_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error))
 			return FALSE;
 		return FALSE;
 	}
@@ -88,9 +88,9 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 							    progress,
 							    error))
 		return FALSE;
-	if (!fu_lenovo_accessory_ble_command_dfu_crc(FU_BLUEZ_DEVICE(device), &device_crc, error)) {
+	if (!fu_lenovo_accessory_ble_dfu_crc(FU_BLUEZ_DEVICE(device), &device_crc, error)) {
 		g_prefix_error(error, "Lenovo BLE CRC Error (device 0x%08x): ", device_crc);
-		if (!fu_lenovo_accessory_ble_command_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error))
+		if (!fu_lenovo_accessory_ble_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error))
 			return FALSE;
 		return FALSE;
 	}
@@ -110,7 +110,7 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 static gboolean
 fu_lenovo_accessory_ble_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_lenovo_accessory_ble_command_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error)) {
+	if (!fu_lenovo_accessory_ble_dfu_exit(FU_BLUEZ_DEVICE(device), 0, error)) {
 		g_prefix_error_literal(error, "failed to exit: ");
 		return FALSE;
 	}
@@ -125,11 +125,11 @@ fu_lenovo_accessory_ble_device_setup(FuDevice *device, GError **error)
 	guint8 major = 0;
 	guint8 minor = 0;
 	guint8 internal = 0;
-	if (!fu_lenovo_accessory_ble_command_fwversion(FU_BLUEZ_DEVICE(device),
-						       &major,
-						       &minor,
-						       &internal,
-						       error))
+	if (!fu_lenovo_accessory_ble_fwversion(FU_BLUEZ_DEVICE(device),
+					       &major,
+					       &minor,
+					       &internal,
+					       error))
 		return FALSE;
 
 	version = g_strdup_printf("%u.%u.%02u", major, minor, internal);
