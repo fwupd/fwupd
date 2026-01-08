@@ -7,6 +7,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-sunwinon-hid-device.h"
+#include "fu-sunwinon-hid-struct.h"
 #include "fu-sunwinon-util-dfu-master.h"
 
 struct _FuSunwinonHidDevice {
@@ -217,27 +218,29 @@ static gboolean
 fu_sunwinon_hid_device_check_update_channel(FuHidDescriptor *desc, GError **error)
 {
 	g_return_val_if_fail(desc != NULL, FALSE);
-	g_autoptr(FuHidReport) report_out = fu_hid_descriptor_find_report(desc,
-									  error,
-									  "report-id",
-									  0x61,
-									  "usage",
-									  0x02,
-									  "output",
-									  0x00,
-									  NULL);
+	g_autoptr(FuHidReport) report_out =
+	    fu_hid_descriptor_find_report(desc,
+					  error,
+					  "report-id",
+					  FU_SUNWINON_HID_REPORT_CHANNEL_ID,
+					  "usage",
+					  0x02,
+					  "output",
+					  0x00,
+					  NULL);
 	if (report_out == NULL)
 		return FALSE;
 
-	g_autoptr(FuHidReport) report_in = fu_hid_descriptor_find_report(desc,
-									 error,
-									 "report-id",
-									 0x61,
-									 "usage",
-									 0x02,
-									 "input",
-									 0x00,
-									 NULL);
+	g_autoptr(FuHidReport) report_in =
+	    fu_hid_descriptor_find_report(desc,
+					  error,
+					  "report-id",
+					  FU_SUNWINON_HID_REPORT_CHANNEL_ID,
+					  "usage",
+					  0x02,
+					  "input",
+					  0x00,
+					  NULL);
 	if (report_in == NULL)
 		return FALSE;
 
