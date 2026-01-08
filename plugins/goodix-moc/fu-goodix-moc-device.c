@@ -97,87 +97,101 @@ fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
 	return TRUE;
 }
 
-static GByteArray *
-fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GError **error)
+typedef struct {
+	GByteArray *res;
+	gboolean data_reply;
+} FuGoodixMocDeviceHelper;
+
+/*
+ * package format
+ * | zlp | ack | zlp | data |
+ */
+static gboolean
+fu_goodix_moc_device_cmd_recv_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	guint32 crc_actual = 0;
-	guint32 crc_calculated = 0;
+	FuGoodixMocDevice *self = FU_GOODIX_MOC_DEVICE(device);
+	FuGoodixMocDeviceHelper *helper = (FuGoodixMocDeviceHelper *)user_data;
 	gsize actual_len = 0;
-	g_autoptr(GByteArray) res = g_byte_array_new();
+	gsize crc_offset;
+	guint16 header_len;
+	guint32 crc_actual;
+	guint32 crc_calculated = 0;
+	guint8 header_cmd0;
+	g_autoptr(GByteArray) reply = g_byte_array_new();
+	g_autoptr(FuStructGoodixMocPkgHeader) st = NULL;
 
-	/*
-	 * package format
-	 * | zlp | ack | zlp | data |
-	 */
-	while (1) {
-		gsize crc_offset;
-		guint16 header_len = 0x0;
-		guint8 header_cmd0 = 0x0;
-		g_autoptr(GByteArray) reply = g_byte_array_new();
-		g_autoptr(FuStructGoodixMocPkgHeader) st = NULL;
+	fu_byte_array_set_size(reply, GX_FLASH_TRANSFER_BLOCK_SIZE, 0x00);
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 GX_USB_BULK_EP_IN,
+					 reply->data,
+					 reply->len,
+					 &actual_len, /* allowed to return short read */
+					 GX_USB_DATAIN_TIMEOUT,
+					 NULL,
+					 error)) {
+		g_prefix_error_literal(error, "failed to reply: ");
+		return FALSE;
+	}
 
-		fu_byte_array_set_size(reply, GX_FLASH_TRANSFER_BLOCK_SIZE, 0x00);
-		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
-						 GX_USB_BULK_EP_IN,
-						 reply->data,
-						 reply->len,
-						 &actual_len, /* allowed to return short read */
-						 GX_USB_DATAIN_TIMEOUT,
-						 NULL,
-						 error)) {
-			g_prefix_error_literal(error, "failed to reply: ");
-			return NULL;
-		}
+	/* receive zero length package */
+	fu_dump_full(G_LOG_DOMAIN,
+		     "REPLY",
+		     reply->data,
+		     actual_len,
+		     16,
+		     FU_DUMP_FLAG_SHOW_ADDRESSES);
+	st = fu_struct_goodix_moc_pkg_header_parse(reply->data,
+						   MIN(reply->len, actual_len),
+						   0x0,
+						   error);
+	if (st == NULL)
+		return FALSE;
 
-		/* receive zero length package */
-		if (actual_len == 0)
-			continue;
-		fu_dump_full(G_LOG_DOMAIN,
-			     "REPLY",
-			     reply->data,
-			     actual_len,
-			     16,
-			     FU_DUMP_FLAG_SHOW_ADDRESSES);
+	/* parse package header */
+	header_cmd0 = fu_struct_goodix_moc_pkg_header_get_cmd0(st);
+	header_len = fu_struct_goodix_moc_pkg_header_get_len(st);
+	crc_offset = FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE + header_len - GX_SIZE_CRC32;
+	crc_actual = fu_crc32(FU_CRC_KIND_B32_STANDARD, reply->data, crc_offset);
+	if (!fu_memread_uint32_safe(reply->data,
+				    reply->len,
+				    crc_offset,
+				    &crc_calculated,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+	if (crc_actual != crc_calculated) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "invalid checksum, got 0x%x, expected 0x%x",
+			    crc_calculated,
+			    crc_actual);
+		return FALSE;
+	}
 
-		st = fu_struct_goodix_moc_pkg_header_parse(reply->data, reply->len, 0x0, error);
-		if (st == NULL)
-			return NULL;
-
-		/* parse package header */
-		header_cmd0 = fu_struct_goodix_moc_pkg_header_get_cmd0(st);
-		header_len = fu_struct_goodix_moc_pkg_header_get_len(st);
-		crc_offset = FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE + header_len - GX_SIZE_CRC32;
-		crc_actual = fu_crc32(FU_CRC_KIND_B32_STANDARD, reply->data, crc_offset);
-		if (!fu_memread_uint32_safe(reply->data,
-					    reply->len,
-					    crc_offset,
-					    &crc_calculated,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return FALSE;
-		if (crc_actual != crc_calculated) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "invalid checksum, got 0x%x, expected 0x%x",
-				    crc_calculated,
-				    crc_actual);
-			return NULL;
-		}
-
-		/* store latest package data */
-		g_byte_array_set_size(res, 0);
-		g_byte_array_append(res,
-				    reply->data + FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE,
-				    reply->len - FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE);
-
-		/* continue after ack received */
-		if (header_cmd0 == FU_GOODIX_MOC_CMD_ACK && data_reply)
-			continue;
-		break;
+	/* continue after ack received */
+	if (header_cmd0 == FU_GOODIX_MOC_CMD_ACK && helper->data_reply) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "continue after ack");
+		return FALSE;
 	}
 
 	/* success */
+	g_byte_array_append(helper->res,
+			    reply->data + FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE,
+			    reply->len - FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE);
+	return TRUE;
+}
+
+static GByteArray *
+fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GError **error)
+{
+	g_autoptr(GByteArray) res = g_byte_array_new();
+	FuGoodixMocDeviceHelper helper = {
+	    .data_reply = data_reply,
+	    .res = res,
+	};
+	if (!fu_device_retry(FU_DEVICE(self), fu_goodix_moc_device_cmd_recv_cb, 5, &helper, error))
+		return NULL;
 	return g_steal_pointer(&res);
 }
 
