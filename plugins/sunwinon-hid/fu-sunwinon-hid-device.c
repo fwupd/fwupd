@@ -84,12 +84,14 @@ fu_sunwinon_hid_device_dfu_get_img_data(void *user_data,
 {
 	FuSwHidDfuCtx *self = (FuSwHidDfuCtx *)user_data;
 	guint32 off = 0;
+	gsize avail = 0;
+
 	if (addr >= self->fw_save_addr)
 		off = addr - self->fw_save_addr;
 	if ((guint64)off + len > self->fw_sz)
 		len = (guint16)MAX((gint)0, (gint)(self->fw_sz > off ? self->fw_sz - off : 0));
 	{
-		gsize avail = (self->fw_sz > off) ? (self->fw_sz - off) : 0;
+		avail = (self->fw_sz > off) ? (self->fw_sz - off) : 0;
 		return fu_memcpy_safe(data,
 				      len,
 				      0,
@@ -270,18 +272,18 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	/* HID report descriptor and fw version confirmed, now device is ready to update */
 	fu_device_add_instance_id(device, "SUNWINON_HID");
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	return TRUE;
 }
 
 static void
 fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 {
-	g_debug("initializing Sunwinon BLE HID Device");
+	g_debug("initializing sunwinon HID device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
 	fu_device_set_id(FU_DEVICE(self), "SunwinonHidTest");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_protocol(FU_DEVICE(self), "com.sunwinon.hid");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
@@ -299,6 +301,8 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 	FuSunwinonDfuCallback cfg = {0};
 	guint16 inlen = 0;
 	const guint8 *payload = NULL;
+	gsize off = 0;
+	gsize avail = 0;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuDfuMaster) master = NULL;
@@ -321,19 +325,17 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	{
-		gsize off = ctx.fw_sz - DFU_IMAGE_INFO_LEN;
-		gsize avail = (ctx.fw_sz > off) ? (ctx.fw_sz - off) : 0;
-		if (!fu_memcpy_safe((guint8 *)&ctx.img_info,
-				    sizeof(ctx.img_info),
-				    0,
-				    (const guint8 *)(ctx.fw + off),
-				    avail,
-				    0,
-				    sizeof(FuSunwinonDfuImageInfo),
-				    error))
-			return FALSE;
-	}
+	off = ctx.fw_sz - DFU_IMAGE_INFO_LEN;
+	avail = (ctx.fw_sz > off) ? (ctx.fw_sz - off) : 0;
+	if (!fu_memcpy_safe((guint8 *)&ctx.img_info,
+			    sizeof(ctx.img_info),
+			    0,
+			    (const guint8 *)(ctx.fw + off),
+			    avail,
+			    0,
+			    sizeof(FuSunwinonDfuImageInfo),
+			    error))
+		return FALSE;
 
 	ctx.device = device;
 	ctx.progress = progress;

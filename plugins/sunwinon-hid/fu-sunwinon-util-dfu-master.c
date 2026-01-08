@@ -859,9 +859,9 @@ static void
 fu_sunwinon_util_dfu_master_schedule_program_end(FuDfuMaster *self)
 {
 	FuDfuMasterState *dfu_state = &self->state;
+	guint32 check_sum = 0;
 	if (dfu_state->fast_dfu_mode == FU_SUNWINON_FAST_DFU_MODE_ENABLE) {
-		guint32 check_sum =
-		    fu_memread_uint32(&dfu_state->receive_frame.data[1], G_LITTLE_ENDIAN);
+		check_sum = fu_memread_uint32(&dfu_state->receive_frame.data[1], G_LITTLE_ENDIAN);
 		if (check_sum == dfu_state->all_check_sum) {
 			dfu_state->dfu_timeout_started = FALSE;
 			fu_sunwinon_util_dfu_master_event_handler(
