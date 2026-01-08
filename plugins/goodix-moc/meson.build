@@ -3,6 +3,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('goodix-moc.quirk')
 plugin_builtins += static_library('fu_plugin_goodix_moc',
+  rustgen.process('fu-goodix-moc.rs'),
   sources: [
     'fu-goodix-moc-device.c',
     'fu-goodix-moc-plugin.c',
