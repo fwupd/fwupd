@@ -217,6 +217,22 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
+    def _test_variable_buffer_index(self, node: Node) -> None:
+        """disallow buf[] and prefer *buf"""
+
+        idx: int = 0
+        while True:
+            idx = node.tokens_pre.find_fuzzy(
+                ["guint8", "~*", "[", "]", ","], offset=idx + 1
+            )
+            if idx == -1:
+                return
+            token = node.tokens_pre[idx + 1]
+            self.add_failure(
+                f"do not use param guint8 {token.data}[], instead use 'guint8 *{token.data}'",
+                linecnt=token.linecnt,
+            )
+
     def _test_struct_member_case(self, node: Node) -> None:
         """disallow non-lowercase struct members"""
 
@@ -1355,6 +1371,7 @@ class Checker:
                 self._test_param_self_native_device(node)
                 self._test_param_self_native_firmware(node)
                 self._test_variable_case(node)
+                self._test_variable_buffer_index(node)
                 self._test_struct_member_case(node)
 
             # test for invalid struct and enum names
