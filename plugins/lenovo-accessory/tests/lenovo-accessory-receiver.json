@@ -1,0 +1,18 @@
+{
+  "name": "Lenovo Pro Unified Pairing Receiver",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "dc625fa1d91ae94e46f12a2073803efb2529c5ed618fb7f18ab9d89973ea7473-Lenovo-hid_629d-vs1.1.3.cab",
+      "emulation-url": "c4bdf91f9ff41cfb6cff2c72a3196ae0a1965ab26e75d67175a92a9181eeca78-emulation.zip",
+      "components": [
+        {
+          "version": "1.1.3",
+          "guids": [
+            "e31f39bb-f694-55da-9935-0cb19e922a5c"
+          ]
+        }
+      ]
+    }
+  ]
+}
