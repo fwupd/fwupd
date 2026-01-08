@@ -191,6 +191,8 @@ fwupd_json_parser_unescape_char(gchar data)
 		return '\t';
 	if (data == '\\')
 		return '\\';
+	if (data == '\"')
+		return '\"';
 	return 0;
 }
 
@@ -211,7 +213,7 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 	data = helper->buf->data[helper->buf_offset];
 
 	/* quotes */
-	if (data == '"') {
+	if (!helper->is_escape && data == '"') {
 		if (helper->is_quoted) {
 			fwupd_json_parser_helper_dump_acc(helper, token, str);
 			helper->is_quoted = FALSE;

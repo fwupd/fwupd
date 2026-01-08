@@ -122,8 +122,8 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 						  GError **error)
 {
 	FuLogitechHidppBootloader *self = FU_LOGITECH_HIDPP_BOOTLOADER(device);
+	GPtrArray *records;
 	const FuLogitechHidppBootloaderRequest *payload;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
 	g_autoptr(FuLogitechHidppBootloaderRequest) req =
 	    fu_logitech_hidpp_bootloader_request_new();
@@ -142,13 +142,9 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 12, NULL);
 	}
 
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
 	/* transfer payload */
-	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, fw, error);
+	records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
+	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, records, error);
 	if (reqs == NULL)
 		return FALSE;
 

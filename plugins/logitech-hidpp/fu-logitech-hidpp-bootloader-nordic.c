@@ -37,25 +37,30 @@ fu_logitech_hidpp_bootloader_nordic_get_hw_platform_id(FuLogitechHidppBootloader
 static gchar *
 fu_logitech_hidpp_bootloader_nordic_get_fw_version(FuLogitechHidppBootloader *self, GError **error)
 {
-	guint16 micro;
-
+	guint16 micro = 0;
+	guint8 major = 0;
+	guint8 minor = 0;
 	g_autoptr(FuLogitechHidppBootloaderRequest) req =
 	    fu_logitech_hidpp_bootloader_request_new();
+
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_FW_VERSION;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
 		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return NULL;
 	}
 
-	/* RRRxx.yy_Bzzzz
-	 * 012345678901234*/
-	micro = (guint16)fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 10) << 8;
-	micro += fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 12);
-	return fu_logitech_hidpp_format_version(
-	    "RQR",
-	    fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 3),
-	    fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 6),
-	    micro);
+	/* RRRxx.yy_Bzzzz */
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 3, &major, error))
+		return NULL;
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 6, &minor, error))
+		return NULL;
+	if (!fu_firmware_strparse_uint16_safe((const gchar *)req->data,
+					      req->len,
+					      10,
+					      &micro,
+					      error))
+		return NULL;
+	return fu_logitech_hidpp_format_version("RQR", major, minor, micro);
 }
 
 static gboolean
@@ -223,9 +228,9 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 						   GError **error)
 {
 	FuLogitechHidppBootloader *self = FU_LOGITECH_HIDPP_BOOTLOADER(device);
+	GPtrArray *records;
 	const FuLogitechHidppBootloaderRequest *payload;
 	guint16 addr;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
 
 	/* progress */
@@ -242,11 +247,6 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 6, "reset-vector");
 	}
 
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
 	/* erase firmware pages up to the bootloader */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 	for (addr = fu_logitech_hidpp_bootloader_get_addr_lo(self);
@@ -258,7 +258,8 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* transfer payload */
-	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, fw, error);
+	records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
+	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, records, error);
 	if (reqs == NULL)
 		return FALSE;
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);

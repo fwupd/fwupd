@@ -47,32 +47,21 @@ fu_logitech_hidpp_bootloader_request_new(void)
 
 GPtrArray *
 fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
-					    GBytes *fw,
+					    GPtrArray *records,
 					    GError **error)
 {
-	const gchar *tmp;
-	g_auto(GStrv) lines = NULL;
-	g_autoptr(GPtrArray) reqs = NULL;
 	guint32 last_addr = 0;
+	g_autoptr(GPtrArray) reqs = g_ptr_array_new_with_free_func(g_free);
 
-	reqs = g_ptr_array_new_with_free_func(g_free);
-	tmp = g_bytes_get_data(fw, NULL);
-	lines = g_strsplit_set(tmp, "\n\r", -1);
-	for (guint i = 0; lines[i] != NULL; i++) {
+	for (guint i = 0; i < records->len; i++) {
+		FuIhexFirmwareRecord *rcd = g_ptr_array_index(records, i);
 		g_autoptr(FuLogitechHidppBootloaderRequest) payload = NULL;
-		guint8 rec_type = 0x00;
-		guint16 offset = 0x0000;
-		guint16 addr = 0x0;
-		gboolean exit = FALSE;
-		gsize linesz = strlen(lines[i]);
 
-		/* skip empty lines */
-		tmp = lines[i];
-		if (linesz < 5)
-			continue;
+		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EOF)
+			break;
 
 		payload = fu_logitech_hidpp_bootloader_request_new();
-		payload->len = fu_logitech_hidpp_buffer_read_uint8(tmp + 0x01);
+		payload->len = rcd->byte_cnt;
 		if (payload->len > 28) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -81,69 +70,23 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 				    payload->len);
 			return NULL;
 		}
-		if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x03, &addr, error))
-			return NULL;
-		payload->addr = addr;
-		payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
-
-		rec_type = fu_logitech_hidpp_buffer_read_uint8(tmp + 0x07);
-
-		switch (rec_type) {
-		case 0x00: /* data */
-			break;
-		case 0x01: /* EOF */
-			exit = TRUE;
-			break;
-		case 0x03: /* start segment address */
-			/* this is used to specify the start address,
-			it is doesn't matter in this context so we can
-			safely ignore it */
-			continue;
-		case 0x04: /* extended linear address */
-			if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x09, &offset, error))
-				return NULL;
-			if (offset != 0x0000) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_DATA,
-						    "extended linear addresses with offset "
-						    "different from 0 are not supported");
-				return NULL;
-			}
-			continue;
-		case 0x05: /* start linear address */
-			/* this is used to specify the start address,
-			it is doesn't matter in this context so we can
-			safely ignore it */
-			continue;
-		case 0xFD: /* custom - vendor */
-			/* record type of 0xFD indicates signature data */
+		payload->addr = rcd->addr;
+		if (rcd->record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE)
 			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE;
-			break;
-		default:
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "intel hex file record type %02x not supported",
-				    rec_type);
-			return NULL;
-		}
-
-		if (exit)
-			break;
+		else
+			payload->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
 
 		/* read the data, but skip the checksum byte */
-		for (guint j = 0; j < payload->len; j++) {
-			const gchar *ptr = tmp + 0x09 + (j * 2);
-			if (ptr[0] == '\0') {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "firmware data invalid: expected %u bytes",
-					    payload->len);
-				return NULL;
-			}
-			payload->data[j] = fu_logitech_hidpp_buffer_read_uint8(ptr);
+		if (!fu_memcpy_safe(payload->data,
+				    sizeof(payload->data),
+				    0x0,
+				    rcd->data->data,
+				    rcd->data->len,
+				    0x0,
+				    rcd->data->len,
+				    error)) {
+			g_prefix_error_literal(error, "failed to copy data: ");
+			return NULL;
 		}
 
 		/* no need to bound check signature addresses */
@@ -226,9 +169,9 @@ fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GErr
 static gboolean
 fu_logitech_hidpp_bootloader_ensure_bl_version(FuLogitechHidppBootloader *self, GError **error)
 {
-	guint16 build;
-	guint8 major;
-	guint8 minor;
+	guint16 build = 0;
+	guint8 major = 0;
+	guint8 minor = 0;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuLogitechHidppBootloaderRequest) req =
 	    fu_logitech_hidpp_bootloader_request_new();
@@ -242,10 +185,16 @@ fu_logitech_hidpp_bootloader_ensure_bl_version(FuLogitechHidppBootloader *self, 
 
 	/* BOTxx.yy_Bzzzz
 	 * 012345678901234 */
-	build = (guint16)fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 10) << 8;
-	build += fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 12);
-	major = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 3);
-	minor = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 6);
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 3, &major, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint8_safe((const gchar *)req->data, req->len, 6, &minor, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint16_safe((const gchar *)req->data,
+					      req->len,
+					      10,
+					      &build,
+					      error))
+		return FALSE;
 	version = fu_logitech_hidpp_format_version("BOT", major, minor, build);
 	if (version == NULL) {
 		g_set_error_literal(error,

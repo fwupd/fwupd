@@ -28,6 +28,8 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-json-array.h"
+#include "fwupd-json-parser.h"
 #include "fwupd-plugin.h"
 #include "fwupd-release.h"
 #include "fwupd-remote-private.h"
@@ -943,6 +945,7 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 			g_task_return_boolean(task, TRUE);
 			return;
 		}
+		fwupd_client_fixup_dbus_error(error);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -1313,11 +1316,39 @@ fwupd_client_quit_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 }
 
 static void
+fwupd_client_strip_error(GError *error)
+{
+	gchar *last_section; /* really const */
+	gchar *last_section_mut;
+
+	if (error == NULL || error->message == NULL)
+		return;
+	last_section = g_strrstr(error->message, ": ");
+	if (last_section == NULL)
+		return;
+
+	/* strip all but the last section of the string -- as it may be shown to the user */
+	last_section_mut = g_strdup(last_section + 2);
+	g_free(error->message);
+	error->message = last_section_mut;
+}
+
+static void
 fwupd_client_fixup_dbus_error(GError *error)
 {
 	g_autofree gchar *name = NULL;
 
 	g_return_if_fail(error != NULL);
+
+	/* client-side D-Bus error */
+	if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
+	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_NAME_HAS_NO_OWNER) ||
+	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_DBUS_ERROR)) {
+		error->domain = FWUPD_ERROR;
+		error->code = FWUPD_ERROR_NOT_SUPPORTED;
+		fwupd_client_strip_error(error);
+		return;
+	}
 
 	/* is a remote error? */
 	if (!g_dbus_error_is_remote_error(error))
@@ -1330,10 +1361,6 @@ fwupd_client_fixup_dbus_error(GError *error)
 	if (g_str_has_prefix(name, FWUPD_DBUS_INTERFACE)) {
 		error->domain = FWUPD_ERROR;
 		error->code = fwupd_error_from_string(name);
-	} else if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
-		   g_error_matches(error, G_IO_ERROR, G_IO_ERROR_DBUS_ERROR)) {
-		error->domain = FWUPD_ERROR;
-		error->code = FWUPD_ERROR_NOT_SUPPORTED;
 	} else {
 		error->domain = FWUPD_ERROR;
 		error->code = FWUPD_ERROR_INTERNAL;
@@ -6261,14 +6288,15 @@ static void
 fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	const gchar *server_msg = NULL;
-	JsonNode *json_root;
-	JsonObject *json_object;
+	gboolean success = FALSE;
 	g_autofree gchar *str = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = G_TASK(user_data);
-	g_autoptr(JsonParser) json_parser = NULL;
+	g_autoptr(FwupdJsonNode) json_root = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
 	/* parse */
 	bytes = fwupd_client_upload_bytes_finish(FWUPD_CLIENT(source), res, &error);
@@ -6288,9 +6316,9 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 	}
 
 	/* parse JSON reply */
-	json_parser = json_parser_new();
 	str = g_strndup(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
-	if (!json_parser_load_from_data(json_parser, str, -1, &error)) {
+	json_root = fwupd_json_parser_load_from_data(json_parser, str, -1, &error);
+	if (json_root == NULL) {
 		g_task_return_new_error(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_INVALID_DATA,
@@ -6299,31 +6327,25 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 					error->message);
 		return;
 	}
-	json_root = json_parser_get_root(json_parser);
-	if (json_root == NULL) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_DATA,
-					"JSON response was malformed: '%s'",
-					str);
-		return;
-	}
-	json_object = json_node_get_object(json_root);
-	if (json_object == NULL) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_DATA,
-					"JSON response object was malformed: '%s'",
-					str);
+	json_obj = fwupd_json_node_get_object(json_root, &error);
+	if (json_obj == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
 
 	/* get any optional server message */
-	if (json_object_has_member(json_object, "msg"))
-		server_msg = json_object_get_string_member(json_object, "msg");
+	server_msg = fwupd_json_object_get_string(json_obj, "msg", NULL);
 
 	/* server reported failed */
-	if (!json_object_get_boolean_member(json_object, "success")) {
+	if (!fwupd_json_object_get_boolean_with_default(json_obj,
+							"success",
+							&success,
+							FALSE,
+							&error)) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+	if (!success) {
 		g_task_return_new_error(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_PERMISSION_DENIED,
@@ -6335,8 +6357,7 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 	/* server wanted us to see the message */
 	if (server_msg != NULL) {
 		g_info("server message: %s", server_msg);
-		if (json_object_has_member(json_object, "uri"))
-			uri = g_strdup(json_object_get_string_member(json_object, "uri"));
+		uri = g_strdup(fwupd_json_object_get_string(json_obj, "uri", NULL));
 	}
 
 	/* fallback */
@@ -7000,20 +7021,6 @@ fwupd_client_undo_host_security_attr_finish(FwupdClient *self, GAsyncResult *res
 	return g_task_propagate_boolean(G_TASK(res), error);
 }
 
-static void
-fwupd_client_build_report_metadata(JsonBuilder *builder, GHashTable *metadata)
-{
-	GHashTableIter iter;
-	const gchar *key;
-	const gchar *value;
-
-	g_hash_table_iter_init(&iter, metadata);
-	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
-		json_builder_set_member_name(builder, key);
-		json_builder_add_string_value(builder, value);
-	}
-}
-
 /**
  * fwupd_client_build_report_devices:
  * @self: a #FwupdClient
@@ -7040,55 +7047,42 @@ fwupd_client_build_report_devices(FwupdClient *self,
 				  GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	guint cnt = 0;
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GString) data = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_devices = fwupd_json_array_new();
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(devices != NULL, NULL);
 	g_return_val_if_fail(metadata != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ReportType");
-	json_builder_add_string_value(builder, "device-list");
-	json_builder_set_member_name(builder, "ReportVersion");
-	json_builder_add_int_value(builder, 2);
-	if (priv->host_machine_id != NULL) {
-		json_builder_set_member_name(builder, "MachineId");
-		json_builder_add_string_value(builder, priv->host_machine_id);
-	}
+	fwupd_json_object_add_string(json_obj, "ReportType", "device-list");
+	fwupd_json_object_add_integer(json_obj, "ReportVersion", 2);
+	if (priv->host_machine_id != NULL)
+		fwupd_json_object_add_string(json_obj, "MachineId", priv->host_machine_id);
 
 	/* this is system metadata not stored in the database */
-	if (g_hash_table_size(metadata) > 0) {
-		json_builder_set_member_name(builder, "Metadata");
-		json_builder_begin_object(builder);
-		fwupd_client_build_report_metadata(builder, metadata);
-		json_builder_end_object(builder);
-	}
+	if (g_hash_table_size(metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
 
 	/* devices */
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(FwupdJsonObject) json_device = NULL;
+
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 			g_debug("ignoring %s as not updatable", fwupd_device_get_id(dev));
 			continue;
 		}
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		cnt++;
+		json_device = fwupd_json_object_new();
+		fwupd_codec_to_json(FWUPD_CODEC(dev), json_device, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_json_array_add_object(json_devices, json_device);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_array(json_obj, "Devices", json_devices);
 
 	/* nothing to do */
-	if (cnt == 0) {
+	if (fwupd_json_array_get_size(json_devices) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -7097,37 +7091,26 @@ fwupd_client_build_report_devices(FwupdClient *self,
 	}
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to convert to JSON string");
-		return NULL;
-	}
-	return g_steal_pointer(&data);
+	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&data), FALSE);
 }
 
-static void
-fwupd_client_build_report_history_device(JsonBuilder *builder, FwupdDevice *dev)
+static FwupdJsonObject *
+fwupd_client_build_report_history_device(FwupdDevice *dev)
 {
 	FwupdRelease *rel = fwupd_device_get_release_default(dev);
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 	GHashTable *metadata = fwupd_release_get_metadata(rel);
 	GPtrArray *checksums;
 	GPtrArray *guids;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* identify the firmware used */
 	checksums = fwupd_release_get_checksums(rel);
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		const gchar *checksum = fwupd_checksum_get_by_kind(checksums, checksum_types[i]);
 		if (checksum != NULL) {
-			json_builder_set_member_name(builder, "Checksum");
-			json_builder_add_string_value(builder, checksum);
+			fwupd_json_object_add_string(json_obj, "Checksum", checksum);
 			break;
 		}
 	}
@@ -7135,81 +7118,72 @@ fwupd_client_build_report_history_device(JsonBuilder *builder, FwupdDevice *dev)
 	/* identify the firmware written */
 	checksums = fwupd_device_get_checksums(dev);
 	if (checksums->len > 0) {
-		json_builder_set_member_name(builder, "ChecksumDevice");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index(checksums, i);
-			json_builder_add_string_value(builder, checksum);
+			fwupd_json_array_add_string(json_arr, checksum);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "ChecksumDevice", json_arr);
 	}
 
 	/* allow matching the specific component */
-	json_builder_set_member_name(builder, "ReleaseId");
-	json_builder_add_string_value(builder, fwupd_release_get_id(rel));
+	fwupd_json_object_add_string(json_obj, "ReleaseId", fwupd_release_get_id(rel));
 
 	/* include the protocol used */
 	if (fwupd_release_get_protocol(rel) != NULL) {
-		json_builder_set_member_name(builder, "Protocol");
-		json_builder_add_string_value(builder, fwupd_release_get_protocol(rel));
+		fwupd_json_object_add_string(json_obj, "Protocol", fwupd_release_get_protocol(rel));
 	}
 
 	/* set the error state of the report */
-	json_builder_set_member_name(builder, "UpdateState");
-	json_builder_add_int_value(builder, fwupd_device_get_update_state(dev));
+	fwupd_json_object_add_integer(json_obj, "UpdateState", fwupd_device_get_update_state(dev));
 	if (fwupd_device_get_update_error(dev) != NULL) {
-		json_builder_set_member_name(builder, "UpdateError");
-		json_builder_add_string_value(builder, fwupd_device_get_update_error(dev));
+		fwupd_json_object_add_string(json_obj,
+					     "UpdateError",
+					     fwupd_device_get_update_error(dev));
 	}
 	if (fwupd_release_get_update_message(rel) != NULL) {
-		json_builder_set_member_name(builder, "UpdateMessage");
-		json_builder_add_string_value(builder, fwupd_release_get_update_message(rel));
+		fwupd_json_object_add_string(json_obj,
+					     "UpdateMessage",
+					     fwupd_release_get_update_message(rel));
 	}
 
 	/* find out if the predicted duration was accurate */
 	if (fwupd_device_get_install_duration(dev) != 0) {
-		json_builder_set_member_name(builder, "InstallDuration");
-		json_builder_add_int_value(builder, fwupd_device_get_install_duration(dev));
+		fwupd_json_object_add_integer(json_obj,
+					      "InstallDuration",
+					      fwupd_device_get_install_duration(dev));
 	}
 
 	/* map back to the dev type on the LVFS */
 	guids = fwupd_device_get_guids(dev);
 	if (guids->len > 0) {
-		json_builder_set_member_name(builder, "Guid");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < guids->len; i++) {
 			const gchar *guid = g_ptr_array_index(guids, i);
-			json_builder_add_string_value(builder, guid);
+			fwupd_json_array_add_string(json_arr, guid);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "Guid", json_arr);
 	}
 
-	json_builder_set_member_name(builder, "Plugin");
-	json_builder_add_string_value(builder, fwupd_device_get_plugin(dev));
+	fwupd_json_object_add_string(json_obj, "Plugin", fwupd_device_get_plugin(dev));
 
 	/* report what we're trying to update *from* and *to* */
-	json_builder_set_member_name(builder, "VersionOld");
-	json_builder_add_string_value(builder, fwupd_device_get_version(dev));
-	json_builder_set_member_name(builder, "VersionNew");
-	json_builder_add_string_value(builder, fwupd_release_get_version(rel));
+	fwupd_json_object_add_string(json_obj, "VersionOld", fwupd_device_get_version(dev));
+	fwupd_json_object_add_string(json_obj, "VersionNew", fwupd_release_get_version(rel));
 
 	/* to know the state of the dev we're trying to update */
-	json_builder_set_member_name(builder, "Flags");
-	json_builder_add_int_value(builder, fwupd_device_get_flags(dev));
+	fwupd_json_object_add_integer(json_obj, "Flags", fwupd_device_get_flags(dev));
 
 	/* to know when the update tried to happen, and how soon after boot */
-	json_builder_set_member_name(builder, "Created");
-	json_builder_add_int_value(builder, fwupd_device_get_created(dev));
-	json_builder_set_member_name(builder, "Modified");
-	json_builder_add_int_value(builder, fwupd_device_get_modified(dev));
+	fwupd_json_object_add_integer(json_obj, "Created", fwupd_device_get_created(dev));
+	fwupd_json_object_add_integer(json_obj, "Modified", fwupd_device_get_modified(dev));
 
 	/* add saved metadata to the report */
-	if (g_hash_table_size(metadata) > 0) {
-		json_builder_set_member_name(builder, "Metadata");
-		json_builder_begin_object(builder);
-		fwupd_client_build_report_metadata(builder, metadata);
-		json_builder_end_object(builder);
-	}
+	if (g_hash_table_size(metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
+
+	/* success */
+	return g_steal_pointer(&json_obj);
 }
 
 /**
@@ -7240,11 +7214,9 @@ fwupd_client_build_report_history(FwupdClient *self,
 				  GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	guint cnt = 0;
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GString) data = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_reports = fwupd_json_array_new();
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(devices != NULL, NULL);
@@ -7262,29 +7234,19 @@ fwupd_client_build_report_history(FwupdClient *self,
 	}
 
 	/* create header */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ReportType");
-	json_builder_add_string_value(builder, "history");
-	json_builder_set_member_name(builder, "ReportVersion");
-	json_builder_add_int_value(builder, 2);
-	if (priv->host_machine_id != NULL) {
-		json_builder_set_member_name(builder, "MachineId");
-		json_builder_add_string_value(builder, priv->host_machine_id);
-	}
+	fwupd_json_object_add_string(json_obj, "ReportType", "history");
+	fwupd_json_object_add_integer(json_obj, "ReportVersion", 2);
+	if (priv->host_machine_id != NULL)
+		fwupd_json_object_add_string(json_obj, "MachineId", priv->host_machine_id);
 
 	/* this is system metadata not stored in the database */
-	if (g_hash_table_size(metadata) > 0) {
-		json_builder_set_member_name(builder, "Metadata");
-		json_builder_begin_object(builder);
-		fwupd_client_build_report_metadata(builder, metadata);
-		json_builder_end_object(builder);
-	}
+	if (g_hash_table_size(metadata) > 0)
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
 
 	/* add each device */
-	json_builder_set_member_name(builder, "Reports");
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(FwupdJsonObject) json_report = NULL;
 
 		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
 			g_debug("ignoring %s as already reported", fwupd_device_get_id(dev));
@@ -7318,17 +7280,13 @@ fwupd_client_build_report_history(FwupdClient *self,
 				continue;
 			}
 		}
-
-		json_builder_begin_object(builder);
-		fwupd_client_build_report_history_device(builder, dev);
-		json_builder_end_object(builder);
-		cnt++;
+		json_report = fwupd_client_build_report_history_device(dev);
+		fwupd_json_array_add_object(json_reports, json_report);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_array(json_obj, "Reports", json_reports);
 
 	/* nothing to do */
-	if (cnt == 0) {
+	if (fwupd_json_array_get_size(json_reports) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -7337,18 +7295,8 @@ fwupd_client_build_report_history(FwupdClient *self,
 	}
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to convert to JSON string");
-		return NULL;
-	}
-	return g_steal_pointer(&data);
+	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&data), FALSE);
 }
 
 /**
@@ -7374,11 +7322,9 @@ fwupd_client_build_report_security(FwupdClient *self,
 				   GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	guint cnt = 0;
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GString) data = NULL;
+	g_autoptr(FwupdJsonArray) json_attrs = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(attrs != NULL, NULL);
@@ -7386,41 +7332,30 @@ fwupd_client_build_report_security(FwupdClient *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* create header */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ReportType");
-	json_builder_add_string_value(builder, "hsi");
-	json_builder_set_member_name(builder, "ReportVersion");
-	json_builder_add_int_value(builder, 2);
-	if (priv->host_machine_id != NULL) {
-		json_builder_set_member_name(builder, "MachineId");
-		json_builder_add_string_value(builder, priv->host_machine_id);
-	}
+	fwupd_json_object_add_string(json_obj, "ReportType", "hsi");
+	fwupd_json_object_add_integer(json_obj, "ReportVersion", 2);
+	if (priv->host_machine_id != NULL)
+		fwupd_json_object_add_string(json_obj, "MachineId", priv->host_machine_id);
 
 	/* this is system metadata not stored in the database */
 	if (g_hash_table_size(metadata) > 0 || fwupd_client_get_host_security_id(self) != NULL) {
-		json_builder_set_member_name(builder, "Metadata");
-		json_builder_begin_object(builder);
-		fwupd_client_build_report_metadata(builder, metadata);
-		json_builder_set_member_name(builder, "HostSecurityId");
-		json_builder_add_string_value(builder, fwupd_client_get_host_security_id(self));
-		json_builder_end_object(builder);
+		fwupd_json_object_add_object_map(json_obj, "Metadata", metadata);
+		fwupd_json_object_add_string(json_obj,
+					     "HostSecurityId",
+					     fwupd_client_get_host_security_id(self));
 	}
 
 	/* attrs */
-	json_builder_set_member_name(builder, "SecurityAttributes");
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
-		cnt++;
+		g_autoptr(FwupdJsonObject) json_attr = fwupd_json_object_new();
+		fwupd_codec_to_json(FWUPD_CODEC(attr), json_attr, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_json_array_add_object(json_attrs, json_attr);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_array(json_obj, "SecurityAttributes", json_attrs);
 
 	/* nothing to do */
-	if (cnt == 0) {
+	if (fwupd_json_array_get_size(json_attrs) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -7429,18 +7364,8 @@ fwupd_client_build_report_security(FwupdClient *self,
 	}
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to convert to JSON string");
-		return NULL;
-	}
-	return g_steal_pointer(&data);
+	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_string_free(g_steal_pointer(&data), FALSE);
 }
 
 static void

@@ -7,9 +7,9 @@
 #pragma once
 
 #include <gio/gio.h>
-#include <json-glib/json-glib.h>
 
 #include "fwupd-codec-struct.h"
+#include "fwupd-json-object.h"
 
 #define FWUPD_TYPE_CODEC (fwupd_codec_get_type())
 G_DECLARE_INTERFACE(FwupdCodec, fwupd_codec, FWUPD, CODEC, GObject)
@@ -18,8 +18,8 @@ struct _FwupdCodecInterface {
 	GTypeInterface g_iface;
 	void (*add_string)(FwupdCodec *self, guint idt, GString *str);
 	gchar *(*to_string)(FwupdCodec *self);
-	void (*add_json)(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flags);
-	gboolean (*from_json)(FwupdCodec *self, JsonNode *json_node, GError **error);
+	void (*add_json)(FwupdCodec *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags);
+	gboolean (*from_json)(FwupdCodec *self, FwupdJsonObject *json_obj, GError **error);
 	void (*add_variant)(FwupdCodec *self, GVariantBuilder *builder, FwupdCodecFlags flags);
 	GVariant *(*to_variant)(FwupdCodec *self, FwupdCodecFlags flags);
 	gboolean (*from_variant)(FwupdCodec *self, GVariant *value, GError **error);
@@ -39,12 +39,13 @@ fwupd_codec_to_string(FwupdCodec *self) G_GNUC_NON_NULL(1);
 void
 fwupd_codec_add_string(FwupdCodec *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
 gboolean
-fwupd_codec_from_json(FwupdCodec *self, JsonNode *json_node, GError **error) G_GNUC_NON_NULL(1, 2);
+fwupd_codec_from_json(FwupdCodec *self, FwupdJsonObject *json_obj, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_codec_from_json_string(FwupdCodec *self, const gchar *json, GError **error)
     G_GNUC_NON_NULL(1, 2);
 void
-fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_codec_to_json(FwupdCodec *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
     G_GNUC_NON_NULL(1, 2);
 gchar *
 fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **error);
@@ -52,7 +53,7 @@ fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **err
 void
 fwupd_codec_array_to_json(GPtrArray *array,
 			  const gchar *member_name,
-			  JsonBuilder *builder,
+			  FwupdJsonObject *json_obj,
 			  FwupdCodecFlags flags);
 
 GVariant *
@@ -85,17 +86,17 @@ fwupd_codec_string_append_size(GString *str, guint idt, const gchar *key, guint6
     G_GNUC_NON_NULL(1, 3);
 
 void
-fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *value)
+fwupd_codec_json_append(FwupdJsonObject *json_obj, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2);
 void
-fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
+fwupd_codec_json_append_strv(FwupdJsonObject *json_obj, const gchar *key, gchar **value)
     G_GNUC_NON_NULL(1, 2);
 void
-fwupd_codec_json_append_map(JsonBuilder *builder, const gchar *key, GHashTable *value)
+fwupd_codec_json_append_map(FwupdJsonObject *json_obj, const gchar *key, GHashTable *value)
     G_GNUC_NON_NULL(1, 2);
 void
-fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)
+fwupd_codec_json_append_int(FwupdJsonObject *json_obj, const gchar *key, guint64 value)
     G_GNUC_NON_NULL(1, 2);
 void
-fwupd_codec_json_append_bool(JsonBuilder *builder, const gchar *key, gboolean value)
+fwupd_codec_json_append_bool(FwupdJsonObject *json_obj, const gchar *key, gboolean value)
     G_GNUC_NON_NULL(1, 2);

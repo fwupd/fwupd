@@ -304,8 +304,8 @@ class Fuzzer:
         return acc
 
     @property
-    def new_gtype(self) -> str:
-        return f"g_object_new(FU_TYPE_{self.pattern.replace('-', '_').upper()}, NULL)"
+    def gtype(self) -> str:
+        return f"FU_TYPE_{self.pattern.replace('-', '_').upper()}"
 
     @property
     def header(self) -> str:
@@ -447,12 +447,12 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
         Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
-        Fuzzer("ifd"),
+        Fuzzer("ifd-bios", pattern="ifd-bios"),
     ]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
@@ -463,7 +463,7 @@ def _build(bld: Builder) -> None:
         src_generator = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
@@ -500,7 +500,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("pixart-rf"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus"),
-        Fuzzer("synaptics-cape"),
+        Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
         Fuzzer("uf2"),
@@ -521,7 +521,7 @@ def _build(bld: Builder) -> None:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
@@ -534,7 +534,7 @@ def _build(bld: Builder) -> None:
         src_generator = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )

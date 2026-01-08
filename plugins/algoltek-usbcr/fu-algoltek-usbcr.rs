@@ -1,14 +1,27 @@
 // Copyright 2024 Algoltek, Inc.
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-enum FuAgUsbcrOffset {
-    FirmwareStartAddr = 0x0B,
-    FirmwareLen = 0x0D,
-    EmmcVer = 0x1FE,
-    AppVerFromEnd = 0x33,
-    EmmcSupportVerFromBootVer = 0x2A,
+#[derive(New, ParseStream, Default)]
+#[repr(C, packed)]
+struct FuStructAgUsbcrFirmwareHdr {
+    reserved: [u8; 11],
+    fw_addr: u16be,
+    fw_len: u16be,
+    reserved: [u8; 495],
+    emmc_ver: u16le = 0x123,
 }
 
+#[derive(New, ParseStream, Default)]
+#[repr(C, packed)]
+struct FuStructAgUsbcrFirmwareInfo {
+    app_ver: u16be,
+    boot_ver: u16be,
+    reserved: [u8; 40],
+    emmc_support_ver: u16be = 0x123,
+    reserved: [u8; 5],
+}
+
+#[repr(u8)]
 enum FuAgUsbcrScsiopVendor {
     EepromRd = 0xC0,
     EepromWr,
@@ -16,6 +29,7 @@ enum FuAgUsbcrScsiopVendor {
     GenericCmd = 0xC7,
 }
 
+#[repr(u8)]
 enum FuAgUsbcr {
     Wrsr = 0x01,
     Rdsr = 0x05,
@@ -25,8 +39,23 @@ enum FuAgUsbcr {
 
 #[derive(New, Default)]
 #[repr(C, packed)]
+struct FuStructAgUsbcrFirmwareRevisionCdb {
+    opcode: FuAgUsbcrScsiopVendor == FirmwareRevision,
+    subopcode: u8 == 0x1F,
+    sig: u16be == 0x058F,
+    cmd: u8,
+    subcmd: u8,
+    sig2: u32be == 0x30353846,
+    ramdest: u8,
+    addr:u16be,
+    val:u8,
+    reserved:[u8; 2],
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructAgUsbcrRegCdb {
-    opcode: u8 == 0xC7,
+    opcode: FuAgUsbcrScsiopVendor == GenericCmd,
     subopcode: u8 == 0x1F,
     sig: u16be == 0x058F,
     cmd: u8,
@@ -41,7 +70,7 @@ struct FuStructAgUsbcrRegCdb {
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructAgUsbcrResetCdb {
-    opcode: u8 == 0xC7,
+    opcode: FuAgUsbcrScsiopVendor == GenericCmd,
     subopcode: u8 == 0x1F,
     sig: u16be == 0x058F,
     cmd: u8,
@@ -55,7 +84,7 @@ struct FuStructAgUsbcrResetCdb {
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructAgUsbcrSpiCdb {
-    opcode: u8 == 0xC7,
+    opcode: FuAgUsbcrScsiopVendor == GenericCmd,
     subopcode: u8 == 0x1F,
     sig: u16be == 0x058F,
     cmd: u8,

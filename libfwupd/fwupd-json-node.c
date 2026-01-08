@@ -319,20 +319,33 @@ fwupd_json_node_get_string(FwupdJsonNode *self, GError **error)
 	return (GRefString *)self->data;
 }
 
-static gchar *
-fwupd_json_node_get_string_safe(FwupdJsonNode *self, GError **error)
+static void
+fwupd_json_node_append_string_safe(FwupdJsonNode *self, GString *str)
 {
-	const gchar *tmp;
-	g_autoptr(GString) str = NULL;
+	const gchar *tmp = (const gchar *)self->data;
 
-	tmp = fwupd_json_node_get_string(self, error);
-	if (tmp == NULL)
-		return NULL;
-	str = g_string_new(tmp);
-	g_string_replace(str, "\\", "\\\\", -1);
-	g_string_replace(str, "\n", "\\n", -1);
-	g_string_replace(str, "\t", "\\t", -1);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	/* no quotes */
+	if (tmp == NULL) {
+		g_string_append(str, "null");
+		return;
+	}
+
+	/* quoted and escaped */
+	g_string_append_c(str, '\"');
+	for (guint i = 0; tmp[i] != '\0'; i++) {
+		if (tmp[i] == '\\') {
+			g_string_append(str, "\\\\");
+		} else if (tmp[i] == '\n') {
+			g_string_append(str, "\\n");
+		} else if (tmp[i] == '\t') {
+			g_string_append(str, "\\t");
+		} else if (tmp[i] == '\"') {
+			g_string_append(str, "\\\"");
+		} else {
+			g_string_append_c(str, tmp[i]);
+		}
+	}
+	g_string_append_c(str, '\"');
 }
 
 void
@@ -349,12 +362,7 @@ fwupd_json_node_append_string(FwupdJsonNode *self,
 		return;
 	}
 	if (self->kind == FWUPD_JSON_NODE_KIND_STRING) {
-		if (self->data == NULL) {
-			g_string_append(str, "null");
-		} else {
-			g_autofree gchar *str_safe = fwupd_json_node_get_string_safe(self, NULL);
-			g_string_append_printf(str, "\"%s\"", str_safe);
-		}
+		fwupd_json_node_append_string_safe(self, str);
 		return;
 	}
 	if (self->kind == FWUPD_JSON_NODE_KIND_OBJECT) {

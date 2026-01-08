@@ -74,54 +74,82 @@ fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufs
 }
 
 static gboolean
-fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_usb_interface_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(codec);
 	const gchar *str;
-	JsonObject *json_object;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_node);
+	gint64 tmpi = 0;
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* optional properties */
-	self->iface.bLength = json_object_get_int_member_with_default(json_object, "Length", 0x0);
-	self->iface.bDescriptorType =
-	    json_object_get_int_member_with_default(json_object, "DescriptorType", 0x0);
-	self->iface.bInterfaceNumber =
-	    json_object_get_int_member_with_default(json_object, "InterfaceNumber", 0x0);
-	self->iface.bAlternateSetting =
-	    json_object_get_int_member_with_default(json_object, "AlternateSetting", 0x0);
-	self->iface.bInterfaceClass =
-	    json_object_get_int_member_with_default(json_object, "InterfaceClass", 0x0);
-	self->iface.bInterfaceSubClass =
-	    json_object_get_int_member_with_default(json_object, "InterfaceSubClass", 0x0);
-	self->iface.bInterfaceProtocol =
-	    json_object_get_int_member_with_default(json_object, "InterfaceProtocol", 0x0);
-	self->iface.iInterface =
-	    json_object_get_int_member_with_default(json_object, "Interface", 0x0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Length", &tmpi, 0x0, error))
+		return FALSE;
+	self->iface.bLength = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"DescriptorType",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->iface.bDescriptorType = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"InterfaceNumber",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->iface.bInterfaceNumber = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"AlternateSetting",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->iface.bAlternateSetting = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"InterfaceClass",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->iface.bInterfaceClass = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"InterfaceSubClass",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->iface.bInterfaceSubClass = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"InterfaceProtocol",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->iface.bInterfaceProtocol = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Interface", &tmpi, 0x0, error))
+		return FALSE;
+	self->iface.iInterface = tmpi;
 
 	/* array of endpoints */
-	if (json_object_has_member(json_object, "UsbEndpoints")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "UsbEndpoints");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_arr = fwupd_json_object_get_array(json_obj, "UsbEndpoints", NULL);
+	if (json_arr != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 			g_autoptr(FuUsbEndpoint) endpoint =
 			    g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(endpoint), node_tmp, error))
+
+			json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(endpoint), json_obj_tmp, error))
 				return FALSE;
 			g_ptr_array_add(self->endpoints, g_object_ref(endpoint));
 		}
 	}
 
 	/* extra data */
-	str = json_object_get_string_member_with_default(json_object, "ExtraData", NULL);
+	str = fwupd_json_object_get_string(json_obj, "ExtraData", NULL);
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
@@ -134,56 +162,57 @@ fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **erro
 }
 
 static void
-fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_interface_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(codec);
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(FU_FIRMWARE(self));
 
 	/* optional properties */
-	if (self->iface.bLength != 0) {
-		json_builder_set_member_name(builder, "Length");
-		json_builder_add_int_value(builder, self->iface.bLength);
-	}
+	if (self->iface.bLength != 0)
+		fwupd_json_object_add_integer(json_obj, "Length", self->iface.bLength);
 	if (self->iface.bDescriptorType != 0) {
-		json_builder_set_member_name(builder, "DescriptorType");
-		json_builder_add_int_value(builder, self->iface.bDescriptorType);
+		fwupd_json_object_add_integer(json_obj,
+					      "DescriptorType",
+					      self->iface.bDescriptorType);
 	}
 	if (self->iface.bInterfaceNumber != 0) {
-		json_builder_set_member_name(builder, "InterfaceNumber");
-		json_builder_add_int_value(builder, self->iface.bInterfaceNumber);
+		fwupd_json_object_add_integer(json_obj,
+					      "InterfaceNumber",
+					      self->iface.bInterfaceNumber);
 	}
 	if (self->iface.bAlternateSetting != 0) {
-		json_builder_set_member_name(builder, "AlternateSetting");
-		json_builder_add_int_value(builder, self->iface.bAlternateSetting);
+		fwupd_json_object_add_integer(json_obj,
+					      "AlternateSetting",
+					      self->iface.bAlternateSetting);
 	}
 	if (self->iface.bInterfaceClass != 0) {
-		json_builder_set_member_name(builder, "InterfaceClass");
-		json_builder_add_int_value(builder, self->iface.bInterfaceClass);
+		fwupd_json_object_add_integer(json_obj,
+					      "InterfaceClass",
+					      self->iface.bInterfaceClass);
 	}
 	if (self->iface.bInterfaceSubClass != 0) {
-		json_builder_set_member_name(builder, "InterfaceSubClass");
-		json_builder_add_int_value(builder, self->iface.bInterfaceSubClass);
+		fwupd_json_object_add_integer(json_obj,
+					      "InterfaceSubClass",
+					      self->iface.bInterfaceSubClass);
 	}
 	if (self->iface.bInterfaceProtocol != 0) {
-		json_builder_set_member_name(builder, "InterfaceProtocol");
-		json_builder_add_int_value(builder, self->iface.bInterfaceProtocol);
+		fwupd_json_object_add_integer(json_obj,
+					      "InterfaceProtocol",
+					      self->iface.bInterfaceProtocol);
 	}
-	if (self->iface.iInterface != 0) {
-		json_builder_set_member_name(builder, "Interface");
-		json_builder_add_int_value(builder, self->iface.iInterface);
-	}
+	if (self->iface.iInterface != 0)
+		fwupd_json_object_add_integer(json_obj, "Interface", self->iface.iInterface);
 
 	/* array of endpoints */
 	if (self->endpoints->len > 0) {
-		json_builder_set_member_name(builder, "UsbEndpoints");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < self->endpoints->len; i++) {
 			FuUsbEndpoint *endpoint = g_ptr_array_index(self->endpoints, i);
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(endpoint), builder, flags);
-			json_builder_end_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(endpoint), json_obj_tmp, flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "UsbEndpoints", json_arr);
 	}
 
 	/* extra data */
@@ -197,8 +226,7 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
 				fu_byte_array_append_bytes(buf, blob);
 		}
 		str = g_base64_encode(buf->data, buf->len);
-		json_builder_set_member_name(builder, "ExtraData");
-		json_builder_add_string_value(builder, str);
+		fwupd_json_object_add_string(json_obj, "ExtraData", str);
 	}
 }
 

@@ -34,7 +34,7 @@ fu_{{vendor_example}}_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 {%- endif %}
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_{{VENDOR_EXAMPLE}}_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_{{VENDOR_EXAMPLE}}_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_{{VENDOR_EXAMPLE}}_FIRMWARE);
 }
 
 static void

@@ -38,8 +38,8 @@ fu_pixart_tp_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_PIXART_TP_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PIXART_TP_HAPTIC_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_PIXART_TP_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_PIXART_TP_SECTION); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_PIXART_TP_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_PIXART_TP_SECTION); /* coverage */
 }
 
 static void

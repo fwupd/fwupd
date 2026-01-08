@@ -1,4 +1,4 @@
-<firmware gtype="FuSynapromFirmware">
+<firmware gtype="FuSynapticsPrometheusFirmware">
   <version>1.2</version>
   <product_id>0x42</product_id>
   <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
