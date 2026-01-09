@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
+
 #include "fu-sunwinon-hid-struct.h"
 
 /* DFU config */
@@ -15,7 +17,7 @@
 
 /* Frame size limits */
 #define FU_SUNWINON_DFU_FRAME_MAX_TX (FU_SUNWINON_DFU_CONFIG_ONCE_PROGRAM_LEN + 15)
-#define FU_SUNWINON_DFU_FRAME_MAX_RX 64U
+#define FU_SUNWINON_DFU_FRAME_MAX_RX 64
 
 typedef struct {
 	guint32 bin_size;
@@ -36,7 +38,7 @@ typedef struct {
 	guint16 pattern;		 /* IMG info pattern */
 	guint16 version;		 /* IMG version */
 	FuSunwinonDfuBootInfo boot_info; /* IMG boot info */
-	guint8 comments[12];		 /* IMG comments */
+	guint8 comments[19];		 /* IMG comments */
 } FuSunwinonDfuImageInfo;
 
 /**@brief DFU master used function config definition */
@@ -118,31 +120,26 @@ fu_sunwinon_util_dfu_master_parse_fw_info(FuDfuMaster *self,
 
 typedef struct FuSwDfuMaster FuSwDfuMaster;
 
-/* forward declarations for types used in prototypes */
-typedef struct _FuDevice FuDevice;
-typedef struct _FuProgress FuProgress;
-
 FuSwDfuMaster *
-fu_sunwinon_util_dfu_master_new_2(const guint8 *fw, gsize fw_sz, FuDevice *device);
+fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device);
 
 void
-fu_sunwinon_util_dfu_master_free_2(FuSwDfuMaster *self);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSwDfuMaster, fu_sunwinon_util_dfu_master_free_2)
+fu_sunwinon_util_dfu_master_2_free(FuSwDfuMaster *self);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSwDfuMaster, fu_sunwinon_util_dfu_master_2_free)
 
 gboolean
-fu_sunwinon_util_dfu_master_fetch_fw_version_2(FuSwDfuMaster *self,
+fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
 					       FuSunwinonDfuImageInfo *out,
 					       GError **error);
 
 gboolean
-fu_sunwinon_util_dfu_master_start_2(FuSwDfuMaster *self,
+fu_sunwinon_util_dfu_master_2_start(FuSwDfuMaster *self,
 				    FuProgress *progress,
 				    guint8 mode_setting,
 				    GError **error);
 
 gboolean
-fu_sunwinon_util_dfu_master_write_firmware_2(FuSwDfuMaster *self,
+fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     FuProgress *progress,
 					     GError **error);
-
 // Removed fast_dfu_mode_set_2 as per requirement to merge mode set into start.
