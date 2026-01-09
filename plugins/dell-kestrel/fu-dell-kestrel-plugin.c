@@ -366,9 +366,9 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 			FuDevice *dev = g_ptr_array_index(devices, i);
 
 			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-				g_debug("uoc dropped needs-activation flag for %s",
-					fu_device_get_name(dev));
+				g_autoptr(FuProgress) progress = fu_progress_new(NULL);
+				if (!fu_device_activate(dev, progress, error))
+					return FALSE;
 			}
 		}
 	}
