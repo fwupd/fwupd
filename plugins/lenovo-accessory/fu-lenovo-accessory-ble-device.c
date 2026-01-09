@@ -28,13 +28,15 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryBleDevice,
 static gboolean
 fu_lenovo_accessory_ble_device_write_files(FuLenovoAccessoryBleDevice *self,
 					   guint8 file_type,
-					   GBytes *blob,
+					   GInputStream *stream,
 					   FuProgress *progress,
 					   GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_bytes(blob, 0, 0, 32);
+	chunks = fu_chunk_array_new_from_stream(stream, 0, 0, 32, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint32 i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -68,18 +70,20 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 	gsize fw_size = 0;
 	guint32 file_crc = 0;
 	guint32 device_crc = 0;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "prepare");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "write");
 
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fw_size = g_bytes_get_size(blob);
-	file_crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, blob);
+	if (!fu_input_stream_size(stream, &fw_size, error))
+		return FALSE;
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &file_crc, error))
+		return FALSE;
 
 	if (!fu_lenovo_accessory_impl_dfu_entry(FU_LENOVO_ACCESSORY_IMPL(device), error))
 		return FALSE;
@@ -93,7 +97,7 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 	if (!fu_lenovo_accessory_ble_device_write_files(self,
 							1,
-							blob,
+							stream,
 							fu_progress_get_child(progress),
 							error))
 		return FALSE;

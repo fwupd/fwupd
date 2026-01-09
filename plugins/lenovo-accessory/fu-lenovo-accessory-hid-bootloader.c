@@ -26,13 +26,15 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidBootloader,
 static gboolean
 fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *self,
 					       guint8 file_type,
-					       GBytes *file_data,
+					       GInputStream *stream,
 					       FuProgress *progress,
 					       GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_bytes(file_data, 0, 0, 32);
+	chunks = fu_chunk_array_new_from_stream(stream, 0, 0, 32, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint32 i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -134,18 +136,20 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 {
 	gsize fw_size = 0;
 	guint32 file_crc = 0;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, "prepare");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "write");
 
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fw_size = g_bytes_get_size(blob);
-	file_crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, blob);
+	if (!fu_input_stream_size(stream, &fw_size, error))
+		return FALSE;
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &file_crc, error))
+		return FALSE;
 	if (!fu_lenovo_accessory_impl_dfu_prepare(FU_LENOVO_ACCESSORY_IMPL(device),
 						  1,
 						  0,
@@ -158,7 +162,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 	if (!fu_lenovo_accessory_hid_bootloader_write_files(
 		FU_LENOVO_ACCESSORY_HID_BOOTLOADER(device),
 		1,
-		blob,
+		stream,
 		fu_progress_get_child(progress),
 		error))
 		return FALSE;
