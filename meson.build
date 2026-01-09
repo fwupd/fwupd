@@ -362,7 +362,7 @@ if build_standalone
 endif
 libjcat = dependency(
   'jcat',
-  version: '>= 0.2.0',
+  version: '>= 0.1.6',
   fallback: ['libjcat', 'libjcat_dep'],
 )
 libblkid = dependency(
