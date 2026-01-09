@@ -52,6 +52,15 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			offset += 0x1000;
 			continue;
 		}
+		if (fu_firmware_get_size(firmware_tmp) < 0x800) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "EFI_VOLUME @0x%x too small (0x%x bytes)",
+				    (guint)offset,
+				    (guint)fu_firmware_get_size(firmware_tmp));
+			return FALSE;
+		}
 		fu_firmware_set_offset(firmware_tmp, offset);
 		if (!fu_firmware_add_image(firmware, firmware_tmp, error))
 			return FALSE;
