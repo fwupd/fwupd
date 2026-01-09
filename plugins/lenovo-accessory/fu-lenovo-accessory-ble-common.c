@@ -74,7 +74,6 @@ fu_lenovo_accessory_ble_get_fwversion(FuBluezDevice *ble_device,
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleFwVersion) st_fwversion = fu_struct_lenovo_ble_fw_version_new();
 
-	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x03);
 	fu_struct_lenovo_accessory_cmd_set_command_class(
 	    st_cmd,
@@ -83,7 +82,6 @@ fu_lenovo_accessory_ble_get_fwversion(FuBluezDevice *ble_device,
 	    st_cmd,
 	    FU_LENOVO_ACCESSORY_INFO_ID_FIRMWARE_VERSION |
 		(FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
-	fu_struct_lenovo_accessory_cmd_set_flag_profile(st_cmd, 0x00);
 
 	if (!fu_struct_lenovo_ble_fw_version_set_cmd(st_fwversion, st_cmd, error))
 		return FALSE;
@@ -109,7 +107,6 @@ fu_lenovo_accessory_ble_get_mode(FuBluezDevice *ble_device, guint8 *mode, GError
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleDevicemode) st_mode = fu_struct_lenovo_ble_devicemode_new();
 
-	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x01);
 	fu_struct_lenovo_accessory_cmd_set_command_class(
 	    st_cmd,
@@ -138,7 +135,6 @@ fu_lenovo_accessory_ble_set_mode(FuBluezDevice *ble_device, guint8 mode, GError 
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleData) st_data = fu_struct_lenovo_ble_data_new();
 
-	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x01);
 	fu_struct_lenovo_accessory_cmd_set_command_class(
 	    st_cmd,
@@ -165,7 +161,6 @@ fu_lenovo_accessory_ble_dfu_exit(FuBluezDevice *ble_device, guint8 exit_code, GE
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleData) st_data = fu_struct_lenovo_ble_data_new();
 
-	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x01);
 	fu_struct_lenovo_accessory_cmd_set_command_class(
 	    st_cmd,
@@ -276,7 +271,6 @@ fu_lenovo_accessory_ble_dfu_file(FuBluezDevice *ble_device,
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleDfuFw) st_file = fu_struct_lenovo_ble_dfu_fw_new();
 
-	fu_struct_lenovo_accessory_cmd_set_target_status(st_cmd, 0x00);
 	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, bufsz + 5);
 	fu_struct_lenovo_accessory_cmd_set_command_class(
 	    st_cmd,
@@ -328,7 +322,6 @@ fu_lenovo_accessory_ble_dfu_entry(FuBluezDevice *ble_device, GError **error)
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoBleData) st_data = fu_struct_lenovo_ble_data_new();
 
-	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0);
 	fu_struct_lenovo_accessory_cmd_set_command_class(
 	    st_cmd,
 	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DFU_CLASS);
