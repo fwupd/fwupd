@@ -76,6 +76,11 @@
 /* only needed until we hard depend on jcat 0.1.3 */
 #include <libjcat/jcat-version.h>
 
+/* fixed in 0.1.14 */
+#ifndef JCAT_CHECK_VERSION
+#define JCAT_CHECK_VERSION LIBJCAT_CHECK_VERSION
+#endif
+
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
 #endif
@@ -9324,10 +9329,12 @@ fu_engine_constructed(GObject *obj)
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
+#if JCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
+#endif
 	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	pkidir_fw = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "pki", "fwupd", NULL);
@@ -9337,7 +9344,9 @@ fu_engine_constructed(GObject *obj)
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
+#if JCAT_CHECK_VERSION(0, 1, 11)
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
+#endif
 	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
 
 	/* optional kernel version */
