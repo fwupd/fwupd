@@ -2582,17 +2582,25 @@ fu_device_inhibit_func(void)
 	g_assert_true(fu_device_has_inhibit(device, "needs-activation"));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_cmpstr(fu_device_get_update_error(device), ==, "Device is pending activation");
 
 	/* another */
 	fu_device_set_battery_level(device, 5);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_cmpstr(
+	    fu_device_get_update_error(device),
+	    ==,
+	    "Device battery power is too low (5%, requires 25%), Device is pending activation");
 
 	/* activated, power still too low */
 	fu_device_uninhibit(device, "needs-activation");
 	g_assert_false(fu_device_has_inhibit(device, "needs-activation"));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_cmpstr(fu_device_get_update_error(device),
+			==,
+			"Device battery power is too low (5%, requires 25%)");
 
 	/* we got some more power -> fine */
 	fu_device_set_battery_level(device, 95);
