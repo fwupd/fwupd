@@ -3761,8 +3761,7 @@ fu_device_ensure_inhibits(FuDevice *self)
 		/* update the update error */
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
-			if (inhibit->problem == FWUPD_DEVICE_PROBLEM_NONE)
-				g_ptr_array_add(reasons, inhibit->reason);
+			g_ptr_array_add(reasons, inhibit->reason);
 			problems |= inhibit->problem;
 		}
 		if (reasons->len > 0) {
