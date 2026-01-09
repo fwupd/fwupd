@@ -1,5 +1,6 @@
 /*
  * Copyright 2026 Yuchao Li <liyc44@lenovo.com>
+ * Copyright 2026 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -12,9 +13,15 @@
 struct _FuLenovoAccessoryHidBootloader {
 	FuHidrawDevice parent_instance;
 };
-G_DEFINE_TYPE(FuLenovoAccessoryHidBootloader,
-	      fu_lenovo_accessory_hid_bootloader,
-	      FU_TYPE_HIDRAW_DEVICE)
+
+static void
+fu_lenovo_accessory_hid_bootloader_impl_iface_init(FuLenovoAccessoryImplInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidBootloader,
+			fu_lenovo_accessory_hid_bootloader,
+			FU_TYPE_HIDRAW_DEVICE,
+			G_IMPLEMENT_INTERFACE(FU_TYPE_LENOVO_ACCESSORY_IMPL,
+					      fu_lenovo_accessory_hid_bootloader_impl_iface_init))
 
 static gboolean
 fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *self,
@@ -33,12 +40,12 @@ fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *s
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_lenovo_accessory_hid_dfu_file(FU_HIDRAW_DEVICE(self),
-						      file_type,
-						      fu_chunk_get_address(chk),
-						      fu_chunk_get_data(chk),
-						      (guint8)fu_chunk_get_data_sz(chk),
-						      error))
+		if (!fu_lenovo_accessory_impl_dfu_file(FU_LENOVO_ACCESSORY_IMPL(self),
+						       file_type,
+						       fu_chunk_get_address(chk),
+						       fu_chunk_get_data(chk),
+						       (guint8)fu_chunk_get_data_sz(chk),
+						       error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
@@ -48,7 +55,7 @@ fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *s
 static gboolean
 fu_lenovo_accessory_hid_bootloader_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_lenovo_accessory_hid_dfu_exit(FU_HIDRAW_DEVICE(device), 0, error))
+	if (!fu_lenovo_accessory_impl_dfu_exit(FU_LENOVO_ACCESSORY_IMPL(device), 0, error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -84,14 +91,14 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add runtime counterpart */
-	if (!fu_lenovo_accessory_hid_dfu_attribute(FU_HIDRAW_DEVICE(device),
-						   NULL,
-						   NULL,
-						   &usb_pid,
-						   NULL,
-						   NULL,
-						   NULL,
-						   error))
+	if (!fu_lenovo_accessory_impl_dfu_attribute(FU_LENOVO_ACCESSORY_IMPL(device),
+						    NULL,
+						    NULL,
+						    &usb_pid,
+						    NULL,
+						    NULL,
+						    NULL,
+						    error))
 		return FALSE;
 	fu_device_add_instance_u16(device, "DEV", usb_pid);
 	if (!fu_device_build_instance_id_full(device,
@@ -104,11 +111,11 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* ensure always recoverable */
-	if (!fu_lenovo_accessory_hid_get_fwversion(FU_HIDRAW_DEVICE(device),
-						   &major,
-						   &minor,
-						   &micro,
-						   error))
+	if (!fu_lenovo_accessory_impl_get_fwversion(FU_LENOVO_ACCESSORY_IMPL(device),
+						    &major,
+						    &minor,
+						    &micro,
+						    error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u", major, minor, micro);
 	fu_device_set_version_bootloader(device, version);
@@ -139,12 +146,12 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 		return FALSE;
 	fw_size = g_bytes_get_size(blob);
 	file_crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, blob);
-	if (!fu_lenovo_accessory_hid_dfu_prepare(FU_HIDRAW_DEVICE(device),
-						 1,
-						 0,
-						 (guint32)fw_size,
-						 file_crc,
-						 error))
+	if (!fu_lenovo_accessory_impl_dfu_prepare(FU_LENOVO_ACCESSORY_IMPL(device),
+						  1,
+						  0,
+						  (guint32)fw_size,
+						  file_crc,
+						  error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -175,6 +182,14 @@ fu_lenovo_accessory_hid_bootloader_init(FuLenovoAccessoryHidBootloader *self)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x4000);
 	fu_device_set_name(FU_DEVICE(self), "HID Bootloader");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+}
+
+static void
+fu_lenovo_accessory_hid_bootloader_impl_iface_init(FuLenovoAccessoryImplInterface *iface)
+{
+	iface->read = fu_lenovo_accessory_hid_read;
+	iface->write = fu_lenovo_accessory_hid_write;
+	iface->process = fu_lenovo_accessory_hid_process;
 }
 
 static void

@@ -1,5 +1,6 @@
 /*
  * Copyright 2026 Yuchao Li <liyc44@lenovo.com>
+ * Copyright 2026 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -13,9 +14,14 @@ struct _FuLenovoAccessoryHidDevice {
 	FuHidrawDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuLenovoAccessoryHidDevice, fu_lenovo_accessory_hid_device, FU_TYPE_HIDRAW_DEVICE)
+static void
+fu_lenovo_accessory_hid_device_impl_iface_init(FuLenovoAccessoryImplInterface *iface);
 
-#define FU_LENOVO_HID_DEVICE_TIMEOUT 200 /* ms */
+G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidDevice,
+			fu_lenovo_accessory_hid_device,
+			FU_TYPE_HIDRAW_DEVICE,
+			G_IMPLEMENT_INTERFACE(FU_TYPE_LENOVO_ACCESSORY_IMPL,
+					      fu_lenovo_accessory_hid_device_impl_iface_init))
 
 static gboolean
 fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
@@ -51,11 +57,11 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_device_probe(usb_parent, error))
 		return FALSE;
 	fu_device_set_version_raw(device, fu_usb_device_get_release(FU_USB_DEVICE(usb_parent)));
-	if (!fu_lenovo_accessory_hid_get_fwversion(FU_HIDRAW_DEVICE(device),
-						   &major,
-						   &minor,
-						   &micro,
-						   error))
+	if (!fu_lenovo_accessory_impl_get_fwversion(FU_LENOVO_ACCESSORY_IMPL(device),
+						    &major,
+						    &minor,
+						    &micro,
+						    error))
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u", major, minor, micro);
 	fu_device_set_version(device, version);
@@ -75,7 +81,7 @@ fu_lenovo_accessory_hid_device_detach(FuDevice *device, FuProgress *progress, GE
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_lenovo_accessory_hid_set_mode(FU_HIDRAW_DEVICE(self), 2, error))
+	if (!fu_lenovo_accessory_impl_set_mode(FU_LENOVO_ACCESSORY_IMPL(self), 2, error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -90,6 +96,14 @@ fu_lenovo_accessory_hid_device_set_progress(FuDevice *device, FuProgress *progre
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 26, "reload");
+}
+
+static void
+fu_lenovo_accessory_hid_device_impl_iface_init(FuLenovoAccessoryImplInterface *iface)
+{
+	iface->read = fu_lenovo_accessory_hid_read;
+	iface->write = fu_lenovo_accessory_hid_write;
+	iface->process = fu_lenovo_accessory_hid_process;
 }
 
 static void

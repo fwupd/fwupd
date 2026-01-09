@@ -5,11 +5,11 @@ plugin_quirks += files('lenovo-accessory.quirk')
 plugin_builtins += static_library('fu_plugin_lenovo_accessory',
   rustgen.process('fu-lenovo-accessory.rs'),
   sources: [
-    'fu-lenovo-accessory-ble-common.c',
     'fu-lenovo-accessory-ble-device.c',
     'fu-lenovo-accessory-hid-bootloader.c',
     'fu-lenovo-accessory-hid-common.c',
     'fu-lenovo-accessory-hid-device.c',
+    'fu-lenovo-accessory-impl.c',
     'fu-lenovo-accessory-plugin.c',
   ],
   include_directories: plugin_incdirs,

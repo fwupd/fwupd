@@ -6,38 +6,11 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
+#include "fu-lenovo-accessory-impl.h"
 
+GByteArray *
+fu_lenovo_accessory_hid_read(FuLenovoAccessoryImpl *impl, GError **error);
 gboolean
-fu_lenovo_accessory_hid_get_fwversion(FuHidrawDevice *hidraw_device,
-				      guint8 *major,
-				      guint8 *minor,
-				      guint8 *micro,
-				      GError **error);
-gboolean
-fu_lenovo_accessory_hid_set_mode(FuHidrawDevice *hidraw_device, guint8 mode, GError **error);
-gboolean
-fu_lenovo_accessory_hid_dfu_exit(FuHidrawDevice *hidraw_device, guint8 exit_code, GError **error);
-gboolean
-fu_lenovo_accessory_hid_dfu_attribute(FuHidrawDevice *hidraw_device,
-				      guint8 *major_ver,
-				      guint8 *minor_ver,
-				      guint16 *product_pid,
-				      guint8 *processor_id,
-				      guint32 *app_max_size,
-				      guint32 *page_size,
-				      GError **error);
-gboolean
-fu_lenovo_accessory_hid_dfu_prepare(FuHidrawDevice *hidraw_device,
-				    guint8 file_type,
-				    guint32 start_address,
-				    guint32 end_address,
-				    guint32 crc32,
-				    GError **error);
-gboolean
-fu_lenovo_accessory_hid_dfu_file(FuHidrawDevice *hidraw_device,
-				 guint8 file_type,
-				 guint32 address,
-				 const guint8 *file_data,
-				 guint8 block_size,
-				 GError **error);
+fu_lenovo_accessory_hid_write(FuLenovoAccessoryImpl *impl, GByteArray *buf, GError **error);
+GByteArray *
+fu_lenovo_accessory_hid_process(FuLenovoAccessoryImpl *impl, GByteArray *buf, GError **error);
