@@ -1,0 +1,26 @@
+# Lenovo_Hid_Bootloader
+[HIDRAW\VEN_17EF&DEV_6194]
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidBootloader
+
+# Lenovo_HID
+[HIDRAW\VEN_17EF&DEV_629D]
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
+
+# Lenovo_HID
+[HIDRAW\VEN_17EF&DEV_6201]
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
+
+# Lenovo_BLE
+[BLUETOOTH\VID_17EF&PID_61FE]
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo_BLE
+[BLUETOOTH\VID_17EF&PID_629A]
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryBleDevice
