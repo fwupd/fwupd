@@ -1,0 +1,26 @@
+{
+  "id": "org.fwupd.hsi.Amd.PlatformSecureBoot",
+  "name": "AMD Platform Secure Boot",
+  "description": [
+    "Platform secure boot is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.",
+    "It forms a root-of-trust by fusing in cryptographic keys into the processor itself."
+  ],
+  "failure-impact": [
+    "When Platform Secure boot is not set up then the chain-of-trust between the CPU and the bootloader can not be verified."
+  ],
+  "failure-results": {
+    "not-enabled": "boot is not verified"
+  },
+  "success-results": {
+    "enabled": "Platform Secure Boot enabled"
+  },
+  "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
+  "requires": [
+    "CPUID\\VID_AuthenticAMD"
+  ],
+  "references": {
+    "https://www.ioactive.com/exploring-amd-platform-secure-boot/": "PlatformSecureBoot article"
+  },
+  "fwupd-version": "2.1.1"
+}
