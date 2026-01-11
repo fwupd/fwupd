@@ -410,6 +410,15 @@ G_BEGIN_DECLS
  * Since: 2.1.1
  **/
 #define FWUPD_SECURITY_ATTR_ID_HP_SURESTART "org.fwupd.hsi.Hp.Surestart"
+/**
+ * FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT:
+ *
+ * Host Security ID attribute for Platform Secure Boot of AMD platform
+ * firmware
+ *
+ * Since: 2.1.1
+ **/
+#define FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT "org.fwupd.hsi.Amd.PlatformSecureBoot"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);

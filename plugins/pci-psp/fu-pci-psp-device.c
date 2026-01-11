@@ -336,6 +336,43 @@ fu_pci_psp_device_add_security_attrs_rom_armor(FuPciPspDevice *self,
 }
 
 static void
+fu_pci_psp_device_add_security_attrs_platform_secure_boot(FuPciPspDevice *self,
+							  const gchar *path,
+							  FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error_local = NULL;
+	gboolean val;
+
+	/* create attr */
+	attr = fu_pci_psp_device_get_security_attr(self,
+						   attrs,
+						   FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+
+	if (!fu_pci_psp_device_get_attr(attr, path, "boot_integrity", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("%s", error_local->message);
+		return;
+	}
+
+	fu_pci_psp_device_set_valid_data(self, attrs);
+
+	if (!val) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_pci_psp_device_add_security_attrs_rpmc(FuPciPspDevice *self,
 					  const gchar *path,
 					  FuSecurityAttrs *attrs)
@@ -407,6 +444,7 @@ fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	fu_pci_psp_device_add_security_attrs_fused_part(self, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_debug_locked_part(self, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_rollback_protection(self, sysfs_path, attrs);
+	fu_pci_psp_device_add_security_attrs_platform_secure_boot(self, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_rpmc(self, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_rom_armor(self, sysfs_path, attrs);
 }
