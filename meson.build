@@ -885,7 +885,7 @@ if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
 endif
 
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
-  host_machine.cpu_family() in ['x86', 'x86_64', 'aarch64', 'riscv64', 'loongarch64']
+  host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
 subdir('generate-build')
 subdir('libfwupd')
