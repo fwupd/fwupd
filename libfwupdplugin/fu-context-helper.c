@@ -46,6 +46,8 @@
 #include <libfwupdplugin/fu-pefile-firmware.h>
 #include <libfwupdplugin/fu-sbatlevel-section.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-tpm-eventlog-v1.h>
+#include <libfwupdplugin/fu-tpm-eventlog-v2.h>
 #include <libfwupdplugin/fu-usb-device-fw-ds20.h>
 #include <libfwupdplugin/fu-usb-device-ms-ds20.h>
 #include <libfwupdplugin/fu-uswid-firmware.h>
@@ -102,4 +104,6 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_INTEL_THUNDERBOLT_NVM);
 	fu_context_add_firmware_gtype(self, FU_TYPE_USB_DEVICE_FW_DS20);
 	fu_context_add_firmware_gtype(self, FU_TYPE_USB_DEVICE_MS_DS20);
+	fu_context_add_firmware_gtype(self, FU_TYPE_TPM_EVENTLOG_V1);
+	fu_context_add_firmware_gtype(self, FU_TYPE_TPM_EVENTLOG_V2);
 }

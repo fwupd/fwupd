@@ -1,7 +1,21 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
+#[repr(u32le)]
+enum FuTpmAlg {
+    Unknown             = 0x0000,
+    Sha1                = 0x0004,
+    Sha256              = 0x000B,
+    Sha384              = 0x000C,
+    Sha512              = 0x000D,
+    Sm3_256             = 0x0012,
+    Sha3_256            = 0x0027,
+    Sha3_384            = 0x0028,
+    Sha3_512            = 0x0029,
+}
+
+#[derive(ToString, FromString)]
 #[repr(u32le)]
 enum FuTpmEventlogItemKind {
     PrebootCert = 0x00000000,
@@ -34,14 +48,6 @@ enum FuTpmEventlogItemKind {
     EfiVariableAuthority = 0x800000e0,
 }
 
-#[derive(Parse)]
-#[repr(C, packed)]
-struct FuStructTpmEventLog2 {
-    pcr: u32le,
-    type: FuTpmEventlogItemKind,
-    digest_count: u32le,
-}
-
 #[derive(ParseBytes, Default)]
 #[repr(C, packed)]
 struct FuStructTpmEfiStartupLocalityEvent {
@@ -49,11 +55,30 @@ struct FuStructTpmEfiStartupLocalityEvent {
     locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
 }
 
-#[derive(Parse)]
+#[derive(ParseStream, New)]
 #[repr(C, packed)]
 struct FuStructTpmEventLog1Item {
     pcr: u32le,
-    event_type: u32le,
+    type: FuTpmEventlogItemKind,
     digest: [u8; 20],
     datasz: u32le,
+    // data: [u8; datasz],
+}
+
+#[derive(ParseStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructTpmEventLog2Hdr {
+    pcr: u32le == 0x0,
+    type: FuTpmEventlogItemKind == NoAction,
+    _digest: [u8; 20],
+    datasz: u32le = 15,
+    data: [char; 15] == "Spec ID Event03",
+}
+
+#[derive(ParseStream, New)]
+#[repr(C, packed)]
+struct FuStructTpmEventLog2 {
+    pcr: u32le,
+    type: FuTpmEventlogItemKind,
+    digest_count: u32le,
 }

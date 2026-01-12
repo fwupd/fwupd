@@ -5640,6 +5640,16 @@ fu_firmware_builder_round_trip_func(void)
 		"845be24c3f31c4e8f0feeadfe356b3156628ba99",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
+	    {
+		"tpm-eventlog-v1.builder.xml",
+		"79b257b9f668681e6c50f3c4c59b5430a3c56625",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"tpm-eventlog-v2.builder.xml",
+		"0b965076bd38f737aaadbaff464199ba104f719a",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
 #ifdef HAVE_CBOR
 	    {
 		"uswid.builder.xml",

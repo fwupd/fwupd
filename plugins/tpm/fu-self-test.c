@@ -9,8 +9,6 @@
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
-#include "fu-tpm-eventlog-common.h"
-#include "fu-tpm-eventlog-parser.h"
 #include "fu-tpm-plugin.h"
 #include "fu-tpm-v1-device.h"
 #include "fu-tpm-v2-device.h"
@@ -140,27 +138,29 @@ fu_tpm_eventlog_parse_v1_func(void)
 {
 	const gchar *tmp;
 	gboolean ret;
-	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(FuTpmEventlog) eventlog = fu_tpm_eventlog_v1_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "binary_bios_measurements-v1", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing binary_bios_measurements-v1");
 		return;
 	}
-	ret = g_file_get_contents(fn, (gchar **)&buf, &bufsz, &error);
+	blob = fu_bytes_get_contents(fn, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(eventlog),
+				      blob,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	items = fu_tpm_eventlog_parser_new(buf, bufsz, FU_TPM_EVENTLOG_PARSER_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(items);
-
-	pcr0s = fu_tpm_eventlog_calc_checksums(items, 0, &error);
+	pcr0s = fu_tpm_eventlog_calc_checksums(eventlog, 0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, ==, 1);
@@ -173,10 +173,9 @@ fu_tpm_eventlog_parse_v2_func(void)
 {
 	const gchar *tmp;
 	gboolean ret;
-	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(FuTpmEventlog) eventlog = fu_tpm_eventlog_v2_new();
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 
@@ -185,15 +184,18 @@ fu_tpm_eventlog_parse_v2_func(void)
 		g_test_skip("Missing binary_bios_measurements-v2");
 		return;
 	}
-	ret = g_file_get_contents(fn, (gchar **)&buf, &bufsz, &error);
+	blob = fu_bytes_get_contents(fn, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(eventlog),
+				      blob,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	items = fu_tpm_eventlog_parser_new(buf, bufsz, FU_TPM_EVENTLOG_PARSER_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(items);
-
-	pcr0s = fu_tpm_eventlog_calc_checksums(items, 0, &error);
+	pcr0s = fu_tpm_eventlog_calc_checksums(eventlog, 0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, ==, 2);

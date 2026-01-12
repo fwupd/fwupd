@@ -39,6 +39,7 @@ fwupdplugin_structs = [
   'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-srec.rs', # fuzzing
+  'fu-tpm.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
@@ -192,6 +193,10 @@ fwupdplugin_src = [
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
+  'fu-tpm-eventlog-item.c', # fuzzing
+  'fu-tpm-eventlog.c', # fuzzing
+  'fu-tpm-eventlog-v1.c', # fuzzing
+  'fu-tpm-eventlog-v2.c', # fuzzing
   'fu-udev-device.c', # fuzzing
   'fu-uefi-device.c',
   'fu-usb-bos-descriptor.c',
@@ -347,6 +352,11 @@ fwupdplugin_headers = [
   'fu-srec-firmware.h',
   'fu-string.h',
   'fu-sum.h',
+  'fu-tpm-eventlog-common.h',
+  'fu-tpm-eventlog.h',
+  'fu-tpm-eventlog-item.h',
+  'fu-tpm-eventlog-v1.h',
+  'fu-tpm-eventlog-v2.h',
   'fu-udev-device.h',
   'fu-udev-device-private.h',
   'fu-uefi-device.h',
