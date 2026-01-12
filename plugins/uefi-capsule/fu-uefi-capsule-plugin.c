@@ -396,8 +396,8 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
-	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
-	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
+	g_autoptr(FuStructEfiCapsuleHeader) st_cap = fu_struct_efi_capsule_header_new();
+	g_autoptr(FuStructEfiUxCapsuleHeader) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* get screen dimensions */
@@ -448,16 +448,16 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	};
 
 	/* header, payload and image has to add to zero */
-	csum += fu_sum8(st_cap->data, st_cap->len);
-	csum += fu_sum8(st_uxh->data, st_uxh->len);
+	csum += fu_sum8(st_cap->buf->data, st_cap->buf->len);
+	csum += fu_sum8(st_uxh->buf->data, st_uxh->buf->len);
 	csum += fu_sum8_bytes(blob);
 	fu_struct_efi_ux_capsule_header_set_checksum(st_uxh, 0x100 - csum);
 
 	/* write capsule file */
-	size = g_output_stream_write(ostream, st_cap->data, st_cap->len, NULL, error);
+	size = g_output_stream_write(ostream, st_cap->buf->data, st_cap->buf->len, NULL, error);
 	if (size < 0)
 		return FALSE;
-	size = g_output_stream_write(ostream, st_uxh->data, st_uxh->len, NULL, error);
+	size = g_output_stream_write(ostream, st_uxh->buf->data, st_uxh->buf->len, NULL, error);
 	if (size < 0)
 		return FALSE;
 	if (!fu_output_stream_write_bytes(ostream, blob, NULL, error))
@@ -989,6 +989,7 @@ fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec
 {
 	FuDevice *device = FU_DEVICE(object);
 	GPtrArray *devices;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autofree gchar *msg = NULL;
 
 	/* device is not in needs-reboot state */
@@ -1000,9 +1001,7 @@ fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec
 		return;
 
 	/* mark every other device for this plugin as non-updatable */
-	msg = g_strdup_printf("Cannot update as %s [%s] needs reboot",
-			      fu_device_get_name(device),
-			      fu_device_get_id(device));
+	msg = g_strdup_printf("Cannot update as %s needs reboot", id_display);
 	devices = fu_plugin_get_devices(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
@@ -1075,7 +1074,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
 	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
-	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -1154,7 +1152,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	g_info("UX capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
 	str = bootloader_supports_fwupd ? "True" : "False";
-	g_info("Bootloader supports fwupd: %s", str);
+	g_info("bootloader supports fwupd: %s", str);
 	fu_plugin_add_report_metadata(plugin, "BootloaderSupportsFwupd", str);
 	fu_progress_step_done(progress);
 

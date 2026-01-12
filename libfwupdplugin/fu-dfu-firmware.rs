@@ -13,7 +13,7 @@ struct FuStructDfuFtr {
     crc: u32le,
 }
 
-#[derive(New, ValidateStream, ParseStream, Default)]
+#[derive(New, ValidateStream, ParseStream, ToBytes, Default)]
 #[repr(C, packed)]
 struct FuStructDfuseHdr {
     sig: [char; 5] == "DfuSe",
@@ -22,7 +22,7 @@ struct FuStructDfuseHdr {
     targets: u8,
 }
 
-#[derive(New, Validate, ParseStream, Default)]
+#[derive(New, Validate, ParseStream, ToBytes, Default)]
 #[repr(C, packed)]
 struct FuStructDfuseImage {
     sig: [char; 6] == "Target",
@@ -33,7 +33,7 @@ struct FuStructDfuseImage {
     chunks: u32le,
 }
 
-#[derive(New, ParseStream)]
+#[derive(New, ParseStream, ToBytes)]
 #[repr(C, packed)]
 struct FuStructDfuseElement {
     address: u32le,

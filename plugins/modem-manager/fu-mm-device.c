@@ -378,7 +378,7 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 #if MM_CHECK_VERSION(1, 26, 0)
 	MMModemPortInfo *ignored_ports = NULL;
 	guint n_ignored_ports = 0;
-#endif // MM_CHECK_VERSION(1, 26, 0)
+#endif
 	const gchar **device_ids;
 	const gchar *sysfs_path;
 	const gchar *version;
@@ -459,7 +459,7 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 		}
 		mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
 	}
-#endif // MM_CHECK_VERSION(1, 26, 0)
+#endif
 
 	/* add properties to fwupd device */
 	if (mm_modem_get_manufacturer(modem) != NULL)
@@ -647,7 +647,6 @@ static void
 fu_mm_device_ensure_payload_quectel(FuMmDevice *self)
 {
 	const gchar *version = fu_device_get_version(FU_DEVICE(self));
-	g_autofree gchar *name = NULL;
 	g_autoptr(GError) error_qsec = NULL;
 	g_autoptr(GError) error_qcfg = NULL;
 	g_autoptr(GBytes) blob = NULL;

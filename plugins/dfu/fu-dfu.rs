@@ -62,7 +62,7 @@ enum FuDfuState {
     DfuError,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuDfuSectorCap {
     None = 0, // No operations possible
     Readable = 1 << 0,
@@ -87,4 +87,11 @@ enum FuDfuAvr32MemoryUnit {
     Bootloader,
     Signature,
     User,
+}
+
+enum FuDfuAvr32Group {
+    Download = 0x01,
+    Upload = 0x03,
+    Exec = 0x04,
+    Select = 0x06,
 }

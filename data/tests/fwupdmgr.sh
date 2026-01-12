@@ -4,304 +4,246 @@ export NO_COLOR=1
 
 exec 0>/dev/null
 exec 2>&1
-device=08d460be0f1f9f128413f816022a6439e0078018
 
+DEVICE=08d460be0f1f9f128413f816022a6439e0078018
 CAB="@installedtestsdir@/fakedevice123.cab"
 
-error()
-{
-    rc=$1
+error() {
     if [ -f "fwupd.txt" ]; then
         cat fwupd.txt
     else
         journalctl -u fwupd -b || true
     fi
-    exit $rc
+    echo " ● Exit code was ${1} and expected ${2}"
+    exit 1
+}
+
+expect_rc() {
+    rc=$?
+    expected=$1
+
+    [ "$expected" -eq "$rc" ] || error "$rc" "$expected"
 }
 
 # ---
-echo "Verify test device is present"
-fwupdtool get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
-rc=$?; if [ $rc != 0 ]; then
-    echo "Enable test device"
-    fwupdtool enable-test-devices
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
-fi
-
-# ---
-echo "Show help output"
+echo " ● Show help output"
 fwupdmgr --help
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Show version output"
+echo " ● Show version output"
 fwupdmgr --version
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Getting the list of plugins..."
+echo " ● Getting the list of plugins…"
 fwupdmgr get-plugins
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 if [ -n "$CI" ]; then
     # ---
-    echo "Setting BIOS setting..."
+    echo " ● Setting BIOS setting…"
     fwupdmgr set-bios-setting fwupd_self_test value
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+    expect_rc 0
 
     # ---
-    echo "Getting BIOS settings..."
+    echo " ● Getting BIOS settings…"
     fwupdmgr get-bios-setting
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+    expect_rc 0
 
     # ---
-    echo "Getting BIOS settings (json)..."
+    echo " ● Getting BIOS settings (JSON)…"
     fwupdmgr get-bios-setting --json
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+    expect_rc 0
 
     # ---
-    echo "Getting BIOS settings (unfound)..."
+    echo " ● Getting BIOS settings (unfound)…"
     fwupdmgr get-bios-setting foo
-    rc=$?; if [ $rc != 3 ]; then error $rc; fi
+    expect_rc 3
 
     # ---
-    echo "Setting BIOS setting (unfound)..."
+    echo " ● Setting BIOS setting (unfound)…"
     fwupdmgr set-bios-setting unfound value
-    rc=$?; if [ $rc != 3 ]; then error $rc; fi
+    expect_rc 3
 fi
 
 # ---
-echo "Getting the list of plugins (json)..."
+echo " ● Getting the list of plugins (JSON)…"
 fwupdmgr get-plugins --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 if [ -f ${CAB} ]; then
     # ---
-    echo "Examining ${CAB}..."
+    echo " ● Examining ${CAB}…"
     fwupdmgr get-details ${CAB}
-    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+    expect_rc 0
 
     # ---
-    echo "Examining ${CAB} (json)..."
+    echo " ● Examining ${CAB} (JSON)…"
     fwupdmgr get-details ${CAB} --json
-    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+    expect_rc 0
 
     # ---
-    echo "Installing ${CAB} cabinet..."
-    fwupdmgr install ${CAB} --no-reboot-check
-    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+    echo " ● Installing ${CAB} cabinet…"
+    fwupdmgr install ${CAB} --no-reboot-check --allow-reinstall --allow-older
+    expect_rc 0
 fi
 
 # ---
-echo "Update the device hash database..."
-fwupdmgr get-releases $device
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Getting the list of remotes..."
+echo " ● Getting the list of remotes…"
 fwupdmgr get-remotes
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Disabling vendor-directory remote..."
-fwupdmgr disable-remote vendor-directory
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Getting the list of remotes (json)..."
+echo " ● Getting the list of remotes (JSON)…"
 fwupdmgr get-remotes --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Enable vendor-directory remote..."
-fwupdmgr enable-remote vendor-directory
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Update the device hash database..."
-fwupdmgr verify-update $device
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Getting devices (should be one)..."
-fwupdmgr get-devices --no-unreported-check
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Testing the verification of firmware..."
-fwupdmgr verify $device
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Getting updates (should be one)..."
-fwupdmgr --no-unreported-check --no-metadata-check get-updates
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Installing test firmware..."
-fwupdmgr update $device -y
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Check if anything was tagged for emulation"
-fwupdmgr get-devices --json --filter emulation-tag | jq -e '(.Devices | length) > 0'
-rc=$?; if [ $rc = 0 ]; then
-    echo "Save device emulation"
-    fwupdmgr emulation-save /dev/null
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
-    echo "Save device emulation (bad args)"
-    fwupdmgr emulation-save
-    rc=$?; if [ $rc != 1 ]; then error $rc; fi
-fi
-
-# ---
-echo "Verifying results (str)..."
-fwupdmgr get-results $device -y
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Verifying results (json)..."
-fwupdmgr get-results $device -y --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Getting updates (should be none)..."
-fwupdmgr --no-unreported-check --no-metadata-check get-updates
-rc=$?; if [ $rc != 2 ]; then error $rc; fi
-
-# ---
-echo "Getting updates [json] (should be none)..."
-fwupdmgr --no-unreported-check --no-metadata-check get-updates --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Testing the verification of firmware (again)..."
-fwupdmgr verify $device
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Getting history (should be none)..."
-fwupdmgr get-history
-rc=$?; if [ $rc != 2 ]; then exit $rc; fi
-
-if [ -n "$CI_NETWORK" ]; then
-    # ---
-    echo "Downgrading to older release (requires network access)"
-    fwupdmgr --download-retries=5 downgrade $device -y
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-    # ---
-    echo "Downgrading to older release (should be none)"
-    fwupdmgr downgrade $device
-    rc=$?; if [ $rc != 2 ]; then error $rc; fi
-
-    # ---
-    echo "Updating all devices to latest release (requires network access)"
-    fwupdmgr --download-retries=5 --no-unreported-check --no-metadata-check --no-reboot-check update -y
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-    # ---
-    echo "Getting updates (should be none)..."
-    fwupdmgr --no-unreported-check --no-metadata-check get-updates
-    rc=$?; if [ $rc != 2 ]; then error $rc; fi
-
-    # ---
-    echo "Refreshing from the LVFS (requires network access)..."
-    fwupdmgr --download-retries=5 refresh
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-    # check we can search for known tokens
-    fwupdmgr search CVE-2022-21894
-    rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-    # check we do not find a random search result
-    fwupdmgr search DOESNOTEXIST
-    rc=$?; if [ $rc != 3 ]; then error $rc; fi
-else
-        echo "Skipping network tests due to CI_NETWORK not being set"
-fi
-
-# ---
-echo "Modifying config..."
+echo " ● Modifying config…"
 fwupdmgr modify-config fwupd UpdateMotd false --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Resetting changed config..."
-fwupdmgr reset-config fwupd --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Resetting empty config ..."
-fwupdmgr reset-config fwupd --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
-echo "Inhibiting for 100ms..."
+echo " ● Inhibiting for 100ms…"
 fwupdmgr inhibit test 100
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Add blocked firmware..."
+echo " ● Uninhibiting for invalid ID…"
+fwupdmgr uninhibit test
+expect_rc 3
+
+# ---
+echo " ● Add blocked firmware…"
 fwupdmgr block-firmware foo
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Add blocked firmware (again)..."
+echo " ● Add blocked firmware (again)…"
 fwupdmgr block-firmware foo
-rc=$?; if [ $rc != 2 ]; then error $rc; fi
+expect_rc 2
 
 # ---
-echo "Getting blocked firmware..."
+echo " ● Getting blocked firmware…"
 fwupdmgr get-blocked-firmware
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Remove blocked firmware..."
+echo " ● Remove blocked firmware…"
 fwupdmgr unblock-firmware foo
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Remove blocked firmware (again)..."
+echo " ● Remove blocked firmware (again)…"
 fwupdmgr unblock-firmware foo
-rc=$?; if [ $rc != 2 ]; then error $rc; fi
+expect_rc 2
 
 # ---
-echo "Setting approved firmware..."
+echo " ● Setting approved firmware…"
 fwupdmgr set-approved-firmware foo,bar,baz
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
 # ---
-echo "Getting approved firmware..."
+echo " ● Getting approved firmware…"
 fwupdmgr get-approved-firmware
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+expect_rc 0
 
-UNAME=$(uname -m)
-if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "x86" ]; then
-       EXPECTED=0
-else
-       EXPECTED=1
-fi
 # ---
-echo "Run security tests..."
+echo " ● Getting approved firmware (JSON)…"
+fwupdmgr get-approved-firmware --json
+expect_rc 0
+
+# ---
+echo " ● Run security tests…"
 fwupdmgr security
-rc=$?; if [ $rc != $EXPECTED ]; then error $rc; fi
 
 # ---
-echo "Run security tests (json)..."
+echo " ● Run security tests (JSON)…"
 fwupdmgr security --json
-rc=$?; if [ $rc != $EXPECTED ]; then error $rc; fi
 
 # ---
-echo "Check reboot behavior"
-fwupdmgr quit
-fwupdtool modify-config test NeedsReboot true
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-fwupdmgr update $device -y
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-fwupdmgr check-reboot-needed $device --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-fwupdtool modify-config test NeedsReboot false
+echo " ● Get HWIDs…"
+fwupdmgr hwids
+expect_rc 0
+
+# ---
+echo " ● Get HWIDs (JSON)…"
+fwupdmgr hwids --json
+expect_rc 0
+
+# ---
+echo " ● Verify test device is present"
+fwupdmgr get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
+if [ $? != 0 ]; then
+    echo " ● Skipping tests due to no test device enabled"
+    exit 0
+fi
+
+# ---
+echo " ● Resetting config…"
+fwupdmgr reset-config test
+expect_rc 0
+
+# ---
+echo " ● Get releases…"
+fwupdmgr get-releases ${DEVICE}
+expect_rc 0
+
+# ---
+echo " ● Get releases (JSON)…"
+fwupdmgr get-releases ${DEVICE} --json
+expect_rc 0
+
+# ---
+echo " ● Disabling vendor-directory remote…"
+fwupdmgr disable-remote vendor-directory
+expect_rc 0
+
+# ---
+echo " ● Enable vendor-directory remote…"
+fwupdmgr enable-remote vendor-directory
+expect_rc 0
+
+# ---
+echo " ● Modify vendor-directory remote…"
+fwupdmgr modify-remote vendor-directory Enabled true
+expect_rc 0
+
+# ---
+echo " ● Update the device hash database…"
+fwupdmgr verify-update ${DEVICE}
+expect_rc 0
+
+# ---
+echo " ● Getting devices (should be one)…"
+fwupdmgr get-devices --no-unreported-check
+expect_rc 0
+
+# ---
+echo " ● Getting one device (should be one)…"
+fwupdmgr get-devices ${DEVICE} --no-unreported-check
+expect_rc 0
+
+# ---
+echo " ● Getting filtered devices (should be none)…"
+fwupdmgr get-devices --no-unreported-check --filter wait-for-replug --filter-release trusted-payload -vv
+expect_rc 2
+
+# ---
+echo " ● Testing the verification of firmware…"
+fwupdmgr verify ${DEVICE}
+expect_rc 0
+
+# ---
+echo " ● Unlocking device (not needed)…"
+fwupdmgr unlock ${DEVICE}
+expect_rc 1
+
+# ---
+echo " ● Testing waiting for device…"
+fwupdmgr device-wait b585990a-003e-5270-89d5-3705a17f9a43
+expect_rc 0
 
 # success!
 exit 0

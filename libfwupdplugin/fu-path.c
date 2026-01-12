@@ -83,8 +83,10 @@ fu_path_get_file_list_internal(GPtrArray *files, const gchar *directory, GError 
 
 	/* try to open */
 	dir = g_dir_open(directory, 0, error);
-	if (dir == NULL)
+	if (dir == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* find each */
 	while ((filename = g_dir_read_name(dir))) {

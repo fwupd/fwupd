@@ -24,6 +24,7 @@
 /*
  * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
  * nocheck:magic-defines=38
+ * nocheck:magic-inlines=600
  */
 
 #define I2C_MST_ADDRESS 0x72
@@ -71,44 +72,31 @@
 /* firmware file offsets */
 #define MST_BLOB_VERSION_OFFSET 0x06F0
 
-typedef enum {
-	Panamera_mst,
-	Cayenne_mst,
-	Unknown,
-} MSTType;
-
-typedef enum {
-	Bank0,
-	Bank1,
-	ESM,
-	Cayenne,
-} MSTBank;
-
 typedef struct {
 	guint start;
 	guint length;
 	guint checksum_cmd;
-} MSTBankAttributes;
+} FuDellDockMstBankAttributes;
 
-const MSTBankAttributes bank0_attributes = {
+const FuDellDockMstBankAttributes bank0_attributes = {
     .start = 0,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const MSTBankAttributes bank1_attributes = {
+const FuDellDockMstBankAttributes bank1_attributes = {
     .start = EEPROM_BANK_OFFSET,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const MSTBankAttributes esm_attributes = {
+const FuDellDockMstBankAttributes esm_attributes = {
     .start = EEPROM_ESM_OFFSET,
     .length = 0x3ffff,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const MSTBankAttributes cayenne_attributes = {
+const FuDellDockMstBankAttributes cayenne_attributes = {
     .start = 0,
     .length = 0x50000,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM,
@@ -117,7 +105,7 @@ const MSTBankAttributes cayenne_attributes = {
 FuHIDI2CParameters mst_base_settings = {
     .i2ctargetaddr = I2C_MST_ADDRESS,
     .regaddrlen = 0,
-    .i2cspeed = I2C_SPEED_400K,
+    .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,
 };
 
 struct _FuDellDockMst {
@@ -131,15 +119,15 @@ struct _FuDellDockMst {
 	guint32 mst_rc_data_addr;
 	guint32 mst_core_mcu_bootloader_addr;
 	guint8 dock_type;
-	MSTType mst_type;
+	FuDellDockMstType mst_type;
 };
 
 G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
 
 /**
  * fu_dell_dock_mst_get_bank_attribs:
- * @bank: the MSTBank
- * @out (out): the MSTBankAttributes attribute that matches
+ * @bank: the FuDellDockMstBank
+ * @out (out): the FuDellDockMstBankAttributes attribute that matches
  * @error: (nullable): optional return location for an error
  *
  * Returns a structure that corresponds to the attributes for a bank
@@ -147,19 +135,21 @@ G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dell_dock_mst_get_bank_attribs(MSTBank bank, const MSTBankAttributes **out, GError **error)
+fu_dell_dock_mst_get_bank_attribs(FuDellDockMstBank bank,
+				  const FuDellDockMstBankAttributes **out,
+				  GError **error)
 {
 	switch (bank) {
-	case Bank0:
+	case FU_DELL_DOCK_MST_BANK_0:
 		*out = &bank0_attributes;
 		break;
-	case Bank1:
+	case FU_DELL_DOCK_MST_BANK_1:
 		*out = &bank1_attributes;
 		break;
-	case ESM:
+	case FU_DELL_DOCK_MST_BANK_ESM:
 		*out = &esm_attributes;
 		break;
-	case Cayenne:
+	case FU_DELL_DOCK_MST_BANK_CAYENNE:
 		*out = &cayenne_attributes;
 		break;
 	default:
@@ -174,7 +164,7 @@ fu_dell_dock_mst_get_bank_attribs(MSTBank bank, const MSTBankAttributes **out, G
 }
 
 static gboolean
-fu_dell_dock_mst_rc_command(FuDevice *device,
+fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    guint8 cmd,
 			    guint32 length,
 			    guint32 offset,
@@ -223,7 +213,7 @@ fu_dell_dock_mst_write_register(FuDevice *proxy,
 }
 
 static gboolean
-fu_dell_dock_mst_query_active_bank(FuDevice *proxy, MSTBank *active, GError **error)
+fu_dell_dock_mst_query_active_bank(FuDevice *proxy, FuDellDockMstBank *active, GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
 	const guint32 *data = NULL;
@@ -240,19 +230,19 @@ fu_dell_dock_mst_query_active_bank(FuDevice *proxy, MSTBank *active, GError **er
 
 	data = g_bytes_get_data(bytes, &length);
 	if ((data[0] & (1 << 7)) || (data[0] & (1 << 30)))
-		*active = Bank1;
+		*active = FU_DELL_DOCK_MST_BANK_1;
 	else
-		*active = Bank0;
+		*active = FU_DELL_DOCK_MST_BANK_0;
 	g_debug("MST: active bank is: %u", *active);
 
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_mst_disable_remote_control(FuDevice *device, GError **error)
+fu_dell_dock_mst_disable_remote_control(FuDellDockMst *self, GError **error)
 {
 	g_debug("MST: Disabling remote control");
-	return fu_dell_dock_mst_rc_command(device,
+	return fu_dell_dock_mst_rc_command(self,
 					   FU_DELL_DOCK_MST_CMD_DISABLE_REMOTE_CONTROL,
 					   0,
 					   0,
@@ -261,13 +251,13 @@ fu_dell_dock_mst_disable_remote_control(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_enable_remote_control(FuDevice *device, GError **error)
+fu_dell_dock_mst_enable_remote_control(FuDellDockMst *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	const gchar *data = "PRIUS";
 
 	g_debug("MST: Enabling remote control");
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_ENABLE_REMOTE_CONTROL,
 					 5,
 					 0,
@@ -275,22 +265,21 @@ fu_dell_dock_mst_enable_remote_control(FuDevice *device, GError **error)
 					 &error_local)) {
 		g_debug("Failed to enable remote control: %s", error_local->message);
 		/* try to disable / re-enable */
-		if (!fu_dell_dock_mst_disable_remote_control(device, error))
+		if (!fu_dell_dock_mst_disable_remote_control(self, error))
 			return FALSE;
-		return fu_dell_dock_mst_enable_remote_control(device, error);
+		return fu_dell_dock_mst_enable_remote_control(self, error);
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_mst_trigger_rc_command(FuDevice *device, GError **error)
+fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 {
 	const guint8 *result = NULL;
-	FuDevice *proxy = fu_device_get_proxy(device);
-	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	guint32 tmp;
 
-	/* Trigger the write */
+	/* trigger the write */
 	tmp = MST_TRIGGER_WRITE;
 	if (!fu_dell_dock_mst_write_register(proxy,
 					     self->mst_rc_trigger_addr,
@@ -323,7 +312,7 @@ fu_dell_dock_mst_trigger_rc_command(FuDevice *device, GError **error)
 	switch (tmp) {
 	/* need to enable remote control */
 	case 4:
-		return fu_dell_dock_mst_enable_remote_control(device, error);
+		return fu_dell_dock_mst_enable_remote_control(self, error);
 	/* error scenarios */
 	case 3:
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Unknown error");
@@ -355,7 +344,7 @@ fu_dell_dock_mst_trigger_rc_command(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_rc_command(FuDevice *device,
+fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    guint8 cmd,
 			    guint32 length,
 			    guint32 offset,
@@ -363,8 +352,7 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	gint buffer_len = (data == NULL) ? 12 : length + 16;
 	g_autofree guint8 *buffer = g_malloc0(buffer_len);
 	guint32 tmp;
@@ -390,13 +378,12 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 					     error))
 		return FALSE;
 
-	return fu_dell_dock_mst_trigger_rc_command(device, error);
+	return fu_dell_dock_mst_trigger_rc_command(self, error);
 }
 
-static MSTType
-fu_dell_dock_mst_get_module_type(FuDevice *device)
+static FuDellDockMstType
+fu_dell_dock_mst_get_module_type(FuDellDockMst *self)
 {
-	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	return self->mst_type;
 }
 
@@ -409,14 +396,13 @@ fu_dell_dock_mst_check_offset(guint8 byte, guint8 offset)
 }
 
 static gboolean
-fu_dell_dock_mst_d19_check_fw(FuDevice *device, GError **error)
+fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 {
-	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *data;
 	gsize length = 4;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
 					    self->mst_core_mcu_bootloader_addr,
 					    length,
 					    &bytes,
@@ -508,15 +494,14 @@ fu_dell_dock_mst_get_crc(guint8 type, guint32 length, const guint8 *payload_data
 }
 
 static gboolean
-fu_dell_dock_mst_checksum_bank(FuDevice *device,
+fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 			       GBytes *blob_fw,
-			       MSTBank bank,
+			       FuDellDockMstBank bank,
 			       gboolean *checksum,
 			       GError **error)
 {
-	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	g_autoptr(GBytes) csum_bytes = NULL;
-	const MSTBankAttributes *attribs = NULL;
+	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize length = 0;
 	const guint8 *data = g_bytes_get_data(blob_fw, &length);
 	guint32 payload_sum = 0;
@@ -551,7 +536,7 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 	g_debug("MST: Payload checksum: 0x%x", payload_sum);
 
 	/* checksum the bank */
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 attribs->checksum_cmd,
 					 attribs->length,
 					 attribs->start,
@@ -561,15 +546,15 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 		return FALSE;
 	}
 	/* read result from data register */
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
 					    self->mst_rc_data_addr,
 					    4,
 					    &csum_bytes,
 					    error))
 		return FALSE;
 	data = g_bytes_get_data(csum_bytes, NULL);
-	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | data[2] << 16 | /* nocheck:blocked */
-				   data[3] << 24);
+	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | /* nocheck:blocked nocheck:endian */
+				   data[2] << 16 | data[3] << 24);
 	g_debug("MST: Bank %u checksum: 0x%x", bank, bank_sum);
 
 	*checksum = (bank_sum == payload_sum);
@@ -578,9 +563,9 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **error)
+fu_dell_dock_mst_erase_panamera_bank(FuDellDockMst *self, FuDellDockMstBank bank, GError **error)
 {
-	const MSTBankAttributes *attribs = NULL;
+	const FuDellDockMstBankAttributes *attribs = NULL;
 	guint32 sector;
 
 	if (!fu_dell_dock_mst_get_bank_attribs(bank, &attribs, error))
@@ -589,7 +574,7 @@ fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **er
 	for (guint32 i = attribs->start; i < attribs->start + attribs->length; i += 0x10000) {
 		sector = FLASH_SECTOR_ERASE_64K | (i / 0x10000);
 		g_debug("MST: Erasing sector 0x%x", sector);
-		if (!fu_dell_dock_mst_rc_command(device,
+		if (!fu_dell_dock_mst_rc_command(self,
 						 FU_DELL_DOCK_MST_CMD_ERASE_FLASH,
 						 4,
 						 0,
@@ -600,19 +585,19 @@ fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **er
 		}
 	}
 	g_debug("MST: Waiting for flash clear to settle");
-	fu_device_sleep(device, 5000); /* ms */
+	fu_device_sleep(FU_DEVICE(self), 5000); /* ms */
 
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
+fu_dell_dock_mst_erase_cayenne(FuDellDockMst *self, GError **error)
 {
 	guint8 data[4] = {0, 0x30, 0, 0};
 
 	for (guint8 i = 0; i < 5; i++) {
 		data[0] = i;
-		if (!fu_dell_dock_mst_rc_command(device,
+		if (!fu_dell_dock_mst_rc_command(self,
 						 FU_DELL_DOCK_MST_CMD_ERASE_FLASH,
 						 4,
 						 0,
@@ -623,19 +608,19 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 		}
 	}
 	g_debug("MST: Waiting for flash clear to settle");
-	fu_device_sleep(device, 5000);
+	fu_device_sleep(FU_DEVICE(self), 5000);
 
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_mst_write_flash_bank(FuDevice *device,
+fu_dell_dock_mst_write_flash_bank(FuDellDockMst *self,
 				  GBytes *blob_fw,
-				  MSTBank bank,
+				  FuDellDockMstBank bank,
 				  FuProgress *progress,
 				  GError **error)
 {
-	const MSTBankAttributes *attribs = NULL;
+	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize write_size = 32;
 	guint end;
 	const guint8 *data = g_bytes_get_data(blob_fw, NULL);
@@ -648,7 +633,7 @@ fu_dell_dock_mst_write_flash_bank(FuDevice *device,
 
 	g_debug("MST: Writing payload to bank %u", bank);
 	for (guint i = attribs->start; i < end; i += write_size) {
-		if (!fu_dell_dock_mst_rc_command(device,
+		if (!fu_dell_dock_mst_rc_command(self,
 						 FU_DELL_DOCK_MST_CMD_WRITE_FLASH,
 						 write_size,
 						 i,
@@ -667,7 +652,7 @@ fu_dell_dock_mst_write_flash_bank(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
+fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 {
 	g_autoptr(GBytes) quad_bytes = NULL;
 	g_autoptr(GBytes) hdcp_bytes = NULL;
@@ -677,7 +662,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 	guint8 data_out[4] = {0};
 
 	/* disable ESM first */
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,
 					 PANAMERA_MST_RC_TRIGGER_ADDR,
@@ -686,10 +671,10 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* waiting for ESM exit */
-	fu_device_sleep(device, 1);
+	fu_device_sleep(FU_DEVICE(self), 1);
 
 	/* disable QUAD mode */
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_READ_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_QUAD_DISABLE,
@@ -697,7 +682,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 					 error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    length,
 					    &quad_bytes,
@@ -707,7 +692,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 	data = g_bytes_get_data(quad_bytes, &length);
 	memcpy(data_out, data, length); /* nocheck:blocked */
 	data_out[0] = 0x00;
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_QUAD_DISABLE,
@@ -716,7 +701,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* disable HDCP2.2 */
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_READ_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_HDCP22_DISABLE,
@@ -724,7 +709,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 					 error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    length,
 					    &hdcp_bytes,
@@ -734,7 +719,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 	data = g_bytes_get_data(hdcp_bytes, &length);
 	memcpy(data_out, data, length); /* nocheck:blocked */
 	data_out[0] = data[0] & (1 << 2);
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_HDCP22_DISABLE,
@@ -746,9 +731,9 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError **error)
+fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_use, GError **error)
 {
-	const MSTBankAttributes *attribs;
+	const FuDellDockMstBankAttributes *attribs;
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *crc_tag;
 	const guint8 *new_tag;
@@ -762,8 +747,8 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 	/* we need to write 4 byte increments over I2C so this differs from DP aux */
 	crc_offset = attribs->start + EEPROM_TAG_OFFSET + 12;
 
-	/* Read CRC byte to flip */
-	if (!fu_dell_dock_mst_rc_command(device,
+	/* read CRC byte to flip */
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_READ_FLASH,
 					 4,
 					 crc_offset,
@@ -772,7 +757,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 		g_prefix_error_literal(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    1,
 					    &bytes,
@@ -788,11 +773,11 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 		if (crc_tag[3] != 0xff) {
 			guint32 sector = FLASH_SECTOR_ERASE_4K +
 					 (attribs->start + attribs->length - 0x1000) / 0x1000;
-			g_debug("Erasing 4k from sector 0x%x invalidate bank %u",
+			g_debug("erasing 4k from sector 0x%x invalidate bank %u",
 				sector,
 				bank_in_use);
 			/* offset for last 4k of bank# */
-			if (!fu_dell_dock_mst_rc_command(device,
+			if (!fu_dell_dock_mst_rc_command(self,
 							 FU_DELL_DOCK_MST_CMD_ERASE_FLASH,
 							 4,
 							 0,
@@ -804,10 +789,10 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 			/* CRC8 is 0xff, set it to 0x00 */
 		} else {
 			guint32 write = 0x00;
-			g_debug("Writing 0x00 byte to 0x%x to invalidate bank %u",
+			g_debug("writing 0x00 byte to 0x%x to invalidate bank %u",
 				crc_offset,
 				bank_in_use);
-			if (!fu_dell_dock_mst_rc_command(device,
+			if (!fu_dell_dock_mst_rc_command(self,
 							 FU_DELL_DOCK_MST_CMD_WRITE_FLASH,
 							 4,
 							 crc_offset,
@@ -818,7 +803,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 			}
 		}
 		/* re-read for comparison */
-		if (!fu_dell_dock_mst_rc_command(device,
+		if (!fu_dell_dock_mst_rc_command(self,
 						 FU_DELL_DOCK_MST_CMD_READ_FLASH,
 						 4,
 						 crc_offset,
@@ -827,7 +812,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 			g_prefix_error_literal(error, "failed to read tag from flash: ");
 			return FALSE;
 		}
-		if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+		if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
 						    PANAMERA_MST_RC_DATA_ADDR,
 						    4,
 						    &bytes_new,
@@ -857,7 +842,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 }
 
 static gboolean
-fu_dell_dock_mst_write_bank(FuDevice *device,
+fu_dell_dock_mst_write_bank(FuDellDockMst *self,
 			    GBytes *fw,
 			    guint8 bank,
 			    FuProgress *progress,
@@ -873,11 +858,11 @@ fu_dell_dock_mst_write_bank(FuDevice *device,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 84, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
 
-		if (!fu_dell_dock_mst_erase_panamera_bank(device, bank, error))
+		if (!fu_dell_dock_mst_erase_panamera_bank(self, bank, error))
 			return FALSE;
 		fu_progress_step_done(progress);
 
-		if (!fu_dell_dock_mst_write_flash_bank(device,
+		if (!fu_dell_dock_mst_write_flash_bank(self,
 						       fw,
 						       bank,
 						       fu_progress_get_child(progress),
@@ -885,7 +870,7 @@ fu_dell_dock_mst_write_bank(FuDevice *device,
 			return FALSE;
 		fu_progress_step_done(progress);
 
-		if (!fu_dell_dock_mst_checksum_bank(device, fw, bank, &checksum, error))
+		if (!fu_dell_dock_mst_checksum_bank(self, fw, bank, &checksum, error))
 			return FALSE;
 		if (!checksum) {
 			g_debug("MST: Failed to verify checksum on bank %u", bank);
@@ -915,36 +900,38 @@ fu_dell_dock_mst_set_local_progress(FuProgress *progress, guint steps)
 }
 
 static gboolean
-fu_dell_dock_mst_write_panamera(FuDevice *device,
+fu_dell_dock_mst_write_panamera(FuDellDockMst *self,
 				GBytes *fw,
 				FwupdInstallFlags flags,
 				FuProgress *progress,
 				GError **error)
 {
 	gboolean checksum = FALSE;
-	MSTBank bank_in_use = 0;
-	guint8 order[2] = {ESM, Bank0};
+	FuDellDockMstBank bank_in_use = 0;
+	guint8 order[2] = {FU_DELL_DOCK_MST_BANK_ESM, FU_DELL_DOCK_MST_BANK_0};
 	FuProgress *progress_local;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "stop-esm");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
 	/* determine the flash order */
-	if (!fu_dell_dock_mst_query_active_bank(fu_device_get_proxy(device), &bank_in_use, error))
+	if (!fu_dell_dock_mst_query_active_bank(fu_device_get_proxy(FU_DEVICE(self)),
+						&bank_in_use,
+						error))
 		return FALSE;
 
-	if (bank_in_use == Bank0)
-		order[1] = Bank1;
+	if (bank_in_use == FU_DELL_DOCK_MST_BANK_0)
+		order[1] = FU_DELL_DOCK_MST_BANK_1;
 	/* ESM needs special handling during flash process*/
-	if (!fu_dell_dock_mst_stop_esm(device, error))
+	if (!fu_dell_dock_mst_stop_esm(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	progress_local = fu_dell_dock_mst_set_local_progress(progress, 2);
-	/* Write each bank in order */
+	/* write each bank in order */
 	for (guint phase = 0; phase < 2; phase++) {
 		g_debug("MST: Checking bank %u", order[phase]);
-		if (!fu_dell_dock_mst_checksum_bank(device, fw, order[phase], &checksum, error))
+		if (!fu_dell_dock_mst_checksum_bank(self, fw, order[phase], &checksum, error))
 			return FALSE;
 		if (checksum) {
 			g_debug("MST: bank %u is already up to date", order[phase]);
@@ -952,7 +939,7 @@ fu_dell_dock_mst_write_panamera(FuDevice *device,
 			continue;
 		}
 		g_debug("MST: bank %u needs to be updated", order[phase]);
-		if (!fu_dell_dock_mst_write_bank(device,
+		if (!fu_dell_dock_mst_write_bank(self,
 						 fw,
 						 order[phase],
 						 fu_progress_get_child(progress_local),
@@ -961,7 +948,7 @@ fu_dell_dock_mst_write_panamera(FuDevice *device,
 		fu_progress_step_done(progress_local);
 	}
 	/* invalidate the previous bank */
-	if (!fu_dell_dock_mst_invalidate_bank(device, bank_in_use, error)) {
+	if (!fu_dell_dock_mst_invalidate_bank(self, bank_in_use, error)) {
 		g_prefix_error(error, "failed to invalidate bank %u: ", bank_in_use);
 		return FALSE;
 	}
@@ -971,7 +958,7 @@ fu_dell_dock_mst_write_panamera(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_write_cayenne(FuDevice *device,
+fu_dell_dock_mst_write_cayenne(FuDellDockMst *self,
 			       GBytes *fw,
 			       FwupdInstallFlags flags,
 			       FuProgress *progress,
@@ -985,16 +972,20 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, NULL);
 
 	for (guint i = 0; i < retries; i++) {
-		if (!fu_dell_dock_mst_erase_cayenne(device, error))
+		if (!fu_dell_dock_mst_erase_cayenne(self, error))
 			return FALSE;
 		fu_progress_step_done(progress);
-		if (!fu_dell_dock_mst_write_flash_bank(device,
+		if (!fu_dell_dock_mst_write_flash_bank(self,
 						       fw,
-						       Cayenne,
+						       FU_DELL_DOCK_MST_BANK_CAYENNE,
 						       fu_progress_get_child(progress),
 						       error))
 			return FALSE;
-		if (!fu_dell_dock_mst_checksum_bank(device, fw, Cayenne, &checksum, error))
+		if (!fu_dell_dock_mst_checksum_bank(self,
+						    fw,
+						    FU_DELL_DOCK_MST_BANK_CAYENNE,
+						    &checksum,
+						    error))
 			return FALSE;
 		fu_progress_step_done(progress);
 		if (!checksum) {
@@ -1013,7 +1004,7 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 		return FALSE;
 	}
 	/* activate the FW */
-	if (!fu_dell_dock_mst_rc_command(device,
+	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_ACTIVATE_FW,
 					 g_bytes_get_size(fw),
 					 0x0,
@@ -1026,17 +1017,17 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_write_fw(FuDevice *device,
-			  FuFirmware *firmware,
-			  FuProgress *progress,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_dell_dock_mst_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	const guint8 *data;
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	MSTType type;
+	FuDellDockMstType type;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
@@ -1063,15 +1054,15 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 	g_info("writing MST firmware version %s", dynamic_version);
 
 	/* enable remote control */
-	if (!fu_dell_dock_mst_enable_remote_control(device, error))
+	if (!fu_dell_dock_mst_enable_remote_control(self, error))
 		return FALSE;
 
-	type = fu_dell_dock_mst_get_module_type(device);
-	if (type == Panamera_mst) {
-		if (!fu_dell_dock_mst_write_panamera(device, fw, flags, progress, error))
+	type = fu_dell_dock_mst_get_module_type(self);
+	if (type == FU_DELL_DOCK_MST_TYPE_PANAMERA) {
+		if (!fu_dell_dock_mst_write_panamera(self, fw, flags, progress, error))
 			return FALSE;
-	} else if (type == Cayenne_mst) {
-		if (!fu_dell_dock_mst_write_cayenne(device, fw, flags, progress, error))
+	} else if (type == FU_DELL_DOCK_MST_TYPE_CAYENNE) {
+		if (!fu_dell_dock_mst_write_cayenne(self, fw, flags, progress, error))
 			return FALSE;
 	} else {
 		g_set_error_literal(error,
@@ -1086,7 +1077,7 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 	fu_device_set_version(device, dynamic_version);
 
 	/* disable remote control now */
-	return fu_dell_dock_mst_disable_remote_control(device, error);
+	return fu_dell_dock_mst_disable_remote_control(self, error);
 }
 
 static gboolean
@@ -1140,16 +1131,17 @@ fu_dell_dock_mst_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 {
+	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	FuDevice *parent;
 	const gchar *version;
 
 	/* sanity check that we can talk to MST */
-	if (!fu_dell_dock_mst_d19_check_fw(device, error))
+	if (!fu_dell_dock_mst_d19_check_fw(self, error))
 		return FALSE;
 
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent(device);
-	version = fu_dell_dock_ec_get_mst_version(parent);
+	version = fu_dell_dock_ec_get_mst_version(FU_DELL_DOCK_EC(parent));
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_device_set_version(device, version);
@@ -1168,7 +1160,7 @@ fu_dell_dock_mst_probe(FuDevice *device, GError **error)
 
 	/* instance id */
 	if (self->dock_type == DOCK_BASE_TYPE_ATOMIC) {
-		self->mst_type = Cayenne_mst;
+		self->mst_type = FU_DELL_DOCK_MST_TYPE_CAYENNE;
 		self->mst_rc_trigger_addr = CAYENNE_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = CAYENNE_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = CAYENNE_MST_RC_DATA_ADDR;
@@ -1176,7 +1168,7 @@ fu_dell_dock_mst_probe(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		fu_device_add_instance_id(device, DELL_DOCK_VMM6210_INSTANCE_ID);
 	} else if (self->dock_type == DOCK_BASE_TYPE_SALOMON) {
-		self->mst_type = Panamera_mst;
+		self->mst_type = FU_DELL_DOCK_MST_TYPE_PANAMERA;
 		self->mst_rc_trigger_addr = PANAMERA_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = PANAMERA_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = PANAMERA_MST_RC_DATA_ADDR;
@@ -1230,7 +1222,7 @@ fu_dell_dock_mst_close(FuDevice *device, GError **error)
 }
 
 static void
-fu_dell_dock_mst_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_dock_mst_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -1255,7 +1247,7 @@ fu_dell_dock_mst_class_init(FuDellDockMstClass *klass)
 	device_class->open = fu_dell_dock_mst_open;
 	device_class->close = fu_dell_dock_mst_close;
 	device_class->setup = fu_dell_dock_mst_setup;
-	device_class->write_firmware = fu_dell_dock_mst_write_fw;
+	device_class->write_firmware = fu_dell_dock_mst_write_firmware;
 	device_class->set_quirk_kv = fu_dell_dock_mst_set_quirk_kv;
 	device_class->set_progress = fu_dell_dock_mst_set_progress;
 }

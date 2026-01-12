@@ -14,17 +14,6 @@ struct _FuUpowerPlugin {
 	GDBusProxy *proxy_manager; /* nullable */
 };
 
-typedef enum {
-	UP_DEVICE_STATE_UNKNOWN,
-	UP_DEVICE_STATE_CHARGING,
-	UP_DEVICE_STATE_DISCHARGING,
-	UP_DEVICE_STATE_EMPTY,
-	UP_DEVICE_STATE_FULLY_CHARGED,
-	UP_DEVICE_STATE_PENDING_CHARGE,
-	UP_DEVICE_STATE_PENDING_DISCHARGE,
-	UP_DEVICE_STATE_LAST
-} UpDeviceState;
-
 G_DEFINE_TYPE(FuUpowerPlugin, fu_upower_plugin, FU_TYPE_PLUGIN)
 
 static void

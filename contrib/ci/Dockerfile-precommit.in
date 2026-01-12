@@ -5,6 +5,7 @@ RUN apt update && apt install -yq --no-install-recommends \
         patch \
         pre-commit \
         shellcheck \
+        shfmt \
         clang-format
 RUN apt install wget -yq
 RUN mkdir -p /tmp/repo && \

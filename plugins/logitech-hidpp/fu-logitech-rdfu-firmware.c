@@ -101,10 +101,9 @@ fu_logitech_rdfu_firmware_block_add(FuLogitechRdfuFirmware *self, JsonNode *node
 }
 
 static gboolean
-fu_logitech_rdfu_firmware_entry_add(FuFirmware *firmware, JsonNode *node, GError **error)
+fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self, JsonNode *node, GError **error)
 
 {
-	FuLogitechRdfuFirmware *self = FU_LOGITECH_RDFU_FIRMWARE(firmware);
 	JsonObject *json_obj;
 	guint str_offset = 0;
 	guint64 entity;
@@ -195,9 +194,8 @@ fu_logitech_rdfu_firmware_entry_add(FuFirmware *firmware, JsonNode *node, GError
 	}
 	build_str = json_object_get_string_member_with_default(json_obj, "build", NULL);
 	/* should be in BCD format already but let's be tolerant to absent leading 0 */
-	if (!fu_strtoull(build_str, &build, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error)) {
+	if (!fu_strtoull(build_str, &build, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
-	}
 
 	/* skip "0x" prefix */
 	self->magic = fu_byte_array_from_string(magic_str + 2, error);
@@ -209,7 +207,7 @@ fu_logitech_rdfu_firmware_entry_add(FuFirmware *firmware, JsonNode *node, GError
 	self->payload_name = g_strdup(payload_str);
 	self->blocks = g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
 	version = g_strdup_printf("%s.%02x_B%04x", name_str, (guint)revision, (guint)build);
-	fu_firmware_set_version(firmware, version);
+	fu_firmware_set_version(FU_FIRMWARE(self), version);
 
 	return TRUE;
 }
@@ -295,13 +293,14 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	/* adding blocks to the entity FW */
 	for (guint i = 0; i < json_array_get_length(contents); i++) {
 		JsonNode *node = json_array_get_element(contents, i);
-		g_autoptr(FuFirmware) entity_fw =
-		    FU_FIRMWARE(g_object_new(FU_TYPE_LOGITECH_RDFU_FIRMWARE, NULL));
+		g_autoptr(FuLogitechRdfuFirmware) entity_fw =
+		    FU_LOGITECH_RDFU_FIRMWARE(g_object_new(FU_TYPE_LOGITECH_RDFU_FIRMWARE, NULL));
 		if (!fu_logitech_rdfu_firmware_entry_add(entity_fw, node, error)) {
 			g_prefix_error(error, "RDFU firmware contents[%u]: ", i);
 			return FALSE;
 		}
-		fu_firmware_add_image(firmware, entity_fw);
+		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(entity_fw), error))
+			return FALSE;
 	}
 
 	if (!json_object_has_member(json_obj, "payloads")) {

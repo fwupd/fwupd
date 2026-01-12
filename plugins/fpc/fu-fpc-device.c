@@ -210,7 +210,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 						   FALSE,
 						   error)) {
 				g_prefix_error_literal(error,
-						       "fail to clear status in setup version");
+						       "fail to clear status in setup version: ");
 				return FALSE;
 			}
 		}
@@ -224,7 +224,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 					   TRUE,
 					   TRUE,
 					   error)) {
-			g_prefix_error_literal(error, "fail to get fw status in setup version");
+			g_prefix_error_literal(error, "fail to get fw status in setup version: ");
 			return FALSE;
 		}
 
@@ -246,13 +246,13 @@ static gboolean
 fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	g_autoptr(GByteArray) dfu_status = fu_struct_fpc_dfu_new();
+	g_autoptr(FuStructFpcDfu) st = fu_struct_fpc_dfu_new();
 
 	if (!fu_fpc_device_dfu_cmd(self,
 				   FPC_CMD_DFU_GETSTATUS,
 				   0x0000,
-				   dfu_status->data,
-				   dfu_status->len,
+				   st->buf->data,
+				   st->buf->len,
 				   TRUE,
 				   FALSE,
 				   error)) {
@@ -260,19 +260,19 @@ fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError *
 		return FALSE;
 	}
 
-	if (fu_struct_fpc_dfu_get_status(dfu_status) != 0 ||
-	    fu_struct_fpc_dfu_get_state(dfu_status) == FU_FPC_DFU_STATE_DNBUSY) {
+	if (fu_struct_fpc_dfu_get_status(st) != 0 ||
+	    fu_struct_fpc_dfu_get_state(st) == FU_FPC_DFU_STATE_DNBUSY) {
 		/* device is not in correct status/state */
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "dfu status error [0x%x, 0x%x]",
-			    fu_struct_fpc_dfu_get_status(dfu_status),
-			    fu_struct_fpc_dfu_get_state(dfu_status));
+			    fu_struct_fpc_dfu_get_status(st),
+			    fu_struct_fpc_dfu_get_state(st));
 		return FALSE;
 	}
 
-	if (fu_struct_fpc_dfu_get_max_payload_size(dfu_status) > 0 ||
+	if (fu_struct_fpc_dfu_get_max_payload_size(st) > 0 ||
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
 		self->max_block_size = FPC_FLASH_BLOCK_SIZE_4096;
 	else
@@ -463,14 +463,14 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 		if (st_blkhdr == NULL)
 			return FALSE;
 		direction = fu_struct_fpc_ff2_block_hdr_get_dir(st_blkhdr);
-		offset += st_blkhdr->len;
+		offset += st_blkhdr->buf->len;
 
 		/* validate dfu_sec_link_t and include the size in payload */
 		st_blksec = fu_struct_fpc_ff2_block_sec_parse_stream(stream, offset, error);
 		if (st_blksec == NULL)
 			return FALSE;
 		payload_len = fu_struct_fpc_ff2_block_sec_get_payload_len(st_blksec);
-		payload_len += st_blksec->len;
+		payload_len += st_blksec->buf->len;
 
 		if (direction == FU_FPC_FF2_BLOCK_DIR_OUT) {
 			g_autoptr(GInputStream) partial_stream = NULL;
@@ -661,7 +661,7 @@ fu_fpc_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_fpc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_fpc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

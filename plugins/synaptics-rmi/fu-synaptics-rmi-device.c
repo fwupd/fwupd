@@ -670,7 +670,7 @@ fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 gboolean
 fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 				      guint timeout_ms,
-				      RmiDeviceWaitForIdleFlags flags,
+				      FuSynapticsRmiDeviceWaitForIdleFlags flags,
 				      GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
@@ -691,7 +691,7 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 						   "failed to wait for attr: ");
 			return FALSE;
 		}
-	} else if ((flags & RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34) == 0) {
+	} else if ((flags & FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34) == 0) {
 		/* device reported idle via an event */
 		return TRUE;
 	}
@@ -812,14 +812,14 @@ fu_synaptics_rmi_device_write_firmware(FuDevice *device,
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	if (priv->f34->function_version == 0x0 || priv->f34->function_version == 0x1) {
-		return fu_synaptics_rmi_v5_device_write_firmware(device,
+		return fu_synaptics_rmi_v5_device_write_firmware(self,
 								 firmware,
 								 progress,
 								 flags,
 								 error);
 	}
 	if (priv->f34->function_version == 0x2) {
-		return fu_synaptics_rmi_v7_device_write_firmware(device,
+		return fu_synaptics_rmi_v7_device_write_firmware(self,
 								 firmware,
 								 progress,
 								 flags,

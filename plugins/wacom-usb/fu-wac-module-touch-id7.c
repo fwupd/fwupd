@@ -22,12 +22,12 @@ typedef struct {
 	const guint8 *buf;
 	gsize bufsz;
 	gsize offset;
-} WtaInfo;
+} FuWacWtaInfo;
 
 typedef struct {
 	guint32 header_size;
 	guint16 firmware_number;
-} WtaFileHeader;
+} FuWacWtaFileHeader;
 
 typedef struct {
 	guint32 file_name_length;
@@ -35,7 +35,7 @@ typedef struct {
 	guint8 ic_id;
 	guint8 ma_id;
 	guint32 block_count;
-} WtaRecordHeader;
+} FuWacWtaRecordHeader;
 
 G_DEFINE_TYPE(FuWacModuleTouchId7, fu_wac_module_touch_id7, FU_TYPE_WAC_MODULE)
 
@@ -53,7 +53,9 @@ G_DEFINE_TYPE(FuWacModuleTouchId7, fu_wac_module_touch_id7, FU_TYPE_WAC_MODULE)
  *
  */
 static gboolean
-fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info, GError **error)
+fu_wac_module_touch_id7_read_file_header(FuWacWtaFileHeader *header,
+					 FuWacWtaInfo *info,
+					 GError **error)
 {
 	info->offset += 4;
 
@@ -99,7 +101,9 @@ fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info, G
  *
  */
 static gboolean
-fu_wac_module_touch_id7_read_record_header(WtaRecordHeader *header, WtaInfo *info, GError **error)
+fu_wac_module_touch_id7_read_record_header(FuWacWtaRecordHeader *header,
+					   FuWacWtaInfo *info,
+					   GError **error)
 {
 	if (!fu_memread_uint32_safe(info->buf,
 				    info->bufsz,
@@ -142,7 +146,7 @@ fu_wac_module_touch_id7_read_record_header(WtaRecordHeader *header, WtaInfo *inf
 
 /**
  * fu_wac_module_touch_id7_generate_command:
- * @header: A #WtaRecordHeader
+ * @header: A #FuWacWtaRecordHeader
  * @cmd: The type of command to be sent
  * @op_id: The operation serial number
  * @buf: The buffer to write the command into
@@ -151,7 +155,7 @@ fu_wac_module_touch_id7_read_record_header(WtaRecordHeader *header, WtaInfo *inf
  *
  */
 static void
-fu_wac_module_touch_id7_generate_command(const WtaRecordHeader *header,
+fu_wac_module_touch_id7_generate_command(const FuWacWtaRecordHeader *header,
 					 guint8 cmd,
 					 guint16 op_id,
 					 guint8 *buf)
@@ -171,13 +175,13 @@ fu_wac_module_touch_id7_generate_command(const WtaRecordHeader *header,
  */
 static gboolean
 fu_wac_module_touch_id7_write_block(FuWacModule *self,
-				    WtaInfo *info,
+				    FuWacWtaInfo *info,
 				    FuProgress *progress,
-				    WtaRecordHeader *record_hdr,
+				    FuWacWtaRecordHeader *record_hdr,
 				    GError **error)
 {
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GByteArray) st_blk = NULL;
+	g_autoptr(FuStructWtaBlockHeader) st_blk = NULL;
 
 	/* generate chunks off of the raw block data */
 	st_blk = fu_struct_wta_block_header_parse(info->buf, info->bufsz, info->offset, error);
@@ -243,11 +247,11 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
  */
 static gboolean
 fu_wac_module_touch_id7_write_record(FuWacModule *self,
-				     WtaInfo *info,
+				     FuWacWtaInfo *info,
 				     FuProgress *progress,
 				     GError **error)
 {
-	WtaRecordHeader record_hdr = {0x0};
+	FuWacWtaRecordHeader record_hdr = {0x0};
 	g_autoptr(GBytes) blob_start = NULL;
 	g_autoptr(GBytes) blob_end = NULL;
 	guint8 command[11] = {0};
@@ -316,8 +320,8 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	g_autoptr(GBytes) blob = NULL;
-	WtaInfo info;
-	WtaFileHeader file_hdr;
+	FuWacWtaInfo info;
+	FuWacWtaFileHeader file_hdr;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

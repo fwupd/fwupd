@@ -27,6 +27,7 @@ be used instead, e.g.
 * `MTD\NAME_Factory`
 * `MTD\VEN_1234&DEV_5678`
 * `MTD\VEN_1234&DEV_5678&NAME_Factory`
+* `MTD\DRIVER_xe` (quirk-only)
 
 If the `FirmwareGType` quirk is set for the device then the firmware is read back from the device at
 daemon startup and parsed for the version number.
@@ -63,6 +64,26 @@ to avoid dumping a huge amount of MTD data to access a tiny chunk of data that w
 known offset.
 
 Since: 1.9.1
+
+### MtdFmapRegions
+
+A comma-separated list of region names that should be written to the device as images in the
+specified order. Each image should have the required offset set as a physical address.
+
+This can be used to selectively target coreboot FMAP regions.
+
+Since: 2.0.17
+
+### MtdFmapOffset
+
+An offset where the `__FMAP__` header can be found, for example `0x1090000`.
+
+This can be used to avoid loading and searching the entire SPI rom for a FMAP image.
+If this option is set then the device `FirmwareGType` is automatically set to `FuFmapFirmware`.
+
+To test actual firmware blobs with mtram, use `sudo modprobe mtdram total_size=32768`
+
+Since: 2.0.17
 
 ### MtdMetadataSize
 

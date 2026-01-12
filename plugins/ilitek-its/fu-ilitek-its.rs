@@ -57,21 +57,21 @@ struct FuStructIlitekItsLongHidCmd {
     data: [u8; 1024],
 }
 
-#[derive(Getters)]
+#[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructIlitekItsFwid {
     customer_id: u16le,
     fwid: u16le,
 }
 
-#[derive(Getters, Default)]
+#[derive(Parse, Default)]
 #[repr(C, packed)]
 struct FuStructIlitekItsSensorId {
-    header: u16le == 0x5aa5,
+    header: u16le == 0xa55a,
     sensor_id: u8,
 }
 
-#[derive(Getters)]
+#[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructIlitekItsMcuVersion {
     ic_name: u16le,
@@ -80,7 +80,7 @@ struct FuStructIlitekItsMcuVersion {
     module_name: [char; 26],
 }
 
-#[derive(Getters)]
+#[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructIlitekItsMcuInfo {
     ic_name: [char; 5],

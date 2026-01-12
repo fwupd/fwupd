@@ -16,6 +16,7 @@
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
+#include "fu-string.h"
 
 /**
  * FuFirmware:
@@ -70,7 +71,7 @@ fu_firmware_patch_free(FuFirmwarePatch *ptch)
 
 /**
  * fu_firmware_add_flag:
- * @firmware: a #FuFirmware
+ * @self: a #FuFirmware
  * @flag: the firmware flag
  *
  * Adds a specific firmware flag to the firmware.
@@ -78,16 +79,16 @@ fu_firmware_patch_free(FuFirmwarePatch *ptch)
  * Since: 1.5.0
  **/
 void
-fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag)
+fu_firmware_add_flag(FuFirmware *self, FuFirmwareFlags flag)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(firmware);
-	g_return_if_fail(FU_IS_FIRMWARE(firmware));
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
 	priv->flags |= flag;
 }
 
 /**
  * fu_firmware_has_flag:
- * @firmware: a #FuFirmware
+ * @self: a #FuFirmware
  * @flag: the firmware flag
  *
  * Finds if the firmware has a specific firmware flag.
@@ -97,10 +98,10 @@ fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag)
  * Since: 1.5.0
  **/
 gboolean
-fu_firmware_has_flag(FuFirmware *firmware, FuFirmwareFlags flag)
+fu_firmware_has_flag(FuFirmware *self, FuFirmwareFlags flag)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(firmware);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	return (priv->flags & flag) > 0;
 }
 
@@ -190,7 +191,7 @@ fu_firmware_set_version_raw(FuFirmware *self, guint64 version_raw)
 	if (klass->convert_version != NULL) {
 		g_autofree gchar *version = klass->convert_version(self, version_raw);
 		if (version != NULL)
-			fu_firmware_set_version(self, version);
+			fu_firmware_set_version(self, version); /* nocheck:set-version */
 	}
 }
 
@@ -237,7 +238,7 @@ fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_form
 	/* convert this, now we know */
 	if (klass->convert_version != NULL && priv->version != NULL && priv->version_raw != 0) {
 		g_autofree gchar *version = klass->convert_version(self, priv->version_raw);
-		fu_firmware_set_version(self, version);
+		fu_firmware_set_version(self, version); /* nocheck:set-version */
 	}
 }
 
@@ -1013,6 +1014,8 @@ fu_firmware_parse_stream(FuFirmware *self,
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
 	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(GInputStream) seekable_stream = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
@@ -1027,8 +1030,18 @@ fu_firmware_parse_stream(FuFirmware *self,
 		return FALSE;
 	}
 
+	/* ensure the stream is seekable */
+	if (!G_IS_SEEKABLE(stream) || !g_seekable_can_seek(G_SEEKABLE(stream))) {
+		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
+		if (blob == NULL)
+			return FALSE;
+		seekable_stream = g_memory_input_stream_new_from_bytes(blob);
+	} else {
+		seekable_stream = g_object_ref(stream);
+	}
+
 	/* check size */
-	if (!fu_input_stream_size(stream, &streamsz, error))
+	if (!fu_input_stream_size(seekable_stream, &streamsz, error))
 		return FALSE;
 	if (streamsz <= offset) {
 		g_set_error(error,
@@ -1041,7 +1054,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 	}
 
 	/* optional */
-	if (!fu_firmware_validate_for_offset(self, stream, &offset, flags, error))
+	if (!fu_firmware_validate_for_offset(self, seekable_stream, &offset, flags, error))
 		return FALSE;
 
 	/* save stream size */
@@ -1075,9 +1088,10 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* save stream */
 	if (offset == 0) {
-		partial_stream = g_object_ref(stream);
+		partial_stream = g_object_ref(seekable_stream);
 	} else {
-		partial_stream = fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
+		partial_stream =
+		    fu_partial_input_stream_new(seekable_stream, offset, priv->streamsz, error);
 		if (partial_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut firmware: ");
 			return FALSE;
@@ -1086,15 +1100,19 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* cache */
 	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB) {
-		g_autoptr(GBytes) blob = NULL;
-		blob = fu_input_stream_read_bytes(partial_stream, 0x0, priv->streamsz, NULL, error);
-		if (blob == NULL)
-			return FALSE;
+		if (blob == NULL) {
+			blob = fu_input_stream_read_bytes(partial_stream,
+							  0x0,
+							  priv->streamsz,
+							  NULL,
+							  error);
+			if (blob == NULL)
+				return FALSE;
+		}
 		fu_firmware_set_bytes(self, blob);
 	}
-	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM) {
+	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM)
 		g_set_object(&priv->stream, partial_stream);
-	}
 
 	/* optional */
 	if (klass->tokenize != NULL) {
@@ -1222,7 +1240,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	/* set attributes */
 	tmp = xb_node_query_text(n, "version", NULL);
 	if (tmp != NULL)
-		fu_firmware_set_version(self, tmp);
+		fu_firmware_set_version(self, tmp); /* nocheck:set-version */
 	tmp = xb_node_query_text(n, "version_format", NULL);
 	if (tmp != NULL) {
 		FwupdVersionFormat version_format = fwupd_version_format_from_string(tmp);
@@ -1337,7 +1355,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			} else {
 				img = fu_firmware_new();
 			}
-			if (!fu_firmware_add_image_full(self, img, error))
+			if (!fu_firmware_add_image(self, img, error))
 				return FALSE;
 			if (!fu_firmware_build(img, xb_image, error))
 				return FALSE;
@@ -1619,9 +1637,8 @@ fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max,
 
 	/* if we have less data than requested */
 	chunk_left = g_bytes_get_size(priv->bytes) - offset;
-	if (chunk_sz_max > chunk_left) {
+	if (chunk_sz_max > chunk_left)
 		return fu_bytes_new_offset(priv->bytes, offset, chunk_left, error);
-	}
 
 	/* check chunk */
 	return fu_bytes_new_offset(priv->bytes, offset, chunk_sz_max, error);
@@ -1695,7 +1712,7 @@ fu_firmware_get_depth(FuFirmware *self)
 }
 
 /**
- * fu_firmware_add_image_full:
+ * fu_firmware_add_image:
  * @self: a #FuPlugin
  * @img: a child firmware image
  * @error: (nullable): optional return location for an error
@@ -1708,10 +1725,10 @@ fu_firmware_get_depth(FuFirmware *self)
  *
  * Returns: %TRUE if the image was added
  *
- * Since: 1.9.3
+ * Since: 1.9.3, but @error was added in 2.0.17
  **/
 gboolean
-fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
+fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 
@@ -1767,33 +1784,6 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-/**
- * fu_firmware_add_image:
- * @self: a #FuPlugin
- * @img: a child firmware image
- *
- * Adds an image to the firmware.
- *
- * NOTE: If adding images in a loop of any kind then fu_firmware_add_image_full() should be used
- * instead, and fu_firmware_set_images_max() should be set before adding images.
- *
- * If %FU_FIRMWARE_FLAG_DEDUPE_ID is set, an image with the same ID is already
- * present it is replaced.
- *
- * Since: 1.3.1
- **/
-void
-fu_firmware_add_image(FuFirmware *self, FuFirmware *img)
-{
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	g_return_if_fail(FU_IS_FIRMWARE(img));
-
-	if (!fu_firmware_add_image_full(self, img, &error_local))
-		g_critical("failed to add image: %s", error_local->message);
 }
 
 /**
@@ -1962,9 +1952,20 @@ FuFirmware *
 fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *id_str = NULL;
+	g_autoptr(GPtrArray) id_errmsg = g_ptr_array_new();
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (priv->images->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no images in firmware");
+		return NULL;
+	}
 
 	/* non-NULL */
 	if (id != NULL) {
@@ -1978,24 +1979,26 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 					return g_object_ref(img);
 			}
 		}
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "no image id %s found in firmware",
-			    id);
-		return NULL;
+	} else {
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(priv->images, i);
+			if (fu_firmware_get_id(img) == NULL)
+				return g_object_ref(img);
+		}
 	}
 
-	/* NULL */
+	/* build a useful error */
 	for (guint i = 0; i < priv->images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(priv->images, i);
-		if (fu_firmware_get_id(img) == NULL)
-			return g_object_ref(img);
+		g_ptr_array_add(id_errmsg, (gpointer)fu_firmware_get_id(img));
 	}
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "no NULL image id found in firmware");
+	id_str = fu_strjoin(",", id_errmsg);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no image id %s found in firmware, only have %s",
+		    id,
+		    id_str);
 	return NULL;
 }
 
@@ -2215,6 +2218,40 @@ fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error)
 	return NULL;
 }
 
+static gint
+fu_firmware_sort_by_id_cb(gconstpointer a, gconstpointer b)
+{
+	FuFirmware *firmware1 = *((FuFirmware **)a);
+	FuFirmware *firmware2 = *((FuFirmware **)b);
+	return g_strcmp0(fu_firmware_get_id(firmware1), fu_firmware_get_id(firmware2));
+}
+
+static gint
+fu_firmware_sort_by_idx_cb(gconstpointer a, gconstpointer b)
+{
+	FuFirmware *firmware1 = *((FuFirmware **)a);
+	FuFirmware *firmware2 = *((FuFirmware **)b);
+	guint64 idx1 = fu_firmware_get_idx(firmware1);
+	guint64 idx2 = fu_firmware_get_idx(firmware2);
+	if (idx1 < idx2)
+		return -1;
+	if (idx1 > idx2)
+		return 1;
+	return 0;
+}
+
+static GPtrArray *
+fu_firmware_get_images_sorted(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) images = g_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, NULL);
+	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX)
+		g_ptr_array_sort(images, fu_firmware_sort_by_idx_cb);
+	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID)
+		g_ptr_array_sort(images, fu_firmware_sort_by_id_cb);
+	return g_steal_pointer(&images);
+}
+
 /**
  * fu_firmware_export:
  * @self: a #FuFirmware
@@ -2222,6 +2259,10 @@ fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error)
  * @bn: a Xmlb builder node
  *
  * This allows us to build an XML object for the nested firmware.
+ *
+ * The image children will have a predictable order if the firmware has
+ * %FU_FIRMWARE_FLAG_DEDUPE_ID or %FU_FIRMWARE_FLAG_DEDUPE_IDX and
+ * %FU_FIRMWARE_EXPORT_FLAG_SORTED is also used in @flags.
  *
  * Since: 1.6.0
  **/
@@ -2323,8 +2364,11 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 
 	/* children */
 	if (priv->images->len > 0) {
-		for (guint i = 0; i < priv->images->len; i++) {
-			FuFirmware *img = g_ptr_array_index(priv->images, i);
+		g_autoptr(GPtrArray) images = flags & FU_FIRMWARE_EXPORT_FLAG_SORTED
+						  ? fu_firmware_get_images_sorted(self)
+						  : g_ptr_array_ref(priv->images);
+		for (guint i = 0; i < images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(images, i);
 			g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "firmware", NULL);
 			fu_firmware_export(img, flags, bc);
 		}
@@ -2550,10 +2594,11 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 		g_autoptr(FuFirmware) firmware = g_object_new(gtype, NULL);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_firmware_parse_stream(firmware, stream, offset, flags, &error_local)) {
-			g_debug("%s", error_local->message);
+			g_debug("@0x%x %s", (guint)offset, error_local->message);
 			if (error_all == NULL) {
 				g_propagate_error(&error_all, g_steal_pointer(&error_local));
 			} else {
+				/* nocheck:error */
 				g_prefix_error(&error_all, "%s: ", error_local->message);
 			}
 			continue;

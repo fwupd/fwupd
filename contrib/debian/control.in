@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
-           Mario Limonciello <superm1@gmail.com>
+           Mario Limonciello <superm1@debian.org>
 Build-Depends: %%%DYNAMIC%%%
 Build-Depends-Indep: gi-docgen <!nodoc>,
 Rules-Requires-Root: no
@@ -37,7 +37,7 @@ Depends: ${misc:Depends},
          systemd-sysusers
 Recommends: python3,
 	    bolt,
-	    dbus,
+	    default-dbus-system-bus | dbus-system-bus,
 	    secureboot-db,
 	    udisks2,
 	    fwupd-signed,
@@ -69,7 +69,7 @@ Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          ca-certificates,
-         dbus-x11,
+         default-dbus-system-bus | dbus-system-bus,
          fwupd,
          gnome-desktop-testing,
          polkitd | policykit-1,

@@ -1,6 +1,16 @@
 // Copyright 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuHughskiColorhugCmd {
+    GetFirmwareVersion = 0x07,
+    Reset = 0x24,
+    ReadFlash = 0x25,
+    WriteFlash = 0x26,
+    BootFlash = 0x27,
+    SetFlashSuccess = 0x28,
+    EraseFlash = 0x29,
+}
+
 #[derive(ToString)]
 enum FuHughskiColorhugError {
     None,

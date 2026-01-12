@@ -80,6 +80,8 @@ typedef struct {
 	gchar *user_agent;
 	GHashTable *hints;		/* str:str */
 	GHashTable *immediate_requests; /* str:FwupdRequest */
+	GStrv hwid_keys;
+	GStrv hwid_values;
 } FwupdClientPrivate;
 
 typedef struct {
@@ -521,7 +523,7 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 	if (priv->status == status)
 		return;
 	priv->status = status;
-	g_debug("Emitting ::status-changed() [%s]", fwupd_status_to_string(priv->status));
+	g_debug("emitting ::status-changed() [%s]", fwupd_status_to_string(priv->status));
 	fwupd_client_object_notify(self, "status");
 }
 
@@ -693,7 +695,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
-		g_debug("Emitting ::changed()");
+		g_debug("emitting ::changed()");
 		fwupd_client_signal_emit_changed(self);
 		return;
 	}
@@ -703,7 +705,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceAdded]: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-added(%s)", fwupd_device_get_id(dev));
+		g_debug("emitting ::device-added(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
 		return;
 	}
@@ -713,7 +715,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceRemoved]: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-removed(%s)", fwupd_device_get_id(dev));
+		g_debug("emitting ::device-removed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
 		return;
 	}
@@ -723,7 +725,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceChanged]: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-changed(%s)", fwupd_device_get_id(dev));
+		g_debug("emitting ::device-changed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
 
 		/* invalidate request */
@@ -744,7 +746,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to convert DeviceRequest: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-request(%s)", fwupd_request_get_id(req));
+		g_debug("emitting ::device-request(%s)", fwupd_request_get_id(req));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
 
 		/* we may need to invalidate this later */
@@ -756,7 +758,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		}
 		return;
 	}
-	g_debug("Unknown signal name '%s' from %s", signal_name, sender_name);
+	g_debug("unknown signal name '%s' from %s", signal_name, sender_name);
 }
 
 /**
@@ -971,6 +973,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val8 = NULL;
 	g_autoptr(GVariant) val9 = NULL;
 	g_autoptr(GVariant) val10 = NULL;
+	g_autoptr(GVariant) val_hwids = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish(res, &error);
@@ -1031,6 +1034,20 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
 	if (val9 != NULL)
 		priv->only_trusted = g_variant_get_boolean(val9);
+
+	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
+	if (val_hwids != NULL) {
+		guint size = g_variant_n_children(val_hwids);
+		priv->hwid_keys = g_new0(gchar *, size + 1);
+		priv->hwid_values = g_new0(gchar *, size + 1);
+		for (guint i = 0; i < size; i++) {
+			const gchar *hwid_value;
+			const gchar *hwid_key;
+			g_variant_get_child(val_hwids, i, "(&s&s)", &hwid_key, &hwid_value);
+			priv->hwid_keys[i] = g_strdup(hwid_key);
+			priv->hwid_values[i] = g_strdup(hwid_value);
+		}
+	}
 
 	/* build client hints */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
@@ -1222,9 +1239,13 @@ fwupd_client_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
-		fwupd_client_fixup_dbus_error(error);
-		g_task_return_error(task, g_steal_pointer(&error));
-		return;
+		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CLOSED)) {
+			g_debug("ignoring: %s", error->message);
+		} else {
+			fwupd_client_fixup_dbus_error(error);
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
 	}
 
 	/* success */
@@ -4141,6 +4162,27 @@ fwupd_client_get_host_security_id(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_hwids:
+ * @self: a #FwupdClient
+ * @keys: (out) (optional): CHID keys
+ * @values: (out) (optional): CHID values
+ *
+ * Gets the daemon hardware IDs, sometimes called CHIDs.
+ *
+ * Since: 2.0.17
+ **/
+void
+fwupd_client_get_hwids(FwupdClient *self, GStrv *keys, GStrv *values)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	if (keys != NULL)
+		*keys = g_strdupv(priv->hwid_keys);
+	if (values != NULL)
+		*values = g_strdupv(priv->hwid_values);
+}
+
+/**
  * fwupd_client_get_battery_level:
  * @self: a #FwupdClient
  *
@@ -4154,7 +4196,7 @@ guint32
 fwupd_client_get_battery_level(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), G_MAXUINT32);
 	return priv->battery_level;
 }
 
@@ -4173,7 +4215,7 @@ guint32
 fwupd_client_get_battery_threshold(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), G_MAXUINT32);
 	return priv->battery_threshold;
 }
 
@@ -5344,6 +5386,84 @@ fwupd_client_modify_remote_finish(FwupdClient *self, GAsyncResult *res, GError *
 }
 
 static void
+fwupd_client_clean_remote_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean(task, TRUE);
+}
+
+/**
+ * fwupd_client_clean_remote_async:
+ * @self: a #FwupdClient
+ * @remote_id: the remote ID, e.g. `lvfs-testing`
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Cleans a system remote, deleting metadata as required.
+ *
+ * Since: 2.0.17
+ **/
+void
+fwupd_client_clean_remote_async(FwupdClient *self,
+				const gchar *remote_id,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(remote_id != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_dbus_proxy_call(priv->proxy,
+			  "CleanRemote",
+			  g_variant_new("(s)", remote_id),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_clean_remote_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_clean_remote_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.clean_remote_async].
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.17
+ **/
+gboolean
+fwupd_client_clean_remote_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean(G_TASK(res), error);
+}
+
+static void
 fwupd_client_modify_device_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
@@ -5687,6 +5807,14 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	res = curl_easy_perform(curl);
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	fwupd_client_set_percentage(self, 100);
+	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "transient failure: %s",
+			    errbuf);
+		return NULL;
+	}
 	if (res != CURLE_OK) {
 		if (errbuf[0] != '\0') {
 			g_set_error(error,
@@ -5708,6 +5836,15 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
 	g_info("status-code was %ld", status_code);
 	if (status_code == 429) {
+		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
+		if (g_str_is_ascii(str)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "Failed to download due to server limit: %s",
+				    str);
+			return NULL;
+		}
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -7751,6 +7888,8 @@ fwupd_client_finalize(GObject *object)
 	FwupdClient *self = FWUPD_CLIENT(object);
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 
+	g_strfreev(priv->hwid_keys);
+	g_strfreev(priv->hwid_values);
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
 	g_free(priv->package_name);

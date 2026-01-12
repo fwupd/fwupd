@@ -11,12 +11,6 @@
 #include "fu-tpm-eventlog-parser.h"
 #include "fu-tpm-struct.h"
 
-#define FU_TPM_EVENTLOG_V1_IDX_PCR	  0x00
-#define FU_TPM_EVENTLOG_V1_IDX_TYPE	  0x04
-#define FU_TPM_EVENTLOG_V1_IDX_DIGEST	  0x08
-#define FU_TPM_EVENTLOG_V1_IDX_EVENT_SIZE 0x1c
-#define FU_TPM_EVENTLOG_V1_SIZE		  0x20
-
 #define FU_TPM_EVENTLOG_V2_HDR_SIGNATURE "Spec ID Event03"
 
 static void
@@ -76,26 +70,26 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 	/* advance over the header block */
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
-				    FU_TPM_EVENTLOG_V1_IDX_EVENT_SIZE,
+				    FU_STRUCT_TPM_EVENT_LOG1_ITEM_OFFSET_DATASZ,
 				    &hdrsz,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return NULL;
 	items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_tpm_eventlog_parser_item_free);
-	for (gsize idx = FU_TPM_EVENTLOG_V1_SIZE + hdrsz; idx < bufsz;) {
+	for (gsize idx = FU_STRUCT_TPM_EVENT_LOG1_ITEM_SIZE + hdrsz; idx < bufsz;) {
 		guint32 pcr;
 		guint32 digestcnt;
 		guint32 datasz = 0;
 		g_autoptr(GBytes) checksum_sha1 = NULL;
 		g_autoptr(GBytes) checksum_sha256 = NULL;
 		g_autoptr(GBytes) checksum_sha384 = NULL;
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructTpmEventLog2) st = NULL;
 
 		/* read checksum block */
 		st = fu_struct_tpm_event_log2_parse(buf, bufsz, idx, error);
 		if (st == NULL)
 			return NULL;
-		idx += st->len;
+		idx += st->buf->len;
 		digestcnt = fu_struct_tpm_event_log2_get_digest_count(st);
 		for (guint i = 0; i < digestcnt; i++) {
 			guint16 alg_type = 0;
@@ -216,7 +210,7 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 			    0x0, /* dst */
 			    buf,
 			    bufsz,
-			    FU_TPM_EVENTLOG_V1_SIZE, /* src */
+			    FU_STRUCT_TPM_EVENT_LOG1_ITEM_SIZE, /* src */
 			    sizeof(sig),
 			    error))
 		return NULL;
@@ -225,31 +219,18 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 
 	/* assume v1 structure */
 	items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_tpm_eventlog_parser_item_free);
-	for (gsize idx = 0; idx < bufsz; idx += FU_TPM_EVENTLOG_V1_SIZE) {
+	for (gsize idx = 0; idx < bufsz; idx += FU_STRUCT_TPM_EVENT_LOG1_ITEM_SIZE) {
 		guint32 datasz = 0;
 		guint32 pcr = 0;
 		guint32 event_type = 0;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V1_IDX_PCR,
-					    &pcr,
-					    G_LITTLE_ENDIAN,
-					    error))
+		g_autoptr(FuStructTpmEventLog1Item) st = NULL;
+
+		st = fu_struct_tpm_event_log1_item_parse(buf, bufsz, idx, error);
+		if (st == NULL)
 			return NULL;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V1_IDX_TYPE,
-					    &event_type,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V1_IDX_EVENT_SIZE,
-					    &datasz,
-					    G_LITTLE_ENDIAN,
-					    error))
-			return NULL;
+		pcr = fu_struct_tpm_event_log1_item_get_pcr(st);
+		event_type = fu_struct_tpm_event_log1_item_get_event_type(st);
+		datasz = fu_struct_tpm_event_log1_item_get_datasz(st);
 		if (datasz > 1024 * 1024) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -259,24 +240,15 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 		}
 		if (pcr == ESYS_TR_PCR0 || flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
 			g_autoptr(FuTpmEventlogItem) item = NULL;
-			guint8 digest[TPM2_SHA1_DIGEST_SIZE] = {0x0};
-
-			/* copy hash */
-			if (!fu_memcpy_safe(digest,
-					    sizeof(digest),
-					    0x0, /* dst */
-					    buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST, /* src */
-					    sizeof(digest),
-					    error))
-				return NULL;
+			gsize digestsz = 0;
+			const guint8 *digest =
+			    fu_struct_tpm_event_log1_item_get_digest(st, &digestsz);
 
 			/* build item */
 			item = g_new0(FuTpmEventlogItem, 1);
 			item->pcr = pcr;
 			item->kind = event_type;
-			item->checksum_sha1 = g_bytes_new(digest, sizeof(digest));
+			item->checksum_sha1 = g_bytes_new(digest, digestsz);
 			if (datasz > 0) {
 				g_autofree guint8 *data = g_malloc0(datasz);
 				if (!fu_memcpy_safe(data,
@@ -284,7 +256,7 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 						    0x0, /* dst */
 						    buf,
 						    bufsz,
-						    idx + FU_TPM_EVENTLOG_V1_SIZE, /* src */
+						    idx + st->buf->len, /* src */
 						    datasz,
 						    error))
 					return NULL;

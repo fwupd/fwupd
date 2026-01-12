@@ -115,17 +115,20 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse at 0x%x: ", (guint)offset);
 			return FALSE;
 		}
-		fu_firmware_set_offset(firmware, offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		fu_firmware_set_offset(img, offset);
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
+
+		/* next! */
+		offset += fu_firmware_get_size(img);
 
 		/* skip any padding */
 		if (fu_firmware_has_flag(img, FU_FIRMWARE_FLAG_IS_LAST_IMAGE))
 			break;
-
-		/* next! */
-		offset += fu_firmware_get_size(img);
 	}
+
+	/* this might be less than streamsz if padded */
+	fu_firmware_set_size(firmware, offset);
 
 	/* success */
 	return TRUE;

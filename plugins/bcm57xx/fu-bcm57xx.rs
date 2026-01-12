@@ -19,7 +19,7 @@ struct FuStructBcm57xxNvramDirectory {
     offset: u32be,
 }
 
-#[derive(ParseStream, New)]
+#[derive(ParseStream, New, ToBytes)]
 #[repr(C, packed)]
 struct FuStructBcm57xxNvramInfo {
     mac_addr: [u32be; 11],

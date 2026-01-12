@@ -426,7 +426,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	guint8 flags1;
 	guint8 flags2;
 	guint8 flags3;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCfuOffer) st = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_offer_parse_stream(stream, 0x0, error);
@@ -462,7 +462,7 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st = fu_struct_cfu_offer_new();
+	g_autoptr(FuStructCfuOffer) st = fu_struct_cfu_offer_new();
 
 	/* component info */
 	fu_struct_cfu_offer_set_segment_number(st, priv->segment_number);
@@ -482,7 +482,7 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	fu_struct_cfu_offer_set_product_id(st, priv->product_id);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

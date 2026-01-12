@@ -24,6 +24,7 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	FuBackend *udev_backend = NULL;
 	g_autofree gchar *pci_sysfs_path = NULL;
+	g_autofree gchar *pci_sysfs_real = NULL;
 	g_autoptr(FuDevice) pci_device = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -40,9 +41,12 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 
 	/* construct PCI sysfs path from bus_name (e.g., "pci/0000:01:00.0") */
 	pci_sysfs_path = g_strdup_printf("/sys/bus/pci/devices/%s", dev_name);
+	pci_sysfs_real = fu_path_make_absolute(pci_sysfs_path, error);
+	if (pci_sysfs_real == NULL)
+		return NULL;
 
 	/* create PCI device from sysfs path */
-	pci_device = fu_backend_create_device(udev_backend, pci_sysfs_path, &error_local);
+	pci_device = fu_backend_create_device(udev_backend, pci_sysfs_real, &error_local);
 	if (pci_device == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -83,49 +87,67 @@ fu_devlink_backend_create_netdevsim_parent(FuDevlinkBackend *self,
 	return g_steal_pointer(&netdevsim_device);
 }
 
-gboolean
+FuDevice *
 fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				const gchar *bus_name,
 				const gchar *dev_name,
+				const gchar *serial_number,
 				GError **error)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	FuDevice *old_devlink_device;
 	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
 
-	g_return_val_if_fail(FU_IS_DEVLINK_BACKEND(self), FALSE);
-	g_return_val_if_fail(bus_name != NULL, FALSE);
-	g_return_val_if_fail(dev_name != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(FU_IS_DEVLINK_BACKEND(self), NULL);
+	g_return_val_if_fail(bus_name != NULL, NULL);
+	g_return_val_if_fail(dev_name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* only support PCI and netdevsim buses */
 	if (g_strcmp0(bus_name, "pci") == 0) {
 		parent_device =
 		    fu_devlink_backend_create_pci_parent(self, bus_name, dev_name, error);
 		if (parent_device == NULL)
-			return FALSE;
+			return NULL;
 	} else if (g_strcmp0(bus_name, "netdevsim") == 0) {
 		parent_device =
 		    fu_devlink_backend_create_netdevsim_parent(self, bus_name, dev_name, error);
 		if (parent_device == NULL)
-			return FALSE;
+			return NULL;
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "unsupported bus type: %s (only 'pci' and 'netdevsim' are supported)",
 			    bus_name);
-		return FALSE;
+		return NULL;
 	}
 
 	/* create devlink device */
-	devlink_device = fu_devlink_device_new(ctx, bus_name, dev_name);
+	devlink_device = fu_devlink_device_new(ctx, bus_name, dev_name, serial_number);
 	if (devlink_device == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "failed to create devlink device");
-		return FALSE;
+		return NULL;
+	}
+
+	/* only add one device for the PCI card, use serial number as backend id */
+	if (serial_number != NULL)
+		fu_device_set_backend_id(devlink_device, serial_number);
+
+	/* in case the device with the same backend id already exists, skip this one */
+	old_devlink_device =
+	    fu_backend_lookup_by_id(FU_BACKEND(self), fu_device_get_backend_id(devlink_device));
+	if (old_devlink_device != NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "device with the same backend id already exists: %s",
+			    fu_device_get_backend_id(devlink_device));
+		return NULL;
 	}
 
 	/* incorporate information from parent device (without setting hierarchy) */
@@ -138,25 +160,14 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 
 	/* only add the devlink device to the backend - parent is managed by its own backend */
 	fu_backend_device_added(FU_BACKEND(self), devlink_device);
-
-	return TRUE;
+	return g_steal_pointer(&devlink_device);
 }
 
 void
-fu_devlink_backend_device_removed(FuDevlinkBackend *self,
-				  const gchar *bus_name,
-				  const gchar *dev_name)
+fu_devlink_backend_device_removed(FuDevlinkBackend *self, FuDevice *devlink_device)
 {
-	FuDevice *devlink_device;
-	g_autofree gchar *backend_id = g_strdup_printf("%s/%s", bus_name, dev_name);
-
 	g_return_if_fail(FU_IS_DEVLINK_BACKEND(self));
-	g_return_if_fail(bus_name != NULL);
-	g_return_if_fail(dev_name != NULL);
-
-	devlink_device = fu_backend_lookup_by_id(FU_BACKEND(self), backend_id);
-	if (devlink_device == NULL)
-		return;
+	g_return_if_fail(FU_IS_DEVICE(devlink_device));
 
 	fu_backend_device_removed(FU_BACKEND(self), devlink_device);
 }

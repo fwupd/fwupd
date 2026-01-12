@@ -77,7 +77,7 @@ enum FuWacModuleStatus {
     ErrWrongImage,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuWacDeviceStatus {
     Unknown = 0,
     Writing = 1 << 0,
@@ -104,7 +104,7 @@ struct FuStructId9SpiCmd {
     data: FuStructId9UnknownCmd,
 }
 
-#[derive(New,Validate)]
+#[derive(New, Validate, ToBytes)]
 #[repr(C, packed)]
 struct FuStructId9LoaderCmd {
     command: u8,

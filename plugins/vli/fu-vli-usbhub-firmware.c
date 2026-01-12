@@ -137,7 +137,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	guint8 tmp = 0x0;
 	guint8 fwtype = 0x0;
 	guint8 strapping1;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructVliUsbhubHdr) st = NULL;
 
 	/* map into header */
 	st = fu_struct_vli_usbhub_hdr_parse_stream(stream, 0x0, error);

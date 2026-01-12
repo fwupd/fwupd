@@ -435,7 +435,8 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	dp_buf = fu_uefi_capsule_device_build_dp_buf(esp, filepath, error);
 	if (dp_buf == NULL)
 		return FALSE;
-	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf));
+	if (!fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf), error))
+		return FALSE;
 	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
 
 	/* save as BootNext */

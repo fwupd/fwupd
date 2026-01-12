@@ -109,7 +109,7 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError *
 					      error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 			return FALSE;
 	}
 
@@ -178,13 +178,13 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 	self->bos_cap.bDevCapabilityType = fu_usb_bos_hdr_get_dev_capability_type(st);
 
 	/* data */
-	if (self->bos_cap.bLength > st->len) {
+	if (self->bos_cap.bLength > st->buf->len) {
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GInputStream) img_stream = NULL;
 
 		img_stream = fu_partial_input_stream_new(stream,
-							 st->len,
-							 self->bos_cap.bLength - st->len,
+							 st->buf->len,
+							 self->bos_cap.bLength - st->buf->len,
 							 error);
 		if (img_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut BOS descriptor: ");
@@ -197,7 +197,7 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 					      error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 			return FALSE;
 	}
 
@@ -215,12 +215,12 @@ fu_usb_bos_descriptor_write(FuFirmware *firmware, GError **error)
 	fu_usb_bos_hdr_set_dev_capability_type(st, self->bos_cap.bDevCapabilityType);
 	blob = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, NULL);
 	if (blob != NULL) {
-		fu_byte_array_append_bytes(st, blob);
-		fu_usb_bos_hdr_set_length(st, st->len);
+		fu_byte_array_append_bytes(st->buf, blob);
+		fu_usb_bos_hdr_set_length(st, st->buf->len);
 	}
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void
@@ -255,7 +255,7 @@ fu_usb_bos_descriptor_init(FuUsbBosDescriptor *self)
 FuUsbBosDescriptor *
 fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos_cap)
 {
-	FuUsbBosDescriptor *self = g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
+	g_autoptr(FuUsbBosDescriptor) self = g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
 	g_autoptr(FuFirmware) img = fu_firmware_new();
 	g_autoptr(GBytes) bytes = NULL;
 
@@ -264,6 +264,7 @@ fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos
 	bytes = g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - FU_USB_BOS_HDR_SIZE);
 	fu_firmware_set_bytes(img, bytes);
 	fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
-	return FU_USB_BOS_DESCRIPTOR(self);
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), img, NULL))
+		return NULL;
+	return g_steal_pointer(&self);
 }

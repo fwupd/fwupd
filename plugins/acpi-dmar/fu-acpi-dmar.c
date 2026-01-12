@@ -42,7 +42,7 @@ fu_acpi_dmar_parse(FuFirmware *firmware,
 	}
 	if (!fu_input_stream_read_u8(stream, 0x25, &dma_flags, error))
 		return FALSE;
-	g_debug("Flags: 0x%02x", dma_flags);
+	g_debug("flags: 0x%02x", dma_flags);
 	self->opt_in = (dma_flags & DMAR_DMA_CTRL_PLATFORM_OPT_IN_FLAG) > 0;
 	return TRUE;
 }

@@ -31,6 +31,8 @@ typedef struct {
 	gchar *product;
 	gchar *summary;
 	gchar *colloquial_version;
+	gchar *persistent_id;
+	gchar *device_id;
 	FuCoswidVersionScheme version_scheme;
 	GPtrArray *links;    /* of FuCoswidFirmwareLink */
 	GPtrArray *entities; /* of FuCoswidFirmwareEntity */
@@ -139,6 +141,43 @@ fu_coswid_firmware_parse_meta(cbor_item_t *item, gpointer user_data, GError **er
 			if (priv->colloquial_version == NULL) {
 				g_prefix_error_literal(error,
 						       "failed to parse colloquial-version: ");
+				return FALSE;
+			}
+		} else if (tag_id == FU_COSWID_TAG_PERSISTENT_ID) {
+			g_free(priv->persistent_id);
+			priv->persistent_id = fu_coswid_read_string(pairs[i].value, error);
+			if (priv->persistent_id == NULL) {
+				g_prefix_error_literal(error, "failed to parse persistent-id: ");
+				return FALSE;
+			}
+		} else {
+			g_debug("unhandled tag %s from %s",
+				fu_coswid_tag_to_string(tag_id),
+				fu_coswid_tag_to_string(FU_COSWID_TAG_SOFTWARE_META));
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/* @userdata: a #FuCoswidFirmware */
+static gboolean
+fu_coswid_firmware_parse_evidence(cbor_item_t *item, gpointer user_data, GError **error)
+{
+	FuCoswidFirmware *self = FU_COSWID_FIRMWARE(user_data);
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	struct cbor_pair *pairs = cbor_map_handle(item);
+
+	for (gsize i = 0; i < cbor_map_size(item); i++) {
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
+		if (tag_id == FU_COSWID_TAG_DEVICE_ID) {
+			g_free(priv->device_id);
+			priv->device_id = fu_coswid_read_string(pairs[i].value, error);
+			if (priv->device_id == NULL) {
+				g_prefix_error_literal(error, "failed to parse device-id: ");
 				return FALSE;
 			}
 		} else {
@@ -651,6 +690,12 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 							 self, /* user_data */
 							 error))
 				return FALSE;
+		} else if (tag_id == FU_COSWID_TAG_EVIDENCE) {
+			if (!fu_coswid_parse_one_or_many(pairs[i].value,
+							 fu_coswid_firmware_parse_evidence,
+							 self, /* user_data */
+							 error))
+				return FALSE;
 		} else if (tag_id == FU_COSWID_TAG_LINK) {
 			if (!fu_coswid_parse_one_or_many(pairs[i].value,
 							 fu_coswid_firmware_parse_link,
@@ -760,6 +805,42 @@ fu_coswid_firmware_get_product(FuCoswidFirmware *self)
 	return priv->product;
 }
 
+/**
+ * fu_coswid_firmware_get_persistent_id:
+ * @self: a #FuCoswidFirmware
+ *
+ * Gets the persistent ID.
+ *
+ * Returns: string, or %NULL for unset
+ *
+ * Since: 2.0.17
+ **/
+const gchar *
+fu_coswid_firmware_get_persistent_id(FuCoswidFirmware *self)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_COSWID_FIRMWARE(self), NULL);
+	return priv->persistent_id;
+}
+
+/**
+ * fu_coswid_firmware_get_device_id:
+ * @self: a #FuCoswidFirmware
+ *
+ * Gets the device ID.
+ *
+ * Returns: string, or %NULL for unset
+ *
+ * Since: 2.0.17
+ **/
+const gchar *
+fu_coswid_firmware_get_device_id(FuCoswidFirmware *self)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_COSWID_FIRMWARE(self), NULL);
+	return priv->device_id;
+}
+
 #ifdef HAVE_CBOR
 
 static gboolean
@@ -802,12 +883,10 @@ fu_coswid_firmware_write_payload(cbor_item_t *root,
 {
 	g_autoptr(cbor_item_t) item_payload = cbor_new_indefinite_map();
 	g_autoptr(cbor_item_t) item_file = cbor_new_indefinite_map();
-	if (payload->name != NULL) {
+	if (payload->name != NULL)
 		fu_coswid_write_tag_string(item_file, FU_COSWID_TAG_FS_NAME, payload->name);
-	}
-	if (payload->size != 0) {
+	if (payload->size != 0)
 		fu_coswid_write_tag_u64(item_file, FU_COSWID_TAG_SIZE, payload->size);
-	}
 	if (payload->hashes->len > 0) {
 		g_autoptr(cbor_item_t) item_hashes = cbor_new_indefinite_array();
 		for (guint j = 0; j < payload->hashes->len; j++) {
@@ -868,6 +947,24 @@ fu_coswid_firmware_write_entity(cbor_item_t *root, FuCoswidFirmwareEntity *entit
 	return TRUE;
 }
 
+static gboolean
+fu_coswid_firmware_write_evidence(cbor_item_t *root, const gchar *device_id, GError **error)
+{
+	g_autoptr(cbor_item_t) item_entity = cbor_new_indefinite_map();
+
+	fu_coswid_write_tag_string(item_entity, FU_COSWID_TAG_DEVICE_ID, device_id);
+	if (!cbor_array_push(root, item_entity)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to push evidence to indefinite array");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 #endif
 
 static GByteArray *
@@ -918,6 +1015,19 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 		fu_coswid_write_tag_string(item_meta,
 					   FU_COSWID_TAG_COLLOQUIAL_VERSION,
 					   priv->colloquial_version);
+	}
+	if (priv->persistent_id != NULL) {
+		fu_coswid_write_tag_string(item_meta,
+					   FU_COSWID_TAG_PERSISTENT_ID,
+					   priv->persistent_id);
+	}
+
+	/* add evidence */
+	if (priv->device_id != NULL) {
+		g_autoptr(cbor_item_t) items = cbor_new_indefinite_array();
+		if (!fu_coswid_firmware_write_evidence(items, priv->device_id, error))
+			return NULL;
+		fu_coswid_write_tag_item(root, FU_COSWID_TAG_EVIDENCE, items);
 	}
 
 	/* add entities */
@@ -1156,6 +1266,12 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "colloquial_version", NULL);
 	if (tmp != NULL)
 		priv->colloquial_version = g_strdup(tmp);
+	tmp = xb_node_query_text(n, "persistent_id", NULL);
+	if (tmp != NULL)
+		priv->persistent_id = g_strdup(tmp);
+	tmp = xb_node_query_text(n, "device_id", NULL);
+	if (tmp != NULL)
+		priv->device_id = g_strdup(tmp);
 
 	tmp = xb_node_query_text(n, "version_scheme", NULL);
 	if (tmp != NULL) {
@@ -1217,6 +1333,8 @@ fu_coswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	fu_xmlb_builder_insert_kv(bn, "product", priv->product);
 	fu_xmlb_builder_insert_kv(bn, "summary", priv->summary);
 	fu_xmlb_builder_insert_kv(bn, "colloquial_version", priv->colloquial_version);
+	fu_xmlb_builder_insert_kv(bn, "persistent_id", priv->persistent_id);
+	fu_xmlb_builder_insert_kv(bn, "device_id", priv->device_id);
 	for (guint i = 0; i < priv->links->len; i++) {
 		FuCoswidFirmwareLink *link = g_ptr_array_index(priv->links, i);
 		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "link", NULL);
@@ -1278,6 +1396,8 @@ fu_coswid_firmware_finalize(GObject *object)
 	g_free(priv->product);
 	g_free(priv->summary);
 	g_free(priv->colloquial_version);
+	g_free(priv->persistent_id);
+	g_free(priv->device_id);
 	g_ptr_array_unref(priv->links);
 	g_ptr_array_unref(priv->payloads);
 	g_ptr_array_unref(priv->entities);

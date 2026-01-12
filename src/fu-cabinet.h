@@ -37,8 +37,9 @@ fu_cabinet_sign(FuCabinet *self,
 		GBytes *privkey,
 		FuCabinetSignFlags flags,
 		GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
-void
-fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data, GError **error)
+    G_GNUC_NON_NULL(1, 2, 3);
 XbSilo *
 fu_cabinet_get_silo(FuCabinet *self, GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *

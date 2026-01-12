@@ -49,11 +49,11 @@ fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 				   fu_device_has_private_flag(parent, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
 				       ? "FWDATA_RECOVERY"
 				       : "FWDATA");
-	if (!fu_device_build_instance_id(device, error, "MEI", "VEN", "DEV", "PART", NULL))
+	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
 					   error,
-					   "MEI",
+					   "PCI",
 					   "VEN",
 					   "DEV",
 					   "SUBSYS",
@@ -80,7 +80,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(FU_DEVICE(igsc_parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
-		version = g_strdup_printf("%u.%x", self->major_version, self->oem_version);
+		version = g_strdup_printf("%u.%u", self->major_version, self->oem_version);
 	}
 	fu_device_set_version(device, version);
 
@@ -105,8 +105,8 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 
 	/* search the device list for a match */
 	if (!fu_igsc_aux_firmware_match_device(firmware,
-					       self->major_version,
-					       self->major_vcn,
+					       fu_device_get_vid(FU_DEVICE(igsc_parent)),
+					       fu_device_get_pid(FU_DEVICE(igsc_parent)),
 					       fu_igsc_device_get_ssvid(igsc_parent),
 					       fu_igsc_device_get_ssdid(igsc_parent),
 					       error))
@@ -135,7 +135,7 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid manufacturer data version, got 0x%x, expected 0x%x",
+			    "invalid OEM version, got 0x%x, expected higher than 0x%x",
 			    fu_igsc_aux_firmware_get_oem_version(firmware),
 			    self->oem_version);
 		return NULL;
@@ -173,33 +173,25 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 					 error);
 }
 
-static gboolean
-fu_igsc_aux_device_prepare(FuDevice *device,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
+static void
+fu_igsc_aux_device_set_progress(FuDevice *device, FuProgress *progress)
 {
-	/* set PCI power policy */
-	return fu_device_prepare(fu_device_get_parent(device), progress, flags, error);
-}
-
-static gboolean
-fu_igsc_aux_device_cleanup(FuDevice *device,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
-{
-	/* set PCI power policy */
-	return fu_device_cleanup(fu_device_get_parent(device), progress, flags, error);
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void
 fu_igsc_aux_device_init(FuIgscAuxDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
@@ -211,17 +203,16 @@ static void
 fu_igsc_aux_device_class_init(FuIgscAuxDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->set_progress = fu_igsc_aux_device_set_progress;
 	device_class->to_string = fu_igsc_aux_device_to_string;
 	device_class->probe = fu_igsc_aux_device_probe;
 	device_class->setup = fu_igsc_aux_device_setup;
 	device_class->prepare_firmware = fu_igsc_aux_device_prepare_firmware;
 	device_class->write_firmware = fu_igsc_aux_device_write_firmware;
-	device_class->prepare = fu_igsc_aux_device_prepare;
-	device_class->cleanup = fu_igsc_aux_device_cleanup;
 }
 
 FuIgscAuxDevice *
-fu_igsc_aux_device_new(FuContext *ctx)
+fu_igsc_aux_device_new(FuDevice *proxy)
 {
-	return g_object_new(FU_TYPE_IGSC_AUX_DEVICE, "context", ctx, NULL);
+	return g_object_new(FU_TYPE_IGSC_AUX_DEVICE, "proxy", proxy, NULL);
 }

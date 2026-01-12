@@ -108,6 +108,11 @@ The `[fwupd]` section can contain the following parameters:
   Ignore the efivars free space requirement for db, dbx, KEK and PK updates.
   This may be required on Linux kernels older than 6.4, or where the hardware does not support UEFI `RT->QueryVariableInfo`.
 
+**OnlyTrustPostQuantumSignatures={{OnlyTrustPostQuantumSignatures}}**
+
+  Only trust post-quantum cryptographic signatures.
+  This is only recommended when you are sure the firmware contains a valid PQ signature.
+
 **OnlyTrusted={{OnlyTrusted}}**
 
   Only support installing firmware signed with a trusted key.

@@ -11,16 +11,21 @@
 # Mingye Wang <arthur200126@gmail.com>, 2016
 # Mingye Wang <arthur2e5@aosc.xyz>, 2015
 # Richard Hughes <richard@hughsie.com>, 2023
+# Richard Hughes <hughsient@gmail.com>, 2025.
+# 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Chinese (China) (http://app.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
+"PO-Revision-Date: 2025-11-05 12:51+0000\n"
+"Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
+"Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -365,7 +370,7 @@ msgstr "BIOS 固件更新"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
-msgstr "BIOS 更新通过 LVFS 或 Windows Update 提供。"
+msgstr "BIOS 更新通过 LVFS 或 Windows Update 提供"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
@@ -565,7 +570,7 @@ msgstr "未正确更新的设备："
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "无固件更新可用的设备："
+msgstr "无固件更新可用的设备： "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -658,7 +663,7 @@ msgstr "下载文件"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "正在下载..."
+msgstr "正在下载…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
@@ -673,7 +678,7 @@ msgstr "启用"
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
-msgstr "£启用新的远程库"
+msgstr "启用新的远程库？"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -943,7 +948,7 @@ msgstr "高"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
-msgstr "主机安全 ID"
+msgstr "主机安全 ID："
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -1006,7 +1011,7 @@ msgstr "安装未签名的系统固件"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "正在安装固件更新..."
+msgstr "正在安装固件更新…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1284,7 +1289,7 @@ msgstr "执行操作？"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "请输入一个 0 到 %u 之间的数字："
+msgstr "请输入一个 0 到 %u 之间的数字： "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -1678,7 +1683,7 @@ msgstr "TPM PCR0 跟重建的不同。"
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
-msgstr "守护进程已经加载了第三方代码，并且上游开发者不再支持。"
+msgstr "守护进程已经加载了第三方代码，并且上游开发者不再支持！"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
@@ -1911,7 +1916,7 @@ msgstr "版本"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
-msgstr "等待中..."
+msgstr "等待中…"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

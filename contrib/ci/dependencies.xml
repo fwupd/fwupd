@@ -1158,6 +1158,9 @@
     <distro id="fedora">
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
+    <distro id="freebsd">
+      <package>pkgconf</package>
+    </distro>
   </dependency>
   <dependency id="polkitd">
     <distro id="arch">
@@ -1465,16 +1468,7 @@
     </distro>
   </dependency>
   <dependency id="python3-toml">
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
     <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -1838,6 +1832,17 @@
       <package variant="x86_64">ShellCheck</package>
     </distro>
   </dependency>
+  <dependency id="shfmt">
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="libprotobuf-c-dev">
     <distro id="arch">
       <package variant="x86_64">protobuf-c</package>
@@ -1929,6 +1934,11 @@
     <distro id="fedora">
       <!-- for building the MSI package -->
       <package variant="mingw64">msitools</package>
+    </distro>
+  </dependency>
+  <dependency id="libinotify">
+    <distro id="freebsd">
+      <package variant="amd64" />
     </distro>
   </dependency>
 </dependencies>

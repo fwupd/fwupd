@@ -7,5 +7,5 @@ set -e
 # this directory, but fwupd-refresh.service used DynamicUser directive
 # meaning no other unit could access it.
 if [ -L /var/cache/fwupd ]; then
-	rm -f /var/cache/fwupd
+    rm -f /var/cache/fwupd
 fi

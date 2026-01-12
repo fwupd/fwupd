@@ -575,7 +575,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		if (device_tmp == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "no device to change");
 			return FALSE;
 		}
@@ -732,7 +732,6 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 				  GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	g_autofree gchar *devtype_new = NULL;
 	g_autofree gchar *sysfs_path = NULL;
 	g_autoptr(FuUdevDevice) device_new = NULL;
 

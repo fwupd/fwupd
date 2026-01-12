@@ -1,0 +1,6 @@
+<firmware gtype="FuEfiVssAuthVariable">
+  <id>CustomMode</id>
+  <data>aGVsbG8gd29ybGQ=</data>
+  <vendor_guid>c076ec0c-7028-4399-a072-71ee5c448b9f</vendor_guid>
+  <attributes>non-volatile,bootservice-access</attributes>
+</firmware>

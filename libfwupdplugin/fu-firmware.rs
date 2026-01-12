@@ -5,6 +5,7 @@ enum FuFirmwareExportFlags {
     None = 0,
     IncludeDebug = 1 << 0,
     AsciiData = 1 << 1, // as UTF-8 strings
+    Sorted = 1 << 2,
 }
 
 enum FuFirmwareParseFlags {
@@ -14,9 +15,11 @@ enum FuFirmwareParseFlags {
     NoSearch = 1 << 8, // no heuristics
     CacheStream = 1 << 10,
     CacheBlob = 1 << 11,
+    OnlyTrustPqSignatures = 1 << 12,
+    OnlyPartitionLayout = 1 << 13,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuFirmwareFlags {
     None = 0,
     DedupeId = 1 << 0,

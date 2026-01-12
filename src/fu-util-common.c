@@ -473,6 +473,7 @@ fu_util_cmd_array_add(GPtrArray *array,
 		} else {
 			/* TRANSLATORS: this is a command alias, e.g. 'get-devices' */
 			item->description = g_strdup_printf(_("Alias to %s"), names[0]);
+			item->flags |= FU_UTIL_CMD_FLAG_IS_ALIAS;
 		}
 		item->arguments = g_strdup(arguments);
 		item->callback = callback;
@@ -494,6 +495,17 @@ fu_util_cmd_array_run(GPtrArray *array,
 		if (g_strcmp0(values[i], "{") == 0) /* nocheck:depth */
 			break;
 		values_copy[i] = g_strdup(values[i]);
+	}
+
+	/* return all possible actions */
+	if (g_strcmp0(command, "get-actions") == 0) {
+		for (guint i = 0; i < array->len; i++) {
+			FuUtilCmd *item = g_ptr_array_index(array, i);
+			if (item->flags & FU_UTIL_CMD_FLAG_IS_ALIAS)
+				continue;
+			g_print("%s\n", item->name); /* nocheck:print */
+		}
+		return TRUE;
 	}
 
 	/* find command */
@@ -1001,9 +1013,8 @@ fu_util_time_to_str(guint64 tmp)
 static gchar *
 fu_util_device_flag_to_string(guint64 device_flag)
 {
-	if (device_flag == FWUPD_DEVICE_FLAG_NONE) {
+	if (device_flag == FWUPD_DEVICE_FLAG_NONE)
 		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_INTERNAL) {
 		/* TRANSLATORS: Device cannot be removed easily*/
 		return _("Internal device");
@@ -1153,9 +1164,8 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: we can save all device enumeration events for emulation */
 		return _("Can tag for emulation");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
+	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return NULL;
-	}
 	return NULL;
 }
 
@@ -1260,7 +1270,7 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		return g_strdup(_("Device is emulated"));
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_MISSING_LICENSE) {
-		/* TRANSLATORS: The device cannot be updated due to missing vendor's license." */
+		/* TRANSLATORS: The device cannot be updated due to missing vendor's license. */
 		return g_strdup(_("Device requires a software license to update"));
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT) {
@@ -1282,6 +1292,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	if (problem == FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY) {
 		/* TRANSLATORS: we have two ways of communicating with the device, so we hide one */
 		return g_strdup(_("Device is lower priority than an equivalent device"));
+	}
+	if (problem == FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM) {
+		/* TRANSLATORS: firmware is signed with insecure key */
+		return g_strdup(_("System has been signed with an insecure key"));
 	}
 	return NULL;
 }
@@ -2049,8 +2063,7 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	fwupd_codec_string_append(str, idt + 1, _("Checksum"), fwupd_remote_get_checksum(remote));
 
 	/* optional parameters */
-	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) > 0 &&
-	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) != G_MAXUINT64) {
 		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
 		fwupd_codec_string_append(str, idt + 1, _("Age"), age_str);

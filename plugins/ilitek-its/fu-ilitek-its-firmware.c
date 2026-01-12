@@ -53,6 +53,10 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	    "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFFILITek END TAG  ";
 
 	/* first line is ILITEK-specific record type as memory mapping addr. */
+	if (records->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no records");
+		return FALSE;
+	}
 	rcd = g_ptr_array_index(records, 0);
 	if (!fu_memread_uint24_safe(rcd->data->data,
 				    rcd->data->len,
@@ -170,7 +174,8 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_idx(block_img, i);
 		fu_firmware_set_parent(block_img, firmware);
 		fu_firmware_set_addr(block_img, start);
-		fu_firmware_add_image(firmware, block_img);
+		if (!fu_firmware_add_image(firmware, block_img, error))
+			return FALSE;
 	}
 
 	/* success */

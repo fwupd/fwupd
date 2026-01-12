@@ -150,10 +150,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	case 'B': /* byte */
 	case ' ': /* byte, ST reference bootloader :/ */
 		break;
-	case 'K': /* Kilo */
+	case 'K': /* kilo */
 		sector_size *= 0x400;
 		break;
-	case 'M': /* Mega */
+	case 'M': /* mega */
 		sector_size *= 0x100000;
 		break;
 	default:
@@ -226,7 +226,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 	if (alt_name == NULL)
 		return TRUE;
 
-	/* From the Neo Freerunner */
+	/* from the Neo Freerunner */
 	if (g_str_has_prefix(alt_name, "RAM 0x")) {
 		FuDfuSector *sector;
 		guint64 addr_tmp = 0;
@@ -525,10 +525,6 @@ fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(device, error))
-		return FALSE;
 
 	/* use the correct setting */
 	if (fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -998,8 +994,7 @@ fu_dfu_target_upload(FuDfuTarget *self,
 	}
 
 	/* success */
-	fu_firmware_add_image(firmware, image);
-	return TRUE;
+	return fu_firmware_add_image(firmware, image, error);
 }
 
 static gchar *
@@ -1264,7 +1259,7 @@ guint8
 fu_dfu_target_get_alt_setting(FuDfuTarget *self)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_TARGET(self), 0xff);
+	g_return_val_if_fail(FU_IS_DFU_TARGET(self), G_MAXUINT8);
 	return priv->alt_setting;
 }
 

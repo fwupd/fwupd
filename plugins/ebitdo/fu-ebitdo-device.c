@@ -37,10 +37,10 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 {
 	gsize actual_length;
 	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
-	g_autoptr(GByteArray) st_hdr = fu_struct_ebitdo_pkt_new();
+	g_autoptr(FuStructEbitdoPkt) st_hdr = fu_struct_ebitdo_pkt_new();
 	g_autoptr(GError) error_local = NULL;
 
-	fu_byte_array_set_size(st_hdr, FU_EBITDO_USB_EP_SIZE, 0x0);
+	fu_byte_array_set_size(st_hdr->buf, FU_EBITDO_USB_EP_SIZE, 0x0);
 
 	/* different */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
@@ -64,8 +64,8 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 		fu_struct_ebitdo_pkt_set_cmd_len(st_hdr, in_len + 3);
 		fu_struct_ebitdo_pkt_set_cmd(st_hdr, cmd);
 		fu_struct_ebitdo_pkt_set_payload_len(st_hdr, in_len);
-		if (!fu_memcpy_safe(st_hdr->data,
-				    st_hdr->len,
+		if (!fu_memcpy_safe(st_hdr->buf->data,
+				    st_hdr->buf->len,
 				    FU_STRUCT_EBITDO_PKT_SIZE, /* dst */
 				    in,
 				    in_len,
@@ -79,13 +79,13 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 		fu_struct_ebitdo_pkt_set_cmd(st_hdr, cmd);
 		fu_struct_ebitdo_pkt_set_pkt_len(st_hdr, 5);
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", st_hdr->data, st_hdr->len);
+	fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", st_hdr->buf->data, st_hdr->buf->len);
 
 	/* get data from device */
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      ep_out,
-					      st_hdr->data,
-					      st_hdr->len,
+					      st_hdr->buf->data,
+					      st_hdr->buf->len,
 					      &actual_length,
 					      FU_EBITDO_USB_TIMEOUT,
 					      NULL, /* cancellable */
@@ -107,7 +107,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructEbitdoPkt) st_hdr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* different */
@@ -340,9 +340,8 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 				   error)) {
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive(self, (guint8 *)&version_tmp, sizeof(version_tmp), error)) {
+	if (!fu_ebitdo_device_receive(self, (guint8 *)&version_tmp, sizeof(version_tmp), error))
 		return FALSE;
-	}
 	fu_device_set_version_raw(device, GUINT32_FROM_LE(version_tmp)); /* nocheck:blocked */
 
 	/* get verification ID */
@@ -355,9 +354,8 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 				   error)) {
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive(self, (guint8 *)&serial_tmp, sizeof(serial_tmp), error)) {
+	if (!fu_ebitdo_device_receive(self, (guint8 *)&serial_tmp, sizeof(serial_tmp), error))
 		return FALSE;
-	}
 	for (guint i = 0; i < 9; i++)
 		self->serial[i] = GUINT32_FROM_LE(serial_tmp[i]); /* nocheck:blocked */
 
@@ -656,7 +654,7 @@ fu_ebitdo_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_ebitdo_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_ebitdo_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);

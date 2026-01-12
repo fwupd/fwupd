@@ -162,21 +162,13 @@ fu_powerd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 }
 
 static gboolean
-fu_powerd_plugin_prepare(FuPlugin *plugin,
-			 FuDevice *device,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_powerd_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	return fu_powerd_plugin_create_suspend_file(error);
 }
 
 static gboolean
-fu_powerd_plugin_cleanup(FuPlugin *plugin,
-			 FuDevice *device,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_powerd_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	return fu_powerd_plugin_delete_suspend_file(error);
 }
@@ -203,6 +195,6 @@ fu_powerd_plugin_class_init(FuPowerdPluginClass *klass)
 
 	object_class->finalize = fu_powerd_plugin_finalize;
 	plugin_class->startup = fu_powerd_plugin_startup;
-	plugin_class->cleanup = fu_powerd_plugin_cleanup;
-	plugin_class->prepare = fu_powerd_plugin_prepare;
+	plugin_class->composite_cleanup = fu_powerd_plugin_composite_cleanup;
+	plugin_class->composite_prepare = fu_powerd_plugin_composite_prepare;
 }

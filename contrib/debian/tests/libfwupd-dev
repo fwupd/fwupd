@@ -19,7 +19,7 @@ PKG_CONFIG="${CROSS_COMPILE}pkg-config"
 
 cd "$WORKDIR"
 
-cat > trivial.c <<'EOF'
+cat >trivial.c <<'EOF'
 #undef NDEBUG
 #include <assert.h>
 

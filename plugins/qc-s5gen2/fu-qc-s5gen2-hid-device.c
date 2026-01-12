@@ -38,16 +38,16 @@ static gboolean
 fu_qc_s5gen2_hid_device_msg_out(FuQcS5gen2Impl *impl, guint8 *data, gsize data_len, GError **error)
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
-	g_autoptr(GByteArray) msg = fu_struct_qc_hid_data_transfer_new();
+	g_autoptr(FuStructQcHidDataTransfer) st_req = fu_struct_qc_hid_data_transfer_new();
 
-	fu_struct_qc_hid_data_transfer_set_payload_len(msg, data_len);
-	if (!fu_struct_qc_hid_data_transfer_set_payload(msg, data, data_len, error))
+	fu_struct_qc_hid_data_transfer_set_payload_len(st_req, data_len);
+	if (!fu_struct_qc_hid_data_transfer_set_payload(st_req, data, data_len, error))
 		return FALSE;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					0x00,
-					msg->data,
-					FU_STRUCT_QC_HID_DATA_TRANSFER_SIZE,
+					st_req->buf->data,
+					st_req->buf->len,
 					FU_QC_S5GEN2_HID_DEVICE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					error);
@@ -62,32 +62,32 @@ fu_qc_s5gen2_hid_device_msg_in(FuQcS5gen2Impl *impl,
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
 	guint8 buf[FU_STRUCT_QC_HID_RESPONSE_SIZE] = {0x0};
-	g_autoptr(GByteArray) msg = NULL;
+	g_autoptr(FuStructQcHidResponse) st_rsp = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x00,
 				      buf,
-				      FU_STRUCT_QC_HID_RESPONSE_SIZE,
+				      sizeof(buf),
 				      FU_QC_S5GEN2_HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))
 		return FALSE;
 
-	msg = fu_struct_qc_hid_response_parse(buf, FU_STRUCT_QC_HID_RESPONSE_SIZE, 0, error);
-	if (msg == NULL)
+	st_rsp = fu_struct_qc_hid_response_parse(buf, FU_STRUCT_QC_HID_RESPONSE_SIZE, 0, error);
+	if (st_rsp == NULL)
 		return FALSE;
 
 	if (!fu_memcpy_safe(data,
 			    data_len,
 			    0,
-			    msg->data,
-			    msg->len,
+			    st_rsp->buf->data,
+			    st_rsp->buf->len,
 			    FU_STRUCT_QC_HID_RESPONSE_OFFSET_PAYLOAD,
-			    fu_struct_qc_hid_response_get_payload_len(msg),
+			    fu_struct_qc_hid_response_get_payload_len(st_rsp),
 			    error))
 		return FALSE;
 
-	*read_len = fu_struct_qc_hid_response_get_payload_len(msg);
+	*read_len = fu_struct_qc_hid_response_get_payload_len(st_rsp);
 
 	return TRUE;
 }
@@ -96,16 +96,16 @@ static gboolean
 fu_qc_s5gen2_hid_device_msg_cmd(FuQcS5gen2Impl *impl, guint8 *data, gsize data_len, GError **error)
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
-	g_autoptr(GByteArray) msg = fu_struct_qc_hid_command_new();
+	g_autoptr(FuStructQcHidCommand) st_req = fu_struct_qc_hid_command_new();
 
-	fu_struct_qc_hid_command_set_payload_len(msg, data_len);
-	if (!fu_struct_qc_hid_command_set_payload(msg, data, data_len, error))
+	fu_struct_qc_hid_command_set_payload_len(st_req, data_len);
+	if (!fu_struct_qc_hid_command_set_payload(st_req, data, data_len, error))
 		return FALSE;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					0x03,
-					msg->data,
-					FU_STRUCT_QC_HID_COMMAND_SIZE,
+					st_req->buf->data,
+					st_req->buf->len,
 					0,
 					FU_HID_DEVICE_FLAG_IS_FEATURE,
 					error);
@@ -114,8 +114,8 @@ fu_qc_s5gen2_hid_device_msg_cmd(FuQcS5gen2Impl *impl, guint8 *data, gsize data_l
 static gboolean
 fu_qc_s5gen2_hid_device_cmd_req_disconnect(FuQcS5gen2Impl *impl, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_qc_disconnect_req_new();
-	return fu_qc_s5gen2_hid_device_msg_cmd(impl, req->data, req->len, error);
+	g_autoptr(FuStructQcDisconnectReq) st_req = fu_struct_qc_disconnect_req_new();
+	return fu_qc_s5gen2_hid_device_msg_cmd(impl, st_req->buf->data, st_req->buf->len, error);
 }
 
 static gboolean
@@ -124,10 +124,10 @@ fu_qc_s5gen2_hid_device_cmd_req_connect(FuQcS5gen2Impl *impl, GError **error)
 	guint8 data_in[FU_STRUCT_QC_UPDATE_STATUS_SIZE] = {0x0};
 	gsize read_len;
 	FuQcStatus update_status;
-	g_autoptr(GByteArray) req = fu_struct_qc_connect_req_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructQcConnectReq) st_req = fu_struct_qc_connect_req_new();
+	g_autoptr(FuStructQcUpdateStatus) st = NULL;
 
-	if (!fu_qc_s5gen2_hid_device_msg_cmd(impl, req->data, req->len, error))
+	if (!fu_qc_s5gen2_hid_device_msg_cmd(impl, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_hid_device_msg_in(impl, data_in, sizeof(data_in), &read_len, error))
 		return FALSE;

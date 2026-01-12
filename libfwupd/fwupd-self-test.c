@@ -1070,7 +1070,7 @@ fwupd_has_system_bus(void)
 	conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, NULL);
 	if (conn != NULL)
 		return TRUE;
-	g_debug("D-Bus system bus unavailable, skipping tests.");
+	g_debug("D-Bus system bus unavailable, skipping tests");
 	return FALSE;
 }
 

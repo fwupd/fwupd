@@ -160,6 +160,14 @@ typedef enum {
 	 * Since: 2.0.14
 	 **/
 	FU_CONTEXT_FLAG_NO_IDLE_SOURCES = 1u << 7,
+	/**
+	 * FU_CONTEXT_FLAG_INSECURE_UEFI:
+	 *
+	 * An insecured UEFI implementation was found
+	 *
+	 * Since: 2.0.17
+	 **/
+	FU_CONTEXT_FLAG_INSECURE_UEFI = 1u << 8,
 
 	/**
 	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:

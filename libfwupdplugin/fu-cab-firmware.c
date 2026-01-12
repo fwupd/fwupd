@@ -141,11 +141,11 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 	for (gsize i = 0; i < bufsz; i += 4) {
 		gsize chunksz = bufsz - i;
 		if (G_LIKELY(chunksz >= 4)) {
-			/* 3,2,1,0 */
+			/* 3,2,1,0 nocheck:endian */
 			tmp ^= ((guint32)buf[i + 3] << 24) | ((guint32)buf[i + 2] << 16) |
 			       ((guint32)buf[i + 1] << 8) | (guint32)buf[i + 0];
 		} else if (chunksz == 3) {
-			/* 0,1,2 -- yes, weird */
+			/* 0,1,2 -- yes, weird, nocheck:endian */
 			tmp ^= ((guint32)buf[i + 0] << 16) | ((guint32)buf[i + 1] << 8) |
 			       (guint32)buf[i + 2];
 		} else if (chunksz == 2) {
@@ -234,7 +234,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		return FALSE;
 	}
 
-	hdr_sz = st->len + helper->rsvd_block;
+	hdr_sz = st->buf->len + helper->rsvd_block;
 
 	/* verify checksum */
 	partial_stream =
@@ -370,7 +370,7 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 			     GError **error)
 {
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabFolder) st = NULL;
 
 	/* parse header */
 	st = fu_struct_cab_folder_parse_stream(helper->stream, offset, error);
@@ -428,7 +428,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	guint16 index;
 	guint16 time;
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabFile) st = NULL;
 	g_autoptr(GDateTime) created = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GString) filename = g_string_new(NULL);
@@ -492,7 +492,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	}
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->parse_flags, error))
 		return FALSE;
-	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 		return FALSE;
 
 	/* set created date time */
@@ -554,7 +554,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	gsize off_cffile = 0;
 	gsize offset = 0;
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabHeader) st = NULL;
 	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;
 
 	/* get size */
@@ -628,13 +628,13 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		helper->ndatabsz = streamsz;
 
 	/* reserved sizes */
-	offset += st->len;
+	offset += st->buf->len;
 	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
-		g_autoptr(GByteArray) st2 = NULL;
+		g_autoptr(FuStructCabHeaderReserve) st2 = NULL;
 		st2 = fu_struct_cab_header_reserve_parse_stream(stream, offset, error);
 		if (st2 == NULL)
 			return FALSE;
-		offset += st2->len;
+		offset += st2->buf->len;
 		offset += fu_struct_cab_header_reserve_get_rsvd_hdr(st2);
 		helper->rsvd_block = fu_struct_cab_header_reserve_get_rsvd_block(st2);
 		helper->rsvd_folder = fu_struct_cab_header_reserve_get_rsvd_folder(st2);
@@ -676,8 +676,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	gsize archive_size;
 	gsize offset;
 	guint32 index_into = 0;
-	g_autoptr(GByteArray) st_hdr = fu_struct_cab_header_new();
-	g_autoptr(GByteArray) st_folder = fu_struct_cab_folder_new();
+	g_autoptr(FuStructCabHeader) st_hdr = fu_struct_cab_header_new();
+	g_autoptr(FuStructCabFolder) st_folder = fu_struct_cab_folder_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) cfdata_linear = g_byte_array_new();
 	g_autoptr(GBytes) cfdata_linear_blob = NULL;
@@ -801,7 +801,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_cab_folder_set_compression(st_folder,
 					     priv->compressed ? FU_CAB_COMPRESSION_MSZIP
 							      : FU_CAB_COMPRESSION_NONE);
-	g_byte_array_append(st_hdr, st_folder->data, st_folder->len);
+	fu_byte_array_append_array(st_hdr->buf, st_folder->buf);
 
 	/* create each CFFILE */
 	for (guint i = 0; i < imgs->len; i++) {
@@ -809,7 +809,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		FuCabFileAttribute fattr = FU_CAB_FILE_ATTRIBUTE_NONE;
 		GDateTime *created = fu_cab_image_get_created(FU_CAB_IMAGE(img));
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		g_autoptr(GByteArray) st_file = fu_struct_cab_file_new();
+		g_autoptr(FuStructCabFile) st_file = fu_struct_cab_file_new();
 		g_autoptr(GBytes) img_blob = fu_firmware_get_bytes(img, NULL);
 
 		if (!g_str_is_ascii(filename_win32))
@@ -827,10 +827,12 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 							(g_date_time_get_minute(created) << 5) +
 							(g_date_time_get_second(created) / 2));
 		}
-		g_byte_array_append(st_hdr, st_file->data, st_file->len);
+		fu_byte_array_append_array(st_hdr->buf, st_file->buf);
 
-		g_byte_array_append(st_hdr, (const guint8 *)filename_win32, strlen(filename_win32));
-		fu_byte_array_append_uint8(st_hdr, 0x0);
+		g_byte_array_append(st_hdr->buf,
+				    (const guint8 *)filename_win32,
+				    strlen(filename_win32));
+		fu_byte_array_append_uint8(st_hdr->buf, 0x0);
 		index_into += g_bytes_get_size(img_blob);
 	}
 
@@ -840,7 +842,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		GByteArray *chunk_zlib = g_ptr_array_index(chunks_zlib, i);
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) hdr = g_byte_array_new();
-		g_autoptr(GByteArray) st_data = fu_struct_cab_data_new();
+		g_autoptr(FuStructCabData) st_data = fu_struct_cab_data_new();
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
@@ -861,12 +863,12 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_cab_data_set_checksum(st_data, checksum);
 		fu_struct_cab_data_set_comp(st_data, chunk_zlib->len);
 		fu_struct_cab_data_set_uncomp(st_data, fu_chunk_get_data_sz(chk));
-		g_byte_array_append(st_hdr, st_data->data, st_data->len);
-		g_byte_array_append(st_hdr, chunk_zlib->data, chunk_zlib->len);
+		fu_byte_array_append_array(st_hdr->buf, st_data->buf);
+		g_byte_array_append(st_hdr->buf, chunk_zlib->data, chunk_zlib->len);
 	}
 
 	/* success */
-	return g_steal_pointer(&st_hdr);
+	return g_steal_pointer(&st_hdr->buf);
 }
 
 static gboolean

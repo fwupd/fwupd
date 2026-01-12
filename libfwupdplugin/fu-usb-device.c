@@ -81,7 +81,7 @@ static gboolean
 fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
 {
 	gint error_code = FWUPD_ERROR_INTERNAL;
-	/* Put the rc in libusb's error enum so that gcc warns us if we're
+	/* put the rc in libusb's error enum so that gcc warns us if we're
 	   missing an error code */
 	enum libusb_error result = rc;
 
@@ -459,9 +459,9 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 		rc = libusb_wrap_sys_device(usb_ctx, fd, &priv->handle);
 #else
 		g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "libusb_wrap_sys_device not available, can't wrap fd");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "libusb_wrap_sys_device not available, can't wrap fd");
 		return FALSE;
 #endif
 	}
@@ -766,21 +766,21 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 		for (guint i = 0; i < intfs->len; i++) {
 			FuUsbInterface *intf = g_ptr_array_index(intfs, i);
 
-			/* Video: Video Control: i.e. a webcam */
+			/* video: i.e. a webcam */
 			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_VIDEO &&
 			    fu_usb_interface_get_subclass(intf) == 0x01) {
 				fu_device_add_icon(device, "camera-web");
 			}
 
-			/* Audio */
+			/* audio */
 			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_AUDIO)
 				fu_device_add_icon(device, "audio-card");
 
-			/* Mass Storage */
+			/* mass storage */
 			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_MASS_STORAGE)
 				fu_device_add_icon(device, "drive-harddisk");
 
-			/* Printer */
+			/* printer */
 			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_PRINTER)
 				fu_device_add_icon(device, "printer");
 		}
@@ -1020,6 +1020,8 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 			struct libusb_bos_dev_capability_descriptor *bos_cap =
 			    bos->dev_capability[i];
 			bos_descriptor = fu_usb_bos_descriptor_new(bos_cap);
+			if (bos_descriptor == NULL)
+				continue;
 			g_ptr_array_add(priv->bos_descriptors, bos_descriptor);
 		}
 		libusb_free_bos_descriptor(bos);
@@ -1835,9 +1837,9 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 					FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 					error))
 					return FALSE;
-				if (!fu_firmware_add_image_full(FU_FIRMWARE(iface),
-								FU_FIRMWARE(img),
-								error))
+				if (!fu_firmware_add_image(FU_FIRMWARE(iface),
+							   FU_FIRMWARE(img),
+							   error))
 					return FALSE;
 				offset += fu_firmware_get_size(FU_FIRMWARE(img));
 			}
@@ -2213,7 +2215,7 @@ fu_usb_device_claim_interface_internal(FuUsbDevice *self,
 
 	if (flags & FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER) {
 		rc = libusb_detach_kernel_driver(priv->handle, iface);
-		if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND && /* No driver attached */
+		if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND && /* no driver attached */
 		    rc != LIBUSB_ERROR_NOT_SUPPORTED &&			    /* win32 */
 		    rc != LIBUSB_ERROR_BUSY /* driver rebound already */)
 			return fu_usb_device_libusb_error_to_gerror(rc, error);
@@ -2317,7 +2319,7 @@ fu_usb_device_release_interface(FuUsbDevice *self,
 
 	if (flags & FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER) {
 		rc = libusb_attach_kernel_driver(priv->handle, iface);
-		if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND && /* No driver attached */
+		if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND && /* no driver attached */
 		    rc != LIBUSB_ERROR_NOT_SUPPORTED &&			    /* win32 */
 		    rc != LIBUSB_ERROR_BUSY /* driver rebound already */)
 			return fu_usb_device_libusb_error_to_gerror(rc, error);

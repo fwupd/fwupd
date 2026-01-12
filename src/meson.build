@@ -287,6 +287,8 @@ if build_daemon
     install_dir: daemon_dir,
   )
 
+endif
+
 if host_machine.system() == 'android' and binder_ndk.found()
   executable(
     'fwupd-binder',
@@ -366,8 +368,6 @@ if host_machine.system() == 'android' and binder_ndk.found()
     ],
     install: true,
   )
-endif
-
 endif
 
 if get_option('tests')

@@ -248,8 +248,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 	if (dict_sz == 0) {
 		g_autoptr(GBytes) blob = g_bytes_new(NULL, 0);
 		fu_firmware_set_bytes(img, blob);
-		fu_firmware_add_image(FU_FIRMWARE(self), img);
-		return TRUE;
+		return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 	}
 
 	/* check against image size */
@@ -275,8 +274,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 		return FALSE;
 
 	/* success */
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
-	return TRUE;
+	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 }
 
 static gboolean
@@ -336,8 +334,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		fu_bcm57xx_dict_image_set_kind(FU_BCM57XX_DICT_IMAGE(img), 0x0);
 		fu_firmware_set_addr(img, BCM_CODE_DIRECTORY_ADDR_APE);
 		fu_firmware_set_id(img, "ape");
-		fu_firmware_add_image(firmware, img);
-		return TRUE;
+		return fu_firmware_add_image(firmware, img, error);
 	}
 
 	/* standalone stage1 */
@@ -346,8 +343,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_set_stream(img_stage1_standalone, stream, error))
 			return FALSE;
 		fu_firmware_set_id(img_stage1_standalone, "stage1");
-		fu_firmware_add_image(firmware, img_stage1_standalone);
-		return TRUE;
+		return fu_firmware_add_image(firmware, img_stage1_standalone, error);
 	}
 
 	/* not full NVRAM image */
@@ -392,7 +388,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	fu_firmware_set_offset(img_info, BCM_NVRAM_INFO_BASE);
-	fu_firmware_add_image(firmware, img_info);
+	if (!fu_firmware_add_image(firmware, img_info, error))
+		return FALSE;
 
 	/* VPD */
 	stream_vpd =
@@ -405,7 +402,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_id(img_vpd, "vpd");
 	fu_firmware_set_offset(img_vpd, BCM_NVRAM_VPD_BASE);
-	fu_firmware_add_image(firmware, img_vpd);
+	if (!fu_firmware_add_image(firmware, img_vpd, error))
+		return FALSE;
 
 	/* info2 */
 	stream_info2 =
@@ -418,7 +416,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_id(img_info2, "info2");
 	fu_firmware_set_offset(img_info2, BCM_NVRAM_INFO2_BASE);
-	fu_firmware_add_image(firmware, img_info2);
+	if (!fu_firmware_add_image(firmware, img_info2, error))
+		return FALSE;
 
 	/* stage1 */
 	img_stage1 = fu_bcm57xx_firmware_parse_stage1(self, stream, &stage1_sz, flags, error);
@@ -426,7 +425,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to parse stage1: ");
 		return FALSE;
 	}
-	fu_firmware_add_image(firmware, img_stage1);
+	if (!fu_firmware_add_image(firmware, img_stage1, error))
+		return FALSE;
 
 	/* stage2 */
 	img_stage2 = fu_bcm57xx_firmware_parse_stage2(self, stream, stage1_sz, flags, error);
@@ -434,7 +434,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to parse stage2: ");
 		return FALSE;
 	}
-	fu_firmware_add_image(firmware, img_stage2);
+	if (!fu_firmware_add_image(firmware, img_stage2, error))
+		return FALSE;
 
 	/* dictionaries, e.g. APE */
 	for (guint i = 0; i < 8; i++) {
@@ -567,7 +568,7 @@ fu_bcm57xx_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuStructBcm57xxNvramInfo) st = fu_struct_bcm57xx_nvram_info_new();
 		fu_struct_bcm57xx_nvram_info_set_device(st, self->model);
 		fu_struct_bcm57xx_nvram_info_set_vendor(st, self->vendor);
-		blob_info = g_bytes_new(st->data, st->len);
+		blob_info = fu_struct_bcm57xx_nvram_info_to_bytes(st);
 	}
 	fu_byte_array_append_bytes(buf, blob_info);
 

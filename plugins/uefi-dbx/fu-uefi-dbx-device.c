@@ -173,6 +173,14 @@ fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
 	fu_device_set_version_lowest(device, fu_device_get_version(device));
 }
 
+static void
+fu_uefi_dbx_device_vendor_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	const gchar *subject_vendor = fu_device_get_vendor(device);
+	if (subject_vendor != NULL)
+		fu_device_build_vendor_id(device, "UEFI", subject_vendor);
+}
+
 static FuFirmware *
 fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
@@ -250,7 +258,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_dbx_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -261,12 +269,14 @@ fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static gboolean
-fu_uefi_dbx_device_cleanup(FuDevice *self,
+fu_uefi_dbx_device_cleanup(FuDevice *device,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error))
+	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
+
+	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(self, error))
 		return FALSE;
 
 	return TRUE;
@@ -304,6 +314,10 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::version",
 			 G_CALLBACK(fu_uefi_dbx_device_version_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vendor",
+			 G_CALLBACK(fu_uefi_dbx_device_vendor_notify_cb),
 			 NULL);
 }
 

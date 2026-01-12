@@ -193,3 +193,8 @@ Remember: Plugins should be upstream!
 ## 2.0.14
 
 * `fu_error_convert()`: Use `fwupd_error_convert()` instead
+
+## 2.0.17
+
+* `fu_firmware_add_image_full()`: Use `fu_firmware_add_image()` instead.
+* `fu_firmware_add_image()`: Add a `GError` and check the return value.

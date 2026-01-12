@@ -4,9 +4,9 @@ exec 2>&1
 modprobe mtdram || true
 fwupdtool enable-test-devices
 fwupdtool modify-config VerboseDomains "*"
-sed "s,ConditionVirtualization=.*,," 		\
-	/lib/systemd/system/fwupd.service >	\
-	/etc/systemd/system/fwupd.service
+sed "s,ConditionVirtualization=.*,," \
+    /lib/systemd/system/fwupd.service > \
+    /etc/systemd/system/fwupd.service
 systemctl daemon-reload
 # run the tests
 gnome-desktop-testing-runner --timeout=600 fwupd

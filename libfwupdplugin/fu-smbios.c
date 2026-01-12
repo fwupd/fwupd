@@ -81,7 +81,7 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 		if (st_str == NULL)
 			return FALSE;
 		length = fu_struct_smbios_structure_get_length(st_str);
-		if (length < st_str->len) {
+		if (length < st_str->buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -174,7 +174,7 @@ fu_smbios_parse_ep32(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 	guint8 csum = 0;
 	g_autofree gchar *version_str = NULL;
 	g_autofree gchar *intermediate_anchor_str = NULL;
-	g_autoptr(GByteArray) st_ep32 = NULL;
+	g_autoptr(FuStructSmbiosEp32) st_ep32 = NULL;
 
 	/* verify checksum */
 	st_ep32 = fu_struct_smbios_ep32_parse(buf, bufsz, 0x0, error);
@@ -226,7 +226,7 @@ fu_smbios_parse_ep64(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 {
 	guint8 csum = 0;
 	g_autofree gchar *version_str = NULL;
-	g_autoptr(GByteArray) st_ep64 = NULL;
+	g_autoptr(FuStructSmbiosEp64) st_ep64 = NULL;
 
 	/* verify checksum */
 	st_ep64 = fu_struct_smbios_ep64_parse(buf, bufsz, 0x0, error);

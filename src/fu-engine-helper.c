@@ -13,8 +13,67 @@
 
 #include <glib/gi18n.h>
 
+#include "fu-cabinet.h"
+#include "fu-context-private.h"
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
+#include "fu-usb-device-fw-ds20.h"
+#include "fu-usb-device-ms-ds20.h"
+
+void
+fu_engine_add_firmware_gtypes(FuEngine *self)
+{
+	FuContext *ctx = fu_engine_get_context(self);
+	fu_context_add_firmware_gtype(ctx, "raw", FU_TYPE_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "cab", FU_TYPE_CAB_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "cabinet", FU_TYPE_CABINET);
+	fu_context_add_firmware_gtype(ctx, "dfu", FU_TYPE_DFU_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "fdt", FU_TYPE_FDT_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "csv", FU_TYPE_CSV_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "fit", FU_TYPE_FIT_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "dfuse", FU_TYPE_DFUSE_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "ifwi-cpd", FU_TYPE_IFWI_CPD_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "ifwi-fpt", FU_TYPE_IFWI_FPT_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "oprom", FU_TYPE_OPROM_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "fmap", FU_TYPE_FMAP_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "ihex", FU_TYPE_IHEX_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "linear", FU_TYPE_LINEAR_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "hid-descriptor", FU_TYPE_HID_DESCRIPTOR);
+	fu_context_add_firmware_gtype(ctx, "archive", FU_TYPE_ARCHIVE_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "smbios", FU_TYPE_SMBIOS);
+	fu_context_add_firmware_gtype(ctx, "acpi-table", FU_TYPE_ACPI_TABLE);
+	fu_context_add_firmware_gtype(ctx, "sbatlevel", FU_TYPE_SBATLEVEL_SECTION);
+	fu_context_add_firmware_gtype(ctx, "edid", FU_TYPE_EDID);
+	fu_context_add_firmware_gtype(ctx, "efi-file", FU_TYPE_EFI_FILE);
+	fu_context_add_firmware_gtype(ctx, "efi-signature", FU_TYPE_EFI_SIGNATURE);
+	fu_context_add_firmware_gtype(ctx, "efi-signature-list", FU_TYPE_EFI_SIGNATURE_LIST);
+	fu_context_add_firmware_gtype(ctx,
+				      "efi-variable-authentication2",
+				      FU_TYPE_EFI_VARIABLE_AUTHENTICATION2);
+	fu_context_add_firmware_gtype(ctx, "efi-load-option", FU_TYPE_EFI_LOAD_OPTION);
+	fu_context_add_firmware_gtype(ctx, "efi-device-path-list", FU_TYPE_EFI_DEVICE_PATH_LIST);
+	fu_context_add_firmware_gtype(ctx, "efi-filesystem", FU_TYPE_EFI_FILESYSTEM);
+	fu_context_add_firmware_gtype(ctx, "efi-section", FU_TYPE_EFI_SECTION);
+	fu_context_add_firmware_gtype(ctx, "efi-volume", FU_TYPE_EFI_VOLUME);
+	fu_context_add_firmware_gtype(ctx, "efi-ftw-store", FU_TYPE_EFI_FTW_STORE);
+	fu_context_add_firmware_gtype(ctx,
+				      "efi-vss2-variable-store",
+				      FU_TYPE_EFI_VSS2_VARIABLE_STORE);
+	fu_context_add_firmware_gtype(ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
+	fu_context_add_firmware_gtype(ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "cfu-offer", FU_TYPE_CFU_OFFER);
+	fu_context_add_firmware_gtype(ctx, "cfu-payload", FU_TYPE_CFU_PAYLOAD);
+	fu_context_add_firmware_gtype(ctx, "uswid", FU_TYPE_USWID_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "coswid", FU_TYPE_COSWID_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "pefile", FU_TYPE_PEFILE_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "elf", FU_TYPE_ELF_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "x509-certificate", FU_TYPE_X509_CERTIFICATE);
+	fu_context_add_firmware_gtype(ctx, "intel-thunderbolt", FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "intel-thunderbolt-nvm", FU_TYPE_INTEL_THUNDERBOLT_NVM);
+	fu_context_add_firmware_gtype(ctx, "usb-device-fw-ds20", FU_TYPE_USB_DEVICE_FW_DS20);
+	fu_context_add_firmware_gtype(ctx, "usb-device-ms-ds20", FU_TYPE_USB_DEVICE_MS_DS20);
+}
 
 static FwupdRelease *
 fu_engine_get_release_with_tag(FuEngine *self,
@@ -99,7 +158,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		}
 	}
 
-	/* If running under systemd unit, use the directory as a base */
+	/* if running under systemd unit, use the directory as a base */
 	if (g_getenv("RUNTIME_DIRECTORY") != NULL) {
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
@@ -255,7 +314,7 @@ fu_engine_integrity_measure_uefi(FuContext *ctx, GHashTable *self)
 		}
 	}
 
-	/* Boot#### */
+	/* UEFI Boot#### */
 	for (guint i = 0; i < 0xFF; i++) {
 		g_autoptr(GBytes) blob = fu_efivars_get_boot_data(efivars, i, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0) {

@@ -104,7 +104,7 @@ fu_wacom_raw_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 		g_debug("already in bootloader mode, skipping");
 		return TRUE;
 	}
-	if (!fu_wacom_raw_device_set_feature(self, st->data, st->len, &error_local)) {
+	if (!fu_wacom_raw_device_set_feature(self, st->buf->data, st->buf->len, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring: %s", error_local->message);
 		} else {
@@ -155,7 +155,7 @@ fu_wacom_raw_device_check_mode(FuWacomRawDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_raw_device_set_version_bootloader(FuWacomRawDevice *self, GError **error)
+fu_wacom_raw_device_ensure_version_bootloader(FuWacomRawDevice *self, GError **error)
 {
 	guint8 rsp_value = 0;
 	g_autofree gchar *version = NULL;
@@ -210,7 +210,7 @@ fu_wacom_raw_device_write_firmware(FuDevice *device,
 	/* we're in bootloader mode now */
 	if (!fu_wacom_raw_device_check_mode(self, error))
 		return FALSE;
-	if (!fu_wacom_raw_device_set_version_bootloader(self, error))
+	if (!fu_wacom_raw_device_ensure_version_bootloader(self, error))
 		return FALSE;
 
 	/* flash chunks */
@@ -252,7 +252,7 @@ fu_wacom_raw_device_cmd_response(FuWacomRawDevice *self,
 				 GError **error)
 {
 	guint8 buf[FU_STRUCT_WACOM_RAW_RESPONSE_SIZE] = {FU_WACOM_RAW_BL_REPORT_ID_GET, 0x0};
-	g_autoptr(FuStructWacomRawRequest) st_rsp = NULL;
+	g_autoptr(FuStructWacomRawResponse) st_rsp = NULL;
 
 	if (!fu_wacom_raw_device_get_feature(self, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
@@ -302,7 +302,7 @@ fu_wacom_raw_device_cmd(FuWacomRawDevice *self,
 			FuWacomRawDeviceCmdFlags flags,
 			GError **error)
 {
-	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
+	if (!fu_wacom_raw_device_set_feature(self, st_req->buf->data, st_req->buf->len, error)) {
 		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
@@ -364,7 +364,7 @@ fu_wacom_raw_device_replace(FuDevice *device, FuDevice *donor)
 }
 
 static void
-fu_wacom_raw_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_wacom_raw_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

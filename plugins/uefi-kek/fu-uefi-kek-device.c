@@ -51,6 +51,9 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		fu_device_add_child(device, FU_DEVICE(x509_device));
 	}
 
+	if (fu_context_has_flag(fu_device_get_context(device), FU_CONTEXT_FLAG_INSECURE_UEFI))
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+
 	/* success */
 	return TRUE;
 }
@@ -89,7 +92,7 @@ fu_uefi_kek_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_uefi_kek_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_kek_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

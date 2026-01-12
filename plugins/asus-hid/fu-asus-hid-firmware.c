@@ -37,16 +37,16 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 			   GError **error)
 {
 	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);
-	g_autoptr(GByteArray) desc = NULL;
+	g_autoptr(FuStructAsusHidDesc) st = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 
-	desc = fu_struct_asus_hid_desc_parse_stream(stream, FGA_OFFSET, error);
-	if (desc == NULL)
+	st = fu_struct_asus_hid_desc_parse_stream(stream, FGA_OFFSET, error);
+	if (st == NULL)
 		return FALSE;
-	self->fga = fu_struct_asus_hid_desc_get_fga(desc);
-	self->product = fu_struct_asus_hid_desc_get_product(desc);
-	self->version = fu_struct_asus_hid_desc_get_version(desc);
+	self->fga = fu_struct_asus_hid_desc_get_fga(st);
+	self->product = fu_struct_asus_hid_desc_get_product(st);
+	self->version = fu_struct_asus_hid_desc_get_version(st);
 
 	stream_payload = fu_partial_input_stream_new(stream, 0x2000, G_MAXSIZE, error);
 	if (stream_payload == NULL)
@@ -54,14 +54,13 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
-
-	return TRUE;
+	return fu_firmware_add_image(firmware, img_payload, error);
 }
 
 static void
 fu_asus_hid_firmware_init(FuAsusHidFirmware *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

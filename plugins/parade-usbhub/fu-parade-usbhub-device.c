@@ -992,7 +992,7 @@ fu_parade_usbhub_device_spi_rom_checksum(FuParadeUsbhubDevice *self,
 }
 
 static gboolean
-fu_parade_usbhub_device_set_ufp_disconnect_flag(FuParadeUsbhubDevice *self, GError **error)
+fu_parade_usbhub_device_assert_ufp_disconnect_flag(FuParadeUsbhubDevice *self, GError **error)
 {
 	guint8 val = 0;
 	if (!fu_parade_usbhub_device_mmio_read_u8(self,
@@ -1108,7 +1108,7 @@ fu_parade_usbhub_device_prepare(FuDevice *device,
 
 	if (self->chip == FU_PARADE_USBHUB_CHIP_PS188) {
 		/* prevent staying in high-power charging mode if UFP is disconnected */
-		if (!fu_parade_usbhub_device_set_ufp_disconnect_flag(self, error)) {
+		if (!fu_parade_usbhub_device_assert_ufp_disconnect_flag(self, error)) {
 			g_prefix_error_literal(error, "failed to set UFP disconnect flag: ");
 			return FALSE;
 		}
@@ -1216,7 +1216,7 @@ fu_parade_usbhub_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_parade_usbhub_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_parade_usbhub_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

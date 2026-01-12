@@ -6,9 +6,9 @@
 
 #include <glib.h>
 
-__attribute__((weak)) extern int
+__attribute__((weak)) extern int /* nocheck:name */
 LLVMFuzzerTestOneInput(const unsigned char *data, size_t size);
-__attribute__((weak)) extern int
+__attribute__((weak)) extern int /* nocheck:name */
 LLVMFuzzerInitialize(int *argc, char ***argv);
 
 int

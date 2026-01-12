@@ -88,9 +88,8 @@ fu_freebsd_efivars_exists_guid(const gchar *guid)
 
 	efi_str_to_guid(guid, &test);
 	while (efi_get_next_variable_name(&guidt, &name)) {
-		if (memcmp(&test, guidt, sizeof(test)) == 0) {
+		if (memcmp(&test, guidt, sizeof(test)) == 0)
 			return TRUE;
-		}
 	}
 	return FALSE;
 }
@@ -130,9 +129,8 @@ fu_freebsd_efivars_get_names(FuEfivars *efivars, const gchar *guid, GError **err
 
 	/* find names with matching GUID */
 	while (efi_get_next_variable_name(&guidt, &name)) {
-		if (memcmp(&test, guidt, sizeof(test)) == 0) {
+		if (memcmp(&test, guidt, sizeof(test)) == 0)
 			g_ptr_array_add(names, g_strdup(name));
-		}
 	}
 
 	/* nothing found */

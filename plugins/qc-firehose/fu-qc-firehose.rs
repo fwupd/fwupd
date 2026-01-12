@@ -1,7 +1,7 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToBitString, FromString)]
+#[derive(ToString, FromString)]
 enum FuQcFirehoseFunctions {
     None = 0,
     Program = 1 << 0,

@@ -55,7 +55,7 @@ fu_qc_s5gen2_device_msg_in(FuQcS5gen2Device *self,
 			   GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	g_autoptr(GByteArray) err_msg = NULL;
+	g_autoptr(FuStructQcErrorInd) st_err = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	if (proxy == NULL) {
@@ -76,16 +76,16 @@ fu_qc_s5gen2_device_msg_in(FuQcS5gen2Device *self,
 	}
 
 	/* error detected */
-	err_msg = fu_struct_qc_error_ind_parse(buf, *read_len, 0, &error_local);
-	if (err_msg != NULL) {
-		guint16 code = fu_struct_qc_error_ind_get_error_code(err_msg);
-		g_autoptr(GByteArray) confirm = fu_struct_qc_error_res_new();
+	st_err = fu_struct_qc_error_ind_parse(buf, *read_len, 0, &error_local);
+	if (st_err != NULL) {
+		guint16 code = fu_struct_qc_error_ind_get_error_code(st_err);
+		g_autoptr(FuStructQcErrorRes) st_confirm = fu_struct_qc_error_res_new();
 
 		/* confirm and stop */
-		fu_struct_qc_error_res_set_error_code(confirm, code);
+		fu_struct_qc_error_res_set_error_code(st_confirm, code);
 		if (!fu_qc_s5gen2_impl_msg_out(FU_QC_S5GEN2_IMPL(proxy),
-					       confirm->data,
-					       confirm->len,
+					       st_confirm->buf->data,
+					       st_confirm->buf->len,
 					       error))
 			return FALSE;
 
@@ -139,16 +139,16 @@ fu_qc_s5gen2_device_cmd_abort(FuQcS5gen2Device *self, GError **error)
 {
 	guint8 data[FU_STRUCT_QC_ABORT_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_abort_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcAbortReq) st_req = fu_struct_qc_abort_req_new();
+	g_autoptr(FuStructQcAbort) st_res = NULL;
 
-	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
 
-	reply = fu_struct_qc_abort_parse(data, read_len, 0, error);
-	if (reply == NULL)
+	st_res = fu_struct_qc_abort_parse(data, read_len, 0, error);
+	if (st_res == NULL)
 		return FALSE;
 
 	return TRUE;
@@ -159,30 +159,30 @@ fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 {
 	guint8 data[FU_STRUCT_QC_SYNC_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_sync_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcSyncReq) st_req = fu_struct_qc_sync_req_new();
+	g_autoptr(FuStructQcSync) st_res = NULL;
 
-	fu_struct_qc_sync_req_set_file_id(req, self->file_id);
-	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+	fu_struct_qc_sync_req_set_file_id(st_req, self->file_id);
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
 
-	reply = fu_struct_qc_sync_parse(data, read_len, 0, error);
-	if (reply == NULL)
+	st_res = fu_struct_qc_sync_parse(data, read_len, 0, error);
+	if (st_res == NULL)
 		return FALSE;
 
-	if (self->file_version != fu_struct_qc_sync_get_protocol_version(reply)) {
+	if (self->file_version != fu_struct_qc_sync_get_protocol_version(st_res)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "unsupported firmware protocol version on device %u, expected %u",
-			    fu_struct_qc_sync_get_protocol_version(reply),
+			    fu_struct_qc_sync_get_protocol_version(st_res),
 			    self->file_version);
 		return FALSE;
 	}
 
-	if (self->file_id != fu_struct_qc_sync_get_file_id(reply)) {
+	if (self->file_id != fu_struct_qc_sync_get_file_id(st_res)) {
 		g_autoptr(GError) error_local = NULL;
 		/* reset the update state */
 		if (!fu_qc_s5gen2_device_cmd_abort(self, &error_local))
@@ -192,13 +192,13 @@ fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "unexpected file ID from the device (%u), expected (%u)",
-			    fu_struct_qc_sync_get_file_id(reply),
+			    fu_struct_qc_sync_get_file_id(st_res),
 			    self->file_id);
 
 		return FALSE;
 	}
 
-	self->resume_point = fu_struct_qc_sync_get_resume_point(reply);
+	self->resume_point = fu_struct_qc_sync_get_resume_point(st_res);
 	return TRUE;
 }
 
@@ -208,19 +208,19 @@ fu_qc_s5gen2_device_cmd_start(FuQcS5gen2Device *self, GError **error)
 	guint8 data[FU_STRUCT_QC_START_SIZE] = {0};
 	gsize read_len;
 	FuQcStartStatus status;
-	g_autoptr(GByteArray) req = fu_struct_qc_start_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcStartReq) st_req = fu_struct_qc_start_req_new();
+	g_autoptr(FuStructQcStart) st_res = NULL;
 
-	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
 
-	reply = fu_struct_qc_start_parse(data, read_len, 0, error);
-	if (reply == NULL)
+	st_res = fu_struct_qc_start_parse(data, read_len, 0, error);
+	if (st_res == NULL)
 		return FALSE;
 
-	status = fu_struct_qc_start_get_status(reply);
+	status = fu_struct_qc_start_get_status(st_res);
 	if (status != FU_QC_START_STATUS_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -231,7 +231,7 @@ fu_qc_s5gen2_device_cmd_start(FuQcS5gen2Device *self, GError **error)
 	}
 
 	/* mostly for debug: save raw battery level */
-	self->battery_raw = fu_struct_qc_start_get_battery_level(reply);
+	self->battery_raw = fu_struct_qc_start_get_battery_level(st_res);
 
 	return TRUE;
 }
@@ -239,9 +239,9 @@ fu_qc_s5gen2_device_cmd_start(FuQcS5gen2Device *self, GError **error)
 static gboolean
 fu_qc_s5gen2_device_cmd_start_data(FuQcS5gen2Device *self, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_qc_start_data_req_new();
+	g_autoptr(FuStructQcStartDataReq) st_req = fu_struct_qc_start_data_req_new();
 
-	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), FU_QC_S5GEN2_DEVICE_DATA_REQ_SLEEP);
@@ -255,11 +255,12 @@ fu_qc_s5gen2_device_cmd_validation(FuQcS5gen2Device *self, GError **error)
 	guint16 delay_ms;
 	guint8 data[FU_STRUCT_QC_IS_VALIDATION_DONE_SIZE] = {0};
 	gsize read_len = 0;
-	g_autoptr(GByteArray) req = fu_struct_qc_validation_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcValidationReq) st_req = fu_struct_qc_validation_req_new();
+	g_autoptr(FuStructQcTransferCompleteInd) st_res = NULL;
+	g_autoptr(FuStructQcIsValidationDone) st_res2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
@@ -275,16 +276,16 @@ fu_qc_s5gen2_device_cmd_validation(FuQcS5gen2Device *self, GError **error)
 	}
 
 	/* ignore the error */
-	reply = fu_struct_qc_transfer_complete_ind_parse(data, sizeof(data), 0, &error_local);
+	st_res = fu_struct_qc_transfer_complete_ind_parse(data, sizeof(data), 0, &error_local);
 	/* check if validation is complete */
-	if (reply != NULL)
+	if (st_res != NULL)
 		return TRUE;
 
-	reply = fu_struct_qc_is_validation_done_parse(data, sizeof(data), 0, error);
-	if (reply == NULL)
+	st_res2 = fu_struct_qc_is_validation_done_parse(data, sizeof(data), 0, error);
+	if (st_res2 == NULL)
 		return FALSE;
 
-	delay_ms = fu_struct_qc_is_validation_done_get_delay(reply);
+	delay_ms = fu_struct_qc_is_validation_done_get_delay(st_res2);
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INVALID_DATA,
@@ -305,12 +306,12 @@ fu_qc_s5gen2_device_cmd_transfer_complete(FuQcS5gen2Device *self, GError **error
 {
 	/* reboot immediately */
 	FuQcTransferAction action = FU_QC_TRANSFER_ACTION_INTERACTIVE;
-	g_autoptr(GByteArray) req = fu_struct_qc_transfer_complete_new();
+	g_autoptr(FuStructQcTransferComplete) st_req = fu_struct_qc_transfer_complete_new();
 
-	fu_struct_qc_transfer_complete_set_action(req, action);
+	fu_struct_qc_transfer_complete_set_action(st_req, action);
 
 	/* if reboot immediately, the write might return error */
-	return fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error);
+	return fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error);
 }
 
 static gboolean
@@ -318,18 +319,18 @@ fu_qc_s5gen2_device_cmd_proceed_to_commit(FuQcS5gen2Device *self, GError **error
 {
 	guint8 data[FU_STRUCT_QC_COMMIT_REQ_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_proceed_to_commit_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcProceedToCommit) st_req = fu_struct_qc_proceed_to_commit_new();
+	g_autoptr(FuStructQcCommitReq) st_res = NULL;
 
-	fu_struct_qc_proceed_to_commit_set_action(req, FU_QC_COMMIT_ACTION_PROCEED);
+	fu_struct_qc_proceed_to_commit_set_action(st_req, FU_QC_COMMIT_ACTION_PROCEED);
 
-	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
 
-	reply = fu_struct_qc_commit_req_parse(data, read_len, 0, error);
-	if (reply == NULL)
+	st_res = fu_struct_qc_commit_req_parse(data, read_len, 0, error);
+	if (st_res == NULL)
 		return FALSE;
 
 	return TRUE;
@@ -340,21 +341,21 @@ fu_qc_s5gen2_device_cmd_commit_cfm(FuQcS5gen2Device *self, GError **error)
 {
 	guint8 data[FU_STRUCT_QC_COMPLETE_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_commit_cfm_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcCommitCfm) st_req = fu_struct_qc_commit_cfm_new();
+	g_autoptr(FuStructQcComplete) st_res = NULL;
 
-	fu_struct_qc_commit_cfm_set_action(req, FU_QC_COMMIT_CFM_ACTION_UPGRADE);
+	fu_struct_qc_commit_cfm_set_action(st_req, FU_QC_COMMIT_CFM_ACTION_UPGRADE);
 
 	if (self->resume_point != FU_QC_RESUME_POINT_POST_COMMIT) {
-		if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
+		if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 			return FALSE;
 	}
 
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
 
-	reply = fu_struct_qc_complete_parse(data, read_len, 0, error);
-	if (reply == NULL)
+	st_res = fu_struct_qc_complete_parse(data, read_len, 0, error);
+	if (st_res == NULL)
 		return FALSE;
 
 	return TRUE;
@@ -367,8 +368,8 @@ fu_qc_s5gen2_device_ensure_version(FuQcS5gen2Device *self, GError **error)
 	g_autofree gchar *ver_str = NULL;
 	gsize read_len;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GByteArray) version = NULL;
-	g_autoptr(GByteArray) version_req = fu_struct_qc_version_req_new();
+	g_autoptr(FuStructQcVersion) st_res = NULL;
+	g_autoptr(FuStructQcVersionReq) st_req = fu_struct_qc_version_req_new();
 
 	locker =
 	    fu_device_locker_new_full(FU_DEVICE(self),
@@ -378,18 +379,18 @@ fu_qc_s5gen2_device_ensure_version(FuQcS5gen2Device *self, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	if (!fu_qc_s5gen2_device_msg_out(self, version_req->data, version_req->len, error))
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, ver_raw, sizeof(ver_raw), &read_len, error))
 		return FALSE;
-	version = fu_struct_qc_version_parse(ver_raw, read_len, 0, error);
-	if (version == NULL)
+	st_res = fu_struct_qc_version_parse(ver_raw, read_len, 0, error);
+	if (st_res == NULL)
 		return FALSE;
 
 	ver_str = g_strdup_printf("%u.%u.%u",
-				  fu_struct_qc_version_get_major(version),
-				  fu_struct_qc_version_get_minor(version),
-				  fu_struct_qc_version_get_config(version));
+				  fu_struct_qc_version_get_major(st_res),
+				  fu_struct_qc_version_get_minor(st_res),
+				  fu_struct_qc_version_get_config(st_res));
 	fu_device_set_version(FU_DEVICE(self), ver_str);
 	return TRUE;
 }
@@ -495,25 +496,23 @@ fu_qc_s5gen2_device_write_bucket(FuQcS5gen2Device *self,
 					       data_sz);
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(GByteArray) pkt = fu_struct_qc_data_new();
+		g_autoptr(FuStructQcData) st_pkt = fu_struct_qc_data_new();
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
 
 		if (chk == NULL)
 			return FALSE;
 
-		fu_struct_qc_data_set_data_len(pkt, fu_chunk_get_data_sz(chk) + 1);
+		fu_struct_qc_data_set_data_len(st_pkt, fu_chunk_get_data_sz(chk) + 1);
 		/* only the last block of the last bucket should have flag LAST */
 		if ((i + 1) == fu_chunk_array_length(chunks))
-			fu_struct_qc_data_set_last_packet(pkt, last);
+			fu_struct_qc_data_set_last_packet(st_pkt, last);
 		else
-			fu_struct_qc_data_set_last_packet(pkt, FU_QC_MORE_DATA_MORE);
+			fu_struct_qc_data_set_last_packet(st_pkt, FU_QC_MORE_DATA_MORE);
 
-		pkt = g_byte_array_append(pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		if (pkt == NULL)
-			return FALSE;
+		g_byte_array_append(st_pkt->buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 
 		if (!fu_qc_s5gen2_device_msg_out(self,
-						 pkt->data,
+						 st_pkt->buf->data,
 						 FU_STRUCT_QC_DATA_SIZE + fu_chunk_get_data_sz(chk),
 						 error))
 			return FALSE;
@@ -543,18 +542,18 @@ fu_qc_s5gen2_device_write_blocks(FuQcS5gen2Device *self,
 		gsize read_len;
 		guint32 data_sz;
 		guint32 data_offset;
-		g_autoptr(GByteArray) data_req = NULL;
+		g_autoptr(FuStructQcDataReq) st_req = NULL;
 		g_autoptr(GBytes) data_out = NULL;
 
 		if (!fu_qc_s5gen2_device_msg_in(self, buf_in, sizeof(buf_in), &read_len, error))
 			return FALSE;
-		data_req = fu_struct_qc_data_req_parse(buf_in, read_len, 0, error);
-		if (data_req == NULL)
+		st_req = fu_struct_qc_data_req_parse(buf_in, read_len, 0, error);
+		if (st_req == NULL)
 			return FALSE;
 
 		/* requested data */
-		data_sz = fu_struct_qc_data_req_get_fw_data_len(data_req);
-		data_offset = fu_struct_qc_data_req_get_fw_data_offset(data_req);
+		data_sz = fu_struct_qc_data_req_get_fw_data_len(st_req);
+		data_offset = fu_struct_qc_data_req_get_fw_data_offset(st_req);
 
 		/* FIXME: abort for now */
 		if (data_sz == 0) {
@@ -712,7 +711,7 @@ fu_qc_s5gen2_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_qc_s5gen2_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_qc_s5gen2_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

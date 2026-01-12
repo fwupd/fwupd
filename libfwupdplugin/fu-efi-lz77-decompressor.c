@@ -171,9 +171,9 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 	}
 
 	for (index = 1; index <= 16; index++) {
-		guint16 WordOfStart = start[index];
-		guint16 WordOfCount = count[index];
-		start[index + 1] = (guint16)(WordOfStart + (WordOfCount << (16 - index)));
+		guint16 word_of_start = start[index];
+		guint16 word_of_count = count[index];
+		start[index + 1] = (guint16)(word_of_start + (word_of_count << (16 - index)));
 	}
 
 	if (start[17] != 0) {
@@ -608,7 +608,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint32 dst_bufsz;
 	guint32 src_bufsz;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiLz77DecompressorHeader) st = NULL;
 	g_autoptr(GError) error_all = NULL;
 	g_autoptr(GByteArray) dst = g_byte_array_new();
 	FuEfiLz77DecompressorVersion decompressor_versions[] = {
@@ -623,7 +623,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 	src_bufsz = fu_struct_efi_lz77_decompressor_header_get_src_size(st);
-	if (streamsz < src_bufsz + st->len) {
+	if (streamsz < src_bufsz + st->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -659,7 +659,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 		};
 		g_autoptr(GError) error_local = NULL;
 
-		if (!g_seekable_seek(G_SEEKABLE(stream), st->len, G_SEEK_SET, NULL, error))
+		if (!g_seekable_seek(G_SEEKABLE(stream), st->buf->len, G_SEEK_SET, NULL, error))
 			return FALSE;
 		if (fu_efi_lz77_decompressor_internal(&helper,
 						      decompressor_versions[i],
@@ -680,7 +680,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 			    fu_efi_lz77_decompressor_version_to_string(decompressor_versions[i]));
 			continue;
 		}
-		g_prefix_error(&error_all,
+		g_prefix_error(&error_all, /* nocheck:error */
 			       "failed to parse %s: %s: ",
 			       fu_efi_lz77_decompressor_version_to_string(decompressor_versions[i]),
 			       error_local->message);

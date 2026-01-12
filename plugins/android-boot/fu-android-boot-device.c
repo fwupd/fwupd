@@ -97,8 +97,7 @@ fu_android_boot_device_setup(FuDevice *device, GError **error)
 	if (fs_label != NULL) {
 		fu_device_set_name(device, fs_label);
 
-		/* If the device has A/B partitioning, compare boot slot to only expose partitions
-		 * in-use */
+		/* if device has A/B partitioning, compare slot to only expose partitions in-use */
 		if (self->boot_slot != NULL && !g_str_has_suffix(fs_label, self->boot_slot)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,

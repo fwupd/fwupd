@@ -101,7 +101,8 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 		guint image_addr = json_object_get_int_member(obj, "load_address");
 		fu_firmware_set_addr(image, image_addr);
 	}
-	fu_firmware_add_image(FU_FIRMWARE(self), image);
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), image, error))
+		return FALSE;
 
 	if (!json_object_has_member(obj, "image_version")) {
 		g_set_error_literal(error,

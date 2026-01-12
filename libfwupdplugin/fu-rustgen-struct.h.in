@@ -1,6 +1,10 @@
-typedef GByteArray {{obj.name}};
+typedef struct {
+  GByteArray *buf;
+  guint refcount;
+} {{obj.name}};
 
-#define {{obj.c_method('Unref')}} g_byte_array_unref
+{{obj.name}} *{{obj.c_method('Ref')}}({{obj.name}} *st) G_GNUC_NON_NULL(1);
+void {{obj.c_method('Unref')}}({{obj.name}} *st) G_GNUC_NON_NULL(1);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, {{obj.c_method('Unref')}})
 
 {%- if obj.export('New') == Export.PUBLIC %}
@@ -26,6 +30,9 @@ gboolean {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, 
 {%- endif %}
 {%- if obj.export('ToString') == Export.PUBLIC %}
 gchar *{{obj.c_method('ToString')}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{%- endif %}
+{%- if obj.export('ToBytes') == Export.PUBLIC %}
+GBytes *{{obj.c_method('ToBytes')}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
 
 {%- for item in obj.items | selectattr('enabled') %}

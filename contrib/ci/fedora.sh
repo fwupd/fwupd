@@ -21,14 +21,14 @@ mv fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 mkdir -p build
 sed "s,#VERSION#,$RPMVERSION,;
      s,#BUILD#,1,;
-     s,#LONGDATE#,`date '+%a %b %d %Y'`,;
+     s,#LONGDATE#,$(date '+%a %b %d %Y'),;
      s,#ALPHATAG#,alpha,;
      s,enable_dummy 0,enable_dummy 1,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
-	contrib/fwupd.spec.in > build/fwupd.spec
+    contrib/fwupd.spec.in >build/fwupd.spec
 
 if [ -n "$CI" ]; then
-	sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec
+    sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec
 fi
 
 #build RPM packages

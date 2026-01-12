@@ -9,6 +9,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <libusb.h>
 
 #include "fu-context-private.h"
@@ -59,6 +61,55 @@ fu_usb_backend_create_device(FuUsbBackend *self, libusb_device *usb_device)
 			    usb_device,
 			    NULL);
 }
+
+#ifndef HAVE_UDEV
+static FuDevice *
+fu_usb_backend_create_device_impl(FuBackend *backend, const gchar *backend_id, GError **error)
+{
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	FuContext *ctx = fu_backend_get_context(backend);
+	guint64 usb_addr = 0;
+	guint64 usb_bus = 0;
+	libusb_device **dev_list = NULL;
+	g_auto(GStrv) bus_addr = NULL;
+	g_autoptr(FuUsbDevice) usb_device = NULL;
+
+	/* back from bus:addr */
+	bus_addr = g_strsplit(backend_id, ":", 2);
+	if (!fu_strtoull(bus_addr[0], &usb_bus, 0x0, G_MAXUINT8, FU_INTEGER_BASE_16, error)) {
+		g_prefix_error(error, "failed to parse bus from %s: ", backend_id);
+		return NULL;
+	}
+	if (!fu_strtoull(bus_addr[1], &usb_addr, 0x0, G_MAXUINT8, FU_INTEGER_BASE_16, error)) {
+		g_prefix_error(error, "failed to parse addr from %s: ", backend_id);
+		return NULL;
+	}
+
+	/* find in the current device list */
+	libusb_get_device_list(self->ctx, &dev_list);
+	for (guint i = 0; dev_list != NULL && dev_list[i] != NULL; i++) {
+		if (libusb_get_bus_number(dev_list[i]) == usb_bus &&
+		    libusb_get_device_address(dev_list[i]) == usb_addr) {
+			usb_device = fu_usb_device_new(ctx, dev_list[i]);
+			break;
+		}
+	}
+	libusb_free_device_list(dev_list, 1);
+
+	/* did not find */
+	if (usb_device == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "%s was not found",
+			    backend_id);
+		return NULL;
+	}
+
+	/* success */
+	return FU_DEVICE(g_steal_pointer(&usb_device));
+}
+#endif
 
 static void
 fu_usb_backend_add_device(FuUsbBackend *self, libusb_device *usb_device)
@@ -279,15 +330,11 @@ fu_usb_backend_setup(FuBackend *backend,
 	gint log_level = g_getenv("FWUPD_VERBOSE") != NULL ? 3 : 0;
 	gint rc;
 
-#ifdef HAVE_LIBUSB_INIT_CONTEXT
-#ifdef HAVE_UDEV
+#if defined(HAVE_LIBUSB_INIT_CONTEXT) && defined(HAVE_UDEV)
 	const struct libusb_init_option options[] = {{.option = LIBUSB_OPTION_NO_DEVICE_DISCOVERY,
 						      .value = {
 							  .ival = 1,
 						      }}};
-#else
-	const struct libusb_init_option options[] = {};
-#endif
 	rc = libusb_init_context(&self->ctx, options, G_N_ELEMENTS(options));
 #else
 	rc = libusb_init(&self->ctx);
@@ -307,7 +354,6 @@ fu_usb_backend_setup(FuBackend *backend,
 	libusb_set_debug(self->ctx, log_level);
 #endif
 	fu_context_set_data(ctx, "libusb_context", self->ctx);
-	fu_context_add_udev_subsystem(ctx, "usb", NULL);
 
 	/* no hotplug required, probably in tests */
 	if ((flags & FU_BACKEND_SETUP_FLAG_USE_HOTPLUG) == 0)
@@ -462,6 +508,7 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 	backend_class->coldplug = fu_usb_backend_coldplug;
 	backend_class->registered = fu_usb_backend_registered;
 	backend_class->get_device_parent = fu_usb_backend_get_device_parent;
+	backend_class->create_device = fu_usb_backend_create_device_impl;
 #endif
 }
 

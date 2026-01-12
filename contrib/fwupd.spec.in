@@ -79,6 +79,7 @@ BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
 BuildRequires: libblkid-devel
 BuildRequires: readline-devel
+BuildRequires: libmnl-devel
 %if 0%{?have_passim}
 BuildRequires: passim-devel
 %endif

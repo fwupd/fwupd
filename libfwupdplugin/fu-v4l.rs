@@ -1,7 +1,7 @@
 // Copyright 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToBitString)]
+#[derive(Bitfield,ToString)]
 enum FuV4lCap {
     None                = 0x00000000,
     VideoCapture        = 0x00000001, // video capture device

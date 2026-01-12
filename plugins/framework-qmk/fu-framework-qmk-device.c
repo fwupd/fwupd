@@ -23,12 +23,12 @@ static gboolean
 fu_framework_qmk_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuFrameworkQmkDevice *self = FU_FRAMEWORK_QMK_DEVICE(device);
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GByteArray) req = fu_struct_framework_qmk_reset_request_new();
+	g_autoptr(FuStructFrameworkQmkResetRequest) st_req =
+	    fu_struct_framework_qmk_reset_request_new();
 
 	if (!fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
-					 req->data,
-					 req->len,
+					 st_req->buf->data,
+					 st_req->buf->len,
 					 FU_IO_CHANNEL_FLAG_NONE,
 					 error)) {
 		g_prefix_error_literal(error, "failed to write packet: ");
@@ -41,7 +41,7 @@ fu_framework_qmk_device_detach(FuDevice *device, FuProgress *progress, GError **
 }
 
 static void
-fu_framework_qmk_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_framework_qmk_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

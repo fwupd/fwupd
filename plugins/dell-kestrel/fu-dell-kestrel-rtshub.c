@@ -32,17 +32,17 @@ fu_dell_kestrel_rtshub_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtshub *self, gboolean enable, GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
-	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
-	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_MCUMODIFYCLOCK);
-	fu_struct_rtshub_hid_cmd_buf_set_regaddr(cmd_buf, (guint8)enable);
-	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(cmd_buf, 0);
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(st_cmd, RTSHUB_CMD_WRITE_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(st_cmd, RTSHUB_EXT_MCUMODIFYCLOCK);
+	fu_struct_rtshub_hid_cmd_buf_set_regaddr(st_cmd, (guint8)enable);
+	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(st_cmd, 0);
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -55,17 +55,17 @@ fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtshub *self, gboolean enable
 static gboolean
 fu_dell_kestrel_rtshub_erase_spare_bank(FuDellKestrelRtshub *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
-	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
-	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_ERASEBANK);
-	fu_struct_rtshub_hid_cmd_buf_set_regaddr(cmd_buf, 0x0100);
-	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(cmd_buf, 0);
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(st_cmd, RTSHUB_CMD_WRITE_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(st_cmd, RTSHUB_EXT_ERASEBANK);
+	fu_struct_rtshub_hid_cmd_buf_set_regaddr(st_cmd, 0x0100);
+	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(st_cmd, 0);
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT * 3,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -80,17 +80,17 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtshub *self,
 					FuProgress *progress,
 					GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
-	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
-	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_VERIFYUPDATE);
-	fu_struct_rtshub_hid_cmd_buf_set_regaddr(cmd_buf, 0x01);
-	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(cmd_buf, 0);
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(st_cmd, RTSHUB_CMD_WRITE_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(st_cmd, RTSHUB_EXT_VERIFYUPDATE);
+	fu_struct_rtshub_hid_cmd_buf_set_regaddr(st_cmd, 0x01);
+	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(st_cmd, 0);
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
@@ -98,15 +98,15 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtshub *self,
 	fu_device_sleep_full(FU_DEVICE(self), 4000, progress); /* ms */
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
 		return FALSE;
 
 	/* check device status, 1 for success otherwise fail */
-	if (cmd_buf->data[0] != 0x01) {
+	if (st_cmd->buf->data[0] != 0x01) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "firmware flash failed");
 		return FALSE;
 	}
@@ -118,15 +118,15 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtshub *self,
 static gboolean
 fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtshub *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
-	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
-	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_RESET_TO_FLASH);
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(st_cmd, RTSHUB_CMD_WRITE_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(st_cmd, RTSHUB_EXT_RESET_TO_FLASH);
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -144,23 +144,23 @@ fu_dell_kestrel_rtshub_write_flash(FuDellKestrelRtshub *self,
 				   guint16 data_sz,
 				   GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
 	g_return_val_if_fail(data_sz <= 128, FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
 	g_return_val_if_fail(data_sz != 0, FALSE);
 
-	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
-	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_WRITEFLASH);
-	fu_struct_rtshub_hid_cmd_buf_set_regaddr(cmd_buf, addr);
-	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(cmd_buf, data_sz);
-	if (!fu_struct_rtshub_hid_cmd_buf_set_data(cmd_buf, data, data_sz, error))
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(st_cmd, RTSHUB_CMD_WRITE_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(st_cmd, RTSHUB_EXT_WRITEFLASH);
+	fu_struct_rtshub_hid_cmd_buf_set_regaddr(st_cmd, addr);
+	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(st_cmd, data_sz);
+	if (!fu_struct_rtshub_hid_cmd_buf_set_data(st_cmd, data, data_sz, error))
 		return FALSE;
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -178,7 +178,6 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
-	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -245,7 +244,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* non-uod: reset the device immediately */
-	if (!fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		/* rts5g2 only */
 		if (fu_device_get_pid(device) == DELL_KESTREL_USB_RTS5_G2_PID) {
 			if (!fu_dell_kestrel_rtshub_reset_device(self, error)) {
@@ -261,43 +260,42 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_get_status(FuDevice *device, GError **error)
+fu_dell_kestrel_rtshub_get_status(FuDellKestrelRtshub *self, GError **error)
 {
-	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 	g_autofree gchar *version = NULL;
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
-	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_READ_DATA);
-	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_READ_STATUS);
-	fu_struct_rtshub_hid_cmd_buf_set_regaddr(cmd_buf, 0x00);
-	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(cmd_buf, 12);
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(st_cmd, RTSHUB_CMD_READ_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(st_cmd, RTSHUB_EXT_READ_STATUS);
+	fu_struct_rtshub_hid_cmd_buf_set_regaddr(st_cmd, 0x00);
+	fu_struct_rtshub_hid_cmd_buf_set_bufferlen(st_cmd, 12);
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 				      error))
 		return FALSE;
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x0,
-				      cmd_buf->data,
-				      cmd_buf->len,
+				      st_cmd->buf->data,
+				      st_cmd->buf->len,
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 				      error))
 		return FALSE;
 
 	/* version: index 10, subversion: index 11 */
-	version = g_strdup_printf("%x.%x", cmd_buf->data[10], cmd_buf->data[11]);
-	fu_device_set_version(device, version);
+	version = g_strdup_printf("%x.%x", st_cmd->buf->data[10], st_cmd->buf->data[11]);
+	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* dual bank capability */
-	self->dual_bank = (cmd_buf->data[13] & 0xf0) == 0x80;
+	self->dual_bank = (st_cmd->buf->data[13] & 0xf0) == 0x80;
 
 	/* authentication capability */
-	self->fw_auth = (cmd_buf->data[13] & 0x02) > 0;
+	self->fw_auth = (st_cmd->buf->data[13] & 0x02) > 0;
 
 	return TRUE;
 }
@@ -311,7 +309,7 @@ fu_dell_kestrel_rtshub_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_dell_kestrel_rtshub_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (!fu_dell_kestrel_rtshub_get_status(device, error))
+	if (!fu_dell_kestrel_rtshub_get_status(self, error))
 		return FALSE;
 
 	if (self->dual_bank)
@@ -370,21 +368,8 @@ fu_dell_kestrel_rtshub_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_dell_kestrel_rtshub_open(FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent(device);
-
-	if (!FU_DEVICE_CLASS(fu_dell_kestrel_rtshub_parent_class)->open(device, error))
-		return FALSE;
-
-	if (parent != NULL)
-		return fu_device_open(parent, error);
-	return TRUE;
-}
-
 static void
-fu_dell_kestrel_rtshub_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_kestrel_rtshub_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -419,15 +404,17 @@ fu_dell_kestrel_rtshub_class_init(FuDellKestrelRtshubClass *klass)
 	device_class->probe = fu_dell_kestrel_rtshub_probe;
 	device_class->write_firmware = fu_dell_kestrel_rtshub_write_firmware;
 	device_class->set_progress = fu_dell_kestrel_rtshub_set_progress;
-	device_class->open = fu_dell_kestrel_rtshub_open;
 }
 
 FuDellKestrelRtshub *
-fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type)
+fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type, gboolean uod)
 {
 	FuDellKestrelRtshub *self = g_object_new(FU_TYPE_DELL_KESTREL_RTSHUB, NULL);
 
 	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 	self->dock_type = dock_type;
+
+	if (uod)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	return self;
 }

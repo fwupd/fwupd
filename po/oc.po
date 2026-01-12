@@ -5,16 +5,20 @@
 # Translators:
 # Cédric Valmary <cvalmary@yahoo.fr>, 2016
 # Cédric Valmary <cvalmary@yahoo.fr>, 2016
+# Quentin PAGÈS <quentinantonin@free.fr>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Occitan (post 1500) (http://www.transifex.com/freedesktop/fwupd/language/oc/)\n"
+"PO-Revision-Date: 2025-10-24 10:22+0000\n"
+"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Language-Team: Occitan <https://hosted.weblate.org/projects/fwupd/fwupd/oc/>\n"
+"Language: oc\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: oc\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -131,7 +135,7 @@ msgstr "Mòstra d'informacions de desbugatge complementàrias"
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Mesa a jorn de %s de %s en %s "
+msgstr "Mesa a jorn de %s de %s en %s... "
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"

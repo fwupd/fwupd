@@ -84,30 +84,11 @@ fu_remote_list_monitor_changed_cb(GFileMonitor *monitor,
 	fu_remote_list_emit_changed(self);
 }
 
-static guint64
-_fwupd_remote_get_mtime(FwupdRemote *remote)
-{
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFileInfo) info = NULL;
-
-	file = g_file_new_for_path(fwupd_remote_get_filename_cache(remote));
-	if (!g_file_query_exists(file, NULL))
-		return G_MAXUINT64;
-	info = g_file_query_info(file,
-				 G_FILE_ATTRIBUTE_TIME_MODIFIED,
-				 G_FILE_QUERY_INFO_NONE,
-				 NULL,
-				 NULL);
-	if (info == NULL)
-		return G_MAXUINT64;
-	return g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
-}
-
 /* GLib only returns the very unhelpful "Unable to find default local file monitor type"
  * when /proc/sys/fs/inotify/max_user_instances is set too low; detect this and set a proper
  * error prefix to aid debugging when the daemon fails to start */
 static void
-fu_remote_list_fixup_inotify_error(GError **error)
+fu_remote_list_fixup_inotify_error(GError **error) /* nocheck:error */
 {
 #ifdef HAVE_INOTIFY_H
 	int fd;
@@ -403,7 +384,8 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 	}
 
 	/* set mtime */
-	fwupd_remote_set_mtime(remote, _fwupd_remote_get_mtime(remote));
+	if (!fwupd_remote_ensure_mtime(remote, error))
+		return FALSE;
 	fu_remote_list_add_remote(self, remote);
 
 	/* success */

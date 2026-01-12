@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-""" This parses avrdude.conf and generates quirks for fwupd """
+"""This parses avrdude.conf and generates quirks for fwupd"""
 
 # pylint: disable=wrong-import-position,pointless-string-statement
 

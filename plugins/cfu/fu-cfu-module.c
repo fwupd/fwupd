@@ -36,7 +36,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 {
 	FuDevice *device = FU_DEVICE(self);
 	g_autofree gchar *logical_id = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCfuGetVersionRspComponent) st = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_get_version_rsp_component_parse(buf, bufsz, offset, error);
@@ -108,7 +108,8 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_bytes(offer, blob_offer, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(offer, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, offer);
+	if (!fu_firmware_add_image(firmware, offer, error))
+		return NULL;
 
 	/* payload */
 	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
@@ -122,7 +123,8 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_bytes(payload, blob_payload, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, payload);
+	if (!fu_firmware_add_image(firmware, payload, error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&firmware);
@@ -152,7 +154,7 @@ fu_cfu_module_write_firmware(FuDevice *device,
 }
 
 static void
-fu_cfu_module_set_progress(FuDevice *self, FuProgress *progress)
+fu_cfu_module_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

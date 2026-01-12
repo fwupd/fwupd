@@ -222,12 +222,12 @@ fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
 					 GError **error)
 {
 	guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
 	self->flash_id = 0;
 	self->flash_size = 0;
 	self->read_flash_prog_time = 10;
-	g_debug("wait for isp driver ready...");
+	g_debug("wait for isp driver ready…");
 
 	/* wait for the command to be processed */
 	if (!fu_device_retry_full(FU_DEVICE(self),
@@ -321,9 +321,9 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 	if (fu_kinetic_dp_device_get_fw_state(FU_KINETIC_DP_DEVICE(self)) ==
 	    FU_KINETIC_DP_FW_STATE_APP) {
 		guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
-		/* Puma takes about 18ms (Winbond EF13) to get ISP driver ready for flash info */
+		/* takes about 18ms (Winbond EF13) to get ISP driver ready for flash info */
 		fu_device_sleep(FU_DEVICE(self), 18);
 		if (!fu_device_retry_full(
 			FU_DEVICE(self),
@@ -373,7 +373,7 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 	}
 
 	/* checking for flash erase done */
-	g_debug("waiting for flash erasing...");
+	g_debug("waiting for flash erasing…");
 	if (self->read_flash_prog_time)
 		fu_device_sleep(FU_DEVICE(self), self->read_flash_prog_time);
 	else
@@ -546,7 +546,7 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_kinetic_dp_puma_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_kinetic_dp_puma_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

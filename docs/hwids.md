@@ -16,7 +16,7 @@ To cover this case fwupd allows adding `hardware` requirements that mean we can 
 targets `USB\VID_0BDA&PID_5850`, but *only for Dell* or *only for Lenovo* systems.
 
 Microsoft calls these values "CHIDs" and they are generated on Windows from the SBMIOS tables using `ComputerHardwareIds.exe`
-binary which can be found [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/computerhardwareids).
+[binary](https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/computerhardwareids).
 The list of CHIDs used in Microsoft Windows is:
 
     HardwareID-00 ← Manufacturer + Family + Product Name + SKU Number + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release

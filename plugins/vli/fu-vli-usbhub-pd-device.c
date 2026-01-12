@@ -49,7 +49,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	guint32 fwver;
 	gsize bufsz = FU_STRUCT_VLI_PD_HDR_SIZE;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructVliPdHdr) st = NULL;
 
 	/* sanity check */
 	if (parent == NULL) {
@@ -59,7 +59,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 
 	/* legacy location */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
-					  VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
+					  FU_VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
 					      VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
 					  buf,
 					  bufsz,
@@ -75,7 +75,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	if (fu_struct_vli_pd_hdr_get_vid(st) != 0x2109) {
 		g_debug("PD VID was 0x%04x trying new location", fu_struct_vli_pd_hdr_get_vid(st));
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
-						  VLI_USBHUB_FLASHMAP_ADDR_PD +
+						  FU_VLI_USBHUB_FLASHMAP_ADDR_PD +
 						      VLI_USBHUB_PD_FLASHMAP_ADDR,
 						  buf,
 						  bufsz,
@@ -135,7 +135,8 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* these have a backup section */
-	if (fu_vli_common_device_kind_get_offset(self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)
+	if (fu_vli_common_device_kind_get_offset(self->device_kind) ==
+	    FU_VLI_USBHUB_FLASHMAP_ADDR_PD)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 
 	/* success */
@@ -281,7 +282,7 @@ fu_vli_usbhub_pd_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_vli_usbhub_pd_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_vli_usbhub_pd_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

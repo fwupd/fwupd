@@ -228,21 +228,21 @@ fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz,
 }
 
 static gboolean
-fu_amd_gpu_device_parse_version_string(FuDevice *device, const gchar *str, GError **error)
+fu_amd_gpu_device_parse_version_string(FuAmdGpuDevice *self, const gchar *str, GError **error)
 {
 	guint64 ver;
 	g_autoptr(GError) error_parse = NULL;
 
 	if (!fu_strtoull(str, &ver, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_parse)) {
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE)) {
 			g_propagate_error(error, g_steal_pointer(&error_parse));
 			return FALSE;
 		}
 		g_info("unable to parse version from '%s': %s", str, error_parse->message);
-		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
-		fu_device_set_version(device, str); /* nocheck:set-version */
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version(FU_DEVICE(self), str); /* nocheck:set-version */
 	} else {
-		fu_device_set_version_raw(device, ver);
+		fu_device_set_version_raw(FU_DEVICE(self), ver);
 	}
 
 	return TRUE;
@@ -271,7 +271,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	tokens =
 	    fu_strsplit((const gchar *)vbios_info.vbios_pn, sizeof(vbios_info.vbios_pn), "-", -1);
 	if (g_strv_length(tokens) >= 3) {
-		if (!fu_amd_gpu_device_parse_version_string(device, tokens[2], error))
+		if (!fu_amd_gpu_device_parse_version_string(self, tokens[2], error))
 			return FALSE;
 	}
 
@@ -315,7 +315,8 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	if (csm == NULL)
 		return NULL;
 
-	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(csm), PART_NUM_STR_SIZE);
+	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(FU_AMD_GPU_ATOM_FIRMWARE(csm)),
+			   PART_NUM_STR_SIZE);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error(error,
@@ -417,7 +418,7 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_amd_gpu_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_amd_gpu_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

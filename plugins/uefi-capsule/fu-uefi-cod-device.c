@@ -18,11 +18,11 @@ struct _FuUefiCodDevice {
 G_DEFINE_TYPE(FuUefiCodDevice, fu_uefi_cod_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
-fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **error)
+fu_uefi_cod_device_get_results_for_idx(FuUefiCodDevice *self, guint idx, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(device);
+	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(self);
 	fwupd_guid_t guid = {0x0};
 	gsize bufsz = 0;
 	guint32 status = 0;
@@ -140,7 +140,7 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 		return FALSE;
 	for (guint i = 0; i <= capsule_last; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (fu_uefi_cod_device_get_results_for_idx(device, i, &error_local))
+		if (fu_uefi_cod_device_get_results_for_idx(self, i, &error_local))
 			return TRUE;
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));

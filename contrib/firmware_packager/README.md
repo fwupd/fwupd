@@ -53,7 +53,7 @@ bin file inside the archive, I would pass `--exe dell-thunderbolt-firmware.exe -
 
 ## Example
 
-Let's say we downloaded `Intel_TBT3_FW_UPDATE_NVM21_318RY_A01_4.21.01.002.exe` (available [here](https://downloads.dell.com/FOLDER04421073M/1/Intel_TBT3_FW_UPDATE_NVM21_318RY_A01_4.21.01.002.exe)) containing updated firmware for Dell laptops thunderbolt controllers. Since Dell hasn't made this available on the LVFS yet, we want to package and install it ourselves.
+Let's say we downloaded [`Intel_TBT3_FW_UPDATE_NVM21_318RY_A01_4.21.01.002.exe`](https://downloads.dell.com/FOLDER04421073M/1/Intel_TBT3_FW_UPDATE_NVM21_318RY_A01_4.21.01.002.exe) containing updated firmware for Dell laptops thunderbolt controllers. Since Dell hasn't made this available on the LVFS yet, we want to package and install it ourselves.
 
 Opening the .exe with archive manager, we see it has a single folder: `Intel` and inside that, a set of firmware binaries (along with some microsoft junk). We pick the file `0x07BE_secure.bin` since we have a Dell XPS 9560 and that is its device string.
 

@@ -14,7 +14,7 @@ enum FuBnrDpPayloadFlags {
     CrcError = 1 << 1,
 }
 
-#[derive(Default, Setters, Parse)]
+#[derive(Default, Setters, Parse, ToBytes)]
 #[repr(C, packed)]
 struct FuStructBnrDpPayloadHeader {
     id: [char; 4] == "DP0R",

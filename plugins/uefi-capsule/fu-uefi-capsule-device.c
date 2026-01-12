@@ -290,7 +290,7 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 	gsize datasz = 0;
 	g_autofree gchar *varname = fu_uefi_capsule_device_build_varname(self);
 	g_autofree guint8 *data = NULL;
-	g_autoptr(GByteArray) st_inf = NULL;
+	g_autoptr(FuStructEfiUpdateInfo) st_inf = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -312,7 +312,7 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 
 	/* just copy the new EfiUpdateInfo and save it back */
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
-	memcpy(data, st_inf->data, st_inf->len); /* nocheck:blocked */
+	memcpy(data, st_inf->buf->data, st_inf->buf->len); /* nocheck:blocked */
 	if (!fu_efivars_set_data(efivars,
 				 FU_EFIVARS_GUID_FWUPDATE,
 				 varname,
@@ -343,8 +343,10 @@ fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *capsule_path, GE
 	name_with_root = g_strdup_printf("/%s", capsule_path);
 	if (!fu_efi_file_path_device_path_set_name(dp_file, name_with_root, error))
 		return NULL;
-	fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_hd));
-	fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_file));
+	if (!fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_hd), error))
+		return NULL;
+	if (!fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_file), error))
+		return NULL;
 	return g_steal_pointer(&dp_buf);
 }
 
@@ -357,7 +359,7 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_new = NULL;
-	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
+	g_autoptr(FuStructEfiCapsuleHeader) st_cap = fu_struct_efi_capsule_header_new();
 
 	g_return_val_if_fail(FU_IS_UEFI_CAPSULE_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -405,9 +407,9 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	fu_struct_efi_capsule_header_set_guid(st_cap, &esrt_guid);
 
 	/* pad to the headersize then add the payload */
-	fu_byte_array_set_size(st_cap, hdrsize, 0x00);
-	g_byte_array_append(st_cap, buf, bufsz);
-	return g_bytes_new(st_cap->data, st_cap->len);
+	fu_byte_array_set_size(st_cap->buf, hdrsize, 0x00);
+	g_byte_array_append(st_cap->buf, buf, bufsz);
+	return fu_struct_efi_capsule_header_to_bytes(st_cap);
 }
 
 gboolean
@@ -423,7 +425,7 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	fwupd_guid_t guid = {0x0};
 	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
 	g_autoptr(GBytes) dp_blob = NULL;
-	g_autoptr(GByteArray) st_inf = fu_struct_efi_update_info_new();
+	g_autoptr(FuStructEfiUpdateInfo) st_inf = fu_struct_efi_update_info_new();
 
 	/* convert to EFI device path */
 	dp_buf = fu_uefi_capsule_device_build_dp_buf(priv->esp, capsule_path, error);
@@ -440,12 +442,12 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	fu_struct_efi_update_info_set_hw_inst(st_inf, priv->fmp_hardware_instance);
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
-	fu_byte_array_append_bytes(st_inf, dp_blob);
+	fu_byte_array_append_bytes(st_inf->buf, dp_blob);
 	if (!fu_efivars_set_data(efivars,
 				 FU_EFIVARS_GUID_FWUPDATE,
 				 varname,
-				 st_inf->data,
-				 st_inf->len,
+				 st_inf->buf->data,
+				 st_inf->buf->len,
 				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
 				 error)) {
@@ -570,9 +572,9 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_uefi_capsule_device_capture_efi_debugging(FuDevice *device)
+fu_uefi_capsule_device_capture_efi_debugging(FuUefiCapsuleDevice *self)
 {
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *str = NULL;
 	g_autoptr(GBytes) buf = NULL;
@@ -645,7 +647,7 @@ fu_uefi_capsule_device_get_results(FuDevice *device, GError **error)
 
 	/* capture EFI binary debug output */
 	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING))
-		fu_uefi_capsule_device_capture_efi_debugging(device);
+		fu_uefi_capsule_device_capture_efi_debugging(self);
 
 	/* just set the update error */
 	fu_uefi_capsule_device_set_status(self, priv->last_attempt_status);
@@ -743,7 +745,7 @@ fu_uefi_capsule_device_set_property(GObject *object,
 }
 
 static void
-fu_uefi_capsule_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_capsule_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

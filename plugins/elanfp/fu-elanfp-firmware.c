@@ -140,7 +140,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 					      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		offset += 0x10;

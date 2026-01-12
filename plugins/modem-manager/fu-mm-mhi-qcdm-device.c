@@ -127,7 +127,6 @@ fu_mm_mhi_qcdm_device_prepare_firmware(FuDevice *device,
 {
 	FuMmMhiQcdmDevice *self = FU_MM_MHI_QCDM_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
-	g_autoptr(GBytes) firehose_prog = NULL;
 
 	/* parse as archive */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
@@ -168,7 +167,7 @@ fu_mm_mhi_qcdm_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_mm_mhi_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_mm_mhi_qcdm_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

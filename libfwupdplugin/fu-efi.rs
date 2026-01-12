@@ -118,10 +118,11 @@ struct FuStructEfiSection {
     type: FuEfiSectionType,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructEfiSection2 {
-    _base: FuStructEfiSection,
+    size: u24le == 0xFFFFFF,
+    type: FuEfiSectionType,
     extended_size: u32le,
 }
 
@@ -183,6 +184,7 @@ struct FuStructEfiVolumeBlockMap {
     length: u32le,
 }
 
+#[derive(Getters, New)]
 #[repr(C, packed)]
 struct FuStructEfiTime {
     year: u16le,
@@ -306,6 +308,81 @@ struct FuStructEfiHardDriveDevicePath {
     partition_signature: Guid,
     partition_format: FuEfiHardDriveDevicePathPartitionFormat = GuidPartitionTable,
     signature_type: FuEfiHardDriveDevicePathSignatureType = Guid,
+}
+
+#[repr(u8)]
+#[derive(ToString, FromString)]
+enum FuEfiVariableStoreState {
+    Unset   = 0x00,
+    Healthy = 0xFE,
+    Empty   = 0xFF,
+}
+
+#[repr(u8)]
+enum FuEfiVariableStoreFormat {
+    Formatted = 0x5A,
+}
+
+#[derive(ParseStream, ValidateStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructEfiVss2VariableStoreHeader {
+    signature: Guid == "aaf32c78-947b-439a-a180-2e144ec37792",
+    size: u32le, // size of variable store, including store header
+    format: FuEfiVariableStoreFormat == Formatted,
+    state: FuEfiVariableStoreState == Healthy,
+    _reserved: u16le,
+    _reserved1: u32le,
+}
+
+#[repr(u8)]
+#[derive(ToString, FromString)]
+enum FuEfiVariableState {
+    Unset                       = 0x00,
+    VariableInDeletedTransition = 0xFE,
+    VariableDeleted             = 0xFD,
+    VariableHeaderValid         = 0x7F,
+    VariableAdded               = 0x3F,
+    IntelVariableValid          = 0xFC,
+    IntelVariableInvalid        = 0xF8,
+}
+
+#[derive(ToString, FromString, Bitfield)]
+#[repr(u32le)]
+enum FuEfiVariableAttributes {
+    None                              = 0x00000000,
+    NonVolatile                       = 0x00000001,
+    BootserviceAccess                 = 0x00000002,
+    RuntimeAccess                     = 0x00000004,
+    HardwareErrorRecord               = 0x00000008,
+    AuthenticatedWriteAccess          = 0x00000010,
+    TimeBasedAuthenticatedWriteAccess = 0x00000020,
+    AppendWrite                       = 0x00000040,
+}
+
+// authenticated variable header, used for SecureBoot vars
+#[derive(ParseStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructEfiVssAuthVariableHeader {
+    start_id: u16le = 0x55AA,
+    state: FuEfiVariableState,
+    reserved: u8,
+    attributes: FuEfiVariableAttributes,
+    monotonic_counter: u64le,
+    timestamp: FuStructEfiTime,
+    pubkey_index: u32le,
+    name_size: u32le,         // null-terminated UCS2 string
+    data_size: u32le,         // size of variable data without header and name
+    vendor_guid: Guid,
+}
+
+#[derive(ParseStream, ValidateStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructEfiFaultTolerantWorkingBlockHeader64 {
+    signature: Guid == "9e58292b-7c68-497d-a0ce-6500fd9f1b95",
+    crc: u32le = 0xFFFFFFFF,
+    state: FuEfiVariableStoreState = Empty,
+    reserved: [u8; 3] = [0xFF; 3],
+    write_queue_size: u64le,
 }
 
 #[derive(ParseStream, New, Default)]

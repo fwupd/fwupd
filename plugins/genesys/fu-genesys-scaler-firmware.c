@@ -64,13 +64,15 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(firmware_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(firmware_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, firmware_payload);
+	if (!fu_firmware_add_image(firmware, firmware_payload, error))
+		return FALSE;
 
 	/* set public-key */
 	blob_public_key = g_bytes_new(&self->public_key, sizeof(self->public_key));
 	firmware_public_key = fu_firmware_new_from_bytes(blob_public_key);
 	fu_firmware_set_id(firmware_public_key, FU_FIRMWARE_ID_SIGNATURE);
-	fu_firmware_add_image(firmware, firmware_public_key);
+	if (!fu_firmware_add_image(firmware, firmware_public_key, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

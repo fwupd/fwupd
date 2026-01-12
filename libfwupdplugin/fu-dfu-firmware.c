@@ -221,7 +221,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructDfuFtr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
@@ -298,7 +298,7 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st = fu_struct_dfu_ftr_new();
+	g_autoptr(FuStructDfuFtr) st = fu_struct_dfu_ftr_new();
 
 	/* add the raw firmware data, the footer-less-CRC, and only then the CRC */
 	fu_byte_array_append_bytes(buf, contents);
@@ -306,7 +306,7 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 	fu_struct_dfu_ftr_set_pid(st, priv->pid);
 	fu_struct_dfu_ftr_set_vid(st, priv->vid);
 	fu_struct_dfu_ftr_set_ver(st, priv->dfu_version);
-	g_byte_array_append(buf, st->data, st->len - sizeof(guint32));
+	g_byte_array_append(buf, st->buf->data, st->buf->len - sizeof(guint32));
 	fu_byte_array_append_uint32(buf,
 				    fu_crc32(FU_CRC_KIND_B32_JAMCRC, buf->data, buf->len),
 				    G_LITTLE_ENDIAN);

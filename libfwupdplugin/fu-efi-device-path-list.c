@@ -77,7 +77,7 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 		return FALSE;
 	while (offset < streamsz) {
 		g_autoptr(FuEfiDevicePath) efi_dp = NULL;
-		g_autoptr(GByteArray) st_dp = NULL;
+		g_autoptr(FuStructEfiDevicePath) st_dp = NULL;
 
 		/* parse the header so we can work out what GType to create */
 		st_dp = fu_struct_efi_device_path_parse_stream(stream, offset, error);
@@ -100,7 +100,7 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(FU_FIRMWARE(efi_dp), offset);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(efi_dp), stream, offset, flags, error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(efi_dp), error))
+		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(efi_dp), error))
 			return FALSE;
 		offset += fu_firmware_get_size(FU_FIRMWARE(efi_dp));
 	}
@@ -114,7 +114,7 @@ fu_efi_device_path_list_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_dp_end = NULL;
+	g_autoptr(FuStructEfiDevicePath) st_dp_end = NULL;
 
 	/* add each image */
 	for (guint i = 0; i < imgs->len; i++) {
@@ -129,7 +129,7 @@ fu_efi_device_path_list_write(FuFirmware *firmware, GError **error)
 	st_dp_end = fu_struct_efi_device_path_new();
 	fu_struct_efi_device_path_set_type(st_dp_end, FU_EFI_DEVICE_PATH_TYPE_END);
 	fu_struct_efi_device_path_set_subtype(st_dp_end, 0xFF);
-	g_byte_array_append(buf, st_dp_end->data, st_dp_end->len);
+	fu_byte_array_append_array(buf, st_dp_end->buf);
 
 	/* success */
 	return g_steal_pointer(&buf);

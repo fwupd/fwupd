@@ -155,3 +155,109 @@ enum FuCcgxHpiVendorCmd {
     ReadUserFlash,
     DeviceReset = 0xE3,
 }
+
+enum FuCcgxPdRespReg {
+    DeviceModeAddr,
+    BootModeReason,
+    SiliconId,
+    BlLastRow = 0x04,
+    IntrRegAddr = 0x06,
+    JumpToBootRegAddr,
+    ResetAddr,
+    EnterFlashModeAddr = 0x0a,
+    ValidateFwAddr,
+    FlashReadWriteAddr,
+    GetVersion = 0x10,
+    DbgPdInit = 0x12,
+    UVdmCtrlAddr = 0x20,
+    ReadPdProfile = 0x22,
+    EffectiveSourcePdoMask = 0x24,
+    EffectiveSinkPdoMask,
+    SelectSourcePdo,
+    SelectSinkPdo,
+    PdControl,
+    PdStatus = 0x2c,
+    TypeCStatus = 0x30,
+    CurrentPdo = 0x34,
+    CurrentRdo = 0x38,
+    CurrentCableVdo = 0x3c,
+    DisplayPortStatus = 0x40,
+    DisplayPortConfig = 0x44,
+    AlternateModeMuxSelection = 0x45,
+    EventMask = 0x48,
+    ResponseAddr = 0x7e,
+    BootdataMemoryAddr = 0x80,
+    FwdataMemoryAddr = 0xc0,
+}
+
+enum FuCcgxHpiRegPart {
+    Reg = 0,            // register region
+    Data = 1,           // data memory
+    Flash = 2,          // flash memory
+    PddataRead = 4,     // read data memory
+    PddataWrite = 8,    // write data memory
+}
+
+enum FuCcgxI2cDataConfig {
+    None = 0,
+    Stop = 1 << 0,
+    Nak = 1 << 1, // only for read
+}
+
+enum FuCcgxHpiDevReg {
+    DeviceMode = 0,
+    BootModeReason,
+    SiId,
+    SiIdLsb,
+    BlLastRow,
+    BlLastRowLsb,
+    IntrAddr,
+    JumpToBoot,
+    ResetAddr,
+    ResetCmd,
+    EnterFlashMode,
+    ValidateFwAddr,
+    FlashReadWrite,
+    FlashReadWriteCmd,
+    FlashRow,
+    FlashRowLsb,
+    AllVersion,
+    AllVersionByte1,
+    AllVersionByte2,
+    AllVersionByte3,
+    AllVersionByte4,
+    AllVersionByte5,
+    AllVersionByte6,
+    AllVersionByte7,
+    AllVersionByte8,
+    AllVersionByte9,
+    AllVersionByte10,
+    AllVersionByte11,
+    AllVersionByte12,
+    AllVersionByte13,
+    AllVersionByte14,
+    AllVersionByte15,
+    Fw2Version,
+    Fw2VersionByte1,
+    Fw2VersionByte2,
+    Fw2VersionByte3,
+    Fw2VersionByte4,
+    Fw2VersionByte5,
+    Fw2VersionByte6,
+    Fw2VersionByte7,
+    FwbinLoc,
+    Fw1BinLocLsb,
+    Fw2BinLocMsb,
+    Fw2BinLocLsb,
+    PortEnable,
+    Len,
+    Response = 0x007e,
+    FlashMem = 0x0200,
+}
+
+enum FuCcgxHpiRegSection {
+    Dev,    // device information
+    Port0,  // USB-PD Port 0
+    Port1,  // USB-PD Port 1
+    All,
+}

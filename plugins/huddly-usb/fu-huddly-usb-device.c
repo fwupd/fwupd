@@ -44,7 +44,7 @@ fu_huddly_usb_device_find_interface(FuHuddlyUsbDevice *self, GError **error)
 
 	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL) {
-		g_prefix_error_literal(error, "could not find interface");
+		g_prefix_error_literal(error, "could not find interface: ");
 		return FALSE;
 	}
 	for (guint i = 0; i < intfs->len; i++) {
@@ -93,7 +93,7 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 src->data + offset,
 						 chunk_size,
 						 &transmitted,
-						 2000,
+						 5000,
 						 NULL,
 						 error)) {
 			return FALSE;
@@ -194,7 +194,7 @@ fu_huddly_usb_device_salute(FuHuddlyUsbDevice *self, GError **error)
 	g_autoptr(GByteArray) response = g_byte_array_new();
 	g_autofree gchar *str = NULL;
 
-	g_debug("send salute...");
+	g_debug("send salute…");
 	fu_byte_array_append_uint8(salutation, 0x00);
 
 	if (!fu_huddly_usb_device_bulk_write(self, salutation, NULL, error)) {

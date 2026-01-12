@@ -15,7 +15,7 @@ fu_huddly_usb_hlink_msg_free(FuHuddlyUsbHLinkMsg *msg)
 {
 	g_free(msg->msg_name);
 	if (msg->header != NULL)
-		g_byte_array_unref(msg->header);
+		fu_struct_h_link_header_unref(msg->header);
 	if (msg->payload != NULL)
 		g_byte_array_unref(msg->payload);
 	g_free(msg);
@@ -59,7 +59,7 @@ fu_huddly_usb_hlink_msg_write(FuHuddlyUsbHLinkMsg *msg, GError **error)
 	g_return_val_if_fail(msg != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	g_byte_array_append(packet, msg->header->data, msg->header->len);
+	fu_byte_array_append_array(packet, msg->header->buf);
 	g_byte_array_append(packet, (const guint8 *)msg->msg_name, strlen(msg->msg_name));
 	if (msg->payload != NULL)
 		g_byte_array_append(packet, msg->payload->data, msg->payload->len);

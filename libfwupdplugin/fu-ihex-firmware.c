@@ -396,7 +396,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 				g_autoptr(FuFirmware) img_sig =
 				    fu_firmware_new_from_bytes(data_sig);
 				fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
-				if (!fu_firmware_add_image_full(firmware, img_sig, error))
+				if (!fu_firmware_add_image(firmware, img_sig, error))
 					return FALSE;
 			}
 			got_sig = TRUE;

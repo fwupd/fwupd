@@ -25,7 +25,7 @@ mkdir -p $build $DESTDIR && cd $build
 
 # Hack for Fedora bug
 if [ "$(id -u)" -eq 0 ]; then
-    sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+    sed -i '/^Requires.private: termcap/d' /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
 fi
 
 # run before using meson
@@ -74,85 +74,85 @@ MINGW32BINDIR=/usr/x86_64-w64-mingw32/sys-root/mingw/bin
 
 # deps
 find $MINGW32BINDIR \
-	-name gspawn-win64-helper-console.exe \
-	-o -name gspawn-win64-helper.exe \
-	-o -name iconv.dll \
-	-o -name libarchive-13.dll \
-	-o -name libbrotlicommon.dll \
-	-o -name libbrotlidec.dll \
-	-o -name libbz2-1.dll \
-	-o -name libcrypto-3-x64.dll \
-	-o -name libcurl-4.dll \
-	-o -name "libffi-*.dll" \
-	-o -name libgcc_s_seh-1.dll \
-	-o -name libgio-2.0-0.dll \
-	-o -name libglib-2.0-0.dll \
-	-o -name libgmodule-2.0-0.dll \
-	-o -name libgmp-10.dll \
-	-o -name libgnutls-30.dll \
-	-o -name libgobject-2.0-0.dll \
-	-o -name "libhogweed-*.dll" \
-	-o -name libidn2-0.dll \
-	-o -name libintl-8.dll \
-	-o -name libjson-glib-1.0-0.dll \
-	-o -name liblzma-5.dll \
-	-o -name "libnettle-*.dll" \
-	-o -name libp11-kit-0.dll \
-	-o -name libpcre2-8-0.dll \
-	-o -name libpsl-5.dll \
-	-o -name libsqlite3-0.dll \
-	-o -name libssh2-1.dll \
-	-o -name libssl-3-x64.dll \
-	-o -name libssp-0.dll \
-	-o -name libtermcap-0.dll \
-	-o -name libreadline8.dll \
-	-o -name libtasn1-6.dll \
-	-o -name libunistring-2.dll \
-	-o -name libusb-1.0.dll \
-	-o -name libwinpthread-1.dll \
-	-o -name libxml2-2.dll \
-	-o -name libxmlb-2.dll \
-	-o -name libzstd.dll \
-	-o -name wldap32.dll \
-	-o -name zlib1.dll \
-	| wixl-heat \
-	-p $MINGW32BINDIR/ \
-	--win64 \
-	--directory-ref BINDIR \
-	--var "var.MINGW32BINDIR" \
-	--component-group "CG.fwupd-deps" | \
-	tee $build/contrib/fwupd-deps.wxs
+    -name gspawn-win64-helper-console.exe \
+    -o -name gspawn-win64-helper.exe \
+    -o -name iconv.dll \
+    -o -name libarchive-13.dll \
+    -o -name libbrotlicommon.dll \
+    -o -name libbrotlidec.dll \
+    -o -name libbz2-1.dll \
+    -o -name libcrypto-3-x64.dll \
+    -o -name libcurl-4.dll \
+    -o -name "libffi-*.dll" \
+    -o -name libgcc_s_seh-1.dll \
+    -o -name libgio-2.0-0.dll \
+    -o -name libglib-2.0-0.dll \
+    -o -name libgmodule-2.0-0.dll \
+    -o -name libgmp-10.dll \
+    -o -name libgnutls-30.dll \
+    -o -name libgobject-2.0-0.dll \
+    -o -name "libhogweed-*.dll" \
+    -o -name libidn2-0.dll \
+    -o -name libintl-8.dll \
+    -o -name libjson-glib-1.0-0.dll \
+    -o -name liblzma-5.dll \
+    -o -name "libnettle-*.dll" \
+    -o -name libp11-kit-0.dll \
+    -o -name libpcre2-8-0.dll \
+    -o -name libpsl-5.dll \
+    -o -name libsqlite3-0.dll \
+    -o -name libssh2-1.dll \
+    -o -name libssl-3-x64.dll \
+    -o -name libssp-0.dll \
+    -o -name libtermcap-0.dll \
+    -o -name libreadline8.dll \
+    -o -name libtasn1-6.dll \
+    -o -name libunistring-2.dll \
+    -o -name libusb-1.0.dll \
+    -o -name libwinpthread-1.dll \
+    -o -name libxml2-2.dll \
+    -o -name libxmlb-2.dll \
+    -o -name libzstd.dll \
+    -o -name wldap32.dll \
+    -o -name zlib1.dll |
+    wixl-heat \
+        -p $MINGW32BINDIR/ \
+        --win64 \
+        --directory-ref BINDIR \
+        --var "var.MINGW32BINDIR" \
+        --component-group "CG.fwupd-deps" |
+    tee $build/contrib/fwupd-deps.wxs
 
-echo $CERTDIR/ca-bundle.crt \
-	| wixl-heat \
-	-p $CERTDIR/ \
-	--win64 \
-	--directory-ref BINDIR \
-	--var "var.CERTDIR" \
-	--component-group "CG.fwupd-crts" | \
-	tee $build/contrib/fwupd-crts.wxs
+echo $CERTDIR/ca-bundle.crt |
+    wixl-heat \
+        -p $CERTDIR/ \
+        --win64 \
+        --directory-ref BINDIR \
+        --var "var.CERTDIR" \
+        --component-group "CG.fwupd-crts" |
+    tee $build/contrib/fwupd-crts.wxs
 
 # no static libraries
 find "$DESTDIR/" -type f -name "*.a" -print0 | xargs rm -f
 
 # our files
-find "$DESTDIR" | \
-	wixl-heat \
-	-p "$DESTDIR/" \
-	-x include/ \
-	-x share/fwupd/device-tests/ \
-	-x share/tests/ \
-	-x share/man/ \
-	-x share/doc/ \
-	-x lib/pkgconfig/ \
-	--win64 \
-	--directory-ref INSTALLDIR \
-	--var "var.DESTDIR" \
-	--component-group "CG.fwupd-files" | \
-	tee "$build/contrib/fwupd-files.wxs"
+find "$DESTDIR" |
+    wixl-heat \
+        -p "$DESTDIR/" \
+        -x include/ \
+        -x share/fwupd/device-tests/ \
+        -x share/tests/ \
+        -x share/man/ \
+        -x share/doc/ \
+        -x lib/pkgconfig/ \
+        --win64 \
+        --directory-ref INSTALLDIR \
+        --var "var.DESTDIR" \
+        --component-group "CG.fwupd-files" |
+    tee "$build/contrib/fwupd-files.wxs"
 
 #add service install key
-sed -i "$build/contrib/fwupd-files.wxs" -f - << EOF
+sed -i "$build/contrib/fwupd-files.wxs" -f - <<EOF
 s,fwupd.exe"/>,fwupd.exe"/>\\
           <ServiceInstall Id="FwupdServiceInstaller" Interactive="no" ErrorControl="normal" Name="fwupd" DisplayName="fwupd" Description="fwupd" Start="auto" Type="ownProcess" Arguments=""/>,
 EOF
@@ -160,15 +160,15 @@ EOF
 MSI_FILENAME="$DESTDIR/setup/fwupd-$VERSION-setup-x86_64.msi"
 mkdir -p "$DESTDIR/setup"
 wixl -v \
-	"$build/contrib/fwupd.wxs" \
-	"$build/contrib/fwupd-crts.wxs" \
-	"$build/contrib/fwupd-deps.wxs" \
-	"$build/contrib/fwupd-files.wxs" \
-	-D CERTDIR=$CERTDIR \
-	-D MINGW32BINDIR=$MINGW32BINDIR \
-	-D Win64="yes" \
-	-D DESTDIR="$DESTDIR" \
-	-o "${MSI_FILENAME}"
+    "$build/contrib/fwupd.wxs" \
+    "$build/contrib/fwupd-crts.wxs" \
+    "$build/contrib/fwupd-deps.wxs" \
+    "$build/contrib/fwupd-files.wxs" \
+    -D CERTDIR=$CERTDIR \
+    -D MINGW32BINDIR=$MINGW32BINDIR \
+    -D Win64="yes" \
+    -D DESTDIR="$DESTDIR" \
+    -o "${MSI_FILENAME}"
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"

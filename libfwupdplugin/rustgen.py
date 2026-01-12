@@ -71,9 +71,9 @@ class EnumObj:
         self.items: List[EnumItem] = []
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
-            "ToBitString": Export.NONE,
             "FromString": Export.NONE,
         }
+        self._is_bitfield = False
 
     def c_method(self, suffix: str):
         return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
@@ -92,6 +92,13 @@ class EnumObj:
             if item.default:
                 return True
         return False
+
+    @property
+    def is_bitfield(self) -> bool:
+        for item in self.items:
+            if item.is_bitfield:
+                return True
+        return self._is_bitfield
 
     def check(self):
         # check we're prefixed with something sane
@@ -119,6 +126,9 @@ class EnumObj:
         self._exports[derive] = Export.PRIVATE
 
     def add_public_export(self, derive: str) -> None:
+        if derive == "Bitfield":
+            self._is_bitfield = True
+            return
         self.add_private_export(derive)
         self._exports[derive] = Export.PUBLIC
 
@@ -134,6 +144,7 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.is_bitfield = False
 
     @property
     def c_define(self) -> str:
@@ -149,6 +160,8 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
+        if val.find("<<") != -1:
+            self.is_bitfield = True
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):
@@ -177,7 +190,9 @@ class StructObj:
             "ParseStream": Export.NONE,
             "ParseInternal": Export.NONE,
             "New": Export.NONE,
+            "NewInternal": Export.NONE,
             "ToString": Export.NONE,
+            "ToBytes": Export.NONE,
             "Default": Export.NONE,
         }
 
@@ -222,6 +237,7 @@ class StructObj:
         if derive == "Validate":
             self.add_private_export("ValidateInternal")
         elif derive == "ValidateStream":
+            self.add_private_export("NewInternal")
             self.add_private_export("ValidateInternal")
         elif derive == "ValidateBytes":
             self.add_private_export("Validate")
@@ -229,6 +245,8 @@ class StructObj:
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Getters")
+                if item.constant and item.enum_obj:
+                    item.enum_obj.add_private_export("ToString")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "ToString":
@@ -238,8 +256,10 @@ class StructObj:
                 if item.enum_obj and not item.constant and item.enabled:
                     item.enum_obj.add_private_export("ToString")
         elif derive == "Parse":
+            self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseStream":
+            self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseBytes":
             self.add_private_export("Parse")
@@ -256,6 +276,7 @@ class StructObj:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
+            self.add_private_export("NewInternal")
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Setters")
@@ -268,6 +289,8 @@ class StructObj:
             for item in self.items:
                 if not item.constant:
                     item.add_public_export(derive)
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("NewInternal")
         else:
             self.add_private_export(derive)
             self._exports[derive] = Export.PUBLIC

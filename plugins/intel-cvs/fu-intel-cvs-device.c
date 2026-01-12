@@ -202,7 +202,7 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 	fu_struct_intel_cvs_write_set_fw_bin_fd(st_write, fu_io_channel_unix_get_fd(io_payload));
 	if (!fu_udev_device_write_sysfs_byte_array(FU_UDEV_DEVICE(self),
 						   "cvs_ctrl_data_pre",
-						   st_write,
+						   st_write->buf,
 						   FU_INTEL_CVS_DEVICE_SYSFS_TIMEOUT,
 						   error))
 		return FALSE;
@@ -259,7 +259,7 @@ fu_intel_cvs_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_intel_cvs_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_intel_cvs_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

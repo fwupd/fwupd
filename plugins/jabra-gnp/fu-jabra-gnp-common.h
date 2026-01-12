@@ -26,7 +26,7 @@
 #define FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA 16
 
 typedef struct {
-	guint8 txbuf[FU_JABRA_GNP_BUF_SIZE];
+	GByteArray *buf;
 	const guint timeout;
 } FuJabraGnpTxData;
 

@@ -332,7 +332,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	/* Check if CMOS needs a reset */
+	/* check if CMOS needs a reset */
 	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
 		g_debug("attempting CMOS reset");
 		if (!fu_flashrom_cmos_reset(error)) {
@@ -346,7 +346,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_flashrom_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_flashrom_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

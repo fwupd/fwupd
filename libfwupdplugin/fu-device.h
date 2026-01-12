@@ -1113,6 +1113,8 @@ gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_string(FuDevice *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
+gchar *
+fu_device_get_id_display(FuDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_device_get_equivalent_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
@@ -1139,6 +1141,9 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
     G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_child_by_logical_id(FuDevice *self, const gchar *logical_id, GError **error)
+    G_GNUC_NON_NULL(1);
 void
 fu_device_add_child(FuDevice *self, FuDevice *child) G_GNUC_NON_NULL(1, 2);
 void
@@ -1449,6 +1454,8 @@ fu_device_get_smbios_string(FuDevice *self,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
 fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_device_check_fwupd_version(FuDevice *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1, 2);
 
 const gchar *
 fu_device_get_instance_str(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);

@@ -1,10 +1,14 @@
 <firmware gtype="FuFmapFirmware">
+  <signature_offset>0x0</signature_offset>
   <firmware>
     <id>FMAP</id>
     <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
-  <firmware>
-    <id>TEST</id>
-    <data>V29ybGQh</data>
+  <firmware gtype="FuUswidFirmware">
+    <id>SBOM</id>
+    <hdrver>0x1</hdrver>
+    <firmware gtype="FuCoswidFirmware">
+      <version>456</version>
+    </firmware>
   </firmware>
 </firmware>

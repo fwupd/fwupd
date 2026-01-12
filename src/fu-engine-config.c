@@ -342,6 +342,12 @@ fu_engine_config_get_ignore_efivars_free_space(FuEngineConfig *self)
 }
 
 gboolean
+fu_engine_config_get_only_trust_pq_signatures(FuEngineConfig *self)
+{
+	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "OnlyTrustPostQuantumSignatures");
+}
+
+gboolean
 fu_engine_config_get_release_dedupe(FuEngineConfig *self)
 {
 	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "ReleaseDedupe");
@@ -439,6 +445,7 @@ fu_engine_config_init(FuEngineConfig *self)
 	fu_engine_config_set_default(self, "ReleaseDedupe", "true");
 	fu_engine_config_set_default(self, "ReleasePriority", "local");
 	fu_engine_config_set_default(self, "RequireImmutableEnumeration", "false");
+	fu_engine_config_set_default(self, "OnlyTrustPostQuantumSignatures", "false");
 	fu_engine_config_set_default(self, "ShowDevicePrivate", "true");
 	fu_engine_config_set_default(self, "TestDevices", "false");
 	fu_engine_config_set_default(self, "TrustedReports", "VendorId=$OEM");

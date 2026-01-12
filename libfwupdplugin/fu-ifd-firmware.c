@@ -130,8 +130,21 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 
 	/* new layout */
 	if (new_layout) {
-		bit_r = (flash_master >> (region + 8)) & 0b1;
-		bit_w = (flash_master >> (region + 20)) & 0b1;
+		/*
+		 * Skylake+ master layout:
+		 *  bits  0..3  ext_read   (regions 12..15)
+		 *  bits  4..7  ext_write  (regions 12..15)
+		 *  bits  8..19 read       (regions 0..11)
+		 *  bits 20..31 write      (regions 0..11)
+		 */
+		if (region < 12) {
+			bit_r = (flash_master >> (region + 8)) & 0b1;
+			bit_w = (flash_master >> (region + 20)) & 0b1;
+		} else {
+			guint8 ext_idx = (guint8)(region - 12);
+			bit_r = (flash_master >> ext_idx) & 0b1;
+			bit_w = (flash_master >> (4 + ext_idx)) & 0b1;
+		}
 		return (bit_r ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
 		       (bit_w ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
 	}
@@ -149,6 +162,9 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 	} else if (region == FU_IFD_REGION_GBE) {
 		bit_r = 19;
 		bit_w = 27;
+	} else if (region == FU_IFD_REGION_PLATFORM) {
+		bit_r = 20;
+		bit_w = 28;
 	}
 	return ((flash_master >> bit_r) & 0b1 ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
 	       ((flash_master >> bit_w) & 0b1 ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
@@ -163,8 +179,8 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	FuIfdFirmware *self = FU_IFD_FIRMWARE(firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st_fcba = NULL;
-	g_autoptr(GByteArray) st_fdbar = NULL;
+	g_autoptr(FuStructIfdFcba) st_fcba = NULL;
+	g_autoptr(FuStructIfdFdbar) st_fdbar = NULL;
 	g_autoptr(GInputStream) stream2 = NULL;
 
 	/* check size */
@@ -192,6 +208,13 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	priv->num_regions = (priv->descriptor_map0 >> 24) & 0b111;
 	if (priv->num_regions == 0)
 		priv->num_regions = 10;
+
+	/*
+	 * Choose master layout based on number of regions parsed from the descriptor:
+	 * - Old layout (pre-Skylake) used 5/7 regions and different bit positions.
+	 * - New layout (Skylake+) uses 10 or more regions and the split ext/read/write fields.
+	 */
+	priv->new_layout = priv->num_regions >= 10;
 	priv->num_components = (priv->descriptor_map0 >> 8) & 0b11;
 	priv->flash_component_base_addr = (priv->descriptor_map0 << 4) & 0x00000FF0;
 	priv->flash_region_base_addr = (priv->descriptor_map0 >> 12) & 0x00000FF0;
@@ -258,7 +281,10 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 			g_prefix_error_literal(error, "failed to cut IFD image: ");
 			return FALSE;
 		}
-		if (i == FU_IFD_REGION_BIOS) {
+
+		/* do not parse all the EFI volumes if we only care about the structure */
+		if (i == FU_IFD_REGION_BIOS &&
+		    (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT) == 0) {
 			img = fu_ifd_bios_new();
 		} else {
 			img = fu_ifd_image_new();
@@ -273,7 +299,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_idx(img, i);
 		if (freg_str != NULL)
 			fu_firmware_set_id(img, freg_str);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* is writable by anything other than the region itself */
@@ -321,8 +347,8 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz_max = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_fcba = fu_struct_ifd_fcba_new();
-	g_autoptr(GByteArray) st_fdbar = fu_struct_ifd_fdbar_new();
+	g_autoptr(FuStructIfdFcba) st_fcba = fu_struct_ifd_fcba_new();
+	g_autoptr(FuStructIfdFdbar) st_fdbar = fu_struct_ifd_fdbar_new();
 	g_autoptr(GHashTable) blobs = NULL;
 	g_autoptr(FuFirmware) img_desc = NULL;
 
@@ -339,7 +365,8 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 		fu_firmware_set_addr(img_desc, 0x0);
 		fu_firmware_set_idx(img_desc, FU_IFD_REGION_DESC);
 		fu_firmware_set_id(img_desc, "desc");
-		fu_firmware_add_image(firmware, img_desc);
+		if (!fu_firmware_add_image(firmware, img_desc, error))
+			return NULL;
 	}
 
 	/* generate ahead of time */
@@ -380,10 +407,10 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
 			    0x0,
-			    st_fdbar->data,
-			    st_fdbar->len,
+			    st_fdbar->buf->data,
+			    st_fdbar->buf->len,
 			    0x0,
-			    st_fdbar->len,
+			    st_fdbar->buf->len,
 			    error))
 		return NULL;
 
@@ -394,10 +421,10 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
 			    priv->flash_component_base_addr,
-			    st_fcba->data,
-			    st_fcba->len,
+			    st_fcba->buf->data,
+			    st_fcba->buf->len,
 			    0x0,
-			    st_fcba->len,
+			    st_fcba->buf->len,
 			    error))
 		return NULL;
 

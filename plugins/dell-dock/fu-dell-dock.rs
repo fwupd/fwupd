@@ -1,6 +1,12 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuDellDockI2cSpeed {
+    250K,
+    400K,
+    800K,
+}
+
 enum FuDellDockMstCmd {
     EnableRemoteControl = 0x1,
     DisableRemoteControl = 0x2,
@@ -12,4 +18,17 @@ enum FuDellDockMstCmd {
     WriteMemory = 0x21,
     ReadFlash = 0x30,
     ReadMemory = 0x31,
+}
+
+enum FuDellDockMstType {
+    Unknown,
+    Panamera,
+    Cayenne,
+}
+
+enum FuDellDockMstBank {
+    0,
+    1,
+    ESM,
+    Cayenne,
 }

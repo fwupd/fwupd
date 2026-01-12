@@ -10,7 +10,7 @@ firmware onto a mass storage device.
 A UF2 device exposes a VFAT block device which has a virtual file
 `INFO_UF2.TXT` where metadata can be read from. It may also have a the
 current firmware exported as a file `CURRENT.UF2` which is in a 512
-byte-block UF2 format.
+byte-block [UF2 format](https://github.com/Microsoft/uf2>).
 
 Writing any file to the MSD will cause the firmware to be written.
 Sometimes the device will restart and the volume will be unmounted and then
@@ -24,8 +24,6 @@ Note: We only read metadata from allow-listed IDs to avoid causing regressions
 on non-UF2 volumes. To get the UUID you can use commands like:
 
     udisksctl info -b /dev/sda1
-
-The UF2 format is specified [here](https://github.com/Microsoft/uf2>).
 
 ## Firmware Format
 

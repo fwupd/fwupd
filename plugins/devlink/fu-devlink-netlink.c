@@ -406,7 +406,7 @@ fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *
 	struct nlattr *tb[CTRL_ATTR_MAX + 1] = {};
 	struct nlattr *mcgrp;
 
-	g_return_val_if_fail(nlh != NULL, MNL_CB_ERROR);
+	g_return_val_if_fail(nlh != NULL, -1);
 
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_genl_ctrl_attr_cb, tb);
 	if (tb[CTRL_ATTR_FAMILY_ID] == NULL)
@@ -461,7 +461,8 @@ fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
 	    error);
 }
 
-/* open generic netlink socket for devlink family */
+/* nocheck:name
+ * open generic netlink socket for devlink family */
 FuDevlinkGenSocket *
 fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 {

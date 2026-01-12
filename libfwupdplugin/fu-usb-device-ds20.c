@@ -119,7 +119,7 @@ fu_usb_device_ds20_validate(FuFirmware *firmware,
 			    gsize offset,
 			    GError **error)
 {
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructDs20) st = NULL;
 	g_autofree gchar *guid_str = NULL;
 
 	/* matches the correct UUID */
@@ -168,7 +168,7 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 		return FALSE;
 	for (gsize off = 0; off < streamsz; off += FU_STRUCT_DS20_SIZE) {
 		g_autofree FuUsbDeviceDs20Item *dsinfo = g_new0(FuUsbDeviceDs20Item, 1);
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructDs20) st = NULL;
 
 		/* parse */
 		st = fu_struct_ds20_parse_stream(stream, off, error);
@@ -245,7 +245,7 @@ fu_usb_device_ds20_write(FuFirmware *firmware, GError **error)
 	fu_struct_ds20_set_platform_ver(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_ds20_set_total_length(st, fu_firmware_get_size(firmware));
 	fu_struct_ds20_set_vendor_code(st, fu_firmware_get_idx(firmware));
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

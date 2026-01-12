@@ -165,7 +165,7 @@ fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 	g_autoptr(GError) error = NULL;
 
 	fu_byte_array_append_uint32(buf, 0x3A, G_LITTLE_ENDIAN); /* VariableTotalSize */
-	fu_byte_array_append_uint32(buf, 0xFF, G_LITTLE_ENDIAN); /* Reserved */
+	fu_byte_array_append_uint32(buf, 0xFF, G_LITTLE_ENDIAN); /* reserved */
 	ret = fwupd_guid_from_string(guidstr, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -173,7 +173,7 @@ fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 	g_byte_array_append(buf, timestamp, sizeof(timestamp)); /* CapsuleProcessed */
 	fu_byte_array_append_uint32(buf,
 				    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT,
-				    G_LITTLE_ENDIAN); /* Status */
+				    G_LITTLE_ENDIAN); /* status */
 	return g_bytes_new(buf->data, buf->len);
 }
 
@@ -464,7 +464,6 @@ fu_uefi_plugin_no_flashes_func(void)
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
-	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(GError) error = NULL;
 
 	/* override ESP */
@@ -537,7 +536,6 @@ fu_uefi_plugin_nvram_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -705,7 +703,6 @@ fu_uefi_plugin_cod_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -818,12 +815,10 @@ fu_uefi_plugin_grub_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
-	g_autoptr(GByteArray) buf_last = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __x86_64__

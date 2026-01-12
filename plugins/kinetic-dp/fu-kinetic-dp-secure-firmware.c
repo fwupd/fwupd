@@ -146,7 +146,7 @@ fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
 	gsize streamsz = 0;
 	guint32 app_code_block_size;
 	guint32 std_fw_ver = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpJaguarFooter) st = NULL;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -225,7 +225,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(isp_drv_img, isp_drv_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_idx(isp_drv_img, FU_KINETIC_DP_FIRMWARE_IDX_ISP_DRV);
-	if (!fu_firmware_add_image_full(firmware, isp_drv_img, error))
+	if (!fu_firmware_add_image(firmware, isp_drv_img, error))
 		return FALSE;
 
 	/* add App FW as a new image into firmware */
@@ -238,7 +238,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(app_fw_img, app_fw_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_idx(app_fw_img, FU_KINETIC_DP_FIRMWARE_IDX_APP_FW);
-	if (!fu_firmware_add_image_full(firmware, app_fw_img, error))
+	if (!fu_firmware_add_image(firmware, app_fw_img, error))
 		return FALSE;
 
 	/* figure out which chip App FW it is for */

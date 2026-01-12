@@ -61,7 +61,7 @@ typedef struct {
 } FuSynapticsVmm9DeviceCommandHelper;
 
 static gboolean
-fu_synaptics_vmm9_device_command_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_synaptics_vmm9_device_command_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuSynapticsVmm9DeviceCommandHelper *helper =
 	    (FuSynapticsVmm9DeviceCommandHelper *)user_data;
@@ -70,7 +70,7 @@ fu_synaptics_vmm9_device_command_cb(FuDevice *self, gpointer user_data, GError *
 	g_autoptr(FuStructHidPayload) st_payload = NULL;
 
 	/* get, and parse */
-	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(device),
 				      FU_STRUCT_HID_GET_COMMAND_DEFAULT_ID,
 				      buf,
 				      sizeof(buf),
@@ -163,24 +163,28 @@ fu_synaptics_vmm9_device_command(FuSynapticsVmm9Device *self,
 	fu_struct_hid_set_command_set_size(st, FU_STRUCT_HID_PAYLOAD_OFFSET_FIFO + src_bufsz);
 	if (!fu_struct_hid_set_command_set_payload(st, st_payload, error))
 		return FALSE;
-	checksum = 0x100 - fu_sum8(st->data + 1, st->len - 1);
+	checksum = 0x100 - fu_sum8(st->buf->data + 1, st->buf->len - 1);
 	if (flags & FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER) {
 		fu_struct_hid_set_command_set_checksum(st, checksum);
 	} else {
 		goffset offset_checksum = FU_STRUCT_HID_SET_COMMAND_OFFSET_PAYLOAD +
 					  FU_STRUCT_HID_PAYLOAD_OFFSET_FIFO + src_bufsz;
-		if (!fu_memwrite_uint8_safe(st->data, st->len, offset_checksum, checksum, error))
+		if (!fu_memwrite_uint8_safe(st->buf->data,
+					    st->buf->len,
+					    offset_checksum,
+					    checksum,
+					    error))
 			return FALSE;
 	}
-	fu_byte_array_set_size(st, FU_SYNAPTICS_VMM9_DEVICE_REPORT_SIZE, 0x0);
+	fu_byte_array_set_size(st->buf, FU_SYNAPTICS_VMM9_DEVICE_REPORT_SIZE, 0x0);
 
 	/* set */
 	str = fu_struct_hid_set_command_to_string(st);
 	g_debug("%s", str);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      FU_STRUCT_HID_SET_COMMAND_DEFAULT_ID,
-				      st->data,
-				      st->len,
+				      st->buf->data,
+				      st->buf->len,
 				      FU_SYNAPTICS_VMM9_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -610,7 +614,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 	/* if device reboot is not required */
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
-		g_debug("skipped device reboot intentionally.");
+		g_debug("skipped device reboot intentionally");
 		return TRUE;
 	}
 
@@ -648,7 +652,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_synaptics_vmm9_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_synaptics_vmm9_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

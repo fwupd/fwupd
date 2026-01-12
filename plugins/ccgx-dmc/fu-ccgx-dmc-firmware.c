@@ -86,14 +86,13 @@ fu_ccgx_dmc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static gboolean
-fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
+fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 				   GInputStream *stream,
 				   FuCcgxDmcFirmwareRecord *img_rcd,
 				   gsize *seg_off,
 				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
-	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
 	gsize row_off;
 	g_autoptr(GChecksum) csum = g_checksum_new(G_CHECKSUM_SHA256);
 
@@ -106,7 +105,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 	for (guint32 i = 0; i < img_rcd->num_img_segments; i++) {
 		guint16 row_size_bytes = 0;
 		g_autoptr(FuCcgxDmcFirmwareSegmentRecord) seg_rcd = NULL;
-		g_autoptr(GByteArray) st_info = NULL;
+		g_autoptr(FuStructCcgxDmcFwctSegmentationInfo) st_info = NULL;
 
 		/* read segment info  */
 		seg_rcd = g_new0(FuCcgxDmcFirmwareSegmentRecord, 1);
@@ -153,7 +152,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 		g_ptr_array_add(img_rcd->seg_records, g_steal_pointer(&seg_rcd));
 
 		/* increment segment info offset */
-		*seg_off += st_info->len;
+		*seg_off += st_info->buf->len;
 	}
 
 	/* check checksum */
@@ -175,13 +174,12 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 }
 
 static gboolean
-fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
+fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 				 guint8 image_count,
 				 GInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
-	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
 	gsize img_off = FU_STRUCT_CCGX_DMC_FWCT_INFO_SIZE;
 	gsize seg_off = FU_STRUCT_CCGX_DMC_FWCT_INFO_SIZE +
 			image_count * FU_STRUCT_CCGX_DMC_FWCT_IMAGE_INFO_SIZE;
@@ -189,7 +187,7 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 	/* set initial segment info offset */
 	for (guint32 i = 0; i < image_count; i++) {
 		g_autoptr(FuCcgxDmcFirmwareRecord) img_rcd = NULL;
-		g_autoptr(GByteArray) st_img = NULL;
+		g_autoptr(FuStructCcgxDmcFwctImageInfo) st_img = NULL;
 
 		/* read image info */
 		img_rcd = g_new0(FuCcgxDmcFirmwareRecord, 1);
@@ -228,7 +226,7 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 				return FALSE;
 
 			/* parse segment */
-			if (!fu_ccgx_dmc_firmware_parse_segment(firmware,
+			if (!fu_ccgx_dmc_firmware_parse_segment(self,
 								stream,
 								img_rcd,
 								&seg_off,
@@ -268,7 +266,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	guint16 mdbufsz = 0;
 	guint32 hdr_composite_version = 0;
 	guint8 hdr_image_count = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructCcgxDmcFwctInfo) st_hdr = NULL;
 
 	/* parse */
 	st_hdr = fu_struct_ccgx_dmc_fwct_info_parse_stream(stream, 0x0, error);
@@ -317,7 +315,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 
 	/* parse image */
 	hdr_image_count = fu_struct_ccgx_dmc_fwct_info_get_image_count(st_hdr);
-	if (!fu_ccgx_dmc_firmware_parse_image(firmware, hdr_image_count, stream, flags, error))
+	if (!fu_ccgx_dmc_firmware_parse_image(self, hdr_image_count, stream, flags, error))
 		return FALSE;
 
 	/* success */
@@ -328,7 +326,7 @@ static GByteArray *
 fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_ccgx_dmc_fwct_info_new();
+	g_autoptr(FuStructCcgxDmcFwctInfo) st_hdr = fu_struct_ccgx_dmc_fwct_info_new();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* add header */
@@ -344,24 +342,26 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_ccgx_dmc_fwct_info_set_composite_version(st_hdr,
 							   fu_firmware_get_version_raw(firmware));
 	fu_struct_ccgx_dmc_fwct_info_set_image_count(st_hdr, images->len);
-	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
+	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
 
 	/* add image headers */
 	for (guint i = 0; i < images->len; i++) {
-		g_autoptr(GByteArray) st_img = fu_struct_ccgx_dmc_fwct_image_info_new();
+		g_autoptr(FuStructCcgxDmcFwctImageInfo) st_img =
+		    fu_struct_ccgx_dmc_fwct_image_info_new();
 		fu_struct_ccgx_dmc_fwct_image_info_set_device_type(st_img, 0x2);
 		fu_struct_ccgx_dmc_fwct_image_info_set_img_type(st_img, 0x1);
 		fu_struct_ccgx_dmc_fwct_image_info_set_row_size(st_img, 0x1);
 		fu_struct_ccgx_dmc_fwct_image_info_set_fw_version(st_img, 0x330006d2);
 		fu_struct_ccgx_dmc_fwct_image_info_set_app_version(st_img, 0x14136161);
 		fu_struct_ccgx_dmc_fwct_image_info_set_num_img_segments(st_img, 0x1);
-		g_byte_array_append(buf, st_img->data, st_img->len);
+		fu_byte_array_append_array(buf, st_img->buf);
 	}
 
 	/* add segments */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GByteArray) st_info = fu_struct_ccgx_dmc_fwct_segmentation_info_new();
+		g_autoptr(FuStructCcgxDmcFwctSegmentationInfo) st_info =
+		    fu_struct_ccgx_dmc_fwct_segmentation_info_new();
 		g_autoptr(FuChunkArray) chunks = NULL;
 		g_autoptr(GBytes) img_bytes = fu_firmware_get_bytes(img, error);
 		if (img_bytes == NULL)
@@ -373,7 +373,7 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_ccgx_dmc_fwct_segmentation_info_set_num_rows(
 		    st_info,
 		    MAX(fu_chunk_array_length(chunks), 1));
-		g_byte_array_append(buf, st_info->data, st_info->len);
+		fu_byte_array_append_array(buf, st_info->buf);
 	}
 
 	/* metadata */

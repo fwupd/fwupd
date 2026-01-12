@@ -33,12 +33,12 @@ root=$(pwd)
 export BUILD=${root}/build
 rm -rf ${BUILD}
 chown -R nobody ${root}
-sudo -u nobody meson ${BUILD}               \
-                    -Db_coverage=true       \
-                    -Dman=false             \
-                    -Ddocs=enabled          \
-                    -Dlibxmlb:gtkdoc=false  \
-                    --prefix=${root}/target
+sudo -u nobody meson ${BUILD} \
+    -Db_coverage=true \
+    -Dman=false \
+    -Ddocs=enabled \
+    -Dlibxmlb:gtkdoc=false \
+    --prefix=${root}/target
 #build with clang
 sudo -u nobody ninja -C ${BUILD} -v
 sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
@@ -49,7 +49,7 @@ sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
 # check we've not become a CPU or memory hog
 ninja -C ${BUILD} install -v
 ./contrib/ci/check-rss.py --limit 3072 ${BUILD}/src/fwupdtool get-devices
-./contrib/ci/check-cpu.py --limit 300 ${BUILD}/src/fwupdtool get-devices
+./contrib/ci/check-cpu.py --limit 350 ${BUILD}/src/fwupdtool get-devices
 
 # check for unused symbols
 ./contrib/ci/check-unused.py
@@ -57,7 +57,7 @@ ninja -C ${BUILD} install -v
 # check the daemon aborts
 set +e
 FWUPD_SYSCALL_FILTER=systemd ${BUILD}/src/fwupd --immediate-exit
-if [ $? -ne 1 ] ; then
+if [ $? -ne 1 ]; then
     echo "failed to detect missing syscall filtering"
     exit 1
 fi

@@ -107,12 +107,15 @@ fwupdplugin_src = [
   'fu-efi-lz77-decompressor.c', # fuzzing
   'fu-efi-hard-drive-device-path.c', # fuzzing
   'fu-efi-load-option.c', # fuzzing
-  'fu-efi-signature.c',
-  'fu-efi-signature-list.c',
+  'fu-efi-signature.c', # fuzzing
+  'fu-efi-signature-list.c', # fuzzing
   'fu-efi-variable-authentication2.c',
+  'fu-efi-vss2-variable-store.c', # fuzzing
+  'fu-efi-vss-auth-variable.c', # fuzzing
+  'fu-efi-ftw-store.c', # fuzzing
   'fu-efivars.c', # fuzzing
   'fu-efi-x509-device.c',
-  'fu-efi-x509-signature.c',
+  'fu-efi-x509-signature.c', # fuzzing
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
@@ -190,7 +193,7 @@ fwupdplugin_src = [
   'fu-v4l-device.c',
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
-  'fu-x509-certificate.c',
+  'fu-x509-certificate.c', # fuzzing
 ]
 
 if host_machine.system() in ['linux', 'android']
@@ -263,6 +266,9 @@ fwupdplugin_headers = [
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
   'fu-efi-variable-authentication2.h',
+  'fu-efi-vss2-variable-store.h',
+  'fu-efi-vss-auth-variable.h',
+  'fu-efi-ftw-store.h',
   'fu-efivars.h',
   'fu-efi-x509-device.h',
   'fu-efi-x509-signature.h',
@@ -446,8 +452,9 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
+    colorhug_test_firmware,
     rustgen.process('fu-self-test.rs'),
-    sources: ['fu-test-device.c', 'fu-self-test.c'],
+    sources: ['fu-self-test-device.c', 'fu-self-test.c'],
     include_directories: [root_incdir, fwupd_incdir],
     dependencies: [library_deps, fwupdplugin_rs_dep],
     link_with: [fwupd, fwupdplugin],

@@ -14,4 +14,4 @@
 G_DECLARE_FINAL_TYPE(FuPxiWirelessDevice, fu_pxi_wireless_device, FU, PXI_WIRELESS_DEVICE, FuDevice)
 
 FuPxiWirelessDevice *
-fu_pxi_wireless_device_new(FuContext *ctx, struct ota_fw_dev_model *model);
+fu_pxi_wireless_device_new(FuContext *ctx, FuPixartRfOtaFwDevModel *model);

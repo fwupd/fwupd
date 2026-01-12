@@ -10,16 +10,20 @@
 # Léane GRASSER, 2025
 # Paragoumba <transifex.unedited741@simplelogin.com>, 2024
 # Yolopix ​, 2022
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: French (http://app.transifex.com/freedesktop/fwupd/language/fr/)\n"
+"PO-Revision-Date: 2025-10-24 10:07+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: French <https://hosted.weblate.org/projects/fwupd/fwupd/fr/>\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fr\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -579,7 +583,7 @@ msgstr "Installer le micrologiciel non signé du système"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "Installation de la mise à jour du micrologiciel..."
+msgstr "Installation de la mise à jour du micrologiciel…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -846,7 +850,7 @@ msgstr "SMM verrouillé"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
-msgstr "Planification..."
+msgstr "Planification…"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"

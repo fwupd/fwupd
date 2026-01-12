@@ -1,6 +1,7 @@
 _fwupdtool_cmd_list=(
 	'activate'
 	'build-cabinet'
+	'clean-remote'
 	'clear-history'
 	'disable-remote'
 	'disable-test-devices'
@@ -39,6 +40,7 @@ _fwupdtool_cmd_list=(
 	'get-plugins'
 	'get-remotes'
 	'get-report-metadata'
+	'get-results'
 	'get-topology'
 	'get-version-formats'
 	'hwids'

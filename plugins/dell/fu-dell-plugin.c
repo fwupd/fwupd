@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "fu-dell-plugin.h"
+#include "fu-dell-struct.h"
 
 #define DACI_FLASH_INTERFACE_CLASS  7
 #define DACI_FLASH_INTERFACE_SELECT 3
@@ -22,16 +23,6 @@ struct _FuDellPlugin {
 };
 
 G_DEFINE_TYPE(FuDellPlugin, fu_dell_plugin, FU_TYPE_PLUGIN)
-
-struct da_structure {
-	guint8 type;
-	guint8 length;
-	guint16 handle;
-	guint16 cmd_address;
-	guint8 cmd_code;
-	guint32 supported_cmds;
-	guint8 *tokens;
-} __attribute__((packed)); /* nocheck:blocked */
 
 /**
  * Dell device types to run
@@ -83,7 +74,7 @@ fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 	g_autoptr(GPtrArray) de_tables = NULL;
 	g_autoptr(GPtrArray) da_tables = NULL;
 	guint8 value = 0;
-	struct da_structure da_values = {0x0};
+	g_autoptr(FuStructDellSmbiosDa) st_smbios_da = NULL;
 
 	/* make sure that Dell SMBIOS methods are available */
 	de_tables = fu_context_get_smbios_data(ctx, 0xDE, FU_SMBIOS_STRUCTURE_LENGTH_ANY, error);
@@ -110,23 +101,19 @@ fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 	if (da_tables == NULL)
 		return FALSE;
 	da_blob = g_ptr_array_index(da_tables, 0);
-	if (!fu_memcpy_safe((guint8 *)&da_values,
-			    sizeof(da_values),
-			    0x0, /* dst */
-			    g_bytes_get_data(da_blob, NULL),
-			    g_bytes_get_size(da_blob),
-			    0x0, /* src */
-			    sizeof(da_values),
-			    error)) {
-		g_prefix_error_literal(error, "unable to access flash interface: ");
+
+	st_smbios_da = fu_struct_dell_smbios_da_parse_bytes(da_blob, 0x0, error);
+	if (st_smbios_da == NULL) {
+		g_prefix_error_literal(error, "unable to parse flash interface: ");
 		return FALSE;
 	}
-	if (!(da_values.supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
+	if ((fu_struct_dell_smbios_da_get_supported_cmds(st_smbios_da) &
+	     (1 << DACI_FLASH_INTERFACE_CLASS)) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "unable to access flash interface. supported commands: 0x%x",
-			    da_values.supported_cmds);
+			    fu_struct_dell_smbios_da_get_supported_cmds(st_smbios_da));
 		return FALSE;
 	}
 
@@ -243,6 +230,8 @@ static void
 fu_dell_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");

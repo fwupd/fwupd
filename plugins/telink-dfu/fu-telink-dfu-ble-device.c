@@ -35,7 +35,7 @@ fu_telink_dfu_ble_device_create_packet(guint16 preamble,
 	}
 	fu_struct_telink_dfu_ble_pkt_set_crc(
 	    st_pkt,
-	    ~fu_crc16(FU_CRC_KIND_B16_USB, st_pkt->data, st_pkt->len - 2));
+	    ~fu_crc16(FU_CRC_KIND_B16_USB, st_pkt->buf->data, st_pkt->buf->len - 2));
 	return g_steal_pointer(&st_pkt);
 }
 
@@ -64,7 +64,7 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 			return FALSE;
 		if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 					   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-					   st_pkt,
+					   st_pkt->buf,
 					   error))
 			return FALSE;
 		fu_device_sleep(FU_DEVICE(self), 5);
@@ -89,7 +89,7 @@ fu_telink_dfu_ble_device_ota_start(FuTelinkDfuBleDevice *self, GError **error)
 		return FALSE;
 	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-				   st_pkt,
+				   st_pkt->buf,
 				   error))
 		return FALSE;
 
@@ -109,14 +109,14 @@ fu_telink_dfu_ble_device_ota_stop(FuTelinkDfuBleDevice *self, guint number_chunk
 	fu_struct_telink_dfu_end_check_set_pkt_index(st_end_check, pkt_index);
 	fu_struct_telink_dfu_end_check_set_inverted_pkt_index(st_end_check, ~pkt_index);
 	st_pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_END,
-							st_end_check->data,
-							st_end_check->len,
+							st_end_check->buf->data,
+							st_end_check->buf->len,
 							error);
 	if (st_pkt == NULL)
 		return FALSE;
 	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-				   st_pkt,
+				   st_pkt->buf,
 				   error))
 		return FALSE;
 
@@ -149,7 +149,7 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 		return FALSE;
 	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
-				   st_pkt,
+				   st_pkt->buf,
 				   error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), 5);
@@ -207,7 +207,7 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_telink_dfu_ble_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_telink_dfu_ble_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

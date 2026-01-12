@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuIoChannelOpenFlags {
     None = 0,
     Read = 1 << 0,

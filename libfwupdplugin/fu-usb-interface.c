@@ -66,7 +66,7 @@ fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufs
 					     FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 					     error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 			return FALSE;
 		offset += fu_firmware_get_size(FU_FIRMWARE(img));
 	}
@@ -386,11 +386,11 @@ fu_usb_interface_parse(FuFirmware *firmware,
 	fu_firmware_set_size(FU_FIRMWARE(self), self->iface.bLength);
 
 	/* extra data */
-	if (self->iface.bLength > st->len) {
+	if (self->iface.bLength > st->buf->len) {
 		g_autoptr(GByteArray) buf = NULL;
 		buf = fu_input_stream_read_byte_array(stream,
-						      st->len,
-						      self->iface.bLength - st->len,
+						      st->buf->len,
+						      self->iface.bLength - st->buf->len,
 						      NULL,
 						      error);
 		if (buf == NULL)

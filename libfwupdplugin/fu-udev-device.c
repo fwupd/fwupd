@@ -627,13 +627,13 @@ fu_udev_device_invalidate(FuDevice *device)
 }
 
 static void
-fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
+fu_udev_device_incorporate(FuDevice *device, FuDevice *donor)
 {
-	FuUdevDevice *uself = FU_UDEV_DEVICE(self);
+	FuUdevDevice *uself = FU_UDEV_DEVICE(device);
 	FuUdevDevice *udonor = FU_UDEV_DEVICE(donor);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(uself);
 
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	g_return_if_fail(FU_IS_UDEV_DEVICE(device));
 	g_return_if_fail(FU_IS_UDEV_DEVICE(donor));
 
 	if (priv->device_file == NULL)
@@ -1080,10 +1080,10 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	 * could add more flags, or set the flags back to NONE -- detect and fixup */
 	if (priv->device_file != NULL && priv->open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONE) {
 #ifndef SUPPORTED_BUILD
-		g_critical("%s [%s] forgot to call fu_udev_device_add_open_flag() with "
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_critical("%s forgot to call fu_udev_device_add_open_flag() with "
 			   "FU_IO_CHANNEL_OPEN_FLAG_READ and/or FU_IO_CHANNEL_OPEN_FLAG_WRITE",
-			   fu_device_get_name(device),
-			   fu_device_get_id(device));
+			   id_display);
 #endif
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -1194,12 +1194,12 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 
@@ -1306,12 +1306,12 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 
@@ -1370,12 +1370,12 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 	return fu_io_channel_seek(priv->io_channel, offset, error);
@@ -1443,12 +1443,12 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 
@@ -1542,12 +1542,12 @@ fu_udev_device_read(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 	if (!fu_io_channel_read_raw(priv->io_channel,
@@ -1658,12 +1658,12 @@ fu_udev_device_write(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 	if (!fu_io_channel_write_raw(priv->io_channel, buf, bufsz, timeout_ms, flags, error))
@@ -1845,8 +1845,10 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 					    timeout_ms,
 					    FU_IO_CHANNEL_FLAG_NONE,
 					    error);
-	if (buf == NULL)
+	if (buf == NULL) {
+		g_prefix_error(error, "failed read of %s: ", path);
 		return NULL;
+	}
 	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "non UTF-8 data");
 		return NULL;
@@ -1933,8 +1935,10 @@ fu_udev_device_read_sysfs_bytes(FuUdevDevice *self,
 		return NULL;
 	blob =
 	    fu_io_channel_read_bytes(io_channel, count, timeout_ms, FU_IO_CHANNEL_FLAG_NONE, error);
-	if (blob == NULL)
+	if (blob == NULL) {
+		g_prefix_error(error, "failed read of %s: ", path);
 		return NULL;
+	}
 
 	/* save for emulation */
 	if (event != NULL)
@@ -2004,12 +2008,18 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
-	return fu_io_channel_write_raw(io_channel,
-				       (const guint8 *)val,
-				       strlen(val),
-				       timeout_ms,
-				       FU_IO_CHANNEL_FLAG_NONE,
-				       error);
+	if (!fu_io_channel_write_raw(io_channel,
+				     (const guint8 *)val,
+				     strlen(val),
+				     timeout_ms,
+				     FU_IO_CHANNEL_FLAG_NONE,
+				     error)) {
+		g_prefix_error(error, "failed write of %s: ", path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -2073,11 +2083,17 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
-	return fu_io_channel_write_byte_array(io_channel,
-					      buf,
-					      timeout_ms,
-					      FU_IO_CHANNEL_FLAG_NONE,
-					      error);
+	if (!fu_io_channel_write_byte_array(io_channel,
+					    buf,
+					    timeout_ms,
+					    FU_IO_CHANNEL_FLAG_NONE,
+					    error)) {
+		g_prefix_error(error, "failed write of %s: ", path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -2142,11 +2158,17 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
-	return fu_io_channel_write_bytes(io_channel,
-					 blob,
-					 timeout_ms,
-					 FU_IO_CHANNEL_FLAG_NONE,
-					 error);
+	if (!fu_io_channel_write_bytes(io_channel,
+				       blob,
+				       timeout_ms,
+				       FU_IO_CHANNEL_FLAG_NONE,
+				       error)) {
+		g_prefix_error(error, "failed write of %s: ", path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**

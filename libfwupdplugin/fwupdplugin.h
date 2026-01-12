@@ -52,6 +52,7 @@
 #include <libfwupdplugin/fu-efi-file-path-device-path.h>
 #include <libfwupdplugin/fu-efi-file.h>
 #include <libfwupdplugin/fu-efi-filesystem.h>
+#include <libfwupdplugin/fu-efi-ftw-store.h>
 #include <libfwupdplugin/fu-efi-hard-drive-device-path.h>
 #include <libfwupdplugin/fu-efi-load-option.h>
 #include <libfwupdplugin/fu-efi-section.h>
@@ -59,6 +60,8 @@
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-variable-authentication2.h>
 #include <libfwupdplugin/fu-efi-volume.h>
+#include <libfwupdplugin/fu-efi-vss-auth-variable.h>
+#include <libfwupdplugin/fu-efi-vss2-variable-store.h>
 #include <libfwupdplugin/fu-efi-x509-device.h>
 #include <libfwupdplugin/fu-efi-x509-signature.h>
 #include <libfwupdplugin/fu-efivars.h>

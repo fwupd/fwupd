@@ -47,7 +47,7 @@ fu_dell_dock_status_setup(FuDevice *device, GError **error)
 	g_autofree gchar *dynamic_version = NULL;
 
 	parent = fu_device_get_parent(device);
-	status_version = fu_dell_dock_ec_get_status_version(parent);
+	status_version = fu_dell_dock_ec_get_status_version(FU_DELL_DOCK_EC(parent));
 
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
@@ -90,7 +90,9 @@ fu_dell_dock_status_write(FuDevice *device,
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	g_info("writing status firmware version %s", dynamic_version);
 
-	if (!fu_dell_dock_ec_commit_package(fu_device_get_proxy(device), fw, error))
+	if (!fu_dell_dock_ec_commit_package(FU_DELL_DOCK_EC(fu_device_get_proxy(device)),
+					    fw,
+					    error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
@@ -170,7 +172,7 @@ fu_dell_dock_status_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_dell_dock_status_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_dock_status_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

@@ -319,9 +319,9 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 		fu_device_set_version(device, revision);
 
 	/* add GUIDs */
-	fu_device_add_instance_str(device, "VEN", vendor);
-	fu_device_add_instance_str(device, "DEV", model);
-	fu_device_add_instance_str(device, "REV", revision);
+	fu_device_add_instance_strsafe(device, "VEN", vendor);
+	fu_device_add_instance_strsafe(device, "DEV", model);
+	fu_device_add_instance_strsafe(device, "REV", revision);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -436,7 +436,7 @@ fu_scsi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 }
 
 static void
-fu_scsi_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_scsi_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

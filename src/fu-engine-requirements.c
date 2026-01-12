@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "fwupd-remote-private.h"
+
 #include "fu-engine-requirements.h"
 
 static gboolean
@@ -170,12 +172,14 @@ fu_engine_requirements_check_not_child(FuEngine *self,
 		FuDevice *child = g_ptr_array_index(children, i);
 		const gchar *version = fu_device_get_version(child);
 		if (version == NULL) {
+			g_autofree gchar *id_display = fu_device_get_id_display(device);
+			g_autofree gchar *id_display_child = fu_device_get_id_display(child);
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no version provided by %s, child of %s",
-				    fu_device_get_name(child),
-				    fu_device_get_name(device));
+				    id_display_child,
+				    id_display);
 			return FALSE;
 		}
 		if (fu_engine_requirements_require_vercmp(req,
@@ -241,6 +245,7 @@ fu_engine_requirements_check_vendor_id(FuEngine *self,
 	return TRUE;
 }
 
+/* nocheck:name */
 static gboolean
 _fu_device_has_guids_any(FuDevice *self, gchar **guids)
 {
@@ -279,12 +284,14 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		for (gint64 i = 0; i < depth; i++) {
 			FuDevice *device_tmp = fu_device_get_parent(device_actual);
 			if (device_tmp == NULL) {
+				g_autofree gchar *id_display =
+				    fu_device_get_id_display(device_actual);
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No parent device for %s "
 					    "(%" G_GINT64_FORMAT "/%" G_GINT64_FORMAT ")",
-					    fu_device_get_name(device_actual),
+					    id_display,
 					    i,
 					    depth);
 				return FALSE;
@@ -438,12 +445,14 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		/* no parent, so look for GUIDs on this device */
 		if (parent == NULL) {
 			if (!_fu_device_has_guids_any(device_actual, guids)) {
+				g_autofree gchar *id_display =
+				    fu_device_get_id_display(device_actual);
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No GUID of %s on device %s",
 					    xb_node_get_text(req),
-					    fu_device_get_name(device_actual));
+					    id_display);
 				return FALSE;
 			}
 			return TRUE;
@@ -468,12 +477,13 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		/* verify the parent device has the GUID */
 	} else {
 		if (!_fu_device_has_guids_any(device_actual, guids)) {
+			g_autofree gchar *id_display = fu_device_get_id_display(device_actual);
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "No GUID of %s on parent device %s",
 				    xb_node_get_text(req),
-				    fu_device_get_name(device_actual));
+				    id_display);
 			return FALSE;
 		}
 	}
@@ -651,6 +661,90 @@ fu_engine_requirements_check_not_hardware(FuEngine *self,
 }
 
 static gboolean
+fu_engine_requirements_check_phased_update(FuEngine *self,
+					   XbNode *req,
+					   FuEngineRequirementsHelper *helper,
+					   GError **error)
+{
+	FwupdRemote *remote;
+	const gchar *archive_filename;
+	const gchar *host_machine_id;
+	gint32 seed;
+	guint64 phased_update = 0;
+
+	/* i'm feeling lucky */
+	if (helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) {
+		g_info("ignoring phased_update requirement");
+		return TRUE;
+	}
+
+	/* check fwupd version requirement */
+	if (!fu_engine_requirements_check_fwupd_version(helper, "2.0.17", error)) {
+		g_prefix_error_literal(error, "requirement phased_update: ");
+		return FALSE;
+	}
+
+	/* sanity check */
+	remote = fu_release_get_remote(helper->release);
+	if (remote == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no assigned remote for firmware release");
+		return FALSE;
+	}
+	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES)) {
+		g_info("ignoring phased update requirement due to remote policy");
+		return TRUE;
+	}
+	if (xb_node_get_text(req) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no phased_update value supplied");
+		return FALSE;
+	}
+	if (!fu_strtoull(xb_node_get_text(req),
+			 &phased_update,
+			 2,
+			 1024,
+			 FU_INTEGER_BASE_AUTO,
+			 error)) {
+		g_prefix_error_literal(error, "expected integer for phased_update: ");
+		return FALSE;
+	}
+
+	/* use multiple seeds, but return uniformly distributed random numbers */
+	archive_filename = fu_release_get_filename(helper->release);
+	host_machine_id = fu_engine_get_host_machine_id(self);
+	if (host_machine_id == NULL || archive_filename == NULL) {
+		seed = (gint32)fwupd_remote_get_mtime(remote);
+	} else {
+		guint32 seed_buf[4] = {0};
+		guint seed_bufsz = 0;
+		g_autoptr(GRand) rand = NULL;
+
+		seed_buf[seed_bufsz++] = g_str_hash(host_machine_id);
+		seed_buf[seed_bufsz++] = g_str_hash(archive_filename);
+		seed_buf[seed_bufsz++] = (guint32)fwupd_remote_get_mtime(remote);
+		rand = g_rand_new_with_seed_array(seed_buf, seed_bufsz);
+		seed = g_rand_int_range(rand, 0, G_MAXINT);
+	}
+
+	/* does seed divide perfectly into the phased update factor */
+	if (seed % phased_update != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "remote mtime meant that deployment was delayed");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_requirements_check_client(FuEngine *self,
 				    XbNode *req,
 				    FuEngineRequirementsHelper *helper,
@@ -741,6 +835,10 @@ fu_engine_requirements_check_hard(FuEngine *self,
 			return TRUE;
 		return fu_engine_requirements_check_not_hardware(self, req, helper, error);
 	}
+
+	/* support slowing down deployments */
+	if (g_strcmp0(xb_node_get_element(req), "phased_update") == 0)
+		return fu_engine_requirements_check_phased_update(self, req, helper, error);
 
 	/* ensure client requirement */
 	if (g_strcmp0(xb_node_get_element(req), "client") == 0)
@@ -841,6 +939,10 @@ fu_engine_requirements_check(FuEngine *self,
 	gboolean has_specific_requirement = FALSE;
 	g_autoptr(FuEngineRequirementsHelper) helper = g_new0(FuEngineRequirementsHelper, 1);
 
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(FU_IS_RELEASE(release), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* create a small helper with common data */
 	helper->release = g_object_ref(release);
 	helper->install_flags = flags;
@@ -854,12 +956,12 @@ fu_engine_requirements_check(FuEngine *self,
 	/* sanity check */
 	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "%s [%s] is not updatable",
-			    fu_device_get_name(device),
-			    fu_device_get_id(device));
+			    "%s is not updatable",
+			    id_display);
 		return FALSE;
 	}
 
