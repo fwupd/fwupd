@@ -75,7 +75,7 @@ struct FuStructAtomRom21Header {
 #[repr(u8)]
 enum FuAtomStringIndex {
     PartNumber = 0x00,
-    ASIC = 0x01,
+    Asic = 0x01,
     PciType = 0x02,
     MemoryType = 0x03,
 }
