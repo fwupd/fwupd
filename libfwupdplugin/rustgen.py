@@ -120,6 +120,10 @@ class EnumObj:
         if indexed:
             raise ValueError(f"enum {self.name} does not need explicit defaults")
 
+        # check each enum
+        for item in self.items:
+            item.check()
+
     def item(self, name: str) -> Optional["EnumItem"]:
         for item in self.items:
             if item.name == name:
@@ -184,6 +188,18 @@ class EnumItem:
         if val.startswith("0b"):
             val = hex(int(val[2:], 2))
         self.default = val
+
+    def check(self):
+        uppercase_cnt: int = 0
+        for char in self.name:
+            if char.isupper():
+                if uppercase_cnt > 1:
+                    raise ValueError(
+                        f"enum {self.name} had too many consecutive uppercase chars"
+                    )
+                uppercase_cnt += 1
+            else:
+                uppercase_cnt = 0
 
     @property
     def value(self) -> str:

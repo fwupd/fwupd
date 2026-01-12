@@ -4,11 +4,11 @@
 // hub operation
 #[repr(u16le)]
 enum FuIntelUsb4Opcode {
-    NVM_WRITE       = 0x20,
-    NVM_AUTH_WRITE  = 0x21,
-    NVM_READ        = 0x22,
-    NVM_SET_OFFSET  = 0x23,
-    DROM_READ       = 0x24,
+    NvmWrite        = 0x20,
+    NvmAuthWrite    = 0x21,
+    NvmRead         = 0x22,
+    NvmSetOffset    = 0x23,
+    DromRead        = 0x24,
 }
 
 #[derive(New, Parse)]
