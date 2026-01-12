@@ -65,6 +65,8 @@ install_data(
     'sbatlevel.builder.xml',
     'srec.builder.xml',
     'sys_vendor',
+    'tpm-eventlog-v1.builder.xml',
+    'tpm-eventlog-v2.builder.xml',
     'usb-bos-descriptor.builder.xml',
     'uswid.builder.xml',
     'uswid-compressed.builder.xml',

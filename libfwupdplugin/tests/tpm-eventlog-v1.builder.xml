@@ -1,0 +1,12 @@
+<firmware gtype="FuTpmEventlogV1">
+  <firmware gtype="FuTpmEventlogItem">
+    <data type="GBytes" size="0x1">AA==</data>
+    <kind>s-crtm-version</kind>
+    <sha1>231f248f12ef9f38549f1bda7a859b781b5caab0</sha1>
+  </firmware>
+  <firmware gtype="FuTpmEventlogItem">
+    <data type="GBytes" size="0x1">AA==</data>
+    <kind>efi-platform-firmware-blob</kind>
+    <sha1>d235e68f43ec4db54caea469e1e69a8fcd93610f</sha1>
+  </firmware>
+</firmware>
