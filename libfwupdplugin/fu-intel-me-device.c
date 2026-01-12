@@ -589,7 +589,6 @@ fu_intel_me_device_add_attrs_csme18_bootguard_otp(FuIntelMeDevice *self,
 static void
 fu_intel_me_device_add_attrs_mei_version(FuIntelMeDevice *self, FuSecurityAttrs *attrs)
 {
-	g_autofree gchar *version = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */

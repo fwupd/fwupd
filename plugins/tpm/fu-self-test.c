@@ -96,7 +96,6 @@ fu_tpm_device_2_0_func(void)
 	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;

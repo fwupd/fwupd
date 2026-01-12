@@ -48,7 +48,6 @@ fu_intel_me_smbios_plugin_parse_dd_table(FuPlugin *plugin,
 {
 	gsize offset = 0;
 	g_autoptr(FuStructMeFviHeader) st_fvi_hdr = NULL;
-	g_autoptr(FuStructMeVersion) st_ver = NULL;
 	g_autoptr(FuStructSmbiosStructure) st = NULL;
 
 	st = fu_struct_smbios_structure_parse_bytes(blob, 0x0, error);
