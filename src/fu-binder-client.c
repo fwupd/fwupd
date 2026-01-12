@@ -608,6 +608,54 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_upgrades_as_json(FuUtil *self, GPtrArray *devices, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Releases");
+	json_builder_begin_array(builder);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
+			continue;
+		if (!fwupd_device_match_flags(dev,
+					      self->filter_device_include,
+					      self->filter_device_exclude))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fu_util_get_upgrades_call(self, fwupd_device_get_id(dev), &error_local);
+		if (rels == NULL) {
+			/* discard the actual reason from user, but leave for debugging */
+			g_debug("%s", error_local->message);
+			continue;
+		}
+
+		/* add all releases */
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index(rels, j);
+			if (!fwupd_release_match_flags(rel,
+						       self->filter_release_include,
+						       self->filter_release_exclude))
+				continue;
+			json_builder_begin_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(rel), builder, FWUPD_CODEC_FLAG_TRUSTED);
+			json_builder_end_object(builder);
+		}
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(self->console, builder, error);
+}
+
+static gboolean
 fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -640,6 +688,10 @@ fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 				    "Invalid arguments");
 		return FALSE;
 	}
+
+	/* not for human consumption */
+	if (self->as_json)
+		return fu_util_get_upgrades_as_json(self, devices, error);
 
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
@@ -1082,6 +1134,12 @@ main(int argc, char *argv[])
 				 _("Failed to parse arguments"),
 				 error->message);
 		return EXIT_FAILURE;
+	}
+
+	/* show version */
+	if (version) {
+		g_print("%s\n", PACKAGE_VERSION);
+		return EXIT_SUCCESS;
 	}
 
 	/* set verbose? */

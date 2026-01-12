@@ -1101,6 +1101,19 @@ fu_binder_daemon_start(FuDaemon *daemon, GError **error)
 	return TRUE;
 }
 
+static void
+log_handler(const gchar *log_domain,
+	    GLogLevelFlags log_level,
+	    const gchar *message,
+	    gpointer user_data)
+{
+	FILE *fp = fopen("/data/vendor/fwupd/fwupd.log", "a");
+	if (fp == NULL)
+		return;
+	fprintf(fp, "%s: %s\n", log_domain, message);
+	fclose(fp);
+}
+
 static gboolean
 fu_binder_daemon_setup(FuDaemon *daemon,
 		       const gchar *socket_address,
@@ -1111,6 +1124,9 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	FuEngine *engine = fu_daemon_get_engine(daemon);
 	binder_status_t nstatus = STATUS_OK;
 	g_autoptr(GSource) source = NULL;
+
+	/* logging */
+	g_log_set_default_handler(log_handler, NULL);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
