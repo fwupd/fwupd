@@ -41,6 +41,15 @@ G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWAR
 #define RMI_IMG_MAX_CONTAINERS	     1024
 
 static gboolean
+fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
+						  GInputStream *stream,
+						  const guint8 *buf,
+						  gsize bufsz,
+						  guint32 start_offset,
+						  FuFirmwareParseFlags flags,
+						  GError **error);
+
+static gboolean
 fu_synaptics_rmi_firmware_add_image(FuSynapticsRmiFirmware *self,
 				    const gchar *id,
 				    GInputStream *stream,
@@ -232,6 +241,14 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 						   content_addr,
 						   &self->bootloader_version,
 						   error))
+				return FALSE;
+			if (!fu_synaptics_rmi_firmware_parse_sbl_container_v10(self,
+									       stream,
+									       buf,
+									       bufsz,
+									       offset,
+									       flags,
+									       error))
 				return FALSE;
 			break;
 		case FU_RMI_CONTAINER_ID_UI:
@@ -724,4 +741,84 @@ FuFirmware *
 fu_synaptics_rmi_firmware_new(void)
 {
 	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_RMI_FIRMWARE, NULL));
+}
+
+static gboolean
+fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
+						  GInputStream *stream,
+						  const guint8 *buf,
+						  gsize bufsz,
+						  guint32 start_offset,
+						  FuFirmwareParseFlags flags,
+						  GError **error)
+{
+	guint32 cntr_addr;
+	guint32 offset;
+	guint32 cntrs_len;
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc = NULL;
+
+	if (!fu_memread_uint32_safe(buf, bufsz, start_offset, &cntr_addr, G_LITTLE_ENDIAN, error))
+		return FALSE;
+
+	st_dsc = fu_struct_rmi_container_descriptor_parse_stream(stream, cntr_addr, error);
+	if (st_dsc == NULL) {
+		g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
+		return FALSE;
+	}
+
+	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
+	cntrs_len = fu_struct_rmi_container_descriptor_get_content_length(st_dsc) / 4;
+	for (guint32 i = 0; i < cntrs_len; i++) {
+		guint32 addr_offset = offset + i * 4;
+		guint16 container_id;
+		guint32 addr;
+		guint32 length;
+		guint32 content_addr;
+		guint32 signature_size;
+		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
+
+		if (!fu_memread_uint32_safe(buf, bufsz, addr_offset, &addr, G_LITTLE_ENDIAN, error))
+			return FALSE;
+
+		st_dsc2 = fu_struct_rmi_container_descriptor_parse_stream(stream, addr, error);
+		if (st_dsc2 == NULL) {
+			g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
+			return FALSE;
+		}
+
+		container_id = fu_struct_rmi_container_descriptor_get_container_id(st_dsc2);
+		content_addr = fu_struct_rmi_container_descriptor_get_content_address(st_dsc2);
+		length = fu_struct_rmi_container_descriptor_get_content_length(st_dsc2);
+		signature_size = fu_struct_rmi_container_descriptor_get_signature_size(st_dsc2);
+
+		g_debug("RmiContainerDescriptor 0x%02x @ 0x%x (len 0x%x) sig_size 0x%x",
+			container_id,
+			content_addr,
+			length,
+			signature_size);
+		if (length == 0) {
+			g_debug("no SBL image found");
+			continue;
+		}
+
+		if (container_id == FU_RMI_CONTAINER_ID_BL_IMAGE) {
+			if (signature_size != 0)
+				g_debug("SBL signature size : 0x%x", signature_size);
+
+			if (!fu_synaptics_rmi_firmware_add_image_v10(self,
+								     "sbl",
+								     stream,
+								     content_addr,
+								     length,
+								     signature_size,
+								     flags,
+								     error)) {
+				g_prefix_error_literal(error, "failed to add SBL image: ");
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
 }

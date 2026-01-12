@@ -240,6 +240,23 @@ fu_uefi_capsule_device_get_capsule_flags(FuUefiCapsuleDevice *self)
 	return priv->capsule_flags;
 }
 
+static void
+fu_uefi_capsule_device_set_capsule_flags(FuUefiCapsuleDevice *self, guint32 capsule_flags)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+
+#ifdef __x86_64__
+	if ((capsule_flags & (FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET |
+			      FU_EFI_CAPSULE_HEADER_FLAG_INITIATE_RESET)) == 0) {
+		capsule_flags |= FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET;
+		capsule_flags |= FU_EFI_CAPSULE_HEADER_FLAG_INITIATE_RESET;
+		g_debug("adding PersistAcrossReset and InitiateReset as missing in ESRT");
+	}
+#endif
+
+	priv->capsule_flags = capsule_flags;
+}
+
 const gchar *
 fu_uefi_capsule_device_get_guid(FuUefiCapsuleDevice *self)
 {
@@ -318,8 +335,9 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 				 varname,
 				 data,
 				 datasz,
-				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				 error)) {
 		g_prefix_error_literal(error, "could not set EfiUpdateInfo: ");
 		return FALSE;
@@ -448,8 +466,9 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 				 varname,
 				 st_inf->buf->data,
 				 st_inf->buf->len,
-				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				 error)) {
 		g_prefix_error(error, "could not set DP_BUF with %s: ", capsule_path);
 		return FALSE;
@@ -466,9 +485,10 @@ fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gboolean secureboot_enabled = FALSE;
 	g_autofree gchar *source_app = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
-		return FALSE;
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
+		g_debug("ignoring: %s", error_local->message);
 
 	/* if fwupd-efi isn't in use, skip checks for the signed binary */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))
@@ -492,6 +512,12 @@ fu_uefi_capsule_device_prepare(FuDevice *device,
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
 
+	/* sanity check */
+	if (priv->esp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP");
+		return FALSE;
+	}
+
 	/* mount if required */
 	priv->esp_locker = fu_volume_locker_new(priv->esp, error);
 	if (priv->esp_locker == NULL)
@@ -508,6 +534,12 @@ fu_uefi_capsule_device_cleanup(FuDevice *device,
 {
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* sanity check */
+	if (priv->esp_locker == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP locker");
+		return FALSE;
+	}
 
 	/* unmount ESP if we opened it */
 	if (!fu_volume_locker_close(priv->esp_locker, error))
@@ -616,9 +648,9 @@ fu_uefi_capsule_device_perhaps_enable_debugging(FuUefiCapsuleDevice *self, GErro
 					 "FWUPDATE_VERBOSE",
 					 &data,
 					 sizeof(data),
-					 FU_EFIVARS_ATTR_NON_VOLATILE |
-					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+					     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					 error)) {
 			g_prefix_error_literal(error, "failed to enable debugging: ");
 			return FALSE;
@@ -721,7 +753,7 @@ fu_uefi_capsule_device_set_property(GObject *object,
 		priv->kind = g_value_get_uint(value);
 		break;
 	case PROP_CAPSULE_FLAGS:
-		priv->capsule_flags = g_value_get_uint(value);
+		fu_uefi_capsule_device_set_capsule_flags(self, g_value_get_uint(value));
 		break;
 	case PROP_FW_VERSION:
 		priv->fw_version = g_value_get_uint(value);
@@ -762,6 +794,7 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);

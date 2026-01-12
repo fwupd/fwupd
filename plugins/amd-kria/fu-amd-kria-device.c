@@ -43,6 +43,12 @@ fu_amd_kria_device_prepare(FuDevice *device,
 	FuAmdKriaDevice *self = FU_AMD_KRIA_DEVICE(device);
 	FuAmdKriaDevicePrivate *priv = GET_PRIVATE(self);
 
+	/* sanity check */
+	if (priv->esp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP");
+		return FALSE;
+	}
+
 	priv->esp_locker = fu_volume_locker_new(priv->esp, error);
 	if (priv->esp_locker == NULL)
 		return FALSE;
@@ -58,6 +64,12 @@ fu_amd_kria_device_cleanup(FuDevice *device,
 {
 	FuAmdKriaDevice *self = FU_AMD_KRIA_DEVICE(device);
 	FuAmdKriaDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* sanity check */
+	if (priv->esp_locker == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP locker");
+		return FALSE;
+	}
 
 	if (!fu_volume_locker_close(priv->esp_locker, error))
 		return FALSE;

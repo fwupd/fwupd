@@ -3290,11 +3290,10 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		}
 	}
 	if (devices_pending->len > 0 && !self->as_json) {
-		fu_console_print_literal(
-		    self->console,
-		    /* TRANSLATORS: message letting the user there is an update
-		     * waiting, but there is a reason it cannot be deployed */
-		    _("Devices with firmware updates that need user action:"));
+		fu_console_print_literal(self->console,
+					 /* TRANSLATORS: message letting the user there is an update
+					  * waiting, but there is a reason it cannot be deployed */
+					 _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -4619,14 +4618,12 @@ static gboolean
 fu_util_check_polkit_actions(GError **error)
 {
 #ifdef HAVE_POLKIT
-	g_autofree gchar *directory = NULL;
 	g_autofree gchar *filename = NULL;
 
 	if (g_getenv("FWUPD_POLKIT_NOCHECK") != NULL)
 		return TRUE;
 
-	directory = fu_path_from_kind(FU_PATH_KIND_POLKIT_ACTIONS);
-	filename = g_build_filename(directory, "org.freedesktop.fwupd.policy", NULL);
+	filename = fu_path_build(FU_PATH_KIND_POLKIT_ACTIONS, "org.freedesktop.fwupd.policy", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
 		g_set_error_literal(
 		    error,

@@ -1,0 +1,79 @@
+# This file defines code owners for fwupd repository
+# Format: [path pattern] [space-separated list of owners]
+# Order is important: last matching pattern takes precedence
+
+# Default owners for everything
+* @superm1 @hughsie
+
+# Plugin-specific owners
+plugins/algoltek-usb/ @MasonLyu
+plugins/amd-gpu/ @superm1
+plugins/amd-kria/ @superm1 @michalsimek
+plugins/amd-pmc/ @superm1
+plugins/analogix/ @xtcui
+plugins/android-boot/ @DylanVanAssche
+plugins/aver-hid/ @AVer-V001598
+plugins/bcm57xx/ @meklort
+plugins/bnr-dp/ @tmuehlbacher-bnr
+plugins/ccgx/ @IfxBrent
+plugins/ccgx-dmc/ @IfxBrent
+plugins/corsair/ @dushko-devx
+plugins/cros-ec/ @bleungatchromium
+plugins/dell/ @CragW
+plugins/dell-dock/ @CragW
+plugins/dell-kestrel/ @CragW
+plugins/devlink/ @jpirko
+plugins/egis-moc/ @jasonhouang
+plugins/elan-kbd/ @hughsie
+plugins/elanfp/ @MichaelCheng04
+plugins/elantp/ @jinglewu @josh-chen-elan
+plugins/focalfp/ @waynehuang2022
+plugins/fpc/ @jimzhang2
+plugins/framework-qmk/ @JohnAZoidberg
+plugins/genesys/ @adamgene
+plugins/goodix-moc/ @boger047
+plugins/goodix-tp/ @xulinkun
+plugins/huddly-usb/ @LarsStensen
+plugins/hughski-colorhug/ @hughsie
+plugins/ilitek-its/ @ILITEK-JoeHung
+plugins/intel-cvs/ @hughsie
+plugins/intel-gsc/ @Fscarbr
+plugins/jabra-file/ @gdpcastro
+plugins/jabra-gnp/ @gdpcastro
+plugins/kinetic-dp/ @FrancisLeeKinetic
+plugins/legion-hid/ @gzmarshall
+plugins/logitech-bulkcontroller/ @vcdmp
+plugins/logitech-rallysystem/ @vcdmp
+plugins/logitech-scribe/ @vcdmp
+plugins/logitech-tap/ @vcdmp
+plugins/mediatek-scaler/ @CragW @GregLo007
+plugins/modem-manager/ @aleksander0m
+plugins/nordic-hid/ @MarekPieta
+plugins/parade-lspcon/ @Pingyao5115
+plugins/parade-usbhub/ @hublin2024 @jimmytu5167 @andychu5168
+plugins/pci-psp/ @superm1
+plugins/pixart-rf/ @sam412081go
+plugins/qc-firehose/ @hughsie
+plugins/qc-s5gen2/ @d4s
+plugins/qsi-dock/ @hssinf
+plugins/realtek-mst/ @tari
+plugins/rp-pico/ @mntmn
+plugins/rts54hub/ @AnyProblem
+plugins/synaptics-cape/ @CNXT-Simon
+plugins/synaptics-mst/ @ApolloLing
+plugins/synaptics-prometheus/ @synavincent
+plugins/synaptics-rmi/ @blueue @vhuag
+plugins/synaptics-vmm9/ @ApolloLing
+plugins/system76-launch/ @jackpot51
+plugins/telink-dfu/ @liangjiazhi-telink
+plugins/thelio-io/ @jackpot51
+plugins/uefi-db/ @hughsie
+plugins/uefi-kek/ @hughsie
+plugins/uefi-mok/ @hughsie
+plugins/uefi-sbat/ @vathpela
+plugins/usi-dock/ @victor-cheng
+plugins/vbe/ @sjg20
+plugins/vli/ @memily
+plugins/wacom-raw/ @flying-elephant
+plugins/wacom-usb/ @jigpu
+plugins/wistron-dock/ @a999153

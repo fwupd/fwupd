@@ -341,31 +341,26 @@ fu_release_get_localized_xpath(FuRelease *self, const gchar *element)
 static gchar *
 fu_release_get_release_version(FuRelease *self, const gchar *version, GError **error)
 {
-	FwupdVersionFormat fmt = fu_device_get_version_format(self->device);
-	guint64 ver_uint32;
-	g_autoptr(GError) error_local = NULL;
-
 	/* already dotted notation */
 	if (g_strstr_len(version, -1, ".") != NULL)
 		return g_strdup(version);
 
-	/* don't touch my version! */
-	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
-		return g_strdup(version);
-
-	/* parse as integer */
-	if (!fu_strtoull(version,
-			 &ver_uint32,
-			 1,
-			 G_MAXUINT32,
-			 FU_INTEGER_BASE_AUTO,
-			 &error_local)) {
-		g_warning("invalid release version %s: %s", version, error_local->message);
-		return g_strdup(version);
+	/* fallback for ESRT-derived UEFI devices */
+	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT)) {
+		guint64 version_raw = 0;
+		if (!fu_strtoull(version,
+				 &version_raw,
+				 1,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
+			return NULL;
+		}
+		return fu_device_convert_version(self->device, version_raw, error);
 	}
 
-	/* convert to dotted decimal */
-	return fu_version_from_uint32((guint32)ver_uint32, fmt);
+	/* fallback */
+	return g_strdup(version);
 }
 
 static gboolean
@@ -776,6 +771,21 @@ fu_release_check_version(FuRelease *self,
 		return TRUE;
 	if (self->request != NULL &&
 	    fu_engine_request_has_flag(self->request, FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS)) {
+		return TRUE;
+	}
+
+	/* allow using no-version-expected on emulated devices, or when not build as supported */
+	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED)) {
+#ifdef SUPPORTED_BUILD
+		if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "only emulated devices can install releases with no "
+					    "version when -Dsupported_build");
+			return FALSE;
+		}
+#endif
 		return TRUE;
 	}
 

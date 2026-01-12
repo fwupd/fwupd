@@ -54,6 +54,8 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 			  GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT(device);
+	FuDevice *proxy;
+	FuDevice *parent;
 	guint32 start_offset = 0;
 	gsize image_size = 0;
 	const guint8 *buffer;
@@ -104,7 +106,10 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	image_size -= start_offset;
 
 	g_debug("waking Thunderbolt controller");
-	if (!fu_dell_dock_hid_tbt_wake(fu_device_get_proxy(device), &tbt_base_settings, error))
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_hid_tbt_wake(proxy, &tbt_base_settings, error))
 		return FALSE;
 	fu_device_sleep(device, 2000);
 
@@ -113,7 +118,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 		guint8 write_size = (image_size - i) > HIDI2C_MAX_WRITE ? HIDI2C_MAX_WRITE
 									: (image_size - i);
 
-		if (!fu_dell_dock_hid_tbt_write(fu_device_get_proxy(device),
+		if (!fu_dell_dock_hid_tbt_write(proxy,
 						i,
 						buffer,
 						write_size,
@@ -127,11 +132,12 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
-	if (fu_dell_dock_ec_tbt_passive(FU_DELL_DOCK_EC(fu_device_get_parent(device)))) {
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
+	if (fu_dell_dock_ec_tbt_passive(FU_DELL_DOCK_EC(parent))) {
 		g_info("using passive flow for Thunderbolt");
-	} else if (!fu_dell_dock_hid_tbt_authenticate(fu_device_get_proxy(device),
-						      &tbt_base_settings,
-						      error)) {
+	} else if (!fu_dell_dock_hid_tbt_authenticate(proxy, &tbt_base_settings, error)) {
 		g_prefix_error_literal(error, "failed to authenticate: ");
 		return FALSE;
 	}
@@ -193,12 +199,14 @@ static gboolean
 fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT(device);
+	FuDevice *proxy;
 	FuDevice *parent;
 	const gchar *version;
-	const gchar *hub_version;
 
 	/* set version from EC if we know it */
-	parent = fu_device_get_parent(device);
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	version = fu_dell_dock_ec_get_tbt_version(FU_DELL_DOCK_EC(parent));
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
@@ -214,9 +222,12 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 		return TRUE;
 	}
 	/* minimum Hub2 version that supports this feature */
-	hub_version = fu_device_get_version(fu_device_get_proxy(device));
-	if (fu_version_compare(hub_version, self->hub_minimum_version, FWUPD_VERSION_FORMAT_PAIR) <
-	    0) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (fu_version_compare(fu_device_get_version(proxy),
+			       self->hub_minimum_version,
+			       FWUPD_VERSION_FORMAT_PAIR) < 0) {
 		fu_device_set_update_error(
 		    device,
 		    "Updates over I2C are disabled due to insufficient USB 3.1 G2 hub version");
@@ -229,13 +240,12 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_tbt_probe(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 
 	/* sanity check */
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return FALSE;
-	}
 
 	fu_device_incorporate(device, parent, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	fu_device_set_logical_id(FU_DEVICE(device), "tbt");
@@ -250,10 +260,14 @@ static gboolean
 fu_dell_dock_tbt_open(FuDevice *device, GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT(device);
+	FuDevice *proxy;
 
 	g_return_val_if_fail(self->unlock_target != 0, FALSE);
 
-	if (!fu_device_open(fu_device_get_proxy(device), error))
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_device_open(proxy, error))
 		return FALSE;
 
 	/* adjust to access controller */
@@ -267,12 +281,16 @@ static gboolean
 fu_dell_dock_tbt_close(FuDevice *device, GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT(device);
+	FuDevice *proxy;
 
 	/* adjust to access controller */
 	if (!fu_dell_dock_set_power(device, self->unlock_target, FALSE, error))
 		return FALSE;
 
-	return fu_device_close(fu_device_get_proxy(device), error);
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	return fu_device_close(proxy, error);
 }
 
 static void
@@ -290,6 +308,7 @@ fu_dell_dock_tbt_init(FuDellDockTbt *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_HID_DEVICE);
 }
 
 static void

@@ -1,6 +1,46 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+// EFI_STATUS is u64le on 64-bit and u32le on 32-bit -- but be pragmatic
+#[repr(u64le)]
+#[derive(ToString)]
+enum FuEfiStatus {
+    Success             = 0,
+    LoadError           = 1,
+    InvalidParameter    = 2,
+    Unsupported         = 3,
+    BadBufferSize       = 4,
+    BufferTooSmall      = 5,
+    NotReady            = 6,
+    DeviceError         = 7,
+    WriteProtected      = 8,
+    OutOfResources      = 9,
+    VolumeCorrupted     = 10,
+    VolumeFull          = 11,
+    NoMedia             = 12,
+    MediaChanged        = 13,
+    NotFound            = 14,
+    AccessDenied        = 15,
+    NoResponse          = 16,
+    NoMapping           = 17,
+    Timeout             = 18,
+    NotStarted          = 19,
+    AlreadyStarted      = 20,
+    Aborted             = 21,
+    IcmpError           = 22,
+    TftpError           = 23,
+    ProtocolError       = 24,
+    IncompatibleVersion = 25,
+    SecurityViolation   = 26,
+    CrcError            = 27,
+    EndOfMedia          = 28,
+    EndOfFile           = 31,
+    InvalidLanguage     = 32,
+    CompromisedData     = 33,
+    IpAddressConflict   = 34,
+    HttpError           = 35,
+}
+
 #[derive(ToString, FromString)]
 enum FuEfiSignatureKind {
     Unknown,
@@ -184,7 +224,7 @@ struct FuStructEfiVolumeBlockMap {
     length: u32le,
 }
 
-#[derive(Getters, New)]
+#[derive(Getters, New, ToString, NewInternal, ValidateInternal)]
 #[repr(C, packed)]
 struct FuStructEfiTime {
     year: u16le,
@@ -348,7 +388,7 @@ enum FuEfiVariableState {
 
 #[derive(ToString, FromString, Bitfield)]
 #[repr(u32le)]
-enum FuEfiVariableAttributes {
+enum FuEfiVariableAttrs {
     None                              = 0x00000000,
     NonVolatile                       = 0x00000001,
     BootserviceAccess                 = 0x00000002,
@@ -366,7 +406,7 @@ struct FuStructEfiVssAuthVariableHeader {
     start_id: u16le = 0x55AA,
     state: FuEfiVariableState,
     reserved: u8,
-    attributes: FuEfiVariableAttributes,
+    attributes: FuEfiVariableAttrs,
     monotonic_counter: u64le,
     timestamp: FuStructEfiTime,
     pubkey_index: u32le,
@@ -403,4 +443,11 @@ struct FuStructShimHiveItem {
     value_length: u32le,
     // key string, no trailing NUL
     // value string, no trailing NUL
+}
+
+#[repr(u32le)]
+enum FuEfiCapsuleHeaderFlags {
+    PersistAcrossReset  = 1 << 16,
+    PopulateSystemTable = 1 << 17,
+    InitiateReset       = 1 << 18,
 }

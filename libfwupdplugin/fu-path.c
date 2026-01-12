@@ -284,55 +284,48 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_SYSFSFWDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "firmware", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "firmware", NULL);
 	/* /sys/class/tpm */
 	case FU_PATH_KIND_SYSFSDIR_TPM:
 		tmp = g_getenv("FWUPD_SYSFSTPMDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "class", "tpm", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "class", "tpm", NULL);
 	/* /sys/bus/platform/drivers */
 	case FU_PATH_KIND_SYSFSDIR_DRIVERS:
 		tmp = g_getenv("FWUPD_SYSFSDRIVERDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "bus", "platform", "drivers", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "bus", "platform", "drivers", NULL);
 	/* /sys/kernel/security */
 	case FU_PATH_KIND_SYSFSDIR_SECURITY:
 		tmp = g_getenv("FWUPD_SYSFSSECURITYDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "kernel", "security", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "kernel", "security", NULL);
 	/* /sys/class/dmi/id */
 	case FU_PATH_KIND_SYSFSDIR_DMI:
 		tmp = g_getenv("FWUPD_SYSFSDMIDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "class", "dmi", "id", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "class", "dmi", "id", NULL);
 	/* /sys/firmware/acpi/tables */
 	case FU_PATH_KIND_ACPI_TABLES:
 		tmp = g_getenv("FWUPD_ACPITABLESDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "firmware", "acpi", "tables", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "firmware", "acpi", "tables", NULL);
 	/* /sys/module/firmware_class/parameters/path */
 	case FU_PATH_KIND_FIRMWARE_SEARCH:
 		tmp = g_getenv("FWUPD_FIRMWARESEARCH");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir,
-					"module",
-					"firmware_class",
-					"parameters",
-					"path",
-					NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR,
+				     "module",
+				     "firmware_class",
+				     "parameters",
+				     "path",
+				     NULL);
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv("FWUPD_SYSCONFDIR");
@@ -404,8 +397,7 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_DATADIR_QUIRKS");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
-		return g_build_filename(basedir, "quirks.d", NULL);
+		return fu_path_build(FU_PATH_KIND_DATADIR_PKG, "quirks.d", NULL);
 	/* /usr/libexec/fwupd/efi */
 	case FU_PATH_KIND_EFIAPPDIR:
 		tmp = g_getenv("FWUPD_EFIAPPDIR");
@@ -424,50 +416,49 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("CONFIGURATION_DIRECTORY");
 		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
-		return g_build_filename(basedir, PACKAGE_NAME, NULL);
+		return fu_path_build(FU_PATH_KIND_SYSCONFDIR, PACKAGE_NAME, NULL);
 	/* /var/lib/fwupd */
 	case FU_PATH_KIND_LOCALSTATEDIR_PKG:
 		tmp = g_getenv("STATE_DIRECTORY");
 		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR);
-		return g_build_filename(basedir, "lib", PACKAGE_NAME, NULL);
+		return fu_path_build(FU_PATH_KIND_LOCALSTATEDIR, "lib", PACKAGE_NAME, NULL);
 	/* /var/lib/fwupd/quirks.d */
 	case FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:
 		tmp = g_getenv("FWUPD_LOCALSTATEDIR_QUIRKS");
 		if (tmp != NULL)
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-		return g_build_filename(basedir, "quirks.d", NULL);
+		return fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "quirks.d", NULL);
 	/* /var/lib/fwupd/metadata */
 	case FU_PATH_KIND_LOCALSTATEDIR_METADATA:
 		tmp = g_getenv("FWUPD_LOCALSTATEDIR_METADATA");
 		if (tmp != NULL)
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-		return g_build_filename(basedir, "metadata", NULL);
+		return fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "metadata", NULL);
 	/* /var/lib/fwupd/remotes.d */
 	case FU_PATH_KIND_LOCALSTATEDIR_REMOTES:
 		tmp = g_getenv("FWUPD_LOCALSTATEDIR_REMOTES");
 		if (tmp != NULL)
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-		return g_build_filename(basedir, "remotes.d", NULL);
+		return fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "remotes.d", NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv("CACHE_DIRECTORY");
 		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR);
-		return g_build_filename(basedir, "cache", PACKAGE_NAME, NULL);
+		return fu_path_build(FU_PATH_KIND_LOCALSTATEDIR, "cache", PACKAGE_NAME, NULL);
 	/* /var/etc/fwupd */
 	case FU_PATH_KIND_LOCALCONFDIR_PKG:
 		tmp = g_getenv("LOCALCONF_DIRECTORY");
 		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename(tmp, NULL);
-		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR);
-		return g_build_filename(basedir, "etc", PACKAGE_NAME, NULL);
+		return fu_path_build(FU_PATH_KIND_LOCALSTATEDIR, "etc", PACKAGE_NAME, NULL);
+	/* /run */
+	case FU_PATH_KIND_RUNDIR:
+		tmp = g_getenv("FWUPD_RUNDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/run");
 	/* /run/lock */
 	case FU_PATH_KIND_LOCKDIR:
 		tmp = g_getenv("FWUPD_LOCKDIR");
@@ -484,8 +475,7 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_SYSFSFWATTRIBDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-		return g_build_filename(basedir, "class", "firmware-attributes", NULL);
+		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "class", "firmware-attributes", NULL);
 	case FU_PATH_KIND_POLKIT_ACTIONS:
 #ifdef POLKIT_ACTIONDIR
 		return g_strdup(POLKIT_ACTIONDIR);
@@ -515,16 +505,15 @@ fu_path_from_kind(FuPathKind path_kind)
 		return g_strdup("/dev");
 	/* /etc/localtime or /var/lib/timezone/localtime */
 	case FU_PATH_KIND_LOCALTIME: {
-		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
-		g_autofree gchar *localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR);
 		g_autofree gchar *localtime = NULL;
 		tmp = g_getenv("FWUPD_LOCALTIME");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		basedir = g_build_filename(localstatedir, "lib", "timezone", "localtime", NULL);
+		basedir =
+		    fu_path_build(FU_PATH_KIND_LOCALSTATEDIR, "lib", "timezone", "localtime", NULL);
 		if (g_file_test(basedir, G_FILE_TEST_EXISTS))
 			return g_steal_pointer(&basedir);
-		localtime = g_build_filename(sysconfdir, "localtime", NULL);
+		localtime = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "localtime", NULL);
 		if (g_file_test(localtime, G_FILE_TEST_EXISTS))
 			return g_steal_pointer(&localtime);
 		return g_strdup("/etc/localtime");
@@ -541,6 +530,36 @@ fu_path_from_kind(FuPathKind path_kind)
 	}
 
 	return NULL;
+}
+
+/**
+ * fu_path_build:
+ * @path_kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ * @...: pairs of string key values, ending with %NULL
+ *
+ * Gets a fwupd-specific system path. These can be overridden with various
+ * environment variables, for instance %FWUPD_DATADIR.
+ *
+ * Returns: a system path, or %NULL if invalid
+ *
+ * Since: 2.0.18
+ **/
+gchar *
+fu_path_build(FuPathKind path_kind, ...)
+{
+	va_list args;
+	gchar *path;
+	g_autofree gchar *path_initial = NULL;
+
+	path_initial = fu_path_from_kind(path_kind);
+	if (path_initial == NULL)
+		return NULL;
+
+	va_start(args, path_kind);
+	path = g_build_filename_valist(path_initial, &args);
+	va_end(args);
+
+	return path;
 }
 
 static gint

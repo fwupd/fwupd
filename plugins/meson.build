@@ -35,8 +35,6 @@ plugins = {
   'ccgx': false,
   'ccgx-dmc': false,
   'cfu': false,
-  'ch341a': false,
-  'ch347': false,
   'corsair': false,
   'cpu': false,
   'cros-ec': false,
@@ -78,6 +76,7 @@ plugins = {
   'jabra-file': false,
   'jabra-gnp': false,
   'kinetic-dp': false,
+  'legion-hid': false,
   'legion-hid2': false,
   'lenovo-thinklmi': false,
   'linux-display': false,
@@ -141,6 +140,8 @@ plugins = {
   'vli': false,
   'wacom-raw': false,
   'wacom-usb': false,
+  'wch-ch341a': false,
+  'wch-ch347': false,
   'wistron-dock': false,
 }
 

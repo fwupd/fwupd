@@ -103,7 +103,7 @@ fu_dell_dock_plugin_get_ec(GPtrArray *devices)
 		FuDevice *parent;
 		if (FU_IS_DELL_DOCK_EC(dev))
 			return FU_DELL_DOCK_EC(dev);
-		parent = fu_device_get_parent(dev);
+		parent = fu_device_get_parent(dev, NULL);
 		if (parent != NULL && FU_IS_DELL_DOCK_EC(parent))
 			ec_parent = FU_DELL_DOCK_EC(parent);
 	}
@@ -232,11 +232,10 @@ fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, G
 		g_debug("dropped needs-activation flag: %s", fu_device_get_name(device));
 	}
 
-	parent = fu_device_get_parent(device);
+	/* remove the dock device tree */
+	parent = fu_device_get_parent(device, NULL);
 	if (parent == NULL)
 		return TRUE;
-
-	/* remove the dock device tree */
 	if (FU_IS_DELL_DOCK_EC(parent)) {
 		g_autofree gchar *id_display = fu_device_get_id_display(parent);
 

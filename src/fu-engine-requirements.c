@@ -10,6 +10,7 @@
 
 #include "fwupd-remote-private.h"
 
+#include "fu-device-private.h"
 #include "fu-engine-requirements.h"
 
 static gboolean
@@ -282,7 +283,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		if (!fu_strtoll(depth_str, &depth, -1, 10, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		for (gint64 i = 0; i < depth; i++) {
-			FuDevice *device_tmp = fu_device_get_parent(device_actual);
+			FuDevice *device_tmp = fu_device_get_parent_internal(device_actual);
 			if (device_tmp == NULL) {
 				g_autofree gchar *id_display =
 				    fu_device_get_id_display(device_actual);
@@ -439,7 +440,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		/* look for a sibling */
 	} else if (depth == 0) {
 		FuDevice *child = NULL;
-		FuDevice *parent = fu_device_get_parent(device_actual);
+		FuDevice *parent = fu_device_get_parent_internal(device_actual);
 		GPtrArray *children;
 
 		/* no parent, so look for GUIDs on this device */

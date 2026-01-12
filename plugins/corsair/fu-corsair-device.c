@@ -202,6 +202,12 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 
+	/* sanity check */
+	if (self->bp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no bp");
+		return FALSE;
+	}
+
 	fu_corsair_bp_flush_input_reports(self->bp);
 
 	if (!fu_corsair_bp_get_property(self->bp, FU_CORSAIR_BP_PROPERTY_MODE, &mode, error))
@@ -244,14 +250,14 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	if (self->subdevice_id != NULL &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		gboolean subdevice_added = FALSE;
-		g_autoptr(GError) local_error = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* Give some time to a subdevice to get connected to the receiver.
 		 * Without this delay a subdevice may be not present even if it is
 		 * turned on. */
 		fu_device_sleep(device, CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
-		if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, &local_error)) {
-			g_warning("error polling subdevice: %s", local_error->message);
+		if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, &error_local)) {
+			g_warning("error polling subdevice: %s", error_local->message);
 		} else {
 			/* start polling if a subdevice was not added */
 			if (!subdevice_added)
@@ -299,16 +305,14 @@ fu_corsair_device_is_subdevice_connected_cb(FuDevice *device, gpointer user_data
 static gboolean
 fu_corsair_device_reconnect_subdevice(FuCorsairDevice *self, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
-
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cannot get parent");
-		return FALSE;
-	}
+	FuDevice *parent;
 
 	/* wait some time to make sure that a subdevice was disconnected */
 	fu_device_sleep(FU_DEVICE(self), CORSAIR_SUBDEVICE_REBOOT_DELAY);
 
+	parent = fu_device_get_parent(FU_DEVICE(self), error);
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_device_retry_full(parent,
 				  fu_corsair_device_is_subdevice_connected_cb,
 				  CORSAIR_SUBDEVICE_RECONNECT_RETRIES,
@@ -326,6 +330,12 @@ static gboolean
 fu_corsair_device_ensure_mode(FuCorsairDevice *self, FuCorsairDeviceMode mode, GError **error)
 {
 	FuCorsairDeviceMode current_mode;
+
+	/* sanity check */
+	if (self->bp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no bp");
+		return FALSE;
+	}
 
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		current_mode = FU_CORSAIR_DEVICE_MODE_BOOTLOADER;

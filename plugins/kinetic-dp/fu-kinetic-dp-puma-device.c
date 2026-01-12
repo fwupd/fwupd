@@ -137,10 +137,7 @@ fu_kinetic_dp_puma_device_enter_code_loading_mode(FuKineticDpPumaDevice *self, G
 }
 
 static gboolean
-fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self,
-				     FuIOChannel *io_channel,
-				     GBytes *fw,
-				     GError **error)
+fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self, GBytes *fw, GError **error)
 {
 	g_autoptr(FuChunkArray) chunks =
 	    fu_chunk_array_new_from_bytes(fw, FU_CHUNK_ADDR_OFFSET_NONE, FU_CHUNK_PAGESZ_NONE, 16);
@@ -168,7 +165,6 @@ fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self,
 
 static gboolean
 fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
-				       FuIOChannel *io_channel,
 				       GBytes *fw,
 				       FuProgress *progress,
 				       guint32 wait_time_ms,
@@ -194,7 +190,7 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 
 		/* send a maximum 32KB chunk of payload to AUX window */
 		chk_blob = fu_chunk_get_bytes(chk);
-		if (!fu_kinetic_dp_puma_device_send_chunk(self, io_channel, chk_blob, error)) {
+		if (!fu_kinetic_dp_puma_device_send_chunk(self, chk_blob, error)) {
 			g_prefix_error(error,
 				       "failed to AUX write at 0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -217,9 +213,7 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 }
 
 static gboolean
-fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
-					 FuIOChannel *io_channel,
-					 GError **error)
+fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self, GError **error)
 {
 	guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
 	g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
@@ -263,19 +257,17 @@ fu_kinetic_dp_puma_device_send_isp_drv(FuKineticDpPumaDevice *self,
 				       FuProgress *progress,
 				       GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	if (!fu_kinetic_dp_puma_device_enter_code_loading_mode(self, error)) {
 		g_prefix_error_literal(error, "enter code loading mode failed: ");
 		return FALSE;
 	}
 	fu_kinetic_dp_puma_device_send_payload(self,
-					       io_channel,
 					       fw,
 					       progress,
 					       PUMA_CHUNK_PROCESS_MAX_WAIT,
 					       TRUE,
 					       error);
-	if (!fu_kinetic_dp_puma_device_wait_drv_ready(self, io_channel, error)) {
+	if (!fu_kinetic_dp_puma_device_wait_drv_ready(self, error)) {
 		g_prefix_error_literal(error, "wait for ISP driver ready failed: ");
 		return FALSE;
 	}
@@ -472,7 +464,6 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 {
 	FuKineticDpPumaDevice *self = FU_KINETIC_DP_PUMA_DEVICE(device);
 	FuKineticDpPumaFirmware *dp_firmware = FU_KINETIC_DP_PUMA_FIRMWARE(firmware);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(GBytes) app_fw_blob = NULL;
 
 	/* progress */
@@ -517,7 +508,6 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 	if (app_fw_blob == NULL)
 		return FALSE;
 	if (!fu_kinetic_dp_puma_device_send_payload(self,
-						    io_channel,
 						    app_fw_blob,
 						    fu_progress_get_child(progress),
 						    PUMA_CHUNK_PROCESS_MAX_WAIT,

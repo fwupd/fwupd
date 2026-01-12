@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "fu-byte-array.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-ioctl-private.h"
@@ -121,7 +122,7 @@ fu_udev_device_ensure_bind_id(FuUdevDevice *self, GError **error)
 		priv->bind_id = fu_udev_device_read_property(self, "HID_PHYS", error);
 		return priv->bind_id != NULL;
 	}
-	if (g_strcmp0(priv->subsystem, "usb") == 0) {
+	if (g_strcmp0(priv->subsystem, "usb") == 0 || g_strcmp0(priv->subsystem, "i2c") == 0) {
 		priv->bind_id = g_path_get_basename(fu_udev_device_get_sysfs_path(self));
 		return TRUE;
 	}
@@ -1606,6 +1607,41 @@ fu_udev_device_read_bytes(FuUdevDevice *self,
 }
 
 /**
+ * fu_udev_device_read_byte_array:
+ * @self: a #FuUdevDevice
+ * @count: bytes to read
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a buffer from a file descriptor.
+ *
+ * Returns: (transfer full): A #GByteArray, or %NULL
+ *
+ * Since: 2.0.18
+ **/
+GByteArray *
+fu_udev_device_read_byte_array(FuUdevDevice *self,
+			       gsize count,
+			       guint timeout_ms,
+			       FuIOChannelFlags flags,
+			       GError **error)
+{
+	gsize bytes_read = 0;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(count > 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	fu_byte_array_set_size(buf, count, 0x0);
+	if (!fu_udev_device_read(self, buf->data, buf->len, &bytes_read, timeout_ms, flags, error))
+		return NULL;
+	g_byte_array_set_size(buf, bytes_read);
+	return g_steal_pointer(&buf);
+}
+
+/**
  * fu_udev_device_write:
  * @self: a #FuUdevDevice
  * @buf: (out): data
@@ -1703,6 +1739,33 @@ fu_udev_device_write_bytes(FuUdevDevice *self,
 				    timeout_ms,
 				    flags,
 				    error);
+}
+
+/**
+ * fu_udev_device_write_byte_array:
+ * @self: a #FuUdevDevice
+ * @buf: a #GByteArray
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Write a buffer to a file descriptor.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.18
+ **/
+gboolean
+fu_udev_device_write_byte_array(FuUdevDevice *self,
+				GByteArray *buf,
+				guint timeout_ms,
+				FuIOChannelFlags flags,
+				GError **error)
+{
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_udev_device_write(self, buf->data, buf->len, timeout_ms, flags, error);
 }
 
 /**

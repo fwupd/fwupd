@@ -211,7 +211,9 @@ fu_mtd_ifd_device_write_firmware(FuDevice *device,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_mtd_device_write_image(FU_MTD_DEVICE(proxy), firmware, progress, error);
 }
 
@@ -222,6 +224,7 @@ fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_MTD_DEVICE);
 }
 
 static void

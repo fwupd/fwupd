@@ -54,7 +54,7 @@ typedef enum {
 	FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO = 1 << 2,
 	/*< private >*/
 	FU_IO_CHANNEL_FLAG_LAST
-} FuIOChannelFlags;
+} G_GNUC_FLAG_ENUM FuIOChannelFlags;
 
 FuIOChannel *
 fu_io_channel_unix_new(gint fd);

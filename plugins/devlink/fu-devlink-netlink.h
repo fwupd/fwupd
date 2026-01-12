@@ -22,7 +22,7 @@ typedef struct {
 	FuDevice *device; /* device for emulation recording/playback */
 	gboolean is_emulated;
 	gboolean save_events;
-	gint pipe_fds[2];  /* dummy pipe for emulation (read=0, write=1) */
+	gint pipe_fds[2]; /* dummy pipe for emulation (read=0, write=1) */
 } FuDevlinkGenSocket;
 
 /* do zero check to silence warnings*/
@@ -45,7 +45,8 @@ fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 				 GError **error) G_GNUC_NON_NULL(1, 2);
 
 gboolean
-fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GError **error) G_GNUC_NON_NULL(1, 2);
+fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 
 /* socket management */
 FuDevlinkGenSocket *
@@ -62,11 +63,13 @@ fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg) G_GNUC_NON_NULL(1
 
 /* prepare devlink command message */
 struct nlmsghdr *
-fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dump) G_GNUC_NON_NULL(1);
+fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dump)
+    G_GNUC_NON_NULL(1);
 
 /* multicast group management */
 gboolean
-fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error) G_GNUC_NON_NULL(1);
+fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error)
+    G_GNUC_NON_NULL(1);
 
 /* attribute parsing callback */
 gint

@@ -60,7 +60,7 @@ typedef enum {
 	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0,
 	/*< private >*/
 	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
-} FwupdClientDownloadFlags;
+} G_GNUC_FLAG_ENUM FwupdClientDownloadFlags;
 
 /**
  * FwupdClientUploadFlags:
@@ -86,7 +86,7 @@ typedef enum {
 	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0,
 	/*< private >*/
 	FWUPD_CLIENT_UPLOAD_FLAG_LAST
-} FwupdClientUploadFlags;
+} G_GNUC_FLAG_ENUM FwupdClientUploadFlags;
 
 FwupdClient *
 fwupd_client_new(void);

@@ -327,6 +327,22 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	return g_steal_pointer(&buf);
 }
 
+static void
+fu_efi_signature_list_add_magic(FuFirmware *firmware)
+{
+	fwupd_guid_t guid = {0};
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_SHA256,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
+	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
+	(void)fwupd_guid_from_string(FU_EFI_SIGNATURE_LIST_GUID_X509,
+				     &guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     NULL);
+	fu_firmware_add_magic(firmware, guid, sizeof(guid), 0x0);
+}
+
 /**
  * fu_efi_signature_list_new:
  *
@@ -347,6 +363,7 @@ fu_efi_signature_list_class_init(FuEfiSignatureListClass *klass)
 	firmware_class->validate = fu_efi_signature_list_validate;
 	firmware_class->parse = fu_efi_signature_list_parse;
 	firmware_class->write = fu_efi_signature_list_write;
+	firmware_class->add_magic = fu_efi_signature_list_add_magic;
 }
 
 static void

@@ -29,7 +29,7 @@
 struct _FuEfiVssAuthVariable {
 	FuFirmware parent_instance;
 	gchar *vendor_guid;
-	FuEfiVariableAttributes attributes;
+	FuEfiVariableAttrs attributes;
 	FuEfiVariableState state;
 	FuStructEfiTime *timestamp; /* nullable */
 };
@@ -64,8 +64,8 @@ fu_efi_vss_auth_variable_export(FuFirmware *firmware,
 		const gchar *str = fu_efi_variable_state_to_string(self->state);
 		fu_xmlb_builder_insert_kv(bn, "state", str);
 	}
-	if (self->attributes != FU_EFI_VARIABLE_ATTRIBUTES_NONE) {
-		g_autofree gchar *str = fu_efi_variable_attributes_to_string(self->attributes);
+	if (self->attributes != FU_EFI_VARIABLE_ATTR_NONE) {
+		g_autofree gchar *str = fu_efi_variable_attrs_to_string(self->attributes);
 		fu_xmlb_builder_insert_kv(bn, "attributes", str);
 	}
 	if (self->timestamp != NULL) {
@@ -259,7 +259,7 @@ fu_efi_vss_auth_variable_build(FuFirmware *firmware, XbNode *n, GError **error)
 		self->vendor_guid = g_strdup(tmp);
 	tmp = xb_node_query_text(n, "attributes", NULL);
 	if (tmp != NULL)
-		self->attributes = fu_efi_variable_attributes_from_string(tmp);
+		self->attributes = fu_efi_variable_attrs_from_string(tmp);
 	tmp = xb_node_query_text(n, "state", NULL);
 	if (tmp != NULL)
 		self->state = fu_efi_variable_state_from_string(tmp);

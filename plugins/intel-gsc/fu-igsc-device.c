@@ -28,8 +28,8 @@ struct _FuIgscDevice {
 #define FU_IGSC_DEVICE_FLAG_HAS_OPROM "has-oprom"
 #define FU_IGSC_DEVICE_FLAG_HAS_SKU   "has-sku"
 
-#define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
-#define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	   480000 /* 480 sec */
+#define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT 60000	/* 60 sec */
+#define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	 480000 /* 480 sec */
 
 #define HECI1_CSE_FS_MODE_MASK 0x3
 #define HECI1_CSE_FS_CP_MODE   0x3
@@ -524,7 +524,6 @@ fu_igsc_device_update_end(FuIgscDevice *self, FuIgscFwuHeciPayloadType payload_t
 	if (st_res == NULL)
 		return FALSE;
 	return fu_igsc_heci_check_status(fu_igsc_fwu_heci_end_res_get_status(st_res), error);
-
 }
 
 static gboolean

@@ -22,5 +22,5 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 void
-fu_devlink_backend_device_removed(FuDevlinkBackend *self,
-				  FuDevice *devlink_device) G_GNUC_NON_NULL(1, 2);
+fu_devlink_backend_device_removed(FuDevlinkBackend *self, FuDevice *devlink_device)
+    G_GNUC_NON_NULL(1, 2);

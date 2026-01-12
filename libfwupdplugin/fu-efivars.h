@@ -8,6 +8,7 @@
 #pragma once
 
 #include "fu-efi-load-option.h"
+#include "fu-efi-struct.h"
 #include "fu-volume.h"
 
 #define FU_TYPE_EFIVARS (fu_efivars_get_type())
@@ -29,14 +30,14 @@ struct _FuEfivarsClass {
 			     const gchar *name,
 			     guint8 **data,
 			     gsize *data_sz,
-			     guint32 *attr,
+			     FuEfiVariableAttrs *attr,
 			     GError **error) G_GNUC_NON_NULL(1, 2, 3);
 	gboolean (*set_data)(FuEfivars *self,
 			     const gchar *guid,
 			     const gchar *name,
 			     const guint8 *data,
 			     gsize sz,
-			     guint32 attr,
+			     FuEfiVariableAttrs attr,
 			     GError **error) G_GNUC_NON_NULL(1, 2, 3);
 	gboolean (*delete)(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)
 	    G_GNUC_NON_NULL(1, 2, 3);
@@ -55,14 +56,6 @@ struct _FuEfivarsClass {
 #define FU_EFIVARS_GUID_SECURITY_DATABASE  "d719b2cb-3d3a-4596-a3bc-dad00e67656f"
 #define FU_EFIVARS_GUID_EFI_CAPSULE_REPORT "39b68c46-f7fb-441b-b6ec-16b0f69821f3"
 #define FU_EFIVARS_GUID_SHIM		   "605dab50-e046-4300-abb6-3dd810dd8b23"
-
-#define FU_EFIVARS_ATTR_NON_VOLATILE			      (1 << 0)
-#define FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS		      (1 << 1)
-#define FU_EFIVARS_ATTR_RUNTIME_ACCESS			      (1 << 2)
-#define FU_EFIVARS_ATTR_HARDWARE_ERROR_RECORD		      (1 << 3)
-#define FU_EFIVARS_ATTR_AUTHENTICATED_WRITE_ACCESS	      (1 << 4)
-#define FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS (1 << 5)
-#define FU_EFIVARS_ATTR_APPEND_WRITE			      (1 << 6)
 
 FuEfivars *
 fu_efivars_new(void);
@@ -83,13 +76,13 @@ fu_efivars_get_data(FuEfivars *self,
 		    const gchar *name,
 		    guint8 **data,
 		    gsize *data_sz,
-		    guint32 *attr,
+		    FuEfiVariableAttrs *attr,
 		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 GBytes *
 fu_efivars_get_data_bytes(FuEfivars *self,
 			  const gchar *guid,
 			  const gchar *name,
-			  guint32 *attr,
+			  FuEfiVariableAttrs *attr,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_efivars_set_data(FuEfivars *self,
@@ -97,14 +90,14 @@ fu_efivars_set_data(FuEfivars *self,
 		    const gchar *name,
 		    const guint8 *data,
 		    gsize sz,
-		    guint32 attr,
+		    FuEfiVariableAttrs attr,
 		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_efivars_set_data_bytes(FuEfivars *self,
 			  const gchar *guid,
 			  const gchar *name,
 			  GBytes *bytes,
-			  guint32 attr,
+			  FuEfiVariableAttrs attr,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_efivars_delete(FuEfivars *self, const gchar *guid, const gchar *name, GError **error)

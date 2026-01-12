@@ -57,13 +57,11 @@ fu_mm_mhi_qcdm_device_detach(FuDevice *device, FuProgress *progress, GError **er
 static FuKernelSearchPathLocker *
 fu_mm_mhi_qcdm_device_search_path_locker_new(FuMmMhiQcdmDevice *self, GError **error)
 {
-	g_autofree gchar *cachedir = NULL;
 	g_autofree gchar *mm_fw_dir = NULL;
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
 	/* create a directory to store firmware files for modem-manager plugin */
-	cachedir = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	mm_fw_dir = g_build_filename(cachedir, "modem-manager", "firmware", NULL);
+	mm_fw_dir = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "modem-manager", "firmware", NULL);
 	if (g_mkdir_with_parents(mm_fw_dir, 0700) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,

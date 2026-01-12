@@ -195,9 +195,9 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 					       FU_EFIVARS_GUID_EFI_GLOBAL,
 					       boot_next_name,
 					       loadopt_blob,
-					       FU_EFIVARS_ATTR_NON_VOLATILE |
-						   FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-						   FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					       FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+						   FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+						   FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					       error)) {
 			g_prefix_error(error, "could not set boot variable %s: ", boot_next_name);
 			return FALSE;
@@ -356,6 +356,7 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
 	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
+	g_autoptr(GError) error_local = NULL;
 
 	/* if secure boot was turned on this might need to be installed separately */
 	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
@@ -363,8 +364,8 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 		return FALSE;
 
 	/* test if we should use shim */
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
-		return FALSE;
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
+		g_debug("ignoring: %s", error_local->message);
 	if (secureboot_enabled) {
 		shim_app = fu_uefi_get_esp_app_path(esp_path, "shim", error);
 		if (shim_app == NULL)

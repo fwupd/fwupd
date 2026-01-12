@@ -331,6 +331,8 @@ fwupd_device_problem_to_string(FwupdDeviceProblem device_problem)
 		return "lower-priority";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM)
 		return "insecure-platform";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED)
+		return "firmware-locked";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -379,6 +381,8 @@ fwupd_device_problem_from_string(const gchar *device_problem)
 		return FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY;
 	if (g_strcmp0(device_problem, "insecure-platform") == 0)
 		return FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM;
+	if (g_strcmp0(device_problem, "firmware-locked") == 0)
+		return FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED;
 	return FWUPD_DEVICE_PROBLEM_UNKNOWN;
 }
 

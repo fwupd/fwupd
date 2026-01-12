@@ -30,12 +30,11 @@ fu_legion_hid2_sipo_device_write_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuLegionHid2SipoDevice *self = FU_LEGION_HID2_SIPO_DEVICE(device);
-	FuLegionHid2Device *proxy = FU_LEGION_HID2_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuLegionHid2Device *proxy;
 
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	proxy = FU_LEGION_HID2_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
-	}
 
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -62,6 +61,7 @@ fu_legion_hid2_sipo_device_init(FuLegionHid2SipoDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_logical_id(FU_DEVICE(self), "touchpad");
 	fu_device_set_vendor(FU_DEVICE(self), "SIPO");
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID2_DEVICE);
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "TP", "SIPO");
 }
 

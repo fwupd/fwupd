@@ -1169,8 +1169,8 @@ fu_util_device_flag_to_string(guint64 device_flag)
 	return NULL;
 }
 
-static gchar *
-fu_util_request_flag_to_string(guint64 request_flag)
+const gchar *
+fu_util_request_flag_to_string(FwupdRequestFlags request_flag)
 {
 	if (request_flag == FWUPD_REQUEST_FLAG_NONE)
 		return NULL;
@@ -1296,6 +1296,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	if (problem == FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM) {
 		/* TRANSLATORS: firmware is signed with insecure key */
 		return g_strdup(_("System has been signed with an insecure key"));
+	}
+	if (problem == FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED) {
+		/* TRANSLATORS: firmware is locked from the BIOS */
+		return g_strdup(_("Device firmware has been locked "));
 	}
 	return NULL;
 }
@@ -1771,7 +1775,7 @@ fu_util_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 	return _("Unknown");
 }
 
-static const gchar *
+const gchar *
 fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 {
 	if (release_flag == FWUPD_RELEASE_FLAG_NONE)

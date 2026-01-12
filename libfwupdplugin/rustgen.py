@@ -69,6 +69,7 @@ class EnumObj:
         self.name: str = name
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
+        self.is_imported: bool = False
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
             "FromString": Export.NONE,
@@ -149,7 +150,7 @@ class EnumItem:
     @property
     def c_define(self) -> str:
         name_snake = _camel_to_snake(self.obj.name)
-        if name_snake.endswith("flags"):
+        if name_snake.endswith("flags") or name_snake.endswith("attrs"):
             name_snake = name_snake[:-1]
         return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
@@ -180,6 +181,7 @@ class StructObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
         self.items: List[StructItem] = []
+        self.is_imported: bool = False
         self._exports: Dict[str, Export] = {
             "Validate": Export.NONE,
             "ValidateBytes": Export.NONE,
@@ -598,8 +600,10 @@ class StructItem:
 
 
 class Generator:
-    def __init__(self, basename) -> None:
+    def __init__(self, basename, modules_map: Dict[str, str]) -> None:
         self.basename: str = basename
+        self.import_headers: list[str] = []
+        self.modules_map: Dict[str, str] = modules_map
         self.struct_objs: Dict[str, StructObj] = {}
         self.enum_objs: Dict[str, EnumObj] = {}
         self._env = Environment(
@@ -630,7 +634,39 @@ class Generator:
         template_c = self._env.get_template(os.path.basename("fu-rustgen-struct.c.in"))
         return template_c.render(subst), template_h.render(subst)
 
-    def process_input(self, contents: str) -> Tuple[str, str]:
+    def _use_import(self, where: str, module: str, what: str) -> None:
+
+        try:
+            fn = os.path.join(self.modules_map[where], f"fu-{module}.rs")
+        except KeyError:
+            raise ValueError(f"invalid module name: {where}")
+        child = Generator(self.basename, self.modules_map)
+        with open(fn, "rb") as f:
+            child._parse_input(f.read().decode())
+
+        # header includes
+        header_basename: str = f"fu-{module}-struct.h"
+        if header_basename not in self.import_headers:
+            self.import_headers.append(header_basename)
+
+        # is enum
+        if what in child.enum_objs:
+            enum_obj = child.enum_objs[what]
+            enum_obj.is_imported = True
+            self.enum_objs[what] = enum_obj
+            return
+
+        # is struct
+        if what in child.struct_objs:
+            struct_obj = child.struct_objs[what]
+            struct_obj.is_imported = True
+            self.struct_objs[what] = struct_obj
+            return
+
+        # not found
+        raise ValueError(f"invalid struct or enum name: {what}")
+
+    def _parse_input(self, contents: str) -> None:
         name = None
         repr_type: Optional[str] = None
         derives: List[str] = []
@@ -643,6 +679,11 @@ class Generator:
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
             line = line.replace("\t", "  ")
+
+            # import one file into another
+            if line.startswith("use "):
+                where, why, what = line[4:].split("::", maxsplit=3)
+                self._use_import(where, why, what)
 
             # remove comments and indent
             line = line.split("//")[0].strip()
@@ -763,21 +804,31 @@ class Generator:
                 bits_offset += item.bits_size
                 struct_cur.items.append(item)
 
+    def process_input(self, contents: str) -> Tuple[str, str]:
+
+        # parse input
+        self._parse_input(contents)
+
         # process the templates here
         subst = {
             "basename": self.basename,
             "enum_objs": self.enum_objs,
             "struct_objs": self.struct_objs,
+            "import_headers": self.import_headers,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
         dst_h = template_h.render(subst)
         dst_c = template_c.render(subst)
         for enum_obj in self.enum_objs.values():
+            if enum_obj.is_imported:
+                continue
             str_c, str_h = self._process_enums(enum_obj)
             dst_c += str_c
             dst_h += str_h
         for struct_obj in self.struct_objs.values():
+            if struct_obj.is_imported:
+                continue
             str_c, str_h = self._process_structs(struct_obj)
             dst_c += str_c
             dst_h += str_h
@@ -791,12 +842,24 @@ if __name__ == "__main__":
     parser.add_argument("src", action="store", type=str, help="source")
     parser.add_argument("dst_c", action="store", type=str, help="destination .c")
     parser.add_argument("dst_h", action="store", type=str, help="destination .h")
+    parser.add_argument("--use", action="append", default=[], help="module:path")
     args = parser.parse_args()
 
-    g = Generator(basename=os.path.basename(args.dst_h))
+    # parse map from module to path
+    modules_map: dict[str, str] = {}
+    for entry in args.use:
+        try:
+            split = entry.split(":", maxsplit=1)
+            modules_map[split[0]] = split[1]
+        except IndexError:
+            sys.exit(f"expected module:path, got {entry}")
+
+    g = Generator(basename=os.path.basename(args.dst_h), modules_map=modules_map)
     with open(args.src, "rb") as f:
         try:
-            dst_c, dst_h = g.process_input(f.read().decode())
+            dst_c, dst_h = g.process_input(
+                f.read().decode(),
+            )
         except ValueError as e:
             sys.exit(f"cannot process {args.src}: {str(e)}")
     with open(args.dst_c, "wb") as f:  # type: ignore

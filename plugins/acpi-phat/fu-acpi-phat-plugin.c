@@ -21,15 +21,13 @@ G_DEFINE_TYPE(FuAcpiPhatPlugin, fu_acpi_phat_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_acpi_phat_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) phat = fu_acpi_phat_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename(path, "PHAT", NULL);
+	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "PHAT", NULL);
 	blob = fu_bytes_get_contents(fn, &error_local);
 	if (blob == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {

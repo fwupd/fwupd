@@ -29,17 +29,6 @@ struct _FuElantpHidHapticDevice {
 
 G_DEFINE_TYPE(FuElantpHidHapticDevice, fu_elantp_hid_haptic_device, FU_TYPE_UDEV_DEVICE)
 
-static FuElantpHidDevice *
-fu_elantp_hid_haptic_device_get_parent(FuElantpHidHapticDevice *self, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent set");
-		return NULL;
-	}
-	return FU_ELANTP_HID_DEVICE(FU_UDEV_DEVICE(parent));
-}
-
 static gboolean
 fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 				   FuProgress *progress,
@@ -493,16 +482,14 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 	FuElantpHidDevice *parent;
-	FuUdevDevice *udev_parent;
 	guint8 ic_type;
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
 	g_autofree gchar *version_bl = NULL;
 
-	parent = fu_elantp_hid_haptic_device_get_parent(self, error);
+	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
-
 	if (!fu_elantp_hid_haptic_device_get_haptic_driver_ic(self, parent, error)) {
 		g_prefix_error_literal(error, "this module is not support haptic EEPROM: ");
 		return FALSE;
@@ -538,9 +525,8 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* define the extra instance IDs */
-	udev_parent = FU_UDEV_DEVICE(parent);
-	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(FU_DEVICE(udev_parent)));
-	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(FU_DEVICE(udev_parent)));
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(FU_DEVICE(parent)));
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(FU_DEVICE(parent)));
 	fu_device_add_instance_u16(device, "DRIVERIC", self->driver_ic);
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	if (!fu_device_build_instance_id(device,
@@ -661,7 +647,7 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* use parent */
-	parent = fu_elantp_hid_haptic_device_get_parent(self, error);
+	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
 
@@ -789,11 +775,6 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* use parent */
-	parent = fu_elantp_hid_haptic_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
-
 	/* detach */
 	if (!fu_elantp_hid_haptic_device_detach(self, fu_progress_get_child(progress), error))
 		return FALSE;
@@ -811,6 +792,9 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
+	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
 						   FU_ETP_CMD_I2C_EEPROM_SETTING,
 						   FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
@@ -910,11 +894,11 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 			    (guint)self->iap_ver);
 		return FALSE;
 	}
-	parent = fu_elantp_hid_haptic_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	/* get OSM version */
+	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_elantp_hid_haptic_device_read_cmd(parent,
 						  FU_ETP_CMD_I2C_OSM_VERSION,
 						  buf,
@@ -1030,11 +1014,10 @@ fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GErro
 	FuElantpHidDevice *parent;
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 
-	parent = fu_elantp_hid_haptic_device_get_parent(self, error);
+	/* reset back to runtime */
+	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
-
-	/* reset back to runtime */
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
 						   FU_ETP_CMD_I2C_IAP_RESET,
 						   ETP_I2C_IAP_RESET,

@@ -15,7 +15,7 @@ struct _FuRts54hubDevice {
 	gboolean fw_auth;
 	gboolean dual_bank;
 	gboolean running_on_flash;
-	guint8 vendor_cmd;
+	FuRts54hubVendorCmd vendor_cmd;
 	guint64 block_sz;
 };
 
@@ -34,19 +34,16 @@ G_DEFINE_TYPE(FuRts54hubDevice, fu_rts54hub_device, FU_TYPE_USB_DEVICE)
 
 #define FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED "not-supported"
 
-typedef enum {
-	FU_RTS54HUB_VENDOR_CMD_NONE = 0x00,
-	FU_RTS54HUB_VENDOR_CMD_STATUS = 1 << 0,
-	FU_RTS54HUB_VENDOR_CMD_FLASH = 1 << 1,
-} FuRts54hubVendorCmd;
-
 static void
 fu_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
+	g_autofree gchar *vendor_cmd = fu_rts54hub_vendor_cmd_to_string(self->vendor_cmd);
 	fwupd_codec_string_append_bool(str, idt, "FwAuth", self->fw_auth);
 	fwupd_codec_string_append_bool(str, idt, "DualBank", self->dual_bank);
 	fwupd_codec_string_append_bool(str, idt, "RunningOnFlash", self->running_on_flash);
+	fwupd_codec_string_append(str, idt, "VendorCmd", vendor_cmd);
+	fwupd_codec_string_append_int(str, idt, "BlockSz", self->block_sz);
 }
 
 static gboolean
@@ -324,30 +321,33 @@ fu_rts54hub_device_erase_flash(FuRts54hubDevice *self, guint8 erase_type, GError
 }
 
 gboolean
-fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self, guint8 value, GError **error)
+fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self,
+			      FuRts54hubVendorCmd vendor_cmd,
+			      GError **error)
 {
 	/* don't set something that's already set */
-	if (self->vendor_cmd == value) {
-		g_debug("skipping vendor command 0x%02x as already set", value);
+	if (self->vendor_cmd == vendor_cmd) {
+		g_debug("skipping vendor command 0x%02x as already set", vendor_cmd);
 		return TRUE;
 	}
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
-					    0x02,   /* request */
-					    value,  /* value */
-					    0x0bda, /* idx */
+					    0x02,	/* request */
+					    vendor_cmd, /* value */
+					    0x0bda,	/* idx */
 					    NULL,
 					    0,	  /* data */
 					    NULL, /* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to issue vendor cmd 0x%02x: ", value);
+		g_autofree gchar *str = fu_rts54hub_vendor_cmd_to_string(vendor_cmd);
+		g_prefix_error(error, "failed to issue vendor cmd %s: ", str);
 		return FALSE;
 	}
-	self->vendor_cmd = value;
+	self->vendor_cmd = vendor_cmd;
 	return TRUE;
 }
 
@@ -400,7 +400,7 @@ fu_rts54hub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* check this device is correct */
-	if (!fu_rts54hub_device_vendor_cmd(self, FU_RTS54HUB_VENDOR_CMD_STATUS, error)) {
+	if (!fu_rts54hub_device_vendor_cmd(self, FU_RTS54HUB_VENDOR_CMD_ENABLE, error)) {
 		g_prefix_error_literal(error, "failed to vendor enable: ");
 		return FALSE;
 	}
@@ -470,8 +470,8 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 
 	/* enable vendor commands */
 	if (!fu_rts54hub_device_vendor_cmd(self,
-					   FU_RTS54HUB_VENDOR_CMD_STATUS |
-					       FU_RTS54HUB_VENDOR_CMD_FLASH,
+					   FU_RTS54HUB_VENDOR_CMD_ENABLE |
+					       FU_RTS54HUB_VENDOR_CMD_ACCESS_FLASH,
 					   error)) {
 		g_prefix_error_literal(error, "failed to cmd enable: ");
 		return FALSE;

@@ -99,21 +99,6 @@ fu_synaptics_rmi_function_parse(GByteArray *buf,
 }
 
 gboolean
-fu_synaptics_rmi_device_writeln(const gchar *fn, const gchar *buf, GError **error)
-{
-	g_autoptr(FuIOChannel) io = NULL;
-	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
-	if (io == NULL)
-		return FALSE;
-	return fu_io_channel_write_raw(io,
-				       (const guint8 *)buf,
-				       strlen(buf),
-				       1000,
-				       FU_IO_CHANNEL_FLAG_NONE,
-				       error);
-}
-
-gboolean
 fu_synaptics_rmi_verify_sha256_signature(GBytes *payload,
 					 GBytes *pubkey,
 					 GBytes *signature,

@@ -46,7 +46,9 @@ fu_dell_dock_status_setup(FuDevice *device, GError **error)
 	guint32 status_version;
 	g_autofree gchar *dynamic_version = NULL;
 
-	parent = fu_device_get_parent(device);
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	status_version = fu_dell_dock_ec_get_status_version(FU_DELL_DOCK_EC(parent));
 
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
@@ -64,6 +66,7 @@ fu_dell_dock_status_write(FuDevice *device,
 			  GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
+	FuDellDockEc *proxy;
 	gsize length = 0;
 	guint32 status_version = 0;
 	const guint8 *data;
@@ -90,9 +93,10 @@ fu_dell_dock_status_write(FuDevice *device,
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	g_info("writing status firmware version %s", dynamic_version);
 
-	if (!fu_dell_dock_ec_commit_package(FU_DELL_DOCK_EC(fu_device_get_proxy(device)),
-					    fw,
-					    error))
+	proxy = FU_DELL_DOCK_EC(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_ec_commit_package(proxy, fw, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
@@ -128,24 +132,26 @@ fu_dell_dock_status_probe(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_status_open(FuDevice *device, GError **error)
 {
-	if (fu_device_get_proxy(device) == NULL) {
-		if (fu_device_get_parent(device) == NULL) {
-			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+	FuDevice *proxy;
+
+	proxy = fu_device_get_proxy(device, NULL);
+	if (proxy == NULL) {
+		proxy = fu_device_get_parent(device, error);
+		if (proxy == NULL)
 			return FALSE;
-		}
-		fu_device_set_proxy(device, fu_device_get_parent(device));
+		fu_device_set_proxy(device, proxy);
 	}
-	return fu_device_open(fu_device_get_proxy(device), error);
+	return fu_device_open(proxy, error);
 }
 
 static gboolean
 fu_dell_dock_status_close(FuDevice *device, GError **error)
 {
-	if (fu_device_get_proxy(device) == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no proxy");
+	FuDevice *proxy;
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
-	return fu_device_close(fu_device_get_proxy(device), error);
+	return fu_device_close(proxy, error);
 }
 
 static gboolean
@@ -188,6 +194,7 @@ fu_dell_dock_status_init(FuDellDockStatus *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_HID_DEVICE);
 }
 
 static void

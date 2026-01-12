@@ -637,6 +637,15 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
+    def _test_blocked_goto(self, node: Node) -> None:
+        idx = node.tokens.find_fuzzy(["goto"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            self.add_failure(
+                f"do not use goto, refactor into a new block",
+                linecnt=token.linecnt,
+            )
+
     def _test_device_display(self, node: Node) -> None:
         """use fu_device_get_id_display rather than the two different commands"""
 
@@ -1261,6 +1270,7 @@ class Checker:
             self._current_nocheck = "nocheck:blocked"
             if self._should_process_node(node):
                 self._test_blocked_funcs(node)
+                self._test_blocked_goto(node)
                 self._test_device_display(node)
                 self._test_equals_true(node)
 

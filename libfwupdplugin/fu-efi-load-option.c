@@ -617,7 +617,7 @@ fu_efi_load_option_class_init(FuEfiLoadOptionClass *klass)
 static void
 fu_efi_load_option_init(FuEfiLoadOption *self)
 {
-	self->attrs = FU_EFI_LOAD_OPTION_ATTRS_ACTIVE;
+	self->attrs = FU_EFI_LOAD_OPTION_ATTR_ACTIVE;
 	self->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	g_type_ensure(FU_TYPE_EFI_DEVICE_PATH_LIST);
 }

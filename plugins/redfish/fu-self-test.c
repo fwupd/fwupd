@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #ifdef HAVE_LINUX_IPMI_H
@@ -41,6 +42,7 @@ fu_test_self_init(FuTest *self)
 	g_assert_true(ret);
 
 	/* load the config file */
+	fu_config_set_basename(fu_context_get_config(ctx), "redfish-fwupd.conf");
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

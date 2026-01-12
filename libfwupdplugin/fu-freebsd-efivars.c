@@ -100,7 +100,7 @@ fu_freebsd_efivars_get_data(FuEfivars *efivars,
 			    const gchar *name,
 			    guint8 **data,
 			    gsize *data_sz,
-			    guint32 *attr,
+			    FuEfiVariableAttrs *attr,
 			    GError **error)
 {
 	efi_guid_t guidt;
@@ -176,7 +176,7 @@ fu_freebsd_efivars_set_data(FuEfivars *efivars,
 			    const gchar *name,
 			    const guint8 *data,
 			    gsize sz,
-			    guint32 attr,
+			    FuEfiVariableAttrs attr,
 			    GError **error)
 {
 	efi_guid_t guidt;

@@ -1,0 +1,17 @@
+{
+  "name": "UGREEN 15765A",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/ugreen-15765a-setup.json",
+      "components": [
+        {
+          "version": "1.0.1",
+          "guids": [
+            "ea64faca-1a31-5b76-9d03-c9455c962b4c"
+          ]
+        }
+      ]
+    }
+  ]
+}

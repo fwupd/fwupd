@@ -853,6 +853,28 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.15
  */
 #define FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX "parent-name-prefix"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT:
+ *
+ * Allow the device version to be specified as an integer in the release XML.
+ *
+ * NOTE: This has only ever been a best-effort fallback for ESRT-derived UEFI devices.
+ *
+ * Since: 2.0.18
+ */
+#define FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT "lazy-verfmt"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED:
+ *
+ * Allow the device version to be unset.
+ *
+ * NOTE: This should only be used when writing to "raw" CFI devices, such as standalone SPI
+ * programmers such as CH341A. CFI devices should be used as a proxy devices rather than
+ * installable targets in most fwupd plugins.
+ *
+ * Since: 2.0.18
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
 
 /* standard icons */
 
@@ -1133,7 +1155,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 FuDevice *
 fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_device_get_parent(FuDevice *self) G_GNUC_NON_NULL(1);
+fu_device_get_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -1155,7 +1177,7 @@ fu_device_add_parent_physical_id(FuDevice *self, const gchar *physical_id) G_GNU
 void
 fu_device_add_parent_backend_id(FuDevice *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2);
 FuDevice *
-fu_device_get_proxy(FuDevice *self) G_GNUC_NON_NULL(1);
+fu_device_get_proxy(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 void
 fu_device_set_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -1297,6 +1319,8 @@ GType
 fu_device_get_specialized_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_proxy_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_proxy_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_firmware_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 void

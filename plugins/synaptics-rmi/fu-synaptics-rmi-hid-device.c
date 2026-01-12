@@ -67,7 +67,6 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				 GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
@@ -93,25 +92,26 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 	/* request */
 	for (guint j = req->len; j < 21; j++)
 		fu_byte_array_append_uint8(req, 0x0);
+
 	fu_dump_full(G_LOG_DOMAIN, "ReportWrite", req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
-	if (!fu_io_channel_write_byte_array(io_channel,
-					    req,
-					    RMI_DEVICE_DEFAULT_TIMEOUT,
-					    FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-						FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					    error))
+	if (!fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
+					     req,
+					     RMI_DEVICE_DEFAULT_TIMEOUT,
+					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
+						 FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+					     error))
 		return NULL;
 
 	/* keep reading responses until we get enough data */
 	while (buf->len < req_sz) {
 		guint8 input_count_sz = 0;
 		g_autoptr(GByteArray) res = NULL;
-		res = fu_io_channel_read_byte_array(io_channel,
-						    req_sz + HID_RMI4_REPORT_ID_SIZE +
-							HID_RMI4_DATA_LENGTH_SIZE,
-						    RMI_DEVICE_DEFAULT_TIMEOUT,
-						    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-						    error);
+		res = fu_udev_device_read_byte_array(FU_UDEV_DEVICE(self),
+						     req_sz + HID_RMI4_REPORT_ID_SIZE +
+							 HID_RMI4_DATA_LENGTH_SIZE,
+						     RMI_DEVICE_DEFAULT_TIMEOUT,
+						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						     error);
 		if (res == NULL)
 			return NULL;
 		if (res->len == 0) {
@@ -182,7 +182,6 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 				  GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint8 len = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -216,12 +215,12 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 		fu_byte_array_append_uint8(buf, 0x0);
 	fu_dump_full(G_LOG_DOMAIN, "DeviceWrite", buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 
-	return fu_io_channel_write_byte_array(io_channel,
-					      buf,
-					      RMI_DEVICE_DEFAULT_TIMEOUT,
-					      FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-						  FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					      error);
+	return fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
+					       buf,
+					       RMI_DEVICE_DEFAULT_TIMEOUT,
+					       FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
+						   FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+					       error);
 }
 
 static gboolean
@@ -231,7 +230,6 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 					  GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* wait for event from hardware */
@@ -240,11 +238,11 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 		g_autoptr(GError) error_local = NULL;
 
 		/* read from fd */
-		res = fu_io_channel_read_byte_array(io_channel,
-						    HID_RMI4_ATTN_INTERRUPT_SOURCES + 1,
-						    timeout_ms,
-						    FU_IO_CHANNEL_FLAG_NONE,
-						    &error_local);
+		res = fu_udev_device_read_byte_array(FU_UDEV_DEVICE(self),
+						     HID_RMI4_ATTN_INTERRUPT_SOURCES + 1,
+						     timeout_ms,
+						     FU_IO_CHANNEL_FLAG_NONE,
+						     &error_local);
 		if (res == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
 				break;
@@ -349,14 +347,8 @@ fu_synaptics_rmi_hid_device_close(FuDevice *device, GError **error)
 static gboolean
 fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **error)
 {
-	const gchar *hid_id;
-	const gchar *driver;
-	const gchar *subsystem;
-	g_autofree gchar *fn_rebind = NULL;
-	g_autofree gchar *fn_unbind = NULL;
 	g_autoptr(FuDevice) parent_hid = NULL;
 	g_autoptr(FuUdevDevice) parent_phys = NULL;
-	g_auto(GStrv) hid_strs = NULL;
 
 	/* get actual HID node */
 	parent_hid = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "hid", error);
@@ -378,31 +370,35 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(parent_hid)));
 		return FALSE;
 	}
-
-	/* find the physical ID to use for the rebind */
-	hid_strs = g_strsplit(fu_udev_device_get_sysfs_path(parent_phys), "/", -1);
-	hid_id = hid_strs[g_strv_length(hid_strs) - 1];
-	if (hid_id == NULL) {
+	if (!fu_device_probe(FU_DEVICE(parent_phys), error)) {
+		g_prefix_error_literal(error, "failed to probe parent: ");
+		return FALSE;
+	}
+	if (fu_udev_device_get_subsystem(parent_phys) == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no HID_PHYS in %s",
-			    fu_udev_device_get_sysfs_path(parent_phys));
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent subsystem for %s",
+			    fu_device_get_id_display(FU_DEVICE(parent_phys)));
+		return FALSE;
+	}
+	if (fu_udev_device_get_driver(parent_phys) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent driver for %s",
+			    fu_device_get_id_display(FU_DEVICE(parent_phys)));
 		return FALSE;
 	}
 
-	g_debug("HID_PHYS: %s", hid_id);
-
-	driver = fu_udev_device_get_driver(parent_phys);
-	subsystem = fu_udev_device_get_subsystem(parent_phys);
-	fn_rebind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "bind", NULL);
-	fn_unbind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "unbind", NULL);
-
 	/* unbind hidraw, then bind it again to get a replug */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	if (!fu_synaptics_rmi_device_writeln(fn_unbind, hid_id, error))
+	if (!fu_device_unbind_driver(FU_DEVICE(parent_phys), error))
 		return FALSE;
-	if (!fu_synaptics_rmi_device_writeln(fn_rebind, hid_id, error))
+	if (!fu_device_bind_driver(FU_DEVICE(parent_phys),
+				   fu_udev_device_get_subsystem(parent_phys),
+				   fu_udev_device_get_driver(parent_phys),
+				   error))
 		return FALSE;
 
 	/* success */

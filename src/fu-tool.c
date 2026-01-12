@@ -60,6 +60,7 @@ struct FuUtil {
 	GMainLoop *loop;
 	GOptionContext *context;
 	FuContext *ctx;
+	GSource *source_sigint;
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgress *progress;
@@ -165,8 +166,7 @@ fu_util_lock(FuUtil *self, GError **error)
 	if (use_user) {
 		lockfn = fu_util_get_user_cache_path("fwupdtool");
 	} else {
-		g_autofree gchar *lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
-		lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+		lockfn = fu_path_build(FU_PATH_KIND_LOCKDIR, "fwupdtool", NULL);
 	}
 	if (!fu_path_mkdir_parent(lockfn, error))
 		return FALSE;
@@ -321,13 +321,34 @@ fu_util_sigint_cb(gpointer user_data)
 #endif
 
 static void
-fu_util_setup_signal_handlers(FuUtil *self)
+fu_util_handle_sigint_start(FuUtil *self)
 {
 #ifdef HAVE_GIO_UNIX
-	g_autoptr(GSource) source = g_unix_signal_source_new(SIGINT);
-	g_source_set_callback(source, fu_util_sigint_cb, self, NULL);
-	g_source_attach(g_steal_pointer(&source), self->main_ctx);
+	if (self->source_sigint != NULL)
+		return;
+	self->source_sigint = g_unix_signal_source_new(SIGINT);
+	g_source_set_callback(self->source_sigint, fu_util_sigint_cb, self, NULL);
+	g_source_attach(self->source_sigint, self->main_ctx);
 #endif
+}
+
+static void
+fu_util_handle_sigint_stop(FuUtil *self)
+{
+	if (self->source_sigint == NULL)
+		return;
+	g_source_destroy(self->source_sigint);
+	self->source_sigint = NULL;
+}
+
+static void
+fu_util_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuUtil *self)
+{
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
+		fu_util_handle_sigint_start(self);
+	} else {
+		fu_util_handle_sigint_stop(self);
+	}
 }
 
 static void
@@ -355,6 +376,8 @@ fu_util_private_free(FuUtil *self)
 		g_object_unref(self->progress);
 	if (self->context != NULL)
 		g_option_context_free(self->context);
+	if (self->source_sigint != NULL)
+		g_source_destroy(self->source_sigint);
 	if (self->lock_fd >= 0)
 		g_close(self->lock_fd, NULL);
 	g_ptr_array_unref(self->post_requests);
@@ -868,7 +891,7 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FuDev
 			continue;
 		if (!self->show_all && !fu_util_is_interesting_device(devs, FWUPD_DEVICE(dev_tmp)))
 			continue;
-		if (fu_device_get_parent(dev_tmp) == dev) {
+		if (fu_device_get_parent_internal(dev_tmp) == dev) {
 			FuUtilNode *child = g_node_append_data(root, g_object_ref(dev_tmp));
 			fu_util_build_device_tree(self, child, devs, dev_tmp);
 		}
@@ -1769,11 +1792,10 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		}
 	}
 	if (devices_pending->len > 0 && !self->as_json) {
-		fu_console_print_literal(
-		    self->console,
-		    /* TRANSLATORS: message letting the user there is an update
-		     * waiting, but there is a reason it cannot be deployed */
-		    _("Devices with firmware updates that need user action:"));
+		fu_console_print_literal(self->console,
+					 /* TRANSLATORS: message letting the user there is an update
+					  * waiting, but there is a reason it cannot be deployed */
+					 _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -3128,7 +3150,7 @@ fu_util_firmware_parse(FuUtil *self, gchar **values, GError **error)
 
 	/* does firmware specify an internal size */
 	firmware = g_object_new(gtype, NULL);
-	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_STORED_SIZE)) {
+	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_ALLOW_LINEAR)) {
 		g_autoptr(FuFirmware) firmware_linear = fu_linear_firmware_new(gtype);
 		g_autoptr(GPtrArray) imgs = NULL;
 		if (!fu_firmware_parse_stream(firmware_linear,
@@ -5967,7 +5989,6 @@ main(int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();
-	fu_util_setup_signal_handlers(self);
 	g_signal_connect(G_CANCELLABLE(self->cancellable),
 			 "cancelled",
 			 G_CALLBACK(fu_util_cancelled_cb),
@@ -6080,6 +6101,10 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	self->ctx = fu_context_new();
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::flags",
+			 G_CALLBACK(fu_util_context_flags_notify_cb),
+			 self);
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),

@@ -33,6 +33,20 @@ enum FuSynapticsVmm9RcCtrl {
     MemoryReadBusy = 0x80|0x31,
 }
 
+enum FuSynapticsVmm9MemOffset {
+    ChipSerial          = 0x20200D3C, // 0x4 bytes, %02x
+    RcTrigger           = 0x2020A024, // write 0xF5000000 to reset
+    McuBootloaderSts    = 0x2020A030, // bootloader status
+    McuFwVersion        = 0x2020A038, // 0x4 bytes, maj.min.mic.?
+    FirmwareBuild       = 0x2020A084, // 0x4 bytes, be
+    RcCommand           = 0x2020B000,
+    RcOffset            = 0x2020B004,
+    RcLength            = 0x2020B008,
+    RcData              = 0x2020B010, // until 0x2020B02C
+    FirmwareName        = 0x90000230, // 0xF bytes, ASCII
+    BoardId             = 0x9000014E, // 0x2 bytes, customer.hardware
+}
+
 #[derive(ToString)]
 #[repr(u8)]
 enum FuSynapticsVmm9RcSts {

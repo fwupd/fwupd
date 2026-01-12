@@ -24,11 +24,15 @@ static gboolean
 fu_redfish_hpe_device_attach(FuDevice *dev, FuProgress *progress, GError **error)
 {
 	FuRedfishHpeDevice *self = FU_REDFISH_HPE_DEVICE(dev);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	JsonObject *json_obj;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 
 	/* create URI and poll */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend);
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/UpdateService",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -87,12 +91,16 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 				     FuRedfishHpeDevicePollCtx *ctx,
 				     GError **error)
 {
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	JsonObject *json_obj;
 	const gchar *message = "Unknown failure";
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 
 	/* create URI and poll */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend);
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/UpdateService",
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -196,7 +204,7 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuRedfishHpeDevice *self = FU_REDFISH_HPE_DEVICE(device);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	CURL *curl;
 	const gchar *sessionkey;
 	curl_mimepart *part;
@@ -223,6 +231,9 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82, NULL);
 
 	/* create session */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
 	if (!fu_redfish_backend_create_session(backend, error))
 		return FALSE;
 	sessionkey = fu_redfish_backend_get_session_key(backend);

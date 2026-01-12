@@ -339,6 +339,15 @@ fu_emmc_device_prepare_firmware(FuDevice *device,
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
+	/* sanity check */
+	if (self->sect_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sector size invalid");
+		return NULL;
+	}
+
 	/* check alignment */
 	if (fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;

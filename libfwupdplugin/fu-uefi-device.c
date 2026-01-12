@@ -102,7 +102,7 @@ fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
 				const gchar *guid,
 				const gchar *name,
 				GBytes *bytes,
-				guint32 attr,
+				FuEfiVariableAttrs attr,
 				GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
@@ -156,7 +156,7 @@ fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
  * @self: a #FuUefiDevice
  * @guid: Globally unique identifier
  * @name: Variable name
- * @attr: (nullable): Attributes
+ * @attr: (nullable) (out): #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
  * @error: (nullable): optional return location for an error
  *
  * Gets the data from a UEFI variable in NVRAM, emulating if required.
@@ -169,7 +169,7 @@ GBytes *
 fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
 				const gchar *guid,
 				const gchar *name,
-				guint32 *attr,
+				FuEfiVariableAttrs *attr,
 				GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
@@ -199,7 +199,7 @@ fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
 			guint64 tmp = fu_device_event_get_i64(event, "Attr", error);
 			if (tmp == G_MAXINT64)
 				return NULL;
-			*attr = (guint32)tmp;
+			*attr = (FuEfiVariableAttrs)tmp;
 		}
 		return fu_device_event_get_bytes(event, "Data", error);
 	}
@@ -213,7 +213,7 @@ fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
 	if (blob == NULL)
 		return NULL;
 	if (attr != NULL)
-		*attr = attr_tmp;
+		*attr = (FuEfiVariableAttrs)attr_tmp;
 
 	/* save response */
 	if (event != NULL) {

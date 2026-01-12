@@ -12,7 +12,7 @@
 #include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-struct.h"
 
-#define FU_ILITEK_ITS_HID_ACK_BYTE	  0xAC
+#define FU_ILITEK_ITS_HID_ACK_BYTE 0xAC
 
 #define FU_ILITEK_ITS_LOOKUP_TYPE_EDID	    0x1
 #define FU_ILITEK_ITS_LOOKUP_TYPE_SENSOR_ID 0x2

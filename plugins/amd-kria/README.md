@@ -33,11 +33,3 @@ in <https://xilinx.github.io/kria-apps-docs/bootfw/build/html/docs/bootfw_overvi
 ## Quirks
 
 * `AmdKriaEepromAddr` represents the I2C address for the SoM EEPROM
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Mario Limonciello: @superm1
-* Michal Simek @michalsimek

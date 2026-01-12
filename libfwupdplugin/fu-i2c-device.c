@@ -154,11 +154,11 @@ fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GEr
 
 	if (!fu_ioctl_execute(ioctl,
 			      force ? I2C_SLAVE_FORCE : I2C_SLAVE,
-			      (guint8 *)(guintptr)address,
-			      sizeof(guintptr),
+			      GUINT_TO_POINTER(address),
+			      sizeof(guint32),
 			      NULL,
 			      FU_I2C_DEVICE_IOCTL_TIMEOUT,
-			      FU_IOCTL_FLAG_NONE,
+			      FU_IOCTL_FLAG_PTR_AS_INTEGER,
 			      error)) {
 		g_prefix_error(error, "failed to set address 0x%02x: ", address);
 		return FALSE;

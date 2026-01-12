@@ -27,7 +27,7 @@ typedef enum {
 	FU_ARCHIVE_FLAG_IGNORE_PATH = 1 << 0,
 	/*< private >*/
 	FU_ARCHIVE_FLAG_LAST
-} FuArchiveFlags;
+} G_GNUC_FLAG_ENUM FuArchiveFlags;
 
 /**
  * FuArchiveIterateFunc:

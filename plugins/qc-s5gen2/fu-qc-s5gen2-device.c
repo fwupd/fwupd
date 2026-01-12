@@ -39,11 +39,9 @@ fu_qc_s5gen2_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_qc_s5gen2_device_msg_out(FuQcS5gen2Device *self, guint8 *data, gsize data_len, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	return fu_qc_s5gen2_impl_msg_out(FU_QC_S5GEN2_IMPL(proxy), data, data_len, error);
 }
 
@@ -54,14 +52,13 @@ fu_qc_s5gen2_device_msg_in(FuQcS5gen2Device *self,
 			   gsize *read_len,
 			   GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	g_autoptr(FuStructQcErrorInd) st_err = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	if (!fu_qc_s5gen2_impl_msg_in(FU_QC_S5GEN2_IMPL(proxy), buf, bufsz, read_len, error))
 		return FALSE;
 
@@ -103,22 +100,18 @@ fu_qc_s5gen2_device_msg_in(FuQcS5gen2Device *self,
 static gboolean
 fu_qc_s5gen2_device_cmd_req_disconnect(FuQcS5gen2Device *self, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	return fu_qc_s5gen2_impl_req_disconnect(FU_QC_S5GEN2_IMPL(proxy), error);
 }
 
 static gboolean
 fu_qc_s5gen2_device_cmd_req_connect(FuQcS5gen2Device *self, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	return fu_qc_s5gen2_impl_req_connect(FU_QC_S5GEN2_IMPL(proxy), error);
 }
 
@@ -126,11 +119,9 @@ fu_qc_s5gen2_device_cmd_req_connect(FuQcS5gen2Device *self, GError **error)
 static gboolean
 fu_qc_s5gen2_device_data_size(FuQcS5gen2Device *self, gsize *data_sz, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	return fu_qc_s5gen2_impl_data_size(FU_QC_S5GEN2_IMPL(proxy), data_sz, error);
 }
 
@@ -699,9 +690,7 @@ fu_qc_s5gen2_device_write_firmware(FuDevice *device,
 		g_autoptr(GError) error_local = NULL;
 
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		fu_qc_s5gen2_device_cmd_transfer_complete(self, &error_local);
-
-		if (error_local != NULL)
+		if (!fu_qc_s5gen2_device_cmd_transfer_complete(self, &error_local))
 			g_debug("expected error during auto reboot: %s", error_local->message);
 
 		self->resume_point = FU_QC_RESUME_POINT_POST_REBOOT;
@@ -737,6 +726,7 @@ fu_qc_s5gen2_device_init(FuQcS5gen2Device *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_QC_S5GEN2_DEVICE_REMOVE_DELAY);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_QC_S5GEN2_IMPL);
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.s5gen2");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
