@@ -38,7 +38,7 @@ typedef struct {
 	guint16 pattern;		 /* IMG info pattern */
 	guint16 version;		 /* IMG version */
 	FuSunwinonDfuBootInfo boot_info; /* IMG boot info */
-	guint8 comments[19];		 /* IMG comments */
+	guint8 comments[11];		 /* IMG comments */
 } FuSunwinonDfuImageInfo;
 
 /**@brief DFU master used function config definition */

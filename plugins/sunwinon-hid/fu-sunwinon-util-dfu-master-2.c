@@ -272,6 +272,7 @@ fu_sunwinon_util_dfu_master_2_recv_frame(FuSwDfuMaster *self,
 	buf_len = recv_frame->data_len;
 
 	st_in = fu_struct_sunwinon_hid_in_v2_new();
+	memset(st_in->buf->data, 0, st_in->buf->len);
 	/* may not get a full length report here */
 	(void)fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self->device),
 					  st_in->buf->data,

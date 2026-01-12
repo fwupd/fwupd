@@ -59,7 +59,8 @@ struct FuStructSunwinonDfuRspFwInfoGet {
     ack_status: FuSunwinonDfuAck,
     dfu_save_addr: u32le,
     run_position: u8, // currently unused
-    image_info_raw: [u8; 48],
+    image_info_raw: [u8; 40],
+    padding: [u8; 8],
 }
 
 // legacy code below
