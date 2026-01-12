@@ -341,13 +341,9 @@ fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
 	}
 
 	dfu_master = fu_sunwinon_util_dfu_master_2_new(fw, fw_sz, device); /* TODO: implement */
-	if (!fu_sunwinon_util_dfu_master_2_start(dfu_master,
-						 progress,
-						 FU_SUNWINON_FAST_DFU_MODE_DISABLE,
-						 error)) /* TODO: implement */
-		return FALSE;
 	if (!fu_sunwinon_util_dfu_master_2_write_firmware(dfu_master,
 							  progress,
+							  FU_SUNWINON_FAST_DFU_MODE_DISABLE,
 							  error)) /* TODO: implement */
 		return FALSE;
 	return TRUE;
@@ -463,6 +459,7 @@ fu_sunwinon_hid_device_class_init(FuSunwinonHidDeviceClass *klass)
 	device_class->probe = fu_sunwinon_hid_device_probe;
 	device_class->setup = fu_sunwinon_hid_device_setup;
 	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware_2;
-	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware; /* TODO: remove */
+	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware;
+	/* device_class->write_firmware = fu_sunwinon_hid_device_write_firmware; TODO: remove */
 	device_class->set_progress = fu_sunwinon_hid_device_set_progress;
 }

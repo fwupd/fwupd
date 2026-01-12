@@ -59,7 +59,7 @@ fu_sunwinon_util_dfu_master_2_check_fw_available(FuSwDfuMaster *self, GError **e
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid firmware blob");
+				    "sunwinon-hid: invalid firmware blob");
 		return FALSE;
 	}
 	return TRUE;
@@ -67,13 +67,13 @@ fu_sunwinon_util_dfu_master_2_check_fw_available(FuSwDfuMaster *self, GError **e
 
 static gboolean
 fu_sunwinon_util_dfu_master_2_dfu_get_img_info(FuSwDfuMaster *self,
-					       FuSunwinonDfuImageInfo *img_info,
+					       FuSunwinonDfuImageInfo *image_info,
 					       GError **error)
 {
 	if (!fu_sunwinon_util_dfu_master_2_check_fw_available(self, error))
 		return FALSE;
 	/* fw info stored near the tail of blob */
-	return fu_memcpy_safe((guint8 *)img_info,
+	return fu_memcpy_safe((guint8 *)image_info,
 			      sizeof(FuSunwinonDfuImageInfo),
 			      0,
 			      self->fw,
@@ -156,6 +156,7 @@ guint8 progress)
 	}
 }
 */
+
 static gboolean
 fu_sunwinon_util_dfu_master_2_parse_and_progress(FuSwDfuMaster *self,
 						 guint16 cmd_type,
@@ -224,7 +225,7 @@ fu_sunwinon_util_dfu_master_2_send_frame(FuSwDfuMaster *self,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "data length exceeds maximum report size");
+				    "sunwinon-hid: data length exceeds maximum report size");
 		return FALSE;
 	}
 
@@ -241,7 +242,6 @@ fu_sunwinon_util_dfu_master_2_send_frame(FuSwDfuMaster *self,
 
 	/* write check_sum at the very end of the whole data package */
 	check_sum = fu_sunwinon_util_dfu_master_2_cal_send_check_sum(cmd_type, p_data, len);
-	g_debug("total_len: 0x%zx, check_sum: 0x%04X", total_len, check_sum);
 	fu_memwrite_uint16(st_out->buf->data + FU_STRUCT_SUNWINON_HID_OUT_V2_OFFSET_DATA + len,
 			   check_sum,
 			   G_LITTLE_ENDIAN);
@@ -307,10 +307,225 @@ fu_sunwinon_util_dfu_master_2_recv_frame(FuSwDfuMaster *self,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "received frame check sum mismatch");
+				    "sunwinon-hid: received frame check sum mismatch");
 		return FALSE;
 	}
 
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(FuSwDfuMaster *self,
+						  FuDfuReceiveFrame *recv_frame,
+						  FuSunwinonDfuCmd expected_cmd,
+						  GError **error)
+{
+	if (recv_frame->cmd_type != expected_cmd) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
+		    "sunwinon-hid: unexpected command type in response, expected %s, got %s",
+		    fu_sunwinon_dfu_cmd_to_string(expected_cmd),
+		    fu_sunwinon_dfu_cmd_to_string(recv_frame->cmd_type));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_emit_ack_failure(FuSunwinonDfuCmd cmd_type, GError **error)
+{
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
+		    "sunwinon-hid: command %s not acked successfully",
+		    fu_sunwinon_dfu_cmd_to_string(cmd_type));
+	return FALSE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_get_info(FuSwDfuMaster *self, GError **error)
+{
+	FuDfuReceiveFrame recv_frame = {0};
+	g_autoptr(FuStructSunwinonDfuRspGetInfo) st_get_info = NULL;
+
+	g_debug("GetInfo");
+
+	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+						      NULL,
+						      0,
+						      FU_SUNWINON_DFU_CMD_GET_INFO,
+						      error))
+		return FALSE;
+
+	st_get_info = fu_struct_sunwinon_dfu_rsp_get_info_new();
+	recv_frame.data = st_get_info->buf->data;
+	recv_frame.data_len = st_get_info->buf->len;
+
+	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
+							       &recv_frame,
+							       FU_SUNWINON_DFU_CMD_GET_INFO,
+							       error))
+		return FALSE;
+	if (!fu_struct_sunwinon_dfu_rsp_get_info_validate(st_get_info->buf->data,
+							  st_get_info->buf->len,
+							  0,
+							  error))
+		return FALSE;
+	if (fu_struct_sunwinon_dfu_rsp_get_info_get_ack_status(st_get_info) !=
+	    FU_SUNWINON_DFU_ACK_SUCCESS)
+		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(FU_SUNWINON_DFU_CMD_GET_INFO,
+								      error);
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
+					  FuSunwinonDfuBootInfo *boot_info,
+					  GError **error)
+{
+	FuDfuReceiveFrame recv_frame = {0};
+	g_autoptr(FuStructSunwinonDfuPayloadSystemInfo) st_sys_info_payload = NULL;
+	g_autoptr(FuStructSunwinonDfuRspSystemInfo) st_sys_info = NULL;
+
+	g_return_val_if_fail(boot_info != NULL, FALSE);
+
+	g_debug("SystemInfo");
+
+	st_sys_info_payload = fu_struct_sunwinon_dfu_payload_system_info_new();
+	fu_struct_sunwinon_dfu_payload_system_info_set_flash_start_addr(
+	    st_sys_info_payload,
+	    FU_SUNWINON_DFU_CONFIG_PERIPHERAL_FLASH_START_ADDR);
+	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+						      st_sys_info_payload->buf->data,
+						      st_sys_info_payload->buf->len,
+						      FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
+						      error))
+		return FALSE;
+
+	st_sys_info = fu_struct_sunwinon_dfu_rsp_system_info_new();
+	recv_frame.data = st_sys_info->buf->data;
+	recv_frame.data_len = st_sys_info->buf->len;
+
+	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
+							       &recv_frame,
+							       FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
+							       error))
+		return FALSE;
+	if (!fu_struct_sunwinon_dfu_rsp_system_info_validate(st_sys_info->buf->data,
+							     st_sys_info->buf->len,
+							     0,
+							     error))
+		return FALSE;
+	if (fu_struct_sunwinon_dfu_rsp_system_info_get_ack_status(st_sys_info) !=
+	    FU_SUNWINON_DFU_ACK_SUCCESS)
+		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(
+		    FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
+		    error);
+	if (fu_struct_sunwinon_dfu_rsp_system_info_get_start_addr(st_sys_info) !=
+	    FU_SUNWINON_DFU_CONFIG_PERIPHERAL_FLASH_START_ADDR) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sunwinon-hid: peripheral flash start address mismatch");
+		return FALSE;
+	}
+
+	if (!fu_memcpy_safe(
+		(guint8 *)boot_info,
+		sizeof(FuSunwinonDfuBootInfo),
+		0,
+		fu_struct_sunwinon_dfu_rsp_system_info_get_system_info_raw(st_sys_info, NULL),
+		FU_STRUCT_SUNWINON_DFU_RSP_SYSTEM_INFO_N_ELEMENTS_SYSTEM_INFO_RAW,
+		0,
+		sizeof(FuSunwinonDfuBootInfo),
+		error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
+					  FuSunwinonDfuImageInfo *image_info,
+					  GError **error)
+{
+	FuDfuReceiveFrame recv_frame = {0};
+	gsize info_size = 0;
+	const guint8 *raw_info = NULL;
+	g_autoptr(FuStructSunwinonDfuRspFwInfoGet) st_fw_info =
+	    fu_struct_sunwinon_dfu_rsp_fw_info_get_new();
+
+	g_return_val_if_fail(image_info != NULL, FALSE);
+
+	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+						      NULL,
+						      0,
+						      FU_SUNWINON_DFU_CMD_FW_INFO_GET,
+						      error))
+		return FALSE;
+
+	recv_frame.data = st_fw_info->buf->data;
+	recv_frame.data_len = st_fw_info->buf->len;
+	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
+							       &recv_frame,
+							       FU_SUNWINON_DFU_CMD_FW_INFO_GET,
+							       error))
+		return FALSE;
+	if (!fu_struct_sunwinon_dfu_rsp_fw_info_get_validate(st_fw_info->buf->data,
+							     st_fw_info->buf->len,
+							     0,
+							     error))
+		return FALSE;
+	if (fu_struct_sunwinon_dfu_rsp_fw_info_get_get_ack_status(st_fw_info) !=
+	    FU_SUNWINON_DFU_ACK_SUCCESS)
+		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(
+		    FU_SUNWINON_DFU_CMD_FW_INFO_GET,
+		    error);
+
+	raw_info =
+	    fu_struct_sunwinon_dfu_rsp_fw_info_get_get_image_info_raw(st_fw_info, &info_size);
+	if (!fu_memcpy_safe((guint8 *)image_info,
+			    sizeof(FuSunwinonDfuImageInfo),
+			    0,
+			    raw_info,
+			    info_size,
+			    0,
+			    sizeof(FuSunwinonDfuImageInfo),
+			    error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self, guint8 mode_setting, GError **error)
+{
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
+					FuProgress *progress,
+					guint8 mode_setting,
+					GError **error)
+{
+	FuSunwinonDfuBootInfo boot_info = {0};
+	FuSunwinonDfuImageInfo image_info = {0};
+	/* GetInfo -> SystemInfo -> FwInfoGet -> ModeSet */
+
+	if (!fu_sunwinon_util_dfu_master_2_get_info(self, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_system_info(self, &boot_info, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_fw_info_get(self, &image_info, error))
+		return FALSE;
 	return TRUE;
 }
 
@@ -337,82 +552,28 @@ fu_sunwinon_util_dfu_master_2_free(FuSwDfuMaster *self)
 
 gboolean
 fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
-					       FuSunwinonDfuImageInfo *out,
+					       FuSunwinonDfuImageInfo *image_info,
 					       GError **error)
 {
-	FuDfuReceiveFrame recv_frame = {0};
-	gsize info_size = 0;
-	const guint8 *raw_info = NULL;
-	g_autoptr(FuStructSunwinonDfuRspFwInfoGet) st_fw_info =
-	    fu_struct_sunwinon_dfu_rsp_fw_info_get_new();
-
-	g_return_val_if_fail(out != NULL, FALSE);
-
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      NULL,
-						      0,
-						      FU_SUNWINON_DFU_CMD_FW_INFO_GET,
-						      error))
-		return FALSE;
-
-	recv_frame.data = st_fw_info->buf->data;
-	recv_frame.data_len = st_fw_info->buf->len;
-	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
-		return FALSE;
-
-	if (recv_frame.cmd_type != FU_SUNWINON_DFU_CMD_FW_INFO_GET) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "unexpected command type in firmware info response");
-		return FALSE;
-	}
-
-	if (!fu_struct_sunwinon_dfu_rsp_fw_info_get_validate(st_fw_info->buf->data,
-							     st_fw_info->buf->len,
-							     0,
-							     error))
-		return FALSE;
-
-	raw_info =
-	    fu_struct_sunwinon_dfu_rsp_fw_info_get_get_image_info_raw(st_fw_info, &info_size);
-	if (!fu_memcpy_safe((guint8 *)out,
-			    sizeof(FuSunwinonDfuImageInfo),
-			    0,
-			    raw_info,
-			    info_size,
-			    0,
-			    sizeof(FuSunwinonDfuImageInfo),
-			    error))
-		return FALSE;
-
-	return TRUE;
-}
-
-gboolean
-fu_sunwinon_util_dfu_master_2_start(FuSwDfuMaster *self,
-				    FuProgress *progress,
-				    guint8 mode_setting,
-				    GError **error)
-{
-	g_debug("DFU Master Start");
-	/*
-	if (!fu_sunwinon_util_dfu_master_get_info(self, error))
-		return FALSE;
-	*/
-	self->dfu_timeout_started = TRUE;
-	self->dfu_timeout_start_time = fu_sunwinon_util_dfu_master_2_get_time();
-	return TRUE;
+	return fu_sunwinon_util_dfu_master_2_fw_info_get(self, image_info, error);
 }
 
 gboolean
 fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     FuProgress *progress,
+					     guint8 mode_setting,
 					     GError **error)
 {
 	(void)self;
 	(void)progress;
 	(void)error;
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Not implemented");
+
+	if (!fu_sunwinon_util_dfu_master_2_handshake(self, progress, mode_setting, error))
+		return FALSE;
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "sunwinon-hid: not implemented");
 	return FALSE;
 }

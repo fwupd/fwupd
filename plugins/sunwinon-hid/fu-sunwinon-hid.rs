@@ -5,6 +5,7 @@ enum FuSunwinonHidReport {
     ChannelId = 0x61,
 }
 
+#[derive(ToString)]
 #[repr(u16le)]
 enum FuSunwinonDfuCmd {
     GetInfo = 0x0001,
@@ -53,14 +54,40 @@ struct FuStructSunwinonHidInV2 {
     data: [u8; 474],
 }
 
+#[derive(New, Default, Validate, Setters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuPayloadSystemInfo {
+    opcode: u8 == 0x00,
+    flash_start_addr: u32le,
+    len: u16le == 0x30,
+}
+
+#[derive(New, Default, Validate, Getters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuRspGetInfo {
+    ack_status: FuSunwinonDfuAck,
+    info_that_this_program_dont_care: [u8; 19],
+}
+
+#[derive(New, Default, Validate, Getters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuRspSystemInfo {
+    ack_status: FuSunwinonDfuAck,
+    opcode: u8, // unused
+    start_addr: u32le,
+    length: u16le == 0x30,
+    system_info_raw: [u8; 24],
+    reserved: [u8; 24],
+}
+
 #[derive(New, Default, Validate, Getters)]
 #[repr(C, packed)]
 struct FuStructSunwinonDfuRspFwInfoGet {
     ack_status: FuSunwinonDfuAck,
     dfu_save_addr: u32le,
-    run_position: u8, // currently unused
+    run_position: u8, // unused
     image_info_raw: [u8; 40],
-    padding: [u8; 8],
+    reserved: [u8; 8],
 }
 
 // legacy code below

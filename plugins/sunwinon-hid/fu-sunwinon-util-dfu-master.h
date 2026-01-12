@@ -129,7 +129,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSwDfuMaster, fu_sunwinon_util_dfu_master_2_free)
 
 gboolean
 fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
-					       FuSunwinonDfuImageInfo *out,
+					       FuSunwinonDfuImageInfo *image_info,
 					       GError **error);
 
 gboolean
@@ -141,5 +141,6 @@ fu_sunwinon_util_dfu_master_2_start(FuSwDfuMaster *self,
 gboolean
 fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     FuProgress *progress,
+					     guint8 mode_setting,
 					     GError **error);
 // Removed fast_dfu_mode_set_2 as per requirement to merge mode set into start.
