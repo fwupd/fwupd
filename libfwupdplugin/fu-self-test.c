@@ -5090,7 +5090,9 @@ fu_bios_settings_load_func(void)
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
 
 #ifdef _WIN32
-	/* the "AlarmDate(MM\DD\YYYY)" setting really confuses wine for obvious reasons */
+	/* BIOS settings are Linux-specific (require sysfs). The test data directory
+	 * "AlarmDate(MM\DD\YYYY)" was also causing repository clone failures on Windows,
+	 * which has been fixed by renaming it to "AlarmDate-MM-DD-YYYY" */
 	g_test_skip("BIOS settings not supported on Windows");
 	return;
 #endif
