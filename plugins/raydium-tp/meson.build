@@ -3,15 +3,15 @@ host_machine.system() == 'linux' or subdir_done()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRaydiumtp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-plugin_quirks += files('raydiumtp.quirk')
-plugin_builtin_raydiumtp = static_library('fu_plugin_raydiumtp',
+plugin_quirks += files('raydium-tp.quirk')
+plugin_builtin_raydium_tp = static_library('fu_plugin_raydium_tp',
   rustgen.process(
-    'fu-raydiumtp.rs',
+    'fu-raydium-tp.rs',
   ),
   sources: [
-    'fu-raydiumtp-plugin.c',
-    'fu-raydiumtp-firmware.c',
-    'fu-raydiumtp-hid-device.c',
+    'fu-raydium-tp-plugin.c',
+    'fu-raydium-tp-firmware.c',
+    'fu-raydium-tp-hid-device.c',
   ],
   include_directories: plugin_incdirs,
   c_args: [
@@ -22,4 +22,4 @@ plugin_builtin_raydiumtp = static_library('fu_plugin_raydiumtp',
   dependencies: plugin_deps,
 )
 
-plugin_builtins += plugin_builtin_raydiumtp
+plugin_builtins += plugin_builtin_raydium_tp

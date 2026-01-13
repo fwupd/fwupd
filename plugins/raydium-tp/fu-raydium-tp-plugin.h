@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuRaydiumtpPlugin, fu_raydiumtp_plugin, FU, RAYDIUMTP_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuRaydiumtpPlugin, fu_raydium_tp_plugin, FU, RAYDIUM_TP_PLUGIN, FuPlugin)
