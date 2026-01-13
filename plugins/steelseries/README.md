@@ -14,9 +14,10 @@ This plugin allows to update firmware on SteelSeries peripherals:
 * Arctis Nova 5 headset and dongle
 * Arctis Nova 3P headset and dongle
 
-SteelSeries Rival 100 gaming mice support is limited by getting the correct
-version number. These mice have updatable firmware but so far no updates are
-available from the vendor.
+> [!NOTE]
+> SteelSeries Rival 100 gaming mice support is limited by getting the correct
+> version number.
+> These mice have updatable firmware but so far no updates are available from the vendor.
 
 This plugin supports the following protocol IDs:
 

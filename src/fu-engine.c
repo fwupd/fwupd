@@ -2097,9 +2097,21 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
 	if (uname(&name_tmp) >= 0) {
-		g_hash_table_insert(hash, g_strdup("CpuArchitecture"), g_strdup(name_tmp.machine));
-		g_hash_table_insert(hash, g_strdup("KernelName"), g_strdup(name_tmp.sysname));
-		g_hash_table_insert(hash, g_strdup("KernelVersion"), g_strdup(name_tmp.release));
+		if (name_tmp.machine[0] != '\0') {
+			g_hash_table_insert(hash,
+					    g_strdup("CpuArchitecture"),
+					    g_strdup(name_tmp.machine));
+		}
+		if (name_tmp.sysname[0] != '\0') {
+			g_hash_table_insert(hash,
+					    g_strdup("KernelName"),
+					    g_strdup(name_tmp.sysname));
+		}
+		if (name_tmp.release[0] != '\0') {
+			g_hash_table_insert(hash,
+					    g_strdup("KernelVersion"),
+					    g_strdup(name_tmp.release));
+		}
 	}
 #endif
 #if defined(HAVE_AUXV_H) && !defined(__FreeBSD__)
@@ -2110,7 +2122,8 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		tmp = name_tmp.machine;
 		g_debug("no AT_PLATFORM, so using CpuArchitecture (%s) for platform", tmp);
 	}
-	g_hash_table_insert(hash, g_strdup("PlatformArchitecture"), g_strdup(tmp));
+	if (tmp != NULL)
+		g_hash_table_insert(hash, g_strdup("PlatformArchitecture"), g_strdup(tmp));
 #endif
 
 	/* add the kernel boot time so we can detect a reboot */
@@ -2119,23 +2132,35 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("BootTime"), btime);
 
 	/* add context information */
-	g_hash_table_insert(
-	    hash,
-	    g_strdup("PowerState"),
-	    g_strdup(fu_power_state_to_string(fu_context_get_power_state(self->ctx))));
-	g_hash_table_insert(
-	    hash,
-	    g_strdup("DisplayState"),
-	    g_strdup(fu_display_state_to_string(fu_context_get_display_state(self->ctx))));
-	g_hash_table_insert(hash,
-			    g_strdup("LidState"),
-			    g_strdup(fu_lid_state_to_string(fu_context_get_lid_state(self->ctx))));
-	g_hash_table_insert(hash,
-			    g_strdup("BatteryLevel"),
-			    g_strdup_printf("%u", fu_context_get_battery_level(self->ctx)));
-	g_hash_table_insert(hash,
-			    g_strdup("BatteryThreshold"),
-			    g_strdup_printf("%u", fu_context_get_battery_threshold(self->ctx)));
+	if (fu_context_get_power_state(self->ctx) != FU_POWER_STATE_UNKNOWN) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("PowerState"),
+		    g_strdup(fu_power_state_to_string(fu_context_get_power_state(self->ctx))));
+	}
+	if (fu_context_get_display_state(self->ctx) != FU_DISPLAY_STATE_UNKNOWN) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("DisplayState"),
+		    g_strdup(fu_display_state_to_string(fu_context_get_display_state(self->ctx))));
+	}
+	if (fu_context_get_lid_state(self->ctx) != FU_LID_STATE_UNKNOWN) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("LidState"),
+		    g_strdup(fu_lid_state_to_string(fu_context_get_lid_state(self->ctx))));
+	}
+	if (fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID) {
+		g_hash_table_insert(hash,
+				    g_strdup("BatteryLevel"),
+				    g_strdup_printf("%u", fu_context_get_battery_level(self->ctx)));
+	}
+	if (fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID) {
+		g_hash_table_insert(
+		    hash,
+		    g_strdup("BatteryThreshold"),
+		    g_strdup_printf("%u", fu_context_get_battery_threshold(self->ctx)));
+	}
 
 	return g_steal_pointer(&hash);
 }
@@ -2919,11 +2944,8 @@ fu_engine_device_prepare(FuEngine *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
-	if (locker == NULL) {
-		g_prefix_error_literal(error, "failed to open device for prepare: ");
-		return FALSE;
-	}
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* check battery level is sane */
 	if (fu_device_get_battery_level(device) > 0 &&
@@ -2936,6 +2958,15 @@ fu_engine_device_prepare(FuEngine *self,
 		return FALSE;
 	}
 
+	/* nothing to do */
+	if (device_class->prepare == NULL)
+		return TRUE;
+
+	locker = fu_device_locker_new(device, error);
+	if (locker == NULL) {
+		g_prefix_error_literal(error, "failed to open device for prepare: ");
+		return FALSE;
+	}
 	return fu_device_prepare(device, progress, flags, error);
 }
 
@@ -2947,12 +2978,17 @@ fu_engine_device_cleanup(FuEngine *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 		g_info("skipping device cleanup due to will-disappear flag");
 		return TRUE;
 	}
+
+	/* nothing to do */
+	if (device_class->cleanup == NULL)
+		return TRUE;
 
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL) {
@@ -2972,7 +3008,8 @@ fu_engine_device_check_power(FuEngine *self,
 		return TRUE;
 
 	/* not charging */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		g_set_error_literal(error,
@@ -2984,7 +3021,8 @@ fu_engine_device_check_power(FuEngine *self,
 	}
 
 	/* not enough just in case */
-	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
@@ -3356,6 +3394,28 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static gboolean
+fu_engine_composite_peek_firmware(FuEngine *self,
+				  FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		if (!fu_plugin_runner_composite_peek_firmware(plugin,
+							      device,
+							      firmware,
+							      progress,
+							      flags,
+							      error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_engine_write_firmware(FuEngine *self,
 			 const gchar *device_id,
 			 FuFirmware *firmware,
@@ -3378,6 +3438,10 @@ fu_engine_write_firmware(FuEngine *self,
 	}
 	device_progress = fu_device_progress_new(device, progress);
 	g_return_val_if_fail(device_progress != NULL, FALSE);
+
+	/* notify all the other plugins */
+	if (!fu_engine_composite_peek_firmware(self, device, firmware, progress, flags, error))
+		return FALSE;
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);

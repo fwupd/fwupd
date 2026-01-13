@@ -21,9 +21,10 @@ Additional information is available [at the website](https://fwupd.org/).
 
 See [Building and Debugging](docs/building.md) for how to build the fwupd development environment.
 
-**NOTE:** In most cases, end users should not compile fwupd from scratch; it's a
-complicated project with dozens of dependencies (and as many configuration options)
-and there's just too many things that can go wrong.
+> [!TIP]
+> In most cases, end users should not compile fwupd from scratch; it's a
+> complicated project with dozens of dependencies (and as many configuration options)
+> and there's just too many things that can go wrong.
 
 Users should just have fwupd installed and updated by their distro, managed and
 tested by the package maintainer.

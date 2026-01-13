@@ -17,6 +17,10 @@
 /* 100ms delay requested by device as a rule */
 #define FU_QC_S5GEN2_DEVICE_VALIDATION_RETRIES (60000 / 100)
 
+/* usually takes around 10-11 sec, let's be tolerant */
+#define FU_QC_S5GEN2_DEVICE_ABORT_DELAY	  300
+#define FU_QC_S5GEN2_DEVICE_ABORT_RETRIES (20 * 1000 / FU_QC_S5GEN2_DEVICE_ABORT_DELAY)
+
 struct _FuQcS5gen2Device {
 	FuDevice parent_instance;
 	guint32 file_id;
@@ -126,15 +130,13 @@ fu_qc_s5gen2_device_data_size(FuQcS5gen2Device *self, gsize *data_sz, GError **e
 }
 
 static gboolean
-fu_qc_s5gen2_device_cmd_abort(FuQcS5gen2Device *self, GError **error)
+fu_qc_s5gen2_device_cmd_abort_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
 	guint8 data[FU_STRUCT_QC_ABORT_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(FuStructQcAbortReq) st_req = fu_struct_qc_abort_req_new();
 	g_autoptr(FuStructQcAbort) st_res = NULL;
 
-	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
-		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), &read_len, error))
 		return FALSE;
 
@@ -143,6 +145,21 @@ fu_qc_s5gen2_device_cmd_abort(FuQcS5gen2Device *self, GError **error)
 		return FALSE;
 
 	return TRUE;
+}
+
+static gboolean
+fu_qc_s5gen2_device_cmd_abort(FuQcS5gen2Device *self, GError **error)
+{
+	g_autoptr(FuStructQcAbortReq) st_req = fu_struct_qc_abort_req_new();
+
+	if (!fu_qc_s5gen2_device_msg_out(self, st_req->buf->data, st_req->buf->len, error))
+		return FALSE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_qc_s5gen2_device_cmd_abort_cb,
+				    FU_QC_S5GEN2_DEVICE_ABORT_RETRIES,
+				    FU_QC_S5GEN2_DEVICE_ABORT_DELAY,
+				    NULL,
+				    error);
 }
 
 static gboolean

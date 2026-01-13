@@ -18,11 +18,10 @@ The assumed map between UIO command bits, pins on CH341A chip and pins on SPI ch
     6    D6/21   unused  DIN2
     7    D7/22   SO/2    DIN
 
-IMPORTANT NOTE:
-
-You must perform the 3.3V signal output modification if you are using the CH341A with 3.3V SPI
-chips. The CH341A has a design flaw that outputs 5V on the MISO and MOSI pins even when VCC is 3V
-which will almost certainly be out-of-specification for the device you are trying to program.
+> [!WARNING]
+> You must perform the 3.3V signal output modification if you are using the CH341A with 3.3V SPI
+> chips. The CH341A has a design flaw that outputs 5V on the MISO and MOSI pins even when VCC is 3V
+> which will almost certainly be out-of-specification for the device you are trying to program.
 
 ![CH341A Signal Output Modification](wch-ch341a-vmod.png)
 

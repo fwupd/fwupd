@@ -128,6 +128,12 @@ option(
   description: 'Default P2P sharing policy',
 )
 option(
+  'udev_hotplug',
+  type: 'boolean',
+  value: true,
+  description: 'Use the udev netlink hotplug event source',
+)
+option(
   'passim',
   type: 'feature',
   description: 'Passim support',

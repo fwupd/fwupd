@@ -192,7 +192,8 @@ Run the tests with sudo privileges:
 # python3 -m unittest -v test.test_qubes_fwupdmgr
 ```
 
-Note: If the whonix tests failed, make sure that you are connected to the Tor
+> [!TIP]
+> If the whonix tests failed, make sure that you are connected to the Tor
 
 ## Whonix support
 

@@ -1,5 +1,27 @@
+/**
+ * {{obj.c_type}}:
+{%- if obj.comments %}
+ *
+{%- for comment in obj.comments %}
+ * {{comment}}
+{%- endfor %}
+{%- endif %}
+ */
 typedef enum {
 {%- for item in obj.items %}
+    /**
+     * {{item.c_define}}:
+{%- if item.comments %}
+     *
+{%- for comment in item.comments %}
+     * {{comment}}
+{%- endfor %}
+{%- endif %}
+{%- if item.since %}
+     *
+     * Since: {{item.since}}
+{%- endif %}
+     */
 {%- if item.default %}
     {{item.c_define}} = {{item.default}},
 {%- else %}

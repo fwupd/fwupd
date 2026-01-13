@@ -67,6 +67,8 @@ def _camel_to_snake(name: str) -> str:
 class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
+        self._since: Optional[str] = None
+        self.comments: list[str] = []
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
         self.is_imported: bool = False
@@ -78,6 +80,9 @@ class EnumObj:
 
     def c_method(self, suffix: str):
         return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+    def since(self, derive: str) -> Optional[str]:
+        return self._since
 
     @property
     def c_type(self):
@@ -101,10 +106,10 @@ class EnumObj:
                 return True
         return self._is_bitfield
 
-    def check(self):
+    def check(self, prefix: Optional[str] = None):
         # check we're prefixed with something sane
-        if not self.name.startswith("Fu"):
-            raise ValueError(f"enum {self.name} does not have 'Fu' prefix")
+        if prefix and not self.name.startswith(prefix):
+            raise ValueError(f"enum {self.name} does not have '{prefix}' prefix")
 
         # check we'd not just done ZERO=0, ONE=1, TWO=2, etc
         indexed = True
@@ -145,6 +150,8 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.comments: list[str] = []
+        self.since: Optional[str] = None
         self.is_bitfield = False
 
     @property
@@ -161,8 +168,17 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
-        if val.find("<<") != -1:
+
+        # parse bitfield shifts
+        try:
+            number, bitshift = val.split("<<", maxsplit=1)
+        except ValueError:
+            pass
+        else:
             self.is_bitfield = True
+            # make sure we promote to a larger integer type
+            if int(bitshift) >= 31:
+                val = f"{int(number)}ull<<{bitshift}"
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):
@@ -227,10 +243,10 @@ class StructObj:
                 return True
         return False
 
-    def check(self):
+    def check(self, prefix: Optional[str] = None):
         # check we're prefixed with something sane
-        if not self.name.startswith("Fu"):
-            raise ValueError(f"struct {self.name} does not have 'Fu' prefix")
+        if prefix and not self.name.startswith(prefix):
+            raise ValueError(f"struct {self.name} does not have '{prefix}' prefix")
 
     def add_private_export(self, derive: str) -> None:
         if self._exports[derive] == Export.PUBLIC:
@@ -600,10 +616,18 @@ class StructItem:
 
 
 class Generator:
-    def __init__(self, basename, modules_map: Dict[str, str]) -> None:
+    def __init__(
+        self,
+        basename,
+        modules_map: Dict[str, str],
+        prefix: Optional[str] = None,
+        includes=[],
+    ) -> None:
         self.basename: str = basename
+        self.prefix: Optional[str] = prefix
         self.import_headers: list[str] = []
         self.modules_map: Dict[str, str] = modules_map
+        self.includes: list[str] = includes
         self.struct_objs: Dict[str, StructObj] = {}
         self.enum_objs: Dict[str, EnumObj] = {}
         self._env = Environment(
@@ -636,16 +660,17 @@ class Generator:
 
     def _use_import(self, where: str, module: str, what: str) -> None:
 
+        module_basename = module.replace("_", "-")
         try:
-            fn = os.path.join(self.modules_map[where], f"fu-{module}.rs")
+            fn = os.path.join(self.modules_map[where], f"fu-{module_basename}.rs")
         except KeyError:
             raise ValueError(f"invalid module name: {where}")
-        child = Generator(self.basename, self.modules_map)
+        child = Generator(self.basename, self.modules_map, prefix=self.prefix)
         with open(fn, "rb") as f:
             child._parse_input(f.read().decode())
 
         # header includes
-        header_basename: str = f"fu-{module}-struct.h"
+        header_basename: str = f"fu-{module_basename}-struct.h"
         if header_basename not in self.import_headers:
             self.import_headers.append(header_basename)
 
@@ -673,8 +698,10 @@ class Generator:
         offset: int = 0
         struct_seen_b32: bool = False
         bits_offset: int = 0
+        since: Optional[str] = None
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
+        comments_cur: list[str] = []
 
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
@@ -682,11 +709,25 @@ class Generator:
 
             # import one file into another
             if line.startswith("use "):
-                where, why, what = line[4:].split("::", maxsplit=3)
+                if not line.endswith(";"):
+                    raise ValueError(f"use requires a semicolon on line {line_num}")
+                where, why, what = line[4:-1].split("::", maxsplit=3)
                 self._use_import(where, why, what)
 
             # remove comments and indent
-            line = line.split("//")[0].strip()
+            try:
+                line, comment = line.split("//", maxsplit=1)
+            except ValueError:
+                pass
+            else:
+                comment = comment.strip()
+                if comment.startswith("Since:"):
+                    since = comment[6:].strip()
+                elif comment.startswith("SPDX") or comment.startswith("Copyright"):
+                    pass
+                elif comment:
+                    comments_cur.append(comment.strip())
+            line = line.strip()
             if not line:
                 continue
 
@@ -706,7 +747,10 @@ class Generator:
                     raise ValueError(f"enum {name} already defined on line {line_num}")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
+                enum_cur._since = since
+                enum_cur.comments.extend(comments_cur)
                 self.enum_objs[name] = enum_cur
+                comments_cur.clear()
                 continue
 
             # the enum type
@@ -727,7 +771,7 @@ class Generator:
             # end of structure
             if line.startswith("}"):
                 if struct_cur:
-                    struct_cur.check()
+                    struct_cur.check(prefix=self.prefix)
                     for derive in derives:
                         struct_cur.add_public_export(derive)
                     for item in struct_cur.items:
@@ -736,12 +780,14 @@ class Generator:
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
                 if enum_cur:
-                    enum_cur.check()
+                    enum_cur.check(prefix=self.prefix)
                     for derive in derives:
                         enum_cur.add_public_export(derive)
                 struct_cur = None
                 enum_cur = None
                 repr_type = None
+                comments_cur.clear()
+                since = None
                 derives.clear()
                 offset = 0
                 bits_offset = 0
@@ -758,11 +804,14 @@ class Generator:
             # split enumeration into sections
             if enum_cur:
                 enum_item = EnumItem(enum_cur)
+                enum_item._since = since
+                enum_item.comments.extend(comments_cur)
                 parts = line.replace(" ", "").split("=", maxsplit=2)
                 enum_item.name = parts[0]
                 if len(parts) > 1:
                     enum_item.parse_default(parts[1])
                 enum_cur.items.append(enum_item)
+                comments_cur.clear()
 
             # split structure into sections
             if struct_cur:
@@ -815,6 +864,7 @@ class Generator:
             "enum_objs": self.enum_objs,
             "struct_objs": self.struct_objs,
             "import_headers": self.import_headers,
+            "includes": self.includes,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
@@ -842,7 +892,11 @@ if __name__ == "__main__":
     parser.add_argument("src", action="store", type=str, help="source")
     parser.add_argument("dst_c", action="store", type=str, help="destination .c")
     parser.add_argument("dst_h", action="store", type=str, help="destination .h")
+    parser.add_argument("--prefix", action="store", type=str, default="", help="prefix")
     parser.add_argument("--use", action="append", default=[], help="module:path")
+    parser.add_argument(
+        "--include", action="append", default=[], help="fwupd.h|fwupdplugin.h"
+    )
     args = parser.parse_args()
 
     # parse map from module to path
@@ -854,7 +908,12 @@ if __name__ == "__main__":
         except IndexError:
             sys.exit(f"expected module:path, got {entry}")
 
-    g = Generator(basename=os.path.basename(args.dst_h), modules_map=modules_map)
+    g = Generator(
+        basename=os.path.basename(args.dst_h),
+        modules_map=modules_map,
+        includes=args.include,
+        prefix=args.prefix,
+    )
     with open(args.src, "rb") as f:
         try:
             dst_c, dst_h = g.process_input(

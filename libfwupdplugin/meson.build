@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
   'fu-common.rs', # fuzzing
   'fu-acpi-table.rs', # fuzzing
@@ -53,6 +54,10 @@ foreach fwupdplugin_struct : fwupdplugin_structs
       '@INPUT@',
       '@OUTPUT0@',
       '@OUTPUT1@',
+      '--include',
+      'fwupd.h',
+      '--prefix',
+      'Fu',
     ],
   )
 endforeach
@@ -452,6 +457,7 @@ if get_option('tests')
 
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,

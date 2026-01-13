@@ -76,6 +76,14 @@ fu_plugin_runner_composite_cleanup(FuPlugin *self,
 				   GPtrArray *devices,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_plugin_runner_composite_peek_firmware(FuPlugin *self,
+					 FuDevice *device,
+					 FuFirmware *firmware,
+					 FuProgress *progress,
+					 FwupdInstallFlags flags,
+					 GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2, 3, 4);
+gboolean
 fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean

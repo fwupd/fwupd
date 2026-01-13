@@ -1,7 +1,7 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ main ]
+    branches: [ 2_0_X ]
 
 jobs:
   snap:

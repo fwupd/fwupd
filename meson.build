@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.0.18',
+  version: '2.0.19',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -262,6 +262,9 @@ endif
 gmodule = dependency('gmodule-2.0')
 if host_machine.system() == 'linux' or host_machine.system() == 'android'
   conf.set('HAVE_UDEV', '1')
+endif
+if get_option('udev_hotplug')
+  conf.set('HAVE_UDEV_HOTPLUG' , '1')
 endif
 if build_standalone
   bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
@@ -916,6 +919,10 @@ rustgen = generator(
     '@INPUT@',
     '@OUTPUT0@',
     '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
+    '--prefix',
+    'Fu',
   ],
 )
 

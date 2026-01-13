@@ -28,9 +28,9 @@ const struct {
     {FU_CRC_KIND_B32_POSIX, 32, 0x04C11DB7, 0x00000000, FALSE, 0xFFFFFFFF},
     {FU_CRC_KIND_B32_SATA, 32, 0x04C11DB7, 0x52325032, FALSE, 0x00000000},
     {FU_CRC_KIND_B32_XFER, 32, 0x000000AF, 0x00000000, FALSE, 0x00000000},
-    {FU_CRC_KIND_B32_C, 32, 0x1EDC6F41, 0xFFFFFFFF, TRUE, 0xFFFFFFFF},
-    {FU_CRC_KIND_B32_D, 32, 0xA833982B, 0xFFFFFFFF, TRUE, 0xFFFFFFFF},
-    {FU_CRC_KIND_B32_Q, 32, 0x814141AB, 0x00000000, FALSE, 0x00000000},
+    {FU_CRC_KIND_B32C, 32, 0x1EDC6F41, 0xFFFFFFFF, TRUE, 0xFFFFFFFF},
+    {FU_CRC_KIND_B32D, 32, 0xA833982B, 0xFFFFFFFF, TRUE, 0xFFFFFFFF},
+    {FU_CRC_KIND_B32Q, 32, 0x814141AB, 0x00000000, FALSE, 0x00000000},
     {FU_CRC_KIND_B16_XMODEM, 16, 0x1021, 0x0000, FALSE, 0x0000},
     {FU_CRC_KIND_B16_KERMIT, 16, 0x1021, 0x0000, TRUE, 0x0000},
     {FU_CRC_KIND_B16_USB, 16, 0x8005, 0xFFFF, TRUE, 0xFFFF},
@@ -38,12 +38,12 @@ const struct {
     {FU_CRC_KIND_B16_TMS37157, 16, 0x1021, 0x89ec, TRUE, 0x0000},
     {FU_CRC_KIND_B16_BNR, 16, 0x8005, 0xFFFF, FALSE, 0x0000},
     {FU_CRC_KIND_B8_WCDMA, 8, 0x9B, 0x00, TRUE, 0x00},
-    {FU_CRC_KIND_B8_TECH_3250, 8, 0x1D, 0xFF, TRUE, 0x00},
+    {FU_CRC_KIND_B8_TECH3250, 8, 0x1D, 0xFF, TRUE, 0x00},
     {FU_CRC_KIND_B8_STANDARD, 8, 0x07, 0x00, FALSE, 0x00},
     {FU_CRC_KIND_B8_SAE_J1850, 8, 0x1D, 0xFF, FALSE, 0xFF},
     {FU_CRC_KIND_B8_ROHC, 8, 0x07, 0xFF, TRUE, 0x00},
     {FU_CRC_KIND_B8_OPENSAFETY, 8, 0x2F, 0x00, FALSE, 0x00},
-    {FU_CRC_KIND_B8_NRSC_5, 8, 0x31, 0xFF, FALSE, 0x00},
+    {FU_CRC_KIND_B8_NRSC5, 8, 0x31, 0xFF, FALSE, 0x00},
     {FU_CRC_KIND_B8_MIFARE_MAD, 8, 0x1D, 0xC7, FALSE, 0x00},
     {FU_CRC_KIND_B8_MAXIM_DOW, 8, 0x31, 0x00, TRUE, 0x00},
     {FU_CRC_KIND_B8_LTE, 8, 0x9B, 0x00, FALSE, 0x00},
@@ -81,6 +81,23 @@ fu_crc_reflect(guint32 data, guint bitwidth)
 		data = (data >> 1);
 	}
 	return val;
+}
+
+/**
+ * fu_crc_size:
+ * @kind: a #FuCrcKind
+ *
+ * Returns the size of the CRC in bits.
+ *
+ * Returns: integer, or 0 on error
+ *
+ * Since: 2.0.19
+ **/
+guint
+fu_crc_size(FuCrcKind kind)
+{
+	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
+	return crc_map[kind].bitwidth;
 }
 
 /**
@@ -395,11 +412,11 @@ fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target)
 			if (crc_target == fu_crc32(crc_map[i].kind, buf, bufsz))
 				return crc_map[i].kind;
 		}
-		if (crc_map[i].bitwidth == 16) {
+		if (crc_target <= G_MAXUINT16 && crc_map[i].bitwidth == 16) {
 			if ((guint16)crc_target == fu_crc16(crc_map[i].kind, buf, bufsz))
 				return crc_map[i].kind;
 		}
-		if (crc_map[i].bitwidth == 8) {
+		if (crc_target <= G_MAXUINT8 && crc_map[i].bitwidth == 8) {
 			if ((guint8)crc_target == fu_crc8(crc_map[i].kind, buf, bufsz))
 				return crc_map[i].kind;
 		}

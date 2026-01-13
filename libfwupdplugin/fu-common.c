@@ -18,6 +18,26 @@
 #include "fu-string.h"
 
 /**
+ * fu_size_checked_add:
+ * @a: The #gsize left operand
+ * @b: The #gsize right operand
+ *
+ * Performs a checked addition of a and b, ensuring the result does not overflow.
+ *
+ * Returns: @a+@b, or %G_MAXSIZE on overflow
+ *
+ * Since: 2.0.19
+ **/
+gsize
+fu_size_checked_add(gsize a, gsize b)
+{
+	gsize tmp = 0;
+	if (!g_size_checked_add(&tmp, a, b))
+		return G_MAXSIZE;
+	return tmp;
+}
+
+/**
  * fu_error_map_entry_to_gerror:
  * @value: the value to look up
  * @entries: the #FuErrorMapEntry map
@@ -372,19 +392,4 @@ void
 fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value)
 {
 	xb_builder_node_insert_text(bn, key, value ? "true" : "false", NULL);
-}
-
-/**
- * fu_snap_is_in_snap:
- *
- * Check whether the current process is running inside a snap.
- *
- * Returns: TRUE if current process is running inside a snap.
- *
- * Since: 2.0.4
- **/
-gboolean
-fu_snap_is_in_snap(void)
-{
-	return getenv("SNAP") != NULL;
 }

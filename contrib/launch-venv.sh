@@ -36,7 +36,9 @@ fi
 ENV="FWUPD_POLKIT_NOCHECK=1 \
      G_DEBUG=${G_DEBUG} \
      GLIBC_TUNABLES=${GLIBC_TUNABLES} \
-     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+     LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
+     FWUPD_UEFI_VERBOSE=${FWUPD_UEFI_VERBOSE} \
+     TPM2TOOLS_TCTI=${TPM2TOOLS_TCTI}"
 for var in $(env | grep FWUPD | cut -d= -f1); do
     ENV="${ENV} ${var}=${!var}"
 done

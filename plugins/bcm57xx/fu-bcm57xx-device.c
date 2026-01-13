@@ -25,7 +25,6 @@
 #include "fu-bcm57xx-device.h"
 #include "fu-bcm57xx-dict-image.h"
 #include "fu-bcm57xx-firmware.h"
-#include "fu-bcm57xx-recovery-device.h"
 
 #define FU_BCM57XX_BLOCK_SZ 0x4000 /* 16kb */
 

@@ -1273,6 +1273,7 @@ gboolean
 fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
 	guint64 tmpval;
 	guint64 version_raw;
@@ -1335,15 +1336,6 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		}
 		fu_firmware_set_alignment(self, (guint8)tmpval);
 	}
-	tmp = xb_node_query_text(n, "filename", NULL);
-	if (tmp != NULL) {
-		g_autoptr(GBytes) blob = NULL;
-		blob = fu_bytes_get_contents(tmp, error);
-		if (blob == NULL)
-			return FALSE;
-		fu_firmware_set_bytes(self, blob);
-		fu_firmware_set_filename(self, tmp);
-	}
 	data = xb_node_query_first(n, "data", NULL);
 	if (data != NULL) {
 		guint64 sz = xb_node_get_attr_as_uint(data, "size");
@@ -1366,6 +1358,17 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, (gsize)sz, 0xFF);
 			fu_firmware_set_bytes(self, blob_padded);
 		}
+	}
+	tmp = xb_node_query_text(n, "filename", NULL);
+	if (tmp != NULL) {
+		if (priv->bytes == NULL) {
+			g_autoptr(GBytes) blob = NULL;
+			blob = fu_bytes_get_contents(tmp, error);
+			if (blob == NULL)
+				return FALSE;
+			fu_firmware_set_bytes(self, blob);
+		}
+		fu_firmware_set_filename(self, tmp);
 	}
 
 	/* optional chunks */

@@ -9,22 +9,9 @@
 #include <linux/types.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-#ifdef HAVE_IOCTL_H
-#include <linux/hidraw.h>
-#endif
-
-#include <string.h>
 
 #include "fu-logitech-tap-sensor-device.h"
 #include "fu-logitech-tap-struct.h"
-
-#define FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT 50000 /* ms */
-
-#ifndef HIDIOCGINPUT
-#define HIDIOCGINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)
-#endif
-
-const guint kLogiDefaultSensorSleepIntervalMs = 50;
 
 struct _FuLogitechTapSensorDevice {
 	FuHidrawDevice parent_instance;
@@ -46,16 +33,12 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 					  datasz,
 					  FU_IOCTL_FLAG_RETRY,
 					  &error_local)) {
-		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 		g_debug("failed to send get request, retrying: %s", error_local->message);
-		if (!fu_ioctl_execute(ioctl,
-				      HIDIOCGINPUT(datasz),
-				      data,
-				      datasz,
-				      NULL,
-				      FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
-				      FU_IOCTL_FLAG_RETRY,
-				      error))
+		if (!fu_hidraw_device_get_input(FU_HIDRAW_DEVICE(self),
+						data,
+						datasz,
+						FU_IOCTL_FLAG_RETRY,
+						error))
 			return FALSE;
 	}
 
@@ -271,7 +254,7 @@ fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GEr
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), kLogiDefaultSensorSleepIntervalMs); /* 50 ms */
+	fu_device_sleep(FU_DEVICE(self), 50); /* ms */
 	/* serial number is a 12-byte-string that is stored in MCU  */
 	/* each get request fetches 1 word (4 bytes), so iterate 3 times */
 	for (int index = 1; index <= 3; index++) {
