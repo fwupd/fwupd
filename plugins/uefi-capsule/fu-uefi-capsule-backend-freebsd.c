@@ -45,7 +45,7 @@ fu_uefi_capsule_backend_device_new(FuUefiCapsuleBackend *self,
 	g_autofree gchar *fw_class = NULL;
 	uint32_t status;
 
-	uuid_to_string(&entry->fw_class, &fw_class, &status);
+	uuid_to_string((const uuid_t *)&entry->fw_class, &fw_class, &status);
 	if (status != uuid_s_ok) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
