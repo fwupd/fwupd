@@ -492,7 +492,7 @@ fu_dell_kestrel_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_DELL_KESTREL_RTSHUB_FIRMWARE);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "false");
+	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "true");
 }
 
 static void
