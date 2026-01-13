@@ -87,6 +87,14 @@ fwupd_json_node_new_raw_internal(GRefString *value)
 	return self;
 }
 
+FwupdJsonNode *
+fwupd_json_node_new_null_internal(void)
+{
+	FwupdJsonNode *self = fwupd_json_node_new_internal();
+	self->kind = FWUPD_JSON_NODE_KIND_NULL;
+	return self;
+}
+
 /**
  * fwupd_json_node_new_string: (skip):
  * @value: (not nullable): string value
@@ -357,6 +365,10 @@ fwupd_json_node_append_string(FwupdJsonNode *self,
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(str != NULL);
 
+	if (self->kind == FWUPD_JSON_NODE_KIND_NULL) {
+		g_string_append(str, "null");
+		return;
+	}
 	if (self->kind == FWUPD_JSON_NODE_KIND_RAW) {
 		g_string_append(str, fwupd_json_node_get_raw(self, NULL));
 		return;

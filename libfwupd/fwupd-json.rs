@@ -5,6 +5,7 @@
 // Since: 2.1.1
 #[derive(ToString)]
 enum FwupdJsonNodeKind {
+    Null,
     Raw,
     String,
     Array,
