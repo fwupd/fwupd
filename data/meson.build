@@ -94,6 +94,7 @@ if build_daemon
 
     device_allows = [
       'block-sd',
+      'block-sr',
       'char-aux',
       'char-cpu/*',
       'char-drm',
