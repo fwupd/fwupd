@@ -87,14 +87,19 @@ update is completed.
 There are two ways to trigger the staged firmware, and the update behavior can
 be adjusted via the plugin configuration `UpdateOnDisconnect`.
 
+fwupd versions with UOC approach are listed below, otherwise use UOD.
+
+* 1.9.33
+* 2.0.17
+* 2.0.18
+* 2.0.19
+
 ### Update on Connected (UOC)
 
 When all the component updates are installed and staged to the dock, the dock
 reboots the devices to activate the new version immediately. The connected
 peripherals on the dock side will be disconnected from the host, and take a few
 minutes to finish.
-
-Starting from fwupd `2.0.17`, or `1.9.33`, this is the default update behavior.
 
 ### Update on Disconnected (UOD)
 
