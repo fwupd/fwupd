@@ -1,4 +1,4 @@
-host_machine.system() == 'linux' or subdir_done()
+host_machine.system() in ['linux', 'freebsd'] or subdir_done()
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
