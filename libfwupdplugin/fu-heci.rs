@@ -50,7 +50,7 @@ enum FuMkhiStatus {
     UpdateDeviceIdNotMatch = 0x102F,
     UpdateOpromSectionNotExist = 0x1032,
     UpdateOpromInvalidStructure = 0x1035,
-    UpdateGetOpromVersionFailed 0x103C,
+    UpdateGetOpromVersionFailed = 0x103C,
     UpdateOromInvalidStructure = 0x1045,
     UpdateVerManFailedGfxData = 0x1048,
     UpdateGfxDataOemManufVer = 0x104B,
