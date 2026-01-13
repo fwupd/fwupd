@@ -62,12 +62,6 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_lenovo_accessory_hid_device_probe(FuDevice *device, GError **error)
-{
-	return TRUE;
-}
-
-static gboolean
 fu_lenovo_accessory_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLenovoAccessoryHidDevice *self = FU_LENOVO_HID_DEVICE(device);
@@ -106,7 +100,6 @@ fu_lenovo_accessory_hid_device_class_init(FuLenovoAccessoryHidDeviceClass *klass
 	device_class->setup = fu_lenovo_accessory_hid_device_setup;
 	device_class->set_progress = fu_lenovo_accessory_hid_device_set_progress;
 	device_class->detach = fu_lenovo_accessory_hid_device_detach;
-	device_class->probe = fu_lenovo_accessory_hid_device_probe;
 }
 
 static void

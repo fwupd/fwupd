@@ -66,6 +66,7 @@ struct FuStructLenovoAccessoryCmd {
     command_class: u8,
     command_id: u8,
     flag_profile: u8,
+    reserve: u8,
 }
 
 #[derive(New)]
