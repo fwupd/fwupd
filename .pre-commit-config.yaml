@@ -8,6 +8,7 @@ repos:
     -   id: check-added-large-files
     -   id: check-executables-have-shebangs
     -   id: forbid-new-submodules
+    -   id: check-illegal-windows-names
     -   id: check-yaml
         exclude: '.clang-format'
     -   id: check-json
