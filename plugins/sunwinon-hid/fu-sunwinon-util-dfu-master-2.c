@@ -9,19 +9,20 @@
 #include "fu-sunwinon-hid-struct.h"
 #include "fu-sunwinon-util-dfu-master.h"
 
-#define DFU_IMAGE_INFO_LEN  48
 #define HID_REPORT_DATA_LEN 480
+/* there is 8 bytes reserved in all fw blob (from file and on device) */
+#define DFU_IMAGE_INFO_TAIL_SIZE 48
+/* fw load addr shall align to sector size */
+#define FLASH_OP_SECTOR_SIZE 0x1000
+/* fw pattern value */
+#define PATTERN_VALUE		0x4744
+#define DFU_SIGN_LEN		856
+#define PATTERN_DEADBEEF	0xDEADBEEF
+#define PATTERN_SIGN		0x4E474953 /* "SIGN" */
+#define PATTERN_DEADBEEF_OFFSET 48
+#define PATTERN_SIGN_OFFSET	72
 
 struct FuSwDfuMaster {
-	gboolean cmd_receive_flag;
-	guint16 receive_data_count;
-	guint16 receive_check_sum;
-	/* peripheral bootloader information */
-	FuSunwinonDfuBootInfo boot_info;
-	/* FW image information about the firmware to be upgraded */
-	FuSunwinonDfuImageInfo now_img_info;
-	/* image information in peripheral APP Info area */
-	FuSunwinonDfuImageInfo app_info;
 	guint32 img_data_addr;
 	guint32 all_check_sum;
 	guint32 file_size;
@@ -30,8 +31,6 @@ struct FuSwDfuMaster {
 	guint16 once_size;
 	guint16 sent_len;
 	guint16 all_send_len;
-	gboolean sec_flag;
-	gboolean new_version_flag;
 	guint16 erase_sectors;
 	guint8 ble_fast_send_cplt_flag;
 	guint8 fast_dfu_mode;
@@ -46,6 +45,17 @@ struct FuSwDfuMaster {
 };
 
 typedef struct {
+	/* peripheral bootloader information */
+	FuSunwinonDfuBootInfo boot_info;
+	/* FW image information about the firmware to be upgraded */
+	FuSunwinonDfuImageInfo now_img_info;
+	/* image information in peripheral APP Info area */
+	FuSunwinonDfuImageInfo app_info;
+	gboolean security_mode;
+	guint32 dfu_save_addr;
+} FuDfuInnerState;
+
+typedef struct {
 	FuSunwinonDfuCmd cmd_type;
 	guint16 data_len; /* inout */
 	guint8 *data;
@@ -55,7 +65,7 @@ typedef struct {
 static gboolean
 fu_sunwinon_util_dfu_master_2_check_fw_available(FuSwDfuMaster *self, GError **error)
 {
-	if (self->fw == NULL || self->fw_sz < DFU_IMAGE_INFO_LEN) {
+	if (self->fw == NULL || self->fw_sz < DFU_IMAGE_INFO_TAIL_SIZE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -73,15 +83,134 @@ fu_sunwinon_util_dfu_master_2_dfu_get_img_info(FuSwDfuMaster *self,
 	if (!fu_sunwinon_util_dfu_master_2_check_fw_available(self, error))
 		return FALSE;
 	/* fw info stored near the tail of blob */
-	return fu_memcpy_safe((guint8 *)image_info,
-			      sizeof(FuSunwinonDfuImageInfo),
-			      0,
-			      self->fw,
-			      self->fw_sz,
-			      self->fw_sz - DFU_IMAGE_INFO_LEN,
-			      sizeof(FuSunwinonDfuImageInfo),
-			      error);
+	if (!fu_memcpy_safe((guint8 *)image_info,
+			    sizeof(FuSunwinonDfuImageInfo),
+			    0,
+			    self->fw,
+			    self->fw_sz,
+			    self->fw_sz - DFU_IMAGE_INFO_TAIL_SIZE,
+			    sizeof(FuSunwinonDfuImageInfo),
+			    error))
+		return FALSE;
+	if (image_info->pattern != PATTERN_VALUE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "sunwinon-hid: invalid firmware pattern");
+		return FALSE;
+	}
+	if (image_info->boot_info.load_addr % FLASH_OP_SECTOR_SIZE != 0U) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "sunwinon-hid: firmware load address not aligned");
+		return FALSE;
+	}
+	if (image_info->boot_info.bin_size + DFU_IMAGE_INFO_TAIL_SIZE > (guint32)self->fw_sz) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "sunwinon-hid: firmware size mismatch");
+		return FALSE;
+	}
+	return TRUE;
 }
+
+const char str[] = {0x4E, 0x47, 0x49, 0x53}; // "NGIS"
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
+					       FuDfuInnerState *inner_state,
+					       GError **error)
+{
+	gsize tail_size = 0;
+	guint32 fw_pattern_deadbeef = 0;
+	guint32 fw_pattern_sign = 0;
+	guint32 bootloader_end = 0;
+	guint32 bank0_fw_end = 0;
+
+	g_return_val_if_fail(inner_state != NULL, FALSE);
+
+	tail_size = DFU_IMAGE_INFO_TAIL_SIZE;
+
+	/* check if fw is signed */
+	if (inner_state->security_mode) {
+		tail_size += DFU_SIGN_LEN;
+		g_debug("signed firmware (security mode)");
+	} else if (self->fw_sz >= (inner_state->now_img_info.boot_info.bin_size +
+				   DFU_IMAGE_INFO_TAIL_SIZE + DFU_SIGN_LEN)) {
+		/* check fw sign pattern to see if it is signed */
+		if (!fu_memcpy_safe((guint8 *)&fw_pattern_deadbeef,
+				    sizeof(fw_pattern_deadbeef),
+				    0,
+				    self->fw,
+				    self->fw_sz,
+				    inner_state->now_img_info.boot_info.bin_size +
+					PATTERN_DEADBEEF_OFFSET,
+				    sizeof(fw_pattern_deadbeef),
+				    error))
+			return FALSE;
+		if (!fu_memcpy_safe((guint8 *)&fw_pattern_sign,
+				    sizeof(fw_pattern_sign),
+				    0,
+				    self->fw,
+				    self->fw_sz,
+				    inner_state->now_img_info.boot_info.bin_size +
+					PATTERN_SIGN_OFFSET,
+				    sizeof(fw_pattern_sign),
+				    error))
+			return FALSE;
+		if ((fw_pattern_deadbeef == PATTERN_DEADBEEF) &&
+		    (fw_pattern_sign == PATTERN_SIGN)) {
+			tail_size += DFU_SIGN_LEN;
+			g_debug("signed firmware (sign pattern found)");
+		}
+	}
+	/* else fw is always unsigned */
+	g_debug("unsigned firmware");
+
+	/* check if the new fw is correctly packed */
+	if (self->fw_sz != inner_state->now_img_info.boot_info.bin_size + tail_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "sunwinon-hid: firmware size mismatch");
+		return FALSE;
+	}
+
+	/* check if the new fw would overlap with bootloader */
+	bootloader_end =
+	    inner_state->boot_info.load_addr + inner_state->boot_info.bin_size + tail_size;
+	if (inner_state->dfu_save_addr <= bootloader_end) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "sunwinon-hid: firmware save address 0x%x overlaps with bootloader "
+			    "(bootloader_end: 0x%x)",
+			    inner_state->dfu_save_addr,
+			    bootloader_end);
+		return FALSE;
+	}
+
+	/* check if the new fw would overlap with current application (bank0) */
+	bank0_fw_end = inner_state->app_info.boot_info.load_addr +
+		       inner_state->app_info.boot_info.bin_size + tail_size;
+	if (inner_state->dfu_save_addr <= bank0_fw_end) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "sunwinon-hid: firmware save address 0x%x overlaps with current app "
+			    "(bank0_fw_end: 0x%x)",
+			    inner_state->dfu_save_addr,
+			    bank0_fw_end);
+		return FALSE;
+	}
+
+	g_debug("firmware pre-update check passed");
+
+	return TRUE;
+}
+
 /*
 static gboolean
 fu_sunwinon_util_dfu_master_dfu_get_img_data(FuSwDfuMaster *self,
@@ -385,6 +514,7 @@ fu_sunwinon_util_dfu_master_2_get_info(FuSwDfuMaster *self, GError **error)
 static gboolean
 fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
 					  FuSunwinonDfuBootInfo *boot_info,
+					  gboolean *security_mode,
 					  GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
@@ -392,6 +522,7 @@ fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
 	g_autoptr(FuStructSunwinonDfuRspSystemInfo) st_sys_info = NULL;
 
 	g_return_val_if_fail(boot_info != NULL, FALSE);
+	g_return_val_if_fail(security_mode != NULL, FALSE);
 
 	g_debug("SystemInfo");
 
@@ -447,12 +578,16 @@ fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
 		error))
 		return FALSE;
 
+	*security_mode =
+	    (fu_struct_sunwinon_dfu_rsp_system_info_get_opcode(st_sys_info) & 0xF0U) != 0U;
+
 	return TRUE;
 }
 
 static gboolean
 fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 					  FuSunwinonDfuImageInfo *image_info,
+					  guint32 *dfu_save_addr,
 					  GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
@@ -490,6 +625,10 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 		    FU_SUNWINON_DFU_CMD_FW_INFO_GET,
 		    error);
 
+	if (dfu_save_addr != NULL)
+		*dfu_save_addr =
+		    fu_struct_sunwinon_dfu_rsp_fw_info_get_get_dfu_save_addr(st_fw_info);
+
 	raw_info =
 	    fu_struct_sunwinon_dfu_rsp_fw_info_get_get_image_info_raw(st_fw_info, &info_size);
 	if (!fu_memcpy_safe((guint8 *)image_info,
@@ -508,23 +647,53 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 static gboolean
 fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self, guint8 mode_setting, GError **error)
 {
+	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+						      &mode_setting,
+						      1,
+						      FU_SUNWINON_DFU_CMD_MODE_SET,
+						      error))
+		return FALSE;
+
+	/* command ModeSet has no response, wait a while for device getting ready */
+	fu_sunwinon_util_dfu_master_2_wait(self, 100);
+	return TRUE;
 }
 
 static gboolean
 fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
-					FuProgress *progress,
 					guint8 mode_setting,
+					FuDfuInnerState *inner_state,
 					GError **error)
 {
-	FuSunwinonDfuBootInfo boot_info = {0};
-	FuSunwinonDfuImageInfo image_info = {0};
-	/* GetInfo -> SystemInfo -> FwInfoGet -> ModeSet */
+	g_return_val_if_fail(inner_state != NULL, FALSE);
+
+	/* GetInfo -> SystemInfo -> FwInfoGet */
 
 	if (!fu_sunwinon_util_dfu_master_2_get_info(self, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_system_info(self, &boot_info, error))
+	if (!fu_sunwinon_util_dfu_master_2_system_info(self,
+						       &inner_state->boot_info,
+						       &inner_state->security_mode,
+						       error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_fw_info_get(self, &image_info, error))
+	if (!fu_sunwinon_util_dfu_master_2_fw_info_get(self,
+						       &inner_state->app_info,
+						       &inner_state->dfu_save_addr,
+						       error))
+		return FALSE;
+
+	if (!fu_sunwinon_util_dfu_master_2_pre_update_check(self, inner_state, error))
+		return FALSE;
+
+	/* start update */
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "sunwinon-hid: not implemented");
+	return FALSE;
+
+	if (!fu_sunwinon_util_dfu_master_2_mode_set(self, mode_setting, error))
 		return FALSE;
 	return TRUE;
 }
@@ -555,7 +724,7 @@ fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
 					       FuSunwinonDfuImageInfo *image_info,
 					       GError **error)
 {
-	return fu_sunwinon_util_dfu_master_2_fw_info_get(self, image_info, error);
+	return fu_sunwinon_util_dfu_master_2_fw_info_get(self, image_info, NULL, error);
 }
 
 gboolean
@@ -564,11 +733,15 @@ fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     guint8 mode_setting,
 					     GError **error)
 {
+	FuDfuInnerState inner_state = {0};
 	(void)self;
 	(void)progress;
 	(void)error;
 
-	if (!fu_sunwinon_util_dfu_master_2_handshake(self, progress, mode_setting, error))
+	if (!fu_sunwinon_util_dfu_master_2_dfu_get_img_info(self, &inner_state.now_img_info, error))
+		return FALSE;
+
+	if (!fu_sunwinon_util_dfu_master_2_handshake(self, mode_setting, &inner_state, error))
 		return FALSE;
 
 	g_set_error_literal(error,

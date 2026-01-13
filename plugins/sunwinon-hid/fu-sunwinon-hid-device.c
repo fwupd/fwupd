@@ -376,6 +376,7 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	ctx.fw = g_bytes_get_data(blob, &ctx.fw_sz);
+	g_debug("firmware size: %zu bytes", ctx.fw_sz);
 	if (ctx.fw_sz < DFU_IMAGE_INFO_LEN) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -396,6 +397,7 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 			    error))
 		return FALSE;
 
+	g_debug("bin size: %u bytes", ctx.img_info.boot_info.bin_size);
 	ctx.device = device;
 	ctx.progress = progress;
 	ctx.done = FALSE;

@@ -988,14 +988,14 @@ fu_sunwinon_util_dfu_master_schedule(FuDfuMaster *self, GError **error)
 			break;
 
 		case PROGRAM_FLASH:
-			/*
+
 			g_set_error_literal(
 			    error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "PROGRAM_FLASH command should not have been received here");
 			return FALSE;
-			*/
+
 			if (dfu_state->receive_frame.data[0] == ACK_SUCCESS) {
 				progress = (guint8)((dfu_state->programed_size * 100U) /
 						    dfu_state->file_size);
