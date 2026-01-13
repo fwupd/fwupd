@@ -38,7 +38,7 @@ enum FuAsusHidReportId {
 #[repr(C, packed)]
 struct FuStructAsusManCommand {
     report_id: FuAsusHidReportId == Info,
-    data: [char; 14] == "ASUS Tech.Inc.",
+    data: [char; 14] == "ASUSTech.Inc.", // FIXME: Was this supposed to be "ASUS Tech.Inc."?
     terminator: u8 == 0,
 }
 
