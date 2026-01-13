@@ -68,10 +68,9 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 {
 	FuLenovoAccessoryBleDevice *self = FU_LENOVO_ACCESSORY_BLE_DEVICE(device);
 	gsize fw_size = 0;
-	guint32 file_crc = 0;
+	guint32 file_crc = 0xFFFFFFFF;
 	guint32 device_crc = 0;
 	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GBytes) blob = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -83,19 +82,8 @@ fu_lenovo_accessory_ble_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_input_stream_size(stream, &fw_size, error))
 		return FALSE;
-	/* * @hughsie: I noticed a discrepancy in CRC calculation between the stream-based
-	 * and GBytes-based methods, even though they operate on the same firmware file.
-	 */
-
-	/* Method A: Using GInputStream (Result: Fails hardware verification) */
 	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &file_crc, error))
 		return FALSE;
-	/* method b: using GBytes (result: correct CRC, passes hardware verification) */
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
-		return FALSE;
-	fw_size = g_bytes_get_size(blob);
-	file_crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, blob);
 	if (!fu_lenovo_accessory_impl_dfu_entry(FU_LENOVO_ACCESSORY_IMPL(device), error))
 		return FALSE;
 	if (!fu_lenovo_accessory_impl_dfu_prepare(FU_LENOVO_ACCESSORY_IMPL(device),

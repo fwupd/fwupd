@@ -136,7 +136,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 						  GError **error)
 {
 	gsize fw_size = 0;
-	guint32 file_crc = 0;
+	guint32 file_crc = 0xFFFFFFFF;
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
