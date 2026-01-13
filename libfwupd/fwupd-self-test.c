@@ -207,6 +207,8 @@ fwupd_json_parser_stream_func(void)
 static void
 fwupd_json_parser_null_func(void)
 {
+	gboolean ret;
+	gint64 value = 0;
 	g_autoptr(FwupdJsonNode) json_node2 = NULL;
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
@@ -226,7 +228,13 @@ fwupd_json_parser_null_func(void)
 
 	/* ensure 'null' is tagged as a string */
 	json_node2 = fwupd_json_object_get_node(json_obj, "seven", &error);
-	g_assert_cmpint(fwupd_json_node_get_kind(json_node2), ==, FWUPD_JSON_NODE_KIND_STRING);
+	g_assert_cmpint(fwupd_json_node_get_kind(json_node2), ==, FWUPD_JSON_NODE_KIND_NULL);
+
+	/* ensure we use the default integer value */
+	ret = fwupd_json_object_get_integer_with_default(json_obj, "seven", &value, 123, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, 123);
 
 	str = fwupd_json_node_to_string(json_node2, FWUPD_JSON_EXPORT_FLAG_NONE);
 	g_assert_cmpstr(str->str, ==, "null");
