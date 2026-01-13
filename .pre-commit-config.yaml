@@ -64,7 +64,7 @@ repos:
               plugins/uefi-capsule/tests/test\.bmp|
               src/tests/auth/firmware\.xml\.gz|
               src/tests/history_v[12]\.db|
-              src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors
+              src/tests/sys/devices/pci0000_00/0000_00_14\.0/usb1/1-1/descriptors
             )$
     - id: check-potfiles
       name: check for missing translated files from potfiles

@@ -7952,7 +7952,7 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* hidraw -> pixart_rf */
-	device = fu_engine_get_device(engine, "6acd27f1feb25ba3b604063de4c13b604776b2f5", &error);
+	device = fu_engine_get_device(engine, "ab6b164573f0782ee23e38740d0e0934ee352090", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "hidraw");
@@ -7962,7 +7962,7 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "pixart_rf");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "PIXART Pixart dual-mode mouse");
-	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "usb-0000:00:14.0-1/input1");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "usb-0000_00_14.0-1/input1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
 
 	/* check can read random files */
@@ -8264,7 +8264,7 @@ fu_test_engine_fake_block(gconstpointer user_data)
 	}
 
 	/* block */
-	device = fu_engine_get_device(engine, "7772d9fe9419e3ea564216e12913a16e233378a6", &error);
+	device = fu_engine_get_device(engine, "82063150bef0a76856b9ab79cbf88e4f6ef2f93d", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "block");
