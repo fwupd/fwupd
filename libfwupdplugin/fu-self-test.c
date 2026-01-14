@@ -5250,6 +5250,16 @@ fu_bios_settings_load_func(void)
 		ret = fwupd_bios_setting_get_read_only(setting);
 		g_assert_true(ret);
 	}
+	g_free(test_dir);
+
+	/* load BIOS settings from a HP Z2 Mini G1a */
+	test_dir = g_build_filename(base_dir, "hp-z2-mini-g1a", NULL);
+	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
+		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+		ret = fu_context_reload_bios_settings(ctx, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
 }
 
 static void
