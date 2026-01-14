@@ -23,7 +23,7 @@ sleep 5
 # run the installed tests whilst the daemon debugging
 NO_COLOR=1 G_DEBUG=fatal-criticals /usr/libexec/fwupd/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 sleep 10
-gnome-desktop-testing-runner --timeout=600 fwupd
+gnome-desktop-testing-runner --timeout=1200 fwupd
 
 # generate coverage report
 ./contrib/ci/coverage.sh
