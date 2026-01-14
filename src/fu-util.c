@@ -3062,16 +3062,26 @@ fu_util_update_device_with_release(FuUtil *self,
 {
 	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		const gchar *name = fwupd_device_get_name(dev);
-		g_autofree gchar *str = NULL;
+		g_autoptr(GPtrArray) array = fu_util_device_problems_to_strings(self->client, dev);
 
-		/* TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed */
-		str = g_strdup_printf(_("%s is not currently updatable"), name);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "%s: %s",
-			    str,
-			    fwupd_device_get_update_error(dev));
+		/* enumerate each problem to the console */
+		fu_console_print(self->console,
+				 /* TRANSLATORS: there are reasons the device can't update */
+				 _("%s is not currently updatable:"),
+				 name);
+		for (guint i = 0; i < array->len; i++) {
+			const gchar *str = g_ptr_array_index(array, i);
+			fu_console_print_full(self->console,
+					      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
+						  FU_CONSOLE_PRINT_FLAG_NEWLINE,
+					      "%s",
+					      str);
+		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: no update can be installed */
+				    _("Nothing to do"));
 		return FALSE;
 	}
 	if (!self->as_json && !self->no_safety_check && !self->assume_yes) {
