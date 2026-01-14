@@ -103,7 +103,7 @@ fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
 }
 
 static void
-fu_msgpack_lookup_func(void)
+fu_msgpack_lookup_func(gconstpointer user_data)
 {
 	g_autoptr(FuMsgpackItem) item1 = NULL;
 	g_autoptr(FuMsgpackItem) item2 = NULL;
@@ -169,7 +169,7 @@ fu_msgpack_lookup_func(void)
 }
 
 static void
-fu_msgpack_binary_stream_func(void)
+fu_msgpack_binary_stream_func(gconstpointer user_data)
 {
 	const gchar data[] = "hello";
 	g_autoptr(GByteArray) buf = NULL;
@@ -195,7 +195,7 @@ fu_msgpack_binary_stream_func(void)
 }
 
 static void
-fu_msgpack_parse_binary_func(void)
+fu_msgpack_parse_binary_func(gconstpointer user_data)
 {
 	/* 64 bit float 100.0099 */
 	const guchar data[] = {0xCB, 0x40, 0x59, 0x00, 0xA2, 0x33, 0x9C, 0x0E, 0xBF};
@@ -215,7 +215,7 @@ fu_msgpack_parse_binary_func(void)
 }
 
 static void
-fu_msgpack_func(void)
+fu_msgpack_func(gconstpointer user_data)
 {
 	g_autoptr(GByteArray) buf1 = NULL;
 	g_autoptr(GByteArray) buf2 = NULL;
@@ -281,7 +281,7 @@ fu_msgpack_func(void)
 }
 
 static void
-fu_archive_invalid_func(void)
+fu_archive_invalid_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuArchive) archive = NULL;
@@ -304,7 +304,7 @@ fu_archive_invalid_func(void)
 }
 
 static void
-fu_archive_cab_func(void)
+fu_archive_cab_func(gconstpointer user_data)
 {
 	g_autofree gchar *checksum1 = NULL;
 	g_autofree gchar *checksum2 = NULL;
@@ -352,7 +352,7 @@ fu_archive_cab_func(void)
 }
 
 static void
-fu_volume_gpt_type_func(void)
+fu_volume_gpt_type_func(gconstpointer user_data)
 {
 	g_assert_cmpstr(fu_volume_kind_convert_to_gpt("0xef"),
 			==,
@@ -367,7 +367,7 @@ fu_volume_gpt_type_func(void)
 }
 
 static void
-fu_common_align_up_func(void)
+fu_common_align_up_func(gconstpointer user_data)
 {
 	g_assert_cmpint(fu_common_align_up(0, 0), ==, 0);
 	g_assert_cmpint(fu_common_align_up(5, 0), ==, 5);
@@ -378,7 +378,7 @@ fu_common_align_up_func(void)
 }
 
 static void
-fu_common_checked_add_func(void)
+fu_common_checked_add_func(gconstpointer user_data)
 {
 	g_assert_cmpint(fu_size_checked_add(0, 0), ==, 0);
 	g_assert_cmpint(fu_size_checked_add(0, 42), ==, 42);
@@ -389,7 +389,7 @@ fu_common_checked_add_func(void)
 }
 
 static void
-fu_common_error_map_func(void)
+fu_common_error_map_func(gconstpointer user_data)
 {
 	const FuErrorMapEntry entries[] = {
 	    {0, FWUPD_ERROR_LAST, NULL},
@@ -412,7 +412,7 @@ fu_common_error_map_func(void)
 }
 
 static void
-fu_common_bitwise_func(void)
+fu_common_bitwise_func(gconstpointer user_data)
 {
 	guint64 val = 0;
 
@@ -434,7 +434,7 @@ fu_common_bitwise_func(void)
 }
 
 static void
-fu_common_byte_array_func(void)
+fu_common_byte_array_func(gconstpointer user_data)
 {
 	g_autofree gchar *str = NULL;
 	g_autoptr(GByteArray) array = g_byte_array_new();
@@ -469,7 +469,7 @@ fu_common_byte_array_func(void)
 }
 
 static void
-fu_common_crc_func(void)
+fu_common_crc_func(gconstpointer user_data)
 {
 	guint8 buf[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
@@ -492,7 +492,7 @@ fu_common_crc_func(void)
 }
 
 static void
-fu_common_guid_func(void)
+fu_common_guid_func(gconstpointer user_data)
 {
 	gboolean ret;
 	guint8 buf[16] = {0};
@@ -511,7 +511,7 @@ fu_common_guid_func(void)
 }
 
 static void
-fu_string_append_func(void)
+fu_string_append_func(gconstpointer user_data)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
 	fwupd_codec_string_append(str, 0, "hdr", "");
@@ -531,7 +531,7 @@ fu_string_append_func(void)
 }
 
 static void
-fu_version_guess_format_func(void)
+fu_version_guess_format_func(gconstpointer user_data)
 {
 	g_assert_cmpint(fu_version_guess_format(NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format(""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
@@ -547,7 +547,7 @@ fu_version_guess_format_func(void)
 }
 
 static void
-fu_version_verify_format_func(void)
+fu_version_verify_format_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
@@ -561,7 +561,7 @@ fu_version_verify_format_func(void)
 }
 
 static void
-fu_device_version_format_func(void)
+fu_device_version_format_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
@@ -571,7 +571,7 @@ fu_device_version_format_func(void)
 }
 
 static void
-fu_device_version_format_raw_func(void)
+fu_device_version_format_raw_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_USB_DEVICE, NULL);
 
@@ -590,7 +590,7 @@ fu_device_version_format_raw_func(void)
 }
 
 static void
-fu_device_open_refcount_func(void)
+fu_device_open_refcount_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -613,7 +613,7 @@ fu_device_open_refcount_func(void)
 }
 
 static void
-fu_device_rescan_func(void)
+fu_device_rescan_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -626,7 +626,7 @@ fu_device_rescan_func(void)
 }
 
 static void
-fu_device_name_func(void)
+fu_device_name_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
 	g_autoptr(FuDevice) device2 = fu_device_new(NULL);
@@ -659,17 +659,13 @@ fu_device_name_func(void)
 }
 
 static void
-fu_device_cfi_device_func(void)
+fu_device_cfi_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	guint8 cmd = 0;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuCfiDevice) cfi_device = NULL;
 	g_autoptr(GError) error = NULL;
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	cfi_device = fu_cfi_device_new(ctx, "3730");
 	ret = fu_device_setup(FU_DEVICE(cfi_device), &error);
@@ -694,7 +690,7 @@ fu_device_cfi_device_func(void)
 }
 
 static void
-fu_device_metadata_func(void)
+fu_device_metadata_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
@@ -719,7 +715,7 @@ fu_device_metadata_func(void)
 }
 
 static void
-fu_string_utf16_func(void)
+fu_string_utf16_func(gconstpointer user_data)
 {
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
@@ -749,7 +745,7 @@ fu_string_utf16_func(void)
 }
 
 static void
-fu_smbios_func(void)
+fu_smbios_func(gconstpointer user_data)
 {
 	const gchar *str;
 	gboolean ret;
@@ -819,7 +815,7 @@ fu_smbios_func(void)
 }
 
 static void
-fu_kernel_cmdline_func(void)
+fu_kernel_cmdline_func(gconstpointer user_data)
 {
 	const gchar *buf = "key=val foo bar=\"baz baz baz\" tail\n";
 	g_autoptr(GHashTable) hash = NULL;
@@ -837,7 +833,7 @@ fu_kernel_cmdline_func(void)
 }
 
 static void
-fu_kernel_config_func(void)
+fu_kernel_config_func(gconstpointer user_data)
 {
 	const gchar *buf = "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE=y\n\n"
 			   "# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set\n";
@@ -853,7 +849,7 @@ fu_kernel_config_func(void)
 }
 
 static void
-fu_smbios3_func(void)
+fu_smbios3_func(gconstpointer user_data)
 {
 	const gchar *str;
 	gboolean ret;
@@ -883,11 +879,16 @@ fu_smbios3_func(void)
 }
 
 static void
-fu_context_efivars_func(void)
+fu_context_efivars_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
+
+	ret = fu_efivars_delete_with_glob(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "*", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	ret = fu_context_efivars_check_free_space(ctx, 10240, &error);
 	g_assert_no_error(error);
@@ -899,9 +900,9 @@ fu_context_efivars_func(void)
 }
 
 static void
-fu_context_backends_func(void)
+fu_context_backends_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(FuBackend) backend2 = NULL;
 	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, "name", "dummy", NULL);
 	g_autoptr(GError) error = NULL;
@@ -913,9 +914,9 @@ fu_context_backends_func(void)
 }
 
 static void
-fu_context_flags_func(void)
+fu_context_flags_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 
 	g_assert_false(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS));
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
@@ -929,9 +930,9 @@ fu_context_flags_func(void)
 }
 
 static void
-fu_context_udev_subsystems_func(void)
+fu_context_udev_subsystems_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) plugin_names1 = NULL;
 	g_autoptr(GPtrArray) plugin_names2 = NULL;
@@ -942,7 +943,7 @@ fu_context_udev_subsystems_func(void)
 	fu_context_add_udev_subsystem(ctx, "block:partition", "uf2");
 	udev_subsystems = fu_context_get_udev_subsystems(ctx);
 	g_assert_nonnull(udev_subsystems);
-	g_assert_cmpint(udev_subsystems->len, ==, 3);
+	g_assert_cmpint(udev_subsystems->len, >=, 3);
 
 	/* add another plugin that can handle *all* block devices */
 	fu_context_add_udev_subsystem(ctx, "block", "uf3");
@@ -962,9 +963,9 @@ fu_context_udev_subsystems_func(void)
 }
 
 static void
-fu_context_state_func(void)
+fu_context_state_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 
 	g_assert_cmpint(fu_context_get_power_state(ctx), ==, FU_POWER_STATE_UNKNOWN);
 	g_assert_cmpint(fu_context_get_lid_state(ctx), ==, FU_LID_STATE_UNKNOWN);
@@ -987,30 +988,26 @@ fu_context_state_func(void)
 }
 
 static void
-fu_context_firmware_gtypes_func(void)
+fu_context_firmware_gtypes_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(GArray) gtypes = NULL;
 	g_autoptr(GPtrArray) gtype_ids = NULL;
 
-	fu_context_add_firmware_gtype(ctx, FU_TYPE_FIRMWARE);
-
 	gtype_ids = fu_context_get_firmware_gtype_ids(ctx);
 	g_assert_nonnull(gtype_ids);
-	g_assert_cmpint(gtype_ids->len, ==, 1);
-	g_assert_cmpstr(g_ptr_array_index(gtype_ids, 0), ==, "raw");
+	g_assert_cmpint(gtype_ids->len, >, 30);
 
 	gtypes = fu_context_get_firmware_gtypes(ctx);
 	g_assert_nonnull(gtypes);
-	g_assert_cmpint(gtypes->len, ==, 1);
-	g_assert_cmpint(g_array_index(gtypes, GType, 0), ==, FU_TYPE_FIRMWARE);
+	g_assert_cmpint(gtypes->len, ==, gtype_ids->len);
 
 	g_assert_cmpint(fu_context_get_firmware_gtype_by_id(ctx, "raw"), ==, FU_TYPE_FIRMWARE);
 	g_assert_cmpint(fu_context_get_firmware_gtype_by_id(ctx, "n/a"), ==, G_TYPE_INVALID);
 }
 
 static void
-fu_context_hwids_dmi_func(void)
+fu_context_hwids_dmi_func(gconstpointer user_data)
 {
 	g_autofree gchar *dump = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -1029,7 +1026,7 @@ fu_context_hwids_dmi_func(void)
 }
 
 static void
-fu_context_hwids_unset_func(void)
+fu_context_hwids_unset_func(gconstpointer user_data)
 {
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -1052,7 +1049,7 @@ fu_context_hwids_unset_func(void)
 }
 
 static void
-fu_context_hwids_fdt_func(void)
+fu_context_hwids_fdt_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
@@ -1127,7 +1124,7 @@ fu_test_strnsplit_nop_cb(GString *token, guint token_idx, gpointer user_data, GE
 }
 
 static void
-fu_common_memmem_func(void)
+fu_common_memmem_func(gconstpointer user_data)
 {
 	const guint8 haystack[] = {'H', 'A', 'Y', 'S'};
 	const guint8 needle[] = {'A', 'Y'};
@@ -1151,7 +1148,7 @@ fu_common_memmem_func(void)
 }
 
 static void
-fu_strpassmask_func(void)
+fu_strpassmask_func(gconstpointer user_data)
 {
 	struct {
 		const gchar *in;
@@ -1171,7 +1168,7 @@ fu_strpassmask_func(void)
 }
 
 static void
-fu_strsplit_func(void)
+fu_strsplit_func(gconstpointer user_data)
 {
 	const gchar *str = "123foo123bar123";
 	const guint bigsz = 1024 * 1024;
@@ -1202,7 +1199,7 @@ fu_strsplit_func(void)
 }
 
 static void
-fu_common_olson_timezone_id_func(void)
+fu_common_olson_timezone_id_func(gconstpointer user_data)
 {
 	g_autofree gchar *timezone_id = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1223,7 +1220,7 @@ fu_common_olson_timezone_id_func(void)
 }
 
 static void
-fu_cpuid_func(void)
+fu_cpuid_func(gconstpointer user_data)
 {
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) cpu_attrs = NULL;
@@ -1236,8 +1233,9 @@ fu_cpuid_func(void)
 }
 
 static void
-fu_strsafe_func(void)
+fu_strsafe_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	struct {
 		const gchar *in;
 		const gchar *op;
@@ -1249,7 +1247,6 @@ fu_strsafe_func(void)
 		    {NULL, NULL}};
 	GPtrArray *instance_ids;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) dev = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
 
@@ -1270,7 +1267,7 @@ fu_strsafe_func(void)
 }
 
 static void
-fu_hwids_func(void)
+fu_hwids_func(gconstpointer user_data)
 {
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *full_path = NULL;
@@ -1363,7 +1360,7 @@ fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user
 }
 
 static void
-fu_config_func(void)
+fu_config_func(gconstpointer user_data)
 {
 	GStatBuf statbuf = {0};
 	gboolean ret;
@@ -1437,8 +1434,9 @@ fu_config_func(void)
 }
 
 static void
-fu_plugin_config_func(void)
+fu_plugin_config_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	GStatBuf statbuf = {0};
 	gboolean ret;
 	gint rc;
@@ -1446,7 +1444,6 @@ fu_plugin_config_func(void)
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
 	g_autofree gchar *fn_mut = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -1507,7 +1504,7 @@ fu_plugin_config_func(void)
 }
 
 static void
-fu_plugin_devices_func(void)
+fu_plugin_devices_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
@@ -1537,7 +1534,7 @@ fu_plugin_devices_func(void)
 }
 
 static void
-fu_plugin_device_inhibit_children_func(void)
+fu_plugin_device_inhibit_children_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) parent = fu_device_new(NULL);
 	g_autoptr(FuDevice) child1 = fu_device_new(NULL);
@@ -1574,7 +1571,7 @@ fu_plugin_device_inhibit_children_func(void)
 }
 
 static void
-fu_plugin_delay_func(void)
+fu_plugin_delay_func(gconstpointer user_data)
 {
 	FuDevice *device_tmp;
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -1610,11 +1607,11 @@ fu_plugin_delay_func(void)
 }
 
 static void
-fu_plugin_fdt_func(void)
+fu_plugin_fdt_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	g_autofree gchar *compatible = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFirmware) fdt_root = NULL;
 	g_autoptr(FuFirmware) fdt_tmp = NULL;
@@ -1664,16 +1661,11 @@ fu_plugin_fdt_func(void)
 }
 
 static void
-fu_plugin_quirks_func(void)
+fu_plugin_quirks_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	const gchar *tmp;
-	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* USB\\VID_0A5C&PID_6412 */
 	tmp = fu_context_lookup_quirk_by_id(ctx, "7a1ba7b9-6bcd-54a4-8a36-d60cc5ee935c", "Flags");
@@ -1705,10 +1697,10 @@ fu_plugin_quirks_func(void)
 }
 
 static void
-fu_plugin_quirks_performance_func(void)
+fu_plugin_quirks_performance_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(GError) error = NULL;
@@ -1756,9 +1748,9 @@ fu_plugin_quirks_append_cb(FuQuirks *quirks,
 }
 
 static void
-fu_plugin_device_progress_func(void)
+fu_plugin_device_progress_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
@@ -1782,7 +1774,7 @@ fu_plugin_device_progress_func(void)
 }
 
 static void
-fu_plugin_quirks_append_func(void)
+fu_plugin_quirks_append_func(gconstpointer user_data)
 {
 	FuPluginQuirksAppendHelper helper = {0};
 	gboolean ret;
@@ -1805,11 +1797,11 @@ fu_plugin_quirks_append_func(void)
 }
 
 static void
-fu_quirks_vendor_ids_func(void)
+fu_quirks_vendor_ids_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	const gchar *tmp;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autofree gchar *guid1 = fwupd_guid_hash_string("PCI\\VEN_8086");
 	g_autofree gchar *guid2 = fwupd_guid_hash_string("USB\\VID_8086");
 	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
@@ -1844,11 +1836,11 @@ fu_quirks_vendor_ids_func(void)
 }
 
 static void
-fu_plugin_func(void)
+fu_plugin_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	GHashTable *metadata;
 	GPtrArray *rules;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "dave1");
@@ -1866,10 +1858,10 @@ fu_plugin_func(void)
 }
 
 static void
-fu_plugin_vfuncs_func(void)
+fu_plugin_vfuncs_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(GError) error = NULL;
 
@@ -1881,9 +1873,9 @@ fu_plugin_vfuncs_func(void)
 }
 
 static void
-fu_plugin_device_gtype_func(void)
+fu_plugin_device_gtype_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 
 	/* add the same gtype multiple times */
@@ -1901,10 +1893,10 @@ fu_plugin_device_gtype_func(void)
 }
 
 static void
-fu_plugin_backend_device_func(void)
+fu_plugin_backend_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRFUNC);
@@ -1929,11 +1921,11 @@ fu_test_plugin_backend_proxy_device_added_cb(FuPlugin *plugin, FuDevice *device,
 }
 
 static void
-fu_plugin_backend_proxy_device_func(void)
+fu_plugin_backend_proxy_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	FuDevice *proxy;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuDevice) device_new = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
@@ -1970,20 +1962,15 @@ fu_plugin_backend_proxy_device_func(void)
 }
 
 static void
-fu_plugin_quirks_device_func(void)
+fu_plugin_quirks_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	FuDevice *device_tmp;
 	GPtrArray *children;
-	gboolean ret;
 	g_autoptr(FuDevice) child1 = NULL;
 	g_autoptr(FuDevice) child2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* use quirk file to set device attributes */
 	fu_device_set_physical_id(device, "usb:00:05");
@@ -2027,7 +2014,7 @@ fu_plugin_quirks_device_func(void)
 }
 
 static void
-fu_common_kernel_lockdown_func(void)
+fu_common_kernel_lockdown_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *locked_dir = NULL;
@@ -2056,7 +2043,7 @@ fu_common_kernel_lockdown_func(void)
 }
 
 static void
-fu_common_kernel_search_func(void)
+fu_common_kernel_search_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *result1 = NULL;
@@ -2114,7 +2101,7 @@ fu_test_close_cb(FuDevice *device, GError **error)
 }
 
 static void
-fu_device_locker_func(void)
+fu_device_locker_func(gconstpointer user_data)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2145,7 +2132,7 @@ fu_test_fail_close_cb(FuDevice *device, GError **error)
 }
 
 static void
-fu_device_locker_fail_func(void)
+fu_device_locker_fail_func(gconstpointer user_data)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2162,7 +2149,7 @@ fu_device_locker_fail_func(void)
 }
 
 static void
-fu_common_endian_func(void)
+fu_common_endian_func(gconstpointer user_data)
 {
 	guint8 buf[3] = {0};
 
@@ -2190,7 +2177,7 @@ fu_common_endian_func(void)
 }
 
 static void
-fu_common_bytes_get_data_func(void)
+fu_common_bytes_get_data_func(gconstpointer user_data)
 {
 	const gchar *fn = "/tmp/fwupdzero";
 	const guint8 *buf;
@@ -2237,7 +2224,7 @@ fu_device_poll_cb(FuDevice *device, GError **error)
 }
 
 static void
-fu_device_poll_func(void)
+fu_device_poll_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -2283,11 +2270,11 @@ fu_device_poll_func(void)
 }
 
 static void
-fu_device_func(void)
+fu_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2310,7 +2297,7 @@ fu_device_func(void)
 }
 
 static void
-fu_device_event_donor_func(void)
+fu_device_event_donor_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
 	g_autoptr(FuDevice) device2 = fu_device_new(NULL);
@@ -2336,7 +2323,7 @@ fu_device_event_donor_func(void)
 }
 
 static void
-fu_device_event_func(void)
+fu_device_event_func(gconstpointer user_data)
 {
 	gboolean ret;
 	const gchar *str;
@@ -2398,7 +2385,7 @@ fu_device_event_func(void)
 }
 
 static void
-fu_device_event_uncompressed_func(void)
+fu_device_event_uncompressed_func(gconstpointer user_data)
 {
 	g_autofree gchar *json = NULL;
 	g_autoptr(FuDeviceEvent) event = fu_device_event_new("foo:bar:baz");
@@ -2417,10 +2404,10 @@ fu_device_event_uncompressed_func(void)
 }
 
 static void
-fu_device_vfuncs_func(void)
+fu_device_vfuncs_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuFirmware) firmware_dummy = fu_firmware_new();
@@ -2482,17 +2469,12 @@ fu_device_vfuncs_func(void)
 }
 
 static void
-fu_device_instance_ids_func(void)
+fu_device_instance_ids_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
-
-	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* sanity check */
 	g_assert_false(fu_device_has_guid(device, "c0a26214-223b-572a-9477-cde897fe8619"));
@@ -2512,7 +2494,7 @@ fu_device_instance_ids_func(void)
 }
 
 static void
-fu_device_composite_id_func(void)
+fu_device_composite_id_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) dev1 = fu_device_new(NULL);
 	g_autoptr(FuDevice) dev2 = fu_device_new(NULL);
@@ -2564,7 +2546,7 @@ fu_device_composite_id_func(void)
 }
 
 static void
-fu_device_inhibit_func(void)
+fu_device_inhibit_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
@@ -2601,7 +2583,7 @@ fu_device_inhibit_func(void)
 }
 
 static void
-fu_device_inhibit_updateable_func(void)
+fu_device_inhibit_updateable_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
@@ -2623,7 +2605,7 @@ fu_device_inhibit_updateable_func(void)
 }
 
 static void
-fu_device_custom_flags_func(void)
+fu_device_custom_flags_func(gconstpointer user_data)
 {
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -2654,7 +2636,7 @@ fu_device_custom_flags_func(void)
 }
 
 static void
-fu_device_flags_func(void)
+fu_device_flags_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuDevice) proxy = fu_device_new(NULL);
@@ -2694,18 +2676,13 @@ fu_device_flags_func(void)
 }
 
 static void
-fu_device_children_func(void)
+fu_device_children_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuDevice) parent = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
-
-	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	fu_device_set_physical_id(child, "dummy");
 	fu_device_set_physical_id(parent, "dummy");
@@ -2727,7 +2704,7 @@ fu_device_children_func(void)
 }
 
 static void
-fu_device_parent_func(void)
+fu_device_parent_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) child = fu_device_new(NULL);
 	g_autoptr(FuDevice) child_root = NULL;
@@ -2759,9 +2736,9 @@ fu_device_parent_func(void)
 }
 
 static void
-fu_device_incorporate_descendant_func(void)
+fu_device_incorporate_descendant_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuSelfTestDevice) test_device = g_object_new(FU_TYPE_SELF_TEST_DEVICE, NULL);
 
@@ -2777,9 +2754,9 @@ fu_device_incorporate_descendant_func(void)
 }
 
 static void
-fu_device_incorporate_non_generic_func(void)
+fu_device_incorporate_non_generic_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuDevice) donor = fu_device_new(ctx);
 
@@ -2812,9 +2789,9 @@ fu_device_incorporate_non_generic_func(void)
 }
 
 static void
-fu_device_incorporate_flag_func(void)
+fu_device_incorporate_flag_func(gconstpointer user_data)
 {
-	g_autoptr(FuContext) ctx = fu_context_new();
+	FuContext *ctx = (FuContext *)user_data;
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuDevice) donor = fu_device_new(ctx);
 
@@ -2835,18 +2812,13 @@ fu_device_incorporate_flag_func(void)
 }
 
 static void
-fu_device_incorporate_func(void)
+fu_device_incorporate_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuDevice) donor = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
-
-	/* load quirks */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* set up donor device */
 	fu_device_set_equivalent_id(donor, "0000000000000000000000000000000000000000");
@@ -2909,8 +2881,9 @@ fu_backend_emulate_count_cb(FuBackend *backend, FuDevice *device, gpointer user_
 }
 
 static void
-fu_backend_emulate_func(void)
+fu_backend_emulate_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	guint8 buf[] = {0x00, 0x00};
 	guint added_cnt = 0;
@@ -2919,7 +2892,6 @@ fu_backend_emulate_func(void)
 	FuDevice *device;
 	g_autofree gchar *json3 = NULL;
 	g_autoptr(FuBackend) backend = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GError) error = NULL;
@@ -3062,7 +3034,7 @@ fu_backend_emulate_func(void)
 }
 
 static void
-fu_backend_func(void)
+fu_backend_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	gboolean ret;
@@ -3111,7 +3083,7 @@ fu_backend_func(void)
 }
 
 static void
-fu_chunk_array_func(void)
+fu_chunk_array_func(gconstpointer user_data)
 {
 	g_autoptr(FuChunk) chk1 = NULL;
 	g_autoptr(FuChunk) chk2 = NULL;
@@ -3156,7 +3128,7 @@ fu_chunk_array_func(void)
 }
 
 static void
-fu_chunk_func(void)
+fu_chunk_func(gconstpointer user_data)
 {
 	g_autofree gchar *chunked1_str = NULL;
 	g_autofree gchar *chunked2_str = NULL;
@@ -3278,7 +3250,7 @@ fu_chunk_func(void)
 }
 
 static void
-fu_chunk_array_null_func(void)
+fu_chunk_array_null_func(gconstpointer user_data)
 {
 	g_autofree gchar *chunked1_str = NULL;
 	g_autofree gchar *chunked2_str = NULL;
@@ -3330,7 +3302,7 @@ fu_chunk_array_null_func(void)
 }
 
 static void
-fu_strstrip_func(void)
+fu_strstrip_func(gconstpointer user_data)
 {
 	struct {
 		const gchar *old;
@@ -3353,7 +3325,7 @@ fu_strstrip_func(void)
 }
 
 static void
-fu_version_semver_func(void)
+fu_version_semver_func(gconstpointer user_data)
 {
 	struct {
 		const gchar *old;
@@ -3374,7 +3346,7 @@ fu_version_semver_func(void)
 }
 
 static void
-fu_strtoull_func(void)
+fu_strtoull_func(gconstpointer user_data)
 {
 	gboolean ret;
 	guint64 val = 0;
@@ -3406,7 +3378,7 @@ fu_strtoull_func(void)
 }
 
 static void
-fu_strtoll_func(void)
+fu_strtoll_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gint64 val = 0;
@@ -3438,7 +3410,7 @@ fu_strtoll_func(void)
 }
 
 static void
-fu_common_version_func(void)
+fu_common_version_func(gconstpointer user_data)
 {
 	guint i;
 	struct {
@@ -3558,7 +3530,7 @@ fu_common_version_func(void)
 }
 
 static void
-fu_common_vercmp_func(void)
+fu_common_vercmp_func(gconstpointer user_data)
 {
 	/* same */
 	g_assert_cmpint(fu_version_compare("1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
@@ -3628,7 +3600,7 @@ fu_common_vercmp_func(void)
 }
 
 static void
-fu_firmware_raw_aligned_func(void)
+fu_firmware_raw_aligned_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware1 = fu_firmware_new();
@@ -3651,7 +3623,7 @@ fu_firmware_raw_aligned_func(void)
 }
 
 static void
-fu_firmware_ihex_func(void)
+fu_firmware_ihex_func(gconstpointer user_data)
 {
 	const guint8 *data;
 	gsize len;
@@ -3692,7 +3664,7 @@ fu_firmware_ihex_func(void)
 }
 
 static void
-fu_firmware_ihex_signed_func(void)
+fu_firmware_ihex_signed_func(gconstpointer user_data)
 {
 	const guint8 *data;
 	gsize len;
@@ -3723,7 +3695,7 @@ fu_firmware_ihex_signed_func(void)
 }
 
 static void
-fu_firmware_ihex_offset_func(void)
+fu_firmware_ihex_offset_func(gconstpointer user_data)
 {
 	const guint8 *data;
 	gboolean ret;
@@ -3767,7 +3739,7 @@ fu_firmware_ihex_offset_func(void)
 }
 
 static void
-fu_firmware_srec_func(void)
+fu_firmware_srec_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -3785,7 +3757,7 @@ fu_firmware_srec_func(void)
 }
 
 static void
-fu_firmware_fdt_func(void)
+fu_firmware_fdt_func(gconstpointer user_data)
 {
 	gboolean ret;
 	guint32 val32 = 0;
@@ -3832,7 +3804,7 @@ fu_firmware_fdt_func(void)
 }
 
 static void
-fu_firmware_fit_func(void)
+fu_firmware_fit_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
@@ -3869,7 +3841,7 @@ fu_firmware_fit_func(void)
 }
 
 static void
-fu_firmware_srec_tokenization_func(void)
+fu_firmware_srec_tokenization_func(gconstpointer user_data)
 {
 	FuSrecFirmwareRecord *rcd;
 	GPtrArray *records;
@@ -3903,7 +3875,7 @@ fu_firmware_srec_tokenization_func(void)
 }
 
 static void
-fu_firmware_build_func(void)
+fu_firmware_build_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *str = NULL;
@@ -3996,7 +3968,7 @@ fu_test_firmware_dfuse_get_size(FuFirmware *firmware)
 }
 
 static void
-fu_firmware_dfuse_func(void)
+fu_firmware_dfuse_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -4015,7 +3987,7 @@ fu_firmware_dfuse_func(void)
 }
 
 static void
-fu_firmware_fmap_func(void)
+fu_firmware_fmap_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum = NULL;
@@ -4065,7 +4037,7 @@ fu_firmware_fmap_func(void)
 }
 
 static void
-fu_firmware_sorted_func(void)
+fu_firmware_sorted_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *xml1 = NULL;
@@ -4143,7 +4115,7 @@ fu_firmware_sorted_func(void)
 }
 
 static void
-fu_firmware_new_from_gtypes_func(void)
+fu_firmware_new_from_gtypes_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -4202,7 +4174,7 @@ fu_firmware_new_from_gtypes_func(void)
 }
 
 static void
-fu_firmware_csv_func(void)
+fu_firmware_csv_func(gconstpointer user_data)
 {
 	FuCsvEntry *entry_tmp;
 	gboolean ret;
@@ -4252,7 +4224,7 @@ fu_firmware_csv_func(void)
 }
 
 static void
-fu_firmware_archive_func(void)
+fu_firmware_archive_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
@@ -4296,7 +4268,7 @@ fu_firmware_archive_func(void)
 }
 
 static void
-fu_firmware_linear_func(void)
+fu_firmware_linear_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware1 = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
@@ -4341,7 +4313,7 @@ fu_firmware_linear_func(void)
 }
 
 static void
-fu_firmware_dfu_func(void)
+fu_firmware_dfu_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -4362,7 +4334,7 @@ fu_firmware_dfu_func(void)
 }
 
 static void
-fu_firmware_ifwi_cpd_func(void)
+fu_firmware_ifwi_cpd_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -4395,7 +4367,7 @@ fu_firmware_ifwi_cpd_func(void)
 }
 
 static void
-fu_firmware_ifwi_fpt_func(void)
+fu_firmware_ifwi_fpt_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -4427,7 +4399,7 @@ fu_firmware_ifwi_fpt_func(void)
 }
 
 static void
-fu_firmware_oprom_func(void)
+fu_firmware_oprom_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
@@ -4463,7 +4435,7 @@ fu_firmware_oprom_func(void)
 }
 
 static void
-fu_firmware_dfu_patch_func(void)
+fu_firmware_dfu_patch_func(gconstpointer user_data)
 {
 	g_autofree gchar *csum = NULL;
 	g_autofree gchar *filename = NULL;
@@ -4497,7 +4469,7 @@ fu_firmware_dfu_patch_func(void)
 }
 
 static void
-fu_hid_descriptor_container_func(void)
+fu_hid_descriptor_container_func(gconstpointer user_data)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -4529,7 +4501,7 @@ fu_hid_descriptor_container_func(void)
 }
 
 static void
-fu_hid_descriptor_func(void)
+fu_hid_descriptor_func(gconstpointer user_data)
 {
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuHidReport) report1 = NULL;
@@ -4592,7 +4564,7 @@ fu_hid_descriptor_func(void)
 }
 
 static void
-fu_firmware_func(void)
+fu_firmware_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -4682,7 +4654,7 @@ fu_firmware_func(void)
 }
 
 static void
-fu_firmware_convert_version_func(void)
+fu_firmware_convert_version_func(gconstpointer user_data)
 {
 	g_autoptr(FuFirmware) firmware = fu_intel_thunderbolt_nvm_new();
 	fu_firmware_set_version_raw(firmware, 0x1234);
@@ -4690,7 +4662,7 @@ fu_firmware_convert_version_func(void)
 }
 
 static void
-fu_firmware_common_func(void)
+fu_firmware_common_func(gconstpointer user_data)
 {
 	gboolean ret;
 	guint8 value = 0;
@@ -4712,7 +4684,7 @@ fu_firmware_common_func(void)
 }
 
 static void
-fu_firmware_dedupe_func(void)
+fu_firmware_dedupe_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -4773,7 +4745,7 @@ fu_firmware_dedupe_func(void)
 }
 
 static void
-fu_efivar_func(void)
+fu_efivar_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gsize sz = 0;
@@ -4890,14 +4862,14 @@ fu_efivar_func(void)
 }
 
 static void
-fu_efivar_boot_func(void)
+fu_efivar_boot_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	FuFirmware *firmware_tmp;
 	gboolean ret;
 	const gchar *tmpdir = g_getenv("FWUPD_LOCALSTATEDIR");
 	guint16 idx = 0;
 	g_autofree gchar *pefile_fn = g_build_filename(tmpdir, "grubx64.efi", NULL);
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuEfiLoadOption) loadopt2 = NULL;
 	g_autoptr(FuVolume) volume = fu_volume_new_from_mount_path(tmpdir);
 	g_autoptr(GArray) bootorder2 = NULL;
@@ -4931,6 +4903,10 @@ fu_efivar_boot_func(void)
 	bootorder2 = fu_efivars_get_boot_order(efivars, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bootorder2);
+	for (guint i = 0; i < bootorder2->len; i++) {
+		idx = g_array_index(bootorder2, guint16, i);
+		g_debug("Boot%04X", idx);
+	}
 	g_assert_cmpint(bootorder2->len, ==, 2);
 	idx = g_array_index(bootorder2, guint16, 0);
 	g_assert_cmpint(idx, ==, 0x0001);
@@ -5015,7 +4991,7 @@ fu_device_retry_success_3rd_try_cb(FuDevice *device, gpointer user_data, GError 
 }
 
 static void
-fu_device_retry_success_func(void)
+fu_device_retry_success_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -5036,7 +5012,7 @@ fu_device_retry_success_func(void)
 }
 
 static void
-fu_device_retry_failed_func(void)
+fu_device_retry_failed_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -5057,7 +5033,7 @@ fu_device_retry_failed_func(void)
 }
 
 static void
-fu_device_retry_hardware_func(void)
+fu_device_retry_hardware_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -5074,8 +5050,9 @@ fu_device_retry_hardware_func(void)
 }
 
 static void
-fu_bios_settings_load_func(void)
+fu_bios_settings_load_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	gint integer;
 	const gchar *tmp;
@@ -5084,7 +5061,6 @@ fu_bios_settings_load_func(void)
 	FwupdBiosSettingKind kind;
 	g_autofree gchar *base_dir = NULL;
 	g_autofree gchar *test_dir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
@@ -5253,7 +5229,7 @@ fu_bios_settings_load_func(void)
 }
 
 static void
-fu_security_attrs_hsi_func(void)
+fu_security_attrs_hsi_func(gconstpointer user_data)
 {
 	g_autofree gchar *hsi1 = NULL;
 	g_autofree gchar *hsi2 = NULL;
@@ -5369,7 +5345,7 @@ fu_security_attrs_hsi_func(void)
 }
 
 static void
-fu_security_attrs_compare_func(void)
+fu_security_attrs_compare_func(gconstpointer user_data)
 {
 	FwupdSecurityAttr *attr_tmp;
 	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
@@ -5433,7 +5409,7 @@ fu_security_attrs_compare_func(void)
 }
 
 static void
-fu_firmware_builder_round_trip_func(void)
+fu_firmware_builder_round_trip_func(gconstpointer user_data)
 {
 	struct {
 		const gchar *xml_fn;
@@ -5694,7 +5670,7 @@ fu_progress_percentage_changed_cb(FuProgress *progress, guint percentage, gpoint
 }
 
 static void
-fu_progress_func(void)
+fu_progress_func(gconstpointer user_data)
 {
 	FuProgressHelper helper = {0};
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -5729,7 +5705,7 @@ fu_progress_func(void)
 }
 
 static void
-fu_progress_child_func(void)
+fu_progress_child_func(gconstpointer user_data)
 {
 	FuProgressHelper helper = {0};
 	FuProgress *child;
@@ -5780,7 +5756,7 @@ fu_progress_child_func(void)
 }
 
 static void
-fu_progress_scaling_func(void)
+fu_progress_scaling_func(gconstpointer user_data)
 {
 	const guint insane_steps = 1000 * 1000;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -5799,7 +5775,7 @@ fu_progress_scaling_func(void)
 }
 
 static void
-fu_progress_parent_one_step_proxy_func(void)
+fu_progress_parent_one_step_proxy_func(gconstpointer user_data)
 {
 	FuProgressHelper helper = {0};
 	FuProgress *child;
@@ -5826,7 +5802,7 @@ fu_progress_parent_one_step_proxy_func(void)
 }
 
 static void
-fu_progress_non_equal_steps_func(void)
+fu_progress_non_equal_steps_func(gconstpointer user_data)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	FuProgress *child;
@@ -5917,7 +5893,7 @@ fu_progress_non_equal_steps_func(void)
 }
 
 static void
-fu_progress_finish_func(void)
+fu_progress_finish_func(gconstpointer user_data)
 {
 	FuProgress *child;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -5935,7 +5911,7 @@ fu_progress_finish_func(void)
 }
 
 static void
-fu_progress_global_fraction_func(void)
+fu_progress_global_fraction_func(gconstpointer user_data)
 {
 	FuProgress *child;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -5961,7 +5937,7 @@ fu_progress_global_fraction_func(void)
 }
 
 static void
-fu_progress_child_finished(void)
+fu_progress_child_finished_func(gconstpointer user_data)
 {
 	FuProgress *child;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -5980,7 +5956,7 @@ fu_progress_child_finished(void)
 }
 
 static void
-fu_partial_input_stream_composite_func(void)
+fu_partial_input_stream_composite_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gint rc;
@@ -6022,7 +5998,7 @@ fu_partial_input_stream_composite_func(void)
 }
 
 static void
-fu_partial_input_stream_simple_func(void)
+fu_partial_input_stream_simple_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gssize rc;
@@ -6056,7 +6032,7 @@ fu_partial_input_stream_simple_func(void)
 }
 
 static void
-fu_partial_input_stream_closed_base_func(void)
+fu_partial_input_stream_closed_base_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gssize rc;
@@ -6082,7 +6058,7 @@ fu_partial_input_stream_closed_base_func(void)
 }
 
 static void
-fu_partial_input_stream_func(void)
+fu_partial_input_stream_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gssize rc;
@@ -6270,7 +6246,7 @@ fu_partial_input_stream_func(void)
 }
 
 static void
-fu_composite_input_stream_func(void)
+fu_composite_input_stream_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gsize streamsz = 0;
@@ -6407,7 +6383,7 @@ fu_strsplit_stream_cb(GString *token, guint token_idx, gpointer user_data, GErro
 }
 
 static void
-fu_strsplit_stream_func(void)
+fu_strsplit_stream_func(gconstpointer user_data)
 {
 	gboolean ret;
 	guint cnt1 = 0;
@@ -6444,7 +6420,7 @@ fu_strsplit_stream_func(void)
 }
 
 static void
-fu_input_stream_find_func(void)
+fu_input_stream_find_func(gconstpointer user_data)
 {
 	const gchar *haystack = "I write free software. Firmware troublemaker, writing Firmware.";
 	const gchar *needle1 = "Firmware";
@@ -6488,7 +6464,7 @@ fu_input_stream_find_func(void)
 }
 
 static void
-fu_input_stream_sum_overflow_func(void)
+fu_input_stream_sum_overflow_func(gconstpointer user_data)
 {
 	guint8 buf[3] = {0};
 	gboolean ret;
@@ -6503,7 +6479,7 @@ fu_input_stream_sum_overflow_func(void)
 }
 
 static void
-fu_input_stream_chunkify_func(void)
+fu_input_stream_chunkify_func(gconstpointer user_data)
 {
 	gboolean ret;
 	guint8 sum8 = 0;
@@ -6544,7 +6520,7 @@ fu_input_stream_chunkify_func(void)
 }
 
 static void
-fu_lzma_func(void)
+fu_lzma_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(GByteArray) buf_in = g_byte_array_new();
@@ -6576,10 +6552,10 @@ fu_lzma_func(void)
 }
 
 static void
-fu_plugin_efi_x509_signature_func(void)
+fu_plugin_efi_x509_signature_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
 	g_autoptr(FuEfiX509Device) device = fu_efi_x509_device_new(ctx, sig);
 	g_autoptr(GError) error = NULL;
@@ -6618,7 +6594,7 @@ fu_plugin_efi_x509_signature_func(void)
 }
 
 static void
-fu_plugin_efi_variable_authentication2_func(void)
+fu_plugin_efi_variable_authentication2_func(gconstpointer user_data)
 {
 	FuFirmware *signer;
 	gboolean ret;
@@ -6672,7 +6648,7 @@ fu_plugin_efi_variable_authentication2_func(void)
 }
 
 static void
-fu_plugin_efi_signature_list_func(void)
+fu_plugin_efi_signature_list_func(gconstpointer user_data)
 {
 	FuEfiX509Signature *sig;
 	gboolean ret;
@@ -6706,7 +6682,7 @@ fu_plugin_efi_signature_list_func(void)
 }
 
 static void
-fu_device_possible_plugin_func(void)
+fu_device_possible_plugin_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -6740,7 +6716,7 @@ fu_device_possible_plugin_func(void)
 }
 
 static void
-fu_device_parent_name_prefix_func(void)
+fu_device_parent_name_prefix_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuDevice) parent = fu_device_new(NULL);
@@ -6764,7 +6740,7 @@ fu_device_parent_name_prefix_func(void)
 }
 
 static void
-fu_device_id_display_func(void)
+fu_device_id_display_func(gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autofree gchar *id1 = NULL;
@@ -6789,11 +6765,11 @@ fu_device_id_display_func(void)
 }
 
 static void
-fu_device_udev_func(void)
+fu_device_udev_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	g_autofree gchar *prop = NULL;
 	g_autofree gchar *sysfs_path = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuUdevDevice) udev_device = fu_udev_device_new(ctx, sysfs_path);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) attrs = NULL;
@@ -6834,11 +6810,11 @@ fu_security_attrs_minimize(FuSecurityAttrs *attrs)
 }
 
 static void
-fu_intel_me16_device_func(void)
+fu_intel_me16_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
@@ -6927,11 +6903,11 @@ fu_intel_me16_device_func(void)
 }
 
 static void
-fu_intel_me18_device_func(void)
+fu_intel_me18_device_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
@@ -7015,11 +6991,11 @@ fu_intel_me18_device_func(void)
 }
 
 static void
-fu_intel_me16_device_hap_func(void)
+fu_intel_me16_device_hap_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
@@ -7108,7 +7084,7 @@ fu_intel_me16_device_hap_func(void)
 }
 
 static void
-fu_cab_checksum_func(void)
+fu_cab_checksum_func(gconstpointer user_data)
 {
 	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
 	guint32 checksums[] = {
@@ -7136,7 +7112,7 @@ fu_cab_checksum_func(void)
 }
 
 static void
-fu_efi_lz77_decompressor_func(void)
+fu_efi_lz77_decompressor_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *csum_legacy = NULL;
@@ -7199,7 +7175,7 @@ fu_efi_lz77_decompressor_func(void)
 }
 
 static void
-fu_input_stream_func(void)
+fu_input_stream_func(gconstpointer user_data)
 {
 	gboolean ret;
 	gsize bufsz = 0;
@@ -7274,7 +7250,7 @@ fu_input_stream_func(void)
 }
 
 static void
-fu_plugin_struct_bits_func(void)
+fu_plugin_struct_bits_func(gconstpointer user_data)
 {
 	g_autofree gchar *str1 = NULL;
 	g_autoptr(FuStructSelfTestBits) st2 = NULL;
@@ -7315,7 +7291,7 @@ fu_plugin_struct_bits_func(void)
 }
 
 static void
-fu_plugin_struct_list_func(void)
+fu_plugin_struct_list_func(gconstpointer user_data)
 {
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuStructSelfTestList) st = fu_struct_self_test_list_new();
@@ -7351,7 +7327,7 @@ fu_plugin_struct_list_func(void)
 }
 
 static void
-fu_plugin_struct_func(void)
+fu_plugin_struct_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuStructSelfTest) st = fu_struct_self_test_new();
@@ -7419,7 +7395,7 @@ fu_plugin_struct_func(void)
 }
 
 static void
-fu_plugin_struct_wrapped_func(void)
+fu_plugin_struct_wrapped_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *str1 = NULL;
@@ -7496,7 +7472,7 @@ fu_plugin_struct_wrapped_func(void)
 }
 
 static void
-fu_efi_load_option_path_func(void)
+fu_efi_load_option_path_func(gconstpointer user_data)
 {
 	const gchar *tmp;
 	gboolean ret;
@@ -7526,7 +7502,7 @@ fu_efi_load_option_path_func(void)
 }
 
 static void
-fu_efi_load_option_hive_func(void)
+fu_efi_load_option_hive_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *blobstr = NULL;
@@ -7559,7 +7535,7 @@ fu_efi_load_option_hive_func(void)
 }
 
 static void
-fu_efi_load_option_func(void)
+fu_efi_load_option_func(gconstpointer user_data)
 {
 	g_autoptr(FuEfivars) efivars = fu_efivars_new();
 	/*
@@ -7589,8 +7565,10 @@ fu_efi_load_option_func(void)
 int
 main(int argc, char **argv)
 {
+	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = NULL;
+	g_autoptr(GError) error = NULL;
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
@@ -7614,187 +7592,241 @@ main(int argc, char **argv)
 	(void)g_setenv("CACHE_DIRECTORY", "/tmp/fwupd-self-test/cache", TRUE);
 
 	/* register all the GTypes manually */
+	ctx = fu_context_new();
 	fu_context_add_firmware_gtypes(ctx);
 	g_type_ensure(FU_TYPE_USB_BOS_DESCRIPTOR);
 
-	g_test_add_func("/fwupd/cab{checksum}", fu_cab_checksum_func);
-	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
-	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
-	g_test_add_func("/fwupd/input-stream{sum-overflow}", fu_input_stream_sum_overflow_func);
-	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
-	g_test_add_func("/fwupd/input-stream{find}", fu_input_stream_find_func);
-	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
-	g_test_add_func("/fwupd/partial-input-stream{closed-base}",
-			fu_partial_input_stream_closed_base_func);
-	g_test_add_func("/fwupd/partial-input-stream{simple}", fu_partial_input_stream_simple_func);
-	g_test_add_func("/fwupd/partial-input-stream{composite}",
-			fu_partial_input_stream_composite_func);
-	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
-	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
-	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);
-	g_test_add_func("/fwupd/struct{list}", fu_plugin_struct_list_func);
-	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
-	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
-	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);
-	g_test_add_func("/fwupd/string{password-mask}", fu_strpassmask_func);
-	g_test_add_func("/fwupd/string{strsplit-stream}", fu_strsplit_stream_func);
-	g_test_add_func("/fwupd/lzma", fu_lzma_func);
-	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
-	g_test_add_func("/fwupd/common{olson-timezone-id}", fu_common_olson_timezone_id_func);
-	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
+	/* ensure quirks are set up, but not saved to disk */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	g_test_add_data_func("/fwupd/cab{checksum}", ctx, fu_cab_checksum_func);
+	g_test_add_data_func("/fwupd/efi-lz77{decompressor}", ctx, fu_efi_lz77_decompressor_func);
+	g_test_add_data_func("/fwupd/input-stream", ctx, fu_input_stream_func);
+	g_test_add_data_func("/fwupd/input-stream{sum-overflow}",
+			     ctx,
+			     fu_input_stream_sum_overflow_func);
+	g_test_add_data_func("/fwupd/input-stream{chunkify}", ctx, fu_input_stream_chunkify_func);
+	g_test_add_data_func("/fwupd/input-stream{find}", ctx, fu_input_stream_find_func);
+	g_test_add_data_func("/fwupd/partial-input-stream", ctx, fu_partial_input_stream_func);
+	g_test_add_data_func("/fwupd/partial-input-stream{closed-base}",
+			     ctx,
+			     fu_partial_input_stream_closed_base_func);
+	g_test_add_data_func("/fwupd/partial-input-stream{simple}",
+			     ctx,
+			     fu_partial_input_stream_simple_func);
+	g_test_add_data_func("/fwupd/partial-input-stream{composite}",
+			     ctx,
+			     fu_partial_input_stream_composite_func);
+	g_test_add_data_func("/fwupd/composite-input-stream", ctx, fu_composite_input_stream_func);
+	g_test_add_data_func("/fwupd/struct", ctx, fu_plugin_struct_func);
+	g_test_add_data_func("/fwupd/struct{bits}", ctx, fu_plugin_struct_bits_func);
+	g_test_add_data_func("/fwupd/struct{list}", ctx, fu_plugin_struct_list_func);
+	g_test_add_data_func("/fwupd/struct{wrapped}", ctx, fu_plugin_struct_wrapped_func);
+	g_test_add_data_func("/fwupd/plugin{quirks-append}", ctx, fu_plugin_quirks_append_func);
+	g_test_add_data_func("/fwupd/quirks{vendor-ids}", ctx, fu_quirks_vendor_ids_func);
+	g_test_add_data_func("/fwupd/string{password-mask}", ctx, fu_strpassmask_func);
+	g_test_add_data_func("/fwupd/string{strsplit-stream}", ctx, fu_strsplit_stream_func);
+	g_test_add_data_func("/fwupd/lzma", ctx, fu_lzma_func);
+	g_test_add_data_func("/fwupd/common{strnsplit}", ctx, fu_strsplit_func);
+	g_test_add_data_func("/fwupd/common{olson-timezone-id}",
+			     ctx,
+			     fu_common_olson_timezone_id_func);
+	g_test_add_data_func("/fwupd/common{memmem}", ctx, fu_common_memmem_func);
 	if (g_test_slow())
-		g_test_add_func("/fwupd/progress", fu_progress_func);
-	g_test_add_func("/fwupd/progress{scaling}", fu_progress_scaling_func);
-	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
-	g_test_add_func("/fwupd/progress{child-finished}", fu_progress_child_finished);
-	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
-	g_test_add_func("/fwupd/progress{no-equal}", fu_progress_non_equal_steps_func);
-	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
-	g_test_add_func("/fwupd/progress{global-fraction}", fu_progress_global_fraction_func);
-	g_test_add_func("/fwupd/bios-attrs{load}", fu_bios_settings_load_func);
-	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
-	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
-	g_test_add_func("/fwupd/config", fu_config_func);
-	g_test_add_func("/fwupd/plugin", fu_plugin_func);
-	g_test_add_func("/fwupd/plugin{vfuncs}", fu_plugin_vfuncs_func);
-	g_test_add_func("/fwupd/plugin{device-gtype}", fu_plugin_device_gtype_func);
-	g_test_add_func("/fwupd/plugin{backend-device}", fu_plugin_backend_device_func);
-	g_test_add_func("/fwupd/plugin{backend-proxy-device}", fu_plugin_backend_proxy_device_func);
-	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
-	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
-	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
-			fu_plugin_device_inhibit_children_func);
-	g_test_add_func("/fwupd/plugin{delay}", fu_plugin_delay_func);
-	g_test_add_func("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
-	g_test_add_func("/fwupd/plugin{fdt}", fu_plugin_fdt_func);
-	g_test_add_func("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
-	g_test_add_func("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
-	g_test_add_func("/fwupd/backend", fu_backend_func);
-	g_test_add_func("/fwupd/backend{emulate}", fu_backend_emulate_func);
-	g_test_add_func("/fwupd/chunk", fu_chunk_func);
-	g_test_add_func("/fwupd/chunk-null", fu_chunk_array_null_func);
-	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
-	g_test_add_func("/fwupd/common{checked-add}", fu_common_checked_add_func);
-	g_test_add_func("/fwupd/common{error-map}", fu_common_error_map_func);
-	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
-	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
-	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
-	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
-	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
-	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
-	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
-	g_test_add_func("/fwupd/common{version-guess-format}", fu_version_guess_format_func);
-	g_test_add_func("/fwupd/common{version-verify-format}", fu_version_verify_format_func);
-	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
-	g_test_add_func("/fwupd/common{strtoll}", fu_strtoll_func);
-	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
-	g_test_add_func("/fwupd/common{version-semver}", fu_version_semver_func);
-	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);
-	g_test_add_func("/fwupd/common{strstrip}", fu_strstrip_func);
-	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
-	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
-	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
-	g_test_add_func("/fwupd/common{kernel-search}", fu_common_kernel_search_func);
-	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
-	g_test_add_func("/fwupd/common{cpuid}", fu_cpuid_func);
-	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
-	g_test_add_func("/fwupd/msgpack{binary-stream}", fu_msgpack_binary_stream_func);
-	g_test_add_func("/fwupd/msgpack{parse-binary}", fu_msgpack_parse_binary_func);
-	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
-	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
-	g_test_add_func("/fwupd/efi-load-option{path}", fu_efi_load_option_path_func);
-	g_test_add_func("/fwupd/efi-load-option{hive}", fu_efi_load_option_hive_func);
-	g_test_add_func("/fwupd/efi-x509-signature", fu_plugin_efi_x509_signature_func);
-	g_test_add_func("/fwupd/efi-signature-list", fu_plugin_efi_signature_list_func);
-	g_test_add_func("/fwupd/efi-variable-authentication2",
-			fu_plugin_efi_variable_authentication2_func);
-	g_test_add_func("/fwupd/efivar", fu_efivar_func);
-	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
-	g_test_add_func("/fwupd/hwids", fu_hwids_func);
-	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
-	g_test_add_func("/fwupd/context{backends}", fu_context_backends_func);
-	g_test_add_func("/fwupd/context{efivars}", fu_context_efivars_func);
-	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
-	g_test_add_func("/fwupd/context{hwids-unset}", fu_context_hwids_unset_func);
-	g_test_add_func("/fwupd/context{hwids-fdt}", fu_context_hwids_fdt_func);
-	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
-	g_test_add_func("/fwupd/context{state}", fu_context_state_func);
-	g_test_add_func("/fwupd/context{udev-subsystems}", fu_context_udev_subsystems_func);
-	g_test_add_func("/fwupd/string{utf16}", fu_string_utf16_func);
-	g_test_add_func("/fwupd/smbios", fu_smbios_func);
-	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
-	g_test_add_func("/fwupd/kernel{cmdline}", fu_kernel_cmdline_func);
-	g_test_add_func("/fwupd/kernel{config}", fu_kernel_config_func);
-	g_test_add_func("/fwupd/hid{descriptor}", fu_hid_descriptor_func);
-	g_test_add_func("/fwupd/hid{descriptor-container}", fu_hid_descriptor_container_func);
-	g_test_add_func("/fwupd/firmware", fu_firmware_func);
-	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
-	g_test_add_func("/fwupd/firmware{convert-version}", fu_firmware_convert_version_func);
-	g_test_add_func("/fwupd/firmware{builder-round-trip}", fu_firmware_builder_round_trip_func);
-	g_test_add_func("/fwupd/firmware{csv}", fu_firmware_csv_func);
-	g_test_add_func("/fwupd/firmware{archive}", fu_firmware_archive_func);
-	g_test_add_func("/fwupd/firmware{linear}", fu_firmware_linear_func);
-	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
-	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);
-	g_test_add_func("/fwupd/firmware{raw-aligned}", fu_firmware_raw_aligned_func);
-	g_test_add_func("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
-	g_test_add_func("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
-	g_test_add_func("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
-	g_test_add_func("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
-	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
-	g_test_add_func("/fwupd/firmware{fdt}", fu_firmware_fdt_func);
-	g_test_add_func("/fwupd/firmware{fit}", fu_firmware_fit_func);
-	g_test_add_func("/fwupd/firmware{ifwi-cpd}", fu_firmware_ifwi_cpd_func);
-	g_test_add_func("/fwupd/firmware{ifwi-fpt}", fu_firmware_ifwi_fpt_func);
-	g_test_add_func("/fwupd/firmware{oprom}", fu_firmware_oprom_func);
-	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
-	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
-	g_test_add_func("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
-	g_test_add_func("/fwupd/firmware{fmap}", fu_firmware_fmap_func);
-	g_test_add_func("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
-	g_test_add_func("/fwupd/firmware{sorted}", fu_firmware_sorted_func);
-	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
-	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
-	g_test_add_func("/fwupd/device", fu_device_func);
-	g_test_add_func("/fwupd/device{parent-name-prefix}", fu_device_parent_name_prefix_func);
-	g_test_add_func("/fwupd/device{id-for-display}", fu_device_id_display_func);
-	g_test_add_func("/fwupd/device{possible-plugin}", fu_device_possible_plugin_func);
-	g_test_add_func("/fwupd/device{udev}", fu_device_udev_func);
-	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
-	g_test_add_func("/fwupd/device{event-uncompressed}", fu_device_event_uncompressed_func);
-	g_test_add_func("/fwupd/device{event-donor}", fu_device_event_donor_func);
-	g_test_add_func("/fwupd/device{vfuncs}", fu_device_vfuncs_func);
-	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
-	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);
-	g_test_add_func("/fwupd/device{flags}", fu_device_flags_func);
-	g_test_add_func("/fwupd/device{private-flags}", fu_device_custom_flags_func);
-	g_test_add_func("/fwupd/device{inhibit}", fu_device_inhibit_func);
-	g_test_add_func("/fwupd/device{inhibit-updateable}", fu_device_inhibit_updateable_func);
-	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);
-	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
-	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);
-	g_test_add_func("/fwupd/device{incorporate-flag}", fu_device_incorporate_flag_func);
-	g_test_add_func("/fwupd/device{incorporate-non-generic}",
-			fu_device_incorporate_non_generic_func);
-	g_test_add_func("/fwupd/device{incorporate-descendant}",
-			fu_device_incorporate_descendant_func);
+		g_test_add_data_func("/fwupd/progress", ctx, fu_progress_func);
+	g_test_add_data_func("/fwupd/progress{scaling}", ctx, fu_progress_scaling_func);
+	g_test_add_data_func("/fwupd/progress{child}", ctx, fu_progress_child_func);
+	g_test_add_data_func("/fwupd/progress{child-finished}",
+			     ctx,
+			     fu_progress_child_finished_func);
+	g_test_add_data_func("/fwupd/progress{parent-1-step}",
+			     ctx,
+			     fu_progress_parent_one_step_proxy_func);
+	g_test_add_data_func("/fwupd/progress{no-equal}", ctx, fu_progress_non_equal_steps_func);
+	g_test_add_data_func("/fwupd/progress{finish}", ctx, fu_progress_finish_func);
+	g_test_add_data_func("/fwupd/progress{global-fraction}",
+			     ctx,
+			     fu_progress_global_fraction_func);
+	g_test_add_data_func("/fwupd/bios-attrs{load}", ctx, fu_bios_settings_load_func);
+	g_test_add_data_func("/fwupd/security-attrs{hsi}", ctx, fu_security_attrs_hsi_func);
+	g_test_add_data_func("/fwupd/security-attrs{compare}", ctx, fu_security_attrs_compare_func);
+	g_test_add_data_func("/fwupd/config", ctx, fu_config_func);
+	g_test_add_data_func("/fwupd/plugin", ctx, fu_plugin_func);
+	g_test_add_data_func("/fwupd/plugin{vfuncs}", ctx, fu_plugin_vfuncs_func);
+	g_test_add_data_func("/fwupd/plugin{device-gtype}", ctx, fu_plugin_device_gtype_func);
+	g_test_add_data_func("/fwupd/plugin{backend-device}", ctx, fu_plugin_backend_device_func);
+	g_test_add_data_func("/fwupd/plugin{backend-proxy-device}",
+			     ctx,
+			     fu_plugin_backend_proxy_device_func);
+	g_test_add_data_func("/fwupd/plugin{config}", ctx, fu_plugin_config_func);
+	g_test_add_data_func("/fwupd/plugin{devices}", ctx, fu_plugin_devices_func);
+	g_test_add_data_func("/fwupd/plugin{device-inhibit-children}",
+			     ctx,
+			     fu_plugin_device_inhibit_children_func);
+	g_test_add_data_func("/fwupd/plugin{delay}", ctx, fu_plugin_delay_func);
+	g_test_add_data_func("/fwupd/plugin{quirks}", ctx, fu_plugin_quirks_func);
+	g_test_add_data_func("/fwupd/plugin{fdt}", ctx, fu_plugin_fdt_func);
+	g_test_add_data_func("/fwupd/plugin{quirks-performance}",
+			     ctx,
+			     fu_plugin_quirks_performance_func);
+	g_test_add_data_func("/fwupd/plugin{quirks-device}", ctx, fu_plugin_quirks_device_func);
+	g_test_add_data_func("/fwupd/backend", ctx, fu_backend_func);
+	g_test_add_data_func("/fwupd/backend{emulate}", ctx, fu_backend_emulate_func);
+	g_test_add_data_func("/fwupd/chunk", ctx, fu_chunk_func);
+	g_test_add_data_func("/fwupd/chunk-null", ctx, fu_chunk_array_null_func);
+	g_test_add_data_func("/fwupd/chunks", ctx, fu_chunk_array_func);
+	g_test_add_data_func("/fwupd/common{checked-add}", ctx, fu_common_checked_add_func);
+	g_test_add_data_func("/fwupd/common{error-map}", ctx, fu_common_error_map_func);
+	g_test_add_data_func("/fwupd/common{align-up}", ctx, fu_common_align_up_func);
+	g_test_add_data_func("/fwupd/volume{gpt-type}", ctx, fu_volume_gpt_type_func);
+	g_test_add_data_func("/fwupd/common{bitwise}", ctx, fu_common_bitwise_func);
+	g_test_add_data_func("/fwupd/common{byte-array}", ctx, fu_common_byte_array_func);
+	g_test_add_data_func("/fwupd/common{crc}", ctx, fu_common_crc_func);
+	g_test_add_data_func("/fwupd/common{guid}", ctx, fu_common_guid_func);
+	g_test_add_data_func("/fwupd/common{string-append-kv}", ctx, fu_string_append_func);
+	g_test_add_data_func("/fwupd/common{version-guess-format}",
+			     ctx,
+			     fu_version_guess_format_func);
+	g_test_add_data_func("/fwupd/common{version-verify-format}",
+			     ctx,
+			     fu_version_verify_format_func);
+	g_test_add_data_func("/fwupd/common{strtoull}", ctx, fu_strtoull_func);
+	g_test_add_data_func("/fwupd/common{strtoll}", ctx, fu_strtoll_func);
+	g_test_add_data_func("/fwupd/common{version}", ctx, fu_common_version_func);
+	g_test_add_data_func("/fwupd/common{version-semver}", ctx, fu_version_semver_func);
+	g_test_add_data_func("/fwupd/common{vercmp}", ctx, fu_common_vercmp_func);
+	g_test_add_data_func("/fwupd/common{strstrip}", ctx, fu_strstrip_func);
+	g_test_add_data_func("/fwupd/common{endian}", ctx, fu_common_endian_func);
+	g_test_add_data_func("/fwupd/common{bytes-get-data}", ctx, fu_common_bytes_get_data_func);
+	g_test_add_data_func("/fwupd/common{kernel-lockdown}", ctx, fu_common_kernel_lockdown_func);
+	g_test_add_data_func("/fwupd/common{kernel-search}", ctx, fu_common_kernel_search_func);
+	g_test_add_data_func("/fwupd/common{strsafe}", ctx, fu_strsafe_func);
+	g_test_add_data_func("/fwupd/common{cpuid}", ctx, fu_cpuid_func);
+	g_test_add_data_func("/fwupd/msgpack", ctx, fu_msgpack_func);
+	g_test_add_data_func("/fwupd/msgpack{binary-stream}", ctx, fu_msgpack_binary_stream_func);
+	g_test_add_data_func("/fwupd/msgpack{parse-binary}", ctx, fu_msgpack_parse_binary_func);
+	g_test_add_data_func("/fwupd/msgpack{lookup}", ctx, fu_msgpack_lookup_func);
+	g_test_add_data_func("/fwupd/efi-load-option", ctx, fu_efi_load_option_func);
+	g_test_add_data_func("/fwupd/efi-load-option{path}", ctx, fu_efi_load_option_path_func);
+	g_test_add_data_func("/fwupd/efi-load-option{hive}", ctx, fu_efi_load_option_hive_func);
+	g_test_add_data_func("/fwupd/efi-x509-signature", ctx, fu_plugin_efi_x509_signature_func);
+	g_test_add_data_func("/fwupd/efi-signature-list", ctx, fu_plugin_efi_signature_list_func);
+	g_test_add_data_func("/fwupd/efi-variable-authentication2",
+			     ctx,
+			     fu_plugin_efi_variable_authentication2_func);
+	g_test_add_data_func("/fwupd/efivar", ctx, fu_efivar_func);
+	g_test_add_data_func("/fwupd/efivar{bootxxxx}", ctx, fu_efivar_boot_func);
+	g_test_add_data_func("/fwupd/hwids", ctx, fu_hwids_func);
+	g_test_add_data_func("/fwupd/context{flags}", ctx, fu_context_flags_func);
+	g_test_add_data_func("/fwupd/context{backends}", ctx, fu_context_backends_func);
+	g_test_add_data_func("/fwupd/context{efivars}", ctx, fu_context_efivars_func);
+	g_test_add_data_func("/fwupd/context{hwids-dmi}", ctx, fu_context_hwids_dmi_func);
+	g_test_add_data_func("/fwupd/context{hwids-unset}", ctx, fu_context_hwids_unset_func);
+	g_test_add_data_func("/fwupd/context{hwids-fdt}", ctx, fu_context_hwids_fdt_func);
+	g_test_add_data_func("/fwupd/context{firmware-gtypes}",
+			     ctx,
+			     fu_context_firmware_gtypes_func);
+	g_test_add_data_func("/fwupd/context{state}", ctx, fu_context_state_func);
+	g_test_add_data_func("/fwupd/context{udev-subsystems}",
+			     ctx,
+			     fu_context_udev_subsystems_func);
+	g_test_add_data_func("/fwupd/string{utf16}", ctx, fu_string_utf16_func);
+	g_test_add_data_func("/fwupd/smbios", ctx, fu_smbios_func);
+	g_test_add_data_func("/fwupd/smbios3", ctx, fu_smbios3_func);
+	g_test_add_data_func("/fwupd/kernel{cmdline}", ctx, fu_kernel_cmdline_func);
+	g_test_add_data_func("/fwupd/kernel{config}", ctx, fu_kernel_config_func);
+	g_test_add_data_func("/fwupd/hid{descriptor}", ctx, fu_hid_descriptor_func);
+	g_test_add_data_func("/fwupd/hid{descriptor-container}",
+			     ctx,
+			     fu_hid_descriptor_container_func);
+	g_test_add_data_func("/fwupd/firmware", ctx, fu_firmware_func);
+	g_test_add_data_func("/fwupd/firmware{common}", ctx, fu_firmware_common_func);
+	g_test_add_data_func("/fwupd/firmware{convert-version}",
+			     ctx,
+			     fu_firmware_convert_version_func);
+	g_test_add_data_func("/fwupd/firmware{builder-round-trip}",
+			     ctx,
+			     fu_firmware_builder_round_trip_func);
+	g_test_add_data_func("/fwupd/firmware{csv}", ctx, fu_firmware_csv_func);
+	g_test_add_data_func("/fwupd/firmware{archive}", ctx, fu_firmware_archive_func);
+	g_test_add_data_func("/fwupd/firmware{linear}", ctx, fu_firmware_linear_func);
+	g_test_add_data_func("/fwupd/firmware{dedupe}", ctx, fu_firmware_dedupe_func);
+	g_test_add_data_func("/fwupd/firmware{build}", ctx, fu_firmware_build_func);
+	g_test_add_data_func("/fwupd/firmware{raw-aligned}", ctx, fu_firmware_raw_aligned_func);
+	g_test_add_data_func("/fwupd/firmware{ihex}", ctx, fu_firmware_ihex_func);
+	g_test_add_data_func("/fwupd/firmware{ihex-offset}", ctx, fu_firmware_ihex_offset_func);
+	g_test_add_data_func("/fwupd/firmware{ihex-signed}", ctx, fu_firmware_ihex_signed_func);
+	g_test_add_data_func("/fwupd/firmware{srec-tokenization}",
+			     ctx,
+			     fu_firmware_srec_tokenization_func);
+	g_test_add_data_func("/fwupd/firmware{srec}", ctx, fu_firmware_srec_func);
+	g_test_add_data_func("/fwupd/firmware{fdt}", ctx, fu_firmware_fdt_func);
+	g_test_add_data_func("/fwupd/firmware{fit}", ctx, fu_firmware_fit_func);
+	g_test_add_data_func("/fwupd/firmware{ifwi-cpd}", ctx, fu_firmware_ifwi_cpd_func);
+	g_test_add_data_func("/fwupd/firmware{ifwi-fpt}", ctx, fu_firmware_ifwi_fpt_func);
+	g_test_add_data_func("/fwupd/firmware{oprom}", ctx, fu_firmware_oprom_func);
+	g_test_add_data_func("/fwupd/firmware{dfu}", ctx, fu_firmware_dfu_func);
+	g_test_add_data_func("/fwupd/firmware{dfu-patch}", ctx, fu_firmware_dfu_patch_func);
+	g_test_add_data_func("/fwupd/firmware{dfuse}", ctx, fu_firmware_dfuse_func);
+	g_test_add_data_func("/fwupd/firmware{fmap}", ctx, fu_firmware_fmap_func);
+	g_test_add_data_func("/fwupd/firmware{gtypes}", ctx, fu_firmware_new_from_gtypes_func);
+	g_test_add_data_func("/fwupd/firmware{sorted}", ctx, fu_firmware_sorted_func);
+	g_test_add_data_func("/fwupd/archive{invalid}", ctx, fu_archive_invalid_func);
+	g_test_add_data_func("/fwupd/archive{cab}", ctx, fu_archive_cab_func);
+	g_test_add_data_func("/fwupd/device", ctx, fu_device_func);
+	g_test_add_data_func("/fwupd/device{parent-name-prefix}",
+			     ctx,
+			     fu_device_parent_name_prefix_func);
+	g_test_add_data_func("/fwupd/device{id-for-display}", ctx, fu_device_id_display_func);
+	g_test_add_data_func("/fwupd/device{possible-plugin}", ctx, fu_device_possible_plugin_func);
+	g_test_add_data_func("/fwupd/device{udev}", ctx, fu_device_udev_func);
+	g_test_add_data_func("/fwupd/device{event}", ctx, fu_device_event_func);
+	g_test_add_data_func("/fwupd/device{event-uncompressed}",
+			     ctx,
+			     fu_device_event_uncompressed_func);
+	g_test_add_data_func("/fwupd/device{event-donor}", ctx, fu_device_event_donor_func);
+	g_test_add_data_func("/fwupd/device{vfuncs}", ctx, fu_device_vfuncs_func);
+	g_test_add_data_func("/fwupd/device{instance-ids}", ctx, fu_device_instance_ids_func);
+	g_test_add_data_func("/fwupd/device{composite-id}", ctx, fu_device_composite_id_func);
+	g_test_add_data_func("/fwupd/device{flags}", ctx, fu_device_flags_func);
+	g_test_add_data_func("/fwupd/device{private-flags}", ctx, fu_device_custom_flags_func);
+	g_test_add_data_func("/fwupd/device{inhibit}", ctx, fu_device_inhibit_func);
+	g_test_add_data_func("/fwupd/device{inhibit-updateable}",
+			     ctx,
+			     fu_device_inhibit_updateable_func);
+	g_test_add_data_func("/fwupd/device{parent}", ctx, fu_device_parent_func);
+	g_test_add_data_func("/fwupd/device{children}", ctx, fu_device_children_func);
+	g_test_add_data_func("/fwupd/device{incorporate}", ctx, fu_device_incorporate_func);
+	g_test_add_data_func("/fwupd/device{incorporate-flag}",
+			     ctx,
+			     fu_device_incorporate_flag_func);
+	g_test_add_data_func("/fwupd/device{incorporate-non-generic}",
+			     ctx,
+			     fu_device_incorporate_non_generic_func);
+	g_test_add_data_func("/fwupd/device{incorporate-descendant}",
+			     ctx,
+			     fu_device_incorporate_descendant_func);
 	if (g_test_slow())
-		g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
-	g_test_add_func("/fwupd/device-locker{success}", fu_device_locker_func);
-	g_test_add_func("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
-	g_test_add_func("/fwupd/device{name}", fu_device_name_func);
-	g_test_add_func("/fwupd/device{rescan}", fu_device_rescan_func);
-	g_test_add_func("/fwupd/device{metadata}", fu_device_metadata_func);
-	g_test_add_func("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
-	g_test_add_func("/fwupd/device{version-format}", fu_device_version_format_func);
-	g_test_add_func("/fwupd/device{version-format-raw}", fu_device_version_format_raw_func);
-	g_test_add_func("/fwupd/device{retry-success}", fu_device_retry_success_func);
-	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
-	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
-	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
-	g_test_add_func("/fwupd/device{progress}", fu_plugin_device_progress_func);
-	g_test_add_func("/fwupd/intel-me16-device", fu_intel_me16_device_func);
-	g_test_add_func("/fwupd/intel-me16-device{hap}", fu_intel_me16_device_hap_func);
-	g_test_add_func("/fwupd/intel-me18-device", fu_intel_me18_device_func);
+		g_test_add_data_func("/fwupd/device{poll}", ctx, fu_device_poll_func);
+	g_test_add_data_func("/fwupd/device-locker{success}", ctx, fu_device_locker_func);
+	g_test_add_data_func("/fwupd/device-locker{fail}", ctx, fu_device_locker_fail_func);
+	g_test_add_data_func("/fwupd/device{name}", ctx, fu_device_name_func);
+	g_test_add_data_func("/fwupd/device{rescan}", ctx, fu_device_rescan_func);
+	g_test_add_data_func("/fwupd/device{metadata}", ctx, fu_device_metadata_func);
+	g_test_add_data_func("/fwupd/device{open-refcount}", ctx, fu_device_open_refcount_func);
+	g_test_add_data_func("/fwupd/device{version-format}", ctx, fu_device_version_format_func);
+	g_test_add_data_func("/fwupd/device{version-format-raw}",
+			     ctx,
+			     fu_device_version_format_raw_func);
+	g_test_add_data_func("/fwupd/device{retry-success}", ctx, fu_device_retry_success_func);
+	g_test_add_data_func("/fwupd/device{retry-failed}", ctx, fu_device_retry_failed_func);
+	g_test_add_data_func("/fwupd/device{retry-hardware}", ctx, fu_device_retry_hardware_func);
+	g_test_add_data_func("/fwupd/device{cfi-device}", ctx, fu_device_cfi_device_func);
+	g_test_add_data_func("/fwupd/device{progress}", ctx, fu_plugin_device_progress_func);
+	g_test_add_data_func("/fwupd/intel-me16-device", ctx, fu_intel_me16_device_func);
+	g_test_add_data_func("/fwupd/intel-me16-device{hap}", ctx, fu_intel_me16_device_hap_func);
+	g_test_add_data_func("/fwupd/intel-me18-device", ctx, fu_intel_me18_device_func);
 	return g_test_run();
 }
