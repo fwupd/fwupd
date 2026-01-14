@@ -466,6 +466,17 @@ fu_device_event_set_id(FuDeviceEvent *self, const gchar *id)
 	}
 }
 
+static void
+fu_device_event_set_id_from_json(FuDeviceEvent *self, const gchar *id)
+{
+	g_clear_pointer(&self->id, g_free);
+	if (g_str_has_prefix(id, "#")) {
+		self->id = g_strdup(id);
+	} else {
+		self->id = fu_device_event_build_id(id);
+	}
+}
+
 static gboolean
 fu_device_event_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
@@ -480,7 +491,7 @@ fu_device_event_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError *
 		if (fwupd_json_node_get_kind(json_node) == FWUPD_JSON_NODE_KIND_STRING) {
 			GRefString *str = fwupd_json_node_get_string(json_node, NULL);
 			if (g_strcmp0(key, "Id") == 0) {
-				fu_device_event_set_id(self, str);
+				fu_device_event_set_id_from_json(self, str);
 			} else if (str != NULL) {
 				g_ptr_array_add(self->values,
 						fu_device_event_blob_new_internal(
