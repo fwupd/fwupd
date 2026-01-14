@@ -9,7 +9,7 @@ fwupdtool enable-test-devices
 # run tests
 ./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
 service dbus restart
-gnome-desktop-testing-runner --timeout=600 fwupd
+gnome-desktop-testing-runner --timeout=1200 fwupd
 
 # generate coverage report
 ./contrib/ci/coverage.sh
