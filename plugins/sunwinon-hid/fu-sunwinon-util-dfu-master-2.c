@@ -18,7 +18,7 @@
 #define PATTERN_DEADBEEF	0xDEADBEEF
 #define PATTERN_SIGN		0x4E474953 /* "SIGN" */
 #define PATTERN_DEADBEEF_OFFSET 48
-#define PATTERN_SIGN_OFFSET	72
+#define PATTERN_SIGN_OFFSET	PATTERN_DEADBEEF_OFFSET + 72
 #define ONCE_SIZE		464
 
 struct FuSwDfuMaster {
@@ -587,12 +587,12 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 
 static gboolean
 fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self,
-				       FuSunwinonFastDfuMode mode_setting,
+				       FuSunwinonDfuUpgradeMode copy_mode,
 				       GError **error)
 {
 	g_debug("ModeSet");
 	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      (const guint8 *)&mode_setting,
+						      (const guint8 *)&copy_mode,
 						      1,
 						      FU_SUNWINON_DFU_CMD_MODE_SET,
 						      error))
@@ -607,7 +607,7 @@ static gboolean
 fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
 					    FuDfuInnerState *inner_state,
 					    FuProgress *progress,
-					    FuSunwinonFastDfuMode mode_setting,
+					    FuSunwinonFastDfuMode fast_mode,
 					    GError **error)
 {
 	g_autoptr(FuStructSunwinonDfuPayloadProgramStart) st_prog_start = NULL;
@@ -619,7 +619,7 @@ fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
 
 	st_prog_start = fu_struct_sunwinon_dfu_payload_program_start_new();
 	fu_struct_sunwinon_dfu_payload_program_start_set_mode(st_prog_start,
-							      inner_state->fw_type | mode_setting);
+							      inner_state->fw_type | fast_mode);
 
 	inner_state->now_img_info.boot_info.load_addr = inner_state->dfu_save_addr;
 	if (!fu_struct_sunwinon_dfu_payload_program_start_set_image_info_raw(
@@ -636,7 +636,7 @@ fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
 						      error))
 		return FALSE;
 
-	if (mode_setting == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
+	if (fast_mode == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
 		if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
 								  FU_SUNWINON_DFU_CMD_PROGRAM_START,
 								  error))
@@ -795,7 +795,8 @@ fu_sunwinon_util_dfu_master_2_program_end(FuSwDfuMaster *self,
 static gboolean
 fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
 					FuDfuInnerState *inner_state,
-					FuSunwinonFastDfuMode mode_setting,
+					FuSunwinonFastDfuMode fast_mode,
+					FuSunwinonDfuUpgradeMode copy_mode,
 					GError **error)
 {
 	g_return_val_if_fail(inner_state != NULL, FALSE);
@@ -817,7 +818,7 @@ fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
 	/* no command sent during checking */
 	if (!fu_sunwinon_util_dfu_master_2_pre_update_check(self, inner_state, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_mode_set(self, mode_setting, error))
+	if (!fu_sunwinon_util_dfu_master_2_mode_set(self, copy_mode, error))
 		return FALSE;
 
 	return TRUE;
@@ -853,22 +854,27 @@ fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
 gboolean
 fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     FuProgress *progress,
-					     FuSunwinonFastDfuMode mode_setting,
+					     FuSunwinonFastDfuMode fast_mode,
+					     FuSunwinonDfuUpgradeMode copy_mode,
 					     GError **error)
 {
 	FuDfuInnerState inner_state = {0};
 
 	if (!fu_sunwinon_util_dfu_master_2_dfu_get_img_info(self, &inner_state.now_img_info, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_handshake(self, &inner_state, mode_setting, error))
+	if (!fu_sunwinon_util_dfu_master_2_handshake(self,
+						     &inner_state,
+						     fast_mode,
+						     copy_mode,
+						     error))
 		return FALSE;
 	if (!fu_sunwinon_util_dfu_master_2_program_start(self,
 							 &inner_state,
 							 progress,
-							 mode_setting,
+							 fast_mode,
 							 error))
 		return FALSE;
-	if (mode_setting == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
+	if (fast_mode == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
 		if (!fu_sunwinon_util_dfu_master_2_do_update_normal(self,
 								    &inner_state,
 								    progress,

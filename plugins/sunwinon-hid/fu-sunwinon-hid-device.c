@@ -341,6 +341,7 @@ fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
 	if (!fu_sunwinon_util_dfu_master_2_write_firmware(dfu_master,
 							  progress,
 							  FU_SUNWINON_FAST_DFU_MODE_DISABLE,
+							  FU_SUNWINON_DFU_UPGRADE_MODE_COPY,
 							  error))
 		return FALSE;
 	return TRUE;
@@ -450,6 +451,9 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 	}
 	return TRUE;
 }
+
+// fwupdtool --plugins sunwinon-hid install-blob ../../test-firmware/Ln01_user_fw_fw_0.0.6T_7.bin
+// --verbose --verbose
 
 static void
 fu_sunwinon_hid_device_class_init(FuSunwinonHidDeviceClass *klass)

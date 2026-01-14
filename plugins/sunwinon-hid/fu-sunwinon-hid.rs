@@ -36,6 +36,12 @@ enum FuSunwinonFastDfuMode {
     Enable = 0x02,
 }
 
+#[repr(u8)]
+enum FuSunwinonDfuUpgradeMode {
+    Copy = 1,
+    NonCopy = 2,
+}
+
 #[derive(New, Default, Validate, Getters, Setters)]
 #[repr(C, packed)]
 struct FuStructSunwinonDfuFrameHeader {
@@ -182,10 +188,4 @@ enum FuSunwinonDfuEvent {
 #[repr(u8)]
 enum FuSunwinonDfu {
     Version = 0x02,
-}
-
-#[repr(u8)]
-enum FuSunwinonDfuUpgradeMode {
-    Copy = 1,
-    NonCopy = 2,
 }
