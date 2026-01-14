@@ -92,10 +92,15 @@ fu_engine_emulator_load_json_blob(FuEngineEmulator *self, GBytes *json_blob, GEr
 	GPtrArray *backends = fu_context_get_backends(fu_engine_get_context(self->engine));
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 5000000); /* yes, this big! */
+	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
 
 	/* parse */
-	json_node = fwupd_json_parser_load_from_bytes(parser,
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
 						      json_blob,
 						      FWUPD_JSON_LOAD_FLAG_TRUSTED |
 							  FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,

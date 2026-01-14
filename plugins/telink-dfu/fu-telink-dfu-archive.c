@@ -119,7 +119,12 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	gint64 manifest_ver = 0;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) manifest = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* load archive */
 	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
@@ -130,8 +135,10 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	manifest = fu_archive_lookup_by_fn(archive, "manifest.json", error);
 	if (manifest == NULL)
 		return FALSE;
-	json_node =
-	    fwupd_json_parser_load_from_bytes(parser, manifest, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
+						      manifest,
+						      FWUPD_JSON_LOAD_FLAG_NONE,
+						      error);
 	if (json_node == NULL) {
 		g_prefix_error_literal(error, "manifest not in JSON format: ");
 		return FALSE;

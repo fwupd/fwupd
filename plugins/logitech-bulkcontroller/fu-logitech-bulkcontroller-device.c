@@ -736,6 +736,11 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	g_autoptr(FwupdJsonObject) json_payload = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+
 	/* parse JSON reply */
 	json_node =
 	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, error);
