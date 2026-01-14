@@ -78,6 +78,7 @@ struct _FuQuirks {
 	XbQuery *query_kv;
 	XbQuery *query_vs;
 	gboolean verbose;
+	gboolean loaded;
 #ifdef HAVE_SQLITE
 	sqlite3 *db;
 #endif
@@ -463,6 +464,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), NULL);
+	g_return_val_if_fail(self->loaded, NULL);
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
@@ -543,6 +545,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
+	g_return_val_if_fail(self->loaded, FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
 
@@ -589,7 +592,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 
 	/* no quirk data */
 	if (self->query_vs == NULL) {
-		g_debug("no quirk data");
+		g_warning("no quirk data");
 		return FALSE;
 	}
 
@@ -999,6 +1002,7 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	self->loaded = TRUE;
 	self->load_flags = load_flags;
 	self->verbose = g_getenv("FWUPD_XMLB_VERBOSE") != NULL;
 
