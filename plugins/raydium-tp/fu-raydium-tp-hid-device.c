@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #include "config.h"
-
 #include "fu-raydium-tp-common.h"
 #include "fu-raydium-tp-firmware.h"
 #include "fu-raydium-tp-hid-device.h"
@@ -104,30 +103,26 @@ fu_raydium_tp_hid_device_bl_write(FuRaydiumtpHidDevice *self,
 				  guint length,
 				  GError **error)
 {
-	g_autofree guint8 *outbuf = g_malloc0(I2C_BUF_SIZE);
+	g_autoptr(FuRaydiumTpHidPacket) pkt = NULL;
 	FuRaydiumTpHidCmdHelper args = {
-	    .outbuf = outbuf,
+	    .outbuf = NULL,
 	    .inbuf = NULL,
 	};
 
-	outbuf[0] = FU_RAYDIUM_TP_CMD2_WID;
-	outbuf[1] = FU_RAYDIUM_TP_HID_DATA_HEADER1;
-	outbuf[2] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[3] = FU_RAYDIUM_TP_HID_DATA_HEADER3_WR;
-	outbuf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER4_WR;
-	outbuf[5] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
-	outbuf[6] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[7] = FU_RAYDIUM_TP_CMD2_WRT;
-	outbuf[8] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[9] = cmd;
-	outbuf[10] = wbuf[3];
-	outbuf[11] = wbuf[4];
-	outbuf[12] = wbuf[5];
-	fu_memwrite_uint16(outbuf + 13, length, G_LITTLE_ENDIAN);
+	pkt = fu_raydium_tp_hid_packet_new();
+	fu_raydium_tp_hid_packet_set_header3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
+	fu_raydium_tp_hid_packet_set_header4(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
+	fu_raydium_tp_hid_packet_set_data0(pkt, FU_RAYDIUM_TP_CMD2_WRT);
+	fu_raydium_tp_hid_packet_set_data2(pkt, cmd);
+	fu_raydium_tp_hid_packet_set_data3(pkt, wbuf[3]);
+	fu_raydium_tp_hid_packet_set_data4(pkt, wbuf[4]);
+	fu_raydium_tp_hid_packet_set_data5(pkt, wbuf[5]);
+	fu_raydium_tp_hid_packet_set_length(pkt, length);
 
-	if (!fu_memcpy_safe(outbuf, I2C_BUF_SIZE, 15, wbuf, I2C_BUF_SIZE, 6, length, error))
+	if (!fu_memcpy_safe(pkt->buf->data, I2C_BUF_SIZE, 15, wbuf, I2C_BUF_SIZE, 6, length, error))
 		return FALSE;
 
+	args.outbuf = pkt->buf->data;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_raydium_tp_hid_device_write_cb,
 				  RETRY_NUM,
@@ -138,18 +133,13 @@ fu_raydium_tp_hid_device_bl_write(FuRaydiumtpHidDevice *self,
 		return FALSE;
 	}
 
-	memset(outbuf, 0, I2C_BUF_SIZE);
+	pkt = fu_raydium_tp_hid_packet_new();
+	fu_raydium_tp_hid_packet_set_header3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
+	fu_raydium_tp_hid_packet_set_header4(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
+	fu_raydium_tp_hid_packet_set_data0(pkt, FU_RAYDIUM_TP_CMD2_ACK);
+	fu_raydium_tp_hid_packet_set_length(pkt, length);
 
-	outbuf[0] = FU_RAYDIUM_TP_CMD2_WID;
-	outbuf[1] = FU_RAYDIUM_TP_HID_DATA_HEADER1;
-	outbuf[2] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[3] = FU_RAYDIUM_TP_HID_DATA_HEADER3_WR;
-	outbuf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER4_WR;
-	outbuf[5] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
-	outbuf[6] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[7] = FU_RAYDIUM_TP_CMD2_ACK;
-	fu_memwrite_uint16(outbuf + 13, length, G_LITTLE_ENDIAN);
-
+	args.outbuf = pkt->buf->data;
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_raydium_tp_hid_device_write_cb,
 				    RETRY_NUM,
@@ -165,10 +155,10 @@ fu_raydium_tp_hid_device_bl_read(FuRaydiumtpHidDevice *self,
 				 GError **error)
 {
 	guint8 wait_idle_flag = 0;
-	g_autofree guint8 *outbuf = g_malloc0(I2C_BUF_SIZE);
 	g_autofree guint8 *inbuf = g_malloc0(I2C_BUF_MAXSIZE);
+	g_autoptr(FuRaydiumTpHidPacket) pkt = NULL;
 	FuRaydiumTpHidCmdHelper args = {
-	    .outbuf = outbuf,
+	    .outbuf = NULL,
 	    .inbuf = inbuf,
 	};
 
@@ -177,21 +167,18 @@ fu_raydium_tp_hid_device_bl_read(FuRaydiumtpHidDevice *self,
 		rcv_buf[1] = 0x00;
 	}
 
-	outbuf[0] = FU_RAYDIUM_TP_CMD2_WID;
-	outbuf[1] = FU_RAYDIUM_TP_HID_DATA_HEADER1;
-	outbuf[2] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[3] = FU_RAYDIUM_TP_HID_DATA_HEADER3_RD;
-	outbuf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER4_RD;
-	outbuf[5] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
-	outbuf[6] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[7] = rcv_buf[0];
-	outbuf[8] = rcv_buf[1];
-	outbuf[9] = rcv_buf[2];
-	outbuf[10] = rcv_buf[3];
-	outbuf[11] = rcv_buf[4];
-	outbuf[12] = rcv_buf[5];
-	fu_memwrite_uint16(outbuf + 13, length, G_LITTLE_ENDIAN);
+	pkt = fu_raydium_tp_hid_packet_new();
+	fu_raydium_tp_hid_packet_set_header3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER3_RD);
+	fu_raydium_tp_hid_packet_set_header4(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER4_RD);
+	fu_raydium_tp_hid_packet_set_data0(pkt, rcv_buf[0]);
+	fu_raydium_tp_hid_packet_set_data1(pkt, rcv_buf[1]);
+	fu_raydium_tp_hid_packet_set_data2(pkt, rcv_buf[2]);
+	fu_raydium_tp_hid_packet_set_data3(pkt, rcv_buf[3]);
+	fu_raydium_tp_hid_packet_set_data4(pkt, rcv_buf[4]);
+	fu_raydium_tp_hid_packet_set_data5(pkt, rcv_buf[5]);
+	fu_raydium_tp_hid_packet_set_length(pkt, length);
 
+	args.outbuf = pkt->buf->data;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_raydium_tp_hid_device_read_cb,
 				  RETRY_NUM,
@@ -223,27 +210,23 @@ fu_raydium_tp_hid_device_tp_write(FuRaydiumtpHidDevice *self,
 				  guint length,
 				  GError **error)
 {
-	g_autofree guint8 *outbuf = g_malloc0(I2C_BUF_SIZE);
+	g_autoptr(FuRaydiumTpHidPacket) pkt = NULL;
 	FuRaydiumTpHidCmdHelper args = {
-	    .outbuf = outbuf,
+	    .outbuf = NULL,
 	    .inbuf = NULL,
 	};
 
-	outbuf[0] = FU_RAYDIUM_TP_CMD2_WID;
-	outbuf[1] = FU_RAYDIUM_TP_HID_DATA_HEADER1;
-	outbuf[2] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[3] = FU_RAYDIUM_TP_HID_DATA_HEADER3_WR;
-	outbuf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER4_WR;
-	outbuf[5] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
-	outbuf[6] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[7] = FU_RAYDIUM_TP_CMD2_WRT;
-	outbuf[8] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[9] = (guint8)(length + 1);
-	outbuf[10] = cmd;
+	pkt = fu_raydium_tp_hid_packet_new();
+	fu_raydium_tp_hid_packet_set_header3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
+	fu_raydium_tp_hid_packet_set_header4(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
+	fu_raydium_tp_hid_packet_set_data0(pkt, FU_RAYDIUM_TP_CMD2_WRT);
+	fu_raydium_tp_hid_packet_set_data2(pkt, (guint8)(length + 1));
+	fu_raydium_tp_hid_packet_set_data3(pkt, cmd);
 
-	if (!fu_memcpy_safe(outbuf, I2C_BUF_SIZE, 11, wbuf, I2C_BUF_SIZE, 0, length, error))
+	if (!fu_memcpy_safe(pkt->buf->data, I2C_BUF_SIZE, 11, wbuf, I2C_BUF_SIZE, 0, length, error))
 		return FALSE;
 
+	args.outbuf = pkt->buf->data;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_raydium_tp_hid_device_write_cb,
 				  RETRY_NUM_MAX,
@@ -254,17 +237,12 @@ fu_raydium_tp_hid_device_tp_write(FuRaydiumtpHidDevice *self,
 		return FALSE;
 	}
 
-	memset(outbuf, 0, I2C_BUF_SIZE);
+	pkt = fu_raydium_tp_hid_packet_new();
+	fu_raydium_tp_hid_packet_set_header3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
+	fu_raydium_tp_hid_packet_set_header4(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
+	fu_raydium_tp_hid_packet_set_data0(pkt, FU_RAYDIUM_TP_CMD2_ACK);
 
-	outbuf[0] = FU_RAYDIUM_TP_CMD2_WID;
-	outbuf[1] = FU_RAYDIUM_TP_HID_DATA_HEADER1;
-	outbuf[2] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[3] = FU_RAYDIUM_TP_HID_DATA_HEADER3_WR;
-	outbuf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER4_WR;
-	outbuf[5] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
-	outbuf[6] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[7] = FU_RAYDIUM_TP_CMD2_ACK;
-
+	args.outbuf = pkt->buf->data;
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_raydium_tp_hid_device_write_cb,
 				    RETRY_NUM_MAX,
@@ -279,26 +257,21 @@ fu_raydium_tp_hid_device_tp_read(FuRaydiumtpHidDevice *self,
 				 guint8 rcv_buf[],
 				 GError **error)
 {
-	g_autofree guint8 *outbuf = g_malloc0(I2C_BUF_SIZE);
-	g_autofree guint8 *inbuf = g_malloc0(I2C_BUF_SIZE);
+	g_autofree guint8 *inbuf = g_malloc0(I2C_BUF_MAXSIZE);
+	g_autoptr(FuRaydiumTpHidPacket) pkt = NULL;
 	FuRaydiumTpHidCmdHelper args = {
-	    .outbuf = outbuf,
+	    .outbuf = NULL,
 	    .inbuf = inbuf,
 	};
 
-	outbuf[0] = FU_RAYDIUM_TP_CMD2_WID;
-	outbuf[1] = FU_RAYDIUM_TP_HID_DATA_HEADER1;
-	outbuf[2] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[3] = FU_RAYDIUM_TP_HID_DATA_HEADER3_RD;
-	outbuf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER4_RD;
-	outbuf[5] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
-	outbuf[6] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[7] = FU_RAYDIUM_TP_CMD2_READ;
-	outbuf[8] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[9] = FU_RAYDIUM_TP_HID_DATA_HEADER_EMPTY;
-	outbuf[10] = FU_RAYDIUM_TP_HID_DATA_HEADER10;
-	outbuf[11] = cmd;
+	pkt = fu_raydium_tp_hid_packet_new();
+	fu_raydium_tp_hid_packet_set_header3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER3_RD);
+	fu_raydium_tp_hid_packet_set_header4(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER4_RD);
+	fu_raydium_tp_hid_packet_set_data0(pkt, FU_RAYDIUM_TP_CMD2_READ);
+	fu_raydium_tp_hid_packet_set_data3(pkt, FU_RAYDIUM_TP_HID_DATA_HEADER10);
+	fu_raydium_tp_hid_packet_set_data4(pkt, cmd);
 
+	args.outbuf = pkt->buf->data;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_raydium_tp_hid_device_read_cb,
 				  RETRY_NUM_MAX,
@@ -575,7 +548,6 @@ fu_raydium_tp_hid_device_bl_erase_fw_flash(FuRaydiumtpHidDevice *self, GError **
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 100);
-
 	return fu_raydium_tp_hid_device_wait_for_idle_boot(self, error);
 }
 
@@ -599,7 +571,6 @@ fu_raydium_tp_hid_device_bl_erase_flash_sector(FuRaydiumtpHidDevice *self,
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 1);
-
 	return fu_raydium_tp_hid_device_wait_for_idle_boot(self, error);
 }
 
@@ -814,7 +785,6 @@ fu_raydium_tp_hid_device_bl_trig_desc_to_flash(FuRaydiumtpHidDevice *self,
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 100);
-
 	return fu_raydium_tp_hid_device_wait_for_idle_boot(self, &error_local);
 }
 
@@ -835,7 +805,6 @@ fu_raydium_tp_hid_device_bl_trig_pram_to_flash(FuRaydiumtpHidDevice *self, GErro
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 100);
-
 	return fu_raydium_tp_hid_device_wait_for_idle_boot(self, &error_local);
 }
 
@@ -1233,48 +1202,50 @@ fu_raydium_tp_hid_device_read_flash_crc(FuRaydiumtpHidDevice *self,
 }
 
 static gboolean
-fu_raydium_tp_hid_device_extract_components(const guint8 *bin_data,
-					    gsize bin_size,
+fu_raydium_tp_hid_device_extract_components(GInputStream *stream,
 					    guint32 image_start,
 					    guint32 image_length,
 					    guint8 *out_buf,
 					    GError **error)
 {
-	if (bin_data == NULL || bin_size == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware buffer empty");
-		return FALSE;
-	}
+	gssize nread;
+	g_autoptr(GError) error_local = NULL;
 
-	if (image_length == 0) {
+	if (!g_seekable_seek(G_SEEKABLE(stream),
+			     (goffset)image_start,
+			     G_SEEK_SET,
+			     NULL,
+			     &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid component lengths: %u",
+			    "failed to seek firmware stream: %s",
+			    error_local->message);
+		return FALSE;
+	}
+
+	nread = g_input_stream_read(stream, out_buf, image_length, NULL, &error_local);
+
+	if (nread < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to read firmware stream: %s",
+			    error_local->message);
+		return FALSE;
+	}
+
+	if ((guint32)nread != image_length) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "read %zd bytes, expected %u",
+			    nread,
 			    image_length);
 		return FALSE;
 	}
 
-	if ((gsize)image_length > bin_size) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "binary size %zu smaller than %u",
-			    bin_size,
-			    image_length);
-		return FALSE;
-	}
-
-	return fu_memcpy_safe(out_buf,
-			      image_length,
-			      0,
-			      bin_data,
-			      bin_size,
-			      image_start,
-			      image_length,
-			      error);
+	return TRUE;
 }
 
 static gboolean
@@ -1293,33 +1264,51 @@ fu_raydium_tp_hid_device_verify_status(FuRaydiumtpHidDevice *self,
 				       GError **error)
 {
 	guint8 rdata[CRC_LEN] = {0};
-	g_autoptr(GBytes) fw_bytes = NULL;
-	const guint8 *fw_data = NULL;
-	gsize fw_size = 0;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GError) error_local = NULL;
 	guint32 pram_lock_val = 0;
 	guint32 image_fw_crc = 0;
 	guint32 device_fw_crc = 0;
+	guint8 crc_buf[CRC_LEN] = {0};
+	gssize nread;
 
-	fw_bytes = fu_firmware_get_bytes(firmware, error);
-	if (fw_bytes == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware has no data");
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
+		return FALSE;
+
+	if (fw_length < CRC_LEN) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid firmware length: %u",
+			    fw_length);
 		return FALSE;
 	}
 
-	fw_data = g_bytes_get_data(fw_bytes, &fw_size);
-	if (fw_data == NULL || fw_size == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware buffer empty");
+	if (!g_seekable_seek(G_SEEKABLE(stream),
+			     (goffset)(fw_start + fw_length - CRC_LEN),
+			     G_SEEK_SET,
+			     NULL,
+			     &error_local)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to seek firmware stream: %s",
+			    error_local->message);
 		return FALSE;
 	}
 
-	image_fw_crc = fu_memread_uint32(fw_data + fw_start + fw_length - 4, G_LITTLE_ENDIAN);
+	nread = g_input_stream_read(stream, crc_buf, CRC_LEN, NULL, &error_local);
+	if (nread < 0 || nread != CRC_LEN) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to read firmware CRC: %s",
+			    error_local->message);
+		return FALSE;
+	}
 
+	image_fw_crc = fu_memread_uint32(crc_buf, G_LITTLE_ENDIAN);
 	if (!fu_raydium_tp_hid_device_set_mem_addr(self,
 						   FU_RAYDIUM_TP_FLASH_CTRL_PRAM_LOCK,
 						   MCU_MEM,
@@ -1393,11 +1382,9 @@ fu_raydium_tp_hid_device_write_images(FuRaydiumtpHidDevice *self,
 	guint8 image_fw_crc[CRC_LEN] = {0};
 	guint8 image_desc_crc[CRC_LEN] = {0};
 	guint32 target_crc = 0;
-	gsize bin_size = 0;
-	const guint8 *bin_data = NULL;
 	g_autofree guint8 *pram = NULL;
 	g_autofree guint8 *desc = NULL;
-	g_autoptr(GBytes) bin_bytes = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1405,21 +1392,13 @@ fu_raydium_tp_hid_device_write_images(FuRaydiumtpHidDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 5, "erase");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "writing");
 
-	bin_bytes = fu_firmware_get_bytes(firmware, error);
-	if (bin_bytes == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware has no data");
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	}
-
-	bin_data = g_bytes_get_data(bin_bytes, &bin_size);
 
 	if (fw_length > CRC_LEN) {
 		pram = g_malloc(fw_length);
-		if (!fu_raydium_tp_hid_device_extract_components(bin_data,
-								 bin_size,
+		if (!fu_raydium_tp_hid_device_extract_components(stream,
 								 fw_start,
 								 fw_length,
 								 pram,
@@ -1440,8 +1419,7 @@ fu_raydium_tp_hid_device_write_images(FuRaydiumtpHidDevice *self,
 
 	if (desc_length > CRC_LEN) {
 		desc = g_malloc(desc_length);
-		if (!fu_raydium_tp_hid_device_extract_components(bin_data,
-								 bin_size,
+		if (!fu_raydium_tp_hid_device_extract_components(stream,
 								 desc_start,
 								 desc_length,
 								 desc,
@@ -1600,14 +1578,6 @@ fu_raydium_tp_hid_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_raydium_tp_firmware_new();
 	guint16 vid;
 	guint16 pid;
-
-	if (stream == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "input stream is NULL");
-		return NULL;
-	}
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;

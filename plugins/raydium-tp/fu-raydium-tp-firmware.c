@@ -88,37 +88,14 @@ fu_raydium_tp_firmware_parse(FuFirmware *firmware,
 {
 	FuRaydiumtpFirmware *self = FU_RAYDIUM_TP_FIRMWARE(firmware);
 	g_autoptr(FuStructRaydiumTpFwHdr) st = NULL;
-	g_autoptr(GBytes) fw_bytes = NULL;
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 
-	if (streamsz < FU_STRUCT_RAYDIUM_TP_FW_HDR_SIZE) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "stream was too small");
-		return FALSE;
-	}
-
 	st = fu_struct_raydium_tp_fw_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-
-	fw_bytes = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
-	if (fw_bytes == NULL)
-		return FALSE;
-
-	if (g_bytes_get_size(fw_bytes) < st->buf->len) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "Firmware file too small");
-		return FALSE;
-	}
-
-	fu_firmware_set_bytes(FU_FIRMWARE(self), fw_bytes);
 
 	self->vendor_id = fu_struct_raydium_tp_fw_hdr_get_vendor_id(st);
 	self->product_id = fu_struct_raydium_tp_fw_hdr_get_product_id(st);
