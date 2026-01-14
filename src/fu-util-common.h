@@ -121,6 +121,8 @@ fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2);
 gchar *
 fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
     G_GNUC_NON_NULL(1, 2);
+GPtrArray *
+fu_util_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags flags)
     G_GNUC_NON_NULL(1);
