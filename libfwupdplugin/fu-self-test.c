@@ -1015,6 +1015,11 @@ fu_context_hwids_dmi_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
+	/* ensure quirks are set up, although not actually needed here */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1033,6 +1038,11 @@ fu_context_hwids_unset_func(gconstpointer user_data)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
+
+	/* ensure quirks are set up, although not actually needed here */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
@@ -1059,6 +1069,11 @@ fu_context_hwids_fdt_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file =
 	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
+
+	/* ensure quirks are set up, although not actually needed here */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* write file */
 	fdt_tmp = fu_firmware_new_from_xml(
@@ -1271,7 +1286,7 @@ fu_hwids_func(gconstpointer user_data)
 {
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *full_path = NULL;
-	g_autoptr(FuContext) context = NULL;
+	g_autoptr(FuContext) ctx = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -1313,42 +1328,37 @@ fu_hwids_func(gconstpointer user_data)
 		return;
 	}
 
-	context = fu_context_new();
-	ret = fu_context_load_hwinfo(context, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
+	ctx = fu_context_new();
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_MANUFACTURER),
-			==,
-			"LENOVO");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_ENCLOSURE_KIND), ==, "a");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY),
-			==,
-			"ThinkPad T440s");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_PRODUCT_NAME),
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER), ==, "LENOVO");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_ENCLOSURE_KIND), ==, "a");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_FAMILY), ==, "ThinkPad T440s");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME),
 			==,
 			"20ARS19C0C");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_VENDOR), ==, "LENOVO");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_VERSION),
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), ==, "LENOVO");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VERSION),
 			==,
 			"GJET75WW (2.25 )");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE),
-			==,
-			"02");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_MINOR_RELEASE),
-			==,
-			"19");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_PRODUCT_SKU),
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "02");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "19");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU),
 			==,
 			"LENOVO_MT_20AR_BU_Think_FM_ThinkPad T440s");
 	for (guint i = 0; guids[i].key != NULL; i++) {
-		FuHwids *hwids = fu_context_get_hwids(context);
+		FuHwids *hwids = fu_context_get_hwids(ctx);
 		g_autofree gchar *guid = fu_hwids_get_guid(hwids, guids[i].key, &error);
 		g_assert_no_error(error);
 		g_assert_cmpstr(guid, ==, guids[i].value);
 	}
 	for (guint i = 0; guids[i].key != NULL; i++)
-		g_assert_true(fu_context_has_hwid_guid(context, guids[i].value));
+		g_assert_true(fu_context_has_hwid_guid(ctx, guids[i].value));
 }
 
 static void
