@@ -141,6 +141,6 @@ fu_sunwinon_util_dfu_master_2_start(FuSwDfuMaster *self,
 gboolean
 fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     FuProgress *progress,
-					     guint8 mode_setting,
+					     FuSunwinonFastDfuMode mode_setting,
 					     GError **error);
 // Removed fast_dfu_mode_set_2 as per requirement to merge mode set into start.

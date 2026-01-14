@@ -6,7 +6,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-sunwinon-hid-struct.h"
 #include "fu-sunwinon-util-dfu-master.h"
 
 #define HID_REPORT_DATA_LEN 480
@@ -14,31 +13,15 @@
 #define DFU_IMAGE_INFO_TAIL_SIZE 48
 /* fw load addr shall align to sector size */
 #define FLASH_OP_SECTOR_SIZE 0x1000
-/* fw pattern value */
-#define PATTERN_VALUE		0x4744
+#define FW_PATTERN_VALUE	0x4744
 #define DFU_SIGN_LEN		856
 #define PATTERN_DEADBEEF	0xDEADBEEF
 #define PATTERN_SIGN		0x4E474953 /* "SIGN" */
 #define PATTERN_DEADBEEF_OFFSET 48
 #define PATTERN_SIGN_OFFSET	72
+#define ONCE_SIZE		464
 
 struct FuSwDfuMaster {
-	guint32 img_data_addr;
-	guint32 all_check_sum;
-	guint32 file_size;
-	guint32 programed_size;
-	gboolean run_fw_flag;
-	guint16 once_size;
-	guint16 sent_len;
-	guint16 all_send_len;
-	guint16 erase_sectors;
-	guint8 ble_fast_send_cplt_flag;
-	guint8 fast_dfu_mode;
-	/* new FW save address in peripheral */
-	guint32 dfu_save_addr;
-	guint32 dfu_timeout_start_time;
-	gboolean dfu_timeout_started;
-	/* V2 API args */
 	const guint8 *fw;
 	gsize fw_sz;
 	FuDevice *device;
@@ -51,8 +34,10 @@ typedef struct {
 	FuSunwinonDfuImageInfo now_img_info;
 	/* image information in peripheral APP Info area */
 	FuSunwinonDfuImageInfo app_info;
-	gboolean security_mode;
 	guint32 dfu_save_addr;
+	guint32 file_check_sum;
+	gboolean security_mode;
+	FuSunwinonFwType fw_type;
 } FuDfuInnerState;
 
 typedef struct {
@@ -61,6 +46,17 @@ typedef struct {
 	guint8 *data;
 	guint16 check_sum;
 } FuDfuReceiveFrame;
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(GError **error)
+{
+	/* fast mode use different flash procedure, but no device support it right now */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no device support fast dfu mode right now");
+	return FALSE;
+}
 
 static gboolean
 fu_sunwinon_util_dfu_master_2_check_fw_available(FuSwDfuMaster *self, GError **error)
@@ -92,7 +88,7 @@ fu_sunwinon_util_dfu_master_2_dfu_get_img_info(FuSwDfuMaster *self,
 			    sizeof(FuSunwinonDfuImageInfo),
 			    error))
 		return FALSE;
-	if (image_info->pattern != PATTERN_VALUE) {
+	if (image_info->pattern != FW_PATTERN_VALUE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -116,8 +112,6 @@ fu_sunwinon_util_dfu_master_2_dfu_get_img_info(FuSwDfuMaster *self,
 	return TRUE;
 }
 
-const char str[] = {0x4E, 0x47, 0x49, 0x53}; // "NGIS"
-
 static gboolean
 fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
 					       FuDfuInnerState *inner_state,
@@ -134,8 +128,10 @@ fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
 	tail_size = DFU_IMAGE_INFO_TAIL_SIZE;
 
 	/* check if fw is signed */
+	inner_state->fw_type = FU_SUNWINON_FW_TYPE_NORMAL;
 	if (inner_state->security_mode) {
 		tail_size += DFU_SIGN_LEN;
+		inner_state->fw_type = FU_SUNWINON_FW_TYPE_SIGNED;
 		g_debug("signed firmware (security mode)");
 	} else if (self->fw_sz >= (inner_state->now_img_info.boot_info.bin_size +
 				   DFU_IMAGE_INFO_TAIL_SIZE + DFU_SIGN_LEN)) {
@@ -163,10 +159,11 @@ fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
 		if ((fw_pattern_deadbeef == PATTERN_DEADBEEF) &&
 		    (fw_pattern_sign == PATTERN_SIGN)) {
 			tail_size += DFU_SIGN_LEN;
+			inner_state->fw_type = FU_SUNWINON_FW_TYPE_SIGNED;
 			g_debug("signed firmware (sign pattern found)");
 		}
 	}
-	/* else fw is always unsigned */
+	/* else fw is unsigned */
 	g_debug("unsigned firmware");
 
 	/* check if the new fw is correctly packed */
@@ -211,91 +208,10 @@ fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
 	return TRUE;
 }
 
-/*
-static gboolean
-fu_sunwinon_util_dfu_master_dfu_get_img_data(FuSwDfuMaster *self,
-					guint32 addr,
-					guint8 *data,
-					guint16 len,
-					GError **error)
-{
-	guint32 off = 0;
-	gsize avail = 0;
-
-	if (addr >= self->fw_save_addr)
-		off = addr - self->fw_save_addr;
-	if ((guint64)off + len > self->fw_sz)
-		len = (guint16)MAX((gint)0, (gint)(self->fw_sz > off ? self->fw_sz - off : 0));
-	{
-		avail = (self->fw_sz > off) ? (self->fw_sz - off) : 0;
-		return fu_memcpy_safe(data,
-				      len,
-				      0,
-				      (const guint8 *)(self->fw + off),
-				      avail,
-				      0,
-				      len,
-				      error);
-	}
-}
-*/
-static guint32
-fu_sunwinon_util_dfu_master_2_get_time(void)
-{
-	return (guint32)(g_get_monotonic_time() / 1000);
-}
-
 static void
 fu_sunwinon_util_dfu_master_2_wait(FuSwDfuMaster *self, guint32 ms)
 {
 	fu_device_sleep(FU_DEVICE(self->device), ms);
-}
-/*
-static void
-fu_sunwinon_util_dfu_master_dfu_event_handler(FuSwDfuMaster *self, FuSunwinonDfuEvent event,
-guint8 progress)
-{
-	switch (event) {
-	case FU_SUNWINON_DFU_EVENT_PRO_START_SUCCESS:
-		break;
-	case FU_SUNWINON_DFU_EVENT_PRO_FLASH_SUCCESS:
-	case FU_SUNWINON_DFU_EVENT_FAST_DFU_PRO_FLASH_SUCCESS:
-		if (self->progress != NULL)
-			fu_progress_set_percentage(self->progress, progress);
-		break;
-	case FU_SUNWINON_DFU_EVENT_PRO_END_SUCCESS:
-		if (self->progress != NULL)
-			fu_progress_set_percentage(self->progress, 100);
-		self->done = TRUE;
-		break;
-	case FU_SUNWINON_DFU_EVENT_DFU_ACK_TIMEOUT:
-		g_clear_pointer(&self->fail_reason, g_free);
-		self->fail_reason = g_strdup("dfu ack timeout");
-		self->failed = TRUE;
-		self->done = TRUE;
-		break;
-	case FU_SUNWINON_DFU_EVENT_PRO_END_FAIL:
-		g_clear_pointer(&self->fail_reason, g_free);
-		self->fail_reason = g_strdup("program end failed");
-		self->failed = TRUE;
-		self->done = TRUE;
-		break;
-	default:
-		break;
-	}
-}
-*/
-
-static gboolean
-fu_sunwinon_util_dfu_master_2_parse_and_progress(FuSwDfuMaster *self,
-						 guint16 cmd_type,
-						 guint16 check_sum,
-						 const guint8 *data,
-						 guint16 len,
-						 GError **error)
-{
-	/* TODO */
-	return TRUE;
 }
 
 static gboolean
@@ -474,6 +390,29 @@ fu_sunwinon_util_dfu_master_2_emit_ack_failure(FuSunwinonDfuCmd cmd_type, GError
 }
 
 static gboolean
+fu_sunwinon_util_dfu_master_2_plain_ack_recv(FuSwDfuMaster *self,
+					     FuSunwinonDfuCmd expected_cmd,
+					     GError **error)
+{
+	FuDfuReceiveFrame recv_frame = {0};
+	guint8 ack_byte = 0;
+
+	recv_frame.data = &ack_byte;
+	recv_frame.data_len = 1;
+
+	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
+							       &recv_frame,
+							       expected_cmd,
+							       error))
+		return FALSE;
+	if (ack_byte != FU_SUNWINON_DFU_ACK_SUCCESS)
+		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(expected_cmd, error);
+	return TRUE;
+}
+
+static gboolean
 fu_sunwinon_util_dfu_master_2_get_info(FuSwDfuMaster *self, GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
@@ -598,6 +537,8 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 
 	g_return_val_if_fail(image_info != NULL, FALSE);
 
+	g_debug("FwInfoGet");
+
 	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
 						      NULL,
 						      0,
@@ -645,10 +586,13 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self, guint8 mode_setting, GError **error)
+fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self,
+				       FuSunwinonFastDfuMode mode_setting,
+				       GError **error)
 {
+	g_debug("ModeSet");
 	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      &mode_setting,
+						      (const guint8 *)&mode_setting,
 						      1,
 						      FU_SUNWINON_DFU_CMD_MODE_SET,
 						      error))
@@ -660,14 +604,203 @@ fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self, guint8 mode_setting,
 }
 
 static gboolean
+fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
+					    FuDfuInnerState *inner_state,
+					    FuProgress *progress,
+					    FuSunwinonFastDfuMode mode_setting,
+					    GError **error)
+{
+	g_autoptr(FuStructSunwinonDfuPayloadProgramStart) st_prog_start = NULL;
+
+	g_return_val_if_fail(inner_state != NULL, FALSE);
+	g_return_val_if_fail(progress != NULL, FALSE);
+
+	g_debug("ProgramStart");
+
+	st_prog_start = fu_struct_sunwinon_dfu_payload_program_start_new();
+	fu_struct_sunwinon_dfu_payload_program_start_set_mode(st_prog_start,
+							      inner_state->fw_type | mode_setting);
+
+	inner_state->now_img_info.boot_info.load_addr = inner_state->dfu_save_addr;
+	if (!fu_struct_sunwinon_dfu_payload_program_start_set_image_info_raw(
+		st_prog_start,
+		(const guint8 *)&inner_state->now_img_info,
+		sizeof(FuSunwinonDfuImageInfo),
+		error))
+		return FALSE;
+
+	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+						      st_prog_start->buf->data,
+						      st_prog_start->buf->len,
+						      FU_SUNWINON_DFU_CMD_PROGRAM_START,
+						      error))
+		return FALSE;
+
+	if (mode_setting == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
+		if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
+								  FU_SUNWINON_DFU_CMD_PROGRAM_START,
+								  error))
+			return FALSE;
+	} else
+		return fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(error);
+
+	fu_progress_set_percentage(progress, 0);
+
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_do_update_fast(FuSwDfuMaster *self,
+					     FuDfuInnerState *inner_state,
+					     FuProgress *progress,
+					     GError **error)
+{
+	(void)self;
+	(void)inner_state;
+	(void)progress;
+	return fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(error);
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_do_update_normal(FuSwDfuMaster *self,
+					       FuDfuInnerState *inner_state,
+					       FuProgress *progress,
+					       GError **error)
+{
+	g_autoptr(FuStructSunwinonDfuPayloadProgramFlash) st_prog_flash = NULL;
+	gsize already_sent = 0;
+	guint16 data_len = 0;
+
+	g_return_val_if_fail(inner_state != NULL, FALSE);
+	g_return_val_if_fail(progress != NULL, FALSE);
+
+	g_debug("normal DFU update start");
+
+	st_prog_flash = fu_struct_sunwinon_dfu_payload_program_flash_new();
+	inner_state->file_check_sum = 0;
+	while (already_sent < self->fw_sz) {
+		g_debug("programming flash: %zu / %zu", already_sent, self->fw_sz);
+
+		fu_struct_sunwinon_dfu_payload_program_flash_set_dfu_save_addr(
+		    st_prog_flash,
+		    inner_state->dfu_save_addr + (guint32)already_sent);
+		if (self->fw_sz - already_sent >= ONCE_SIZE)
+			data_len = ONCE_SIZE;
+		else
+			data_len = (guint16)(self->fw_sz - already_sent);
+		fu_struct_sunwinon_dfu_payload_program_flash_set_data_len(st_prog_flash, data_len);
+		if (!fu_struct_sunwinon_dfu_payload_program_flash_set_fw_data(st_prog_flash,
+									      self->fw +
+										  already_sent,
+									      data_len,
+									      error))
+			return FALSE;
+
+		if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+							      st_prog_flash->buf->data,
+							      st_prog_flash->buf->len -
+								  (ONCE_SIZE - data_len),
+							      FU_SUNWINON_DFU_CMD_PROGRAM_FLASH,
+							      error))
+			return FALSE;
+
+		if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
+								  FU_SUNWINON_DFU_CMD_PROGRAM_FLASH,
+								  error))
+			return FALSE;
+
+		/* update file check sum */
+		for (guint16 i = 0; i < data_len; i++) {
+			inner_state->file_check_sum += self->fw[already_sent + i];
+		}
+		already_sent += data_len;
+
+		if (progress != NULL)
+			fu_progress_set_percentage(progress,
+						   (guint)((already_sent * 100) / self->fw_sz));
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_program_end(FuSwDfuMaster *self,
+					  FuDfuInnerState *inner_state,
+					  FuProgress *progress,
+					  GError **error)
+{
+	FuDfuReceiveFrame recv_frame = {0};
+	guint32 device_file_check_sum = 0;
+	g_autoptr(FuStructSunwinonDfuPayloadProgramEnd) st_prog_end_payload = NULL;
+	g_autoptr(FuStructSunwinonDfuRspProgramEnd) st_prog_end = NULL;
+
+	g_return_val_if_fail(inner_state != NULL, FALSE);
+	g_return_val_if_fail(progress != NULL, FALSE);
+
+	g_debug("ProgramEnd");
+
+	st_prog_end_payload = fu_struct_sunwinon_dfu_payload_program_end_new();
+	fu_struct_sunwinon_dfu_payload_program_end_set_file_check_sum(st_prog_end_payload,
+								      inner_state->file_check_sum);
+
+	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
+						      st_prog_end_payload->buf->data,
+						      st_prog_end_payload->buf->len,
+						      FU_SUNWINON_DFU_CMD_PROGRAM_END,
+						      error))
+		return FALSE;
+
+	st_prog_end = fu_struct_sunwinon_dfu_rsp_program_end_new();
+	recv_frame.data = st_prog_end->buf->data;
+	recv_frame.data_len = st_prog_end->buf->len;
+	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+		return FALSE;
+
+	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
+							       &recv_frame,
+							       FU_SUNWINON_DFU_CMD_PROGRAM_END,
+							       error))
+		return FALSE;
+
+	if (!fu_struct_sunwinon_dfu_rsp_program_end_validate(st_prog_end->buf->data,
+							     st_prog_end->buf->len,
+							     0,
+							     error))
+		return FALSE;
+
+	if (fu_struct_sunwinon_dfu_rsp_program_end_get_ack_status(st_prog_end) !=
+	    FU_SUNWINON_DFU_ACK_SUCCESS)
+		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(
+		    FU_SUNWINON_DFU_CMD_PROGRAM_END,
+		    error);
+
+	device_file_check_sum =
+	    fu_struct_sunwinon_dfu_rsp_program_end_get_file_check_sum(st_prog_end);
+	if (device_file_check_sum != inner_state->file_check_sum) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
+		    "sunwinon-hid: firmware file check sum mismatch. host: 0x%x, device: 0x%x",
+		    inner_state->file_check_sum,
+		    device_file_check_sum);
+		return FALSE;
+	}
+
+	fu_progress_set_percentage(progress, 100);
+
+	return TRUE;
+}
+
+static gboolean
 fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
-					guint8 mode_setting,
 					FuDfuInnerState *inner_state,
+					FuSunwinonFastDfuMode mode_setting,
 					GError **error)
 {
 	g_return_val_if_fail(inner_state != NULL, FALSE);
 
-	/* GetInfo -> SystemInfo -> FwInfoGet */
+	/* GetInfo -> SystemInfo -> FwInfoGet -> ModeSet */
 
 	if (!fu_sunwinon_util_dfu_master_2_get_info(self, error))
 		return FALSE;
@@ -681,20 +814,12 @@ fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
 						       &inner_state->dfu_save_addr,
 						       error))
 		return FALSE;
-
+	/* no command sent during checking */
 	if (!fu_sunwinon_util_dfu_master_2_pre_update_check(self, inner_state, error))
 		return FALSE;
-
-	/* start update */
-
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "sunwinon-hid: not implemented");
-	return FALSE;
-
 	if (!fu_sunwinon_util_dfu_master_2_mode_set(self, mode_setting, error))
 		return FALSE;
+
 	return TRUE;
 }
 
@@ -705,8 +830,6 @@ fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *devic
 
 	g_return_val_if_fail(device != NULL, NULL);
 	self = g_new0(FuSwDfuMaster, 1);
-	self->fast_dfu_mode = FU_SUNWINON_FAST_DFU_MODE_DISABLE;
-	self->once_size = HID_REPORT_DATA_LEN;
 	self->fw = fw;
 	self->fw_sz = fw_sz;
 	self->device = device;
@@ -730,23 +853,36 @@ fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
 gboolean
 fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 					     FuProgress *progress,
-					     guint8 mode_setting,
+					     FuSunwinonFastDfuMode mode_setting,
 					     GError **error)
 {
 	FuDfuInnerState inner_state = {0};
-	(void)self;
-	(void)progress;
-	(void)error;
 
 	if (!fu_sunwinon_util_dfu_master_2_dfu_get_img_info(self, &inner_state.now_img_info, error))
 		return FALSE;
-
-	if (!fu_sunwinon_util_dfu_master_2_handshake(self, mode_setting, &inner_state, error))
+	if (!fu_sunwinon_util_dfu_master_2_handshake(self, &inner_state, mode_setting, error))
+		return FALSE;
+	if (!fu_sunwinon_util_dfu_master_2_program_start(self,
+							 &inner_state,
+							 progress,
+							 mode_setting,
+							 error))
+		return FALSE;
+	if (mode_setting == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
+		if (!fu_sunwinon_util_dfu_master_2_do_update_normal(self,
+								    &inner_state,
+								    progress,
+								    error))
+			return FALSE;
+	} else {
+		if (!fu_sunwinon_util_dfu_master_2_do_update_fast(self,
+								  &inner_state,
+								  progress,
+								  error))
+			return FALSE;
+	}
+	if (!fu_sunwinon_util_dfu_master_2_program_end(self, &inner_state, progress, error))
 		return FALSE;
 
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "sunwinon-hid: not implemented");
-	return FALSE;
+	return TRUE;
 }

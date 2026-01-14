@@ -4,10 +4,7 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-sunwinon-hid-device.h"
-#include "fu-sunwinon-hid-struct.h"
 #include "fu-sunwinon-util-dfu-master.h"
 
 struct _FuSunwinonHidDevice {
@@ -321,15 +318,15 @@ fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
 	gsize fw_sz = 0;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuSwDfuMaster) dfu_master = NULL; /* TODO: implement */
+	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
+
+	(void)flags;
 
 	locker = fu_device_locker_new(device, error);
-	if (locker == NULL)
-		return FALSE;
+	g_return_val_if_fail(locker != NULL, FALSE);
 
 	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
-		return FALSE;
+	g_return_val_if_fail(blob != NULL, FALSE);
 
 	fw = g_bytes_get_data(blob, &fw_sz);
 	if (fw_sz < DFU_IMAGE_INFO_LEN) {
@@ -340,11 +337,11 @@ fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
 		return FALSE;
 	}
 
-	dfu_master = fu_sunwinon_util_dfu_master_2_new(fw, fw_sz, device); /* TODO: implement */
+	dfu_master = fu_sunwinon_util_dfu_master_2_new(fw, fw_sz, device);
 	if (!fu_sunwinon_util_dfu_master_2_write_firmware(dfu_master,
 							  progress,
 							  FU_SUNWINON_FAST_DFU_MODE_DISABLE,
-							  error)) /* TODO: implement */
+							  error))
 		return FALSE;
 	return TRUE;
 }

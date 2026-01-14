@@ -24,6 +24,18 @@ enum FuSunwinonDfuAck {
     Error = 0x02,
 }
 
+#[repr(u8)]
+enum FuSunwinonFwType {
+    Normal = 0x00,
+    Signed = 0x10,
+}
+
+#[repr(u8)]
+enum FuSunwinonFastDfuMode {
+    Disable = 0x00,
+    Enable = 0x02,
+}
+
 #[derive(New, Default, Validate, Getters, Setters)]
 #[repr(C, packed)]
 struct FuStructSunwinonDfuFrameHeader {
@@ -62,6 +74,29 @@ struct FuStructSunwinonDfuPayloadSystemInfo {
     len: u16le == 0x30,
 }
 
+#[derive(New, Default, Validate, Setters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuPayloadProgramStart {
+    mode: u8,
+    image_info_raw: [u8; 40],
+}
+
+#[derive(New, Default, Validate, Setters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuPayloadProgramFlash {
+    write_mode: u8 == 0x01,
+    dfu_save_addr: u32le,
+    data_len: u16le,
+    fw_data: [u8; 464],
+}
+
+#[derive(New, Default, Validate, Setters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuPayloadProgramEnd {
+    end_mode: u8 == 0x01, // restart with new fw
+    file_check_sum: u32le,
+}
+
 #[derive(New, Default, Validate, Getters)]
 #[repr(C, packed)]
 struct FuStructSunwinonDfuRspGetInfo {
@@ -88,6 +123,13 @@ struct FuStructSunwinonDfuRspFwInfoGet {
     run_position: u8, // unused
     image_info_raw: [u8; 40],
     reserved: [u8; 8],
+}
+
+#[derive(New, Default, Validate, Getters)]
+#[repr(C, packed)]
+struct FuStructSunwinonDfuRspProgramEnd {
+    ack_status: FuSunwinonDfuAck,
+    file_check_sum: u32le,
 }
 
 // legacy code below
@@ -140,12 +182,6 @@ enum FuSunwinonDfuEvent {
 #[repr(u8)]
 enum FuSunwinonDfu {
     Version = 0x02,
-}
-
-#[repr(u8)]
-enum FuSunwinonFastDfuMode {
-    Disable = 0x00,
-    Enable = 0x02,
 }
 
 #[repr(u8)]
