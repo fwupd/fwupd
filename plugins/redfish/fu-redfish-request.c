@@ -293,6 +293,11 @@ fu_redfish_request_init(FuRedfishRequest *self)
 	self->json_parser = fwupd_json_parser_new();
 	(void)curl_easy_setopt(self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_request_write_cb);
 	(void)curl_easy_setopt(self->curl, CURLOPT_WRITEDATA, self->buf);
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(self->json_parser, 50);
+	fwupd_json_parser_set_max_items(self->json_parser, 1000);
+	fwupd_json_parser_set_max_quoted(self->json_parser, 100000);
 }
 
 static void

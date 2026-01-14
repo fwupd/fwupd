@@ -186,7 +186,7 @@ fwupd_codec_from_json(FwupdCodec *self, FwupdJsonObject *json_obj, GError **erro
 gboolean
 fwupd_codec_from_json_string(FwupdCodec *self, const gchar *json, GError **error)
 {
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
@@ -194,7 +194,12 @@ fwupd_codec_from_json_string(FwupdCodec *self, const gchar *json, GError **error
 	g_return_val_if_fail(json != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	json_node = fwupd_json_parser_load_from_data(parser, json, -1, error);
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 1000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
+
+	json_node = fwupd_json_parser_load_from_data(json_parser, json, -1, error);
 	if (json_node == NULL) {
 		g_prefix_error(error, "failed to load '%s': ", json);
 		return FALSE;

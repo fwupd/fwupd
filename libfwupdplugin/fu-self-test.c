@@ -5671,6 +5671,7 @@ fu_firmware_builder_round_trip_func(void)
 		g_autoptr(GError) error = NULL;
 
 		filename = g_test_build_filename(G_TEST_DIST, "tests", map[i].xml_fn, NULL);
+		g_debug("parsing: %s", filename);
 		ret = fu_firmware_roundtrip_from_filename(filename,
 							  map[i].checksum,
 							  map[i].flags,

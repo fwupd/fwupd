@@ -97,6 +97,11 @@ fu_json_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	const gchar *json;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+
 	/* simple properties */
 	json = xb_node_query_text(n, "json", error);
 	if (json == NULL) {

@@ -5203,17 +5203,24 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(GInputStream) stream = NULL;
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 1000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 
 	g_debug("loading %s", fn);
 	stream = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	json_node =
-	    fwupd_json_parser_load_from_stream(parser, stream, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	json_node = fwupd_json_parser_load_from_stream(json_parser,
+						       stream,
+						       FWUPD_JSON_LOAD_FLAG_NONE,
+						       &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_node);
 	json_obj = fwupd_json_node_get_object(json_node, &error);
@@ -5345,7 +5352,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(GBytes) usb_emulate_blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
@@ -5358,6 +5365,11 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 			      "failed to parse * BOS descriptor: *invalid UUID*");
 #endif
 
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+
 	/* load the JSON into the backend */
 	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
 	usb_emulate_fn =
@@ -5365,7 +5377,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	usb_emulate_blob = fu_bytes_get_contents(usb_emulate_fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(usb_emulate_blob);
-	json_node = fwupd_json_parser_load_from_bytes(parser,
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
 						      usb_emulate_blob,
 						      FWUPD_JSON_LOAD_FLAG_NONE,
 						      &error);
