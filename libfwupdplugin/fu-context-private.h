@@ -20,6 +20,8 @@
 
 FuContext *
 fu_context_new(void);
+FuContext *
+fu_context_new_full(FuContextFlags flags);
 void
 fu_context_housekeeping(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean

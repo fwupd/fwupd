@@ -1013,7 +1013,7 @@ static void
 fu_context_hwids_dmi_func(void)
 {
 	g_autofree gchar *dump = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -1032,7 +1032,7 @@ static void
 fu_context_hwids_unset_func(void)
 {
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -1056,7 +1056,7 @@ fu_context_hwids_fdt_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuFirmware) fdt_tmp = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1249,7 +1249,7 @@ fu_strsafe_func(void)
 		    {NULL, NULL}};
 	GPtrArray *instance_ids;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) dev = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
 
@@ -1272,9 +1272,8 @@ fu_strsafe_func(void)
 static void
 fu_hwids_func(void)
 {
-	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *full_path = NULL;
-	g_autoptr(FuContext) context = NULL;
+	g_autoptr(FuContext) context = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -1305,10 +1304,6 @@ fu_hwids_func(void)
 	return;
 #endif
 
-	/* these tests will not write */
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-
 	/* DMI */
 	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
 	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
@@ -1316,7 +1311,6 @@ fu_hwids_func(void)
 		return;
 	}
 
-	context = fu_context_new();
 	ret = fu_context_load_hwinfo(context, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6580,7 +6574,7 @@ static void
 fu_plugin_efi_x509_signature_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
 	g_autoptr(FuEfiX509Device) device = fu_efi_x509_device_new(ctx, sig);
 	g_autoptr(GError) error = NULL;
@@ -6839,7 +6833,7 @@ fu_intel_me16_device_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
@@ -6932,7 +6926,7 @@ fu_intel_me18_device_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
@@ -7020,7 +7014,7 @@ fu_intel_me16_device_hap_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
