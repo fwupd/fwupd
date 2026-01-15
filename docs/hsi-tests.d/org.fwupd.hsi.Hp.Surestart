@@ -1,0 +1,25 @@
+{
+  "id": "org.fwupd.hsi.Hp.Surestart",
+  "name": "HP SureStart",
+  "description": [
+    "HP SureStart is an advanced self-healing BIOS that automatically recovers the BIOS code if it becomes corrupted or is compromised by malicious software.",
+    "When enabled, SureStart monitors the BIOS for unauthorized changes and can automatically restore the BIOS to a known-good state.",
+    "This provides runtime intrusion prevention and detection for the firmware, protecting against both malware and physical attacks on the BIOS chip."
+  ],
+  "failure-impact": [
+    "Without HP SureStart enabled, the system firmware is vulnerable to persistent malware that could survive operating system reinstallation.",
+    "An attacker who compromises the BIOS could maintain persistent access to the system and potentially bypass security features like Secure Boot.",
+    "Physical attacks on the BIOS chip could result in permanent system compromise without detection."
+  ],
+  "failure-results": {
+    "not-enabled": "HP SureStart is disabled"
+  },
+  "success-results": {
+    "enabled": "HP SureStart is enabled"
+  },
+  "references": {
+    "https://h20195.www2.hp.com/v2/GetPDF.aspx/4aa6-4194enw.pdf": "HP SureStart White Paper"
+  },
+  "hsi-level": 2,
+  "fwupd-version": "2.1.1"
+}
