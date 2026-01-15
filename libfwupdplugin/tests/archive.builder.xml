@@ -1,4 +1,4 @@
-<firmware gtype="FuArchiveFirmware">
+<firmware gtype="FuZipArchive">
   <format>ustar</format>
   <compression>gzip</compression>
   <firmware>

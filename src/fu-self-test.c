@@ -1479,7 +1479,6 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	g_autoptr(GError) error = NULL;
 	const gchar *noxml[] = {
 	    "FuFirmware",
-	    "FuArchiveFirmware",
 	    "FuGenesysUsbhubFirmware",
 	    "FuIntelThunderboltFirmware",
 	    "FuIntelThunderboltNvm",

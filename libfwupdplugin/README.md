@@ -72,7 +72,7 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_common_write*`: Use `fu_memwrite` prefix, i.e. replace the `_common` with `_mem`
 * `fu_common_bytes_compare_raw()`: Use `fu_memcmp_safe()` instead
 * `fu_common_spawn_sync()`: Use `g_spawn_sync()` instead, or ideally not at all!
-* `fu_common_extract_archive()`: Use `FuArchiveFirmware()` instead.
+* `fu_common_extract_archive()`: Use `FuZipArchive()` instead.
 * `fu_common_instance_id_strsafe()`: Use `fu_device_add_instance_strsafe()` instead.
 * `fu_common_kernel_locked_down()`: Use `fu_kernel_locked_down` instead.
 * `fu_common_check_kernel_version()`: Use `fu_kernel_check_version` instead.
@@ -211,3 +211,4 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_context_add_firmware_gtype()`: Drop the `id` parameter.
 * `fu_firmware_build_from_xml()`: Use `fu_firmware_new_from_xml()` instead.
 * `fu_firmware_build_from_filename()`: Use `fu_firmware_new_from_filename()` instead.
+* `FuArchiveFirmware`: Use `FuZipArchive` instead

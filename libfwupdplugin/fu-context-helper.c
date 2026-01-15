@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include <libfwupdplugin/fu-acpi-table.h>
-#include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-cab-firmware.h>
 #include <libfwupdplugin/fu-cfu-offer.h>
 #include <libfwupdplugin/fu-cfu-payload.h>
@@ -74,7 +73,6 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_LINEAR_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SREC_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_HID_DESCRIPTOR);
-	fu_context_add_firmware_gtype(self, FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self, FU_TYPE_ACPI_TABLE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SBATLEVEL_SECTION);

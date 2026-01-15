@@ -16,5 +16,5 @@ struct _FuZipArchiveClass {
 	FuFirmwareClass parent_class;
 };
 
-FuZipArchive *
+FuFirmware *
 fu_zip_archive_new(void) G_GNUC_WARN_UNUSED_RESULT;

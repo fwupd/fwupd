@@ -31,12 +31,12 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 	guint32 compressed_size;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuStructZipLfh) st_lfh = NULL;
-	g_autoptr(FuZipFile) zip_file = fu_zip_file_new();
+	g_autoptr(FuFirmware) zip_file = fu_zip_file_new();
 	g_autoptr(GInputStream) stream_compressed = NULL;
 	g_autoptr(GInputStream) stream_raw = NULL;
 
 	/* read local file header */
-	fu_firmware_set_offset(FU_FIRMWARE(zip_file), offset);
+	fu_firmware_set_offset(zip_file, offset);
 	st_lfh = fu_struct_zip_lfh_parse_stream(stream, offset, error);
 	if (st_lfh == NULL)
 		return FALSE;
@@ -89,7 +89,7 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 			    fu_zip_compression_to_string(compression));
 		return FALSE;
 	}
-	fu_zip_file_set_compression(zip_file, compression);
+	fu_zip_file_set_compression(FU_ZIP_FILE(zip_file), compression);
 
 	/* verify checksum */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
@@ -116,10 +116,10 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 	}
 
 	/* add stream as a image */
-	fu_firmware_set_id(FU_FIRMWARE(zip_file), filename);
-	if (!fu_firmware_set_stream(FU_FIRMWARE(zip_file), stream_raw, error))
+	fu_firmware_set_id(zip_file, filename);
+	if (!fu_firmware_set_stream(zip_file, stream_raw, error))
 		return FALSE;
-	if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(zip_file), error))
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), zip_file, error))
 		return FALSE;
 
 	/* success */
@@ -322,7 +322,7 @@ static void
 fu_zip_archive_init(FuZipArchive *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ZIP_FILE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT16);
@@ -335,8 +335,8 @@ fu_zip_archive_init(FuZipArchive *self)
  *
  * Since: 2.1.1
  **/
-FuZipArchive *
+FuFirmware *
 fu_zip_archive_new(void)
 {
-	return g_object_new(FU_TYPE_ZIP_ARCHIVE, NULL);
+	return FU_FIRMWARE(g_object_new(FU_TYPE_ZIP_ARCHIVE, NULL));
 }

@@ -4252,50 +4252,6 @@ fu_firmware_csv_func(void)
 }
 
 static void
-fu_firmware_archive_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
-	g_autoptr(FuFirmware) img_asc = NULL;
-	g_autoptr(FuFirmware) img_bin = NULL;
-	g_autoptr(FuFirmware) img_both = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = NULL;
-
-#ifndef HAVE_LIBARCHIVE
-	g_test_skip("no libarchive support");
-	return;
-#endif
-
-	fn = g_test_build_filename(G_TEST_BUILT, "tests", "firmware.zip", NULL);
-	file = g_file_new_for_path(fn);
-	ret = fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(fu_archive_firmware_get_format(FU_ARCHIVE_FIRMWARE(firmware)),
-			==,
-			FU_ARCHIVE_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_archive_firmware_get_compression(FU_ARCHIVE_FIRMWARE(firmware)),
-			==,
-			FU_ARCHIVE_COMPRESSION_UNKNOWN);
-
-	img_bin =
-	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.txt", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(img_bin);
-	img_asc = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							"*.txt.asc",
-							&error);
-	g_assert_no_error(error);
-	g_assert_nonnull(img_asc);
-	img_both =
-	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.txt*", &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_null(img_both);
-}
-
-static void
 fu_firmware_linear_func(void)
 {
 	gboolean ret;
@@ -7742,7 +7698,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{convert-version}", fu_firmware_convert_version_func);
 	g_test_add_func("/fwupd/firmware{builder-round-trip}", fu_firmware_builder_round_trip_func);
 	g_test_add_func("/fwupd/firmware{csv}", fu_firmware_csv_func);
-	g_test_add_func("/fwupd/firmware{archive}", fu_firmware_archive_func);
 	g_test_add_func("/fwupd/firmware{linear}", fu_firmware_linear_func);
 	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);

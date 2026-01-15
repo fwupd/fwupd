@@ -102,7 +102,7 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 			    GError **error)
 {
 	FuJabraGnpFirmware *self = FU_JABRA_GNP_FIRMWARE(firmware);
-	g_autoptr(FuFirmware) firmware_archive = fu_archive_firmware_new();
+	g_autoptr(FuFirmware) firmware_archive = FU_FIRMWARE(fu_zip_archive_new());
 	g_autoptr(FuFirmware) img_xml = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GPtrArray) files = NULL;
@@ -110,18 +110,12 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
 
-	/* FuArchiveFirmware->parse */
-	fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(firmware_archive),
-				       FU_ARCHIVE_FORMAT_ZIP);
-	fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(firmware_archive),
-					    FU_ARCHIVE_COMPRESSION_NONE);
+	/* FuZipArchive->parse */
 	if (!fu_firmware_parse_stream(firmware_archive, stream, 0x0, flags, error))
 		return FALSE;
 
 	/* parse the XML metadata */
-	img_xml = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
-							"info.xml",
-							error);
+	img_xml = fu_firmware_get_image_by_id(firmware_archive, "info.xml", error);
 	if (img_xml == NULL)
 		return FALSE;
 	img_blob = fu_firmware_get_bytes(img_xml, error);

@@ -1507,14 +1507,10 @@ fu_hpi_cfu_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 8, "restart");
 
 	/* get both images */
-	fw_offer = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							 "*.offer.bin",
-							 error);
+	fw_offer = fu_firmware_get_image_by_id(FU_FIRMWARE(firmware), "*.offer.bin", error);
 	if (fw_offer == NULL)
 		return FALSE;
-	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							   "*.payload.bin",
-							   error);
+	fw_payload = fu_firmware_get_image_by_id(firmware, "*.payload.bin", error);
 	if (fw_payload == NULL)
 		return FALSE;
 
@@ -1563,7 +1559,7 @@ fu_hpi_cfu_device_init(FuHpiCfuDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_ARCHIVE);
 	fu_device_set_install_duration(FU_DEVICE(self), 720); /* 12 min */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_HPI_CFU_INTERFACE);

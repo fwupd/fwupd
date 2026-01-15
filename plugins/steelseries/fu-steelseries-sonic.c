@@ -673,7 +673,7 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 {
 	FuSteelseriesSonic *self = FU_STEELSERIES_SONIC(device);
 	FuSteelseriesSonicChip chip;
-	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
+	g_autoptr(FuFirmware) firmware = fu_zip_archive_new();
 	g_autoptr(FuFirmware) firmware_nordic = NULL;
 	g_autoptr(FuFirmware) firmware_holtek = NULL;
 	g_autoptr(FuFirmware) firmware_mouse = NULL;
@@ -688,10 +688,6 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 18, "nordic");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 8, "holtek");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 73, "mouse");
-
-	fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(firmware), FU_ARCHIVE_FORMAT_ZIP);
-	fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(firmware),
-					    FU_ARCHIVE_COMPRESSION_NONE);
 
 	/* nordic */
 	chip = FU_STEELSERIES_SONIC_CHIP_NORDIC;
@@ -866,7 +862,7 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware_mouse = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 
-	firmware = fu_archive_firmware_new();
+	firmware = fu_zip_archive_new();
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 

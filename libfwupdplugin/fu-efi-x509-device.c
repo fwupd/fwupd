@@ -8,10 +8,10 @@
 
 #include "config.h"
 
-#include "fu-archive-firmware.h"
 #include "fu-efi-variable-authentication2.h"
 #include "fu-efi-x509-device.h"
 #include "fu-version-common.h"
+#include "fu-zip-archive.h"
 
 /**
  * FuEfiX509Device
@@ -94,7 +94,7 @@ fu_efi_x509_device_prepare_firmware(FuDevice *device,
 					   flags,
 					   error,
 					   FU_TYPE_EFI_VARIABLE_AUTHENTICATION2,
-					   FU_TYPE_ARCHIVE_FIRMWARE,
+					   FU_TYPE_ZIP_ARCHIVE,
 					   G_TYPE_INVALID);
 }
 
