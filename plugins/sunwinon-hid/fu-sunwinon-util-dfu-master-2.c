@@ -724,15 +724,24 @@ fu_sunwinon_util_dfu_master_2_do_update_normal(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_program_end(FuSwDfuMaster *self,
-					  FuDfuInnerState *inner_state,
-					  FuProgress *progress,
-					  GError **error)
+fu_sunwinon_util_dfu_master_2_program_end_fast(FuSwDfuMaster *self,
+					       FuDfuInnerState *inner_state,
+					       FuProgress *progress,
+					       GError **error)
 {
-	FuDfuReceiveFrame recv_frame = {0};
-	guint32 device_file_check_sum = 0;
+	(void)self;
+	(void)inner_state;
+	(void)progress;
+	return fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(error);
+}
+
+static gboolean
+fu_sunwinon_util_dfu_master_2_program_end_normal(FuSwDfuMaster *self,
+						 FuDfuInnerState *inner_state,
+						 FuProgress *progress,
+						 GError **error)
+{
 	g_autoptr(FuStructSunwinonDfuPayloadProgramEnd) st_prog_end_payload = NULL;
-	g_autoptr(FuStructSunwinonDfuRspProgramEnd) st_prog_end = NULL;
 
 	g_return_val_if_fail(inner_state != NULL, FALSE);
 	g_return_val_if_fail(progress != NULL, FALSE);
@@ -750,42 +759,10 @@ fu_sunwinon_util_dfu_master_2_program_end(FuSwDfuMaster *self,
 						      error))
 		return FALSE;
 
-	st_prog_end = fu_struct_sunwinon_dfu_rsp_program_end_new();
-	recv_frame.data = st_prog_end->buf->data;
-	recv_frame.data_len = st_prog_end->buf->len;
-	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+	if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
+							  FU_SUNWINON_DFU_CMD_PROGRAM_END,
+							  error))
 		return FALSE;
-
-	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
-							       &recv_frame,
-							       FU_SUNWINON_DFU_CMD_PROGRAM_END,
-							       error))
-		return FALSE;
-
-	if (!fu_struct_sunwinon_dfu_rsp_program_end_validate(st_prog_end->buf->data,
-							     st_prog_end->buf->len,
-							     0,
-							     error))
-		return FALSE;
-
-	if (fu_struct_sunwinon_dfu_rsp_program_end_get_ack_status(st_prog_end) !=
-	    FU_SUNWINON_DFU_ACK_SUCCESS)
-		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(
-		    FU_SUNWINON_DFU_CMD_PROGRAM_END,
-		    error);
-
-	device_file_check_sum =
-	    fu_struct_sunwinon_dfu_rsp_program_end_get_file_check_sum(st_prog_end);
-	if (device_file_check_sum != inner_state->file_check_sum) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INTERNAL,
-		    "sunwinon-hid: firmware file check sum mismatch. host: 0x%x, device: 0x%x",
-		    inner_state->file_check_sum,
-		    device_file_check_sum);
-		return FALSE;
-	}
 
 	fu_progress_set_percentage(progress, 100);
 
@@ -880,15 +857,23 @@ fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
 								    progress,
 								    error))
 			return FALSE;
+		if (!fu_sunwinon_util_dfu_master_2_program_end_normal(self,
+								      &inner_state,
+								      progress,
+								      error))
+			return FALSE;
 	} else {
 		if (!fu_sunwinon_util_dfu_master_2_do_update_fast(self,
 								  &inner_state,
 								  progress,
 								  error))
 			return FALSE;
+		if (!fu_sunwinon_util_dfu_master_2_program_end_fast(self,
+								    &inner_state,
+								    progress,
+								    error))
+			return FALSE;
 	}
-	if (!fu_sunwinon_util_dfu_master_2_program_end(self, &inner_state, progress, error))
-		return FALSE;
 
 	return TRUE;
 }

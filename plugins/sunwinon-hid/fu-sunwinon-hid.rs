@@ -131,13 +131,6 @@ struct FuStructSunwinonDfuRspFwInfoGet {
     reserved: [u8; 8],
 }
 
-#[derive(New, Default, Validate, Getters)]
-#[repr(C, packed)]
-struct FuStructSunwinonDfuRspProgramEnd {
-    ack_status: FuSunwinonDfuAck,
-    file_check_sum: u32le,
-}
-
 // legacy code below
 
 #[derive(New, Default, Getters)]
