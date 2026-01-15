@@ -60,6 +60,7 @@ plugins = {
   'goodix-moc': false,
   'goodix-tp': false,
   'gpio': false,
+  'hp-bioscfg': false,
   'hpi-cfu': false,
   'huddly-usb': false,
   'hughski-colorhug': false,

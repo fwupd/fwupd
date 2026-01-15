@@ -233,6 +233,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
 		return g_strdup(_("UEFI db"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HP_SURESTART) == 0) {
+		/* TRANSLATORS: Title: HP Surestart is a firmware security feature */
+		return g_strdup(_("HP Surestart"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -425,6 +429,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
 		return _("UEFI db");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HP_SURESTART) == 0) {
+		/* TRANSLATORS: Title: HP Surestart is a firmware security feature */
+		return _("HP Surestart");
 	}
 	return NULL;
 }
@@ -628,6 +636,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The UEFI db contains the list of valid certificates that can be used to "
 			 "authorize what EFI binaries are allowed to run.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HP_SURESTART) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("HP Surestart is a firmware security feature that protects the BIOS from "
+			 "tampering.");
 	}
 	return NULL;
 }
