@@ -1,6 +1,6 @@
 // Copyright 2025 Shihwei Huang <shihwei.huang@focaltech-electronics.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
-
+#[repr(u8)]
 enum FuFocaltouchCmd {
     EnterUpgradeMode = 0x40,
     CheckCurrentState = 0x41,
@@ -22,7 +22,7 @@ enum FuFocaltouchCmd {
 #[derive(New, Getters)]
 #[repr(C, packed)]
 struct FuStructFocaltouchBinLengthReq {
-    cmd: u8,
+    cmd: FuFocaltouchCmd,
     reg: u8,
     size: u24be,	// size
 }

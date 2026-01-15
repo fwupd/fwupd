@@ -236,20 +236,15 @@ fu_focaltouch_hid_device_write_bin_length(FuFocaltouchHidDevice *self,
 					  GError **error)
 {
 	g_autoptr(FuStructFocaltouchBinLengthReq) st = fu_struct_focaltouch_bin_length_req_new();
-	GByteArray *st_array = NULL;
 	guint8 rbuf[64] = {0x0};
 
 	fu_struct_focaltouch_bin_length_req_set_cmd(st, FU_FOCALTOUCH_CMD_WRITE_REGISTER);
 	fu_struct_focaltouch_bin_length_req_set_reg(st, FU_FOCALTOUCH_CMD_BIN_LENGTH);
 	fu_struct_focaltouch_bin_length_req_set_size(st, firmware_size);
-
-	st_array = (GByteArray *)st;
-
-	if (!fu_focaltouch_hid_device_io(self, st_array->data, st_array->len, rbuf, 6, error)) {
+	if (!fu_focaltouch_hid_device_io(self, st->buf->data, st->buf->len, rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to write bin length: ");
 		return FALSE;
 	}
-
 	return fu_focaltouch_hid_device_check_cmd_crc(rbuf,
 						      sizeof(rbuf),
 						      FU_FOCALTOUCH_CMD_ACK,
@@ -342,7 +337,7 @@ fu_focaltouch_hid_device_wait_for_upgrade_ready(FuFocaltouchHidDevice *self,
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_focaltouch_hid_device_wait_for_upgrade_ready_cb,
 				    retries,
-				    500,
+				    1,
 				    NULL,
 				    error);
 }
@@ -518,7 +513,7 @@ fu_focaltouch_hid_device_write_chunks(FuFocaltouchHidDevice *self,
 			g_prefix_error(error, "failed to write chunk %u: ", i);
 			return FALSE;
 		}
-		if (!fu_focaltouch_hid_device_wait_for_upgrade_ready(self, 100, error)) {
+		if (!fu_focaltouch_hid_device_wait_for_upgrade_ready(self, 20, error)) {
 			g_prefix_error(error, "failed to wait for chunk %u: ", i);
 			return FALSE;
 		}
@@ -549,10 +544,10 @@ fu_focaltouch_hid_device_upgrade_5822(FuFocaltouchHidDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 89, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 89, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "reset");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "reset");
 
 	/* simple image */
 	stream = fu_firmware_get_stream(firmware, error);
@@ -640,10 +635,10 @@ fu_focaltouch_hid_device_upgrade_5456(FuFocaltouchHidDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 89, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 89, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "reset");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "reset");
 
 	/* simple image */
 	stream = fu_firmware_get_stream(firmware, error);
@@ -734,21 +729,17 @@ fu_focaltouch_hid_device_upgrade_3c83(FuFocaltouchHidDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 89, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 89, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "reset");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "reset");
 
 	/* simple image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
+	buf_size = fu_firmware_get_size(firmware);
 	/* simple image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	buf_size = g_bytes_get_size(fw);
 	max_length = (buf_size + 3) / 4 * 4;
 
 	/* check chip id and erase flash */
@@ -905,6 +896,7 @@ fu_focaltouch_hid_device_detach(FuDevice *device, FuProgress *progress, GError *
 	FuFocaltouchHidDevice *self = FU_FOCALTOUCH_HID_DEVICE(device);
 	guint8 wbuf[] = {FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
+
 	/* command to go from APP --> Bootloader -- but we do not check crc */
 	if (!fu_focaltouch_hid_device_io(self, wbuf, sizeof(wbuf), rbuf, 6, error)) {
 		g_prefix_error_literal(error, "failed to FU_FOCALTOUCH_CMD_ENTER_UPGRADE_MODE: ");
