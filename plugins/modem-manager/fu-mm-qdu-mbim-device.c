@@ -215,7 +215,7 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* load the manifest of operations */
-	data_xml = fu_firmware_get_image_by_id(archive, "flashfile.xml", error);
+	data_xml = fu_firmware_get_image_by_id_bytes(archive, "flashfile.xml", error);
 	if (data_xml == NULL)
 		return FALSE;
 	if (!xb_builder_source_load_bytes(source, data_xml, XB_BUILDER_SOURCE_FLAG_NONE, error))

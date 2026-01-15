@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include "fu-archive.h"
 #include "fu-backend-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
@@ -48,7 +47,7 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gpointer key;
 	gpointer value;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuZipArchive) archive = fu_zip_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
 	g_return_val_if_fail(G_IS_OUTPUT_STREAM(stream), FALSE);
@@ -221,7 +220,7 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 
 static gboolean
 fu_engine_emulator_load_phases(FuEngineEmulator *self,
-			       FuZipArchive *archive,
+			       FuFirmware *archive,
 			       guint composite_cnt,
 			       guint write_cnt,
 			       gboolean *got_json,

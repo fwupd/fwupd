@@ -806,9 +806,11 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 {
 	FuMmQmiDevice *self = FU_MM_QMI_DEVICE(device);
 	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) file_infos =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_qmi_device_file_info_free);
+	g_autoptr(GPtrArray) imgs = NULL;
 	gint active_i = -1;
 
 	/* decompress entire archive ahead of time */
@@ -819,7 +821,6 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* process the list of MCFG files to write */
-	g_autoptr(GPtrArray) imgs = NULL;
 	imgs = fu_firmware_get_images(archive);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -838,20 +839,15 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 						      filename);
 		g_ptr_array_add(file_infos, file_info);
 	}
-	if (!fu_firmware_get_images(archive,
-				    fu_mm_qmi_device_archive_iterate_mcfg_cb,
-				    &archive_context,
-				    error))
-		return FALSE;
 
 	for (guint i = 0; i < file_infos->len; i++) {
 		FuMmQmiDeviceFileInfo *file_info = g_ptr_array_index(file_infos, i);
 		file_info->digest = fu_mm_qmi_device_write(self,
 							   file_info->filename,
 							   file_info->bytes,
-							   &archive_context.error);
+							   &error_local);
 		if (file_info->digest == NULL) {
-			g_prefix_error(&archive_context.error, /* nocheck:error */
+			g_prefix_error(&error_local, /* nocheck:error */
 				       "Failed to write file %s: ",
 				       file_info->filename);
 			break;
@@ -869,8 +865,8 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 		self->active_id = g_array_ref(file_info->digest);
 	}
 
-	if (archive_context.error != NULL) {
-		g_propagate_error(error, archive_context.error);
+	if (error_local != NULL) {
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
 

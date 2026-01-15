@@ -322,7 +322,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
-	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.tar.xz", NULL);
+	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.zip", NULL);
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;

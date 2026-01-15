@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
-				FuZipArchive *archive,
+				FuFirmware *archive,
 				FwupdJsonObject *json_obj,
 				guint i,
 				FuFirmwareParseFlags flags,
