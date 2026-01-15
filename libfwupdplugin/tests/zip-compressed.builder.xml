@@ -1,0 +1,11 @@
+<firmware gtype="FuZipFirmware">
+  <compressed>true</compressed>
+  <firmware>
+    <id>hello.txt</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware>
+    <id>goodbye.txt</id>
+    <data>Z29vZGJ5ZQ==</data>
+  </firmware>
+</firmware>

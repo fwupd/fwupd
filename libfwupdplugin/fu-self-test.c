@@ -5441,6 +5441,16 @@ fu_firmware_builder_round_trip_func(void)
 		FuFirmwareBuilderFlags flags;
 	} map[] = {
 	    {
+		"zip.builder.xml",
+		"aefdd7b205927e383981b03ded1ad22878d03263",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"zip-compressed.builder.xml",
+		"10792ff01b036ed89d11a6480694ccfd89c4d9fd",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		"cab.builder.xml",
 		"a708f47b1a46377f1ea420597641ffe9a40abd75",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,

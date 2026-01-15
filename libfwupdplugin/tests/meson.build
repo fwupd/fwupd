@@ -70,6 +70,8 @@ install_data(
     'usb-bos-descriptor.builder.xml',
     'uswid.builder.xml',
     'uswid-compressed.builder.xml',
+    'zip.builder.xml',
+    'zip-compressed.builder.xml',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests'),
   follow_symlinks: true,

@@ -44,6 +44,7 @@ fwupdplugin_structs = [
   'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
   'fu-v4l.rs', # fuzzing
+  'fu-zip.rs', # fuzzing
 ]
 
 # do not use structgen as these are referenced in headers too...
@@ -215,6 +216,7 @@ fwupdplugin_src = [
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
   'fu-x509-certificate.c', # fuzzing
+  'fu-zip-firmware.c', # fuzzing
 ]
 
 if host_machine.system() in ['linux', 'android']
@@ -382,6 +384,7 @@ fwupdplugin_headers = [
   'fu-volume.h',
   'fu-volume-locker.h',
   'fu-x509-certificate.h',
+  'fu-zip-firmware.h',
 ]
 
 introspection_deps = [libxmlb, giounix, libusb]
