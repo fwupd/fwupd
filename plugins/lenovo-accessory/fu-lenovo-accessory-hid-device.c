@@ -26,7 +26,7 @@ G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidDevice,
 static gboolean
 fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 {
-	FuLenovoAccessoryHidDevice *self = FU_LENOVO_HID_DEVICE(device);
+	FuLenovoAccessoryHidDevice *self = FU_LENOVO_ACCESSORY_HID_DEVICE(device);
 	guint8 major = 0;
 	guint8 minor = 0;
 	guint8 micro = 0;
@@ -64,7 +64,7 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_lenovo_accessory_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLenovoAccessoryHidDevice *self = FU_LENOVO_HID_DEVICE(device);
+	FuLenovoAccessoryHidDevice *self = FU_LENOVO_ACCESSORY_HID_DEVICE(device);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_lenovo_accessory_impl_set_mode(FU_LENOVO_ACCESSORY_IMPL(self),
 					       FU_LENOVO_DEVICE_MODE_DFU_MODE,

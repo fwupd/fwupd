@@ -12,5 +12,5 @@
 G_DECLARE_FINAL_TYPE(FuLenovoAccessoryHidDevice,
 		     fu_lenovo_accessory_hid_device,
 		     FU,
-		     LENOVO_HID_DEVICE,
+		     LENOVO_ACCESSORY_HID_DEVICE,
 		     FuHidrawDevice)
