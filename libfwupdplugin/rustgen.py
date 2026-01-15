@@ -900,7 +900,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # parse map from module to path
-    modules_map: dict[str, str] = {}
+    modules_map: Dict[str, str] = {}
     for entry in args.use:
         try:
             split = entry.split(":", maxsplit=1)
