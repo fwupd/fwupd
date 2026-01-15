@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Mario Limonciello <mario.limonciello@amd.com> *
+ * Copyright 2026 Mario Limonciello <mario.limonciello@amd.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
