@@ -1,10 +1,11 @@
-<firmware gtype="FuZipFirmware">
-  <compressed>true</compressed>
-  <firmware>
+<firmware gtype="FuZipArchive">
+  <firmware gtype="FuZipFile">
+    <compression>deflate</compression>
     <id>hello.txt</id>
     <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
-  <firmware>
+  <firmware gtype="FuZipFile">
+    <compression>deflate</compression>
     <id>goodbye.txt</id>
     <data>Z29vZGJ5ZQ==</data>
   </firmware>

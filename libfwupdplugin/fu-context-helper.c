@@ -52,7 +52,7 @@
 #include <libfwupdplugin/fu-usb-device-ms-ds20.h>
 #include <libfwupdplugin/fu-uswid-firmware.h>
 #include <libfwupdplugin/fu-x509-certificate.h>
-#include <libfwupdplugin/fu-zip-firmware.h>
+#include <libfwupdplugin/fu-zip-archive.h>
 
 #include "fu-context-helper.h"
 
@@ -107,5 +107,5 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_USB_DEVICE_MS_DS20);
 	fu_context_add_firmware_gtype(self, FU_TYPE_TPM_EVENTLOG_V1);
 	fu_context_add_firmware_gtype(self, FU_TYPE_TPM_EVENTLOG_V2);
-	fu_context_add_firmware_gtype(self, FU_TYPE_ZIP_FIRMWARE);
+	fu_context_add_firmware_gtype(self, FU_TYPE_ZIP_ARCHIVE);
 }

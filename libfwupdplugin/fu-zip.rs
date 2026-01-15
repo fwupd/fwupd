@@ -1,7 +1,7 @@
 // Copyright 2026 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 #[repr(u16le)]
 enum FuZipCompression {
     None = 0,

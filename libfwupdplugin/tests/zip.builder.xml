@@ -1,10 +1,9 @@
-<firmware gtype="FuZipFirmware">
-  <compressed>false</compressed>
-  <firmware>
+<firmware gtype="FuZipArchive">
+  <firmware gtype="FuZipFile">
     <id>hello.txt</id>
     <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
-  <firmware>
+  <firmware gtype="FuZipFile">
     <id>goodbye.txt</id>
     <data>Z29vZGJ5ZQ==</data>
   </firmware>
