@@ -57,6 +57,7 @@ fu_fdt_image_guess_format_from_key(const gchar *key)
 			      {"os", FU_FDT_IMAGE_FORMAT_STR},
 			      {"timestamp", FU_FDT_IMAGE_FORMAT_UINT32},
 			      {"type", FU_FDT_IMAGE_FORMAT_STR},
+			      {"vendor", FU_FDT_IMAGE_FORMAT_STR},
 			      {"version", FU_FDT_IMAGE_FORMAT_STR},
 			      {NULL, NULL}};
 	for (guint i = 0; key_format_map[i].key != NULL; i++) {

@@ -27,6 +27,7 @@
 #include "fu-efi-lz77-decompressor.h"
 #include "fu-efi-x509-signature-private.h"
 #include "fu-efivars-private.h"
+#include "fu-hwids-private.h"
 #include "fu-kernel-search-path-private.h"
 #include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
@@ -1009,16 +1010,16 @@ fu_context_firmware_gtypes_func(gconstpointer user_data)
 static void
 fu_context_hwids_dmi_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	g_autofree gchar *dump = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
-	/* ensure quirks are set up, although not actually needed here */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	/* reset config before loading hwinfo to avoid assertion failures */
+	fu_context_reset_config(ctx);
+	fu_context_set_hwids(ctx, fu_hwids_new());
+	fu_context_set_smbios(ctx, fu_smbios_new());
 
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
 	g_assert_no_error(error);
@@ -1028,21 +1029,26 @@ fu_context_hwids_dmi_func(gconstpointer user_data)
 
 	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER), ==, "FwupdTest");
 	g_assert_cmpuint(fu_context_get_chassis_kind(ctx), ==, 16);
+
+	/* reset hwids, smbios, and config to avoid affecting other tests */
+	fu_context_reset_config(ctx);
+	fu_context_set_hwids(ctx, fu_hwids_new());
+	fu_context_set_smbios(ctx, fu_smbios_new());
 }
 
 static void
 fu_context_hwids_unset_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
-	/* ensure quirks are set up, although not actually needed here */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	/* reset config before loading hwinfo to avoid assertion failures */
+	fu_context_reset_config(ctx);
+	fu_context_set_hwids(ctx, fu_hwids_new());
+	fu_context_set_smbios(ctx, fu_smbios_new());
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
@@ -1056,21 +1062,31 @@ fu_context_hwids_unset_func(gconstpointer user_data)
 
 	/* ensure that we processed the ~hwid-test-flag */
 	g_assert_false(fu_context_has_hwid_flag(ctx, "hwid-test-flag"));
+
+	/* reset hwids, smbios, and config to avoid affecting other tests */
+	fu_context_reset_config(ctx);
+	fu_context_set_hwids(ctx, fu_hwids_new());
+	fu_context_set_smbios(ctx, fu_smbios_new());
 }
 
 static void
 fu_context_hwids_fdt_func(gconstpointer user_data)
 {
+	FuContext *ctx = (FuContext *)user_data;
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuFirmware) fdt_tmp = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file =
 	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
 
-	/* ensure quirks are set up, although not actually needed here */
+	/* reset config before loading hwinfo to avoid assertion failures */
+	fu_context_reset_config(ctx);
+	fu_context_set_hwids(ctx, fu_hwids_new());
+	fu_context_set_smbios(ctx, fu_smbios_new());
+
+	/* ensure quirks are set up */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1119,6 +1135,11 @@ fu_context_hwids_fdt_func(gconstpointer user_data)
 			==,
 			"Tablet");
 	g_assert_cmpuint(fu_context_get_chassis_kind(ctx), ==, FU_SMBIOS_CHASSIS_KIND_TABLET);
+
+	/* reset hwids, smbios, and config to avoid affecting other tests */
+	fu_context_reset_config(ctx);
+	fu_context_set_hwids(ctx, fu_hwids_new());
+	fu_context_set_smbios(ctx, fu_smbios_new());
 }
 
 static gboolean

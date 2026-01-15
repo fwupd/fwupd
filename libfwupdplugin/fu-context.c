@@ -303,6 +303,25 @@ fu_context_get_hwids(FuContext *self)
 }
 
 /**
+ * fu_context_set_hwids:
+ * @self: a #FuContext
+ * @hwids: a #FuHwids
+ *
+ * Sets the HWIDs store. This is only required by self test code.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_set_hwids(FuContext *self, FuHwids *hwids)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(FU_IS_HWIDS(hwids));
+	g_set_object(&priv->hwids, hwids);
+	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
+}
+
+/**
  * fu_context_get_config:
  * @self: a #FuContext
  *
@@ -2424,6 +2443,16 @@ fu_context_set_data(FuContext *self, const gchar *key, gpointer data)
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(key != NULL);
 	g_object_set_data(G_OBJECT(self), key, data);
+}
+
+/* private */
+void
+fu_context_reset_config(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_set_object(&priv->config, fu_config_new());
+	fu_context_remove_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
 }
 
 static void

@@ -76,11 +76,13 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	/* fallback */
 	if (g_strv_length(compatible) > 0) {
 		g_auto(GStrv) compatible0 = g_strsplit(compatible[0], ",", -1);
-		fu_hwids_add_value(self, FU_HWIDS_KEY_MANUFACTURER, compatible0[0]);
-		if (g_strv_length(compatible0) > 1)
+		if (fu_hwids_get_value(self, FU_HWIDS_KEY_MANUFACTURER) == NULL)
+			fu_hwids_add_value(self, FU_HWIDS_KEY_MANUFACTURER, compatible0[0]);
+		if (g_strv_length(compatible0) > 1 &&
+		    fu_hwids_get_value(self, FU_HWIDS_KEY_PRODUCT_NAME) == NULL)
 			fu_hwids_add_value(self, FU_HWIDS_KEY_PRODUCT_NAME, compatible0[1]);
 	}
-	if (g_strv_length(compatible) > 1)
+	if (g_strv_length(compatible) > 1 && fu_hwids_get_value(self, FU_HWIDS_KEY_FAMILY) == NULL)
 		fu_hwids_add_value(self, FU_HWIDS_KEY_FAMILY, compatible[1]);
 	if (fu_context_get_chassis_kind(ctx) == FU_SMBIOS_CHASSIS_KIND_UNKNOWN) {
 		if (fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "battery", NULL, NULL))
@@ -90,7 +92,7 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/ibm,firmware-versions", NULL);
 	if (fdt_img_fwver != NULL) {
 		g_autofree gchar *version = NULL;
-		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "version", &version, NULL);
+		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img_fwver), "version", &version, NULL);
 		fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
 	}
 

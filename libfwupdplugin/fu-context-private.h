@@ -64,6 +64,8 @@ void
 fu_context_set_smbios(FuContext *self, FuSmbios *smbios) G_GNUC_NON_NULL(1, 2);
 FuHwids *
 fu_context_get_hwids(FuContext *self) G_GNUC_NON_NULL(1);
+void
+fu_context_set_hwids(FuContext *self, FuHwids *hwids) G_GNUC_NON_NULL(1, 2);
 FuConfig *
 fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1);
 void
@@ -73,3 +75,5 @@ gpointer
 fu_context_get_data(FuContext *self, const gchar *key);
 void
 fu_context_set_data(FuContext *self, const gchar *key, gpointer data);
+void
+fu_context_reset_config(FuContext *self) G_GNUC_NON_NULL(1);
