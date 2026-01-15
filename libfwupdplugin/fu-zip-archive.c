@@ -28,12 +28,13 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 {
 	FuZipCompression compression;
 	gsize offset = fu_struct_zip_cdfh_get_offset_lfh(st_cdfh);
+	guint32 actual_crc = 0xFFFFFFFF;
 	guint32 compressed_size;
+	guint32 uncompressed_crc;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuStructZipLfh) st_lfh = NULL;
 	g_autoptr(FuFirmware) zip_file = fu_zip_file_new();
 	g_autoptr(GInputStream) stream_compressed = NULL;
-	g_autoptr(GInputStream) stream_raw = NULL;
 
 	/* read local file header */
 	fu_firmware_set_offset(zip_file, offset);
@@ -54,6 +55,11 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 	offset += fu_struct_zip_lfh_get_filename_size(st_lfh);
 	offset += fu_struct_zip_lfh_get_extra_size(st_lfh);
 
+	/* read crc */
+	uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
+	if (uncompressed_crc == 0x0)
+		uncompressed_crc = fu_struct_zip_cdfh_get_uncompressed_crc(st_cdfh);
+
 	/* read data */
 	compressed_size = fu_struct_zip_lfh_get_compressed_size(st_lfh);
 	if (compressed_size == 0x0)
@@ -63,7 +69,15 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 		return FALSE;
 	compression = fu_struct_zip_lfh_get_compression(st_lfh);
 	if (compression == FU_ZIP_COMPRESSION_NONE) {
-		stream_raw = g_object_ref(stream_compressed);
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
+			if (!fu_input_stream_compute_crc32(stream_compressed,
+							   FU_CRC_KIND_B32_STANDARD,
+							   &actual_crc,
+							   error))
+				return FALSE;
+		}
+		if (!fu_firmware_set_stream(zip_file, stream_compressed, error))
+			return FALSE;
 	} else if (compression == FU_ZIP_COMPRESSION_DEFLATE) {
 		g_autoptr(GBytes) blob_raw = NULL;
 		g_autoptr(GConverter) conv = NULL;
@@ -80,7 +94,9 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 			g_prefix_error_literal(error, "failed to read compressed stream: ");
 			return FALSE;
 		}
-		stream_raw = g_memory_input_stream_new_from_bytes(blob_raw);
+		fu_firmware_set_bytes(zip_file, blob_raw);
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0)
+			actual_crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, blob_raw);
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -93,32 +109,20 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 
 	/* verify checksum */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint32 crc = 0xFFFFFFFF;
-		guint32 uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
-
-		if (uncompressed_crc == 0x0)
-			uncompressed_crc = fu_struct_zip_cdfh_get_uncompressed_crc(st_cdfh);
-		if (!fu_input_stream_compute_crc32(stream_raw,
-						   FU_CRC_KIND_B32_STANDARD,
-						   &crc,
-						   error))
-			return FALSE;
-		if (crc != uncompressed_crc) {
+		if (actual_crc != uncompressed_crc) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "%s CRC 0x%08x invalid, expected 0x%08x",
 				    filename,
-				    uncompressed_crc,
-				    crc);
+				    actual_crc,
+				    uncompressed_crc);
 			return FALSE;
 		}
 	}
 
 	/* add stream as a image */
 	fu_firmware_set_id(zip_file, filename);
-	if (!fu_firmware_set_stream(zip_file, stream_raw, error))
-		return FALSE;
 	if (!fu_firmware_add_image(FU_FIRMWARE(self), zip_file, error))
 		return FALSE;
 
