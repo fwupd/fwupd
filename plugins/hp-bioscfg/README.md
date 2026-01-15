@@ -1,11 +1,11 @@
 ---
-title: Plugin: Lenovo ThinkLMI
+title: Plugin: HP BIOSCFG
 ---
 
 ## Introduction
 
-This allows checking whether the firmware on a Lenovo system is configured to
-allow UEFI capsule updates using the thinklmi kernel module.
+This allows checking whether the firmware on an HP system is configured to
+allow UEFI capsule updates using the hp-bioscfg kernel module.
 
 ## External Interface Access
 
