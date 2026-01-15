@@ -302,15 +302,7 @@ fu_context_get_hwids(FuContext *self)
 	return priv->hwids;
 }
 
-/**
- * fu_context_set_hwids:
- * @self: a #FuContext
- * @hwids: a #FuHwids
- *
- * Sets the HWIDs store. This is only required by self test code.
- *
- * Since: 2.1.1
- **/
+/* private */
 void
 fu_context_set_hwids(FuContext *self, FuHwids *hwids)
 {
