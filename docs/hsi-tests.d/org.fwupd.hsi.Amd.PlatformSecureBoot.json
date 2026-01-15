@@ -22,5 +22,5 @@
   "references": {
     "https://www.ioactive.com/exploring-amd-platform-secure-boot/": "PlatformSecureBoot article"
   },
-  "fwupd-version": "2.1.0"
+  "fwupd-version": "2.1.1"
 }
