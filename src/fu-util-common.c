@@ -2447,7 +2447,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
-		      _("HP Surestart is enabled")},
+		      _("HP SureStart is enabled")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
