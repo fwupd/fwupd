@@ -10,7 +10,6 @@
 
 #include <fwupd.h>
 #include <libfwupdplugin/fu-acpi-table.h>
-#include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
 #include <libfwupdplugin/fu-bios-settings.h>
 #include <libfwupdplugin/fu-block-device.h>

@@ -329,7 +329,7 @@ fu_telink_dfu_hid_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuTelinkDfuHidDevice *self = FU_TELINK_DFU_HID_DEVICE(device);
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -337,10 +337,9 @@ fu_telink_dfu_hid_device_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
-	blob = fu_archive_lookup_by_fn(archive, "firmware.bin", error);
+	blob = fu_firmware_get_image_by_id_bytes(archive, "firmware.bin", error);
 	if (blob == NULL)
 		return FALSE;
 	return fu_telink_dfu_hid_device_write_blob(self, blob, progress, error);

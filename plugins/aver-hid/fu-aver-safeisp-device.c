@@ -269,7 +269,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	const guint8 *m12_fw_buf;
 	guint32 cx3_checksum = 0;
 	guint32 m12_checksum = 0;
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) cx3_fw = NULL;
 	g_autoptr(GBytes) m12_fw = NULL;
@@ -290,13 +290,12 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* decompress */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
-	cx3_fw = fu_archive_lookup_by_fn(archive, "update/cx3uvc.img", error);
+	cx3_fw = fu_firmware_get_image_by_id_bytes(archive, "update/cx3uvc.img", error);
 	if (cx3_fw == NULL)
 		return FALSE;
-	m12_fw = fu_archive_lookup_by_fn(archive, "update/RS_M12MO.bin", error);
+	m12_fw = fu_firmware_get_image_by_id_bytes(archive, "update/RS_M12MO.bin", error);
 	if (m12_fw == NULL)
 		return FALSE;
 

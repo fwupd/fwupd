@@ -15,33 +15,26 @@ struct _FuAverHidFirmware {
 G_DEFINE_TYPE(FuAverHidFirmware, fu_aver_hid_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_aver_hid_firmware_parse_archive_cb(FuArchive *self,
-				      const gchar *filename,
-				      GBytes *bytes,
-				      gpointer user_data,
-				      GError **error)
-{
-	FuFirmware *firmware = FU_FIRMWARE(user_data);
-	if (g_str_has_suffix(filename, ".dat")) {
-		g_autofree gchar *version = g_strndup(filename, strlen(filename) - 4);
-		fu_firmware_set_version(firmware, version);
-		fu_firmware_set_filename(firmware, filename);
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_aver_hid_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
-	g_autoptr(FuArchive) archive = NULL;
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
-	if (archive == NULL)
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
-	if (!fu_archive_iterate(archive, fu_aver_hid_firmware_parse_archive_cb, firmware, error))
-		return FALSE;
+	imgs = fu_firmware_get_images(archive);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		const gchar *filename = fu_firmware_get_id(img);
+		if (g_str_has_suffix(filename, ".dat")) {
+			g_autofree gchar *version = g_strndup(filename, strlen(filename) - 4);
+			fu_firmware_set_version(firmware, version);
+			fu_firmware_set_filename(firmware, filename);
+		}
+	}
 	return TRUE;
 }
 

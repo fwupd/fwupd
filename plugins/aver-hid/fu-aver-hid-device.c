@@ -410,7 +410,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	const gchar *aver_fw_name = NULL;
 	gsize fw_size;
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
 	g_autoptr(GBytes) aver_fw = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -430,11 +430,10 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* decompress */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	aver_fw_name = fu_firmware_get_filename(firmware);
-	aver_fw = fu_archive_lookup_by_fn(archive, aver_fw_name, error);
+	aver_fw = fu_firmware_get_image_by_id_bytes(archive, aver_fw_name, error);
 	if (aver_fw == NULL)
 		return FALSE;
 	fw_size = g_bytes_get_size(aver_fw);

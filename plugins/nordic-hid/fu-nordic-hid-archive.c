@@ -190,15 +190,14 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 	g_autoptr(FwupdJsonArray) json_files = NULL;
 	gint64 manifest_ver = 0;
 	guint files_cnt = 0;
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
 	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
-	manifest = fu_archive_lookup_by_fn(archive, "manifest.json", error);
+	manifest = fu_firmware_get_image_by_id_bytes(archive, "manifest.json", error);
 	if (manifest == NULL)
 		return FALSE;
 
@@ -252,7 +251,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			g_prefix_error_literal(error, "manifest invalid: ");
 			return FALSE;
 		}
-		blob = fu_archive_lookup_by_fn(archive, filename, error);
+		blob = fu_firmware_get_image_by_id_bytes(archive, filename, error);
 		if (blob == NULL)
 			return FALSE;
 

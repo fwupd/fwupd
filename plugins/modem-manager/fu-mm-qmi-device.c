@@ -770,12 +770,6 @@ fu_mm_qmi_device_file_info_free(FuMmQmiDeviceFileInfo *file_info)
 	g_free(file_info);
 }
 
-typedef struct {
-	FuMmQmiDevice *self;
-	GError *error;
-	GPtrArray *file_infos;
-} FuMmQmiDeviceArchiveIterateCtx;
-
 static gboolean
 fu_mm_qmi_device_should_be_active(const gchar *version, const gchar *filename)
 {
@@ -804,30 +798,6 @@ fu_mm_qmi_device_should_be_active(const gchar *version, const gchar *filename)
 }
 
 static gboolean
-fu_mm_qmi_device_archive_iterate_mcfg_cb(FuArchive *archive,
-					 const gchar *filename,
-					 GBytes *bytes,
-					 gpointer user_data,
-					 GError **error)
-{
-	FuMmQmiDeviceArchiveIterateCtx *ctx = user_data;
-	FuMmQmiDeviceFileInfo *file_info;
-
-	/* filenames should be named as 'mcfg.*.mbn', e.g.: mcfg.A2.018.mbn */
-	if (!g_str_has_prefix(filename, "mcfg.") || !g_str_has_suffix(filename, ".mbn"))
-		return TRUE;
-
-	file_info = g_new0(FuMmQmiDeviceFileInfo, 1);
-	file_info->filename = g_strdup(filename);
-	file_info->bytes = g_bytes_ref(bytes);
-	file_info->active =
-	    fu_mm_qmi_device_should_be_active(fu_device_get_version(FU_DEVICE(ctx->self)),
-					      filename);
-	g_ptr_array_add(ctx->file_infos, file_info);
-	return TRUE;
-}
-
-static gboolean
 fu_mm_qmi_device_write_firmware(FuDevice *device,
 				FuFirmware *firmware,
 				FuProgress *progress,
@@ -835,30 +805,43 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuMmQmiDevice *self = FU_MM_QMI_DEVICE(device);
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) file_infos =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_qmi_device_file_info_free);
 	gint active_i = -1;
-	FuMmQmiDeviceArchiveIterateCtx archive_context = {
-	    .self = self,
-	    .error = NULL,
-	    .file_infos = file_infos,
-	};
 
 	/* decompress entire archive ahead of time */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 
 	/* process the list of MCFG files to write */
-	if (!fu_archive_iterate(archive,
-				fu_mm_qmi_device_archive_iterate_mcfg_cb,
-				&archive_context,
-				error))
+	g_autoptr(GPtrArray) imgs = NULL;
+	imgs = fu_firmware_get_images(archive);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		const gchar *filename = fu_firmware_get_id(img);
+		FuMmQmiDeviceFileInfo *file_info;
+
+		/* filenames should be named as 'mcfg.*.mbn', e.g.: mcfg.A2.018.mbn */
+		if (!g_str_has_prefix(filename, "mcfg.") || !g_str_has_suffix(filename, ".mbn"))
+			continue;
+
+		file_info = g_new0(FuMmQmiDeviceFileInfo, 1);
+		file_info->filename = g_strdup(filename);
+		file_info->bytes = fu_firmware_get_bytes(img, NULL);
+		file_info->active =
+		    fu_mm_qmi_device_should_be_active(fu_device_get_version(FU_DEVICE(self)),
+						      filename);
+		g_ptr_array_add(file_infos, file_info);
+	}
+	if (!fu_firmware_get_images(archive,
+				    fu_mm_qmi_device_archive_iterate_mcfg_cb,
+				    &archive_context,
+				    error))
 		return FALSE;
 
 	for (guint i = 0; i < file_infos->len; i++) {
