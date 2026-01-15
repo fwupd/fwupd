@@ -2452,6 +2452,7 @@ fu_context_reset_config(FuContext *self)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_set_object(&priv->config, fu_config_new());
+	g_clear_object(&priv->fdt);
 	fu_context_remove_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
 }
 
