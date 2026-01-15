@@ -431,8 +431,8 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		return _("UEFI db");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HP_SURESTART) == 0) {
-		/* TRANSLATORS: Title: HP Surestart is a firmware security feature */
-		return _("HP Surestart");
+		/* TRANSLATORS: Title: HP SureStart is a firmware security feature */
+		return _("HP SureStart");
 	}
 	return NULL;
 }
