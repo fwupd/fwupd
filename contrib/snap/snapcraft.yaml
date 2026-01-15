@@ -140,7 +140,6 @@ parts:
       - fwupd-unsigned-dev
       - hwdata
       - libcurl4-openssl-dev
-      - libarchive-dev
       - libcbor-dev
       - libcairo-dev
       - libglib2.0-dev
@@ -177,7 +176,6 @@ parts:
       - libnghttp2-14
       - libpsl5
       - librtmp1
-      - libarchive13
       - libcurl4
       - libcbor0.10
       - libassuan0

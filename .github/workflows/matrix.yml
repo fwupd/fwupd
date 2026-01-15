@@ -133,7 +133,7 @@ jobs:
     steps:
     - name: install dependencies
       run: |
-        brew install meson usb.ids gobject-introspection libarchive json-glib protobuf-c vala gi-docgen
+        brew install meson usb.ids gobject-introspection json-glib protobuf-c vala gi-docgen
         python3 -m pip install --user jinja2 --break-system-packages
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
     - name: configure

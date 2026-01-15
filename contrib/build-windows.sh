@@ -48,7 +48,6 @@ cp -f -v \
     $MINGW32BINDIR/gspawn-win64-helper-console.exe \
     $MINGW32BINDIR/gspawn-win64-helper.exe \
     $MINGW32BINDIR/iconv.dll \
-    $MINGW32BINDIR/libarchive-13.dll \
     $MINGW32BINDIR/libbrotlicommon.dll \
     $MINGW32BINDIR/libbrotlidec.dll \
     $MINGW32BINDIR/libbz2-1.dll \

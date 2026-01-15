@@ -5,7 +5,6 @@ endif
 client_src = []
 systemd_src = []
 engine_dep = [
-  libarchive,
   libjcat,
   libxmlb,
   giounix,
@@ -169,7 +168,7 @@ executable(
   export_dynamic: true,
   sources: ['fu-tool.c'],
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
-  dependencies: [libfwupd_deps, libarchive, client_dep, valgrind],
+  dependencies: [libfwupd_deps, client_dep, valgrind],
   link_with: [fwupdengine, fwupdutil, plugin_libs],
   install: true,
   install_rpath: libdir_pkg,

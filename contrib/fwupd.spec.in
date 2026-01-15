@@ -74,7 +74,6 @@ BuildRequires: python3-jinja2
 BuildRequires: sqlite-devel
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel
-BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
 BuildRequires: libblkid-devel
 BuildRequires: readline-devel

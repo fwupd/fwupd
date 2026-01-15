@@ -77,7 +77,6 @@ find $MINGW32BINDIR \
     -name gspawn-win64-helper-console.exe \
     -o -name gspawn-win64-helper.exe \
     -o -name iconv.dll \
-    -o -name libarchive-13.dll \
     -o -name libbrotlicommon.dll \
     -o -name libbrotlidec.dll \
     -o -name libbz2-1.dll \
