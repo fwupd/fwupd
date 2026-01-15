@@ -610,6 +610,23 @@ fu_bios_settings_to_hash_kv(FuBiosSettings *self)
 }
 
 /**
+ * fu_bios_settings_is_supported:
+ * @self: a #FuBiosSettings
+ *
+ * Determines if any BIOS settings are supported on this system.
+ *
+ * Returns: %TRUE if any BIOS settings are available, %FALSE otherwise
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_bios_settings_is_supported(FuBiosSettings *self)
+{
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
+	return self->attrs->len > 0;
+}
+
+/**
  * fu_bios_settings_new:
  *
  * Returns: #FuBiosSettings

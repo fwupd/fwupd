@@ -402,6 +402,14 @@ G_BEGIN_DECLS
  * Since: 2.0.8
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_DB "org.fwupd.hsi.Uefi.Db"
+/**
+ * FWUPD_SECURITY_ATTR_HP_SURESTART:
+ *
+ * Host Security ID attribute for HP Surestart
+ *
+ * Since: 2.1.1
+ **/
+#define FWUPD_SECURITY_ATTR_ID_HP_SURESTART "org.fwupd.hsi.Hp.Surestart"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
