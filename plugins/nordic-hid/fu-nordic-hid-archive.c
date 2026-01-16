@@ -190,7 +190,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 	g_autoptr(FwupdJsonArray) json_files = NULL;
 	gint64 manifest_ver = 0;
 	guint files_cnt = 0;
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
 

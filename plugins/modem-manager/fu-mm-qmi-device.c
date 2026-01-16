@@ -805,7 +805,7 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuMmQmiDevice *self = FU_MM_QMI_DEVICE(device);
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) file_infos =

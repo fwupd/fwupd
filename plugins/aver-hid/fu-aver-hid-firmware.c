@@ -20,7 +20,7 @@ fu_aver_hid_firmware_parse(FuFirmware *firmware,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GPtrArray) imgs = NULL;
 
 	if (!fu_firmware_parse_stream(archive, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))

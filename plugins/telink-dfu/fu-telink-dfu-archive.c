@@ -117,7 +117,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	gint64 manifest_ver = 0;
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
 

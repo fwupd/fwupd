@@ -47,7 +47,7 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gpointer key;
 	gpointer value;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
 	g_return_val_if_fail(G_IS_OUTPUT_STREAM(stream), FALSE);
@@ -261,7 +261,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 {
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) json_blob = g_bytes_new_static(json_empty, strlen(json_empty));
 	g_autoptr(GError) error_archive = NULL;
 

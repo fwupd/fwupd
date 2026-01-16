@@ -75,7 +75,7 @@ fu_jabra_file_firmware_parse(FuFirmware *firmware,
 			     GError **error)
 {
 	FuJabraFileFirmware *self = FU_JABRA_FILE_FIRMWARE(firmware);
-	g_autoptr(FuFirmware) firmware_archive = FU_FIRMWARE(fu_zip_archive_new());
+	g_autoptr(FuFirmware) firmware_archive = fu_zip_firmware_new();
 	g_autoptr(FuFirmware) img_xml = NULL;
 	g_autoptr(FuFirmware) upgrade_archive = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
@@ -84,7 +84,7 @@ fu_jabra_file_firmware_parse(FuFirmware *firmware,
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
 
-	/* FuZipArchive->parse */
+	/* FuZipFirmware->parse */
 	if (!fu_firmware_parse_stream(firmware_archive, stream, 0x0, flags, error))
 		return FALSE;
 

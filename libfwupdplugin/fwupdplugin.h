@@ -124,8 +124,8 @@
 #include <libfwupdplugin/fu-v4l-device.h>
 #include <libfwupdplugin/fu-volume-locker.h>
 #include <libfwupdplugin/fu-x509-certificate.h>
-#include <libfwupdplugin/fu-zip-archive.h>
 #include <libfwupdplugin/fu-zip-file.h>
+#include <libfwupdplugin/fu-zip-firmware.h>
 // #include <libfwupdplugin/fu-usb-common.h>
 #include <libfwupdplugin/fu-tpm-eventlog.h>
 #include <libfwupdplugin/fu-tpm-eventlog-item.h>

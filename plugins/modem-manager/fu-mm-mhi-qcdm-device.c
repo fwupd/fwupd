@@ -124,7 +124,7 @@ fu_mm_mhi_qcdm_device_prepare_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuMmMhiQcdmDevice *self = FU_MM_MHI_QCDM_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_zip_archive_new();
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
 
 	/* parse as archive */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))

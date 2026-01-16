@@ -11,7 +11,7 @@
 #include "fu-efi-variable-authentication2.h"
 #include "fu-efi-x509-device.h"
 #include "fu-version-common.h"
-#include "fu-zip-archive.h"
+#include "fu-zip-firmware.h"
 
 /**
  * FuEfiX509Device
@@ -94,7 +94,7 @@ fu_efi_x509_device_prepare_firmware(FuDevice *device,
 					   flags,
 					   error,
 					   FU_TYPE_EFI_VARIABLE_AUTHENTICATION2,
-					   FU_TYPE_ZIP_ARCHIVE,
+					   FU_TYPE_ZIP_FIRMWARE,
 					   G_TYPE_INVALID);
 }
 

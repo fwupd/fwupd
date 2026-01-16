@@ -1802,7 +1802,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autofree gchar *data = NULL;
 		g_autofree gchar *filename = NULL;
-		g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+		g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 		g_autoptr(FuFirmware) payload_img = NULL;
 		g_autoptr(GBytes) payload_blob = NULL;
 		g_autoptr(GFile) file = NULL;

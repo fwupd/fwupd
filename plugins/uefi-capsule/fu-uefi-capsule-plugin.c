@@ -318,7 +318,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	const gchar *const *langs = g_get_language_names();
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */

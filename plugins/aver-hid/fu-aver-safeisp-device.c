@@ -269,7 +269,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	const guint8 *m12_fw_buf;
 	guint32 cx3_checksum = 0;
 	guint32 m12_checksum = 0;
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) cx3_fw = NULL;
 	g_autoptr(GBytes) m12_fw = NULL;

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#define G_LOG_DOMAIN "FuZipArchive"
+#define G_LOG_DOMAIN "FuZipFirmware"
 
 #include "config.h"
 
@@ -12,19 +12,19 @@
 #include "fu-common.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
-#include "fu-zip-archive.h"
 #include "fu-zip-file.h"
+#include "fu-zip-firmware.h"
 #include "fu-zip-struct.h"
 
-G_DEFINE_TYPE(FuZipArchive, fu_zip_archive, FU_TYPE_FIRMWARE)
-#define GET_PRIVATE(o) (fu_zip_archive_get_instance_private(o))
+G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_zip_firmware_get_instance_private(o))
 
 static gboolean
-fu_zip_archive_parse_lfh(FuZipArchive *self,
-			 GInputStream *stream,
-			 FuStructZipCdfh *st_cdfh,
-			 FuFirmwareParseFlags flags,
-			 GError **error)
+fu_zip_firmware_parse_lfh(FuZipFirmware *self,
+			  GInputStream *stream,
+			  FuStructZipCdfh *st_cdfh,
+			  FuFirmwareParseFlags flags,
+			  GError **error)
 {
 	FuZipCompression compression;
 	gsize offset = fu_struct_zip_cdfh_get_offset_lfh(st_cdfh);
@@ -131,12 +131,12 @@ fu_zip_archive_parse_lfh(FuZipArchive *self,
 }
 
 static gboolean
-fu_zip_archive_parse(FuFirmware *firmware,
-		     GInputStream *stream,
-		     FuFirmwareParseFlags flags,
-		     GError **error)
+fu_zip_firmware_parse(FuFirmware *firmware,
+		      GInputStream *stream,
+		      FuFirmwareParseFlags flags,
+		      GError **error)
 {
-	FuZipArchive *self = FU_ZIP_ARCHIVE(firmware);
+	FuZipFirmware *self = FU_ZIP_FIRMWARE(firmware);
 	gsize streamsz = 0;
 	gsize offset = 0;
 	g_autoptr(FuStructZipEocd) st_eocd = NULL;
@@ -178,7 +178,7 @@ fu_zip_archive_parse(FuFirmware *firmware,
 		st_cdfh = fu_struct_zip_cdfh_parse_stream(stream, offset, error);
 		if (st_cdfh == NULL)
 			return FALSE;
-		if (!fu_zip_archive_parse_lfh(self, stream, st_cdfh, flags, error))
+		if (!fu_zip_firmware_parse_lfh(self, stream, st_cdfh, flags, error))
 			return FALSE;
 		offset += FU_STRUCT_ZIP_CDFH_SIZE;
 		offset += fu_struct_zip_cdfh_get_filename_size(st_cdfh);
@@ -194,19 +194,19 @@ typedef struct {
 	guint32 uncompressed_crc;
 	guint32 uncompressed_size;
 	guint32 compressed_size;
-} FuZipArchiveWriteItem;
+} FuZipFirmwareWriteItem;
 
 static GByteArray *
-fu_zip_archive_write(FuFirmware *firmware, GError **error)
+fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize cd_offset;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 	g_autoptr(FuStructZipEocd) st_eocd = fu_struct_zip_eocd_new();
-	g_autofree FuZipArchiveWriteItem *items = NULL;
+	g_autofree FuZipFirmwareWriteItem *items = NULL;
 
 	/* stored twice, so avoid computing */
-	items = g_new0(FuZipArchiveWriteItem, imgs->len);
+	items = g_new0(FuZipFirmwareWriteItem, imgs->len);
 
 	/* LFHs */
 	for (guint i = 0; i < imgs->len; i++) {
@@ -305,7 +305,7 @@ fu_zip_archive_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_zip_archive_add_magic(FuFirmware *firmware)
+fu_zip_firmware_add_magic(FuFirmware *firmware)
 {
 	fu_firmware_add_magic(firmware,
 			      (const guint8 *)FU_STRUCT_ZIP_LFH_DEFAULT_MAGIC,
@@ -314,16 +314,16 @@ fu_zip_archive_add_magic(FuFirmware *firmware)
 }
 
 static void
-fu_zip_archive_class_init(FuZipArchiveClass *klass)
+fu_zip_firmware_class_init(FuZipFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->parse = fu_zip_archive_parse;
-	firmware_class->write = fu_zip_archive_write;
-	firmware_class->add_magic = fu_zip_archive_add_magic;
+	firmware_class->parse = fu_zip_firmware_parse;
+	firmware_class->write = fu_zip_firmware_write;
+	firmware_class->add_magic = fu_zip_firmware_add_magic;
 }
 
 static void
-fu_zip_archive_init(FuZipArchive *self)
+fu_zip_firmware_init(FuZipFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ZIP_FILE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
@@ -333,14 +333,14 @@ fu_zip_archive_init(FuZipArchive *self)
 }
 
 /**
- * fu_zip_archive_new:
+ * fu_zip_firmware_new:
  *
- * Returns: (transfer full): a #FuZipArchive
+ * Returns: (transfer full): a #FuZipFirmware
  *
  * Since: 2.1.1
  **/
 FuFirmware *
-fu_zip_archive_new(void)
+fu_zip_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ZIP_ARCHIVE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_ZIP_FIRMWARE, NULL));
 }

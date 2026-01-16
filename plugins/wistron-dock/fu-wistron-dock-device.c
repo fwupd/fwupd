@@ -336,7 +336,7 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 					FuFirmwareParseFlags flags,
 					GError **error)
 {
-	g_autoptr(FuFirmware) firmware = FU_FIRMWARE(fu_zip_archive_new());
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
 	g_autoptr(FuFirmware) fw_cbin = NULL;
 	g_autoptr(FuFirmware) fw_new = fu_firmware_new();
 	g_autoptr(FuFirmware) fw_wdfl = NULL;

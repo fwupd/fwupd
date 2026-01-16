@@ -199,7 +199,7 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 	const gchar *filename = NULL;
 	const gchar *csum;
 	g_autofree gchar *csum_actual = NULL;
-	g_autoptr(FuFirmware) archive = fu_zip_archive_new();
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) data_part = NULL;
 	g_autoptr(GBytes) data_xml = NULL;
 	g_autoptr(GInputStream) stream = NULL;
