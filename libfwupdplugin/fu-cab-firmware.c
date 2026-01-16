@@ -327,7 +327,30 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 					    zError(zret));
 				return FALSE;
 			}
+
+			/* prevent decompression bombs */
+			if (size_max > 0 && buf->len > size_max) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "decompressed data too large (0x%x, limit 0x%x)",
+					    (guint)buf->len,
+					    (guint)size_max);
+				return FALSE;
+			}
 		}
+
+		/* verify actual decompressed size matches declared size */
+		if (buf->len != blob_uncomp) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "decompressed size mismatch (0x%x, specified 0x%x)",
+				    (guint)buf->len,
+				    (guint)blob_uncomp);
+			return FALSE;
+		}
+
 		zret = inflateReset(&helper->zstrm);
 		if (zret != Z_OK) {
 			g_set_error(error,
