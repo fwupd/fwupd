@@ -246,7 +246,7 @@ static gboolean
 fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 {
 	const gchar *ven;
-	const gchar *allowlist[] = {"8Bitdo", "8BitDo", "SFC30", NULL};
+	const gchar *allowlist[] = {"8Bitdo", "8BitDo", "SFC30"};
 
 	/* this is a new, always valid, VID */
 	if (fu_device_get_vid(FU_DEVICE(self)) == 0x2dc8)
@@ -261,7 +261,7 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 				    "could not check vendor descriptor");
 		return FALSE;
 	}
-	for (guint i = 0; allowlist[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(allowlist); i++) {
 		if (g_str_has_prefix(ven, allowlist[i]))
 			return TRUE;
 	}
