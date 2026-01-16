@@ -976,7 +976,10 @@ fu_cabinet_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		if (!FU_FIRMWARE_CLASS(fu_cabinet_parent_class)
-			 ->parse(firmware, stream, flags, error))
+			 ->parse(firmware,
+				 stream,
+				 flags | FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
+				 error))
 			return FALSE;
 		self->container_checksum =
 		    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, error);
@@ -1082,7 +1085,6 @@ fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error)
 static void
 fu_cabinet_init(FuCabinet *self)
 {
-	fu_cab_firmware_set_only_basename(FU_CAB_FIRMWARE(self), TRUE);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), G_MAXUINT32); /* ~4GB */
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();

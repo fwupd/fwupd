@@ -208,6 +208,7 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 
 ## 2.1.1
 
+* `fu_cab_firmware_set_only_basename()`: Use `FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME` instead.
 * `fu_context_add_firmware_gtype()`: Drop the `id` parameter.
 * `fu_firmware_build_from_xml()`: Use `fu_firmware_new_from_xml()` instead.
 * `fu_firmware_build_from_filename()`: Use `fu_firmware_new_from_filename()` instead.
