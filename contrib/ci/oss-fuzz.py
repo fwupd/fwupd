@@ -8,6 +8,7 @@
 # pylint: disable=too-many-instance-attributes,no-self-use
 
 import os
+import shutil
 import sys
 import subprocess
 import glob
@@ -322,23 +323,50 @@ def _build(bld: Builder) -> None:
     bld.build_cmake_project(src, argv=["-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"])
     bld.add_build_ldflag("lib/libcbor.a")
 
+    # PCRE2 (required by GLib gregex)
+    src = bld.checkout_source("pcre2", url="https://github.com/PCRE2Project/pcre2.git")
+    bld.build_cmake_project(
+        src,
+        argv=[
+            "-DPCRE2_SUPPORT_UNICODE=ON",
+            "-DPCRE2_BUILD_PCRE2_8=ON",
+            "-DPCRE2_BUILD_PCRE2_16=OFF",
+            "-DPCRE2_BUILD_PCRE2_32=OFF",
+            "-DPCRE2_BUILD_TESTS=OFF",
+            "-DPCRE2_BUILD_PCRE2GREP=OFF",
+            "-DPCRE2_BUILD_PCRE2POSIX=OFF",
+            "-DBUILD_SHARED_LIBS=OFF",
+        ],
+    )
     # GLib
     src = bld.checkout_source(
         "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-68"
     )
-    bld.build_meson_project(
-        src,
-        [
+    glib_args = [
+        "-Dlibmount=disabled",
+        "-Dselinux=disabled",
+        "-Dnls=disabled",
+        "-Dlibelf=disabled",
+        "-Dbsymbolic_functions=false",
+        "-Dtests=false",
+        "-Dinternal_pcre=true",
+        "--force-fallback-for=libpcre",
+    ]
+    try:
+        bld.build_meson_project(src, glib_args)
+    except subprocess.CalledProcessError:
+        srcdir_build = os.path.join(src, DEFAULT_BUILDDIR)
+        if os.path.exists(srcdir_build):
+            shutil.rmtree(srcdir_build)
+        glib_args = [
             "-Dlibmount=disabled",
             "-Dselinux=disabled",
             "-Dnls=disabled",
             "-Dlibelf=disabled",
             "-Dbsymbolic_functions=false",
             "-Dtests=false",
-            "-Dinternal_pcre=true",
-            "--force-fallback-for=libpcre",
-        ],
-    )
+        ]
+        bld.build_meson_project(src, glib_args)
     bld.add_work_includedir("include/glib-2.0")
     bld.add_work_includedir("lib/glib-2.0/include")
     bld.add_build_ldflag("lib/libgio-2.0.a")
@@ -346,6 +374,7 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libgobject-2.0.a")
     bld.add_build_ldflag("lib/libglib-2.0.a")
     bld.add_build_ldflag("lib/libgthread-2.0.a")
+    bld.add_build_ldflag("lib/libpcre2-8.a")
 
     # libxmlb
     src = bld.checkout_source("libxmlb", url="https://github.com/hughsie/libxmlb.git")
@@ -410,164 +439,251 @@ def _build(bld: Builder) -> None:
     else:
         fuzzing_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
-    # built in formats
-    for fzr in [
-        Fuzzer("efi-lz77", pattern="efi-lz77-decompressor"),
-        Fuzzer("csv"),
-        Fuzzer("cab"),
-        Fuzzer("dfuse"),
-        Fuzzer("edid", pattern="edid"),
-        Fuzzer("elf"),
-        Fuzzer("fdt"),
-        Fuzzer("fit"),
-        Fuzzer("fmap"),
-        Fuzzer("hid-descriptor", pattern="hid-descriptor"),
-        Fuzzer("ihex"),
-        Fuzzer("pefile"),
-        Fuzzer("srec"),
-        Fuzzer("intel-thunderbolt"),
-        Fuzzer("ifwi-cpd"),
-        Fuzzer("ifwi-fpt"),
-        Fuzzer("json"),
-        Fuzzer("oprom"),
-        Fuzzer("uswid"),
-        Fuzzer("efi-filesystem", pattern="efi-filesystem"),
-        Fuzzer("efi-volume", pattern="efi-volume"),
-        Fuzzer("efi-load-option", pattern="efi-load-option"),
-        Fuzzer("ifd-bios", pattern="ifd-bios"),
-    ]:
-        src = bld.substitute(
-            "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
-            {
-                "@GTYPE@": fzr.gtype,
-                "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
-            },
-        )
-        exe = bld.link(
-            [bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer"
-        )
+    only_custom_fuzzer = True
 
-        src_generator = bld.substitute(
-            "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
-            {
-                "@GTYPE@": fzr.gtype,
-                "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
-            },
-        )
-        exe_generator = bld.link(
-            [bld.compile(src_generator)] + built_objs, f"{fzr.name}_generator"
-        )
-        corpus = bld.mkfuzztargets(
-            exe_generator,
-            os.path.join(
-                bld.srcdir,
-                "fwupd",
-                "libfwupdplugin",
-                "tests",
-                f"{fzr.name}*.builder.xml",
-            ),
-        )
-        bld.makezip(
-            f"{fzr.name}_fuzzer_seed_corpus.zip",
-            corpus,
-        )
+    if not only_custom_fuzzer:
+        # built in formats
+        for fzr in [
+            Fuzzer("efi-lz77", pattern="efi-lz77-decompressor"),
+            Fuzzer("csv"),
+            Fuzzer("cab"),
+            Fuzzer("dfuse"),
+            Fuzzer("edid", pattern="edid"),
+            Fuzzer("elf"),
+            Fuzzer("fdt"),
+            Fuzzer("fit"),
+            Fuzzer("fmap"),
+            Fuzzer("hid-descriptor", pattern="hid-descriptor"),
+            Fuzzer("ihex"),
+            Fuzzer("pefile"),
+            Fuzzer("srec"),
+            Fuzzer("intel-thunderbolt"),
+            Fuzzer("ifwi-cpd"),
+            Fuzzer("ifwi-fpt"),
+            Fuzzer("json"),
+            Fuzzer("oprom"),
+            Fuzzer("uswid"),
+            Fuzzer("efi-filesystem", pattern="efi-filesystem"),
+            Fuzzer("efi-volume", pattern="efi-volume"),
+            Fuzzer("efi-load-option", pattern="efi-load-option"),
+            Fuzzer("ifd-bios", pattern="ifd-bios"),
+        ]:
+            src = bld.substitute(
+                "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
+                {
+                    "@GTYPE@": fzr.gtype,
+                    "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
+                },
+            )
+            bld.link(
+                [bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer"
+            )
 
-    # plugins
-    for fzr in [
-        Fuzzer("acpi-phat", pattern="acpi-phat"),
-        Fuzzer("bcm57xx"),
-        Fuzzer("ccgx"),
-        Fuzzer("ccgx-dmc"),
-        Fuzzer("cros-ec"),
-        Fuzzer("ebitdo"),
-        Fuzzer("elanfp"),
-        Fuzzer("elantp"),
-        Fuzzer("genesys-scaler", srcdir="genesys", pattern="genesys-scaler-firmware"),
-        Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
-        Fuzzer("pixart-rf"),
-        Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
-        Fuzzer("synaptics-prometheus"),
-        Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),
-        Fuzzer("synaptics-mst"),
-        Fuzzer("synaptics-rmi"),
-        Fuzzer("uf2"),
-        Fuzzer("wacom-usb"),
-    ]:
-        fuzz_objs = []
-        for obj in bld.grep_meson(f"fwupd/plugins/{fzr.srcdir}"):
-            if obj.endswith(".c"):
-                fuzz_objs.append(
-                    bld.compile(
-                        obj, argv_extra=[f'-DG_LOG_DOMAIN="FuPlugin{fzr.name_camel}"']
+            src_generator = bld.substitute(
+                "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
+                {
+                    "@GTYPE@": fzr.gtype,
+                    "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
+                },
+            )
+            exe_generator = bld.link(
+                [bld.compile(src_generator)] + built_objs, f"{fzr.name}_generator"
+            )
+            corpus = bld.mkfuzztargets(
+                exe_generator,
+                os.path.join(
+                    bld.srcdir,
+                    "fwupd",
+                    "libfwupdplugin",
+                    "tests",
+                    f"{fzr.name}*.builder.xml",
+                ),
+            )
+            bld.makezip(
+                f"{fzr.name}_fuzzer_seed_corpus.zip",
+                corpus,
+            )
+
+        # plugins
+        for fzr in [
+            Fuzzer("acpi-phat", pattern="acpi-phat"),
+            Fuzzer("bcm57xx"),
+            Fuzzer("ccgx"),
+            Fuzzer("ccgx-dmc"),
+            Fuzzer("cros-ec"),
+            Fuzzer("ebitdo"),
+            Fuzzer("elanfp"),
+            Fuzzer("elantp"),
+            Fuzzer("genesys-scaler", srcdir="genesys", pattern="genesys-scaler-firmware"),
+            Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
+            Fuzzer("pixart-rf"),
+            Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
+            Fuzzer("synaptics-prometheus"),
+            Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),
+            Fuzzer("synaptics-mst"),
+            Fuzzer("synaptics-rmi"),
+            Fuzzer("uf2"),
+            Fuzzer("wacom-usb"),
+        ]:
+            fuzz_objs = []
+            for obj in bld.grep_meson(f"fwupd/plugins/{fzr.srcdir}"):
+                if obj.endswith(".c"):
+                    fuzz_objs.append(
+                        bld.compile(
+                            obj, argv_extra=[f'-DG_LOG_DOMAIN="FuPlugin{fzr.name_camel}"']
+                        )
                     )
-                )
-            elif obj.endswith(".rs"):
-                fuzz_objs.append(
-                    bld.compile(bld.rustgen(obj, includes=["fwupdplugin.h"]))
-                )
-        src = bld.substitute(
-            "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
-            {
-                "@GTYPE@": fzr.gtype,
-                "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
-            },
+                elif obj.endswith(".rs"):
+                    fuzz_objs.append(
+                        bld.compile(bld.rustgen(obj, includes=["fwupdplugin.h"]))
+                    )
+            src = bld.substitute(
+                "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
+                {
+                    "@GTYPE@": fzr.gtype,
+                    "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
+                },
+            )
+            bld.link(
+                fuzz_objs + built_objs + fuzzing_objs + [bld.compile(src)],
+                f"{fzr.name}_fuzzer",
+            )
+
+            # generate the corpus
+            src_generator = bld.substitute(
+                "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
+                {
+                    "@GTYPE@": fzr.gtype,
+                    "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
+                },
+            )
+            exe_generator = bld.link(
+                fuzz_objs + built_objs + [bld.compile(src_generator)],
+                f"{fzr.name}_generator",
+            )
+            corpus = bld.mkfuzztargets(
+                exe_generator,
+                os.path.join(
+                    bld.srcdir,
+                    "fwupd",
+                    "plugins",
+                    fzr.srcdir,
+                    "tests",
+                    f"{fzr.name}*.builder.xml",
+                ),
+            )
+            bld.makezip(
+                f"{fzr.name}_fuzzer_seed_corpus.zip",
+                corpus,
+            )
+
+    # custom logitech-bulkcontroller protocol fuzzer
+    proto_dir = os.path.join(
+        bld.srcdir, "fwupd", "plugins", "logitech-bulkcontroller", "proto"
+    )
+    proto_out = os.path.join(bld.builddir, "logitech-bulkcontroller-proto")
+    os.makedirs(proto_out, exist_ok=True)
+    proto_files = [
+        "antiflicker.proto",
+        "ble_cfg.proto",
+        "crash_info.proto",
+        "device_attestation.proto",
+        "device_common.proto",
+        "device_info.proto",
+        "device_mode.proto",
+        "device_request.proto",
+        "device_time.proto",
+        "firmware_update.proto",
+        "rightsight.proto",
+        "ota_manifest.proto",
+        "usb_msg.proto",
+    ]
+    for proto in proto_files:
+        subprocess.run(
+            [
+                "protoc",
+                f"--proto_path={proto_dir}",
+                f"--c_out={proto_out}",
+                os.path.join(proto_dir, proto),
+            ],
+            check=True,
         )
-        exe = bld.link(
-            fuzz_objs + built_objs + fuzzing_objs + [bld.compile(src)],
-            f"{fzr.name}_fuzzer",
+    bld.add_work_includedir("logitech-bulkcontroller-proto")
+    # ensure zstd/ffi are after static libs in the final link line
+    bld.ldflags.append("-lzstd")
+    bld.ldflags.append("-lffi")
+
+    fuzz_objs = []
+    struct_src = bld.rustgen(
+        "fwupd/plugins/logitech-bulkcontroller/fu-logitech-bulkcontroller.rs",
+        includes=["fwupdplugin.h"],
+    )
+    fuzz_objs.append(bld.compile(struct_src))
+    plugin_srcs = [
+        "fwupd/plugins/logitech-bulkcontroller/fu-logitech-bulkcontroller-common.c",
+        "fwupd/plugins/logitech-bulkcontroller/fu-logitech-bulkcontroller-child.c",
+        "fwupd/plugins/logitech-bulkcontroller/fu-logitech-bulkcontroller-device.c",
+    ]
+    for src in plugin_srcs:
+        fuzz_objs.append(
+            bld.compile(
+                src,
+                argv_extra=[
+                    f'-DG_LOG_DOMAIN="FuPluginLogitechBulkController"',
+                    "-DFUZZING",
+                ],
+            )
+        )
+    for proto in proto_files:
+        fuzz_objs.append(
+            bld.compile(
+                os.path.join(
+                    "logitech-bulkcontroller-proto",
+                    proto.replace(".proto", ".pb-c.c"),
+                )
+            )
         )
 
-        # generate the corpus
-        src_generator = bld.substitute(
-            "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
-            {
-                "@GTYPE@": fzr.gtype,
-                "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
-            },
-        )
-        exe_generator = bld.link(
-            fuzz_objs + built_objs + [bld.compile(src_generator)],
-            f"{fzr.name}_generator",
-        )
-        corpus = bld.mkfuzztargets(
-            exe_generator,
-            os.path.join(
-                bld.srcdir,
-                "fwupd",
-                "plugins",
-                fzr.srcdir,
-                "tests",
-                f"{fzr.name}*.builder.xml",
-            ),
-        )
-        bld.makezip(
-            f"{fzr.name}_fuzzer_seed_corpus.zip",
-            corpus,
-        )
+    fuzzer_obj = bld.compile(
+        "fwupd/fuzzing/protocol_fuzzer.c",
+        argv_extra=["-DFUZZING", "-Ifwupd/plugins/logitech-bulkcontroller"],
+    )
+    bld.link(
+        fuzz_objs
+        + built_objs
+        + fuzzing_objs
+        + [fuzzer_obj, "-lprotobuf-c", "-Wl,--wrap=fu_usb_device_bulk_transfer"],
+        "logitech-bulkcontroller-protocol_fuzzer",
+    )
 
 
 if __name__ == "__main__":
     # install missing deps here rather than patching the Dockerfile in oss-fuzz
-    try:
-        subprocess.check_call(
-            [
-                "apt-get",
-                "install",
-                "-y",
-                "liblzma-dev",
-                "libzstd-dev",
-                "libcbor-dev",
-                "python3",
-                "python3-jinja2",
-                "python3-packaging",
-            ],
-            stdout=open(os.devnull, "wb"),
-        )
-    except FileNotFoundError:
-        pass
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        sys.exit(1)
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        try:
+            subprocess.check_call(
+                [
+                    "apt-get",
+                    "install",
+                    "-y",
+                    "liblzma-dev",
+                    "libzstd-dev",
+                    "libcbor-dev",
+                    "protobuf-compiler",
+                    "protobuf-c-compiler",
+                    "python3",
+                    "python3-jinja2",
+                    "python3-packaging",
+                ],
+                stdout=open(os.devnull, "wb"),
+            )
+        except FileNotFoundError:
+            pass
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            sys.exit(1)
+    else:
+        print("oss-fuzz.py: not running as root, skipping apt-get install")
 
     _builder = Builder()
     _build(_builder)
