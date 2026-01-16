@@ -242,17 +242,16 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
 	/* validate payload length to prevent OOB read */
-	if (st->buf->len + fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st) >
-	    actual_length) {
+	guint32 payload_length =
+	    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st);
+	if (st->buf->len > actual_length || payload_length > actual_length - st->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
 				    "payload length exceeds transfer length");
 		return NULL;
 	}
-	g_byte_array_append(response->data,
-			    buf + st->buf->len,
-			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
+	g_byte_array_append(response->data, buf + st->buf->len, payload_length);
 	/* no payload for UninitBuffer, skip check */
 	if ((response->cmd != FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER) &&
 	    (response->data->len == 0)) {
