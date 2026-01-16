@@ -1110,6 +1110,8 @@ fu_context_lookup_quirk_by_id_iter(FuContext *self,
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
+	if (priv->flags & FU_CONTEXT_FLAG_NO_QUIRKS)
+		return TRUE;
 	return fu_quirks_lookup_by_id_iter(priv->quirks,
 					   guid,
 					   key,
@@ -2695,6 +2697,13 @@ fu_context_init(FuContext *self)
 	priv->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
+/* private */
+FuContext *
+fu_context_new_full(FuContextFlags flags)
+{
+	return FU_CONTEXT(g_object_new(FU_TYPE_CONTEXT, "flags", (guint64)flags, NULL));
+}
+
 /**
  * fu_context_new:
  *
@@ -2707,5 +2716,5 @@ fu_context_init(FuContext *self)
 FuContext *
 fu_context_new(void)
 {
-	return FU_CONTEXT(g_object_new(FU_TYPE_CONTEXT, NULL));
+	return fu_context_new_full(FU_CONTEXT_FLAG_NONE);
 }

@@ -21,7 +21,7 @@ fu_intel_me_pci_plugin_func(void)
 	gboolean ret;
 	g_autofree gchar *json = NULL;
 	g_autofree gchar *path = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuBackend) backend =
 	    g_object_new(FU_TYPE_BACKEND, "context", ctx, "device-gtype", FU_TYPE_PCI_DEVICE, NULL);
 	g_autoptr(FuPlugin) plugin =
