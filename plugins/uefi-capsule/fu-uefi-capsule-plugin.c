@@ -329,7 +329,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	if (!fu_firmware_parse_stream(archive,
 				      stream_archive,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      error))
 		return NULL;
 
