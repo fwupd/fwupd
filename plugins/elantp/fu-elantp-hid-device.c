@@ -627,7 +627,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	guint16 checksum_device = 0;
 	guint16 iap_addr;
 	const guint8 *buf;
-	g_autofree guint8 *buf2;
+	g_autofree guint8 *buf2 = NULL;
 	guint8 csum_buf[2] = {0x0};
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
