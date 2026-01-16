@@ -15,5 +15,13 @@ G_DECLARE_FINAL_TYPE(FuLogitechBulkcontrollerDevice,
 		     LOGITECH_BULKCONTROLLER_DEVICE,
 		     FuUsbDevice)
 
+#ifdef FUZZING
+GByteArray *fu_logitech_bulkcontroller_device_sync_wait_any_fuzz(
+	FuLogitechBulkcontrollerDevice *self,
+	const guint8 *data,
+	gsize size,
+	GError **error);
+#endif
+
 #define FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE "check-buffer-size"
 #define FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL	 "post-install"

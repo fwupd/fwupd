@@ -256,6 +256,29 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	return g_steal_pointer(&response);
 }
 
+#ifdef FUZZING
+extern void
+fu_logitech_bulkcontroller_fuzz_set_input(const guint8 *data, gsize size);
+
+GByteArray *
+fu_logitech_bulkcontroller_device_sync_wait_any_fuzz(FuLogitechBulkcontrollerDevice *self,
+						     const guint8 *data,
+						     gsize size,
+						     GError **error)
+{
+	g_autoptr(FuLogitechBulkcontrollerResponse) response = NULL;
+
+	g_return_val_if_fail(self != NULL, NULL);
+	g_return_val_if_fail(data != NULL, NULL);
+
+	fu_logitech_bulkcontroller_fuzz_set_input(data, size);
+	response = fu_logitech_bulkcontroller_device_sync_wait_any(self, 0, error);
+	if (response == NULL)
+		return NULL;
+	return g_steal_pointer(&response->data);
+}
+#endif
+
 static GByteArray *
 fu_logitech_bulkcontroller_device_sync_wait_cmd(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
