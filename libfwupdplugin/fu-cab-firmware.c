@@ -318,6 +318,18 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 			g_byte_array_append(buf,
 					    helper->decompress_buf,
 					    helper->decompress_bufsz - helper->zstrm.avail_out);
+			/* check actual decompressed size against limit to prevent decompression bombs */
+			if (size_max > 0 && buf->len > size_max) {
+				g_autofree gchar *sz_val = g_format_size(buf->len);
+				g_autofree gchar *sz_max = g_format_size(size_max);
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "actual decompressed data too large (%s, limit %s)",
+					    sz_val,
+					    sz_max);
+				return FALSE;
+			}
 			if (zret != Z_OK) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -327,6 +339,16 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 					    zError(zret));
 				return FALSE;
 			}
+		}
+		/* verify actual decompressed size matches declared size */
+		if (buf->len != blob_uncomp) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "decompressed size mismatch: declared %lu bytes, actual %u bytes",
+				    (unsigned long)blob_uncomp,
+				    buf->len);
+			return FALSE;
 		}
 		zret = inflateReset(&helper->zstrm);
 		if (zret != Z_OK) {

@@ -7136,6 +7136,134 @@ fu_cab_checksum_func(void)
 }
 
 static void
+fu_cab_decompression_bomb_func(void)
+{
+	/* Test that CAB files with mismatched declared vs actual decompressed size are rejected.
+	 * This prevents decompression bomb attacks (CWE-409) where attackers craft CAB files
+	 * with small declared uncompressed sizes but large actual decompressed data. */
+	g_autoptr(FuCabFirmware) cab = fu_cab_firmware_new();
+	g_autoptr(GByteArray) cab_data = g_byte_array_new();
+	g_autoptr(GBytes) cab_bytes = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+	guint8 cfheader[] = {
+	    /* signature */
+	    'M', 'S', 'C', 'F',
+	    /* reserved1 (4 bytes) */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* cbCabinet (total size, will be updated) */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* reserved2 (4 bytes) */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* coffFiles (offset to CFFILE, will be updated) */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* reserved3 (4 bytes) */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* versionMinor, versionMajor */
+	    0x03, 0x01,
+	    /* cFolders (1 folder) */
+	    0x01, 0x00,
+	    /* cFiles (1 file) */
+	    0x01, 0x00,
+	    /* flags (0x0000) */
+	    0x00, 0x00,
+	    /* setID */
+	    0x00, 0x00,
+	    /* iCabinet */
+	    0x00, 0x00};
+
+	/* Create a simple compressed payload */
+	guint8 compressed_data[256];
+	/* "CK" header for MSZIP */
+	compressed_data[0] = 'C';
+	compressed_data[1] = 'K';
+	/* Small zlib compressed data that decompresses to zeros */
+	/* This is a minimal deflate stream: 0x78 0x9c (zlib header), followed by compressed data
+	 */
+	compressed_data[2] = 0x78; /* zlib header */
+	compressed_data[3] = 0x9c;
+	/* Compressed representation of multiple zeros (about 100 bytes uncompressed) */
+	compressed_data[4] = 0x63; /* deflate compressed zeros */
+	compressed_data[5] = 0x60;
+	compressed_data[6] = 0x00;
+	compressed_data[7] = 0x00; /* checksum will follow */
+	compressed_data[8] = 0x00;
+	compressed_data[9] = 0x65;
+	compressed_data[10] = 0x00;
+	compressed_data[11] = 0x01;
+	gsize comp_size = 12;
+
+	/* CFFOLDER structure at offset 36 */
+	guint8 cffolder[] = {
+	    /* coffCabStart (offset to first CFDATA, will be 36+8+16+1=61) */
+	    0x3d, 0x00, 0x00, 0x00,
+	    /* cCFData (1 block) */
+	    0x01, 0x00,
+	    /* typeCompress (MSZIP = 1) */
+	    0x01, 0x00};
+
+	/* CFFILE structure at offset 44 */
+	guint8 cffile[] = {
+	    /* cbFile (100 bytes - actual uncompressed size we'll generate) */
+	    0x64, 0x00, 0x00, 0x00,
+	    /* uoffFolderStart */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* iFolder */
+	    0x00, 0x00,
+	    /* date */
+	    0x21, 0x00,
+	    /* time */
+	    0x00, 0x00,
+	    /* attribs */
+	    0x00, 0x00,
+	    /* szName (null-terminated) */
+	    'x', 0x00};
+
+	/* CFDATA structure at offset 61 */
+	guint8 cfdata[] = {
+	    /* checksum (0 for simplicity) */
+	    0x00, 0x00, 0x00, 0x00,
+	    /* cbData (compressed size) */
+	    (guint8)(comp_size & 0xff), (guint8)((comp_size >> 8) & 0xff),
+	    /* cbUncomp (FAKE: declare only 10 bytes to bypass size check!) */
+	    0x0a, 0x00};
+
+	/* Update cabinet header with correct sizes */
+	guint32 total_size = sizeof(cfheader) + sizeof(cffolder) + sizeof(cffile) + sizeof(cfdata) +
+			     comp_size;
+	cfheader[8] = (total_size & 0xff);
+	cfheader[9] = ((total_size >> 8) & 0xff);
+	cfheader[10] = ((total_size >> 16) & 0xff);
+	cfheader[11] = ((total_size >> 24) & 0xff);
+
+	/* Update CFFILE offset (36 + 8 = 44) */
+	cfheader[16] = 0x2c;
+	cfheader[17] = 0x00;
+
+	/* Build the CAB file */
+	g_byte_array_append(cab_data, cfheader, sizeof(cfheader));
+	g_byte_array_append(cab_data, cffolder, sizeof(cffolder));
+	g_byte_array_append(cab_data, cffile, sizeof(cffile));
+	g_byte_array_append(cab_data, cfdata, sizeof(cfdata));
+	g_byte_array_append(cab_data, compressed_data, comp_size);
+
+	/* Try to parse this malicious CAB - it should fail with decompressed size mismatch */
+	cab_bytes = g_byte_array_free_to_bytes(g_steal_pointer(&cab_data));
+	stream = g_memory_input_stream_new_from_bytes(cab_bytes);
+
+	/* Set a size limit to test the size_max check as well */
+	fu_firmware_set_size_max(FU_FIRMWARE(cab), 50 * 1024); /* 50KB limit */
+
+	ret = fu_firmware_parse_stream(FU_FIRMWARE(cab), stream, 0x0, FWUPD_INSTALL_FLAG_NONE, &error);
+
+	/* Should fail with size mismatch error */
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_nonnull(g_strrstr(error->message, "decompressed size mismatch"));
+}
+
+static void
 fu_efi_lz77_decompressor_func(void)
 {
 	gboolean ret;
@@ -7618,6 +7746,7 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_USB_BOS_DESCRIPTOR);
 
 	g_test_add_func("/fwupd/cab{checksum}", fu_cab_checksum_func);
+	g_test_add_func("/fwupd/cab{decompression-bomb}", fu_cab_decompression_bomb_func);
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/input-stream{sum-overflow}", fu_input_stream_sum_overflow_func);
