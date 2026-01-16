@@ -9,6 +9,7 @@
 #include <glib.h>
 
 #define ETP_I2C_IC13_IAPV5_PW 0x37CA
+#define ETP_I2C_IC13_IAPV7_PW 0x2F3B
 
 #define ETP_FW_FORCE_TYPE_ENABLE_BIT 0x1
 #define ETP_FW_EEPROM_ENABLE_BIT     0x2
@@ -24,10 +25,11 @@
 #define ETP_I2C_IAP_REG_L 0x01
 #define ETP_I2C_IAP_REG_H 0x06
 
-#define ETP_FW_IAP_INTF_ERR (1 << 4)
-#define ETP_FW_IAP_PAGE_ERR (1 << 5)
-#define ETP_FW_IAP_CHECK_PW (1 << 7)
-#define ETP_FW_IAP_LAST_FIT (1 << 9)
+#define ETP_FW_IAP_END_WAITWDT (1 << 3)
+#define ETP_FW_IAP_INTF_ERR    (1 << 4)
+#define ETP_FW_IAP_PAGE_ERR    (1 << 5)
+#define ETP_FW_IAP_CHECK_PW    (1 << 7)
+#define ETP_FW_IAP_LAST_FIT    (1 << 9)
 
 #define ELANTP_DELAY_COMPLETE	     1200 /* ms */
 #define ELANTP_DELAY_RESET	     30	  /* ms */
