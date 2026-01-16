@@ -243,7 +243,7 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 			return TRUE;
 		}
 		else
-			return TRUE;	
+			return TRUE;
 	}
 	if (self->ic_type == 0x14 && self->iap_ver == 4)
 		return TRUE;
