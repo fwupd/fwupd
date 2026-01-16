@@ -138,23 +138,27 @@ gboolean
 fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
 {
 	guint32 tmp = *checksum;
-	for (gsize i = 0; i < bufsz; i += 4) {
-		gsize chunksz = bufsz - i;
-		if (G_LIKELY(chunksz >= 4)) {
-			/* 3,2,1,0 nocheck:endian */
-			tmp ^= ((guint32)buf[i + 3] << 24) | ((guint32)buf[i + 2] << 16) |
-			       ((guint32)buf[i + 1] << 8) | (guint32)buf[i + 0];
-		} else if (chunksz == 3) {
-			/* 0,1,2 -- yes, weird, nocheck:endian */
-			tmp ^= ((guint32)buf[i + 0] << 16) | ((guint32)buf[i + 1] << 8) |
-			       (guint32)buf[i + 2];
-		} else if (chunksz == 2) {
-			/* 0,1 -- yes, weird */
-			tmp ^= ((guint32)buf[i + 0] << 8) | (guint32)buf[i + 1];
-		} else {
+	while (bufsz != 0) {
+		if (G_UNLIKELY(bufsz == 1)) {
 			/* 0 */
-			tmp ^= (guint32)buf[i + 0];
+			tmp ^= (guint32)buf[0];
+			break;
 		}
+		if (G_UNLIKELY(bufsz == 2)) {
+			/* 0,1 -- yes, weird */
+			tmp ^= ((guint32)buf[0] << 8) | (guint32)buf[1];
+			break;
+		}
+		if (G_UNLIKELY(bufsz == 3)) {
+			/* 0,1,2 -- yes, weird, nocheck:endian */
+			tmp ^= ((guint32)buf[0] << 16) | ((guint32)buf[1] << 8) | (guint32)buf[2];
+			break;
+		}
+		/* 3,2,1,0 nocheck:endian */
+		tmp ^= ((guint32)buf[3] << 24) | ((guint32)buf[2] << 16) | ((guint32)buf[1] << 8) |
+		       (guint32)buf[0];
+		buf += 4;
+		bufsz -= 4;
 	}
 	*checksum = tmp;
 	return TRUE;

@@ -1078,8 +1078,13 @@ fu_util_device_test_filename(FuUtil *self,
 	g_autoptr(FwupdJsonArray) json_steps_result = fwupd_json_array_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(GBytes) blob = NULL;
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* log */
 	fwupd_json_object_add_string(json_object_result, "filename", filename);
@@ -1089,7 +1094,7 @@ fu_util_device_test_filename(FuUtil *self,
 	if (blob == NULL)
 		return FALSE;
 	json_node =
-	    fwupd_json_parser_load_from_bytes(parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
 	if (json_node == NULL) {
 		g_prefix_error_literal(error, "test not in JSON format: ");
 		return FALSE;

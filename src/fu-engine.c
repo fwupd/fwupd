@@ -7507,12 +7507,17 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 {
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	g_autoptr(GInputStream) istream_json = NULL;
 	g_autoptr(GInputStream) istream_raw = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 10000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 
 	/* add an attr so we know this is emulated and do not offer to upload results */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_HOST_EMULATION);
@@ -7532,7 +7537,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	} else {
 		istream_json = g_object_ref(istream_raw);
 	}
-	json_node = fwupd_json_parser_load_from_stream(parser,
+	json_node = fwupd_json_parser_load_from_stream(json_parser,
 						       istream_json,
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
