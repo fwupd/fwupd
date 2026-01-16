@@ -238,9 +238,17 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 	guint16 addr_wrds;
 
 	if (self->iap_ver == 0x3) {
-		self->force_table_addr = 0xFF40 * 2;
-		return TRUE;
+		if (self->module_id == 0x130 || self->module_id==0x133) {
+			self->force_table_addr = 0xFF40 * 2;
+			return TRUE;
+		}
+		else {
+			return TRUE;
+		}		
 	}
+	if (self->ic_type == 0x14 && self->iap_ver == 4) {
+		return TRUE;
+    	}
 	if (!fu_elantp_hid_device_read_cmd(self, FU_ETP_CMD_FORCE_ADDR, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to read force table address cmd: ");
 		return FALSE;
@@ -271,7 +279,13 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
 	guint16 value;
 
-	if (iap_ver < 0x5 || ic_type != 0x13)
+	if (iap_ver >= 0x7 && ic_type==0x13)
+    		pw = ETP_I2C_IC13_IAPV7_PW;	
+    	else if (iap_ver >= 0x5 && ic_type == 0x13)
+		pw = ETP_I2C_IC13_IAPV5_PW;
+	else if ((iap_ver >= 0x4) && (ic_type == 0x14 || ic_type==0x15))
+    		pw = ETP_I2C_IC13_IAPV5_PW;	
+	else
 		return TRUE;
 
 	if (!fu_elantp_hid_device_write_cmd(self, FU_ETP_CMD_I2C_FW_PW, pw, error)) {
@@ -423,7 +437,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 
-	if (self->ic_type != 0x12 && self->ic_type != 0x13)
+	if (self->ic_type != 0x12 && self->ic_type != 0x13 && 
+ 	    self->ic_type != 0x14 && self->ic_type != 0x15)
 		return TRUE;
 
 	if (!fu_elantp_hid_device_read_force_table_enable(self, &error_forcetable)) {
@@ -434,6 +449,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		self->force_table_support = TRUE;
+		if (self->force_table_addr == 0)
+			self->force_table_support = FALSE;
 		/* is in bootloader mode */
 		if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
 			return FALSE;
@@ -492,6 +509,9 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
+	if (self->ic_type == 0x14 && self->iap_ver == 4) {
+		self->force_table_support = force_table_support;
+    	}
 	if (self->force_table_support != force_table_support) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -610,6 +630,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	guint16 checksum_device = 0;
 	guint16 iap_addr;
 	const guint8 *buf;
+	g_autofree guint8 *buf2;
 	guint8 csum_buf[2] = {0x0};
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -640,7 +661,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	if (self->force_table_support &&
 	    self->force_table_addr >=
 		fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware))) {
-		g_autofree guint8 *buf2 = g_malloc0(bufsz);
+		buf2 = g_malloc0(bufsz);
 		if (!fu_memcpy_safe(buf2,
 				    bufsz,
 				    0x0, /* dst */
@@ -720,7 +741,9 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 				    self->iap_ctrl);
 			return FALSE;
 		}
-
+		if (self->iap_ctrl & ETP_FW_IAP_END_WAITWDT) {
+			i = total_pages;
+		}
 		/* update progress */
 		checksum += csum_tmp;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
