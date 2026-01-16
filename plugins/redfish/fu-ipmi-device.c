@@ -471,10 +471,10 @@ static gboolean
 fu_ipmi_device_probe(FuDevice *device, GError **error)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
-	const gchar *physical_ids[] = {"/dev/ipmi0", "/dev/ipmi/0", "/dev/ipmidev/0", NULL};
+	const gchar *physical_ids[] = {"/dev/ipmi0", "/dev/ipmi/0", "/dev/ipmidev/0"};
 
 	/* look for the IPMI device */
-	for (guint i = 0; physical_ids[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(physical_ids); i++) {
 		gboolean exists_fn = FALSE;
 		if (!fu_device_query_file_exists(device, physical_ids[i], &exists_fn, error))
 			return FALSE;

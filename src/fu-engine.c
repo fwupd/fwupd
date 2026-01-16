@@ -803,12 +803,15 @@ fu_engine_get_releases_for_container_checksum(FuEngine *self, const gchar *csum)
 gchar *
 fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 {
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA256,
+	    G_CHECKSUM_SHA1,
+	};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *csum = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 
@@ -2725,8 +2728,11 @@ fu_engine_install_release(FuEngine *self,
 
 	/* add the checksum of the container blob if not already set */
 	if (fwupd_release_get_checksums(FWUPD_RELEASE(release))->len == 0) {
-		GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
-		for (guint i = 0; checksum_types[i] != 0; i++) {
+		GChecksumType checksum_types[] = {
+		    G_CHECKSUM_SHA256,
+		    G_CHECKSUM_SHA1,
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 			g_autofree gchar *checksum =
 			    fu_input_stream_compute_checksum(stream, checksum_types[i], error);
 			if (checksum == NULL)
@@ -5041,7 +5047,10 @@ fu_engine_get_details(FuEngine *self,
 		      GInputStream *stream,
 		      GError **error)
 {
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA256,
+	    G_CHECKSUM_SHA1,
+	};
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
@@ -5062,7 +5071,7 @@ fu_engine_get_details(FuEngine *self,
 		return NULL;
 
 	/* calculate the checksums of the blob */
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *checksum =
 		    fu_input_stream_compute_checksum(stream, checksum_types[i], error);
 		if (checksum == NULL)
@@ -7868,10 +7877,11 @@ fu_engine_plugins_init(FuEngine *self, FuProgress *progress, GError **error)
 static gboolean
 fu_engine_cleanup_state(GError **error)
 {
-	const gchar *filenames[] = {"/var/cache/app-info/xmls/fwupd-verify.xml",
-				    "/var/cache/app-info/xmls/fwupd.xml",
-				    NULL};
-	for (guint i = 0; filenames[i] != NULL; i++) {
+	const gchar *filenames[] = {
+	    "/var/cache/app-info/xmls/fwupd-verify.xml",
+	    "/var/cache/app-info/xmls/fwupd.xml",
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(filenames); i++) {
 		g_autoptr(GFile) file = g_file_new_for_path(filenames[i]);
 		if (g_file_query_exists(file, NULL)) {
 			if (!g_file_delete(file, NULL, error))
@@ -8447,12 +8457,13 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 static gboolean
 fu_engine_ensure_paths_exist(GError **error)
 {
-	FuPathKind path_kinds[] = {FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
-				   FU_PATH_KIND_LOCALSTATEDIR_METADATA,
-				   FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
-				   FU_PATH_KIND_CACHEDIR_PKG,
-				   FU_PATH_KIND_LAST};
-	for (guint i = 0; path_kinds[i] != FU_PATH_KIND_LAST; i++) {
+	FuPathKind path_kinds[] = {
+	    FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+	    FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+	    FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
+	    FU_PATH_KIND_CACHEDIR_PKG,
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(path_kinds); i++) {
 		g_autofree gchar *fn = fu_path_from_kind(path_kinds[i]);
 		if (!fu_path_mkdir(fn, error))
 			return FALSE;
