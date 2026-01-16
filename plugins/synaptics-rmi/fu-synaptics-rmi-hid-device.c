@@ -158,7 +158,13 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				    (guint)input_count_sz + HID_RMI4_READ_INPUT_DATA);
 			return NULL;
 		}
-		g_byte_array_append(buf, res->data + HID_RMI4_READ_INPUT_DATA, input_count_sz);
+		if (!fu_byte_array_append_safe(buf,
+					       res->data,
+					       res->len,
+					       HID_RMI4_READ_INPUT_DATA, /* offset */
+					       input_count_sz,
+					       error))
+			return NULL;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "DeviceRead", buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
 

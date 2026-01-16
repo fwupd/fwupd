@@ -11,7 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-firmware-common.h"
-#include "fu-mem.h"
+#include "fu-mem-private.h"
 
 /**
  * fu_byte_array_to_string:
@@ -180,6 +180,39 @@ fu_byte_array_append_array(GByteArray *array, GByteArray *array2)
 	g_return_if_fail(array != NULL);
 	g_return_if_fail(array2 != NULL);
 	g_byte_array_append(array, array2->data, array2->len);
+}
+
+/**
+ * fu_byte_array_append_safe:
+ * @array: a #GByteArray
+ * @buf: a raw byte buffer
+ * @bufsz: size of @buf
+ * @offset: offset in bytes
+ * @n: number of bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Adds the content of @buf at @offset to @array.
+ *
+ * Returns: %TRUE if the access is safe, %FALSE otherwise
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_byte_array_append_safe(GByteArray *array,
+			  const guint8 *buf,
+			  gsize bufsz,
+			  gsize offset,
+			  gsize n,
+			  GError **error)
+{
+	g_return_val_if_fail(array != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_memchk_read(bufsz, offset, n, error))
+		return FALSE;
+	g_byte_array_append(array, buf + offset, n);
+	return TRUE;
 }
 
 /**
