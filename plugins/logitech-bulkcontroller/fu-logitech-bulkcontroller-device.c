@@ -215,6 +215,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 						GError **error)
 {
 	gsize actual_length = 0;
+	guint32 payload_length;
 	g_autofree guint8 *buf = g_malloc0(self->transfer_bufsz);
 	g_autoptr(FuStructLogitechBulkcontrollerSendSyncRes) st = NULL;
 	g_autoptr(FuLogitechBulkcontrollerResponse) response =
@@ -242,7 +243,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
 	/* validate payload length to prevent OOB read */
-	guint32 payload_length = fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st);
+	payload_length = fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st);
 	if (payload_length > 0 && st->buf->len + payload_length > actual_length) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
