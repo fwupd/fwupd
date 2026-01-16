@@ -19,6 +19,8 @@
 G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_zip_firmware_get_instance_private(o))
 
+#define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX 0x4000
+
 static gboolean
 fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 			  GInputStream *stream,
@@ -121,8 +123,13 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		}
 	}
 
-	/* add stream as a image */
-	fu_firmware_set_id(zip_file, filename);
+	/* add as a image */
+	if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME) {
+		g_autofree gchar *filename_basename = g_path_get_basename(filename);
+		fu_firmware_set_id(zip_file, filename_basename);
+	} else {
+		fu_firmware_set_id(zip_file, filename);
+	}
 	if (!fu_firmware_add_image(FU_FIRMWARE(self), zip_file, error))
 		return FALSE;
 
@@ -145,15 +152,17 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* look for the end of central directory record signature in the last 4K */
-	if (streamsz > 0x1000)
-		offset = streamsz - 0x1000;
+	if (streamsz > FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX)
+		offset = streamsz - FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX;
 	if (!fu_input_stream_find(stream,
 				  (const guint8 *)FU_STRUCT_ZIP_EOCD_DEFAULT_MAGIC,
 				  FU_STRUCT_ZIP_EOCD_N_ELEMENTS_MAGIC,
 				  offset,
 				  &offset,
-				  error))
+				  error)) {
+		g_prefix_error_literal(error, "failed to find zip EOCD signature: ");
 		return FALSE;
+	}
 	g_debug("found ZIP EOCD magic @0x%x", (guint)offset);
 	st_eocd = fu_struct_zip_eocd_parse_stream(stream, offset, error);
 	if (st_eocd == NULL)

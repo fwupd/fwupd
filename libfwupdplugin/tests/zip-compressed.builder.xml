@@ -1,4 +1,4 @@
-<firmware gtype="FuZipArchive">
+<firmware gtype="FuZipFirmware">
   <firmware gtype="FuZipFile">
     <compression>deflate</compression>
     <id>hello.txt</id>

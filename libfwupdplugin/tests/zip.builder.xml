@@ -1,4 +1,4 @@
-<firmware gtype="FuZipArchive">
+<firmware gtype="FuZipFirmware">
   <firmware gtype="FuZipFile">
     <id>hello.txt</id>
     <data>aGVsbG8gd29ybGQ=</data>
