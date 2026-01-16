@@ -242,13 +242,11 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 			self->force_table_addr = 0xFF40 * 2;
 			return TRUE;
 		}
-		else {
-			return TRUE;
-		}		
+		else
+			return TRUE;	
 	}
-	if (self->ic_type == 0x14 && self->iap_ver == 4) {
+	if (self->ic_type == 0x14 && self->iap_ver == 4)
 		return TRUE;
-    	}
 	if (!fu_elantp_hid_device_read_cmd(self, FU_ETP_CMD_FORCE_ADDR, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to read force table address cmd: ");
 		return FALSE;
@@ -280,7 +278,7 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 	guint16 value;
 
 	if (iap_ver >= 0x7 && ic_type==0x13)
-		pw = ETP_I2C_IC13_IAPV7_PW;	
+		pw = ETP_I2C_IC13_IAPV7_PW;
     	else if (iap_ver >= 0x5 && ic_type == 0x13)
 		pw = ETP_I2C_IC13_IAPV5_PW;
 	else if ((iap_ver >= 0x4) && (ic_type == 0x14 || ic_type==0x15))
@@ -741,9 +739,8 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 				    self->iap_ctrl);
 			return FALSE;
 		}
-		if (self->iap_ctrl & ETP_FW_IAP_END_WAITWDT) {
+		if (self->iap_ctrl & ETP_FW_IAP_END_WAITWDT)
 			i = total_pages;
-		}
 		/* update progress */
 		checksum += csum_tmp;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
