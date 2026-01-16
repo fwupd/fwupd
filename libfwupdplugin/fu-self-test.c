@@ -434,6 +434,32 @@ fu_common_bitwise_func(void)
 }
 
 static void
+fu_common_byte_array_safe_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GByteArray) array = g_byte_array_new();
+	const guint8 buf[] = {0x01, 0x02, 0x03};
+
+	/* all buffer */
+	ret = fu_byte_array_append_safe(array, buf, sizeof(buf), 0, sizeof(buf), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 3);
+
+	/* +1, -1 */
+	ret = fu_byte_array_append_safe(array, buf, sizeof(buf), 1, sizeof(buf) - 1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 3 + 2);
+
+	/* boom */
+	ret = fu_byte_array_append_safe(array, buf, sizeof(buf), 1, sizeof(buf), &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_false(ret);
+}
+
+static void
 fu_common_byte_array_func(void)
 {
 	g_autofree gchar *str = NULL;
@@ -7728,6 +7754,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
+	g_test_add_func("/fwupd/common{byte-array-safe}", fu_common_byte_array_safe_func);
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);

@@ -169,7 +169,8 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
 	}
 
 	/* truncate the last byte which is the checksum value */
-	g_byte_array_append(st_res, buf, report_data_sz + 2);
+	if (!fu_byte_array_append_safe(st_res, buf, sizeof(buf), 0x0, report_data_sz + 2, error))
+		return NULL;
 
 	/* print the raw data */
 	fu_dump_raw(G_LOG_DOMAIN, "DDC/CI read report", st_res->data, st_res->len);

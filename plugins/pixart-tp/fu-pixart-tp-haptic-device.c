@@ -227,7 +227,13 @@ fu_pixart_tp_haptic_device_tf_read_rmi(FuPixartTpHapticDevice *self,
 	}
 
 	/* success */
-	g_byte_array_append(buf, io_buf + FU_STRUCT_PIXART_TP_TF_REPLY_HDR_SIZE, datalen);
+	if (!fu_byte_array_append_safe(buf,
+				       io_buf,
+				       sizeof(io_buf),
+				       FU_STRUCT_PIXART_TP_TF_REPLY_HDR_SIZE, /* offset */
+				       datalen,
+				       error))
+		return NULL;
 	return g_steal_pointer(&buf);
 }
 
