@@ -48,6 +48,23 @@ fu_qc_firehose_raw_device_impl_add_function(FuQcFirehoseImpl *impl, FuQcFirehose
 	self->supported_functions |= func;
 }
 
+static FuFirmware *
+fu_qc_firehose_raw_device_impl_prepare_firmware(FuDevice *device,
+						GInputStream *stream,
+						FuProgress *progress,
+						FuFirmwareParseFlags flags,
+						GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
+	if (!fu_firmware_parse_stream(firmware,
+				      stream,
+				      0x0,
+				      flags | FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
+				      error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
 static gboolean
 fu_qc_firehose_raw_device_impl_write_firmware(FuDevice *device,
 					      FuFirmware *firmware,
@@ -220,6 +237,7 @@ fu_qc_firehose_raw_device_class_init(FuQcFirehoseRawDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_qc_firehose_raw_device_to_string;
 	device_class->write_firmware = fu_qc_firehose_raw_device_impl_write_firmware;
+	device_class->prepare_firmware = fu_qc_firehose_raw_device_impl_prepare_firmware;
 	device_class->set_progress = fu_qc_firehose_raw_device_set_progress;
 	device_class->probe = fu_qc_firehose_raw_device_probe;
 	device_class->setup = fu_qc_firehose_raw_device_setup;
