@@ -242,9 +242,8 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
 	/* validate payload length to prevent OOB read */
-	guint32 payload_length =
-	    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st);
-	if (st->buf->len > actual_length || payload_length > actual_length - st->buf->len) {
+	guint32 payload_length = fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st);
+	if (st->buf->len > actual_length || payload_length > (actual_length - st->buf->len)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
