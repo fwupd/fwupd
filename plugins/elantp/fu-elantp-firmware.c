@@ -144,7 +144,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 				      G_LITTLE_ENDIAN,
 				      error))
 		return FALSE;
-	if (module_id_wrds > 0x7FFF) {
+	if (module_id_wrds == 0xFFFF) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
