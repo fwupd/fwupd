@@ -243,7 +243,7 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 			return TRUE;
 		}
 		else
-			return TRUE;	
+			return TRUE;
 	}
 	if (self->ic_type == 0x14 && self->iap_ver == 4)
 		return TRUE;
@@ -282,7 +282,7 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
     	else if (iap_ver >= 0x5 && ic_type == 0x13)
 		pw = ETP_I2C_IC13_IAPV5_PW;
 	else if ((iap_ver >= 0x4) && (ic_type == 0x14 || ic_type==0x15))
-		pw = ETP_I2C_IC13_IAPV5_PW;	
+		pw = ETP_I2C_IC13_IAPV5_PW;
 	else
 		return TRUE;
 
