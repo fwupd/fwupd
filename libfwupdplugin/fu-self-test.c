@@ -7249,7 +7249,8 @@ fu_cab_decompression_bomb_func(void)
 	g_byte_array_append(cab_data, compressed_data, comp_size);
 
 	/* try to parse this malicious CAB - it should fail with decompressed size mismatch */
-	cab_bytes = g_bytes_new(cab_data->data, cab_data->len);
+	cab_bytes =
+	    g_byte_array_free_to_bytes(g_steal_pointer(&cab_data)); /* nocheck:blocked */
 	stream = g_memory_input_stream_new_from_bytes(cab_bytes);
 
 	/* set a size limit to test the size_max check as well */
