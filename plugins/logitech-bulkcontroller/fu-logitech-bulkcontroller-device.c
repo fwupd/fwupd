@@ -234,13 +234,21 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	fu_dump_raw(G_LOG_DOMAIN, "response", buf, MIN(actual_length, 12));
 
 	st = fu_struct_logitech_bulkcontroller_send_sync_res_parse(buf,
-								   self->transfer_bufsz,
+								   actual_length,
 								   0x0,
 								   error);
 	if (st == NULL)
 		return NULL;
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
+	if (st->buf->len >
+	    actual_length - fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "payload length exceeds transfer length");
+		return NULL;
+	}
 	g_byte_array_append(response->data,
 			    buf + st->buf->len,
 			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
