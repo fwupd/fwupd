@@ -240,6 +240,8 @@ fu_elantp_hid_device_ensure_forcetable_address(FuElantpHidDevice *self, GError *
 	if (self->iap_ver == 0x3) {
 		if (self->module_id == 0x130 || self->module_id == 0x133)
 			self->force_table_addr = 0xFF40 * 2;
+		else
+			self->force_table_addr = 0x0;
 		return TRUE;
 	}
 	if (self->ic_type == 0x14 && self->iap_ver == 4)
