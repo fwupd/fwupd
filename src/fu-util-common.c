@@ -2465,6 +2465,11 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("The UEFI certificate store is now up to date")},
+		     {FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("HP SureStart is enabled")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
