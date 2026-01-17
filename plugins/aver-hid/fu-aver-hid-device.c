@@ -430,7 +430,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* decompress */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 	if (archive == NULL)
 		return FALSE;
 	aver_fw_name = fu_firmware_get_filename(firmware);
