@@ -9,13 +9,19 @@ a proprietary HID protocol.
 
 ## Firmware Format
 
-The daemon will decompress the cabinet archive and extract a firmware blob in
-a packed binary file format.
+The daemon will decompress the cabinet archive and load:
 
-This plugin supports the following protocol ID:
+* HID: a `.tar.bz2` payload, typically with extension `.audio.dat`
+* SafeISP: a zip archive containing the compressed payload files, e.g. `update/cx3uvc.img`
 
-* `com.aver.hid`
-* `com.aver.safeisp`
+This plugin supports the following protocol IDs:
+
+* `com.aver.hid2`
+* `com.aver.safeisp2`
+
+Versions of fwupd prior to 2.1.1 Aver HID expected the firmware payload to be composed of compressed
+images inside an `archive.tar.bz2` themselves inside another `archive.tar.bz2`; these used the
+protocol values of `com.aver.hid` and `com.aver.safeisp`.
 
 ## GUID Generation
 
