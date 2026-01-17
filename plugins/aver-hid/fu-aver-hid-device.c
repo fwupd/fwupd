@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-aver-hid-device.h"
-#include "fu-aver-hid-firmware.h"
 #include "fu-aver-hid-struct.h"
 
 struct _FuAverHidDevice {
@@ -129,19 +128,6 @@ fu_aver_hid_device_setup(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static FuFirmware *
-fu_aver_hid_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
-				    FuProgress *progress,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_aver_hid_firmware_new();
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -408,10 +394,7 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
-	const gchar *aver_fw_name = NULL;
-	gsize fw_size;
-	g_autoptr(FuArchive) archive = NULL;
-	g_autoptr(GBytes) aver_fw = NULL;
+	gsize streamsz = 0;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -424,20 +407,12 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 15, NULL);
 
-	/* get default image */
+	/* get archive payload */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-
-	/* decompress */
-	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_NONE, error);
-	if (archive == NULL)
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	aver_fw_name = fu_firmware_get_filename(firmware);
-	aver_fw = fu_archive_lookup_by_fn(archive, aver_fw_name, error);
-	if (aver_fw == NULL)
-		return FALSE;
-	fw_size = g_bytes_get_size(aver_fw);
 
 	/* wait for ST_READY */
 	if (!fu_device_retry_full(device,
@@ -450,15 +425,21 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* ISP_FILE_START */
-	if (!fu_aver_hid_device_isp_file_start(self, fw_size, aver_fw_name, error))
+	if (!fu_aver_hid_device_isp_file_start(self,
+					       streamsz,
+					       fu_firmware_get_filename(firmware),
+					       error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* ISP_FILE_DNLOAD */
-	chunks = fu_chunk_array_new_from_bytes(aver_fw,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 
 	if (!fu_aver_hid_device_isp_file_dnload(self,
 						chunks,
@@ -468,7 +449,10 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* ISP_FILE_END */
-	if (!fu_aver_hid_device_isp_file_end(self, fw_size, aver_fw_name, error))
+	if (!fu_aver_hid_device_isp_file_end(self,
+					     streamsz,
+					     fu_firmware_get_filename(firmware),
+					     error))
 		return FALSE;
 
 	/* poll for the file untar progress */
@@ -521,7 +505,7 @@ static void
 fu_aver_hid_device_init(FuAverHidDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_add_protocol(FU_DEVICE(self), "com.aver.hid");
+	fu_device_add_protocol(FU_DEVICE(self), "com.aver.hid2");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
@@ -541,7 +525,6 @@ fu_aver_hid_device_class_init(FuAverHidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_aver_hid_device_setup;
-	device_class->prepare_firmware = fu_aver_hid_device_prepare_firmware;
 	device_class->write_firmware = fu_aver_hid_device_write_firmware;
 	device_class->set_progress = fu_aver_hid_device_set_progress;
 }
