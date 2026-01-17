@@ -258,7 +258,10 @@ fu_archive_read_new(GError **error)
 }
 
 static gboolean
-fu_archive_read(FuArchive *self, _archive_read_ctx *arch, FuArchiveFlags flags, GError **error)
+fu_archive_read(FuArchive *self,
+		_archive_read_ctx *arch,
+		FuFirmwareParseFlags flags,
+		GError **error)
 {
 	int r;
 	while (TRUE) {
@@ -321,7 +324,7 @@ fu_archive_read(FuArchive *self, _archive_read_ctx *arch, FuArchiveFlags flags, 
 				    bufsz);
 			return FALSE;
 		}
-		if (flags & FU_ARCHIVE_FLAG_IGNORE_PATH) {
+		if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME) {
 			fn_key = g_path_get_basename(fn);
 		} else {
 			fn_key = g_strdup(fn);
@@ -339,7 +342,7 @@ fu_archive_read(FuArchive *self, _archive_read_ctx *arch, FuArchiveFlags flags, 
 /**
  * fu_archive_new:
  * @data: (nullable): archive contents
- * @flags: archive flags, e.g. %FU_ARCHIVE_FLAG_NONE
+ * @flags: archive flags, e.g. %FU_FIRMWARE_PARSE_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Parses @data as an archive and decompresses all files to memory blobs.
@@ -351,7 +354,7 @@ fu_archive_read(FuArchive *self, _archive_read_ctx *arch, FuArchiveFlags flags, 
  * Since: 1.2.2
  **/
 FuArchive *
-fu_archive_new(GBytes *data, FuArchiveFlags flags, GError **error)
+fu_archive_new(GBytes *data, FuFirmwareParseFlags flags, GError **error)
 {
 #ifdef HAVE_LIBARCHIVE
 	g_autoptr(FuArchive) self = g_object_new(FU_TYPE_ARCHIVE, NULL);
@@ -470,7 +473,7 @@ fu_archive_seek_cb(struct archive *arch, void *client_data, gint64 offset, gint 
 /**
  * fu_archive_new_stream:
  * @stream: a #GInputStream
- * @flags: archive flags, e.g. %FU_ARCHIVE_FLAG_NONE
+ * @flags: archive flags, e.g. %FU_FIRMWARE_PARSE_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Parses @stream as an archive and decompresses all files to memory blobs.
@@ -480,7 +483,7 @@ fu_archive_seek_cb(struct archive *arch, void *client_data, gint64 offset, gint 
  * Since: 2.0.0
  **/
 FuArchive *
-fu_archive_new_stream(GInputStream *stream, FuArchiveFlags flags, GError **error)
+fu_archive_new_stream(GInputStream *stream, FuFirmwareParseFlags flags, GError **error)
 {
 #ifdef HAVE_LIBARCHIVE
 	g_autoptr(FuArchive) self = g_object_new(FU_TYPE_ARCHIVE, NULL);

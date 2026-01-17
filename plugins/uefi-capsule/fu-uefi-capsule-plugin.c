@@ -326,7 +326,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
-	archive = fu_archive_new_stream(stream_archive, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream_archive, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 	if (archive == NULL)
 		return NULL;
 

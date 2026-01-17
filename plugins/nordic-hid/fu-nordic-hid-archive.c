@@ -200,7 +200,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME, error);
 	if (archive == NULL)
 		return FALSE;
 	manifest = fu_archive_lookup_by_fn(archive, "manifest.json", error);

@@ -49,7 +49,7 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gpointer value;
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
+	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_FIRMWARE_PARSE_FLAG_NONE, NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
 	g_return_val_if_fail(G_IS_OUTPUT_STREAM(stream), FALSE);
@@ -278,7 +278,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 	g_hash_table_remove_all(self->phase_blobs);
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, &error_archive);
+	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_NONE, &error_archive);
 	if (archive == NULL) {
 		g_autoptr(GBytes) blob = NULL;
 		g_debug("no archive found, using JSON as phase setup: %s", error_archive->message);

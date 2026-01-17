@@ -290,7 +290,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* decompress */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 	if (archive == NULL)
 		return FALSE;
 	cx3_fw = fu_archive_lookup_by_fn(archive, "update/cx3uvc.img", error);

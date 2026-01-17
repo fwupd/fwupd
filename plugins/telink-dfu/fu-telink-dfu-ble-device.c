@@ -197,7 +197,7 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME, error);
 	if (archive == NULL)
 		return FALSE;
 	blob = fu_archive_lookup_by_fn(archive, "firmware.bin", error);

@@ -62,7 +62,7 @@ fu_archive_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuArchive) archive = NULL;
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	archive = fu_archive_new_stream(stream, flags, error);
 	if (archive == NULL)
 		return FALSE;
 
@@ -214,7 +214,7 @@ fu_archive_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* save archive and compress each image to the archive */
-	archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
+	archive = fu_archive_new(NULL, FU_FIRMWARE_PARSE_FLAG_NONE, NULL);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) blob = NULL;

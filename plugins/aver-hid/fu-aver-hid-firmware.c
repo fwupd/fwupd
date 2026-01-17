@@ -37,7 +37,7 @@ fu_aver_hid_firmware_parse(FuFirmware *firmware,
 			   GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream, flags, error);
 	if (archive == NULL)
 		return FALSE;
 	if (!fu_archive_iterate(archive, fu_aver_hid_firmware_parse_archive_cb, firmware, error))
