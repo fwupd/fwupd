@@ -298,7 +298,7 @@ fu_archive_invalid_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
 
-	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, &error);
+	archive = fu_archive_new(data, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(archive);
 }
@@ -330,7 +330,7 @@ fu_archive_cab_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
 
-	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, &error);
+	archive = fu_archive_new(data, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(archive);
 
