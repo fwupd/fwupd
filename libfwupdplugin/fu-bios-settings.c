@@ -289,6 +289,7 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 {
 	g_autoptr(FwupdBiosSetting) attr = NULL;
 	g_autofree gchar *id = NULL;
+	g_autofree gchar *name_stripped = NULL;
 
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 	g_return_val_if_fail(name != NULL, FALSE);
@@ -297,7 +298,10 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 
 	attr = fu_bios_setting_new();
 
-	id = g_strdup_printf("com.%s.%s", driver, name);
+	name_stripped = g_strdup(name);
+	g_strdelimit(name_stripped, " ", '_');
+
+	id = g_strdup_printf("com.%s.%s", driver, name_stripped);
 	fwupd_bios_setting_set_name(attr, name);
 	fwupd_bios_setting_set_path(attr, path);
 	fwupd_bios_setting_set_id(attr, id);

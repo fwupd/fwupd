@@ -15,7 +15,7 @@ struct _FuHpBiosCfgPlugin {
 G_DEFINE_TYPE(FuHpBiosCfgPlugin, fu_hp_bioscfg_plugin, FU_TYPE_PLUGIN)
 
 #define BIOS_SETTING_SURESTART                                                                     \
-	"com.hp-bioscfg.Enhanced HP Firmware Runtime Intrusion Prevention and Detection"
+	"com.hp-bioscfg.Enhanced_HP_Firmware_Runtime_Intrusion_Prevention_and_Detection"
 
 static gboolean
 fu_hp_bioscfg_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
