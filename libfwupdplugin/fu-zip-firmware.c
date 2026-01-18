@@ -32,6 +32,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 	gsize offset = fu_struct_zip_cdfh_get_offset_lfh(st_cdfh);
 	guint32 actual_crc = 0xFFFFFFFF;
 	guint32 compressed_size;
+	guint32 uncompressed_size;
 	guint32 uncompressed_crc;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuStructZipLfh) st_lfh = NULL;
@@ -66,11 +67,37 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 	compressed_size = fu_struct_zip_lfh_get_compressed_size(st_lfh);
 	if (compressed_size == 0x0)
 		compressed_size = fu_struct_zip_cdfh_get_compressed_size(st_cdfh);
+	if (compressed_size == 0xFFFFFFFF) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "zip64 not supported");
+		return FALSE;
+	}
+	uncompressed_size = fu_struct_zip_lfh_get_uncompressed_size(st_lfh);
+	if (uncompressed_size == 0x0)
+		compressed_size = fu_struct_zip_cdfh_get_uncompressed_size(st_cdfh);
+	if (uncompressed_size == 0xFFFFFFFF) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "zip64 not supported");
+		return FALSE;
+	}
 	stream_compressed = fu_partial_input_stream_new(stream, offset, compressed_size, error);
 	if (stream_compressed == NULL)
 		return FALSE;
 	compression = fu_struct_zip_lfh_get_compression(st_lfh);
 	if (compression == FU_ZIP_COMPRESSION_NONE) {
+		if (compressed_size != uncompressed_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no compression but compressed (0x%x) != uncompressed (0x%x)",
+				    (guint)compressed_size,
+				    (guint)uncompressed_size);
+			return FALSE;
+		}
 		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 			if (!fu_input_stream_compute_crc32(stream_compressed,
 							   FU_CRC_KIND_B32_STANDARD,
@@ -91,9 +118,19 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		stream_deflate = g_converter_input_stream_new(stream_compressed, conv);
 		g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(stream_deflate),
 							    FALSE);
-		blob_raw = fu_input_stream_read_bytes(stream_deflate, 0, G_MAXSIZE, NULL, error);
+		blob_raw =
+		    fu_input_stream_read_bytes(stream_deflate, 0, uncompressed_size, NULL, error);
 		if (blob_raw == NULL) {
 			g_prefix_error_literal(error, "failed to read compressed stream: ");
+			return FALSE;
+		}
+		if (g_bytes_get_size(blob_raw) != uncompressed_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid decompression, got 0x%x bytes but expected 0x%x",
+				    (guint)g_bytes_get_size(blob_raw),
+				    (guint)uncompressed_size);
 			return FALSE;
 		}
 		fu_firmware_set_bytes(zip_file, blob_raw);
@@ -175,6 +212,15 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "multiple disk archives not supported");
+		return FALSE;
+	}
+
+	/* archives over 4GB do not make sense here */
+	if (fu_struct_zip_eocd_get_cd_size(st_eocd) == 0xFFFFFFFF) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "zip64 not supported");
 		return FALSE;
 	}
 
