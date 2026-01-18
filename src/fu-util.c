@@ -1807,8 +1807,8 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autofree gchar *data = NULL;
 		g_autofree gchar *filename = NULL;
-		g_autoptr(FuFirmware) archive = fu_archive_firmware_new();
-		g_autoptr(FuFirmware) payload_img = NULL;
+		g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
+		g_autoptr(FuFirmware) payload_img = fu_zip_file_new();
 		g_autoptr(GBytes) payload_blob = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GPtrArray) devices_tmp = g_ptr_array_new();
@@ -1823,8 +1823,9 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		if (data == NULL)
 			return FALSE;
 		payload_blob = g_bytes_new(data, strlen(data));
-		payload_img = fu_firmware_new_from_bytes(payload_blob);
 		fu_firmware_set_id(payload_img, "report.json");
+		fu_firmware_set_bytes(payload_img, payload_blob);
+		fu_zip_file_set_compression(FU_ZIP_FILE(payload_img), FU_ZIP_COMPRESSION_DEFLATE);
 		if (!fu_firmware_add_image(archive, payload_img, error))
 			return FALSE;
 
@@ -1849,9 +1850,6 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		}
 
 		/* save to local file */
-		fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(archive), FU_ARCHIVE_FORMAT_ZIP);
-		fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(archive),
-						    FU_ARCHIVE_COMPRESSION_GZIP);
 		filename = g_strdup_printf("%s.fwupdreport", fwupd_device_get_id(dev));
 		file = g_file_new_for_path(filename);
 		if (!fu_firmware_write_file(archive, file, error))
