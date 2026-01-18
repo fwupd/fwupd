@@ -199,7 +199,7 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 	const gchar *filename = NULL;
 	const gchar *csum;
 	g_autofree gchar *csum_actual = NULL;
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) data_part = NULL;
 	g_autoptr(GBytes) data_xml = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -211,12 +211,15 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive,
+				      stream,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
+				      error))
 		return FALSE;
 
 	/* load the manifest of operations */
-	data_xml = fu_archive_lookup_by_fn(archive, "flashfile.xml", error);
+	data_xml = fu_firmware_get_image_by_id_bytes(archive, "flashfile.xml", error);
 	if (data_xml == NULL)
 		return FALSE;
 	if (!xb_builder_source_load_bytes(source, data_xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
@@ -231,7 +234,7 @@ fu_mm_qdu_mbim_device_write_firmware(FuDevice *device,
 		return FALSE;
 	filename = xb_node_get_attr(part, "filename");
 	csum = xb_node_get_attr(part, "MD5");
-	data_part = fu_archive_lookup_by_fn(archive, filename, error);
+	data_part = fu_firmware_get_image_by_id_bytes(archive, filename, error);
 	if (data_part == NULL)
 		return FALSE;
 	csum_actual = g_compute_checksum_for_bytes(G_CHECKSUM_MD5, data_part);
