@@ -5690,6 +5690,16 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 #endif
+	    {
+		"zip.builder.xml",
+		"aefdd7b205927e383981b03ded1ad22878d03263",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"zip-compressed.builder.xml",
+		"10792ff01b036ed89d11a6480694ccfd89c4d9fd",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		gboolean ret;
