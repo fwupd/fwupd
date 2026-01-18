@@ -12,7 +12,7 @@
 import os
 import sys
 import argparse
-import tarfile
+import zipfile
 import math
 import io
 import struct
@@ -88,7 +88,9 @@ def _cairo_surface_write_to_bmp(img: cairo.ImageSurface) -> bytes:
 
 def main(args) -> int:
     # open output archive
-    with tarfile.open(args.out, "w:xz", preset=8) as tar:
+    with zipfile.ZipFile(
+        args.out, mode="w", compression=zipfile.ZIP_DEFLATED, allowZip64=False
+    ) as myzip:
         for lang in languages(args.podir):
             # these are the 1.6:1 of some common(ish) screen widths
             if lang == "en":
@@ -204,12 +206,8 @@ def main(args) -> int:
 
                 # convert to BMP and add to archive
                 with io.BytesIO() as io_bmp:
-                    io_bmp.write(_cairo_surface_write_to_bmp(img))
                     filename = f"fwupd-{lang}-{width}-{height}.bmp"
-                    tarinfo = tarfile.TarInfo(filename)
-                    tarinfo.size = io_bmp.tell()
-                    io_bmp.seek(0)
-                    tar.addfile(tarinfo, fileobj=io_bmp)
+                    myzip.writestr(filename, data=_cairo_surface_write_to_bmp(img))
 
     # success
     return 0
