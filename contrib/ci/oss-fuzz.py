@@ -435,6 +435,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
         Fuzzer("ifd-bios", pattern="ifd-bios"),
+        Fuzzer("zip"),
     ]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
