@@ -85,7 +85,7 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 			       GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
-	g_autoptr(FuFirmware) firmware_archive = fu_archive_firmware_new();
+	g_autoptr(FuFirmware) firmware_archive = fu_zip_firmware_new();
 	g_autoptr(FuFirmware) fw_offer = NULL;
 	g_autoptr(FuFirmware) fw_payload = NULL;
 	g_autoptr(FuFirmware) offer = fu_cfu_offer_new();
@@ -101,9 +101,7 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* offer */
-	fw_offer = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
-							 "*.offer.bin",
-							 error);
+	fw_offer = fu_firmware_get_image_by_id(firmware_archive, "*.offer.bin", error);
 	if (fw_offer == NULL)
 		return NULL;
 	blob_offer = fu_firmware_get_bytes(fw_offer, NULL);
@@ -116,9 +114,7 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* payload */
-	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
-							   "*.payload.bin",
-							   error);
+	fw_payload = fu_firmware_get_image_by_id(firmware_archive, "*.payload.bin", error);
 	if (fw_payload == NULL)
 		return NULL;
 	blob_payload = fu_firmware_get_bytes(fw_payload, NULL);
@@ -175,7 +171,7 @@ fu_cfu_module_init(FuCfuModule *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.cfu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_SURFACE);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_CFU_DEVICE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
