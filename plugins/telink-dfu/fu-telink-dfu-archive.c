@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
-				FuArchive *archive,
+				FuFirmware *archive,
 				FwupdJsonObject *json_obj,
 				guint i,
 				FuFirmwareParseFlags flags,
@@ -47,7 +47,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	filename = fwupd_json_object_get_string(json_obj, "file", error);
 	if (filename == NULL)
 		return FALSE;
-	blob = fu_archive_lookup_by_fn(archive, filename, error);
+	blob = fu_firmware_get_image_by_id_bytes(archive, filename, error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -117,7 +117,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	gint64 manifest_ver = 0;
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
@@ -127,12 +127,15 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive,
+				      stream,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
+				      error))
 		return FALSE;
 
 	/* parse manifest.json */
-	manifest = fu_archive_lookup_by_fn(archive, "manifest.json", error);
+	manifest = fu_firmware_get_image_by_id_bytes(archive, "manifest.json", error);
 	if (manifest == NULL)
 		return FALSE;
 	json_node = fwupd_json_parser_load_from_bytes(json_parser,
