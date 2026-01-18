@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include "fu-archive.h"
 #include "fu-backend-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
@@ -226,7 +225,7 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 
 static gboolean
 fu_engine_emulator_load_phases(FuEngineEmulator *self,
-			       FuArchive *archive,
+			       FuFirmware *archive,
 			       guint composite_cnt,
 			       guint write_cnt,
 			       gboolean *got_json,
@@ -240,7 +239,7 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 
 		/* not found */
 		fn = fu_engine_emulator_phase_to_filename(composite_cnt, phase, write_cnt);
-		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
+		blob = fu_firmware_get_image_by_id_bytes(archive, fn, NULL);
 		if (blob == NULL || g_bytes_get_size(blob) == 0)
 			continue;
 		*got_json = TRUE;
@@ -267,7 +266,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 {
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) json_blob = g_bytes_new_static(json_empty, strlen(json_empty));
 	g_autoptr(GError) error_archive = NULL;
 
@@ -281,8 +280,11 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 	g_hash_table_remove_all(self->phase_blobs);
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_NONE, &error_archive);
-	if (archive == NULL) {
+	if (!fu_firmware_parse_stream(archive,
+				      stream,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error_archive)) {
 		g_autoptr(GBytes) blob = NULL;
 		g_debug("no archive found, using JSON as phase setup: %s", error_archive->message);
 		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
