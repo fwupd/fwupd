@@ -336,7 +336,7 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 					FuFirmwareParseFlags flags,
 					GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
+	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
 	g_autoptr(FuFirmware) fw_cbin = NULL;
 	g_autoptr(FuFirmware) fw_new = fu_firmware_new();
 	g_autoptr(FuFirmware) fw_wdfl = NULL;
@@ -345,17 +345,13 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	/* unzip and get images */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
-	fw_wsig = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							"*.wdfl.sig",
-							error);
+	fw_wsig = fu_firmware_get_image_by_id(firmware, "*.wdfl.sig", error);
 	if (fw_wsig == NULL)
 		return NULL;
-	fw_wdfl =
-	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.wdfl", error);
+	fw_wdfl = fu_firmware_get_image_by_id(firmware, "*.wdfl", error);
 	if (fw_wdfl == NULL)
 		return NULL;
-	fw_cbin =
-	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.bin", error);
+	fw_cbin = fu_firmware_get_image_by_id(firmware, "*.bin", error);
 	if (fw_cbin == NULL)
 		return NULL;
 
@@ -380,7 +376,7 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* success */
-	fu_firmware_add_image_gtype(fw_new, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(fw_new, FU_TYPE_ZIP_FILE);
 	fu_firmware_set_id(fw_wsig, FU_FIRMWARE_ID_SIGNATURE);
 	if (!fu_firmware_add_image(fw_new, fw_wsig, error))
 		return NULL;
