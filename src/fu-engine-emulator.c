@@ -47,9 +47,8 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gboolean got_json = FALSE;
 	gpointer key;
 	gpointer value;
-	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_FIRMWARE_PARSE_FLAG_NONE, NULL);
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
 	g_return_val_if_fail(G_IS_OUTPUT_STREAM(stream), FALSE);
@@ -58,7 +57,12 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	/* sanity check */
 	g_hash_table_iter_init(&iter, self->phase_blobs);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		fu_archive_add_entry(archive, (const gchar *)key, (GBytes *)value);
+		g_autoptr(FuFirmware) img = fu_zip_file_new();
+		fu_zip_file_set_compression(FU_ZIP_FILE(img), FU_ZIP_COMPRESSION_DEFLATE);
+		fu_firmware_set_id(img, (const gchar *)key);
+		fu_firmware_set_bytes(img, (GBytes *)value);
+		if (!fu_firmware_add_image(archive, img, error))
+			return FALSE;
 		got_json = TRUE;
 	}
 	if (!got_json) {
@@ -70,10 +74,9 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	}
 
 	/* write  */
-	buf = fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
-	if (buf == NULL)
+	blob = fu_firmware_write(archive, error);
+	if (blob == NULL)
 		return FALSE;
-	blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 	if (!fu_output_stream_write_bytes(stream, blob, NULL, error))
 		return FALSE;
 	if (!g_output_stream_flush(stream, NULL, error)) {
