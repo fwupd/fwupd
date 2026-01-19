@@ -3,9 +3,11 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('hughski-colorhug.quirk')
 plugin_builtins += static_library('fu_plugin_hughski_colorhug',
-  rustgen.process('fu-hughski-colorhug.rs'),
+  rustgen.process(
+    'fu-hughski-colorhug.rs', # fuzzing
+  ),
   sources: [
-    'fu-hughski-colorhug-device.c',
+    'fu-hughski-colorhug-device.c', # fuzzing
     'fu-hughski-colorhug-plugin.c',
   ],
   include_directories: plugin_incdirs,

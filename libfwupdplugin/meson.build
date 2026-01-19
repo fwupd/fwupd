@@ -200,16 +200,16 @@ fwupdplugin_src = [
   'fu-tpm-eventlog-v2.c', # fuzzing
   'fu-udev-device.c', # fuzzing
   'fu-uefi-device.c',
-  'fu-usb-bos-descriptor.c',
-  'fu-usb-config-descriptor.c',
-  'fu-usb-descriptor.c',
-  'fu-usb-device.c',
-  'fu-usb-device-ds20.c',
-  'fu-usb-device-fw-ds20.c',
-  'fu-usb-device-ms-ds20.c',
-  'fu-usb-endpoint.c',
-  'fu-usb-hid-descriptor.c',
-  'fu-usb-interface.c',
+  'fu-usb-bos-descriptor.c', # fuzzing
+  'fu-usb-config-descriptor.c', # fuzzing
+  'fu-usb-descriptor.c', # fuzzing
+  'fu-usb-device.c', # fuzzing
+  'fu-usb-device-ds20.c', # fuzzing
+  'fu-usb-device-fw-ds20.c', # fuzzing
+  'fu-usb-device-ms-ds20.c', # fuzzing
+  'fu-usb-endpoint.c', # fuzzing
+  'fu-usb-hid-descriptor.c', # fuzzing
+  'fu-usb-interface.c', # fuzzing
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
   'fu-v4l-device.c',

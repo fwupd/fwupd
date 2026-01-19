@@ -7991,6 +7991,11 @@ fu_device_add_event(FuDevice *self, FuDeviceEvent *event)
 	}
 
 	fu_device_ensure_events(self);
+
+	/* fuzzing */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		g_ptr_array_set_size(priv->events, 0);
+
 	g_ptr_array_add(priv->events, g_object_ref(event));
 }
 
@@ -8056,6 +8061,10 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no events loaded");
 		return NULL;
 	}
+
+	/* fuzzing */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return g_ptr_array_index(priv->events, 0);
 
 	/* reset back to the beginning */
 	if (priv->event_idx >= priv->events->len) {
