@@ -1,0 +1,38 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/platform/soc/16700000.usb/usb2/2-1/2-1.1/2-1.1.3/2-1.1.3:1.0/0003:2808:3003.003C/hidraw/hidraw3",
+      "DeviceFile": "/dev/hidraw3",
+      "Subsystem": "hidraw",
+      "Vendor": 10248,
+      "Model": 12291,
+      "Events": [
+        {
+          "Id": "#3dd640b5",
+          "DataOut": "Bv//BUBGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//Bv8E/v///////////////////////////////////////////////////////////////////////////w=="
+        },
+        {
+          "Id": "#3dd640b5",
+          "DataOut": "Bv//BUBGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//BfD2/////////////////////////////////////////////////////////////////////////////w=="
+        },
+        {
+          "Id": "#fa693535",
+          "DataOut": "Bv//BUFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//BkEBR////////////////////////////////////////////////////////////////////////////w=="
+        }
+      ]
+    }
+  ]
+}

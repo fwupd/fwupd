@@ -1,0 +1,46 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/platform/soc/16700000.usb/usb2/2-1/2-1.1/2-1.1.3/2-1.1.3:1.0/0003:2808:3003.003C/hidraw/hidraw3",
+      "DeviceFile": "/dev/hidraw3",
+      "Subsystem": "hidraw",
+      "Vendor": 10248,
+      "Model": 12291,
+      "Events": [
+        {
+          "Id": "#1f67a9ea",
+          "DataOut": "Bv//BlCfygAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//B1Cfg0z//////////////////////////////////////////////////////////////////////////w=="
+        },
+        {
+          "Id": "#d0697adb",
+          "DataOut": "Bv//BlCj9gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//B1CjPMn//////////////////////////////////////////////////////////////////////////w=="
+        },
+        {
+          "Id": "#f3936432",
+          "DataOut": "Bv//BlCm8QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//B1CmAvT//////////////////////////////////////////////////////////////////////////w=="
+        },
+        {
+          "Id": "#f824fa35",
+          "DataOut": "Bv//BlCt/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "#ee5d7df3",
+          "DataOut": "Bv//B1CtAvn//////////////////////////////////////////////////////////////////////////w=="
+        }
+      ]
+    }
+  ]
+}
