@@ -158,7 +158,7 @@ struct FuUsbEndpointHdr {
     interval: u8,
 }
 
-#[derive(New, ParseStream, Default)]
+#[derive(New, Parse, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuUsbBosHdr {
     length: u8 = $struct_size,
