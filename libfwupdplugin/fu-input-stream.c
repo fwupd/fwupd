@@ -615,6 +615,9 @@ fu_input_stream_compute_crc32(GInputStream *stream, FuCrcKind kind, guint32 *crc
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (kind == FU_CRC_KIND_B32_STANDARD)
+		helper.crc = 0;
 	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc32_cb, &helper, error))
 		return FALSE;
 	*crc = fu_crc32_done(kind, helper.crc);

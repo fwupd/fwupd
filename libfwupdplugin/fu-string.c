@@ -728,8 +728,8 @@ fu_strpassmask(const gchar *str)
 		gboolean is_password = FALSE;
 		gboolean is_url = FALSE;
 		for (guint i = 0; i < tmp->len; i++) {
-			const gchar *url_prefixes[] = {"http://", "https://", NULL};
-			for (guint j = 0; url_prefixes[j] != NULL; j++) {
+			const gchar *url_prefixes[] = {"http://", "https://"};
+			for (guint j = 0; j < G_N_ELEMENTS(url_prefixes); j++) {
 				if (g_str_has_prefix(tmp->str + i, url_prefixes[j])) {
 					is_url = TRUE;
 					i += strlen(url_prefixes[j]);

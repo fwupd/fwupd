@@ -20,10 +20,11 @@ fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error)
 	struct {
 		const gchar *hwid;
 		const gchar *key;
-	} map[] = {{FU_HWIDS_KEY_BIOS_VERSION, "System Firmware Version"},
-		   {FU_HWIDS_KEY_FAMILY, "Model Name"},
-		   {FU_HWIDS_KEY_PRODUCT_NAME, "Model Identifier"},
-		   {NULL}};
+	} map[] = {
+	    {FU_HWIDS_KEY_BIOS_VERSION, "System Firmware Version"},
+	    {FU_HWIDS_KEY_FAMILY, "Model Name"},
+	    {FU_HWIDS_KEY_PRODUCT_NAME, "Model Identifier"},
+	};
 	const gchar *family = NULL;
 	g_autofree gchar *standard_output = NULL;
 	g_auto(GStrv) lines = NULL;
@@ -37,7 +38,7 @@ fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error)
 		return FALSE;
 	lines = g_strsplit(standard_output, "\n", -1);
 	for (guint j = 0; lines[j] != NULL; j++) {
-		for (guint i = 0; map[i].key != NULL; i++) {
+		for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 			g_auto(GStrv) chunks = g_strsplit(lines[j], ":", 2);
 			if (g_strv_length(chunks) != 2)
 				continue;

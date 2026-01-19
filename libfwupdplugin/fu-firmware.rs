@@ -17,6 +17,7 @@ enum FuFirmwareParseFlags {
     CacheBlob = 1 << 11,
     OnlyTrustPqSignatures = 1 << 12,
     OnlyPartitionLayout = 1 << 13,
+    OnlyBasename = 1 << 14,
 }
 
 enum FuFirmwareBuilderFlags {

@@ -24,7 +24,6 @@
 
 typedef struct {
 	gboolean compressed;
-	gboolean only_basename;
 } FuCabFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
@@ -68,41 +67,6 @@ fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed)
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CAB_FIRMWARE(self));
 	priv->compressed = compressed;
-}
-
-/**
- * fu_cab_firmware_get_only_basename:
- * @self: a #FuCabFirmware
- *
- * Gets if the cabinet archive filenames should have the path component removed.
- *
- * Returns: boolean
- *
- * Since: 1.9.7
- **/
-gboolean
-fu_cab_firmware_get_only_basename(FuCabFirmware *self)
-{
-	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_CAB_FIRMWARE(self), FALSE);
-	return priv->only_basename;
-}
-
-/**
- * fu_cab_firmware_set_only_basename:
- * @self: a #FuCabFirmware
- * @only_basename: boolean
- *
- * Sets if the cabinet archive filenames should have the path component removed.
- *
- * Since: 1.9.7
- **/
-void
-fu_cab_firmware_set_only_basename(FuCabFirmware *self, gboolean only_basename)
-{
-	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_CAB_FIRMWARE(self));
-	priv->only_basename = only_basename;
 }
 
 typedef struct {
@@ -331,7 +295,30 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 					    zError(zret));
 				return FALSE;
 			}
+
+			/* prevent decompression bombs */
+			if (size_max > 0 && buf->len > size_max) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "decompressed data too large (0x%x, limit 0x%x)",
+					    (guint)buf->len,
+					    (guint)size_max);
+				return FALSE;
+			}
 		}
+
+		/* verify actual decompressed size matches declared size */
+		if (buf->len != blob_uncomp) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "decompressed size mismatch (0x%x, specified 0x%x)",
+				    (guint)buf->len,
+				    (guint)blob_uncomp);
+			return FALSE;
+		}
+
 		zret = inflateReset(&helper->zstrm);
 		if (zret != Z_OK) {
 			g_set_error(error,
@@ -424,9 +411,9 @@ static gboolean
 fu_cab_firmware_parse_file(FuCabFirmware *self,
 			   FuCabFirmwareParseHelper *helper,
 			   gsize *offset,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
-	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
 	GInputStream *folder_data;
 	guint16 date;
 	guint16 index;
@@ -480,7 +467,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	}
 
 	/* add image */
-	if (priv->only_basename) {
+	if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME) {
 		g_autofree gchar *id = g_path_get_basename(filename->str);
 		fu_firmware_set_id(FU_FIRMWARE(img), id);
 	} else {
@@ -664,7 +651,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 
 	/* parse CFFILEs */
 	for (guint i = 0; i < fu_struct_cab_header_get_nr_files(st); i++) {
-		if (!fu_cab_firmware_parse_file(self, helper, &off_cffile, error))
+		if (!fu_cab_firmware_parse_file(self, helper, &off_cffile, flags, error))
 			return FALSE;
 	}
 
@@ -888,11 +875,6 @@ fu_cab_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		if (!fu_strtobool(tmp, &priv->compressed, error))
 			return FALSE;
 	}
-	tmp = xb_node_query_text(n, "only_basename", NULL);
-	if (tmp != NULL) {
-		if (!fu_strtobool(tmp, &priv->only_basename, error))
-			return FALSE;
-	}
 
 	/* success */
 	return TRUE;
@@ -904,7 +886,6 @@ fu_cab_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
 	fu_xmlb_builder_insert_kb(bn, "compressed", priv->compressed);
-	fu_xmlb_builder_insert_kb(bn, "only_basename", priv->only_basename);
 }
 
 static void

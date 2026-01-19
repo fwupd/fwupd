@@ -247,14 +247,13 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 	    "vt.handoff",
 	    "zfs",
 	    "zswap.enabled",
-	    NULL, /* last entry */
 	};
 
 	/* get a PII-safe kernel command line */
 	hash = fu_kernel_get_cmdline(error);
 	if (hash == NULL)
 		return NULL;
-	for (guint i = 0; ignore[i] != NULL; i++)
+	for (guint i = 0; i < G_N_ELEMENTS(ignore); i++)
 		g_hash_table_remove(hash, ignore[i]);
 	g_hash_table_iter_init(&iter, hash);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {

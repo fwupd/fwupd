@@ -7753,12 +7753,13 @@ fu_config_migrate_1_7_func(void)
 {
 	const gchar *sysconfdir = "/tmp/fwupd-self-test/conf-migration-1.7/var/etc";
 	gboolean ret;
-	const gchar *fn_merge[] = {"daemon.conf",
-				   "msr.conf",
-				   "redfish.conf",
-				   "thunderbolt.conf",
-				   "uefi_capsule.conf",
-				   NULL};
+	const gchar *fn_merge[] = {
+	    "daemon.conf",
+	    "msr.conf",
+	    "redfish.conf",
+	    "thunderbolt.conf",
+	    "uefi_capsule.conf",
+	};
 	g_autofree gchar *localconf_data = NULL;
 	g_autofree gchar *fn_mut = NULL;
 	g_autofree gchar *testdatadir = NULL;
@@ -7786,7 +7787,7 @@ fu_config_migrate_1_7_func(void)
 	g_assert_true(ret);
 
 	/* copy all files to working directory */
-	for (guint i = 0; fn_merge[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
 		g_autofree gchar *source =
 		    g_build_filename(testdatadir, "fwupd", fn_merge[i], NULL);
 		g_autofree gchar *target = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
@@ -7800,7 +7801,7 @@ fu_config_migrate_1_7_func(void)
 	g_assert_true(ret);
 
 	/* make sure all migrated files were renamed */
-	for (guint i = 0; fn_merge[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
 		g_autofree gchar *old = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
 		g_autofree gchar *new = g_strdup_printf("%s.old", old);
 		ret = g_file_test(old, G_FILE_TEST_EXISTS);

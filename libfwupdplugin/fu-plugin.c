@@ -800,7 +800,11 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA1, G_CHECKSUM_SHA256, 0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA1,
+	    G_CHECKSUM_SHA256,
+	};
+
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
@@ -822,7 +826,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 		g_prefix_error_literal(error, "failed to write firmware: ");
 		return FALSE;
 	}
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *hash = NULL;
 		hash = g_compute_checksum_for_bytes(checksum_types[i], fw);
 		fu_device_add_checksum(device, hash);
