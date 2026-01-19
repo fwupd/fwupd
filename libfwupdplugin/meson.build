@@ -138,6 +138,7 @@ fwupdplugin_src = [
   'fu-firmware-common.c', # fuzzing
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
+  'fu-fuzzer.c', # fuzzing
   'fu-hid-descriptor.c', # fuzzing
   'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
