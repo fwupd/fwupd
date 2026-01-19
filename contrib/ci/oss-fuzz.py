@@ -126,10 +126,29 @@ class Builder:
             )
             subprocess.run(["make", "all", "install"], cwd=srcdir_build, check=True)
 
-    def build_automake_project(self, srcdir: str, argv=None) -> None:
+    def build_automake_project(self, srcdir: str, argv=None, outoftree=True) -> None:
         """configure and build the autoconf/automake project"""
         if not argv:
             argv = []
+        if not outoftree:
+            if os.path.exists(os.path.join(srcdir, "Makefile")):
+                return
+            subprocess.run(
+                ["./autogen.sh"],
+                cwd=srcdir,
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "./configure",
+                    f"--prefix={self.builddir}",
+                ]
+                + argv,
+                cwd=srcdir,
+                check=True,
+            )
+            subprocess.run(["make", "install"], cwd=srcdir, check=True)
+            return
         srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
         if not os.path.exists(srcdir_build):
             os.makedirs(srcdir_build, exist_ok=True)
@@ -212,6 +231,25 @@ class Builder:
             print(e)
             sys.exit(1)
         return fulldst_c
+
+    def protoc(self, src: str) -> str:
+        try:
+            argv = [
+                "protoc",
+                f"--proto_path={os.path.dirname(src)}",
+                "--c_out",
+                self.builddir,
+                src,
+            ]
+            subprocess.run(
+                argv,
+                cwd=self.srcdir,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
+        return os.path.basename(src).replace(".proto", ".pb-c.c")
 
     def link(self, objs: List[str], dst: str) -> str:
         """link multiple objects into a binary"""
@@ -349,6 +387,18 @@ def _build(bld: Builder) -> None:
     bld.build_automake_project(src, argv=["--disable-udev", "--disable-log"])
     bld.add_build_ldflag("lib/libusb-1.0.a")
     bld.add_work_includedir("include/libusb-1.0")
+
+    # protobuf
+    src = bld.checkout_source(
+        "protobuf-c",
+        url="https://github.com/protobuf-c/protobuf-c.git",
+        commit="v1.5.2",
+    )
+    bld.build_automake_project(
+        src, outoftree=False, argv=["--disable-udev", "--disable-log"]
+    )
+    bld.add_build_ldflag("lib/libprotobuf-c.a")
+    bld.add_work_includedir("include/protobuf-c")
 
     # GLib
     src = bld.checkout_source(
@@ -502,6 +552,7 @@ def _build(bld: Builder) -> None:
 
     # plugins
     for fzr in [
+        Fuzzer("logitech-bulkcontroller", pattern="logitech-bulkcontroller-device"),
         Fuzzer("hughski-colorhug", pattern="hughski-colorhug-device"),
         Fuzzer("acpi-phat", pattern="acpi-phat"),
         Fuzzer("bcm57xx"),
@@ -537,6 +588,8 @@ def _build(bld: Builder) -> None:
                 fuzz_objs.append(
                     bld.compile(bld.rustgen(obj, includes=["fwupdplugin.h"]))
                 )
+            elif obj.endswith(".proto"):
+                fuzz_objs.append(bld.compile(bld.protoc(obj)))
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {

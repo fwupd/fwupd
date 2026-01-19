@@ -42,7 +42,15 @@ struct _FuLogitechBulkcontrollerDevice {
 	guint32 sequence_id;
 };
 
-G_DEFINE_TYPE(FuLogitechBulkcontrollerDevice, fu_logitech_bulkcontroller_device, FU_TYPE_USB_DEVICE)
+static void
+fu_logitech_bulkcontroller_device_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuLogitechBulkcontrollerDevice,
+		       fu_logitech_bulkcontroller_device,
+		       FU_TYPE_USB_DEVICE,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER,
+					     fu_logitech_bulkcontroller_device_fuzzer_iface_init));
 
 static void
 fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -241,6 +249,11 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 		return NULL;
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
+#if 1
+	g_byte_array_append(response->data,
+			    buf + st->buf->len,
+			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
+#else
 	if (!fu_byte_array_append_safe(
 		response->data,
 		buf,
@@ -249,6 +262,8 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 		fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st),
 		error))
 		return NULL;
+#endif
+
 	/* no payload for UninitBuffer, skip check */
 	if ((response->cmd != FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER) &&
 	    (response->data->len == 0)) {
@@ -1469,6 +1484,45 @@ fu_logitech_bulkcontroller_device_set_progress(FuDevice *device, FuProgress *pro
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
+}
+
+static gboolean
+fu_logitech_bulkcontroller_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(fuzzer);
+	g_autoptr(FuDeviceEvent) device_event = fu_device_event_new(NULL);
+	g_autoptr(FuLogitechBulkcontrollerResponse) st = NULL;
+
+	/* fuzzing USB */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
+	fu_device_event_set_bytes(device_event, "Data", blob);
+	fu_device_add_event(FU_DEVICE(self), device_event);
+	st = fu_logitech_bulkcontroller_device_sync_wait_any(self, BULK_TRANSFER_TIMEOUT, error);
+	if (st == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static GBytes *
+fu_logitech_bulkcontroller_device_fuzzer_build_example(FuFuzzer *fuzzer,
+						       GBytes *blob,
+						       GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(fuzzer);
+	g_autoptr(FuStructLogitechBulkcontrollerSendSyncRes) st =
+	    fu_struct_logitech_bulkcontroller_send_sync_res_new();
+	fu_byte_array_set_size(st->buf, self->transfer_bufsz, 0x0);
+	return g_bytes_new(st->buf->data, st->buf->len);
+}
+
+static void
+fu_logitech_bulkcontroller_device_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_logitech_bulkcontroller_device_fuzzer_test_input;
+	iface->build_example = fu_logitech_bulkcontroller_device_fuzzer_build_example;
 }
 
 static void

@@ -60,7 +60,7 @@ struct FuStructLogitechBulkcontrollerSendSyncReq {
     sequence_id: u32le,
 }
 
-#[derive(Parse)]
+#[derive(Parse, New)]
 #[repr(C, packed)]
 struct FuStructLogitechBulkcontrollerSendSyncRes {
     cmd: FuLogitechBulkcontrollerCmd,
