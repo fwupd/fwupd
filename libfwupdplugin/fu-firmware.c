@@ -13,6 +13,7 @@
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
@@ -52,7 +53,16 @@ typedef struct {
 	GPtrArray *magic;   /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
+static void
+fu_firmware_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuFirmware,
+		       fu_firmware,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FuFirmware)
+			   G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_firmware_fuzzer_iface_init));
+
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
 
 enum { PROP_0, PROP_PARENT, PROP_LAST };
@@ -2907,4 +2917,73 @@ fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
 		return FALSE;
 	}
 	return fu_firmware_roundtrip_from_xml(xml, checksum_expected, flags, error);
+}
+
+static gboolean
+fu_firmware_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuFirmware *self = FU_FIRMWARE(fuzzer);
+	g_autoptr(GBytes) fw = NULL;
+
+	if (!fu_firmware_parse_bytes(self,
+				     blob,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+					 FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID |
+					 FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				     error))
+		return FALSE;
+	fw = fu_firmware_write(self, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static GBytes *
+fu_firmware_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuFirmware *self = FU_FIRMWARE(fuzzer);
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* sanity check */
+	if (blob == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "builder XML required");
+		return NULL;
+	}
+
+	/* parse XML */
+	if (!xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		g_prefix_error_literal(error, "could not parse XML: ");
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+	if (silo == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	n = xb_silo_query_first(silo, "firmware", error);
+	if (n == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	if (!fu_firmware_build(self, n, error))
+		return NULL;
+	return fu_firmware_write(self, error);
+}
+
+static void
+fu_firmware_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_firmware_fuzzer_test_input;
+	iface->build_example = fu_firmware_fuzzer_build_example;
 }
