@@ -1021,9 +1021,17 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 #endif
 		for (guint i = 0; i < num_device_caps; i++) {
 			FuUsbBosDescriptor *bos_descriptor = NULL;
-			struct libusb_bos_dev_capability_descriptor *bos_cap =
-			    bos->dev_capability[i];
-			bos_descriptor = fu_usb_bos_descriptor_new(bos_cap);
+			g_autoptr(FuUsbBosHdr) st_hdr = NULL;
+
+			/* i hate this: libusb doesn't give us the size of the buffer... */
+			st_hdr = fu_usb_bos_hdr_parse(
+			    (const guint8 *)bos->dev_capability[i],
+			    sizeof(struct libusb_bos_dev_capability_descriptor),
+			    0x0,
+			    error);
+			if (st_hdr == NULL)
+				return FALSE;
+			bos_descriptor = fu_usb_bos_descriptor_new(st_hdr);
 			if (bos_descriptor == NULL)
 				continue;
 			g_ptr_array_add(priv->bos_descriptors, bos_descriptor);
