@@ -51,7 +51,7 @@ plugins = {
   'ep963x': false,
   'fastboot': false,
   'flashrom': false,
-  'focalfp': false,
+  'focal-fp': false,
   'fpc': false,
   'framework-qmk': false,
   'fresco-pd': false,
