@@ -1,4 +1,4 @@
 [HIDRAW\VEN_2808&DEV_0106]
-Plugin = focalfp
-GType = FuFocalfpHidDevice
+Plugin = focal_fp
+GType = FuFocalFpHidDevice
 Flags = enforce-requires

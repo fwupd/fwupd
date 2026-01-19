@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuFocalfpPlugin, fu_focalfp_plugin, FU, FOCALFP_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuFocalFpPlugin, fu_focal_fp_plugin, FU, FOCAL_FP_PLUGIN, FuPlugin)

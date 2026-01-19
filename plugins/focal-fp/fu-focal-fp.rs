@@ -1,7 +1,7 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-enum FuFocalfpCmd {
+enum FuFocalFpCmd {
     EnterUpgradeMode = 0x40,
     CheckCurrentState = 0x41,
     ReadyForUpgrade = 0x42,

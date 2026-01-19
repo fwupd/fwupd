@@ -8,9 +8,9 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_FOCALFP_HID_DEVICE (fu_focalfp_hid_device_get_type())
-G_DECLARE_FINAL_TYPE(FuFocalfpHidDevice,
-		     fu_focalfp_hid_device,
+#define FU_TYPE_FOCAL_FP_HID_DEVICE (fu_focal_fp_hid_device_get_type())
+G_DECLARE_FINAL_TYPE(FuFocalFpHidDevice,
+		     fu_focal_fp_hid_device,
 		     FU,
-		     FOCALFP_HID_DEVICE,
+		     FOCAL_FP_HID_DEVICE,
 		     FuHidrawDevice)
