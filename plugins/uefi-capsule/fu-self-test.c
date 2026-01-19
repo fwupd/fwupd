@@ -986,6 +986,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_EFIAPPDIR", testdatadir_mut, TRUE);
 	(void)g_setenv("FWUPD_ACPITABLESDIR", testdatadir_mut, TRUE);
 	(void)g_setenv("FWUPD_DATADIR", g_test_get_dir(G_TEST_BUILT), TRUE);
+	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	(void)g_setenv("LANGUAGE", "en", TRUE);
 	(void)g_setenv("PATH", testdatadir, TRUE);
