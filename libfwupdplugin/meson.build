@@ -3,7 +3,6 @@ fwupdplugin_structs = [
   'fu-progress.rs', # fuzzing
   'fu-common.rs', # fuzzing
   'fu-acpi-table.rs', # fuzzing
-  'fu-archive.rs', # fuzzing
   'fu-cab.rs', # fuzzing
   'fu-cfi.rs', # fuzzing
   'fu-cfu.rs', # fuzzing
@@ -76,7 +75,6 @@ endforeach
 
 fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
-  'fu-archive.c',
   'fu-backend.c', # fuzzing
   'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
@@ -244,7 +242,6 @@ endif
 
 fwupdplugin_headers = [
   'fu-acpi-table.h',
-  'fu-archive.h',
   'fu-backend.h',
   'fu-bios-settings.h',
   'fu-bios-settings-private.h',
@@ -509,7 +506,6 @@ if get_option('tests')
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   foreach test_name: [
-    'archive',
     'backend',
     'bios-settings',
     'byte-array',
