@@ -9,4 +9,8 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_TELINK_DFU_ARCHIVE (fu_telink_dfu_archive_get_type())
-G_DECLARE_FINAL_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU, TELINK_DFU_ARCHIVE, FuFirmware)
+G_DECLARE_FINAL_TYPE(FuTelinkDfuArchive,
+		     fu_telink_dfu_archive,
+		     FU,
+		     TELINK_DFU_ARCHIVE,
+		     FuZipFirmware)
