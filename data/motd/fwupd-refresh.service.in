@@ -6,6 +6,7 @@ After=network-online.target
 
 [Service]
 Type=oneshot
+TimeoutStartSec=300
 CacheDirectory=fwupdmgr
 StandardError=null
 @user@
