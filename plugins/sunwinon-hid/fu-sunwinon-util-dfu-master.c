@@ -318,11 +318,15 @@ fu_sunwinon_util_dfu_master_recv_frame(FuSwDfuMaster *self,
 	st_in = fu_struct_sunwinon_hid_in_new();
 	memset(st_in->buf->data, 0, st_in->buf->len);
 	/* may not get a full length report here */
-	(void)fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self->device),
-					  st_in->buf->data,
-					  st_in->buf->len,
-					  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-					  NULL);
+	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self->device),
+					 st_in->buf->data,
+					 st_in->buf->len,
+					 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					 error)) {
+		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_READ))
+			return FALSE;
+		g_clear_error(error);
+	}
 
 	fu_dump_raw(G_LOG_DOMAIN, "raw input report", st_in->buf->data, st_in->buf->len);
 
