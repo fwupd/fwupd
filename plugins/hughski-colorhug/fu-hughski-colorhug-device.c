@@ -18,7 +18,15 @@ struct _FuHughskiColorhugDevice {
 	guint16 start_addr;
 };
 
-G_DEFINE_TYPE(FuHughskiColorhugDevice, fu_hughski_colorhug_device, FU_TYPE_USB_DEVICE)
+static void
+fu_hughski_colorhug_device_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuHughskiColorhugDevice,
+		       fu_hughski_colorhug_device,
+		       FU_TYPE_USB_DEVICE,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER,
+					     fu_hughski_colorhug_device_fuzzer_iface_init));
 
 #define CH_USB_HID_EP		   0x0001
 #define CH_USB_HID_EP_IN	   (CH_USB_HID_EP | 0x80)
@@ -209,6 +217,48 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_hughski_colorhug_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(fuzzer);
+	g_autoptr(FuDeviceEvent) device_event = fu_device_event_new(NULL);
+
+	/* fuzzing USB */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
+	fu_device_event_set_bytes(device_event, "Data", blob);
+	fu_device_add_event(FU_DEVICE(self), device_event);
+	if (!fu_hughski_colorhug_device_recv(self,
+					     FU_HUGHSKI_COLORHUG_CMD_BOOT_FLASH,
+					     NULL,
+					     0,
+					     error))
+		return FALSE;
+	if (!fu_hughski_colorhug_device_send(self,
+					     FU_HUGHSKI_COLORHUG_CMD_BOOT_FLASH,
+					     NULL,
+					     0,
+					     error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static GBytes *
+fu_hughski_colorhug_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	guint8 buf[CH_USB_HID_EP_SIZE] = {FU_HUGHSKI_COLORHUG_CMD_RESET};
+	return g_bytes_new(buf, sizeof(buf));
+}
+
+static void
+fu_hughski_colorhug_device_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_hughski_colorhug_device_fuzzer_test_input;
+	iface->build_example = fu_hughski_colorhug_device_fuzzer_build_example;
 }
 
 static gboolean

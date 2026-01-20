@@ -232,7 +232,7 @@ class Builder:
         builder_xmls = glob.glob(globstr)
         corpus: List[str] = []
         if not builder_xmls:
-            print(f"failed to find {globstr}")
+            builder_xmls.append(globstr.replace("*", ""))
         for fn_src in builder_xmls:
             fn_dst = os.path.join(
                 self.builddir, os.path.basename(fn_src).replace(".builder.xml", ".bin")
@@ -511,6 +511,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("elantp"),
         Fuzzer("genesys-scaler", srcdir="genesys", pattern="genesys-scaler-firmware"),
         Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
+        Fuzzer("hughski-colorhug", pattern="hughski-colorhug-device"),
         Fuzzer("pixart-rf"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus"),
