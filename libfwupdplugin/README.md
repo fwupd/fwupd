@@ -212,4 +212,5 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_context_add_firmware_gtype()`: Drop the `id` parameter.
 * `fu_firmware_build_from_xml()`: Use `fu_firmware_new_from_xml()` instead.
 * `fu_firmware_build_from_filename()`: Use `fu_firmware_new_from_filename()` instead.
+* `FuArchive`: Use `FuZipFirmware` or `FuCabArchive` instead.
 * `FuArchiveFirmware`: Use `FuZipFirmware` instead.
