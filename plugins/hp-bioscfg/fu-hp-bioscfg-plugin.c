@@ -41,6 +41,9 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FuBiosSettings) bios_settings = NULL;
 
+	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+		return;
+
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_HP_SURESTART);
 	fu_security_attr_add_bios_target_value(attr, BIOS_SETTING_SURESTART, "Enable");
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
