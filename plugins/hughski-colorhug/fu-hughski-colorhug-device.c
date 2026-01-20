@@ -33,28 +33,18 @@ G_DEFINE_TYPE(FuHughskiColorhugDevice, fu_hughski_colorhug_device, FU_TYPE_USB_D
 #define CH_FLASH_TRANSFER_BLOCK_SIZE 0x020 /* 32 */
 
 static gboolean
-fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
-			       guint8 cmd,
-			       guint8 *ibuf,
-			       gsize ibufsz,
-			       guint8 *obuf,
-			       gsize obufsz,
-			       GError **error)
+fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
+				FuHughskiColorhugCmd cmd,
+				const guint8 *ibuf,
+				gsize ibufsz,
+				GError **error)
 {
-	guint8 buf[] = {[0] = cmd, [1 ... CH_USB_HID_EP_SIZE - 1] = 0x00};
 	gsize actual_length = 0;
+	guint8 buf[CH_USB_HID_EP_SIZE] = {cmd};
 	g_autoptr(GError) error_local = NULL;
 
 	/* check size */
 	if (ibufsz > sizeof(buf) - 1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "cannot process chunk of size %" G_GSIZE_FORMAT,
-			    ibufsz);
-		return FALSE;
-	}
-	if (obufsz > sizeof(buf) - 2) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -105,8 +95,32 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 		return FALSE;
 	}
 
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
+				FuHughskiColorhugCmd cmd,
+				guint8 *obuf,
+				gsize obufsz,
+				GError **error)
+{
+	gsize actual_length = 0;
+	guint8 buf[CH_USB_HID_EP_SIZE] = {0};
+	g_autoptr(GError) error_local = NULL;
+
+	/* check size */
+	if (obufsz > sizeof(buf) - 2) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "cannot process chunk of size %" G_GSIZE_FORMAT,
+			    obufsz);
+		return FALSE;
+	}
+
 	/* read reply */
-	memset(buf, 0, sizeof(buf));
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      CH_USB_HID_EP_IN,
 					      buf,
@@ -170,6 +184,30 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 				    error))
 			return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
+			       FuHughskiColorhugCmd cmd,
+			       const guint8 *ibuf,
+			       gsize ibufsz,
+			       guint8 *obuf,
+			       gsize obufsz,
+			       GError **error)
+{
+	if (!fu_hughski_colorhug_device_send(self, cmd, ibuf, ibufsz, error)) {
+		g_prefix_error_literal(error, "failed to send: ");
+		return FALSE;
+	}
+	if (!fu_hughski_colorhug_device_recv(self, cmd, obuf, obufsz, error)) {
+		g_prefix_error_literal(error, "failed to receive: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
