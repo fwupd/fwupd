@@ -52,7 +52,7 @@ struct FuStructSunwinonDfuFrameHeader {
 
 #[derive(New, Default, Setters)]
 #[repr(C, packed)]
-struct FuStructSunwinonHidOutV2 {
+struct FuStructSunwinonHidOut {
     report_id: FuSunwinonHidReport == ChannelId,
     device_id: u8 = 0x00,
     sub_id: u8 = 0x01,
@@ -63,7 +63,7 @@ struct FuStructSunwinonHidOutV2 {
 
 #[derive(New, Default, Validate, Getters)]
 #[repr(C, packed)]
-struct FuStructSunwinonHidInV2 {
+struct FuStructSunwinonHidIn {
     report_id: FuSunwinonHidReport == ChannelId,
     device_id: u8,
     sub_id: u8,

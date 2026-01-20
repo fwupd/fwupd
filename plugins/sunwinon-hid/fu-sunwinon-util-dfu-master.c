@@ -260,7 +260,7 @@ fu_sunwinon_util_dfu_master_send_frame(FuSwDfuMaster *self,
 {
 	gsize total_len = FU_STRUCT_SUNWINON_DFU_FRAME_HEADER_SIZE + len + 2; /* +2 for check_sum */
 	guint16 check_sum = 0;
-	g_autoptr(FuStructSunwinonHidOutV2) st_out = fu_struct_sunwinon_hid_out_v2_new();
+	g_autoptr(FuStructSunwinonHidOut) st_out = fu_struct_sunwinon_hid_out_new();
 	g_autoptr(FuStructSunwinonDfuFrameHeader) st_dfu_header =
 	    fu_struct_sunwinon_dfu_frame_header_new();
 
@@ -275,17 +275,17 @@ fu_sunwinon_util_dfu_master_send_frame(FuSwDfuMaster *self,
 	fu_struct_sunwinon_dfu_frame_header_set_cmd_type(st_dfu_header, cmd_type);
 	fu_struct_sunwinon_dfu_frame_header_set_data_len(st_dfu_header, len);
 
-	if (!fu_struct_sunwinon_hid_out_v2_set_dfu_header(st_out, st_dfu_header, error))
+	if (!fu_struct_sunwinon_hid_out_set_dfu_header(st_out, st_dfu_header, error))
 		return FALSE;
 
-	if (p_data != NULL && !fu_struct_sunwinon_hid_out_v2_set_data(st_out, p_data, len, error))
+	if (p_data != NULL && !fu_struct_sunwinon_hid_out_set_data(st_out, p_data, len, error))
 		return FALSE;
 
-	fu_struct_sunwinon_hid_out_v2_set_data_len(st_out, total_len);
+	fu_struct_sunwinon_hid_out_set_data_len(st_out, total_len);
 
 	/* write check_sum at the very end of the whole data package */
 	check_sum = fu_sunwinon_util_dfu_master_cal_send_check_sum(cmd_type, p_data, len);
-	fu_memwrite_uint16(st_out->buf->data + FU_STRUCT_SUNWINON_HID_OUT_V2_OFFSET_DATA + len,
+	fu_memwrite_uint16(st_out->buf->data + FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DATA + len,
 			   check_sum,
 			   G_LITTLE_ENDIAN);
 
@@ -306,7 +306,7 @@ fu_sunwinon_util_dfu_master_recv_frame(FuSwDfuMaster *self,
 {
 	gsize check_sum_offset = 0;
 	gsize buf_len = 0;
-	g_autoptr(FuStructSunwinonHidInV2) st_in = NULL;
+	g_autoptr(FuStructSunwinonHidIn) st_in = NULL;
 	g_autoptr(FuStructSunwinonDfuFrameHeader) st_dfu_header = NULL;
 
 	g_return_val_if_fail(recv_frame != NULL, FALSE);
@@ -314,7 +314,7 @@ fu_sunwinon_util_dfu_master_recv_frame(FuSwDfuMaster *self,
 
 	buf_len = recv_frame->data_len;
 
-	st_in = fu_struct_sunwinon_hid_in_v2_new();
+	st_in = fu_struct_sunwinon_hid_in_new();
 	memset(st_in->buf->data, 0, st_in->buf->len);
 	/* may not get a full length report here */
 	(void)fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self->device),
@@ -325,25 +325,24 @@ fu_sunwinon_util_dfu_master_recv_frame(FuSwDfuMaster *self,
 
 	fu_dump_raw(G_LOG_DOMAIN, "raw input report", st_in->buf->data, st_in->buf->len);
 
-	if (!fu_struct_sunwinon_hid_in_v2_validate(st_in->buf->data, st_in->buf->len, 0, error))
+	if (!fu_struct_sunwinon_hid_in_validate(st_in->buf->data, st_in->buf->len, 0, error))
 		return FALSE;
 
-	st_dfu_header = fu_struct_sunwinon_hid_in_v2_get_dfu_header(st_in);
+	st_dfu_header = fu_struct_sunwinon_hid_in_get_dfu_header(st_in);
 	recv_frame->cmd_type = fu_struct_sunwinon_dfu_frame_header_get_cmd_type(st_dfu_header);
 	recv_frame->data_len = fu_struct_sunwinon_dfu_frame_header_get_data_len(st_dfu_header);
-	check_sum_offset = FU_STRUCT_SUNWINON_HID_IN_V2_OFFSET_DATA + recv_frame->data_len;
+	check_sum_offset = FU_STRUCT_SUNWINON_HID_IN_OFFSET_DATA + recv_frame->data_len;
 	recv_frame->check_sum =
 	    fu_memread_uint16(st_in->buf->data + check_sum_offset, G_LITTLE_ENDIAN);
 
-	if (buf_len > 0 &&
-	    !fu_memcpy_safe(recv_frame->data,
-			    buf_len,
-			    0,
-			    st_in->buf->data + FU_STRUCT_SUNWINON_HID_IN_V2_OFFSET_DATA,
-			    recv_frame->data_len,
-			    0,
-			    recv_frame->data_len,
-			    error))
+	if (buf_len > 0 && !fu_memcpy_safe(recv_frame->data,
+					   buf_len,
+					   0,
+					   st_in->buf->data + FU_STRUCT_SUNWINON_HID_IN_OFFSET_DATA,
+					   recv_frame->data_len,
+					   0,
+					   recv_frame->data_len,
+					   error))
 		return FALSE;
 
 	if (!fu_sunwinon_util_dfu_master_recv_sum_check(recv_frame)) {
