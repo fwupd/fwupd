@@ -402,7 +402,6 @@ pkgg_requires = [
   'gmodule-2.0',
   'gobject-2.0',
   'fwupd',
-  'libarchive',
   'xmlb',
   'libusb',
 ]
@@ -413,7 +412,6 @@ library_deps = [
   zlib,
   valgrind,
   lzma,
-  libarchive,
   libusb,
   cbor,
   sqlite,
