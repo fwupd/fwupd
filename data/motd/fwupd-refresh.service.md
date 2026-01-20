@@ -27,6 +27,9 @@ This uses a systemd timer to run on a regular cadence. To enable this, run:
 
 ## NOTES
 
+The service has a timeout of 5 minutes (300 seconds) to prevent it from hanging indefinitely if
+network conditions are poor or if the metadata download stalls.
+
 Motd display is dependent upon the availability of the update-motd snippet consumption service
 such as `pam_motd`.
 
