@@ -72,10 +72,8 @@ fu_logind_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError 
 		return TRUE;
 
 	/* not yet connected */
-	if (self->logind_proxy == NULL) {
-		g_warning("no logind connection to use");
+	if (self->logind_proxy == NULL)
 		return TRUE;
-	}
 
 	/* block shutdown and idle */
 	res = g_dbus_proxy_call_with_unix_fd_list_sync(

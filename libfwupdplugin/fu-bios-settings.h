@@ -19,3 +19,5 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
     G_GNUC_NON_NULL(1);
 FwupdBiosSetting *
 fu_bios_settings_get_attr(FuBiosSettings *self, const gchar *val) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_bios_settings_is_supported(FuBiosSettings *self) G_GNUC_NON_NULL(1);

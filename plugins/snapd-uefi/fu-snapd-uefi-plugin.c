@@ -79,6 +79,12 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 	g_autofree gchar *endpoint_str = NULL;
 	g_autoptr(GByteArray) rsp_buf = g_byte_array_new();
 
+	/* plugin startup failed */
+	if (self->curl_template == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no curl template");
+		return FALSE;
+	}
+
 	/* duplicate a preconfigured curl handle */
 	curl = curl_easy_duphandle(self->curl_template);
 

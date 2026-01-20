@@ -6298,6 +6298,11 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+
 	/* parse */
 	bytes = fwupd_client_upload_bytes_finish(FWUPD_CLIENT(source), res, &error);
 	if (bytes == NULL) {
@@ -7099,7 +7104,7 @@ static FwupdJsonObject *
 fwupd_client_build_report_history_device(FwupdDevice *dev)
 {
 	FwupdRelease *rel = fwupd_device_get_release_default(dev);
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1};
 	GHashTable *metadata = fwupd_release_get_metadata(rel);
 	GPtrArray *checksums;
 	GPtrArray *guids;
@@ -7107,7 +7112,7 @@ fwupd_client_build_report_history_device(FwupdDevice *dev)
 
 	/* identify the firmware used */
 	checksums = fwupd_release_get_checksums(rel);
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		const gchar *checksum = fwupd_checksum_get_by_kind(checksums, checksum_types[i]);
 		if (checksum != NULL) {
 			fwupd_json_object_add_string(json_obj, "Checksum", checksum);

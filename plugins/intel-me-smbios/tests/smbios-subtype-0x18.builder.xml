@@ -1,0 +1,22 @@
+<firmware gtype="FuSmbios">
+  <item>
+    <type>0xdd</type>
+    <length>0x1a</length>
+    <handle>0x0018</handle>
+    <buf>dd1a18000301000c00f41000020000000000000304100120a909</buf>
+    <string idx="00">Reference Code - ME</string>
+    <string idx="01">MEBx version</string>
+    <string idx="02">ME Firmware Version</string>
+    <string idx="03">Consumer SKU</string>
+  </item>
+  <item>
+    <type>0xdb</type>
+    <length>0x6a</length>
+    <handle>0x0073</handle>
+    <buf>db6a730001040145020090060185392000000000400000000000000200204002ffffffffffffffffffffffffffffffffffffffffffffffff0300000080000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000</buf>
+    <string idx="00">MEI1</string>
+    <string idx="01">MEI2</string>
+    <string idx="02">MEI3</string>
+    <string idx="03">MEI4</string>
+  </item>
+</firmware>

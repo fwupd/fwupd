@@ -754,7 +754,8 @@ fu_util_device_test_component(FuUtil *self,
 	name = fwupd_json_object_get_string_with_default(json_obj, "name", "component", error);
 	if (name == NULL)
 		return FALSE;
-	fwupd_json_object_add_string(json_object_result, "name", name);
+	if (g_strcmp0(name, "component") != 0)
+		fwupd_json_object_add_string(json_object_result, "name", name);
 	protocol = fwupd_json_object_get_string(json_obj, "protocol", NULL);
 	if (protocol != NULL)
 		fwupd_json_object_add_string(json_object_result, "protocol", protocol);
@@ -1074,10 +1075,16 @@ fu_util_device_test_filename(FuUtil *self,
 	g_autoptr(FwupdJsonArray) json_archs_cpu = NULL;
 	g_autoptr(FwupdJsonArray) json_archs_plat = NULL;
 	g_autoptr(FwupdJsonArray) json_steps = NULL;
+	g_autoptr(FwupdJsonArray) json_steps_result = fwupd_json_array_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(GBytes) blob = NULL;
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* log */
 	fwupd_json_object_add_string(json_object_result, "filename", filename);
@@ -1087,7 +1094,7 @@ fu_util_device_test_filename(FuUtil *self,
 	if (blob == NULL)
 		return FALSE;
 	json_node =
-	    fwupd_json_parser_load_from_bytes(parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
 	if (json_node == NULL) {
 		g_prefix_error_literal(error, "test not in JSON format: ");
 		return FALSE;
@@ -1152,21 +1159,24 @@ fu_util_device_test_filename(FuUtil *self,
 	/* process each step */
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "repeat", &repeat, 1, error))
 		return FALSE;
-	fwupd_json_object_add_integer(json_object_result, "repeat", repeat);
 
 	json_steps = fwupd_json_object_get_array(json_obj, "steps", error);
 	if (json_steps == NULL)
 		return FALSE;
+	fwupd_json_object_add_array(json_object_result, "steps", json_steps_result);
 	for (guint j = 0; j < repeat; j++) {
 		for (guint i = 0; i < fwupd_json_array_get_size(json_steps); i++) {
 			g_autoptr(FwupdJsonObject) json_step = NULL;
+			g_autoptr(FwupdJsonObject) json_step_result = fwupd_json_object_new();
+
 			json_step = fwupd_json_array_get_object(json_steps, i, error);
 			if (json_step == NULL)
 				return FALSE;
+			fwupd_json_array_add_object(json_steps_result, json_step_result);
 			if (!fu_util_device_test_step(self,
 						      helper,
 						      json_step,
-						      json_object_result,
+						      json_step_result,
 						      error))
 				return FALSE;
 		}
@@ -1374,7 +1384,6 @@ fu_util_device_test_full(FuUtil *self,
 			 FuUtilDeviceTestHelper *helper,
 			 GError **error)
 {
-	g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
 	g_autoptr(FwupdJsonArray) json_array_results = fwupd_json_array_new();
 
 	/* required for interactive devices */
@@ -1411,6 +1420,8 @@ fu_util_device_test_full(FuUtil *self,
 
 	/* dump to screen as JSON format */
 	if (self->as_json) {
+		g_autoptr(FwupdJsonObject) json_object_results = fwupd_json_object_new();
+		fwupd_json_object_add_array(json_object_results, "results", json_array_results);
 		fu_util_print_json_object(self->console, json_object_results);
 		return TRUE;
 	}
@@ -1796,8 +1807,8 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autofree gchar *data = NULL;
 		g_autofree gchar *filename = NULL;
-		g_autoptr(FuFirmware) archive = fu_archive_firmware_new();
-		g_autoptr(FuFirmware) payload_img = NULL;
+		g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
+		g_autoptr(FuFirmware) payload_img = fu_zip_file_new();
 		g_autoptr(GBytes) payload_blob = NULL;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GPtrArray) devices_tmp = g_ptr_array_new();
@@ -1812,8 +1823,9 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		if (data == NULL)
 			return FALSE;
 		payload_blob = g_bytes_new(data, strlen(data));
-		payload_img = fu_firmware_new_from_bytes(payload_blob);
 		fu_firmware_set_id(payload_img, "report.json");
+		fu_firmware_set_bytes(payload_img, payload_blob);
+		fu_zip_file_set_compression(FU_ZIP_FILE(payload_img), FU_ZIP_COMPRESSION_DEFLATE);
 		if (!fu_firmware_add_image(archive, payload_img, error))
 			return FALSE;
 
@@ -1838,9 +1850,6 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		}
 
 		/* save to local file */
-		fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(archive), FU_ARCHIVE_FORMAT_ZIP);
-		fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(archive),
-						    FU_ARCHIVE_COMPRESSION_GZIP);
 		filename = g_strdup_printf("%s.fwupdreport", fwupd_device_get_id(dev));
 		file = g_file_new_for_path(filename);
 		if (!fu_firmware_write_file(archive, file, error))
@@ -3056,16 +3065,26 @@ fu_util_update_device_with_release(FuUtil *self,
 {
 	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		const gchar *name = fwupd_device_get_name(dev);
-		g_autofree gchar *str = NULL;
+		g_autoptr(GPtrArray) array = fu_util_device_problems_to_strings(self->client, dev);
 
-		/* TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed */
-		str = g_strdup_printf(_("%s is not currently updatable"), name);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "%s: %s",
-			    str,
-			    fwupd_device_get_update_error(dev));
+		/* enumerate each problem to the console */
+		fu_console_print(self->console,
+				 /* TRANSLATORS: there are reasons the device can't update */
+				 _("%s is not currently updatable:"),
+				 name);
+		for (guint i = 0; i < array->len; i++) {
+			const gchar *str = g_ptr_array_index(array, i);
+			fu_console_print_full(self->console,
+					      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
+						  FU_CONSOLE_PRINT_FLAG_NEWLINE,
+					      "%s",
+					      str);
+		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: no update can be installed */
+				    _("Nothing to do"));
 		return FALSE;
 	}
 	if (!self->as_json && !self->no_safety_check && !self->assume_yes) {

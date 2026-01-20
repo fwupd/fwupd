@@ -11,7 +11,6 @@ engine_dep = [
   giounix,
   gmodule,
   libusb,
-  libjsonglib,
   polkit,
   sqlite,
   cbor,
@@ -22,7 +21,7 @@ if get_option('passim').allowed()
   engine_dep += passim
 endif
 
-client_dep = [libcurl, libjcat, libjsonglib, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
+client_dep = [libcurl, libjcat, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif

@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include "fu-archive.h"
 #include "fu-backend-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
@@ -47,9 +46,8 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gboolean got_json = FALSE;
 	gpointer key;
 	gpointer value;
-	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
 	g_return_val_if_fail(G_IS_OUTPUT_STREAM(stream), FALSE);
@@ -58,7 +56,12 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	/* sanity check */
 	g_hash_table_iter_init(&iter, self->phase_blobs);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		fu_archive_add_entry(archive, (const gchar *)key, (GBytes *)value);
+		g_autoptr(FuFirmware) img = fu_zip_file_new();
+		fu_zip_file_set_compression(FU_ZIP_FILE(img), FU_ZIP_COMPRESSION_DEFLATE);
+		fu_firmware_set_id(img, (const gchar *)key);
+		fu_firmware_set_bytes(img, (GBytes *)value);
+		if (!fu_firmware_add_image(archive, img, error))
+			return FALSE;
 		got_json = TRUE;
 	}
 	if (!got_json) {
@@ -70,10 +73,9 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	}
 
 	/* write  */
-	buf = fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
-	if (buf == NULL)
+	blob = fu_firmware_write(archive, error);
+	if (blob == NULL)
 		return FALSE;
-	blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 	if (!fu_output_stream_write_bytes(stream, blob, NULL, error))
 		return FALSE;
 	if (!g_output_stream_flush(stream, NULL, error)) {
@@ -92,10 +94,15 @@ fu_engine_emulator_load_json_blob(FuEngineEmulator *self, GBytes *json_blob, GEr
 	GPtrArray *backends = fu_context_get_backends(fu_engine_get_context(self->engine));
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 5000000); /* yes, this big! */
+	fwupd_json_parser_set_max_quoted(json_parser, 1000000);
 
 	/* parse */
-	json_node = fwupd_json_parser_load_from_bytes(parser,
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
 						      json_blob,
 						      FWUPD_JSON_LOAD_FLAG_TRUSTED |
 							  FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
@@ -218,7 +225,7 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 
 static gboolean
 fu_engine_emulator_load_phases(FuEngineEmulator *self,
-			       FuArchive *archive,
+			       FuFirmware *archive,
 			       guint composite_cnt,
 			       guint write_cnt,
 			       gboolean *got_json,
@@ -232,7 +239,7 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 
 		/* not found */
 		fn = fu_engine_emulator_phase_to_filename(composite_cnt, phase, write_cnt);
-		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
+		blob = fu_firmware_get_image_by_id_bytes(archive, fn, NULL);
 		if (blob == NULL || g_bytes_get_size(blob) == 0)
 			continue;
 		*got_json = TRUE;
@@ -259,7 +266,7 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 {
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) json_blob = g_bytes_new_static(json_empty, strlen(json_empty));
 	g_autoptr(GError) error_archive = NULL;
 
@@ -273,8 +280,11 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 	g_hash_table_remove_all(self->phase_blobs);
 
 	/* load archive */
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, &error_archive);
-	if (archive == NULL) {
+	if (!fu_firmware_parse_stream(archive,
+				      stream,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      &error_archive)) {
 		g_autoptr(GBytes) blob = NULL;
 		g_debug("no archive found, using JSON as phase setup: %s", error_archive->message);
 		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);

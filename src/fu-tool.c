@@ -1584,16 +1584,28 @@ fu_util_install_release(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GErro
 
 	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		const gchar *name = fwupd_device_get_name(dev);
-		g_autofree gchar *str = NULL;
+		g_autoptr(GPtrArray) array = fu_util_device_problems_to_strings(self->client, dev);
+
+		/* enumerate each problem to the console */
+		fu_console_print(self->console,
+				 /* TRANSLATORS: there is a reason the device can't update */
+				 _("%s is not currently updatable:"),
+				 name);
+		for (guint i = 0; i < array->len; i++) {
+			const gchar *str = g_ptr_array_index(array, i);
+			fu_console_print_full(self->console,
+					      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
+						  FU_CONSOLE_PRINT_FLAG_NEWLINE,
+					      "%s",
+					      str);
+		}
 
 		/* TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed */
-		str = g_strdup_printf(_("%s is not currently updatable"), name);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "%s: %s",
-			    str,
-			    fwupd_device_get_update_error(dev));
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: no update can be installed */
+				    _("Nothing to do"));
 		return FALSE;
 	}
 
@@ -2451,6 +2463,93 @@ fu_util_crc(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* success */
+	return TRUE;
+}
+
+static gint
+fu_util_tpm_eventlog_sort_cb(gconstpointer a, gconstpointer b)
+{
+	FuTpmEventlogItem *item_a = *((FuTpmEventlogItem **)a);
+	FuTpmEventlogItem *item_b = *((FuTpmEventlogItem **)b);
+	if (fu_tpm_eventlog_item_get_pcr(item_a) > fu_tpm_eventlog_item_get_pcr(item_b))
+		return 1;
+	if (fu_tpm_eventlog_item_get_pcr(item_a) < fu_tpm_eventlog_item_get_pcr(item_b))
+		return -1;
+	return 0;
+}
+
+static gboolean
+fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
+{
+	guint64 pcr = G_MAXUINT64;
+	guint8 max_pcr = 0;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuFirmware) eventlog = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* optional PCR */
+	if (g_strv_length(values) > 0) {
+		if (!fu_strtoull(values[0], &pcr, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+	}
+
+	/* parse this */
+	fn =
+	    fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "tpm0", "binary_bios_measurements", NULL);
+	blob = fu_bytes_get_contents(fn, error);
+	stream = g_memory_input_stream_new_from_bytes(blob);
+	eventlog = fu_firmware_new_from_gtypes(stream,
+					       0x0,
+					       FU_FIRMWARE_PARSE_FLAG_NONE,
+					       error,
+					       FU_TYPE_TPM_EVENTLOG_V2,
+					       FU_TYPE_TPM_EVENTLOG_V1,
+					       G_TYPE_INVALID);
+	if (eventlog == NULL)
+		return FALSE;
+	items = fu_firmware_get_images(eventlog);
+	g_ptr_array_sort(items, fu_util_tpm_eventlog_sort_cb);
+	for (guint i = 0; i < items->len; i++) {
+		FuTpmEventlogItem *item = g_ptr_array_index(items, i);
+		g_autofree gchar *tmp = NULL;
+		if (fu_tpm_eventlog_item_get_pcr(item) > max_pcr)
+			max_pcr = fu_tpm_eventlog_item_get_pcr(item);
+		if (pcr != G_MAXUINT64 && fu_tpm_eventlog_item_get_pcr(item) != pcr)
+			continue;
+		tmp = fu_firmware_to_string(FU_FIRMWARE(item));
+		g_string_append_printf(str, "%s", tmp);
+	}
+	if (pcr != G_MAXUINT64 && pcr > max_pcr) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid PCR specified: %u",
+			    (guint)pcr);
+		return FALSE;
+	}
+	fwupd_codec_string_append(str, 0, "Reconstructed PCRs", "");
+	for (guint8 i = 0; i <= max_pcr; i++) {
+		g_autoptr(GPtrArray) pcrs =
+		    fu_tpm_eventlog_calc_checksums(FU_TPM_EVENTLOG(eventlog), i, NULL);
+		if (pcrs == NULL)
+			continue;
+		for (guint j = 0; j < pcrs->len; j++) {
+			const gchar *csum = g_ptr_array_index(pcrs, j);
+			g_autofree gchar *title = NULL;
+			g_autofree gchar *pretty = NULL;
+			if (pcr != G_MAXUINT64 && i != (guint)pcr)
+				continue;
+			title = g_strdup_printf("PCR %u", i);
+			pretty = fwupd_checksum_format_for_display(csum);
+			fwupd_codec_string_append(str, 1, title, pretty);
+		}
+	}
+
+	/* success */
+	fu_console_print_literal(self->console, str->str);
 	return TRUE;
 }
 
@@ -6077,6 +6176,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Finds a algorithm that matches the file CRC"),
 			      fu_util_crc_find);
+	fu_util_cmd_array_add(cmd_array,
+			      "tpm-eventlog",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[PCR]"),
+			      /* TRANSLATORS: command description */
+			      _("Parse the system PCR eventlog"),
+			      fu_util_tpm_eventlog);
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();

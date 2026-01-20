@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 
 #include "fu-archive-struct.h"
+#include "fu-firmware-struct.h"
 
 #define FU_TYPE_ARCHIVE (fu_archive_get_type())
 
@@ -33,10 +34,10 @@ typedef gboolean (*FuArchiveIterateFunc)(FuArchive *self,
     G_GNUC_NON_NULL(1);
 
 FuArchive *
-fu_archive_new(GBytes *data, FuArchiveFlags flags, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_archive_new(GBytes *data, FuFirmwareParseFlags flags, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuArchive *
 fu_archive_new_stream(GInputStream *stream,
-		      FuArchiveFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob) G_GNUC_NON_NULL(1, 2);

@@ -8,14 +8,11 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('tpm.quirk')
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
-  rustgen.process('fu-tpm.rs'),
   sources: [
     'fu-tpm-plugin.c',
     'fu-tpm-device.c',
     'fu-tpm-v1-device.c',
     'fu-tpm-v2-device.c',
-    'fu-tpm-eventlog-common.c',
-    'fu-tpm-eventlog-parser.c',
   ],
   include_directories: plugin_incdirs,
   link_with: [
@@ -39,7 +36,6 @@ if get_option('tests')
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   e = executable(
     'tpm-self-test',
-    rustgen.process('fu-tpm.rs'),
     sources: [
       'fu-self-test.c',
     ],
@@ -84,20 +80,3 @@ if get_option('tests')
   )
 
 endif
-
-executable(
-  'fwupdtpmevlog',
-  rustgen.process('fu-tpm.rs'),
-  sources: [
-    'fu-tpm-eventlog.c',
-  ],
-  include_directories: plugin_incdirs,
-  dependencies: [
-      plugin_deps,
-      tpm2tss_tpm,
-  ],
-  link_with: [
-    plugin_libs,
-    plugin_builtin_tpm,
-  ],
-)

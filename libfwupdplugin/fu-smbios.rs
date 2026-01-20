@@ -84,7 +84,7 @@ struct FuStructSmbiosEp64 {
     structure_table_addr: u64le,
 }
 
-#[derive(New, Parse)]
+#[derive(New, Parse, ParseBytes)]
 #[repr(C, packed)]
 struct FuStructSmbiosStructure {
     type: u8,

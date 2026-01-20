@@ -12,6 +12,11 @@
 
 #include "fu-cabinet.h"
 
+/* fixed in 0.1.14 */
+#ifndef JCAT_CHECK_VERSION
+#define JCAT_CHECK_VERSION LIBJCAT_CHECK_VERSION
+#endif
+
 /**
  * FuCabinet:
  *
@@ -225,6 +230,7 @@ fu_cabinet_parse_release(FuCabinet *self,
 
 	/* the jcat file signed the *checksum of the payload*, not the payload itself */
 	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
+#if JCAT_CHECK_VERSION(0, 2, 0)
 	if (item != NULL && jcat_item_has_target(item)) {
 		g_autofree gchar *checksum_sha256 = NULL;
 		g_autofree gchar *checksum_sha512 = NULL;
@@ -265,7 +271,9 @@ fu_cabinet_parse_release(FuCabinet *self,
 			g_info("verified indirect payload %s: %u", basename, results->len);
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 		}
-	} else if (item != NULL) {
+	}
+#endif
+	if (item != NULL) {
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
@@ -968,7 +976,10 @@ fu_cabinet_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		if (!FU_FIRMWARE_CLASS(fu_cabinet_parent_class)
-			 ->parse(firmware, stream, flags, error))
+			 ->parse(firmware,
+				 stream,
+				 flags | FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
+				 error))
 			return FALSE;
 		self->container_checksum =
 		    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, error);
@@ -1074,15 +1085,16 @@ fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error)
 static void
 fu_cabinet_init(FuCabinet *self)
 {
-	fu_cab_firmware_set_only_basename(FU_CAB_FIRMWARE(self), TRUE);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), G_MAXUINT32); /* ~4GB */
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();
 	self->jcat_context = jcat_context_new();
+#if JCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
+#endif
 }
 
 static void

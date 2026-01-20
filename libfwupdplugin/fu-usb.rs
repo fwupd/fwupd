@@ -32,7 +32,7 @@ enum FuUsbClass {
     Printer = 0x07,
     MassStorage = 0x08,
     Hub = 0x09,
-    Cdc_data = 0x0A,
+    CdcData = 0x0A,
     SmartCard = 0x0B,
     ContentSecurity = 0x0D,
     Video = 0x0E,
@@ -158,7 +158,7 @@ struct FuUsbEndpointHdr {
     interval: u8,
 }
 
-#[derive(New, ParseStream, Default)]
+#[derive(New, Parse, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuUsbBosHdr {
     length: u8 = $struct_size,

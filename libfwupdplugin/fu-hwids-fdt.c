@@ -24,10 +24,11 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	struct {
 		const gchar *hwid;
 		const gchar *key;
-	} map[] = {{FU_HWIDS_KEY_MANUFACTURER, "vendor"},
-		   {FU_HWIDS_KEY_FAMILY, "model-name"},
-		   {FU_HWIDS_KEY_PRODUCT_NAME, "model"},
-		   {NULL, NULL}};
+	} map[] = {
+	    {FU_HWIDS_KEY_MANUFACTURER, "vendor"},
+	    {FU_HWIDS_KEY_FAMILY, "model-name"},
+	    {FU_HWIDS_KEY_PRODUCT_NAME, "model"},
+	};
 
 	/* adds compatible GUIDs */
 	fdt = fu_context_get_fdt(ctx, error);
@@ -45,7 +46,7 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	}
 
 	/* root node */
-	for (guint i = 0; map[i].key != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		g_autofree gchar *tmp = NULL;
 		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), map[i].key, &tmp, NULL);
 		if (tmp == NULL)

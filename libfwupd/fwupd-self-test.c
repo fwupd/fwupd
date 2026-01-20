@@ -141,14 +141,16 @@ fwupd_enums_func(void)
 static void
 fwupd_json_parser_depth_func(void)
 {
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *json = "{\"one\": {\"two\": {\"three\": []}}}";
 
-	fwupd_json_parser_set_max_depth(parser, 3);
+	fwupd_json_parser_set_max_depth(json_parser, 3);
+	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
 	json_node =
-	    fwupd_json_parser_load_from_data(parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(json_node);
 }
@@ -156,14 +158,16 @@ fwupd_json_parser_depth_func(void)
 static void
 fwupd_json_parser_items_func(void)
 {
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *json = "[1,2,3,4]";
 
-	fwupd_json_parser_set_max_items(parser, 3);
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 3);
 	json_node =
-	    fwupd_json_parser_load_from_data(parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(json_node);
 }
@@ -171,14 +175,17 @@ fwupd_json_parser_items_func(void)
 static void
 fwupd_json_parser_quoted_func(void)
 {
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *json = "\"hello\"";
 
-	fwupd_json_parser_set_max_quoted(parser, 3);
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 3);
 	json_node =
-	    fwupd_json_parser_load_from_data(parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	    fwupd_json_parser_load_from_data(json_parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(json_node);
 }
@@ -187,19 +194,24 @@ static void
 fwupd_json_parser_stream_func(void)
 {
 	const gchar *json = "\"one\"";
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node1 = NULL;
 	g_autoptr(FwupdJsonNode) json_node2 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new((const guint8 *)json, strlen(json));
 	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob);
 
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
 	json_node1 =
-	    fwupd_json_parser_load_from_bytes(parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_node1);
-	json_node2 =
-	    fwupd_json_parser_load_from_stream(parser, stream, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	json_node2 = fwupd_json_parser_load_from_stream(json_parser,
+							stream,
+							FWUPD_JSON_LOAD_FLAG_NONE,
+							&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_node2);
 }
@@ -207,14 +219,19 @@ fwupd_json_parser_stream_func(void)
 static void
 fwupd_json_parser_null_func(void)
 {
+	gboolean ret;
+	gint64 value = 0;
 	g_autoptr(FwupdJsonNode) json_node2 = NULL;
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GString) str = NULL;
 
-	json_node = fwupd_json_parser_load_from_data(parser,
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
+	json_node = fwupd_json_parser_load_from_data(json_parser,
 						     "{\"seven\": null}",
 						     FWUPD_JSON_LOAD_FLAG_NONE,
 						     &error);
@@ -226,7 +243,13 @@ fwupd_json_parser_null_func(void)
 
 	/* ensure 'null' is tagged as a string */
 	json_node2 = fwupd_json_object_get_node(json_obj, "seven", &error);
-	g_assert_cmpint(fwupd_json_node_get_kind(json_node2), ==, FWUPD_JSON_NODE_KIND_STRING);
+	g_assert_cmpint(fwupd_json_node_get_kind(json_node2), ==, FWUPD_JSON_NODE_KIND_NULL);
+
+	/* ensure we use the default integer value */
+	ret = fwupd_json_object_get_integer_with_default(json_obj, "seven", &value, 123, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, 123);
 
 	str = fwupd_json_node_to_string(json_node2, FWUPD_JSON_EXPORT_FLAG_NONE);
 	g_assert_cmpstr(str->str, ==, "null");
@@ -235,7 +258,7 @@ fwupd_json_parser_null_func(void)
 static void
 fwupd_json_parser_valid_func(void)
 {
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	const gchar *data[] = {
 	    "{\"one\": \"alice\", \"two\": \"bob\"}",
 	    "{\"one\": True, \"two\": 123}",
@@ -248,13 +271,16 @@ fwupd_json_parser_valid_func(void)
 	    "[\"one\", \"two\\n\", [{\"three\": [true]}]]",
 	};
 
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
 	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
 		g_autoptr(FwupdJsonNode) json_node = NULL;
 		g_autoptr(GError) error = NULL;
 		g_autoptr(GString) str = NULL;
 
 		g_debug("IN: %s", data[i]);
-		json_node = fwupd_json_parser_load_from_data(parser,
+		json_node = fwupd_json_parser_load_from_data(json_parser,
 							     data[i],
 							     FWUPD_JSON_LOAD_FLAG_NONE,
 							     &error);
@@ -269,7 +295,7 @@ fwupd_json_parser_valid_func(void)
 static void
 fwupd_json_parser_invalid_func(void)
 {
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	const gchar *data[] = {
 	    "[",
 	    "[\"one\": true]",
@@ -283,12 +309,15 @@ fwupd_json_parser_invalid_func(void)
 	    "         []",
 	};
 
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
 	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
 		g_autoptr(FwupdJsonNode) json_node = NULL;
 		g_autoptr(GError) error = NULL;
 
 		g_debug("IN: %s", data[i]);
-		json_node = fwupd_json_parser_load_from_data(parser,
+		json_node = fwupd_json_parser_load_from_data(json_parser,
 							     data[i],
 							     FWUPD_JSON_LOAD_FLAG_NONE,
 							     &error);

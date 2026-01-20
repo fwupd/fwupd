@@ -405,11 +405,6 @@ fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
 	    {"intel_spi_bios_locked", "bios"},
 	};
 
-	/* preserve compat with older emulation files */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
-	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.0.18"))
-		return TRUE;
-
 	/* look for PCI parent */
 	parent_device = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", NULL);
 	if (parent_device == NULL)

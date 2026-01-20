@@ -357,7 +357,8 @@ fwupd_json_object_get_integer_with_default(FwupdJsonObject *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	entry = fwupd_json_object_get_entry(self, key, NULL);
-	if (entry == NULL) {
+	if (entry == NULL ||
+	    fwupd_json_node_get_kind(entry->json_node) == FWUPD_JSON_NODE_KIND_NULL) {
 		if (value != NULL)
 			*value = value_default;
 		return TRUE;
@@ -468,7 +469,8 @@ fwupd_json_object_get_boolean_with_default(FwupdJsonObject *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	entry = fwupd_json_object_get_entry(self, key, NULL);
-	if (entry == NULL) {
+	if (entry == NULL ||
+	    fwupd_json_node_get_kind(entry->json_node) == FWUPD_JSON_NODE_KIND_NULL) {
 		if (value != NULL)
 			*value = value_default;
 		return TRUE;
@@ -667,6 +669,27 @@ fwupd_json_object_add_raw_internal(FwupdJsonObject *self,
 		g_ptr_array_add(self->items, entry);
 	}
 	entry->json_node = fwupd_json_node_new_raw_internal(value);
+}
+
+void
+fwupd_json_object_add_null_internal(FwupdJsonObject *self,
+				    GRefString *key,
+				    FwupdJsonLoadFlags flags)
+{
+	FwupdJsonObjectEntry *entry = NULL;
+
+	if ((flags & FWUPD_JSON_LOAD_FLAG_TRUSTED) == 0)
+		entry = fwupd_json_object_get_entry(self, key, NULL);
+	if (entry != NULL) {
+		fwupd_json_node_unref(entry->json_node);
+	} else {
+		entry = g_new0(FwupdJsonObjectEntry, 1);
+		entry->key = (flags & FWUPD_JSON_LOAD_FLAG_STATIC_KEYS) > 0
+				 ? g_ref_string_new_intern(key)
+				 : g_ref_string_acquire(key);
+		g_ptr_array_add(self->items, entry);
+	}
+	entry->json_node = fwupd_json_node_new_null_internal();
 }
 
 /**

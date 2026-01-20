@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <libusb.h>
-
 #include "fu-usb-config-descriptor.h"
 
 FuUsbConfigDescriptor *

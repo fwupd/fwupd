@@ -1007,7 +1007,7 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	guint8 offset;
 	g_autoptr(FuStructSynapticsRmiV7F34x) st_f34x = NULL;
 	g_autoptr(GByteArray) f34_data0 = NULL;
-	g_autoptr(GByteArray) f34_dataX = NULL;
+	g_autoptr(GByteArray) f34_data = NULL;
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
@@ -1021,12 +1021,11 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	}
 	flash->has_security = (f34_data0->data[0] & 0x40) ? TRUE : FALSE;
 	offset = (f34_data0->data[0] & 0b00000111) + 1;
-	f34_dataX = fu_synaptics_rmi_device_read(self, f34->query_base + offset, 21, error);
-	if (f34_dataX == NULL)
+	f34_data = fu_synaptics_rmi_device_read(self, f34->query_base + offset, 21, error);
+	if (f34_data == NULL)
 		return FALSE;
 
-	st_f34x =
-	    fu_struct_synaptics_rmi_v7_f34x_parse(f34_dataX->data, f34_dataX->len, 0x0, error);
+	st_f34x = fu_struct_synaptics_rmi_v7_f34x_parse(f34_data->data, f34_data->len, 0x0, error);
 	if (st_f34x == NULL)
 		return FALSE;
 	flash->bootloader_id[0] = fu_struct_synaptics_rmi_v7_f34x_get_bootloader_id0(st_f34x);

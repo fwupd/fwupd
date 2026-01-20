@@ -366,9 +366,9 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 			FuDevice *dev = g_ptr_array_index(devices, i);
 
 			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-				g_debug("uoc dropped needs-activation flag for %s",
-					fu_device_get_name(dev));
+				g_autoptr(FuProgress) progress = fu_progress_new(NULL);
+				if (!fu_device_activate(dev, progress, error))
+					return FALSE;
 			}
 		}
 	}
@@ -492,7 +492,7 @@ fu_dell_kestrel_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_DELL_KESTREL_RTSHUB_FIRMWARE);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "false");
+	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "true");
 }
 
 static void

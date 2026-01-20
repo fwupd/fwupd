@@ -19,31 +19,31 @@
 #include "fu-debug.h"
 
 /* nocheck:static */
-static SERVICE_STATUS gSvcStatus = {.dwServiceType = SERVICE_WIN32_OWN_PROCESS,
-				    .dwServiceSpecificExitCode = 0};
-static SERVICE_STATUS_HANDLE gSvcStatusHandle = 0;
-static FuDaemon *gDaemon = NULL;
+static SERVICE_STATUS g_svc_status = {.dwServiceType = SERVICE_WIN32_OWN_PROCESS,
+				      .dwServiceSpecificExitCode = 0};
+static SERVICE_STATUS_HANDLE g_svc_status_handle = 0;
+static FuDaemon *g_daemon = NULL;
 
 static void
 fu_main_svc_report_status(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
 {
 	static DWORD check_point = 1; /* nocheck:static */
 
-	gSvcStatus.dwCurrentState = dwCurrentState;
-	gSvcStatus.dwWin32ExitCode = dwWin32ExitCode;
-	gSvcStatus.dwWaitHint = dwWaitHint;
+	g_svc_status.dwCurrentState = dwCurrentState;
+	g_svc_status.dwWin32ExitCode = dwWin32ExitCode;
+	g_svc_status.dwWaitHint = dwWaitHint;
 
 	if (dwCurrentState == SERVICE_START_PENDING)
-		gSvcStatus.dwControlsAccepted = 0;
+		g_svc_status.dwControlsAccepted = 0;
 	else
-		gSvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+		g_svc_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 
 	if (dwCurrentState == SERVICE_RUNNING || dwCurrentState == SERVICE_STOPPED)
-		gSvcStatus.dwCheckPoint = 0;
+		g_svc_status.dwCheckPoint = 0;
 	else
-		gSvcStatus.dwCheckPoint = check_point++;
+		g_svc_status.dwCheckPoint = check_point++;
 
-	SetServiceStatus(gSvcStatusHandle, &gSvcStatus);
+	SetServiceStatus(g_svc_status_handle, &g_svc_status);
 }
 
 static gboolean
@@ -63,8 +63,8 @@ fu_main_svc_control_cb(DWORD dwCtrl)
 	case SERVICE_CONTROL_STOP:
 		fu_main_svc_report_status(SERVICE_STOP_PENDING, NO_ERROR, 0);
 		/* there is no user_data, because global state with threads is completely fine */
-		g_idle_add(fu_main_svc_control_stop_cb, gDaemon);
-		fu_main_svc_report_status(gSvcStatus.dwCurrentState, NO_ERROR, 0);
+		g_idle_add(fu_main_svc_control_stop_cb, g_daemon);
+		fu_main_svc_report_status(g_svc_status.dwCurrentState, NO_ERROR, 0);
 		break;
 	default:
 		break;
@@ -74,7 +74,7 @@ fu_main_svc_control_cb(DWORD dwCtrl)
 static void
 fu_main_svc_main_cb(DWORD dwArgc, LPSTR *lpszArgv)
 {
-	g_autoptr(FuDaemon) daemon = gDaemon = fu_daemon_new();
+	g_autoptr(FuDaemon) daemon = g_daemon = fu_daemon_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
 
@@ -85,8 +85,8 @@ fu_main_svc_main_cb(DWORD dwArgc, LPSTR *lpszArgv)
 		return;
 	}
 
-	gSvcStatusHandle = RegisterServiceCtrlHandlerA((LPSTR) "fwupd", fu_main_svc_control_cb);
-	if (gSvcStatusHandle == NULL) {
+	g_svc_status_handle = RegisterServiceCtrlHandlerA((LPSTR) "fwupd", fu_main_svc_control_cb);
+	if (g_svc_status_handle == NULL) {
 		g_warning("RegisterServiceCtrlHandlerA failed [%u]", (guint)GetLastError());
 		return;
 	}
@@ -108,7 +108,7 @@ fu_main_svc_main_cb(DWORD dwArgc, LPSTR *lpszArgv)
 static int
 fu_main_console(int argc, char *argv[])
 {
-	g_autoptr(FuDaemon) daemon = gDaemon = fu_daemon_new();
+	g_autoptr(FuDaemon) daemon = g_daemon = fu_daemon_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
 

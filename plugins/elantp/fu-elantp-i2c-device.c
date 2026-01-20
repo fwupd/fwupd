@@ -514,6 +514,8 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 				    self->iap_ctrl);
 			return FALSE;
 		}
+		if (self->iap_ctrl & ETP_FW_IAP_END_WAITWDT)
+			i = fu_chunk_array_length(chunks) - 1;
 
 		/* update progress */
 		checksum += csum_tmp;

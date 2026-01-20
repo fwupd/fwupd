@@ -146,7 +146,7 @@ fu_system76_launch_device_reset(FuSystem76LaunchDevice *self, guint8 *rc, GError
 }
 
 static gboolean
-fu_system76_launch_device_security_set(FuSystem76LaunchDevice *self,
+fu_system76_launch_device_set_security(FuSystem76LaunchDevice *self,
 				       FuSystem76LaunchSecurityState state,
 				       guint8 *rc,
 				       GError **error)
@@ -182,7 +182,7 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 	}
 
 	/* notify device of desire to unlock */
-	if (!fu_system76_launch_device_security_set(
+	if (!fu_system76_launch_device_set_security(
 		self,
 		FU_SYSTEM76_LAUNCH_SECURITY_STATE_PREPARE_UNLOCK,
 		&rc,

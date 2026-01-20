@@ -103,22 +103,23 @@ GPtrArray *
 fu_hwids_get_keys(FuHwids *self)
 {
 	GPtrArray *array = g_ptr_array_new();
-	const gchar *keys[] = {FU_HWIDS_KEY_BIOS_VENDOR,
-			       FU_HWIDS_KEY_BIOS_VERSION,
-			       FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
-			       FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
-			       FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE,
-			       FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE,
-			       FU_HWIDS_KEY_MANUFACTURER,
-			       FU_HWIDS_KEY_FAMILY,
-			       FU_HWIDS_KEY_PRODUCT_NAME,
-			       FU_HWIDS_KEY_PRODUCT_SKU,
-			       FU_HWIDS_KEY_ENCLOSURE_KIND,
-			       FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
-			       FU_HWIDS_KEY_BASEBOARD_PRODUCT,
-			       NULL};
+	const gchar *keys[] = {
+	    FU_HWIDS_KEY_BIOS_VENDOR,
+	    FU_HWIDS_KEY_BIOS_VERSION,
+	    FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
+	    FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
+	    FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE,
+	    FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE,
+	    FU_HWIDS_KEY_MANUFACTURER,
+	    FU_HWIDS_KEY_FAMILY,
+	    FU_HWIDS_KEY_PRODUCT_NAME,
+	    FU_HWIDS_KEY_PRODUCT_SKU,
+	    FU_HWIDS_KEY_ENCLOSURE_KIND,
+	    FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
+	    FU_HWIDS_KEY_BASEBOARD_PRODUCT,
+	};
 	g_return_val_if_fail(FU_IS_HWIDS(self), NULL);
-	for (guint i = 0; keys[i] != NULL; i++)
+	for (guint i = 0; i < G_N_ELEMENTS(keys); i++)
 		g_ptr_array_add(array, (gpointer)keys[i]);
 	return array;
 }

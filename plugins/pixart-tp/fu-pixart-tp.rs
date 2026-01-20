@@ -113,7 +113,7 @@ enum FuPixartTpFlashInst {
 
 #[repr(u8)]
 enum FuPixartTpClocksPowerUp {
-    CPU = 1 << 1,
+    Cpu = 1 << 1,
 }
 
 #[repr(u8)]

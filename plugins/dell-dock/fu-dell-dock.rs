@@ -29,6 +29,6 @@ enum FuDellDockMstType {
 enum FuDellDockMstBank {
     0,
     1,
-    ESM,
+    Esm,
     Cayenne,
 }

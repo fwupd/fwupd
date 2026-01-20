@@ -10,7 +10,6 @@
 
 #include <fwupd.h>
 #include <libfwupdplugin/fu-acpi-table.h>
-#include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
 #include <libfwupdplugin/fu-bios-settings.h>
@@ -73,6 +72,7 @@
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-fit-firmware.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
+#include <libfwupdplugin/fu-fuzzer.h>
 #include <libfwupdplugin/fu-heci-device.h>
 #include <libfwupdplugin/fu-hid-descriptor.h>
 #include <libfwupdplugin/fu-hid-device.h>
@@ -88,6 +88,7 @@
 #include <libfwupdplugin/fu-ifwi-fpt-firmware.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
 #include <libfwupdplugin/fu-input-stream.h>
+#include <libfwupdplugin/fu-intel-me-device.h>
 #include <libfwupdplugin/fu-intel-thunderbolt-firmware.h>
 #include <libfwupdplugin/fu-intel-thunderbolt-nvm.h>
 #include <libfwupdplugin/fu-io-channel.h>
@@ -125,7 +126,13 @@
 #include <libfwupdplugin/fu-v4l-device.h>
 #include <libfwupdplugin/fu-volume-locker.h>
 #include <libfwupdplugin/fu-x509-certificate.h>
+#include <libfwupdplugin/fu-zip-file.h>
+#include <libfwupdplugin/fu-zip-firmware.h>
 // #include <libfwupdplugin/fu-usb-common.h>
+#include <libfwupdplugin/fu-tpm-eventlog.h>
+#include <libfwupdplugin/fu-tpm-eventlog-item.h>
+#include <libfwupdplugin/fu-tpm-eventlog-v1.h>
+#include <libfwupdplugin/fu-tpm-eventlog-v2.h>
 #include <libfwupdplugin/fu-uefi-device.h>
 #include <libfwupdplugin/fu-usb-device.h>
 #include <libfwupdplugin/fu-usb-endpoint.h>

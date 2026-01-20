@@ -222,6 +222,16 @@ fu_security_attrs_get_all(FuSecurityAttrs *self, const gchar *fwupd_version)
 }
 
 /**
+ * fu_security_attrs_get_all_mutable: (skip):
+ **/
+GPtrArray *
+fu_security_attrs_get_all_mutable(FuSecurityAttrs *self)
+{
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	return g_ptr_array_ref(self->attrs);
+}
+
+/**
  * fu_security_attrs_remove_all:
  * @self: a #FuSecurityAttrs
  *
@@ -406,6 +416,7 @@ const struct {
     {FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
     {FWUPD_SECURITY_ATTR_ID_UEFI_DB, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
+    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
 };
 
 static void
@@ -480,6 +491,7 @@ const struct {
     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION, "2.0.7"},
     {FWUPD_SECURITY_ATTR_ID_UEFI_PK, "1.5.0"},
     {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART, "2.1.1"},
 };
 
 static void

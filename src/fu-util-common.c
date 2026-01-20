@@ -1304,6 +1304,28 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	return NULL;
 }
 
+/* enumerate each problem, and also untranslated update error if set */
+GPtrArray *
+fu_util_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev)
+{
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
+
+	for (guint i = 0; i < 64; i++) {
+		FwupdDeviceProblem problem = (guint64)1 << i;
+		g_autofree gchar *str = NULL;
+
+		if (!fwupd_device_has_problem(dev, problem))
+			continue;
+		str = fu_util_device_problem_to_string(client, dev, problem);
+		if (str == NULL)
+			continue;
+		g_ptr_array_add(array, g_steal_pointer(&str));
+	}
+	if (fwupd_device_get_update_error(dev) != NULL)
+		g_ptr_array_add(array, g_strdup(fwupd_device_get_update_error(dev)));
+	return g_steal_pointer(&array);
+}
+
 gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 {
@@ -2443,6 +2465,11 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("The UEFI certificate store is now up to date")},
+		     {FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("HP SureStart is enabled")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */

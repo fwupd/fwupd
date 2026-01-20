@@ -65,9 +65,13 @@ install_data(
     'sbatlevel.builder.xml',
     'srec.builder.xml',
     'sys_vendor',
+    'tpm-eventlog-v1.builder.xml',
+    'tpm-eventlog-v2.builder.xml',
     'usb-bos-descriptor.builder.xml',
     'uswid.builder.xml',
     'uswid-compressed.builder.xml',
+    'zip.builder.xml',
+    'zip-compressed.builder.xml',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests'),
   follow_symlinks: true,
@@ -191,6 +195,21 @@ install_data(
   install_dir: join_paths(
     installed_test_datadir,
     'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot',
+  ),
+  follow_symlinks: true,
+)
+
+install_data(
+  [
+    'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/current_value',
+    'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/display_name',
+    'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/display_name_language_code',
+    'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/possible_values',
+    'bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection/type',
+  ],
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/hp-z2-mini-g1a/hp-bioscfg/attributes/Enhanced HP Firmware Runtime Intrusion Prevention and Detection',
   ),
   follow_symlinks: true,
 )

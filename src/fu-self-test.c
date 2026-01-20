@@ -1479,7 +1479,6 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	g_autoptr(GError) error = NULL;
 	const gchar *noxml[] = {
 	    "FuFirmware",
-	    "FuArchiveFirmware",
 	    "FuGenesysUsbhubFirmware",
 	    "FuIntelThunderboltFirmware",
 	    "FuIntelThunderboltNvm",
@@ -1610,12 +1609,6 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	g_autoptr(GArray) firmware_gtypes = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	const gchar *plugin_names_safe[] = {
-	    "linux_lockdown",
-	    "linux_sleep",
-	    "linux_swap",
-	    "linux_tainted",
-	};
 	const gchar *external_plugins[] = {
 	    "flashrom",
 	    "modem-manager",
@@ -1652,14 +1645,12 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	g_assert_nonnull(plugins);
 	g_assert_cmpint(plugins->len, >, 5);
 
-	/* start up some "safe" plugins */
-	for (guint i = 0; i < G_N_ELEMENTS(plugin_names_safe); i++) {
-		FuPlugin *plugin = fu_engine_get_plugin_by_name(engine, plugin_names_safe[i], NULL);
-		if (plugin != NULL) {
-			ret = fu_plugin_runner_startup(plugin, progress, &error);
-			g_assert_no_error(error);
-			g_assert_true(ret);
-		}
+	/* start up plugins */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_plugin_runner_startup(plugin, progress, &error_local))
+			g_debug("ignoring: %s", error_local->message);
 	}
 
 	/* add security attrs where possible */
@@ -1674,6 +1665,46 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_plugin_runner_reboot_cleanup(plugin, device_nop, &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* run the composite-prepare action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) devices = g_ptr_array_new();
+		g_ptr_array_add(devices, device_nop);
+		if (!fu_plugin_runner_composite_prepare(plugin, devices, &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* run the composite-cleanup action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) devices = g_ptr_array_new();
+		g_ptr_array_add(devices, device_nop);
+		if (!fu_plugin_runner_composite_cleanup(plugin, devices, &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* run the composite-peek-firmware action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(GBytes) blob = g_bytes_new_static("xxx", 3);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
+		g_autoptr(GError) error_local = NULL;
+
+		fu_device_set_plugin(device_nop, "uefi_dbx");
+		if (!fu_plugin_runner_composite_peek_firmware(plugin,
+							      device_nop,
+							      firmware,
+							      progress,
+							      FWUPD_INSTALL_FLAG_NONE,
+							      &error_local))
 			g_debug("ignoring: %s", error_local->message);
 	}
 
@@ -5171,17 +5202,24 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(GInputStream) stream = NULL;
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 1000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 
 	g_debug("loading %s", fn);
 	stream = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
-	json_node =
-	    fwupd_json_parser_load_from_stream(parser, stream, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	json_node = fwupd_json_parser_load_from_stream(json_parser,
+						       stream,
+						       FWUPD_JSON_LOAD_FLAG_NONE,
+						       &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json_node);
 	json_obj = fwupd_json_node_get_object(json_node, &error);
@@ -5313,7 +5351,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(GBytes) usb_emulate_blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
@@ -5326,6 +5364,11 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 			      "failed to parse * BOS descriptor: *invalid UUID*");
 #endif
 
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+
 	/* load the JSON into the backend */
 	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
 	usb_emulate_fn =
@@ -5333,7 +5376,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	usb_emulate_blob = fu_bytes_get_contents(usb_emulate_fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(usb_emulate_blob);
-	json_node = fwupd_json_parser_load_from_bytes(parser,
+	json_node = fwupd_json_parser_load_from_bytes(json_parser,
 						      usb_emulate_blob,
 						      FWUPD_JSON_LOAD_FLAG_NONE,
 						      &error);
@@ -7709,12 +7752,13 @@ fu_config_migrate_1_7_func(void)
 {
 	const gchar *sysconfdir = "/tmp/fwupd-self-test/conf-migration-1.7/var/etc";
 	gboolean ret;
-	const gchar *fn_merge[] = {"daemon.conf",
-				   "msr.conf",
-				   "redfish.conf",
-				   "thunderbolt.conf",
-				   "uefi_capsule.conf",
-				   NULL};
+	const gchar *fn_merge[] = {
+	    "daemon.conf",
+	    "msr.conf",
+	    "redfish.conf",
+	    "thunderbolt.conf",
+	    "uefi_capsule.conf",
+	};
 	g_autofree gchar *localconf_data = NULL;
 	g_autofree gchar *fn_mut = NULL;
 	g_autofree gchar *testdatadir = NULL;
@@ -7742,7 +7786,7 @@ fu_config_migrate_1_7_func(void)
 	g_assert_true(ret);
 
 	/* copy all files to working directory */
-	for (guint i = 0; fn_merge[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
 		g_autofree gchar *source =
 		    g_build_filename(testdatadir, "fwupd", fn_merge[i], NULL);
 		g_autofree gchar *target = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
@@ -7756,7 +7800,7 @@ fu_config_migrate_1_7_func(void)
 	g_assert_true(ret);
 
 	/* make sure all migrated files were renamed */
-	for (guint i = 0; fn_merge[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
 		g_autofree gchar *old = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
 		g_autofree gchar *new = g_strdup_printf("%s.old", old);
 		ret = g_file_test(old, G_FILE_TEST_EXISTS);
@@ -7920,7 +7964,7 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* hidraw -> pixart_rf */
-	device = fu_engine_get_device(engine, "6acd27f1feb25ba3b604063de4c13b604776b2f5", &error);
+	device = fu_engine_get_device(engine, "ab6b164573f0782ee23e38740d0e0934ee352090", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "hidraw");
@@ -7930,7 +7974,7 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "pixart_rf");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "PIXART Pixart dual-mode mouse");
-	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "usb-0000:00:14.0-1/input1");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "usb-0000_00_14.0-1/input1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
 
 	/* check can read random files */
@@ -8232,7 +8276,7 @@ fu_test_engine_fake_block(gconstpointer user_data)
 	}
 
 	/* block */
-	device = fu_engine_get_device(engine, "7772d9fe9419e3ea564216e12913a16e233378a6", &error);
+	device = fu_engine_get_device(engine, "82063150bef0a76856b9ab79cbf88e4f6ef2f93d", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "block");
@@ -8281,6 +8325,7 @@ main(int argc, char **argv)
 	/* do not save silo */
 	self->ctx = fu_context_new();
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD);
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

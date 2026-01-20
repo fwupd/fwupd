@@ -38,9 +38,3 @@ enum FuArchiveCompression {
     Lz4,      // Since: 1.8.1
     Zstd,     // Since: 1.8.1
 }
-
-// Flags to use when loading the archive
-enum FuArchiveFlags {
-    None = 0,
-    IgnorePath = 1 << 0,
-}

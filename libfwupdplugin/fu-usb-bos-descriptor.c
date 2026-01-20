@@ -24,7 +24,8 @@
 
 struct _FuUsbBosDescriptor {
 	FuUsbDescriptor parent_instance;
-	struct libusb_bos_dev_capability_descriptor bos_cap;
+	guint8 length;
+	guint8 dev_capability_type;
 };
 
 static void
@@ -41,10 +42,9 @@ static void
 fu_usb_bos_descriptor_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
-	fu_xmlb_builder_insert_kv(
-	    bn,
-	    "dev_capability_type",
-	    fu_usb_descriptor_kind_to_string(self->bos_cap.bDevCapabilityType));
+	fu_xmlb_builder_insert_kv(bn,
+				  "dev_capability_type",
+				  fu_usb_descriptor_kind_to_string(self->dev_capability_type));
 }
 
 static gboolean
@@ -56,12 +56,12 @@ fu_usb_bos_descriptor_build(FuFirmware *firmware, XbNode *n, GError **error)
 	/* simple properties */
 	str = xb_node_query_text(n, "dev_capability_type", NULL);
 	if (str != NULL) {
-		self->bos_cap.bDevCapabilityType = fu_usb_descriptor_kind_from_string(str);
-		if (self->bos_cap.bDevCapabilityType == FU_USB_DESCRIPTOR_KIND_INVALID) {
+		self->dev_capability_type = fu_usb_descriptor_kind_from_string(str);
+		if (self->dev_capability_type == FU_USB_DESCRIPTOR_KIND_INVALID) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid DevCapabilityType %s",
+				    "invalid dev_capability_type %s",
 				    str);
 			return FALSE;
 		}
@@ -85,7 +85,7 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GE
 							0x0,
 							error))
 		return FALSE;
-	self->bos_cap.bDevCapabilityType = tmpi;
+	self->dev_capability_type = tmpi;
 
 	/* data */
 	str = fwupd_json_object_get_string(json_obj, "ExtraData", NULL);
@@ -119,10 +119,10 @@ fu_usb_bos_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwu
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* optional properties */
-	if (self->bos_cap.bDevCapabilityType != 0) {
+	if (self->dev_capability_type != 0) {
 		fwupd_json_object_add_integer(json_obj,
 					      "DevCapabilityType",
-					      self->bos_cap.bDevCapabilityType);
+					      self->dev_capability_type);
 	}
 
 	/* data */
@@ -148,7 +148,7 @@ guint8
 fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
 {
 	g_return_val_if_fail(FU_IS_USB_BOS_DESCRIPTOR(self), 0);
-	return self->bos_cap.bDevCapabilityType;
+	return self->dev_capability_type;
 }
 
 static gboolean
@@ -169,17 +169,17 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 	st = fu_usb_bos_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	self->bos_cap.bLength = fu_usb_bos_hdr_get_length(st);
-	self->bos_cap.bDevCapabilityType = fu_usb_bos_hdr_get_dev_capability_type(st);
+	self->length = fu_usb_bos_hdr_get_length(st);
+	self->dev_capability_type = fu_usb_bos_hdr_get_dev_capability_type(st);
 
 	/* data */
-	if (self->bos_cap.bLength > st->buf->len) {
+	if (self->length > st->buf->len) {
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GInputStream) img_stream = NULL;
 
 		img_stream = fu_partial_input_stream_new(stream,
 							 st->buf->len,
-							 self->bos_cap.bLength - st->buf->len,
+							 self->length - st->buf->len,
 							 error);
 		if (img_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut BOS descriptor: ");
@@ -207,12 +207,11 @@ fu_usb_bos_descriptor_write(FuFirmware *firmware, GError **error)
 	g_autoptr(FuUsbBosHdr) st = fu_usb_bos_hdr_new();
 	g_autoptr(GBytes) blob = NULL;
 
-	fu_usb_bos_hdr_set_dev_capability_type(st, self->bos_cap.bDevCapabilityType);
+	fu_usb_bos_hdr_set_dev_capability_type(st, self->dev_capability_type);
 	blob = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, NULL);
-	if (blob != NULL) {
+	if (blob != NULL)
 		fu_byte_array_append_bytes(st->buf, blob);
-		fu_usb_bos_hdr_set_length(st, st->buf->len);
-	}
+	fu_usb_bos_hdr_set_length(st, st->buf->len);
 
 	/* success */
 	return g_steal_pointer(&st->buf);
@@ -244,21 +243,24 @@ fu_usb_bos_descriptor_init(FuUsbBosDescriptor *self)
 
 /**
  * fu_usb_bos_descriptor_new:
+ * @st_hdr: a #FuUsbBosHdr
  *
  * Return value: a new #FuUsbBosDescriptor object.
  *
- * Since: 2.0.0
+ * Since: 2.1.1
  **/
 FuUsbBosDescriptor *
-fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos_cap)
+fu_usb_bos_descriptor_new(FuUsbBosHdr *st_hdr)
 {
 	g_autoptr(FuUsbBosDescriptor) self = g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
 	g_autoptr(FuFirmware) img = fu_firmware_new();
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* copy the data */
-	memcpy(&self->bos_cap, bos_cap, sizeof(*bos_cap)); /* nocheck:blocked */
-	bytes = g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - FU_USB_BOS_HDR_SIZE);
+	self->length = fu_usb_bos_hdr_get_length(st_hdr);
+	self->dev_capability_type = fu_usb_bos_hdr_get_dev_capability_type(st_hdr);
+	bytes = g_bytes_new(st_hdr->buf->data + FU_USB_BOS_HDR_SIZE,
+			    st_hdr->buf->len - FU_USB_BOS_HDR_SIZE);
 	fu_firmware_set_bytes(img, bytes);
 	fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
 	if (!fu_firmware_add_image(FU_FIRMWARE(self), img, NULL))

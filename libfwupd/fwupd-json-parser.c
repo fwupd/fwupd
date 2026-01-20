@@ -41,7 +41,10 @@ G_DEFINE_TYPE(FwupdJsonParser, fwupd_json_parser, G_TYPE_OBJECT)
  * @self: a #FwupdJsonParser
  * @max_depth: max nesting depth
  *
- * Sets the maximum nesting depth. By default there is no limit.
+ * Sets the maximum nesting depth.
+ *
+ * The default maximum depth is %G_MAXUINT16, but users of #FwupdJsonParser should use this function
+ * to set a better limit.
  *
  * Since: 2.1.1
  **/
@@ -57,7 +60,10 @@ fwupd_json_parser_set_max_depth(FwupdJsonParser *self, guint max_depth)
  * @self: a #FwupdJsonParser
  * @max_items: max items
  *
- * Sets the maximum number of items in an array or object. By default there is no limit.
+ * Sets the maximum number of items in an array or object.
+ *
+ * The default maximum items is %G_MAXUINT16, but users of #FwupdJsonParser should use this function
+ * to set a better limit.
  *
  * Since: 2.1.1
  **/
@@ -73,7 +79,10 @@ fwupd_json_parser_set_max_items(FwupdJsonParser *self, guint max_items)
  * @self: a #FwupdJsonParser
  * @max_quoted: maximum size of a quoted string
  *
- * Sets the maximum size of a quoted string. By default there is no limit.
+ * Sets the maximum size of a quoted string.
+ *
+ * The default maximum quoted string length is %G_MAXUINT16, but users of #FwupdJsonParser should
+ * use this function to set a better limit.
  *
  * Since: 2.1.1
  **/
@@ -86,6 +95,7 @@ fwupd_json_parser_set_max_quoted(FwupdJsonParser *self, guint max_quoted)
 
 typedef enum {
 	FWUPD_JSON_PARSER_TOKEN_INVALID = 0,
+	FWUPD_JSON_PARSER_TOKEN_NULL = '0',
 	FWUPD_JSON_PARSER_TOKEN_RAW = 'b',
 	FWUPD_JSON_PARSER_TOKEN_STRING = '\"',
 	FWUPD_JSON_PARSER_TOKEN_OBJECT_START = '{',
@@ -148,7 +158,7 @@ fwupd_json_parser_helper_dump_acc(FwupdJsonParserHelper *helper,
 		if (helper->acc->len == 0)
 			return;
 		if (g_ascii_strncasecmp(helper->acc->str, "null", helper->acc->len) == 0) {
-			*token = FWUPD_JSON_PARSER_TOKEN_STRING;
+			*token = FWUPD_JSON_PARSER_TOKEN_NULL;
 		} else {
 			*token = FWUPD_JSON_PARSER_TOKEN_RAW;
 			if (str != NULL)
@@ -485,6 +495,8 @@ fwupd_json_parser_load_object(FwupdJsonParser *self, FwupdJsonParserHelper *help
 			fwupd_json_object_add_array_internal(json_obj, key, json_array2);
 		} else if (token3 == FWUPD_JSON_PARSER_TOKEN_STRING) {
 			fwupd_json_object_add_string_internal(json_obj, key, val, helper->flags);
+		} else if (token3 == FWUPD_JSON_PARSER_TOKEN_NULL) {
+			fwupd_json_object_add_null_internal(json_obj, key, helper->flags);
 		} else {
 			if (G_UNLIKELY(val == NULL)) {
 				g_set_error(error,
@@ -519,6 +531,16 @@ fwupd_json_parser_load_from_stream_internal(FwupdJsonParser *self,
 {
 	FwupdJsonParserToken token = FWUPD_JSON_PARSER_TOKEN_INVALID;
 	g_autoptr(GRefString) str = NULL;
+
+#ifndef SUPPORTED_BUILD
+	/* runtime warnings */
+	if (self->max_depth == G_MAXUINT16)
+		g_warning("using the default max depth; use fwupd_json_parser_set_max_depth()");
+	if (self->max_items == G_MAXUINT16)
+		g_warning("using the default max items; use fwupd_json_parser_set_max_items()");
+	if (self->max_quoted == G_MAXUINT16)
+		g_warning("using the default max quoted; use fwupd_json_parser_set_max_quoted()");
+#endif
 
 	if (!fwupd_json_parser_helper_get_next_token(helper, &token, &str, error))
 		return NULL;
@@ -652,6 +674,9 @@ fwupd_json_parser_class_init(FwupdJsonParserClass *klass)
 static void
 fwupd_json_parser_init(FwupdJsonParser *self)
 {
+	self->max_depth = G_MAXUINT16;
+	self->max_items = G_MAXUINT16;
+	self->max_quoted = G_MAXUINT16;
 }
 
 /**

@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include <libfwupdplugin/fu-acpi-table.h>
-#include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-cab-firmware.h>
 #include <libfwupdplugin/fu-cfu-offer.h>
 #include <libfwupdplugin/fu-cfu-payload.h>
@@ -46,10 +45,13 @@
 #include <libfwupdplugin/fu-pefile-firmware.h>
 #include <libfwupdplugin/fu-sbatlevel-section.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-tpm-eventlog-v1.h>
+#include <libfwupdplugin/fu-tpm-eventlog-v2.h>
 #include <libfwupdplugin/fu-usb-device-fw-ds20.h>
 #include <libfwupdplugin/fu-usb-device-ms-ds20.h>
 #include <libfwupdplugin/fu-uswid-firmware.h>
 #include <libfwupdplugin/fu-x509-certificate.h>
+#include <libfwupdplugin/fu-zip-firmware.h>
 
 #include "fu-context-helper.h"
 
@@ -71,7 +73,6 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_LINEAR_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SREC_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_HID_DESCRIPTOR);
-	fu_context_add_firmware_gtype(self, FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self, FU_TYPE_ACPI_TABLE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SBATLEVEL_SECTION);
@@ -102,4 +103,7 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_INTEL_THUNDERBOLT_NVM);
 	fu_context_add_firmware_gtype(self, FU_TYPE_USB_DEVICE_FW_DS20);
 	fu_context_add_firmware_gtype(self, FU_TYPE_USB_DEVICE_MS_DS20);
+	fu_context_add_firmware_gtype(self, FU_TYPE_TPM_EVENTLOG_V1);
+	fu_context_add_firmware_gtype(self, FU_TYPE_TPM_EVENTLOG_V2);
+	fu_context_add_firmware_gtype(self, FU_TYPE_ZIP_FIRMWARE);
 }

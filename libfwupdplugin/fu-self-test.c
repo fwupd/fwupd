@@ -298,7 +298,7 @@ fu_archive_invalid_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
 
-	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, &error);
+	archive = fu_archive_new(data, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(archive);
 }
@@ -330,7 +330,7 @@ fu_archive_cab_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
 
-	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, &error);
+	archive = fu_archive_new(data, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(archive);
 
@@ -431,6 +431,32 @@ fu_common_bitwise_func(void)
 	g_assert_cmpint(val, ==, 0x8000000000000000ull);
 	FU_BIT_CLEAR(val, 63);
 	g_assert_cmpint(val, ==, 0);
+}
+
+static void
+fu_common_byte_array_safe_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GByteArray) array = g_byte_array_new();
+	const guint8 buf[] = {0x01, 0x02, 0x03};
+
+	/* all buffer */
+	ret = fu_byte_array_append_safe(array, buf, sizeof(buf), 0, sizeof(buf), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 3);
+
+	/* +1, -1 */
+	ret = fu_byte_array_append_safe(array, buf, sizeof(buf), 1, sizeof(buf) - 1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 3 + 2);
+
+	/* boom */
+	ret = fu_byte_array_append_safe(array, buf, sizeof(buf), 1, sizeof(buf), &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_false(ret);
 }
 
 static void
@@ -4252,50 +4278,6 @@ fu_firmware_csv_func(void)
 }
 
 static void
-fu_firmware_archive_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
-	g_autoptr(FuFirmware) img_asc = NULL;
-	g_autoptr(FuFirmware) img_bin = NULL;
-	g_autoptr(FuFirmware) img_both = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = NULL;
-
-#ifndef HAVE_LIBARCHIVE
-	g_test_skip("no libarchive support");
-	return;
-#endif
-
-	fn = g_test_build_filename(G_TEST_BUILT, "tests", "firmware.zip", NULL);
-	file = g_file_new_for_path(fn);
-	ret = fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(fu_archive_firmware_get_format(FU_ARCHIVE_FIRMWARE(firmware)),
-			==,
-			FU_ARCHIVE_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_archive_firmware_get_compression(FU_ARCHIVE_FIRMWARE(firmware)),
-			==,
-			FU_ARCHIVE_COMPRESSION_UNKNOWN);
-
-	img_bin =
-	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.txt", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(img_bin);
-	img_asc = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
-							"*.txt.asc",
-							&error);
-	g_assert_no_error(error);
-	g_assert_nonnull(img_asc);
-	img_both =
-	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.txt*", &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_null(img_both);
-}
-
-static void
 fu_firmware_linear_func(void)
 {
 	gboolean ret;
@@ -5090,7 +5072,9 @@ fu_bios_settings_load_func(void)
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
 
 #ifdef _WIN32
-	/* the "AlarmDate(MM\DD\YYYY)" setting really confuses wine for obvious reasons */
+	/* BIOS settings are Linux-specific (require sysfs). The test data directory
+	 * "AlarmDate(MM\DD\YYYY)" was also causing repository clone failures on Windows,
+	 * which has been fixed by renaming it to "AlarmDate-MM-DD-YYYY" */
 	g_test_skip("BIOS settings not supported on Windows");
 	return;
 #endif
@@ -5246,6 +5230,16 @@ fu_bios_settings_load_func(void)
 		setting = fu_context_get_bios_setting(ctx, "com.dell-wmi-sysman.SecureBoot");
 		g_assert_nonnull(setting);
 		ret = fwupd_bios_setting_get_read_only(setting);
+		g_assert_true(ret);
+	}
+	g_free(test_dir);
+
+	/* load BIOS settings from a HP Z2 Mini G1a */
+	test_dir = g_build_filename(base_dir, "hp-z2-mini-g1a", NULL);
+	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
+		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+		ret = fu_context_reload_bios_settings(ctx, &error);
+		g_assert_no_error(error);
 		g_assert_true(ret);
 	}
 }
@@ -5640,6 +5634,16 @@ fu_firmware_builder_round_trip_func(void)
 		"845be24c3f31c4e8f0feeadfe356b3156628ba99",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
+	    {
+		"tpm-eventlog-v1.builder.xml",
+		"79b257b9f668681e6c50f3c4c59b5430a3c56625",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"tpm-eventlog-v2.builder.xml",
+		"0b965076bd38f737aaadbaff464199ba104f719a",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
 #ifdef HAVE_CBOR
 	    {
 		"uswid.builder.xml",
@@ -5652,6 +5656,16 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 #endif
+	    {
+		"zip.builder.xml",
+		"aefdd7b205927e383981b03ded1ad22878d03263",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
+		"zip-compressed.builder.xml",
+		"10792ff01b036ed89d11a6480694ccfd89c4d9fd",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		gboolean ret;
@@ -5659,6 +5673,7 @@ fu_firmware_builder_round_trip_func(void)
 		g_autoptr(GError) error = NULL;
 
 		filename = g_test_build_filename(G_TEST_DIST, "tests", map[i].xml_fn, NULL);
+		g_debug("parsing: %s", filename);
 		ret = fu_firmware_roundtrip_from_filename(filename,
 							  map[i].checksum,
 							  map[i].flags,
@@ -6797,6 +6812,304 @@ fu_device_udev_func(void)
 	g_assert_cmpint(attrs->len, >, 10);
 }
 
+static gint
+fu_security_attrs_sort_cb(gconstpointer item1, gconstpointer item2)
+{
+	FwupdSecurityAttr *attr1 = *((FwupdSecurityAttr **)item1);
+	FwupdSecurityAttr *attr2 = *((FwupdSecurityAttr **)item2);
+	return g_strcmp0(fwupd_security_attr_get_appstream_id(attr1),
+			 fwupd_security_attr_get_appstream_id(attr2));
+}
+
+static void
+fu_security_attrs_minimize(FuSecurityAttrs *attrs)
+{
+	g_autoptr(GPtrArray) attrs_arr = fu_security_attrs_get_all_mutable(attrs);
+	for (guint i = 0; i < attrs_arr->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs_arr, i);
+		fwupd_security_attr_set_url(attr, NULL);
+		fwupd_security_attr_set_plugin(attr, NULL);
+		fwupd_security_attr_set_fwupd_version(attr, NULL);
+		fwupd_security_attr_set_flags(attr, 0);
+		fwupd_security_attr_set_level(attr, 0);
+	}
+	g_ptr_array_sort(attrs_arr, fu_security_attrs_sort_cb);
+}
+
+static void
+fu_intel_me16_device_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts6 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts = NULL;
+	g_autoptr(GError) error = NULL;
+
+	st_hfsts = fu_intel_me_device_get_hfsts(device, 1);
+	g_assert_null(st_hfsts);
+
+	/*
+	 * ROG MAXIMUS Z790 HERO
+	 * Version:              16.1.32.2473
+	 * Family:               csme16
+	 * Issue:                not-vulnerable
+	 * Hfsts1:               0x90000245
+	 * Hfsts2:               0x39850106
+	 * Hfsts3:               0x20
+	 * Hfsts4:               0x4000
+	 * Hfsts6:               0x40200002
+	 */
+	fu_device_set_plugin(FU_DEVICE(device), "intel_me");
+	fu_device_set_version(FU_DEVICE(device), "16.1.32.2473");
+	g_assert_cmpint(fu_intel_me_device_get_family(device), ==, FU_INTEL_ME_FAMILY_CSME16);
+	g_assert_cmpint(fu_intel_me_device_get_issue(device), ==, FU_INTEL_ME_ISSUE_NOT_VULNERABLE);
+
+	fu_struct_intel_me_hfsts_set_value(st_hfsts1, 0x90000245);
+	fu_struct_intel_me_hfsts_set_value(st_hfsts6, 0x40200002);
+	fu_intel_me_device_set_hfsts(device, 1, st_hfsts1);
+	fu_intel_me_device_set_hfsts(device, 6, st_hfsts6);
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	fu_security_attrs_depsolve(attrs);
+	fu_security_attrs_minimize(attrs);
+	str = fwupd_codec_to_json_string(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(str);
+	g_print("%s\n", str);
+	ret = fu_test_compare_lines(
+	    str,
+	    "{\n"
+	    "  \"SecurityAttributes\": [\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Acm\",\n"
+	    "      \"HsiResult\": \"not-valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Enabled\",\n"
+	    "      \"HsiResult\": \"enabled\",\n"
+	    "      \"HsiResultSuccess\": \"enabled\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Otp\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Policy\",\n"
+	    "      \"HsiResult\": \"not-valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Verified\",\n"
+	    "      \"HsiResult\": \"not-valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.OverrideStrap\",\n"
+	    "      \"HsiResult\": \"locked\",\n"
+	    "      \"HsiResultSuccess\": \"locked\",\n"
+	    "      \"kind\": \"csme16\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.Version\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\",\n"
+	    "      \"kind\": \"csme16\",\n"
+	    "      \"version\": \"16.1.32.2473\"\n"
+	    "    }\n"
+	    "  ]\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_intel_me18_device_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts5 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts6 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(GError) error = NULL;
+
+	/*
+	 * Dell XPS 13 9350
+	 * Version:              20.0.0.1322
+	 * Family:               csme18
+	 * Issue:                not-vulnerable
+	 * Hfsts1:               0xA4000255
+	 * Hfsts2:               0x80218500
+	 * Hfsts3:               0x30
+	 * Hfsts4:               0x4
+	 * Hfsts5:               0x2f61f03
+	 * Hfsts6:               0x0
+	 */
+	fu_device_set_plugin(FU_DEVICE(device), "intel_me");
+	fu_device_set_version(FU_DEVICE(device), "20.0.0.1322");
+	g_assert_cmpint(fu_intel_me_device_get_family(device), ==, FU_INTEL_ME_FAMILY_CSME18);
+	g_assert_cmpint(fu_intel_me_device_get_issue(device), ==, FU_INTEL_ME_ISSUE_NOT_VULNERABLE);
+
+	fu_struct_intel_me_hfsts_set_value(st_hfsts1, 0xA4000255);
+	fu_struct_intel_me_hfsts_set_value(st_hfsts5, 0x40200002);
+	fu_struct_intel_me_hfsts_set_value(st_hfsts6, 0x0);
+	fu_intel_me_device_set_hfsts(device, 1, st_hfsts1);
+	fu_intel_me_device_set_hfsts(device, 5, st_hfsts5);
+	fu_intel_me_device_set_hfsts(device, 6, st_hfsts6);
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	fu_security_attrs_depsolve(attrs);
+	fu_security_attrs_minimize(attrs);
+	str = fwupd_codec_to_json_string(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(str);
+	g_print("%s\n", str);
+	ret = fu_test_compare_lines(
+	    str,
+	    "{\n"
+	    "  \"SecurityAttributes\": [\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Acm\",\n"
+	    "      \"HsiResult\": \"not-valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Enabled\",\n"
+	    "      \"HsiResult\": \"enabled\",\n"
+	    "      \"HsiResultSuccess\": \"enabled\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Otp\",\n"
+	    "      \"HsiResult\": \"not-valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.ManufacturingMode\",\n"
+	    "      \"HsiResult\": \"not-locked\",\n"
+	    "      \"HsiResultSuccess\": \"locked\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.OverrideStrap\",\n"
+	    "      \"HsiResult\": \"locked\",\n"
+	    "      \"HsiResultSuccess\": \"locked\",\n"
+	    "      \"kind\": \"csme18\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.Version\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\",\n"
+	    "      \"kind\": \"csme18\",\n"
+	    "      \"version\": \"20.0.0.1322\"\n"
+	    "    }\n"
+	    "  ]\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_intel_me16_device_hap_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuIntelMeDevice) device = fu_intel_me_device_new(ctx);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts1 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts5 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(FuStructIntelMeHfsts) st_hfsts6 = fu_struct_intel_me_hfsts_new();
+	g_autoptr(GError) error = NULL;
+
+	/*
+	 * Alder Lake-P HAP set, Boot Guard enabled, fused (no manufacturing mode)
+	 * Version:              16.0.0.0
+	 * Family:               csme17
+	 * Issue:                not-vulnerable
+	 * Hfsts1:               0x80022054
+	 * Hfsts2:               0x30284106
+	 * Hfsts3:               0x00000020
+	 * Hfsts4:               0x00006000
+	 * Hfsts5:               0x00001f03
+	 * Hfsts6:               0xc46003cf
+	 */
+	fu_device_set_plugin(FU_DEVICE(device), "intel_me");
+	fu_device_set_version(FU_DEVICE(device), "16.0.0.0");
+	g_assert_cmpint(fu_intel_me_device_get_family(device), ==, FU_INTEL_ME_FAMILY_CSME16);
+	g_assert_cmpint(fu_intel_me_device_get_issue(device), ==, FU_INTEL_ME_ISSUE_NOT_VULNERABLE);
+
+	fu_struct_intel_me_hfsts_set_value(st_hfsts1, 0x80022054);
+	fu_struct_intel_me_hfsts_set_value(st_hfsts5, 0x00001f03);
+	fu_struct_intel_me_hfsts_set_value(st_hfsts6, 0xc46003cf);
+	fu_intel_me_device_set_hfsts(device, 1, st_hfsts1);
+	fu_intel_me_device_set_hfsts(device, 5, st_hfsts5);
+	fu_intel_me_device_set_hfsts(device, 6, st_hfsts6);
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	fu_security_attrs_depsolve(attrs);
+	fu_security_attrs_minimize(attrs);
+	str = fwupd_codec_to_json_string(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(str);
+	g_print("%s\n", str);
+	ret = fu_test_compare_lines(
+	    str,
+	    "{\n"
+	    "  \"SecurityAttributes\": [\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Acm\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Enabled\",\n"
+	    "      \"HsiResult\": \"enabled\",\n"
+	    "      \"HsiResultSuccess\": \"enabled\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Otp\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Policy\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.IntelBootguard.Verified\",\n"
+	    "      \"HsiResult\": \"valid\",\n"
+	    "      \"HsiResultSuccess\": \"valid\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.OverrideStrap\",\n"
+	    "      \"HsiResult\": \"locked\",\n"
+	    "      \"HsiResultSuccess\": \"locked\",\n"
+	    "      \"kind\": \"csme16\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\": \"org.fwupd.hsi.Mei.Version\",\n"
+	    "      \"HsiResult\": \"not-enabled\",\n"
+	    "      \"HsiResultSuccess\": \"valid\",\n"
+	    "      \"kind\": \"csme16\",\n"
+	    "      \"version\": \"16.0.0.0\"\n"
+	    "    }\n"
+	    "  ]\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 static void
 fu_cab_checksum_func(void)
 {
@@ -6823,6 +7136,52 @@ fu_cab_checksum_func(void)
 		g_assert_true(ret);
 		g_assert_cmpint(checksum, ==, checksums[i]);
 	}
+}
+
+static void
+fu_cab_compressed_size_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuCabFirmware) cab2 = fu_cab_firmware_new();
+	g_autoptr(FuCabFirmware) cab = fu_cab_firmware_new();
+	g_autoptr(FuCabImage) img = fu_cab_image_new();
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) blob_img = g_bytes_new_static("abc", 3);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* build a cab file and then tweak the payload */
+	fu_cab_firmware_set_compressed(cab, TRUE);
+	fu_firmware_set_bytes(FU_FIRMWARE(img), blob_img);
+	fu_firmware_set_id(FU_FIRMWARE(img), "foo.txt");
+	ret = fu_firmware_add_image(FU_FIRMWARE(cab), FU_FIRMWARE(img), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* write to a mutable buffer */
+	blob = fu_firmware_write(FU_FIRMWARE(cab), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	buf = g_bytes_unref_to_array(g_steal_pointer(&blob));
+	g_assert_nonnull(buf);
+	g_assert_nonnull(buf->data);
+
+	/* change FuStructCabData.uncomp to be too small */
+	g_assert_cmpint(buf->len, ==, 0x53);
+	g_assert_cmpint(buf->data[0x4A], ==, 0x03);
+	buf->data[0x4A] = 0x02;
+
+	/* parse the new blob */
+	blob2 = g_bytes_new(buf->data, buf->len);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cab2),
+				      blob2,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_true(g_str_has_prefix(error->message, "decompressed size mismatch"));
+	g_assert_false(ret);
 }
 
 static void
@@ -7082,16 +7441,20 @@ fu_plugin_struct_func(void)
 
 	/* to string */
 	str2 = fu_struct_self_test_to_string(st);
-	g_assert_cmpstr(str2,
-			==,
-			"FuStructSelfTest:\n"
-			"  length: 0xdead\n"
-			"  revision: 0xff [all]\n"
-			"  owner: 00000000-0000-0000-0000-000000000000\n"
-			"  oem_table_id: X\n"
-			"  oem_revision: 0x0\n"
-			"  asl_compiler_id: 0xDFDFDFDF\n"
-			"  asl_compiler_revision: 0x0");
+	ret = fu_test_compare_lines(str2,
+				    "FuStructSelfTest:\n"
+				    "  signature: 0x12345678\n"
+				    "  length: 0xdead\n"
+				    "  revision: 0xff [all]\n"
+				    "  owner: 00000000-0000-0000-0000-000000000000\n"
+				    "  oem_id: ABCDEF\n"
+				    "  oem_table_id: X\n"
+				    "  oem_revision: 0x0\n"
+				    "  asl_compiler_id: 0xDFDFDFDF\n"
+				    "  asl_compiler_revision: 0x0",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* parse failing signature */
 	st->buf->data[0] = 0xFF;
@@ -7153,18 +7516,22 @@ fu_plugin_struct_wrapped_func(void)
 	/* to string */
 	str2 = fu_struct_self_test_wrapped_to_string(st);
 	g_debug("%s", str2);
-	g_assert_cmpstr(str2,
-			==,
-			"FuStructSelfTestWrapped:\n"
-			"  less: 0x99\n"
-			"  base: FuStructSelfTest:\n"
-			"  length: 0x3b\n"
-			"  revision: 0xfe\n"
-			"  owner: 00000000-0000-0000-0000-000000000000\n"
-			"  oem_revision: 0x0\n"
-			"  asl_compiler_id: 0xDFDFDFDF\n"
-			"  asl_compiler_revision: 0x0\n"
-			"  more: 0x12");
+	fu_test_compare_lines(str2,
+			      "FuStructSelfTestWrapped:\n"
+			      "  less: 0x99\n"
+			      "  base: FuStructSelfTest:\n"
+			      "  signature: 0x12345678\n"
+			      "  length: 0x3b\n"
+			      "  revision: 0xfe\n"
+			      "  owner: 00000000-0000-0000-0000-000000000000\n"
+			      "  oem_id: ABCDEF\n"
+			      "  oem_revision: 0x0\n"
+			      "  asl_compiler_id: 0xDFDFDFDF\n"
+			      "  asl_compiler_revision: 0x0\n"
+			      "  more: 0x12",
+			      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* parse failing signature */
 	st->buf->data[FU_STRUCT_SELF_TEST_WRAPPED_OFFSET_BASE] = 0xFF;
@@ -7300,6 +7667,7 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_USB_BOS_DESCRIPTOR);
 
 	g_test_add_func("/fwupd/cab{checksum}", fu_cab_checksum_func);
+	g_test_add_func("/fwupd/cab{compressed-size}", fu_cab_compressed_size_func);
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/input-stream{sum-overflow}", fu_input_stream_sum_overflow_func);
@@ -7362,6 +7730,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
+	g_test_add_func("/fwupd/common{byte-array-safe}", fu_common_byte_array_safe_func);
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
@@ -7414,7 +7783,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{convert-version}", fu_firmware_convert_version_func);
 	g_test_add_func("/fwupd/firmware{builder-round-trip}", fu_firmware_builder_round_trip_func);
 	g_test_add_func("/fwupd/firmware{csv}", fu_firmware_csv_func);
-	g_test_add_func("/fwupd/firmware{archive}", fu_firmware_archive_func);
 	g_test_add_func("/fwupd/firmware{linear}", fu_firmware_linear_func);
 	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);
@@ -7475,5 +7843,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
 	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
 	g_test_add_func("/fwupd/device{progress}", fu_plugin_device_progress_func);
+	g_test_add_func("/fwupd/intel-me16-device", fu_intel_me16_device_func);
+	g_test_add_func("/fwupd/intel-me16-device{hap}", fu_intel_me16_device_hap_func);
+	g_test_add_func("/fwupd/intel-me18-device", fu_intel_me18_device_func);
 	return g_test_run();
 }

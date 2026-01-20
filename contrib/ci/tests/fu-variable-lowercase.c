@@ -5,6 +5,7 @@
  *
  * nocheck:expect: mixed case variable
  * nocheck:expect: mixed case struct member
+ * nocheck:expect: do not use param guint8 buf[]
  */
 
 typedef struct {
@@ -13,7 +14,8 @@ typedef struct {
 } FuTest;
 
 static void
-fu_variable_lowercase(void)
+fu_variable_lowercase(guint8 buf[], gpointer user_data)
 {
 	guint16 Enter_SBL = 0;
+	guint8 *PRAM = NULL;
 }

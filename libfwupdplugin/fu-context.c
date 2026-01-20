@@ -266,6 +266,25 @@ fu_context_get_smbios(FuContext *self)
 }
 
 /**
+ * fu_context_set_smbios:
+ * @self: a #FuContext
+ * @smbios: a #FuSmbios
+ *
+ * Sets the SMBIOS store. This is only required by self test code.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_set_smbios(FuContext *self, FuSmbios *smbios)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(FU_IS_SMBIOS(smbios));
+	g_set_object(&priv->smbios, smbios);
+	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
+}
+
+/**
  * fu_context_get_hwids:
  * @self: a #FuContext
  *

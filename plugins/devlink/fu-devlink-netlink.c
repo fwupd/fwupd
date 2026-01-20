@@ -399,7 +399,8 @@ fu_devlink_netlink_genl_mcast_group_attr_cb(const struct nlattr *attr, gpointer 
 
 /* family resolution callback */
 static gint
-fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *nlh, gpointer data)
+fu_devlink_netlink_fu_devlink_netlink_genl_ensure_family_cb(const struct nlmsghdr *nlh,
+							    gpointer data)
 {
 	FuDevlinkGenSocket *nlg = data;
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
@@ -438,9 +439,9 @@ fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *
 
 /* get generic netlink family ID */
 static gboolean
-fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
-				   const gchar *family_name,
-				   GError **error)
+fu_devlink_netlink_genl_ensure_family(FuDevlinkGenSocket *nlg,
+				      const gchar *family_name,
+				      GError **error)
 {
 	struct genlmsghdr hdr = {
 	    .cmd = CTRL_CMD_GETFAMILY,
@@ -456,7 +457,7 @@ fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
 	return fu_devlink_netlink_msg_send_recv(
 	    nlg,
 	    nlh,
-	    fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb,
+	    fu_devlink_netlink_fu_devlink_netlink_genl_ensure_family_cb,
 	    nlg,
 	    error);
 }
@@ -543,7 +544,7 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 	}
 
 	/* resolve devlink family ID dynamically */
-	if (!fu_devlink_netlink_genl_family_get(nlg, DEVLINK_GENL_NAME, error)) {
+	if (!fu_devlink_netlink_genl_ensure_family(nlg, DEVLINK_GENL_NAME, error)) {
 		g_prefix_error_literal(error, "failed to resolve devlink family ID: ");
 		return NULL;
 	}

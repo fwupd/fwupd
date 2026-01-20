@@ -1,0 +1,15 @@
+<firmware gtype="FuTpmEventlogV2">
+  <firmware gtype="FuTpmEventlogItem">
+    <data type="GBytes" size="0x1">AA==</data>
+    <kind>s-crtm-contents</kind>
+    <sha1>19ce8e1347a709d2b485d519695e3ce10b939485</sha1>
+    <sha256>eca85ec936719874dfc1499810fb327c25c09365c30262dd94874bf4add0beed</sha256>
+  </firmware>
+  <firmware gtype="FuTpmEventlogItem">
+    <data type="GBytes" size="0x1">AA==</data>
+    <kind>efi-variable-driver-config</kind>
+    <pcr>0x7</pcr>
+    <sha1>a735f66fe2104a41c54ebce24bfaca3e7dcdd3ed</sha1>
+    <sha256>58a0c07f6f04c9d61afe2b70e99bc3caf569856119bd543cebae7dcd9ac2c7d1</sha256>
+  </firmware>
+</firmware>
