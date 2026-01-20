@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "170f2c19f17b7819644d3fcc7617621cc3350a04-hughski-colorhug2-2.0.6.cab",
-      "emulation-url": "5ddb5d8e9ac85ea05b8dafcad638befdf3e70e5e1db0ca47489fa43d93f33a57-hughski-colorhug2-2.0.6.zip",
+      "emulation-url": "c30534e54b5a0da8d3b402e27f091e76a20bdcdf168c303a11505cbcb21967fe-hughski-colorhug2-2.0.6.zip",
       "components": [
         {
           "version": "2.0.6",
@@ -16,7 +16,7 @@
     },
     {
       "url": "e5ad222bdbd3d3d48d8613e67c7e0a0e194f8cd828e33c554d9f05d933e482c7-hughski-colorhug2-2.0.7.cab",
-      "emulation-url": "29ee025e65b6a469556bbdd819cba665b043244c90c65b9f659933a347f8cf2e-hughski-colorhug2-2.0.7.zip",
+      "emulation-url": "452020517f0fa6e5d9c2f6902f19ca29a217bf95dc1d7009eb6af2a1d2efb740-hughski-colorhug2-2.0.7.zip",
       "components": [
         {
           "version": "2.0.7",
