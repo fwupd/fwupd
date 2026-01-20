@@ -126,6 +126,24 @@ class Builder:
             )
             subprocess.run(["make", "all", "install"], cwd=srcdir_build, check=True)
 
+    def build_automake_project(self, srcdir: str, argv=None) -> None:
+        """configure and build the autoconf/automake project"""
+        if not argv:
+            argv = []
+        srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
+        if not os.path.exists(srcdir_build):
+            os.makedirs(srcdir_build, exist_ok=True)
+            subprocess.run(
+                [
+                    "../autogen.sh",
+                    f"--prefix={self.builddir}",
+                ]
+                + argv,
+                cwd=srcdir_build,
+                check=True,
+            )
+            subprocess.run(["make", "install"], cwd=srcdir_build, check=True)
+
     def add_work_includedir(self, value: str) -> None:
         """add a CFLAG"""
         self.cflags.append(f"-I{self.builddir}/{value}")
@@ -322,6 +340,14 @@ def _build(bld: Builder) -> None:
     bld.build_cmake_project(src, argv=["-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"])
     bld.add_build_ldflag("lib/libcbor.a")
 
+    # libusb
+    src = bld.checkout_source(
+        "libusb", url="https://github.com/libusb/libusb.git", commit="v1.0.29"
+    )
+    bld.build_automake_project(src, argv=["--disable-udev", "--disable-log"])
+    bld.add_build_ldflag("lib/libusb-1.0.a")
+    bld.add_work_includedir("include/libusb-1.0")
+
     # GLib
     src = bld.checkout_source(
         "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-68"
@@ -377,6 +403,7 @@ def _build(bld: Builder) -> None:
             "HAVE_FUZZER": None,
             "HAVE_CBOR": None,
             "HAVE_CBOR_SET_ALLOCS": None,
+            "HAVE_LIBUSB_GET_PARENT": None,
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
             "PACKAGE_VERSION": "0.0.0",
