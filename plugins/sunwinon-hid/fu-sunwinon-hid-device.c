@@ -36,7 +36,6 @@ fu_sunwinon_hid_device_fetch_fw_version_2(FuSunwinonHidDevice *device, GError **
 	g_debug("firmware version fetched: %u.%u",
 		(guint)((fw_info.version >> 8) & 0xFF),
 		(guint)(fw_info.version & 0xFF));
-	/* TODO: finalize after version format is decided by the firmware guy */
 	fu_device_set_version(FU_DEVICE(device),
 			      g_strdup_printf("%u.%u",
 					      (guint)((fw_info.version >> 8) & 0xFF),
@@ -107,7 +106,6 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 	g_debug("initializing sunwinon HID device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
 	fu_device_set_id(FU_DEVICE(self), "SunwinonHidTest");
-	/* TODO: finalize after version format is decided by the firmware guy */
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_protocol(FU_DEVICE(self), "com.sunwinon.hid");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);

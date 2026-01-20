@@ -41,46 +41,6 @@ typedef struct {
 	guint8 comments[11];		 /* IMG comments */
 } FuSunwinonDfuImageInfo;
 
-/**@brief DFU master used function config definition */
-typedef struct {
-	/* opaque user context passed to callbacks */
-	gpointer user_data;
-	/* get information about the firmware to be updated */
-	gboolean (*dfu_m_get_img_info)(gpointer user_data,
-				       FuSunwinonDfuImageInfo *img_info,
-				       GError **error);
-	/* get data about the firmware to be updated */
-	gboolean (*dfu_m_get_img_data)(gpointer user_data,
-				       guint32 addr,
-				       guint8 *data,
-				       guint16 len,
-				       GError **error);
-	/* send data to peer device */
-	gboolean (*dfu_m_send_data)(gpointer user_data, guint8 *data, guint16 len, GError **error);
-	/* send event to app */
-	void (*dfu_m_event_handler)(gpointer user_data, FuSunwinonDfuEvent event, guint8 progress);
-	/* wait for device ready */
-	void (*dfu_m_wait)(gpointer user_data, guint32 ms);
-	/* get system current time, in ms */
-	guint32 (*dfu_m_get_time)(gpointer user_data);
-} FuSunwinonDfuCallback;
-
-typedef struct FuDfuMaster FuDfuMaster;
-
-FuDfuMaster *
-fu_sunwinon_util_dfu_master_new(const FuSunwinonDfuCallback *dfu_m_func_cfg,
-				guint16 once_send_size);
-
-void
-fu_sunwinon_util_dfu_master_free(FuDfuMaster *self);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuDfuMaster, fu_sunwinon_util_dfu_master_free)
-
-/*
- * Experimental v2 API (stubs): allow parallel integration without
- * affecting existing call sites. Implementations are provided in the
- * corresponding .c file and currently act as no-op placeholders.
- */
-
 typedef struct FuSwDfuMaster FuSwDfuMaster;
 
 FuSwDfuMaster *
