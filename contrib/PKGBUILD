@@ -21,7 +21,6 @@ depends=(
   gnutls
   gsettings-desktop-schemas
   hicolor-icon-theme
-  libarchive
   libcbor
   libusb
   libjcat
@@ -84,7 +83,6 @@ check() {
 
 package() {
   depends+=(
-    libarchive.so
     libcbor.so
     libcurl.so
     libmm-glib.so
