@@ -439,7 +439,6 @@ def _build(bld: Builder) -> None:
 
     # built in formats
     for fzr in [
-        Fuzzer("efi-lz77", pattern="efi-lz77-decompressor"),
         Fuzzer("csv"),
         Fuzzer("cab"),
         Fuzzer("dfuse"),
