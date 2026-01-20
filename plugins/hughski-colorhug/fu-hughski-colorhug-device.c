@@ -106,6 +106,7 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 	}
 
 	/* read reply */
+	memset(buf, 0, sizeof(buf));
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      CH_USB_HID_EP_IN,
 					      buf,
