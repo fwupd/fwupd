@@ -57,7 +57,7 @@ struct FuStructSunwinonHidOut {
     device_id: u8 = 0x00,
     sub_id: u8 = 0x01,
     data_len: u16le,
-    dfu_header : FuStructSunwinonDfuFrameHeader,
+    dfu_header: FuStructSunwinonDfuFrameHeader,
     data: [u8; 474],
 }
 
@@ -68,7 +68,7 @@ struct FuStructSunwinonHidIn {
     device_id: u8,
     sub_id: u8,
     data_len: u16le,
-    dfu_header : FuStructSunwinonDfuFrameHeader,
+    dfu_header: FuStructSunwinonDfuFrameHeader,
     data: [u8; 474],
 }
 
