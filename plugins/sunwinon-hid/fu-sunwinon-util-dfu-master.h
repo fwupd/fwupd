@@ -8,16 +8,9 @@
 
 #include "fu-sunwinon-hid-struct.h"
 
-/* DFU config */
 #define FU_SUNWINON_DFU_CONFIG_PERIPHERAL_FLASH_START_ADDR 0x00200000U
-#define FU_SUNWINON_DFU_CONFIG_ONCE_PROGRAM_LEN		   464U
-#define FU_SUNWINON_DFU_CONFIG_SEND_SIZE_MAX		   517U
-#define FU_SUNWINON_DFU_CONFIG_ACK_WAIT_TIMEOUT		   4000U
-#define FU_SUNWINON_DFU_CONFIG_PERIPHERAL_RESET_TIME	   2000U
-
-/* Frame size limits */
-#define FU_SUNWINON_DFU_FRAME_MAX_TX (FU_SUNWINON_DFU_CONFIG_ONCE_PROGRAM_LEN + 15)
-#define FU_SUNWINON_DFU_FRAME_MAX_RX 64
+/* there is 8 bytes reserved in all fw blob (from file and on device) */
+#define DFU_IMAGE_INFO_TAIL_SIZE 48
 
 typedef struct {
 	guint32 bin_size;
@@ -34,6 +27,7 @@ typedef struct {
 	guint32 reserved : 20;
 } FuSunwinonDfuBootInfo;
 
+/* shall be 40 bytes total */
 typedef struct {
 	guint16 pattern;		 /* IMG info pattern */
 	guint16 version;		 /* IMG version */
@@ -43,6 +37,7 @@ typedef struct {
 
 typedef struct FuSwDfuMaster FuSwDfuMaster;
 
+/* fw parameter is optional in device fw info get path */
 FuSwDfuMaster *
 fu_sunwinon_util_dfu_master_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error);
 

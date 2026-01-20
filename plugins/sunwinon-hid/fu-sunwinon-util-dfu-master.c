@@ -9,8 +9,6 @@
 #include "fu-sunwinon-util-dfu-master.h"
 
 #define HID_REPORT_DATA_LEN 480
-/* there is 8 bytes reserved in all fw blob (from file and on device) */
-#define DFU_IMAGE_INFO_TAIL_SIZE 48
 /* fw load addr shall align to sector size */
 #define FLASH_OP_SECTOR_SIZE	0x1000
 #define FW_PATTERN_VALUE	0x4744
@@ -54,7 +52,7 @@ fu_sunwinon_util_dfu_master_fast_mode_not_supported(GError **error)
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no device support fast dfu mode right now");
+			    "sunwinon-hid: no device support fast dfu mode right now");
 	return FALSE;
 }
 
@@ -78,7 +76,7 @@ fu_sunwinon_util_dfu_master_dfu_get_img_info(FuSwDfuMaster *self,
 {
 	if (!fu_sunwinon_util_dfu_master_check_fw_available(self, error))
 		return FALSE;
-	/* fw info stored near the tail of blob */
+	/* for now, all fw are unsigned unencrypted images */
 	if (!fu_memcpy_safe((guint8 *)image_info,
 			    sizeof(FuSunwinonDfuImageInfo),
 			    0,
@@ -808,14 +806,14 @@ fu_sunwinon_util_dfu_master_new(const guint8 *fw, gsize fw_sz, FuDevice *device,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "missing device parameter");
+				    "sunwinon-hid: missing device parameter");
 		return NULL;
 	}
 	if (fw != NULL && fw_sz < DFU_IMAGE_INFO_TAIL_SIZE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware too small");
+				    "sunwinon-hid: firmware too small");
 		return NULL;
 	}
 	self = g_new0(FuSwDfuMaster, 1);
