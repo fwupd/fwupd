@@ -1,7 +1,2 @@
-# Test Stylus
-[HIDRAW\VEN_04F7&DEV_1234]
-Plugin = sunwinon_hid
-
-# Final Product
 [HIDRAW\VEN_17EF&DEV_62CC]
 Plugin = sunwinon_hid
