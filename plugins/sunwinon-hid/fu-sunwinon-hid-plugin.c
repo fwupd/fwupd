@@ -4,8 +4,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-sunwinon-hid-device.h"
 
 typedef struct {
