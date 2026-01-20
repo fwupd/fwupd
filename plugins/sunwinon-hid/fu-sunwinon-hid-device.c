@@ -105,7 +105,7 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 {
 	g_debug("initializing sunwinon HID device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
-	fu_device_set_id(FU_DEVICE(self), "SunwinonHidTest");
+	fu_device_set_id(FU_DEVICE(self), "SunwinonHid");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_protocol(FU_DEVICE(self), "com.sunwinon.hid");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -116,19 +116,17 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 }
 
 static gboolean
-fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
-					FuFirmware *firmware,
-					FuProgress *progress,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_sunwinon_hid_device_write_firmware(FuDevice *device,
+				      FuFirmware *firmware,
+				      FuProgress *progress,
+				      G_GNUC_UNUSED FwupdInstallFlags flags,
+				      GError **error)
 {
 	gconstpointer fw = NULL;
 	gsize fw_sz = 0;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
-
-	(void)flags;
 
 	locker = fu_device_locker_new(device, error);
 	g_return_val_if_fail(locker != NULL, FALSE);
@@ -156,6 +154,6 @@ fu_sunwinon_hid_device_class_init(FuSunwinonHidDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_sunwinon_hid_device_probe;
 	device_class->setup = fu_sunwinon_hid_device_setup;
-	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware_2;
+	device_class->write_firmware = fu_sunwinon_hid_device_write_firmware;
 	device_class->set_progress = fu_sunwinon_hid_device_set_progress;
 }

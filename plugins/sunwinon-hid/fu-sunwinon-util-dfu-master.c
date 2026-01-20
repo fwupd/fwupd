@@ -126,7 +126,6 @@ fu_sunwinon_util_dfu_master_pre_update_check(FuSwDfuMaster *self,
 	tail_size = DFU_IMAGE_INFO_TAIL_SIZE;
 
 	/* check if fw is signed */
-	inner_state->fw_type = FU_SUNWINON_FW_TYPE_NORMAL;
 	if (inner_state->security_mode) {
 		tail_size += DFU_SIGN_LEN;
 		inner_state->fw_type = FU_SUNWINON_FW_TYPE_SIGNED;
@@ -160,9 +159,11 @@ fu_sunwinon_util_dfu_master_pre_update_check(FuSwDfuMaster *self,
 			inner_state->fw_type = FU_SUNWINON_FW_TYPE_SIGNED;
 			g_debug("signed firmware (sign pattern found)");
 		}
+	} else {
+		/* fw is unsigned */
+		g_debug("unsigned firmware");
+		inner_state->fw_type = FU_SUNWINON_FW_TYPE_NORMAL;
 	}
-	/* else fw is unsigned */
-	g_debug("unsigned firmware");
 
 	/* check if the new fw is correctly packed */
 	if (self->fw_sz != inner_state->now_img_info.boot_info.bin_size + tail_size) {
@@ -710,9 +711,7 @@ fu_sunwinon_util_dfu_master_do_update_normal(FuSwDfuMaster *self,
 		}
 		already_sent += data_len;
 
-		if (progress != NULL)
-			fu_progress_set_percentage(progress,
-						   (guint)((already_sent * 100) / self->fw_sz));
+		fu_progress_set_percentage(progress, (guint)((already_sent * 100) / self->fw_sz));
 	}
 
 	return TRUE;
