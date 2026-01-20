@@ -22,7 +22,7 @@
  *
  * Cabinet archive parser and writer.
  *
- * See also: [class@FuArchive]
+ * See also: [class@FuCabFirmware]
  */
 
 struct _FuCabinet {
