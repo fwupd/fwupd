@@ -44,27 +44,26 @@ typedef struct {
 typedef struct FuSwDfuMaster FuSwDfuMaster;
 
 FuSwDfuMaster *
-fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error);
+fu_sunwinon_util_dfu_master_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error);
 
 void
-fu_sunwinon_util_dfu_master_2_free(FuSwDfuMaster *self);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSwDfuMaster, fu_sunwinon_util_dfu_master_2_free)
+fu_sunwinon_util_dfu_master_free(FuSwDfuMaster *self);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSwDfuMaster, fu_sunwinon_util_dfu_master_free)
 
 gboolean
-fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
-					       FuSunwinonDfuImageInfo *image_info,
-					       GError **error);
-
-gboolean
-fu_sunwinon_util_dfu_master_2_start(FuSwDfuMaster *self,
-				    FuProgress *progress,
-				    guint8 mode_setting,
-				    GError **error);
-
-gboolean
-fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
-					     FuProgress *progress,
-					     FuSunwinonFastDfuMode fast_mode,
-					     FuSunwinonDfuUpgradeMode copy_mode,
+fu_sunwinon_util_dfu_master_fetch_fw_version(FuSwDfuMaster *self,
+					     FuSunwinonDfuImageInfo *image_info,
 					     GError **error);
-// Removed fast_dfu_mode_set_2 as per requirement to merge mode set into start.
+
+gboolean
+fu_sunwinon_util_dfu_master_start(FuSwDfuMaster *self,
+				  FuProgress *progress,
+				  guint8 mode_setting,
+				  GError **error);
+
+gboolean
+fu_sunwinon_util_dfu_master_write_firmware(FuSwDfuMaster *self,
+					   FuProgress *progress,
+					   FuSunwinonFastDfuMode fast_mode,
+					   FuSunwinonDfuUpgradeMode copy_mode,
+					   GError **error);

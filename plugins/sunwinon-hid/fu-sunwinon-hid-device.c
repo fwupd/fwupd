@@ -30,8 +30,8 @@ fu_sunwinon_hid_device_fetch_fw_version_2(FuSunwinonHidDevice *device, GError **
 	FuSunwinonDfuImageInfo fw_info = {0};
 	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
 
-	dfu_master = fu_sunwinon_util_dfu_master_2_new(NULL, 0, FU_DEVICE(device), error);
-	if (!fu_sunwinon_util_dfu_master_2_fetch_fw_version(dfu_master, &fw_info, error))
+	dfu_master = fu_sunwinon_util_dfu_master_new(NULL, 0, FU_DEVICE(device), error);
+	if (!fu_sunwinon_util_dfu_master_fetch_fw_version(dfu_master, &fw_info, error))
 		return FALSE;
 	g_debug("firmware version fetched: %u.%u",
 		(guint)((fw_info.version >> 8) & 0xFF),
@@ -137,15 +137,15 @@ fu_sunwinon_hid_device_write_firmware_2(FuDevice *device,
 	g_return_val_if_fail(blob != NULL, FALSE);
 
 	fw = g_bytes_get_data(blob, &fw_sz);
-	dfu_master = fu_sunwinon_util_dfu_master_2_new(fw, fw_sz, device, error);
+	dfu_master = fu_sunwinon_util_dfu_master_new(fw, fw_sz, device, error);
 	if (dfu_master == NULL)
 		return FALSE;
 
-	if (!fu_sunwinon_util_dfu_master_2_write_firmware(dfu_master,
-							  progress,
-							  FU_SUNWINON_FAST_DFU_MODE_DISABLE,
-							  FU_SUNWINON_DFU_UPGRADE_MODE_COPY,
-							  error))
+	if (!fu_sunwinon_util_dfu_master_write_firmware(dfu_master,
+							progress,
+							FU_SUNWINON_FAST_DFU_MODE_DISABLE,
+							FU_SUNWINON_DFU_UPGRADE_MODE_COPY,
+							error))
 		return FALSE;
 	return TRUE;
 }

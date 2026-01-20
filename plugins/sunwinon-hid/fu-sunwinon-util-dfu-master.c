@@ -48,7 +48,7 @@ typedef struct {
 } FuDfuReceiveFrame;
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(GError **error)
+fu_sunwinon_util_dfu_master_fast_mode_not_supported(GError **error)
 {
 	/* fast mode use different flash procedure, but no device support it right now */
 	g_set_error_literal(error,
@@ -59,7 +59,7 @@ fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(GError **error)
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_check_fw_available(FuSwDfuMaster *self, GError **error)
+fu_sunwinon_util_dfu_master_check_fw_available(FuSwDfuMaster *self, GError **error)
 {
 	if (self->fw == NULL || self->fw_sz < DFU_IMAGE_INFO_TAIL_SIZE) {
 		g_set_error_literal(error,
@@ -72,11 +72,11 @@ fu_sunwinon_util_dfu_master_2_check_fw_available(FuSwDfuMaster *self, GError **e
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_dfu_get_img_info(FuSwDfuMaster *self,
-					       FuSunwinonDfuImageInfo *image_info,
-					       GError **error)
+fu_sunwinon_util_dfu_master_dfu_get_img_info(FuSwDfuMaster *self,
+					     FuSunwinonDfuImageInfo *image_info,
+					     GError **error)
 {
-	if (!fu_sunwinon_util_dfu_master_2_check_fw_available(self, error))
+	if (!fu_sunwinon_util_dfu_master_check_fw_available(self, error))
 		return FALSE;
 	/* fw info stored near the tail of blob */
 	if (!fu_memcpy_safe((guint8 *)image_info,
@@ -113,9 +113,9 @@ fu_sunwinon_util_dfu_master_2_dfu_get_img_info(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
-					       FuDfuInnerState *inner_state,
-					       GError **error)
+fu_sunwinon_util_dfu_master_pre_update_check(FuSwDfuMaster *self,
+					     FuDfuInnerState *inner_state,
+					     GError **error)
 {
 	gsize tail_size = 0;
 	guint32 fw_pattern_deadbeef = 0;
@@ -209,13 +209,13 @@ fu_sunwinon_util_dfu_master_2_pre_update_check(FuSwDfuMaster *self,
 }
 
 static void
-fu_sunwinon_util_dfu_master_2_wait(FuSwDfuMaster *self, guint32 ms)
+fu_sunwinon_util_dfu_master_wait(FuSwDfuMaster *self, guint32 ms)
 {
 	fu_device_sleep(FU_DEVICE(self->device), ms);
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_recv_sum_check(FuDfuReceiveFrame *recv_frame)
+fu_sunwinon_util_dfu_master_recv_sum_check(FuDfuReceiveFrame *recv_frame)
 {
 	guint16 calc_check_sum = 0;
 	guint8 cmd_type_l = (guint8)(recv_frame->cmd_type & 0xFF);
@@ -236,9 +236,9 @@ fu_sunwinon_util_dfu_master_2_recv_sum_check(FuDfuReceiveFrame *recv_frame)
 }
 
 static guint16
-fu_sunwinon_util_dfu_master_2_cal_send_check_sum(FuSunwinonDfuCmd cmd_type,
-						 const guint8 *data,
-						 guint16 len)
+fu_sunwinon_util_dfu_master_cal_send_check_sum(FuSunwinonDfuCmd cmd_type,
+					       const guint8 *data,
+					       guint16 len)
 {
 	guint16 check_sum = 0;
 	check_sum += (guint8)(cmd_type & 0xFF);
@@ -254,11 +254,11 @@ fu_sunwinon_util_dfu_master_2_cal_send_check_sum(FuSunwinonDfuCmd cmd_type,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_send_frame(FuSwDfuMaster *self,
-					 const guint8 *p_data,
-					 guint16 len,
-					 FuSunwinonDfuCmd cmd_type,
-					 GError **error)
+fu_sunwinon_util_dfu_master_send_frame(FuSwDfuMaster *self,
+				       const guint8 *p_data,
+				       guint16 len,
+				       FuSunwinonDfuCmd cmd_type,
+				       GError **error)
 {
 	gsize total_len = FU_STRUCT_SUNWINON_DFU_FRAME_HEADER_SIZE + len + 2; /* +2 for check_sum */
 	guint16 check_sum = 0;
@@ -286,7 +286,7 @@ fu_sunwinon_util_dfu_master_2_send_frame(FuSwDfuMaster *self,
 	fu_struct_sunwinon_hid_out_v2_set_data_len(st_out, total_len);
 
 	/* write check_sum at the very end of the whole data package */
-	check_sum = fu_sunwinon_util_dfu_master_2_cal_send_check_sum(cmd_type, p_data, len);
+	check_sum = fu_sunwinon_util_dfu_master_cal_send_check_sum(cmd_type, p_data, len);
 	fu_memwrite_uint16(st_out->buf->data + FU_STRUCT_SUNWINON_HID_OUT_V2_OFFSET_DATA + len,
 			   check_sum,
 			   G_LITTLE_ENDIAN);
@@ -302,9 +302,9 @@ fu_sunwinon_util_dfu_master_2_send_frame(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_recv_frame(FuSwDfuMaster *self,
-					 FuDfuReceiveFrame *recv_frame,
-					 GError **error)
+fu_sunwinon_util_dfu_master_recv_frame(FuSwDfuMaster *self,
+				       FuDfuReceiveFrame *recv_frame,
+				       GError **error)
 {
 	gsize check_sum_offset = 0;
 	gsize buf_len = 0;
@@ -348,7 +348,7 @@ fu_sunwinon_util_dfu_master_2_recv_frame(FuSwDfuMaster *self,
 			    error))
 		return FALSE;
 
-	if (!fu_sunwinon_util_dfu_master_2_recv_sum_check(recv_frame)) {
+	if (!fu_sunwinon_util_dfu_master_recv_sum_check(recv_frame)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -360,10 +360,10 @@ fu_sunwinon_util_dfu_master_2_recv_frame(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(FuSwDfuMaster *self,
-						  FuDfuReceiveFrame *recv_frame,
-						  FuSunwinonDfuCmd expected_cmd,
-						  GError **error)
+fu_sunwinon_util_dfu_master_check_recv_cmd_type(FuSwDfuMaster *self,
+						FuDfuReceiveFrame *recv_frame,
+						FuSunwinonDfuCmd expected_cmd,
+						GError **error)
 {
 	if (recv_frame->cmd_type != expected_cmd) {
 		g_set_error(
@@ -379,7 +379,7 @@ fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_emit_ack_failure(FuSunwinonDfuCmd cmd_type, GError **error)
+fu_sunwinon_util_dfu_master_emit_ack_failure(FuSunwinonDfuCmd cmd_type, GError **error)
 {
 	g_set_error(error,
 		    FWUPD_ERROR,
@@ -390,9 +390,9 @@ fu_sunwinon_util_dfu_master_2_emit_ack_failure(FuSunwinonDfuCmd cmd_type, GError
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_plain_ack_recv(FuSwDfuMaster *self,
-					     FuSunwinonDfuCmd expected_cmd,
-					     GError **error)
+fu_sunwinon_util_dfu_master_plain_ack_recv(FuSwDfuMaster *self,
+					   FuSunwinonDfuCmd expected_cmd,
+					   GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	guint8 ack_byte = 0;
@@ -400,43 +400,43 @@ fu_sunwinon_util_dfu_master_2_plain_ack_recv(FuSwDfuMaster *self,
 	recv_frame.data = &ack_byte;
 	recv_frame.data_len = 1;
 
-	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+	if (!fu_sunwinon_util_dfu_master_recv_frame(self, &recv_frame, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
-							       &recv_frame,
-							       expected_cmd,
-							       error))
+	if (!fu_sunwinon_util_dfu_master_check_recv_cmd_type(self,
+							     &recv_frame,
+							     expected_cmd,
+							     error))
 		return FALSE;
 	if (ack_byte != FU_SUNWINON_DFU_ACK_SUCCESS)
-		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(expected_cmd, error);
+		return fu_sunwinon_util_dfu_master_emit_ack_failure(expected_cmd, error);
 	return TRUE;
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_get_info(FuSwDfuMaster *self, GError **error)
+fu_sunwinon_util_dfu_master_get_info(FuSwDfuMaster *self, GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	g_autoptr(FuStructSunwinonDfuRspGetInfo) st_get_info = NULL;
 
 	g_debug("GetInfo");
 
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      NULL,
-						      0,
-						      FU_SUNWINON_DFU_CMD_GET_INFO,
-						      error))
+	if (!fu_sunwinon_util_dfu_master_send_frame(self,
+						    NULL,
+						    0,
+						    FU_SUNWINON_DFU_CMD_GET_INFO,
+						    error))
 		return FALSE;
 
 	st_get_info = fu_struct_sunwinon_dfu_rsp_get_info_new();
 	recv_frame.data = st_get_info->buf->data;
 	recv_frame.data_len = st_get_info->buf->len;
 
-	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+	if (!fu_sunwinon_util_dfu_master_recv_frame(self, &recv_frame, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
-							       &recv_frame,
-							       FU_SUNWINON_DFU_CMD_GET_INFO,
-							       error))
+	if (!fu_sunwinon_util_dfu_master_check_recv_cmd_type(self,
+							     &recv_frame,
+							     FU_SUNWINON_DFU_CMD_GET_INFO,
+							     error))
 		return FALSE;
 	if (!fu_struct_sunwinon_dfu_rsp_get_info_validate(st_get_info->buf->data,
 							  st_get_info->buf->len,
@@ -445,16 +445,16 @@ fu_sunwinon_util_dfu_master_2_get_info(FuSwDfuMaster *self, GError **error)
 		return FALSE;
 	if (fu_struct_sunwinon_dfu_rsp_get_info_get_ack_status(st_get_info) !=
 	    FU_SUNWINON_DFU_ACK_SUCCESS)
-		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(FU_SUNWINON_DFU_CMD_GET_INFO,
-								      error);
+		return fu_sunwinon_util_dfu_master_emit_ack_failure(FU_SUNWINON_DFU_CMD_GET_INFO,
+								    error);
 	return TRUE;
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
-					  FuSunwinonDfuBootInfo *boot_info,
-					  gboolean *security_mode,
-					  GError **error)
+fu_sunwinon_util_dfu_master_system_info(FuSwDfuMaster *self,
+					FuSunwinonDfuBootInfo *boot_info,
+					gboolean *security_mode,
+					GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	g_autoptr(FuStructSunwinonDfuPayloadSystemInfo) st_sys_info_payload = NULL;
@@ -469,23 +469,23 @@ fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
 	fu_struct_sunwinon_dfu_payload_system_info_set_flash_start_addr(
 	    st_sys_info_payload,
 	    FU_SUNWINON_DFU_CONFIG_PERIPHERAL_FLASH_START_ADDR);
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      st_sys_info_payload->buf->data,
-						      st_sys_info_payload->buf->len,
-						      FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
-						      error))
+	if (!fu_sunwinon_util_dfu_master_send_frame(self,
+						    st_sys_info_payload->buf->data,
+						    st_sys_info_payload->buf->len,
+						    FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
+						    error))
 		return FALSE;
 
 	st_sys_info = fu_struct_sunwinon_dfu_rsp_system_info_new();
 	recv_frame.data = st_sys_info->buf->data;
 	recv_frame.data_len = st_sys_info->buf->len;
 
-	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+	if (!fu_sunwinon_util_dfu_master_recv_frame(self, &recv_frame, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
-							       &recv_frame,
-							       FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
-							       error))
+	if (!fu_sunwinon_util_dfu_master_check_recv_cmd_type(self,
+							     &recv_frame,
+							     FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
+							     error))
 		return FALSE;
 	if (!fu_struct_sunwinon_dfu_rsp_system_info_validate(st_sys_info->buf->data,
 							     st_sys_info->buf->len,
@@ -494,9 +494,8 @@ fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
 		return FALSE;
 	if (fu_struct_sunwinon_dfu_rsp_system_info_get_ack_status(st_sys_info) !=
 	    FU_SUNWINON_DFU_ACK_SUCCESS)
-		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(
-		    FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
-		    error);
+		return fu_sunwinon_util_dfu_master_emit_ack_failure(FU_SUNWINON_DFU_CMD_SYSTEM_INFO,
+								    error);
 	if (fu_struct_sunwinon_dfu_rsp_system_info_get_start_addr(st_sys_info) !=
 	    FU_SUNWINON_DFU_CONFIG_PERIPHERAL_FLASH_START_ADDR) {
 		g_set_error_literal(error,
@@ -524,10 +523,10 @@ fu_sunwinon_util_dfu_master_2_system_info(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
-					  FuSunwinonDfuImageInfo *image_info,
-					  guint32 *dfu_save_addr,
-					  GError **error)
+fu_sunwinon_util_dfu_master_fw_info_get(FuSwDfuMaster *self,
+					FuSunwinonDfuImageInfo *image_info,
+					guint32 *dfu_save_addr,
+					GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	gsize info_size = 0;
@@ -539,21 +538,21 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 
 	g_debug("FwInfoGet");
 
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      NULL,
-						      0,
-						      FU_SUNWINON_DFU_CMD_FW_INFO_GET,
-						      error))
+	if (!fu_sunwinon_util_dfu_master_send_frame(self,
+						    NULL,
+						    0,
+						    FU_SUNWINON_DFU_CMD_FW_INFO_GET,
+						    error))
 		return FALSE;
 
 	recv_frame.data = st_fw_info->buf->data;
 	recv_frame.data_len = st_fw_info->buf->len;
-	if (!fu_sunwinon_util_dfu_master_2_recv_frame(self, &recv_frame, error))
+	if (!fu_sunwinon_util_dfu_master_recv_frame(self, &recv_frame, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_check_recv_cmd_type(self,
-							       &recv_frame,
-							       FU_SUNWINON_DFU_CMD_FW_INFO_GET,
-							       error))
+	if (!fu_sunwinon_util_dfu_master_check_recv_cmd_type(self,
+							     &recv_frame,
+							     FU_SUNWINON_DFU_CMD_FW_INFO_GET,
+							     error))
 		return FALSE;
 	if (!fu_struct_sunwinon_dfu_rsp_fw_info_get_validate(st_fw_info->buf->data,
 							     st_fw_info->buf->len,
@@ -562,9 +561,8 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 		return FALSE;
 	if (fu_struct_sunwinon_dfu_rsp_fw_info_get_get_ack_status(st_fw_info) !=
 	    FU_SUNWINON_DFU_ACK_SUCCESS)
-		return fu_sunwinon_util_dfu_master_2_emit_ack_failure(
-		    FU_SUNWINON_DFU_CMD_FW_INFO_GET,
-		    error);
+		return fu_sunwinon_util_dfu_master_emit_ack_failure(FU_SUNWINON_DFU_CMD_FW_INFO_GET,
+								    error);
 
 	if (dfu_save_addr != NULL)
 		*dfu_save_addr =
@@ -586,29 +584,29 @@ fu_sunwinon_util_dfu_master_2_fw_info_get(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_mode_set(FuSwDfuMaster *self,
-				       FuSunwinonDfuUpgradeMode copy_mode,
-				       GError **error)
+fu_sunwinon_util_dfu_master_mode_set(FuSwDfuMaster *self,
+				     FuSunwinonDfuUpgradeMode copy_mode,
+				     GError **error)
 {
 	g_debug("ModeSet");
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      (const guint8 *)&copy_mode,
-						      1,
-						      FU_SUNWINON_DFU_CMD_MODE_SET,
-						      error))
+	if (!fu_sunwinon_util_dfu_master_send_frame(self,
+						    (const guint8 *)&copy_mode,
+						    1,
+						    FU_SUNWINON_DFU_CMD_MODE_SET,
+						    error))
 		return FALSE;
 
 	/* command ModeSet has no response, wait a while for device getting ready */
-	fu_sunwinon_util_dfu_master_2_wait(self, 100);
+	fu_sunwinon_util_dfu_master_wait(self, 100);
 	return TRUE;
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
-					    FuDfuInnerState *inner_state,
-					    FuProgress *progress,
-					    FuSunwinonFastDfuMode fast_mode,
-					    GError **error)
+fu_sunwinon_util_dfu_master_program_start(FuSwDfuMaster *self,
+					  FuDfuInnerState *inner_state,
+					  FuProgress *progress,
+					  FuSunwinonFastDfuMode fast_mode,
+					  GError **error)
 {
 	g_autoptr(FuStructSunwinonDfuPayloadProgramStart) st_prog_start = NULL;
 
@@ -629,20 +627,20 @@ fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
 		error))
 		return FALSE;
 
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      st_prog_start->buf->data,
-						      st_prog_start->buf->len,
-						      FU_SUNWINON_DFU_CMD_PROGRAM_START,
-						      error))
+	if (!fu_sunwinon_util_dfu_master_send_frame(self,
+						    st_prog_start->buf->data,
+						    st_prog_start->buf->len,
+						    FU_SUNWINON_DFU_CMD_PROGRAM_START,
+						    error))
 		return FALSE;
 
 	if (fast_mode == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
-		if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
-								  FU_SUNWINON_DFU_CMD_PROGRAM_START,
-								  error))
+		if (!fu_sunwinon_util_dfu_master_plain_ack_recv(self,
+								FU_SUNWINON_DFU_CMD_PROGRAM_START,
+								error))
 			return FALSE;
 	} else
-		return fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(error);
+		return fu_sunwinon_util_dfu_master_fast_mode_not_supported(error);
 
 	fu_progress_set_percentage(progress, 0);
 
@@ -650,22 +648,22 @@ fu_sunwinon_util_dfu_master_2_program_start(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_do_update_fast(FuSwDfuMaster *self,
-					     FuDfuInnerState *inner_state,
-					     FuProgress *progress,
-					     GError **error)
+fu_sunwinon_util_dfu_master_do_update_fast(FuSwDfuMaster *self,
+					   FuDfuInnerState *inner_state,
+					   FuProgress *progress,
+					   GError **error)
 {
 	(void)self;
 	(void)inner_state;
 	(void)progress;
-	return fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(error);
+	return fu_sunwinon_util_dfu_master_fast_mode_not_supported(error);
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_do_update_normal(FuSwDfuMaster *self,
-					       FuDfuInnerState *inner_state,
-					       FuProgress *progress,
-					       GError **error)
+fu_sunwinon_util_dfu_master_do_update_normal(FuSwDfuMaster *self,
+					     FuDfuInnerState *inner_state,
+					     FuProgress *progress,
+					     GError **error)
 {
 	g_autoptr(FuStructSunwinonDfuPayloadProgramFlash) st_prog_flash = NULL;
 	gsize already_sent = 0;
@@ -696,17 +694,17 @@ fu_sunwinon_util_dfu_master_2_do_update_normal(FuSwDfuMaster *self,
 									      error))
 			return FALSE;
 
-		if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-							      st_prog_flash->buf->data,
-							      st_prog_flash->buf->len -
-								  (ONCE_SIZE - data_len),
-							      FU_SUNWINON_DFU_CMD_PROGRAM_FLASH,
-							      error))
+		if (!fu_sunwinon_util_dfu_master_send_frame(self,
+							    st_prog_flash->buf->data,
+							    st_prog_flash->buf->len -
+								(ONCE_SIZE - data_len),
+							    FU_SUNWINON_DFU_CMD_PROGRAM_FLASH,
+							    error))
 			return FALSE;
 
-		if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
-								  FU_SUNWINON_DFU_CMD_PROGRAM_FLASH,
-								  error))
+		if (!fu_sunwinon_util_dfu_master_plain_ack_recv(self,
+								FU_SUNWINON_DFU_CMD_PROGRAM_FLASH,
+								error))
 			return FALSE;
 
 		/* update file check sum */
@@ -724,22 +722,22 @@ fu_sunwinon_util_dfu_master_2_do_update_normal(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_program_end_fast(FuSwDfuMaster *self,
-					       FuDfuInnerState *inner_state,
-					       FuProgress *progress,
-					       GError **error)
+fu_sunwinon_util_dfu_master_program_end_fast(FuSwDfuMaster *self,
+					     FuDfuInnerState *inner_state,
+					     FuProgress *progress,
+					     GError **error)
 {
 	(void)self;
 	(void)inner_state;
 	(void)progress;
-	return fu_sunwinon_util_dfu_master_2_fast_mode_not_supported(error);
+	return fu_sunwinon_util_dfu_master_fast_mode_not_supported(error);
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_program_end_normal(FuSwDfuMaster *self,
-						 FuDfuInnerState *inner_state,
-						 FuProgress *progress,
-						 GError **error)
+fu_sunwinon_util_dfu_master_program_end_normal(FuSwDfuMaster *self,
+					       FuDfuInnerState *inner_state,
+					       FuProgress *progress,
+					       GError **error)
 {
 	g_autoptr(FuStructSunwinonDfuPayloadProgramEnd) st_prog_end_payload = NULL;
 
@@ -752,16 +750,16 @@ fu_sunwinon_util_dfu_master_2_program_end_normal(FuSwDfuMaster *self,
 	fu_struct_sunwinon_dfu_payload_program_end_set_file_check_sum(st_prog_end_payload,
 								      inner_state->file_check_sum);
 
-	if (!fu_sunwinon_util_dfu_master_2_send_frame(self,
-						      st_prog_end_payload->buf->data,
-						      st_prog_end_payload->buf->len,
-						      FU_SUNWINON_DFU_CMD_PROGRAM_END,
-						      error))
+	if (!fu_sunwinon_util_dfu_master_send_frame(self,
+						    st_prog_end_payload->buf->data,
+						    st_prog_end_payload->buf->len,
+						    FU_SUNWINON_DFU_CMD_PROGRAM_END,
+						    error))
 		return FALSE;
 
-	if (!fu_sunwinon_util_dfu_master_2_plain_ack_recv(self,
-							  FU_SUNWINON_DFU_CMD_PROGRAM_END,
-							  error))
+	if (!fu_sunwinon_util_dfu_master_plain_ack_recv(self,
+							FU_SUNWINON_DFU_CMD_PROGRAM_END,
+							error))
 		return FALSE;
 
 	fu_progress_set_percentage(progress, 100);
@@ -770,39 +768,39 @@ fu_sunwinon_util_dfu_master_2_program_end_normal(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
-					FuDfuInnerState *inner_state,
-					FuSunwinonFastDfuMode fast_mode,
-					FuSunwinonDfuUpgradeMode copy_mode,
-					GError **error)
+fu_sunwinon_util_dfu_master_handshake(FuSwDfuMaster *self,
+				      FuDfuInnerState *inner_state,
+				      FuSunwinonFastDfuMode fast_mode,
+				      FuSunwinonDfuUpgradeMode copy_mode,
+				      GError **error)
 {
 	g_return_val_if_fail(inner_state != NULL, FALSE);
 
 	/* GetInfo -> SystemInfo -> FwInfoGet -> ModeSet */
 
-	if (!fu_sunwinon_util_dfu_master_2_get_info(self, error))
+	if (!fu_sunwinon_util_dfu_master_get_info(self, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_system_info(self,
-						       &inner_state->boot_info,
-						       &inner_state->security_mode,
-						       error))
+	if (!fu_sunwinon_util_dfu_master_system_info(self,
+						     &inner_state->boot_info,
+						     &inner_state->security_mode,
+						     error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_fw_info_get(self,
-						       &inner_state->app_info,
-						       &inner_state->dfu_save_addr,
-						       error))
+	if (!fu_sunwinon_util_dfu_master_fw_info_get(self,
+						     &inner_state->app_info,
+						     &inner_state->dfu_save_addr,
+						     error))
 		return FALSE;
 	/* no command sent during checking */
-	if (!fu_sunwinon_util_dfu_master_2_pre_update_check(self, inner_state, error))
+	if (!fu_sunwinon_util_dfu_master_pre_update_check(self, inner_state, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_mode_set(self, copy_mode, error))
+	if (!fu_sunwinon_util_dfu_master_mode_set(self, copy_mode, error))
 		return FALSE;
 
 	return TRUE;
 }
 
 FuSwDfuMaster *
-fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error)
+fu_sunwinon_util_dfu_master_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error)
 {
 	g_autoptr(FuSwDfuMaster) self = NULL;
 
@@ -828,63 +826,59 @@ fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *devic
 }
 
 void
-fu_sunwinon_util_dfu_master_2_free(FuSwDfuMaster *self)
+fu_sunwinon_util_dfu_master_free(FuSwDfuMaster *self)
 {
 	g_free(self);
 }
 
 gboolean
-fu_sunwinon_util_dfu_master_2_fetch_fw_version(FuSwDfuMaster *self,
-					       FuSunwinonDfuImageInfo *image_info,
-					       GError **error)
+fu_sunwinon_util_dfu_master_fetch_fw_version(FuSwDfuMaster *self,
+					     FuSunwinonDfuImageInfo *image_info,
+					     GError **error)
 {
-	return fu_sunwinon_util_dfu_master_2_fw_info_get(self, image_info, NULL, error);
+	return fu_sunwinon_util_dfu_master_fw_info_get(self, image_info, NULL, error);
 }
 
 gboolean
-fu_sunwinon_util_dfu_master_2_write_firmware(FuSwDfuMaster *self,
-					     FuProgress *progress,
-					     FuSunwinonFastDfuMode fast_mode,
-					     FuSunwinonDfuUpgradeMode copy_mode,
-					     GError **error)
+fu_sunwinon_util_dfu_master_write_firmware(FuSwDfuMaster *self,
+					   FuProgress *progress,
+					   FuSunwinonFastDfuMode fast_mode,
+					   FuSunwinonDfuUpgradeMode copy_mode,
+					   GError **error)
 {
 	FuDfuInnerState inner_state = {0};
 
-	if (!fu_sunwinon_util_dfu_master_2_dfu_get_img_info(self, &inner_state.now_img_info, error))
+	if (!fu_sunwinon_util_dfu_master_dfu_get_img_info(self, &inner_state.now_img_info, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_handshake(self,
-						     &inner_state,
-						     fast_mode,
-						     copy_mode,
-						     error))
+	if (!fu_sunwinon_util_dfu_master_handshake(self, &inner_state, fast_mode, copy_mode, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_2_program_start(self,
-							 &inner_state,
-							 progress,
-							 fast_mode,
-							 error))
+	if (!fu_sunwinon_util_dfu_master_program_start(self,
+						       &inner_state,
+						       progress,
+						       fast_mode,
+						       error))
 		return FALSE;
 	if (fast_mode == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
-		if (!fu_sunwinon_util_dfu_master_2_do_update_normal(self,
-								    &inner_state,
-								    progress,
-								    error))
-			return FALSE;
-		if (!fu_sunwinon_util_dfu_master_2_program_end_normal(self,
-								      &inner_state,
-								      progress,
-								      error))
-			return FALSE;
-	} else {
-		if (!fu_sunwinon_util_dfu_master_2_do_update_fast(self,
+		if (!fu_sunwinon_util_dfu_master_do_update_normal(self,
 								  &inner_state,
 								  progress,
 								  error))
 			return FALSE;
-		if (!fu_sunwinon_util_dfu_master_2_program_end_fast(self,
+		if (!fu_sunwinon_util_dfu_master_program_end_normal(self,
 								    &inner_state,
 								    progress,
 								    error))
+			return FALSE;
+	} else {
+		if (!fu_sunwinon_util_dfu_master_do_update_fast(self,
+								&inner_state,
+								progress,
+								error))
+			return FALSE;
+		if (!fu_sunwinon_util_dfu_master_program_end_fast(self,
+								  &inner_state,
+								  progress,
+								  error))
 			return FALSE;
 	}
 
