@@ -45,6 +45,10 @@ reboot into normal runtime mode automatically after procedure finished.
 
 Requires hidraw read/write access to send and receive HID reports.
 
+## Vendor ID Security
+
+The vendor ID is set from the HID vendor ID, in this instance set to `HIDRAW:0x17EF`
+
 ## Security Notes
 
 The plugin currently accepts unsigned and unencrypted firmware images only.
