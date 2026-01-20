@@ -75,43 +75,6 @@ void
 fu_sunwinon_util_dfu_master_free(FuDfuMaster *self);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuDfuMaster, fu_sunwinon_util_dfu_master_free)
 
-gboolean
-fu_sunwinon_util_dfu_master_start(FuDfuMaster *self, GError **error);
-
-void
-fu_sunwinon_util_dfu_master_parse_state_reset(FuDfuMaster *self);
-
-gboolean
-fu_sunwinon_util_dfu_master_schedule(FuDfuMaster *self, GError **error);
-
-void
-fu_sunwinon_util_dfu_master_cmd_parse(FuDfuMaster *self, const guint8 *data, guint16 len);
-
-void
-fu_sunwinon_util_dfu_master_send_data_cmpl_process(FuDfuMaster *self);
-
-void
-fu_sunwinon_util_dfu_master_fast_dfu_mode_set(FuDfuMaster *self, guint8 setting);
-
-guint8
-fu_sunwinon_util_dfu_master_fast_dfu_mode_get(FuDfuMaster *self);
-
-void
-fu_sunwinon_util_dfu_master_fast_send_data_cmpl_process(FuDfuMaster *self);
-
-guint32
-fu_sunwinon_util_dfu_master_get_program_size(FuDfuMaster *self);
-
-gboolean
-fu_sunwinon_util_dfu_master_send_fw_info_get(FuDfuMaster *self, GError **error);
-
-gboolean
-fu_sunwinon_util_dfu_master_parse_fw_info(FuDfuMaster *self,
-					  FuSunwinonDfuImageInfo *img_info,
-					  const guint8 *data,
-					  guint16 len,
-					  GError **error);
-
 /*
  * Experimental v2 API (stubs): allow parallel integration without
  * affecting existing call sites. Implementations are provided in the
@@ -121,7 +84,7 @@ fu_sunwinon_util_dfu_master_parse_fw_info(FuDfuMaster *self,
 typedef struct FuSwDfuMaster FuSwDfuMaster;
 
 FuSwDfuMaster *
-fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device);
+fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error);
 
 void
 fu_sunwinon_util_dfu_master_2_free(FuSwDfuMaster *self);

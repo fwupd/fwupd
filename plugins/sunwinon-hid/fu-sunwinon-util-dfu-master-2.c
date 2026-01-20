@@ -802,11 +802,24 @@ fu_sunwinon_util_dfu_master_2_handshake(FuSwDfuMaster *self,
 }
 
 FuSwDfuMaster *
-fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device)
+fu_sunwinon_util_dfu_master_2_new(const guint8 *fw, gsize fw_sz, FuDevice *device, GError **error)
 {
 	g_autoptr(FuSwDfuMaster) self = NULL;
 
-	g_return_val_if_fail(device != NULL, NULL);
+	if (device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "missing device parameter");
+		return NULL;
+	}
+	if (fw != NULL && fw_sz < DFU_IMAGE_INFO_TAIL_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware too small");
+		return NULL;
+	}
 	self = g_new0(FuSwDfuMaster, 1);
 	self->fw = fw;
 	self->fw_sz = fw_sz;
