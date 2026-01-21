@@ -10,6 +10,7 @@
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-hid-device.h"
 #include "fu-elantp-hid-haptic-device.h"
+#include "fu-elantp-hid-mcu-device.h"
 #include "fu-elantp-struct.h"
 
 struct _FuElantpHidDevice {
@@ -132,6 +133,18 @@ fu_elantp_hid_device_write_cmd(FuElantpHidDevice *self, guint16 reg, guint16 cmd
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_device_send_cmd(self, buf, sizeof(buf), NULL, 0, error);
+}
+
+static gboolean
+fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *self,
+				  guint16 reg,
+				  guint8 *rx,
+				  gsize rxsz,
+				  GError **error)
+{
+	guint8 buf[5] = {0x70, 0x05, 0x03};
+	fu_memwrite_uint16(buf + 0x3, reg, G_LITTLE_ENDIAN);
+	return fu_elantp_hid_device_send_cmd(self, buf, sizeof(buf), rx, rxsz, error);
 }
 
 static gboolean
@@ -309,6 +322,45 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 }
 
 static gboolean
+fu_elantp_hid_device_read_mcu_ic_type(FuElantpHidDevice *self, GError **error)
+{
+	guint16 tmp;
+	guint8 buf[2] = {0x0};
+	guint16 mcu_ic_type = 0x00;
+	/* get OSM version */
+	if (!fu_elantp_hid_mcu_device_read_cmd(self,
+					       FU_ETP_CMD_I2C_OSM_VERSION,
+					       buf,
+					       sizeof(buf),
+					       error)) {
+		g_prefix_error_literal(error, "failed to read MCU OSM version: ");
+		return FALSE;
+	}
+	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
+		if (!fu_elantp_hid_mcu_device_read_cmd(self,
+						       FU_ETP_CMD_I2C_IAP_ICBODY,
+						       buf,
+						       sizeof(buf),
+						       error)) {
+			g_prefix_error_literal(error, "failed to read MCU IC body: ");
+			return FALSE;
+		}
+		mcu_ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
+	} else {
+		mcu_ic_type = (tmp >> 8) & 0xFF;
+	}
+	if (mcu_ic_type == 0x00 || mcu_ic_type == 0xFF) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "connection error");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
@@ -318,6 +370,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version_bl = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_forcetable = NULL;
+	g_autoptr(GError) error_mcu = NULL;
 
 	/* get pattern */
 	if (!fu_elantp_hid_device_read_cmd(self,
@@ -459,6 +512,13 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
+	if (!fu_elantp_hid_device_read_mcu_ic_type(self, &error_mcu)) {
+		g_debug("no mcu device detected: %s", error_mcu->message);
+	} else {
+		g_autoptr(FuElantpHidMcuDevice) cfg = fu_elantp_hid_mcu_device_new();
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
+	}
+
 	/* fix an unsuitable i²c name, e.g. `VEN 04F3:00 04F3:3XXX` or `0672:00 04F3:3187` */
 	if (g_strstr_len(fu_device_get_name(device), -1, ":00 ") != NULL)
 		fu_device_set_name(device, "Touchpad");
@@ -519,6 +579,8 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 		guint32 diff_size;
 		force_table_addr =
 		    fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware));
+		if (self->ic_type == 0x14 && self->iap_ver == 4)
+			self->force_table_addr = force_table_addr;
 		if (self->force_table_addr < force_table_addr) {
 			g_set_error(
 			    error,
