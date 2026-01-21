@@ -151,6 +151,10 @@ fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **
 					buf,
 					1000,
 					&error_local)) {
+		g_warning("XXX: %s:%i:%s",
+			  g_quark_to_string(error_local->domain),
+			  error_local->code,
+			  error_local->message);
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("autosuspend_delay_ms does not exist, so skipping");
 			return TRUE;
