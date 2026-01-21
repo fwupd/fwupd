@@ -60,4 +60,3 @@ from GOODIX's `dfu_master.c` and `dfu_master.h` files, which are part of
 [GOODIX GR551x SDK](https://github.com/goodix-ble/GR551x.SDK)
 that originally licensed under the BSD-3-Clause License. The derived code
 is dual-licensed under both the BSD and LGPLv2.1+ licenses.
-See `GOODIX-BSD-LICENSE` for original license.

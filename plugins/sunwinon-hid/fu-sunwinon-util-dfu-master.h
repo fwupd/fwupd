@@ -1,4 +1,7 @@
 /*
+ * Copyright 2019 GOODIX
+ * Copyright 2026 Sunwinon Electronics Co., Ltd.
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  */
 

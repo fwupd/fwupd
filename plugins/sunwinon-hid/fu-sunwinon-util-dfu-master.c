@@ -1,4 +1,7 @@
 /*
+ * Copyright 2019 GOODIX
+ * Copyright 2026 Sunwinon Electronics Co., Ltd.
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  */
 
@@ -415,7 +418,7 @@ fu_sunwinon_util_dfu_master_plain_ack_recv(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_get_info(FuSwDfuMaster *self, GError **error)
+fu_sunwinon_util_dfu_master_get_info_cmd(FuSwDfuMaster *self, GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	g_autoptr(FuStructSunwinonDfuRspGetInfo) st_get_info = NULL;
@@ -453,10 +456,10 @@ fu_sunwinon_util_dfu_master_get_info(FuSwDfuMaster *self, GError **error)
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_system_info(FuSwDfuMaster *self,
-					FuSunwinonDfuBootInfo *boot_info,
-					gboolean *security_mode,
-					GError **error)
+fu_sunwinon_util_dfu_master_system_info_cmd(FuSwDfuMaster *self,
+					    FuSunwinonDfuBootInfo *boot_info,
+					    gboolean *security_mode,
+					    GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	g_autoptr(FuStructSunwinonDfuPayloadSystemInfo) st_sys_info_payload = NULL;
@@ -525,10 +528,10 @@ fu_sunwinon_util_dfu_master_system_info(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_fw_info_get(FuSwDfuMaster *self,
-					FuSunwinonDfuImageInfo *image_info,
-					guint32 *dfu_save_addr,
-					GError **error)
+fu_sunwinon_util_dfu_master_fw_info_get_cmd(FuSwDfuMaster *self,
+					    FuSunwinonDfuImageInfo *image_info,
+					    guint32 *dfu_save_addr,
+					    GError **error)
 {
 	FuDfuReceiveFrame recv_frame = {0};
 	gsize info_size = 0;
@@ -586,9 +589,9 @@ fu_sunwinon_util_dfu_master_fw_info_get(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_mode_set(FuSwDfuMaster *self,
-				     FuSunwinonDfuUpgradeMode copy_mode,
-				     GError **error)
+fu_sunwinon_util_dfu_master_mode_set_cmd(FuSwDfuMaster *self,
+					 FuSunwinonDfuUpgradeMode copy_mode,
+					 GError **error)
 {
 	g_debug("ModeSet");
 	if (!fu_sunwinon_util_dfu_master_send_frame(self,
@@ -604,11 +607,11 @@ fu_sunwinon_util_dfu_master_mode_set(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_program_start(FuSwDfuMaster *self,
-					  FuDfuInnerState *inner_state,
-					  FuProgress *progress,
-					  FuSunwinonFastDfuMode fast_mode,
-					  GError **error)
+fu_sunwinon_util_dfu_master_program_start_cmd(FuSwDfuMaster *self,
+					      FuDfuInnerState *inner_state,
+					      FuProgress *progress,
+					      FuSunwinonFastDfuMode fast_mode,
+					      GError **error)
 {
 	g_autoptr(FuStructSunwinonDfuPayloadProgramStart) st_prog_start = NULL;
 
@@ -722,10 +725,10 @@ fu_sunwinon_util_dfu_master_do_update_normal(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_program_end_fast(FuSwDfuMaster *self,
-					     FuDfuInnerState *inner_state,
-					     FuProgress *progress,
-					     GError **error)
+fu_sunwinon_util_dfu_master_program_end_cmd_fast(FuSwDfuMaster *self,
+						 FuDfuInnerState *inner_state,
+						 FuProgress *progress,
+						 GError **error)
 {
 	(void)self;
 	(void)inner_state;
@@ -734,10 +737,10 @@ fu_sunwinon_util_dfu_master_program_end_fast(FuSwDfuMaster *self,
 }
 
 static gboolean
-fu_sunwinon_util_dfu_master_program_end_normal(FuSwDfuMaster *self,
-					       FuDfuInnerState *inner_state,
-					       FuProgress *progress,
-					       GError **error)
+fu_sunwinon_util_dfu_master_program_end_cmd_normal(FuSwDfuMaster *self,
+						   FuDfuInnerState *inner_state,
+						   FuProgress *progress,
+						   GError **error)
 {
 	g_autoptr(FuStructSunwinonDfuPayloadProgramEnd) st_prog_end_payload = NULL;
 
@@ -778,22 +781,22 @@ fu_sunwinon_util_dfu_master_handshake(FuSwDfuMaster *self,
 
 	/* GetInfo -> SystemInfo -> FwInfoGet -> ModeSet */
 
-	if (!fu_sunwinon_util_dfu_master_get_info(self, error))
+	if (!fu_sunwinon_util_dfu_master_get_info_cmd(self, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_system_info(self,
-						     &inner_state->boot_info,
-						     &inner_state->security_mode,
-						     error))
+	if (!fu_sunwinon_util_dfu_master_system_info_cmd(self,
+							 &inner_state->boot_info,
+							 &inner_state->security_mode,
+							 error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_fw_info_get(self,
-						     &inner_state->app_info,
-						     &inner_state->dfu_save_addr,
-						     error))
+	if (!fu_sunwinon_util_dfu_master_fw_info_get_cmd(self,
+							 &inner_state->app_info,
+							 &inner_state->dfu_save_addr,
+							 error))
 		return FALSE;
 	/* no command sent during checking */
 	if (!fu_sunwinon_util_dfu_master_pre_update_check(self, inner_state, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_mode_set(self, copy_mode, error))
+	if (!fu_sunwinon_util_dfu_master_mode_set_cmd(self, copy_mode, error))
 		return FALSE;
 
 	return TRUE;
@@ -836,7 +839,7 @@ fu_sunwinon_util_dfu_master_fetch_fw_version(FuSwDfuMaster *self,
 					     FuSunwinonDfuImageInfo *image_info,
 					     GError **error)
 {
-	return fu_sunwinon_util_dfu_master_fw_info_get(self, image_info, NULL, error);
+	return fu_sunwinon_util_dfu_master_fw_info_get_cmd(self, image_info, NULL, error);
 }
 
 gboolean
@@ -852,11 +855,11 @@ fu_sunwinon_util_dfu_master_write_firmware(FuSwDfuMaster *self,
 		return FALSE;
 	if (!fu_sunwinon_util_dfu_master_handshake(self, &inner_state, fast_mode, copy_mode, error))
 		return FALSE;
-	if (!fu_sunwinon_util_dfu_master_program_start(self,
-						       &inner_state,
-						       progress,
-						       fast_mode,
-						       error))
+	if (!fu_sunwinon_util_dfu_master_program_start_cmd(self,
+							   &inner_state,
+							   progress,
+							   fast_mode,
+							   error))
 		return FALSE;
 	if (fast_mode == FU_SUNWINON_FAST_DFU_MODE_DISABLE) {
 		if (!fu_sunwinon_util_dfu_master_do_update_normal(self,
@@ -864,10 +867,10 @@ fu_sunwinon_util_dfu_master_write_firmware(FuSwDfuMaster *self,
 								  progress,
 								  error))
 			return FALSE;
-		if (!fu_sunwinon_util_dfu_master_program_end_normal(self,
-								    &inner_state,
-								    progress,
-								    error))
+		if (!fu_sunwinon_util_dfu_master_program_end_cmd_normal(self,
+									&inner_state,
+									progress,
+									error))
 			return FALSE;
 	} else {
 		if (!fu_sunwinon_util_dfu_master_do_update_fast(self,
@@ -875,10 +878,10 @@ fu_sunwinon_util_dfu_master_write_firmware(FuSwDfuMaster *self,
 								progress,
 								error))
 			return FALSE;
-		if (!fu_sunwinon_util_dfu_master_program_end_fast(self,
-								  &inner_state,
-								  progress,
-								  error))
+		if (!fu_sunwinon_util_dfu_master_program_end_cmd_fast(self,
+								      &inner_state,
+								      progress,
+								      error))
 			return FALSE;
 	}
 

@@ -1,4 +1,6 @@
 /*
+ * Copyright 2026 Sunwinon Electronics Co., Ltd.
+ *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
@@ -25,7 +27,7 @@ fu_sunwinon_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 }
 
 static gboolean
-fu_sunwinon_hid_device_fetch_fw_version_2(FuSunwinonHidDevice *device, GError **error)
+fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **error)
 {
 	FuSunwinonDfuImageInfo fw_info = {0};
 	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
@@ -88,7 +90,7 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 	g_debug("HID descriptor parsed successfully");
 	if (!fu_sunwinon_hid_device_check_update_channel(descriptor, error))
 		return FALSE;
-	if (!fu_sunwinon_hid_device_fetch_fw_version_2(FU_SUNWINON_HID_DEVICE(device), error))
+	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
 	return TRUE;
 }
