@@ -587,6 +587,7 @@ if __name__ == "__main__":
                 "libcbor-dev",
                 "autoconf",
                 "automake",
+                "libtool",
                 "python3",
                 "python3-jinja2",
                 "python3-packaging",
