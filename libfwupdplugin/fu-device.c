@@ -8053,7 +8053,11 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 
 	/* sanity check */
 	if (priv->events == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no events loaded");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no event with ID %s: no events loaded",
+			    id);
 		return NULL;
 	}
 
