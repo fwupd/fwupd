@@ -42,7 +42,7 @@ fu_uefi_dbx_zero_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
 
-	/* create a pausible KEK */
+	/* create a plausible KEK */
 	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
 	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
 	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
@@ -111,6 +111,56 @@ fu_efi_image_func(void)
 	}
 }
 
+static void
+fu_uefi_dbx_not_present_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) ms_blob = NULL;
+	g_autoptr(FuFirmware) ms_siglist = NULL;
+	g_autofree gchar *ms_kek_filename = NULL;
+	g_autofree gchar *ms_kek_xml = NULL;
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* create a KEK with Microsoft's signature*/
+	ms_kek_filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-signature-list.builder.xml", NULL);
+	g_assert_nonnull(ms_kek_filename);
+
+	g_file_get_contents(ms_kek_filename, &ms_kek_xml, NULL, &error);
+	g_assert_nonnull(ms_kek_xml);
+	g_assert_no_error(error);
+
+	ms_siglist = fu_firmware_new_from_xml(ms_kek_xml, &error);
+	g_assert_nonnull(ms_siglist);
+	g_assert_no_error(error);
+
+	ms_blob = fu_firmware_write(ms_siglist, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(ms_blob);
+
+	fu_uefi_device_set_guid(FU_UEFI_DEVICE(device), FU_EFIVARS_GUID_EFI_GLOBAL);
+	fu_uefi_device_set_name(FU_UEFI_DEVICE(device), "KEK");
+	ret = fu_uefi_device_set_efivar_bytes(FU_UEFI_DEVICE(device),
+					      FU_EFIVARS_GUID_EFI_GLOBAL,
+					      "KEK",
+					      ms_blob,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -130,6 +180,7 @@ main(int argc, char **argv)
 	/* tests go here */
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
 	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
+	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
 
 	return g_test_run();
 }
