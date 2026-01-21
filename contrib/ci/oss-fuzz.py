@@ -585,6 +585,8 @@ if __name__ == "__main__":
                 "liblzma-dev",
                 "libzstd-dev",
                 "libcbor-dev",
+                "autoconf",
+                "automake",
                 "python3",
                 "python3-jinja2",
                 "python3-packaging",
