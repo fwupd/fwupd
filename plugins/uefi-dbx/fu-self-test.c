@@ -128,7 +128,7 @@ fu_uefi_dbx_not_present_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* create a KEK with Microsoft's signature*/
+	/* create a KEK with Microsoft's signature */
 	ms_kek_filename =
 	    g_test_build_filename(G_TEST_DIST, "tests", "efi-signature-list.builder.xml", NULL);
 	g_assert_nonnull(ms_kek_filename);

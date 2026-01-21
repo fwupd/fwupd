@@ -94,14 +94,13 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 						   NULL,
 						   &error_local);
 	if (dbx_blob == NULL) {
-		/* Create a fake UEFI device */
-		if (error_local->code == FWUPD_ERROR_NOT_FOUND) {
-			sigs = g_ptr_array_new();
-			g_debug("dbx variable not found, creating a fake dbx");
-		} else {
+		/* create an empty dbx signature list */
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
+		g_debug("dbx variable not found, creating a fake dbx");
+		sigs = g_ptr_array_new();
 	} else {
 		if (!fu_firmware_parse_bytes(dbx,
 					     dbx_blob,
@@ -109,10 +108,10 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 					     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
-		/* add the last checksum to the device */
 		sigs = fu_firmware_get_images(dbx);
 	}
 
+	/* add the last checksum to the device */
 	for (guint i = sigs->len; i > 0; i--) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i - 1);
 		const gchar *owner = fu_efi_signature_get_owner(sig);
