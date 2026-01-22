@@ -2637,8 +2637,6 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
-
-
 static gboolean
 fu_util_vercmp(FuUtil *self, gchar **values, GError **error)
 {

@@ -389,14 +389,14 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, Fwupd
 static gboolean
 fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 
 		/* filter */
 		if (!fwupd_device_match_flags(dev,
@@ -420,13 +420,12 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), json_obj_tmp, FWUPD_CODEC_FLAG_TRUSTED);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	fwupd_json_object_add_array(json_obj, "Devices", json_arr);
+	fu_util_print_json_object(self->console, json_obj);
+	return TRUE;
 }
 
 static gboolean
@@ -610,11 +609,8 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 static gboolean
 fu_util_get_upgrades_as_json(FuUtil *self, GPtrArray *devices, GError **error)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Releases");
-	json_builder_begin_array(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
@@ -641,18 +637,18 @@ fu_util_get_upgrades_as_json(FuUtil *self, GPtrArray *devices, GError **error)
 		/* add all releases */
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index(rels, j);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 			if (!fwupd_release_match_flags(rel,
 						       self->filter_release_include,
 						       self->filter_release_exclude))
 				continue;
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(rel), builder, FWUPD_CODEC_FLAG_TRUSTED);
-			json_builder_end_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj_tmp, FWUPD_CODEC_FLAG_TRUSTED);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(self->console, builder, error);
+	fwupd_json_object_add_array(json_obj, "Releases", json_arr);
+	fu_util_print_json_object(self->console, json_obj);
+	return TRUE;
 }
 
 static gboolean
@@ -968,6 +964,21 @@ fu_util_binder_thread_data_free(FuUtilBinderThreadData *thread_data)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilBinderThreadData, fu_util_binder_thread_data_free)
 
+static void
+fu_binder_client_log_handler(const gchar *log_domain,
+			     GLogLevelFlags log_level,
+			     const gchar *message,
+			     gpointer user_data)
+{
+	g_autoptr(GDateTime) dt = g_date_time_new_now_local();
+	g_autofree gchar *timestamp = g_strdup_printf("%02i:%02i:%02i.%03i",
+						      g_date_time_get_hour(dt),
+						      g_date_time_get_minute(dt),
+						      g_date_time_get_second(dt),
+						      g_date_time_get_microsecond(dt) / 1000);
+	g_printerr("%s %s: %s\n", timestamp, log_domain, message);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1144,10 +1155,11 @@ main(int argc, char *argv[])
 
 	/* set verbose? */
 	if (verbose) {
+		g_log_set_default_handler(fu_binder_client_log_handler, NULL);
 		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
 	} else {
-		//g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
+		// g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}
 
 	/* set flags */

@@ -250,7 +250,7 @@ run clean-remote lvfs
 expect_rc 0
 
 # ---
-echo "  Refresh remotes (forced)"
+echo " ● Refresh remotes (forced)"
 run refresh --json --force --verbose
 expect_rc 0
 

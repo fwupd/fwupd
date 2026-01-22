@@ -1050,6 +1050,8 @@ LIBFWUPD_2.0.17 {
 
 LIBFWUPD_2.1.1 {
   global:
+    fwupd_codec_variant_get_uint32;
+    fwupd_codec_variant_get_uint64;
     fwupd_json_array_add_array;
     fwupd_json_array_add_node;
     fwupd_json_array_add_object;

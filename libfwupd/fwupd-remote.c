@@ -9,7 +9,6 @@
 #include <curl/curl.h>
 #include <jcat.h>
 
-#include "fwupd-binder-variant-hack.h"
 #include "fwupd-codec.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"

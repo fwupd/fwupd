@@ -1107,10 +1107,16 @@ log_handler(const gchar *log_domain,
 	    const gchar *message,
 	    gpointer user_data)
 {
+	g_autoptr(GDateTime) dt = g_date_time_new_now_local();
+	g_autofree gchar *timestamp = g_strdup_printf("%02i:%02i:%02i.%03i",
+						      g_date_time_get_hour(dt),
+						      g_date_time_get_minute(dt),
+						      g_date_time_get_second(dt),
+						      g_date_time_get_microsecond(dt) / 1000);
 	FILE *fp = fopen("/data/vendor/fwupd/fwupd.log", "a");
 	if (fp == NULL)
 		return;
-	fprintf(fp, "%s: %s\n", log_domain, message);
+	fprintf(fp, "%s %s: %s\n", timestamp, log_domain, message);
 	fclose(fp);
 }
 

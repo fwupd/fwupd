@@ -60,7 +60,6 @@ plugins/qsi-dock/ @hssinf
 plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn
 plugins/rts54hub/ @AnyProblem
-plugins/snapd-uefi/ @BAMF0 @bboozzoo
 plugins/synaptics-cape/ @CNXT-Simon
 plugins/synaptics-mst/ @ApolloLing
 plugins/synaptics-prometheus/ @synavincent

@@ -747,3 +747,37 @@ fwupd_codec_json_append_map(FwupdJsonObject *json_obj, const gchar *key, GHashTa
 		return;
 	fwupd_json_object_add_object_map(json_obj, key, value);
 }
+
+/**
+ * fwupd_codec_variant_get_uint32:
+ * @value: a #GVariant
+ *
+ * Gets an unsigned integer from a variant, handling both 'u' and 'i' types.
+ *
+ * Since: 2.1.1
+ **/
+guint32
+fwupd_codec_variant_get_uint32(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, 0);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT32))
+		return (guint32)g_variant_get_int32(value);
+	return g_variant_get_uint32(value);
+}
+
+/**
+ * fwupd_codec_variant_get_uint64:
+ * @value: a #GVariant
+ *
+ * Gets an unsigned integer from a variant, handling both 't' and 'x' types.
+ *
+ * Since: 2.1.1
+ **/
+guint64
+fwupd_codec_variant_get_uint64(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, 0);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT64))
+		return (guint64)g_variant_get_int64(value);
+	return g_variant_get_uint64(value);
+}

@@ -100,3 +100,11 @@ fwupd_codec_json_append_int(FwupdJsonObject *json_obj, const gchar *key, guint64
 void
 fwupd_codec_json_append_bool(FwupdJsonObject *json_obj, const gchar *key, gboolean value)
     G_GNUC_NON_NULL(1, 2);
+
+guint32
+fwupd_codec_variant_get_uint32(GVariant *value) G_GNUC_NON_NULL(1);
+guint64
+fwupd_codec_variant_get_uint64(GVariant *value) G_GNUC_NON_NULL(1);
+
+G_END_DECLS
+
