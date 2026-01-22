@@ -24,8 +24,9 @@
 #define OUT_REPORT_TYPE	     0x0200
 #define FEATURE_REPORT_TYPE  0x0300
 
-#define FU_HPI_CFU_PAYLOAD_LENGTH 52
-#define FU_HPI_CFU_DEVICE_TIMEOUT 0 /* ms */
+#define FU_HPI_CFU_PAYLOAD_LENGTH		52
+#define FU_HPI_CFU_DEVICE_TIMEOUT		0 /* ms */
+#define FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT "update-on-reboot"
 
 const guint8 report_data[15] =
     {0x00, 0xff, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -42,6 +43,7 @@ struct _FuHpiCfuDevice {
 	gboolean last_packet_sent;
 	guint8 bulk_opt;
 	gboolean firmware_status;
+	gboolean update_on_reboot;
 	gboolean exit_state_machine_framework;
 };
 
@@ -1433,6 +1435,14 @@ fu_hpi_cfu_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_hpi_cfu_device_parent_class)->setup(device, error))
 		return FALSE;
 
+	/* sets update_on_reboot flag if device needs reboot for update */
+	if (fu_device_has_private_flag(device, FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT)) {
+		self->update_on_reboot = TRUE;
+		g_debug("update_on_reboot flag is set for device: %s",
+			fu_device_get_name(FU_DEVICE(self)));
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	}
+
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -1534,7 +1544,7 @@ fu_hpi_cfu_device_write_firmware(FuDevice *device,
 	}
 
 	/* the device automatically reboots */
-	if (self->firmware_status)
+	if (self->firmware_status && !self->update_on_reboot)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -1563,6 +1573,7 @@ fu_hpi_cfu_device_init(FuHpiCfuDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 720); /* 12 min */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_HPI_CFU_INTERFACE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT);
 
 	/* reboot takes down the entire hub for ~12 minutes */
 	fu_device_set_remove_delay(FU_DEVICE(self), 720 * 1000);
