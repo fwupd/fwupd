@@ -1,0 +1,238 @@
+/*
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include <string.h>
+
+#include "fu-wacom-usb-common.h"
+#include "fu-wacom-usb-device.h"
+#include "fu-wacom-usb-module-bluetooth.h"
+#include "fu-wacom-usb-struct.h"
+
+struct _FuWacomUsbModuleBluetooth {
+	FuWacomUsbModule parent_instance;
+};
+
+G_DEFINE_TYPE(FuWacomUsbModuleBluetooth, fu_wacom_usb_module_bluetooth, FU_TYPE_WACOM_USB_MODULE)
+
+#define FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ	  256
+#define FU_WACOM_USB_MODULE_BLUETOOTH_ADDR_USERDATA_START 0x3000
+#define FU_WACOM_USB_MODULE_BLUETOOTH_ADDR_USERDATA_STOP  0x8000
+
+typedef struct {
+	guint8 preamble[7];
+	guint32 addr;
+	guint8 crc;
+	guint8 cdata[FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ];
+} FuWacomUsbModuleBluetoothBlockData;
+
+static void
+fu_wacom_usb_module_bluetooth_calculate_crc_byte(guint8 *crc, guint8 data)
+{
+	guint8 c[8] = {0};
+	guint8 m[8] = {0};
+	guint8 r[8] = {0};
+
+	/* find out what bits are set */
+	for (guint i = 0; i < 8; i++) {
+		c[i] = (*crc & (1 << i)) != 0;
+		m[i] = (data & (1 << i)) != 0;
+	}
+
+	/* do CRC on byte */
+	r[7] = (c[7] ^ m[4] ^ c[3] ^ m[3] ^ c[4] ^ m[6] ^ c[1] ^ m[0]);
+	r[6] = (c[6] ^ m[5] ^ c[2] ^ m[4] ^ c[3] ^ m[7] ^ c[0] ^ m[1]);
+	r[5] = (c[5] ^ m[6] ^ c[1] ^ m[5] ^ c[2] ^ m[2]);
+	r[4] = (c[4] ^ m[7] ^ c[0] ^ m[6] ^ c[1] ^ m[3]);
+	r[3] = (m[7] ^ m[0] ^ c[7] ^ c[0] ^ m[3] ^ c[4] ^ m[6] ^ c[1]);
+	r[2] = (m[1] ^ c[6] ^ m[0] ^ c[7] ^ m[3] ^ c[4] ^ m[7] ^ c[0] ^ m[6] ^ c[1]);
+	r[1] = (m[2] ^ c[5] ^ m[1] ^ c[6] ^ m[4] ^ c[3] ^ m[7] ^ c[0]);
+	r[0] = (m[3] ^ c[4] ^ m[2] ^ c[5] ^ m[5] ^ c[2]);
+
+	/* copy back into CRC */
+	*crc = 0;
+	for (guint i = 0; i < 8; i++) {
+		if (r[i] == 0)
+			continue;
+		FU_BIT_SET(*crc, i);
+	}
+}
+
+static guint8
+fu_wacom_usb_module_bluetooth_calculate_crc(const guint8 *data, gsize sz)
+{
+	guint8 crc = 0;
+	for (gsize i = 0; i < sz; i++)
+		fu_wacom_usb_module_bluetooth_calculate_crc_byte(&crc, data[i]);
+	return crc;
+}
+
+static GPtrArray *
+fu_wacom_usb_module_bluetooth_parse_blocks(const guint8 *data,
+					   gsize sz,
+					   gboolean skip_user_data,
+					   GError **error)
+{
+	const guint8 preamble[] = {0x02, 0x00, 0x0f, 0x06, 0x01, 0x08, 0x01};
+	GPtrArray *blocks = g_ptr_array_new_with_free_func(g_free);
+	for (guint addr = 0x0; addr < sz; addr += FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ) {
+		g_autofree FuWacomUsbModuleBluetoothBlockData *bd = NULL;
+		gsize cdata_sz = FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ;
+
+		/* user data area */
+		if (skip_user_data && addr >= FU_WACOM_USB_MODULE_BLUETOOTH_ADDR_USERDATA_START &&
+		    addr < FU_WACOM_USB_MODULE_BLUETOOTH_ADDR_USERDATA_STOP)
+			continue;
+
+		bd = g_new0(FuWacomUsbModuleBluetoothBlockData, 1);
+		bd->addr = addr;
+		memcpy(bd->preamble, preamble, sizeof(preamble)); /* nocheck:blocked */
+		memset(bd->cdata, 0xff, FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ);
+
+		/* if file is not in multiples of payload size */
+		if (addr + FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ >= sz)
+			cdata_sz = sz - addr;
+		if (!fu_memcpy_safe(bd->cdata,
+				    sizeof(bd->cdata),
+				    0x0, /* dst */
+				    data,
+				    sz,
+				    addr, /* src */
+				    cdata_sz,
+				    error))
+			return NULL;
+		bd->crc = fu_wacom_usb_module_bluetooth_calculate_crc(
+		    bd->cdata,
+		    FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ);
+		g_ptr_array_add(blocks, g_steal_pointer(&bd));
+	}
+	return blocks;
+}
+
+static gboolean
+fu_wacom_usb_module_bluetooth_write_firmware(FuDevice *device,
+					     FuFirmware *firmware,
+					     FuProgress *progress,
+					     FwupdInstallFlags flags,
+					     GError **error)
+{
+	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
+	const guint8 *data;
+	gsize len = 0;
+	const guint8 buf_start[] = {0x00};
+	g_autoptr(GPtrArray) blocks = NULL;
+	g_autoptr(GBytes) blob_start = g_bytes_new_static(buf_start, 1);
+	g_autoptr(GBytes) fw = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 79, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
+
+	/* get default image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL) {
+		g_prefix_error_literal(error, "failed to get bytes: ");
+		return FALSE;
+	}
+
+	/* build each data packet */
+	data = g_bytes_get_data(fw, &len);
+	blocks = fu_wacom_usb_module_bluetooth_parse_blocks(data, len, TRUE, error);
+	if (blocks == NULL) {
+		g_prefix_error_literal(error, "failed to parse: ");
+		return FALSE;
+	}
+
+	/* start, which will erase the module */
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_START,
+					     blob_start,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_START_TIMEOUT,
+					     error)) {
+		g_prefix_error_literal(error, "failed to erase: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* data */
+	for (guint i = 0; i < blocks->len; i++) {
+		FuWacomUsbModuleBluetoothBlockData *bd = g_ptr_array_index(blocks, i);
+		guint8 buf[256 + 11]; /* nocheck:zero-init */
+		g_autoptr(GBytes) blob_chunk = NULL;
+
+		/* build data packet */
+		memset(buf, 0xff, sizeof(buf));
+		memcpy(&buf[0], bd->preamble, 7); /* nocheck:blocked */
+		fu_memwrite_uint24(buf + 0x7, bd->addr, G_LITTLE_ENDIAN);
+		buf[10] = bd->crc;
+		memcpy(&buf[11], bd->cdata, sizeof(bd->cdata)); /* nocheck:blocked */
+		blob_chunk = g_bytes_new(buf, sizeof(buf));
+		if (!fu_wacom_usb_module_set_feature(self,
+						     FU_WACOM_USB_MODULE_COMMAND_DATA,
+						     blob_chunk,
+						     fu_progress_get_child(progress),
+						     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+						     FU_WACOM_USB_MODULE_DATA_TIMEOUT,
+						     error)) {
+			g_prefix_error_literal(error, "failed to write: ");
+			return FALSE;
+		}
+
+		/* update progress */
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						blocks->len);
+	}
+	fu_progress_step_done(progress);
+
+	/* end */
+	if (!fu_wacom_usb_module_set_feature(self,
+					     FU_WACOM_USB_MODULE_COMMAND_END,
+					     NULL,
+					     fu_progress_get_child(progress),
+					     FU_WACOM_USB_MODULE_POLL_INTERVAL,
+					     FU_WACOM_USB_MODULE_END_TIMEOUT,
+					     error)) {
+		g_prefix_error_literal(error, "failed to end: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_wacom_usb_module_bluetooth_init(FuWacomUsbModuleBluetooth *self)
+{
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_install_duration(FU_DEVICE(self), 30);
+}
+
+static void
+fu_wacom_usb_module_bluetooth_class_init(FuWacomUsbModuleBluetoothClass *klass)
+{
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_wacom_usb_module_bluetooth_write_firmware;
+}
+
+FuWacomUsbModule *
+fu_wacom_usb_module_bluetooth_new(FuDevice *proxy)
+{
+	FuWacomUsbModule *module = NULL;
+	module = g_object_new(FU_TYPE_WACOM_USB_MODULE_BLUETOOTH,
+			      "proxy",
+			      proxy,
+			      "fw-type",
+			      FU_WACOM_USB_MODULE_FW_TYPE_BLUETOOTH,
+			      NULL);
+	return module;
+}

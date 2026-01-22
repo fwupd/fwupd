@@ -38,6 +38,11 @@ fu_json_firmware_parse(FuFirmware *firmware,
 	/* make the fuzzer spend time on complexity, not depth or length -> OOM */
 	fwupd_json_parser_set_max_depth(json_parser, 5);
 	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 10);
+#else
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 10000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 #endif
 
 	/* just load into memory, no extraction performed */
@@ -91,6 +96,11 @@ fu_json_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	FuJsonFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *json;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* simple properties */
 	json = xb_node_query_text(n, "json", error);

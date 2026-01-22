@@ -105,7 +105,7 @@ enum FuCoswidEntityRole {
 #[derive(ToString, FromString)]
 enum FuCoswidHashAlg {
     Unknown = 0,
-    SHA256 = 1,
-    SHA384 = 7,
-    SHA512 = 8,
+    Sha256 = 1,
+    Sha384 = 7,
+    Sha512 = 8,
 }

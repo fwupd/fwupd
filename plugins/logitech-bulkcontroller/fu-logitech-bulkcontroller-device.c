@@ -241,9 +241,14 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 		return NULL;
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
-	g_byte_array_append(response->data,
-			    buf + st->buf->len,
-			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
+	if (!fu_byte_array_append_safe(
+		response->data,
+		buf,
+		self->transfer_bufsz,
+		st->buf->len, /* offset */
+		fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st),
+		error))
+		return NULL;
 	/* no payload for UninitBuffer, skip check */
 	if ((response->cmd != FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER) &&
 	    (response->data->len == 0)) {
@@ -735,6 +740,11 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FwupdJsonObject) json_payload = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* parse JSON reply */
 	json_node =

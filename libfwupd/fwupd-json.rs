@@ -5,6 +5,7 @@
 // Since: 2.1.1
 #[derive(ToString)]
 enum FwupdJsonNodeKind {
+    Null,
     Raw,
     String,
     Array,
@@ -16,6 +17,7 @@ enum FwupdJsonNodeKind {
 enum FwupdJsonExportFlags {
     None = 0,
     Indent = 1 << 0,
+    TrailingNewline = 2 << 0,
 }
 
 // JSON load flags.

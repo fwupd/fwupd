@@ -16,3 +16,5 @@ fu_context_add_backend(FuContext *self, FuBackend *backend) G_GNUC_NON_NULL(1, 2
 FuBackend *
 fu_context_get_backend_by_name(FuContext *self, const gchar *name, GError **error)
     G_GNUC_NON_NULL(1, 2);
+void
+fu_context_add_firmware_gtypes(FuContext *self) G_GNUC_NON_NULL(1);

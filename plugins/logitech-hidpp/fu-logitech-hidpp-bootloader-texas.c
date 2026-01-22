@@ -21,12 +21,18 @@ G_DEFINE_TYPE(FuLogitechHidppBootloaderTexas,
 static gboolean
 fu_logitech_hidpp_bootloader_texas_erase_all(FuLogitechHidppBootloader *self, GError **error)
 {
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM;
-	req->len = 0x01;     /* magic number */
-	req->data[0] = 0x00; /* magic number */
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
+	guint8 buf[] = {FU_STRUCT_LOGITECH_HIDPP_BOOTLOADER_TEXAS_CMD_ERASE_ALL};
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
+
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(st_req,
+							FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM);
+	fu_struct_logitech_hidpp_bootloader_pkt_set_len(st_req, sizeof(buf));
+	if (!fu_struct_logitech_hidpp_bootloader_pkt_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
 		g_prefix_error_literal(error, "failed to erase all pages: ");
 		return FALSE;
 	}
@@ -37,16 +43,23 @@ static gboolean
 fu_logitech_hidpp_bootloader_texas_compute_and_test_crc(FuLogitechHidppBootloader *self,
 							GError **error)
 {
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM;
-	req->len = 0x01;     /* magic number */
-	req->data[0] = 0x03; /* magic number */
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
+	guint8 buf[] = {FU_STRUCT_LOGITECH_HIDPP_BOOTLOADER_TEXAS_CMD_COMPUTE_CRC};
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
+
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(st_req,
+							FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM);
+	fu_struct_logitech_hidpp_bootloader_pkt_set_len(st_req, sizeof(buf));
+	if (!fu_struct_logitech_hidpp_bootloader_pkt_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
 		g_prefix_error_literal(error, "failed to compute and test CRC: ");
 		return FALSE;
 	}
-	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_WRONG_CRC) {
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_WRONG_CRC) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -61,17 +74,24 @@ fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(FuLogitechHidppBootloader *s
 						    guint16 addr,
 						    GError **error)
 {
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM;
-	req->addr = addr;
-	req->len = 0x01;     /* magic number */
-	req->data[0] = 0x01; /* magic number */
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
+	guint8 buf[] = {FU_STRUCT_LOGITECH_HIDPP_BOOTLOADER_TEXAS_CMD_FLASH_RAM_BUFFER};
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
+
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(st_req,
+							FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM);
+	fu_struct_logitech_hidpp_bootloader_pkt_set_addr(st_req, addr);
+	fu_struct_logitech_hidpp_bootloader_pkt_set_len(st_req, sizeof(buf));
+	if (!fu_struct_logitech_hidpp_bootloader_pkt_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
 		g_prefix_error(error, "failed to flash ram buffer @%04x: ", addr);
 		return FALSE;
 	}
-	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_INVALID_ADDR) {
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_INVALID_ADDR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -79,7 +99,8 @@ fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(FuLogitechHidppBootloader *s
 			    addr);
 		return FALSE;
 	}
-	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_PAGE0_INVALID) {
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_PAGE0_INVALID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -87,7 +108,8 @@ fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(FuLogitechHidppBootloader *s
 			    addr);
 		return FALSE;
 	}
-	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_INVALID_ORDER) {
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_INVALID_ORDER) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -101,16 +123,96 @@ fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(FuLogitechHidppBootloader *s
 static gboolean
 fu_logitech_hidpp_bootloader_texas_clear_ram_buffer(FuLogitechHidppBootloader *self, GError **error)
 {
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
-	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM;
-	req->addr = 0x0000;
-	req->len = 0x01;     /* magic number */
-	req->data[0] = 0x02; /* magic number */
-	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to clear ram buffer @%04x: ", req->addr);
+	guint8 buf[] = {FU_STRUCT_LOGITECH_HIDPP_BOOTLOADER_TEXAS_CMD_CLEAR_RAM_BUFFER};
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_req =
+	    fu_struct_logitech_hidpp_bootloader_pkt_new();
+
+	fu_struct_logitech_hidpp_bootloader_pkt_set_cmd(st_req,
+							FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM);
+	fu_struct_logitech_hidpp_bootloader_pkt_set_len(st_req, sizeof(buf));
+	if (!fu_struct_logitech_hidpp_bootloader_pkt_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
+		g_prefix_error(error,
+			       "failed to clear ram buffer @%04x: ",
+			       fu_struct_logitech_hidpp_bootloader_pkt_get_addr(st_req));
 		return FALSE;
 	}
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_bootloader_texas_write_pkt(FuLogitechHidppBootloader *self,
+					     FuStructLogitechHidppBootloaderPkt *st_req,
+					     GError **error)
+{
+	g_autoptr(FuStructLogitechHidppBootloaderPkt) st_rsp = NULL;
+	guint16 addr_old = fu_struct_logitech_hidpp_bootloader_pkt_get_addr(st_req);
+
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_req) !=
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE) {
+		fu_struct_logitech_hidpp_bootloader_pkt_set_addr(st_req, addr_old % 0x80);
+	}
+	st_rsp = fu_logitech_hidpp_bootloader_request(self, st_req, error);
+	if (st_rsp == NULL) {
+		g_prefix_error(error, "failed to write ram buffer @0x%02x: ", addr_old);
+		return FALSE;
+	}
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER_INVALID_ADDR) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to write ram buffer @%04x: invalid location",
+			    fu_struct_logitech_hidpp_bootloader_pkt_get_addr(st_rsp));
+		return FALSE;
+	}
+	if (fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) ==
+	    FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER_OVERFLOW) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to write ram buffer @%04x: invalid size 0x%02x",
+			    fu_struct_logitech_hidpp_bootloader_pkt_get_addr(st_rsp),
+			    fu_struct_logitech_hidpp_bootloader_pkt_get_len(st_rsp));
+		return FALSE;
+	}
+
+	/* flush RAM buffer to EEPROM */
+	if ((addr_old + 0x10) % 0x80 == 0 &&
+	    fu_struct_logitech_hidpp_bootloader_pkt_get_cmd(st_rsp) !=
+		FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE) {
+		guint16 addr_start = addr_old - (7 * 0x10);
+		g_debug("addr flush @ 0x%04x for 0x%04x", addr_old, addr_start);
+		if (!fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(self, addr_start, error)) {
+			g_prefix_error(error, "failed to flash ram buffer @0x%04x: ", addr_start);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_bootloader_texas_write_pkts(FuLogitechHidppBootloader *self,
+					      GPtrArray *pkts,
+					      FuProgress *progress,
+					      GError **error)
+{
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, pkts->len);
+	for (guint i = 0; i < pkts->len; i++) {
+		FuStructLogitechHidppBootloaderPkt *st_req = g_ptr_array_index(pkts, i);
+		if (!fu_logitech_hidpp_bootloader_texas_write_pkt(self, st_req, error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -122,11 +224,8 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 						  GError **error)
 {
 	FuLogitechHidppBootloader *self = FU_LOGITECH_HIDPP_BOOTLOADER(device);
-	const FuLogitechHidppBootloaderRequest *payload;
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) reqs = NULL;
-	g_autoptr(FuLogitechHidppBootloaderRequest) req =
-	    fu_logitech_hidpp_bootloader_request_new();
+	GPtrArray *records;
+	g_autoptr(GPtrArray) pkts = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -142,14 +241,10 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 12, NULL);
 	}
 
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
 	/* transfer payload */
-	reqs = fu_logitech_hidpp_bootloader_parse_requests(self, fw, error);
-	if (reqs == NULL)
+	records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
+	pkts = fu_logitech_hidpp_bootloader_parse_pkts(self, records, error);
+	if (pkts == NULL)
 		return FALSE;
 
 	/* erase all flash pages */
@@ -163,79 +258,11 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write to RAM buffer */
-	for (guint i = 0; i < reqs->len; i++) {
-		payload = g_ptr_array_index(reqs, i);
-
-		/* check size */
-		if (payload->len != 16) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "payload size invalid @%04x: got 0x%02x",
-				    payload->addr,
-				    payload->len);
-			return FALSE;
-		}
-
-		/* build packet */
-		req->cmd = payload->cmd;
-
-		/* signature addresses do not need to fit inside 128 bytes */
-		if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE)
-			req->addr = payload->addr;
-		else
-			req->addr = payload->addr % 0x80;
-
-		req->len = payload->len;
-		if (!fu_memcpy_safe(req->data,
-				    req->len,
-				    0x0, /* dst */
-				    payload->data,
-				    payload->len,
-				    0x0, /* src */
-				    payload->len,
-				    error))
-			return FALSE;
-		if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-			g_prefix_error(error, "failed to write ram buffer @0x%02x: ", req->addr);
-			return FALSE;
-		}
-		if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER_INVALID_ADDR) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "failed to write ram buffer @%04x: invalid location",
-				    req->addr);
-			return FALSE;
-		}
-		if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER_OVERFLOW) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "failed to write ram buffer @%04x: invalid size 0x%02x",
-				    req->addr,
-				    req->len);
-			return FALSE;
-		}
-
-		/* flush RAM buffer to EEPROM */
-		if ((payload->addr + 0x10) % 0x80 == 0 &&
-		    req->cmd != FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_SIGNATURE) {
-			guint16 addr_start = payload->addr - (7 * 0x10);
-			g_debug("addr flush @ 0x%04x for 0x%04x", payload->addr, addr_start);
-			if (!fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(self,
-										 addr_start,
-										 error)) {
-				g_prefix_error(error,
-					       "failed to flash ram buffer @0x%04x: ",
-					       addr_start);
-				return FALSE;
-			}
-		}
-
-		/* update progress */
-		fu_progress_set_percentage_full(fu_progress_get_child(progress), i + 1, reqs->len);
-	}
+	if (!fu_logitech_hidpp_bootloader_texas_write_pkts(self,
+							   pkts,
+							   fu_progress_get_child(progress),
+							   error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* check CRC */

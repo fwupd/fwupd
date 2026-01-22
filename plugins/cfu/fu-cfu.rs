@@ -93,7 +93,7 @@ enum FuCfuContentStatus {
     ErrorSignature = 0x06,
     ErrorVersion = 0x07,
     SwapPending = 0x08,
-    ErrorInvalidAddr 0x09,
+    ErrorInvalidAddr = 0x09,
     ErrorNoOffer = 0x0A,
     ErrorInvalid = 0x0B,
 }

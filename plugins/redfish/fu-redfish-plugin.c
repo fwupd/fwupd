@@ -224,8 +224,9 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	/* in self tests */
 	smbios_data_fn = g_getenv("FWUPD_REDFISH_SMBIOS_DATA");
 	if (smbios_data_fn != NULL) {
-		g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
-		if (!fu_firmware_build_from_filename(FU_FIRMWARE(smbios), smbios_data_fn, error)) {
+		g_autoptr(FuRedfishSmbios) smbios = NULL;
+		smbios = FU_REDFISH_SMBIOS(fu_firmware_new_from_filename(smbios_data_fn, error));
+		if (smbios == NULL) {
 			g_prefix_error_literal(error, "failed to build SMBIOS entry type 42: ");
 			return FALSE;
 		}
@@ -713,7 +714,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "RedfishResetPreDelay");
 	fu_context_add_quirk_key(ctx, "RedfishResetPostDelay");
 	self->backend = fu_redfish_backend_new(ctx);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_REDFISH_SMBIOS);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_HPE_DEVICE);	      /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_LEGACY_DEVICE);    /* coverage */

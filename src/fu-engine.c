@@ -76,6 +76,11 @@
 /* only needed until we hard depend on jcat 0.1.3 */
 #include <libjcat/jcat-version.h>
 
+/* fixed in 0.1.14 */
+#ifndef JCAT_CHECK_VERSION
+#define JCAT_CHECK_VERSION LIBJCAT_CHECK_VERSION
+#endif
+
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
 #endif
@@ -798,12 +803,15 @@ fu_engine_get_releases_for_container_checksum(FuEngine *self, const gchar *csum)
 gchar *
 fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 {
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA256,
+	    G_CHECKSUM_SHA1,
+	};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *csum = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 
@@ -2720,8 +2728,11 @@ fu_engine_install_release(FuEngine *self,
 
 	/* add the checksum of the container blob if not already set */
 	if (fwupd_release_get_checksums(FWUPD_RELEASE(release))->len == 0) {
-		GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
-		for (guint i = 0; checksum_types[i] != 0; i++) {
+		GChecksumType checksum_types[] = {
+		    G_CHECKSUM_SHA256,
+		    G_CHECKSUM_SHA1,
+		};
+		for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 			g_autofree gchar *checksum =
 			    fu_input_stream_compute_checksum(stream, checksum_types[i], error);
 			if (checksum == NULL)
@@ -5036,7 +5047,10 @@ fu_engine_get_details(FuEngine *self,
 		      GInputStream *stream,
 		      GError **error)
 {
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA256,
+	    G_CHECKSUM_SHA1,
+	};
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
@@ -5057,7 +5071,7 @@ fu_engine_get_details(FuEngine *self,
 		return NULL;
 
 	/* calculate the checksums of the blob */
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *checksum =
 		    fu_input_stream_compute_checksum(stream, checksum_types[i], error);
 		if (checksum == NULL)
@@ -7456,24 +7470,12 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 }
 
 static gboolean
-fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+fu_engine_security_attrs_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
 {
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-
 	/* not supplied */
-	obj = json_node_get_object(json_node);
-	if (!json_object_has_member(obj, "SecurityAttributes"))
+	if (!fwupd_json_object_has_node(json_obj, "SecurityAttributes"))
 		return TRUE;
-	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_node, error))
+	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_obj, error))
 		return FALSE;
 
 	/* success */
@@ -7481,31 +7483,22 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 }
 
 static gboolean
-fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+fu_engine_devices_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
 {
-	JsonArray *array;
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* not supplied */
-	obj = json_node_get_object(json_node);
-	if (!json_object_has_member(obj, "Devices"))
+	json_arr = fwupd_json_object_get_array(json_obj, "Devices", NULL);
+	if (json_arr == NULL)
 		return TRUE;
-
-	/* this has to exist */
-	array = json_object_get_array_member(obj, "Devices");
-	for (guint i = 0; i < json_array_get_length(array); i++) {
-		JsonNode *node_tmp = json_array_get_element(array, i);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
 		g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-		if (!fwupd_codec_from_json(FWUPD_CODEC(device), node_tmp, error))
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(device), json_obj_tmp, error))
 			return FALSE;
 		fu_device_set_plugin(device, "dummy");
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_IS_EMULATED);
@@ -7521,12 +7514,19 @@ fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 static gboolean
 fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 {
-	g_autoptr(JsonParser) parser = json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	g_autoptr(GInputStream) istream_json = NULL;
 	g_autoptr(GInputStream) istream_raw = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
+
+	/* set appropriate limits */
+	fwupd_json_parser_set_max_depth(json_parser, 50);
+	fwupd_json_parser_set_max_items(json_parser, 10000);
+	fwupd_json_parser_set_max_quoted(json_parser, 100000);
 
 	/* add an attr so we know this is emulated and do not offer to upload results */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_HOST_EMULATION);
@@ -7546,13 +7546,20 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	} else {
 		istream_json = g_object_ref(istream_raw);
 	}
-	if (!json_parser_load_from_stream(parser, istream_json, NULL, error))
+	json_node = fwupd_json_parser_load_from_stream(json_parser,
+						       istream_json,
+						       FWUPD_JSON_LOAD_FLAG_NONE,
+						       error);
+	if (json_node == NULL)
 		return FALSE;
-	if (!fu_engine_devices_from_json(self, json_parser_get_root(parser), error))
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
 		return FALSE;
-	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
+	if (!fu_engine_devices_from_json(self, json_obj, error))
 		return FALSE;
-	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_parser_get_root(parser), error))
+	if (!fu_engine_security_attrs_from_json(self, json_obj, error))
+		return FALSE;
+	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_obj, error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -7870,10 +7877,11 @@ fu_engine_plugins_init(FuEngine *self, FuProgress *progress, GError **error)
 static gboolean
 fu_engine_cleanup_state(GError **error)
 {
-	const gchar *filenames[] = {"/var/cache/app-info/xmls/fwupd-verify.xml",
-				    "/var/cache/app-info/xmls/fwupd.xml",
-				    NULL};
-	for (guint i = 0; filenames[i] != NULL; i++) {
+	const gchar *filenames[] = {
+	    "/var/cache/app-info/xmls/fwupd-verify.xml",
+	    "/var/cache/app-info/xmls/fwupd.xml",
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(filenames); i++) {
 		g_autoptr(GFile) file = g_file_new_for_path(filenames[i]);
 		if (g_file_query_exists(file, NULL)) {
 			if (!g_file_delete(file, NULL, error))
@@ -8449,12 +8457,13 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 static gboolean
 fu_engine_ensure_paths_exist(GError **error)
 {
-	FuPathKind path_kinds[] = {FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
-				   FU_PATH_KIND_LOCALSTATEDIR_METADATA,
-				   FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
-				   FU_PATH_KIND_CACHEDIR_PKG,
-				   FU_PATH_KIND_LAST};
-	for (guint i = 0; path_kinds[i] != FU_PATH_KIND_LAST; i++) {
+	FuPathKind path_kinds[] = {
+	    FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+	    FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+	    FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
+	    FU_PATH_KIND_CACHEDIR_PKG,
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(path_kinds); i++) {
 		g_autofree gchar *fn = fu_path_from_kind(path_kinds[i]);
 		if (!fu_path_mkdir(fn, error))
 			return FALSE;
@@ -9336,10 +9345,12 @@ fu_engine_constructed(GObject *obj)
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
+#if JCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
+#endif
 	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	pkidir_fw = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "pki", "fwupd", NULL);
@@ -9349,7 +9360,9 @@ fu_engine_constructed(GObject *obj)
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
+#if JCAT_CHECK_VERSION(0, 1, 11)
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
+#endif
 	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
 
 	/* optional kernel version */

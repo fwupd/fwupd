@@ -1304,6 +1304,28 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	return NULL;
 }
 
+/* enumerate each problem, and also untranslated update error if set */
+GPtrArray *
+fu_util_device_problems_to_strings(FwupdClient *client, FwupdDevice *dev)
+{
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
+
+	for (guint i = 0; i < 64; i++) {
+		FwupdDeviceProblem problem = (guint64)1 << i;
+		g_autofree gchar *str = NULL;
+
+		if (!fwupd_device_has_problem(dev, problem))
+			continue;
+		str = fu_util_device_problem_to_string(client, dev, problem);
+		if (str == NULL)
+			continue;
+		g_ptr_array_add(array, g_steal_pointer(&str));
+	}
+	if (fwupd_device_get_update_error(dev) != NULL)
+		g_ptr_array_add(array, g_strdup(fwupd_device_get_update_error(dev)));
+	return g_steal_pointer(&array);
+}
+
 gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 {
@@ -2443,6 +2465,11 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("The UEFI certificate store is now up to date")},
+		     {FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("HP SureStart is enabled")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
@@ -2855,48 +2882,24 @@ fu_util_is_url(const gchar *perhaps_url)
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 }
 
-gboolean
-fu_util_print_builder(FuConsole *console, JsonBuilder *builder, GError **error)
+void
+fu_util_print_json_object(FuConsole *console, FwupdJsonObject *json_obj)
 {
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
-
-	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Failed to convert to JSON string");
-		return FALSE;
-	}
-
-	/* just print */
-	fu_console_print_literal(console, data);
-	return TRUE;
+	g_autoptr(GString) str = NULL;
+	str = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	fu_console_print_literal(console, str->str);
 }
 
 void
 fu_util_print_error_as_json(FuConsole *console, const GError *error)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Error");
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Domain");
-	json_builder_add_string_value(builder, g_quark_to_string(error->domain));
-	json_builder_set_member_name(builder, "Code");
-	json_builder_add_int_value(builder, error->code);
-	json_builder_set_member_name(builder, "Message");
-	json_builder_add_string_value(builder, error->message);
-	json_builder_end_object(builder);
-	json_builder_end_object(builder);
-	fu_util_print_builder(console, builder, NULL);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+	fwupd_json_object_add_string(json_obj_tmp, "Domain", g_quark_to_string(error->domain));
+	fwupd_json_object_add_integer(json_obj_tmp, "Code", error->code);
+	fwupd_json_object_add_string(json_obj_tmp, "Message", error->message);
+	fwupd_json_object_add_object(json_obj, "Error", json_obj_tmp);
+	fu_util_print_json_object(console, json_obj);
 }
 
 typedef enum {
@@ -2945,42 +2948,37 @@ fu_util_print_version_key_valid(const gchar *key)
 	return FALSE;
 }
 
-gboolean
-fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error)
+void
+fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata)
 {
 	GHashTableIter iter;
 	const gchar *key;
 	const gchar *value;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Versions");
-	json_builder_begin_array(builder);
 	g_hash_table_iter_init(&iter, metadata);
 	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
 		FuUtilDependencyKind dependency_kind = FU_UTIL_DEPENDENCY_KIND_UNKNOWN;
 		g_autofree gchar *project = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 
 		/* add version keys */
 		if (!fu_util_print_version_key_valid(key))
 			continue;
 		project = fu_util_parse_project_dependency(key, &dependency_kind);
-		json_builder_begin_object(builder);
 		if (dependency_kind != FU_UTIL_DEPENDENCY_KIND_UNKNOWN) {
-			json_builder_set_member_name(builder, "Type");
-			json_builder_add_string_value(
-			    builder,
+			fwupd_json_object_add_string(
+			    json_obj_tmp,
+			    "Type",
 			    fu_util_dependency_kind_to_string(dependency_kind));
 		}
-		json_builder_set_member_name(builder, "AppstreamId");
-		json_builder_add_string_value(builder, project);
-		json_builder_set_member_name(builder, "Version");
-		json_builder_add_string_value(builder, value);
-		json_builder_end_object(builder);
+		fwupd_json_object_add_string(json_obj_tmp, "AppstreamId", project);
+		fwupd_json_object_add_string(json_obj_tmp, "Version", value);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(console, builder, error);
+	fwupd_json_object_add_array(json_obj, "Versions", json_arr);
+	fu_util_print_json_object(console, json_obj);
 }
 
 gchar *

@@ -1,4 +1,4 @@
-<firmware gtype="FuWacFirmware">
+<firmware gtype="FuWacomUsbFirmware">
   <firmware gtype="FuSrecFirmware">
     <idx>0x0</idx>
     <addr>0x8008000</addr>

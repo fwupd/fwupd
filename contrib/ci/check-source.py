@@ -202,15 +202,34 @@ class Checker:
 
         if node.hint == NodeHint.ENUM:
             return
-        idx = node.tokens.find_fuzzy(["="])
-        if idx == -1:
-            return
-        token = node.tokens[idx - 1]
-        if token.data.find(".") != -1:
-            return
-        if token.data.lower() != token.data:
+
+        idx: int = 0
+        while True:
+            idx = node.tokens.find_fuzzy(["="], offset=idx + 1)
+            if idx == -1:
+                return
+            token = node.tokens[idx - 1]
+            if token.data.find(".") != -1:
+                continue
+            if token.data.lower() != token.data:
+                self.add_failure(
+                    f"mixed case variable {token.data}",
+                    linecnt=token.linecnt,
+                )
+
+    def _test_variable_buffer_index(self, node: Node) -> None:
+        """disallow buf[] and prefer *buf"""
+
+        idx: int = 0
+        while True:
+            idx = node.tokens_pre.find_fuzzy(
+                ["guint8", "~*", "[", "]", ","], offset=idx + 1
+            )
+            if idx == -1:
+                return
+            token = node.tokens_pre[idx + 1]
             self.add_failure(
-                f"mixed case variable {token.data}",
+                f"do not use param guint8 {token.data}[], instead use 'guint8 *{token.data}'",
                 linecnt=token.linecnt,
             )
 
@@ -351,6 +370,30 @@ class Checker:
             token = node.tokens_pre[idx]
             self.add_failure(
                 "function should be called ensure, not set",
+                linecnt=token.linecnt,
+            )
+
+    def _test_function_name_suffix(self, node: Node) -> None:
+        """verb_noun, not noun_verb"""
+
+        if node.depth != 0:
+            return
+
+        # ACTION_set
+        idx = node.tokens_pre.find_fuzzy(["~fu_*_set@FUNCTION"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            self.add_failure(
+                "function should be called set_ACTION, not ACTION_set",
+                linecnt=token.linecnt,
+            )
+
+        # ACTION_get
+        idx = node.tokens_pre.find_fuzzy(["~fu_*_get@FUNCTION"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            self.add_failure(
+                "function should be called get_ACTION, not ACTION_get",
                 linecnt=token.linecnt,
             )
 
@@ -605,6 +648,20 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
+    def _test_comment_lines(self, node: Node) -> None:
+        """/**** not boxes *****/"""
+        for token in node.tokens_pre + node.tokens:
+            if token.data.find("/***") != -1:
+                self.add_failure(
+                    f"do not use boxed comment lines, just use /* comment */",
+                    linecnt=token.linecnt,
+                )
+            if token.data.find("/**@brief") != -1:
+                self.add_failure(
+                    f"do not use doxygen comment lines, just use /* comment */",
+                    linecnt=token.linecnt,
+                )
+
     def _test_comment_lower_case(self, node: Node) -> None:
         """single line comments are supposed to be lowercase"""
         idx: int = 0
@@ -753,6 +810,18 @@ class Checker:
         if idx != -1:
             token = node.tokens_pre[idx]
             self.add_failure("use rustgen instead", linecnt=token.linecnt)
+
+    def _test_blocked_tokens(self, node: Node) -> None:
+
+        for search, msg in {
+            "__FUNCTION__": "Use G_STRFUNC instead",
+        }.items():
+            for token in node.tokens:
+                if token.data.find(search) != -1:
+                    self.add_failure(
+                        f"contains blocked token {token.data}: {msg}",
+                        linecnt=token.linecnt,
+                    )
 
     def _test_magic_numbers_defined(self, nodes: list[Node]) -> None:
 
@@ -1270,6 +1339,7 @@ class Checker:
             self._current_nocheck = "nocheck:blocked"
             if self._should_process_node(node):
                 self._test_blocked_funcs(node)
+                self._test_blocked_tokens(node)
                 self._test_blocked_goto(node)
                 self._test_device_display(node)
                 self._test_equals_true(node)
@@ -1283,6 +1353,7 @@ class Checker:
                 self._test_debug_sentence_case(node)
                 self._test_comment_lower_case(node)
                 self._test_comment_cpp(node)
+                self._test_comment_lines(node)
 
             # not nesting too deep
             self._current_nocheck = "nocheck:depth"
@@ -1294,11 +1365,13 @@ class Checker:
             if self._should_process_node(node):
                 self._test_function_names_prefix(node)
                 self._test_function_names_ensure(node)
+                self._test_function_name_suffix(node)
                 self._test_param_self_device(node)
                 self._test_param_self_firmware(node)
                 self._test_param_self_native_device(node)
                 self._test_param_self_native_firmware(node)
                 self._test_variable_case(node)
+                self._test_variable_buffer_index(node)
                 self._test_struct_member_case(node)
 
             # test for invalid struct and enum names
@@ -1381,11 +1454,16 @@ class Checker:
 
     def test_file(self, fn: str) -> None:
         self._current_fn = fn
+        self._current_nocheck = None
         with open(fn, "rb") as f:
             try:
                 data = f.read().decode()
             except UnicodeDecodeError as e:
                 print(f"failed to read {fn}: {e}")
+        if data.find("Copyright") == -1:
+            self.add_failure(f"does not have copyright assigned")
+        if data.find("Copyright") == -1:
+            self.add_failure(f"does not have a SPDX-License-Identifier")
         tokenizer = Tokenizer(data)
         nodes = tokenizer.nodes
         if self.verbose:

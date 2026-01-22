@@ -10,6 +10,7 @@
 from typing import Optional
 from enum import Enum
 from fnmatch import fnmatch
+import sys
 import copy
 
 
@@ -283,7 +284,8 @@ class Tokenizer:
 
     def _parse(self, data: str):
 
-        is_quote_mode: bool = False
+        is_quote_double: bool = False
+        is_quote_single: bool = False
         is_comment_mode: bool = False
         is_escape_mode: bool = False
 
@@ -299,16 +301,25 @@ class Tokenizer:
                 self._linecnt += 1
                 continue
 
-            # only valid once
-            is_escape_mode = data[pos - 1] == "\\" and data[pos - 2] != "\\"
+            if char == "\\" and not is_escape_mode:
+                is_escape_mode = True
+                continue
 
             # string quotes
             if (
                 char == '"'
                 and not is_escape_mode
-                and not (data[pos - 1] == "'" and data[pos + 1] == "'")
+                and not is_quote_single
+                and not is_comment_mode
             ):
-                is_quote_mode = not is_quote_mode
+                is_quote_double = not is_quote_double
+            if (
+                char == "'"
+                and not is_escape_mode
+                and not is_quote_double
+                and not is_comment_mode
+            ):
+                is_quote_single = not is_quote_single
 
             # delimiter
             dump_char: bool = False
@@ -332,20 +343,23 @@ class Tokenizer:
                     "!",
                 ]
                 and not is_comment_mode
-                and not is_quote_mode
-                and not (data[pos - 1] == "'" and data[pos + 1] == "'")
+                and not is_quote_double
+                and not is_quote_single
             ):
                 self.dump_acc()
                 dump_char = True
 
             # comment
-            if data[pos : pos + 2] == "/*" and not is_quote_mode:
+            if data[pos : pos + 2] == "/*" and not is_quote_double:
                 is_comment_mode = True
 
+            if is_escape_mode:
+                self._acc += "\\"
             self._acc += char
+            is_escape_mode = False
 
             # end comment
-            if data[pos - 1 : pos + 1] == "*/" and not is_quote_mode:
+            if data[pos - 1 : pos + 1] == "*/" and not is_quote_double:
                 self.dump_acc(hint=TokenHint.COMMENT)
                 is_comment_mode = False
 
@@ -404,6 +418,8 @@ class Tokenizer:
                 tokens_acc.clear()
                 depth += 1
             elif token.data == "}":
+                if not stack:
+                    raise ValueError(f"unequal nesting on line {token.linecnt}")
                 node_parent = stack.pop()
                 node_parent.tokens.extend(tokens_acc)
                 node_parent.linecnt_end = token.linecnt
@@ -441,3 +457,12 @@ class Tokenizer:
         if not self._nodes:
             self._ensure_nodes()
         return self._nodes
+
+
+if __name__ == "__main__":
+
+    for fn in sys.argv[1:]:
+        with open(fn, "rb") as f:
+            tok = Tokenizer(f.read().decode())
+            print(tok.tokens)
+            print(tok.nodes)

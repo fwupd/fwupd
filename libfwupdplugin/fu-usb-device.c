@@ -1021,9 +1021,17 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 #endif
 		for (guint i = 0; i < num_device_caps; i++) {
 			FuUsbBosDescriptor *bos_descriptor = NULL;
-			struct libusb_bos_dev_capability_descriptor *bos_cap =
-			    bos->dev_capability[i];
-			bos_descriptor = fu_usb_bos_descriptor_new(bos_cap);
+			g_autoptr(FuUsbBosHdr) st_hdr = NULL;
+
+			/* i hate this: libusb doesn't give us the size of the buffer... */
+			st_hdr = fu_usb_bos_hdr_parse(
+			    (const guint8 *)bos->dev_capability[i],
+			    sizeof(struct libusb_bos_dev_capability_descriptor),
+			    0x0,
+			    error);
+			if (st_hdr == NULL)
+				return FALSE;
+			bos_descriptor = fu_usb_bos_descriptor_new(st_hdr);
 			if (bos_descriptor == NULL)
 				continue;
 			g_ptr_array_add(priv->bos_descriptors, bos_descriptor);
@@ -2747,95 +2755,160 @@ fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_usb_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
+	gint64 value = 0;
+	g_autoptr(FwupdJsonArray) json_array_bos = NULL;
+	g_autoptr(FwupdJsonArray) json_array_cfg = NULL;
+	g_autoptr(FwupdJsonArray) json_array_hid = NULL;
+	g_autoptr(FwupdJsonArray) json_array_ifaces = NULL;
+	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	/* optional properties */
-	tmp = json_object_get_string_member_with_default(json_object, "PlatformId", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "PlatformId", NULL);
 	if (tmp != NULL)
 		fu_device_set_physical_id(FU_DEVICE(self), tmp);
-	fu_device_set_vid(FU_DEVICE(self),
-			  json_object_get_int_member_with_default(json_object, "IdVendor", 0x0));
-	fu_device_set_pid(FU_DEVICE(self),
-			  json_object_get_int_member_with_default(json_object, "IdProduct", 0x0));
-	priv->desc.bcdDevice = json_object_get_int_member_with_default(json_object, "Device", 0x0);
-	priv->desc.bcdUSB = json_object_get_int_member_with_default(json_object, "USB", 0x0);
-	priv->desc.iManufacturer =
-	    json_object_get_int_member_with_default(json_object, "Manufacturer", 0x0);
-	priv->desc.bDeviceClass =
-	    json_object_get_int_member_with_default(json_object, "DeviceClass", 0x0);
-	priv->desc.bDeviceSubClass =
-	    json_object_get_int_member_with_default(json_object, "DeviceSubClass", 0x0);
-	priv->desc.bDeviceProtocol =
-	    json_object_get_int_member_with_default(json_object, "DeviceProtocol", 0x0);
-	priv->desc.iProduct = json_object_get_int_member_with_default(json_object, "Product", 0x0);
-	priv->desc.iSerialNumber =
-	    json_object_get_int_member_with_default(json_object, "SerialNumber", 0x0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "IdVendor", &value, 0x0, error))
+		return FALSE;
+	fu_device_set_vid(FU_DEVICE(self), value);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "IdProduct", &value, 0x0, error))
+		return FALSE;
+	fu_device_set_pid(FU_DEVICE(self), value);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Device", &value, 0x0, error))
+		return FALSE;
+	priv->desc.bcdDevice = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "USB", &value, 0x0, error))
+		return FALSE;
+	priv->desc.bcdUSB = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"Manufacturer",
+							&value,
+							0x0,
+							error))
+		return FALSE;
+	priv->desc.iManufacturer = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"DeviceClass",
+							&value,
+							0x0,
+							error))
+		return FALSE;
+	priv->desc.bDeviceClass = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"DeviceSubClass",
+							&value,
+							0x0,
+							error))
+		return FALSE;
+	priv->desc.bDeviceSubClass = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"DeviceProtocol",
+							&value,
+							0x0,
+							error))
+		return FALSE;
+	priv->desc.bDeviceProtocol = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Product", &value, 0x0, error))
+		return FALSE;
+	priv->desc.iProduct = value;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"SerialNumber",
+							&value,
+							0x0,
+							error))
+		return FALSE;
+	priv->desc.iSerialNumber = value;
 
 	/* array of BOS descriptors */
-	if (json_object_has_member(json_object, "UsbBosDescriptors")) {
-		JsonArray *json_array =
-		    json_object_get_array_member(json_object, "UsbBosDescriptors");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_bos = fwupd_json_object_get_array(json_obj, "UsbBosDescriptors", NULL);
+	if (json_array_bos != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_bos); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 			g_autoptr(FuUsbBosDescriptor) bos_descriptor =
 			    g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(bos_descriptor), node_tmp, error))
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_bos, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(bos_descriptor),
+						   json_obj_tmp,
+						   error))
 				return FALSE;
 			g_ptr_array_add(priv->bos_descriptors, g_object_ref(bos_descriptor));
 		}
 	}
 
 	/* array of config descriptors */
-	if (json_object_has_member(json_object, "UsbConfigDescriptors")) {
-		JsonArray *json_array =
-		    json_object_get_array_member(json_object, "UsbConfigDescriptors");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_cfg = fwupd_json_object_get_array(json_obj, "UsbConfigDescriptors", NULL);
+	if (json_array_cfg != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_cfg); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 			g_autoptr(FuUsbConfigDescriptor) cfg_descriptor =
 			    g_object_new(FU_TYPE_USB_CONFIG_DESCRIPTOR, NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(cfg_descriptor), node_tmp, error))
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_cfg, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(cfg_descriptor),
+						   json_obj_tmp,
+						   error))
 				return FALSE;
 			g_ptr_array_add(priv->cfg_descriptors, g_object_ref(cfg_descriptor));
 		}
 	}
 
 	/* array of HID descriptors */
-	if (json_object_has_member(json_object, "UsbHidDescriptors")) {
-		JsonArray *json_array =
-		    json_object_get_array_member(json_object, "UsbHidDescriptors");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_hid = fwupd_json_object_get_array(json_obj, "UsbHidDescriptors", NULL);
+	if (json_array_hid != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_hid); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			g_autoptr(FwupdJsonNode) json_node_tmp = NULL;
 			g_autoptr(FuUsbHidDescriptor) hid_descriptor =
 			    g_object_new(FU_TYPE_USB_HID_DESCRIPTOR, NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(hid_descriptor), node_tmp, error))
+
+			/* weirdly, this is encoded as a node, not an object */
+			json_node_tmp = fwupd_json_array_get_node(json_array_hid, i, error);
+			if (json_node_tmp == NULL)
+				return FALSE;
+			fwupd_json_object_add_node(json_obj_tmp, "Data", json_node_tmp);
+			if (!fwupd_codec_from_json(FWUPD_CODEC(hid_descriptor),
+						   json_obj_tmp,
+						   error))
 				return FALSE;
 			g_ptr_array_add(priv->hid_descriptors, g_object_ref(hid_descriptor));
 		}
 	}
 
 	/* array of interfaces */
-	if (json_object_has_member(json_object, "UsbInterfaces")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "UsbInterfaces");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_ifaces = fwupd_json_object_get_array(json_obj, "UsbInterfaces", NULL);
+	if (json_array_ifaces != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_ifaces); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 			g_autoptr(FuUsbInterface) iface = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(iface), node_tmp, error))
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_ifaces, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(iface), json_obj_tmp, error))
 				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
 		}
 	}
 
 	/* array of events */
-	if (json_object_has_member(json_object, "UsbEvents")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "UsbEvents");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_events = fwupd_json_object_get_array(json_obj, "UsbEvents", NULL);
+	if (json_array_events != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), node_tmp, error))
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
 				return FALSE;
 			fu_device_add_event(FU_DEVICE(self), event);
 		}
@@ -2848,7 +2921,7 @@ fu_usb_device_from_json(FuDevice *device, JsonObject *json_object, GError **erro
 }
 
 static void
-fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -2859,8 +2932,10 @@ fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags f
 	g_autoptr(GError) error_interfaces = NULL;
 
 	/* optional properties */
-	fwupd_codec_json_append(builder, "GType", "FuUsbDevice");
-	fwupd_codec_json_append(builder, "PlatformId", fu_device_get_physical_id(FU_DEVICE(self)));
+	fwupd_json_object_add_string(json_obj, "GType", "FuUsbDevice");
+	fwupd_json_object_add_string(json_obj,
+				     "PlatformId",
+				     fu_device_get_physical_id(FU_DEVICE(self)));
 	if (fu_device_get_created_usec(FU_DEVICE(self)) != 0) {
 #if GLIB_CHECK_VERSION(2, 80, 0)
 		g_autoptr(GDateTime) dt =
@@ -2870,77 +2945,85 @@ fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags f
 		    fu_device_get_created_usec(FU_DEVICE(self)) / G_USEC_PER_SEC);
 #endif
 		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		fwupd_codec_json_append(builder, "Created", str);
+		fwupd_json_object_add_string(json_obj, "Created", str);
 	}
 	if (fu_device_get_vid(FU_DEVICE(self)) != 0) {
-		fwupd_codec_json_append_int(builder,
-					    "IdVendor",
-					    fu_device_get_vid(FU_DEVICE(self)));
+		fwupd_json_object_add_integer(json_obj,
+					      "IdVendor",
+					      fu_device_get_vid(FU_DEVICE(self)));
 	}
 	if (fu_device_get_pid(FU_DEVICE(self)) != 0) {
-		fwupd_codec_json_append_int(builder,
-					    "IdProduct",
-					    fu_device_get_pid(FU_DEVICE(self)));
+		fwupd_json_object_add_integer(json_obj,
+					      "IdProduct",
+					      fu_device_get_pid(FU_DEVICE(self)));
 	}
 	if (priv->desc.bcdDevice != 0)
-		fwupd_codec_json_append_int(builder, "Device", priv->desc.bcdDevice);
+		fwupd_json_object_add_integer(json_obj, "Device", priv->desc.bcdDevice);
 	if (priv->desc.bcdUSB != 0)
-		fwupd_codec_json_append_int(builder, "USB", priv->desc.bcdUSB);
+		fwupd_json_object_add_integer(json_obj, "USB", priv->desc.bcdUSB);
 	if (priv->desc.iManufacturer != 0)
-		fwupd_codec_json_append_int(builder, "Manufacturer", priv->desc.iManufacturer);
+		fwupd_json_object_add_integer(json_obj, "Manufacturer", priv->desc.iManufacturer);
 	if (priv->desc.bDeviceClass != 0)
-		fwupd_codec_json_append_int(builder, "DeviceClass", priv->desc.bDeviceClass);
+		fwupd_json_object_add_integer(json_obj, "DeviceClass", priv->desc.bDeviceClass);
 	if (priv->desc.bDeviceSubClass != 0)
-		fwupd_codec_json_append_int(builder, "DeviceSubClass", priv->desc.bDeviceSubClass);
+		fwupd_json_object_add_integer(json_obj,
+					      "DeviceSubClass",
+					      priv->desc.bDeviceSubClass);
 	if (priv->desc.bDeviceProtocol != 0)
-		fwupd_codec_json_append_int(builder, "DeviceProtocol", priv->desc.bDeviceProtocol);
+		fwupd_json_object_add_integer(json_obj,
+					      "DeviceProtocol",
+					      priv->desc.bDeviceProtocol);
 	if (priv->desc.iProduct != 0)
-		fwupd_codec_json_append_int(builder, "Product", priv->desc.iProduct);
+		fwupd_json_object_add_integer(json_obj, "Product", priv->desc.iProduct);
 	if (priv->desc.iSerialNumber != 0)
-		fwupd_codec_json_append_int(builder, "SerialNumber", priv->desc.iSerialNumber);
+		fwupd_json_object_add_integer(json_obj, "SerialNumber", priv->desc.iSerialNumber);
 
 	/* array of BOS descriptors */
 	if (!fu_usb_device_ensure_bos_descriptors(self, &error_bos))
 		g_debug("%s", error_bos->message);
 	if (priv->bos_descriptors->len > 0) {
-		json_builder_set_member_name(builder, "UsbBosDescriptors");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < priv->bos_descriptors->len; i++) {
 			FuUsbBosDescriptor *bos_descriptor =
 			    g_ptr_array_index(priv->bos_descriptors, i);
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(bos_descriptor), builder, flags);
-			json_builder_end_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(bos_descriptor), json_obj_tmp, flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "UsbBosDescriptors", json_arr);
 	}
 
 	/* array of config descriptors */
 	if (priv->cfg_descriptors->len > 0) {
-		json_builder_set_member_name(builder, "UsbConfigDescriptors");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < priv->cfg_descriptors->len; i++) {
 			FuUsbConfigDescriptor *cfg_descriptor =
 			    g_ptr_array_index(priv->cfg_descriptors, i);
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(cfg_descriptor), builder, flags);
-			json_builder_end_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(cfg_descriptor), json_obj_tmp, flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "UsbConfigDescriptors", json_arr);
 	}
 
 	/* array of HID descriptors */
 	if (!fu_usb_device_ensure_hid_descriptors(self, &error_hid)) {
 		g_debug("%s", error_hid->message);
 	} else if (priv->hid_descriptors->len > 0) {
-		json_builder_set_member_name(builder, "UsbHidDescriptors");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < priv->hid_descriptors->len; i++) {
 			FuUsbHidDescriptor *hid_descriptor =
 			    g_ptr_array_index(priv->hid_descriptors, i);
-			fwupd_codec_to_json(FWUPD_CODEC(hid_descriptor), builder, flags);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			g_autoptr(FwupdJsonNode) json_node_tmp = NULL;
+
+			fwupd_codec_to_json(FWUPD_CODEC(hid_descriptor), json_obj_tmp, flags);
+			/* weirdly, this is encoded as a node, not an object */
+			json_node_tmp = fwupd_json_object_get_node(json_obj_tmp, "Data", NULL);
+			if (json_node_tmp != NULL)
+				fwupd_json_array_add_node(json_arr, json_node_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "UsbHidDescriptors", json_arr);
 	}
 
 	/* array of interfaces */
@@ -2948,31 +3031,29 @@ fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags f
 	if (interfaces == NULL) {
 		g_debug("%s", error_interfaces->message);
 	} else if (interfaces->len > 0) {
-		json_builder_set_member_name(builder, "UsbInterfaces");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < interfaces->len; i++) {
 			FuUsbInterface *iface = g_ptr_array_index(interfaces, i);
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(iface), builder, flags);
-			json_builder_end_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(iface), json_obj_tmp, flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "UsbInterfaces", json_arr);
 	}
 
 	/* events */
 	if (events->len > 0) {
-		json_builder_set_member_name(builder, "UsbEvents");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			json_builder_begin_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    builder,
+					    json_obj_tmp,
 					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
 							       : flags);
-			json_builder_end_object(builder);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "UsbEvents", json_arr);
 	}
 }
 

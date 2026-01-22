@@ -7,11 +7,13 @@ fwupdplugin_structs = [
   'fu-cab.rs', # fuzzing
   'fu-cfi.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
+  'fu-config.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
   'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
+  'fu-dump.rs', # fuzzing
   'fu-edid.rs', # fuzzing
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
@@ -19,23 +21,30 @@ fwupdplugin_structs = [
   'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
-  'fu-hidraw.rs', # fuzzing
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-ihex.rs', # fuzzing
+  'fu-intel-me.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-io-channel.rs', # fuzzing
+  'fu-ioctl.rs', # fuzzing
   'fu-heci.rs', # fuzzing
   'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
+  'fu-path.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
+  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
+  'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
+  'fu-srec.rs', # fuzzing
+  'fu-tpm.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
   'fu-v4l.rs', # fuzzing
+  'fu-zip.rs', # fuzzing
 ]
 
 # do not use structgen as these are referenced in headers too...
@@ -65,7 +74,6 @@ endforeach
 fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
   'fu-archive.c',
-  'fu-archive-firmware.c',
   'fu-backend.c', # fuzzing
   'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
@@ -86,6 +94,7 @@ fwupdplugin_src = [
   'fu-composite-input-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
+  'fu-context-helper.c',
   'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
   'fu-crc.c', # fuzzing
@@ -129,6 +138,7 @@ fwupdplugin_src = [
   'fu-firmware-common.c', # fuzzing
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
+  'fu-fuzzer.c', # fuzzing
   'fu-hid-descriptor.c', # fuzzing
   'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
@@ -149,6 +159,7 @@ fwupdplugin_src = [
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-ihex-firmware.c', # fuzzing
   'fu-input-stream.c', # fuzzing
+  'fu-intel-me-device.c', # fuzzing
   'fu-intel-thunderbolt-firmware.c', # fuzzing
   'fu-intel-thunderbolt-nvm.c', # fuzzing
   'fu-io-channel.c', # fuzzing
@@ -177,30 +188,36 @@ fwupdplugin_src = [
   'fu-quirks.c', # fuzzing
   'fu-sbatlevel-section.c', # fuzzing
   'fu-security-attr.c', # fuzzing
-  'fu-security-attrs.c',
+  'fu-security-attrs.c', # fuzzing
   'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
+  'fu-tpm-eventlog-item.c', # fuzzing
+  'fu-tpm-eventlog.c', # fuzzing
+  'fu-tpm-eventlog-v1.c', # fuzzing
+  'fu-tpm-eventlog-v2.c', # fuzzing
   'fu-udev-device.c', # fuzzing
   'fu-uefi-device.c',
-  'fu-usb-bos-descriptor.c',
-  'fu-usb-config-descriptor.c',
-  'fu-usb-descriptor.c',
-  'fu-usb-device.c',
-  'fu-usb-device-ds20.c',
-  'fu-usb-device-fw-ds20.c',
-  'fu-usb-device-ms-ds20.c',
-  'fu-usb-endpoint.c',
-  'fu-usb-hid-descriptor.c',
-  'fu-usb-interface.c',
+  'fu-usb-bos-descriptor.c', # fuzzing
+  'fu-usb-config-descriptor.c', # fuzzing
+  'fu-usb-descriptor.c', # fuzzing
+  'fu-usb-device.c', # fuzzing
+  'fu-usb-device-ds20.c', # fuzzing
+  'fu-usb-device-fw-ds20.c', # fuzzing
+  'fu-usb-device-ms-ds20.c', # fuzzing
+  'fu-usb-endpoint.c', # fuzzing
+  'fu-usb-hid-descriptor.c', # fuzzing
+  'fu-usb-interface.c', # fuzzing
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
   'fu-v4l-device.c',
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
   'fu-x509-certificate.c', # fuzzing
+  'fu-zip-firmware.c', # fuzzing
+  'fu-zip-file.c', # fuzzing
 ]
 
 if host_machine.system() in ['linux', 'android']
@@ -219,7 +236,6 @@ endif
 
 fwupdplugin_headers = [
   'fu-acpi-table.h',
-  'fu-archive-firmware.h',
   'fu-archive.h',
   'fu-backend.h',
   'fu-bios-settings.h',
@@ -301,6 +317,7 @@ fwupdplugin_headers = [
   'fu-ifwi-fpt-firmware.h',
   'fu-ihex-firmware.h',
   'fu-input-stream.h',
+  'fu-intel-me-device.h',
   'fu-intel-thunderbolt-firmware.h',
   'fu-intel-thunderbolt-nvm.h',
   'fu-io-channel.h',
@@ -337,6 +354,11 @@ fwupdplugin_headers = [
   'fu-srec-firmware.h',
   'fu-string.h',
   'fu-sum.h',
+  'fu-tpm-eventlog-common.h',
+  'fu-tpm-eventlog.h',
+  'fu-tpm-eventlog-item.h',
+  'fu-tpm-eventlog-v1.h',
+  'fu-tpm-eventlog-v2.h',
   'fu-udev-device.h',
   'fu-udev-device-private.h',
   'fu-uefi-device.h',
@@ -362,6 +384,8 @@ fwupdplugin_headers = [
   'fu-volume.h',
   'fu-volume-locker.h',
   'fu-x509-certificate.h',
+  'fu-zip-file.h',
+  'fu-zip-firmware.h',
 ]
 
 introspection_deps = [libxmlb, giounix, libusb]
@@ -371,7 +395,6 @@ pkgg_requires = [
   'gmodule-2.0',
   'gobject-2.0',
   'fwupd',
-  'json-glib-1.0',
   'libarchive',
   'xmlb',
   'libusb',
@@ -380,7 +403,6 @@ pkgg_requires = [
 library_deps = [
   introspection_deps,
   gmodule,
-  libjsonglib,
   zlib,
   valgrind,
   lzma,

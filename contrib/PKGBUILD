@@ -21,7 +21,6 @@ depends=(
   gnutls
   gsettings-desktop-schemas
   hicolor-icon-theme
-  json-glib
   libarchive
   libcbor
   libusb
@@ -91,7 +90,6 @@ package() {
     libarchive.so
     libcbor.so
     libcurl.so
-    libjson-glib-1.0.so
     libmm-glib.so
     libpassim.so
     libprotobuf-c.so

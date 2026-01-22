@@ -4,7 +4,6 @@
 %global libcurl_version 7.62.0
 %global libjcat_version 0.1.0
 %global systemd_version 249
-%global json_glib_version 1.1.1
 
 # to use this feature use `rpmbuild -ba fwupd.spec --with=libfwupdcompat`
 %bcond_with libfwupdcompat
@@ -94,7 +93,6 @@ BuildRequires: gi-docgen
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
-BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: pkgconfig(bash-completion)
 BuildRequires: git-core
@@ -441,7 +439,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %endif
 %if 0%{?have_uefi}
 %files plugin-uefi-capsule-data
-%{_datadir}/fwupd/uefi-capsule-ux.tar.xz
+%{_datadir}/fwupd/uefi-capsule-ux.zip
 %endif
 
 %files devel

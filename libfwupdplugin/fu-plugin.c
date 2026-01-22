@@ -800,7 +800,11 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA1, G_CHECKSUM_SHA256, 0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA1,
+	    G_CHECKSUM_SHA256,
+	};
+
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
@@ -822,7 +826,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 		g_prefix_error_literal(error, "failed to write firmware: ");
 		return FALSE;
 	}
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		g_autofree gchar *hash = NULL;
 		hash = g_compute_checksum_for_bytes(checksum_types[i], fw);
 		fu_device_add_checksum(device, hash);
@@ -1528,22 +1532,6 @@ fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype)
 	priv->device_gtype_default = device_gtype;
 }
 
-static gchar *
-fu_plugin_string_uncamelcase(const gchar *str)
-{
-	GString *tmp = g_string_new(NULL);
-	for (guint i = 0; str[i] != '\0'; i++) {
-		if (g_ascii_islower(str[i]) || g_ascii_isdigit(str[i])) {
-			g_string_append_c(tmp, str[i]);
-			continue;
-		}
-		if (i > 0)
-			g_string_append_c(tmp, '-');
-		g_string_append_c(tmp, g_ascii_tolower(str[i]));
-	}
-	return g_string_free(tmp, FALSE);
-}
-
 static gboolean
 fu_plugin_check_amdgpu_dpaux(FuPlugin *self, GError **error)
 {
@@ -1629,31 +1617,19 @@ fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem)
 /**
  * fu_plugin_add_firmware_gtype:
  * @self: a #FuPlugin
- * @id: (nullable): an optional string describing the type, e.g. `ihex`
  * @gtype: a #GType e.g. `FU_TYPE_FOO_FIRMWARE`
  *
- * Adds a firmware #GType which is used when creating devices. If @id is not
- * specified then it is guessed using the #GType name.
+ * Adds a firmware #GType which is used when creating devices.
  *
  * Plugins can use this method only in fu_plugin_init()
  *
- * Since: 1.3.3
+ * Since: 2.1.1
  **/
 void
-fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype)
+fu_plugin_add_firmware_gtype(FuPlugin *self, GType gtype)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *id_safe = NULL;
-	if (id != NULL) {
-		id_safe = g_strdup(id);
-	} else {
-		g_autoptr(GString) str = g_string_new(g_type_name(gtype));
-		if (g_str_has_prefix(str->str, "Fu"))
-			g_string_erase(str, 0, 2);
-		g_string_replace(str, "Firmware", "", 1);
-		id_safe = fu_plugin_string_uncamelcase(str->str);
-	}
-	fu_context_add_firmware_gtype(priv->ctx, id_safe, gtype);
+	fu_context_add_firmware_gtype(priv->ctx, gtype);
 }
 
 static gboolean

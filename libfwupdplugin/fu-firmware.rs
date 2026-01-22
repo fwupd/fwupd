@@ -17,6 +17,13 @@ enum FuFirmwareParseFlags {
     CacheBlob = 1 << 11,
     OnlyTrustPqSignatures = 1 << 12,
     OnlyPartitionLayout = 1 << 13,
+    OnlyBasename = 1 << 14,
+}
+
+enum FuFirmwareBuilderFlags {
+    None = 0,
+    NoBinaryCompare = 1 << 0,
+    NoWrite = 1 << 1,
 }
 
 #[derive(ToString)]

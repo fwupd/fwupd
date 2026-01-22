@@ -357,7 +357,8 @@ fwupd_json_object_get_integer_with_default(FwupdJsonObject *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	entry = fwupd_json_object_get_entry(self, key, NULL);
-	if (entry == NULL) {
+	if (entry == NULL ||
+	    fwupd_json_node_get_kind(entry->json_node) == FWUPD_JSON_NODE_KIND_NULL) {
 		if (value != NULL)
 			*value = value_default;
 		return TRUE;
@@ -468,7 +469,8 @@ fwupd_json_object_get_boolean_with_default(FwupdJsonObject *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	entry = fwupd_json_object_get_entry(self, key, NULL);
-	if (entry == NULL) {
+	if (entry == NULL ||
+	    fwupd_json_node_get_kind(entry->json_node) == FWUPD_JSON_NODE_KIND_NULL) {
 		if (value != NULL)
 			*value = value_default;
 		return TRUE;
@@ -669,6 +671,27 @@ fwupd_json_object_add_raw_internal(FwupdJsonObject *self,
 	entry->json_node = fwupd_json_node_new_raw_internal(value);
 }
 
+void
+fwupd_json_object_add_null_internal(FwupdJsonObject *self,
+				    GRefString *key,
+				    FwupdJsonLoadFlags flags)
+{
+	FwupdJsonObjectEntry *entry = NULL;
+
+	if ((flags & FWUPD_JSON_LOAD_FLAG_TRUSTED) == 0)
+		entry = fwupd_json_object_get_entry(self, key, NULL);
+	if (entry != NULL) {
+		fwupd_json_node_unref(entry->json_node);
+	} else {
+		entry = g_new0(FwupdJsonObjectEntry, 1);
+		entry->key = (flags & FWUPD_JSON_LOAD_FLAG_STATIC_KEYS) > 0
+				 ? g_ref_string_new_intern(key)
+				 : g_ref_string_acquire(key);
+		g_ptr_array_add(self->items, entry);
+	}
+	entry->json_node = fwupd_json_node_new_null_internal();
+}
+
 /**
  * fwupd_json_object_add_node:
  * @self: a #FwupdJsonObject
@@ -767,6 +790,30 @@ fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gcha
 }
 
 /**
+ * fwupd_json_object_add_array_strv:
+ * @self: a #FwupdJsonObject
+ * @key: (not nullable): dictionary key
+ * @value: (not nullable): value
+ *
+ * Adds a string array to the JSON object. If the node already exists the old one is replaced.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_object_add_array_strv(FwupdJsonObject *self, const gchar *key, gchar **value)
+{
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
+	g_return_if_fail(self != NULL);
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+
+	for (guint i = 0; value[i] != NULL; i++)
+		fwupd_json_array_add_string(json_arr, value[i]);
+	fwupd_json_object_add_array(self, key, json_arr);
+}
+
+/**
  * fwupd_json_object_add_integer:
  * @self: a #FwupdJsonObject
  * @key: (not nullable): dictionary key
@@ -851,6 +898,36 @@ fwupd_json_object_add_object(FwupdJsonObject *self, const gchar *key, FwupdJsonO
 
 	json_node = fwupd_json_node_new_object(json_obj);
 	fwupd_json_object_add_node(self, key, json_node);
+}
+
+/**
+ * fwupd_json_object_add_object_map:
+ * @self: a #FwupdJsonObject
+ * @key: (not nullable): dictionary key
+ * @value: (element-type utf8 utf8): a hash table
+ *
+ * Adds a  object to the JSON object.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_object_add_object_map(FwupdJsonObject *self, const gchar *key, GHashTable *value)
+{
+	GHashTableIter iter;
+	gpointer hash_key, hash_value;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+
+	g_return_if_fail(self != NULL);
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+
+	g_hash_table_iter_init(&iter, value);
+	while (g_hash_table_iter_next(&iter, &hash_key, &hash_value)) {
+		fwupd_json_object_add_string(json_obj,
+					     (const gchar *)hash_key,
+					     (const gchar *)hash_value);
+	}
+	fwupd_json_object_add_object(self, key, json_obj);
 }
 
 void
@@ -956,6 +1033,8 @@ fwupd_json_object_to_string(FwupdJsonObject *self, FwupdJsonExportFlags flags)
 {
 	GString *str = g_string_new(NULL);
 	fwupd_json_object_append_string(self, str, 0, flags);
+	if (flags & FWUPD_JSON_EXPORT_FLAG_TRAILING_NEWLINE)
+		g_string_append_c(str, '\n');
 	return str;
 }
 
@@ -975,5 +1054,7 @@ fwupd_json_object_to_bytes(FwupdJsonObject *self, FwupdJsonExportFlags flags)
 {
 	GString *str = g_string_new(NULL);
 	fwupd_json_object_append_string(self, str, 0, flags);
+	if (flags & FWUPD_JSON_EXPORT_FLAG_TRAILING_NEWLINE)
+		g_string_append_c(str, '\n');
 	return g_string_free_to_bytes(str);
 }

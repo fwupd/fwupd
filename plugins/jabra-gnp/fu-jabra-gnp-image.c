@@ -94,9 +94,7 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 		return FALSE;
 	}
 	fu_firmware_set_id(FU_FIRMWARE(self), name);
-	img_archive = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
-							    name,
-							    error);
+	img_archive = fu_firmware_get_image_by_id(firmware_archive, name, error);
 	if (img_archive == NULL)
 		return FALSE;
 	blob = fu_firmware_get_bytes(img_archive, error);

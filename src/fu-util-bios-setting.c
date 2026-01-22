@@ -61,29 +61,25 @@ fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 	return FALSE;
 }
 
-gboolean
-fu_util_bios_setting_console_print(FuConsole *console,
-				   gchar **values,
-				   GPtrArray *settings,
-				   GError **error)
+void
+fu_util_bios_setting_console_print(FuConsole *console, gchar **values, GPtrArray *settings)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
-	json_builder_set_member_name(builder, "BiosSettings");
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < settings->len; i++) {
 		FwupdBiosSetting *setting = g_ptr_array_index(settings, i);
 		if (fu_util_bios_setting_matches_args(setting, values)) {
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 			fu_util_bios_setting_update_description(setting);
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(setting), builder, FWUPD_CODEC_FLAG_NONE);
-			json_builder_end_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(setting),
+					    json_obj_tmp,
+					    FWUPD_CODEC_FLAG_NONE);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(console, builder, error);
+	fwupd_json_object_add_array(json_obj, "BiosSettings", json_arr);
+	fu_util_print_json_object(console, json_obj);
 }
 
 gchar *

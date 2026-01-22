@@ -17,7 +17,7 @@
  * @data: buffer to print
  * @len: the size of @data
  * @columns: break new lines after this many bytes
- * @flags: dump flags, e.g. %FU_DUMP_FLAGS_SHOW_ASCII
+ * @flags: dump flags, e.g. %FU_DUMP_FLAG_SHOW_ASCII
  *
  * Dumps a raw buffer to the screen.
  *
@@ -45,7 +45,7 @@ fu_dump_full(const gchar *log_domain,
 		g_string_append_printf(str, "%s:", title);
 
 	/* if more than can fit on one line then start afresh */
-	if (len > columns || flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
+	if (len > columns || flags & FU_DUMP_FLAG_SHOW_ADDRESSES) {
 		g_string_append(str, "\n");
 	} else {
 		for (gsize i = str->len; i < 16; i++)
@@ -53,17 +53,17 @@ fu_dump_full(const gchar *log_domain,
 	}
 
 	/* offset line */
-	if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
+	if (flags & FU_DUMP_FLAG_SHOW_ADDRESSES) {
 		g_string_append(str, "       │ ");
 		for (gsize i = 0; i < columns; i++) {
 			g_string_append_printf(str, "%02x ", (guint)i);
-			if (flags & FU_DUMP_FLAGS_SHOW_ASCII)
+			if (flags & FU_DUMP_FLAG_SHOW_ASCII)
 				g_string_append(str, "    ");
 		}
 		g_string_append(str, "\n───────┼");
 		for (gsize i = 0; i < columns; i++) {
 			g_string_append(str, "───");
-			if (flags & FU_DUMP_FLAGS_SHOW_ASCII)
+			if (flags & FU_DUMP_FLAG_SHOW_ASCII)
 				g_string_append(str, "────");
 		}
 		g_string_append_printf(str, "\n0x%04x │ ", (guint)0);
@@ -74,7 +74,7 @@ fu_dump_full(const gchar *log_domain,
 		g_string_append_printf(str, "%02x ", data[i]);
 
 		/* optionally print ASCII char */
-		if (flags & FU_DUMP_FLAGS_SHOW_ASCII) {
+		if (flags & FU_DUMP_FLAG_SHOW_ASCII) {
 			if (g_ascii_isprint(data[i]))
 				g_string_append_printf(str, "[%c] ", data[i]);
 			else
@@ -84,7 +84,7 @@ fu_dump_full(const gchar *log_domain,
 		/* new row required */
 		if (i > 0 && i != len - 1 && (i + 1) % columns == 0) {
 			g_string_append(str, "\n");
-			if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES)
+			if (flags & FU_DUMP_FLAG_SHOW_ADDRESSES)
 				g_string_append_printf(str, "0x%04x │ ", (guint)i + 1);
 		}
 	}
@@ -105,9 +105,9 @@ fu_dump_full(const gchar *log_domain,
 void
 fu_dump_raw(const gchar *log_domain, const gchar *title, const guint8 *data, gsize len)
 {
-	FuDumpFlags flags = FU_DUMP_FLAGS_NONE;
+	FuDumpFlags flags = FU_DUMP_FLAG_NONE;
 	if (len > 64)
-		flags |= FU_DUMP_FLAGS_SHOW_ADDRESSES;
+		flags |= FU_DUMP_FLAG_SHOW_ADDRESSES;
 	fu_dump_full(log_domain, title, data, len, 32, flags);
 }
 

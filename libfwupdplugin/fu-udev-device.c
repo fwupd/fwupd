@@ -1507,7 +1507,7 @@ fu_udev_device_read(FuUdevDevice *self,
 		    gsize bufsz,
 		    gsize *bytes_read,
 		    guint timeout_ms,
-		    FuIOChannelFlags flags,
+		    FuIoChannelFlags flags,
 		    GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1590,7 +1590,7 @@ GBytes *
 fu_udev_device_read_bytes(FuUdevDevice *self,
 			  gsize count,
 			  guint timeout_ms,
-			  FuIOChannelFlags flags,
+			  FuIoChannelFlags flags,
 			  GError **error)
 {
 	gsize bytes_read = 0;
@@ -1624,7 +1624,7 @@ GByteArray *
 fu_udev_device_read_byte_array(FuUdevDevice *self,
 			       gsize count,
 			       guint timeout_ms,
-			       FuIOChannelFlags flags,
+			       FuIoChannelFlags flags,
 			       GError **error)
 {
 	gsize bytes_read = 0;
@@ -1661,7 +1661,7 @@ fu_udev_device_write(FuUdevDevice *self,
 		     const guint8 *buf,
 		     gsize bufsz,
 		     guint timeout_ms,
-		     FuIOChannelFlags flags,
+		     FuIoChannelFlags flags,
 		     GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1727,7 +1727,7 @@ gboolean
 fu_udev_device_write_bytes(FuUdevDevice *self,
 			   GBytes *blob,
 			   guint timeout_ms,
-			   FuIOChannelFlags flags,
+			   FuIoChannelFlags flags,
 			   GError **error)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
@@ -1759,7 +1759,7 @@ gboolean
 fu_udev_device_write_byte_array(FuUdevDevice *self,
 				GByteArray *buf,
 				guint timeout_ms,
-				FuIOChannelFlags flags,
+				FuIoChannelFlags flags,
 				GError **error)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
@@ -2373,87 +2373,96 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 }
 
 static void
-fu_udev_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
-	fwupd_codec_json_append(builder, "GType", "FuUdevDevice");
-	if (fu_udev_device_get_sysfs_path(self) != NULL)
-		fwupd_codec_json_append(builder, "BackendId", fu_udev_device_get_sysfs_path(self));
+	fwupd_json_object_add_string(json_obj, "GType", "FuUdevDevice");
+	if (fu_udev_device_get_sysfs_path(self) != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     "BackendId",
+					     fu_udev_device_get_sysfs_path(self));
+	}
 	if (priv->device_file != NULL)
-		fwupd_codec_json_append(builder, "DeviceFile", priv->device_file);
+		fwupd_json_object_add_string(json_obj, "DeviceFile", priv->device_file);
 	if (priv->subsystem != NULL)
-		fwupd_codec_json_append(builder, "Subsystem", priv->subsystem);
+		fwupd_json_object_add_string(json_obj, "Subsystem", priv->subsystem);
 	if (priv->devtype != NULL)
-		fwupd_codec_json_append(builder, "Devtype", priv->devtype);
+		fwupd_json_object_add_string(json_obj, "Devtype", priv->devtype);
 	if (priv->driver != NULL)
-		fwupd_codec_json_append(builder, "Driver", priv->driver);
+		fwupd_json_object_add_string(json_obj, "Driver", priv->driver);
 	if (priv->bind_id != NULL)
-		fwupd_codec_json_append(builder, "BindId", priv->bind_id);
+		fwupd_json_object_add_string(json_obj, "BindId", priv->bind_id);
 	if (fu_device_get_vid(device) != 0)
-		fwupd_codec_json_append_int(builder, "Vendor", fu_device_get_vid(device));
+		fwupd_json_object_add_integer(json_obj, "Vendor", fu_device_get_vid(device));
 	if (fu_device_get_pid(device) != 0)
-		fwupd_codec_json_append_int(builder, "Model", fu_device_get_pid(device));
+		fwupd_json_object_add_integer(json_obj, "Model", fu_device_get_pid(device));
 
 	/* events */
 	if (events->len > 0) {
-		json_builder_set_member_name(builder, "Events");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			json_builder_begin_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
 			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    builder,
+					    json_obj_tmp,
 					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
 							       : flags);
-			json_builder_end_object(builder);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "Events", json_arr);
 	}
 }
 
 static gboolean
-fu_udev_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+fu_udev_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	const gchar *tmp;
-	gint64 tmp64;
+	gint64 tmp64 = 0;
+	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
-	tmp = json_object_get_string_member_with_default(json_object, "BackendId", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "Subsystem", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Subsystem", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_subsystem(self, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "Devtype", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Devtype", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_devtype(self, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "Driver", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Driver", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_driver(self, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "BindId", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "BindId", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_bind_id(self, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "DeviceFile", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "DeviceFile", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_device_file(self, tmp);
-	tmp64 = json_object_get_int_member_with_default(json_object, "Vendor", 0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Vendor", &tmp64, 0x0, error))
+		return FALSE;
 	if (tmp64 != 0)
 		fu_device_set_vid(device, tmp64);
-	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Model", &tmp64, 0x0, error))
+		return FALSE;
 	if (tmp64 != 0)
 		fu_device_set_pid(device, tmp64);
 
 	/* array of events */
-	if (json_object_has_member(json_object, "Events")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "Events");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
+	if (json_array_events != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
 			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), node_tmp, error))
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
 				return FALSE;
 			fu_device_add_event(device, event);
 		}

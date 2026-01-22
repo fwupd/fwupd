@@ -93,7 +93,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [giounix, libjcat, libjsonglib, libcurl]
+libfwupd_deps = [giounix, libjcat, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -153,7 +153,7 @@ libfwupd_dep = declare_dependency(
 pkgg = import('pkgconfig')
 pkgg.generate(
   fwupd,
-  requires: ['gio-2.0', 'json-glib-1.0'],
+  requires: ['gio-2.0'],
   subdirs: base_dir,
   version: meson.project_version(),
   name: 'fwupd',
@@ -220,14 +220,14 @@ if introspection.allowed()
     export_packages: 'fwupd',
     header: 'fwupd.h',
     dependencies: fwupd_gir_deps,
-    includes: ['Gio-2.0', 'GObject-2.0', 'Json-1.0'],
+    includes: ['Gio-2.0', 'GObject-2.0'],
     install: true,
   )
 
   gnome.generate_vapi(
     'fwupd',
     sources: fwupd_gir[0],
-    packages: ['gio-2.0', 'json-glib-1.0'],
+    packages: ['gio-2.0'],
     install: true,
   )
 

@@ -93,7 +93,7 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 	for (guint j = req->len; j < 21; j++)
 		fu_byte_array_append_uint8(req, 0x0);
 
-	fu_dump_full(G_LOG_DOMAIN, "ReportWrite", req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, "ReportWrite", req->data, req->len, 80, FU_DUMP_FLAG_NONE);
 	if (!fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
 					     req,
 					     RMI_DEVICE_DEFAULT_TIMEOUT,
@@ -126,7 +126,7 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 			     res->data,
 			     res->len,
 			     80,
-			     FU_DUMP_FLAGS_NONE);
+			     FU_DUMP_FLAG_NONE);
 
 		/* ignore non data report events */
 		if (res->data[HID_RMI4_REPORT_ID] != RMI_READ_DATA_REPORT_ID) {
@@ -158,9 +158,15 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				    (guint)input_count_sz + HID_RMI4_READ_INPUT_DATA);
 			return NULL;
 		}
-		g_byte_array_append(buf, res->data + HID_RMI4_READ_INPUT_DATA, input_count_sz);
+		if (!fu_byte_array_append_safe(buf,
+					       res->data,
+					       res->len,
+					       HID_RMI4_READ_INPUT_DATA, /* offset */
+					       input_count_sz,
+					       error))
+			return NULL;
 	}
-	fu_dump_full(G_LOG_DOMAIN, "DeviceRead", buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, "DeviceRead", buf->data, buf->len, 80, FU_DUMP_FLAG_NONE);
 
 	return g_steal_pointer(&buf);
 }
@@ -213,7 +219,7 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 	/* pad out to 21 bytes for some reason */
 	for (guint i = buf->len; i < 21; i++)
 		fu_byte_array_append_uint8(buf, 0x0);
-	fu_dump_full(G_LOG_DOMAIN, "DeviceWrite", buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN, "DeviceWrite", buf->data, buf->len, 80, FU_DUMP_FLAG_NONE);
 
 	return fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
 					       buf,
@@ -254,7 +260,7 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 			     res->data,
 			     res->len,
 			     80,
-			     FU_DUMP_FLAGS_NONE);
+			     FU_DUMP_FLAG_NONE);
 		if (res->len < HID_RMI4_ATTN_INTERRUPT_SOURCES + 1) {
 			g_debug("attr: ignoring small read of %u", res->len);
 			continue;

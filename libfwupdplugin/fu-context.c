@@ -266,6 +266,25 @@ fu_context_get_smbios(FuContext *self)
 }
 
 /**
+ * fu_context_set_smbios:
+ * @self: a #FuContext
+ * @smbios: a #FuSmbios
+ *
+ * Sets the SMBIOS store. This is only required by self test code.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_set_smbios(FuContext *self, FuSmbios *smbios)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(FU_IS_SMBIOS(smbios));
+	g_set_object(&priv->smbios, smbios);
+	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
+}
+
+/**
  * fu_context_get_hwids:
  * @self: a #FuContext
  *
@@ -859,28 +878,60 @@ fu_context_get_udev_subsystems(FuContext *self)
 	return g_steal_pointer(&subsystems);
 }
 
+static gchar *
+fu_context_convert_firmware_gtype_to_id(GType gtype)
+{
+	const gchar *gtype_name = g_type_name(gtype);
+	gsize len = strlen(gtype_name);
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* no format */
+	if (g_strcmp0(gtype_name, "FuFirmware") == 0)
+		return g_strdup("raw");
+
+	/* not useful */
+	if (g_str_has_suffix(gtype_name, "Firmware"))
+		len -= 8;
+
+	/* normal plugins */
+	for (guint j = 2; j < len; j++) {
+		gchar tmp = gtype_name[j];
+		if (g_ascii_isupper(tmp)) {
+			if (str->len > 0)
+				g_string_append_c(str, '-');
+			g_string_append_c(str, g_ascii_tolower(tmp));
+		} else {
+			g_string_append_c(str, tmp);
+		}
+	}
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 /**
  * fu_context_add_firmware_gtype:
  * @self: a #FuContext
- * @id: (nullable): an optional string describing the type, e.g. `ihex`
  * @gtype: a #GType e.g. `FU_TYPE_FOO_FIRMWARE`
  *
- * Adds a firmware #GType which is used when creating devices. If @id is not
- * specified then it is guessed using the #GType name.
+ * Adds a firmware #GType which is used when creating devices.
  *
  * Plugins can use this method only in fu_plugin_init()
  *
- * Since: 1.6.0
+ * Since: 2.1.1
  **/
 void
-fu_context_add_firmware_gtype(FuContext *self, const gchar *id, GType gtype)
+fu_context_add_firmware_gtype(FuContext *self, GType gtype)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(id != NULL);
 	g_return_if_fail(gtype != G_TYPE_INVALID);
+
 	g_type_ensure(gtype);
-	g_hash_table_insert(priv->firmware_gtypes, g_strdup(id), GSIZE_TO_POINTER(gtype));
+	g_hash_table_insert(priv->firmware_gtypes,
+			    fu_context_convert_firmware_gtype_to_id(gtype),
+			    GSIZE_TO_POINTER(gtype));
 }
 
 /**

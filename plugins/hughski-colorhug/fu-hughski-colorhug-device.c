@@ -18,7 +18,15 @@ struct _FuHughskiColorhugDevice {
 	guint16 start_addr;
 };
 
-G_DEFINE_TYPE(FuHughskiColorhugDevice, fu_hughski_colorhug_device, FU_TYPE_USB_DEVICE)
+static void
+fu_hughski_colorhug_device_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuHughskiColorhugDevice,
+		       fu_hughski_colorhug_device,
+		       FU_TYPE_USB_DEVICE,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER,
+					     fu_hughski_colorhug_device_fuzzer_iface_init));
 
 #define CH_USB_HID_EP		   0x0001
 #define CH_USB_HID_EP_IN	   (CH_USB_HID_EP | 0x80)
@@ -33,28 +41,18 @@ G_DEFINE_TYPE(FuHughskiColorhugDevice, fu_hughski_colorhug_device, FU_TYPE_USB_D
 #define CH_FLASH_TRANSFER_BLOCK_SIZE 0x020 /* 32 */
 
 static gboolean
-fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
-			       guint8 cmd,
-			       guint8 *ibuf,
-			       gsize ibufsz,
-			       guint8 *obuf,
-			       gsize obufsz,
-			       GError **error)
+fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
+				FuHughskiColorhugCmd cmd,
+				const guint8 *ibuf,
+				gsize ibufsz,
+				GError **error)
 {
-	guint8 buf[] = {[0] = cmd, [1 ... CH_USB_HID_EP_SIZE - 1] = 0x00};
 	gsize actual_length = 0;
+	guint8 buf[CH_USB_HID_EP_SIZE] = {cmd};
 	g_autoptr(GError) error_local = NULL;
 
 	/* check size */
 	if (ibufsz > sizeof(buf) - 1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "cannot process chunk of size %" G_GSIZE_FORMAT,
-			    ibufsz);
-		return FALSE;
-	}
-	if (obufsz > sizeof(buf) - 2) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -102,6 +100,31 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 			    FWUPD_ERROR_INTERNAL,
 			    "request not all sent, got %" G_GSIZE_FORMAT,
 			    actual_length);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
+				FuHughskiColorhugCmd cmd,
+				guint8 *obuf,
+				gsize obufsz,
+				GError **error)
+{
+	gsize actual_length = 0;
+	guint8 buf[CH_USB_HID_EP_SIZE] = {0};
+	g_autoptr(GError) error_local = NULL;
+
+	/* check size */
+	if (obufsz > sizeof(buf) - 2) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "cannot process chunk of size %" G_GSIZE_FORMAT,
+			    obufsz);
 		return FALSE;
 	}
 
@@ -169,7 +192,73 @@ fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
 				    error))
 			return FALSE;
 	}
+
+	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
+			       FuHughskiColorhugCmd cmd,
+			       const guint8 *ibuf,
+			       gsize ibufsz,
+			       guint8 *obuf,
+			       gsize obufsz,
+			       GError **error)
+{
+	if (!fu_hughski_colorhug_device_send(self, cmd, ibuf, ibufsz, error)) {
+		g_prefix_error_literal(error, "failed to send: ");
+		return FALSE;
+	}
+	if (!fu_hughski_colorhug_device_recv(self, cmd, obuf, obufsz, error)) {
+		g_prefix_error_literal(error, "failed to receive: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_hughski_colorhug_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(fuzzer);
+	g_autoptr(FuDeviceEvent) device_event = fu_device_event_new(NULL);
+
+	/* fuzzing USB */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
+	fu_device_event_set_bytes(device_event, "Data", blob);
+	fu_device_add_event(FU_DEVICE(self), device_event);
+	if (!fu_hughski_colorhug_device_recv(self,
+					     FU_HUGHSKI_COLORHUG_CMD_BOOT_FLASH,
+					     NULL,
+					     0,
+					     error))
+		return FALSE;
+	if (!fu_hughski_colorhug_device_send(self,
+					     FU_HUGHSKI_COLORHUG_CMD_BOOT_FLASH,
+					     NULL,
+					     0,
+					     error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static GBytes *
+fu_hughski_colorhug_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	guint8 buf[CH_USB_HID_EP_SIZE] = {FU_HUGHSKI_COLORHUG_CMD_RESET};
+	return g_bytes_new(buf, sizeof(buf));
+}
+
+static void
+fu_hughski_colorhug_device_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_hughski_colorhug_device_fuzzer_test_input;
+	iface->build_example = fu_hughski_colorhug_device_fuzzer_build_example;
 }
 
 static gboolean

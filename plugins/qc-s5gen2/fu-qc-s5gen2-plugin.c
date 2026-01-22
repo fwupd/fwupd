@@ -34,7 +34,7 @@ fu_qc_s5gen2_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_S5GEN2_BLE_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_S5GEN2_HID_DEVICE);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_QC_S5GEN2_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_QC_S5GEN2_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_QC_S5GEN2_FIRMWARE);
 }
 
 static void

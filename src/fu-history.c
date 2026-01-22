@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include <glib/gstdio.h>
-#include <json-glib/json-glib.h>
 #include <sqlite3.h>
 
 #include "fu-device-private.h"

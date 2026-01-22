@@ -11,6 +11,7 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-plugin.h"
+#include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 #include "fu-logitech-hidpp-runtime-unifying.h"
 #include "fu-logitech-rdfu-firmware.h"
@@ -41,7 +42,8 @@ fu_logitech_hidpp_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_RUNTIME_UNIFYING);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_RUNTIME_BOLT);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_LOGITECH_RDFU_FIRMWARE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_RADIO); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_LOGITECH_RDFU_FIRMWARE);
 }
 
 static void

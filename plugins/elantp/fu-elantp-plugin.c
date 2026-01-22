@@ -45,7 +45,7 @@ fu_elantp_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "i2c");
 	fu_plugin_add_udev_subsystem(plugin, "i2c-dev");
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ELANTP_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ELANTP_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ELANTP_I2C_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ELANTP_HID_DEVICE);
 }

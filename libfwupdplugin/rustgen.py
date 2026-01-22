@@ -137,6 +137,10 @@ class EnumObj:
         if indexed:
             raise ValueError(f"enum {self.name} does not need explicit defaults")
 
+        # check each enum
+        for item in self.items:
+            item.check()
+
     def item(self, name: str) -> Optional["EnumItem"]:
         for item in self.items:
             if item.name == name:
@@ -224,6 +228,18 @@ class EnumItem:
             val = hex(int(val[2:], 2))
         self.default = val
 
+    def check(self):
+        uppercase_cnt: int = 0
+        for char in self.name:
+            if char.isupper():
+                if uppercase_cnt > 1:
+                    raise ValueError(
+                        f"enum {self.name} had too many consecutive uppercase chars"
+                    )
+                uppercase_cnt += 1
+            else:
+                uppercase_cnt = 0
+
     @property
     def value(self) -> str:
         return _camel_to_snake(self.name).replace("_", "-")
@@ -310,8 +326,10 @@ class StructObj:
             for item in self.items:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ToString")
-                if item.enum_obj and not item.constant and item.enabled:
+                elif item.enum_obj and item.enabled:
                     item.enum_obj.add_private_export("ToString")
+                elif item.enabled:
+                    item.add_private_export("Getters")
         elif derive == "Parse":
             self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
@@ -324,12 +342,6 @@ class StructObj:
             self.add_private_export("ToString")
             self.add_private_export("ValidateInternal")
             for item in self.items:
-                if (
-                    item.constant
-                    and item.type != Type.STRING
-                    and not (item.type == Type.U8 and item.n_elements)
-                ):
-                    item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
@@ -583,6 +595,7 @@ class StructItem:
         # is array
         if val.startswith("[") and val.endswith("]"):
             typestr, n_elements = val[1:-1].split(";", maxsplit=1)
+            n_elements = n_elements.strip()
             if n_elements.startswith("0x"):
                 self.n_elements = int(n_elements[2:], 16)
             else:
@@ -799,8 +812,8 @@ class Generator:
 
             # what should we build
             if line.startswith("#[derive("):
-                for derive in line[9:-2].replace(" ", "").split(","):
-                    derives.append(derive)
+                for derive in line[9:-2].split(","):
+                    derives.append(derive.strip())
                 continue
 
             # not in object
@@ -845,17 +858,17 @@ class Generator:
                 enum_item = EnumItem(enum_cur)
                 enum_item._since = since
                 enum_item.comments.extend(comments_cur)
-                parts = line.replace(" ", "").split("=", maxsplit=2)
-                enum_item.name = parts[0]
+                parts = line.split("=", maxsplit=2)
+                enum_item.name = parts[0].strip()
                 if len(parts) > 1:
-                    enum_item.parse_default(parts[1])
+                    enum_item.parse_default(parts[1].strip())
                 enum_cur.items.append(enum_item)
                 comments_cur.clear()
 
             # split structure into sections
             if struct_cur:
                 # parse "signature: u32be == 0x12345678"
-                parts = line.replace(" ", "").split(":", maxsplit=2)
+                parts = line.split(":", maxsplit=2)
                 if len(parts) == 1:
                     raise ValueError(f"invalid struct line on line {line_num}: {line}")
 
@@ -863,14 +876,14 @@ class Generator:
                 item = StructItem(struct_cur)
                 item._bits_offset = bits_offset
                 item.offset = offset
-                item.element_id = parts[0]
+                item.element_id = parts[0].strip()
                 if repr_type == "C, packed":
                     item.is_packed = True
 
                 type_parts = parts[1].split("=", maxsplit=3)
                 try:
                     item.parse_type(
-                        type_parts[0],
+                        type_parts[0].strip(),
                         enum_objs=self.enum_objs,
                         struct_objs=self.struct_objs,
                     )
@@ -882,9 +895,9 @@ class Generator:
                             f"struct requires #[derive(Default)] for line {line_num}: {line}"
                         )
                 if len(type_parts) == 3:
-                    item.parse_constant(type_parts[2])
+                    item.parse_constant(type_parts[2].strip())
                 elif len(type_parts) == 2:
-                    item.parse_default(type_parts[1])
+                    item.parse_default(type_parts[1].strip())
                 if item.size == 0:
                     struct_seen_b32 = True
                 if not struct_seen_b32:

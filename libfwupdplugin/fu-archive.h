@@ -10,24 +10,11 @@
 #include <gio/gio.h>
 
 #include "fu-archive-struct.h"
+#include "fu-firmware-struct.h"
 
 #define FU_TYPE_ARCHIVE (fu_archive_get_type())
 
 G_DECLARE_FINAL_TYPE(FuArchive, fu_archive, FU, ARCHIVE, GObject)
-
-/**
- * FuArchiveFlags:
- * @FU_ARCHIVE_FLAG_NONE:		No flags set
- * @FU_ARCHIVE_FLAG_IGNORE_PATH:	Ignore any path component
- *
- * The flags to use when loading the archive.
- **/
-typedef enum {
-	FU_ARCHIVE_FLAG_NONE = 0,
-	FU_ARCHIVE_FLAG_IGNORE_PATH = 1 << 0,
-	/*< private >*/
-	FU_ARCHIVE_FLAG_LAST
-} G_GNUC_FLAG_ENUM FuArchiveFlags;
 
 /**
  * FuArchiveIterateFunc:
@@ -47,10 +34,10 @@ typedef gboolean (*FuArchiveIterateFunc)(FuArchive *self,
     G_GNUC_NON_NULL(1);
 
 FuArchive *
-fu_archive_new(GBytes *data, FuArchiveFlags flags, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_archive_new(GBytes *data, FuFirmwareParseFlags flags, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuArchive *
 fu_archive_new_stream(GInputStream *stream,
-		      FuArchiveFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob) G_GNUC_NON_NULL(1, 2);

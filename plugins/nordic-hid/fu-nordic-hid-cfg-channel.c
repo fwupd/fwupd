@@ -25,31 +25,6 @@
 #define FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY     500  /* ms */
 #define FU_NORDIC_HID_CFG_CHANNEL_PEERS_POLL_INTERVAL 2000 /* ms */
 
-typedef enum {
-	CONFIG_STATUS_PENDING,
-	CONFIG_STATUS_GET_MAX_MOD_ID,
-	CONFIG_STATUS_GET_HWID,
-	CONFIG_STATUS_GET_BOARD_NAME,
-	CONFIG_STATUS_INDEX_PEERS,
-	CONFIG_STATUS_GET_PEER,
-	CONFIG_STATUS_SET,
-	CONFIG_STATUS_FETCH,
-	CONFIG_STATUS_SUCCESS,
-	CONFIG_STATUS_TIMEOUT,
-	CONFIG_STATUS_REJECT,
-	CONFIG_STATUS_WRITE_FAIL,
-	CONFIG_STATUS_DISCONNECTED,
-	CONFIG_STATUS_GET_PEERS_CACHE,
-	CONFIG_STATUS_FAULT = 99,
-} FuNordicCfgStatus;
-
-typedef enum {
-	DFU_STATE_INACTIVE,
-	DFU_STATE_ACTIVE,
-	DFU_STATE_STORING,
-	DFU_STATE_CLEANING,
-} FuNordicCfgSyncState;
-
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 recipient;
@@ -501,7 +476,7 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
 						NULL,
-						CONFIG_STATUS_INDEX_PEERS,
+						FU_NORDIC_HID_CFG_STATUS_INDEX_PEERS,
 						NULL,
 						0,
 						error)) {
@@ -510,7 +485,7 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 	}
 
 	if (fu_nordic_hid_cfg_channel_cmd_receive(self,
-						  CONFIG_STATUS_DISCONNECTED,
+						  FU_NORDIC_HID_CFG_STATUS_DISCONNECTED,
 						  res,
 						  &error_local)) {
 		/* forwarding configuration channel to peers not supported */
@@ -518,7 +493,10 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 	}
 
 	/* peers available */
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error)) {
 		g_prefix_error_literal(error, "INDEX_PEERS cmd_receive failed: ");
 		return FALSE;
 	}
@@ -537,7 +515,7 @@ fu_nordic_hid_cfg_channel_get_next_peer_id_cmd(FuNordicHidCfgChannel *self,
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
 						NULL,
-						CONFIG_STATUS_GET_PEER,
+						FU_NORDIC_HID_CFG_STATUS_GET_PEER,
 						NULL,
 						0,
 						error)) {
@@ -545,7 +523,10 @@ fu_nordic_hid_cfg_channel_get_next_peer_id_cmd(FuNordicHidCfgChannel *self,
 		return FALSE;
 	}
 
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error)) {
 		g_prefix_error_literal(error, "GET_PEER cmd_receive failed: ");
 		return FALSE;
 	}
@@ -569,7 +550,7 @@ fu_nordic_hid_cfg_channel_read_peers_cache_cmd(FuNordicHidCfgChannel *self,
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
 						NULL,
-						CONFIG_STATUS_GET_PEERS_CACHE,
+						FU_NORDIC_HID_CFG_STATUS_GET_PEERS_CACHE,
 						NULL,
 						0,
 						error)) {
@@ -578,7 +559,7 @@ fu_nordic_hid_cfg_channel_read_peers_cache_cmd(FuNordicHidCfgChannel *self,
 	}
 
 	if (fu_nordic_hid_cfg_channel_cmd_receive(self,
-						  CONFIG_STATUS_DISCONNECTED,
+						  FU_NORDIC_HID_CFG_STATUS_DISCONNECTED,
 						  res,
 						  &error_local)) {
 		/* configuration channel peers cache not supported */
@@ -586,7 +567,10 @@ fu_nordic_hid_cfg_channel_read_peers_cache_cmd(FuNordicHidCfgChannel *self,
 	}
 
 	/* configuration channel peer caching available */
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error)) {
 		g_prefix_error_literal(error, "GET_PEERS_CACHE cmd_receive failed: ");
 		return FALSE;
 	}
@@ -749,12 +733,15 @@ fu_nordic_hid_cfg_channel_get_board_name_cb(FuDevice *device, gpointer user_data
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
 						NULL,
-						CONFIG_STATUS_GET_BOARD_NAME,
+						FU_NORDIC_HID_CFG_STATUS_GET_BOARD_NAME,
 						NULL,
 						0,
 						error))
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error))
 		return FALSE;
 	self->board_name = fu_memstrsafe(res->data, res->data_len, 0x0, res->data_len, error);
 	if (self->board_name == NULL)
@@ -775,12 +762,15 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							"dfu",
 							"module_variant",
-							CONFIG_STATUS_FETCH,
+							FU_NORDIC_HID_CFG_STATUS_FETCH,
 							NULL,
 							0,
 							error))
 			return FALSE;
-		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+		if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+							   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+							   res,
+							   error))
 			return FALSE;
 
 		/* check if not set via quirk */
@@ -828,12 +818,15 @@ fu_nordic_hid_cfg_channel_get_devinfo(FuNordicHidCfgChannel *self, GError **erro
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							"dfu",
 							"devinfo",
-							CONFIG_STATUS_FETCH,
+							FU_NORDIC_HID_CFG_STATUS_FETCH,
 							NULL,
 							0,
 							error))
 			return FALSE;
-		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+		if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+							   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+							   res,
+							   error))
 			return FALSE;
 
 		if (!fu_memread_uint16_safe(res->data,
@@ -894,12 +887,15 @@ fu_nordic_hid_cfg_channel_get_hwid(FuNordicHidCfgChannel *self, GError **error)
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
 						NULL,
-						CONFIG_STATUS_GET_HWID,
+						FU_NORDIC_HID_CFG_STATUS_GET_HWID,
 						NULL,
 						0,
 						error))
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error))
 		return FALSE;
 
 	if (!fu_memcpy_safe(hw_id, HWID_LEN, 0, res->data, REPORT_DATA_MAX_LEN, 0, HWID_LEN, error))
@@ -937,12 +933,15 @@ fu_nordic_hid_cfg_channel_load_module_opts(FuNordicHidCfgChannel *self,
 
 		if (!fu_nordic_hid_cfg_channel_cmd_send_by_id(self,
 							      mod->idx << 4,
-							      CONFIG_STATUS_FETCH,
+							      FU_NORDIC_HID_CFG_STATUS_FETCH,
 							      NULL,
 							      0,
 							      error))
 			return FALSE;
-		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+		if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+							   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+							   res,
+							   error))
 			return FALSE;
 
 		/* res->data: option name */
@@ -998,12 +997,15 @@ fu_nordic_hid_cfg_channel_get_modinfo(FuNordicHidCfgChannel *self, GError **erro
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						NULL,
 						NULL,
-						CONFIG_STATUS_GET_MAX_MOD_ID,
+						FU_NORDIC_HID_CFG_STATUS_GET_MAX_MOD_ID,
 						NULL,
 						0,
 						error))
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error))
 		return FALSE;
 
 	/* res->data[0]: maximum module idx */
@@ -1026,12 +1028,15 @@ fu_nordic_hid_cfg_channel_dfu_fwinfo(FuNordicHidCfgChannel *self, GError **error
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						"dfu",
 						"fwinfo",
-						CONFIG_STATUS_FETCH,
+						FU_NORDIC_HID_CFG_STATUS_FETCH,
 						NULL,
 						0,
 						error))
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error))
 		return FALSE;
 
 	/* parsing fwinfo answer */
@@ -1072,12 +1077,15 @@ fu_nordic_hid_cfg_channel_dfu_reboot(FuNordicHidCfgChannel *self, GError **error
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						"dfu",
 						"reboot",
-						CONFIG_STATUS_FETCH,
+						FU_NORDIC_HID_CFG_STATUS_FETCH,
 						NULL,
 						0,
 						error))
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+	if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+						   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						   res,
+						   error))
 		return FALSE;
 	if (res->data_len != 1 || res->data[0] != 0x01) {
 		g_set_error_literal(error,
@@ -1104,7 +1112,7 @@ fu_nordic_hid_cfg_channel_dfu_sync_cb(FuDevice *device, gpointer user_data, GErr
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							"dfu",
 							"sync",
-							CONFIG_STATUS_FETCH,
+							FU_NORDIC_HID_CFG_STATUS_FETCH,
 							NULL,
 							0,
 							error))
@@ -1125,8 +1133,8 @@ fu_nordic_hid_cfg_channel_dfu_sync_cb(FuDevice *device, gpointer user_data, GErr
 					    "incorrect length of reply");
 			return FALSE;
 		}
-		if (recv_msg->data[0] == DFU_STATE_INACTIVE ||
-		    recv_msg->data[0] == DFU_STATE_ACTIVE) {
+		if (recv_msg->data[0] == FU_NORDIC_HID_CFG_SYNC_STATE_INACTIVE ||
+		    recv_msg->data[0] == FU_NORDIC_HID_CFG_SYNC_STATE_ACTIVE) {
 			break;
 		}
 	}
@@ -1250,12 +1258,15 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 						"dfu",
 						"start",
-						CONFIG_STATUS_SET,
+						FU_NORDIC_HID_CFG_STATUS_SET,
 						data,
 						0x0C,
 						error))
 		return FALSE;
-	return fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error);
+	return fu_nordic_hid_cfg_channel_cmd_receive(self,
+						     FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+						     res,
+						     error);
 }
 
 static gboolean
@@ -1450,7 +1461,7 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 {
 	guint32 chunk_len;
 	guint32 offset = 0;
-	guint8 sync_state = DFU_STATE_ACTIVE;
+	guint8 sync_state = FU_NORDIC_HID_CFG_SYNC_STATE_ACTIVE;
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
 
 	chunk_len = fu_chunk_get_data_sz(chk);
@@ -1477,12 +1488,15 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							"dfu",
 							"data",
-							CONFIG_STATUS_SET,
+							FU_NORDIC_HID_CFG_STATUS_SET,
 							data,
 							data_len,
 							error))
 			return FALSE;
-		if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error))
+		if (!fu_nordic_hid_cfg_channel_cmd_receive(self,
+							   FU_NORDIC_HID_CFG_STATUS_SUCCESS,
+							   res,
+							   error))
 			return FALSE;
 
 		offset += data_len;
@@ -1490,7 +1504,7 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 
 	/* sync should return inactive for the last chunk */
 	if (is_last)
-		sync_state = DFU_STATE_INACTIVE;
+		sync_state = FU_NORDIC_HID_CFG_SYNC_STATE_INACTIVE;
 	return fu_nordic_hid_cfg_channel_dfu_sync(self, dfu_info, sync_state, error);
 }
 
@@ -1503,7 +1517,10 @@ fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	if (!fu_nordic_hid_cfg_channel_dfu_sync(self, dfu_info, DFU_STATE_ACTIVE, error))
+	if (!fu_nordic_hid_cfg_channel_dfu_sync(self,
+						dfu_info,
+						FU_NORDIC_HID_CFG_SYNC_STATE_ACTIVE,
+						error))
 		return FALSE;
 
 	chunks = fu_chunk_array_new_from_stream(stream,
@@ -1578,7 +1595,10 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_dfu_sync(self, dfu_info, DFU_STATE_INACTIVE, error))
+	if (!fu_nordic_hid_cfg_channel_dfu_sync(self,
+						dfu_info,
+						FU_NORDIC_HID_CFG_SYNC_STATE_INACTIVE,
+						error))
 		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;

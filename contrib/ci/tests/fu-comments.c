@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * nocheck:expect: use C style comments
+ * nocheck:expect: do not use boxed comment lines
+ * nocheck:expect: do not use doxygen comment lines
  */
 
 static void
@@ -11,5 +13,7 @@ fu_comments(void)
 {
 	g_debug("hello");
 	// c++ comments
+	/**@brief */
 	g_debug("world");
+	/**** not boxes *****/
 }

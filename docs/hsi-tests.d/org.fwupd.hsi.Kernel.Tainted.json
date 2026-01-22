@@ -3,7 +3,7 @@
   "name": "Kernel Tainted",
   "description": [
     "When calculating the HSI value fwupd has to ask the Linux Kernel for information.",
-    "If the kernel has been tainted by overriding a firmware table or by loading a proprietary module then we cannot trust the data it reports."
+    "If the kernel has been tainted by overriding a firmware table or by loading an out-of-tree module then we cannot trust the data it reports."
   ],
   "failure-impact": [
     "Using a tainted kernel means that values obtained from the kernel cannot be trusted."

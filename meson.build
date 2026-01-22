@@ -369,13 +369,8 @@ if build_standalone
 endif
 libjcat = dependency(
   'jcat',
-  version: '>= 0.2.0',
+  version: '>= 0.1.6',
   fallback: ['libjcat', 'libjcat_dep'],
-)
-libjsonglib = dependency(
-  'json-glib-1.0',
-  version: '>= 1.6.0',
-  fallback: ['libjsonglib', 'libjsonglib_dep'],
 )
 libblkid = dependency(
   'blkid',
@@ -952,7 +947,7 @@ if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
 endif
 
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
-  host_machine.cpu_family() in ['x86', 'x86_64', 'aarch64', 'riscv64', 'loongarch64']
+  host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
 subdir('generate-build')
 subdir('libfwupd')

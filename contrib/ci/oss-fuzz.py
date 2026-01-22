@@ -126,6 +126,24 @@ class Builder:
             )
             subprocess.run(["make", "all", "install"], cwd=srcdir_build, check=True)
 
+    def build_automake_project(self, srcdir: str, argv=None) -> None:
+        """configure and build the autoconf/automake project"""
+        if not argv:
+            argv = []
+        srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
+        if not os.path.exists(srcdir_build):
+            os.makedirs(srcdir_build, exist_ok=True)
+            subprocess.run(
+                [
+                    "../autogen.sh",
+                    f"--prefix={self.builddir}",
+                ]
+                + argv,
+                cwd=srcdir_build,
+                check=True,
+            )
+            subprocess.run(["make", "install"], cwd=srcdir_build, check=True)
+
     def add_work_includedir(self, value: str) -> None:
         """add a CFLAG"""
         self.cflags.append(f"-I{self.builddir}/{value}")
@@ -214,7 +232,7 @@ class Builder:
         builder_xmls = glob.glob(globstr)
         corpus: List[str] = []
         if not builder_xmls:
-            print(f"failed to find {globstr}")
+            builder_xmls.append(globstr.replace("*", ""))
         for fn_src in builder_xmls:
             fn_dst = os.path.join(
                 self.builddir, os.path.basename(fn_src).replace(".builder.xml", ".bin")
@@ -304,8 +322,8 @@ class Fuzzer:
         return acc
 
     @property
-    def new_gtype(self) -> str:
-        return f"g_object_new(FU_TYPE_{self.pattern.replace('-', '_').upper()}, NULL)"
+    def gtype(self) -> str:
+        return f"FU_TYPE_{self.pattern.replace('-', '_').upper()}"
 
     @property
     def header(self) -> str:
@@ -321,6 +339,14 @@ def _build(bld: Builder) -> None:
     )
     bld.build_cmake_project(src, argv=["-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"])
     bld.add_build_ldflag("lib/libcbor.a")
+
+    # libusb
+    src = bld.checkout_source(
+        "libusb", url="https://github.com/libusb/libusb.git", commit="v1.0.29"
+    )
+    bld.build_automake_project(src, argv=["--disable-udev", "--disable-log"])
+    bld.add_build_ldflag("lib/libusb-1.0.a")
+    bld.add_work_includedir("include/libusb-1.0")
 
     # GLib
     src = bld.checkout_source(
@@ -346,19 +372,6 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libgobject-2.0.a")
     bld.add_build_ldflag("lib/libglib-2.0.a")
     bld.add_build_ldflag("lib/libgthread-2.0.a")
-
-    # JSON-GLib
-    src = bld.checkout_source(
-        "json-glib",
-        url="https://github.com/GNOME/json-glib.git",
-        commit="1.8.0-actual",
-    )
-    bld.build_meson_project(
-        src, ["-Dgtk_doc=disabled", "-Dtests=false", "-Dintrospection=disabled"]
-    )
-    bld.add_work_includedir("include/json-glib-1.0/json-glib")
-    bld.add_work_includedir("include/json-glib-1.0")
-    bld.add_build_ldflag("lib/libjson-glib-1.0.a")
 
     # libxmlb
     src = bld.checkout_source("libxmlb", url="https://github.com/hughsie/libxmlb.git")
@@ -390,6 +403,7 @@ def _build(bld: Builder) -> None:
             "HAVE_FUZZER": None,
             "HAVE_CBOR": None,
             "HAVE_CBOR_SET_ALLOCS": None,
+            "HAVE_LIBUSB_GET_PARENT": None,
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
             "PACKAGE_VERSION": "0.0.0",
@@ -425,7 +439,6 @@ def _build(bld: Builder) -> None:
 
     # built in formats
     for fzr in [
-        Fuzzer("efi-lz77", pattern="efi-lz77-decompressor"),
         Fuzzer("csv"),
         Fuzzer("cab"),
         Fuzzer("dfuse"),
@@ -447,12 +460,13 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
         Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
-        Fuzzer("ifd"),
+        Fuzzer("ifd-bios", pattern="ifd-bios"),
+        Fuzzer("zip"),
     ]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
@@ -463,7 +477,7 @@ def _build(bld: Builder) -> None:
         src_generator = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
@@ -497,14 +511,15 @@ def _build(bld: Builder) -> None:
         Fuzzer("elantp"),
         Fuzzer("genesys-scaler", srcdir="genesys", pattern="genesys-scaler-firmware"),
         Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
+        Fuzzer("hughski-colorhug", pattern="hughski-colorhug-device"),
         Fuzzer("pixart-rf"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("synaptics-prometheus"),
-        Fuzzer("synaptics-cape"),
+        Fuzzer("synaptics-cape", pattern="synaptics-cape-hid-firmware"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
         Fuzzer("uf2"),
-        Fuzzer("wacom-usb", pattern="wac-firmware"),
+        Fuzzer("wacom-usb"),
     ]:
         fuzz_objs = []
         for obj in bld.grep_meson(f"fwupd/plugins/{fzr.srcdir}"):
@@ -521,7 +536,7 @@ def _build(bld: Builder) -> None:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
@@ -534,7 +549,7 @@ def _build(bld: Builder) -> None:
         src_generator = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
             {
-                "@FIRMWARENEW@": fzr.new_gtype,
+                "@GTYPE@": fzr.gtype,
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
@@ -570,6 +585,9 @@ if __name__ == "__main__":
                 "liblzma-dev",
                 "libzstd-dev",
                 "libcbor-dev",
+                "autoconf",
+                "automake",
+                "libtool",
                 "python3",
                 "python3-jinja2",
                 "python3-packaging",

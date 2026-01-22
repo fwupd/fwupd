@@ -293,18 +293,19 @@ fu_config_migrate_keyfiles(FuConfig *self, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) legacy_cfg_files = g_ptr_array_new_with_free_func(g_free);
-	const gchar *fn_merge[] = {"daemon.conf",
-				   "msr.conf",
-				   "redfish.conf",
-				   "thunderbolt.conf",
-				   "uefi_capsule.conf",
-				   NULL};
+	const gchar *fn_merge[] = {
+	    "daemon.conf",
+	    "msr.conf",
+	    "redfish.conf",
+	    "thunderbolt.conf",
+	    "uefi_capsule.conf",
+	};
 
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
 		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
 
-		for (guint j = 0; fn_merge[j] != NULL; j++) {
+		for (guint j = 0; j < G_N_ELEMENTS(fn_merge); j++) {
 			g_autofree gchar *fncompat = g_build_filename(dirname, fn_merge[j], NULL);
 			if (g_file_test(fncompat, G_FILE_TEST_EXISTS)) {
 				g_autoptr(GBytes) blob_compat =

@@ -246,7 +246,7 @@ static gboolean
 fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 {
 	const gchar *ven;
-	const gchar *allowlist[] = {"8Bitdo", "8BitDo", "SFC30", NULL};
+	const gchar *allowlist[] = {"8Bitdo", "8BitDo", "SFC30"};
 
 	/* this is a new, always valid, VID */
 	if (fu_device_get_vid(FU_DEVICE(self)) == 0x2dc8)
@@ -261,7 +261,7 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 				    "could not check vendor descriptor");
 		return FALSE;
 	}
-	for (guint i = 0; allowlist[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(allowlist); i++) {
 		if (g_str_has_prefix(ven, allowlist[i]))
 			return TRUE;
 	}
@@ -436,14 +436,26 @@ fu_ebitdo_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	return fu_device_emit_request(device, request, progress, error);
 }
 
-static gboolean
-fu_ebitdo_device_write_firmware(FuDevice *device,
-				FuFirmware *firmware,
-				FuProgress *progress,
-				FwupdInstallFlags flags,
-				GError **error)
+static FuFirmware *
+fu_ebitdo_device_prepare_firmware(FuDevice *device,
+				  GInputStream *stream,
+				  FuProgress *progress,
+				  FuFirmwareParseFlags flags,
+				  GError **error)
 {
-	FuEbitdoDevice *self = FU_EBITDO_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_linear_firmware_new(FU_TYPE_EBITDO_FIRMWARE);
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_ebitdo_device_write_image(FuEbitdoDevice *self,
+			     FuFirmware *firmware,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
+{
 	const guint8 *buf;
 	gsize bufsz = 0;
 	guint32 serial_new[3] = {0};
@@ -451,31 +463,24 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	const guint32 app_key_index[16] = {0x186976e5,
-					   0xcac67acd,
-					   0x38f27fee,
-					   0x0a4948f1,
-					   0xb75b7753,
-					   0x1f8ffa5c,
-					   0xbff8cf43,
-					   0xc4936167,
-					   0x92bd03f0,
-					   0x5573c6ed,
-					   0x57d8845b,
-					   0x827197ac,
-					   0xb91901c9,
-					   0x3917edfe,
-					   0xbcd6344f,
-					   0xcf9e23b5};
-
-	/* not in bootloader mode */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NEEDS_USER_ACTION,
-				    "Not in bootloader mode");
-		return FALSE;
-	}
+	const guint32 app_key_index[16] = {
+	    0x186976e5,
+	    0xcac67acd,
+	    0x38f27fee,
+	    0x0a4948f1,
+	    0xb75b7753,
+	    0x1f8ffa5c,
+	    0xbff8cf43,
+	    0xc4936167,
+	    0x92bd03f0,
+	    0x5573c6ed,
+	    0x57d8845b,
+	    0x827197ac,
+	    0xb91901c9,
+	    0x3917edfe,
+	    0xbcd6344f,
+	    0xcf9e23b5,
+	};
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -583,8 +588,8 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	if (!fu_ebitdo_device_receive(self, NULL, 0, &error_local)) {
 		g_prefix_error_literal(&error_local,
 				       "failed to get ACK for mark firmware as successful: ");
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
-			fu_device_set_remove_delay(device, 0);
+		if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+			fu_device_set_remove_delay(FU_DEVICE(self), 0);
 			g_debug("%s", error_local->message);
 			return TRUE;
 		}
@@ -594,6 +599,43 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* success! */
+	return TRUE;
+}
+
+static gboolean
+fu_ebitdo_device_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE(device);
+	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
+
+	/* not in bootloader mode */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NEEDS_USER_ACTION,
+				    "Not in bootloader mode");
+		return FALSE;
+	}
+
+	/* flash each linear image */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, images->len);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(images, i);
+		if (!fu_ebitdo_device_write_image(self,
+						  img,
+						  fu_progress_get_child(progress),
+						  flags,
+						  error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -673,7 +715,6 @@ fu_ebitdo_device_init(FuEbitdoDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EBITDO_FIRMWARE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
@@ -681,6 +722,7 @@ static void
 fu_ebitdo_device_class_init(FuEbitdoDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->prepare_firmware = fu_ebitdo_device_prepare_firmware;
 	device_class->write_firmware = fu_ebitdo_device_write_firmware;
 	device_class->setup = fu_ebitdo_device_setup;
 	device_class->detach = fu_ebitdo_device_detach;

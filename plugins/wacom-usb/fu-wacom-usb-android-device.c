@@ -1,0 +1,32 @@
+/*
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include "fu-wacom-usb-android-device.h"
+
+struct _FuWacomUsbAndroidDevice {
+	FuHidDevice parent_instance;
+};
+
+G_DEFINE_TYPE(FuWacomUsbAndroidDevice, fu_wacom_usb_android_device, FU_TYPE_HID_DEVICE)
+
+static void
+fu_wacom_usb_android_device_init(FuWacomUsbAndroidDevice *self)
+{
+	fu_device_add_protocol(FU_DEVICE(self), "com.wacom.usb");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_inhibit(FU_DEVICE(self),
+			  "hw",
+			  "Switch into PC mode by holding down the "
+			  "two outermost ExpressKeys for 4 seconds");
+}
+
+static void
+fu_wacom_usb_android_device_class_init(FuWacomUsbAndroidDeviceClass *klass)
+{
+}

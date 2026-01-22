@@ -13,6 +13,7 @@
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
@@ -52,7 +53,16 @@ typedef struct {
 	GPtrArray *magic;   /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
+static void
+fu_firmware_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuFirmware,
+		       fu_firmware,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FuFirmware)
+			   G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_firmware_fuzzer_iface_init));
+
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
 
 enum { PROP_0, PROP_PARENT, PROP_LAST };
@@ -1424,8 +1434,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 }
 
 /**
- * fu_firmware_build_from_xml:
- * @self: a #FuFirmware
+ * fu_firmware_new_from_xml:
  * @xml: XML text
  * @error: (nullable): optional return location for an error
  *
@@ -1465,68 +1474,90 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
  * subclassed object `FuFirmware->build` vfunc for the specific additional
  * options supported.
  *
- * Plugins should manually g_type_ensure() subclassed image objects if not
- * constructed as part of the plugin fu_plugin_init() or fu_plugin_setup()
- * functions.
+ * Firmware subclasses should use fu_firmware_add_image_gtype() for subclassed image objects.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.6.0
+ * Since: 2.1.1
  **/
-gboolean
-fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
+FuFirmware *
+fu_firmware_new_from_xml(const gchar *xml, GError **error)
 {
+	GType gtype;
+	const gchar *gtypestr = NULL;
+	g_autoptr(FuFirmware) self = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbNode) n = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
+	g_return_val_if_fail(xml != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	/* parse XML */
 	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
 		g_prefix_error_literal(error, "could not parse XML: ");
 		fwupd_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL) {
 		fwupd_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
 
 	/* create FuFirmware of specific GType */
 	n = xb_silo_query_first(silo, "firmware", error);
 	if (n == NULL) {
 		fwupd_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
-	return fu_firmware_build(self, n, error);
+	gtypestr = xb_node_get_attr(n, "gtype");
+	if (gtypestr == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "expected gtype for <firmware>");
+		return NULL;
+	}
+	gtype = g_type_from_name(gtypestr);
+	if (gtype == G_TYPE_INVALID) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "GType %s not registered",
+			    gtypestr);
+		return NULL;
+	}
+	self = g_object_new(gtype, NULL);
+	if (!fu_firmware_build(self, n, error))
+		return NULL;
+	return g_steal_pointer(&self);
 }
 
 /**
- * fu_firmware_build_from_filename:
- * @self: a #FuFirmware
+ * fu_firmware_new_from_filename:
  * @filename: filename of XML builder
  * @error: (nullable): optional return location for an error
  *
  * Builds a firmware from an XML manifest.
  *
- * Returns: %TRUE for success
+ * Returns: a #FuFirmware on success, else %NULL
  *
- * Since: 2.0.0
+ * Since: 2.1.1
  **/
-gboolean
-fu_firmware_build_from_filename(FuFirmware *self, const gchar *filename, GError **error)
+FuFirmware *
+fu_firmware_new_from_filename(const gchar *filename, GError **error)
 {
 	g_autofree gchar *xml = NULL;
 
-	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
-	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (!g_file_get_contents(filename, &xml, NULL, error))
-		return FALSE;
-	return fu_firmware_build_from_xml(self, xml, error);
+		return NULL;
+	return fu_firmware_new_from_xml(xml, error);
 }
 
 /**
@@ -2748,4 +2779,211 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 	/* failed */
 	g_propagate_error(error, g_steal_pointer(&error_all));
 	return NULL;
+}
+
+/**
+ * fu_firmware_roundtrip_from_xml:
+ * @builder_xml: (not nullable): XML describing the firmware
+ * @checksum_expected: (nullable): Expected SHA1 hash of the built binary blob
+ * @flags: #FuFirmwareBuilderFlags, e.g. %FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE
+ * @error: (nullable): optional return location for an error
+ *
+ * Roundtrip a firmware from builder XML to binary and back to XML.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
+			       const gchar *checksum_expected,
+			       FuFirmwareBuilderFlags flags,
+			       GError **error)
+{
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autoptr(FuFirmware) firmware1 = NULL;
+	g_autoptr(FuFirmware) firmware2 = NULL;
+
+	g_return_val_if_fail(builder_xml != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* build and write */
+	firmware1 = fu_firmware_new_from_xml(builder_xml, error);
+	if (firmware1 == NULL) {
+		g_prefix_error(error, "failed to build %s: ", builder_xml);
+		return FALSE;
+	}
+	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, error);
+	if (csum1 == NULL)
+		return FALSE;
+	if (checksum_expected != NULL && g_strcmp0(csum1, checksum_expected) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "got checksum %s and expected %s",
+			    csum1,
+			    checksum_expected);
+		return FALSE;
+	}
+
+	/* ensure we can write and then parse what we just wrote */
+	if ((flags & FU_FIRMWARE_BUILDER_FLAG_NO_WRITE) == 0) {
+		g_autoptr(FuFirmware) firmware3 =
+		    g_object_new(G_TYPE_FROM_INSTANCE(firmware1), NULL);
+		g_autoptr(GBytes) fw = NULL;
+
+		fw = fu_firmware_write(firmware1, error);
+		if (fw == NULL) {
+			g_prefix_error(error, "failed to write %s: ", builder_xml);
+			return FALSE;
+		}
+		if (!fu_firmware_parse_bytes(firmware3,
+					     fw,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						 FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					     error)) {
+			g_prefix_error(error, "failed to parse %s: ", builder_xml);
+			return FALSE;
+		}
+		if ((flags & FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE) == 0) {
+			g_autoptr(GBytes) fw2 = NULL;
+			fw2 = fu_firmware_write(firmware3, error);
+			if (fw2 == NULL) {
+				g_prefix_error(error, "failed to write %s: ", builder_xml);
+				return FALSE;
+			}
+			if (!fu_bytes_compare(fw2, fw, error)) {
+				g_prefix_error(error, "failed to compare %s: ", builder_xml);
+				return FALSE;
+			}
+		}
+	}
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, error);
+	if (xml_out == NULL) {
+		g_prefix_error(error, "cannot export %s: ", builder_xml);
+		return FALSE;
+	}
+	firmware2 = fu_firmware_new_from_xml(xml_out, error);
+	if (firmware2 == NULL)
+		return FALSE;
+	csum2 = fu_firmware_get_checksum(firmware2, G_CHECKSUM_SHA1, error);
+	if (csum2 == NULL)
+		return FALSE;
+	if (checksum_expected != NULL && g_strcmp0(csum2, checksum_expected) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "got round-trip checksum %s and expected %s",
+			    csum2,
+			    checksum_expected);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_firmware_roundtrip_from_filename:
+ * @builder_fn: (not nullable): XML filename describing the firmware
+ * @checksum_expected: (nullable): Expected SHA1 hash of the built binary blob
+ * @flags: #FuFirmwareBuilderFlags, e.g. %FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE
+ * @error: (nullable): optional return location for an error
+ *
+ * Roundtrip a firmware from builder XML filename to binary and back to XML.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
+				    const gchar *checksum_expected,
+				    FuFirmwareBuilderFlags flags,
+				    GError **error)
+{
+	g_autofree gchar *xml = NULL;
+
+	g_return_val_if_fail(builder_fn != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_get_contents(builder_fn, &xml, NULL, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	return fu_firmware_roundtrip_from_xml(xml, checksum_expected, flags, error);
+}
+
+static gboolean
+fu_firmware_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuFirmware *self = FU_FIRMWARE(fuzzer);
+	g_autoptr(GBytes) fw = NULL;
+
+	if (!fu_firmware_parse_bytes(self,
+				     blob,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+					 FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID |
+					 FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				     error))
+		return FALSE;
+	fw = fu_firmware_write(self, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static GBytes *
+fu_firmware_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuFirmware *self = FU_FIRMWARE(fuzzer);
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* sanity check */
+	if (blob == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "builder XML required");
+		return NULL;
+	}
+
+	/* parse XML */
+	if (!xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		g_prefix_error_literal(error, "could not parse XML: ");
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+	if (silo == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	n = xb_silo_query_first(silo, "firmware", error);
+	if (n == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	if (!fu_firmware_build(self, n, error))
+		return NULL;
+	return fu_firmware_write(self, error);
+}
+
+static void
+fu_firmware_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_firmware_fuzzer_test_input;
+	iface->build_example = fu_firmware_fuzzer_build_example;
 }

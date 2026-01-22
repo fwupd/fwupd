@@ -12,26 +12,27 @@
 # Sebastian Rasmussen <sebras@gmail.com>, 2018
 # Anders Jonsson <anders.jonsson@norsjovallen.se>, 2025.
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Daniel Nylander <daniel@danielnylander.se>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-24 10:39+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-01-21 13:01+0000\n"
+"Last-Translator: Daniel Nylander <daniel@danielnylander.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.16-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
-msgstr[0] "%.0f minut kvarstår"
-msgstr[1] "%.0f minuter kvarstår"
+msgstr[0] "%.0f minut återstår"
+msgstr[1] "%.0f minuter återstår"
 
 #. TRANSLATORS: BMC refers to baseboard management controller which
 #. * is the device that updates all the other firmware on the system
@@ -935,7 +936,7 @@ msgstr "Enheten behöver vara ansluten till nätspänning"
 
 #. TRANSLATORS: device does not have a display connected
 msgid "Device requires a display to be plugged in"
-msgstr "Enheten kräver att en skärm är inpluggad"
+msgstr "Enheten kräver att en skärm är inkopplad"
 
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
@@ -1504,7 +1505,7 @@ msgstr "Plattform med säkring"
 msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
-msgstr[1] "GUID"
+msgstr[1] "GUID:n"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -1564,7 +1565,7 @@ msgstr "Hämtar listan med uppdateringar för alla angivna enheter, eller alla e
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
-msgstr "Erhåll utgåvan för en enhet"
+msgstr "Hämtar utgåvorna för en enhet"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"

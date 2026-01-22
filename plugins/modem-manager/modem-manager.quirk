@@ -212,3 +212,17 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_nand_firehose_9x07.mbn
 Flags = disable-zlp
+
+# Rolling RW101
+[USB\VID_33F8&PID_0301]
+GType = FuMmFastbootDevice
+Summary = Rolling RW101-GL Module
+Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
+CounterpartGuid = USB\VID_33F8&PID_D00D
+
+# Rolling RW101-CAT12
+[USB\VID_33F8&PID_0302]
+GType = FuMmFastbootDevice
+Summary = Rolling RW101-GL Module
+Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
+CounterpartGuid = USB\VID_33F8&PID_D00D

@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <zlib.h>
+
 #include "fu-common.h"
 #include "fu-crc-private.h"
 #include "fu-mem.h"
@@ -314,6 +316,10 @@ fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc)
 	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
 	g_return_val_if_fail(crc_map[kind].bitwidth == 32, 0x0);
 
+	/* use hand-crafted assembly with pre-computed table for raw speed */
+	if (kind == FU_CRC_KIND_B32_STANDARD)
+		return crc32_z(crc, buf, bufsz);
+
 	for (gsize i = 0; i < bufsz; ++i) {
 		guint32 tmp = crc_map[kind].reflected ? fu_crc_reflect8(buf[i]) : buf[i];
 		crc ^= tmp << (bitwidth - 8);
@@ -344,6 +350,8 @@ fu_crc32_done(FuCrcKind kind, guint32 crc)
 {
 	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
 	g_return_val_if_fail(crc_map[kind].bitwidth == 32, 0x0);
+	if (kind == FU_CRC_KIND_B32_STANDARD)
+		return crc;
 	crc = crc_map[kind].reflected ? fu_crc_reflect(crc, crc_map[kind].bitwidth) : crc;
 	return crc ^ crc_map[kind].xorout;
 }
@@ -365,6 +373,11 @@ fu_crc32(FuCrcKind kind, const guint8 *buf, gsize bufsz)
 {
 	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
 	g_return_val_if_fail(crc_map[kind].bitwidth == 32, 0x0);
+
+	/* use hand-crafted assembly with pre-computed table for raw speed */
+	if (kind == FU_CRC_KIND_B32_STANDARD)
+		return crc32_z(0, buf, bufsz);
+
 	return fu_crc32_done(kind, fu_crc32_step(kind, buf, bufsz, crc_map[kind].init));
 }
 

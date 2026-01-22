@@ -16,8 +16,9 @@
 G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
 #ifdef __GI_SCANNER__
-#define FuFirmwareExportFlags guint64
-#define FuFirmwareParseFlags  guint64
+#define FuFirmwareExportFlags  guint64
+#define FuFirmwareParseFlags   guint64
+#define FuFirmwareBuilderFlags guint64
 #endif
 
 struct _FuFirmwareClass {
@@ -81,6 +82,12 @@ FuFirmware *
 fu_firmware_new(void);
 FuFirmware *
 fu_firmware_new_from_bytes(GBytes *fw);
+FuFirmware *
+fu_firmware_new_from_xml(const gchar *xml, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+FuFirmware *
+fu_firmware_new_from_filename(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 FuFirmware *
 fu_firmware_new_from_gtypes(GInputStream *stream,
 			    gsize offset,
@@ -182,13 +189,15 @@ gboolean
 fu_firmware_build(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_build_from_xml(FuFirmware *self,
-			   const gchar *xml,
-			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+fu_firmware_roundtrip_from_xml(const gchar *builder_xml,
+			       const gchar *checksum_expected,
+			       FuFirmwareBuilderFlags flags,
+			       GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_firmware_build_from_filename(FuFirmware *self,
-				const gchar *filename,
-				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+fu_firmware_roundtrip_from_filename(const gchar *builder_fn,
+				    const gchar *checksum_expected,
+				    FuFirmwareBuilderFlags flags,
+				    GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,
 			 GInputStream *stream,

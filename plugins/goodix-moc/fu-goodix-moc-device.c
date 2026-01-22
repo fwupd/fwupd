@@ -63,7 +63,7 @@ fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
 		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
 	}
-	fu_dump_full(G_LOG_DOMAIN, "REQST", buf->data, buf->len, 16, FU_DUMP_FLAGS_SHOW_ADDRESSES);
+	fu_dump_full(G_LOG_DOMAIN, "REQST", buf->data, buf->len, 16, FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 	/* send data */
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
@@ -128,7 +128,7 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self,
 			     reply->data,
 			     actual_len,
 			     16,
-			     FU_DUMP_FLAGS_SHOW_ADDRESSES);
+			     FU_DUMP_FLAG_SHOW_ADDRESSES);
 
 		/* parse package header */
 		if (!fu_memread_uint8_safe(reply->data, reply->len, 0x0, &header_cmd0, error))

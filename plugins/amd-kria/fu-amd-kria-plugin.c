@@ -149,13 +149,13 @@ fu_amd_kria_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 
 	/* for parsing QSPI in registered callback */
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AMD_KRIA_IMAGE_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AMD_KRIA_PERSISTENT_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_KRIA_IMAGE_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_KRIA_PERSISTENT_FIRMWARE);
 
 	/* for reading FRU inventory */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AMD_KRIA_DEVICE);
 	fu_plugin_add_udev_subsystem(plugin, "i2c");
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AMD_KRIA_SOM_EEPROM);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AMD_KRIA_SOM_EEPROM);
 }
 
 static void

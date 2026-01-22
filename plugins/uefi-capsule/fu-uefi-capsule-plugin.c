@@ -318,16 +318,19 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	const gchar *const *langs = g_get_language_names();
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
-	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.tar.xz", NULL);
+	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.zip", NULL);
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
-	archive = fu_archive_new_stream(stream_archive, FU_ARCHIVE_FLAG_NONE, error);
-	if (archive == NULL)
+	if (!fu_firmware_parse_stream(archive,
+				      stream_archive,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      error))
 		return NULL;
 
 	/* find the closest locale match, falling back to `en` and `C` */
@@ -337,7 +340,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 		if (g_str_has_suffix(langs[i], ".UTF-8"))
 			continue;
 		fn = g_strdup_printf("fwupd-%s-%u-%u.bmp", langs[i], width, height);
-		blob_tmp = fu_archive_lookup_by_fn(archive, fn, NULL);
+		blob_tmp = fu_firmware_get_image_by_id_bytes(archive, fn, NULL);
 		if (blob_tmp != NULL) {
 			g_debug("using UX image %s", fn);
 			return g_bytes_ref(blob_tmp);
@@ -1306,9 +1309,9 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
-	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
-	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
-	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_BITMAP_IMAGE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_UEFI);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_UEFI_UPDATE_INFO);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_BITMAP_IMAGE);
 	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_COD_DEVICE);	/* coverage */
 	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_GRUB_DEVICE);	/* coverage */
 	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_NVRAM_DEVICE); /* coverage */

@@ -1,0 +1,131 @@
+// Copyright 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
+#[derive(ValidateStream, Default)]
+#[repr(C, packed)]
+struct FuStructWacomUsbFirmwareHdr {
+    magic: [char; 5] == "WACOM",
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructWtaBlockHeader {
+    block_start: u32le,
+    block_size: u32le,
+}
+
+#[derive(ToString)]
+enum FuWacomUsbReportId {
+    FwDescriptor              = 0xCB, // GET_FEATURE
+    SwitchToFlashLoader       = 0xCC, // SET_FEATURE
+    QuitAndReset              = 0xCD, // SET_FEATURE
+    ReadBlockData             = 0xD1, // GET_FEATURE
+    WriteBlock                = 0xD2, // SET_FEATURE
+    EraseBlock                = 0xD3, // SET_FEATURE
+    SetReadAddress            = 0xD4, // GET_FEATURE
+    GetStatus                 = 0xD5, // GET_FEATURE
+    UpdateReset               = 0xD6, // SET_FEATURE
+    WriteWord                 = 0xD7, // SET_FEATURE
+    GetParameters             = 0xD8, // GET_FEATURE
+    GetFlashDescriptor        = 0xD9, // GET_FEATURE
+    GetChecksums              = 0xDA, // GET_FEATURE
+    SetChecksumForBlock       = 0xDB, // SET_FEATURE
+    CalculateChecksumForBlock = 0xDC, // SET_FEATURE
+    WriteChecksumTable        = 0xDE, // SET_FEATURE
+    GetCurrentFirmwareIdx     = 0xE2, // GET_FEATURE
+    Module                    = 0xE4,
+}
+
+#[derive(ToString)]
+#[repr(u8)]
+enum FuWacomUsbModuleFwType {
+    Touch         = 0x00,
+    Bluetooth     = 0x01,
+    EmrCorrection = 0x02,
+    BluetoothHid  = 0x03,
+    Scaler        = 0x04,
+    BluetoothId6  = 0x06,
+    TouchId7      = 0x07,
+    BluetoothId9  = 0x09,
+    SubCpu        = 0x0A,
+    Main          = 0x3F,
+}
+
+#[derive(ToString)]
+enum FuWacomUsbModuleCommand {
+    Start = 0x01,
+    Data  = 0x02,
+    End   = 0x03,
+}
+
+#[derive(ToString)]
+enum FuWacomUsbModuleStatus {
+    Ok,
+    Busy,
+    ErrCrc,
+    ErrCmd,
+    ErrHwAccessFail,
+    ErrFlashNoSupport,
+    ErrModeWrong,
+    ErrMpuNoSupport,
+    ErrVersionNoSupport,
+    ErrErase,
+    ErrWrite,
+    ErrExit,
+    Err,
+    ErrInvalidOp,
+    ErrWrongImage,
+}
+
+#[derive(ToString)]
+enum FuWacomUsbDeviceStatus {
+    Unknown = 0,
+    Writing = 1 << 0,
+    Erasing = 1 << 1,
+    ErrorWrite = 1 << 2,
+    ErrorErase = 1 << 3,
+    WriteProtected = 1 << 4,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructWacomUsbId9UnknownCmd {
+    unknown1: u16be == 0x7050,
+    unknown2: u32be == 0,
+    size: u16be,                  // Size of payload to be transferred
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructWacomUsbId9SpiCmd {
+    command: u8 == 0x91,
+    start_addr: u32be == 0,
+    size: u16be,                  // sizeof(data) + size of payload
+    data: FuStructWacomUsbId9UnknownCmd,
+}
+
+#[derive(New, Validate, ToBytes)]
+#[repr(C, packed)]
+struct FuStructWacomUsbId9LoaderCmd {
+    command: u8,
+    size: u16be,                  // sizeof(data) + size of payload
+    crc: u32be,                   // CRC(concat(data, payload))
+    data: FuStructWacomUsbId9SpiCmd,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructWacomUsbModuleDesc {
+    _report_id: u8,
+    bootloader_version: u16be,
+    number_modules: u8,
+    // FuStructWacomUsbModuleItem[number_modules]
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructWacomUsbModuleItem {
+    kind: FuWacomUsbModuleFwType,
+    version: u16be,
+    version2: u8,
+}

@@ -20,7 +20,6 @@
 #include <sys/mman.h>
 #endif
 
-#include <json-glib/json-glib.h>
 #include <string.h>
 
 /**
@@ -131,13 +130,14 @@ fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind)
 const gchar *
 fwupd_checksum_get_best(GPtrArray *checksums)
 {
-	GChecksumType checksum_types[] = {G_CHECKSUM_SHA512,
-					  G_CHECKSUM_SHA256,
-					  G_CHECKSUM_SHA384,
-					  G_CHECKSUM_SHA1,
-					  0};
+	GChecksumType checksum_types[] = {
+	    G_CHECKSUM_SHA512,
+	    G_CHECKSUM_SHA256,
+	    G_CHECKSUM_SHA384,
+	    G_CHECKSUM_SHA1,
+	};
 	g_return_val_if_fail(checksums != NULL, NULL);
-	for (guint i = 0; checksum_types[i] != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(checksum_types); i++) {
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index(checksums, j);
 			if (fwupd_checksum_guess_kind(checksum) == checksum_types[i])

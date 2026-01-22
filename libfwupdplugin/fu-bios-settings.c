@@ -289,6 +289,7 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 {
 	g_autoptr(FwupdBiosSetting) attr = NULL;
 	g_autofree gchar *id = NULL;
+	g_autofree gchar *name_stripped = NULL;
 
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 	g_return_val_if_fail(name != NULL, FALSE);
@@ -297,7 +298,10 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 
 	attr = fu_bios_setting_new();
 
-	id = g_strdup_printf("com.%s.%s", driver, name);
+	name_stripped = g_strdup(name);
+	g_strdelimit(name_stripped, " ", '_');
+
+	id = g_strdup_printf("com.%s.%s", driver, name_stripped);
 	fwupd_bios_setting_set_name(attr, name);
 	fwupd_bios_setting_set_path(attr, path);
 	fwupd_bios_setting_set_id(attr, id);
@@ -550,35 +554,23 @@ fu_bios_settings_to_variant(FwupdCodec *codec, FwupdCodecFlags flags)
 }
 
 static gboolean
-fu_bios_settings_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_bios_settings_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(codec);
-	JsonArray *array;
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	obj = json_node_get_object(json_node);
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* this has to exist */
-	if (!json_object_has_member(obj, "BiosSettings")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no BiosSettings property in object");
+	json_arr = fwupd_json_object_get_array(json_obj, "BiosSettings", error);
+	if (json_arr == NULL)
 		return FALSE;
-	}
-	array = json_object_get_array_member(obj, "BiosSettings");
-	for (guint i = 0; i < json_array_get_length(array); i++) {
-		JsonNode *node_tmp = json_array_get_element(array, i);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
 		g_autoptr(FwupdBiosSetting) attr = fwupd_bios_setting_new(NULL, NULL);
-		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), node_tmp, error))
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), json_obj_tmp, error))
 			return FALSE;
 		g_ptr_array_add(self->attrs, g_steal_pointer(&attr));
 	}
@@ -619,6 +611,23 @@ fu_bios_settings_to_hash_kv(FuBiosSettings *self)
 				    g_strdup(fwupd_bios_setting_get_current_value(item_setting)));
 	}
 	return bios_settings;
+}
+
+/**
+ * fu_bios_settings_is_supported:
+ * @self: a #FuBiosSettings
+ *
+ * Determines if any BIOS settings are supported on this system.
+ *
+ * Returns: %TRUE if any BIOS settings are available, %FALSE otherwise
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_bios_settings_is_supported(FuBiosSettings *self)
+{
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
+	return self->attrs->len > 0;
 }
 
 /**

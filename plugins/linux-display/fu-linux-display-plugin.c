@@ -59,6 +59,8 @@ fu_linux_display_plugin_plugin_backend_device_added(FuPlugin *plugin,
 	if (fu_drm_device_get_edid(FU_DRM_DEVICE(device)) != NULL) {
 		if (!fu_device_setup(device, error))
 			return FALSE;
+		/* these devices are for display state tracking only, not for emulation */
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 		fu_plugin_device_add(plugin, device);
 	}
 	fu_linux_display_plugin_ensure_display_state(self);

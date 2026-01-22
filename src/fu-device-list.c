@@ -736,7 +736,6 @@ _fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *dono
 static void
 fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
-	GPtrArray *children = fu_device_get_children(item->device);
 	g_autofree gchar *str = NULL;
 
 	/* run the optional device-specific subclass */
@@ -789,23 +788,6 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 
 	/* device won't come back in right mode */
 	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
-
-	/* copy the parent if not already set */
-	if (fu_device_get_parent_internal(item->device) != NULL &&
-	    fu_device_get_parent_internal(item->device) != device &&
-	    fu_device_get_parent_internal(device) != item->device &&
-	    fu_device_get_parent_internal(device) == NULL) {
-		FuDevice *parent = fu_device_get_parent_internal(item->device);
-		g_info("copying parent %s to new device", fu_device_get_id(parent));
-		fu_device_set_parent(device, parent);
-	}
-
-	/* copy the children */
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index(children, i);
-		g_info("copying child %s to new device", fu_device_get_id(child));
-		fu_device_add_child(device, child);
-	}
 
 	/* assign the new device */
 	fu_device_list_item_set_device_old(item, item->device);

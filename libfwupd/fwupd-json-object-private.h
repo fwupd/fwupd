@@ -14,6 +14,10 @@ fwupd_json_object_append_string(FwupdJsonObject *self,
 				guint depth,
 				FwupdJsonExportFlags flags) G_GNUC_NON_NULL(1, 2);
 void
+fwupd_json_object_add_null_internal(FwupdJsonObject *self,
+				    GRefString *key,
+				    FwupdJsonLoadFlags flags) G_GNUC_NON_NULL(1, 2);
+void
 fwupd_json_object_add_raw_internal(FwupdJsonObject *self,
 				   GRefString *key,
 				   GRefString *value,

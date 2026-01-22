@@ -6,14 +6,8 @@
 
 #pragma once
 
+#include "fu-config-struct.h"
 #include "fu-config.h"
-
-typedef enum {
-	FU_CONFIG_LOAD_FLAG_NONE = 0,
-	FU_CONFIG_LOAD_FLAG_WATCH_FILES = 1 << 0,
-	FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS = 1 << 1,
-	FU_CONFIG_LOAD_FLAG_MIGRATE_FILES = 1 << 2,
-} G_GNUC_FLAG_ENUM FuConfigLoadFlags;
 
 FuConfig *
 fu_config_new(void);

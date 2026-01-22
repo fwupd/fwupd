@@ -1,0 +1,5 @@
+<firmware gtype="FuAlgoltekUsbcrFirmware">
+  <version_raw>0x258</version_raw>
+  <boot_ver>0x208</boot_ver>
+  <emmc_ver>0x401</emmc_ver>
+</firmware>

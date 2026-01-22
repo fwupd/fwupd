@@ -33,12 +33,12 @@ G_DEFINE_TYPE_EXTENDED(FuUsbHidDescriptor,
 					     fu_usb_hid_descriptor_codec_iface_init));
 
 static gboolean
-fu_usb_hid_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_usb_hid_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbHidDescriptor *self = FU_USB_HID_DESCRIPTOR(codec);
 	const gchar *tmp;
 
-	tmp = json_node_get_string(json_node);
+	tmp = fwupd_json_object_get_string(json_obj, "Data", NULL);
 	if (tmp != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(tmp, &bufsz);
@@ -51,7 +51,7 @@ fu_usb_hid_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError *
 }
 
 static void
-fu_usb_hid_descriptor_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_hid_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUsbHidDescriptor *self = FU_USB_HID_DESCRIPTOR(codec);
 	g_autofree gchar *str = NULL;
@@ -59,7 +59,7 @@ fu_usb_hid_descriptor_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCod
 	if (self->blob == NULL)
 		return;
 	str = g_base64_encode(g_bytes_get_data(self->blob, NULL), g_bytes_get_size(self->blob));
-	json_builder_add_string_value(builder, str);
+	fwupd_json_object_add_string(json_obj, "Data", str);
 }
 
 /**

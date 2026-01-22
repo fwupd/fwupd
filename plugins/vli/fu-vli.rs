@@ -112,24 +112,24 @@ enum FuVliDeviceKind {
 }
 
 enum FuVliDeviceFwTag {
-    VL100A = 0x01,
-    VL100B = 0x02,
-    VL100C = 0x03,
-    VL101A = 0x04,
-    VL101B = 0x05,
-    VL101C = 0x06,
-    VL102A = 0x07,
-    VL102B = 0x08,
-    VL103A = 0x09,
-    VL103B = 0x0A,
-    VL104  = 0x0B,
-    VL105  = 0x0C,
-    VL106  = 0x0D,
-    VL107  = 0x0E,
-    VL108A = 0xA1,
-    VL108B = 0xB1,
-    VL109A = 0xA2,
-    VL109B = 0xB2,
+    Vl100a = 0x01,
+    Vl100b = 0x02,
+    Vl100c = 0x03,
+    Vl101a = 0x04,
+    Vl101b = 0x05,
+    Vl101c = 0x06,
+    Vl102a = 0x07,
+    Vl102b = 0x08,
+    Vl103a = 0x09,
+    Vl103b = 0x0A,
+    Vl104  = 0x0B,
+    Vl105  = 0x0C,
+    Vl106  = 0x0D,
+    Vl107  = 0x0E,
+    Vl108a = 0xA1,
+    Vl108b = 0xB1,
+    Vl109a = 0xA2,
+    Vl109b = 0xB2,
 }
 
 enum FuVliUsbhubRtd21xxIspStatus {
@@ -148,4 +148,13 @@ enum FuVliUsbhubRtd21xxIspCmd {
     FwUpdateIspDone,
     FwUpdateExit,
     FwUpdateReset,
+}
+
+enum FuVliUsbhubI2cStatus {
+    Ok = 0x00,
+    Header = 0x51,
+    Command = 0x52,
+    Address = 0x53,
+    Packetsize = 0x54,
+    Checksum = 0x55,
 }
