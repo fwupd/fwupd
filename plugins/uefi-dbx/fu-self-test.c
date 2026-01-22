@@ -115,7 +115,7 @@ static void
 fu_uefi_dbx_not_present_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) ms_blob = NULL;
