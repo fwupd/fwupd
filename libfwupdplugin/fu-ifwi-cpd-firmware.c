@@ -131,6 +131,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
+		fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 		offset += extension_length;
@@ -343,6 +344,7 @@ fu_ifwi_cpd_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 static void
 fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }

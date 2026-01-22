@@ -237,7 +237,7 @@ static void
 fu_efi_variable_authentication2_init(FuEfiVariableAuthentication2 *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
-	g_type_ensure(FU_TYPE_EFI_SIGNATURE_LIST);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	self->signers = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 

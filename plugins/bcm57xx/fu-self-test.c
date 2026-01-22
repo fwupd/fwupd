@@ -149,9 +149,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	g_test_init(&argc, &argv, NULL);
-	g_type_ensure(FU_TYPE_BCM57XX_STAGE1_IMAGE);
-	g_type_ensure(FU_TYPE_BCM57XX_STAGE2_IMAGE);
-	g_type_ensure(FU_TYPE_BCM57XX_DICT_IMAGE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);

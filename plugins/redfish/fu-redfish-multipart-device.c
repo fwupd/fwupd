@@ -42,32 +42,23 @@ fu_redfish_multipart_device_set_apply_time(FuRedfishMultipartDevice *self, const
 static GString *
 fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
 {
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
 	/* create header */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Targets");
-	json_builder_begin_array(builder);
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS)) {
 		const gchar *logical_id = fu_device_get_logical_id(FU_DEVICE(self));
-		json_builder_add_string_value(builder, logical_id);
+		fwupd_json_array_add_string(json_arr, logical_id);
 	}
-	json_builder_end_array(builder);
+	fwupd_json_object_add_array(json_obj, "Targets", json_arr);
 	if (self->apply_time != NULL) {
-		json_builder_set_member_name(builder, "@Redfish.OperationApplyTime");
-		json_builder_add_string_value(builder, self->apply_time);
+		fwupd_json_object_add_string(json_obj,
+					     "@Redfish.OperationApplyTime",
+					     self->apply_time);
 	}
-	json_builder_end_object(builder);
 
 	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, str);
-	return g_steal_pointer(&str);
+	return fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
 }
 
 static size_t
@@ -94,9 +85,9 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	FuRedfishMultipartDevice *self = FU_REDFISH_MULTIPART_DEVICE(device);
 	FuRedfishBackend *backend;
 	CURL *curl;
-	JsonObject *json_obj;
 	curl_mimepart *part;
 	const gchar *location;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -154,13 +145,14 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	/* prefer the header, otherwise fall back to the response */
 	if (location == NULL || g_utf8_strlen(location, 1) == 0) {
 		json_obj = fu_redfish_request_get_json_object(request);
-		if (json_object_has_member(json_obj, "TaskMonitor")) {
-			const gchar *tmp = json_object_get_string_member(json_obj, "TaskMonitor");
+		if (fwupd_json_object_has_node(json_obj, "TaskMonitor")) {
+			const gchar *tmp =
+			    fwupd_json_object_get_string(json_obj, "TaskMonitor", NULL);
 			g_debug("task manager for cleanup is %s", tmp);
 		}
 
 		/* poll the task for progress */
-		if (!json_object_has_member(json_obj, "@odata.id")) {
+		if (!fwupd_json_object_has_node(json_obj, "@odata.id")) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -168,7 +160,9 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 				    fu_redfish_backend_get_push_uri_path(backend));
 			return FALSE;
 		}
-		location = json_object_get_string_member(json_obj, "@odata.id");
+		location = fwupd_json_object_get_string(json_obj, "@odata.id", error);
+		if (location == NULL)
+			return FALSE;
 	}
 	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }

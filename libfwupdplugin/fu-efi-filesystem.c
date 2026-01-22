@@ -135,7 +135,8 @@ fu_efi_filesystem_init(FuEfiFilesystem *self)
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_FILESYSTEM_FILES_MAX);
 #endif
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
-	g_type_ensure(FU_TYPE_EFI_FILE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILE);
 }
 
 static void

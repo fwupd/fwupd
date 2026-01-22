@@ -248,6 +248,7 @@ fu_vbe_simple_device_prepare_firmware(FuDevice *device,
 		    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(firmware), path, error);
 		if (img_firmware == NULL)
 			return NULL;
+		fu_firmware_add_image_gtype(firmware_container, FU_TYPE_FDT_IMAGE);
 		if (!fu_firmware_add_image(firmware_container, FU_FIRMWARE(img_firmware), error))
 			return NULL;
 	}

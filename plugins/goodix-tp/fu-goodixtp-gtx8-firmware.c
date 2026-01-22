@@ -212,6 +212,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 static void
 fu_goodixtp_gtx8_firmware_init(FuGoodixtpGtx8Firmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 

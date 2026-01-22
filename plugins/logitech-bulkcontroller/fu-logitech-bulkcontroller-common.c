@@ -148,14 +148,15 @@ fu_logitech_bulkcontroller_usb_msg_parse_msg_response(Logi__Device__Proto__UsbMs
 	case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_GET_DEVICE_INFO_RESPONSE:
 		if (usb_msg->response->get_device_info_response) {
 			const gchar *tmp = usb_msg->response->get_device_info_response->payload;
-			*proto_id = kProtoId_GetDeviceInfoResponse;
+			*proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_GET_DEVICE_INFO_RESPONSE;
 			if (tmp != NULL)
 				g_byte_array_append(buf, (const guint8 *)tmp, strlen(tmp));
 		}
 		break;
 	case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_TRANSITION_TO_DEVICEMODE_RESPONSE:
 		if (usb_msg->response->transition_to_devicemode_response) {
-			*proto_id = kProtoId_TransitionToDeviceModeResponse;
+			*proto_id =
+			    FU_LOGITECH_BULKCONTROLLER_PROTO_ID_TRANSITION_TO_DEVICE_MODE_RESPONSE;
 			if (!usb_msg->response->transition_to_devicemode_response->success) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -190,17 +191,17 @@ fu_logitech_bulkcontroller_usb_msg_parse_msg_event(Logi__Device__Proto__UsbMsg *
 	case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_KONG_EVENT:
 		if (usb_msg->event->kong_event) {
 			const gchar *tmp = usb_msg->event->kong_event->mqtt_event;
-			*proto_id = kProtoId_KongEvent;
+			*proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_KONG_EVENT;
 			if (tmp != NULL)
 				g_byte_array_append(buf, (const guint8 *)tmp, strlen(tmp));
 		}
 		break;
 	case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_HANDSHAKE_EVENT:
 		if (usb_msg->event->handshake_event)
-			*proto_id = kProtoId_HandshakeEvent;
+			*proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_HANDSHAKE_EVENT;
 		break;
 	case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_CRASH_DUMP_AVAILABLE_EVENT:
-		*proto_id = kProtoId_CrashDumpAvailableEvent;
+		*proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_CRASH_DUMP_AVAILABLE_EVENT;
 		break;
 	default:
 		break;
@@ -232,7 +233,7 @@ fu_logitech_bulkcontroller_proto_manager_decode_message(const guint8 *data,
 	switch (usb_msg->message_case) {
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_ACK:
 		buf = g_byte_array_new();
-		*proto_id = kProtoId_Ack;
+		*proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_ACK;
 		break;
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_RESPONSE:
 		buf =

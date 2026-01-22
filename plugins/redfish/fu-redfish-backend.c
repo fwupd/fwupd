@@ -101,7 +101,9 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 }
 
 static gboolean
-fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, GError **error)
+fu_redfish_backend_coldplug_member(FuRedfishBackend *self,
+				   FwupdJsonObject *json_obj,
+				   GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -114,7 +116,7 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 			   "backend",
 			   self,
 			   "member",
-			   member,
+			   json_obj,
 			   NULL);
 
 	/* Dell specific currently */
@@ -148,25 +150,26 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 
 static gboolean
 fu_redfish_backend_coldplug_collection(FuRedfishBackend *self,
-				       JsonObject *collection,
+				       FwupdJsonObject *json_obj,
 				       GError **error)
 {
-	JsonArray *members = json_object_get_array_member(collection, "Members");
-	for (guint i = 0; i < json_array_get_length(members); i++) {
-		JsonObject *json_obj;
-		JsonObject *member_id;
+	g_autoptr(FwupdJsonArray) json_arr_members = NULL;
+
+	json_arr_members = fwupd_json_object_get_array(json_obj, "Members", error);
+	if (json_arr_members == NULL)
+		return FALSE;
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr_members); i++) {
 		const gchar *member_uri;
 		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+		g_autoptr(FwupdJsonObject) json_obj_member = NULL;
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
 
-		member_id = json_array_get_object_element(members, i);
-		member_uri = json_object_get_string_member(member_id, "@odata.id");
-		if (member_uri == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "no @odata.id string");
+		json_obj_member = fwupd_json_array_get_object(json_arr_members, i, error);
+		if (json_obj_member == NULL)
 			return FALSE;
-		}
+		member_uri = fwupd_json_object_get_string(json_obj_member, "@odata.id", error);
+		if (member_uri == NULL)
+			return FALSE;
 
 		/* create the device for the member */
 		if (!fu_redfish_request_perform(request,
@@ -174,37 +177,25 @@ fu_redfish_backend_coldplug_collection(FuRedfishBackend *self,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 						error))
 			return FALSE;
-		json_obj = fu_redfish_request_get_json_object(request);
-		if (!fu_redfish_backend_coldplug_member(self, json_obj, error))
+		json_obj_tmp = fu_redfish_request_get_json_object(request);
+		if (!fu_redfish_backend_coldplug_member(self, json_obj_tmp, error))
 			return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_redfish_backend_coldplug_inventory(FuRedfishBackend *self, JsonObject *inventory, GError **error)
+fu_redfish_backend_coldplug_inventory(FuRedfishBackend *self,
+				      FwupdJsonObject *json_inventory,
+				      GError **error)
 {
-	JsonObject *json_obj;
 	const gchar *collection_uri;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
-	if (inventory == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no inventory object");
+	collection_uri = fwupd_json_object_get_string(json_inventory, "@odata.id", error);
+	if (collection_uri == NULL)
 		return FALSE;
-	}
-
-	collection_uri = json_object_get_string_member(inventory, "@odata.id");
-	if (collection_uri == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no @odata.id string");
-		return FALSE;
-	}
-
 	if (!fu_redfish_request_perform(request,
 					collection_uri,
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
@@ -260,14 +251,10 @@ gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 {
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
-	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "UserName");
-	json_builder_add_string_value(builder, self->username);
-	json_builder_set_member_name(builder, "Password");
-	json_builder_add_string_value(builder, self->password);
-	json_builder_end_object(builder);
+	fwupd_json_object_add_string(json_obj, "UserName", self->username);
+	fwupd_json_object_add_string(json_obj, "Password", self->password);
 
 	(void)curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_HEADERDATA, self);
 	(void)curl_easy_setopt(fu_redfish_request_get_curl(request),
@@ -278,7 +265,7 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 	if (!fu_redfish_request_perform_full(request,
 					     "/redfish/v1/SessionService/Sessions",
 					     "POST",
-					     builder,
+					     json_obj,
 					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					     error))
 		return FALSE;
@@ -302,29 +289,35 @@ fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_u
 }
 
 static gboolean
-fu_redfish_backend_has_smc_update_path(JsonObject *update_svc)
+fu_redfish_backend_has_smc_update_path(FwupdJsonObject *json_obj)
 {
-	JsonObject *tmp_obj;
 	const gchar *tmp_str;
+	g_autoptr(FwupdJsonObject) json_actions = NULL;
+	g_autoptr(FwupdJsonObject) json_start = NULL;
 
-	if (!json_object_has_member(update_svc, "Actions"))
+	json_actions = fwupd_json_object_get_object(json_obj, "Actions", NULL);
+	if (json_actions == NULL)
 		return FALSE;
-	tmp_obj = json_object_get_object_member(update_svc, "Actions");
-	if (tmp_obj == NULL || !json_object_has_member(tmp_obj, "#UpdateService.StartUpdate"))
+	json_start = fwupd_json_object_get_object(json_actions, "#UpdateService.StartUpdate", NULL);
+	if (json_start == NULL)
 		return FALSE;
-	tmp_obj = json_object_get_object_member(tmp_obj, "#UpdateService.StartUpdate");
-	if (tmp_obj == NULL || !json_object_has_member(tmp_obj, "target"))
+	tmp_str = fwupd_json_object_get_string(json_start, "target", NULL);
+	if (tmp_str == NULL)
 		return FALSE;
-	tmp_str = json_object_get_string_member(tmp_obj, "target");
-	return g_str_equal(tmp_str, "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate");
+	return g_strcmp0(tmp_str, "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate") ==
+	       0;
 }
 
 static gboolean
 fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
-	JsonObject *json_obj;
+	gboolean service_enabled = FALSE;
+	gint64 max_image_size = 0;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FwupdJsonObject) json_firmware = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonObject) json_software = NULL;
 
 	/* nothing set */
 	if (self->update_uri_path == NULL) {
@@ -338,19 +331,24 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					error))
 		return FALSE;
+
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (!json_object_has_member(json_obj, "ServiceEnabled")) {
-		if (!json_object_get_boolean_member(json_obj, "ServiceEnabled")) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "service is not enabled");
-			return FALSE;
-		}
+	if (!fwupd_json_object_get_boolean_with_default(json_obj,
+							"ServiceEnabled",
+							&service_enabled,
+							TRUE,
+							error))
+		return FALSE;
+	if (!service_enabled) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "service is not enabled");
+		return FALSE;
 	}
-	if (self->push_uri_path == NULL &&
-	    json_object_has_member(json_obj, "MultipartHttpPushUri")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "MultipartHttpPushUri");
+	if (self->push_uri_path == NULL) {
+		const gchar *tmp =
+		    fwupd_json_object_get_string(json_obj, "MultipartHttpPushUri", NULL);
 		if (tmp != NULL) {
 			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
 			    fu_redfish_backend_has_smc_update_path(json_obj)) {
@@ -361,8 +359,8 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 			fu_redfish_backend_set_push_uri_path(self, tmp);
 		}
 	}
-	if (self->push_uri_path == NULL && json_object_has_member(json_obj, "HttpPushUri")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "HttpPushUri");
+	if (self->push_uri_path == NULL) {
+		const gchar *tmp = fwupd_json_object_get_string(json_obj, "HttpPushUri", NULL);
 		if (tmp != NULL) {
 			if (self->vendor != NULL && g_str_equal(self->vendor, "HPE"))
 				self->device_gtype = FU_TYPE_REDFISH_HPE_DEVICE;
@@ -378,17 +376,21 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 				    "HttpPushUri and MultipartHttpPushUri are invalid");
 		return FALSE;
 	}
-	if (json_object_has_member(json_obj, "MaxImageSizeBytes")) {
-		self->max_image_size = json_object_get_int_member(json_obj, "MaxImageSizeBytes");
-	}
-	if (json_object_has_member(json_obj, "FirmwareInventory")) {
-		JsonObject *tmp = json_object_get_object_member(json_obj, "FirmwareInventory");
-		return fu_redfish_backend_coldplug_inventory(self, tmp, error);
-	}
-	if (json_object_has_member(json_obj, "SoftwareInventory")) {
-		JsonObject *tmp = json_object_get_object_member(json_obj, "SoftwareInventory");
-		return fu_redfish_backend_coldplug_inventory(self, tmp, error);
-	}
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"MaxImageSizeBytes",
+							&max_image_size,
+							-1,
+							error))
+		return FALSE;
+	if (max_image_size != -1)
+		self->max_image_size = max_image_size;
+
+	json_firmware = fwupd_json_object_get_object(json_obj, "FirmwareInventory", NULL);
+	if (json_firmware != NULL)
+		return fu_redfish_backend_coldplug_inventory(self, json_firmware, error);
+	json_software = fwupd_json_object_get_object(json_obj, "SoftwareInventory", NULL);
+	if (json_software != NULL)
+		return fu_redfish_backend_coldplug_inventory(self, json_software, error);
 
 	/* work out if we have multiple devices with the same SoftwareId */
 	if (self->wildcard_targets)
@@ -414,11 +416,12 @@ fu_redfish_backend_setup_dell_member(FuRedfishBackend *self,
 				     const gchar *member_uri,
 				     GError **error)
 {
-	JsonObject *dell_obj;
-	JsonObject *dell_system_obj;
-	JsonObject *json_obj;
-	JsonObject *oem_obj;
+	gint64 system_id = 0;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonObject) json_oem_dell = NULL;
+	g_autoptr(FwupdJsonObject) json_oem_dell_system = NULL;
+	g_autoptr(FwupdJsonObject) json_oem = NULL;
 
 	if (!fu_redfish_request_perform(request,
 					member_uri,
@@ -426,71 +429,41 @@ fu_redfish_backend_setup_dell_member(FuRedfishBackend *self,
 					error))
 		return FALSE;
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (!json_object_has_member(json_obj, "Oem")) {
+	if (!fwupd_json_object_has_node(json_obj, "Oem")) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no Oem in Member");
 		return FALSE;
 	}
-	oem_obj = json_object_get_object_member(json_obj, "Oem");
-	if (oem_obj == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no valid Oem in Member");
+	json_oem = fwupd_json_object_get_object(json_obj, "Oem", error);
+	if (json_oem == NULL)
+		return FALSE;
+	json_oem_dell = fwupd_json_object_get_object(json_oem, "Dell", error);
+	if (json_oem_dell == NULL) {
+		g_prefix_error_literal(error, "no OEM/Dell: ");
 		return FALSE;
 	}
-	if (!json_object_has_member(oem_obj, "Dell")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no OEM/Dell in Member");
+	json_oem_dell_system = fwupd_json_object_get_object(json_oem_dell, "DellSystem", error);
+	if (json_oem_dell_system == NULL) {
+		g_prefix_error_literal(error, "no OEM/Dell/DellSystem: ");
 		return FALSE;
 	}
-	dell_obj = json_object_get_object_member(oem_obj, "Dell");
-	if (dell_obj == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no valid OEM/Dell in Member");
-		return FALSE;
-	}
-	if (!json_object_has_member(dell_obj, "DellSystem")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no OEM/Dell/DellSystem in Member");
-		return FALSE;
-	}
-	dell_system_obj = json_object_get_object_member(dell_obj, "DellSystem");
-	if (dell_system_obj == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no valid OEM/Dell/DellSystem in Member");
-		return FALSE;
-	}
-	if (!json_object_has_member(dell_system_obj, "SystemID")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no OEM/Dell/DellSystem/SystemID in Member");
+	if (!fwupd_json_object_get_integer(json_oem_dell_system, "SystemID", &system_id, error)) {
+		g_prefix_error_literal(error, "no OEM/Dell/DellSystem/SystemID: ");
 		return FALSE;
 	}
 
 	/* success */
-	self->system_id =
-	    g_strdup_printf("%04X",
-			    (guint16)json_object_get_int_member(dell_system_obj, "SystemID"));
+	self->system_id = g_strdup_printf("%04X", (guint16)system_id);
 	return TRUE;
 }
 
 static gboolean
 fu_redfish_backend_setup_dell(FuRedfishBackend *self, GError **error)
 {
-	JsonObject *member;
-	JsonArray *members;
-	JsonObject *json_obj;
 	const gchar *member_uri;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+	g_autoptr(FwupdJsonArray) json_arr_members = NULL;
+	g_autoptr(FwupdJsonObject) json_obj_member = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
 
 	if (!fu_redfish_request_perform(request,
 					"/redfish/v1/Systems",
@@ -498,20 +471,22 @@ fu_redfish_backend_setup_dell(FuRedfishBackend *self, GError **error)
 					error))
 		return FALSE;
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (!json_object_has_member(json_obj, "Members")) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no Members object");
+	json_arr_members = fwupd_json_object_get_array(json_obj, "Members", error);
+	if (json_arr_members == NULL)
 		return FALSE;
-	}
-	members = json_object_get_array_member(json_obj, "Members");
-	if (json_array_get_length(members) == 0) {
+	if (fwupd_json_array_get_size(json_arr_members) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
 				    "empty Members array");
 		return FALSE;
 	}
-	member = json_array_get_object_element(members, 0);
-	member_uri = json_object_get_string_member(member, "@odata.id");
+	json_obj_member = fwupd_json_array_get_object(json_arr_members, 0, error);
+	if (json_obj_member == NULL)
+		return FALSE;
+	member_uri = fwupd_json_object_get_string(json_obj_member, "@odata.id", error);
+	if (member_uri == NULL)
+		return FALSE;
 	return fu_redfish_backend_setup_dell_member(self, member_uri, error);
 }
 
@@ -522,8 +497,8 @@ fu_redfish_backend_setup(FuBackend *backend,
 			 GError **error)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
-	JsonObject *json_obj;
-	JsonObject *json_update_service = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonObject) json_update_service = NULL;
 	const gchar *data_id;
 	const gchar *version = NULL;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
@@ -545,44 +520,33 @@ fu_redfish_backend_setup(FuBackend *backend,
 					error))
 		return FALSE;
 	json_obj = fu_redfish_request_get_json_object(request);
-	if (json_object_has_member(json_obj, "ServiceVersion")) {
-		version = json_object_get_string_member(json_obj, "ServiceVersion");
-	} else if (json_object_has_member(json_obj, "RedfishVersion")) {
-		version = json_object_get_string_member(json_obj, "RedfishVersion");
+	if (fwupd_json_object_has_node(json_obj, "ServiceVersion")) {
+		version = fwupd_json_object_get_string(json_obj, "ServiceVersion", NULL);
+	} else if (fwupd_json_object_has_node(json_obj, "RedfishVersion")) {
+		version = fwupd_json_object_get_string(json_obj, "RedfishVersion", NULL);
 	}
 	if (version != NULL) {
 		g_free(self->version);
 		self->version = g_strdup(version);
 	}
-	if (json_object_has_member(json_obj, "UUID")) {
+	if (fwupd_json_object_has_node(json_obj, "UUID")) {
 		g_free(self->uuid);
-		self->uuid = g_strdup(json_object_get_string_member(json_obj, "UUID"));
+		self->uuid = g_strdup(fwupd_json_object_get_string(json_obj, "UUID", NULL));
 	}
-	if (json_object_has_member(json_obj, "Vendor")) {
+	if (fwupd_json_object_has_node(json_obj, "Vendor")) {
 		g_free(self->vendor);
-		self->vendor = g_strdup(json_object_get_string_member(json_obj, "Vendor"));
+		self->vendor = g_strdup(fwupd_json_object_get_string(json_obj, "Vendor", NULL));
 	}
 	if (g_strcmp0(self->vendor, "Dell") == 0) {
 		if (!fu_redfish_backend_setup_dell(self, error))
 			return FALSE;
 	}
-	if (json_object_has_member(json_obj, "UpdateService"))
-		json_update_service = json_object_get_object_member(json_obj, "UpdateService");
-	if (json_update_service == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no UpdateService object");
+	json_update_service = fwupd_json_object_get_object(json_obj, "UpdateService", error);
+	if (json_update_service == NULL)
 		return FALSE;
-	}
-	data_id = json_object_get_string_member(json_update_service, "@odata.id");
-	if (data_id == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no @odata.id string");
+	data_id = fwupd_json_object_get_string(json_update_service, "@odata.id", error);
+	if (data_id == NULL)
 		return FALSE;
-	}
 	fu_redfish_backend_set_update_uri_path(self, data_id);
 	return TRUE;
 }

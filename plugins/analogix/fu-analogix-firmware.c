@@ -121,6 +121,7 @@ fu_analogix_firmware_init(FuAnalogixFirmware *self)
 {
 	fu_ihex_firmware_set_padding_value(FU_IHEX_FIRMWARE(self), 0xFF);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

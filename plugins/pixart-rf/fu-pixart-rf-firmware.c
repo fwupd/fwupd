@@ -1,0 +1,323 @@
+/*
+ * Copyright 2020 Jimmy Yu <Jimmy_yu@pixart.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include "fu-pixart-rf-common.h"
+#include "fu-pixart-rf-firmware.h"
+
+#define PIXART_RF_FW_HEADER_SIZE       32 /* bytes */
+#define PIXART_RF_FW_HEADER_TAG_OFFSET 24
+/* The hpac header is start from 821st byte from the end */
+#define PIXART_RF_FW_HEADER_HPAC_POS_FROM_END	      821
+#define PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END 823
+
+#define PIXART_RF_FW_HEADER_MAGIC 0x55AA55AA55AA55AA
+
+struct _FuPixartRfFirmware {
+	FuFirmware parent_instance;
+	gchar *model_name;
+	gboolean is_hpac;
+};
+
+G_DEFINE_TYPE(FuPixartRfFirmware, fu_pixart_rf_firmware, FU_TYPE_FIRMWARE)
+
+const gchar *
+fu_pixart_rf_firmware_get_model_name(FuPixartRfFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_PIXART_RF_FIRMWARE(self), NULL);
+	return self->model_name;
+}
+
+static void
+fu_pixart_rf_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
+	fu_xmlb_builder_insert_kv(bn, "model_name", self->model_name);
+}
+
+static gboolean
+fu_pixart_rf_firmware_validate(FuFirmware *firmware,
+			       GInputStream *stream,
+			       gsize offset,
+			       GError **error)
+{
+	guint64 magic = 0;
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
+	gsize streamsz = 0;
+
+	/* is a footer, in normal bin file, the header is starts from the 32nd byte from the end. */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz < PIXART_RF_FW_HEADER_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
+	if (!fu_input_stream_read_u64(stream,
+				      streamsz - PIXART_RF_FW_HEADER_SIZE +
+					  PIXART_RF_FW_HEADER_TAG_OFFSET,
+				      &magic,
+				      G_BIG_ENDIAN,
+				      error)) {
+		g_prefix_error_literal(error, "failed to read magic: ");
+		return FALSE;
+	}
+	if (magic != PIXART_RF_FW_HEADER_MAGIC) {
+		/* if the magic number is not found, then start from the 821st byte from the end for
+		 * HPAC header */
+		if (!fu_input_stream_read_u64(stream,
+					      streamsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END +
+						  PIXART_RF_FW_HEADER_TAG_OFFSET,
+					      &magic,
+					      G_BIG_ENDIAN,
+					      error)) {
+			g_prefix_error_literal(error, "failed to read magic: ");
+			return FALSE;
+		}
+		if (magic != PIXART_RF_FW_HEADER_MAGIC) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid magic, expected 0x%08X got 0x%08X",
+				    (guint32)PIXART_RF_FW_HEADER_MAGIC,
+				    (guint32)magic);
+			return FALSE;
+		}
+		self->is_hpac = TRUE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_pixart_rf_firmware_parse(FuFirmware *firmware,
+			    GInputStream *stream,
+			    FuFirmwareParseFlags flags,
+			    GError **error)
+{
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
+	gsize streamsz = 0;
+	guint32 version_raw = 0;
+	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE] = {0};
+	guint8 model_name[FU_PIXART_RF_DEVICE_MODEL_NAME_LEN] = {0x0};
+	guint16 hpac_ver = 0;
+	g_autofree gchar *version = NULL;
+
+	/* get fw header from buf */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (fu_pixart_rf_firmware_is_hpac(self)) {
+		if (streamsz < PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "image is too small");
+			return FALSE;
+		}
+		if (!fu_input_stream_read_safe(stream,
+					       fw_header,
+					       sizeof(fw_header),
+					       0x0,
+					       streamsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END,
+					       sizeof(fw_header),
+					       error)) {
+			g_prefix_error_literal(error, "failed to read fw header: ");
+			return FALSE;
+		}
+	} else {
+		if (streamsz < sizeof(fw_header)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "image is too small");
+			return FALSE;
+		}
+		if (!fu_input_stream_read_safe(stream,
+					       fw_header,
+					       sizeof(fw_header),
+					       0x0,
+					       streamsz - sizeof(fw_header),
+					       sizeof(fw_header),
+					       error)) {
+			g_prefix_error_literal(error, "failed to read fw header: ");
+			return FALSE;
+		}
+	}
+
+	fu_dump_raw(G_LOG_DOMAIN, "fw header", fw_header, sizeof(fw_header));
+
+	/* set fw version */
+	if (fu_pixart_rf_firmware_is_hpac(self)) {
+		if (!fu_input_stream_read_u16(stream,
+					      streamsz -
+						  PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END,
+					      &hpac_ver,
+					      G_BIG_ENDIAN,
+					      error))
+			return FALSE;
+
+		version_raw = hpac_ver;
+		version = fu_pixart_rf_hpac_version_info_parse(hpac_ver);
+	} else {
+		version_raw = (((guint32)(fw_header[0] - '0')) << 16) +
+			      (((guint32)(fw_header[2] - '0')) << 8) +
+			      (guint32)(fw_header[4] - '0');
+		version = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_DELL_BIOS);
+	}
+	fu_firmware_set_version_raw(firmware, version_raw);
+	fu_firmware_set_version(firmware, version); /* nocheck:set-version */
+
+	/* set fw model name */
+	if (!fu_memcpy_safe(model_name,
+			    sizeof(model_name),
+			    0x0,
+			    fw_header,
+			    sizeof(fw_header),
+			    0x05,
+			    sizeof(model_name),
+			    error)) {
+		g_prefix_error_literal(error, "failed to get fw model name: ");
+		return FALSE;
+	}
+	self->model_name = g_strndup((gchar *)model_name, sizeof(model_name));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_pixart_rf_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
+	const gchar *tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text(n, "model_name", NULL);
+	if (tmp != NULL)
+		self->model_name = g_strdup(tmp);
+
+	/* success */
+	return TRUE;
+}
+
+static GByteArray *
+fu_pixart_rf_firmware_write(FuFirmware *firmware, GError **error)
+{
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(firmware);
+	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE] = {0x0};
+	guint64 version_raw = fu_firmware_get_version_raw(firmware);
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	const guint8 tag[] = {
+	    0x55,
+	    0xAA,
+	    0x55,
+	    0xAA,
+	    0x55,
+	    0xAA,
+	    0x55,
+	    0xAA,
+	};
+
+	/* data first */
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
+	if (blob == NULL)
+		return NULL;
+
+	if (fu_pixart_rf_firmware_is_hpac(self)) {
+		buf = g_byte_array_sized_new(g_bytes_get_size(blob));
+		fu_byte_array_append_bytes(buf, blob);
+		return g_steal_pointer(&buf);
+	}
+
+	buf = g_byte_array_sized_new(g_bytes_get_size(blob) + sizeof(fw_header));
+	fu_byte_array_append_bytes(buf, blob);
+
+	/* footer */
+	if (!fu_memcpy_safe(fw_header,
+			    sizeof(fw_header),
+			    PIXART_RF_FW_HEADER_TAG_OFFSET, /* dst */
+			    tag,
+			    sizeof(tag),
+			    0x0, /* src */
+			    sizeof(tag),
+			    error))
+		return NULL;
+	fw_header[0] = ((version_raw >> 16) & 0xff) + '0';
+	fw_header[1] = '.';
+	fw_header[2] = ((version_raw >> 8) & 0xff) + '0';
+	fw_header[3] = '.';
+	fw_header[4] = ((version_raw >> 0) & 0xff) + '0';
+	if (!g_ascii_isdigit(fw_header[0]) || !g_ascii_isdigit(fw_header[2]) ||
+	    !g_ascii_isdigit(fw_header[4])) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot write invalid version number 0x%x",
+			    (guint)version_raw);
+		return NULL;
+	}
+	if (self->model_name != NULL) {
+		gsize model_namesz =
+		    MIN(strlen(self->model_name), FU_PIXART_RF_DEVICE_MODEL_NAME_LEN);
+		if (!fu_memcpy_safe(fw_header,
+				    sizeof(fw_header),
+				    0x05, /* dst */
+				    (const guint8 *)self->model_name,
+				    model_namesz,
+				    0x0, /* src */
+				    model_namesz,
+				    error)) {
+			g_prefix_error_literal(error, "failed to get fw model name: ");
+			return NULL;
+		}
+	}
+
+	g_byte_array_append(buf, fw_header, sizeof(fw_header));
+	return g_steal_pointer(&buf);
+}
+
+static void
+fu_pixart_rf_firmware_init(FuPixartRfFirmware *self)
+{
+}
+
+static void
+fu_pixart_rf_firmware_finalize(GObject *object)
+{
+	FuPixartRfFirmware *self = FU_PIXART_RF_FIRMWARE(object);
+	g_free(self->model_name);
+	G_OBJECT_CLASS(fu_pixart_rf_firmware_parent_class)->finalize(object);
+}
+
+static void
+fu_pixart_rf_firmware_class_init(FuPixartRfFirmwareClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	object_class->finalize = fu_pixart_rf_firmware_finalize;
+	firmware_class->validate = fu_pixart_rf_firmware_validate;
+	firmware_class->parse = fu_pixart_rf_firmware_parse;
+	firmware_class->build = fu_pixart_rf_firmware_build;
+	firmware_class->write = fu_pixart_rf_firmware_write;
+	firmware_class->export = fu_pixart_rf_firmware_export;
+}
+
+FuFirmware *
+fu_pixart_rf_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_PIXART_RF_FIRMWARE, NULL));
+}
+
+gboolean
+fu_pixart_rf_firmware_is_hpac(FuPixartRfFirmware *self)
+{
+	return self->is_hpac;
+}

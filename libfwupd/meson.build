@@ -10,6 +10,57 @@ fwupd_version_h = configure_file(
 
 base_dir = 'fwupd-' + libfwupd_lt_current
 
+fwupd_structs = [
+  'fwupd-bios-setting.rs', # fuzzing
+  'fwupd-client.rs', # fuzzing
+  'fwupd-codec.rs', # fuzzing
+  'fwupd-device.rs', # fuzzing
+  'fwupd-enums.rs', # fuzzing
+  'fwupd-error.rs', # fuzzing
+  'fwupd-json.rs', # fuzzing
+  'fwupd-plugin.rs', # fuzzing
+  'fwupd-release.rs', # fuzzing
+  'fwupd-remote.rs', # fuzzing
+  'fwupd-report.rs', # fuzzing
+  'fwupd-request.rs', # fuzzing
+  'fwupd-security-attr.rs', # fuzzing
+]
+
+# do not use structgen as these are referenced in headers too...
+fwupd_rs_targets = []
+foreach fwupd_struct : fwupd_structs
+  fwupd_rs_targets += custom_target(
+    'lib' + fwupd_struct + '.h',
+    input: fwupd_struct,
+    output: fwupd_struct.replace('.rs', '-struct.h'),
+    command: [
+      python3,
+      join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+      '--include',
+      'libfwupd/fwupd-build.h',
+      '@INPUT@',
+      '--outh',
+      '@OUTPUT@',
+    ],
+    install: true,
+    install_dir: join_paths(includedir, base_dir, 'libfwupd'),
+  )
+  fwupd_rs_targets += custom_target(
+    'lib' + fwupd_struct + '.c',
+    input: fwupd_struct,
+    output: fwupd_struct.replace('.rs', '-struct.c'),
+    command: [
+      python3,
+      join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+      '--include',
+      'fwupd-build.h',
+      '@INPUT@',
+      '--outc',
+      '@OUTPUT@',
+    ],
+  )
+endforeach
+
 install_headers(
   'fwupd.h',
   subdir: base_dir,
@@ -28,6 +79,11 @@ install_headers(
     'fwupd-remote.h',
     'fwupd-report.h',
     'fwupd-request.h',
+    'fwupd-json-array.h',
+    'fwupd-json-common.h',
+    'fwupd-json-node.h',
+    'fwupd-json-object.h',
+    'fwupd-json-parser.h',
     'fwupd-bios-setting.h',
     'fwupd-security-attr.h',
     'fwupd-release.h',
@@ -45,9 +101,13 @@ libfwupd_src = [
   'fwupd-common.c', # fuzzing
   'fwupd-codec.c', # fuzzing
   'fwupd-device.c', # fuzzing
-  'fwupd-enums.c', # fuzzing
   'fwupd-error.c', # fuzzing
   'fwupd-bios-setting.c', # fuzzing
+  'fwupd-json-array.c', # fuzzing
+  'fwupd-json-common.c', # fuzzing
+  'fwupd-json-node.c', # fuzzing
+  'fwupd-json-object.c', # fuzzing
+  'fwupd-json-parser.c', # fuzzing
   'fwupd-security-attr.c', # fuzzing
   'fwupd-release.c', # fuzzing
   'fwupd-plugin.c',
@@ -61,6 +121,7 @@ fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = library(
   'fwupd',
+  fwupd_rs_targets,
   sources: libfwupd_src,
   soversion: libfwupd_lt_current,
   version: libfwupd_lt_version,
@@ -71,6 +132,16 @@ fwupd = library(
   link_depends: fwupd_mapfile,
   install: true,
   install_tag: 'lib',
+)
+
+# see https://mesonbuild.com/FAQ.html#how-do-i-tell-meson-that-my-sources-use-generated-headers
+fwupd_rs_headers = []
+foreach fwupd_rs_target : fwupd_rs_targets
+  fwupd_rs_headers += fwupd_rs_target
+endforeach
+fwupd_rs_dep = declare_dependency(
+  link_with: fwupd,
+  sources: fwupd_rs_headers,
 )
 
 libfwupd_dep = declare_dependency(
@@ -107,13 +178,22 @@ if introspection.allowed()
       'fwupd-device.c',
       'fwupd-device.h',
       'fwupd-device-private.h',
-      'fwupd-enums.c',
       'fwupd-enums.h',
       'fwupd-enums-private.h',
       'fwupd-error.c',
       'fwupd-error.h',
       'fwupd-bios-setting.c',
       'fwupd-bios-setting.h',
+      'fwupd-json-array.c',
+      'fwupd-json-array.h',
+      'fwupd-json-common.c',
+      'fwupd-json-common.h',
+      'fwupd-json-node.c',
+      'fwupd-json-node.h',
+      'fwupd-json-object.c',
+      'fwupd-json-object.h',
+      'fwupd-json-parser.c',
+      'fwupd-json-parser.h',
       'fwupd-security-attr.c',
       'fwupd-security-attr.h',
       'fwupd-security-attr-private.h',
@@ -131,6 +211,7 @@ if introspection.allowed()
       'fwupd-request-private.h',
       'fwupd-version.c',
       fwupd_version_h,
+      fwupd_rs_targets,
     ],
     nsversion: '2.0',
     namespace: 'Fwupd',
@@ -179,7 +260,7 @@ if get_option('tests')
     'fwupd-self-test',
     sources: ['fwupd-self-test.c'],
     include_directories: [root_incdir],
-    dependencies: [libfwupd_deps],
+    dependencies: [libfwupd_deps, fwupd_rs_dep],
     link_with: fwupd,
     c_args: [
       '-DG_LOG_DOMAIN="Fwupd"',
@@ -198,7 +279,7 @@ if get_option('tests')
       'fwupd-thread-test',
       sources: ['fwupd-thread-test.c'],
       include_directories: [root_incdir],
-      dependencies: [libfwupd_deps],
+      dependencies: [libfwupd_deps, fwupd_rs_dep],
       link_with: fwupd,
       c_args: ['-DG_LOG_DOMAIN="Fwupd"'],
     )
@@ -211,7 +292,7 @@ if get_option('tests')
       'fwupd-context-test',
       sources: ['fwupd-context-test.c'],
       include_directories: [root_incdir],
-      dependencies: [libfwupd_deps],
+      dependencies: [libfwupd_deps, fwupd_rs_dep],
       link_with: fwupd,
       c_args: ['-DG_LOG_DOMAIN="Fwupd"'],
     )

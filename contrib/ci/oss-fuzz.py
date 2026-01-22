@@ -178,7 +178,9 @@ class Builder:
                 "python",
                 "fwupd/libfwupdplugin/rustgen.py",
                 src,
+                "--outc",
                 fulldst_c,
+                "--outh",
                 fulldst_h,
             ]
             for include in includes:
@@ -398,7 +400,16 @@ def _build(bld: Builder) -> None:
     built_objs: List[str] = []
     fuzzing_objs: List[str] = []
     bld.add_src_includedir("fwupd")
-    for path in ["fwupd/libfwupd", "fwupd/libfwupdplugin"]:
+    for path in ["fwupd/libfwupd"]:
+        bld.add_src_includedir(path)
+        for src in bld.grep_meson(path):
+            if src.endswith(".c"):
+                built_objs.append(bld.compile(src))
+            elif src.endswith(".rs"):
+                built_objs.append(
+                    bld.compile(bld.rustgen(src, includes=["fwupd-build.h"]))
+                )
+    for path in ["fwupd/libfwupdplugin"]:
         bld.add_src_includedir(path)
         for src in bld.grep_meson(path):
             if src.endswith(".c"):
@@ -430,6 +441,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("intel-thunderbolt"),
         Fuzzer("ifwi-cpd"),
         Fuzzer("ifwi-fpt"),
+        Fuzzer("json"),
         Fuzzer("oprom"),
         Fuzzer("uswid"),
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
@@ -485,9 +497,9 @@ def _build(bld: Builder) -> None:
         Fuzzer("elantp"),
         Fuzzer("genesys-scaler", srcdir="genesys", pattern="genesys-scaler-firmware"),
         Fuzzer("genesys-usbhub", srcdir="genesys", pattern="genesys-usbhub-firmware"),
-        Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
+        Fuzzer("pixart-rf"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
-        Fuzzer("synaptics-prometheus", pattern="synaprom-firmware"),
+        Fuzzer("synaptics-prometheus"),
         Fuzzer("synaptics-cape"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),

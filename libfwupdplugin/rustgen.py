@@ -76,12 +76,27 @@ class EnumObj:
             "ToString": Export.NONE,
             "FromString": Export.NONE,
         }
+        self._c_methods: Dict[str, Export] = {}
+        self._derives_since: Dict[str, str] = {}
         self._is_bitfield = False
+        self._is_force_enum = False
 
     def c_method(self, suffix: str):
-        return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+
+        # override
+        if suffix in self._c_methods:
+            return self._c_methods[suffix]
+
+        name_snake = _camel_to_snake(self.name)
+        if self._is_force_enum:
+            if name_snake.endswith("flags"):
+                name_snake = name_snake[:-1]
+
+        return f"{name_snake}_{_camel_to_snake(suffix)}"
 
     def since(self, derive: str) -> Optional[str]:
+        if derive in self._derives_since:
+            return self._derives_since[derive]
         return self._since
 
     @property
@@ -101,6 +116,8 @@ class EnumObj:
 
     @property
     def is_bitfield(self) -> bool:
+        if self._is_force_enum:
+            return False
         for item in self.items:
             if item.is_bitfield:
                 return True
@@ -131,7 +148,29 @@ class EnumObj:
             return
         self._exports[derive] = Export.PRIVATE
 
+    def add_export_param(self, derive: str, value: str):
+
+        if derive in ["FromString", "ToString"] and value == "enum":
+            self._is_force_enum = True
+            return
+        if value.startswith("since="):
+            self._derives_since[derive] = value[6:]
+            return
+        if value.startswith("name="):
+            self._c_methods[derive] = value[5:]
+            return
+        raise ValueError(f"derive {derive} parameter {value} unknown")
+
     def add_public_export(self, derive: str) -> None:
+
+        # split out the any derive params
+        idx = derive.find("(")
+        if idx != -1:
+            params = derive[idx + 1 : -1].split(";")
+            derive = derive[:idx]
+            for param in params:
+                self.add_export_param(derive, param)
+
         if derive == "Bitfield":
             self._is_bitfield = True
             return
@@ -890,8 +929,8 @@ class Generator:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("src", action="store", type=str, help="source")
-    parser.add_argument("dst_c", action="store", type=str, help="destination .c")
-    parser.add_argument("dst_h", action="store", type=str, help="destination .h")
+    parser.add_argument("--outc", action="store", type=str, help="destination .c")
+    parser.add_argument("--outh", action="store", type=str, help="destination .h")
     parser.add_argument("--prefix", action="store", type=str, default="", help="prefix")
     parser.add_argument("--use", action="append", default=[], help="module:path")
     parser.add_argument(
@@ -909,7 +948,7 @@ if __name__ == "__main__":
             sys.exit(f"expected module:path, got {entry}")
 
     g = Generator(
-        basename=os.path.basename(args.dst_h),
+        basename=os.path.basename(args.outh or args.outc.replace(".c", ".h")),
         modules_map=modules_map,
         includes=args.include,
         prefix=args.prefix,
@@ -921,7 +960,9 @@ if __name__ == "__main__":
             )
         except ValueError as e:
             sys.exit(f"cannot process {args.src}: {str(e)}")
-    with open(args.dst_c, "wb") as f:  # type: ignore
-        f.write(dst_c.encode())
-    with open(args.dst_h, "wb") as f:  # type: ignore
-        f.write(dst_h.encode())
+    if args.outc:
+        with open(args.outc, "wb") as f:  # type: ignore
+            f.write(dst_c.encode())
+    if args.outh:
+        with open(args.outh, "wb") as f:  # type: ignore
+            f.write(dst_h.encode())

@@ -1,0 +1,113 @@
+/*
+ * Copyright 2021 Jimmy Yu <Jimmy_yu@pixart.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include "fu-pixart-rf-common.h"
+#include "fu-pixart-rf-struct.h"
+
+void
+fu_pixart_rf_ota_fw_state_to_string(FuPixartRfOtaFwState *fwstate, guint idt, GString *str)
+{
+	fwupd_codec_string_append_hex(str, idt, "Status", fwstate->status);
+	fwupd_codec_string_append_hex(str, idt, "NewFlow", fwstate->new_flow);
+	fwupd_codec_string_append_hex(str, idt, "CurrentObjectOffset", fwstate->offset);
+	fwupd_codec_string_append_hex(str, idt, "CurrentChecksum", fwstate->checksum);
+	fwupd_codec_string_append_hex(str, idt, "MaxObjectSize", fwstate->max_object_size);
+	fwupd_codec_string_append_hex(str, idt, "MtuSize", fwstate->mtu_size);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "PacketReceiptNotificationThreshold",
+				      fwstate->prn_threshold);
+	fwupd_codec_string_append(
+	    str,
+	    idt,
+	    "SpecCheckResult",
+	    fu_pixart_rf_ota_spec_check_result_to_string(fwstate->spec_check_result));
+}
+
+gboolean
+fu_pixart_rf_ota_fw_state_parse(FuPixartRfOtaFwState *fwstate,
+				const guint8 *buf,
+				gsize bufsz,
+				gsize offset,
+				GError **error)
+{
+	g_autoptr(FuStructPixartRfOtaFwState) st = NULL;
+
+	st = fu_struct_pixart_rf_ota_fw_state_parse(buf, bufsz, offset, error);
+	if (st == NULL)
+		return FALSE;
+	fwstate->status = fu_struct_pixart_rf_ota_fw_state_get_status(st);
+	fwstate->new_flow = fu_struct_pixart_rf_ota_fw_state_get_new_flow(st);
+	fwstate->offset = fu_struct_pixart_rf_ota_fw_state_get_offset(st);
+	fwstate->checksum = fu_struct_pixart_rf_ota_fw_state_get_checksum(st);
+	fwstate->max_object_size = fu_struct_pixart_rf_ota_fw_state_get_max_object_size(st);
+	fwstate->mtu_size = fu_struct_pixart_rf_ota_fw_state_get_mtu_size(st);
+	fwstate->prn_threshold = fu_struct_pixart_rf_ota_fw_state_get_prn_threshold(st);
+	fwstate->spec_check_result = fu_struct_pixart_rf_ota_fw_state_get_spec_check_result(st);
+
+	/* success */
+	return TRUE;
+}
+gboolean
+fu_pixart_rf_composite_receiver_cmd(guint8 opcode,
+				    guint8 sn,
+				    guint8 target,
+				    GByteArray *wireless_mod_cmd,
+				    GByteArray *ota_cmd,
+				    GError **error)
+{
+	guint8 checksum = 0x0;
+	guint8 hid_sn = sn;
+	guint8 len = 0x0;
+	guint8 ota_sn = sn + 1;
+	guint8 rf_cmd_code = FU_PIXART_RF_BLE_DEVICE_RF_CMD_CODE;
+	guint8 rid = PIXART_RF_HID_WIRELESS_DEV_OTA_REPORT_ID;
+
+	if (ota_cmd == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "ota cmd is NULL");
+		return FALSE;
+	}
+
+	/* append ota dispatch header */
+	fu_byte_array_append_uint8(wireless_mod_cmd, opcode); /* wireless module ota op code */
+	fu_byte_array_append_uint8(wireless_mod_cmd, ota_sn); /* wireless module ota command sn */
+
+	/* append ota command length and content  */
+	for (guint idx = 0; idx < ota_cmd->len; idx++)
+		fu_byte_array_append_uint8(wireless_mod_cmd, ota_cmd->data[idx]);
+
+	/* append target of wireless module and hid command serial number */
+	g_byte_array_prepend(wireless_mod_cmd, &target, 0x01); /* target */
+	g_byte_array_prepend(wireless_mod_cmd, &hid_sn, 0x01); /* hid command sn */
+
+	/* prepend length and rf command code, the param len not include "hid_sn" byte and "target"
+	 * byte */
+	len = wireless_mod_cmd->len - 2;
+	g_byte_array_prepend(wireless_mod_cmd, &len, 0x01);
+	g_byte_array_prepend(wireless_mod_cmd, &rf_cmd_code, 0x01); /* command code */
+
+	/* prepend checksum */
+	checksum = fu_sum8(wireless_mod_cmd->data, wireless_mod_cmd->len);
+	g_byte_array_prepend(wireless_mod_cmd, &checksum, 0x01);
+
+	/* prepend feature report id */
+	g_byte_array_prepend(wireless_mod_cmd, &rid, 0x01);
+	return TRUE;
+}
+
+gchar *
+fu_pixart_rf_hpac_version_info_parse(const guint16 hpac_ver)
+{
+	return g_strdup_printf("%u%u.%u%u.%u",
+			       (guint)(hpac_ver / 10000),
+			       (guint)((hpac_ver / 1000) % 10),
+			       (guint)((hpac_ver / 100) % 10),
+			       (guint)((hpac_ver / 10) % 10),
+			       (guint)(hpac_ver % 10));
+}

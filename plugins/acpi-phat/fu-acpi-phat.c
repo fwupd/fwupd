@@ -310,8 +310,8 @@ fu_acpi_phat_init(FuAcpiPhat *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	g_type_ensure(FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
-	g_type_ensure(FU_TYPE_ACPI_PHAT_VERSION_RECORD);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 }
 
 static void

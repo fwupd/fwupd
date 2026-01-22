@@ -263,9 +263,10 @@ static void
 fu_fmap_firmware_init(FuFmapFirmware *self)
 {
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_type_ensure(FU_TYPE_USWID_FIRMWARE);
 	priv->ver_major = FU_STRUCT_FMAP_DEFAULT_VER_MAJOR;
 	priv->ver_minor = FU_STRUCT_FMAP_DEFAULT_VER_MINOR;
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USWID_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 

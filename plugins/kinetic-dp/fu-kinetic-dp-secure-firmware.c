@@ -259,6 +259,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 static void
 fu_kinetic_dp_secure_firmware_init(FuKineticDpSecureFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

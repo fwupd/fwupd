@@ -8,19 +8,10 @@
 #pragma once
 
 #include "fu-logitech-bulkcontroller-device.h"
+#include "fu-logitech-bulkcontroller-struct.h"
 #include "usb_msg.pb-c.h"
 
 #define SET_TIME_DELAY_MS 500 /* send future time to keep PC & device time as close as possible */
-
-typedef enum {
-	kProtoId_UnknownId,
-	kProtoId_GetDeviceInfoResponse,
-	kProtoId_TransitionToDeviceModeResponse,
-	kProtoId_Ack,
-	kProtoId_KongEvent,
-	kProtoId_HandshakeEvent,
-	kProtoId_CrashDumpAvailableEvent
-} FuLogitechBulkcontrollerProtoId;
 
 GByteArray *
 fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(

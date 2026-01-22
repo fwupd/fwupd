@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-08 22:17+0100\n"
-"PO-Revision-Date: 2025-10-30 04:26+0000\n"
+"PO-Revision-Date: 2025-12-11 22:02+0000\n"
 "Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.15-dev\n"
 
 #: data/remotes.d/lvfs.metainfo.xml:6
 msgid "Linux Vendor Firmware Service (stable firmware)"
@@ -505,12 +505,12 @@ msgstr "Laadin alla…"
 #. TRANSLATORS: waiting for user to authenticate
 #: src/fu-console.c:403
 msgid "Authenticating…"
-msgstr ""
+msgstr "Autentimisel…"
 
 #. TRANSLATORS: waiting for device to do something
 #: src/fu-console.c:408
 msgid "Waiting…"
-msgstr ""
+msgstr "Ootan…"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
@@ -519,7 +519,7 @@ msgstr ""
 #: src/fu-console.c:415 src/fu-util-common.c:1729 src/fu-util-common.c:1769
 #: src/fu-util-common.c:2257
 msgid "Unknown"
-msgstr ""
+msgstr "Pole teada"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 #: src/fu-console.c:469
@@ -537,7 +537,7 @@ msgstr[1] ""
 #. TRANSLATORS: this is a prefix on the console
 #: src/fu-console.c:555
 msgid "WARNING"
-msgstr ""
+msgstr "HOIATUS"
 
 #. TRANSLATORS: turn on all debugging
 #: src/fu-debug.c:241
@@ -700,7 +700,7 @@ msgstr ""
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 #: src/fu-security-attr-common.c:76
 msgid "SMAP"
-msgstr ""
+msgstr "SMAP"
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 #: src/fu-security-attr-common.c:80 src/fu-security-attr-common.c:299
@@ -711,7 +711,7 @@ msgstr ""
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 #: src/fu-security-attr-common.c:85
 msgid "IOMMU"
-msgstr ""
+msgstr "IOMMU"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 #: src/fu-security-attr-common.c:89
@@ -1361,7 +1361,7 @@ msgstr ""
 #. TRANSLATORS: this is from ctrl+c
 #: src/fu-tool.c:286 src/fu-util.c:5183
 msgid "Cancelled"
-msgstr ""
+msgstr "Katkestatud"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 #: src/fu-tool.c:384 src/fu-util.c:102
@@ -1377,7 +1377,7 @@ msgstr ""
 #: src/fu-tool.c:574 src/fu-tool.c:2948 src/fu-tool.c:4052 src/fu-tool.c:4310
 #: src/fu-util.c:203 src/fu-util.c:2554 src/fu-util.c:3697
 msgid "Cancel"
-msgstr ""
+msgstr "Katkesta"
 
 #. TRANSLATORS: get interactive prompt
 #: src/fu-tool.c:582 src/fu-util.c:213
@@ -1762,7 +1762,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: src/fu-tool.c:5370 src/fu-tool.c:5383 src/fu-util.c:5511
 msgid "FILE"
-msgstr ""
+msgstr "FAIL"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5372
@@ -1791,7 +1791,7 @@ msgstr ""
 #: src/fu-util.c:5582 src/fu-util.c:5596 src/fu-util.c:5624 src/fu-util.c:5658
 #: src/fu-util.c:5787 src/fu-util.c:5794
 msgid "[DEVICE-ID|GUID]"
-msgstr ""
+msgstr "[SEADME-TUNNUS|GUID]"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5398 src/fu-util.c:5520
@@ -1841,7 +1841,7 @@ msgstr ""
 #: src/fu-tool.c:5437 src/fu-tool.c:5444 src/fu-tool.c:5457 src/fu-util.c:5541
 #: src/fu-util.c:5548 src/fu-util.c:5555
 msgid "DEVICE-ID|GUID"
-msgstr ""
+msgstr "SEADME-TUNNUS|GUID"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5439
@@ -1918,7 +1918,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: src/fu-tool.c:5513
 msgid "TEXT"
-msgstr ""
+msgstr "TEKST"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5515
@@ -2121,7 +2121,7 @@ msgstr ""
 #: src/fu-tool.c:5697
 msgctxt "command-argument"
 msgid "GUID"
-msgstr ""
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5699
@@ -2136,7 +2136,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: src/fu-tool.c:5712 src/fu-tool.c:5726
 msgid "INDEX"
-msgstr ""
+msgstr "INDEKS"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5714
@@ -2201,7 +2201,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: src/fu-tool.c:5768
 msgid "[DEVICE]"
-msgstr ""
+msgstr "[SEADE]"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5770

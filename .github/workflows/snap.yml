@@ -32,7 +32,7 @@ jobs:
         ln -s ../contrib/snap/snapcraft.yaml snap/snapcraft.yaml
     - uses: snapcore/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1.3.0
       id: snapcraft
-    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+    - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: snap
         path: ${{ steps.snapcraft.outputs.snap }}
@@ -41,7 +41,7 @@ jobs:
     needs: build-snap
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       id: download
       with:
         name: snap
@@ -74,3 +74,19 @@ jobs:
       run: |
         sudo TMPDIR="$SNAP_TEST_TMPDIR" \
             /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool-efiboot.sh
+
+  deploy-store:
+    needs: [build-snap, test-snap]
+    runs-on: ubuntu-latest
+    if: ${{ inputs.deploy }}
+    steps:
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      id: download
+      with:
+        name: snap
+    - uses: snapcore/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1.2.0
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
+      with:
+        snap: ${{ needs.build-snap.outputs.snap_name }}
+        release: ${{ needs.build-snap.outputs.channel }}

@@ -93,6 +93,9 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob_offer = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_CFU_OFFER);
+	fu_firmware_add_image_gtype(firmware, FU_TYPE_CFU_PAYLOAD);
+
 	/* parse archive */
 	if (!fu_firmware_parse_stream(firmware_archive, stream, 0x0, flags, error))
 		return NULL;

@@ -1,0 +1,31 @@
+<firmware gtype="FuPixartTpFirmware">
+  <version_raw>0xff02</version_raw>
+  <header_ver>0x103</header_ver>
+  <ic_part_id>0x343</ic_part_id>
+  <flash_sectors>0x20</flash_sectors>
+  <firmware gtype="FuPixartTpSection">
+    <id>tf-force</id>
+    <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+    <filename>tf.bin</filename>
+    <update_type>tf-force</update_type>
+    <flags>valid</flags>
+    <reserved>01090e0a0000000000000000</reserved>
+  </firmware>
+  <firmware gtype="FuPixartTpSection">
+    <id>parameter</id>
+    <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+    <update_type>param</update_type>
+    <flags>valid</flags>
+    <target_flash_start>0x1e000</target_flash_start>
+    <section_crc>0xb887bc55</section_crc>
+    <reserved>000000000000000000000000</reserved>
+  </firmware>
+  <firmware gtype="FuPixartTpSection">
+    <id>payload</id>
+    <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+    <update_type>fw-section</update_type>
+    <flags>valid</flags>
+    <section_crc>0xda33306b</section_crc>
+    <reserved>000000000000000000000000</reserved>
+  </firmware>
+</firmware>
