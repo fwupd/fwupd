@@ -14,7 +14,7 @@ fu_mm_device_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuMmDevice) mm_device = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 

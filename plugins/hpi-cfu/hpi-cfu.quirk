@@ -9,3 +9,8 @@ Plugin = hpi_cfu
 # HP USB-C 100W G6 Dock
 [USB\VID_03F0&PID_04B7]
 Plugin = hpi_cfu
+
+# HP Engage One G2 Advanced Hub
+[USB\VID_03F0&PID_07C8]
+Plugin = hpi_cfu
+Flags = update-on-reboot
