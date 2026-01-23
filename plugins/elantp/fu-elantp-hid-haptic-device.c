@@ -323,14 +323,14 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *device, gpointer user_da
 	FuElantpHaptictpWaitFlashEEPROMChecksumHelper *helper = user_data;
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
+						   FU_ETP_CMD_I2C_TP_SETTING,
 						   FU_ETP_CMD_I2C_EEPROM_WRITE_INFORMATION,
 						   error)) {
 		g_prefix_error_literal(error, "failed to write haptic info: ");
 		return FALSE;
 	}
 	if (!fu_elantp_hid_haptic_device_read_cmd(parent,
-						  FU_ETP_CMD_I2C_EEPROM_SETTING,
+						  FU_ETP_CMD_I2C_TP_SETTING,
 						  buf,
 						  sizeof(buf),
 						  error)) {
@@ -367,7 +367,7 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *device, gpointer user_da
 		return FALSE;
 	}
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
+						   FU_ETP_CMD_I2C_TP_SETTING,
 						   FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
 						   error)) {
 		g_prefix_error_literal(error, "failed to set haptic initial setting: ");
@@ -796,7 +796,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	if (parent == NULL)
 		return FALSE;
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
+						   FU_ETP_CMD_I2C_TP_SETTING,
 						   FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
 						   error)) {
 		g_prefix_error_literal(error, "cannot disable EEPROM Long Transmission mode: ");
@@ -973,7 +973,7 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 	}
 
 	if (!fu_elantp_hid_haptic_device_write_cmd(parent,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
+						   FU_ETP_CMD_I2C_TP_SETTING,
 						   FU_ETP_CMD_I2C_EEPROM_LONG_TRANS_ENABLE,
 						   error)) {
 		g_prefix_error_literal(error, "cannot enable EEPROM Long Transmission mode: ");

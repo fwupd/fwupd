@@ -33,7 +33,7 @@ enum FuEtpCmd {
     I2cIapReset = 0x0314,
     I2cIapChecksum = 0x0315,
     I2cSetEepromCtrl = 0x0321,
-    I2cEepromSetting = 0x0322,
+    I2cTpSetting = 0x0322,
     ForceAddr = 0x03ad,
     I2cEepromWriteChecksum = 0x048B,
     I2cHapticRestart = 0x0601,
