@@ -72,6 +72,7 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	}
 
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT);
 }
 
 static void
