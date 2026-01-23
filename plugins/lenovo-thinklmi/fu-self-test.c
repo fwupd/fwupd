@@ -42,7 +42,7 @@ static void
 fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
