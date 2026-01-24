@@ -4379,8 +4379,10 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		path = fwupd_remote_get_filename_cache(remote);
-		if (!g_file_test(path, G_FILE_TEST_EXISTS))
+		if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
+			g_debug("did not find: %s", path);
 			continue;
+		}
 
 		/* generate all metadata on demand */
 		if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DIRECTORY) {

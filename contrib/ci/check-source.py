@@ -281,7 +281,6 @@ class Checker:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-firmware-progress.c",
-            "fu-self-test.c",
         ]:
             return
         if self._current_fn and os.path.basename(self._current_fn).endswith(".h"):
@@ -737,9 +736,7 @@ class Checker:
             "fu-gcab.c",
             "fu-main.c",
             "fu-main-windows.c",
-            "fu-self-test.c",
             "fu-tpm-eventlog.c",
-            "fwupd-self-test.c",
         ]:
             return
         for token, msg in {
@@ -1149,7 +1146,7 @@ class Checker:
     def _test_device_convert_version(self, nodes: list[Node]) -> None:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
-            "fu-self-test.c",
+            "fu-engine-test.c",
         ]:
             return
 

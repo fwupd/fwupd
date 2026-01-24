@@ -571,8 +571,8 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* clear */
-	g_ptr_array_set_size(self->array, 0);
-	g_ptr_array_set_size(self->monitors, 0);
+	//	g_ptr_array_set_size(self->array, 0);
+	//	g_ptr_array_set_size(self->monitors, 0);
 
 	/* search mutable, and then fall back to /etc and immutable */
 	remotesdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);

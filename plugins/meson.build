@@ -180,7 +180,6 @@ if umockdev_integration_tests.allowed()
         ut,
         python3,
         args: [suite, ut],
-        is_parallel: false,
         env: envs,
       )
     endforeach
