@@ -258,7 +258,10 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupd-self-test',
-    sources: ['fwupd-self-test.c'],
+    sources: [
+      'fwupd-self-test.c',
+      'fwupd-json-test.c',
+    ],
     include_directories: [root_incdir],
     dependencies: [libfwupd_deps, fwupd_rs_dep],
     link_with: fwupd,
