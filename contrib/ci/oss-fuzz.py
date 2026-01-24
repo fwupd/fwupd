@@ -456,6 +456,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("ifwi-fpt"),
         Fuzzer("json"),
         Fuzzer("oprom"),
+        Fuzzer("protobuf", pattern="protobuf"),
         Fuzzer("uswid"),
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
         Fuzzer("efi-volume", pattern="efi-volume"),
