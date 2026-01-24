@@ -1,6 +1,105 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuLogitechBulkcontrollerFnumUsbMsg {
+    Header = 1,
+    Acknowledge = 2,
+    Request = 3,
+    Response = 4,
+    Event = 5,
+}
+
+enum FuLogitechBulkcontrollerFnumHeader {
+    Id = 1, // str, used in the ack message msgId field
+    Timestamp = 2, // str, number of ms since the epoch
+}
+
+enum FuLogitechBulkcontrollerFnumRequest {
+    GetDeviceInfo = 2,
+    UpdateNow = 3,
+    SendCrashDump = 4,
+    TransitionToDeviceMode = 5,
+    GetCertificateChain = 6,
+    SetRightSightConfiguration = 7,
+    GetManifestBody = 8,
+    SendCrashDump2 = 9,
+    SetDeviceTime = 10,
+    SetAntiFlickerConfiguration = 11,
+    SetBleCfg = 12,
+    SetDeprovision = 13,
+    RebootDevice = 14,
+    SetSpeakerBoost = 15,
+    SetNoiseReduction = 16,
+    SetReverbMode = 17,
+    GenerateCrashDump = 18,
+    SendCertificateData = 19,
+    SetMicEqMode = 20,
+    SetSpeakerEqMode = 21,
+    ForgetDevice = 22,
+    SetRightSightConfiguration2 = 23,
+    SendTestResult = 24,
+    GetMemfaultManifest = 25,
+    SendMemfaultSettings = 26,
+}
+
+enum FuLogitechBulkcontrollerFnumResponse {
+    GetDeviceInfo = 2,
+    UpdateNow = 3,
+    SendCrashDump = 4,
+    TransitionToDeviceMode = 5,
+    GetCertificateChain = 6,
+    SetRightSightConfiguration = 7,
+    GetManifestBody = 8,
+    SendCrashDumpResponse2 = 9,
+    SetAntiFlickerConfiguration = 11,
+    SetBleCfg = 12,
+    SetDeprovision = 13,
+    RebootDevice = 14,
+    SetSpeakerBoost = 15,
+    SetNoiseReduction = 16,
+    SetReverbMode = 17,
+    GenerateCrashDump = 18,
+    SendCertificateData = 19,
+    SetMicEqMode = 20,
+    SetSpeakerEqMode = 21,
+    ForgetDevice = 22,
+    SendTestResult = 24,
+    GetMemfaultManifest = 25,
+    SendMemfaultSettings = 26,
+}
+
+enum FuLogitechBulkcontrollerFnumSetDeviceTimeRequest {
+    Ts = 1, // u64 utc
+    Timezone = 2, // str
+}
+
+enum FuLogitechBulkcontrollerFnumAcknowledge {
+    MsgId = 1, // str, the same as UsbMsg.Header.id
+    Success = 2, // bool
+}
+
+enum FuLogitechBulkcontrollerFnumTransitionToDeviceModeResponse {
+    Success = 1, // bool, if Kong is not provisioned, should just respond with true value
+    Error = 2, // int
+    ErrorDescription = 3, //str
+}
+
+enum FuLogitechBulkcontrollerFnumGetDeviceInfoResponse {
+    Payload = 1, // str, MQTT message
+}
+
+enum FuLogitechBulkcontrollerFnumEvent {
+    Kong = 1,
+    SendCrashDump = 2,
+    CrashDumpAvailable = 3,
+    Handshake = 4,
+    InitiateMemfaultManifestRequest = 5,
+}
+
+enum FuLogitechBulkcontrollerFnumKongEvent {
+    Payload = 1, // str, MQTT message
+}
+
 #[derive(ToString)]
 enum FuLogitechBulkcontrollerDeviceState {
     Unknown = -1,
@@ -23,16 +122,6 @@ enum FuLogitechBulkcontrollerUpdateState {
     Updating,
     Scheduled,
     Error,
-}
-
-enum FuLogitechBulkcontrollerProtoId {
-    UnknownId,
-    GetDeviceInfoResponse,
-    TransitionToDeviceModeResponse,
-    Ack,
-    KongEvent,
-    HandshakeEvent,
-    CrashDumpAvailableEvent,
 }
 
 #[repr(u32le)]
