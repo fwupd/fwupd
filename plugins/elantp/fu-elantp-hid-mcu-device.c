@@ -666,7 +666,7 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 static gboolean
 fu_elantp_hid_mcu_device_read_iap_type(FuDevice *parent, guint16 *iap_type, GError **error)
 {
-	guint8 buf[2];
+	guint8 buf[2] = {0x0};
 
 	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
 					       FU_ETP_CMD_I2C_IAP_TYPE,
