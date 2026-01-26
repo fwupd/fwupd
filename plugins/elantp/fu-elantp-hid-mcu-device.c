@@ -664,6 +664,24 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_elantp_hid_mcu_device_read_iap_type(FuDevice *parent, guint16 *iap_type, GError **error)
+{
+	guint8 buf[2];
+
+	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+					       FU_ETP_CMD_I2C_IAP_TYPE,
+					       buf,
+					       sizeof(buf),
+					       error)) {
+		g_prefix_error_literal(error, "failed to read MCU IAP type: ");
+		return FALSE;
+	}
+
+	*iap_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+	return TRUE;
+}
+
+static gboolean
 fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress, GError **error)
 {
 	FuElantpHidDevice *parent;
@@ -760,18 +778,10 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type == 0x15)) {
 				self->fw_page_size = 512;
 				if (iap_ver >= 3) {
-					if (!fu_elantp_hid_mcu_device_read_cmd(
-						parent,
-						FU_ETP_CMD_I2C_IAP_TYPE,
-						buf,
-						sizeof(buf),
-						error)) {
-						g_prefix_error_literal(
-						    error,
-						    "failed to read MCU IAP type: ");
+					if (!fu_elantp_hid_mcu_device_read_iap_type(parent,
+										    &self->iap_type,
+										    error))
 						return FALSE;
-					}
-					self->iap_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 					self->fw_section_size = self->iap_type * 2;
 					self->fw_no_of_sections =
 					    self->fw_page_size / self->fw_section_size;
