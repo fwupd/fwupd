@@ -136,13 +136,13 @@ fu_elantp_hid_device_write_cmd(FuElantpHidDevice *self, guint16 reg, guint16 cmd
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *self,
+fu_elantp_hid_device_mcu_read_cmd(FuElantpHidDevice *self,
 				  guint16 reg,
 				  guint8 *rx,
 				  gsize rxsz,
 				  GError **error)
 {
-	guint8 buf[5] = {0x70, 0x05, 0x03};
+	guint8 buf[5] = {FU_ETP_RPTID_MCU_FEATURE, 0x05, 0x03};
 	fu_memwrite_uint16(buf + 0x3, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_device_send_cmd(self, buf, sizeof(buf), rx, rxsz, error);
 }
@@ -329,7 +329,7 @@ fu_elantp_hid_device_read_mcu_ic_type(FuElantpHidDevice *self, GError **error)
 	guint16 mcu_ic_type = 0x00;
 
 	/* get OSM version */
-	if (!fu_elantp_hid_mcu_device_read_cmd(self,
+	if (!fu_elantp_hid_device_mcu_read_cmd(self,
 					       FU_ETP_CMD_I2C_OSM_VERSION,
 					       buf,
 					       sizeof(buf),
@@ -339,7 +339,7 @@ fu_elantp_hid_device_read_mcu_ic_type(FuElantpHidDevice *self, GError **error)
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
-		if (!fu_elantp_hid_mcu_device_read_cmd(self,
+		if (!fu_elantp_hid_device_mcu_read_cmd(self,
 						       FU_ETP_CMD_I2C_IAP_ICBODY,
 						       buf,
 						       sizeof(buf),
