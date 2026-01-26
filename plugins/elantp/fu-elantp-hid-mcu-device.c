@@ -94,7 +94,7 @@ fu_elantp_hid_tp_device_write_cmd(FuElantpHidDevice *parent,
 				  guint16 cmd,
 				  GError **error)
 {
-	guint8 buf[5] = {0x0D};
+	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_tp_device_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
@@ -107,7 +107,7 @@ fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *parent,
 				  gsize bufz,
 				  GError **error)
 {
-	guint8 tmp[5] = {0x70, 0x05, 0x03};
+	guint8 tmp[5] = {FU_ETP_RPTID_MCU_FEATURE, 0x05, 0x03};
 	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_tp_device_send_cmd(parent, tmp, sizeof(tmp), buf, bufz, error);
 }
@@ -118,7 +118,7 @@ fu_elantp_hid_mcu_device_write_cmd(FuElantpHidDevice *parent,
 				   guint16 cmd,
 				   GError **error)
 {
-	guint8 buf[5] = {0x70};
+	guint8 buf[5] = {FU_ETP_RPTID_MCU_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_tp_device_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
@@ -514,54 +514,16 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
-					FuFirmware *firmware,
-					FuProgress *progress,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_elantp_hid_mcu_device_write_chunks(FuDevice *device,
+				      FuElantpHidMcuDevice *self,
+				      FuElantpHidDevice *parent,
+				      GPtrArray *chunks,
+				      guint16 *checksum,
+				      FuProgress *progress,
+				      GError **error)
 {
-	FuElantpHidDevice *parent;
-	FuElantpHidMcuDevice *self = FU_ELANTP_HID_MCU_DEVICE(device);
-	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE(firmware);
-	gsize bufsz = 0;
-	guint16 checksum = 0;
-	guint16 checksum_device = 0;
-	guint16 iap_addr;
-	const guint8 *buf;
-	guint8 csum_buf[2] = {0x0};
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
-	guint total_pages;
+	guint total_pages = chunks->len;
 	guint16 fw_section_cnt = 0;
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 30, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, "reset");
-
-	/* simple image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* detach */
-	if (!fu_elantp_hid_mcu_device_detach(self, fu_progress_get_child(progress), error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
-		return FALSE;
-
-	/* write each block */
-	buf = g_bytes_get_data(fw, &bufsz);
-	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
-	chunks =
-	    fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_section_size);
-	total_pages = chunks->len;
 
 	for (guint i = 0; i < total_pages; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -571,7 +533,7 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 		g_autofree guint8 *blk = g_malloc0(blksz);
 
 		/* write block */
-		blk[0] = 0x72; /* report ID */
+		blk[0] = FU_ETP_RPTID_MCU_IAP; /* report ID */
 		if (!fu_memcpy_safe(blk,
 				    blksz,
 				    0x1, /* dst */
@@ -606,12 +568,70 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 				i = total_pages;
 			}
 		}
+
 		/* update progress */
-		checksum += csum_tmp;
+		*checksum += csum_tmp;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
 						(gsize)chunks->len);
 	}
+	return TRUE;
+}
+static gboolean
+fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuProgress *progress,
+					FwupdInstallFlags flags,
+					GError **error)
+{
+	FuElantpHidDevice *parent;
+	FuElantpHidMcuDevice *self = FU_ELANTP_HID_MCU_DEVICE(device);
+	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE(firmware);
+	gsize bufsz = 0;
+	guint16 checksum = 0;
+	guint16 checksum_device = 0;
+	guint16 iap_addr;
+	const guint8 *buf;
+	guint8 csum_buf[2] = {0x0};
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 30, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, "reset");
+
+	/* simple image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* detach */
+	if (!fu_elantp_hid_mcu_device_detach(self, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
+
+	/* write each block */
+	buf = g_bytes_get_data(fw, &bufsz);
+	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
+	chunks =
+	    fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_section_size);
+
+	if (!fu_elantp_hid_mcu_device_write_chunks(device,
+						   self,
+						   parent,
+						   chunks,
+						   &checksum,
+						   progress,
+						   error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* verify the written checksum */
@@ -826,10 +846,10 @@ fu_elantp_hid_mcu_device_attach(FuDevice *device, FuProgress *progress, GError *
 		return FALSE;
 
 	/* sanity check */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	/*if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("already in MCU runtime mode, skipping");
 		return TRUE;
-	}
+	}*/
 
 	/* reset back to runtime */
 	if (!fu_elantp_hid_mcu_device_write_cmd(parent,
