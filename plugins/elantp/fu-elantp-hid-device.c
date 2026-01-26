@@ -121,7 +121,7 @@ fu_elantp_hid_device_read_cmd(FuElantpHidDevice *self,
 			      gsize rxsz,
 			      GError **error)
 {
-	guint8 buf[5] = {0x0d, 0x05, 0x03};
+	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE, 0x05, 0x03};
 	fu_memwrite_uint16(buf + 0x3, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_device_send_cmd(self, buf, sizeof(buf), rx, rxsz, error);
 }
@@ -129,7 +129,7 @@ fu_elantp_hid_device_read_cmd(FuElantpHidDevice *self,
 static gint
 fu_elantp_hid_device_write_cmd(FuElantpHidDevice *self, guint16 reg, guint16 cmd, GError **error)
 {
-	guint8 buf[5] = {0x0d};
+	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_device_send_cmd(self, buf, sizeof(buf), NULL, 0, error);
@@ -327,6 +327,7 @@ fu_elantp_hid_device_read_mcu_ic_type(FuElantpHidDevice *self, GError **error)
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
 	guint16 mcu_ic_type = 0x00;
+
 	/* get OSM version */
 	if (!fu_elantp_hid_mcu_device_read_cmd(self,
 					       FU_ETP_CMD_I2C_OSM_VERSION,
@@ -771,7 +772,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 		g_autofree guint8 *blk = g_malloc0(blksz);
 
 		/* write block */
-		blk[0] = 0x0B; /* report ID */
+		blk[0] = FU_ETP_RPTID_TP_IAP; /* report ID */
 		if (!fu_memcpy_safe(blk,
 				    blksz,
 				    0x1, /* dst */
