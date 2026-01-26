@@ -81,6 +81,8 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 	g_string_replace(str, esp_path, "", 0);
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
 	grub_target = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "uefi_capsule.conf", NULL);
+	if (!fu_path_mkdir_parent(grub_target, error))
+		return FALSE;
 	if (!g_file_set_contents(grub_target, str->str, -1, error)) {
 		fwupd_error_convert(error);
 		return FALSE;

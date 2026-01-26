@@ -266,24 +266,20 @@ fu_uefi_cod_device_func(void)
 #endif
 
 static FuVolume *
-fu_uefi_plugin_fake_esp_new(void)
+fu_uefi_plugin_fake_esp_new(FuTemporaryDirectory *tmpdir)
 {
+	const gchar *tmpdir_path = fu_temporary_directory_get_path(tmpdir);
 	g_autofree gchar *tmpdir_efi = NULL;
-	g_autofree gchar *tmpdir = NULL;
-	g_autoptr(FuVolume) esp = NULL;
+	g_autoptr(FuVolume) esp = fu_volume_new_from_mount_path(tmpdir_path);
 	g_autoptr(GError) error = NULL;
 
 	/* enough to fit the firmware */
-	tmpdir = g_dir_make_tmp("fwupd-esp-XXXXXX", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(tmpdir);
-	esp = fu_volume_new_from_mount_path(tmpdir);
 	fu_volume_set_filesystem_free(esp, 10 * 1024 * 1024);
 	fu_volume_set_partition_kind(esp, FU_VOLUME_KIND_ESP);
 	fu_volume_set_partition_uuid(esp, "00000000-0000-0000-0000-000000000000");
 
 	/* make fu_uefi_get_esp_path_for_os() distro-neutral */
-	tmpdir_efi = g_build_filename(tmpdir, "EFI", EFI_OS_DIR, NULL);
+	tmpdir_efi = g_build_filename(tmpdir_path, "EFI", EFI_OS_DIR, NULL);
 	g_assert_cmpint(g_mkdir_with_parents(tmpdir_efi, 0700), ==, 0);
 
 	/* success */
@@ -300,7 +296,8 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __linux__
@@ -309,6 +306,10 @@ fu_uefi_plugin_no_coalesce_func(void)
 #endif
 
 	/* override ESP */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up at least one HWID */
@@ -407,7 +408,8 @@ fu_uefi_plugin_no_cod_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __linux__
@@ -419,6 +421,10 @@ fu_uefi_plugin_no_cod_func(void)
 	fu_uefi_plugin_setup_indications(ctx, EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED);
 
 	/* override ESP */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up at least one HWID */
@@ -461,10 +467,15 @@ fu_uefi_plugin_no_flashes_func(void)
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* override ESP */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* do not save silo */
@@ -515,17 +526,6 @@ fu_uefi_plugin_esp_file_exists(FuVolume *esp, const gchar *filename)
 }
 
 static void
-fu_uefi_plugin_esp_rmtree(FuVolume *esp)
-{
-	gboolean ret;
-	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
-	g_autoptr(GError) error = NULL;
-	ret = fu_path_rmtree(mount_point, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-}
-
-static void
 fu_uefi_plugin_nvram_func(void)
 {
 	gboolean ret;
@@ -537,7 +537,8 @@ fu_uefi_plugin_nvram_func(void)
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GArray) bootorder = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -547,6 +548,10 @@ fu_uefi_plugin_nvram_func(void)
 #endif
 
 	/* override ESP */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up system so that secure boot is on */
@@ -689,9 +694,6 @@ fu_uefi_plugin_nvram_func(void)
 	ret = fu_device_get_results(device, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* cleanup */
-	fu_uefi_plugin_esp_rmtree(esp);
 }
 
 static void
@@ -704,11 +706,16 @@ fu_uefi_plugin_cod_func(void)
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GByteArray) buf_last = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* override ESP */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up system  */
@@ -801,9 +808,6 @@ fu_uefi_plugin_cod_func(void)
 	ret = fu_device_get_results(device, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* cleanup */
-	fu_uefi_plugin_esp_rmtree(esp);
 }
 
 static void
@@ -816,7 +820,8 @@ fu_uefi_plugin_grub_func(void)
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __x86_64__
@@ -840,6 +845,10 @@ fu_uefi_plugin_grub_func(void)
 	g_assert_true(ret);
 
 	/* override ESP */
+	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* create plugin, and ->startup then ->coldplug */
@@ -878,9 +887,6 @@ fu_uefi_plugin_grub_func(void)
 	g_assert_true(fu_uefi_plugin_esp_file_exists(
 	    esp,
 	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
-
-	/* cleanup */
-	fu_uefi_plugin_esp_rmtree(esp);
 }
 
 static void
@@ -971,9 +977,15 @@ main(int argc, char **argv)
 {
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *testdatadir_mut = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
+
+	tmpdir = fu_temporary_directory_new("uefi-capsule", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	testdatadir_mut = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
@@ -986,7 +998,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_EFIAPPDIR", testdatadir_mut, TRUE);
 	(void)g_setenv("FWUPD_ACPITABLESDIR", testdatadir_mut, TRUE);
 	(void)g_setenv("FWUPD_DATADIR", g_test_get_dir(G_TEST_BUILT), TRUE);
-	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_LOCALSTATEDIR", fu_temporary_directory_get_path(tmpdir), TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	(void)g_setenv("LANGUAGE", "en", TRUE);
 	(void)g_setenv("PATH", testdatadir, TRUE);
