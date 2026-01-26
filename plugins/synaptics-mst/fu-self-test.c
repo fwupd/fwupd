@@ -196,8 +196,6 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
-	g_assert_cmpint(g_mkdir_with_parents("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
-
 	/* tests go here */
 	g_type_ensure(FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 	g_test_add_func("/fwupd/plugin/synaptics_mst{none}", fu_plugin_synaptics_mst_none_func);
