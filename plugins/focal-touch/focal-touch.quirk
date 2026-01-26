@@ -1,0 +1,14 @@
+[HIDRAW\VEN_2808&DEV_3003]
+Plugin = focal_touch
+Flags = enforce-requires
+FocalTouchVerifyId = 0x3c83
+
+[HIDRAW\VEN_2808&DEV_3002]
+Plugin = focal_touch
+Flags = enforce-requires
+FocalTouchVerifyId = 0x5822
+
+[HIDRAW\VEN_2808&DEV_0301]
+Plugin = focal_touch
+Flags = enforce-requires
+FocalTouchVerifyId = 0x5456

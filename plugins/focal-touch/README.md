@@ -1,0 +1,60 @@
+---
+title: Plugin: Focal Touchpad and touchscreen
+---
+
+## Introduction
+
+This plugin allows updating Touch devices from FocalTech. Devices are enumerated
+using HID. The I²C mode is used for firmware recovery.
+
+## Firmware Format
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format.
+
+This plugin supports the following protocol ID:
+
+* `tw.com.focal.tp`
+
+## GUID Generation
+
+These devices use the standard DeviceInstanceId values, e.g.
+
+* `HIDRAW\VEN_2808&DEV_3002`
+* `HIDRAW\VEN_2808&DEV_1006`
+
+## Update Behavior
+
+The device usually presents in HID mode, and the firmware is written to the
+device by switching to a IAP mode where the Touch device is nonfunctional.
+Once complete the device is reset to get out of IAP mode and to load the new
+firmware version.
+
+On flash failure the device is nonfunctional, but is recoverable by writing
+to the i2c device. This is typically much slower than updating the device
+using HID and also requires a model-specific HWID quirk to match.
+
+## Vendor ID Security
+
+The vendor ID is set from the HID vendor, for example set to `HIDRAW:0x2808`
+
+## Quirk Use
+
+This plugin uses the following plugin-specific quirk:
+
+* `FocalTouchVerifyId`: The first and second byte of the hardware verification ID.
+
+## External Interface Access
+
+This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.
+
+## Version Considerations
+
+This plugin has been available since fwupd version `2.1.1`.
+
+## Owners
+
+Anyone can submit a pull request to modify this plugin, but the following people should be
+consulted before making major or functional changes:
+
+* Wayne Huang: @waynehuang2022
