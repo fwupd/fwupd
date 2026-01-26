@@ -48,12 +48,12 @@ fu_elantp_hid_mcu_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_tp_device_send_cmd(FuElantpHidDevice *parent,
-				 const guint8 *tx,
-				 gsize txsz,
-				 guint8 *rx,
-				 gsize rxsz,
-				 GError **error)
+fu_elantp_hid_mcu_device_tp_send_cmd(FuElantpHidDevice *parent,
+				     const guint8 *tx,
+				     gsize txsz,
+				     guint8 *rx,
+				     gsize rxsz,
+				     GError **error)
 {
 	g_autofree guint8 *buf = NULL;
 	gsize bufsz = rxsz + 3;
@@ -89,15 +89,15 @@ fu_elantp_hid_tp_device_send_cmd(FuElantpHidDevice *parent,
 }
 
 static gint
-fu_elantp_hid_tp_device_write_cmd(FuElantpHidDevice *parent,
-				  guint16 reg,
-				  guint16 cmd,
-				  GError **error)
+fu_elantp_hid_mcu_device_tp_write_cmd(FuElantpHidDevice *parent,
+				      guint16 reg,
+				      guint16 cmd,
+				      GError **error)
 {
 	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_tp_device_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
+	return fu_elantp_hid_mcu_device_tp_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
 }
 
 static gboolean
@@ -109,7 +109,7 @@ fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *parent,
 {
 	guint8 tmp[5] = {FU_ETP_RPTID_MCU_FEATURE, 0x05, 0x03};
 	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_tp_device_send_cmd(parent, tmp, sizeof(tmp), buf, bufz, error);
+	return fu_elantp_hid_mcu_device_tp_send_cmd(parent, tmp, sizeof(tmp), buf, bufz, error);
 }
 
 static gint
@@ -121,7 +121,7 @@ fu_elantp_hid_mcu_device_write_cmd(FuElantpHidDevice *parent,
 	guint8 buf[5] = {FU_ETP_RPTID_MCU_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_tp_device_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
+	return fu_elantp_hid_mcu_device_tp_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
 }
 
 static gboolean
@@ -208,9 +208,8 @@ fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
 			return TRUE;
 		}
 	}
-	if (self->ic_type == 0x14 && self->iap_ver == 4) {
+	if (self->ic_type == 0x14 && self->iap_ver == 4)
 		return TRUE;
-	}
 	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
 					       FU_ETP_CMD_FORCE_ADDR,
 					       buf,
@@ -468,9 +467,8 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
-	if (self->ic_type == 0x14 && self->iap_ver == 4) {
+	if (self->ic_type == 0x14 && self->iap_ver == 4)
 		self->force_table_support = force_table_support;
-	}
 	if (self->force_table_support != force_table_support) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -483,9 +481,8 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 		guint32 diff_size;
 		force_table_addr =
 		    fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware));
-		if (self->ic_type == 0x14 && self->iap_ver == 4) {
+		if (self->ic_type == 0x14 && self->iap_ver == 4)
 			self->force_table_addr = force_table_addr;
-		}
 		if (self->force_table_addr < force_table_addr) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -514,9 +511,9 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_write_chunks(FuDevice *device,
-				      FuElantpHidMcuDevice *self,
+fu_elantp_hid_mcu_device_write_chunks(FuElantpHidMcuDevice *self,
 				      FuElantpHidDevice *parent,
+				      FuDevice *device,
 				      GPtrArray *chunks,
 				      guint16 *checksum,
 				      FuProgress *progress,
@@ -544,7 +541,7 @@ fu_elantp_hid_mcu_device_write_chunks(FuDevice *device,
 				    error))
 			return FALSE;
 		fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 1, csum_tmp, G_LITTLE_ENDIAN);
-		if (!fu_elantp_hid_tp_device_send_cmd(parent, blk, blksz, NULL, 0, error))
+		if (!fu_elantp_hid_mcu_device_tp_send_cmd(parent, blk, blksz, NULL, 0, error))
 			return FALSE;
 		fw_section_cnt++;
 		if (self->fw_section_size == self->fw_page_size ||
@@ -564,9 +561,8 @@ fu_elantp_hid_mcu_device_write_chunks(FuDevice *device,
 					    self->iap_ctrl);
 				return FALSE;
 			}
-			if (self->iap_ctrl & ETP_FW_IAP_END_WAITWDT) {
+			if (self->iap_ctrl & ETP_FW_IAP_END_WAITWDT)
 				i = total_pages;
-			}
 		}
 
 		/* update progress */
@@ -624,9 +620,9 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 	chunks =
 	    fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_section_size);
 
-	if (!fu_elantp_hid_mcu_device_write_chunks(device,
-						   self,
+	if (!fu_elantp_hid_mcu_device_write_chunks(self,
 						   parent,
+						   device,
 						   chunks,
 						   &checksum,
 						   progress,
@@ -680,18 +676,18 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	if (parent == NULL)
 		return FALSE;
 
-	if (!fu_elantp_hid_tp_device_write_cmd(parent,
-					       FU_ETP_CMD_I2C_TP_SETTING,
-					       ETP_I2C_DISABLE_SCAN,
-					       error)) {
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+						   FU_ETP_CMD_I2C_TP_SETTING,
+						   ETP_I2C_DISABLE_SCAN,
+						   error)) {
 		g_prefix_error_literal(error, "cannot disable TP scan: ");
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_tp_device_write_cmd(parent,
-					       FU_ETP_CMD_I2C_IAP_RESET,
-					       ETP_I2C_DISABLE_REPORT,
-					       error)) {
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+						   FU_ETP_CMD_I2C_IAP_RESET,
+						   ETP_I2C_DISABLE_REPORT,
+						   error)) {
 		g_prefix_error_literal(error, "cannot disable TP report: ");
 		return FALSE;
 	}
@@ -869,27 +865,27 @@ fu_elantp_hid_mcu_device_attach(FuDevice *device, FuProgress *progress, GError *
 		g_prefix_error_literal(error, "cannot switch to MCU PTP mode: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_tp_device_write_cmd(parent,
-					       FU_ETP_CMD_I2C_IAP_RESET,
-					       ETP_I2C_IAP_RESET,
-					       error))
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+						   FU_ETP_CMD_I2C_IAP_RESET,
+						   ETP_I2C_IAP_RESET,
+						   error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
-	if (!fu_elantp_hid_tp_device_write_cmd(parent,
-					       FU_ETP_CMD_I2C_IAP_RESET,
-					       ETP_I2C_ENABLE_REPORT,
-					       error)) {
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+						   FU_ETP_CMD_I2C_IAP_RESET,
+						   ETP_I2C_ENABLE_REPORT,
+						   error)) {
 		g_prefix_error_literal(error, "cannot enable TP report: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_tp_device_write_cmd(parent, 0x0306, 0x003, error)) {
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent, 0x0306, 0x003, error)) {
 		g_prefix_error_literal(error, "cannot switch to TP PTP mode: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_tp_device_write_cmd(parent,
-					       FU_ETP_CMD_I2C_TP_SETTING,
-					       ETP_I2C_ENABLE_SCAN,
-					       error)) {
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+						   FU_ETP_CMD_I2C_TP_SETTING,
+						   ETP_I2C_ENABLE_SCAN,
+						   error)) {
 		g_prefix_error_literal(error, "cannot enable TP scan: ");
 		return FALSE;
 	}
