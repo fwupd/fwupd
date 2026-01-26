@@ -852,10 +852,10 @@ fu_elantp_hid_mcu_device_attach(FuDevice *device, FuProgress *progress, GError *
 		return FALSE;
 
 	/* sanity check */
-	/*if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("already in MCU runtime mode, skipping");
 		return TRUE;
-	}*/
+	}
 
 	/* reset back to runtime */
 	if (!fu_elantp_hid_mcu_device_write_cmd(parent,
