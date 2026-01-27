@@ -24,6 +24,7 @@
 #include "fwupd-enums-private.h"
 
 #include "fu-binder-common.h"
+#include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
@@ -683,6 +684,51 @@ fu_dbus_daemon_install_with_helper(FuMainAuthHelper *helper, GError **error)
 #endif /* HAVE_GIO_UNIX */
 
 static binder_status_t
+fu_binder_daemon_method_get_hwids(FuBinderDaemon *self,
+				  FuEngineRequest *request,
+				  const AParcel *in,
+				  AParcel *out,
+				  GError **error)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
+	FuHwids *hwids = fu_context_get_hwids(ctx);
+	g_autoptr(GPtrArray) chid_keys = fu_hwids_get_chid_keys(hwids);
+	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys(hwids);
+	g_auto(GVariantBuilder) builder;
+
+	/* activity */
+	fu_engine_idle_reset(engine);
+
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
+		const gchar *value = fu_hwids_get_value(hwids, hwid_key);
+		if (value == NULL)
+			continue;
+		g_variant_builder_add(&builder, "{sv}", hwid_key, g_variant_new_string(value));
+	}
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
+		const gchar *keys = NULL;
+		g_autofree gchar *guid = NULL;
+
+		/* get the GUID */
+		keys = fu_hwids_get_replace_keys(hwids, key);
+		if (keys == NULL)
+			continue;
+		guid = fu_hwids_get_guid(hwids, key, NULL);
+		if (guid == NULL)
+			continue;
+		g_variant_builder_add(&builder, "{sv}", keys, g_variant_new_string(guid));
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out,
+								g_variant_builder_end(&builder),
+								error);
+}
+
+static binder_status_t
 fu_binder_daemon_method_update_metadata(FuBinderDaemon *self,
 					FuEngineRequest *request,
 					const AParcel *in,
@@ -1248,6 +1294,7 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 	    fu_binder_daemon_method_get_properties,	/* getProperties */
 	    fu_binder_daemon_method_get_remotes,	/* getRemotes */
 	    fu_binder_daemon_method_update_metadata,	/* updateMetadata */
+	    fu_binder_daemon_method_get_hwids,		/* getHwids */
 	};
 
 	g_debug("daemon transaction code %d (%s)",

@@ -10,4 +10,5 @@ interface IFwupd {
         PersistableBundle getProperties(in String[] property_names);
         PersistableBundle[] getRemotes();
         void updateMetadata(in String remoteId, in ParcelFileDescriptor dataFd, in ParcelFileDescriptor signatureFd);
+        PersistableBundle getHwids();
 }

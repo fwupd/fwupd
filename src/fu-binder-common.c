@@ -22,6 +22,7 @@ const char *const fu_binder_call_names[FWUPD_BINDER_CALL_COUNT] = {
     "getProperties",
     "getRemotes",
     "updateMetadata",
+    "getHwids",
 };
 
 const char *const fu_binder_listener_call_names[FWUPD_BINDER_LISTENER_CALL_COUNT] = {

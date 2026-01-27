@@ -455,6 +455,90 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_hwids_call(FuUtil *self, GStrv *keys, GStrv *values, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+	GVariantBuilder builder;
+	const GVariantType *vtype = G_VARIANT_TYPE("(a{sv})");
+	guint size;
+
+	if (!fu_util_transact(self, FWUPD_BINDER_CALL_GET_HWIDS, NULL, 0, &out, error))
+		return FALSE;
+
+	g_variant_builder_init(&builder, vtype);
+	if (!gp_parcel_to_variant(&builder, out, vtype, error))
+		return FALSE;
+	val = g_variant_builder_end(&builder);
+
+	g_autoptr(GVariant) val_hwids = g_variant_get_child_value(val, 0);
+	g_autoptr(GVariantIter) iter = NULL;
+	const gchar *hwid_key;
+	GVariant *hwid_value_v;
+
+	size = g_variant_n_children(val_hwids);
+	*keys = g_new0(gchar *, size + 1);
+	*values = g_new0(gchar *, size + 1);
+	g_variant_get(val_hwids, "a{sv}", &iter);
+	for (guint i = 0; g_variant_iter_next(iter, "{&sv}", &hwid_key, &hwid_value_v); i++) {
+		(*keys)[i] = g_strdup(hwid_key);
+		(*values)[i] = g_variant_dup_string(hwid_value_v, NULL);
+		g_variant_unref(hwid_value_v);
+	}
+
+	return TRUE;
+}
+
+static void
+fu_util_hwids_as_json(FuUtil *self, GStrv hwids_keys, GStrv hwids_values)
+{
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	for (guint i = 0; hwids_keys[i] != NULL; i++)
+		fwupd_json_object_add_string(json_obj, hwids_keys[i], hwids_values[i]);
+	fu_util_print_json_object(self->console, json_obj);
+}
+
+static gboolean
+fu_util_hwids(FuUtil *self, gchar **values, GError **error)
+{
+	g_auto(GStrv) hwids_keys = NULL;
+	g_auto(GStrv) hwids_values = NULL;
+
+	if (!fu_util_get_hwids_call(self, &hwids_keys, &hwids_values, error))
+		return FALSE;
+
+	if (self->as_json) {
+		fu_util_hwids_as_json(self, hwids_keys, hwids_values);
+		return TRUE;
+	}
+
+	/* show debug output */
+	fu_console_print_literal(self->console, "Computer Information");
+	fu_console_print_literal(self->console, "--------------------");
+	for (guint i = 0; hwids_keys[i] != NULL; i++) {
+		if (fwupd_guid_is_valid(hwids_values[i]))
+			continue;
+		fu_console_print(self->console, "%s: %s", hwids_keys[i], hwids_values[i]);
+	}
+
+	/* show GUIDs */
+	fu_console_print_literal(self->console, "Hardware IDs");
+	fu_console_print_literal(self->console, "------------");
+	for (guint i = 0; hwids_keys[i] != NULL; i++) {
+		g_autofree gchar *hwids_keys_real = NULL;
+		g_auto(GStrv) hwids_keys_strv = NULL;
+		if (!fwupd_guid_is_valid(hwids_values[i]))
+			continue;
+		hwids_keys_strv = g_strsplit(hwids_keys[i], "&", -1);
+		hwids_keys_real = g_strjoinv(" + ", hwids_keys_strv);
+		fu_console_print(self->console, "{%s}   <- %s", hwids_values[i], hwids_keys_real);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gchar *
 fu_util_download_if_required(FuUtil *self, const gchar *perhapsfn, GError **error)
 {
@@ -1122,6 +1206,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Refresh metadata from remote server"),
 			      fu_util_refresh);
+	fu_util_cmd_array_add(cmd_array,
+			      "hwids",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Return all the hardware IDs for the machine"),
+			      fu_util_hwids);
 
 	/* get a list of the commands */
 	self->context = g_option_context_new(NULL);
