@@ -6,8 +6,12 @@
 
 #include "config.h"
 
+#include "fwupd-enums-struct.h"
+
 #include "fu-sunwinon-hid-device.h"
 #include "fu-sunwinon-util-dfu-master.h"
+#include "glib.h"
+#include "glibconfig.h"
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -30,18 +34,22 @@ static gboolean
 fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **error)
 {
 	FuSunwinonDfuImageInfo fw_info = {0};
+	guint8 major = 0;
+	guint8 minor = 0;
+	guint8 patch = 0;
 	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
 
 	dfu_master = fu_sunwinon_util_dfu_master_new(NULL, 0, FU_DEVICE(device), error);
 	if (!fu_sunwinon_util_dfu_master_fetch_fw_version(dfu_master, &fw_info, error))
 		return FALSE;
-	g_debug("firmware version fetched: %u.%u",
-		(guint)((fw_info.version >> 8) & 0xFF),
-		(guint)(fw_info.version & 0xFF));
-	fu_device_set_version(FU_DEVICE(device),
-			      g_strdup_printf("%u.%u",
-					      (guint)((fw_info.version >> 8) & 0xFF),
-					      (guint)(fw_info.version & 0xFF)));
+
+	patch = fw_info.version & 0xFF;
+	major = (fw_info.version >> 8) & 0xFF;
+	minor = (fw_info.version >> 12) & 0xFF;
+	g_debug("firmware version fetched: %u.%u.%u", (guint)major, (guint)minor, (guint)patch);
+	fu_device_set_version(
+	    FU_DEVICE(device),
+	    g_strdup_printf("%u.%u.%u", (guint)major, (guint)minor, (guint)patch));
 	return TRUE;
 }
 
@@ -108,7 +116,7 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 	g_debug("initializing sunwinon HID device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
 	fu_device_set_id(FU_DEVICE(self), "SunwinonHid");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "com.sunwinon.hid");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);

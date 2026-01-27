@@ -742,12 +742,30 @@ fu_sunwinon_util_dfu_master_program_end_cmd_normal(FuSwDfuMaster *self,
 						   FuProgress *progress,
 						   GError **error)
 {
+	guint32 image_info_check_sum = 0;
 	g_autoptr(FuStructSunwinonDfuPayloadProgramEnd) st_prog_end_payload = NULL;
 
 	g_return_val_if_fail(inner_state != NULL, FALSE);
 	g_return_val_if_fail(progress != NULL, FALSE);
 
 	g_debug("ProgramEnd");
+
+	/* embedded check sum only counts app blob, tailing info is not included */
+	/* but the ProgramEnd command requires full file check sum */
+	for (gsize i = 0; i < DFU_IMAGE_INFO_TAIL_SIZE; i++) {
+		image_info_check_sum += self->fw[self->fw_sz - DFU_IMAGE_INFO_TAIL_SIZE + i];
+	}
+
+	if (inner_state->file_check_sum !=
+	    inner_state->now_img_info.boot_info.check_sum + image_info_check_sum) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "sunwinon-hid: file check sum mismatch, expected %u, got %u",
+			    inner_state->now_img_info.boot_info.check_sum,
+			    inner_state->file_check_sum);
+		return FALSE;
+	}
 
 	st_prog_end_payload = fu_struct_sunwinon_dfu_payload_program_end_new();
 	fu_struct_sunwinon_dfu_payload_program_end_set_file_check_sum(st_prog_end_payload,
