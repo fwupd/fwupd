@@ -505,6 +505,7 @@ if get_option('tests')
     'device-event',
     'device-locker',
     'efi',
+    'firmware',
     'hid-descriptor',
     'ihex-firmware',
     'input-stream',
