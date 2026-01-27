@@ -502,6 +502,7 @@ if get_option('tests')
     'bytes',
     'chunk-array',
     'composite-input-stream',
+    'device-event',
     'device-locker',
     'hid-descriptor',
     'ihex-firmware',
