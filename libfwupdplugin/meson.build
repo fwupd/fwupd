@@ -504,6 +504,7 @@ if get_option('tests')
     'device-locker',
     'input-stream',
     'intel-me',
+    'kernel-search-path',
     'partial-input-stream',
     'progress',
     'self',

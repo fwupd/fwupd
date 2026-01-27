@@ -1809,48 +1809,6 @@ fu_common_kernel_lockdown_func(void)
 }
 
 static void
-fu_common_kernel_search_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *result1 = NULL;
-	g_autofree gchar *result2 = NULL;
-	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
-	g_autoptr(GError) error = NULL;
-
-#ifndef __linux__
-	g_test_skip("only works on Linux");
-	return;
-#endif
-
-	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/dev/null", TRUE);
-	result1 = fu_kernel_search_path_get_current(&error);
-	g_assert_null(result1);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
-	g_clear_error(&error);
-
-	ret = g_file_set_contents("/tmp/fwupd-self-test/search_path", "oldvalue", -1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/tmp/fwupd-self-test/search_path", TRUE);
-	locker = fu_kernel_search_path_locker_new("/foo/bar", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(locker);
-	g_assert_cmpstr(fu_kernel_search_path_locker_get_path(locker), ==, "/foo/bar");
-
-	result1 = fu_kernel_search_path_get_current(&error);
-	g_assert_nonnull(result1);
-	g_assert_cmpstr(result1, ==, "/foo/bar");
-	g_assert_no_error(error);
-	g_clear_object(&locker);
-
-	result2 = fu_kernel_search_path_get_current(&error);
-	g_assert_nonnull(result2);
-	g_assert_cmpstr(result2, ==, "oldvalue");
-	g_assert_no_error(error);
-}
-
-static void
 fu_common_endian_func(void)
 {
 	guint8 buf[3] = {0};
@@ -5385,7 +5343,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
-	g_test_add_func("/fwupd/common{kernel-search}", fu_common_kernel_search_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/common{cpuid}", fu_cpuid_func);
 	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
