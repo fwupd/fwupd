@@ -502,6 +502,7 @@ if get_option('tests')
     'bytes',
     'composite-input-stream',
     'device-locker',
+    'input-stream',
     'intel-me',
     'partial-input-stream',
     'progress',
