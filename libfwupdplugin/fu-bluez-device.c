@@ -217,7 +217,9 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 
 	/* set version if the revision has been set */
 	if (rev != 0x0 &&
-	    fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+	    fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    !fu_device_has_private_flag(FU_DEVICE(self),
+					FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION)) {
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version_raw(FU_DEVICE(self), rev);
 	}
@@ -415,7 +417,6 @@ static gboolean
 fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **error)
 {
 	g_autofree gchar *model_number = NULL;
-	g_autofree gchar *fw_revision = NULL;
 	g_autofree gchar *manufacturer = NULL;
 
 	model_number =
@@ -461,11 +462,18 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 			fu_device_set_serial(FU_DEVICE(self), serial_number);
 	}
 
-	fw_revision =
-	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_FIRMWARE_REVISION, NULL);
-	if (fw_revision != NULL) {
-		fu_device_set_version_format(FU_DEVICE(self), fu_version_guess_format(fw_revision));
-		fu_device_set_version(FU_DEVICE(self), fw_revision); /* nocheck:set-version */
+	if (!fu_device_has_private_flag(FU_DEVICE(self),
+					FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION)) {
+		g_autofree gchar *fw_revision =
+		    fu_bluez_device_read_string(self,
+						FU_BLUEZ_DEVICE_UUID_DI_FIRMWARE_REVISION,
+						NULL);
+		if (fw_revision != NULL) {
+			fu_device_set_version_format(FU_DEVICE(self),
+						     fu_version_guess_format(fw_revision));
+			fu_device_set_version(FU_DEVICE(self),
+					      fw_revision); /* nocheck:set-version */
+		}
 	}
 
 	/* success */
