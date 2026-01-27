@@ -500,6 +500,7 @@ if get_option('tests')
     'bytes',
     'self',
     'temporary-directory',
+    'version',
     'volume',
   ]
     e = executable(
