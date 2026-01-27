@@ -1190,7 +1190,9 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	/* set the version if the release has been set */
 	release = fu_usb_device_get_release(self);
 	if (release != 0x0 &&
-	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    !fu_device_has_private_flag(FU_DEVICE(self),
+					FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION)) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version_raw(device, release);
 	}

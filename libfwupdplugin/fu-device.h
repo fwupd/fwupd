@@ -496,6 +496,14 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS "no-generic-guids"
 /**
+ * FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION:
+ *
+ * Do not add generic versions from outside the plugin.
+ *
+ * Since: 2.1.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION "no-generic-version"
+/**
  * FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES:
  *
  * The device uses a generic instance ID and firmware requires a parent, child, sibling or
