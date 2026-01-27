@@ -430,7 +430,7 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* DMI */
-	path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "dmi", "tables", NULL);
+	path = fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, "dmi", "tables", NULL);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
 		g_set_error(error,
 			    FWUPD_ERROR,

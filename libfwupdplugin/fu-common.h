@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <fwupd.h>
 #include <xmlb.h>
 
 #include "fu-common-struct.h"
+#include "fu-context.h"
 
 /**
  * FU_BIT_SET:
@@ -65,7 +65,7 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
 FuCpuVendor
 fu_cpu_get_vendor(void);
 GHashTable *
-fu_cpu_get_attrs(GError **error);
+fu_cpu_get_attrs(FuContext *ctx, GError **error);
 
 guint64
 fu_common_get_memory_size(void);

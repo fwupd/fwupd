@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuAcpiFacpPlugin, fu_acpi_facp_plugin, FU_TYPE_PLUGIN)
 static void
 fu_acpi_facp_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiFacp) facp = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -30,7 +31,7 @@ fu_acpi_facp_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	/* load FACP table */
-	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "FACP", NULL);
+	fn = fu_context_build_path(ctx, FU_PATH_KIND_ACPI_TABLES, "FACP", NULL);
 	blob = fu_bytes_get_contents(fn, &error_local);
 	if (blob == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);

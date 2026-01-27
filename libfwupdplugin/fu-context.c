@@ -75,6 +75,402 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuContext, fu_context, G_TYPE_OBJECT)
 
 #define GET_PRIVATE(o) (fu_context_get_instance_private(o))
 
+/**
+ * fu_context_path_get_win32_basedir:
+ *
+ * Gets the base directory that fwupd has been launched from on Windows.
+ * This is the directory containing all subdirectories (IE 'C:\Program Files (x86)\fwupd\')
+ *
+ * Returns: The system path, or %NULL if invalid
+ *
+ * Since: 1.8.2
+ **/
+static gchar *
+fu_context_path_get_win32_basedir(void)
+{
+#ifdef _WIN32
+	char drive_buf[_MAX_DRIVE];
+	char dir_buf[_MAX_DIR];
+	_splitpath(_pgmptr, drive_buf, dir_buf, NULL, NULL);
+	return g_build_filename(drive_buf, dir_buf, "..", NULL);
+#endif
+	return NULL;
+}
+
+/**
+ * fu_context_get_path:
+ * @self: a #FuContext
+ * @path_kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ *
+ * Gets a fwupd-specific system path. These can be overridden with various
+ * environment variables, for instance %FWUPD_DATADIR.
+ *
+ * Returns: a system path, or %NULL if invalid
+ *
+ * Since: 2.1.1
+ **/
+gchar *
+fu_context_get_path(FuContext *self, FuPathKind path_kind)
+{
+	const gchar *tmp;
+	g_autofree gchar *basedir = NULL;
+
+	switch (path_kind) {
+	/* /var */
+	case FU_PATH_KIND_LOCALSTATEDIR:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+#ifdef _WIN32
+		return g_build_filename(g_getenv("USERPROFILE"),
+					PACKAGE_NAME,
+					FWUPD_LOCALSTATEDIR,
+					NULL);
+#else
+		tmp = g_getenv("SNAP_COMMON");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LOCALSTATEDIR, NULL);
+		return g_build_filename(FWUPD_LOCALSTATEDIR, NULL);
+#endif
+	/* /proc */
+	case FU_PATH_KIND_PROCFS:
+		tmp = g_getenv("FWUPD_PROCFS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/proc");
+	/* /sys */
+	case FU_PATH_KIND_SYSFSDIR:
+		tmp = g_getenv("FWUPD_SYSFSDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/sys");
+	/* /sys/firmware */
+	case FU_PATH_KIND_SYSFSDIR_FW:
+		tmp = g_getenv("FWUPD_SYSFSFWDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self, FU_PATH_KIND_SYSFSDIR, "firmware", NULL);
+	/* /sys/class/tpm */
+	case FU_PATH_KIND_SYSFSDIR_TPM:
+		tmp = g_getenv("FWUPD_SYSFSTPMDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self, FU_PATH_KIND_SYSFSDIR, "class", "tpm", NULL);
+	/* /sys/bus/platform/drivers */
+	case FU_PATH_KIND_SYSFSDIR_DRIVERS:
+		tmp = g_getenv("FWUPD_SYSFSDRIVERDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_SYSFSDIR,
+					     "bus",
+					     "platform",
+					     "drivers",
+					     NULL);
+	/* /sys/kernel/security */
+	case FU_PATH_KIND_SYSFSDIR_SECURITY:
+		tmp = g_getenv("FWUPD_SYSFSSECURITYDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_SYSFSDIR,
+					     "kernel",
+					     "security",
+					     NULL);
+	/* /sys/class/dmi/id */
+	case FU_PATH_KIND_SYSFSDIR_DMI:
+		tmp = g_getenv("FWUPD_SYSFSDMIDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_SYSFSDIR,
+					     "class",
+					     "dmi",
+					     "id",
+					     NULL);
+	/* /sys/firmware/acpi/tables */
+	case FU_PATH_KIND_ACPI_TABLES:
+		tmp = g_getenv("FWUPD_ACPITABLESDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_SYSFSDIR,
+					     "firmware",
+					     "acpi",
+					     "tables",
+					     NULL);
+	/* /sys/module/firmware_class/parameters/path */
+	case FU_PATH_KIND_FIRMWARE_SEARCH:
+		tmp = g_getenv("FWUPD_FIRMWARESEARCH");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_SYSFSDIR,
+					     "module",
+					     "firmware_class",
+					     "parameters",
+					     "path",
+					     NULL);
+	/* /etc */
+	case FU_PATH_KIND_SYSCONFDIR:
+		tmp = g_getenv("FWUPD_SYSCONFDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_SYSCONFDIR, NULL);
+		basedir = fu_context_path_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_SYSCONFDIR, NULL);
+		return g_strdup(FWUPD_SYSCONFDIR);
+	/* /usr/libexec/ */
+	case FU_PATH_KIND_LIBEXECDIR:
+		tmp = g_getenv("FWUPD_LIBEXECDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LIBEXECDIR, NULL);
+		return g_strdup(FWUPD_LIBEXECDIR);
+	/* /usr/lib/<triplet>/fwupd-#VERSION# */
+	case FU_PATH_KIND_LIBDIR_PKG:
+		tmp = g_getenv("FWUPD_LIBDIR_PKG");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LIBDIR_PKG, NULL);
+		basedir = fu_context_path_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_LIBDIR_PKG, NULL);
+		return g_build_filename(FWUPD_LIBDIR_PKG, NULL);
+	/* /usr/share/fwupd */
+	case FU_PATH_KIND_DATADIR_PKG:
+		tmp = g_getenv("FWUPD_DATADIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_DATADIR, PACKAGE_NAME, NULL);
+		basedir = fu_context_path_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_DATADIR, PACKAGE_NAME, NULL);
+		return g_build_filename(FWUPD_DATADIR, PACKAGE_NAME, NULL);
+	/* /usr/libexec/fwupd */
+	case FU_PATH_KIND_LIBEXECDIR_PKG:
+		tmp = g_getenv("FWUPD_LIBEXECDIR_PKG");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LIBEXECDIR, PACKAGE_NAME, NULL);
+		return g_build_filename(FWUPD_LIBEXECDIR, PACKAGE_NAME, NULL);
+	/* /usr/share/hwdata */
+	case FU_PATH_KIND_DATADIR_VENDOR_IDS:
+		tmp = g_getenv("FWUPD_DATADIR_VENDOR_IDS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_DATADIR_VENDOR_IDS, NULL);
+		return g_strdup(FWUPD_DATADIR_VENDOR_IDS);
+	/* /usr/share/fwupd/quirks.d */
+	case FU_PATH_KIND_DATADIR_QUIRKS:
+		tmp = g_getenv("FWUPD_DATADIR_QUIRKS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self, FU_PATH_KIND_DATADIR_PKG, "quirks.d", NULL);
+	/* /usr/libexec/fwupd/efi */
+	case FU_PATH_KIND_EFIAPPDIR:
+		tmp = g_getenv("FWUPD_EFIAPPDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+#ifdef EFI_APP_LOCATION
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, EFI_APP_LOCATION, NULL);
+		return g_strdup(EFI_APP_LOCATION);
+#else
+		return NULL;
+#endif
+	/* /etc/fwupd */
+	case FU_PATH_KIND_SYSCONFDIR_PKG:
+		tmp = g_getenv("CONFIGURATION_DIRECTORY");
+		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self, FU_PATH_KIND_SYSCONFDIR, PACKAGE_NAME, NULL);
+	/* /var/lib/fwupd */
+	case FU_PATH_KIND_LOCALSTATEDIR_PKG:
+		tmp = g_getenv("STATE_DIRECTORY");
+		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_LOCALSTATEDIR,
+					     "lib",
+					     PACKAGE_NAME,
+					     NULL);
+	/* /var/lib/fwupd/quirks.d */
+	case FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_QUIRKS");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "quirks.d",
+					     NULL);
+	/* /var/lib/fwupd/metadata */
+	case FU_PATH_KIND_LOCALSTATEDIR_METADATA:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_METADATA");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "metadata",
+					     NULL);
+	/* /var/lib/fwupd/remotes.d */
+	case FU_PATH_KIND_LOCALSTATEDIR_REMOTES:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_REMOTES");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "remotes.d",
+					     NULL);
+	/* /var/cache/fwupd */
+	case FU_PATH_KIND_CACHEDIR_PKG:
+		tmp = g_getenv("CACHE_DIRECTORY");
+		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_LOCALSTATEDIR,
+					     "cache",
+					     PACKAGE_NAME,
+					     NULL);
+	/* /var/etc/fwupd */
+	case FU_PATH_KIND_LOCALCONFDIR_PKG:
+		tmp = g_getenv("LOCALCONF_DIRECTORY");
+		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
+			return g_build_filename(tmp, NULL);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_LOCALSTATEDIR,
+					     "etc",
+					     PACKAGE_NAME,
+					     NULL);
+	/* /run */
+	case FU_PATH_KIND_RUNDIR:
+		tmp = g_getenv("FWUPD_RUNDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/run");
+	/* /run/lock */
+	case FU_PATH_KIND_LOCKDIR:
+		tmp = g_getenv("FWUPD_LOCKDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		if (g_file_test("/run/lock", G_FILE_TEST_EXISTS))
+			return g_strdup("/run/lock");
+		return g_strdup("/var/run");
+	/* /sys/class/firmware-attributes */
+	case FU_PATH_KIND_SYSFSDIR_FW_ATTRIB:
+		tmp = g_getenv("FWUPD_SYSFSFWATTRIBDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return fu_context_build_path(self,
+					     FU_PATH_KIND_SYSFSDIR,
+					     "class",
+					     "firmware-attributes",
+					     NULL);
+	case FU_PATH_KIND_POLKIT_ACTIONS:
+#ifdef POLKIT_ACTIONDIR
+		return g_strdup(POLKIT_ACTIONDIR);
+#else
+		return NULL;
+#endif
+	/* C:\Program Files (x86)\fwupd\ */
+	case FU_PATH_KIND_WIN32_BASEDIR:
+		return fu_context_path_get_win32_basedir();
+	/* / */
+	case FU_PATH_KIND_HOSTFS_ROOT:
+		tmp = g_getenv("FWUPD_HOSTFS_ROOT");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/");
+	/* /boot */
+	case FU_PATH_KIND_HOSTFS_BOOT:
+		tmp = g_getenv("FWUPD_HOSTFS_BOOT");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/boot");
+	/* /dev */
+	case FU_PATH_KIND_DEVFS:
+		tmp = g_getenv("FWUPD_DEVFS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/dev");
+	/* /etc/localtime or /var/lib/timezone/localtime */
+	case FU_PATH_KIND_LOCALTIME: {
+		g_autofree gchar *localtime = NULL;
+		tmp = g_getenv("FWUPD_LOCALTIME");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		basedir = fu_context_build_path(self,
+						FU_PATH_KIND_LOCALSTATEDIR,
+						"lib",
+						"timezone",
+						"localtime",
+						NULL);
+		if (g_file_test(basedir, G_FILE_TEST_EXISTS))
+			return g_steal_pointer(&basedir);
+		localtime = fu_context_build_path(self, FU_PATH_KIND_SYSCONFDIR, "localtime", NULL);
+		if (g_file_test(localtime, G_FILE_TEST_EXISTS))
+			return g_steal_pointer(&localtime);
+		return g_strdup("/etc/localtime");
+	}
+	/* /sys/kernel/debug */
+	case FU_PATH_KIND_DEBUGFSDIR:
+		tmp = g_getenv("FWUPD_DEBUGFSDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/sys/kernel/debug");
+	/* this shouldn't happen */
+	default:
+		g_warning("cannot build path for unknown kind %u", path_kind);
+	}
+
+	return NULL;
+}
+
+/**
+ * fu_context_build_path:
+ * @self: a #FuContext
+ * @path_kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ * @...: pairs of string key values, ending with %NULL
+ *
+ * Gets a fwupd-specific system path. These can be overridden with various
+ * environment variables, for instance %FWUPD_DATADIR.
+ *
+ * Returns: a system path, or %NULL if invalid
+ *
+ * Since: 2.1.1
+ **/
+gchar *
+fu_context_build_path(FuContext *self, FuPathKind path_kind, ...)
+{
+	va_list args;
+	gchar *path;
+	g_autofree gchar *path_initial = NULL;
+
+	path_initial = fu_context_get_path(self, path_kind);
+	if (path_initial == NULL)
+		return NULL;
+
+	va_start(args, path_kind);
+	path = g_build_filename_valist(path_initial, &args);
+	va_end(args);
+
+	return path;
+}
+
 static gboolean
 fu_context_ensure_smbios_uefi_enabled(FuContext *self, GError **error)
 {
@@ -120,18 +516,19 @@ fu_context_ensure_smbios_uefi_enabled(FuContext *self, GError **error)
 }
 
 static GFile *
-fu_context_get_fdt_file(GError **error)
+fu_context_get_fdt_file(FuContext *self, GError **error)
 {
 	g_autofree gchar *fdtfn_local = NULL;
 	g_autofree gchar *fdtfn_sys = NULL;
 
 	/* look for override first, fall back to system value */
-	fdtfn_local = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "system.dtb", NULL);
+	fdtfn_local =
+	    fu_context_build_path(self, FU_PATH_KIND_LOCALSTATEDIR_PKG, "system.dtb", NULL);
 	if (g_file_test(fdtfn_local, G_FILE_TEST_EXISTS))
 		return g_file_new_for_path(fdtfn_local);
 
 	/* actual hardware value */
-	fdtfn_sys = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "fdt", NULL);
+	fdtfn_sys = fu_context_build_path(self, FU_PATH_KIND_SYSFSDIR_FW, "fdt", NULL);
 	if (g_file_test(fdtfn_sys, G_FILE_TEST_EXISTS))
 		return g_file_new_for_path(fdtfn_sys);
 
@@ -170,7 +567,7 @@ fu_context_get_fdt(FuContext *self, GError **error)
 	/* load if not already parsed */
 	if (priv->fdt == NULL) {
 		g_autoptr(FuFirmware) fdt_tmp = fu_fdt_firmware_new();
-		g_autoptr(GFile) file = fu_context_get_fdt_file(error);
+		g_autoptr(GFile) file = fu_context_get_fdt_file(self, error);
 		if (file == NULL)
 			return NULL;
 		if (!fu_firmware_parse_file(fdt_tmp,
@@ -1228,11 +1625,12 @@ fu_context_detect_hypervisor_privileged(FuContext *self)
 	g_autofree gchar *xen_privileged_fn = NULL;
 
 	/* privileged xen can access most hardware */
-	xen_privileged_fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
-					  "hypervisor",
-					  "start_flags",
-					  "privileged",
-					  NULL);
+	xen_privileged_fn = fu_context_build_path(self,
+						  FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
+						  "hypervisor",
+						  "start_flags",
+						  "privileged",
+						  NULL);
 	if (!g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
 		g_autofree gchar *contents = NULL;
 		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
@@ -1250,7 +1648,7 @@ fu_context_detect_hypervisor(FuContext *self)
 	const gchar *flags;
 	g_autoptr(GHashTable) cpu_attrs = NULL;
 
-	cpu_attrs = fu_cpu_get_attrs(NULL);
+	cpu_attrs = fu_cpu_get_attrs(self, NULL);
 	if (cpu_attrs == NULL)
 		return;
 	flags = g_hash_table_lookup(cpu_attrs, "flags");
@@ -2489,6 +2887,16 @@ fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 }
 
 static void
+fu_context_constructed(GObject *object)
+{
+	FuContext *self = FU_CONTEXT(object);
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	priv->config = fu_config_new(self);
+	priv->quirks = fu_quirks_new(self);
+	priv->host_bios_settings = fu_bios_settings_new(self);
+}
+
+static void
 fu_context_dispose(GObject *object)
 {
 	FuContext *self = FU_CONTEXT(object);
@@ -2530,6 +2938,7 @@ fu_context_class_init(FuContextClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
+	object_class->constructed = fu_context_constructed;
 	object_class->dispose = fu_context_dispose;
 	object_class->get_property = fu_context_get_property;
 	object_class->set_property = fu_context_set_property;
@@ -2680,7 +3089,6 @@ fu_context_init(FuContext *self)
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
-	priv->config = fu_config_new();
 	priv->efivars = g_strcmp0(g_getenv("FWUPD_EFIVARS"), "dummy") == 0 ? fu_dummy_efivars_new()
 									   : fu_efivars_new();
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -2689,8 +3097,6 @@ fu_context_init(FuContext *self)
 						      g_free,
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	priv->quirks = fu_quirks_new(self);
-	priv->host_bios_settings = fu_bios_settings_new();
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

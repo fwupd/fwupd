@@ -124,6 +124,7 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
 
 /**
  * fu_cpu_get_attrs:
+ * @ctx: a #FuContext
  * @error: (nullable): optional return location for an error
  *
  * Gets attributes for the first CPU listed in `/proc/cpuinfo`.
@@ -133,11 +134,11 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
  * Since: 2.0.7
  **/
 GHashTable *
-fu_cpu_get_attrs(GError **error)
+fu_cpu_get_attrs(FuContext *ctx, GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
+	g_autofree gchar *fn = fu_context_build_path(ctx, FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
 	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);

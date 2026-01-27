@@ -16,15 +16,22 @@ struct _FuUefiMokPlugin {
 G_DEFINE_TYPE(FuUefiMokPlugin, fu_uefi_mok_plugin, FU_TYPE_PLUGIN)
 
 static gchar *
-fu_uefi_mok_plugin_get_filename(void)
+fu_uefi_mok_plugin_get_filename(FuUefiMokPlugin *self)
 {
-	return fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "mok-variables", "HSIStatus", NULL);
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	return fu_context_build_path(ctx,
+				     FU_PATH_KIND_SYSFSDIR_FW,
+				     "efi",
+				     "mok-variables",
+				     "HSIStatus",
+				     NULL);
 }
 
 static gboolean
 fu_uefi_mok_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	g_autofree gchar *fn = fu_uefi_mok_plugin_get_filename();
+	FuUefiMokPlugin *self = FU_UEFI_MOK_PLUGIN(plugin);
+	g_autofree gchar *fn = fu_uefi_mok_plugin_get_filename(self);
 
 	/* sanity check */
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
@@ -39,6 +46,7 @@ fu_uefi_mok_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 static void
 fu_uefi_mok_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuUefiMokPlugin *self = FU_UEFI_MOK_PLUGIN(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *fn = fu_uefi_mok_plugin_get_filename();

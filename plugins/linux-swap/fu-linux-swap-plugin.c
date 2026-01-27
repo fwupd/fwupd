@@ -33,9 +33,10 @@ static gboolean
 fu_linux_swap_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuLinuxSwapPlugin *self = FU_LINUX_SWAP_PLUGIN(plugin);
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *fn = NULL;
 
-	fn = fu_path_build(FU_PATH_KIND_PROCFS, "swaps", NULL);
+	fn = fu_context_build_path(ctx, FU_PATH_KIND_PROCFS, "swaps", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-heci-device.h"
 
 /**

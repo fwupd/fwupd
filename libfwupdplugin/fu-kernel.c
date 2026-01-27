@@ -28,13 +28,16 @@
  * Since: 1.8.2
  **/
 gboolean
-fu_kernel_locked_down(void)
+fu_kernel_locked_down(FuContext *ctx)
 {
 #ifdef __linux__
 	gsize len = 0;
-	g_autofree gchar *fname = fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
+	g_autofree gchar *fname =
+	    fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
 	g_autofree gchar *data = NULL;
 	g_auto(GStrv) options = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), FALSE);
 
 	if (!g_file_test(fname, G_FILE_TEST_EXISTS))
 		return FALSE;
@@ -175,7 +178,7 @@ fu_kernel_parse_config(const gchar *buf, gsize bufsz, GError **error)
 
 #ifdef __linux__
 static gchar *
-fu_kernel_get_config_path(GError **error)
+fu_kernel_get_config_path(FuContext *ctx, GError **error)
 {
 #ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
@@ -190,7 +193,7 @@ fu_kernel_get_config_path(GError **error)
 		return NULL;
 	}
 	config_fn = g_strdup_printf("config-%s", name_tmp.release);
-	return fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, config_fn, NULL);
+	return fu_context_build_path(ctx, FU_PATH_KIND_HOSTFS_BOOT, config_fn, NULL);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -212,14 +215,16 @@ fu_kernel_get_config_path(GError **error)
  * Since: 1.8.5
  **/
 GHashTable *
-fu_kernel_get_config(GError **error)
+fu_kernel_get_config(FuContext *ctx, GError **error)
 {
 #ifdef __linux__
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *config_fngz = fu_path_build(FU_PATH_KIND_PROCFS, "config.gz", NULL);
+	g_autofree gchar *config_fngz =
+	    fu_context_build_path(ctx, FU_PATH_KIND_PROCFS, "config.gz", NULL);
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* try /proc/config.gz -- which will only work with CONFIG_IKCONFIG */
@@ -244,7 +249,7 @@ fu_kernel_get_config(GError **error)
 	}
 
 	/* fall back to /boot/config-$(uname -r) */
-	fn = fu_kernel_get_config_path(error);
+	fn = fu_kernel_get_config_path(ctx, error);
 	if (fn == NULL)
 		return NULL;
 	if (!g_file_get_contents(fn, &buf, &bufsz, error))
@@ -336,7 +341,7 @@ fu_kernel_get_cmdline(GError **error)
 }
 
 gboolean
-fu_kernel_check_cmdline_mutable(GError **error)
+fu_kernel_check_cmdline_mutable(FuContext *ctx, GError **error)
 {
 	g_autofree gchar *grubby_path = NULL;
 	g_auto(GStrv) config_files = g_new0(gchar *, 3);
@@ -347,8 +352,9 @@ fu_kernel_check_cmdline_mutable(GError **error)
 		return FALSE;
 
 	/* check all the config files are writable */
-	config_files[0] = fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, "grub2", "grub.cfg", NULL);
-	config_files[1] = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "grub.cfg", NULL);
+	config_files[0] =
+	    fu_context_build_path(ctx, FU_PATH_KIND_HOSTFS_BOOT, "grub2", "grub.cfg", NULL);
+	config_files[1] = fu_context_build_path(ctx, FU_PATH_KIND_SYSCONFDIR, "grub.cfg", NULL);
 	for (guint i = 0; config_files[i] != NULL; i++) {
 		g_autoptr(GFile) file = g_file_new_for_path(config_files[i]);
 		g_autoptr(GFileInfo) info = NULL;

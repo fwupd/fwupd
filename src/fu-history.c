@@ -615,7 +615,7 @@ fu_history_load(FuHistory *self, GError **error)
 	g_return_val_if_fail(self->db == NULL, FALSE);
 
 	/* create directory */
-	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	dirname = fu_context_get_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	file = g_file_new_for_path(dirname);
 	if (!g_file_query_exists(file, NULL)) {
 		if (!g_file_make_directory_with_parents(file, NULL, error))

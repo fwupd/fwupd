@@ -52,9 +52,10 @@ static gboolean
 fu_linux_tainted_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuLinuxTaintedPlugin *self = FU_LINUX_TAINTED_PLUGIN(plugin);
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *fn = NULL;
 
-	fn = fu_path_build(FU_PATH_KIND_PROCFS, "sys", "kernel", "tainted", NULL);
+	fn = fu_context_build_path(ctx, FU_PATH_KIND_PROCFS, "sys", "kernel", "tainted", NULL);
 	self->file = g_file_new_for_path(fn);
 	self->monitor = g_file_monitor(self->file, G_FILE_MONITOR_NONE, NULL, error);
 	if (self->monitor == NULL)

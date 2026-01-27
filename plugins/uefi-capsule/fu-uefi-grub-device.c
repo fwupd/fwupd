@@ -22,6 +22,7 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 			     const gchar *target_app,
 			     GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *fn_grub_cfg = NULL;
 	const gchar *argv_mkconfig[] = {"", "-o", "grub.cfg", NULL};
 	const gchar *argv_reboot[] = {"", "fwupd", NULL};
@@ -33,14 +34,16 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* find grub.conf */
-	fn_grub_cfg = fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, "grub", "grub.cfg", NULL);
+	fn_grub_cfg =
+	    fu_context_build_path(ctx, FU_PATH_KIND_HOSTFS_BOOT, "grub", "grub.cfg", NULL);
 	if (!fu_device_query_file_exists(FU_DEVICE(self), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
 
 	/* try harder */
 	if (!exists_mkconfig) {
 		g_free(fn_grub_cfg);
-		fn_grub_cfg = fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, "grub2", "grub.cfg", NULL);
+		fn_grub_cfg =
+		    fu_context_build_path(ctx, FU_PATH_KIND_HOSTFS_BOOT, "grub2", "grub.cfg", NULL);
 	}
 	if (!fu_device_query_file_exists(FU_DEVICE(self), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
@@ -80,7 +83,8 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 	g_string_append_printf(str, "EFI_PATH=%s\n", target_app);
 	g_string_replace(str, esp_path, "", 0);
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
-	grub_target = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "uefi_capsule.conf", NULL);
+	grub_target =
+	    fu_context_build_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, "uefi_capsule.conf", NULL);
 	if (!fu_path_mkdir_parent(grub_target, error))
 		return FALSE;
 	if (!g_file_set_contents(grub_target, str->str, -1, error)) {

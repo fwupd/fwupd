@@ -4616,7 +4616,10 @@ fu_util_check_polkit_actions(GError **error)
 	if (g_getenv("FWUPD_POLKIT_NOCHECK") != NULL)
 		return TRUE;
 
-	filename = fu_path_build(FU_PATH_KIND_POLKIT_ACTIONS, "org.freedesktop.fwupd.policy", NULL);
+	filename = fu_context_build_path(self->ctx,
+					 FU_PATH_KIND_POLKIT_ACTIONS,
+					 "org.freedesktop.fwupd.policy",
+					 NULL);
 	if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
 		g_set_error_literal(
 		    error,

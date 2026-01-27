@@ -17,7 +17,7 @@
 gboolean
 fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 {
-	g_autofree gchar *path = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_DMI);
+	g_autofree gchar *path = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI);
 	struct {
 		const gchar *hwid;
 		const gchar *key;

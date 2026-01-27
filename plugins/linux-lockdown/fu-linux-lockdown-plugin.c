@@ -60,10 +60,11 @@ fu_linux_lockdown_plugin_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_linux_lockdown_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
 	g_autofree gchar *fn = NULL;
 
-	fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
+	fn = fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

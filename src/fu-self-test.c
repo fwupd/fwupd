@@ -3865,7 +3865,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
 	/* delete history */
-	history_db = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "pending.db", NULL);
+	history_db = fu_context_build_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, "pending.db", NULL);
 	(void)g_unlink(history_db);
 
 	/* no metadata in daemon */
@@ -3998,7 +3998,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autofree gchar *rundir = fu_path_from_kind(FU_PATH_KIND_RUNDIR);
+	g_autofree gchar *rundir = fu_context_get_path(ctx, FU_PATH_KIND_RUNDIR);
 	g_autofree gchar *reboot_file = NULL;
 
 	/* create rundir */
@@ -5484,7 +5484,7 @@ fu_history_func(gconstpointer user_data)
 	g_assert_nonnull(history);
 
 	/* delete the database */
-	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	dirname = fu_context_get_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
 		return;
 	filename = g_build_filename(dirname, "pending.db", NULL);

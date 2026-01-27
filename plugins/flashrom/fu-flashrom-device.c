@@ -247,13 +247,15 @@ fu_flashrom_device_prepare(FuDevice *device,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	gboolean exists_orig = FALSE;
 	g_autofree gchar *firmware_orig = NULL;
 	g_autofree gchar *basename = NULL;
 
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf("flashrom-%s.bin", fu_device_get_id(device));
-	firmware_orig = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "builder", basename, NULL);
+	firmware_orig =
+	    fu_context_build_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, "builder", basename, NULL);
 	if (!fu_path_mkdir_parent(firmware_orig, error))
 		return FALSE;
 	if (!fu_device_query_file_exists(device, firmware_orig, &exists_orig, error))

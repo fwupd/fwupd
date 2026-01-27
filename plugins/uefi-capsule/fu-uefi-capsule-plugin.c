@@ -313,8 +313,12 @@ fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 
 #ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 static GBytes *
-fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error)
+fu_uefi_capsule_plugin_get_splash_data(FuUefiCapsulePlugin *self,
+				       guint width,
+				       guint height,
+				       GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	const gchar *const *langs = g_get_language_names();
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
@@ -322,7 +326,8 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
-	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.zip", NULL);
+	filename_archive =
+	    fu_context_build_path(ctx, FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.zip", NULL);
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
@@ -521,7 +526,8 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	}
 
 	/* get the raw data */
-	image_bmp = fu_uefi_capsule_plugin_get_splash_data(sizes[best_idx].width,
+	image_bmp = fu_uefi_capsule_plugin_get_splash_data(self,
+							   sizes[best_idx].width,
 							   sizes[best_idx].height,
 							   error);
 	if (image_bmp == NULL)
@@ -802,12 +808,13 @@ fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 static FuFirmware *
 fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuFirmware) firmware = fu_acpi_uefi_new();
 	g_autoptr(GFile) file = NULL;
 
 	/* if we have a table, parse it and validate it */
-	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "UEFI", NULL);
+	fn = fu_context_build_path(ctx, FU_PATH_KIND_ACPI_TABLES, "UEFI", NULL);
 	file = g_file_new_for_path(fn);
 	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;

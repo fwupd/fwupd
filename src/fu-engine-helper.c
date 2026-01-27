@@ -139,7 +139,11 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
 	} else {
-		target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, MOTD_DIR, MOTD_FILE, NULL);
+		target = fu_context_build_path(ctx,
+					       FU_PATH_KIND_CACHEDIR_PKG,
+					       MOTD_DIR,
+					       MOTD_FILE,
+					       NULL);
 	}
 
 	/* create the directory and file, even if zero devices; we want an empty file then */
@@ -204,7 +208,8 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) data = NULL;
-	g_autofree gchar *target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
+	g_autofree gchar *target =
+	    fu_context_build_path(ctx, FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
 
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
@@ -234,7 +239,8 @@ fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(tables); i++) {
-		g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, tables[i], NULL);
+		g_autofree gchar *fn =
+		    fu_context_build_path(ctx, FU_PATH_KIND_ACPI_TABLES, tables[i], NULL);
 		g_autoptr(GBytes) blob = NULL;
 
 		blob = fu_bytes_get_contents(fn, NULL);

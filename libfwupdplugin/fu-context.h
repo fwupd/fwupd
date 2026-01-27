@@ -10,11 +10,11 @@
 
 #include "fu-bios-settings.h"
 #include "fu-common-struct.h"
-#include "fu-common.h"
 #include "fu-context-struct.h"
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efivars.h"
 #include "fu-firmware.h"
+#include "fu-path-struct.h"
 #include "fu-smbios-struct.h"
 
 #define FU_TYPE_CONTEXT (fu_context_get_type())
@@ -157,3 +157,8 @@ fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error
 GPtrArray *
 fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)
     G_GNUC_NON_NULL(1);
+
+gchar *
+fu_context_get_path(FuContext *self, FuPathKind path_kind);
+gchar *
+fu_context_build_path(FuContext *self, FuPathKind path_kind, ...) G_GNUC_NULL_TERMINATED;

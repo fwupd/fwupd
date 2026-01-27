@@ -122,7 +122,8 @@ fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
 				g_autofree gchar *path = NULL;
 
 				/* get the path to the file */
-				path = fu_path_build(FU_PATH_KIND_HOSTFS_ROOT, fn, NULL);
+				path =
+				    fu_context_build_path(ctx, FU_PATH_KIND_HOSTFS_ROOT, fn, NULL);
 
 				self->enabled_cnt++;
 				if (!fu_linux_swap_verify_file(self, path, error))

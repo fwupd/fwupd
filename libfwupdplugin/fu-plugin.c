@@ -724,6 +724,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 				GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
+	FuPluginPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	locker = fu_device_locker_new(proxy, error);
@@ -750,7 +751,8 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			return FALSE;
 		}
 		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
-		path = fu_path_build(
+		path = fu_context_build_path(
+		    priv->ctx,
 		    FU_PATH_KIND_LOCALSTATEDIR_PKG,
 		    "backup",
 		    fu_device_get_id(device),

@@ -44,7 +44,7 @@ static gboolean
 fu_devlink_netdevsim_sysfs_write(const gchar *filename, const guint value, GError **error)
 {
 	g_autofree gchar *path =
-	    fu_path_build(FU_PATH_KIND_SYSFSDIR, "bus", "netdevsim", filename, NULL);
+	    fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR, "bus", "netdevsim", filename, NULL);
 
 	return fu_devlink_file_write_helper(path, value, error);
 }
@@ -56,8 +56,12 @@ fu_devlink_netdevsim_debugfs_write(const guint device_id,
 				   GError **error)
 {
 	g_autofree gchar *device_id_str = g_strdup_printf("netdevsim%u", device_id);
-	g_autofree gchar *path =
-	    fu_path_build(FU_PATH_KIND_DEBUGFSDIR, "netdevsim", device_id_str, filename, NULL);
+	g_autofree gchar *path = fu_context_build_path(ctx,
+						       FU_PATH_KIND_DEBUGFSDIR,
+						       "netdevsim",
+						       device_id_str,
+						       filename,
+						       NULL);
 
 	return fu_devlink_file_write_helper(path, value, error);
 }

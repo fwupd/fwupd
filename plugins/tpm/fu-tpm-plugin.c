@@ -307,12 +307,13 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	g_autofree gchar *str = NULL;
 
 	/* do not show a warning if no TPM exists, or the kernel is too old */
-	fn = fu_path_build(FU_PATH_KIND_SYSFSDIR,
-			   "kernel",
-			   "security",
-			   "tpm0",
-			   "binary_bios_measurements",
-			   NULL);
+	fn = fu_context_build_path(ctx,
+				   FU_PATH_KIND_SYSFSDIR,
+				   "kernel",
+				   "security",
+				   "tpm0",
+				   "binary_bios_measurements",
+				   NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("no %s, so skipping", fn);
 		return TRUE;
@@ -364,7 +365,7 @@ fu_tpm_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		g_warning("failed to load eventlog: %s", error_local->message);
 
 	/* look for TPM v1.2 */
-	fn_pcrs = fu_path_build(FU_PATH_KIND_SYSFSDIR_TPM, "tpm0", "pcrs", NULL);
+	fn_pcrs = fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, "tpm0", "pcrs", NULL);
 	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS)) {
 		self->tpm_device = fu_tpm_v1_device_new(ctx);
 		g_object_set(self->tpm_device, "device-file", fn_pcrs, NULL);

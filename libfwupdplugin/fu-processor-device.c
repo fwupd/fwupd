@@ -12,6 +12,7 @@
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-common.h"
 #include "fu-mem.h"
 #include "fu-path.h"
 #include "fu-processor-device.h"
@@ -419,6 +420,7 @@ fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSe
 static void
 fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -440,7 +442,7 @@ fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSec
 	fu_security_attrs_append(attrs, attr);
 
 	/* check that userspace has been compiled for CET support */
-	toolfn = fu_path_build(FU_PATH_KIND_LIBEXECDIR_PKG, "fwupd-detect-cet", NULL);
+	toolfn = fu_context_build_path(ctx, FU_PATH_KIND_LIBEXECDIR_PKG, "fwupd-detect-cet", NULL);
 	if (!g_spawn_command_line_sync(toolfn, NULL, NULL, &exit_status, &error_local)) {
 		g_warning("failed to test CET: %s", error_local->message);
 		return;

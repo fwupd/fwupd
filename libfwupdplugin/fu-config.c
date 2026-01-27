@@ -33,6 +33,7 @@ typedef struct {
 } FuConfigItem;
 
 typedef struct {
+	FuContext *ctx;
 	GKeyFile *keyfile;
 	GHashTable *default_values;
 	GPtrArray *items; /* (element-type FuConfigItem) */
@@ -779,8 +780,9 @@ gboolean
 fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *configdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALCONFDIR_PKG);
-	g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *configdir_mut =
+	    fu_context_get_path(priv->ctx, FU_PATH_KIND_LOCALCONFDIR_PKG);
+	g_autofree gchar *configdir = fu_context_get_path(priv->ctx, FU_PATH_KIND_SYSCONFDIR_PKG);
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	g_return_val_if_fail(priv->items->len == 0, FALSE);
@@ -828,6 +830,8 @@ fu_config_finalize(GObject *obj)
 {
 	FuConfig *self = FU_CONFIG(obj);
 	FuConfigPrivate *priv = GET_PRIVATE(self);
+	if (priv->ctx != NULL)
+		g_object_unref(priv->ctx);
 	g_free(priv->basename);
 	g_key_file_unref(priv->keyfile);
 	g_ptr_array_unref(priv->items);
@@ -886,7 +890,10 @@ fu_config_class_init(FuConfigClass *klass)
  * Since: 1.9.1
  **/
 FuConfig *
-fu_config_new(void)
+fu_config_new(FuContext *ctx)
 {
-	return FU_CONFIG(g_object_new(FU_TYPE_CONFIG, NULL));
+	FuConfig *self = FU_CONFIG(g_object_new(FU_TYPE_CONFIG, NULL));
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	priv->ctx = g_object_ref(ctx);
+	return self;
 }

@@ -166,7 +166,7 @@ fu_util_lock(FuUtil *self, GError **error)
 	if (use_user) {
 		lockfn = fu_util_get_user_cache_path("fwupdtool");
 	} else {
-		lockfn = fu_path_build(FU_PATH_KIND_LOCKDIR, "fwupdtool", NULL);
+		lockfn = fu_context_build_path(self->ctx, FU_PATH_KIND_LOCKDIR, "fwupdtool", NULL);
 	}
 	if (!fu_path_mkdir_parent(lockfn, error))
 		return FALSE;
@@ -2497,8 +2497,11 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* parse this */
-	fn =
-	    fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "tpm0", "binary_bios_measurements", NULL);
+	fn = fu_context_build_path(self->ctx,
+				   FU_PATH_KIND_SYSFSDIR_SECURITY,
+				   "tpm0",
+				   "binary_bios_measurements",
+				   NULL);
 	blob = fu_bytes_get_contents(fn, error);
 	stream = g_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,

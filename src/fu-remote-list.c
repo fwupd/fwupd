@@ -282,7 +282,7 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 	g_autoptr(FwupdRemote) remote_tmp = NULL;
 
 	/* set directory to store data */
-	remotesdir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
+	remotesdir = fu_context_get_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA);
 	fwupd_remote_set_remotes_dir(remote, remotesdir);
 
 	/* load from keyfile */
@@ -453,10 +453,11 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_PERM)) {
 			g_autofree gchar *basename = g_path_get_basename(filename);
 
-			filename_new = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG,
-						     "remotes.d",
-						     basename,
-						     NULL);
+			filename_new = fu_context_build_path(ctx,
+							     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+							     "remotes.d",
+							     basename,
+							     NULL);
 			if (!fu_path_mkdir_parent(filename_new, error))
 				return FALSE;
 			g_info("falling back from %s to %s", filename, filename_new);
@@ -575,13 +576,13 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	g_ptr_array_set_size(self->monitors, 0);
 
 	/* search mutable, and then fall back to /etc and immutable */
-	remotesdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	remotesdir_mut = fu_context_get_path(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
 		return FALSE;
-	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	remotesdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir, error))
 		return FALSE;
-	remotesdir_immut = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
+	remotesdir_immut = fu_context_get_path(ctx, FU_PATH_KIND_DATADIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir_immut, error))
 		return FALSE;
 
@@ -630,7 +631,7 @@ fu_remote_list_load_metainfos(XbBuilder *builder, GError **error)
 	g_autoptr(GDir) dir = NULL;
 
 	/* pkg metainfo dir */
-	metainfo_path = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "metainfo", NULL);
+	metainfo_path = fu_context_build_path(ctx, FU_PATH_KIND_DATADIR_PKG, "metainfo", NULL);
 	if (!g_file_test(metainfo_path, G_FILE_TEST_EXISTS))
 		return TRUE;
 
@@ -719,7 +720,7 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 			return FALSE;
 	} else {
 		g_autofree gchar *xmlbfn =
-		    fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "metainfo.xmlb", NULL);
+		    fu_context_build_path(ctx, FU_PATH_KIND_CACHEDIR_PKG, "metainfo.xmlb", NULL);
 		xmlb = g_file_new_for_path(xmlbfn);
 	}
 	self->silo = xb_builder_ensure(builder, xmlb, compile_flags, NULL, error);

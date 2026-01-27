@@ -21,10 +21,11 @@ G_DEFINE_TYPE(FuUefiEsrtPlugin, fu_uefi_esrt_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_uefi_esrt_plugin_check_esrt(void)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *esrtdir = NULL;
 
 	/* already exists */
-	esrtdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	esrtdir = fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
 
 	return g_file_test(esrtdir, G_FILE_TEST_EXISTS);
 }

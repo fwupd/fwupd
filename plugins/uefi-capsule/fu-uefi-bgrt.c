@@ -32,7 +32,7 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_UEFI_BGRT(self), FALSE);
 
-	bgrtdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "acpi", "bgrt", NULL);
+	bgrtdir = fu_context_build_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, "acpi", "bgrt", NULL);
 	if (!g_file_test(bgrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

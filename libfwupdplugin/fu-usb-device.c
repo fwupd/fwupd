@@ -11,6 +11,7 @@
 #include "config.h"
 
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-context-private.h"
 #include "fu-device-event-private.h"
 #include "fu-device-locker.h"

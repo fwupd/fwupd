@@ -272,7 +272,7 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 gchar *
 fu_common_get_olson_timezone_id_impl(GError **error)
 {
-	g_autofree gchar *fn_localtime = fu_path_from_kind(FU_PATH_KIND_LOCALTIME);
+	g_autofree gchar *fn_localtime = fu_context_get_path(ctx, FU_PATH_KIND_LOCALTIME);
 	g_autoptr(GFile) file_localtime = g_file_new_for_path(fn_localtime);
 
 	/* use the last two sections of the symlink target */

@@ -19,6 +19,7 @@
 
 struct _FuKernelSearchPathLocker {
 	GObject parent_instance;
+	FuContext *ctx;
 	gchar *path;
 	gchar *old_path;
 };
@@ -44,13 +45,13 @@ fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self)
 
 /* private */
 gchar *
-fu_kernel_search_path_get_current(GError **error)
+fu_kernel_search_path_get_current(FuContext *ctx, GError **error)
 {
 	gsize sz = 0;
 	g_autofree gchar *sys_fw_search_path = NULL;
 	g_autofree gchar *contents = NULL;
 
-	sys_fw_search_path = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
+	sys_fw_search_path = fu_context_get_path(ctx, FU_PATH_KIND_FIRMWARE_SEARCH);
 	if (!g_file_get_contents(sys_fw_search_path, &contents, &sz, error))
 		return NULL;
 
@@ -73,7 +74,7 @@ fu_kernel_search_path_get_current(GError **error)
 }
 
 static gboolean
-fu_kernel_search_path_set_current(const gchar *path, GError **error)
+fu_kernel_search_path_set_current(FuKernelSearchPathLocker *self, const gchar *path, GError **error)
 {
 	g_autofree gchar *sys_fw_search_path_prm = NULL;
 
@@ -81,7 +82,7 @@ fu_kernel_search_path_set_current(const gchar *path, GError **error)
 	g_return_val_if_fail(strlen(path) < PATH_MAX, FALSE);
 
 	g_debug("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen(path), path);
-	sys_fw_search_path_prm = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
+	sys_fw_search_path_prm = fu_context_get_path(self->ctx, FU_PATH_KIND_FIRMWARE_SEARCH);
 	return g_file_set_contents_full(sys_fw_search_path_prm,
 					path,
 					strlen(path),
@@ -95,7 +96,7 @@ fu_kernel_search_path_locker_close(FuKernelSearchPathLocker *self, GError **erro
 {
 	if (self->old_path == NULL)
 		return TRUE;
-	if (!fu_kernel_search_path_set_current(self->old_path, error))
+	if (!fu_kernel_search_path_set_current(self, self->old_path, error))
 		return FALSE;
 	g_clear_pointer(&self->old_path, g_free);
 	return TRUE;
@@ -117,25 +118,27 @@ fu_kernel_search_path_locker_close(FuKernelSearchPathLocker *self, GError **erro
  * Since: 2.0.6
  **/
 FuKernelSearchPathLocker *
-fu_kernel_search_path_locker_new(const gchar *path, GError **error)
+fu_kernel_search_path_locker_new(FuContext *ctx, const gchar *path, GError **error)
 {
 	g_autofree gchar *old_path = NULL;
 	g_autoptr(FuKernelSearchPathLocker) self = NULL;
 
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
 	g_return_val_if_fail(path != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* create object */
 	self = g_object_new(FU_TYPE_KERNEL_SEARCH_PATH_LOCKER, NULL);
+	self->ctx = g_object_ref(ctx);
 	self->path = g_strdup(path);
-	old_path = fu_kernel_search_path_get_current(error);
+	old_path = fu_kernel_search_path_get_current(ctx, error);
 	if (old_path == NULL)
 		return NULL;
 
 	/* set the new path if different */
 	if (g_strcmp0(self->old_path, path) != 0) {
 		self->old_path = g_steal_pointer(&old_path);
-		if (!fu_kernel_search_path_set_current(path, error))
+		if (!fu_kernel_search_path_set_current(self, path, error))
 			return NULL;
 	}
 
@@ -159,6 +162,7 @@ static void
 fu_kernel_search_path_locker_finalize(GObject *obj)
 {
 	FuKernelSearchPathLocker *self = FU_KERNEL_SEARCH_PATH_LOCKER(obj);
+	g_object_unref(self->ctx);
 	g_free(self->path);
 	g_free(self->old_path);
 	G_OBJECT_CLASS(fu_kernel_search_path_locker_parent_class)->finalize(obj);

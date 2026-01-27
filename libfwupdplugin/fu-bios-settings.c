@@ -22,6 +22,7 @@
 
 struct _FuBiosSettings {
 	GObject parent_instance;
+	FuContext *ctx;
 	GHashTable *descriptions;
 	GHashTable *read_only;
 	GPtrArray *attrs;
@@ -39,6 +40,8 @@ static void
 fu_bios_settings_finalize(GObject *obj)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
+	if (self->ctx != NULL)
+		g_object_unref(self->ctx);
 	g_ptr_array_unref(self->attrs);
 	g_hash_table_unref(self->descriptions);
 	g_hash_table_unref(self->read_only);
@@ -394,7 +397,7 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 	if (g_hash_table_size(self->read_only) == 0)
 		fu_bios_settings_populate_read_only(self);
 
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
+	sysfsfwdir = fu_context_get_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
 	class_dir = g_dir_open(sysfsfwdir, 0, error);
 	if (class_dir == NULL) {
 		fwupd_error_convert(error);
@@ -638,7 +641,9 @@ fu_bios_settings_is_supported(FuBiosSettings *self)
  * Since: 1.8.4
  **/
 FuBiosSettings *
-fu_bios_settings_new(void)
+fu_bios_settings_new(FuContext *ctx)
 {
-	return g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
+	FuBiosSettings *self = g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
+	self->ctx = g_object_ref(ctx);
+	return self;
 }

@@ -8,9 +8,10 @@
 
 #include "fu-config-struct.h"
 #include "fu-config.h"
+#include "fu-context.h"
 
 FuConfig *
-fu_config_new(void);
+fu_config_new(FuContext *ctx);
 gboolean
 fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error) G_GNUC_NON_NULL(1);
 void

@@ -428,7 +428,7 @@ static gboolean
 fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **error)
 {
 	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	g_autofree gchar *sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR);
 #ifdef HAVE_UDEV_HOTPLUG
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	const guint8 *buf;
@@ -667,7 +667,7 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 {
 	FuContext *ctx = fu_backend_get_context(backend);
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	g_autofree gchar *sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR);
 	g_autoptr(GPtrArray) udev_subsystems = fu_context_get_udev_subsystems(ctx);
 
 	/* get all devices of class */
