@@ -16,3 +16,5 @@ FuTemporaryDirectory *
 fu_temporary_directory_new(const gchar *prefix, GError **error);
 const gchar *
 fu_temporary_directory_get_path(FuTemporaryDirectory *self) G_GNUC_NON_NULL(1);
+gchar *
+fu_temporary_directory_build(FuTemporaryDirectory *self, ...) G_GNUC_NULL_TERMINATED;

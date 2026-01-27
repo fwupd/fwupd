@@ -7633,6 +7633,7 @@ static void
 fu_temporary_directory_func(void)
 {
 	const gchar *tmpdir_path;
+	g_autofree gchar *tmpdir_fn = NULL;
 	g_autofree gchar *tmpdir_path_copy = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
@@ -7646,8 +7647,10 @@ fu_temporary_directory_func(void)
 	g_assert_true(g_strstr_len(tmpdir_path, -1, "foobar") != NULL);
 	g_assert_true(g_file_test(tmpdir_path, G_FILE_TEST_IS_DIR));
 
+	tmpdir_fn = fu_temporary_directory_build(tmpdir, "baz", NULL);
 	tmpdir_path_copy = g_strdup(tmpdir_path);
 	g_clear_object(&tmpdir);
+	g_assert_false(g_file_test(tmpdir_fn, G_FILE_TEST_EXISTS));
 	g_assert_false(g_file_test(tmpdir_path_copy, G_FILE_TEST_IS_DIR));
 }
 

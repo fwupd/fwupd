@@ -67,6 +67,32 @@ fu_temporary_directory_new(const gchar *prefix, GError **error)
 	return g_steal_pointer(&self);
 }
 
+/**
+ * fu_temporary_directory_build:
+ * @self: a #FuTemporaryDirectory
+ * @...: pairs of string values, ending with %NULL
+ *
+ * Builds a path within the temporary_directory.
+ *
+ * Returns: a path
+ *
+ * Since: 2.1.1
+ **/
+gchar *
+fu_temporary_directory_build(FuTemporaryDirectory *self, ...)
+{
+	va_list args;
+	gchar *path;
+
+	g_return_val_if_fail(FU_IS_TEMPORARY_DIRECTORY(self), NULL);
+
+	va_start(args, self);
+	path = g_build_filename_valist(self->path, &args);
+	va_end(args);
+
+	return path;
+}
+
 static void
 fu_temporary_directory_finalize(GObject *object)
 {
