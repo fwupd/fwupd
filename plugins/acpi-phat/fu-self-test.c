@@ -34,7 +34,7 @@ fu_acpi_phat_parse_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	str = fu_acpi_phat_to_report_string(FU_ACPI_PHAT(phat));
-	g_print("%s\n", str);
+	g_debug("%s", str);
 }
 
 int
