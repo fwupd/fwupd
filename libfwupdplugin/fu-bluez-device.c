@@ -30,6 +30,7 @@ typedef struct {
 	GDBusObjectManager *object_manager;
 	GDBusProxy *proxy;
 	GPtrArray *uuids; /* element-type FuBluezDeviceUuidItem */
+	gchar *modalias;
 } FuBluezDevicePrivate;
 
 typedef struct {
@@ -147,6 +148,7 @@ fu_bluez_device_add_uuid_path(FuBluezDevice *self, const gchar *uuid, const gcha
 static void
 fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 {
+	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 	gsize modaliaslen;
 	guint16 vid = 0x0;
 	guint16 pid = 0x0;
@@ -223,6 +225,9 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version_raw(FU_DEVICE(self), rev);
 	}
+
+	/* save in case we need this for emulation */
+	priv->modalias = g_strdup(modalias);
 }
 
 static void
@@ -231,6 +236,7 @@ fu_bluez_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 
+	fwupd_codec_string_append(str, idt, "Modalias", priv->modalias);
 	for (guint i = 0; i < priv->uuids->len; i++) {
 		FuBluezDeviceUuidItem *item = g_ptr_array_index(priv->uuids, i);
 		fwupd_codec_string_append(str, idt + 1, item->uuid, item->path);
@@ -565,6 +571,10 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GVariant) val_name = NULL;
 	g_autoptr(GVariant) val_alias = NULL;
 
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return fu_bluez_device_parse_device_information_service(self, error);
+
 	/* sanity check */
 	if (priv->proxy == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy set");
@@ -651,6 +661,8 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
 	FuBluezDeviceUuidItem *item;
 	guint8 byte;
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *title = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GVariantBuilder) builder = NULL;
@@ -660,6 +672,27 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), NULL);
 	g_return_val_if_fail(uuid != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("Read:Uuid=%s", uuid);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		if (!fu_device_event_check_error(event, error))
+			return NULL;
+		return fu_device_event_get_byte_array(event, "Data", error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	item = fu_bluez_device_get_uuid_item(self, uuid, error);
 	if (item == NULL)
@@ -696,6 +729,10 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	/* debug a bit */
 	title = g_strdup_printf("ReadValue[%s]", uuid);
 	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_byte_array(event, "Data", buf);
 
 	/* success */
 	return g_steal_pointer(&buf);
@@ -747,6 +784,8 @@ gboolean
 fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, GError **error)
 {
 	FuBluezDeviceUuidItem *item;
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *title = NULL;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariantBuilder) val_builder = NULL;
@@ -758,6 +797,29 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 	g_return_val_if_fail(uuid != NULL, FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *data_base64 = g_base64_encode(buf->data, buf->len);
+		event_id = g_strdup_printf("Write:Uuid=%s,Data=%s,Length=0x%x",
+					   uuid,
+					   data_base64,
+					   (guint)buf->len);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_check_error(event, error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	item = fu_bluez_device_get_uuid_item(self, uuid, error);
 	if (item == NULL)
@@ -995,9 +1057,9 @@ fu_bluez_device_incorporate(FuDevice *device, FuDevice *donor)
 		FuBluezDeviceUuidItem *item = g_ptr_array_index(privdonor->uuids, i);
 		fu_bluez_device_add_uuid_path(uself, item->uuid, item->path);
 	}
-	if (priv->object_manager == NULL)
+	if (priv->object_manager == NULL && privdonor->object_manager != NULL)
 		priv->object_manager = g_object_ref(privdonor->object_manager);
-	if (priv->proxy == NULL)
+	if (priv->proxy == NULL && privdonor->proxy != NULL)
 		priv->proxy = g_object_ref(privdonor->proxy);
 }
 
@@ -1005,6 +1067,128 @@ static gchar *
 fu_bluez_device_convert_version(FuDevice *device, guint64 version_raw)
 {
 	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
+static void
+fu_bluez_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+{
+	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
+	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
+	GPtrArray *events = fu_device_get_events(device);
+	GPtrArray *icons = fu_device_get_icons(device);
+
+	/* optional properties */
+	fwupd_json_object_add_string(json_obj, "GType", "FuBluezDevice");
+	fwupd_json_object_add_string(json_obj, "PhysicalId", fu_device_get_physical_id(device));
+	fwupd_json_object_add_string(json_obj, "LogicalId", fu_device_get_logical_id(device));
+	fwupd_json_object_add_string(json_obj, "BackendId", fu_device_get_backend_id(device));
+	fwupd_json_object_add_string(json_obj, "Name", fu_device_get_name(device));
+	fwupd_json_object_add_string(json_obj, "Modalias", priv->modalias);
+	fwupd_json_object_add_integer(json_obj, "Battery", fu_device_get_battery_level(device));
+	if (icons->len > 0) {
+		const gchar *icon = g_ptr_array_index(icons, 0);
+		fwupd_json_object_add_string(json_obj, "Icon", icon);
+	}
+
+	/* UUID -> path */
+	if (priv->uuids->len > 0) {
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+		for (guint i = 0; i < priv->uuids->len; i++) {
+			FuBluezDeviceUuidItem *item = g_ptr_array_index(priv->uuids, i);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_json_object_add_string(json_obj_tmp, "Uuid", item->uuid);
+			fwupd_json_object_add_string(json_obj_tmp, "Path", item->path);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
+		}
+		fwupd_json_object_add_array(json_obj, "Uuids", json_arr);
+	}
+
+	/* events */
+	if (events->len > 0) {
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+		for (guint i = 0; i < events->len; i++) {
+			FuDeviceEvent *event = g_ptr_array_index(events, i);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(event),
+					    json_obj_tmp,
+					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
+							       : flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
+		}
+		fwupd_json_object_add_array(json_obj, "Events", json_arr);
+	}
+}
+
+static gboolean
+fu_bluez_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+{
+	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
+	const gchar *tmp;
+	gint64 tmp64 = 0;
+	g_autoptr(FwupdJsonArray) json_array_events = NULL;
+	g_autoptr(FwupdJsonArray) json_array_uuids = NULL;
+
+	tmp = fwupd_json_object_get_string(json_obj, "PhysicalId", NULL);
+	if (tmp != NULL)
+		fu_device_set_physical_id(device, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "LogicalId", NULL);
+	if (tmp != NULL)
+		fu_device_set_logical_id(device, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
+	if (tmp != NULL)
+		fu_device_set_backend_id(device, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
+	if (tmp != NULL)
+		fu_device_set_name(device, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "Modalias", NULL);
+	if (tmp != NULL)
+		fu_bluez_device_set_modalias(self, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, "Icon", NULL);
+	if (tmp != NULL)
+		fu_device_add_icon(device, tmp);
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "Battery", &tmp64, 100, error))
+		return FALSE;
+	fu_device_set_battery_level(device, tmp64);
+
+	/* array of events */
+	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
+	if (json_array_events != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
+			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
+				return FALSE;
+			fu_device_add_event(device, event);
+		}
+	}
+
+	/* array of UUIDs -> paths */
+	json_array_uuids = fwupd_json_object_get_array(json_obj, "Uuids", NULL);
+	if (json_array_uuids != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_uuids); i++) {
+			const gchar *uuid;
+			const gchar *path;
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_uuids, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			uuid = fwupd_json_object_get_string(json_obj_tmp, "Uuid", error);
+			if (uuid == NULL)
+				return FALSE;
+			path = fwupd_json_object_get_string(json_obj_tmp, "Path", error);
+			if (path == NULL)
+				return FALSE;
+			fu_bluez_device_add_uuid_path(self, uuid, path);
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -1049,6 +1233,7 @@ fu_bluez_device_finalize(GObject *object)
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(object);
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 
+	g_free(priv->modalias);
 	g_ptr_array_unref(priv->uuids);
 	if (priv->proxy != NULL)
 		g_object_unref(priv->proxy);
@@ -1063,6 +1248,7 @@ fu_bluez_device_init(FuBluezDevice *self)
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 	priv->uuids =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_bluez_device_uuid_item_free);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 }
 
 static void
@@ -1080,6 +1266,8 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
 	device_class->convert_version = fu_bluez_device_convert_version;
+	device_class->from_json = fu_bluez_device_from_json;
+	device_class->add_json = fu_bluez_device_add_json;
 
 	/**
 	 * FuBluezDevice::changed:
