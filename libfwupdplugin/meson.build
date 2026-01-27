@@ -505,6 +505,7 @@ if get_option('tests')
     'ihex-firmware',
     'input-stream',
     'intel-me',
+    'kernel',
     'kernel-search-path',
     'lzma',
     'mem',
