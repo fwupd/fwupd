@@ -29,16 +29,15 @@
 typedef struct {
 	GDBusObjectManager *object_manager;
 	GDBusProxy *proxy;
-	GHashTable *uuids; /* utf8 : FuBluezDeviceUuidHelper */
+	GPtrArray *uuids; /* element-type FuBluezDeviceUuidItem */
 } FuBluezDevicePrivate;
 
 typedef struct {
-	FuBluezDevice *self;
 	gchar *uuid;
 	gchar *path;
 	gulong signal_id;
 	GDBusProxy *proxy;
-} FuBluezDeviceUuidHelper;
+} FuBluezDeviceUuidItem;
 
 enum { PROP_0, PROP_OBJECT_MANAGER, PROP_PROXY, PROP_LAST };
 
@@ -51,83 +50,80 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuBluezDevice, fu_bluez_device, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_bluez_device_get_instance_private(o))
 
 static void
-fu_bluez_device_uuid_free(FuBluezDeviceUuidHelper *uuid_helper)
+fu_bluez_device_uuid_item_free(FuBluezDeviceUuidItem *item)
 {
-	if (uuid_helper->path != NULL)
-		g_free(uuid_helper->path);
-	if (uuid_helper->proxy != NULL)
-		g_object_unref(uuid_helper->proxy);
-	g_free(uuid_helper->uuid);
-	g_object_unref(uuid_helper->self);
-	g_free(uuid_helper);
+	if (item->proxy != NULL)
+		g_object_unref(item->proxy);
+	g_free(item->uuid);
+	g_free(item->path);
+	g_free(item);
 }
 
-/*
- * Looks up a UUID in the FuBluezDevice uuids table.
- */
-static FuBluezDeviceUuidHelper *
-fu_bluez_device_get_uuid_helper(FuBluezDevice *self, const gchar *uuid, GError **error)
+static FuBluezDeviceUuidItem *
+fu_bluez_device_get_uuid_item(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
-	FuBluezDeviceUuidHelper *uuid_helper;
 
-	uuid_helper = g_hash_table_lookup(priv->uuids, uuid);
-	if (uuid_helper == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "UUID %s not supported",
-			    uuid);
-		return NULL;
+	for (guint i = 0; i < priv->uuids->len; i++) {
+		FuBluezDeviceUuidItem *item = g_ptr_array_index(priv->uuids, i);
+		if (g_strcmp0(item->uuid, uuid) == 0)
+			return item;
 	}
-
-	return uuid_helper;
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "UUID %s not supported", uuid);
+	return NULL;
 }
 
 static void
 fu_bluez_device_signal_cb(GDBusProxy *proxy,
 			  GVariant *changed_properties,
 			  GStrv invalidated_properties,
-			  FuBluezDeviceUuidHelper *uuid_helper)
+			  FuBluezDevice *self)
 {
-	g_signal_emit(uuid_helper->self, signals[SIGNAL_CHANGED], 0, uuid_helper->uuid);
+	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
+	for (guint i = 0; i < priv->uuids->len; i++) {
+		FuBluezDeviceUuidItem *item = g_ptr_array_index(priv->uuids, i);
+		if (g_strcmp0(item->path, g_dbus_proxy_get_object_path(proxy)) == 0)
+			g_signal_emit(self, signals[SIGNAL_CHANGED], 0, item->uuid);
+	}
 }
 
 /*
  * Builds the GDBusProxy of the BlueZ object identified by a UUID
  * string. If the object doesn't have a dedicated proxy yet, this
- * creates it and saves it in the FuBluezDeviceUuidHelper object.
+ * creates it and saves it in the FuBluezDeviceUuidItem object.
  *
  * NOTE: Currently limited to GATT characteristics.
  */
 static gboolean
-fu_bluez_device_ensure_uuid_helper_proxy(FuBluezDeviceUuidHelper *uuid_helper, GError **error)
+fu_bluez_device_ensure_uuid_item_proxy(FuBluezDevice *self,
+				       FuBluezDeviceUuidItem *item,
+				       GError **error)
 {
-	if (uuid_helper->proxy != NULL)
+	if (item->proxy != NULL)
 		return TRUE;
-	uuid_helper->proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-							   G_DBUS_PROXY_FLAGS_NONE,
-							   NULL,
-							   "org.bluez",
-							   uuid_helper->path,
-							   "org.bluez.GattCharacteristic1",
-							   NULL,
-							   error);
-	if (uuid_helper->proxy == NULL) {
-		g_prefix_error_literal(error, "Failed to create GDBusProxy for uuid_helper: ");
+	item->proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+						    G_DBUS_PROXY_FLAGS_NONE,
+						    NULL,
+						    "org.bluez",
+						    item->path,
+						    "org.bluez.GattCharacteristic1",
+						    NULL,
+						    error);
+	if (item->proxy == NULL) {
+		g_prefix_error_literal(error, "Failed to create GDBusProxy for item: ");
 		return FALSE;
 	}
-	g_dbus_proxy_set_default_timeout(uuid_helper->proxy, DEFAULT_PROXY_TIMEOUT);
-	uuid_helper->signal_id = g_signal_connect(G_DBUS_PROXY(uuid_helper->proxy),
-						  "g-properties-changed",
-						  G_CALLBACK(fu_bluez_device_signal_cb),
-						  uuid_helper);
-	if (uuid_helper->signal_id <= 0) {
+	g_dbus_proxy_set_default_timeout(item->proxy, DEFAULT_PROXY_TIMEOUT);
+	item->signal_id = g_signal_connect(G_DBUS_PROXY(item->proxy),
+					   "g-properties-changed",
+					   G_CALLBACK(fu_bluez_device_signal_cb),
+					   self);
+	if (item->signal_id <= 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot connect to signal of UUID %s",
-			    uuid_helper->uuid);
+			    item->uuid);
 		return FALSE;
 	}
 	return TRUE;
@@ -137,16 +133,15 @@ static void
 fu_bluez_device_add_uuid_path(FuBluezDevice *self, const gchar *uuid, const gchar *path)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
-	FuBluezDeviceUuidHelper *uuid_helper;
+	FuBluezDeviceUuidItem *item;
 	g_return_if_fail(FU_IS_BLUEZ_DEVICE(self));
 	g_return_if_fail(uuid != NULL);
 	g_return_if_fail(path != NULL);
 
-	uuid_helper = g_new0(FuBluezDeviceUuidHelper, 1);
-	uuid_helper->self = g_object_ref(self);
-	uuid_helper->uuid = g_strdup(uuid);
-	uuid_helper->path = g_strdup(path);
-	g_hash_table_insert(priv->uuids, g_strdup(uuid), uuid_helper);
+	item = g_new0(FuBluezDeviceUuidItem, 1);
+	item->uuid = g_strdup(uuid);
+	item->path = g_strdup(path);
+	g_ptr_array_add(priv->uuids, item);
 }
 
 static void
@@ -234,17 +229,9 @@ fu_bluez_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (priv->uuids != NULL) {
-		GHashTableIter iter;
-		gpointer key, value;
-		g_hash_table_iter_init(&iter, priv->uuids);
-		while (g_hash_table_iter_next(&iter, &key, &value)) {
-			FuBluezDeviceUuidHelper *uuid_helper = (FuBluezDeviceUuidHelper *)value;
-			fwupd_codec_string_append(str,
-						  idt + 1,
-						  (const gchar *)key,
-						  uuid_helper->path);
-		}
+	for (guint i = 0; i < priv->uuids->len; i++) {
+		FuBluezDeviceUuidItem *item = g_ptr_array_index(priv->uuids, i);
+		fwupd_codec_string_append(str, idt + 1, item->uuid, item->path);
 	}
 }
 
@@ -337,7 +324,7 @@ fu_bluez_device_get_interface_uuid(FuBluezDevice *self,
 }
 
 /*
- * Populates the {uuid_helper : object_path} entry of a device for its
+ * Populates the {item : object_path} entry of a device for its
  * characteristic.
  */
 static gboolean
@@ -485,7 +472,7 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 }
 
 /*
- * Populates the {uuid_helper : object_path} entries of a device for all its
+ * Populates the {item : object_path} entries of a device for all its
  * characteristics.
  */
 static gboolean
@@ -653,7 +640,7 @@ fu_bluez_device_reload(FuDevice *device, GError **error)
 GByteArray *
 fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
-	FuBluezDeviceUuidHelper *uuid_helper;
+	FuBluezDeviceUuidItem *item;
 	guint8 byte;
 	g_autofree gchar *title = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -665,10 +652,10 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	g_return_val_if_fail(uuid != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
-	if (uuid_helper == NULL)
+	item = fu_bluez_device_get_uuid_item(self, uuid, error);
+	if (item == NULL)
 		return NULL;
-	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
+	if (!fu_bluez_device_ensure_uuid_item_proxy(self, item, error))
 		return NULL;
 
 	/*
@@ -682,7 +669,7 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	g_variant_builder_add(builder, "{sv}", "offset", g_variant_new("q", 0));
 
-	val = g_dbus_proxy_call_sync(uuid_helper->proxy,
+	val = g_dbus_proxy_call_sync(item->proxy,
 				     "ReadValue",
 				     g_variant_new("(a{sv})", builder),
 				     G_DBUS_CALL_FLAGS_NONE,
@@ -750,7 +737,7 @@ fu_bluez_device_read_string(FuBluezDevice *self, const gchar *uuid, GError **err
 gboolean
 fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, GError **error)
 {
-	FuBluezDeviceUuidHelper *uuid_helper;
+	FuBluezDeviceUuidItem *item;
 	g_autofree gchar *title = NULL;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariantBuilder) val_builder = NULL;
@@ -763,10 +750,10 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
-	if (uuid_helper == NULL)
+	item = fu_bluez_device_get_uuid_item(self, uuid, error);
+	if (item == NULL)
 		return FALSE;
-	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
+	if (!fu_bluez_device_ensure_uuid_item_proxy(self, item, error))
 		return FALSE;
 
 	/* debug a bit */
@@ -784,7 +771,7 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 	g_variant_builder_add(opt_builder, "{sv}", "offset", g_variant_new_uint16(0));
 	opt_variant = g_variant_new("a{sv}", opt_builder);
 
-	ret = g_dbus_proxy_call_sync(uuid_helper->proxy,
+	ret = g_dbus_proxy_call_sync(item->proxy,
 				     "WriteValue",
 				     g_variant_new("(@ay@a{sv})", val_variant, opt_variant),
 				     G_DBUS_CALL_FLAGS_NONE,
@@ -816,19 +803,19 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 gboolean
 fu_bluez_device_notify_start(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
-	FuBluezDeviceUuidHelper *uuid_helper;
+	FuBluezDeviceUuidItem *item;
 	g_autoptr(GVariant) retval = NULL;
 
 	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), FALSE);
 	g_return_val_if_fail(uuid != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
-	if (uuid_helper == NULL)
+	item = fu_bluez_device_get_uuid_item(self, uuid, error);
+	if (item == NULL)
 		return FALSE;
-	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
+	if (!fu_bluez_device_ensure_uuid_item_proxy(self, item, error))
 		return FALSE;
-	retval = g_dbus_proxy_call_sync(uuid_helper->proxy,
+	retval = g_dbus_proxy_call_sync(item->proxy,
 					"StartNotify",
 					NULL,
 					G_DBUS_CALL_FLAGS_NONE,
@@ -859,19 +846,19 @@ fu_bluez_device_notify_start(FuBluezDevice *self, const gchar *uuid, GError **er
 gboolean
 fu_bluez_device_notify_stop(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
-	FuBluezDeviceUuidHelper *uuid_helper;
+	FuBluezDeviceUuidItem *item;
 	g_autoptr(GVariant) retval = NULL;
 
 	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), FALSE);
 	g_return_val_if_fail(uuid != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
-	if (uuid_helper == NULL)
+	item = fu_bluez_device_get_uuid_item(self, uuid, error);
+	if (item == NULL)
 		return FALSE;
-	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
+	if (!fu_bluez_device_ensure_uuid_item_proxy(self, item, error))
 		return FALSE;
-	retval = g_dbus_proxy_call_sync(uuid_helper->proxy,
+	retval = g_dbus_proxy_call_sync(item->proxy,
 					"StopNotify",
 					NULL,
 					G_DBUS_CALL_FLAGS_NONE,
@@ -894,23 +881,23 @@ fu_bluez_device_method_acquire(FuBluezDevice *self,
 			       GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	FuBluezDeviceUuidHelper *uuid_helper;
+	FuBluezDeviceUuidItem *item;
 	GVariant *opt_variant = NULL;
 	gint fd_id;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GUnixFDList) out_fd_list = NULL;
 
-	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
-	if (uuid_helper == NULL)
+	item = fu_bluez_device_get_uuid_item(self, uuid, error);
+	if (item == NULL)
 		return NULL;
-	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
+	if (!fu_bluez_device_ensure_uuid_item_proxy(self, item, error))
 		return NULL;
 
 	opt_builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	opt_variant = g_variant_new("a{sv}", opt_builder);
 
-	val = g_dbus_proxy_call_with_unix_fd_list_sync(uuid_helper->proxy,
+	val = g_dbus_proxy_call_with_unix_fd_list_sync(item->proxy,
 						       method,
 						       g_variant_new("(@a{sv})", opt_variant),
 						       G_DBUS_CALL_FLAGS_NONE,
@@ -995,14 +982,9 @@ fu_bluez_device_incorporate(FuDevice *device, FuDevice *donor)
 	g_return_if_fail(FU_IS_BLUEZ_DEVICE(device));
 	g_return_if_fail(FU_IS_BLUEZ_DEVICE(donor));
 
-	if (g_hash_table_size(priv->uuids) == 0) {
-		GHashTableIter iter;
-		gpointer key, value;
-		g_hash_table_iter_init(&iter, privdonor->uuids);
-		while (g_hash_table_iter_next(&iter, &key, &value)) {
-			FuBluezDeviceUuidHelper *uuid_helper = (FuBluezDeviceUuidHelper *)value;
-			fu_bluez_device_add_uuid_path(uself, (const gchar *)key, uuid_helper->path);
-		}
+	for (guint i = 0; i < privdonor->uuids->len; i++) {
+		FuBluezDeviceUuidItem *item = g_ptr_array_index(privdonor->uuids, i);
+		fu_bluez_device_add_uuid_path(uself, item->uuid, item->path);
 	}
 	if (priv->object_manager == NULL)
 		priv->object_manager = g_object_ref(privdonor->object_manager);
@@ -1058,7 +1040,7 @@ fu_bluez_device_finalize(GObject *object)
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(object);
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 
-	g_hash_table_unref(priv->uuids);
+	g_ptr_array_unref(priv->uuids);
 	if (priv->proxy != NULL)
 		g_object_unref(priv->proxy);
 	if (priv->object_manager != NULL)
@@ -1070,10 +1052,8 @@ static void
 fu_bluez_device_init(FuBluezDevice *self)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
-	priv->uuids = g_hash_table_new_full(g_str_hash,
-					    g_str_equal,
-					    g_free,
-					    (GDestroyNotify)fu_bluez_device_uuid_free);
+	priv->uuids =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_bluez_device_uuid_item_free);
 }
 
 static void
