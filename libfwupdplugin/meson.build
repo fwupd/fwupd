@@ -505,6 +505,7 @@ if get_option('tests')
     'progress',
     'self',
     'string',
+    'struct',
     'temporary-directory',
     'version',
     'volume',
