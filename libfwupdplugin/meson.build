@@ -501,6 +501,7 @@ if get_option('tests')
     'bytes',
     'composite-input-stream',
     'device-locker',
+    'partial-input-stream',
     'self',
     'temporary-directory',
     'version',
