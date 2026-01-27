@@ -289,21 +289,6 @@ fu_archive_cab_func(void)
 }
 
 static void
-fu_volume_gpt_type_func(void)
-{
-	g_assert_cmpstr(fu_volume_kind_convert_to_gpt("0xef"),
-			==,
-			"c12a7328-f81f-11d2-ba4b-00a0c93ec93b");
-	g_assert_cmpstr(fu_volume_kind_convert_to_gpt("0x0b"),
-			==,
-			"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7");
-	g_assert_cmpstr(fu_volume_kind_convert_to_gpt("fat32lba"),
-			==,
-			"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7");
-	g_assert_cmpstr(fu_volume_kind_convert_to_gpt("0x00"), ==, "0x00");
-}
-
-static void
 fu_common_align_up_func(void)
 {
 	g_assert_cmpint(fu_common_align_up(0, 0), ==, 0);
@@ -7620,7 +7605,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{checked-add}", fu_common_checked_add_func);
 	g_test_add_func("/fwupd/common{error-map}", fu_common_error_map_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
-	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func("/fwupd/common{byte-array-safe}", fu_common_byte_array_safe_func);

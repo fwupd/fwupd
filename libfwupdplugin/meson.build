@@ -500,6 +500,7 @@ if get_option('tests')
     'bytes',
     'self',
     'temporary-directory',
+    'volume',
   ]
     e = executable(
       'fwupdplugin-' + test_name + '-test',
