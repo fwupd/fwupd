@@ -33,6 +33,7 @@
 #include <libfwupdplugin/fu-fit-firmware.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
 #include <libfwupdplugin/fu-hid-descriptor.h>
+#include <libfwupdplugin/fu-hid-report-item.h>
 #include <libfwupdplugin/fu-ifd-bios.h>
 #include <libfwupdplugin/fu-ifd-firmware.h>
 #include <libfwupdplugin/fu-ifwi-cpd-firmware.h>
@@ -74,6 +75,8 @@ fu_context_add_firmware_gtypes(FuContext *self)
 	fu_context_add_firmware_gtype(self, FU_TYPE_LINEAR_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SREC_FIRMWARE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_HID_DESCRIPTOR);
+	fu_context_add_firmware_gtype(self, FU_TYPE_HID_REPORT);
+	fu_context_add_firmware_gtype(self, FU_TYPE_HID_REPORT_ITEM);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self, FU_TYPE_ACPI_TABLE);
 	fu_context_add_firmware_gtype(self, FU_TYPE_SBATLEVEL_SECTION);
