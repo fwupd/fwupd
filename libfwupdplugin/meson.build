@@ -502,6 +502,7 @@ if get_option('tests')
     'bytes',
     'cab-firmware',
     'chunk-array',
+    'common',
     'composite-input-stream',
     'device-event',
     'device-locker',
