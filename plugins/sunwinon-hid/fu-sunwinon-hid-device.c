@@ -8,6 +8,7 @@
 
 #include "fu-sunwinon-hid-device.h"
 #include "fu-sunwinon-util-dfu-master.h"
+#include "glibconfig.h"
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -40,8 +41,8 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 		return FALSE;
 
 	patch = fw_info.version & 0xFF;
-	major = (fw_info.version >> 8) & 0xFF;
-	minor = (fw_info.version >> 12) & 0xFF;
+	minor = (fw_info.version >> 8) & 0x0F;
+	major = (fw_info.version >> 12) & 0x0F;
 	g_debug("firmware version fetched: %u.%u.%u", (guint)major, (guint)minor, (guint)patch);
 	fu_device_set_version(
 	    FU_DEVICE(device),
