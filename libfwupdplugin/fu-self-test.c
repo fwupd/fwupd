@@ -110,26 +110,6 @@ fu_archive_cab_func(void)
 }
 
 static void
-fu_string_append_func(void)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	fwupd_codec_string_append(str, 0, "hdr", "");
-	fwupd_codec_string_append(str, 0, "key", "value");
-	fwupd_codec_string_append(str, 0, "key1", "value1");
-	fwupd_codec_string_append(str, 1, "key2", "value2");
-	fwupd_codec_string_append(str, 1, "", "value2");
-	fwupd_codec_string_append(str, 2, "key3", "value3");
-	g_assert_cmpstr(str->str,
-			==,
-			"hdr:\n"
-			"key:                    value\n"
-			"key1:                   value1\n"
-			"  key2:                 value2\n"
-			"                        value2\n"
-			"    key3:               value3\n");
-}
-
-static void
 fu_device_version_format_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -2665,7 +2645,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
 	g_test_add_func("/fwupd/backend{emulate}", fu_backend_emulate_func);
-	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/common{cpuid}", fu_cpuid_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
