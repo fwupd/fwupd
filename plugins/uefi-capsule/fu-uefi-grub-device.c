@@ -81,8 +81,12 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 	g_string_replace(str, esp_path, "", 0);
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
 	grub_target = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "uefi_capsule.conf", NULL);
-	if (!g_file_set_contents(grub_target, str->str, -1, error))
+	if (!fu_path_mkdir_parent(grub_target, error))
 		return FALSE;
+	if (!g_file_set_contents(grub_target, str->str, -1, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
 
 	/* refresh GRUB configuration */
 	argv_mkconfig[0] = grub_mkconfig;
@@ -96,8 +100,10 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 			  &output,
 			  NULL,
 			  NULL,
-			  error))
+			  error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	g_debug("%s", output);
 
 	/* skip for self tests */
@@ -106,16 +112,22 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 
 	/* make fwupd default */
 	argv_reboot[0] = grub_reboot;
-	return g_spawn_sync(NULL,
-			    (gchar **)argv_reboot,
-			    NULL,
-			    G_SPAWN_DEFAULT,
-			    NULL,
-			    NULL,
-			    NULL,
-			    NULL,
-			    NULL,
-			    error);
+	if (!g_spawn_sync(NULL,
+			  (gchar **)argv_reboot,
+			  NULL,
+			  G_SPAWN_DEFAULT,
+			  NULL,
+			  NULL,
+			  NULL,
+			  NULL,
+			  NULL,
+			  error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean

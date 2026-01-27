@@ -1,0 +1,18 @@
+{
+  "name": "Focaltech touch",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "a4b37dd2d8d6f6e7349477797f0141eb372a974dc8e59ed9018090d0e4b87674-1.cab",
+      "emulation-url": "a074096609c11485afc1b35b430c6940307c078a6accc9295d04a54835caa32f-emulation.zip",
+      "components": [
+        {
+          "version": "0x0202",
+          "guids": [
+            "da8fa77e-8420-5f7c-9ad0-d27675f85fd5"
+          ]
+        }
+      ]
+    }
+  ]
+}

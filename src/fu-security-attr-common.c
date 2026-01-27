@@ -193,6 +193,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if firmware enforces rollback protection */
 		return g_strdup(_("Processor rollback protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT) == 0) {
+		/* TRANSLATORS: Title: APU is root of trust */
+		return g_strdup(_("Platform secure boot"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if hardware enforces control of SPI replays */
 		return g_strdup(_("SPI replay protection"));
@@ -393,6 +397,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if firmware enforces rollback protection */
 		return _("AMD Secure Processor Rollback Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT) == 0) {
+		/* TRANSLATORS: Title: APU is root of trust */
+		return _("AMD Platform Secure Boot");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if hardware enforces control of SPI replays */
@@ -612,6 +620,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("Rollback Protection prevents device software from being downgraded "
 			 "to an older version that has security problems.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Platform Secure Boot prevents unsigned software from being loaded "
+			 "when the device starts.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
 		/* TRANSLATORS: longer description */

@@ -52,6 +52,7 @@ plugins = {
   'fastboot': false,
   'flashrom': false,
   'focal-fp': false,
+  'focal-touch': false,
   'fpc': false,
   'framework-qmk': false,
   'fresco-pd': false,

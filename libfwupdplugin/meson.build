@@ -34,6 +34,7 @@ fwupdplugin_structs = [
   'fu-path.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
+  'fu-processor.rs', # fuzzing
   'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
@@ -181,6 +182,7 @@ fwupdplugin_src = [
   'fu-pefile-firmware.c', # fuzzing
   'fu-pci-device.c',
   'fu-pkcs7.c',
+  'fu-processor-device.c',
   'fu-oprom-device.c',
   'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
@@ -194,6 +196,7 @@ fwupdplugin_src = [
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
+  'fu-temporary-directory.c',
   'fu-tpm-eventlog-item.c', # fuzzing
   'fu-tpm-eventlog.c', # fuzzing
   'fu-tpm-eventlog-v1.c', # fuzzing
@@ -342,6 +345,7 @@ fwupdplugin_headers = [
   'fu-pkcs7.h',
   'fu-plugin.h',
   'fu-plugin-private.h',
+  'fu-processor-device.h',
   'fu-progress.h',
   'fu-quirks.h',
   'fu-sbatlevel-section.h',
@@ -354,6 +358,7 @@ fwupdplugin_headers = [
   'fu-srec-firmware.h',
   'fu-string.h',
   'fu-sum.h',
+  'fu-temporary-directory.h',
   'fu-tpm-eventlog-common.h',
   'fu-tpm-eventlog.h',
   'fu-tpm-eventlog-item.h',
