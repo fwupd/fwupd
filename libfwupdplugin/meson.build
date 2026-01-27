@@ -507,6 +507,7 @@ if get_option('tests')
     'kernel-search-path',
     'partial-input-stream',
     'progress',
+    'security-attrs',
     'self',
     'string',
     'struct',
