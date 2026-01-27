@@ -6,12 +6,8 @@
 
 #include "config.h"
 
-#include "fwupd-enums-struct.h"
-
 #include "fu-sunwinon-hid-device.h"
 #include "fu-sunwinon-util-dfu-master.h"
-#include "glib.h"
-#include "glibconfig.h"
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
