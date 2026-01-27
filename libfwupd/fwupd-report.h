@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib-object.h>
+
 #include "fwupd-report-struct.h"
 
 G_BEGIN_DECLS
