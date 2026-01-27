@@ -504,6 +504,7 @@ if get_option('tests')
     'partial-input-stream',
     'progress',
     'self',
+    'string',
     'temporary-directory',
     'version',
     'volume',
