@@ -502,6 +502,7 @@ if get_option('tests')
     'bytes',
     'composite-input-stream',
     'device-locker',
+    'hid-descriptor',
     'ihex-firmware',
     'input-stream',
     'intel-me',
