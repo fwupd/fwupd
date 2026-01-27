@@ -505,6 +505,7 @@ if get_option('tests')
     'input-stream',
     'intel-me',
     'kernel-search-path',
+    'lzma',
     'partial-input-stream',
     'progress',
     'security-attrs',
