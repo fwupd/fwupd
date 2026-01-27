@@ -499,6 +499,7 @@ if get_option('tests')
   foreach test_name: [
     'byte-array',
     'bytes',
+    'composite-input-stream',
     'device-locker',
     'self',
     'temporary-directory',
