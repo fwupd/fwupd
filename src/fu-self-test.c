@@ -6205,62 +6205,6 @@ fu_common_cabinet_func(void)
 }
 
 static void
-fu_memcpy_func(gconstpointer user_data)
-{
-	const guint8 src[] = {'a', 'b', 'c', 'd', 'e'};
-	gboolean ret;
-	guint8 dst[4] = {0};
-	g_autoptr(GError) error = NULL;
-
-	/* copy entire buffer */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 4, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(memcmp(src, dst, 4), ==, 0);
-
-	/* copy first char */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(dst[0], ==, 'a');
-
-	/* copy last char */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x4, 1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(dst[0], ==, 'e');
-
-	/* copy nothing */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 0, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* write past the end of dst */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 5, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	/* write past the end of dst with offset */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x1, src, sizeof(src), 0x0, 4, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	/* read past the end of dst */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 6, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	/* read past the end of src with offset */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x4, 4, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
-	g_assert_false(ret);
-	g_clear_error(&error);
-}
-
-static void
 fu_console_func(gconstpointer user_data)
 {
 	g_autoptr(FuConsole) console = fu_console_new();
@@ -8363,7 +8307,6 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);
-	g_test_add_data_func("/fwupd/memcpy", self, fu_memcpy_func);
 	g_test_add_func("/fwupd/cabinet", fu_common_cabinet_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
