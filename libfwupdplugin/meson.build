@@ -520,6 +520,7 @@ if get_option('tests')
     'progress',
     'security-attrs',
     'self',
+    'srec-firmware',
     'string',
     'struct',
     'temporary-directory',
