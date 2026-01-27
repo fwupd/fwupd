@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#define G_LOG_DOMAIN "FuSelfTest"
-
 #include <fwupdplugin.h>
 
 #include <glib/gstdio.h>
@@ -35,72 +33,11 @@
 #include "fu-self-test-device.h"
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
+#include "fu-test.h"
 #include "fu-udev-device-private.h"
 #include "fu-volume-private.h"
 
-/* nocheck:static */
-static GMainLoop *_test_loop = NULL;
-static guint _test_loop_timeout_id = 0;
-
-/* nocheck:magic-inlines=500 */
-
-static gboolean
-fu_test_hang_check_cb(gpointer user_data)
-{
-	g_main_loop_quit(_test_loop);
-	_test_loop_timeout_id = 0;
-	return G_SOURCE_REMOVE;
-}
-
-static void
-fu_test_loop_run_with_timeout(guint timeout_ms)
-{
-	g_assert_cmpint(_test_loop_timeout_id, ==, 0);
-	g_assert_null(_test_loop);
-	_test_loop = g_main_loop_new(NULL, FALSE);
-	_test_loop_timeout_id = g_timeout_add(timeout_ms, fu_test_hang_check_cb, NULL);
-	g_main_loop_run(_test_loop);
-}
-
-static void
-fu_test_loop_quit(void)
-{
-	if (_test_loop_timeout_id > 0) {
-		g_source_remove(_test_loop_timeout_id);
-		_test_loop_timeout_id = 0;
-	}
-	if (_test_loop != NULL) {
-		g_main_loop_quit(_test_loop);
-		g_main_loop_unref(_test_loop);
-		_test_loop = NULL;
-	}
-}
-
-static gboolean
-fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
-{
-	g_autofree gchar *output = NULL;
-
-	/* exactly the same */
-	if (g_strcmp0(txt1, txt2) == 0)
-		return TRUE;
-
-	/* matches a pattern */
-	if (g_pattern_match_simple(txt2, txt1))
-		return TRUE;
-
-	/* save temp files and diff them */
-	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
-		return FALSE;
-	if (!g_file_set_contents("/tmp/b", txt2, -1, error))
-		return FALSE;
-	if (!g_spawn_command_line_sync("diff -urNp /tmp/b /tmp/a", &output, NULL, NULL, error))
-		return FALSE;
-
-	/* just output the diff */
-	g_set_error_literal(error, 1, 0, output);
-	return FALSE;
-}
+/* nocheck:magic-inlines=300 */
 
 static void
 fu_msgpack_lookup_func(void)
@@ -2207,44 +2144,6 @@ fu_common_endian_func(void)
 	g_assert_cmpint(buf[1], ==, 0x34);
 	g_assert_cmpint(buf[2], ==, 0x56);
 	g_assert_cmpint(fu_memread_uint24(buf, G_BIG_ENDIAN), ==, 0x123456);
-}
-
-static void
-fu_common_bytes_get_data_func(void)
-{
-	const gchar *fn = "/tmp/fwupdzero";
-	const guint8 *buf;
-	gboolean ret;
-	g_autoptr(GBytes) bytes1 = NULL;
-	g_autoptr(GBytes) bytes2 = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GMappedFile) mmap = NULL;
-
-	/* create file with zero size */
-	ret = g_file_set_contents(fn, NULL, 0, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* check we got zero sized data */
-	bytes1 = fu_bytes_get_contents(fn, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(bytes1);
-	g_assert_cmpint(g_bytes_get_size(bytes1), ==, 0);
-	g_assert_nonnull(g_bytes_get_data(bytes1, NULL));
-
-	/* do the same with an mmap mapping, which returns NULL on empty file */
-	mmap = g_mapped_file_new(fn, FALSE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(mmap);
-	bytes2 = g_mapped_file_get_bytes(mmap);
-	g_assert_nonnull(bytes2);
-	g_assert_cmpint(g_bytes_get_size(bytes2), ==, 0);
-	g_assert_null(g_bytes_get_data(bytes2, NULL));
-
-	/* use the safe function */
-	buf = fu_bytes_get_data_safe(bytes2, NULL, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_null(buf);
 }
 
 static gboolean
@@ -7762,7 +7661,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func("/fwupd/common{strstrip}", fu_strstrip_func);
 	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
-	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{kernel-search}", fu_common_kernel_search_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
