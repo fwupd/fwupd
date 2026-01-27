@@ -415,7 +415,6 @@ static gboolean
 fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **error)
 {
 	g_autofree gchar *model_number = NULL;
-	g_autofree gchar *serial_number = NULL;
 	g_autofree gchar *fw_revision = NULL;
 	g_autofree gchar *manufacturer = NULL;
 
@@ -455,10 +454,12 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 		}
 	}
 
-	serial_number =
-	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_SERIAL_NUMBER, NULL);
-	if (serial_number != NULL)
-		fu_device_set_serial(FU_DEVICE(self), serial_number);
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER)) {
+		g_autofree gchar *serial_number =
+		    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_SERIAL_NUMBER, NULL);
+		if (serial_number != NULL)
+			fu_device_set_serial(FU_DEVICE(self), serial_number);
+	}
 
 	fw_revision =
 	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_FIRMWARE_REVISION, NULL);
