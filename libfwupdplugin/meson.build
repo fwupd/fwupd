@@ -500,6 +500,7 @@ if get_option('tests')
     'bios-settings',
     'byte-array',
     'bytes',
+    'cab-firmware',
     'chunk-array',
     'composite-input-stream',
     'device-event',
