@@ -14,7 +14,6 @@ plugin_builtins += static_library('fu_plugin_hpi_cfu',
   ],
   link_with: [ 
     plugin_libs,
-    plugin_builtin_cfu,
   ],
   c_args: cargs,
   dependencies: plugin_deps,
