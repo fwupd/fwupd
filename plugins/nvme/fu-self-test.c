@@ -103,20 +103,19 @@ fu_nvme_cns_all_func(void)
 		g_autoptr(GError) error = NULL;
 
 		filename = g_build_filename(path, fn, NULL);
-		g_print("parsing %s... ", filename);
+		g_debug("parsing %s... ", filename);
 		if (!g_file_get_contents(filename, &data, &sz, &error)) {
-			g_print("failed to load %s: %s\n", filename, error->message);
+			g_debug("failed to load %s: %s", filename, error->message);
 			continue;
 		}
 		dev = fu_nvme_device_new_from_blob(ctx, (guint8 *)data, sz, &error);
 		if (dev == NULL) {
-			g_print("failed to load %s: %s\n", filename, error->message);
+			g_debug("failed to load %s: %s", filename, error->message);
 			continue;
 		}
 		g_assert_cmpstr(fu_device_get_name(FU_DEVICE(dev)), !=, NULL);
 		g_assert_cmpstr(fu_device_get_version(FU_DEVICE(dev)), !=, NULL);
 		g_assert_cmpstr(fu_device_get_serial(FU_DEVICE(dev)), !=, NULL);
-		g_print("done\n");
 	}
 }
 
