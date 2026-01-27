@@ -371,7 +371,7 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 
 	/* no registered specialized GType */
 	if (priv->device_gtype == FU_TYPE_DEVICE) {
-		g_debug("no registered device GType");
+		g_debug("no registered device GType for %s", G_OBJECT_CLASS_NAME(self));
 		return TRUE;
 	}
 
