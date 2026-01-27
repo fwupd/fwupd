@@ -758,30 +758,6 @@ fu_context_hwids_fdt_func(void)
 }
 
 static void
-fu_common_memmem_func(void)
-{
-	const guint8 haystack[] = {'H', 'A', 'Y', 'S'};
-	const guint8 needle[] = {'A', 'Y'};
-	gboolean ret;
-	gsize offset = 0;
-	g_autoptr(GError) error = NULL;
-
-	ret = fu_memmem_safe(haystack, sizeof(haystack), needle, sizeof(needle), &offset, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(offset, ==, 0x1);
-
-	ret = fu_memmem_safe(haystack + 2,
-			     sizeof(haystack) - 2,
-			     needle,
-			     sizeof(needle),
-			     &offset,
-			     &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_false(ret);
-}
-
-static void
 fu_common_olson_timezone_id_func(void)
 {
 	g_autofree gchar *timezone_id = NULL;
@@ -1627,34 +1603,6 @@ fu_common_kernel_lockdown_func(void)
 	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
 	ret = fu_kernel_locked_down();
 	g_assert_false(ret);
-}
-
-static void
-fu_common_endian_func(void)
-{
-	guint8 buf[3] = {0};
-
-	fu_memwrite_uint16(buf, 0x1234, G_LITTLE_ENDIAN);
-	g_assert_cmpint(buf[0], ==, 0x34);
-	g_assert_cmpint(buf[1], ==, 0x12);
-	g_assert_cmpint(fu_memread_uint16(buf, G_LITTLE_ENDIAN), ==, 0x1234);
-
-	fu_memwrite_uint16(buf, 0x1234, G_BIG_ENDIAN);
-	g_assert_cmpint(buf[0], ==, 0x12);
-	g_assert_cmpint(buf[1], ==, 0x34);
-	g_assert_cmpint(fu_memread_uint16(buf, G_BIG_ENDIAN), ==, 0x1234);
-
-	fu_memwrite_uint24(buf, 0x123456, G_LITTLE_ENDIAN);
-	g_assert_cmpint(buf[0], ==, 0x56);
-	g_assert_cmpint(buf[1], ==, 0x34);
-	g_assert_cmpint(buf[2], ==, 0x12);
-	g_assert_cmpint(fu_memread_uint24(buf, G_LITTLE_ENDIAN), ==, 0x123456);
-
-	fu_memwrite_uint24(buf, 0x123456, G_BIG_ENDIAN);
-	g_assert_cmpint(buf[0], ==, 0x12);
-	g_assert_cmpint(buf[1], ==, 0x34);
-	g_assert_cmpint(buf[2], ==, 0x56);
-	g_assert_cmpint(fu_memread_uint24(buf, G_BIG_ENDIAN), ==, 0x123456);
 }
 
 static gboolean
@@ -4919,7 +4867,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);
 	g_test_add_func("/fwupd/common{olson-timezone-id}", fu_common_olson_timezone_id_func);
-	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	g_test_add_func("/fwupd/config", fu_config_func);
 	g_test_add_func("/fwupd/plugin", fu_plugin_func);
 	g_test_add_func("/fwupd/plugin{vfuncs}", fu_plugin_vfuncs_func);
@@ -4947,7 +4894,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
-	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/common{cpuid}", fu_cpuid_func);
