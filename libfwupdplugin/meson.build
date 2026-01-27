@@ -499,6 +499,7 @@ if get_option('tests')
   foreach test_name: [
     'bytes',
     'self',
+    'temporary-directory',
   ]
     e = executable(
       'fwupdplugin-' + test_name + '-test',
