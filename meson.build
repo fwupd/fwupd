@@ -772,15 +772,6 @@ libdrm_amdgpu = dependency(
   version: '>= 2.4.113',
   required: get_option('libdrm'),
 )
-protobufc = dependency(
-  'libprotobuf-c',
-  required: get_option('protobuf'),
-)
-protoc = find_program(
-  'protoc',
-  'protoc-c',
-  required: get_option('protobuf'),
-)
 
 root_incdir = include_directories('.')
 

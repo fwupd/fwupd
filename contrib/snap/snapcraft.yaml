@@ -151,7 +151,6 @@ parts:
       - liblzma-dev
       - libpango1.0-dev
       - libpolkit-gobject-1-dev
-      - libprotobuf-c-dev
       - libsqlite3-dev
       - libsystemd-dev
       - libtss2-dev
@@ -168,7 +167,6 @@ parts:
       - python3-gi
       - python3-jinja2
       - python3-dbusmock
-      - protobuf-c-compiler
       - shim-signed
       - systemd
       - umockdev
@@ -186,7 +184,6 @@ parts:
       - liblzma5
       - libusb-1.0-0
       - libgpgme11
-      - libprotobuf-c1
       - libpolkit-gobject-1-0
       - libreadline8t64
       - libtss2-esys-3.0.2-0

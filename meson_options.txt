@@ -155,11 +155,6 @@ option(
   description: 'PolKit support in daemon',
 )
 option(
-  'protobuf',
-  type: 'feature',
-  description: 'protobuf support',
-)
-option(
   'python',
   type: 'string',
   description: 'the absolute path of the python3 binary',

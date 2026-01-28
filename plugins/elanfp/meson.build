@@ -7,7 +7,6 @@ plugin_builtins += static_library('fu_plugin_elanfp',
     'fu-elanfp.rs',         # fuzzing
   ),
   sources: [
-    cfu_rs[1], # header
     'fu-elanfp-plugin.c',
     'fu-elanfp-device.c',
     'fu-elanfp-firmware.c'  # fuzzing
@@ -18,7 +17,6 @@ plugin_builtins += static_library('fu_plugin_elanfp',
   ],
   link_with: [
     plugin_libs,
-    plugin_builtin_cfu,
   ],
   c_args: cargs,
   dependencies: plugin_deps,

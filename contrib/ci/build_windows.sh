@@ -31,13 +31,6 @@ fi
 # run before using meson
 export WINEPREFIX=$build/.wine
 
-# For logitech bulk controller being disabled (-Dprotobuf=disabled):
-# See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
-# When fixed need to do the following to enable:
-# 1. need to add mingw64-protobuf mingw64-protobuf-tools to CI build deps
-# 2. add protoc = /path/to/protoc-c.exe in mingw64.cross
-# 3. Only enable when not a tagged release (Unsupported by Logitech)
-
 # try to keep this and ../contrib/build-windows.sh in sync as much as makes sense
 xvfb-run meson setup .. \
     --cross-file=/usr/share/mingw/toolchain-mingw64.meson \

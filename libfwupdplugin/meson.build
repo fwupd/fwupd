@@ -7,6 +7,7 @@ fwupdplugin_structs = [
   'fu-cab.rs', # fuzzing
   'fu-cfi.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
+  'fu-cfu.rs', # fuzzing
   'fu-config.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
@@ -35,6 +36,7 @@ fwupdplugin_structs = [
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
+  'fu-protobuf.rs', # fuzzing
   'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
@@ -183,6 +185,7 @@ fwupdplugin_src = [
   'fu-pci-device.c',
   'fu-pkcs7.c',
   'fu-processor-device.c',
+  'fu-protobuf.c', # fuzzing
   'fu-oprom-device.c',
   'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
@@ -519,6 +522,7 @@ if get_option('tests')
     'msgpack',
     'partial-input-stream',
     'progress',
+    'protobuf',
     'security-attrs',
     'self',
     'srec-firmware',
