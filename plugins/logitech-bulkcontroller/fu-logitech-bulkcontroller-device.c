@@ -960,7 +960,7 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 	 * Host->Device FU_LOGITECH_BULKCONTROLLER_CMD_ACK
 	 *
 	 * use lower timeout to quickly flush any kUpdateStateDownloading progress events,
-	 * accumulated while host busy sending firmware image. Device queue stores upto 100 events.
+	 * accumulated while host busy sending firmware image. Device queue stores up to 100 events.
 	 * These events are not removed from the queue, unless properly acknowledged
 	 */
 	buf = fu_logitech_bulkcontroller_device_sync_wait_cmd(
@@ -1203,6 +1203,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 		    device,
 		    FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE);
 	} else {
+		g_debug("FIXME parent firmware updated");
 		fu_device_set_remove_delay(FU_DEVICE(self),
 					   10 * 60 * 1000); /* >1 min to finish init */
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -1476,7 +1477,7 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE);
-
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	/* these are unrecoverable */
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
