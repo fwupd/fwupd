@@ -15,6 +15,7 @@ plugin_builtin_elantp = static_library('fu_plugin_elantp',
     'fu-elantp-hid-device.c',
     'fu-elantp-i2c-device.c',
     'fu-elantp-hid-haptic-device.c',
+    'fu-elantp-hid-mcu-device.c',
   ],
   include_directories: plugin_incdirs,
   c_args: [
