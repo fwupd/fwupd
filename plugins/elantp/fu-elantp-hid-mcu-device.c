@@ -664,7 +664,7 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_read_iap_type(FuDevice *parent, guint16 *iap_type, GError **error)
+fu_elantp_hid_mcu_device_read_iap_type(FuElantpHidDevice *parent, guint16 *iap_type, GError **error)
 {
 	guint8 buf[2] = {0x0};
 
@@ -957,6 +957,7 @@ fu_elantp_hid_mcu_device_init(FuElantpHidMcuDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp.mcu");
