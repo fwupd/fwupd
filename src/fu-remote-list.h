@@ -32,7 +32,7 @@ typedef enum {
 } G_GNUC_FLAG_ENUM FuRemoteListLoadFlags;
 
 FuRemoteList *
-fu_remote_list_new(void);
+fu_remote_list_new(FuPathStore *pstore);
 gboolean
 fu_remote_list_set_testing_remote_enabled(FuRemoteList *self, gboolean enable, GError **error)
     G_GNUC_NON_NULL(1);

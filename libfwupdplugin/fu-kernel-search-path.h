@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fwupd.h>
+#include "fu-path-store.h"
 
 #define FU_TYPE_KERNEL_SEARCH_PATH_LOCKER (fu_kernel_search_path_locker_get_type())
 
@@ -17,7 +17,8 @@ G_DECLARE_FINAL_TYPE(FuKernelSearchPathLocker,
 		     GObject)
 
 FuKernelSearchPathLocker *
-fu_kernel_search_path_locker_new(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+fu_kernel_search_path_locker_new(FuPathStore *pstore,
+				 const gchar *path,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 const gchar *
 fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self) G_GNUC_NON_NULL(1);

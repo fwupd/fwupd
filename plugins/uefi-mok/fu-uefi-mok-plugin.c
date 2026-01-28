@@ -16,17 +16,27 @@ struct _FuUefiMokPlugin {
 G_DEFINE_TYPE(FuUefiMokPlugin, fu_uefi_mok_plugin, FU_TYPE_PLUGIN)
 
 static gchar *
-fu_uefi_mok_plugin_get_filename(void)
+fu_uefi_mok_plugin_get_filename(FuPlugin *plugin, GError **error)
 {
-	return fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "mok-variables", "HSIStatus", NULL);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	return fu_context_build_filename(ctx,
+					 error,
+					 FU_PATH_KIND_SYSFSDIR_FW,
+					 "efi",
+					 "mok-variables",
+					 "HSIStatus",
+					 NULL);
 }
 
 static gboolean
 fu_uefi_mok_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	g_autofree gchar *fn = fu_uefi_mok_plugin_get_filename();
+	g_autofree gchar *fn = NULL;
 
 	/* sanity check */
+	fn = fu_uefi_mok_plugin_get_filename(plugin, error);
+	if (fn == NULL)
+		return FALSE;
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "%s does not exist", fn);
 		return FALSE;
@@ -41,8 +51,11 @@ fu_uefi_mok_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *fn = fu_uefi_mok_plugin_get_filename();
+	g_autofree gchar *fn = NULL;
 
+	fn = fu_uefi_mok_plugin_get_filename(plugin, NULL);
+	if (fn == NULL)
+		return;
 	attr = fu_uefi_mok_attr_new(plugin, fn, &error_local);
 	if (attr == NULL) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))

@@ -12,6 +12,7 @@
 
 struct _FuUefiBgrt {
 	GObject parent_instance;
+	FuPathStore *pstore;
 	guint32 xoffset;
 	guint32 yoffset;
 	guint32 width;
@@ -32,7 +33,14 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_UEFI_BGRT(self), FALSE);
 
-	bgrtdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "acpi", "bgrt", NULL);
+	bgrtdir = fu_path_store_build_filename(self->pstore,
+					       error,
+					       FU_PATH_KIND_SYSFSDIR_FW,
+					       "acpi",
+					       "bgrt",
+					       NULL);
+	if (bgrtdir == NULL)
+		return FALSE;
 	if (!g_file_test(bgrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -116,8 +124,19 @@ fu_uefi_bgrt_get_height(FuUefiBgrt *self)
 }
 
 static void
+fu_uefi_bgrt_finalize(GObject *object)
+{
+	FuUefiBgrt *self = FU_UEFI_BGRT(object);
+	if (self->pstore != NULL)
+		g_object_unref(self->pstore);
+	G_OBJECT_CLASS(fu_uefi_bgrt_parent_class)->finalize(object);
+}
+
+static void
 fu_uefi_bgrt_class_init(FuUefiBgrtClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_uefi_bgrt_finalize;
 }
 
 static void
@@ -126,9 +145,13 @@ fu_uefi_bgrt_init(FuUefiBgrt *self)
 }
 
 FuUefiBgrt *
-fu_uefi_bgrt_new(void)
+fu_uefi_bgrt_new(FuPathStore *pstore)
 {
 	FuUefiBgrt *self;
+
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+
 	self = g_object_new(FU_TYPE_UEFI_BGRT, NULL);
+	self->pstore = g_object_ref(pstore);
 	return FU_UEFI_BGRT(self);
 }

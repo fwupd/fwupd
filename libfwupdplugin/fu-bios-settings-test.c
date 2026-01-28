@@ -45,8 +45,7 @@ fu_bios_settings_load_func(void)
 	/* load BIOS settings from a Lenovo P620 (with thinklmi driver problems) */
 	test_dir = g_build_filename(base_dir, "lenovo-p620", NULL);
 	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
-		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
-
+		fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, test_dir);
 		ret = fu_context_reload_bios_settings(ctx, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -56,8 +55,7 @@ fu_bios_settings_load_func(void)
 	/* load BIOS settings from a Lenovo P620 running 6.3 */
 	test_dir = g_build_filename(base_dir, "lenovo-p620-6.3", NULL);
 	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
-		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
-
+		fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, test_dir);
 		ret = fu_context_reload_bios_settings(ctx, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -126,7 +124,7 @@ fu_bios_settings_load_func(void)
 	/* load BIOS settings from a Lenovo P14s Gen1 */
 	test_dir = g_build_filename(base_dir, "lenovo-p14s-gen1", NULL);
 	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
-		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+		fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, test_dir);
 		ret = fu_context_reload_bios_settings(ctx, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -137,7 +135,7 @@ fu_bios_settings_load_func(void)
 	/* load BIOS settings from a Dell XPS 9310 */
 	test_dir = g_build_filename(base_dir, "dell-xps13-9310", NULL);
 	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
-		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+		fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, test_dir);
 		ret = fu_context_reload_bios_settings(ctx, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -193,7 +191,7 @@ fu_bios_settings_load_func(void)
 	/* load BIOS settings from a HP Z2 Mini G1a */
 	test_dir = g_build_filename(base_dir, "hp-z2-mini-g1a", NULL);
 	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
-		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+		fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, test_dir);
 		ret = fu_context_reload_bios_settings(ctx, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -203,6 +201,7 @@ fu_bios_settings_load_func(void)
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/bios-settings/load", fu_bios_settings_load_func);
 	return g_test_run();

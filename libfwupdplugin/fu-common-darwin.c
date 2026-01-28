@@ -42,7 +42,7 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 }
 
 gchar *
-fu_common_get_olson_timezone_id_impl(GError **error)
+fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 {
 	g_set_error_literal(error,
 			    FWUPD_ERROR,

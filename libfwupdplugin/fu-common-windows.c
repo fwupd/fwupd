@@ -199,7 +199,7 @@ fu_common_convert_tzinfo_to_olson_id(const gchar *tzinfo, GError **error)
 }
 
 gchar *
-fu_common_get_olson_timezone_id_impl(GError **error)
+fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 {
 	DWORD rc;
 	TIME_ZONE_INFORMATION tzinfo = {0};

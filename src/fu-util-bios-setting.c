@@ -180,7 +180,7 @@ fu_util_bios_settings_parse_argv(gchar **input, GError **error)
 	/* json input */
 	if (g_strv_length(input) == 1) {
 		g_autofree gchar *data = NULL;
-		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
+		g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(NULL);
 		if (!g_file_get_contents(input[0], &data, NULL, error))
 			return NULL;
 		if (!fwupd_codec_from_json_string(FWUPD_CODEC(new_bios_settings), data, error))

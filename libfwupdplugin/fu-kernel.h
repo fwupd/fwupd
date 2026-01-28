@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <fwupd.h>
+#include "fu-path-store.h"
 
 gboolean
-fu_kernel_locked_down(void);
+fu_kernel_locked_down(FuPathStore *pstore);
 gboolean
 fu_kernel_check_version(const gchar *minimum_kernel, GError **error) G_GNUC_NON_NULL(1);
 GHashTable *
-fu_kernel_get_config(GError **error);
+fu_kernel_get_config(FuPathStore *pstore, GError **error);
 GHashTable *
 fu_kernel_parse_config(const gchar *buf, gsize bufsz, GError **error);
 GHashTable *
@@ -21,7 +21,7 @@ fu_kernel_get_cmdline(GError **error);
 GHashTable *
 fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz) G_GNUC_NON_NULL(1);
 gboolean
-fu_kernel_check_cmdline_mutable(GError **error);
+fu_kernel_check_cmdline_mutable(FuPathStore *pstore, GError **error);
 gboolean
 fu_kernel_add_cmdline_arg(const gchar *arg, GError **error) G_GNUC_NON_NULL(1);
 gboolean

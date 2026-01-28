@@ -482,6 +482,7 @@ gboolean
 fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gboolean secureboot_enabled = FALSE;
 	g_autofree gchar *source_app = NULL;
@@ -494,7 +495,7 @@ fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))
 		return TRUE;
 
-	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
+	source_app = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
 	if (source_app == NULL && secureboot_enabled) {
 		g_prefix_error_literal(error, "missing signed bootloader for secure boot: ");
 		return FALSE;

@@ -23,6 +23,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-efivars-private.h"
 #include "fu-linux-efivars.h"
 #include "fu-path.h"
 
@@ -33,22 +34,35 @@ struct _FuLinuxEfivars {
 G_DEFINE_TYPE(FuLinuxEfivars, fu_linux_efivars, FU_TYPE_EFIVARS)
 
 static gchar *
-fu_linux_efivars_get_path(void)
+fu_linux_efivars_get_path(FuEfivars *efivars, GError **error)
 {
-	return fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "efivars", NULL);
+	FuPathStore *pstore = fu_efivars_get_path_store(efivars);
+	return fu_path_store_build_filename(pstore,
+					    error,
+					    FU_PATH_KIND_SYSFSDIR_FW,
+					    "efi",
+					    "efivars",
+					    NULL);
 }
 
 static gchar *
-fu_linux_efivars_get_filename(const gchar *guid, const gchar *name)
+fu_linux_efivars_get_filename(FuEfivars *efivars,
+			      const gchar *guid,
+			      const gchar *name,
+			      GError **error)
 {
-	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
+	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path(efivars, error);
+	if (efivarsdir == NULL)
+		return NULL;
 	return g_strdup_printf("%s/%s-%s", efivarsdir, name, guid);
 }
 
 static gboolean
 fu_linux_efivars_supported(FuEfivars *efivars, GError **error)
 {
-	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
+	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path(efivars, error);
+	if (efivarsdir == NULL)
+		return FALSE;
 	if (!g_file_test(efivarsdir, G_FILE_TEST_IS_DIR)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -150,7 +164,9 @@ fu_linux_efivars_delete(FuEfivars *efivars, const gchar *guid, const gchar *name
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GFile) file = NULL;
 
-	fn = fu_linux_efivars_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
+	if (fn == NULL)
+		return FALSE;
 	file = g_file_new_for_path(fn);
 	if (!g_file_query_exists(file, NULL)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no key to delete");
@@ -171,9 +187,12 @@ fu_linux_efivars_delete_with_glob(FuEfivars *efivars,
 {
 	const gchar *fn;
 	g_autofree gchar *nameguid_glob = NULL;
-	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
+	g_autofree gchar *efivarsdir = NULL;
 	g_autoptr(GDir) dir = NULL;
 
+	efivarsdir = fu_linux_efivars_get_path(efivars, error);
+	if (efivarsdir == NULL)
+		return FALSE;
 	dir = g_dir_open(efivarsdir, 0, error);
 	if (dir == NULL)
 		return FALSE;
@@ -194,12 +213,15 @@ fu_linux_efivars_delete_with_glob(FuEfivars *efivars,
 }
 
 static gboolean
-fu_linux_efivars_exists_guid(const gchar *guid)
+fu_linux_efivars_exists_guid(FuEfivars *efivars, const gchar *guid)
 {
 	const gchar *fn;
-	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
+	g_autofree gchar *efivarsdir = NULL;
 	g_autoptr(GDir) dir = NULL;
 
+	efivarsdir = fu_linux_efivars_get_path(efivars, NULL);
+	if (efivarsdir == NULL)
+		return FALSE;
 	dir = g_dir_open(efivarsdir, 0, NULL);
 	if (dir == NULL)
 		return FALSE;
@@ -217,9 +239,11 @@ fu_linux_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name
 
 	/* any name */
 	if (name == NULL)
-		return fu_linux_efivars_exists_guid(guid);
+		return fu_linux_efivars_exists_guid(efivars, guid);
 
-	fn = fu_linux_efivars_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(efivars, guid, name, NULL);
+	if (fn == NULL)
+		return FALSE;
 	return g_file_test(fn, G_FILE_TEST_EXISTS);
 }
 
@@ -242,7 +266,9 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	g_autoptr(GInputStream) istr = NULL;
 
 	/* open file as stream */
-	fn = fu_linux_efivars_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
+	if (fn == NULL)
+		return FALSE;
 	file = g_file_new_for_path(fn);
 	istr = G_INPUT_STREAM(g_file_read(file, NULL, error));
 	if (istr == NULL) {
@@ -306,11 +332,14 @@ static GPtrArray *
 fu_linux_efivars_get_names(FuEfivars *efivars, const gchar *guid, GError **error)
 {
 	const gchar *name_guid;
-	g_autofree gchar *path = fu_linux_efivars_get_path();
+	g_autofree gchar *path = NULL;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func(g_free);
 
 	/* find names with matching GUID */
+	path = fu_linux_efivars_get_path(efivars, error);
+	if (path == NULL)
+		return NULL;
 	dir = g_dir_open(path, 0, error);
 	if (dir == NULL)
 		return NULL;
@@ -347,7 +376,9 @@ fu_linux_efivars_get_monitor(FuEfivars *efivars,
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileMonitor) monitor = NULL;
 
-	fn = fu_linux_efivars_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
+	if (fn == NULL)
+		return NULL;
 	file = g_file_new_for_path(fn);
 	monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
 	if (monitor == NULL) {
@@ -363,13 +394,17 @@ fu_linux_efivars_space_used(FuEfivars *efivars, GError **error)
 {
 	const gchar *fn;
 	guint64 total = 0;
+	g_autofree gchar *path = NULL;
 	g_autoptr(GDir) dir = NULL;
-	g_autofree gchar *path = fu_linux_efivars_get_path();
-	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
+	g_autoptr(GFile) file_fs = NULL;
 	g_autoptr(GFileInfo) info_fs = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* this is only supported in new kernels */
+	path = fu_linux_efivars_get_path(efivars, error);
+	if (path == NULL)
+		return G_MAXUINT64;
+	file_fs = g_file_new_for_path(path);
 	info_fs = g_file_query_info(file_fs,
 				    G_FILE_ATTRIBUTE_FILESYSTEM_USED,
 				    G_FILE_QUERY_INFO_NONE,
@@ -418,11 +453,15 @@ static guint64
 fu_linux_efivars_space_free(FuEfivars *efivars, GError **error)
 {
 	guint64 total = 0;
-	g_autofree gchar *path = fu_linux_efivars_get_path();
-	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
+	g_autofree gchar *path = NULL;
+	g_autoptr(GFile) file_fs = NULL;
 	g_autoptr(GFileInfo) info_fs = NULL;
 
 	/* try GIO first */
+	path = fu_linux_efivars_get_path(efivars, error);
+	if (path == NULL)
+		return G_MAXUINT64;
+	file_fs = g_file_new_for_path(path);
 	info_fs = g_file_query_info(file_fs,
 				    G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
 				    G_FILE_QUERY_INFO_NONE,
@@ -474,11 +513,14 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 	int fd;
 	int open_wflags = O_WRONLY;
 	gboolean was_immutable = TRUE;
-	g_autofree gchar *fn = fu_linux_efivars_get_filename(guid, name);
+	g_autofree gchar *fn = NULL;
 	g_autofree guint8 *buf = g_malloc0(sizeof(guint32) + sz);
 	g_autoptr(GOutputStream) ostr = NULL;
 
 	/* clear the immutable bit before writing if required */
+	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
+	if (fn == NULL)
+		return FALSE;
 	if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		if (!fu_linux_efivars_set_immutable(fn, FALSE, &was_immutable, error)) {
 			g_prefix_error(error, "failed to set %s as mutable: ", fn);
@@ -542,7 +584,7 @@ fu_linux_efivars_class_init(FuLinuxEfivarsClass *klass)
 }
 
 FuEfivars *
-fu_efivars_new(void)
+fu_efivars_new(FuPathStore *pstore)
 {
-	return FU_EFIVARS(g_object_new(FU_TYPE_LINUX_EFIVARS, NULL));
+	return FU_EFIVARS(g_object_new(FU_TYPE_LINUX_EFIVARS, "path-store", pstore, NULL));
 }

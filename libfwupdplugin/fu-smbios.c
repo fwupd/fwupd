@@ -36,6 +36,7 @@
 
 struct _FuSmbios {
 	FuFirmware parent_instance;
+	FuPathStore *pstore;
 	guint32 structure_table_len;
 	GPtrArray *items;
 };
@@ -430,7 +431,14 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* DMI */
-	path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "dmi", "tables", NULL);
+	path = fu_path_store_build_filename(self->pstore,
+					    error,
+					    FU_PATH_KIND_SYSFSDIR_FW,
+					    "dmi",
+					    "tables",
+					    NULL);
+	if (path == NULL)
+		return FALSE;
 	if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -708,6 +716,8 @@ static void
 fu_smbios_finalize(GObject *object)
 {
 	FuSmbios *self = FU_SMBIOS(object);
+	if (self->pstore != NULL)
+		g_object_unref(self->pstore);
 	g_ptr_array_unref(self->items);
 	G_OBJECT_CLASS(fu_smbios_parent_class)->finalize(object);
 }
@@ -739,9 +749,13 @@ fu_smbios_init(FuSmbios *self)
  * Since: 1.0.0
  **/
 FuSmbios *
-fu_smbios_new(void)
+fu_smbios_new(FuPathStore *pstore)
 {
 	FuSmbios *self;
+
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+
 	self = g_object_new(FU_TYPE_SMBIOS, NULL);
+	self->pstore = g_object_ref(pstore);
 	return FU_SMBIOS(self);
 }

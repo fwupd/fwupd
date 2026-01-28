@@ -270,13 +270,18 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 }
 
 gchar *
-fu_common_get_olson_timezone_id_impl(GError **error)
+fu_common_get_olson_timezone_id_impl(FuPathStore *pstore, GError **error)
 {
-	g_autofree gchar *fn_localtime = fu_path_from_kind(FU_PATH_KIND_LOCALTIME);
-	g_autoptr(GFile) file_localtime = g_file_new_for_path(fn_localtime);
+	const gchar *fn_localtime;
+	g_autoptr(GFile) file_localtime = NULL;
+
+	fn_localtime = fu_path_store_get_path(pstore, FU_PATH_KIND_LOCALTIME, error);
+	if (fn_localtime == NULL)
+		return NULL;
 
 	/* use the last two sections of the symlink target */
 	g_debug("looking for timezone file %s", fn_localtime);
+	file_localtime = g_file_new_for_path(fn_localtime);
 	if (g_file_query_file_type(file_localtime, G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS, NULL) ==
 	    G_FILE_TYPE_SYMBOLIC_LINK) {
 		const gchar *target;

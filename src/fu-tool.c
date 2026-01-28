@@ -166,7 +166,13 @@ fu_util_lock(FuUtil *self, GError **error)
 	if (use_user) {
 		lockfn = fu_util_get_user_cache_path("fwupdtool");
 	} else {
-		lockfn = fu_path_build(FU_PATH_KIND_LOCKDIR, "fwupdtool", NULL);
+		lockfn = fu_context_build_filename(self->ctx,
+						   error,
+						   FU_PATH_KIND_LOCKDIR,
+						   "fwupdtool",
+						   NULL);
+		if (lockfn == NULL)
+			return FALSE;
 	}
 	if (!fu_path_mkdir_parent(lockfn, error))
 		return FALSE;
@@ -292,6 +298,7 @@ fu_util_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 static gboolean
 fu_util_smbios_dump(FuUtil *self, gchar **values, GError **error)
 {
+	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	if (g_strv_length(values) < 1) {
@@ -301,7 +308,7 @@ fu_util_smbios_dump(FuUtil *self, gchar **values, GError **error)
 				    "Invalid arguments");
 		return FALSE;
 	}
-	smbios = fu_smbios_new();
+	smbios = fu_smbios_new(pstore);
 	if (!fu_smbios_setup_from_file(smbios, values[0], error))
 		return FALSE;
 	tmp = fu_firmware_to_string(FU_FIRMWARE(smbios));
@@ -2501,8 +2508,14 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* parse this */
-	fn =
-	    fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "tpm0", "binary_bios_measurements", NULL);
+	fn = fu_context_build_filename(self->ctx,
+				       error,
+				       FU_PATH_KIND_SYSFSDIR_SECURITY,
+				       "tpm0",
+				       "binary_bios_measurements",
+				       NULL);
+	if (fn == NULL)
+		return FALSE;
 	blob = fu_bytes_get_contents(fn, error);
 	stream = g_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,
@@ -4379,7 +4392,10 @@ fu_util_esp_list(FuUtil *self, gchar **values, GError **error)
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
-	if (!fu_util_start_engine(self, FU_ENGINE_LOAD_FLAG_HWINFO, self->progress, error))
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+				  self->progress,
+				  error))
 		return FALSE;
 	if (self->as_json)
 		return fu_util_esp_list_as_json(self, error);
@@ -6308,6 +6324,7 @@ main(int argc, char *argv[])
 			 G_CALLBACK(fu_util_context_flags_notify_cb),
 			 self);
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
+	fu_context_load_path_store(self->ctx);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "device-request",

@@ -22,6 +22,7 @@
 
 struct _FuBiosSettings {
 	GObject parent_instance;
+	FuPathStore *pstore;
 	GHashTable *descriptions;
 	GHashTable *read_only;
 	GPtrArray *attrs;
@@ -39,6 +40,8 @@ static void
 fu_bios_settings_finalize(GObject *obj)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
+	if (self->pstore != NULL)
+		g_object_unref(self->pstore);
 	g_ptr_array_unref(self->attrs);
 	g_hash_table_unref(self->descriptions);
 	g_hash_table_unref(self->read_only);
@@ -379,8 +382,9 @@ gboolean
 fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 {
 	guint count = 0;
-	g_autofree gchar *sysfsfwdir = NULL;
+	const gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) class_dir = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 
@@ -394,7 +398,12 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 	if (g_hash_table_size(self->read_only) == 0)
 		fu_bios_settings_populate_read_only(self);
 
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
+	sysfsfwdir =
+	    fu_path_store_get_path(self->pstore, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, &error_local);
+	if (sysfsfwdir == NULL) {
+		g_debug("ignoring BIOS settings: %s", error_local->message);
+		return TRUE;
+	}
 	class_dir = g_dir_open(sysfsfwdir, 0, error);
 	if (class_dir == NULL) {
 		fwupd_error_convert(error);
@@ -419,7 +428,7 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 		do {
 			const gchar *name = g_dir_read_name(driver_dir);
 			g_autofree gchar *full_path = NULL;
-			g_autoptr(GError) error_local = NULL;
+			g_autoptr(GError) error_loop = NULL;
 			if (name == NULL)
 				break;
 			full_path = g_build_filename(path, name, NULL);
@@ -427,8 +436,8 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 								 driver,
 								 full_path,
 								 name,
-								 &error_local)) {
-				g_debug("%s is not supported: %s", name, error_local->message);
+								 &error_loop)) {
+				g_debug("%s is not supported: %s", name, error_loop->message);
 				continue;
 			}
 		} while (++count);
@@ -632,13 +641,19 @@ fu_bios_settings_is_supported(FuBiosSettings *self)
 
 /**
  * fu_bios_settings_new:
+ * @pstore: (nullable): a #FuPathStore
  *
  * Returns: #FuBiosSettings
  *
  * Since: 1.8.4
  **/
 FuBiosSettings *
-fu_bios_settings_new(void)
+fu_bios_settings_new(FuPathStore *pstore)
 {
-	return g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
+	FuBiosSettings *self;
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore) || pstore == NULL, NULL);
+	self = g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
+	if (pstore != NULL)
+		self->pstore = g_object_ref(pstore);
+	return self;
 }

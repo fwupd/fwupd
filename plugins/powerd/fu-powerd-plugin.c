@@ -20,13 +20,20 @@ struct _FuPowerdPlugin {
 G_DEFINE_TYPE(FuPowerdPlugin, fu_powerd_plugin, FU_TYPE_PLUGIN)
 
 static gboolean
-fu_powerd_plugin_create_suspend_file(GError **error)
+fu_powerd_plugin_create_suspend_file(FuPowerdPlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *inhibitsuspend_filename = NULL;
 	g_autofree gchar *getpid_str = NULL;
 
-	inhibitsuspend_filename =
-	    fu_path_build(FU_PATH_KIND_LOCKDIR, "power_override", "fwupd.lock", NULL);
+	inhibitsuspend_filename = fu_context_build_filename(ctx,
+							    error,
+							    FU_PATH_KIND_LOCKDIR,
+							    "power_override",
+							    "fwupd.lock",
+							    NULL);
+	if (inhibitsuspend_filename == NULL)
+		return FALSE;
 	getpid_str = g_strdup_printf("%d", getpid());
 	if (!g_file_set_contents(inhibitsuspend_filename, getpid_str, -1, error)) {
 		g_prefix_error_literal(error, "lock file unable to be created: ");
@@ -36,13 +43,16 @@ fu_powerd_plugin_create_suspend_file(GError **error)
 }
 
 static gboolean
-fu_powerd_plugin_delete_suspend_file(GError **error)
+fu_powerd_plugin_delete_suspend_file(FuPowerdPlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *lockdir = NULL;
+	const gchar *lockdir = NULL;
 	g_autoptr(GFile) inhibitsuspend_file = NULL;
 
-	lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
+	lockdir = fu_context_get_path(ctx, FU_PATH_KIND_LOCKDIR, error);
+	if (lockdir == NULL)
+		return FALSE;
 	inhibitsuspend_file =
 	    g_file_new_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
 	if (!g_file_delete(inhibitsuspend_file, NULL, &error_local) &&
@@ -102,7 +112,7 @@ fu_powerd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	FuPowerdPlugin *self = FU_POWERD_PLUGIN(plugin);
 	g_autofree gchar *name_owner = NULL;
 
-	if (!fu_powerd_plugin_delete_suspend_file(error))
+	if (!fu_powerd_plugin_delete_suspend_file(self, error))
 		return FALSE;
 
 	/* establish proxy for method call to powerd */
@@ -149,13 +159,15 @@ fu_powerd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 static gboolean
 fu_powerd_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	return fu_powerd_plugin_create_suspend_file(error);
+	FuPowerdPlugin *self = FU_POWERD_PLUGIN(plugin);
+	return fu_powerd_plugin_create_suspend_file(self, error);
 }
 
 static gboolean
 fu_powerd_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	return fu_powerd_plugin_delete_suspend_file(error);
+	FuPowerdPlugin *self = FU_POWERD_PLUGIN(plugin);
+	return fu_powerd_plugin_delete_suspend_file(self, error);
 }
 
 static void

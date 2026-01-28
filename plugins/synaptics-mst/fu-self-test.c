@@ -26,9 +26,9 @@ fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user
 static void
 fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *basename;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GDir) dir = g_dir_open(path, 0, &error);
@@ -89,6 +89,9 @@ fu_plugin_synaptics_mst_none_func(void)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autofree gchar *filename = NULL;
 
+	/* set up test harness */
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
+
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -123,6 +126,7 @@ static void
 fu_plugin_synaptics_mst_tb16_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -131,10 +135,11 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autofree gchar *filename = NULL;
 
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
+
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -185,16 +190,11 @@ fu_synaptics_mst_firmware_xml_func(void)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	/* tests go here */
 	g_type_ensure(FU_TYPE_SYNAPTICS_MST_FIRMWARE);

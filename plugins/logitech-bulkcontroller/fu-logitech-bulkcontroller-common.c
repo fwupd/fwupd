@@ -89,6 +89,8 @@ fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(
     FuLogitechBulkcontrollerDevice *self,
     GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	g_autofree gchar *olson_location = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
@@ -102,7 +104,7 @@ fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(
 	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
 		olson_location = g_strdup("Europe/London");
 	} else {
-		olson_location = fu_common_get_olson_timezone_id(error);
+		olson_location = fu_common_get_olson_timezone_id(pstore, error);
 		if (olson_location == NULL)
 			return NULL;
 	}

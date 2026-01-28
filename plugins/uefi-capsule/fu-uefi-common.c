@@ -11,9 +11,10 @@
 #include "fu-uefi-common.h"
 
 static const gchar *
-fu_uefi_bootmgr_get_suffix(GError **error)
+fu_uefi_bootmgr_get_suffix(FuPathStore *pstore, GError **error)
 {
 	guint64 firmware_bits;
+	g_autofree gchar *sysfsefidir = NULL;
 	struct {
 		guint64 bits;
 		const gchar *arch;
@@ -33,7 +34,11 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 	    {32, "arm"},
 #endif
 	    {0, NULL}};
-	g_autofree gchar *sysfsefidir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
+
+	sysfsefidir =
+	    fu_path_store_build_filename(pstore, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
+	if (sysfsefidir == NULL)
+		return NULL;
 	firmware_bits = fu_uefi_read_file_as_uint64(sysfsefidir, "fw_platform_size");
 	if (firmware_bits == 0) {
 		g_set_error(error,
@@ -61,10 +66,15 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 
 /* return without the ESP dir prepended */
 gchar *
-fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error)
+fu_uefi_get_esp_app_path(FuPathStore *pstore,
+			 const gchar *esp_path,
+			 const gchar *cmd,
+			 GError **error)
 {
-	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
+	const gchar *suffix;
 	g_autofree gchar *base = NULL;
+
+	suffix = fu_uefi_bootmgr_get_suffix(pstore, error);
 	if (suffix == NULL)
 		return NULL;
 	base = fu_uefi_get_esp_path_for_os(esp_path);
@@ -85,10 +95,13 @@ fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error
  * Since: 1.8.1
  **/
 gchar *
-fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **error)
+fu_uefi_get_built_app_path(FuPathStore *pstore,
+			   FuEfivars *efivars,
+			   const gchar *binary,
+			   GError **error)
 {
 	const gchar *suffix;
-	g_autofree gchar *prefix = NULL;
+	const gchar *prefix = NULL;
 	g_autofree gchar *source_path = NULL;
 	g_autofree gchar *source_path_signed = NULL;
 	gboolean secureboot_enabled = FALSE;
@@ -96,10 +109,12 @@ fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **err
 	gboolean source_path_signed_exists = FALSE;
 	g_autoptr(GError) error_local = NULL;
 
-	suffix = fu_uefi_bootmgr_get_suffix(error);
+	suffix = fu_uefi_bootmgr_get_suffix(pstore, error);
 	if (suffix == NULL)
 		return NULL;
-	prefix = fu_path_from_kind(FU_PATH_KIND_EFIAPPDIR);
+	prefix = fu_path_store_get_path(pstore, FU_PATH_KIND_EFIAPPDIR, error);
+	if (prefix == NULL)
+		return NULL;
 
 	source_path = g_strdup_printf("%s/%s%s.efi", prefix, binary, suffix);
 	source_path_signed = g_strdup_printf("%s.signed", source_path);
@@ -136,16 +151,20 @@ fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **err
 }
 
 gboolean
-fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
+fu_uefi_get_framebuffer_size(FuPathStore *pstore, guint32 *width, guint32 *height, GError **error)
 {
 	guint32 height_tmp;
 	guint32 width_tmp;
 	g_autofree gchar *fbdir = NULL;
 
-	fbdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_DRIVERS,
-			      "efi-framebuffer",
-			      "efi-framebuffer.0",
-			      NULL);
+	fbdir = fu_path_store_build_filename(pstore,
+					     error,
+					     FU_PATH_KIND_SYSFSDIR_DRIVERS,
+					     "efi-framebuffer",
+					     "efi-framebuffer.0",
+					     NULL);
+	if (fbdir == NULL)
+		return FALSE;
 	if (!g_file_test(fbdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

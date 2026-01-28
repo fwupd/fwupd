@@ -12,8 +12,6 @@
 
 G_DECLARE_FINAL_TYPE(FuBiosSettings, fu_bios_settings, FU, BIOS_SETTINGS, GObject)
 
-FuBiosSettings *
-fu_bios_settings_new(void);
 gboolean
 fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error)
     G_GNUC_NON_NULL(1);

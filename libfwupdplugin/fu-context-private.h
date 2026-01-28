@@ -9,6 +9,7 @@
 #include "fu-config.h"
 #include "fu-context.h"
 #include "fu-hwids.h"
+#include "fu-path-store.h"
 #include "fu-progress.h"
 #include "fu-quirks.h"
 #include "fu-volume.h"
@@ -33,6 +34,8 @@ fu_context_load_hwinfo(FuContext *self,
 		       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error) G_GNUC_NON_NULL(1);
+void
+fu_context_load_path_store(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
 fu_context_get_runtime_versions(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
