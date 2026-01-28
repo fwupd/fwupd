@@ -348,11 +348,13 @@ fu_path_store_load_from_env(FuPathStore *self)
 	    {"CONFIGURATION_DIRECTORY", FU_PATH_KIND_SYSCONFDIR_PKG},
 	    {"LOCALCONF_DIRECTORY", FU_PATH_KIND_LOCALCONFDIR_PKG},
 	    {"STATE_DIRECTORY", FU_PATH_KIND_LOCALSTATEDIR_PKG},
+	    {"FWUPD_DATADIR_QUIRKS", FU_PATH_KIND_DATADIR_QUIRKS},
 	    {"FWUPD_HOSTFS_ROOT", FU_PATH_KIND_HOSTFS_ROOT},
 	    {"FWUPD_LIBDIR_PKG", FU_PATH_KIND_LIBDIR_PKG},
 	    {"FWUPD_LOCKDIR", FU_PATH_KIND_LOCKDIR},
 	    {"FWUPD_SYSFSFWATTRIBDIR", FU_PATH_KIND_SYSFSDIR_FW_ATTRIB},
 	    {"FWUPD_SYSFSFWDIR", FU_PATH_KIND_SYSFSDIR_FW},
+	    {"FWUPD_UEFI_ESP_PATH", FU_PATH_KIND_UEFI_ESP},
 	};
 
 	g_return_if_fail(FU_IS_PATH_STORE(self));
@@ -437,10 +439,20 @@ fu_path_store_load_from_env(FuPathStore *self)
 	/* snap special case */
 	tmp = g_getenv("SNAP_COMMON");
 	if (tmp != NULL) {
+		fu_path_store_add_dir(self,
+				      FU_PATH_KIND_CACHEDIR_PKG,
+				      tmp,
+				      "var",
+				      "local",
+				      "cache",
+				      PACKAGE_NAME,
+				      NULL);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmp);
+		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_QUIRKS, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_REMOTES, tmp);
+		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALCONFDIR_PKG, tmp);
 	}
 
 	/* snap usual case */

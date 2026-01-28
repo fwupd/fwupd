@@ -22,9 +22,14 @@ static void
 fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
+	g_autofree gchar *confdir = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
+
+	confdir = g_test_build_filename(G_TEST_DIST, "tests", "etc", "fwupd", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, confdir);
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
@@ -34,6 +39,15 @@ fu_test_self_init(FuTest *self)
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* starting bioscfg dir to make startup pass */
+	testdatadir = g_test_build_filename(G_TEST_DIST,
+					    "tests",
+					    "firmware-attributes",
+					    "surestart-not-available",
+					    NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
+
 	ret = fu_context_reload_bios_settings(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -53,14 +67,13 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autofree gchar *test_dir = g_test_build_filename(G_TEST_DIST,
-							   "tests",
-							   "firmware-attributes",
-							   "surestart-enabled",
-							   NULL);
+	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
+							      "tests",
+							      "firmware-attributes",
+							      "surestart-enabled",
+							      NULL);
 
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
-
+	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
 	ret = fu_context_reload_bios_settings(self->ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -85,13 +98,13 @@ fu_plugin_hp_bioscfg_surestart_disabled(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autofree gchar *test_dir = g_test_build_filename(G_TEST_DIST,
-							   "tests",
-							   "firmware-attributes",
-							   "surestart-disabled",
-							   NULL);
+	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
+							      "tests",
+							      "firmware-attributes",
+							      "surestart-disabled",
+							      NULL);
 
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
 
 	ret = fu_context_reload_bios_settings(self->ctx, &error);
 	g_assert_no_error(error);
@@ -119,13 +132,13 @@ fu_plugin_hp_bioscfg_surestart_not_available(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autofree gchar *test_dir = g_test_build_filename(G_TEST_DIST,
-							   "tests",
-							   "firmware-attributes",
-							   "surestart-not-available",
-							   NULL);
+	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
+							      "tests",
+							      "firmware-attributes",
+							      "surestart-not-available",
+							      NULL);
 
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
+	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdatadir);
 
 	ret = fu_context_reload_bios_settings(self->ctx, &error);
 	g_assert_no_error(error);
@@ -158,27 +171,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_self_free)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *confdir = NULL;
-	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* starting bioscfg dir to make startup pass */
-	test_dir = g_test_build_filename(G_TEST_DIST,
-					 "tests",
-					 "firmware-attributes",
-					 "surestart-not-available",
-					 NULL);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
-
-	/* to load fwupd.conf */
-	confdir = g_test_build_filename(G_TEST_DIST, "tests", "etc", "fwupd", NULL);
-	(void)g_setenv("CONFIGURATION_DIRECTORY", confdir, TRUE);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* tests go here */
 	fu_test_self_init(self);

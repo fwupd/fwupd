@@ -723,6 +723,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 				FwupdInstallFlags flags,
 				GError **error)
 {
+	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -750,13 +751,17 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			return FALSE;
 		}
 		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
-		path = fu_path_build(
+		path = fu_context_build_filename(
+		    priv->ctx,
+		    error,
 		    FU_PATH_KIND_LOCALSTATEDIR_PKG,
 		    "backup",
 		    fu_device_get_id(device),
 		    fu_device_get_serial(device) != NULL ? fu_device_get_serial(device) : "default",
 		    fn,
 		    NULL);
+		if (path == NULL)
+			return FALSE;
 		fu_progress_step_done(progress);
 		if (!fu_bytes_set_contents(path, fw_old, error))
 			return FALSE;
@@ -2773,6 +2778,14 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 		g_critical("cannot get config value with no plugin name!");
 		return FALSE;
 	}
+
+	/* do not persist */
+	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_TEST_ONLY)) {
+		fu_config_set_value_internal(config, name, key, value);
+		return TRUE;
+	}
+
+	/* write to disk */
 	return fu_config_set_value(config, name, key, value, error);
 }
 

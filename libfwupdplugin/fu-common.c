@@ -14,7 +14,7 @@
 
 #include "fu-common-private.h"
 #include "fu-firmware.h"
-#include "fu-path.h"
+#include "fu-path-store.h"
 #include "fu-string.h"
 
 /**
@@ -133,15 +133,18 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
  * Since: 2.0.7
  **/
 GHashTable *
-fu_cpu_get_attrs(GError **error)
+fu_cpu_get_attrs(FuPathStore *pstore, GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
+	g_autofree gchar *fn = NULL;
 	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	fn = fu_path_store_build_filename(pstore, error, FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
+	if (fn == NULL)
+		return NULL;
 	if (!g_file_get_contents(fn, &buf, &bufsz, error))
 		return NULL;
 	if (bufsz > 0) {
@@ -229,6 +232,7 @@ fu_common_get_kernel_cmdline(GError **error)
 
 /**
  * fu_common_get_olson_timezone_id:
+ * @pstore: a #FuPathStore
  * @error: (nullable): optional return location for an error
  *
  * Gets the system Olson timezone ID, as used in the CLDR and ICU specifications.
@@ -238,9 +242,11 @@ fu_common_get_kernel_cmdline(GError **error)
  * Since: 1.9.7
  **/
 gchar *
-fu_common_get_olson_timezone_id(GError **error)
+fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error)
 {
-	return fu_common_get_olson_timezone_id_impl(error);
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_common_get_olson_timezone_id_impl(pstore, error);
 }
 
 /**

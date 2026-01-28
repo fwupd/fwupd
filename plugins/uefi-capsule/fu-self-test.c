@@ -105,8 +105,16 @@ static void
 fu_uefi_bgrt_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuUefiBgrt) bgrt = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuUefiBgrt) bgrt = fu_uefi_bgrt_new();
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+
+	bgrt = fu_uefi_bgrt_new(pstore);
 	ret = fu_uefi_bgrt_setup(bgrt, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -123,8 +131,15 @@ fu_uefi_framebuffer_func(void)
 	gboolean ret;
 	guint32 height = 0;
 	guint32 width = 0;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
-	ret = fu_uefi_get_framebuffer_size(&width, &height, &error);
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR_DRIVERS, testdatadir);
+
+	ret = fu_uefi_get_framebuffer_size(pstore, &width, &height, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(width, ==, 800);
@@ -293,6 +308,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 	FuUefiCapsuleDevice *dev2;
 	GPtrArray *devices;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -304,6 +320,12 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_test_skip("ESRT data is mocked only on Linux");
 	return;
 #endif
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
 
 	/* override ESP */
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
@@ -405,6 +427,7 @@ fu_uefi_plugin_no_cod_func(void)
 	FuBackend *backend;
 	GType device_gtype;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -416,6 +439,12 @@ fu_uefi_plugin_no_cod_func(void)
 	g_test_skip("ESRT data is mocked only on Linux");
 	return;
 #endif
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
 
 	/* the firmware supports CoD */
 	fu_uefi_plugin_setup_indications(ctx, EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED);
@@ -462,6 +491,7 @@ static void
 fu_uefi_plugin_no_flashes_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -470,6 +500,11 @@ fu_uefi_plugin_no_flashes_func(void)
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
 
 	/* override ESP */
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
@@ -531,6 +566,8 @@ fu_uefi_plugin_nvram_func(void)
 	gboolean ret;
 	guint16 bootnext = 0;
 	guint16 idx;
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fwupdx64_efi_signed = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
@@ -547,12 +584,26 @@ fu_uefi_plugin_nvram_func(void)
 	return;
 #endif
 
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_DRIVERS, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, g_test_get_dir(G_TEST_BUILT));
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+
 	/* override ESP */
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
+
+	/* also use the ESP for writes */
+	fu_context_set_path(ctx, FU_PATH_KIND_EFIAPPDIR, fu_temporary_directory_get_path(tmpdir));
+	fwupdx64_efi_signed = fu_temporary_directory_build(tmpdir, "fwupdx64.efi.signed", NULL);
+	ret = g_file_set_contents(fwupdx64_efi_signed, "PEBINARY", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* set up system so that secure boot is on */
 	ret = fu_efivars_set_secure_boot(fu_context_get_efivars(ctx), TRUE, &error);
@@ -700,6 +751,7 @@ static void
 fu_uefi_plugin_cod_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
@@ -710,6 +762,11 @@ fu_uefi_plugin_cod_func(void)
 	g_autoptr(FuVolume) esp = NULL;
 	g_autoptr(GByteArray) buf_last = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
 
 	/* override ESP */
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
@@ -814,6 +871,8 @@ static void
 fu_uefi_plugin_grub_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *fwupdx64_efi_signed = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
@@ -850,6 +909,21 @@ fu_uefi_plugin_grub_func(void)
 	g_assert_nonnull(tmpdir);
 	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_HOSTFS_BOOT, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_EFIAPPDIR, fu_temporary_directory_get_path(tmpdir));
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+
+	fwupdx64_efi_signed = fu_temporary_directory_build(tmpdir, "fwupdx64.efi.signed", NULL);
+	ret = g_file_set_contents(fwupdx64_efi_signed, "PEBINARY", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_path(ctx,
+			    FU_PATH_KIND_LOCALSTATEDIR_PKG,
+			    fu_temporary_directory_get_path(tmpdir));
 
 	/* create plugin, and ->startup then ->coldplug */
 	plugin =
@@ -911,6 +985,7 @@ fu_uefi_update_info_func(void)
 {
 	FuUefiCapsuleDevice *dev;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuBackend) backend = fu_uefi_capsule_backend_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -940,6 +1015,11 @@ fu_uefi_update_info_func(void)
 					&error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
 
 	/* add each device */
 	ret = fu_backend_coldplug(backend, progress, &error);
@@ -976,36 +1056,20 @@ int
 main(int argc, char **argv)
 {
 	g_autofree gchar *testdatadir = NULL;
-	g_autofree gchar *testdatadir_mut = NULL;
-	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(GError) error = NULL;
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
-	tmpdir = fu_temporary_directory_new("uefi-capsule", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(tmpdir);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	testdatadir_mut = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-	(void)g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_DATADIR_QUIRKS", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_HOSTFS_BOOT", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_EFIAPPDIR", testdatadir_mut, TRUE);
-	(void)g_setenv("FWUPD_ACPITABLESDIR", testdatadir_mut, TRUE);
-	(void)g_setenv("FWUPD_DATADIR", g_test_get_dir(G_TEST_BUILT), TRUE);
-	(void)g_setenv("FWUPD_LOCALSTATEDIR", fu_temporary_directory_get_path(tmpdir), TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	(void)g_setenv("LANGUAGE", "en", TRUE);
-	(void)g_setenv("PATH", testdatadir, TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+
+	/* find our version of grub-mkconfig */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("PATH", testdatadir, TRUE);
 
 	/* tests go here */
 	g_type_ensure(FU_TYPE_UEFI_UPDATE_INFO);

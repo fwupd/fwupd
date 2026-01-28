@@ -7,7 +7,10 @@
 #pragma once
 
 #include "fu-bios-settings.h"
+#include "fu-path-store.h"
 
+FuBiosSettings *
+fu_bios_settings_new(FuPathStore *pstore);
 gboolean
 fu_bios_settings_setup(FuBiosSettings *self, GError **error) G_GNUC_NON_NULL(1);
 

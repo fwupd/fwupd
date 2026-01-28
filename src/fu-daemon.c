@@ -255,6 +255,7 @@ fu_daemon_init(FuDaemon *self)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuContext) ctx = fu_context_new();
+	fu_context_load_path_store(ctx);
 	priv->engine = fu_engine_new(ctx);
 	priv->loop = g_main_loop_new(NULL, FALSE);
 }

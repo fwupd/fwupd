@@ -781,6 +781,7 @@ class Checker:
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
             "memcpy": "Use fu_memcpy_safe or rustgen instead",
+            "g_unsetenv": "This is not thread safe",
             "~GUINT??_FROM_?E": "Use fu_memread_uintXX_safe() or rustgen instead",
             "~GUINT??_TO_?E": "Use fu_memwrite_uintXX_safe() or rustgen instead",
             "ioctl": "Use fu_udev_device_ioctl() instead",

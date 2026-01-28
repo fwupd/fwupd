@@ -164,17 +164,12 @@ fu_uefi_dbx_not_present_func(void)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 
 	/* tests go here */

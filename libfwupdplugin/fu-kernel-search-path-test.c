@@ -17,6 +17,7 @@ fu_kernel_search_path_func(void)
 	g_autofree gchar *search_path = NULL;
 	g_autofree gchar *result1 = NULL;
 	g_autofree gchar *result2 = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
@@ -32,8 +33,8 @@ fu_kernel_search_path_func(void)
 	g_assert_nonnull(tmpdir);
 	search_path = fu_temporary_directory_build(tmpdir, "search_path", NULL);
 
-	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/dev/null", TRUE);
-	result1 = fu_kernel_search_path_get_current(&error);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_FIRMWARE_SEARCH, "/dev/null");
+	result1 = fu_kernel_search_path_get_current(pstore, &error);
 	g_assert_null(result1);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_clear_error(&error);
@@ -42,19 +43,19 @@ fu_kernel_search_path_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	(void)g_setenv("FWUPD_FIRMWARESEARCH", search_path, TRUE);
-	locker = fu_kernel_search_path_locker_new("/foo/bar", &error);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_FIRMWARE_SEARCH, search_path);
+	locker = fu_kernel_search_path_locker_new(pstore, "/foo/bar", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
 	g_assert_cmpstr(fu_kernel_search_path_locker_get_path(locker), ==, "/foo/bar");
 
-	result1 = fu_kernel_search_path_get_current(&error);
+	result1 = fu_kernel_search_path_get_current(pstore, &error);
 	g_assert_nonnull(result1);
 	g_assert_cmpstr(result1, ==, "/foo/bar");
 	g_assert_no_error(error);
 	g_clear_object(&locker);
 
-	result2 = fu_kernel_search_path_get_current(&error);
+	result2 = fu_kernel_search_path_get_current(pstore, &error);
 	g_assert_nonnull(result2);
 	g_assert_cmpstr(result2, ==, "oldvalue");
 	g_assert_no_error(error);

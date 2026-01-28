@@ -14,7 +14,7 @@
 G_DECLARE_FINAL_TYPE(FuEngineConfig, fu_engine_config, FU, ENGINE_CONFIG, FuConfig)
 
 FuEngineConfig *
-fu_engine_config_new(void);
+fu_engine_config_new(FuPathStore *pstore);
 guint64
 fu_engine_config_get_archive_size_max(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 guint
