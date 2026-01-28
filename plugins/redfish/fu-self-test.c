@@ -31,9 +31,15 @@ static void
 fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
@@ -51,6 +57,7 @@ fu_test_self_init(FuTest *self)
 	self->plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
 		g_test_skip("no redfish.py running");
 		g_clear_error(&error);
 	} else {
@@ -65,6 +72,7 @@ fu_test_self_init(FuTest *self)
 	self->smc_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->smc_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
 		g_test_skip("no redfish.py running");
 		g_clear_error(&error);
 	} else {
@@ -83,6 +91,7 @@ fu_test_self_init(FuTest *self)
 	self->unlicensed_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->unlicensed_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
 		g_test_skip("no redfish.py running");
 		g_clear_error(&error);
 	} else {
@@ -103,6 +112,7 @@ fu_test_self_init(FuTest *self)
 	self->hpe_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->hpe_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
 		g_test_skip("no redfish.py running");
 		g_clear_error(&error);
 	} else {
@@ -125,6 +135,7 @@ fu_test_self_init(FuTest *self)
 	self->dell_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->dell_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_debug("ignoring: %s", error->message);
 		g_test_skip("no redfish.py running");
 	} else {
 		g_assert_no_error(error);
@@ -634,19 +645,15 @@ main(int argc, char **argv)
 {
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 	g_autofree gchar *smbios_data_fn = NULL;
-	g_autofree gchar *testdatadir = NULL;
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	(void)g_setenv("FWUPD_REDFISH_VERBOSE", "1", TRUE);
 
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	smbios_data_fn = g_build_filename(testdatadir, "redfish-smbios.builder.xml", NULL);
+	smbios_data_fn =
+	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.xml", NULL);
 	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	fu_test_self_init(self);

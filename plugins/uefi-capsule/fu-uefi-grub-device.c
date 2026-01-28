@@ -22,6 +22,7 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 			     const gchar *target_app,
 			     GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *fn_grub_cfg = NULL;
 	const gchar *argv_mkconfig[] = {"", "-o", "grub.cfg", NULL};
 	const gchar *argv_reboot[] = {"", "fwupd", NULL};
@@ -33,14 +34,28 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* find grub.conf */
-	fn_grub_cfg = fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, "grub", "grub.cfg", NULL);
+	fn_grub_cfg = fu_context_build_filename(ctx,
+						error,
+						FU_PATH_KIND_HOSTFS_BOOT,
+						"grub",
+						"grub.cfg",
+						NULL);
+	if (fn_grub_cfg == NULL)
+		return FALSE;
 	if (!fu_device_query_file_exists(FU_DEVICE(self), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
 
 	/* try harder */
 	if (!exists_mkconfig) {
 		g_free(fn_grub_cfg);
-		fn_grub_cfg = fu_path_build(FU_PATH_KIND_HOSTFS_BOOT, "grub2", "grub.cfg", NULL);
+		fn_grub_cfg = fu_context_build_filename(ctx,
+							error,
+							FU_PATH_KIND_HOSTFS_BOOT,
+							"grub2",
+							"grub.cfg",
+							NULL);
+		if (fn_grub_cfg == NULL)
+			return FALSE;
 	}
 	if (!fu_device_query_file_exists(FU_DEVICE(self), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
@@ -80,7 +95,13 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 	g_string_append_printf(str, "EFI_PATH=%s\n", target_app);
 	g_string_replace(str, esp_path, "", 0);
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
-	grub_target = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "uefi_capsule.conf", NULL);
+	grub_target = fu_context_build_filename(ctx,
+						error,
+						FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						"uefi_capsule.conf",
+						NULL);
+	if (grub_target == NULL)
+		return FALSE;
 	if (!fu_path_mkdir_parent(grub_target, error))
 		return FALSE;
 	if (!g_file_set_contents(grub_target, str->str, -1, error)) {
@@ -139,6 +160,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
 	const gchar *fw_class = fu_uefi_capsule_device_get_guid(self);
@@ -198,12 +220,12 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
+	source_app = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
 	if (source_app == NULL)
 		return FALSE;
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path(esp_path, "fwupd", error);
+	target_app = fu_uefi_get_esp_app_path(pstore, esp_path, "fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
 	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {

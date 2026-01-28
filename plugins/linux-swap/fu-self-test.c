@@ -14,9 +14,11 @@ static void
 fu_linux_swap_none_func(void)
 {
 	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
-	swap = fu_linux_swap_new("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n", 0, &error);
+	swap =
+	    fu_linux_swap_new(pstore, "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n", 0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(swap);
 	g_assert_false(fu_linux_swap_get_enabled(swap));
@@ -27,10 +29,12 @@ static void
 fu_linux_swap_plain_func(void)
 {
 	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
 	swap =
-	    fu_linux_swap_new("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
+	    fu_linux_swap_new(pstore,
+			      "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
 			      "/dev/nvme0n1p4                          partition\t5962748\t0\t-2\n",
 			      0,
 			      &error);
@@ -53,10 +57,12 @@ static void
 fu_linux_swap_encrypted_func(void)
 {
 	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
 	swap =
-	    fu_linux_swap_new("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
+	    fu_linux_swap_new(pstore,
+			      "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
 			      "/dev/dm-1                               partition\t5962748\t0\t-2\n",
 			      0,
 			      &error);

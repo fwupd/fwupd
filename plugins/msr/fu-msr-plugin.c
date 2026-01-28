@@ -593,12 +593,14 @@ fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 }
 
 static gboolean
-fu_msr_plugin_kernel_enabled_sme(GError **error)
+fu_msr_plugin_kernel_enabled_sme(FuMsrPlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	const gchar *flags;
 	g_autoptr(GHashTable) cpu_attrs = NULL;
 
-	cpu_attrs = fu_cpu_get_attrs(error);
+	cpu_attrs = fu_cpu_get_attrs(pstore, error);
 	if (cpu_attrs == NULL)
 		return FALSE;
 	flags = g_hash_table_lookup(cpu_attrs, "flags");
@@ -655,7 +657,7 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 		return;
 	}
 
-	if (!(fu_msr_plugin_kernel_enabled_sme(&error_local))) {
+	if (!(fu_msr_plugin_kernel_enabled_sme(self, &error_local))) {
 		g_debug("%s", error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);

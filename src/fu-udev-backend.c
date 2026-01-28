@@ -448,15 +448,19 @@ fu_udev_backend_devnode_wait_cb(FuDevice *device, gpointer user_data, GError **e
 static gboolean
 fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **error)
 {
-	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-#ifdef HAVE_UDEV_HOTPLUG
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
+	const gchar *sysfsdir;
+#ifdef HAVE_UDEV_HOTPLUG
 	const guint8 *buf;
 	gsize bufsz = 0;
 	g_autoptr(FuStructUdevMonitorNetlinkHeader) st_hdr = NULL;
 	g_autoptr(FuUdevDevice) device_donor = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
+
+	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
+	if (sysfsdir == NULL)
+		return FALSE;
 
 	/* parse the buffer */
 	st_hdr = fu_struct_udev_monitor_netlink_header_parse_bytes(blob, 0x0, error);
@@ -579,6 +583,10 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 #else
 	g_auto(GStrv) split = fu_strsplit_bytes(blob, "@", 2);
 
+	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
+	if (sysfsdir == NULL)
+		return FALSE;
+
 	action = fu_udev_action_from_string(split[0]);
 	if (action == FU_UDEV_ACTION_ADD) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
@@ -695,8 +703,12 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 {
 	FuContext *ctx = fu_backend_get_context(backend);
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	const gchar *sysfsdir;
 	g_autoptr(GPtrArray) udev_subsystems = fu_context_get_udev_subsystems(ctx);
+
+	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
+	if (sysfsdir == NULL)
+		return FALSE;
 
 	/* get all devices of class */
 	fu_progress_set_id(progress, G_STRLOC);

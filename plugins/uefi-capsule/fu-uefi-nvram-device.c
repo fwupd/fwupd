@@ -56,6 +56,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiBootmgrFlags bootmgr_flags = FU_UEFI_BOOTMGR_FLAG_NONE;
 	const gchar *bootmgr_desc = "Linux Firmware Updater";
@@ -129,7 +130,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
 		bootmgr_desc = "Linux-Firmware-Updater";
-	if (!fu_uefi_bootmgr_bootnext(efivars, esp, bootmgr_desc, bootmgr_flags, error))
+	if (!fu_uefi_bootmgr_bootnext(pstore, efivars, esp, bootmgr_desc, bootmgr_flags, error))
 		return FALSE;
 
 	/* success! */

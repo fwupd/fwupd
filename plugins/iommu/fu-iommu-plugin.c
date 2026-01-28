@@ -43,7 +43,9 @@ fu_iommu_plugin_backend_device_added(FuPlugin *plugin,
 static void
 fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuIommuPlugin *self = FU_IOMMU_PLUGIN(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) cmdline = NULL;
@@ -57,7 +59,7 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	cmdline = fu_kernel_get_cmdline(&error_local);
 	if (cmdline == NULL) {
 		g_warning("failed to get kernel cmdline: %s", error_local->message);
-	} else if (fu_kernel_check_cmdline_mutable(NULL)) {
+	} else if (fu_kernel_check_cmdline_mutable(pstore, NULL)) {
 		const gchar *value = g_hash_table_lookup(cmdline, "iommu");
 		fwupd_security_attr_set_kernel_current_value(attr, value);
 		if (!g_hash_table_contains(cmdline, "iommu") &&

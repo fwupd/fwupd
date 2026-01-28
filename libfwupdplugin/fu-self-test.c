@@ -212,9 +212,14 @@ fu_device_cfi_device_func(void)
 {
 	gboolean ret;
 	guint8 cmd = 0;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuCfiDevice) cfi_device = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -275,6 +280,7 @@ fu_smbios_func(void)
 	g_autofree gchar *dump = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *full_path = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -283,9 +289,9 @@ fu_smbios_func(void)
 	return;
 #endif
 
-	/* these tests will not write */
+	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
 
 	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
 	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
@@ -293,7 +299,7 @@ fu_smbios_func(void)
 		return;
 	}
 
-	smbios = fu_smbios_new();
+	smbios = fu_smbios_new(pstore);
 	ret = fu_smbios_setup(smbios, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -344,6 +350,7 @@ fu_smbios3_func(void)
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
 	g_autofree gchar *path = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -354,7 +361,7 @@ fu_smbios3_func(void)
 		return;
 	}
 
-	smbios = fu_smbios_new();
+	smbios = fu_smbios_new(pstore);
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -498,10 +505,15 @@ static void
 fu_context_hwids_dmi_func(void)
 {
 	g_autofree gchar *dump = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, testdatadir);
 
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
 	g_assert_no_error(error);
@@ -516,14 +528,10 @@ fu_context_hwids_dmi_func(void)
 static void
 fu_context_hwids_unset_func(void)
 {
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
@@ -541,12 +549,21 @@ fu_context_hwids_fdt_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
+	g_autofree gchar *fn = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuFirmware) fdt_tmp = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file =
-	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
+	g_autoptr(GFile) file = NULL;
+
+	fu_context_add_firmware_gtypes(ctx);
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("hwids", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* write file */
 	fdt_tmp = fu_firmware_new_from_xml(
@@ -577,6 +594,8 @@ fu_context_hwids_fdt_func(void)
 	    &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fdt_tmp);
+	fn = fu_temporary_directory_build(tmpdir, "system.dtb", NULL);
+	file = g_file_new_for_path(fn);
 	ret = fu_firmware_write_file(FU_FIRMWARE(fdt_tmp), file, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -597,7 +616,9 @@ fu_context_hwids_fdt_func(void)
 static void
 fu_common_olson_timezone_id_func(void)
 {
+	g_autofree gchar *localtime = NULL;
 	g_autofree gchar *timezone_id = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
 #ifdef HOST_MACHINE_SYSTEM_DARWIN
@@ -605,7 +626,11 @@ fu_common_olson_timezone_id_func(void)
 	return;
 #endif
 
-	timezone_id = fu_common_get_olson_timezone_id(&error);
+	/* set up test harness */
+	localtime = g_test_build_filename(G_TEST_DIST, "tests", "localtime", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_LOCALTIME, localtime);
+
+	timezone_id = fu_common_get_olson_timezone_id(pstore, &error);
 	g_assert_no_error(error);
 #ifdef _WIN32
 	/* we do not emulate this on Windows, so just check for anything */
@@ -618,10 +643,13 @@ fu_common_olson_timezone_id_func(void)
 static void
 fu_cpuid_func(void)
 {
+	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) cpu_attrs = NULL;
 
-	cpu_attrs = fu_cpu_get_attrs(&error);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_PROCFS, testdatadir);
+	cpu_attrs = fu_cpu_get_attrs(pstore, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cpu_attrs);
 	g_assert_cmpstr(g_hash_table_lookup(cpu_attrs, "vendor_id"), ==, "AuthenticAMD");
@@ -666,7 +694,8 @@ static void
 fu_hwids_func(void)
 {
 	g_autofree gchar *full_path = NULL;
-	g_autoptr(FuContext) context = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -697,6 +726,10 @@ fu_hwids_func(void)
 	return;
 #endif
 
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
+
 	/* DMI */
 	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
 	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
@@ -704,41 +737,33 @@ fu_hwids_func(void)
 		return;
 	}
 
-	ret = fu_context_load_hwinfo(context, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_MANUFACTURER),
-			==,
-			"LENOVO");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_ENCLOSURE_KIND), ==, "a");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY),
-			==,
-			"ThinkPad T440s");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_PRODUCT_NAME),
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER), ==, "LENOVO");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_ENCLOSURE_KIND), ==, "a");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_FAMILY), ==, "ThinkPad T440s");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME),
 			==,
 			"20ARS19C0C");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_VENDOR), ==, "LENOVO");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_VERSION),
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), ==, "LENOVO");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VERSION),
 			==,
 			"GJET75WW (2.25 )");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE),
-			==,
-			"02");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_BIOS_MINOR_RELEASE),
-			==,
-			"19");
-	g_assert_cmpstr(fu_context_get_hwid_value(context, FU_HWIDS_KEY_PRODUCT_SKU),
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE), ==, "02");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MINOR_RELEASE), ==, "19");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU),
 			==,
 			"LENOVO_MT_20AR_BU_Think_FM_ThinkPad T440s");
 	for (guint i = 0; guids[i].key != NULL; i++) {
-		FuHwids *hwids = fu_context_get_hwids(context);
+		FuHwids *hwids = fu_context_get_hwids(ctx);
 		g_autofree gchar *guid = fu_hwids_get_guid(hwids, guids[i].key, &error);
 		g_assert_no_error(error);
 		g_assert_cmpstr(guid, ==, guids[i].value);
 	}
 	for (guint i = 0; guids[i].key != NULL; i++)
-		g_assert_true(fu_context_has_hwid_guid(context, guids[i].value));
+		g_assert_true(fu_context_has_hwid_guid(ctx, guids[i].value));
 }
 
 static void
@@ -755,7 +780,11 @@ fu_config_func(void)
 	GStatBuf statbuf = {0};
 	gboolean ret;
 	g_autofree gchar *composite_data = NULL;
-	g_autoptr(FuConfig) config = fu_config_new();
+	g_autofree gchar *sysconfdir_imu = NULL;
+	g_autofree gchar *sysconfdir_mut = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuConfig) config = fu_config_new(pstore);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn_imu = NULL;
 	g_autofree gchar *fn_mut = NULL;
@@ -766,14 +795,21 @@ fu_config_func(void)
 	return;
 #endif
 
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("config", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	sysconfdir_imu = fu_temporary_directory_build(tmpdir, "etc", "fwupd", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSCONFDIR, sysconfdir_imu);
+	sysconfdir_mut = fu_temporary_directory_build(tmpdir, "var", "etc", "fwupd", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_LOCALCONFDIR_PKG, sysconfdir_mut);
+
 	/* immutable file */
-	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
-	fn_imu = g_build_filename(g_getenv("FWUPD_SYSCONFDIR"), "fwupd.conf", NULL);
+	fn_imu = g_build_filename(sysconfdir_imu, "fwupd.conf", NULL);
 	g_assert_nonnull(fn_imu);
 	ret = fu_path_mkdir_parent(fn_imu, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_remove(fn_imu);
 	ret = g_file_set_contents(fn_imu,
 				  "[fwupd]\n"
 				  "Key=true\n",
@@ -788,13 +824,11 @@ fu_config_func(void)
 	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0640);
 
 	/* mutable file */
-	(void)g_setenv("LOCALCONF_DIRECTORY", "/tmp/fwupd-self-test/var/etc/fwupd", TRUE);
-	fn_mut = g_build_filename(g_getenv("LOCALCONF_DIRECTORY"), "fwupd.conf", NULL);
+	fn_mut = g_build_filename(sysconfdir_mut, "fwupd.conf", NULL);
 	g_assert_nonnull(fn_mut);
 	ret = fu_path_mkdir_parent(fn_mut, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_remove(fn_mut);
 	ret = g_file_set_contents(fn_mut,
 				  "# group comment\n"
 				  "[fwupd]\n"
@@ -820,7 +854,6 @@ fu_config_func(void)
 	g_assert_true(g_strstr_len(composite_data, -1, "Key=true") == NULL);
 	g_assert_true(g_strstr_len(composite_data, -1, "# group comment") != NULL);
 	g_assert_true(g_strstr_len(composite_data, -1, "# key comment") != NULL);
-	g_remove(fn_mut);
 }
 
 static void
@@ -833,6 +866,9 @@ fu_plugin_config_func(void)
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
 	g_autofree gchar *fn_mut = NULL;
+	g_autofree gchar *sysconfdir_imu = NULL;
+	g_autofree gchar *sysconfdir_mut = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -844,26 +880,33 @@ fu_plugin_config_func(void)
 	return;
 #endif
 
-	/* remove existing file */
-	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("config", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	sysconfdir_imu = fu_temporary_directory_build(tmpdir, "etc", "fwupd", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, sysconfdir_imu);
+	sysconfdir_mut = fu_temporary_directory_build(tmpdir, "var", "etc", "fwupd", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_LOCALCONFDIR_PKG, sysconfdir_mut);
+
 	fu_plugin_set_name(plugin, "test");
-	fn = fu_path_build(FU_PATH_KIND_SYSCONFDIR_PKG, "fwupd.conf", NULL);
+	fn =
+	    fu_context_build_filename(ctx, &error, FU_PATH_KIND_SYSCONFDIR_PKG, "fwupd.conf", NULL);
+	g_assert_no_error(error);
+	g_assert_nonnull(fn);
 	ret = fu_path_mkdir_parent(fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_remove(fn);
 	ret = g_file_set_contents(fn, "", -1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* mutable file we'll be writing */
-	(void)g_setenv("LOCALCONF_DIRECTORY", "/tmp/fwupd-self-test/var/etc/fwupd", TRUE);
-	fn_mut = g_build_filename(g_getenv("LOCALCONF_DIRECTORY"), "fwupd.conf", NULL);
+	fn_mut = g_build_filename(sysconfdir_mut, "fwupd.conf", NULL);
 	g_assert_nonnull(fn_mut);
 	ret = fu_path_mkdir_parent(fn_mut, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_remove(fn_mut);
 	ret = g_file_set_contents(fn_mut, "", -1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1000,7 +1043,9 @@ static void
 fu_plugin_fdt_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *fn = NULL;
 	g_autofree gchar *compatible = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFirmware) fdt_root = NULL;
@@ -1008,9 +1053,19 @@ fu_plugin_fdt_func(void)
 	g_autoptr(FuFirmware) img2 = NULL;
 	g_autoptr(FuFirmware) img3 = NULL;
 	g_autoptr(FuFirmware) img4 = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file =
-	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
+	g_autoptr(GFile) file = NULL;
+
+	fu_context_add_firmware_gtypes(ctx);
+
+	tmpdir = fu_temporary_directory_new("fdt", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* write file */
 	fdt_tmp = fu_firmware_new_from_xml(
@@ -1022,6 +1077,8 @@ fu_plugin_fdt_func(void)
 	    &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fdt_tmp);
+	fn = fu_temporary_directory_build(tmpdir, "system.dtb", NULL);
+	file = g_file_new_for_path(fn);
 	ret = fu_firmware_write_file(FU_FIRMWARE(fdt_tmp), file, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1055,8 +1112,13 @@ fu_plugin_quirks_func(void)
 {
 	const gchar *tmp;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -1095,11 +1157,16 @@ static void
 fu_plugin_quirks_performance_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *keys[] = {"Name", "Children", "Flags", NULL};
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -1173,9 +1240,14 @@ fu_plugin_quirks_append_func(void)
 {
 	FuPluginQuirksAppendHelper helper = {0};
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	/* lookup a duplicate group name */
 	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -1196,18 +1268,25 @@ fu_quirks_vendor_ids_func(void)
 {
 	gboolean ret;
 	const gchar *tmp;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autofree gchar *guid1 = fwupd_guid_hash_string("PCI\\VEN_8086");
 	g_autofree gchar *guid2 = fwupd_guid_hash_string("USB\\VID_8086");
 	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
 	g_autofree gchar *guid4 = fwupd_guid_hash_string("PCI\\VEN_8086&DEV_0007");
 	g_autofree gchar *guid5 = fwupd_guid_hash_string("USB\\VID_8086&PID_0001");
-	g_autofree gchar *quirksdb = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.db", NULL);
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 
-	g_debug("deleting %s if exists", quirksdb);
-	g_unlink(quirksdb);
+	tmpdir = fu_temporary_directory_new("quirks-vids", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_VENDOR_IDS, testdatadir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
 
 	/* lookup a duplicate group name */
 	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
@@ -1362,11 +1441,16 @@ fu_plugin_quirks_device_func(void)
 	FuDevice *device_tmp;
 	GPtrArray *children;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) child1 = NULL;
 	g_autoptr(FuDevice) child2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -1917,10 +2001,15 @@ static void
 fu_device_incorporate_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuDevice) donor = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	/* load quirks */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -2311,17 +2400,23 @@ fu_efivar_boot_func(void)
 {
 	FuFirmware *firmware_tmp;
 	gboolean ret;
-	const gchar *tmpdir = g_getenv("FWUPD_LOCALSTATEDIR");
 	guint16 idx = 0;
-	g_autofree gchar *pefile_fn = g_build_filename(tmpdir, "grubx64.efi", NULL);
+	g_autofree gchar *pefile_fn = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuEfiLoadOption) loadopt2 = NULL;
-	g_autoptr(FuVolume) volume = fu_volume_new_from_mount_path(tmpdir);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GArray) bootorder2 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
 	g_autoptr(GPtrArray) esp_files = NULL;
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("efivar-boot", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	volume = fu_volume_new_from_mount_path(fu_temporary_directory_get_path(tmpdir));
 
 	/* set and get BootCurrent */
 	ret = fu_efivars_set_boot_current(efivars, 0x0001, &error);
@@ -2393,6 +2488,7 @@ fu_efivar_boot_func(void)
 	g_assert_nonnull(esp_files);
 	g_assert_cmpint(esp_files->len, ==, 2);
 	firmware_tmp = g_ptr_array_index(esp_files, 0);
+	pefile_fn = fu_temporary_directory_build(tmpdir, "grubx64.efi", NULL);
 	g_assert_cmpstr(fu_firmware_get_filename(firmware_tmp), ==, pefile_fn);
 }
 
@@ -2597,33 +2693,13 @@ fu_device_udev_func(void)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_DATADIR_VENDOR_IDS", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_LIBDIR_PKG", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSDMIDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_PROCFS", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
-	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-	(void)g_setenv("CACHE_DIRECTORY", "/tmp/fwupd-self-test/cache", TRUE);
-
-	/* register all the GTypes manually */
-	fu_context_add_firmware_gtypes(ctx);
-	g_type_ensure(FU_TYPE_USB_BOS_DESCRIPTOR);
 
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);

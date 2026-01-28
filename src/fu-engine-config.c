@@ -461,7 +461,7 @@ fu_engine_config_class_init(FuEngineConfigClass *klass)
 }
 
 FuEngineConfig *
-fu_engine_config_new(void)
+fu_engine_config_new(FuPathStore *pstore)
 {
-	return FU_ENGINE_CONFIG(g_object_new(FU_TYPE_ENGINE_CONFIG, NULL));
+	return FU_ENGINE_CONFIG(g_object_new(FU_TYPE_ENGINE_CONFIG, "path-store", pstore, NULL));
 }
