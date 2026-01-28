@@ -15,6 +15,7 @@
 #include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
 #include "fu-common.h"
+#include "fu-context-private.h"
 #include "fu-path.h"
 #include "fu-string.h"
 
@@ -22,6 +23,7 @@
 
 struct _FuBiosSettings {
 	GObject parent_instance;
+	FuPathContext *pathctx;
 	GHashTable *descriptions;
 	GHashTable *read_only;
 	GPtrArray *attrs;
@@ -39,6 +41,8 @@ static void
 fu_bios_settings_finalize(GObject *obj)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
+	if (self->pathctx != NULL)
+		g_object_unref(self->pathctx);
 	g_ptr_array_unref(self->attrs);
 	g_hash_table_unref(self->descriptions);
 	g_hash_table_unref(self->read_only);
@@ -632,13 +636,19 @@ fu_bios_settings_is_supported(FuBiosSettings *self)
 
 /**
  * fu_bios_settings_new:
+ * @pathctx: (nullable): a #FuPathContext
  *
  * Returns: #FuBiosSettings
  *
  * Since: 1.8.4
  **/
 FuBiosSettings *
-fu_bios_settings_new(void)
+fu_bios_settings_new(FuPathContext *pathctx)
 {
-	return g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
+	FuBiosSettings *self;
+	g_return_val_if_fail(FU_IS_PATH_CONTEXT(pathctx) || pathctx == NULL, NULL);
+	self = g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
+	if (pathctx != NULL)
+		self->pathctx = g_object_ref(pathctx);
+	return self;
 }

@@ -9,6 +9,7 @@
 #include "fu-config.h"
 #include "fu-context.h"
 #include "fu-hwids.h"
+#include "fu-path-context.h"
 #include "fu-progress.h"
 #include "fu-quirks.h"
 #include "fu-volume.h"
@@ -75,3 +76,6 @@ gpointer
 fu_context_get_data(FuContext *self, const gchar *key);
 void
 fu_context_set_data(FuContext *self, const gchar *key, gpointer data);
+
+FuPathContext *
+fu_context_get_path_context(FuContext *self) G_GNUC_NON_NULL(1);

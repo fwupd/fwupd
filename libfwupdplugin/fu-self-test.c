@@ -2598,6 +2598,7 @@ int
 main(int argc, char **argv)
 {
 	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *localtime = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
@@ -2608,6 +2609,7 @@ main(int argc, char **argv)
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	localtime = g_test_build_filename(G_TEST_DIST, "tests", "localtime", NULL);
 	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_DATADIR_VENDOR_IDS", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LIBDIR_PKG", testdatadir, TRUE);
@@ -2616,6 +2618,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSDMIDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_PROCFS", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_LOCALTIME", localtime, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);

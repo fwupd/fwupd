@@ -22,20 +22,25 @@
 
 /**
  * fu_kernel_locked_down:
+ * @pathctx: a #FuPathContext
  *
  * Determines if kernel lockdown in effect
  *
  * Since: 1.8.2
  **/
 gboolean
-fu_kernel_locked_down(void)
+fu_kernel_locked_down(FuPathContext *pathctx)
 {
 #ifdef __linux__
 	gsize len = 0;
-	g_autofree gchar *fname = fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
+	g_autofree gchar *fname = NULL;
 	g_autofree gchar *data = NULL;
 	g_auto(GStrv) options = NULL;
 
+	fname = fu_path_context_build_filename(pathctx,
+					       FU_PATH_KIND_SYSFSDIR_SECURITY,
+					       "lockdown",
+					       NULL);
 	if (!g_file_test(fname, G_FILE_TEST_EXISTS))
 		return FALSE;
 	if (!g_file_get_contents(fname, &data, &len, NULL))

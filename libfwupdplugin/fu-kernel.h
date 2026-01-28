@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <fwupd.h>
+#include "fu-path-context.h"
 
 gboolean
-fu_kernel_locked_down(void);
+fu_kernel_locked_down(FuPathContext *pathctx);
 gboolean
 fu_kernel_check_version(const gchar *minimum_kernel, GError **error) G_GNUC_NON_NULL(1);
 GHashTable *

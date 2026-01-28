@@ -19,6 +19,7 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
+#include "fu-path-context.h"
 #include "fu-path.h"
 #include "fu-pefile-firmware.h"
 #include "fu-volume-locker.h"
@@ -33,6 +34,7 @@
 
 typedef struct {
 	FuContextFlags flags;
+	FuPathContext *pathctx;
 	FuHwids *hwids;
 	FuConfig *config;
 	FuSmbios *smbios;
@@ -2428,6 +2430,41 @@ fu_context_set_data(FuContext *self, const gchar *key, gpointer data)
 	g_object_set_data(G_OBJECT(self), key, data);
 }
 
+/**
+ * fu_context_set_path:
+ * @self: a #FuContext
+ * @kind: a #FuPathKind
+ *
+ * Sets a well-known path.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_set_path(FuContext *self, FuPathKind kind, const gchar *dirname)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	fu_path_context_set_dir(priv->pathctx, kind, dirname);
+}
+
+/**
+ * fu_context_get_path_context:
+ * @self: a #FuContext
+ *
+ * Gets the path context.
+ *
+ * Returns: (transfer none): a #FuPathContext, or %NULL if not set
+ *
+ * Since: 2.1.1
+ **/
+FuPathContext *
+fu_context_get_path_context(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->pathctx;
+}
+
 static void
 fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -2510,6 +2547,7 @@ fu_context_finalize(GObject *object)
 	g_free(priv->esp_location);
 	g_hash_table_unref(priv->runtime_versions);
 	g_hash_table_unref(priv->compile_versions);
+	g_object_unref(priv->pathctx);
 	g_object_unref(priv->hwids);
 	g_object_unref(priv->config);
 	g_hash_table_unref(priv->hwid_flags);
@@ -2678,6 +2716,7 @@ fu_context_init(FuContext *self)
 	priv->chassis_kind = FU_SMBIOS_CHASSIS_KIND_UNKNOWN;
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
+	priv->pathctx = fu_path_context_new();
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
 	priv->config = fu_config_new();
@@ -2690,7 +2729,7 @@ fu_context_init(FuContext *self)
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new(self);
-	priv->host_bios_settings = fu_bios_settings_new();
+	priv->host_bios_settings = fu_bios_settings_new(priv->pathctx);
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

@@ -36,6 +36,37 @@ fu_path_context_get_dir(FuPathContext *self, FuPathKind kind)
 }
 
 /**
+ * fu_path_context_build_filename:
+ * @self: a #FuPathContext
+ * @kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ * @...: pairs of string key values, ending with %NULL
+ *
+ * Gets a fwupd-specific system path. These can be overridden with various
+ * environment variables, for instance %FWUPD_DATADIR.
+ *
+ * Returns: a system path, or %NULL if invalid
+ *
+ * Since: 2.1.1
+ **/
+gchar *
+fu_path_context_build_filename(FuPathContext *self, FuPathKind kind, ...)
+{
+	va_list args;
+	gchar *path;
+	const gchar *dirname = NULL;
+
+	dirname = fu_path_context_get_dir(self, kind);
+	if (dirname == NULL)
+		return NULL;
+
+	va_start(args, kind);
+	path = g_build_filename_valist(dirname, &args);
+	va_end(args);
+
+	return path;
+}
+
+/**
  * fu_path_context_set_dir:
  * @self: a #FuPathContext
  * @dirname: (nullable): directory name
@@ -78,7 +109,7 @@ fu_path_context_add_prefix(FuPathContext *self, FuPathKind kind, const gchar *pr
 }
 
 void
-fu_path_context_build_dir(FuPathContext *self, FuPathKind kind, ...)
+fu_path_context_add_dir(FuPathContext *self, FuPathKind kind, ...)
 {
 	va_list args;
 	g_autofree gchar *dir = NULL;
@@ -177,69 +208,65 @@ fu_path_context_load_defaults(FuPathContext *self)
 	/* defined from the buildsystem */
 	fu_path_context_set_dir(self, FU_PATH_KIND_LOCALSTATEDIR, FWUPD_LOCALSTATEDIR);
 	fu_path_context_set_dir(self, FU_PATH_KIND_LIBEXECDIR, FWUPD_LIBEXECDIR);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_LIBEXECDIR_PKG,
-				  FWUPD_LIBEXECDIR,
-				  PACKAGE_NAME,
-				  NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_LIBEXECDIR_PKG,
+				FWUPD_LIBEXECDIR,
+				PACKAGE_NAME,
+				NULL);
 	fu_path_context_set_dir(self, FU_PATH_KIND_DATADIR_VENDOR_IDS, FWUPD_DATADIR_VENDOR_IDS);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_LOCALSTATEDIR_PKG,
-				  FWUPD_LOCALSTATEDIR,
-				  "lib",
-				  PACKAGE_NAME,
-				  NULL);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
-				  FWUPD_LOCALSTATEDIR,
-				  "lib",
-				  PACKAGE_NAME,
-				  "quirks.d",
-				  NULL);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_LOCALSTATEDIR_METADATA,
-				  FWUPD_LOCALSTATEDIR,
-				  "lib",
-				  PACKAGE_NAME,
-				  "metadata",
-				  NULL);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
-				  FWUPD_LOCALSTATEDIR,
-				  "lib",
-				  PACKAGE_NAME,
-				  "remotes.d",
-				  NULL);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_CACHEDIR_PKG,
-				  FWUPD_LOCALSTATEDIR,
-				  "cache",
-				  PACKAGE_NAME,
-				  NULL);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_LOCALCONFDIR_PKG,
-				  FWUPD_LOCALSTATEDIR,
-				  "etc",
-				  PACKAGE_NAME,
-				  NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_LOCALSTATEDIR_PKG,
+				FWUPD_LOCALSTATEDIR,
+				"lib",
+				PACKAGE_NAME,
+				NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+				FWUPD_LOCALSTATEDIR,
+				"lib",
+				PACKAGE_NAME,
+				"quirks.d",
+				NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+				FWUPD_LOCALSTATEDIR,
+				"lib",
+				PACKAGE_NAME,
+				"metadata",
+				NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
+				FWUPD_LOCALSTATEDIR,
+				"lib",
+				PACKAGE_NAME,
+				"remotes.d",
+				NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_CACHEDIR_PKG,
+				FWUPD_LOCALSTATEDIR,
+				"cache",
+				PACKAGE_NAME,
+				NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_LOCALCONFDIR_PKG,
+				FWUPD_LOCALSTATEDIR,
+				"etc",
+				PACKAGE_NAME,
+				NULL);
 	fu_path_context_set_dir(self, FU_PATH_KIND_SYSCONFDIR, FWUPD_SYSCONFDIR);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_SYSCONFDIR_PKG,
-				  FWUPD_SYSCONFDIR,
-				  PACKAGE_NAME,
-				  NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_SYSCONFDIR_PKG,
+				FWUPD_SYSCONFDIR,
+				PACKAGE_NAME,
+				NULL);
 	fu_path_context_set_dir(self, FU_PATH_KIND_LIBDIR_PKG, FWUPD_LIBDIR_PKG);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_DATADIR_PKG,
-				  FWUPD_DATADIR,
-				  PACKAGE_NAME,
-				  NULL);
-	fu_path_context_build_dir(self,
-				  FU_PATH_KIND_DATADIR_QUIRKS,
-				  FWUPD_DATADIR,
-				  PACKAGE_NAME,
-				  "quirks.d",
-				  NULL);
+	fu_path_context_add_dir(self, FU_PATH_KIND_DATADIR_PKG, FWUPD_DATADIR, PACKAGE_NAME, NULL);
+	fu_path_context_add_dir(self,
+				FU_PATH_KIND_DATADIR_QUIRKS,
+				FWUPD_DATADIR,
+				PACKAGE_NAME,
+				"quirks.d",
+				NULL);
 #ifdef EFI_APP_LOCATION
 	fu_path_context_set_dir(self, FU_PATH_KIND_EFIAPPDIR, EFI_APP_LOCATION);
 #endif
@@ -279,39 +306,41 @@ fu_path_context_load_from_env(FuPathContext *self)
 		FuPathKind kind;
 	} envmap[] = {
 	    /* TODO: remove some (all?) of these once the self tests are using pathctx */
-	    {"FWUPD_LOCALSTATEDIR", FU_PATH_KIND_LOCALSTATEDIR},
-	    {"FWUPD_PROCFS", FU_PATH_KIND_PROCFS},
-	    {"FWUPD_SYSFSDIR", FU_PATH_KIND_SYSFSDIR},
-	    {"FWUPD_SYSFSFWDIR", FU_PATH_KIND_SYSFSDIR_FW},
-	    {"FWUPD_SYSFSTPMDIR", FU_PATH_KIND_SYSFSDIR_TPM},
-	    {"FWUPD_SYSFSDRIVERDIR", FU_PATH_KIND_SYSFSDIR_DRIVERS},
-	    {"FWUPD_SYSFSSECURITYDIR", FU_PATH_KIND_SYSFSDIR_SECURITY},
-	    {"FWUPD_SYSFSDMIDIR", FU_PATH_KIND_SYSFSDIR_DMI},
-	    {"FWUPD_ACPITABLESDIR", FU_PATH_KIND_ACPI_TABLES},
-	    {"FWUPD_FIRMWARESEARCH", FU_PATH_KIND_FIRMWARE_SEARCH},
-	    {"FWUPD_SYSCONFDIR", FU_PATH_KIND_SYSCONFDIR},
-	    {"FWUPD_LIBEXECDIR", FU_PATH_KIND_LIBEXECDIR},
-	    {"FWUPD_LIBDIR_PKG", FU_PATH_KIND_LIBDIR_PKG},
-	    {"FWUPD_DATADIR", FU_PATH_KIND_DATADIR_PKG},
-	    {"FWUPD_LIBEXECDIR_PKG", FU_PATH_KIND_LIBEXECDIR_PKG},
-	    {"FWUPD_DATADIR_VENDOR_IDS", FU_PATH_KIND_DATADIR_VENDOR_IDS},
-	    {"FWUPD_DATADIR_QUIRKS", FU_PATH_KIND_DATADIR_QUIRKS},
-	    {"FWUPD_EFIAPPDIR", FU_PATH_KIND_EFIAPPDIR},
-	    {"CONFIGURATION_DIRECTORY", FU_PATH_KIND_SYSCONFDIR_PKG},
-	    {"STATE_DIRECTORY", FU_PATH_KIND_LOCALSTATEDIR_PKG},
-	    {"FWUPD_LOCALSTATEDIR_QUIRKS", FU_PATH_KIND_LOCALSTATEDIR_QUIRKS},
-	    {"FWUPD_LOCALSTATEDIR_METADATA", FU_PATH_KIND_LOCALSTATEDIR_METADATA},
-	    {"FWUPD_LOCALSTATEDIR_REMOTES", FU_PATH_KIND_LOCALSTATEDIR_REMOTES},
 	    {"CACHE_DIRECTORY", FU_PATH_KIND_CACHEDIR_PKG},
-	    {"LOCALCONF_DIRECTORY", FU_PATH_KIND_LOCALCONFDIR_PKG},
-	    {"FWUPD_RUNDIR", FU_PATH_KIND_RUNDIR},
-	    {"FWUPD_LOCKDIR", FU_PATH_KIND_LOCKDIR},
-	    {"FWUPD_SYSFSFWATTRIBDIR", FU_PATH_KIND_SYSFSDIR_FW_ATTRIB},
-	    {"FWUPD_HOSTFS_ROOT", FU_PATH_KIND_HOSTFS_ROOT},
-	    {"FWUPD_HOSTFS_BOOT", FU_PATH_KIND_HOSTFS_BOOT},
-	    {"FWUPD_DEVFS", FU_PATH_KIND_DEVFS},
-	    {"FWUPD_LOCALTIME", FU_PATH_KIND_LOCALTIME},
+	    {"CONFIGURATION_DIRECTORY", FU_PATH_KIND_SYSCONFDIR_PKG},
+	    {"FWUPD_ACPITABLESDIR", FU_PATH_KIND_ACPI_TABLES},
+	    {"FWUPD_DATADIR", FU_PATH_KIND_DATADIR_PKG},
+	    {"FWUPD_DATADIR_QUIRKS", FU_PATH_KIND_DATADIR_QUIRKS},
+	    {"FWUPD_DATADIR_VENDOR_IDS", FU_PATH_KIND_DATADIR_VENDOR_IDS},
 	    {"FWUPD_DEBUGFSDIR", FU_PATH_KIND_DEBUGFSDIR},
+	    {"FWUPD_DEVFS", FU_PATH_KIND_DEVFS},
+	    {"FWUPD_EFIAPPDIR", FU_PATH_KIND_EFIAPPDIR},
+	    {"FWUPD_FIRMWARESEARCH", FU_PATH_KIND_FIRMWARE_SEARCH},
+	    {"FWUPD_HOSTFS_BOOT", FU_PATH_KIND_HOSTFS_BOOT},
+	    {"FWUPD_HOSTFS_ROOT", FU_PATH_KIND_HOSTFS_ROOT},
+	    {"FWUPD_LIBDIR_PKG", FU_PATH_KIND_LIBDIR_PKG},
+	    {"FWUPD_LIBEXECDIR", FU_PATH_KIND_LIBEXECDIR},
+	    {"FWUPD_LIBEXECDIR_PKG", FU_PATH_KIND_LIBEXECDIR_PKG},
+	    {"FWUPD_LOCALSTATEDIR", FU_PATH_KIND_LOCALSTATEDIR},
+#if 0
+{"FWUPD_LOCALSTATEDIR_METADATA", FU_PATH_KIND_LOCALSTATEDIR_METADATA},
+{"FWUPD_LOCALSTATEDIR_QUIRKS", FU_PATH_KIND_LOCALSTATEDIR_QUIRKS},
+{"FWUPD_LOCALSTATEDIR_REMOTES", FU_PATH_KIND_LOCALSTATEDIR_REMOTES},
+#endif
+	    {"FWUPD_LOCALTIME", FU_PATH_KIND_LOCALTIME},
+	    {"FWUPD_LOCKDIR", FU_PATH_KIND_LOCKDIR},
+	    {"FWUPD_PROCFS", FU_PATH_KIND_PROCFS},
+	    {"FWUPD_RUNDIR", FU_PATH_KIND_RUNDIR},
+	    {"FWUPD_SYSCONFDIR", FU_PATH_KIND_SYSCONFDIR},
+	    {"FWUPD_SYSFSDIR", FU_PATH_KIND_SYSFSDIR},
+	    {"FWUPD_SYSFSDMIDIR", FU_PATH_KIND_SYSFSDIR_DMI},
+	    {"FWUPD_SYSFSDRIVERDIR", FU_PATH_KIND_SYSFSDIR_DRIVERS},
+	    {"FWUPD_SYSFSFWATTRIBDIR", FU_PATH_KIND_SYSFSDIR_FW_ATTRIB},
+	    {"FWUPD_SYSFSFWDIR", FU_PATH_KIND_SYSFSDIR_FW},
+	    {"FWUPD_SYSFSSECURITYDIR", FU_PATH_KIND_SYSFSDIR_SECURITY},
+	    {"FWUPD_SYSFSTPMDIR", FU_PATH_KIND_SYSFSDIR_TPM},
+	    {"LOCALCONF_DIRECTORY", FU_PATH_KIND_LOCALCONFDIR_PKG},
+	    {"STATE_DIRECTORY", FU_PATH_KIND_LOCALSTATEDIR_PKG},
 	};
 
 	g_return_if_fail(FU_IS_PATH_CONTEXT(self));
@@ -327,16 +356,63 @@ fu_path_context_load_from_env(FuPathContext *self)
 		}
 	}
 
+	/* special case */
+	tmp = g_getenv("FWUPD_LOCALSTATEDIR");
+	if (tmp != NULL) {
+		fu_path_context_add_dir(self,
+					FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+					tmp,
+					"quirks.d",
+					NULL);
+		fu_path_context_add_dir(self,
+					FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+					tmp,
+					"metadata",
+					NULL);
+		fu_path_context_add_dir(self,
+					FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
+					tmp,
+					"remotes.d",
+					NULL);
+		fu_path_context_add_dir(self,
+					FU_PATH_KIND_LOCALCONFDIR_PKG,
+					tmp,
+					"etc",
+					PACKAGE_NAME,
+					NULL);
+	}
+	tmp = g_getenv("FWUPD_DATADIR");
+	if (tmp != NULL) {
+		fu_path_context_add_dir(self, FU_PATH_KIND_DATADIR_QUIRKS, tmp, "quirks.d", NULL);
+	}
+	tmp = g_getenv("FWUPD_LOCALSTATEDIR");
+	if (tmp != NULL) {
+		fu_path_context_add_dir(self,
+					FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					tmp,
+					"lib",
+					PACKAGE_NAME,
+					NULL);
+	}
+	tmp = g_getenv("FWUPD_SYSCONFDIR");
+	if (tmp != NULL) {
+		fu_path_context_add_dir(self, FU_PATH_KIND_SYSCONFDIR_PKG, tmp, PACKAGE_NAME, NULL);
+	}
+	tmp = g_getenv("FWUPD_LIBEXECDIR");
+	if (tmp != NULL) {
+		fu_path_context_add_dir(self, FU_PATH_KIND_LIBEXECDIR_PKG, tmp, PACKAGE_NAME, NULL);
+	}
+
 #ifdef _WIN32
 	/* WIN32 special case */
 	tmp = g_getenv("USERPROFILE");
 	if (tmp != NULL) {
-		fu_path_context_build_dir(self,
-					  FU_PATH_KIND_LOCALSTATEDIR,
-					  tmp,
-					  PACKAGE_NAME,
-					  FWUPD_LOCALSTATEDIR,
-					  NULL);
+		fu_path_context_add_dir(self,
+					FU_PATH_KIND_LOCALSTATEDIR,
+					tmp,
+					PACKAGE_NAME,
+					FWUPD_LOCALSTATEDIR,
+					NULL);
 	}
 #endif
 

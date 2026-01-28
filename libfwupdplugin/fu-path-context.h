@@ -14,6 +14,11 @@ G_DECLARE_FINAL_TYPE(FuPathContext, fu_path_context, FU, PATH_CONTEXT, GObject)
 
 const gchar *
 fu_path_context_get_dir(FuPathContext *self, FuPathKind kind) G_GNUC_NON_NULL(1);
+gchar *
+fu_path_context_build_filename(FuPathContext *self,
+			       FuPathKind path_kind,
+			       ...) G_GNUC_NULL_TERMINATED;
+
 void
 fu_path_context_set_dir(FuPathContext *self, FuPathKind kind, const gchar *dirname)
     G_GNUC_NON_NULL(1);
@@ -21,7 +26,8 @@ void
 fu_path_context_add_prefix(FuPathContext *self, FuPathKind kind, const gchar *prefix)
     G_GNUC_NON_NULL(1, 3);
 void
-fu_path_context_build_dir(FuPathContext *self, FuPathKind kind, ...) G_GNUC_NULL_TERMINATED;
+fu_path_context_add_dir(FuPathContext *self, FuPathKind kind, ...) G_GNUC_NULL_TERMINATED;
+
 void
 fu_path_context_load_defaults(FuPathContext *self) G_GNUC_NON_NULL(1);
 void

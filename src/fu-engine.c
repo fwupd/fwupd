@@ -7897,7 +7897,8 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 	const gchar *tmp;
 	g_autofree gchar *dirname =
 	    fu_path_build(FU_PATH_KIND_SYSCONFDIR_PKG, "bios-settings.d", NULL);
-	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
+	g_autoptr(FuBiosSettings) new_bios_settings =
+	    fu_bios_settings_new(fu_context_get_path_context(self->ctx));
 	g_autoptr(GHashTable) hashtable = NULL;
 	g_autoptr(GDir) dir = NULL;
 

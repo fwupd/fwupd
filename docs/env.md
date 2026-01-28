@@ -60,7 +60,6 @@ for details.
 * `FWUPD_HOSTDIR` looks for host OS `os-release` in this sysroot, default is /
 * `FWUPD_LIBDIR_PKG`
 * `FWUPD_LOCALSTATEDIR`
-* `FWUPD_LOCALSTATEDIR_QUIRKS`
 * `FWUPD_PROCFS`
 * `FWUPD_SYSCONFDIR`
 * `FWUPD_SYSFSDMIDIR`
