@@ -947,6 +947,7 @@ fu_cfi_device_init(FuCfiDevice *self)
 	priv->cmds[FU_CFI_DEVICE_CMD_SECTOR_ERASE] = 0x20;
 	priv->cmds[FU_CFI_DEVICE_CMD_CHIP_ERASE] = 0x60;
 	priv->cmds[FU_CFI_DEVICE_CMD_READ_ID] = 0x9f;
+	priv->cmds[FU_CFI_DEVICE_CMD_RELEASE_PD] = 0xAB;
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.cfi");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
