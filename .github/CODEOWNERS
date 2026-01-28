@@ -80,3 +80,4 @@ plugins/vli/ @memily
 plugins/wacom-raw/ @flying-elephant
 plugins/wacom-usb/ @jigpu
 plugins/wistron-dock/ @a999153
+plugins/nvt-ts/ @novatekmsp
