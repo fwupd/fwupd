@@ -110,6 +110,7 @@ plugins = {
   'qc-firehose': false,
   'qc-s5gen2': false,
   'qsi-dock': false,
+  'raydium-tp': false,
   'realtek-mst': false,
   'redfish': false,
   'rp-pico': false,
