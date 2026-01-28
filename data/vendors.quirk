@@ -10,6 +10,8 @@ Vendor = Logitech
 Vendor = Chicony
 [USB\VID_04F3]
 Vendor = Elan
+[USB\VID_0603]
+Vendor = Novatek
 [USB\VID_06CB]
 Vendor = Synaptics
 [USB\VID_10AB]

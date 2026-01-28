@@ -1,0 +1,2 @@
+[HIDRAW\VEN_0603&DEV_F203]
+Plugin = novatek_ts
