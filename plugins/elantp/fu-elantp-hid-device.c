@@ -60,6 +60,10 @@ fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* usb-hid-bridge */
+	if (device_id == 0x044f || device_id == 0x044a)
+		return TRUE;
+
 	/* i2c-hid */
 	if (device_id != 0x400 && (device_id < 0x3000 || device_id >= 0x4000)) {
 		g_set_error_literal(error,
