@@ -53,11 +53,6 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			return FALSE;
 	}
 
-	/* special cases */
-	if (st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
-	    FU_USI_DOCK_MCU_CMD_FW_UPDATE)
-		st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
-
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
 					st->buf->data,
@@ -211,6 +206,7 @@ static gboolean
 fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **error)
 {
 	guint8 inbuf[] = {FU_USI_DOCK_MCU_CMD_READ_MCU_VERSIONPAGE,
+			  0x0,
 			  DP_VERSION_FROM_MCU | NIC_VERSION_FROM_MCU};
 	guint8 outbuf[49] = {0x0};
 	struct {
