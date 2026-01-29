@@ -133,13 +133,13 @@ fu_uefi_dbx_not_present_func(void)
 	    g_test_build_filename(G_TEST_DIST, "tests", "efi-signature-list.builder.xml", NULL);
 	g_assert_nonnull(ms_kek_filename);
 
-	g_file_get_contents(ms_kek_filename, &ms_kek_xml, NULL, &error);
-	g_assert_nonnull(ms_kek_xml);
+	ret = g_file_get_contents(ms_kek_filename, &ms_kek_xml, NULL, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	ms_siglist = fu_firmware_new_from_xml(ms_kek_xml, &error);
-	g_assert_nonnull(ms_siglist);
 	g_assert_no_error(error);
+	g_assert_nonnull(ms_siglist);
 
 	ms_blob = fu_firmware_write(ms_siglist, &error);
 	g_assert_no_error(error);
