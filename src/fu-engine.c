@@ -5606,7 +5606,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		checksums = fu_release_get_checksums(release);
 		if (checksums->len == 0) {
 			g_autofree gchar *str = fwupd_codec_to_string(FWUPD_CODEC(release));
-			g_debug("no locations for %s", str);
+			g_debug("no checksums for %s", str);
 			continue;
 		}
 
