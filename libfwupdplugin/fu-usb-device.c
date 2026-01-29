@@ -260,7 +260,6 @@ fu_usb_device_init(FuUsbDevice *self)
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
-	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
@@ -564,6 +563,9 @@ fu_usb_device_open(FuDevice *device, GError **error)
 		}
 		iface->claimed = TRUE;
 	}
+
+	/* so that we can watch for the device to appear in the non-udev hotplug case */
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	return TRUE;
 }
 
