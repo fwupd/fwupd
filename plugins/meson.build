@@ -99,6 +99,7 @@ plugins = {
   'msr': false,
   'mtd': false,
   'nordic-hid': false,
+  'novatek-ts': false,
   'nvme': false,
   'parade-lspcon': false,
   'parade-usbhub': false,
@@ -148,7 +149,6 @@ plugins = {
   'wch-ch341a': false,
   'wch-ch347': false,
   'wistron-dock': false,
-  'nvt-ts': false,
 }
 
 umockdev_tests = []
