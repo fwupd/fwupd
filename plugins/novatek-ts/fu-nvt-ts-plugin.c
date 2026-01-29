@@ -10,7 +10,7 @@
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "FuPluginNvtTs"
 
-#define NVT_TS_PLUGIN_VERSION "2.0.0"
+#define NVT_TS_PLUGIN_VERSION "2.1.0"
 
 struct _FuNvtTsPlugin {
 	FuPlugin parent_instance;

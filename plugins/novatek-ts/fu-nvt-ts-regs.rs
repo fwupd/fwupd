@@ -25,5 +25,30 @@ enum FuNvtTsMemMapReg {
 enum FuNvtTsFlashMapConst {
     FlashNormalFwStartAddr  = 0x2000,
     FlashPidAddr            = 0x3f004,
-    FlashFwSize             = 0x3c000,
+    FlashMaxSize            = 0x3c000,
+}
+
+#[derive(New, Getters)]
+#[repr(C, packed)]
+struct FuStructNvtTsHidReadReq {
+    i2c_hid_eng_report_id: u8,
+    write_len: u16le,
+    i2c_eng_addr_0: u8,
+    i2c_eng_addr_1: u8,
+    i2c_eng_addr_2: u8,
+    target_addr_0: u8,
+    target_addr_1: u8,
+    target_addr_2: u8,
+    _reserved0: u8,
+    len: u16le,
+}
+
+#[derive(New, Getters)]
+#[repr(C, packed)]
+struct FuStructNvtTsHidWriteHdr {
+    i2c_hid_eng_report_id: u8,
+    write_len: u16le,
+    target_addr_0: u8,
+    target_addr_1: u8,
+    target_addr_2: u8,
 }

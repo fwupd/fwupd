@@ -68,7 +68,8 @@ typedef struct {
 typedef struct {
 	uint32_t flash_normal_fw_start_addr;
 	uint32_t flash_pid_addr;
-	uint32_t flash_fw_size;
+	/* max size starting at flash_normal_fw_start_addr */
+	uint32_t flash_max_size;
 } FuNvtTsFlashMap;
 
 typedef struct {
@@ -260,17 +261,3 @@ static const FuNvtTsFlashInfo fu_nvt_ts_flash_info_table[] = {
      .prog_method = SPP_0x02,
      .wrsr_method = FLASH_WRSR_METHOD_UNKNOWN,
      .rdsr1_cmd = 0xFF}};
-
-typedef struct {
-	const FuNvtTsMemMap *mmap;
-	const FuNvtTsFlashMap *fmap;
-	uint8_t fw_ver;
-	uint8_t flash_mid;
-	uint16_t flash_did;
-	uint16_t flash_pid;
-	const FuNvtTsFlashInfo *match_finfo;
-	uint8_t flash_prog_data_cmd;
-	uint8_t flash_read_data_cmd;
-	uint8_t flash_read_pem_byte_len;
-	uint8_t flash_read_dummy_byte_len;
-} FuNvtTsData;
