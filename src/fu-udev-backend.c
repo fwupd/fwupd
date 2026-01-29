@@ -422,6 +422,34 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 	}
 }
 
+static void
+fu_udev_backend_wait_for_devnode(FuUdevDevice *device)
+{
+	/* Use the existing getter you found! */
+	const gchar *dev_file = fu_udev_device_get_device_file(device);
+	guint retries = 0;
+	const guint max_retries = 200; /* 2 seconds max */
+
+	/* If the device has no associated /dev/ node (e.g. pure sysfs), we skip it */
+	if (dev_file == NULL)
+		return;
+
+	/* Spin-wait: Check filesystem every 10ms */
+	g_debug("Wait for ueventd to create the file before adding it to the engine");
+	while (access(dev_file, F_OK) != 0 && retries < max_retries) {
+		g_usleep(10000); /* 10ms */
+		retries++;
+	}
+
+	if (retries > 0) {
+		if (retries == max_retries) {
+			g_warning("Timed out waiting for %s", dev_file);
+		} else {
+			g_debug("Waited %d ms for %s", retries * 10, dev_file);
+		}
+	}
+}
+
 /* if enabled, systemd takes the kernel event, runs the udev rules (which might rename devices)
  * and then re-broadcasts on the udev netlink socket */
 static gboolean
@@ -429,7 +457,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 {
 	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
 	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-#ifdef HAVE_SYSTEMD
+#ifdef HAVE_UDEV_HOTPLUG
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -565,6 +593,8 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		    fu_udev_backend_create_device(self, sysfspath, error);
 		if (device == NULL)
 			return FALSE;
+		/* Wait for ueventd to create the file before adding it to the engine */
+		fu_udev_backend_wait_for_devnode(device);
 		fu_udev_backend_device_add_from_device(self, device);
 	} else if (action == FU_UDEV_ACTION_REMOVE) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
@@ -618,7 +648,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
 	    .nl_pid = getpid(),
-#ifdef HAVE_SYSTEMD
+#ifdef HAVE_UDEV_HOTPLUG
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_UDEV,
 #else
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL,
