@@ -8729,8 +8729,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* read config file */
 	if (!fu_config_load(FU_CONFIG(self->config),
-			    FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS | FU_CONFIG_LOAD_FLAG_WATCH_FILES |
-				FU_CONFIG_LOAD_FLAG_MIGRATE_FILES,
+			    FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS | FU_CONFIG_LOAD_FLAG_WATCH_FILES,
 			    error)) {
 		g_prefix_error_literal(error, "failed to load config: ");
 		return FALSE;
