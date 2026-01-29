@@ -126,22 +126,6 @@ fu_self_test_mkroot(void)
 }
 
 static void
-fu_test_copy_file(const gchar *source, const gchar *target)
-{
-	gboolean ret;
-	g_autofree gchar *data = NULL;
-	g_autoptr(GError) error = NULL;
-
-	g_debug("copying %s to %s", source, target);
-	ret = g_file_get_contents(source, &data, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = g_file_set_contents(target, data, -1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-}
-
-static void
 fu_test_free(FuTest *self)
 {
 	if (self->ctx != NULL)
@@ -7629,138 +7613,6 @@ fu_remote_list_repair_func(void)
 }
 
 static void
-fu_config_migrate_1_9_func(void)
-{
-	const gchar *fake_localconf_fn = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
-	const gchar *fake_sysconf_fn = "/tmp/fwupd-self-test/fwupd/fwupd.conf";
-	gboolean ret;
-	g_autoptr(FuConfig) config = FU_CONFIG(fu_engine_config_new());
-	g_autoptr(GError) error = NULL;
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
-
-	g_unsetenv("CONFIGURATION_DIRECTORY");
-	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
-
-	ret = fu_path_mkdir_parent(fake_sysconf_fn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = g_file_set_contents(fake_sysconf_fn,
-				  "# use `man 5 fwupd.conf` for documentation\n"
-				  "[fwupd]\n"
-				  "DisabledPlugins=test;test_ble\n"
-				  "OnlyTrusted=true\n"
-				  "AllowEmulation=false\n",
-				  -1,
-				  &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* ensure that all keys migrated */
-	ret = g_file_test(fake_localconf_fn, G_FILE_TEST_EXISTS);
-	g_assert_false(ret);
-}
-
-static void
-fu_config_set_plugin_defaults(FuConfig *config)
-{
-	/* these are correct for v2.0.0 */
-	fu_config_set_default(config, "msr", "MinimumSmeKernelVersion", "5.18.0");
-	fu_config_set_default(config, "redfish", "CACheck", "false");
-	fu_config_set_default(config, "redfish", "IpmiDisableCreateUser", "false");
-	fu_config_set_default(config, "redfish", "ManagerResetTimeout", "1800"); /* seconds */
-	fu_config_set_default(config, "redfish", "Password", NULL);
-	fu_config_set_default(config, "redfish", "Uri", NULL);
-	fu_config_set_default(config, "redfish", "Username", NULL);
-	fu_config_set_default(config, "redfish", "UserUri", NULL);
-	fu_config_set_default(config, "thunderbolt", "DelayedActivation", "false");
-	fu_config_set_default(config, "thunderbolt", "MinimumKernelVersion", "4.13.0");
-	fu_config_set_default(config, "uefi-capsule", "DisableCapsuleUpdateOnDisk", "false");
-	fu_config_set_default(config, "uefi-capsule", "DisableShimForSecureBoot", "false");
-	fu_config_set_default(config, "uefi-capsule", "EnableEfiDebugging", "false");
-	fu_config_set_default(config, "uefi-capsule", "EnableGrubChainLoad", "false");
-	fu_config_set_default(config, "uefi-capsule", "OverrideESPMountPoint", NULL);
-	fu_config_set_default(config, "uefi-capsule", "RebootCleanup", "true");
-	fu_config_set_default(config, "uefi-capsule", "RequireESPFreeSpace", "0");
-	fu_config_set_default(config, "uefi-capsule", "ScreenWidth", "0");
-	fu_config_set_default(config, "uefi-capsule", "ScreenHeight", "0");
-}
-
-static void
-fu_config_migrate_1_7_func(void)
-{
-	const gchar *sysconfdir = "/tmp/fwupd-self-test/conf-migration-1.7/var/etc";
-	gboolean ret;
-	const gchar *fn_merge[] = {
-	    "daemon.conf",
-	    "msr.conf",
-	    "redfish.conf",
-	    "thunderbolt.conf",
-	    "uefi_capsule.conf",
-	};
-	g_autofree gchar *localconf_data = NULL;
-	g_autofree gchar *fn_mut = NULL;
-	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuConfig) config = FU_CONFIG(fu_engine_config_new());
-	g_autoptr(GError) error = NULL;
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
-
-	/* source directory and data */
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "conf-migration-1.7", NULL);
-	if (!g_file_test(testdatadir, G_FILE_TEST_EXISTS)) {
-		g_test_skip("missing fwupd 1.7.x migration test data");
-		return;
-	}
-
-	/* working directory */
-	(void)g_setenv("FWUPD_SYSCONFDIR", sysconfdir, TRUE);
-	g_unsetenv("CONFIGURATION_DIRECTORY");
-
-	fn_mut = g_build_filename(sysconfdir, "fwupd", "fwupd.conf", NULL);
-	g_assert_nonnull(fn_mut);
-	ret = fu_path_mkdir_parent(fn_mut, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* copy all files to working directory */
-	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
-		g_autofree gchar *source =
-		    g_build_filename(testdatadir, "fwupd", fn_merge[i], NULL);
-		g_autofree gchar *target = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
-		fu_test_copy_file(source, target);
-	}
-
-	/* we don't want to run all the plugins just to get the _init() defaults */
-	fu_config_set_plugin_defaults(config);
-	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_MIGRATE_FILES, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* make sure all migrated files were renamed */
-	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
-		g_autofree gchar *old = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
-		g_autofree gchar *new = g_strdup_printf("%s.old", old);
-		ret = g_file_test(old, G_FILE_TEST_EXISTS);
-		g_assert_false(ret);
-		ret = g_file_test(new, G_FILE_TEST_EXISTS);
-		g_assert_true(ret);
-	}
-
-	/* ensure all default keys migrated */
-	ret = g_file_get_contents(fn_mut, &localconf_data, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpstr(localconf_data, ==, "");
-}
-
-static void
 fu_engine_integrity_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -8540,9 +8392,5 @@ main(int argc, char **argv)
 			fu_common_store_cab_error_missing_file_func);
 	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_data_func("/fwupd/write-bios-attrs", self, fu_engine_modify_bios_settings_func);
-
-	/* these need to be last as they overwrite stuff in the mkroot */
-	g_test_add_func("/fwupd/config_migrate_1_7", fu_config_migrate_1_7_func);
-	g_test_add_func("/fwupd/config_migrate_1_9", fu_config_migrate_1_9_func);
 	return g_test_run();
 }

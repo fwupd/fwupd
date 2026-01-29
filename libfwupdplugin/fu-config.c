@@ -289,86 +289,6 @@ fu_config_ensure_permissions(FuConfig *self, GError **error)
 }
 
 static gboolean
-fu_config_migrate_keyfiles(FuConfig *self, GError **error)
-{
-	FuConfigPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) legacy_cfg_files = g_ptr_array_new_with_free_func(g_free);
-	const gchar *fn_merge[] = {
-	    "daemon.conf",
-	    "msr.conf",
-	    "redfish.conf",
-	    "thunderbolt.conf",
-	    "uefi_capsule.conf",
-	};
-
-	for (guint i = 0; i < priv->items->len; i++) {
-		FuConfigItem *item = g_ptr_array_index(priv->items, i);
-		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
-
-		for (guint j = 0; j < G_N_ELEMENTS(fn_merge); j++) {
-			g_autofree gchar *fncompat = g_build_filename(dirname, fn_merge[j], NULL);
-			if (g_file_test(fncompat, G_FILE_TEST_EXISTS)) {
-				g_autoptr(GBytes) blob_compat =
-				    fu_bytes_get_contents(fncompat, error);
-				if (blob_compat == NULL) {
-					g_prefix_error(error, "failed to read %s: ", fncompat);
-					return FALSE;
-				}
-				if (!fu_config_load_bytes_replace(self, blob_compat, error)) {
-					g_prefix_error(error, "failed to load %s: ", fncompat);
-					return FALSE;
-				}
-				g_ptr_array_add(legacy_cfg_files, g_steal_pointer(&fncompat));
-			}
-		}
-	}
-
-	/* migration needed */
-	if (legacy_cfg_files->len > 0) {
-		FuConfigItem *item = g_ptr_array_index(priv->items, 0);
-		const gchar *fn_default = item->filename;
-		g_autofree gchar *data = NULL;
-
-		/* do not write empty keys migrated from daemon.conf */
-		fu_config_migrate_keyfile(self);
-
-		/* make sure we can save the new file first */
-		data = g_key_file_to_data(priv->keyfile, NULL, error);
-		if (data == NULL)
-			return FALSE;
-		if (!g_file_set_contents_full(
-			fn_default,
-			data,
-			-1,
-			G_FILE_SET_CONTENTS_CONSISTENT,
-			FU_CONFIG_FILE_MODE_SECURE, /* only readable by root */
-			error)) {
-			g_prefix_error(error, "failed to save %s: ", fn_default);
-			return FALSE;
-		}
-
-		/* give the legacy files a .old extension */
-		for (guint i = 0; i < legacy_cfg_files->len; i++) {
-			const gchar *fn_old = g_ptr_array_index(legacy_cfg_files, i);
-			g_autofree gchar *fn_new = g_strdup_printf("%s.old", fn_old);
-			g_info("renaming legacy config file %s to %s", fn_old, fn_new);
-			if (g_rename(fn_old, fn_new) != 0) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "failed to change rename %s to %s",
-					    fn_old,
-					    fn_new);
-				return FALSE;
-			}
-		}
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_config_reload(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
@@ -416,12 +336,6 @@ fu_config_reload(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 			g_prefix_error(error, "failed to load %s: ", item->filename);
 			return FALSE;
 		}
-	}
-
-	/* are any of the legacy files found in this location? */
-	if (flags & FU_CONFIG_LOAD_FLAG_MIGRATE_FILES) {
-		if (!fu_config_migrate_keyfiles(self, error))
-			return FALSE;
 	}
 
 	/* success */
