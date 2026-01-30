@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 // Path types to use when dynamically determining a path at runtime.
+#[derive(ToString)]
 enum FuPathKind {
     // The cache directory (/var/cache/fwupd)
     CachedirPkg,

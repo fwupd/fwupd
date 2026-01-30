@@ -179,6 +179,7 @@ fwupdplugin_src = [
   'fu-oprom-firmware.c', # fuzzing
   'fu-partial-input-stream.c', # fuzzing
   'fu-path.c', # fuzzing
+  'fu-path-store.c', # fuzzing
   'fu-pefile-firmware.c', # fuzzing
   'fu-pci-device.c',
   'fu-pkcs7.c',
@@ -340,6 +341,7 @@ fwupdplugin_headers = [
   'fu-partial-input-stream.h',
   'fu-partial-input-stream-private.h',
   'fu-path.h',
+  'fu-path-store.h',
   'fu-pefile-firmware.h',
   'fu-pci-device.h',
   'fu-pkcs7.h',
@@ -518,6 +520,7 @@ if get_option('tests')
     'mem',
     'msgpack',
     'partial-input-stream',
+    'path-store',
     'progress',
     'security-attrs',
     'self',
