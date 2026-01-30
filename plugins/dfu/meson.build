@@ -64,6 +64,7 @@ if get_option('tests')
       libm,
     ],
     link_with: [
+      libfwupdtest,
       plugin_libs,
       plugin_builtin_dfu,
     ],

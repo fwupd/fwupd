@@ -237,6 +237,7 @@ fu_usb_bos_descriptor_class_init(FuUsbBosDescriptorClass *klass)
 static void
 fu_usb_bos_descriptor_init(FuUsbBosDescriptor *self)
 {
+	self->dev_capability_type = FU_USB_DESCRIPTOR_KIND_INTERFACE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }

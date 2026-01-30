@@ -196,6 +196,7 @@ fwupdplugin_src = [
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
+  'fu-temporary-directory.c',
   'fu-tpm-eventlog-item.c', # fuzzing
   'fu-tpm-eventlog.c', # fuzzing
   'fu-tpm-eventlog-v1.c', # fuzzing
@@ -357,6 +358,7 @@ fwupdplugin_headers = [
   'fu-srec-firmware.h',
   'fu-string.h',
   'fu-sum.h',
+  'fu-temporary-directory.h',
   'fu-tpm-eventlog-common.h',
   'fu-tpm-eventlog.h',
   'fu-tpm-eventlog-item.h',
@@ -480,31 +482,77 @@ if get_option('tests')
 
   subdir('tests')
 
+  libfutest = static_library(
+    'fu-test',
+    sources: [
+      'fu-test.c',
+      'fu-self-test-device.c',
+    ],
+    include_directories: [root_incdir, fwupd_incdir],
+    dependencies: [library_deps, fwupdplugin_rs_dep],
+    link_with: [fwupd, libfwupdtest],
+  )
+
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
-  e = executable(
-    'fwupdplugin-self-test',
-    installed_firmware_zip,
-    colorhug_test_firmware,
-    rustgen.process('fu-self-test.rs'),
-    sources: ['fu-self-test-device.c', 'fu-self-test.c'],
-    include_directories: [root_incdir, fwupd_incdir],
-    dependencies: [library_deps, fwupdplugin_rs_dep],
-    link_with: [fwupd, fwupdplugin],
-    c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
-    install: true,
-    install_rpath: libdir_pkg,
-    install_tag: 'tests',
-    install_dir: installed_test_bindir,
-  )
-  test(
-    'fwupdplugin-self-test',
-    e,
-    is_parallel: false,
-    timeout: 180,
-    env: env,
-  )
+  foreach test_name: [
+    'bios-settings',
+    'byte-array',
+    'bytes',
+    'cab-firmware',
+    'chunk-array',
+    'common',
+    'composite-input-stream',
+    'device-event',
+    'device-locker',
+    'efi',
+    'firmware',
+    'hid-descriptor',
+    'ihex-firmware',
+    'input-stream',
+    'intel-me',
+    'kernel',
+    'kernel-search-path',
+    'lzma',
+    'mem',
+    'msgpack',
+    'partial-input-stream',
+    'progress',
+    'security-attrs',
+    'self',
+    'srec-firmware',
+    'string',
+    'struct',
+    'temporary-directory',
+    'version',
+    'volume',
+  ]
+    e = executable(
+      'fwupdplugin-' + test_name + '-test',
+      installed_firmware_zip,
+      colorhug_test_firmware,
+      rustgen.process('fu-self-test.rs'),
+      sources: [
+        'fu-' + test_name + '-test.c',
+      ],
+      include_directories: [root_incdir, fwupd_incdir],
+      dependencies: [library_deps, fwupdplugin_rs_dep],
+      link_with: [fwupd, fwupdplugin, libfutest],
+      c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"', '-DG_LOG_DOMAIN="FuTest"'],
+      install: true,
+      install_rpath: libdir_pkg,
+      install_tag: 'tests',
+      install_dir: installed_test_bindir,
+    )
+    test(
+      'fwupdplugin-' + test_name + '-test',
+      e,
+      timeout: 180,
+      env: env,
+      args: ['--tap'],
+    )
+  endforeach
 endif
 
 fwupdplugin_incdir = include_directories('.')
