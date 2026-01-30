@@ -99,6 +99,7 @@ plugins = {
   'msr': false,
   'mtd': false,
   'nordic-hid': false,
+  'novatek-ts': false,
   'nvme': false,
   'parade-lspcon': false,
   'parade-usbhub': false,
