@@ -838,33 +838,6 @@
       <package variant="i386" />
     </distro>
   </dependency>
-  <dependency id="libarchive-dev">
-    <distro id="centos">
-      <package variant="x86_64">libarchive-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libarchive-devel</package>
-      <package variant="aarch64">libarchive-devel</package>
-      <package variant="mingw64">mingw64-libarchive</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libarchive-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="darwin">
-      <package>libarchive</package>
-    </distro>
-    <distro id="freebsd">
-      <package>libarchive</package>
-    </distro>
-  </dependency>
   <dependency id="libcbor-dev">
     <distro id="arch">
       <package variant="x86_64">libcbor</package>

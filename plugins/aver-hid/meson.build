@@ -7,7 +7,6 @@ plugin_builtins += static_library('fu_plugin_aver_hid',
   sources: [
     'fu-aver-hid-device.c',
     'fu-aver-safeisp-device.c',
-    'fu-aver-hid-firmware.c',
     'fu-aver-hid-plugin.c',
   ],
   include_directories: plugin_incdirs,
