@@ -318,7 +318,7 @@ if get_option('tests')
       link_with: [fwupd],
     )
     test(
-      'fu-self-test',
+      'fu-polkit-test',
       e,
       env: {
         'G_DEBUG': 'fatal-criticals',
