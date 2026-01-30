@@ -2943,7 +2943,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT |
-				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG,
+				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG | FU_ENGINE_LOAD_FLAG_HISTORY,
 			    fu_progress_get_child(progress),
 			    error)) {
 		g_prefix_error_literal(error, "failed to load engine: ");

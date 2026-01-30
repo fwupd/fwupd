@@ -3484,7 +3484,10 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
 
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3610,7 +3613,10 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3863,7 +3869,10 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3935,6 +3944,12 @@ fu_engine_history_inherit(gconstpointer user_data)
 	engine = fu_engine_new(self->ctx);
 	fu_engine_set_silo(engine, silo_empty);
 	fu_engine_add_plugin(engine, plugin);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	device = fu_device_new(self->ctx);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION);
 	fu_device_set_id(device, "test_device");
@@ -4207,7 +4222,10 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
