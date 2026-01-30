@@ -106,6 +106,7 @@
 #include <libfwupdplugin/fu-oprom-firmware.h>
 #include <libfwupdplugin/fu-output-stream.h>
 #include <libfwupdplugin/fu-partial-input-stream.h>
+#include <libfwupdplugin/fu-path-store.h>
 #include <libfwupdplugin/fu-path.h>
 #include <libfwupdplugin/fu-pci-device.h>
 #include <libfwupdplugin/fu-pefile-firmware.h>
