@@ -30,8 +30,6 @@ enum FuPathKind {
     SysfsdirTpm,
     // The procfs location (/proc)
     Procfs,
-    // The directory for polkit actions (/usr/share/polkit-1/actions/)
-    PolkitActions,
     // The sysfs security location (/sys/kernel/security)
     SysfsdirSecurity,
     // The location of the ACPI tables

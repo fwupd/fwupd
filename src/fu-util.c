@@ -4610,13 +4610,13 @@ fu_util_check_daemon_version(FuUtil *self, GError **error)
 static gboolean
 fu_util_check_polkit_actions(GError **error)
 {
-#ifdef HAVE_POLKIT
+#ifdef POLKIT_ACTIONDIR
 	g_autofree gchar *filename = NULL;
 
 	if (g_getenv("FWUPD_POLKIT_NOCHECK") != NULL)
 		return TRUE;
 
-	filename = fu_path_build(FU_PATH_KIND_POLKIT_ACTIONS, "org.freedesktop.fwupd.policy", NULL);
+	filename = g_build_filename(POLKIT_ACTIONDIR, "org.freedesktop.fwupd.policy", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
 		g_set_error_literal(
 		    error,
