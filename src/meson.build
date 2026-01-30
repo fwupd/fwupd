@@ -298,7 +298,7 @@ if get_option('tests')
     sources: ['fu-self-test.c'],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [engine_dep],
-    link_with: [fwupdengine, fwupdutil, plugin_libs],
+    link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
     c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
   )
   test(
