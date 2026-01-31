@@ -376,7 +376,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	}
 
 	/* something we can write when using Ostree */
-	localstatedir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR, NULL);
+	localstatedir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_QUIRKS, NULL);
 	if (localstatedir != NULL) {
 		if (!fu_quirks_add_quirks_for_path(self, builder, localstatedir, error))
 			return FALSE;
