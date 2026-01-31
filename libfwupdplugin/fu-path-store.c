@@ -449,6 +449,7 @@ fu_path_store_load_from_env(FuPathStore *self)
 				      NULL);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmp);
+		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_QUIRKS, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALSTATEDIR_REMOTES, tmp);
 		fu_path_store_add_prefix(self, FU_PATH_KIND_LOCALCONFDIR_PKG, tmp);
