@@ -422,6 +422,29 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 	}
 }
 
+#ifndef HAVE_UDEV_HOTPLUG
+/* nocheck:name */
+static gboolean
+fu_udev_backend_wait_for_devnode(FuDevice *device, gpointer user_data, GError **error)
+{
+	const gchar *dev_file = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+
+	/* if the device has no associated /dev/ node (e.g. pure sysfs), we skip it */
+	if (dev_file == NULL)
+		return TRUE;
+
+	if (g_file_test(dev_file, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "device node %s does not exist",
+		    dev_file);
+	return FALSE;
+}
+#endif
+
 /* if enabled, systemd takes the kernel event, runs the udev rules (which might rename devices)
  * and then re-broadcasts on the udev netlink socket */
 static gboolean
@@ -565,6 +588,15 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		    fu_udev_backend_create_device(self, sysfspath, error);
 		if (device == NULL)
 			return FALSE;
+
+		if (!fu_device_retry_full(FU_DEVICE(device),
+					  fu_udev_backend_wait_for_devnode,
+					  200, /* max_retries */
+					  10,  /* 10ms */
+					  NULL,
+					  error))
+			return FALSE;
+
 		fu_udev_backend_device_add_from_device(self, device);
 	} else if (action == FU_UDEV_ACTION_REMOVE) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
