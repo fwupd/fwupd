@@ -307,5 +307,5 @@ fu_windows_efivars_class_init(FuWindowsEfivarsClass *klass)
 FuEfivars *
 fu_efivars_new(void)
 {
-	return FU_EFIVARS(g_object_new(FU_TYPE_FREEBSD_EFIVARS, NULL));
+	return FU_EFIVARS(g_object_new(FU_TYPE_WINDOWS_EFIVARS, NULL));
 }
