@@ -10,10 +10,10 @@
 #include "fu-telink-dfu-common.h"
 
 struct _FuTelinkDfuArchive {
-	FuFirmware parent_instance;
+	FuZipFirmware parent_instance;
 };
 
-G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_ZIP_FIRMWARE)
 
 #define FU_TELINK_DFU_FIRMWARE_JSON_FORMAT_VERSION_MAX 0
 
@@ -117,7 +117,6 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	gint64 manifest_ver = 0;
-	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 
@@ -127,15 +126,12 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	fwupd_json_parser_set_max_quoted(json_parser, 10000);
 
 	/* load archive */
-	if (!fu_firmware_parse_stream(archive,
-				      stream,
-				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
-				      error))
+	if (!FU_FIRMWARE_CLASS(fu_telink_dfu_archive_parent_class)
+		 ->parse(firmware, stream, flags | FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME, error))
 		return FALSE;
 
 	/* parse manifest.json */
-	manifest = fu_firmware_get_image_by_id_bytes(archive, "manifest.json", error);
+	manifest = fu_firmware_get_image_by_id_bytes(firmware, "manifest.json", error);
 	if (manifest == NULL)
 		return FALSE;
 	json_node = fwupd_json_parser_load_from_bytes(json_parser,
@@ -190,7 +186,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 		if (json_object_file == NULL)
 			return FALSE;
 		if (!fu_telink_dfu_archive_load_file(self,
-						     archive,
+						     firmware,
 						     json_object_file,
 						     i,
 						     flags,

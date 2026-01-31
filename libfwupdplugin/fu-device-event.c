@@ -201,6 +201,29 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
 }
 
 /**
+ * fu_device_event_set_byte_array:
+ * @self: a #FuDeviceEvent
+ * @key: (not nullable): a unique key, e.g. `Name`
+ * @value: (not nullable): a #GByteArray
+ *
+ * Sets a blob on the event. Note: blobs are stored internally as BASE-64 strings.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_device_event_set_byte_array(FuDeviceEvent *self, const gchar *key, GByteArray *value)
+{
+	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+	g_ptr_array_add(self->values,
+			fu_device_event_blob_new(G_TYPE_STRING,
+						 key,
+						 g_base64_encode(value->data, value->len),
+						 g_free));
+}
+
+/**
  * fu_device_event_set_data:
  * @self: a #FuDeviceEvent
  * @key: (not nullable): a unique key, e.g. `Name`
@@ -379,6 +402,38 @@ fu_device_event_get_bytes(FuDeviceEvent *self, const gchar *key, GError **error)
 		return g_bytes_new(NULL, 0);
 	buf = g_base64_decode(blobstr, &bufsz);
 	return g_bytes_new_take(g_steal_pointer(&buf), bufsz);
+}
+
+/**
+ * fu_device_event_get_byte_array:
+ * @self: a #FuDeviceEvent
+ * @key: (not nullable): a unique key, e.g. `Name`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a memory blob from the event.
+ *
+ * Returns: (transfer full) (nullable): a #GByteArray, or %NULL on error
+ *
+ * Since: 2.1.1
+ **/
+GByteArray *
+fu_device_event_get_byte_array(FuDeviceEvent *self, const gchar *key, GError **error)
+{
+	const gchar *blobstr;
+	gsize bufsz = 0;
+	g_autofree guchar *buf = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE_EVENT(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	blobstr = fu_device_event_lookup(self, key, G_TYPE_STRING, error);
+	if (blobstr == NULL)
+		return NULL;
+	if (blobstr[0] == '\0')
+		return g_byte_array_new();
+	buf = g_base64_decode(blobstr, &bufsz);
+	return g_byte_array_new_take(g_steal_pointer(&buf), bufsz);
 }
 
 /**

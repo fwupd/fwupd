@@ -476,12 +476,6 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		return fu_path_build(FU_PATH_KIND_SYSFSDIR, "class", "firmware-attributes", NULL);
-	case FU_PATH_KIND_POLKIT_ACTIONS:
-#ifdef POLKIT_ACTIONDIR
-		return g_strdup(POLKIT_ACTIONDIR);
-#else
-		return NULL;
-#endif
 	/* C:\Program Files (x86)\fwupd\ */
 	case FU_PATH_KIND_WIN32_BASEDIR:
 		return fu_path_get_win32_basedir();

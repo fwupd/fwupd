@@ -38,6 +38,7 @@
 #include "fu-remote-list.h"
 #include "fu-remote.h"
 #include "fu-security-attrs-private.h"
+#include "fu-test.h"
 #include "fu-usb-backend.h"
 #include "fu-util-common.h"
 
@@ -52,68 +53,6 @@ typedef struct {
 	FuContext *ctx;
 } FuTest;
 
-/* nocheck:static */
-static GMainLoop *_test_loop = NULL;
-static guint _test_loop_timeout_id = 0;
-
-static gboolean
-fu_test_hang_check_cb(gpointer user_data)
-{
-	g_main_loop_quit(_test_loop);
-	_test_loop_timeout_id = 0;
-	return G_SOURCE_REMOVE;
-}
-
-static void
-fu_test_loop_run_with_timeout(guint timeout_ms)
-{
-	g_assert_cmpint(_test_loop_timeout_id, ==, 0);
-	g_assert_null(_test_loop);
-	_test_loop = g_main_loop_new(NULL, FALSE);
-	_test_loop_timeout_id = g_timeout_add(timeout_ms, fu_test_hang_check_cb, NULL);
-	g_main_loop_run(_test_loop);
-}
-
-static void
-fu_test_loop_quit(void)
-{
-	if (_test_loop_timeout_id > 0) {
-		g_source_remove(_test_loop_timeout_id);
-		_test_loop_timeout_id = 0;
-	}
-	if (_test_loop != NULL) {
-		g_main_loop_quit(_test_loop);
-		g_main_loop_unref(_test_loop);
-		_test_loop = NULL;
-	}
-}
-
-static gboolean
-fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
-{
-	g_autofree gchar *output = NULL;
-
-	/* exactly the same */
-	if (g_strcmp0(txt1, txt2) == 0)
-		return TRUE;
-
-	/* matches a pattern */
-	if (g_pattern_match_simple(txt2, txt1))
-		return TRUE;
-
-	/* save temp files and diff them */
-	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
-		return FALSE;
-	if (!g_file_set_contents("/tmp/b", txt2, -1, error))
-		return FALSE;
-	if (!g_spawn_command_line_sync("diff -urNp /tmp/b /tmp/a", &output, NULL, NULL, error))
-		return FALSE;
-
-	/* just output the diff */
-	g_set_error_literal(error, 1, 0, output);
-	return FALSE;
-}
-
 static void
 fu_self_test_mkroot(void)
 {
@@ -123,22 +62,6 @@ fu_self_test_mkroot(void)
 			g_warning("failed to mkroot: %s", error->message);
 	}
 	g_assert_cmpint(g_mkdir_with_parents("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
-}
-
-static void
-fu_test_copy_file(const gchar *source, const gchar *target)
-{
-	gboolean ret;
-	g_autofree gchar *data = NULL;
-	g_autoptr(GError) error = NULL;
-
-	g_debug("copying %s to %s", source, target);
-	ret = g_file_get_contents(source, &data, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = g_file_set_contents(target, data, -1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 }
 
 static void
@@ -3500,7 +3423,10 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
 
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3626,7 +3552,10 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3879,7 +3808,10 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3951,6 +3883,12 @@ fu_engine_history_inherit(gconstpointer user_data)
 	engine = fu_engine_new(self->ctx);
 	fu_engine_set_silo(engine, silo_empty);
 	fu_engine_add_plugin(engine, plugin);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	device = fu_device_new(self->ctx);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION);
 	fu_device_set_id(device, "test_device");
@@ -4223,7 +4161,10 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -6205,62 +6146,6 @@ fu_common_cabinet_func(void)
 }
 
 static void
-fu_memcpy_func(gconstpointer user_data)
-{
-	const guint8 src[] = {'a', 'b', 'c', 'd', 'e'};
-	gboolean ret;
-	guint8 dst[4] = {0};
-	g_autoptr(GError) error = NULL;
-
-	/* copy entire buffer */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 4, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(memcmp(src, dst, 4), ==, 0);
-
-	/* copy first char */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(dst[0], ==, 'a');
-
-	/* copy last char */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x4, 1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(dst[0], ==, 'e');
-
-	/* copy nothing */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 0, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* write past the end of dst */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 5, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	/* write past the end of dst with offset */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x1, src, sizeof(src), 0x0, 4, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	/* read past the end of dst */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 6, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
-	g_assert_false(ret);
-	g_clear_error(&error);
-
-	/* read past the end of src with offset */
-	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x4, 4, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
-	g_assert_false(ret);
-	g_clear_error(&error);
-}
-
-static void
 fu_console_func(gconstpointer user_data)
 {
 	g_autoptr(FuConsole) console = fu_console_new();
@@ -7685,138 +7570,6 @@ fu_remote_list_repair_func(void)
 }
 
 static void
-fu_config_migrate_1_9_func(void)
-{
-	const gchar *fake_localconf_fn = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
-	const gchar *fake_sysconf_fn = "/tmp/fwupd-self-test/fwupd/fwupd.conf";
-	gboolean ret;
-	g_autoptr(FuConfig) config = FU_CONFIG(fu_engine_config_new());
-	g_autoptr(GError) error = NULL;
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
-
-	g_unsetenv("CONFIGURATION_DIRECTORY");
-	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
-
-	ret = fu_path_mkdir_parent(fake_sysconf_fn, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = g_file_set_contents(fake_sysconf_fn,
-				  "# use `man 5 fwupd.conf` for documentation\n"
-				  "[fwupd]\n"
-				  "DisabledPlugins=test;test_ble\n"
-				  "OnlyTrusted=true\n"
-				  "AllowEmulation=false\n",
-				  -1,
-				  &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* ensure that all keys migrated */
-	ret = g_file_test(fake_localconf_fn, G_FILE_TEST_EXISTS);
-	g_assert_false(ret);
-}
-
-static void
-fu_config_set_plugin_defaults(FuConfig *config)
-{
-	/* these are correct for v2.0.0 */
-	fu_config_set_default(config, "msr", "MinimumSmeKernelVersion", "5.18.0");
-	fu_config_set_default(config, "redfish", "CACheck", "false");
-	fu_config_set_default(config, "redfish", "IpmiDisableCreateUser", "false");
-	fu_config_set_default(config, "redfish", "ManagerResetTimeout", "1800"); /* seconds */
-	fu_config_set_default(config, "redfish", "Password", NULL);
-	fu_config_set_default(config, "redfish", "Uri", NULL);
-	fu_config_set_default(config, "redfish", "Username", NULL);
-	fu_config_set_default(config, "redfish", "UserUri", NULL);
-	fu_config_set_default(config, "thunderbolt", "DelayedActivation", "false");
-	fu_config_set_default(config, "thunderbolt", "MinimumKernelVersion", "4.13.0");
-	fu_config_set_default(config, "uefi-capsule", "DisableCapsuleUpdateOnDisk", "false");
-	fu_config_set_default(config, "uefi-capsule", "DisableShimForSecureBoot", "false");
-	fu_config_set_default(config, "uefi-capsule", "EnableEfiDebugging", "false");
-	fu_config_set_default(config, "uefi-capsule", "EnableGrubChainLoad", "false");
-	fu_config_set_default(config, "uefi-capsule", "OverrideESPMountPoint", NULL);
-	fu_config_set_default(config, "uefi-capsule", "RebootCleanup", "true");
-	fu_config_set_default(config, "uefi-capsule", "RequireESPFreeSpace", "0");
-	fu_config_set_default(config, "uefi-capsule", "ScreenWidth", "0");
-	fu_config_set_default(config, "uefi-capsule", "ScreenHeight", "0");
-}
-
-static void
-fu_config_migrate_1_7_func(void)
-{
-	const gchar *sysconfdir = "/tmp/fwupd-self-test/conf-migration-1.7/var/etc";
-	gboolean ret;
-	const gchar *fn_merge[] = {
-	    "daemon.conf",
-	    "msr.conf",
-	    "redfish.conf",
-	    "thunderbolt.conf",
-	    "uefi_capsule.conf",
-	};
-	g_autofree gchar *localconf_data = NULL;
-	g_autofree gchar *fn_mut = NULL;
-	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuConfig) config = FU_CONFIG(fu_engine_config_new());
-	g_autoptr(GError) error = NULL;
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
-
-	/* source directory and data */
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "conf-migration-1.7", NULL);
-	if (!g_file_test(testdatadir, G_FILE_TEST_EXISTS)) {
-		g_test_skip("missing fwupd 1.7.x migration test data");
-		return;
-	}
-
-	/* working directory */
-	(void)g_setenv("FWUPD_SYSCONFDIR", sysconfdir, TRUE);
-	g_unsetenv("CONFIGURATION_DIRECTORY");
-
-	fn_mut = g_build_filename(sysconfdir, "fwupd", "fwupd.conf", NULL);
-	g_assert_nonnull(fn_mut);
-	ret = fu_path_mkdir_parent(fn_mut, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* copy all files to working directory */
-	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
-		g_autofree gchar *source =
-		    g_build_filename(testdatadir, "fwupd", fn_merge[i], NULL);
-		g_autofree gchar *target = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
-		fu_test_copy_file(source, target);
-	}
-
-	/* we don't want to run all the plugins just to get the _init() defaults */
-	fu_config_set_plugin_defaults(config);
-	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_MIGRATE_FILES, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* make sure all migrated files were renamed */
-	for (guint i = 0; i < G_N_ELEMENTS(fn_merge); i++) {
-		g_autofree gchar *old = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
-		g_autofree gchar *new = g_strdup_printf("%s.old", old);
-		ret = g_file_test(old, G_FILE_TEST_EXISTS);
-		g_assert_false(ret);
-		ret = g_file_test(new, G_FILE_TEST_EXISTS);
-		g_assert_true(ret);
-	}
-
-	/* ensure all default keys migrated */
-	ret = g_file_get_contents(fn_mut, &localconf_data, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpstr(localconf_data, ==, "");
-}
-
-static void
 fu_engine_integrity_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -8363,7 +8116,6 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);
-	g_test_add_data_func("/fwupd/memcpy", self, fu_memcpy_func);
 	g_test_add_func("/fwupd/cabinet", fu_common_cabinet_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
@@ -8597,9 +8349,5 @@ main(int argc, char **argv)
 			fu_common_store_cab_error_missing_file_func);
 	g_test_add_func("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_data_func("/fwupd/write-bios-attrs", self, fu_engine_modify_bios_settings_func);
-
-	/* these need to be last as they overwrite stuff in the mkroot */
-	g_test_add_func("/fwupd/config_migrate_1_7", fu_config_migrate_1_7_func);
-	g_test_add_func("/fwupd/config_migrate_1_9", fu_config_migrate_1_9_func);
 	return g_test_run();
 }

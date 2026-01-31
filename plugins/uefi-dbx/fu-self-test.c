@@ -17,7 +17,7 @@ static void
 fu_uefi_dbx_zero_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
@@ -115,7 +115,7 @@ static void
 fu_uefi_dbx_not_present_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) ms_blob = NULL;
@@ -133,13 +133,13 @@ fu_uefi_dbx_not_present_func(void)
 	    g_test_build_filename(G_TEST_DIST, "tests", "efi-signature-list.builder.xml", NULL);
 	g_assert_nonnull(ms_kek_filename);
 
-	g_file_get_contents(ms_kek_filename, &ms_kek_xml, NULL, &error);
-	g_assert_nonnull(ms_kek_xml);
+	ret = g_file_get_contents(ms_kek_filename, &ms_kek_xml, NULL, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	ms_siglist = fu_firmware_new_from_xml(ms_kek_xml, &error);
-	g_assert_nonnull(ms_siglist);
 	g_assert_no_error(error);
+	g_assert_nonnull(ms_siglist);
 
 	ms_blob = fu_firmware_write(ms_siglist, &error);
 	g_assert_no_error(error);

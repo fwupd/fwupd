@@ -694,7 +694,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_HISTORY,
 				  self->progress,
 				  error))
 		return FALSE;
@@ -813,7 +813,7 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_HISTORY,
 				  self->progress,
 				  error))
 		return FALSE;
@@ -937,8 +937,8 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
 static gboolean
 fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 {
-	FuEngineLoadFlags load_flags =
-	    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO;
+	FuEngineLoadFlags load_flags = FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				       FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_HISTORY;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = NULL;
 
@@ -1089,7 +1089,8 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_HISTORY,
 				  fu_progress_get_child(self->progress),
 				  error))
 		return FALSE;
@@ -1508,7 +1509,8 @@ fu_util_install(FuUtil *self, gchar **values, GError **error)
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_HISTORY,
 				  fu_progress_get_child(self->progress),
 				  error))
 		return FALSE;
@@ -1679,7 +1681,8 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_HISTORY,
 				  self->progress,
 				  error))
 		return FALSE;
@@ -1847,7 +1850,8 @@ fu_util_reinstall(FuUtil *self, gchar **values, GError **error)
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_HISTORY,
 				  self->progress,
 				  error))
 		return FALSE;
@@ -2839,7 +2843,7 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 		FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_COLDPLUG |
 		    FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
 		    FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-		    FU_ENGINE_LOAD_FLAG_HWINFO,
+		    FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_HISTORY,
 		fu_progress_get_child(self->progress),
 		error))
 		return FALSE;
@@ -3913,7 +3917,7 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_HWINFO | FU_ENGINE_LOAD_FLAG_HISTORY,
 				  self->progress,
 				  error))
 		return FALSE;
@@ -4664,7 +4668,8 @@ fu_util_get_results(FuUtil *self, gchar **values, GError **error)
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_HISTORY,
 				  self->progress,
 				  error))
 		return FALSE;

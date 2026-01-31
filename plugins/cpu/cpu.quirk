@@ -1,139 +1,373 @@
-# Intel Atom Bay Trail [Silvermont]
-[CPUID\PRO_0&FAM_06&MOD_37]
-PciBcrAddr = 0x0
+# values from https://elixir.bootlin.com/linux/v6.18.1/source/arch/x86/include/asm/intel-family.h
 
-# affected by Gather Data Sampling bug
+[CPUID\PRO_0&FAM_05&MOD_02]
+ProcessorKind = intel-pentium
+[CPUID\PRO_0&FAM_05&MOD_04]
+ProcessorKind = intel-pentium-mmx
+[CPUID\PRO_0&FAM_05&MOD_09]
+ProcessorKind = intel-quark-x1000
+
+[CPUID\PRO_0&FAM_06&MOD_01]
+ProcessorKind = intel-pentium-pro
+
+[CPUID\PRO_0&FAM_06&MOD_03]
+ProcessorKind = intel-pentium2-klamath
+[CPUID\PRO_0&FAM_06&MOD_05]
+ProcessorKind = intel-pentium3-deschutes
+[CPUID\PRO_0&FAM_06&MOD_0B]
+ProcessorKind = intel-pentium3-tualatin
+[CPUID\PRO_0&FAM_06&MOD_0D]
+ProcessorKind = intel-pentium3-dothan
+
+[CPUID\PRO_0&FAM_06&MOD_0E]
+ProcessorKind = intel-core-yonah
+
+[CPUID\PRO_0&FAM_06&MOD_0F]
+ProcessorKind = intel-core2-merom
+[CPUID\PRO_0&FAM_06&MOD_16]
+ProcessorKind = intel-core2-merom
+[CPUID\PRO_0&FAM_06&MOD_17]
+ProcessorKind = intel-core2-penryn
+[CPUID\PRO_0&FAM_06&MOD_1D]
+ProcessorKind = intel-core2-dunnington
+
+[CPUID\PRO_0&FAM_06&MOD_1E]
+ProcessorKind = intel-nehalem
+[CPUID\PRO_0&FAM_06&MOD_1F]
+ProcessorKind = intel-nehalem
+[CPUID\PRO_0&FAM_06&MOD_1A]
+ProcessorKind = intel-nehalem
+[CPUID\PRO_0&FAM_06&MOD_2E]
+ProcessorKind = intel-nehalem
+
+[CPUID\PRO_0&FAM_06&MOD_25]
+ProcessorKind = intel-westmere
+[CPUID\PRO_0&FAM_06&MOD_2C]
+ProcessorKind = intel-westmere
+[CPUID\PRO_0&FAM_06&MOD_2F]
+ProcessorKind = intel-westmere
+
+[CPUID\PRO_0&FAM_06&MOD_2A]
+ProcessorKind = intel-sandybridge
+[CPUID\PRO_0&FAM_06&MOD_2D]
+ProcessorKind = intel-sandybridge
+[CPUID\PRO_0&FAM_06&MOD_3A]
+ProcessorKind = intel-ivybridge
+[CPUID\PRO_0&FAM_06&MOD_3E]
+ProcessorKind = intel-ivybridge
+
+[CPUID\PRO_0&FAM_06&MOD_3C]
+ProcessorKind = intel-haswell
+[CPUID\PRO_0&FAM_06&MOD_3F]
+ProcessorKind = intel-haswell
+[CPUID\PRO_0&FAM_06&MOD_45]
+ProcessorKind = intel-haswell
+[CPUID\PRO_0&FAM_06&MOD_46]
+ProcessorKind = intel-haswell
+
+[CPUID\PRO_0&FAM_06&MOD_3D]
+ProcessorKind = intel-broadwell
+[CPUID\PRO_0&FAM_06&MOD_47]
+ProcessorKind = intel-broadwell
+[CPUID\PRO_0&FAM_06&MOD_4F]
+ProcessorKind = intel-broadwell
+[CPUID\PRO_0&FAM_06&MOD_56]
+ProcessorKind = intel-broadwell
+
+[CPUID\PRO_0&FAM_06&MOD_4E]
+ProcessorKind = intel-skylake
+[CPUID\PRO_0&FAM_06&MOD_5E]
+ProcessorKind = intel-skylake
+[CPUID\PRO_0&FAM_06&MOD_55]
+ProcessorKind = intel-skylake
 [CPUID\PRO_0&FAM_06&MOD_55&STP_3]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_4]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_6]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_7]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_A]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_55&STP_B]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6A&STP_4]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6A&STP_5]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6A&STP_6]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_6C&STP_1]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_7E&STP_5]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8C&STP_0]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8C&STP_1]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8C&STP_2]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8D&STP_0]
-CpuMitigationsRequired = gds
-[CPUID\PRO_0&FAM_06&MOD_8D&STP_1]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_8E]
+ProcessorKind = intel-kabylake
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_9]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_A]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_B]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_8E&STP_C]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_9E]
+ProcessorKind = intel-kabylake
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_9]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_A]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_B]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_C]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_9E&STP_D]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_A5]
+ProcessorKind = intel-cometlake
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_0]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_1]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_2]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_3]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A5&STP_5]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_A6]
+ProcessorKind = intel-cometlake
 [CPUID\PRO_0&FAM_06&MOD_A6&STP_0]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A6&STP_1]
-CpuMitigationsRequired = gds
+ProcessorMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_66]
+ProcessorKind = intel-cannonlake
+
+[CPUID\PRO_0&FAM_06&MOD_6A]
+ProcessorKind = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_4]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_5]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6A&STP_6]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_6C]
+ProcessorKind = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_6C&STP_1]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_7D]
+ProcessorKind = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_7E]
+ProcessorKind = intel-icelake
+[CPUID\PRO_0&FAM_06&MOD_7E&STP_5]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_9D]
+ProcessorKind = intel-icelake
+
 [CPUID\PRO_0&FAM_06&MOD_A7]
-CpuMitigationsRequired = gds
+ProcessorKind = intel-rocketlake
+ProcessorMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_8C]
+ProcessorKind = intel-tigerlake
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_0]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_1]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8C&STP_2]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8D]
+ProcessorKind = intel-tigerlake
+[CPUID\PRO_0&FAM_06&MOD_8D&STP_0]
+ProcessorMitigationsRequired = gds
+[CPUID\PRO_0&FAM_06&MOD_8D&STP_1]
+ProcessorMitigationsRequired = gds
+
+[CPUID\PRO_0&FAM_06&MOD_8F]
+ProcessorKind = intel-sapphirerapids
+
+[CPUID\PRO_0&FAM_06&MOD_CF]
+ProcessorKind = intel-emeraldrapids
+
+[CPUID\PRO_0&FAM_06&MOD_AD]
+ProcessorKind = intel-graniterapids
+[CPUID\PRO_0&FAM_06&MOD_AE]
+ProcessorKind = intel-graniterapids
+
+[CPUID\PRO_0&FAM_19&MOD_01]
+ProcessorKind = intel-diamondrapids
+
+[CPUID\PRO_0&FAM_06&MOD_D7]
+ProcessorKind = intel-bartlettlake
+
+[CPUID\PRO_0&FAM_06&MOD_8A]
+ProcessorKind = intel-lakefield
+
+[CPUID\PRO_0&FAM_06&MOD_97]
+ProcessorKind = intel-alderlake
+[CPUID\PRO_0&FAM_06&MOD_9A]
+ProcessorKind = intel-alderlake
+
+[CPUID\PRO_0&FAM_06&MOD_B7]
+ProcessorKind = intel-raptorlake
+[CPUID\PRO_0&FAM_06&MOD_BA]
+ProcessorKind = intel-raptorlake
+[CPUID\PRO_0&FAM_06&MOD_BF]
+ProcessorKind = intel-raptorlake
+
+[CPUID\PRO_0&FAM_06&MOD_AC]
+ProcessorKind = intel-meteorlake
+[CPUID\PRO_0&FAM_06&MOD_AA]
+ProcessorKind = intel-meteorlake
+
+[CPUID\PRO_0&FAM_06&MOD_C5]
+ProcessorKind = intel-arrowlake
+[CPUID\PRO_0&FAM_06&MOD_C6]
+ProcessorKind = intel-arrowlake
+[CPUID\PRO_0&FAM_06&MOD_B5]
+ProcessorKind = intel-arrowlake
+
+[CPUID\PRO_0&FAM_06&MOD_BD]
+ProcessorKind = intel-lunarlake
+
+[CPUID\PRO_0&FAM_06&MOD_CC]
+ProcessorKind = intel-pantherlake
+
+[CPUID\PRO_0&FAM_06&MOD_D5]
+ProcessorKind = intel-wildcatlake
+
+[CPUID\PRO_0&FAM_18&MOD_01]
+ProcessorKind = intel-novalake
+[CPUID\PRO_0&FAM_18&MOD_03]
+ProcessorKind = intel-novalake
+
+[CPUID\PRO_0&FAM_06&MOD_1C]
+ProcessorKind = intel-atom-bonnell
+[CPUID\PRO_0&FAM_06&MOD_26]
+ProcessorKind = intel-atom-bonnell
+
+[CPUID\PRO_0&FAM_06&MOD_36]
+ProcessorKind = intel-atom-saltwell
+[CPUID\PRO_0&FAM_06&MOD_27]
+ProcessorKind = intel-atom-saltwell
+[CPUID\PRO_0&FAM_06&MOD_35]
+ProcessorKind = intel-atom-saltwell
+
+[CPUID\PRO_0&FAM_06&MOD_37]
+ProcessorKind = intel-atom-silvermont
+PciBcrAddr = 0x0
+[CPUID\PRO_0&FAM_06&MOD_4D]
+ProcessorKind = intel-atom-silvermont
+[CPUID\PRO_0&FAM_06&MOD_4A]
+ProcessorKind = intel-atom-silvermont
+[CPUID\PRO_0&FAM_06&MOD_5A]
+ProcessorKind = intel-atom-silvermont
+
+[CPUID\PRO_0&FAM_06&MOD_4C]
+ProcessorKind = intel-atom-airmont
+[CPUID\PRO_0&FAM_06&MOD_75]
+ProcessorKind = intel-atom-airmont
+
+[CPUID\PRO_0&FAM_06&MOD_5C]
+ProcessorKind = intel-atom-goldmont
+[CPUID\PRO_0&FAM_06&MOD_5F]
+ProcessorKind = intel-atom-goldmont
+
+[CPUID\PRO_0&FAM_06&MOD_7A]
+ProcessorKind = intel-atom-goldmont-plus
+
+[CPUID\PRO_0&FAM_06&MOD_86]
+ProcessorKind = intel-atom-tremont
+[CPUID\PRO_0&FAM_06&MOD_96]
+ProcessorKind = intel-atom-tremont
+[CPUID\PRO_0&FAM_06&MOD_9C]
+ProcessorKind = intel-atom-tremont
+
+[CPUID\PRO_0&FAM_06&MOD_BE]
+ProcessorKind = intel-atom-gracemont
+
+[CPUID\PRO_0&FAM_06&MOD_AF]
+ProcessorKind = intel-atom-crestmont
+[CPUID\PRO_0&FAM_06&MOD_B6]
+ProcessorKind = intel-atom-crestmont
+
+[CPUID\PRO_0&FAM_06&MOD_DD]
+ProcessorKind = intel-atom-darkmont
+
+[CPUID\PRO_0&FAM_06&MOD_57]
+ProcessorKind = intel-xeon-phi
+[CPUID\PRO_0&FAM_06&MOD_85]
+ProcessorKind = intel-xeon-phi
+
+[CPUID\PRO_0&FAM_15&MOD_01]
+ProcessorKind = intel-p4-willamette
+[CPUID\PRO_0&FAM_15&MOD_03]
+ProcessorKind = intel-p4-prescott
+[CPUID\PRO_0&FAM_15&MOD_04]
+ProcessorKind = intel-p4-prescott
+[CPUID\PRO_0&FAM_15&MOD_06]
+ProcessorKind = intel-p4-cedarmill
 
 # Affected by Sinkclose
 [CPUID\PRO_0&FAM_17&MOD_01&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0800126f
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0800126f
 [CPUID\PRO_0&FAM_17&MOD_31&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0830107c
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0830107c
 [CPUID\PRO_0&FAM_17&MOD_60&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0860010d
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0860010d
 [CPUID\PRO_0&FAM_17&MOD_68&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x08608108
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x08608108
 [CPUID\PRO_0&FAM_17&MOD_71&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x08701034
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x08701034
 [CPUID\PRO_0&FAM_17&MOD_A0&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x08a0000a
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x08a0000a
 [CPUID\PRO_0&FAM_19&MOD_01&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a0011d5
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a0011d5
 [CPUID\PRO_0&FAM_19&MOD_01&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a001238
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a001238
 [CPUID\PRO_0&FAM_19&MOD_08&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a00820c
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a00820c
 [CPUID\PRO_0&FAM_19&MOD_11&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a101148
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a101148
 [CPUID\PRO_0&FAM_19&MOD_11&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a101248
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a101248
 [CPUID\PRO_0&FAM_19&MOD_18&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a108108
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a108108
 [CPUID\PRO_0&FAM_19&MOD_21&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a20102d
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a20102d
 [CPUID\PRO_0&FAM_19&MOD_21&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a201210
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a201210
 [CPUID\PRO_0&FAM_19&MOD_44&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a404107
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a404107
 [CPUID\PRO_0&FAM_19&MOD_50&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a500011
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a500011
 [CPUID\PRO_0&FAM_19&MOD_61&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a601209
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a601209
 [CPUID\PRO_0&FAM_19&MOD_74&STP_1]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a704107
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a704107
 [CPUID\PRO_0&FAM_19&MOD_77&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a705206
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a705206
 [CPUID\PRO_0&FAM_19&MOD_78&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a708007
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a708007
 [CPUID\PRO_0&FAM_19&MOD_7C&STP_0]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0a70c005
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0a70c005
 [CPUID\PRO_0&FAM_19&MOD_A0&STP_2]
-CpuMitigationsRequired = sinkclose
-CpuSinkcloseMicrocodeVersion = 0x0aa00215
+ProcessorMitigationsRequired = sinkclose
+ProcessorSinkcloseMicrocodeVersion = 0x0aa00215

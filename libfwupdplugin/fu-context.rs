@@ -17,6 +17,7 @@ enum FuContextFlags {
     IsHypervisorPrivileged  = 1 << 10, // privileged xen can access most hardware
     IsContainer             = 1 << 11,
     SmbiosUefiEnabled       = 1 << 12,
+    NoQuirks                = 1 << 13,
 }
 
 enum FuContextHwidFlags {

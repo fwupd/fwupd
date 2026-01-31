@@ -323,6 +323,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX,
 	    FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT,
 	    FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED,
+	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -8058,7 +8059,11 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 
 	/* sanity check */
 	if (priv->events == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no events loaded");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no event with ID %s: no events loaded",
+			    id);
 		return NULL;
 	}
 

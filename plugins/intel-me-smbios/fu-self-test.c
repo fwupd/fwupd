@@ -21,7 +21,7 @@ fu_intel_me_smbios_plugin_subtype18_func(void)
 	GPtrArray *devices;
 	g_autofree gchar *str = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin =
 	    g_object_new(FU_TYPE_INTEL_ME_SMBIOS_PLUGIN, "context", ctx, NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -63,7 +63,7 @@ fu_intel_me_smbios_plugin_subtype30_func(void)
 	GPtrArray *devices;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuPlugin) plugin =
 	    g_object_new(FU_TYPE_INTEL_ME_SMBIOS_PLUGIN, "context", ctx, NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);

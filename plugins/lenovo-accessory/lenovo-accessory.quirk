@@ -1,0 +1,39 @@
+# Lenovo HID Bootloader
+[HIDRAW\VEN_17EF&DEV_6194]
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidBootloader
+
+# Lenovo Pro USB-A Unified Pairing Receiver
+[HIDRAW\VEN_17EF&DEV_629D]
+Name = Pro USB-A Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
+
+# Lenovo Pro USB-A Unified Pairing Receiver
+[HIDRAW\VEN_17EF&DEV_6201]
+Name = Pro USB-A Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
+
+# Lenovo 700 Multi-Device Wireless Mouse
+[BLUETOOTH\VID_17EF&PID_61FE]
+Name = 700 Multi-Device Wireless Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo 700 Multi-Device Wireless Mouse
+[BLUETOOTH\VID_17EF&PID_629A]
+Name = 700 Multi-Device Wireless Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo 700 Wireless Modern Keyboard
+[BLUETOOTH\VID_17EF&PID_6297]
+Name = 700 Wireless Modern Keyboard
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice

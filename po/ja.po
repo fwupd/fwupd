@@ -11,19 +11,20 @@
 # YOSHIDUMI, Rentaro, 2021
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Mikenu Takeru <mikenu-jp@users.noreply.hosted.weblate.org>, 2025.
+# Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-11-14 16:51+0000\n"
-"Last-Translator: Mikenu Takeru <mikenu-jp@users.noreply.hosted.weblate.org>\n"
+"PO-Revision-Date: 2026-01-23 00:01+0000\n"
+"Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.15-dev\n"
+"X-Generator: Weblate 5.16-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -2880,7 +2881,7 @@ msgstr "Suspend-to-Idle"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
-msgstr "Suspend-to-RAM"
+msgstr "サスペンド"
 
 #. TRANSLATORS: show and ask user to confirm --
 #. * %1 is the old branch name, %2 is the new branch name

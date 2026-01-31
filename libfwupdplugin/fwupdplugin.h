@@ -106,12 +106,14 @@
 #include <libfwupdplugin/fu-oprom-firmware.h>
 #include <libfwupdplugin/fu-output-stream.h>
 #include <libfwupdplugin/fu-partial-input-stream.h>
+#include <libfwupdplugin/fu-path-store.h>
 #include <libfwupdplugin/fu-path.h>
 #include <libfwupdplugin/fu-pci-device.h>
 #include <libfwupdplugin/fu-pefile-firmware.h>
 #include <libfwupdplugin/fu-pkcs7.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
 #include <libfwupdplugin/fu-plugin.h>
+#include <libfwupdplugin/fu-processor-device.h>
 #include <libfwupdplugin/fu-progress.h>
 #include <libfwupdplugin/fu-sbatlevel-section.h>
 #include <libfwupdplugin/fu-security-attr.h>
@@ -121,6 +123,7 @@
 #include <libfwupdplugin/fu-srec-firmware.h>
 #include <libfwupdplugin/fu-string.h>
 #include <libfwupdplugin/fu-sum.h>
+#include <libfwupdplugin/fu-temporary-directory.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-bos-descriptor.h>
 #include <libfwupdplugin/fu-v4l-device.h>

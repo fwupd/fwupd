@@ -2726,6 +2726,10 @@ fu_engine_install_release(FuEngine *self,
 	if (request != NULL)
 		feature_flags = fu_engine_request_get_feature_flags(request);
 
+	/* engine was loaded with no history support */
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_HISTORY) == 0)
+		flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+
 	/* add the checksum of the container blob if not already set */
 	if (fwupd_release_get_checksums(FWUPD_RELEASE(release))->len == 0) {
 		GChecksumType checksum_types[] = {
@@ -2772,12 +2776,14 @@ fu_engine_install_release(FuEngine *self,
 	if (plugin == NULL)
 		return FALSE;
 
+	/* add metadata */
+	if (!fu_engine_add_release_metadata(self, release, error))
+		return FALSE;
+	if (!fu_engine_add_release_plugin_metadata(self, release, plugin, error))
+		return FALSE;
+
 	/* add device to database */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
-		if (!fu_engine_add_release_metadata(self, release, error))
-			return FALSE;
-		if (!fu_engine_add_release_plugin_metadata(self, release, plugin, error))
-			return FALSE;
 		if (!fu_history_add_device(self->history, device, release, error))
 			return FALSE;
 	}
@@ -5620,7 +5626,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		checksums = fu_release_get_checksums(release);
 		if (checksums->len == 0) {
 			g_autofree gchar *str = fwupd_codec_to_string(FWUPD_CODEC(release));
-			g_debug("no locations for %s", str);
+			g_debug("no checksums for %s", str);
 			continue;
 		}
 
@@ -6709,6 +6715,8 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 
 	/* ignore */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_HISTORY) == 0)
 		return;
 
 	/* any success or failed update? */
@@ -8662,11 +8670,11 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 {
 	FuPlugin *plugin_uefi;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
+	GPtrArray *config_approved;
+	GPtrArray *config_blocked;
 	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
-	g_autoptr(GPtrArray) checksums_approved = NULL;
-	g_autoptr(GPtrArray) checksums_blocked = NULL;
 	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -8729,8 +8737,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* read config file */
 	if (!fu_config_load(FU_CONFIG(self->config),
-			    FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS | FU_CONFIG_LOAD_FLAG_WATCH_FILES |
-				FU_CONFIG_LOAD_FLAG_MIGRATE_FILES,
+			    FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS | FU_CONFIG_LOAD_FLAG_WATCH_FILES,
 			    error)) {
 		g_prefix_error_literal(error, "failed to load config: ");
 		return FALSE;
@@ -8766,31 +8773,36 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* get hardcoded approved and blocked firmware */
-	checksums_approved = fu_engine_config_get_approved_firmware(self->config);
-	for (guint i = 0; i < checksums_approved->len; i++) {
-		const gchar *csum = g_ptr_array_index(checksums_approved, i);
+	config_approved = fu_engine_config_get_approved_firmware(self->config);
+	for (guint i = 0; i < config_approved->len; i++) {
+		const gchar *csum = g_ptr_array_index(config_approved, i);
 		fu_engine_add_approved_firmware(self, csum);
 	}
-	checksums_blocked = fu_engine_config_get_blocked_firmware(self->config);
-	for (guint i = 0; i < checksums_blocked->len; i++) {
-		const gchar *csum = g_ptr_array_index(checksums_blocked, i);
+	config_blocked = fu_engine_config_get_blocked_firmware(self->config);
+	for (guint i = 0; i < config_blocked->len; i++) {
+		const gchar *csum = g_ptr_array_index(config_blocked, i);
 		fu_engine_add_blocked_firmware(self, csum);
 	}
 
 	/* get extra firmware saved to the database */
-	checksums_approved = fu_history_get_approved_firmware(self->history, error);
-	if (checksums_approved == NULL)
-		return FALSE;
-	for (guint i = 0; i < checksums_approved->len; i++) {
-		const gchar *csum = g_ptr_array_index(checksums_approved, i);
-		fu_engine_add_approved_firmware(self, csum);
-	}
-	checksums_blocked = fu_history_get_blocked_firmware(self->history, error);
-	if (checksums_blocked == NULL)
-		return FALSE;
-	for (guint i = 0; i < checksums_blocked->len; i++) {
-		const gchar *csum = g_ptr_array_index(checksums_blocked, i);
-		fu_engine_add_blocked_firmware(self, csum);
+	if (flags & FU_ENGINE_LOAD_FLAG_HISTORY) {
+		g_autoptr(GPtrArray) history_approved = NULL;
+		g_autoptr(GPtrArray) history_blocked = NULL;
+
+		history_approved = fu_history_get_approved_firmware(self->history, error);
+		if (history_approved == NULL)
+			return FALSE;
+		for (guint i = 0; i < history_approved->len; i++) {
+			const gchar *csum = g_ptr_array_index(history_approved, i);
+			fu_engine_add_approved_firmware(self, csum);
+		}
+		history_blocked = fu_history_get_blocked_firmware(self->history, error);
+		if (history_blocked == NULL)
+			return FALSE;
+		for (guint i = 0; i < history_blocked->len; i++) {
+			const gchar *csum = g_ptr_array_index(history_blocked, i);
+			fu_engine_add_blocked_firmware(self, csum);
+		}
 	}
 	fu_progress_step_done(progress);
 
@@ -8993,8 +9005,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* update the db for devices that were updated during the reboot */
-	if (!fu_engine_update_history_database(self, error))
-		return FALSE;
+	if (flags & FU_ENGINE_LOAD_FLAG_HISTORY) {
+		if (!fu_engine_update_history_database(self, error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* update the devices JSON file */

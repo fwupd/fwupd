@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 // Path types to use when dynamically determining a path at runtime.
+#[derive(ToString)]
 enum FuPathKind {
     // The cache directory (/var/cache/fwupd)
     CachedirPkg,
@@ -29,8 +30,6 @@ enum FuPathKind {
     SysfsdirTpm,
     // The procfs location (/proc)
     Procfs,
-    // The directory for polkit actions (/usr/share/polkit-1/actions/)
-    PolkitActions,
     // The sysfs security location (/sys/kernel/security)
     SysfsdirSecurity,
     // The location of the ACPI tables

@@ -23,10 +23,11 @@ fu_hp_bioscfg_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 	const gchar *hwid =
 	    fu_context_get_hwid_value(fu_plugin_get_context(plugin), FU_HWIDS_KEY_MANUFACTURER);
 	if (g_strcmp0(hwid, "HP") != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unsupported manufacturer");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported manufacturer, got %s",
+			    hwid);
 		return FALSE;
 	}
 
@@ -72,6 +73,7 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	}
 
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT);
 }
 
 static void
