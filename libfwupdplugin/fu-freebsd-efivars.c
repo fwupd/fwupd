@@ -215,7 +215,7 @@ fu_freebsd_efivars_class_init(FuFreebsdEfivarsClass *klass)
 }
 
 FuEfivars *
-fu_efivars_new(void)
+fu_efivars_new(FuPathStore *pstore)
 {
-	return FU_EFIVARS(g_object_new(FU_TYPE_FREEBSD_EFIVARS, NULL));
+	return FU_EFIVARS(g_object_new(FU_TYPE_FREEBSD_EFIVARS, "path-store", pstore, NULL));
 }

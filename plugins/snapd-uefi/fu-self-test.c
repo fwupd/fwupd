@@ -196,7 +196,8 @@ static void
 fu_self_test_tear_down(FuTestFixture *fixture, gconstpointer user_data)
 {
 	FuTestCase *tc = (FuTestCase *)user_data;
-	/* test should always run in a snap */
+	/* nocheck:blocked
+	 * test should always run in a snap */
 	g_unsetenv("SNAP");
 	if (tc->snapd_fde_detected) {
 		if (fixture->mock_snapd_available)
@@ -570,7 +571,6 @@ main(int argc, char **argv)
 	    .snapd_supported = TRUE,
 	    .mock_snapd_scenario = "failed-cleanup",
 	};
-	g_autofree gchar *testdatadir = NULL;
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
@@ -578,13 +578,7 @@ main(int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-	(void)g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SNAPD_SNAP_SOCKET", "/tmp/mock-snapd-test.sock", TRUE);
 
 	/* tests go here */

@@ -305,7 +305,7 @@ fu_windows_efivars_class_init(FuWindowsEfivarsClass *klass)
 }
 
 FuEfivars *
-fu_efivars_new(void)
+fu_efivars_new(FuPathStore *pstore)
 {
-	return FU_EFIVARS(g_object_new(FU_TYPE_WINDOWS_EFIVARS, NULL));
+	return FU_EFIVARS(g_object_new(FU_TYPE_WINDOWS_EFIVARS, "path-store", pstore, NULL));
 }

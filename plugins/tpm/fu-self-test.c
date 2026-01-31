@@ -19,6 +19,7 @@ fu_tpm_device_1_2_func(void)
 	FuTpmDevice *device;
 	GPtrArray *devices;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -34,6 +35,10 @@ fu_tpm_device_1_2_func(void)
 		g_test_skip("Skipping TPM1.2 tests when simulator running");
 		return;
 	}
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, testdatadir);
 
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -212,7 +217,6 @@ fu_tpm_empty_pcr_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_auto(GStrv) environ_old = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -231,10 +235,9 @@ fu_tpm_empty_pcr_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* save environment and set broken PCR data */
-	environ_old = g_get_environ();
+	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "empty_pcr", NULL);
-	(void)g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, testdatadir);
 
 	/* load the plugin */
 	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
@@ -256,26 +259,14 @@ fu_tpm_empty_pcr_func(void)
 	g_assert_cmpint(fwupd_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-
-	/* restore default environment */
-	(void)g_setenv("FWUPD_SYSFSTPMDIR",
-		       g_environ_getenv(environ_old, "FWUPD_SYSFSTPMDIR"),
-		       TRUE);
 }
 
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);

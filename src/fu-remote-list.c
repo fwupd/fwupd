@@ -33,6 +33,7 @@ fu_remote_list_finalize(GObject *obj);
 
 struct _FuRemoteList {
 	GObject parent_instance;
+	FuPathStore *pstore;
 	GPtrArray *array;    /* (element-type FwupdRemote) */
 	GPtrArray *monitors; /* (element-type GFileMonitor) */
 	gboolean testing_remote;
@@ -277,12 +278,15 @@ fu_remote_list_is_remote_origin_lvfs(FwupdRemote *remote)
 static gboolean
 fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **error)
 {
-	g_autofree gchar *remotesdir = NULL;
+	const gchar *remotesdir;
 	g_autoptr(FwupdRemote) remote = fu_remote_new();
 	g_autoptr(FwupdRemote) remote_tmp = NULL;
 
 	/* set directory to store data */
-	remotesdir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
+	remotesdir =
+	    fu_path_store_get_path(self->pstore, FU_PATH_KIND_LOCALSTATEDIR_METADATA, error);
+	if (remotesdir == NULL)
+		return FALSE;
 	fwupd_remote_set_remotes_dir(remote, remotesdir);
 
 	/* load from keyfile */
@@ -453,10 +457,14 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_PERM)) {
 			g_autofree gchar *basename = g_path_get_basename(filename);
 
-			filename_new = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG,
-						     "remotes.d",
-						     basename,
-						     NULL);
+			filename_new = fu_path_store_build_filename(self->pstore,
+								    error,
+								    FU_PATH_KIND_LOCALSTATEDIR_PKG,
+								    "remotes.d",
+								    basename,
+								    NULL);
+			if (filename_new == NULL)
+				return FALSE;
 			if (!fu_path_mkdir_parent(filename_new, error))
 				return FALSE;
 			g_info("falling back from %s to %s", filename, filename_new);
@@ -565,9 +573,9 @@ static gboolean
 fu_remote_list_reload(FuRemoteList *self, GError **error)
 {
 	guint depsolve_check;
-	g_autofree gchar *remotesdir = NULL;
-	g_autofree gchar *remotesdir_mut = NULL;
-	g_autofree gchar *remotesdir_immut = NULL;
+	const gchar *remotesdir;
+	const gchar *remotesdir_mut;
+	const gchar *remotesdir_immut;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* clear */
@@ -575,15 +583,21 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	g_ptr_array_set_size(self->monitors, 0);
 
 	/* search mutable, and then fall back to /etc and immutable */
-	remotesdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
-		return FALSE;
-	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	if (!fu_remote_list_add_for_path(self, remotesdir, error))
-		return FALSE;
-	remotesdir_immut = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
-	if (!fu_remote_list_add_for_path(self, remotesdir_immut, error))
-		return FALSE;
+	remotesdir_mut = fu_path_store_get_path(self->pstore, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
+	if (remotesdir_mut != NULL) {
+		if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
+			return FALSE;
+	}
+	remotesdir = fu_path_store_get_path(self->pstore, FU_PATH_KIND_SYSCONFDIR_PKG, NULL);
+	if (remotesdir != NULL) {
+		if (!fu_remote_list_add_for_path(self, remotesdir, error))
+			return FALSE;
+	}
+	remotesdir_immut = fu_path_store_get_path(self->pstore, FU_PATH_KIND_DATADIR_PKG, NULL);
+	if (remotesdir_immut != NULL) {
+		if (!fu_remote_list_add_for_path(self, remotesdir_immut, error))
+			return FALSE;
+	}
 
 	/* depsolve */
 	for (depsolve_check = 0; depsolve_check < 100; depsolve_check++) {
@@ -623,14 +637,20 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 }
 
 static gboolean
-fu_remote_list_load_metainfos(XbBuilder *builder, GError **error)
+fu_remote_list_load_metainfos(FuRemoteList *self, XbBuilder *builder, GError **error)
 {
 	const gchar *fn;
 	g_autofree gchar *metainfo_path = NULL;
 	g_autoptr(GDir) dir = NULL;
 
 	/* pkg metainfo dir */
-	metainfo_path = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "metainfo", NULL);
+	metainfo_path = fu_path_store_build_filename(self->pstore,
+						     error,
+						     FU_PATH_KIND_DATADIR_PKG,
+						     "metainfo",
+						     NULL);
+	if (metainfo_path == NULL)
+		return FALSE;
 	if (!g_file_test(metainfo_path, G_FILE_TEST_EXISTS))
 		return TRUE;
 
@@ -700,7 +720,7 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 		self->fix_metadata_uri = TRUE;
 
 	/* load AppStream about the remote_list */
-	if (!fu_remote_list_load_metainfos(builder, error))
+	if (!fu_remote_list_load_metainfos(self, builder, error))
 		return FALSE;
 
 	/* add the locales, which is really only going to be 'C' or 'en' */
@@ -718,8 +738,15 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 		if (xmlb == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *xmlbfn =
-		    fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "metainfo.xmlb", NULL);
+		g_autofree gchar *xmlbfn = NULL;
+
+		xmlbfn = fu_path_store_build_filename(self->pstore,
+						      error,
+						      FU_PATH_KIND_CACHEDIR_PKG,
+						      "metainfo.xmlb",
+						      NULL);
+		if (xmlbfn == NULL)
+			return FALSE;
 		xmlb = g_file_new_for_path(xmlbfn);
 	}
 	self->silo = xb_builder_ensure(builder, xmlb, compile_flags, NULL, error);
@@ -810,6 +837,7 @@ static void
 fu_remote_list_finalize(GObject *obj)
 {
 	FuRemoteList *self = FU_REMOTE_LIST(obj);
+	g_object_unref(self->pstore);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
 	g_ptr_array_unref(self->array);
@@ -819,9 +847,13 @@ fu_remote_list_finalize(GObject *obj)
 }
 
 FuRemoteList *
-fu_remote_list_new(void)
+fu_remote_list_new(FuPathStore *pstore)
 {
 	FuRemoteList *self;
+
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+
 	self = g_object_new(FU_TYPE_REMOTE_LIST, NULL);
+	self->pstore = g_object_ref(pstore);
 	return FU_REMOTE_LIST(self);
 }

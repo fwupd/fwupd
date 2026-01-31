@@ -17,7 +17,7 @@
 gboolean
 fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 {
-	g_autofree gchar *path = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_DMI);
+	const gchar *path;
 	struct {
 		const gchar *hwid;
 		const gchar *key;
@@ -33,6 +33,9 @@ fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 		   {NULL, NULL}};
 
 	/* the values the kernel parsed; these are world-readable */
+	path = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, error);
+	if (path == NULL)
+		return FALSE;
 	if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no %s", path);
 		return FALSE;

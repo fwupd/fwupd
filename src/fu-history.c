@@ -603,9 +603,7 @@ fu_history_load(FuHistory *self, GError **error)
 {
 	gint rc;
 	guint schema_ver;
-	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(GFile) file = NULL;
 
 	/* already done */
 	if (self->db != NULL)
@@ -614,16 +612,18 @@ fu_history_load(FuHistory *self, GError **error)
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(self->db == NULL, FALSE);
 
-	/* create directory */
-	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	file = g_file_new_for_path(dirname);
-	if (!g_file_query_exists(file, NULL)) {
-		if (!g_file_make_directory_with_parents(file, NULL, error))
-			return FALSE;
-	}
-
 	/* open */
-	filename = g_build_filename(dirname, "pending.db", NULL);
+	filename = fu_context_build_filename(self->ctx,
+					     error,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "pending.db",
+					     NULL);
+	if (filename == NULL) {
+		g_prefix_error_literal(error, "no history: ");
+		return FALSE;
+	}
+	if (!fu_path_mkdir_parent(filename, error))
+		return FALSE;
 	if (!fu_history_open(self, filename, error))
 		return FALSE;
 

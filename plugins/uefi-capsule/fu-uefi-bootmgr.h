@@ -20,7 +20,8 @@ typedef enum {
 gboolean
 fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error);
 gboolean
-fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
+fu_uefi_bootmgr_bootnext(FuPathStore *pstore,
+			 FuEfivars *efivars,
 			 FuVolume *esp,
 			 const gchar *description,
 			 FuUefiBootmgrFlags flags,

@@ -60,10 +60,14 @@ fu_linux_lockdown_plugin_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_linux_lockdown_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
 	g_autofree gchar *fn = NULL;
 
-	fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
+	fn =
+	    fu_context_build_filename(ctx, error, FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
+	if (fn == NULL)
+		return FALSE;
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -89,6 +93,7 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
 						    GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	const gchar *value;
 	gboolean secureboot_enabled = FALSE;
@@ -101,11 +106,11 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
 		return FALSE;
 
 	/* can we modify the args */
-	if (!fu_kernel_check_cmdline_mutable(error))
+	if (!fu_kernel_check_cmdline_mutable(pstore, error))
 		return FALSE;
 
 	/* get build flags */
-	config = fu_kernel_get_config(error);
+	config = fu_kernel_get_config(pstore, error);
 	if (config == NULL)
 		return FALSE;
 	if (!g_hash_table_contains(config, "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE")) {

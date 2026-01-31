@@ -311,12 +311,10 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_MTD_VERBOSE", "1", TRUE);
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	/* do not save silo */
 	self->ctx = fu_context_new();
+	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
 	fu_config_set_basename(fu_context_get_config(self->ctx), "mtd-fwupd.conf");
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);

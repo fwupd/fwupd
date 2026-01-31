@@ -271,7 +271,13 @@ fu_efi_load_option_hive_func(void)
 static void
 fu_efi_load_option_func(void)
 {
-	g_autoptr(FuEfivars) efivars = fu_efivars_new();
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuEfivars) efivars = NULL;
+
+	/* load actual data from the hardware */
+	fu_path_store_load_defaults(pstore);
+	efivars = fu_efivars_new(pstore);
+
 	/*
 	 * 0000 = Linux-Firmware-Updater
 	 * 0001 = Fedora

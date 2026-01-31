@@ -93,7 +93,7 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, const gchar *fn, GError **error)
 }
 
 FuLinuxSwap *
-fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
+fu_linux_swap_new(FuPathStore *pstore, const gchar *buf, gsize bufsz, GError **error)
 {
 	g_autoptr(FuLinuxSwap) self = g_object_new(FU_TYPE_LINUX_SWAP, NULL);
 	g_auto(GStrv) lines = NULL;
@@ -122,7 +122,11 @@ fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
 				g_autofree gchar *path = NULL;
 
 				/* get the path to the file */
-				path = fu_path_build(FU_PATH_KIND_HOSTFS_ROOT, fn, NULL);
+				path = fu_path_store_build_filename(pstore,
+								    error,
+								    FU_PATH_KIND_HOSTFS_ROOT,
+								    fn,
+								    NULL);
 
 				self->enabled_cnt++;
 				if (!fu_linux_swap_verify_file(self, path, error))
