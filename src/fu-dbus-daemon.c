@@ -1788,6 +1788,13 @@ static void
 fu_dbus_daemon_authorize_modify_device_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 
 	fu_dbus_daemon_authorize_modify_device_internal(
 	    fu_daemon_get_engine(FU_DAEMON(helper->self)),
