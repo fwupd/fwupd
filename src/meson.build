@@ -294,6 +294,7 @@ if get_option('tests')
     'history',
     'idle',
     'plugin-list',
+    'remote-list',
     'self',
     'unix-seekable-input-stream',
     'usb-backend',
