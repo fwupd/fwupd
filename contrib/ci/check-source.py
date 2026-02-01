@@ -1154,7 +1154,7 @@ class Checker:
     def _test_device_convert_version(self, nodes: list[Node]) -> None:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
-            "fu-self-test.c",
+            "fu-engine-test.c",
         ]:
             return
 
