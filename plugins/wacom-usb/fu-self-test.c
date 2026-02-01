@@ -71,9 +71,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
 	/* log everything */
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 

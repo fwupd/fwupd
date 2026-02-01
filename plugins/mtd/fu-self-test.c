@@ -323,7 +323,6 @@ main(int argc, char **argv)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_data_func("/mtd/device{raw}", self, fu_test_mtd_device_raw_func);
 	g_test_add_data_func("/mtd/device{uswid}", self, fu_test_mtd_device_uswid_func);
 	g_test_add_data_func("/mtd/device{ifd}", self, fu_test_mtd_device_ifd_func);

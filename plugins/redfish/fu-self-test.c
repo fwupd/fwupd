@@ -655,7 +655,6 @@ main(int argc, char **argv)
 	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.xml", NULL);
 	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
 
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	fu_test_self_init(self);
 	g_test_add_func("/redfish/ipmi", fu_test_redfish_ipmi_func);
 	g_test_add_func("/redfish/common", fu_test_redfish_common_func);
