@@ -516,6 +516,7 @@ if get_option('tests')
     'device-locker',
     'efi',
     'efivars',
+    'fdt-firmware',
     'firmware',
     'hid-descriptor',
     'hwids',
