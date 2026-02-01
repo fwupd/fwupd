@@ -135,8 +135,6 @@ int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/uefi/mok{nx-disabled}", fu_uefi_mok_nx_disabled_func);
 	g_test_add_func("/uefi/mok{nx-invalid}", fu_uefi_mok_nx_invalid_func);

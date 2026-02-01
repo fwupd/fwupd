@@ -42,7 +42,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
 	g_test_add_func("/acpi-phat/parse", fu_acpi_phat_parse_func);
