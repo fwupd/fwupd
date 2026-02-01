@@ -502,6 +502,7 @@ if get_option('tests')
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   foreach test_name: [
+    'backend',
     'bios-settings',
     'byte-array',
     'bytes',
