@@ -290,6 +290,7 @@ if get_option('tests')
     'cabinet',
     'client-list',
     'idle',
+    'plugin-list',
     'self',
     'unix-seekable-input-stream',
   ]
