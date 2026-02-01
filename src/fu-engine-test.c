@@ -6,57 +6,102 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
-#include <fcntl.h>
-#include <glib/gstdio.h>
-#include <string.h>
-
 #include "fwupd-remote-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
-#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
-#include "fu-cabinet.h"
-#include "fu-client-list.h"
-#include "fu-config-private.h"
-#include "fu-console.h"
 #include "fu-context-private.h"
-#include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-drm-device-private.h"
 #include "fu-efivars-private.h"
-#include "fu-engine-config.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
-#include "fu-idle.h"
-#include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
-#include "fu-release-common.h"
-#include "fu-remote-list.h"
 #include "fu-remote.h"
 #include "fu-security-attrs-private.h"
 #include "fu-test.h"
-#include "fu-usb-backend.h"
-#include "fu-util-common.h"
-
-#ifdef HAVE_GIO_UNIX
-#include "fu-unix-seekable-input-stream.h"
-#endif
-
-#pragma GCC diagnostic ignored "-Wanalyzer-null-argument"
 
 static void
-fu_self_test_mkroot(void)
+fu_engine_save_remote_broken(FuTemporaryDirectory *tmpdir)
 {
-	if (g_file_test("/tmp/fwupd-self-test", G_FILE_TEST_EXISTS)) {
-		g_autoptr(GError) error = NULL;
-		if (!fu_path_rmtree("/tmp/fwupd-self-test", &error))
-			g_warning("failed to mkroot: %s", error->message);
-	}
-	g_assert_cmpint(g_mkdir_with_parents("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *uri = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	uri = g_strdup_printf("file://%s/broken.xml.gz", fu_temporary_directory_get_path(tmpdir));
+	fwupd_remote_set_id(remote, "broken");
+	fwupd_remote_set_metadata_uri(remote, uri);
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
+
+	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "broken.conf", NULL);
+	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_engine_save_remote_stable(FuTemporaryDirectory *tmpdir)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *uri = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	uri = g_strdup_printf("file://%s/stable.xml", fu_temporary_directory_get_path(tmpdir));
+	fwupd_remote_set_id(remote, "stable");
+	fwupd_remote_set_metadata_uri(remote, uri);
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
+
+	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "stable.conf", NULL);
+	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_engine_save_remote_directory(FuTemporaryDirectory *tmpdir)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *uri = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	uri = g_strdup_printf("file://%s", fu_temporary_directory_get_path(tmpdir));
+	fwupd_remote_set_id(remote, "directory");
+	fwupd_remote_set_metadata_uri(remote, uri);
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
+
+	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "directory.conf", NULL);
+	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_engine_save_remote_testing(FuTemporaryDirectory *tmpdir)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *uri = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	uri = g_strdup_printf("file://%s/testing.xml", fu_temporary_directory_get_path(tmpdir));
+	fwupd_remote_set_id(remote, "testing");
+	fwupd_remote_set_metadata_uri(remote, uri);
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
+
+	fn = fu_temporary_directory_build(tmpdir, "remotes.d", "testing.conf", NULL);
+	ret = fu_remote_save_to_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -65,7 +110,7 @@ fu_engine_generate_md_func(void)
 	const gchar *tmp;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_archive = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
@@ -79,9 +124,10 @@ fu_engine_generate_md_func(void)
 	tmpdir = fu_temporary_directory_new("self-tests", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
+	fu_engine_save_remote_directory(tmpdir);
 
 	/* put cab file somewhere we can parse it */
 	filename = g_test_build_filename(G_TEST_BUILT,
@@ -94,7 +140,8 @@ fu_engine_generate_md_func(void)
 	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
-	ret = fu_bytes_set_contents("/tmp/fwupd-self-test/var/cache/fwupd/foo.cab", data, &error);
+	fn_archive = fu_temporary_directory_build(tmpdir, "foo.cab", NULL);
+	ret = fu_bytes_set_contents(fn_archive, data, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1235,7 +1282,9 @@ fu_engine_downgrade_func(void)
 {
 	FwupdRelease *rel;
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_broken = NULL;
+	g_autofree gchar *fn_stable = NULL;
+	g_autofree gchar *fn_testing = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
@@ -1256,27 +1305,26 @@ fu_engine_downgrade_func(void)
 	tmpdir = fu_temporary_directory_new("self-tests", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
+	fu_engine_save_remote_broken(tmpdir);
+	fu_engine_save_remote_stable(tmpdir);
+	fu_engine_save_remote_testing(tmpdir);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* write a broken file */
-	ret = g_file_set_contents("/tmp/fwupd-self-test/broken.xml.gz",
-				  "this is not a valid",
-				  -1,
-				  &error);
+	fn_broken = fu_temporary_directory_build(tmpdir, "broken.xml.gz", NULL);
+	ret = g_file_set_contents(fn_broken, "this is not a valid", -1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* write the main file */
+	fn_stable = fu_temporary_directory_build(tmpdir, "stable.xml", NULL);
 	ret = g_file_set_contents(
-	    "/tmp/fwupd-self-test/stable.xml",
+	    fn_stable,
 	    "<components>"
 	    "  <component type=\"firmware\">"
 	    "    <id>test</id>"
@@ -1312,8 +1360,9 @@ fu_engine_downgrade_func(void)
 	g_assert_true(ret);
 
 	/* write the extra file */
+	fn_testing = fu_temporary_directory_build(tmpdir, "testing.xml", NULL);
 	ret = g_file_set_contents(
-	    "/tmp/fwupd-self-test/testing.xml",
+	    fn_testing,
 	    "<components>"
 	    "  <component type=\"firmware\">"
 	    "    <id>test</id>"
@@ -1360,7 +1409,7 @@ fu_engine_downgrade_func(void)
 	remotes = fu_engine_get_remotes(engine, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(remotes);
-	g_assert_cmpint(remotes->len, ==, 7);
+	g_assert_cmpint(remotes->len, ==, 3);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices(engine, &error);
@@ -1437,7 +1486,7 @@ fu_engine_md_verfmt_func(void)
 {
 	FwupdRemote *remote;
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_stable = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
@@ -1453,19 +1502,18 @@ fu_engine_md_verfmt_func(void)
 	tmpdir = fu_temporary_directory_new("self-tests", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
+	fu_engine_save_remote_stable(tmpdir);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* write the main file */
+	fn_stable = fu_temporary_directory_build(tmpdir, "stable.xml", NULL);
 	ret = g_file_set_contents(
-	    "/tmp/fwupd-self-test/stable.xml",
+	    fn_stable,
 	    "<components>"
 	    "  <component type=\"firmware\">"
 	    "    <id>test</id>"
@@ -1568,7 +1616,7 @@ fu_engine_install_duration_func(void)
 {
 	FwupdRelease *rel;
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_stable = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
@@ -1584,19 +1632,18 @@ fu_engine_install_duration_func(void)
 	tmpdir = fu_temporary_directory_new("self-tests", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
+	fu_engine_save_remote_stable(tmpdir);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* write the main file */
+	fn_stable = fu_temporary_directory_build(tmpdir, "stable.xml", NULL);
 	ret = g_file_set_contents(
-	    "/tmp/fwupd-self-test/stable.xml",
+	    fn_stable,
 	    "<components>"
 	    "  <component type=\"firmware\">"
 	    "    <id>test</id>"
@@ -1656,7 +1703,7 @@ static void
 fu_engine_release_dedupe_func(void)
 {
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_stable = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
@@ -1672,19 +1719,18 @@ fu_engine_release_dedupe_func(void)
 	tmpdir = fu_temporary_directory_new("self-tests", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
-
-	/* ensure empty tree */
-	fu_self_test_mkroot();
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
+	fu_engine_save_remote_stable(tmpdir);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* write the main file */
+	fn_stable = fu_temporary_directory_build(tmpdir, "stable.xml", NULL);
 	ret = g_file_set_contents(
-	    "/tmp/fwupd-self-test/stable.xml",
+	    fn_stable,
 	    "<components>"
 	    "  <component type=\"firmware\">"
 	    "    <id>test</id>"
@@ -2803,23 +2849,14 @@ fu_test_plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer u
 }
 
 static void
-fu_plugin_module_func(void)
+fu_engine_plugin_module_func(void)
 {
 	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-
-	/* set up test harness */
-	tmpdir = fu_temporary_directory_new("plugin-module", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(tmpdir);
-	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALCONFDIR_PKG, tmpdir);
 
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(ctx,
@@ -2829,9 +2866,6 @@ fu_plugin_module_func(void)
 				     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* no metadata in daemon */
-	fu_engine_set_silo(engine, silo_empty);
 
 	/* create a fake device */
 	ret = fu_plugin_set_config_value(plugin, "RegistrationSupported", "true", &error);
@@ -2934,7 +2968,7 @@ fu_plugin_composite_release_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static void
-fu_plugin_composite_func(void)
+fu_engine_plugin_composite_func(void)
 {
 	FuDevice *dev_tmp;
 	GError *error = NULL;
@@ -3138,7 +3172,7 @@ fu_plugin_composite_func(void)
 }
 
 static void
-fu_plugin_composite_multistep_func(void)
+fu_engine_plugin_composite_multistep_func(void)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
@@ -4083,7 +4117,7 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
-	g_test_add_func("/fwupd/plugin/module", fu_plugin_module_func);
+	g_test_add_func("/fwupd/engine/plugin/module", fu_engine_plugin_module_func);
 	g_test_add_func("/fwupd/engine/get-details-added", fu_engine_get_details_added_func);
 	g_test_add_func("/fwupd/engine/get-details-missing", fu_engine_get_details_missing_func);
 	g_test_add_func("/fwupd/engine/device-unlock", fu_engine_device_unlock_func);
@@ -4127,9 +4161,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/generate-md", fu_engine_generate_md_func);
 	g_test_add_func("/fwupd/engine/plugin-gtypes", fu_engine_plugin_gtypes_func);
 	g_test_add_func("/fwupd/engine/better-than", fu_engine_device_better_than_func);
-	g_test_add_func("/fwupd/plugin/mutable", fu_engine_test_plugin_mutable_enumeration);
-	g_test_add_func("/fwupd/plugin/composite", fu_plugin_composite_func);
-	g_test_add_func("/fwupd/plugin/composite-multistep", fu_plugin_composite_multistep_func);
-	g_test_add_func("/fwupd/write-bios-attrs", fu_engine_modify_bios_settings_func);
+	g_test_add_func("/fwupd/engine/plugin/mutable", fu_engine_test_plugin_mutable_enumeration);
+	g_test_add_func("/fwupd/engine/plugin/composite", fu_engine_plugin_composite_func);
+	g_test_add_func("/fwupd/engine/plugin/composite-multistep",
+			fu_engine_plugin_composite_multistep_func);
+	g_test_add_func("/fwupd/engine/write-bios-attrs", fu_engine_modify_bios_settings_func);
 	return g_test_run();
 }
