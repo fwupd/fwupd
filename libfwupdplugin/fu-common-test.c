@@ -119,6 +119,49 @@ fu_common_guid_func(void)
 	g_assert_true(ret);
 }
 
+static void
+fu_common_olson_timezone_id_func(void)
+{
+	g_autofree gchar *localtime = NULL;
+	g_autofree gchar *timezone_id = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+#ifdef HOST_MACHINE_SYSTEM_DARWIN
+	g_test_skip("not supported on Darwin");
+	return;
+#endif
+
+	/* set up test harness */
+	localtime = g_test_build_filename(G_TEST_DIST, "tests", "localtime", NULL);
+	fu_path_store_set_path(pstore, FU_PATH_KIND_LOCALTIME, localtime);
+
+	timezone_id = fu_common_get_olson_timezone_id(pstore, &error);
+	g_assert_no_error(error);
+#ifdef _WIN32
+	/* we do not emulate this on Windows, so just check for anything */
+	g_assert_nonnull(timezone_id);
+#else
+	g_assert_cmpstr(timezone_id, ==, "America/New_York");
+#endif
+}
+
+static void
+fu_cpuid_func(void)
+{
+	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) cpu_attrs = NULL;
+
+	fu_path_store_set_path(pstore, FU_PATH_KIND_PROCFS, testdatadir);
+	cpu_attrs = fu_cpu_get_attrs(pstore, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(cpu_attrs);
+	g_assert_cmpstr(g_hash_table_lookup(cpu_attrs, "vendor_id"), ==, "AuthenticAMD");
+	g_assert_cmpstr(g_hash_table_lookup(cpu_attrs, "fpu_exception"), ==, "yes");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -129,5 +172,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common/bitwise", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common/crc", fu_common_crc_func);
 	g_test_add_func("/fwupd/common/guid", fu_common_guid_func);
+	g_test_add_func("/fwupd/common/olson-timezone-id", fu_common_olson_timezone_id_func);
+	g_test_add_func("/fwupd/common/cpuid", fu_cpuid_func);
 	return g_test_run();
 }
