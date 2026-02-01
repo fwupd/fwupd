@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#define NVT_TS_PLUGIN_VERSION "3.0.1"
+
 /* plugin type */
 #define FU_TYPE_NVT_TS_PLUGIN (fu_nvt_ts_plugin_get_type())
 G_DECLARE_FINAL_TYPE(FuNvtTsPlugin, fu_nvt_ts_plugin, FU, NVT_TS_PLUGIN, FuPlugin)

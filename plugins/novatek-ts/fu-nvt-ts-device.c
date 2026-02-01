@@ -1290,13 +1290,13 @@ fu_nvt_ts_device_read_flash_pid_gcm(FuNvtTsDevice *self, GError **error)
 	}
 
 	if (!fu_nvt_ts_device_switch_gcm(self, 1, error))
-		return -EIO;
+		return FALSE;
 
 	if (!fu_nvt_ts_device_resume_pd_gcm(self, error))
-		return -EIO;
+		return FALSE;
 
 	if (!fu_nvt_ts_device_read_flash_mid_did_gcm(self, error))
-		return -EIO;
+		return FALSE;
 
 	if (!fu_nvt_ts_device_ensure_read_flash_method(self, error))
 		return FALSE;
