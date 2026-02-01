@@ -127,8 +127,6 @@ int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
 	g_test_init(&argc, &argv, NULL);
 
 	/* tests go here */

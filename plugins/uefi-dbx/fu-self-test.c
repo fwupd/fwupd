@@ -166,7 +166,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 
 	/* tests go here */
