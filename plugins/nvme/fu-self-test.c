@@ -126,6 +126,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/serial-suffix", fu_nvme_serial_suffix_func);
 	g_test_add_func("/fwupd/cns", fu_nvme_cns_func);
-	g_test_add_func("/fwupd/cns{all}", fu_nvme_cns_all_func);
+	g_test_add_func("/fwupd/cns/all", fu_nvme_cns_all_func);
 	return g_test_run();
 }

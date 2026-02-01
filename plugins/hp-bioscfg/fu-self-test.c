@@ -176,13 +176,13 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	fu_test_self_init(self);
-	g_test_add_data_func("/fwupd/plugin{hp-bioscfg:surestart-enabled}",
+	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-enabled",
 			     self,
 			     fu_plugin_hp_bioscfg_surestart_enabled);
-	g_test_add_data_func("/fwupd/plugin{hp-bioscfg:surestart-disabled}",
+	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-disabled",
 			     self,
 			     fu_plugin_hp_bioscfg_surestart_disabled);
-	g_test_add_data_func("/fwupd/plugin{hp-bioscfg:surestart-not-available}",
+	g_test_add_data_func("/fwupd/plugin/hp-bioscfg/surestart-not-available",
 			     self,
 			     fu_plugin_hp_bioscfg_surestart_not_available);
 	return g_test_run();

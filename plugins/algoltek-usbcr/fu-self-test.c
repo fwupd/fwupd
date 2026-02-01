@@ -30,6 +30,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_ALGOLTEK_USBCR_FIRMWARE);
-	g_test_add_func("/fwupd/algoltek-usbcr/firmware{xml}", fu_algoltek_usbcr_firmware_xml_func);
+	g_test_add_func("/fwupd/algoltek-usbcr/xml", fu_algoltek_usbcr_firmware_xml_func);
 	return g_test_run();
 }

@@ -193,9 +193,9 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_SYNAPTICS_MST_FIRMWARE);
-	g_test_add_func("/fwupd/plugin/synaptics_mst{none}", fu_plugin_synaptics_mst_none_func);
-	g_test_add_func("/fwupd/plugin/synaptics_mst{tb16}", fu_plugin_synaptics_mst_tb16_func);
-	g_test_add_func("/fwupd/plugin/synaptics_mst/firmware{xml}",
+	g_test_add_func("/fwupd/plugin/synaptics_mst/none", fu_plugin_synaptics_mst_none_func);
+	g_test_add_func("/fwupd/plugin/synaptics_mst/tb16", fu_plugin_synaptics_mst_tb16_func);
+	g_test_add_func("/fwupd/plugin/synaptics_mst/firmware/xml",
 			fu_synaptics_mst_firmware_xml_func);
 	return g_test_run();
 }

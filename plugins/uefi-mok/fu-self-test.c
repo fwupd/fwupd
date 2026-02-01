@@ -136,8 +136,8 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/uefi/mok{nx-disabled}", fu_uefi_mok_nx_disabled_func);
-	g_test_add_func("/uefi/mok{nx-invalid}", fu_uefi_mok_nx_invalid_func);
-	g_test_add_func("/uefi/mok{nx-valid}", fu_uefi_mok_nx_valid_func);
+	g_test_add_func("/uefi/mok/nx-disabled", fu_uefi_mok_nx_disabled_func);
+	g_test_add_func("/uefi/mok/nx-invalid", fu_uefi_mok_nx_invalid_func);
+	g_test_add_func("/uefi/mok/nx-valid", fu_uefi_mok_nx_valid_func);
 	return g_test_run();
 }

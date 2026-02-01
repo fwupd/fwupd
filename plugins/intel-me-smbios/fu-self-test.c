@@ -14,7 +14,7 @@
 #include "fu-smbios-private.h"
 
 static void
-fu_intel_me_smbios_plugin_subtype18_func(void)
+fu_intel_me_smbios_subtype18_func(void)
 {
 	gboolean ret;
 	FuDevice *device_tmp;
@@ -56,7 +56,7 @@ fu_intel_me_smbios_plugin_subtype18_func(void)
 }
 
 static void
-fu_intel_me_smbios_plugin_subtype30_func(void)
+fu_intel_me_smbios_subtype30_func(void)
 {
 	gboolean ret;
 	FuDevice *device_tmp;
@@ -99,9 +99,7 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/intel-me-smbios/plugin{subtype-0x18}",
-			fu_intel_me_smbios_plugin_subtype18_func);
-	g_test_add_func("/intel-me-smbios/plugin{subtype-0x30}",
-			fu_intel_me_smbios_plugin_subtype30_func);
+	g_test_add_func("/intel-me-smbios/subtype-0x18", fu_intel_me_smbios_subtype18_func);
+	g_test_add_func("/intel-me-smbios/subtype-0x30", fu_intel_me_smbios_subtype30_func);
 	return g_test_run();
 }
