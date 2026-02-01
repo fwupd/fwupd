@@ -529,6 +529,7 @@ if get_option('tests')
     'protobuf',
     'security-attrs',
     'self',
+    'smbios',
     'srec-firmware',
     'string',
     'struct',
