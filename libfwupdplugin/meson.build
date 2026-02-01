@@ -509,6 +509,7 @@ if get_option('tests')
     'chunk-array',
     'common',
     'composite-input-stream',
+    'config',
     'device',
     'device-event',
     'device-locker',
