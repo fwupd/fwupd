@@ -511,6 +511,7 @@ if get_option('tests')
     'common',
     'composite-input-stream',
     'config',
+    'context',
     'device',
     'device-event',
     'device-locker',
