@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define NVT_TS_PLUGIN_VERSION "3.0.1"
+#define NVT_TS_PLUGIN_VERSION "3.0.2"
 
 /* plugin type */
 #define FU_TYPE_NVT_TS_PLUGIN (fu_nvt_ts_plugin_get_type())
@@ -60,7 +60,6 @@ typedef struct {
 	uint32_t flash_cmd_issue_addr;
 	uint32_t flash_cksum_status_addr;
 	uint32_t bld_spe_pups_addr;
-	uint32_t q_wr_cmd_addr;
 } FuNvtTsMemMap;
 
 typedef struct {

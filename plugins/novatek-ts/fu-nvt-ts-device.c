@@ -29,7 +29,6 @@ static const FuNvtTsMemMap nt36536_cascade_memory_map = {
     .flash_cmd_issue_addr = FU_NVT_TS_MEM_MAP_REG_FLASH_CMD_ISSUE_ADDR,
     .flash_cksum_status_addr = FU_NVT_TS_MEM_MAP_REG_FLASH_CKSUM_STATUS_ADDR,
     .gcm_flag_addr = FU_NVT_TS_MEM_MAP_REG_GCM_FLAG_ADDR,
-    .q_wr_cmd_addr = FU_NVT_TS_MEM_MAP_REG_Q_WR_CMD_ADDR,
 };
 
 static const FuNvtTsFlashMap nt36536_flash_map = {
