@@ -8,35 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include <glib/gstdio.h>
-#include <string.h>
-
-#include "fwupd-enums-private.h"
-#include "fwupd-security-attr-private.h"
-
-#include "fu-bios-settings-private.h"
-#include "fu-cab-firmware-private.h"
-#include "fu-config-private.h"
 #include "fu-context-private.h"
-#include "fu-device-event-private.h"
-#include "fu-device-private.h"
-#include "fu-device-progress.h"
-#include "fu-dummy-efivars.h"
-#include "fu-efi-lz77-decompressor.h"
-#include "fu-efi-x509-signature-private.h"
-#include "fu-efivars-private.h"
-#include "fu-kernel-search-path-private.h"
-#include "fu-plugin-private.h"
-#include "fu-progress-private.h"
-#include "fu-security-attrs-private.h"
-#include "fu-self-test-device.h"
-#include "fu-self-test-struct.h"
-#include "fu-smbios-private.h"
-#include "fu-test.h"
-#include "fu-udev-device-private.h"
-#include "fu-volume-private.h"
-
-/* nocheck:magic-inlines=300 */
 
 static void
 fu_archive_invalid_func(void)
