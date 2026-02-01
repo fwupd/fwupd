@@ -517,6 +517,7 @@ if get_option('tests')
     'efivars',
     'firmware',
     'hid-descriptor',
+    'hwids',
     'ihex-firmware',
     'input-stream',
     'intel-me',
