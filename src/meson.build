@@ -285,28 +285,34 @@ if get_option('tests')
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
-  e = executable(
-    'fu-self-test',
-    fwupdengine_rs,
-    colorhug_test_firmware,
-    hwid_test_firmware,
-    multiple_rels_test_firmware,
-    noreqs_test_firmware,
-    plugins_hdr,
-    firmware_xml_gz_jcat,
-    sources: ['fu-self-test.c'],
-    include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
-    dependencies: [engine_dep],
-    link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
-    c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
-  )
-  test(
-    'fu-self-test',
-    e,
-    is_parallel: false,
-    timeout: 180,
-    env: env,
-  )
+
+  foreach test_name: [
+    'idle',
+    'self',
+  ]
+    e = executable(
+      'fu-' + test_name + '-test',
+      fwupdengine_rs,
+      colorhug_test_firmware,
+      hwid_test_firmware,
+      multiple_rels_test_firmware,
+      noreqs_test_firmware,
+      plugins_hdr,
+      firmware_xml_gz_jcat,
+      sources: ['fu-' + test_name + '-test.c'],
+      include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
+      dependencies: [engine_dep],
+      link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
+      c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
+    )
+    test(
+      'fu-' + test_name + '-test',
+      e,
+      is_parallel: false,
+      timeout: 180,
+      env: env,
+    )
+  endforeach
 
   if polkit.found()
     e = executable(
