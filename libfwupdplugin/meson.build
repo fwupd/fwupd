@@ -531,6 +531,7 @@ if get_option('tests')
     'msgpack',
     'partial-input-stream',
     'path-store',
+    'plugin',
     'progress',
     'protobuf',
     'quirks',
