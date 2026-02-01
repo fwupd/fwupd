@@ -513,6 +513,7 @@ if get_option('tests')
     'device-event',
     'device-locker',
     'efi',
+    'efivars',
     'firmware',
     'hid-descriptor',
     'ihex-firmware',
