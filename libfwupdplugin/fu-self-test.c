@@ -378,7 +378,7 @@ static void
 fu_context_efivars_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(GError) error = NULL;
 
 	ret = fu_context_efivars_check_free_space(ctx, 10240, &error);
@@ -2402,7 +2402,7 @@ fu_efivar_boot_func(void)
 	gboolean ret;
 	guint16 idx = 0;
 	g_autofree gchar *pefile_fn = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuEfiLoadOption) loadopt2 = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(FuVolume) volume = NULL;
@@ -2695,8 +2695,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-
 	g_test_add_func("/fwupd/plugin/quirks-append", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks/vendor-ids", fu_quirks_vendor_ids_func);
 	g_test_add_func("/fwupd/common/olson-timezone-id", fu_common_olson_timezone_id_func);
