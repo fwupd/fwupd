@@ -296,6 +296,7 @@ if get_option('tests')
     'plugin-list',
     'self',
     'unix-seekable-input-stream',
+    'usb-backend',
     'util',
   ]
     e = executable(
