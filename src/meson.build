@@ -287,6 +287,7 @@ if get_option('tests')
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
 
   foreach test_name: [
+    'cabinet',
     'client-list',
     'idle',
     'self',
