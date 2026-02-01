@@ -295,6 +295,7 @@ if get_option('tests')
     'plugin-list',
     'self',
     'unix-seekable-input-stream',
+    'util',
   ]
     e = executable(
       'fu-' + test_name + '-test',
