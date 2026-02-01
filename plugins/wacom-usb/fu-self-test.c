@@ -73,8 +73,6 @@ main(int argc, char **argv)
 
 	/* log everything */
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-
-	/* tests go here */
 	g_type_ensure(FU_TYPE_WACOM_USB_FIRMWARE);
 	g_test_add_func("/wacom-usb/firmware{parse}", fu_wacom_usb_firmware_parse_func);
 	g_test_add_func("/wacom-usb/firmware{xml}", fu_wacom_usb_firmware_xml_func);

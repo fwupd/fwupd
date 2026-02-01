@@ -124,8 +124,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_test_add_func("/fwupd/serial-suffix", fu_nvme_serial_suffix_func);
 	g_test_add_func("/fwupd/cns", fu_nvme_cns_func);
 	g_test_add_func("/fwupd/cns{all}", fu_nvme_cns_all_func);

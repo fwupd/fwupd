@@ -29,8 +29,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_type_ensure(FU_TYPE_BNR_DP_FIRMWARE);
 	g_test_add_func("/bnr-dp/firmware{xml}", fu_bnr_dp_firmware_xml_func);
 	return g_test_run();

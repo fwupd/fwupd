@@ -201,8 +201,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	fu_test_self_init(self);
 	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:bootorder-locked}",
 			     self,

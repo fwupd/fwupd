@@ -83,8 +83,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_test_add_func("/linux-swap/none", fu_linux_swap_none_func);
 	g_test_add_func("/linux-swap/plain", fu_linux_swap_plain_func);
 	g_test_add_func("/linux-swap/encrypted", fu_linux_swap_encrypted_func);

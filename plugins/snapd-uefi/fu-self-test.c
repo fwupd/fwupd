@@ -576,8 +576,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 	(void)g_setenv("FWUPD_SNAPD_SNAP_SOCKET", "/tmp/mock-snapd-test.sock", TRUE);
-
-	/* tests go here */
 	g_test_add("/uefi-dbx/startup",
 		   FuTestFixture,
 		   &simple,
@@ -717,6 +715,5 @@ main(int argc, char **argv)
 		   fu_self_test_set_up,
 		   fu_uefi_dbx_test_plugin_failed_update,
 		   fu_self_test_tear_down);
-
 	return g_test_run();
 }

@@ -1066,8 +1066,6 @@ main(int argc, char **argv)
 	/* find our version of grub-mkconfig */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("PATH", testdatadir, TRUE);
-
-	/* tests go here */
 	g_type_ensure(FU_TYPE_UEFI_UPDATE_INFO);
 	g_test_add_func("/uefi/update-esp-valid", fu_uefi_update_esp_valid_func);
 	g_test_add_func("/uefi/update-esp-invalid", fu_uefi_update_esp_invalid_func);

@@ -39,8 +39,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_test_add_func("/egic-moc/checksum", fu_egis_moc_checksum_func);
 	return g_test_run();
 }
