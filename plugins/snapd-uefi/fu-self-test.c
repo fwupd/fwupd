@@ -574,7 +574,6 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 	(void)g_setenv("FWUPD_SNAPD_SNAP_SOCKET", "/tmp/mock-snapd-test.sock", TRUE);
 	g_test_add("/uefi-dbx/startup",
 		   FuTestFixture,
