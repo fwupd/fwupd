@@ -532,6 +532,7 @@ if get_option('tests')
     'path-store',
     'progress',
     'protobuf',
+    'quirks',
     'security-attrs',
     'self',
     'smbios',
