@@ -290,6 +290,7 @@ if get_option('tests')
     'client-list',
     'idle',
     'self',
+    'unix-seekable-input-stream',
   ]
     e = executable(
       'fu-' + test_name + '-test',

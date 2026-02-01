@@ -7250,53 +7250,6 @@ fu_engine_modify_bios_settings_func(void)
 	g_clear_error(&error);
 }
 
-GFileInputStream *
-_g_local_file_input_stream_new(int fd);
-
-static void
-fu_unix_seekable_input_stream_func(void)
-{
-#ifdef HAVE_GIO_UNIX
-	gssize ret;
-	gint fd;
-	guint8 buf[6] = {0};
-	g_autofree gchar *fn = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
-	g_assert_nonnull(fn);
-	fd = g_open(fn, O_RDONLY, 0);
-	g_assert_cmpint(fd, >=, 0);
-
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
-	g_assert_nonnull(stream);
-
-	/* first chuck */
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_cmpint(ret, ==, 5);
-	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
-
-	/* second chuck */
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_cmpint(ret, ==, 5);
-	g_assert_cmpstr((const gchar *)buf, ==, " vers");
-
-	/* first chuck, again */
-	ret = g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_SET, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_cmpint(ret, ==, 1);
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_cmpint(ret, ==, 5);
-	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
-#else
-	g_test_skip("No gio-unix-2.0 support, skipping");
-#endif
-}
-
 static void
 fu_remote_download_func(void)
 {
@@ -8243,7 +8196,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/remote/duplicate", fu_remote_duplicate_func);
 	g_test_add_func("/fwupd/remote/auth", fu_remote_auth_func);
 	g_test_add_func("/fwupd/remote-list/repair", fu_remote_list_repair_func);
-	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
 	g_test_add_func("/fwupd/backend/usb", fu_backend_usb_func);
 	g_test_add_func("/fwupd/backend/usb-invalid", fu_backend_usb_invalid_func);
 	g_test_add_func("/fwupd/plugin/module", fu_plugin_module_func);
