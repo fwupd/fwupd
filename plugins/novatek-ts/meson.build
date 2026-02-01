@@ -6,9 +6,10 @@ plugins += { meson.current_source_dir().split('/')[-1] : true }
 
 plugin_builtins += static_library(
   'fu_plugin_nvt_ts',
-  rustgen.process('fu-nvt-ts-regs.rs'),
+  rustgen.process('fu-nvt-ts.rs'),
   sources: [
     'fu-nvt-ts-device.c',
+    'fu-nvt-ts-firmware.c',
     'fu-nvt-ts-plugin.c',
   ],
   include_directories: plugin_incdirs,

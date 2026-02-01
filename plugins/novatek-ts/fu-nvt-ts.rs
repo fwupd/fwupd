@@ -33,12 +33,8 @@ enum FuNvtTsFlashMapConst {
 struct FuStructNvtTsHidReadReq {
     i2c_hid_eng_report_id: u8,
     write_len: u16le,
-    i2c_eng_addr_0: u8,
-    i2c_eng_addr_1: u8,
-    i2c_eng_addr_2: u8,
-    target_addr_0: u8,
-    target_addr_1: u8,
-    target_addr_2: u8,
+    i2c_eng_addr: u24le,
+    target_addr: u24le,
     _reserved0: u8,
     len: u16le,
 }
@@ -48,7 +44,17 @@ struct FuStructNvtTsHidReadReq {
 struct FuStructNvtTsHidWriteHdr {
     i2c_hid_eng_report_id: u8,
     write_len: u16le,
-    target_addr_0: u8,
-    target_addr_1: u8,
-    target_addr_2: u8,
+    target_addr: u24le,
+}
+
+#[derive(New, Getters)]
+#[repr(C, packed)]
+struct FuStructNvtTsGcmCmd {
+    flash_cmd: u8,
+    flash_addr: u24le,
+    _reserved0: u8,
+    write_len: u16le,
+    read_len: u16le,
+    flash_checksum: u16le,
+    magic: u8,
 }
