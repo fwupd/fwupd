@@ -295,6 +295,7 @@ if get_option('tests')
     'history',
     'idle',
     'plugin-list',
+    'release',
     'remote',
     'remote-list',
     'self',
