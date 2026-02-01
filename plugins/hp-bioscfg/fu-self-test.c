@@ -175,8 +175,6 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	fu_test_self_init(self);
 	g_test_add_data_func("/fwupd/plugin{hp-bioscfg:surestart-enabled}",
 			     self,

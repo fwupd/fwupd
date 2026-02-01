@@ -223,8 +223,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_test_add_func("/devlink/plugin/flash", fu_devlink_plugin_flash_func);
 	return g_test_run();
 }

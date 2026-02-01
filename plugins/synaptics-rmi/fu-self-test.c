@@ -47,8 +47,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_type_ensure(FU_TYPE_SYNAPTICS_RMI_FIRMWARE);
 	g_test_add_func("/synaptics-rmi/firmware{0x}", fu_synaptics_rmi_firmware_0x_func);
 	g_test_add_func("/synaptics-rmi/firmware{10}", fu_synaptics_rmi_firmware_10_func);

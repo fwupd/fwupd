@@ -167,11 +167,8 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
 	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
-
 	return g_test_run();
 }

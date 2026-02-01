@@ -8312,8 +8312,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-
-	/* tests go here */
 	if (g_test_slow())
 		g_test_add_func("/fwupd/console", fu_console_func);
 	g_test_add_func("/fwupd/idle", fu_idle_func);

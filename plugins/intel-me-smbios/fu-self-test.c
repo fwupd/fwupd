@@ -99,8 +99,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_test_add_func("/intel-me-smbios/plugin{subtype-0x18}",
 			fu_intel_me_smbios_plugin_subtype18_func);
 	g_test_add_func("/intel-me-smbios/plugin{subtype-0x30}",

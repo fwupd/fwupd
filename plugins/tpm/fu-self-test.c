@@ -267,8 +267,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/tpm/pcrs1.2", fu_tpm_device_1_2_func);
 	g_test_add_func("/tpm/pcrs2.0", fu_tpm_device_2_0_func);
 	g_test_add_func("/tpm/empty-pcr", fu_tpm_empty_pcr_func);

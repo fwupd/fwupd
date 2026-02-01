@@ -128,8 +128,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_type_ensure(FU_TYPE_BCM57XX_FIRMWARE);
 	g_test_add_func("/fwupd/bcm57xx/firmware{xml}", fu_bcm57xx_firmware_xml_func);
 	g_test_add_func("/fwupd/bcm57xx/firmware{talos}", fu_bcm57xx_firmware_talos_func);

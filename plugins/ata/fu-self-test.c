@@ -85,8 +85,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* tests go here */
 	g_test_add_func("/fwupd/ata/id", fu_ata_id_func);
 	g_test_add_func("/fwupd/ata/oui", fu_ata_oui_func);
 	return g_test_run();
