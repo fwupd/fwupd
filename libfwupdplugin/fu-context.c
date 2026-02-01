@@ -2669,6 +2669,16 @@ fu_context_finalize(GObject *object)
 }
 
 static void
+fu_context_constructed(GObject *obj)
+{
+	FuContext *self = FU_CONTEXT(obj);
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	priv->efivars = (priv->flags & FU_CONTEXT_FLAG_DUMMY_EFIVARS) > 0
+			    ? fu_dummy_efivars_new()
+			    : fu_efivars_new(priv->pstore);
+}
+
+static void
 fu_context_class_init(FuContextClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -2677,6 +2687,7 @@ fu_context_class_init(FuContextClass *klass)
 	object_class->dispose = fu_context_dispose;
 	object_class->get_property = fu_context_get_property;
 	object_class->set_property = fu_context_set_property;
+	object_class->constructed = fu_context_constructed;
 
 	/**
 	 * FuContext:power-state:
@@ -2771,7 +2782,7 @@ fu_context_class_init(FuContextClass *klass)
 				    FU_CONTEXT_FLAG_NONE,
 				    G_MAXUINT64,
 				    FU_CONTEXT_FLAG_NONE,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
 	/**
@@ -2826,9 +2837,6 @@ fu_context_init(FuContext *self)
 	priv->smbios = fu_smbios_new(priv->pstore);
 	priv->hwids = fu_hwids_new();
 	priv->config = fu_config_new(priv->pstore);
-	priv->efivars = g_strcmp0(g_getenv("FWUPD_EFIVARS"), "dummy") == 0
-			    ? fu_dummy_efivars_new()
-			    : fu_efivars_new(priv->pstore);
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->udev_subsystems = g_hash_table_new_full(g_str_hash,
 						      g_str_equal,

@@ -7748,7 +7748,8 @@ static void
 fu_engine_integrity_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autofree gchar *str = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) integrity = NULL;
@@ -8311,7 +8312,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
-	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 	if (g_test_slow())
 		g_test_add_func("/fwupd/console", fu_console_func);
 	g_test_add_func("/fwupd/idle", fu_idle_func);

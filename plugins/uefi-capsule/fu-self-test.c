@@ -194,7 +194,7 @@ static void
 fu_uefi_cod_device_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *str = NULL;
@@ -309,7 +309,7 @@ fu_uefi_capsule_no_coalesce_func(void)
 	GPtrArray *devices;
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
@@ -428,7 +428,7 @@ fu_uefi_capsule_no_cod_func(void)
 	GType device_gtype;
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
@@ -492,7 +492,7 @@ fu_uefi_capsule_no_flashes_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -569,7 +569,7 @@ fu_uefi_capsule_nvram_func(void)
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *fwupdx64_efi_signed = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -753,7 +753,7 @@ fu_uefi_capsule_cod_func(void)
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -874,7 +874,7 @@ fu_uefi_capsule_grub_func(void)
 	g_autofree gchar *fwupdx64_efi_signed = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -986,7 +986,7 @@ fu_uefi_update_info_func(void)
 	FuUefiCapsuleDevice *dev;
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuBackend) backend = fu_uefi_capsule_backend_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuUefiUpdateInfo) info2 = fu_uefi_update_info_new();
@@ -1059,7 +1059,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
-	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	(void)g_setenv("LANGUAGE", "en", TRUE);
 
