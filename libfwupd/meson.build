@@ -297,7 +297,6 @@ if get_option('tests')
       e,
       timeout: 60,
       env: env,
-      args: ['--tap'],
     )
   endforeach
 
