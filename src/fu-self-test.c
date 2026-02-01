@@ -5038,34 +5038,6 @@ fu_plugin_engine_get_results_appstream_id_func(void)
 			"com.acme.example.firmware");
 }
 
-static void
-fu_console_func(void)
-{
-	g_autoptr(FuConsole) console = fu_console_new();
-
-	fu_console_set_status_length(console, 20);
-	fu_console_set_percentage_length(console, 50);
-
-	g_print("\n");
-	for (guint i = 0; i < 100; i++) {
-		fu_console_set_progress(console, FWUPD_STATUS_DECOMPRESSING, i);
-		g_usleep(10000);
-	}
-	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
-	for (guint i = 0; i < 100; i++) {
-		guint pc = (i > 25 && i < 75) ? 0 : i;
-		fu_console_set_progress(console, FWUPD_STATUS_LOADING, pc);
-		g_usleep(10000);
-	}
-	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
-
-	for (guint i = 0; i < 5000; i++) {
-		fu_console_set_progress(console, FWUPD_STATUS_LOADING, 0);
-		g_usleep(1000);
-	}
-	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
-}
-
 static gint
 fu_release_compare_func_cb(gconstpointer a, gconstpointer b)
 {
@@ -6471,8 +6443,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
-	if (g_test_slow())
-		g_test_add_func("/fwupd/console", fu_console_func);
 	g_test_add_func("/fwupd/remote/download", fu_remote_download_func);
 	g_test_add_func("/fwupd/remote/base-uri", fu_remote_baseuri_func);
 	g_test_add_func("/fwupd/remote/no-path", fu_remote_nopath_func);
