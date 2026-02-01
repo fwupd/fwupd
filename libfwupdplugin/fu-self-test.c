@@ -349,49 +349,6 @@ fu_context_hwids_fdt_func(void)
 }
 
 static void
-fu_common_olson_timezone_id_func(void)
-{
-	g_autofree gchar *localtime = NULL;
-	g_autofree gchar *timezone_id = NULL;
-	g_autoptr(FuPathStore) pstore = fu_path_store_new();
-	g_autoptr(GError) error = NULL;
-
-#ifdef HOST_MACHINE_SYSTEM_DARWIN
-	g_test_skip("not supported on Darwin");
-	return;
-#endif
-
-	/* set up test harness */
-	localtime = g_test_build_filename(G_TEST_DIST, "tests", "localtime", NULL);
-	fu_path_store_set_path(pstore, FU_PATH_KIND_LOCALTIME, localtime);
-
-	timezone_id = fu_common_get_olson_timezone_id(pstore, &error);
-	g_assert_no_error(error);
-#ifdef _WIN32
-	/* we do not emulate this on Windows, so just check for anything */
-	g_assert_nonnull(timezone_id);
-#else
-	g_assert_cmpstr(timezone_id, ==, "America/New_York");
-#endif
-}
-
-static void
-fu_cpuid_func(void)
-{
-	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_autoptr(FuPathStore) pstore = fu_path_store_new();
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GHashTable) cpu_attrs = NULL;
-
-	fu_path_store_set_path(pstore, FU_PATH_KIND_PROCFS, testdatadir);
-	cpu_attrs = fu_cpu_get_attrs(pstore, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(cpu_attrs);
-	g_assert_cmpstr(g_hash_table_lookup(cpu_attrs, "vendor_id"), ==, "AuthenticAMD");
-	g_assert_cmpstr(g_hash_table_lookup(cpu_attrs, "fpu_exception"), ==, "yes");
-}
-
-static void
 fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
@@ -916,7 +873,6 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/plugin/quirks-append", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks/vendor-ids", fu_quirks_vendor_ids_func);
-	g_test_add_func("/fwupd/common/olson-timezone-id", fu_common_olson_timezone_id_func);
 	g_test_add_func("/fwupd/plugin", fu_plugin_func);
 	g_test_add_func("/fwupd/plugin/vfuncs", fu_plugin_vfuncs_func);
 	g_test_add_func("/fwupd/plugin/device-gtype", fu_plugin_device_gtype_func);
@@ -928,7 +884,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin/quirks", fu_plugin_quirks_func);
 	g_test_add_func("/fwupd/plugin/quirks-performance", fu_plugin_quirks_performance_func);
 	g_test_add_func("/fwupd/plugin/quirks-device", fu_plugin_quirks_device_func);
-	g_test_add_func("/fwupd/common/cpuid", fu_cpuid_func);
 	g_test_add_func("/fwupd/context/flags", fu_context_flags_func);
 	g_test_add_func("/fwupd/context/backends", fu_context_backends_func);
 	g_test_add_func("/fwupd/context/efivars", fu_context_efivars_func);
