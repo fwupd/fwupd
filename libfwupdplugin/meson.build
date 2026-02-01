@@ -538,6 +538,7 @@ if get_option('tests')
     'string',
     'struct',
     'temporary-directory',
+    'udev-device',
     'version',
     'volume',
   ]
