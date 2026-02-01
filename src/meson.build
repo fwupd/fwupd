@@ -289,6 +289,7 @@ if get_option('tests')
   foreach test_name: [
     'cabinet',
     'client-list',
+    'console',
     'device-list',
     'history',
     'idle',
