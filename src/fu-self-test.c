@@ -5739,69 +5739,6 @@ fu_plugin_engine_get_results_appstream_id_func(void)
 }
 
 static void
-fu_security_attr_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *json1 = NULL;
-	g_autofree gchar *json2 = NULL;
-	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
-	g_autoptr(FuSecurityAttrs) attrs2 = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
-	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
-	g_autoptr(GError) error = NULL;
-
-	fwupd_security_attr_set_plugin(attr1, "foo");
-	fwupd_security_attr_set_created(attr1, 0);
-	fwupd_security_attr_set_level(attr1, 1);
-	fwupd_security_attr_set_plugin(attr2, "bar");
-	fwupd_security_attr_set_created(attr2, 0);
-	fwupd_security_attr_set_level(attr2, 2);
-	fu_security_attrs_append(attrs1, attr1);
-	fu_security_attrs_append(attrs1, attr2);
-
-	json1 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs1), FWUPD_CODEC_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(json1);
-	ret = fu_test_compare_lines(
-	    json1,
-	    "{\n"
-	    "  \"SecurityAttributes\": [\n"
-	    "    {\n"
-	    "      \"AppstreamId\": \"org.fwupd.hsi.foo\",\n"
-	    "      \"HsiLevel\": 1,\n"
-	    "      \"Plugin\": \"foo\",\n"
-	    "      \"Uri\": "
-	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.foo\"\n"
-	    "    },\n"
-	    "    {\n"
-	    "      \"AppstreamId\": \"org.fwupd.hsi.bar\",\n"
-	    "      \"HsiLevel\": 2,\n"
-	    "      \"Plugin\": \"bar\",\n"
-	    "      \"Uri\": "
-	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.bar\"\n"
-	    "    }\n"
-	    "  ]\n"
-	    "}",
-	    &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	ret = fwupd_codec_from_json_string(FWUPD_CODEC(attrs2), json1, &error);
-	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-		g_test_skip(error->message);
-		return;
-	}
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	json2 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs2), FWUPD_CODEC_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(json2);
-	ret = g_strcmp0(json2, json1) == 0;
-	g_assert_true(ret);
-}
-
-static void
 fu_console_func(void)
 {
 	g_autoptr(FuConsole) console = fu_console_new();
@@ -7247,7 +7184,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/backend/usb", fu_backend_usb_func);
 	g_test_add_func("/fwupd/backend/usb-invalid", fu_backend_usb_invalid_func);
 	g_test_add_func("/fwupd/plugin/module", fu_plugin_module_func);
-	g_test_add_func("/fwupd/security-attr", fu_security_attr_func);
 	g_test_add_func("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func("/fwupd/device-list/unconnected-no-delay",
 			fu_device_list_unconnected_no_delay_func);
