@@ -30,9 +30,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
 	/* tests go here */
 	g_type_ensure(FU_TYPE_PIXART_RF_FIRMWARE);
 	g_test_add_func("/pixart-rf/firmware{xml}", fu_pixart_rf_firmware_xml_func);
