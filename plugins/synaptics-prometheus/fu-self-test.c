@@ -111,7 +111,7 @@ main(int argc, char **argv)
 	g_type_ensure(FU_TYPE_SYNAPTICS_PROMETHEUS_FIRMWARE);
 	g_test_add_func("/synaptics-prometheus/firmware",
 			fu_test_synaptics_prometheus_firmware_func);
-	g_test_add_func("/synaptics-prometheus/firmware{xml}",
+	g_test_add_func("/synaptics-prometheus/firmware/xml",
 			fu_synaptics_prometheus_firmware_xml_func);
 	return g_test_run();
 }

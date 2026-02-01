@@ -323,10 +323,10 @@ main(int argc, char **argv)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_test_add_data_func("/mtd/device{raw}", self, fu_test_mtd_device_raw_func);
-	g_test_add_data_func("/mtd/device{uswid}", self, fu_test_mtd_device_uswid_func);
-	g_test_add_data_func("/mtd/device{ifd}", self, fu_test_mtd_device_ifd_func);
-	g_test_add_data_func("/mtd/device{fmap}", self, fu_test_mtd_device_fmap_func);
-	g_test_add_data_func("/mtd/device{smbios}", self, fu_test_mtd_device_smbios_func);
+	g_test_add_data_func("/mtd/device/raw", self, fu_test_mtd_device_raw_func);
+	g_test_add_data_func("/mtd/device/uswid", self, fu_test_mtd_device_uswid_func);
+	g_test_add_data_func("/mtd/device/ifd", self, fu_test_mtd_device_ifd_func);
+	g_test_add_data_func("/mtd/device/fmap", self, fu_test_mtd_device_fmap_func);
+	g_test_add_data_func("/mtd/device/smbios", self, fu_test_mtd_device_smbios_func);
 	return g_test_run();
 }

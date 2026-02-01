@@ -270,7 +270,7 @@ main(int argc, char **argv)
 	g_test_add_func("/tpm/pcrs1.2", fu_tpm_device_1_2_func);
 	g_test_add_func("/tpm/pcrs2.0", fu_tpm_device_2_0_func);
 	g_test_add_func("/tpm/empty-pcr", fu_tpm_empty_pcr_func);
-	g_test_add_func("/tpm/eventlog-parse{v1}", fu_tpm_eventlog_parse_v1_func);
-	g_test_add_func("/tpm/eventlog-parse{v2}", fu_tpm_eventlog_parse_v2_func);
+	g_test_add_func("/tpm/eventlog-parse/v1", fu_tpm_eventlog_parse_v1_func);
+	g_test_add_func("/tpm/eventlog-parse/v2", fu_tpm_eventlog_parse_v2_func);
 	return g_test_run();
 }

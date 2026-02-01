@@ -115,7 +115,7 @@ fu_test_probe_fake_esrt(FuTest *self)
 }
 
 static void
-fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
+fu_lenovo_thinklmi_bootorder_locked_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
@@ -136,7 +136,7 @@ fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
 }
 
 static void
-fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
+fu_lenovo_thinklmi_bootorder_unlocked_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
@@ -156,7 +156,7 @@ fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
 }
 
 static void
-fu_plugin_lenovo_thinklmi_reboot_pending(gconstpointer user_data)
+fu_lenovo_thinklmi_reboot_pending_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
@@ -202,14 +202,14 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	g_test_init(&argc, &argv, NULL);
 	fu_test_self_init(self);
-	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:bootorder-locked}",
+	g_test_add_data_func("/fwupd/lenovo-think-lmi/bootorder/locked",
 			     self,
-			     fu_plugin_lenovo_thinklmi_bootorder_locked);
-	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:bootorder-unlocked}",
+			     fu_lenovo_thinklmi_bootorder_locked_func);
+	g_test_add_data_func("/fwupd/lenovo-think-lmi/bootorder/unlocked",
 			     self,
-			     fu_plugin_lenovo_thinklmi_bootorder_unlocked);
-	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:reboot-pending}",
+			     fu_lenovo_thinklmi_bootorder_unlocked_func);
+	g_test_add_data_func("/fwupd/lenovo-think-lmi/reboot-pending",
 			     self,
-			     fu_plugin_lenovo_thinklmi_reboot_pending);
+			     fu_lenovo_thinklmi_reboot_pending_func);
 	return g_test_run();
 }

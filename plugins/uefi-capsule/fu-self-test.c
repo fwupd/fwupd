@@ -281,7 +281,7 @@ fu_uefi_cod_device_func(void)
 #endif
 
 static FuVolume *
-fu_uefi_plugin_fake_esp_new(FuTemporaryDirectory *tmpdir)
+fu_uefi_capsule_fake_esp_new(FuTemporaryDirectory *tmpdir)
 {
 	const gchar *tmpdir_path = fu_temporary_directory_get_path(tmpdir);
 	g_autofree gchar *tmpdir_efi = NULL;
@@ -302,7 +302,7 @@ fu_uefi_plugin_fake_esp_new(FuTemporaryDirectory *tmpdir)
 }
 
 static void
-fu_uefi_plugin_no_coalesce_func(void)
+fu_uefi_capsule_no_coalesce_func(void)
 {
 	FuUefiCapsuleDevice *dev1;
 	FuUefiCapsuleDevice *dev2;
@@ -331,7 +331,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up at least one HWID */
@@ -402,7 +402,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 }
 
 static void
-fu_uefi_plugin_setup_indications(FuContext *ctx, guint64 indications)
+fu_uefi_capsule_setup_indications(FuContext *ctx, guint64 indications)
 {
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gboolean ret;
@@ -422,7 +422,7 @@ fu_uefi_plugin_setup_indications(FuContext *ctx, guint64 indications)
 }
 
 static void
-fu_uefi_plugin_no_cod_func(void)
+fu_uefi_capsule_no_cod_func(void)
 {
 	FuBackend *backend;
 	GType device_gtype;
@@ -447,13 +447,13 @@ fu_uefi_plugin_no_cod_func(void)
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
 
 	/* the firmware supports CoD */
-	fu_uefi_plugin_setup_indications(ctx, EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED);
+	fu_uefi_capsule_setup_indications(ctx, EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED);
 
 	/* override ESP */
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up at least one HWID */
@@ -488,7 +488,7 @@ fu_uefi_plugin_no_cod_func(void)
 }
 
 static void
-fu_uefi_plugin_no_flashes_func(void)
+fu_uefi_capsule_no_flashes_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
@@ -510,7 +510,7 @@ fu_uefi_plugin_no_flashes_func(void)
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* do not save silo */
@@ -553,7 +553,7 @@ fu_uefi_plugin_no_flashes_func(void)
 }
 
 static gboolean
-fu_uefi_plugin_esp_file_exists(FuVolume *esp, const gchar *filename)
+fu_uefi_capsule_esp_file_exists(FuVolume *esp, const gchar *filename)
 {
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
 	g_autofree gchar *fn = g_build_filename(mount_point, filename, NULL);
@@ -561,7 +561,7 @@ fu_uefi_plugin_esp_file_exists(FuVolume *esp, const gchar *filename)
 }
 
 static void
-fu_uefi_plugin_nvram_func(void)
+fu_uefi_capsule_nvram_func(void)
 {
 	gboolean ret;
 	guint16 bootnext = 0;
@@ -595,7 +595,7 @@ fu_uefi_plugin_nvram_func(void)
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* also use the ESP for writes */
@@ -672,7 +672,7 @@ fu_uefi_plugin_nvram_func(void)
 
 #ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 	/* check UX splash was created */
-	g_assert_true(fu_uefi_plugin_esp_file_exists(
+	g_assert_true(fu_uefi_capsule_esp_file_exists(
 	    esp,
 	    "EFI/" EFI_OS_DIR "/fw/fwupd-" FU_EFIVARS_GUID_UX_CAPSULE ".cap"));
 	g_assert_true(fu_efivars_exists(fu_context_get_efivars(ctx),
@@ -681,7 +681,7 @@ fu_uefi_plugin_nvram_func(void)
 #endif
 
 	/* check FW was created */
-	g_assert_true(fu_uefi_plugin_esp_file_exists(
+	g_assert_true(fu_uefi_capsule_esp_file_exists(
 	    esp,
 	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 #ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
@@ -724,13 +724,13 @@ fu_uefi_plugin_nvram_func(void)
 	g_assert_true(ret);
 
 	/* check both files and variables no longer exist */
-	g_assert_false(fu_uefi_plugin_esp_file_exists(
+	g_assert_false(fu_uefi_capsule_esp_file_exists(
 	    esp,
 	    "EFI/" EFI_OS_DIR "/fw/fwupd-" FU_EFIVARS_GUID_UX_CAPSULE ".cap"));
 	g_assert_false(fu_efivars_exists(fu_context_get_efivars(ctx),
 					 FU_EFIVARS_GUID_FWUPDATE,
 					 "fwupd-ux-capsule"));
-	g_assert_false(fu_uefi_plugin_esp_file_exists(
+	g_assert_false(fu_uefi_capsule_esp_file_exists(
 	    esp,
 	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 	g_assert_false(fu_efivars_exists(fu_context_get_efivars(ctx),
@@ -748,7 +748,7 @@ fu_uefi_plugin_nvram_func(void)
 }
 
 static void
-fu_uefi_plugin_cod_func(void)
+fu_uefi_capsule_cod_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
@@ -772,7 +772,7 @@ fu_uefi_plugin_cod_func(void)
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up system  */
@@ -832,7 +832,7 @@ fu_uefi_plugin_cod_func(void)
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_true(fu_uefi_plugin_esp_file_exists(
+	g_assert_true(fu_uefi_capsule_esp_file_exists(
 	    esp,
 	    "EFI/UpdateCapsule/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 
@@ -846,7 +846,7 @@ fu_uefi_plugin_cod_func(void)
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_true(fu_uefi_plugin_esp_file_exists(esp, "EFI/dell/bios/recovery/BIOS_TRS.rcv"));
+	g_assert_true(fu_uefi_capsule_esp_file_exists(esp, "EFI/dell/bios/recovery/BIOS_TRS.rcv"));
 
 	/* try again with a different filename */
 	fu_device_add_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
@@ -859,7 +859,7 @@ fu_uefi_plugin_cod_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_true(
-	    fu_uefi_plugin_esp_file_exists(esp, "EFI/UpdateCapsule/CapsuleUpdateFile0000.bin"));
+	    fu_uefi_capsule_esp_file_exists(esp, "EFI/UpdateCapsule/CapsuleUpdateFile0000.bin"));
 
 	/* get results */
 	ret = fu_device_get_results(device, &error);
@@ -868,7 +868,7 @@ fu_uefi_plugin_cod_func(void)
 }
 
 static void
-fu_uefi_plugin_grub_func(void)
+fu_uefi_capsule_grub_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *fwupdx64_efi_signed = NULL;
@@ -907,7 +907,7 @@ fu_uefi_plugin_grub_func(void)
 	tmpdir = fu_temporary_directory_new("uefi-capsule-esp", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
-	esp = fu_uefi_plugin_fake_esp_new(tmpdir);
+	esp = fu_uefi_capsule_fake_esp_new(tmpdir);
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* set up test harness */
@@ -958,7 +958,7 @@ fu_uefi_plugin_grub_func(void)
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_true(fu_uefi_plugin_esp_file_exists(
+	g_assert_true(fu_uefi_capsule_esp_file_exists(
 	    esp,
 	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 }
@@ -1067,20 +1067,20 @@ main(int argc, char **argv)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("PATH", testdatadir, TRUE);
 	g_type_ensure(FU_TYPE_UEFI_UPDATE_INFO);
-	g_test_add_func("/uefi/update-esp-valid", fu_uefi_update_esp_valid_func);
-	g_test_add_func("/uefi/update-esp-invalid", fu_uefi_update_esp_invalid_func);
-	g_test_add_func("/uefi/update-esp-no-backup", fu_uefi_update_esp_no_backup_func);
-	g_test_add_func("/uefi/bgrt", fu_uefi_bgrt_func);
-	g_test_add_func("/uefi/framebuffer", fu_uefi_framebuffer_func);
-	g_test_add_func("/uefi/bitmap", fu_uefi_bitmap_func);
-	g_test_add_func("/uefi/cod-device", fu_uefi_cod_device_func);
-	g_test_add_func("/uefi/update-info", fu_uefi_update_info_func);
-	g_test_add_func("/uefi/update-info{xml}", fu_uefi_update_info_xml_func);
-	g_test_add_func("/uefi/plugin{no-coalesce}", fu_uefi_plugin_no_coalesce_func);
-	g_test_add_func("/uefi/plugin{no-flashes-left}", fu_uefi_plugin_no_flashes_func);
-	g_test_add_func("/uefi/plugin{nvram}", fu_uefi_plugin_nvram_func);
-	g_test_add_func("/uefi/plugin{cod}", fu_uefi_plugin_cod_func);
-	g_test_add_func("/uefi/plugin{no-cod}", fu_uefi_plugin_no_cod_func);
-	g_test_add_func("/uefi/plugin{grub}", fu_uefi_plugin_grub_func);
+	g_test_add_func("/uefi-capsule/update-esp/valid", fu_uefi_update_esp_valid_func);
+	g_test_add_func("/uefi-capsule/update-esp/invalid", fu_uefi_update_esp_invalid_func);
+	g_test_add_func("/uefi-capsule/update-esp/no-backup", fu_uefi_update_esp_no_backup_func);
+	g_test_add_func("/uefi-capsule/bgrt", fu_uefi_bgrt_func);
+	g_test_add_func("/uefi-capsule/framebuffer", fu_uefi_framebuffer_func);
+	g_test_add_func("/uefi-capsule/bitmap", fu_uefi_bitmap_func);
+	g_test_add_func("/uefi-capsule/cod-device", fu_uefi_cod_device_func);
+	g_test_add_func("/uefi-capsule/update-info", fu_uefi_update_info_func);
+	g_test_add_func("/uefi-capsule/update-info/xml", fu_uefi_update_info_xml_func);
+	g_test_add_func("/uefi-capsule/no-coalesce", fu_uefi_capsule_no_coalesce_func);
+	g_test_add_func("/uefi-capsule/no-flashes-left", fu_uefi_capsule_no_flashes_func);
+	g_test_add_func("/uefi-capsule/nvram", fu_uefi_capsule_nvram_func);
+	g_test_add_func("/uefi-capsule/cod", fu_uefi_capsule_cod_func);
+	g_test_add_func("/uefi-capsule/no-cod", fu_uefi_capsule_no_cod_func);
+	g_test_add_func("/uefi-capsule/grub", fu_uefi_capsule_grub_func);
 	return g_test_run();
 }

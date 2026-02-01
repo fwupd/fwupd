@@ -21,6 +21,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/unifying/common", fu_logitech_hidpp_common);
+	g_test_add_func("/logitech-hidpp/common", fu_logitech_hidpp_common);
 	return g_test_run();
 }

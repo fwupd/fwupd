@@ -28,7 +28,7 @@ typedef struct {
 } FuTest;
 
 static void
-fu_test_self_init(FuTest *self)
+fu_self_init(FuTest *self)
 {
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
@@ -155,7 +155,7 @@ fu_test_self_init(FuTest *self)
 }
 
 static void
-fu_test_redfish_ipmi_func(void)
+fu_redfish_ipmi_func(void)
 {
 #ifdef HAVE_LINUX_IPMI_H
 	gboolean ret;
@@ -209,7 +209,7 @@ fu_test_redfish_ipmi_func(void)
 }
 
 static void
-fu_test_redfish_common_func(void)
+fu_redfish_common_func(void)
 {
 	const guint8 buf[16] = {0x00,
 				0x01,
@@ -240,7 +240,7 @@ fu_test_redfish_common_func(void)
 }
 
 static void
-fu_test_redfish_common_version_func(void)
+fu_redfish_common_version_func(void)
 {
 	struct {
 		const gchar *in;
@@ -256,7 +256,7 @@ fu_test_redfish_common_version_func(void)
 }
 
 static void
-fu_test_redfish_common_lenovo_func(void)
+fu_redfish_common_lenovo_func(void)
 {
 	struct {
 		const gchar *in;
@@ -282,7 +282,7 @@ fu_test_redfish_common_lenovo_func(void)
 }
 
 static void
-fu_test_redfish_network_mac_addr_func(void)
+fu_redfish_network_mac_addr_func(void)
 {
 	FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
 	gboolean ret;
@@ -317,7 +317,7 @@ fu_test_redfish_network_mac_addr_func(void)
 }
 
 static void
-fu_test_redfish_network_vid_pid_func(void)
+fu_redfish_network_vid_pid_func(void)
 {
 	g_autofree gchar *ip_addr = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -342,7 +342,7 @@ fu_test_redfish_network_vid_pid_func(void)
 }
 
 static void
-fu_test_redfish_devices_func(gconstpointer user_data)
+fu_redfish_devices_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -399,7 +399,7 @@ fu_test_redfish_devices_func(gconstpointer user_data)
 }
 
 static void
-fu_test_redfish_unlicensed_devices_func(gconstpointer user_data)
+fu_redfish_unlicensed_devices_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -427,7 +427,7 @@ fu_test_redfish_unlicensed_devices_func(gconstpointer user_data)
 }
 
 static void
-fu_test_redfish_smc_devices_func(gconstpointer user_data)
+fu_redfish_smc_devices_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -449,7 +449,7 @@ fu_test_redfish_smc_devices_func(gconstpointer user_data)
 }
 
 static void
-fu_test_redfish_dell_devices_func(gconstpointer user_data)
+fu_redfish_dell_devices_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -470,7 +470,7 @@ fu_test_redfish_dell_devices_func(gconstpointer user_data)
 }
 
 static void
-fu_test_redfish_hpe_update_func(gconstpointer user_data)
+fu_redfish_hpe_update_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -510,7 +510,7 @@ fu_test_redfish_hpe_update_func(gconstpointer user_data)
 }
 
 static void
-fu_test_redfish_update_func(gconstpointer user_data)
+fu_redfish_update_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -562,7 +562,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 }
 
 static void
-fu_test_redfish_smc_update_func(gconstpointer user_data)
+fu_redfish_smc_update_func(gconstpointer user_data)
 {
 	FuDevice *dev;
 	FuTest *self = (FuTest *)user_data;
@@ -620,7 +620,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 }
 
 static void
-fu_test_self_free(FuTest *self)
+fu_self_free(FuTest *self)
 {
 	if (self->plugin != NULL)
 		g_object_unref(self->plugin);
@@ -637,7 +637,7 @@ fu_test_self_free(FuTest *self)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_self_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_self_free)
 #pragma clang diagnostic pop
 
 int
@@ -655,25 +655,21 @@ main(int argc, char **argv)
 	    g_test_build_filename(G_TEST_DIST, "tests", "redfish-smbios.builder.xml", NULL);
 	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
 
-	fu_test_self_init(self);
-	g_test_add_func("/redfish/ipmi", fu_test_redfish_ipmi_func);
-	g_test_add_func("/redfish/common", fu_test_redfish_common_func);
-	g_test_add_func("/redfish/common{version}", fu_test_redfish_common_version_func);
-	g_test_add_func("/redfish/common{lenovo}", fu_test_redfish_common_lenovo_func);
-	g_test_add_func("/redfish/network{mac_addr}", fu_test_redfish_network_mac_addr_func);
-	g_test_add_func("/redfish/network{vid_pid}", fu_test_redfish_network_vid_pid_func);
-	g_test_add_data_func("/redfish/unlicensed_plugin{devices}",
+	fu_self_init(self);
+	g_test_add_func("/redfish/ipmi", fu_redfish_ipmi_func);
+	g_test_add_func("/redfish/common", fu_redfish_common_func);
+	g_test_add_func("/redfish/common/version", fu_redfish_common_version_func);
+	g_test_add_func("/redfish/common/lenovo", fu_redfish_common_lenovo_func);
+	g_test_add_func("/redfish/network/mac_addr", fu_redfish_network_mac_addr_func);
+	g_test_add_func("/redfish/network/vid_pid", fu_redfish_network_vid_pid_func);
+	g_test_add_data_func("/redfish/unlicensed-plugin/devices",
 			     self,
-			     fu_test_redfish_unlicensed_devices_func);
-	g_test_add_data_func("/redfish/smc_plugin{devices}",
-			     self,
-			     fu_test_redfish_smc_devices_func);
-	g_test_add_data_func("/redfish/smc_plugin{update}", self, fu_test_redfish_smc_update_func);
-	g_test_add_data_func("/redfish/hpe_plugin{update}", self, fu_test_redfish_hpe_update_func);
-	g_test_add_data_func("/redfish/plugin{devices}", self, fu_test_redfish_devices_func);
-	g_test_add_data_func("/redfish/dell_plugin{devices}",
-			     self,
-			     fu_test_redfish_dell_devices_func);
-	g_test_add_data_func("/redfish/plugin{update}", self, fu_test_redfish_update_func);
+			     fu_redfish_unlicensed_devices_func);
+	g_test_add_data_func("/redfish/smc_plugin/devices", self, fu_redfish_smc_devices_func);
+	g_test_add_data_func("/redfish/smc-plugin/update", self, fu_redfish_smc_update_func);
+	g_test_add_data_func("/redfish/hpe-plugin/update", self, fu_redfish_hpe_update_func);
+	g_test_add_data_func("/redfish/plugin/devices", self, fu_redfish_devices_func);
+	g_test_add_data_func("/redfish/dell/devices", self, fu_redfish_dell_devices_func);
+	g_test_add_data_func("/redfish/plugin/update", self, fu_redfish_update_func);
 	return g_test_run();
 }
