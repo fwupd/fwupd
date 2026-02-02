@@ -286,7 +286,6 @@ fu_uefi_capsule_fake_esp_new(FuTemporaryDirectory *tmpdir)
 	const gchar *tmpdir_path = fu_temporary_directory_get_path(tmpdir);
 	g_autofree gchar *tmpdir_efi = NULL;
 	g_autoptr(FuVolume) esp = fu_volume_new_from_mount_path(tmpdir_path);
-	g_autoptr(GError) error = NULL;
 
 	/* enough to fit the firmware */
 	fu_volume_set_filesystem_free(esp, 10 * 1024 * 1024);
