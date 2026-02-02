@@ -292,6 +292,7 @@ if get_option('tests')
     'console',
     'device-list',
     'engine',
+    'engine-gtypes',
     'engine-helper',
     'engine-requirements',
     'engine-udev',
