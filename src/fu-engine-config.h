@@ -29,8 +29,6 @@ GPtrArray *
 fu_engine_config_get_trusted_reports(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_engine_config_get_approved_firmware(FuEngineConfig *self) G_GNUC_NON_NULL(1);
-GPtrArray *
-fu_engine_config_get_blocked_firmware(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 guint
 fu_engine_config_get_uri_scheme_prio(FuEngineConfig *self, const gchar *scheme)
     G_GNUC_NON_NULL(1, 2);

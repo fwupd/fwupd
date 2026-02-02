@@ -425,29 +425,6 @@ fu_dbus_daemon_authorize_set_approved_firmware_cb(GObject *source,
 }
 
 static void
-fu_dbus_daemon_authorize_set_blocked_firmware_cb(GObject *source,
-						 GAsyncResult *res,
-						 gpointer user_data)
-{
-	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
-	g_autoptr(GError) error = NULL;
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
-
-	/* get result */
-	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
-		return;
-	}
-
-	/* success */
-	if (!fu_engine_set_blocked_firmware(engine, helper->checksums, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
-		return;
-	}
-	g_dbus_method_invocation_return_value(helper->invocation, NULL);
-}
-
-static void
 fu_dbus_daemon_authorize_fix_host_security_attr_cb(GObject *source,
 						   GAsyncResult *res,
 						   gpointer user_data)
@@ -1277,26 +1254,6 @@ fu_dbus_daemon_method_get_approved_firmware(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_method_get_blocked_firmware(FuDbusDaemon *self,
-					   GVariant *parameters,
-					   FuEngineRequest *request,
-					   GDBusMethodInvocation *invocation)
-{
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	GPtrArray *checksums = fu_engine_get_blocked_firmware(engine);
-	GVariantBuilder builder;
-	GVariant *val;
-
-	g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
-	for (guint i = 0; i < checksums->len; i++) {
-		const gchar *checksum = g_ptr_array_index(checksums, i);
-		g_variant_builder_add_value(&builder, g_variant_new_string(checksum));
-	}
-	val = g_variant_builder_end(&builder);
-	g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
-}
-
-static void
 fu_dbus_daemon_method_get_report_metadata(FuDbusDaemon *self,
 					  GVariant *parameters,
 					  FuEngineRequest *request,
@@ -1354,37 +1311,6 @@ fu_dbus_daemon_method_set_approved_firmware(FuDbusDaemon *self,
 				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
 				  NULL,
 				  fu_dbus_daemon_authorize_set_approved_firmware_cb,
-				  g_steal_pointer(&helper));
-}
-
-static void
-fu_dbus_daemon_method_set_blocked_firmware(FuDbusDaemon *self,
-					   GVariant *parameters,
-					   FuEngineRequest *request,
-					   GDBusMethodInvocation *invocation)
-{
-	g_autofree gchar *checksums_str = NULL;
-	g_auto(GStrv) checksums = NULL;
-	g_autoptr(FuMainAuthHelper) helper = NULL;
-
-	g_variant_get(parameters, "(^as)", &checksums);
-	checksums_str = g_strjoinv(",", checksums);
-
-	/* authenticate */
-	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
-	helper = g_new0(FuMainAuthHelper, 1);
-	helper->self = self;
-	helper->request = g_object_ref(request);
-	helper->invocation = g_object_ref(invocation);
-	helper->checksums = g_ptr_array_new_with_free_func(g_free);
-	for (guint i = 0; checksums[i] != NULL; i++)
-		g_ptr_array_add(helper->checksums, g_strdup(checksums[i]));
-	fu_polkit_authority_check(self->authority,
-				  fu_engine_request_get_sender(request),
-				  "org.freedesktop.fwupd.set-approved-firmware",
-				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
-				  NULL,
-				  fu_dbus_daemon_authorize_set_blocked_firmware_cb,
 				  g_steal_pointer(&helper));
 }
 
@@ -2544,10 +2470,8 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"GetPlugins", fu_dbus_daemon_method_get_plugins},
 	    {"GetReleases", fu_dbus_daemon_method_get_releases},
 	    {"GetApprovedFirmware", fu_dbus_daemon_method_get_approved_firmware},
-	    {"GetBlockedFirmware", fu_dbus_daemon_method_get_blocked_firmware},
 	    {"GetReportMetadata", fu_dbus_daemon_method_get_report_metadata},
 	    {"SetApprovedFirmware", fu_dbus_daemon_method_set_approved_firmware},
-	    {"SetBlockedFirmware", fu_dbus_daemon_method_set_blocked_firmware},
 	    {"Quit", fu_dbus_daemon_method_quit},
 	    {"SelfSign", fu_dbus_daemon_method_self_sign},
 	    {"GetDowngrades", fu_dbus_daemon_method_get_downgrades},

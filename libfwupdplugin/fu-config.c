@@ -172,7 +172,6 @@ fu_config_migrate_keyfile(FuConfig *self)
 		const gchar *value;
 	} key_values[] = {{"fwupd", "ApprovedFirmware", NULL},
 			  {"fwupd", "ArchiveSizeMax", "0"},
-			  {"fwupd", "BlockedFirmware", NULL},
 			  {"fwupd", "DisabledDevices", NULL},
 			  {"fwupd", "EnumerateAllDevices", NULL},
 			  {"fwupd", "EspLocation", NULL},

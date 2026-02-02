@@ -17,7 +17,6 @@ end
 function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
     printf '%s\t%s\n' \
         activate 'Activate devices' \
-        block-firmware 'Blocks a specific firmware from being installed' \
         check-reboot-needed 'Check if any devices are pending a reboot to complete update' \
         clear-results 'Clears the results from the last update' \
         device-emulate 'Emulate a device using a JSON manifest' \
@@ -33,7 +32,6 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         enable-remote 'Enables a given remote' \
         get-approved-firmware 'Gets the list of approved firmware' \
         get-bios-settings 'Retrieve BIOS settings' \
-        get-blocked-firmware 'Gets the list of blocked firmware' \
         get-details 'Gets details about a firmware file' \
         get-devices 'Get all devices that support firmware updates' \
         get-history 'Show history of firmware updates' \
@@ -64,7 +62,6 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         set-bios-setting 'Sets one or more BIOS settings' \
         switch-branch 'Switch the firmware branch on the device' \
         sync 'Sync firmware versions to the chosen configuration' \
-        unblock-firmware 'Unblocks a specific firmware from being installed' \
         uninhibit 'Uninhibit the system to allow upgrades' \
         unlock 'Unlocks the device for firmware access' \
         update 'Updates all firmware to latest versions available' \
