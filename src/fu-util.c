@@ -4679,6 +4679,13 @@ fu_util_block_firmware(FuUtil *self, gchar **values, GError **error)
 	g_auto(GStrv) csums_new = NULL;
 	g_auto(GStrv) csums = NULL;
 
+	/* we dropped this in 2.1.1... */
+	fu_console_print_full(self->console,
+			      FU_CONSOLE_PRINT_FLAG_WARNING,
+			      "%s\n",
+			      /* TRANSLATORS: the user should not rely on this working long-term */
+			      _("This functionality has been removed in newer fwupd versions."));
+
 	/* get existing checksums */
 	csums = fwupd_client_get_blocked_firmware(self->client, self->cancellable, error);
 	if (csums == NULL)
@@ -4723,6 +4730,13 @@ fu_util_unblock_firmware(FuUtil *self, gchar **values, GError **error)
 	g_auto(GStrv) csums = NULL;
 	g_auto(GStrv) csums_new = NULL;
 	g_autofree gchar *csum = NULL;
+
+	/* we dropped this in 2.1.1... */
+	fu_console_print_full(self->console,
+			      FU_CONSOLE_PRINT_FLAG_WARNING,
+			      "%s\n",
+			      /* TRANSLATORS: the user should not rely on this working long-term */
+			      _("This functionality has been removed in newer fwupd versions."));
 
 	/* get existing checksums */
 	csums = fwupd_client_get_blocked_firmware(self->client, self->cancellable, error);
@@ -4774,6 +4788,13 @@ static gboolean
 fu_util_get_blocked_firmware(FuUtil *self, gchar **values, GError **error)
 {
 	g_auto(GStrv) csums = NULL;
+
+	/* we dropped this in 2.1.1... */
+	fu_console_print_full(self->console,
+			      FU_CONSOLE_PRINT_FLAG_WARNING,
+			      "%s\n",
+			      /* TRANSLATORS: the user should not rely on this working long-term */
+			      _("This functionality has been removed in newer fwupd versions."));
 
 	/* get checksums */
 	csums = fwupd_client_get_blocked_firmware(self->client, self->cancellable, error);
