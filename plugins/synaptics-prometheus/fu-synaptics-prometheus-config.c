@@ -106,7 +106,7 @@ fu_synaptics_prometheus_config_setup(FuDevice *device, GError **error)
 	self->configid1 = fu_struct_synaptics_prometheus_iota_config_version_get_config_id1(st_cfg);
 	self->configid2 = fu_struct_synaptics_prometheus_iota_config_version_get_config_id2(st_cfg);
 
-	/* we should have made these a %08% uint32_t... */
+	/* we should have made these a %08% guint32... */
 	configid1_str = g_strdup_printf("%u", self->configid1);
 	configid2_str = g_strdup_printf("%u", self->configid2);
 

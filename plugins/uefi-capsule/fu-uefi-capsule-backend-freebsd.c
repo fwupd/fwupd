@@ -43,7 +43,7 @@ fu_uefi_capsule_backend_device_new(FuUefiCapsuleBackend *self,
 	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
 	g_autofree gchar *backend_id = NULL;
 	g_autofree gchar *fw_class = NULL;
-	uint32_t status;
+	guint32 status;
 
 	uuid_to_string((const uuid_t *)&entry->fw_class, &fw_class, &status);
 	if (status != uuid_s_ok) {
