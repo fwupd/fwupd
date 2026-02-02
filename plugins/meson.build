@@ -8,7 +8,6 @@ plugin_deps = [
   libarchive,
   libxmlb,
   libdrm_amdgpu,
-  protobufc,
   fwupdplugin_rs_dep,
 ]
 

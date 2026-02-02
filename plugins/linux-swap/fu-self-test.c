@@ -14,9 +14,11 @@ static void
 fu_linux_swap_none_func(void)
 {
 	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
-	swap = fu_linux_swap_new("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n", 0, &error);
+	swap =
+	    fu_linux_swap_new(pstore, "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n", 0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(swap);
 	g_assert_false(fu_linux_swap_get_enabled(swap));
@@ -27,10 +29,12 @@ static void
 fu_linux_swap_plain_func(void)
 {
 	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
 	swap =
-	    fu_linux_swap_new("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
+	    fu_linux_swap_new(pstore,
+			      "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
 			      "/dev/nvme0n1p4                          partition\t5962748\t0\t-2\n",
 			      0,
 			      &error);
@@ -53,10 +57,12 @@ static void
 fu_linux_swap_encrypted_func(void)
 {
 	g_autoptr(FuLinuxSwap) swap = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
 	swap =
-	    fu_linux_swap_new("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
+	    fu_linux_swap_new(pstore,
+			      "Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
 			      "/dev/dm-1                               partition\t5962748\t0\t-2\n",
 			      0,
 			      &error);
@@ -77,12 +83,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/linux-swap/none", fu_linux_swap_none_func);
 	g_test_add_func("/linux-swap/plain", fu_linux_swap_plain_func);
 	g_test_add_func("/linux-swap/encrypted", fu_linux_swap_encrypted_func);

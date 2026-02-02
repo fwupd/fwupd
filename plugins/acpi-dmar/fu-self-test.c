@@ -67,14 +67,7 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/acpi-dmar/opt-in", fu_acpi_dmar_opt_in_func);
 	g_test_add_func("/acpi-dmar/opt-out", fu_acpi_dmar_opt_out_func);
-
 	return g_test_run();
 }

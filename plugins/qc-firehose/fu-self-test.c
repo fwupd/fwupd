@@ -103,12 +103,10 @@ int
 main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/qc-firehose/retry{true}", fu_qc_firehose_retry_true_func);
-	g_test_add_func("/qc-firehose/retry{done}", fu_qc_firehose_retry_done_func);
-	g_test_add_func("/qc-firehose/retry{timeout}", fu_qc_firehose_retry_timeout_func);
-	g_test_add_func("/qc-firehose/retry{invalid}", fu_qc_firehose_retry_invalid_func);
+	g_test_add_func("/qc-firehose/retry/true", fu_qc_firehose_retry_true_func);
+	g_test_add_func("/qc-firehose/retry/done", fu_qc_firehose_retry_done_func);
+	g_test_add_func("/qc-firehose/retry/timeout", fu_qc_firehose_retry_timeout_func);
+	g_test_add_func("/qc-firehose/retry/invalid", fu_qc_firehose_retry_invalid_func);
 	return g_test_run();
 }

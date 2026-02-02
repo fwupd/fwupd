@@ -17,9 +17,10 @@ G_DEFINE_TYPE(FuLinuxSleepPlugin, fu_linux_sleep_plugin, FU_TYPE_PLUGIN)
 static void
 fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_SYSFSDIR, "power", "mem_sleep", NULL);
+	g_autofree gchar *fn = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -30,6 +31,17 @@ fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 	fu_security_attrs_append(attrs, attr);
 
 	/* load file */
+	fn = fu_context_build_filename(ctx,
+				       &error_local,
+				       FU_PATH_KIND_SYSFSDIR,
+				       "power",
+				       "mem_sleep",
+				       NULL);
+	if (fn == NULL) {
+		g_debug("failed to build: %s", error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
 	file = g_file_new_for_path(fn);
 	if (!g_file_load_contents(file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_warning("could not open %s: %s", fn, error_local->message);

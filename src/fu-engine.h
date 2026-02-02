@@ -190,11 +190,6 @@ void
 fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
 void
 fu_engine_set_approved_firmware(FuEngine *self, GPtrArray *checksums) G_GNUC_NON_NULL(1, 2);
-GPtrArray *
-fu_engine_get_blocked_firmware(FuEngine *self) G_GNUC_NON_NULL(1);
-gboolean
-fu_engine_set_blocked_firmware(FuEngine *self, GPtrArray *checksums, GError **error)
-    G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_engine_self_sign(FuEngine *self, const gchar *value, JcatSignFlags flags, GError **error)
     G_GNUC_NON_NULL(1, 2);

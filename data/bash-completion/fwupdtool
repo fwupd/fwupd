@@ -111,7 +111,6 @@ fwupd_modify_config_sections=(
 fwupd_modify_config_opts=(
 	'ArchiveSizeMax'
 	'ApprovedFirmware'
-	'BlockedFirmware'
 	'DisabledDevices'
 	'DisabledPlugins'
 	'EspLocation'
@@ -399,7 +398,7 @@ _fwupdtool()
 				;;
 			IdleTimeout|ArchiveSizeMax|HostBkc|TrustedUids)
 				;;
-			ApprovedFirmware|BlockedFirmware)
+			ApprovedFirmware)
 				;;
 			DisabledDevices)
 				_show_device_ids

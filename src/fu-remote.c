@@ -230,6 +230,8 @@ fu_remote_save_to_filename(FwupdRemote *self,
 		g_key_file_set_boolean(kf, group, "AutomaticSecurityReports", TRUE);
 
 	/* save file */
+	if (!fu_path_mkdir_parent(filename, error))
+		return FALSE;
 	return g_key_file_save_to_file(kf, filename, error);
 }
 

@@ -205,20 +205,20 @@ fu_plugin_struct_wrapped_func(void)
 	/* to string */
 	str2 = fu_struct_self_test_wrapped_to_string(st);
 	g_debug("%s", str2);
-	fu_test_compare_lines(str2,
-			      "FuStructSelfTestWrapped:\n"
-			      "  less: 0x99\n"
-			      "  base: FuStructSelfTest:\n"
-			      "  signature: 0x12345678\n"
-			      "  length: 0x3b\n"
-			      "  revision: 0xfe\n"
-			      "  owner: 00000000-0000-0000-0000-000000000000\n"
-			      "  oem_id: ABCDEF\n"
-			      "  oem_revision: 0x0\n"
-			      "  asl_compiler_id: 0xDFDFDFDF\n"
-			      "  asl_compiler_revision: 0x0\n"
-			      "  more: 0x12",
-			      &error);
+	ret = fu_test_compare_lines(str2,
+				    "FuStructSelfTestWrapped:\n"
+				    "  less: 0x99\n"
+				    "  base: FuStructSelfTest:\n"
+				    "  signature: 0x12345678\n"
+				    "  length: 0x3b\n"
+				    "  revision: 0xfe\n"
+				    "  owner: 00000000-0000-0000-0000-000000000000\n"
+				    "  oem_id: ABCDEF\n"
+				    "  oem_revision: 0x0\n"
+				    "  asl_compiler_id: 0xDFDFDFDF\n"
+				    "  asl_compiler_revision: 0x0\n"
+				    "  more: 0x12",
+				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -58,7 +58,10 @@ fu_bios_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 
 	/* get the directory of ESRT entries */
-	esrt_path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	esrt_path =
+	    fu_context_build_filename(ctx, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	if (esrt_path == NULL)
+		return FALSE;
 	if (!g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {
 		/* don't show the warning in a hypervisor as capsule updates are not expected */
 		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR)) {

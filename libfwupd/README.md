@@ -5,6 +5,7 @@
 * Typedef `FwupdFeatureFlags` to `guint64` so it's the same size on all platforms
 * Remove `FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM`
 * Remove `FWUPD_INSTALL_FLAG_NO_SEARCH`
+* Remove `fwupd_client_set_blocked_firmware()` and `fwupd_client_get_blocked_firmware()`
 
 ## Migration from Version 1.9.x
 

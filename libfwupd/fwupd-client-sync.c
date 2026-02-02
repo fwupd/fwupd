@@ -2304,15 +2304,6 @@ fwupd_client_set_approved_firmware(FwupdClient *self,
 	return TRUE;
 }
 
-static void
-fwupd_client_get_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointer user_data)
-{
-	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
-	helper->array =
-	    fwupd_client_get_blocked_firmware_finish(FWUPD_CLIENT(source), res, &helper->error);
-	g_main_loop_quit(helper->loop);
-}
-
 /**
  * fwupd_client_get_blocked_firmware:
  * @self: a #FwupdClient
@@ -2328,43 +2319,11 @@ fwupd_client_get_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointe
 gchar **
 fwupd_client_get_blocked_firmware(FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
-	gchar **argv;
-
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect(self, cancellable, error))
-		return NULL;
-
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_get_blocked_firmware_async(self,
-						cancellable,
-						fwupd_client_get_blocked_firmware_cb,
-						helper);
-	g_main_loop_run(helper->loop);
-	if (helper->array == NULL) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
-		return NULL;
-	}
-	argv = g_new0(gchar *, helper->array->len + 1);
-	for (guint i = 0; i < helper->array->len; i++) {
-		const gchar *tmp = g_ptr_array_index(helper->array, i);
-		argv[i] = g_strdup(tmp);
-	}
-	return argv;
-}
-
-static void
-fwupd_client_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointer user_data)
-{
-	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
-	helper->ret =
-	    fwupd_client_set_blocked_firmware_finish(FWUPD_CLIENT(source), res, &helper->error);
-	g_main_loop_quit(helper->loop);
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no longer supported");
+	return NULL;
 }
 
 /**
@@ -2386,34 +2345,12 @@ fwupd_client_set_blocked_firmware(FwupdClient *self,
 				  GCancellable *cancellable,
 				  GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
-
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(checksums != NULL, FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect(self, cancellable, error))
-		return FALSE;
-
-	for (guint i = 0; checksums[i] != NULL; i++)
-		g_ptr_array_add(array, g_strdup(checksums[i]));
-
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_set_blocked_firmware_async(self,
-						array,
-						cancellable,
-						fwupd_client_set_blocked_firmware_cb,
-						helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
-		return FALSE;
-	}
-	return TRUE;
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no longer supported");
+	return FALSE;
 }
 
 static void

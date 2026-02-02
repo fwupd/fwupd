@@ -17,7 +17,6 @@ struct _FuEngineConfig {
 	GPtrArray *disabled_devices;  /* (element-type utf-8) */
 	GPtrArray *disabled_plugins;  /* (element-type utf-8) */
 	GPtrArray *approved_firmware; /* (element-type utf-8) */
-	GPtrArray *blocked_firmware;  /* (element-type utf-8) */
 	GPtrArray *uri_schemes;	      /* (element-type utf-8) */
 	GPtrArray *trusted_reports;   /* (element-type FwupdReport) */
 	GArray *trusted_uids;	      /* (element-type guint64) */
@@ -112,7 +111,6 @@ static void
 fu_engine_config_reload(FuEngineConfig *self)
 {
 	g_auto(GStrv) approved_firmware = NULL;
-	g_auto(GStrv) blocked_firmware = NULL;
 	g_auto(GStrv) disabled_devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_auto(GStrv) report_specs = NULL;
@@ -149,14 +147,6 @@ fu_engine_config_reload(FuEngineConfig *self)
 	if (approved_firmware != NULL) {
 		for (guint i = 0; approved_firmware[i] != NULL; i++)
 			g_ptr_array_add(self->approved_firmware, g_strdup(approved_firmware[i]));
-	}
-
-	/* get blocked firmware */
-	g_ptr_array_set_size(self->blocked_firmware, 0);
-	blocked_firmware = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "BlockedFirmware");
-	if (blocked_firmware != NULL) {
-		for (guint i = 0; blocked_firmware[i] != NULL; i++)
-			g_ptr_array_add(self->blocked_firmware, g_strdup(blocked_firmware[i]));
 	}
 
 	/* get download schemes */
@@ -261,13 +251,6 @@ fu_engine_config_get_trusted_reports(FuEngineConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
 	return self->trusted_reports;
-}
-
-GPtrArray *
-fu_engine_config_get_blocked_firmware(FuEngineConfig *self)
-{
-	g_return_val_if_fail(FU_IS_ENGINE_CONFIG(self), NULL);
-	return self->blocked_firmware;
 }
 
 guint
@@ -419,7 +402,6 @@ fu_engine_config_init(FuEngineConfig *self)
 	self->disabled_devices = g_ptr_array_new_with_free_func(g_free);
 	self->disabled_plugins = g_ptr_array_new_with_free_func(g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func(g_free);
-	self->blocked_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->trusted_uids = g_array_new(FALSE, FALSE, sizeof(guint64));
 	self->trusted_reports = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->uri_schemes = g_ptr_array_new_with_free_func(g_free);
@@ -429,7 +411,6 @@ fu_engine_config_init(FuEngineConfig *self)
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_engine_config_set_default(self, "ApprovedFirmware", NULL);
 	fu_engine_config_set_default(self, "ArchiveSizeMax", archive_size_max_default);
-	fu_engine_config_set_default(self, "BlockedFirmware", NULL);
 	fu_engine_config_set_default(self, "DisabledDevices", NULL);
 	fu_engine_config_set_default(self, "DisabledPlugins", "");
 	fu_engine_config_set_default(self, "EnumerateAllDevices", "false");
@@ -463,7 +444,6 @@ fu_engine_config_finalize(GObject *obj)
 	g_ptr_array_unref(self->disabled_devices);
 	g_ptr_array_unref(self->disabled_plugins);
 	g_ptr_array_unref(self->approved_firmware);
-	g_ptr_array_unref(self->blocked_firmware);
 	g_ptr_array_unref(self->uri_schemes);
 	g_ptr_array_unref(self->trusted_reports);
 	g_array_unref(self->trusted_uids);
@@ -481,7 +461,7 @@ fu_engine_config_class_init(FuEngineConfigClass *klass)
 }
 
 FuEngineConfig *
-fu_engine_config_new(void)
+fu_engine_config_new(FuPathStore *pstore)
 {
-	return FU_ENGINE_CONFIG(g_object_new(FU_TYPE_ENGINE_CONFIG, NULL));
+	return FU_ENGINE_CONFIG(g_object_new(FU_TYPE_ENGINE_CONFIG, "path-store", pstore, NULL));
 }

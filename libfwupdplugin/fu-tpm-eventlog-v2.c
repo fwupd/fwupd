@@ -66,7 +66,6 @@ fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
 	for (guint i = 0; i < digestcnt; i++) {
 		guint16 alg_type = 0;
 		guint32 alg_size = 0;
-		g_autofree guint8 *digest = NULL;
 		g_autoptr(GBytes) checksum = NULL;
 
 		/* get checksum type */

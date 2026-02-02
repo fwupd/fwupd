@@ -1825,53 +1825,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="libprotobuf-c-dev">
-    <distro id="arch">
-      <package variant="x86_64">protobuf-c</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">protobuf-c-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">protobuf-c-devel</package>
-      <package variant="aarch64">protobuf-c-devel</package>
-    </distro>
-    <distro id="darwin">
-      <package>protobuf-c</package>
-    </distro>
-    <distro id="freebsd">
-      <package>protobuf-c</package>
-    </distro>
-  </dependency>
-  <dependency id="protobuf-c-compiler">
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
   <dependency id="sudo">
     <distro id="debian">
       <package variant="i386" />
