@@ -324,7 +324,6 @@ if get_option('tests')
     test(
       'fu-' + test_name + '-test',
       e,
-      is_parallel: false,
       timeout: 180,
       env: env,
     )
