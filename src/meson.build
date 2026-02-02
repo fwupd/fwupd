@@ -293,6 +293,7 @@ if get_option('tests')
     'device-list',
     'engine',
     'engine-requirements',
+    'engine-udev',
     'history',
     'idle',
     'plugin-list',
