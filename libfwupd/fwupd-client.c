@@ -4984,30 +4984,6 @@ fwupd_client_set_approved_firmware_finish(FwupdClient *self, GAsyncResult *res, 
 	return g_task_propagate_boolean(G_TASK(res), error);
 }
 
-static void
-fwupd_client_get_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointer user_data)
-{
-	g_auto(GStrv) strv = NULL;
-	g_autoptr(GTask) task = G_TASK(user_data);
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
-	g_autoptr(GVariant) val = NULL;
-
-	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
-	if (val == NULL) {
-		fwupd_client_fixup_dbus_error(error);
-		g_task_return_error(task, g_steal_pointer(&error));
-		return;
-	}
-
-	g_variant_get(val, "(^as)", &strv);
-	for (guint i = 0; strv[i] != NULL; i++)
-		g_ptr_array_add(array, g_strdup(strv[i]));
-
-	/* success */
-	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
-}
-
 /**
  * fwupd_client_get_blocked_firmware_async:
  * @self: a #FwupdClient
@@ -5037,14 +5013,10 @@ fwupd_client_get_blocked_firmware_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
-	g_dbus_proxy_call(priv->proxy,
-			  "GetBlockedFirmware",
-			  NULL,
-			  G_DBUS_CALL_FLAGS_NONE,
-			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
-			  cancellable,
-			  fwupd_client_get_blocked_firmware_cb,
-			  g_steal_pointer(&task));
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"no longer supported");
 }
 
 /**
@@ -5068,24 +5040,6 @@ fwupd_client_get_blocked_firmware_finish(FwupdClient *self, GAsyncResult *res, G
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
-static void
-fwupd_client_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, gpointer user_data)
-{
-	g_autoptr(GTask) task = G_TASK(user_data);
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
-	if (val == NULL) {
-		fwupd_client_fixup_dbus_error(error);
-		g_task_return_error(task, g_steal_pointer(&error));
-		return;
-	}
-
-	/* success */
-	g_task_return_boolean(task, TRUE);
-}
-
 /**
  * fwupd_client_set_blocked_firmware_async:
  * @self: a #FwupdClient
@@ -5107,27 +5061,16 @@ fwupd_client_set_blocked_firmware_async(FwupdClient *self,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
-	g_auto(GStrv) strv = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 
-	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
-	strv = g_new0(gchar *, checksums->len + 1);
-	for (guint i = 0; i < checksums->len; i++) {
-		const gchar *tmp = g_ptr_array_index(checksums, i);
-		strv[i] = g_strdup(tmp);
-	}
-	g_dbus_proxy_call(priv->proxy,
-			  "SetBlockedFirmware",
-			  g_variant_new("(^as)", strv),
-			  G_DBUS_CALL_FLAGS_NONE,
-			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
-			  cancellable,
-			  fwupd_client_set_blocked_firmware_cb,
-			  g_steal_pointer(&task));
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"no longer supported");
 }
 
 /**
