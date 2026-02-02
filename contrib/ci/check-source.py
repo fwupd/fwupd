@@ -815,6 +815,10 @@ class Checker:
 
         for search, msg in {
             "__FUNCTION__": "Use G_STRFUNC instead",
+            "__VA_ARGS__": "Use native functions instead",
+            "uint32_t": "Use guint32 instead",
+            "uint16_t": "Use guint16 instead",
+            "uint8_t": "Use guint8 instead",
         }.items():
             for token in node.tokens:
                 if token.data.find(search) != -1:
