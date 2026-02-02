@@ -2,6 +2,7 @@ package org.freedesktop.fwupd;
 
 import org.freedesktop.fwupd.IFwupdEventListener;
 
+@VintfStability
 interface IFwupd {
         PersistableBundle[] getDevices();
         void install(in String id, in ParcelFileDescriptor firmwareFd, in PersistableBundle options);
