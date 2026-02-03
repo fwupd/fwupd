@@ -316,10 +316,6 @@ fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc)
 	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
 	g_return_val_if_fail(crc_map[kind].bitwidth == 32, 0x0);
 
-	/* use hand-crafted assembly with pre-computed table for raw speed */
-	if (kind == FU_CRC_KIND_B32_STANDARD)
-		return crc32_z(crc, buf, bufsz);
-
 	for (gsize i = 0; i < bufsz; ++i) {
 		guint32 tmp = crc_map[kind].reflected ? fu_crc_reflect8(buf[i]) : buf[i];
 		crc ^= tmp << (bitwidth - 8);
@@ -332,6 +328,25 @@ fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc)
 		}
 	}
 	return crc;
+}
+
+/**
+ * fu_crc32_fast:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @crc: initial CRC value
+ *
+ * Returns the cyclic redundancy check value using the zlib hand-crafted assembly with pre-computed
+ * tables for raw speed. It must always be %FU_CRC_KIND_B32_STANDARD with no inverted start value.
+ *
+ * Returns: CRC value
+ *
+ * Since: 2.1.1
+ **/
+guint32
+fu_crc32_fast(const guint8 *buf, gsize bufsz, guint32 crc)
+{
+	return crc32_z(crc, buf, bufsz);
 }
 
 /**
@@ -350,8 +365,6 @@ fu_crc32_done(FuCrcKind kind, guint32 crc)
 {
 	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
 	g_return_val_if_fail(crc_map[kind].bitwidth == 32, 0x0);
-	if (kind == FU_CRC_KIND_B32_STANDARD)
-		return crc;
 	crc = crc_map[kind].reflected ? fu_crc_reflect(crc, crc_map[kind].bitwidth) : crc;
 	return crc ^ crc_map[kind].xorout;
 }
