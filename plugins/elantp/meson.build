@@ -28,7 +28,10 @@ plugin_builtin_elantp = static_library('fu_plugin_elantp',
 plugin_builtins += plugin_builtin_elantp
 
 enumeration_data += files('tests/lenovo-nano-g1-setup.json')
-device_tests += files('tests/lenovo-nano-g1.json')
+device_tests += files(
+  'tests/lenovo-nano-g1.json',
+  'tests/elan-haptic-mcu.json',
+)
 
 if get_option('tests')
   install_data(['tests/elantp.builder.xml'],
