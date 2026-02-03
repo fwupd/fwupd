@@ -437,6 +437,7 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 static guint16
 fu_dell_dock_mst_get_crc(guint8 type, guint32 length, const guint8 *payload_data)
 {
+	/* nocheck:magic */
 	static const guint16 CRC16_table[] = {
 	    0x0000, 0x8005, 0x800f, 0x000a, 0x801b, 0x001e, 0x0014, 0x8011, 0x8033, 0x0036, 0x003c,
 	    0x8039, 0x0028, 0x802d, 0x8027, 0x0022, 0x8063, 0x0066, 0x006c, 0x8069, 0x0078, 0x807d,

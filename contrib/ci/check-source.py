@@ -540,6 +540,24 @@ class Checker:
             linecnt=node.linecnt,
         )
 
+    def _test_magic_numbers_buffer(self, node: Node) -> None:
+
+        # skip tests
+        if self._current_fn:
+            basename = os.path.basename(self._current_fn)
+            if basename.endswith("-test.c"):
+                return
+
+        limit: int = 4
+        idx = node.tokens.find_fuzzy(["~*@INTEGER", ","] * limit)
+        if idx == -1:
+            return
+        token = node.tokens[idx]
+        self.add_failure(
+            f"variable has too many magic values (limit of {limit})",
+            linecnt=token.linecnt,
+        )
+
     def _test_static_vars(self, node: Node) -> None:
 
         if node.depth != 0:
@@ -1389,6 +1407,11 @@ class Checker:
             self._current_nocheck = "nocheck:static"
             if self._should_process_node(node):
                 self._test_static_vars(node)
+
+            # test for magic numbers
+            self._current_nocheck = "nocheck:magic"
+            if self._should_process_node(node):
+                self._test_magic_numbers_buffer(node)
 
             # test for rustgen variables
             self._current_nocheck = "nocheck:rustgen"
