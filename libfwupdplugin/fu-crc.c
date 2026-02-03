@@ -418,6 +418,8 @@ fu_crc32_bytes(FuCrcKind kind, GBytes *blob)
  * @buf: memory buffer
  * @bufsz: size of @buf
  * @crc_target: "correct" CRC value
+ * @kind: (out) (nullable): a #FuCrcKind, or %FU_CRC_KIND_UNKNOWN on error
+ * @error: (nullable): optional return location for an error
  *
  * Returns the cyclic redundancy kind for the given memory buffer and target CRC.
  *
@@ -426,28 +428,59 @@ fu_crc32_bytes(FuCrcKind kind, GBytes *blob)
  *    guint8 buf[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
  *    g_info("CRC:%u", fu_crc_find(buf, sizeof(buf), _custom_crc(buf, sizeof(buf))));
  *
- * Returns: a #FuCrcKind, or %FU_CRC_KIND_UNKNOWN on error
+ * Returns: %TRUE if one well-known CRC kind was found.
  *
- * Since: 2.0.0
+ * Since: 2.1.1
  **/
-FuCrcKind
-fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target)
+gboolean
+fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target, FuCrcKind *kind, GError **error)
 {
+	FuCrcKind kind_tmp = FU_CRC_KIND_UNKNOWN;
+	guint match_cnt = 0;
 	for (guint i = 0; i < G_N_ELEMENTS(crc_map); i++) {
 		if (crc_map[i].bitwidth == 32) {
-			if (crc_target == fu_crc32(crc_map[i].kind, buf, bufsz))
-				return crc_map[i].kind;
+			if (crc_target == fu_crc32(crc_map[i].kind, buf, bufsz)) {
+				g_debug("matched %s", fu_crc_kind_to_string(crc_map[i].kind));
+				kind_tmp = crc_map[i].kind;
+				match_cnt++;
+			}
 		}
 		if (crc_target <= G_MAXUINT16 && crc_map[i].bitwidth == 16) {
-			if ((guint16)crc_target == fu_crc16(crc_map[i].kind, buf, bufsz))
-				return crc_map[i].kind;
+			if ((guint16)crc_target == fu_crc16(crc_map[i].kind, buf, bufsz)) {
+				g_debug("matched %s", fu_crc_kind_to_string(crc_map[i].kind));
+				kind_tmp = crc_map[i].kind;
+				match_cnt++;
+			}
 		}
 		if (crc_target <= G_MAXUINT8 && crc_map[i].bitwidth == 8) {
-			if ((guint8)crc_target == fu_crc8(crc_map[i].kind, buf, bufsz))
-				return crc_map[i].kind;
+			if ((guint8)crc_target == fu_crc8(crc_map[i].kind, buf, bufsz)) {
+				g_debug("matched %s", fu_crc_kind_to_string(crc_map[i].kind));
+				kind_tmp = crc_map[i].kind;
+				match_cnt++;
+			}
 		}
 	}
-	return FU_CRC_KIND_UNKNOWN;
+
+	/* failed */
+	if (match_cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no CRC kind matched");
+		return FALSE;
+	}
+	if (match_cnt > 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "multiple CRC kinds matched");
+		return FALSE;
+	}
+
+	/* success */
+	if (kind != NULL)
+		*kind = kind_tmp;
+	return TRUE;
 }
 
 static guint16
