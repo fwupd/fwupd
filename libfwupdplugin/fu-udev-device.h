@@ -24,6 +24,13 @@ struct _FuUdevDeviceClass {
  */
 #define FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT 50 /* ms */
 
+/**
+ * FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID:
+ *
+ * Use the physical ID for the sysfs path rather than the backend ID.
+ */
+#define FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID "sysfs-use-physical-id"
+
 const gchar *
 fu_udev_device_get_device_file(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
