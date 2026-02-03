@@ -26,6 +26,8 @@ Vendor = Goodix
 Vendor = Framework
 [USB\VID_8087]
 Vendor = Intel
+[USB\VID_347D]
+Vendor = Blestech
 
 [PCI\VEN_1002]
 Vendor = AMD

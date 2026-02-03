@@ -1,0 +1,29 @@
+# BTL 7840
+[HIDRAW\VEN_347D&DEV_7840]
+Plugin = blestech_tp
+Flags = enforce-requires
+
+# BTL 7936
+[HIDRAW\VEN_347D&DEV_7936]
+Plugin = blestech_tp
+Flags = enforce-requires
+
+# BTL 7940
+[HIDRAW\VEN_347D&DEV_7940]
+Plugin = blestech_tp
+Flags = enforce-requires
+
+# BTL 7943
+[HIDRAW\VEN_347D&DEV_7943]
+Plugin = blestech_tp
+Flags = enforce-requires
+
+# BTL 7953
+[HIDRAW\VEN_347D&DEV_7953]
+Plugin = blestech_tp
+Flags = enforce-requires
+
+# BTL 7955
+[HIDRAW\VEN_347D&DEV_7955]
+Plugin = blestech_tp
+Flags = enforce-requires
