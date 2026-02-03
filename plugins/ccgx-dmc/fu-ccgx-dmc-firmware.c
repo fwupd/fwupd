@@ -430,6 +430,15 @@ fu_ccgx_dmc_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 }
 
 static void
+fu_ccgx_dmc_firmware_add_magic(FuFirmware *firmware)
+{
+	fu_firmware_add_magic(firmware,
+			      (const guint8 *)FU_STRUCT_CCGX_DMC_FWCT_INFO_DEFAULT_SIGNATURE,
+			      strlen(FU_STRUCT_CCGX_DMC_FWCT_INFO_DEFAULT_SIGNATURE),
+			      0x0);
+}
+
+static void
 fu_ccgx_dmc_firmware_init(FuCcgxDmcFirmware *self)
 {
 	self->image_records =
@@ -464,6 +473,7 @@ fu_ccgx_dmc_firmware_class_init(FuCcgxDmcFirmwareClass *klass)
 	firmware_class->parse = fu_ccgx_dmc_firmware_parse;
 	firmware_class->write = fu_ccgx_dmc_firmware_write;
 	firmware_class->export = fu_ccgx_dmc_firmware_export;
+	firmware_class->add_magic = fu_ccgx_dmc_firmware_add_magic;
 }
 
 FuFirmware *
