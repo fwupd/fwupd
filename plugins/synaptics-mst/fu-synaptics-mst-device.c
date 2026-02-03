@@ -937,7 +937,7 @@ fu_synaptics_mst_device_update_panamera_set_new_valid_cb(FuDevice *device,
 	buf[3] = g_date_time_get_year(dt) - 2000;
 	buf[4] = (helper->checksum >> 8) & 0xff;
 	buf[5] = helper->checksum & 0xff;
-	buf[15] = fu_synaptics_mst_calculate_crc8(0, buf, sizeof(buf) - 1);
+	buf[15] = fu_crc8(FU_CRC_KIND_B8_DVB_S2, buf, sizeof(buf) - 1);
 	g_debug("tag date %x %x %x crc %x %x %x %x",
 		buf[1],
 		buf[2],
