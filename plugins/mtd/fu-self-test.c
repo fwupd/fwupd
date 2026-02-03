@@ -309,14 +309,11 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	(void)g_setenv("FWUPD_MTD_VERBOSE", "1", TRUE);
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	/* do not save silo */
 	self->ctx = fu_context_new();
+	fu_context_set_path(self->ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
 	fu_config_set_basename(fu_context_get_config(self->ctx), "mtd-fwupd.conf");
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
@@ -325,11 +322,10 @@ main(int argc, char **argv)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	g_test_add_data_func("/mtd/device{raw}", self, fu_test_mtd_device_raw_func);
-	g_test_add_data_func("/mtd/device{uswid}", self, fu_test_mtd_device_uswid_func);
-	g_test_add_data_func("/mtd/device{ifd}", self, fu_test_mtd_device_ifd_func);
-	g_test_add_data_func("/mtd/device{fmap}", self, fu_test_mtd_device_fmap_func);
-	g_test_add_data_func("/mtd/device{smbios}", self, fu_test_mtd_device_smbios_func);
+	g_test_add_data_func("/mtd/device/raw", self, fu_test_mtd_device_raw_func);
+	g_test_add_data_func("/mtd/device/uswid", self, fu_test_mtd_device_uswid_func);
+	g_test_add_data_func("/mtd/device/ifd", self, fu_test_mtd_device_ifd_func);
+	g_test_add_data_func("/mtd/device/fmap", self, fu_test_mtd_device_fmap_func);
+	g_test_add_data_func("/mtd/device/smbios", self, fu_test_mtd_device_smbios_func);
 	return g_test_run();
 }

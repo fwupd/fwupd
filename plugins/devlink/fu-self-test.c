@@ -13,6 +13,7 @@
 #include "fu-plugin-private.h"
 
 typedef struct {
+	FuPathStore *pstore;
 	guint device_id;
 } FuDevlinkNetdevsim;
 
@@ -41,24 +42,44 @@ fu_devlink_file_write_helper(const gchar *path, const guint value, GError **erro
 }
 
 static gboolean
-fu_devlink_netdevsim_sysfs_write(const gchar *filename, const guint value, GError **error)
+fu_devlink_netdevsim_sysfs_write(FuPathStore *pstore,
+				 const gchar *filename,
+				 const guint value,
+				 GError **error)
 {
-	g_autofree gchar *path =
-	    fu_path_build(FU_PATH_KIND_SYSFSDIR, "bus", "netdevsim", filename, NULL);
+	g_autofree gchar *path = NULL;
 
+	path = fu_path_store_build_filename(pstore,
+					    error,
+					    FU_PATH_KIND_SYSFSDIR,
+					    "bus",
+					    "netdevsim",
+					    filename,
+					    NULL);
+	if (path == NULL)
+		return FALSE;
 	return fu_devlink_file_write_helper(path, value, error);
 }
 
 static gboolean
-fu_devlink_netdevsim_debugfs_write(const guint device_id,
+fu_devlink_netdevsim_debugfs_write(FuPathStore *pstore,
+				   const guint device_id,
 				   const gchar *filename,
 				   const guint value,
 				   GError **error)
 {
 	g_autofree gchar *device_id_str = g_strdup_printf("netdevsim%u", device_id);
-	g_autofree gchar *path =
-	    fu_path_build(FU_PATH_KIND_DEBUGFSDIR, "netdevsim", device_id_str, filename, NULL);
+	g_autofree gchar *path = NULL;
 
+	path = fu_path_store_build_filename(pstore,
+					    error,
+					    FU_PATH_KIND_DEBUGFSDIR,
+					    "netdevsim",
+					    device_id_str,
+					    filename,
+					    NULL);
+	if (path == NULL)
+		return FALSE;
 	return fu_devlink_file_write_helper(path, value, error);
 }
 
@@ -67,9 +88,12 @@ fu_devlink_netdevsim_cleanup(FuDevlinkNetdevsim *ndsim)
 {
 	g_autoptr(GError) error_local = NULL;
 
+	if (ndsim->pstore != NULL)
+		g_object_unref(ndsim->pstore);
 	if (ndsim->device_id != 0) {
 		/* remove netdevsim device */
-		if (!fu_devlink_netdevsim_sysfs_write("del_device",
+		if (!fu_devlink_netdevsim_sysfs_write(ndsim->pstore,
+						      "del_device",
 						      ndsim->device_id,
 						      &error_local)) {
 			g_debug("Failed to remove netdevsim device %u: %s",
@@ -85,18 +109,20 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuDevlinkNetdevsim, fu_devlink_netdevsim_cleanup)
 #define FU_DEVLINK_NETDEVSIM_FW_UPDATE_FLASH_CHUNK_TIME_MS 1 /* 1ms */
 
 static FuDevlinkNetdevsim *
-fu_devlink_netdevsim_new(guint device_id, GError **error)
+fu_devlink_netdevsim_new(FuPathStore *pstore, guint device_id, GError **error)
 {
 	g_autoptr(FuDevlinkNetdevsim) ndsim = g_new0(FuDevlinkNetdevsim, 1);
 	g_autoptr(GError) error_local = NULL;
 
 	/* create netdevsim device */
-	if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error))
+	if (!fu_devlink_netdevsim_sysfs_write(pstore, "new_device", device_id, error))
 		return NULL;
 
 	ndsim->device_id = device_id;
+	ndsim->pstore = g_object_ref(pstore);
 
-	if (!fu_devlink_netdevsim_debugfs_write(device_id,
+	if (!fu_devlink_netdevsim_debugfs_write(pstore,
+						device_id,
 						"fw_update_flash_chunk_time_ms",
 						FU_DEVLINK_NETDEVSIM_FW_UPDATE_FLASH_CHUNK_TIME_MS,
 						&error_local)) {
@@ -120,12 +146,16 @@ fu_devlink_plugin_flash_func(void)
 	g_autoptr(FuDevlinkNetdevsim) ndsim = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) fw_data = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	/* an actual kernel device */
+	fu_path_store_load_defaults(pstore);
+
 	/* create test netdevsim to set up netdevsim device */
-	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
+	ndsim = fu_devlink_netdevsim_new(pstore, FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
 	if (ndsim == NULL) {
 		g_autofree gchar *msg =
 		    g_strdup_printf("failed to create netdevsim device: %s", error_local->message);
@@ -193,11 +223,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
-	/* tests go here */
 	g_test_add_func("/devlink/plugin/flash", fu_devlink_plugin_flash_func);
 	return g_test_run();
 }

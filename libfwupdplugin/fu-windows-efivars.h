@@ -8,5 +8,5 @@
 
 #include "fu-efivars.h"
 
-#define FU_TYPE_FREEBSD_EFIVARS (fu_windows_efivars_get_type())
-G_DECLARE_FINAL_TYPE(FuWindowsEfivars, fu_windows_efivars, FU, FREEBSD_EFIVARS, FuEfivars)
+#define FU_TYPE_WINDOWS_EFIVARS (fu_windows_efivars_get_type())
+G_DECLARE_FINAL_TYPE(FuWindowsEfivars, fu_windows_efivars, FU, WINDOWS_EFIVARS, FuEfivars)

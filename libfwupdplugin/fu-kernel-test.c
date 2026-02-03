@@ -49,6 +49,7 @@ fu_kernel_lockdown_func(void)
 	g_autofree gchar *locked_dir = NULL;
 	g_autofree gchar *none_dir = NULL;
 	g_autofree gchar *old_kernel_dir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 
 #ifndef __linux__
 	g_test_skip("only works on Linux");
@@ -56,24 +57,25 @@ fu_kernel_lockdown_func(void)
 #endif
 
 	old_kernel_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", NULL);
-	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
-	ret = fu_kernel_locked_down();
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR_SECURITY, old_kernel_dir);
+	ret = fu_kernel_locked_down(pstore);
 	g_assert_false(ret);
 
 	locked_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "locked", NULL);
-	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
-	ret = fu_kernel_locked_down();
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR_SECURITY, locked_dir);
+	ret = fu_kernel_locked_down(pstore);
 	g_assert_true(ret);
 
 	none_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "none", NULL);
-	(void)g_setenv("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
-	ret = fu_kernel_locked_down();
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR_SECURITY, none_dir);
+	ret = fu_kernel_locked_down(pstore);
 	g_assert_false(ret);
 }
 
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/kernel/cmdline", fu_kernel_cmdline_func);
 	g_test_add_func("/fwupd/kernel/config", fu_kernel_config_func);

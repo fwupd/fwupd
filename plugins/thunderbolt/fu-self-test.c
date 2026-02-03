@@ -1303,13 +1303,8 @@ test_update_fail_nowshow(FuThunderboltTest *tt, gconstpointer user_data)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	g_test_add("/thunderbolt/basic",
 		   FuThunderboltTest,

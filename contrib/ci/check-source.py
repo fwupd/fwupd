@@ -781,6 +781,7 @@ class Checker:
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
             "memcpy": "Use fu_memcpy_safe or rustgen instead",
+            "g_unsetenv": "This is not thread safe",
             "~GUINT??_FROM_?E": "Use fu_memread_uintXX_safe() or rustgen instead",
             "~GUINT??_TO_?E": "Use fu_memwrite_uintXX_safe() or rustgen instead",
             "ioctl": "Use fu_udev_device_ioctl() instead",
@@ -815,6 +816,10 @@ class Checker:
 
         for search, msg in {
             "__FUNCTION__": "Use G_STRFUNC instead",
+            "__VA_ARGS__": "Use native functions instead",
+            "uint32_t": "Use guint32 instead",
+            "uint16_t": "Use guint16 instead",
+            "uint8_t": "Use guint8 instead",
         }.items():
             for token in node.tokens:
                 if token.data.find(search) != -1:
@@ -1149,7 +1154,7 @@ class Checker:
     def _test_device_convert_version(self, nodes: list[Node]) -> None:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
-            "fu-self-test.c",
+            "fu-engine-test.c",
         ]:
             return
 

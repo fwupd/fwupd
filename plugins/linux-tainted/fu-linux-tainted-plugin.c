@@ -51,10 +51,19 @@ fu_linux_tainted_plugin_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_linux_tainted_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuLinuxTaintedPlugin *self = FU_LINUX_TAINTED_PLUGIN(plugin);
 	g_autofree gchar *fn = NULL;
 
-	fn = fu_path_build(FU_PATH_KIND_PROCFS, "sys", "kernel", "tainted", NULL);
+	fn = fu_context_build_filename(ctx,
+				       error,
+				       FU_PATH_KIND_PROCFS,
+				       "sys",
+				       "kernel",
+				       "tainted",
+				       NULL);
+	if (fn == NULL)
+		return FALSE;
 	self->file = g_file_new_for_path(fn);
 	self->monitor = g_file_monitor(self->file, G_FILE_MONITOR_NONE, NULL, error);
 	if (self->monitor == NULL)
