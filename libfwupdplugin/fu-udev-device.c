@@ -740,6 +740,9 @@ const gchar *
 fu_udev_device_get_sysfs_path(FuUdevDevice *self)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID))
+		return fu_device_get_physical_id(FU_DEVICE(self));
 	return fu_device_get_backend_id(FU_DEVICE(self));
 }
 
@@ -2562,6 +2565,7 @@ fu_udev_device_init(FuUdevDevice *self)
 	priv->properties = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_udev_device_vid_notify_cb),
