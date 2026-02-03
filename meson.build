@@ -659,7 +659,7 @@ if build_standalone
 endif
 
 flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-allow_flashrom = flashrom.allowed()
+libflashrom = disabler()
 if build_standalone
   libflashrom = dependency(
     'flashrom',
@@ -672,6 +672,9 @@ if build_standalone
   )
     conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
   endif
+  allow_flashrom = flashrom.allowed() and libflashrom.found()
+else
+  allow_flashrom = false
 endif
 
 if libsystemd.found()
