@@ -14,6 +14,7 @@ plugins/analogix/ @xtcui
 plugins/android-boot/ @DylanVanAssche
 plugins/aver-hid/ @AVer-V001598
 plugins/bcm57xx/ @meklort
+plugins/blestech-tp/ @xiaomaoting
 plugins/bnr-dp/ @tmuehlbacher-bnr
 plugins/ccgx/ @IfxBrent
 plugins/ccgx-dmc/ @IfxBrent
