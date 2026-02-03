@@ -1080,9 +1080,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
-	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
-							    g_bytes_get_data(helper->fw, NULL),
-							    g_bytes_get_size(helper->fw));
+	helper->checksum = fu_crc16_bytes(FU_CRC_KIND_B16_UMTS, helper->fw);
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_BANK_OFFSET * helper->bank_to_update,
@@ -1307,9 +1305,7 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
-	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
-							    g_bytes_get_data(helper->fw, NULL),
-							    g_bytes_get_size(helper->fw));
+	helper->checksum = fu_crc16_bytes(FU_CRC_KIND_B16_UMTS, helper->fw);
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       FU_CHUNK_ADDR_OFFSET_NONE,

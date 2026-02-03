@@ -21,5 +21,3 @@ FuSynapticsMstFamily
 fu_synaptics_mst_family_from_chip_id(guint16 chip_id);
 guint8
 fu_synaptics_mst_calculate_crc8(guint8 crc, const guint8 *buf, gsize bufsz);
-guint16
-fu_synaptics_mst_calculate_crc16(guint16 crc, const guint8 *buf, gsize bufsz);
