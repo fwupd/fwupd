@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-firmware.h"
 
 struct _FuSynapticsMstFirmware {
