@@ -1,0 +1,4 @@
+[HIDRAW\VEN_347D]
+Plugin = blestechtp
+Flags = enforce-requires
+GType = FuBlestechtpHidDevice

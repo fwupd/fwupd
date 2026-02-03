@@ -29,6 +29,7 @@ plugins = {
   'aver-hid': false,
   'bcm57xx': false,
   'bios': false,
+  'blestech-tp': false,
   'bnr-dp': false,
   'ccgx': false,
   'ccgx-dmc': false,
