@@ -62,14 +62,17 @@ fu_ccgx_pure_hid_device_enter_flashing_mode(FuCcgxPureHidDevice *self, GError **
 static gboolean
 fu_ccgx_pure_hid_device_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
 {
-	guint8 buf[8] = {FU_CCGX_PURE_HID_REPORT_ID_CUSTOM,
-			 FU_CCGX_PD_RESP_BRIDGE_MODE_CMD_SIG,
-			 0x43,
-			 0x59,
-			 0x00,
-			 0x00,
-			 0x00,
-			 0x0B};
+	/* nocheck:magic */
+	guint8 buf[8] = {
+	    FU_CCGX_PURE_HID_REPORT_ID_CUSTOM,
+	    FU_CCGX_PD_RESP_BRIDGE_MODE_CMD_SIG,
+	    0x43,
+	    0x59,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x0B,
+	};
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),

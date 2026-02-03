@@ -255,8 +255,10 @@ static gboolean
 fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, GError **error)
 {
 	guint duration_ms = 0;
-	guint8 ait_finalize_update[XU_INPUT_DATA_LEN] =
-	    {kLogiTapAitSetMmpCmdFwBurning, kLogiTapVideoAitInitiateSetMMPData, 0, 0, 0, 0, 0, 0};
+	guint8 ait_finalize_update[XU_INPUT_DATA_LEN] = {
+	    kLogiTapAitSetMmpCmdFwBurning,
+	    kLogiTapVideoAitInitiateSetMMPData,
+	};
 
 	fu_device_sleep(FU_DEVICE(self), 4 * kLogiDefaultAitSleepIntervalMs); /* 4 sec */
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
@@ -419,7 +421,9 @@ static gboolean
 fu_logitech_tap_hdmi_device_ensure_version(FuLogitechTapHdmiDevice *self, GError **error)
 {
 	guint16 bufsz = 0;
-	guint8 set_data[XU_INPUT_DATA_LEN] = {kLogiTapHdmiVerSetData, 0, 0, 0, 0, 0, 0, 0};
+	guint8 set_data[XU_INPUT_DATA_LEN] = {
+	    kLogiTapHdmiVerSetData,
+	};
 	guint16 build = 0;
 	guint16 minor = 0;
 	guint16 major = 0;

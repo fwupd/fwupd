@@ -413,7 +413,8 @@ fu_synaptics_prometheus_device_attach(FuDevice *device, FuProgress *progress, GE
 {
 	gboolean ret;
 	gsize actual_len = 0;
-	guint8 data[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	/* nocheck:magic */
+	guint8 data[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 	/* sanity check */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -458,6 +459,7 @@ static gboolean
 fu_synaptics_prometheus_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	gsize actual_len = 0;
+	/* nocheck:magic */
 	guint8 data[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
 
 	/* sanity check */

@@ -341,7 +341,17 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuElanfpDevice *self = FU_ELANFP_DEVICE(device);
-	guint8 usb_buf[8] = {0x40, 0x27, 0x57, 0x44, 0x54, 0x52, 0x53, 0x54};
+	/* nocheck:magic */
+	guint8 usb_buf[8] = {
+	    0x40,
+	    0x27,
+	    0x57,
+	    0x44,
+	    0x54,
+	    0x52,
+	    0x53,
+	    0x54,
+	};
 	guint i;
 	struct {
 		const gchar *tag;
