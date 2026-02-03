@@ -153,6 +153,7 @@ fu_efi_device_path_list_class_init(FuEfiDevicePathListClass *klass)
 static void
 fu_efi_device_path_list_init(FuEfiDevicePathList *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILE_PATH_DEVICE_PATH);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_HARD_DRIVE_DEVICE_PATH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_DEVICE_PATH_LIST_IMAGES_MAX);
