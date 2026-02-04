@@ -50,87 +50,29 @@ fu_novatek_ts_firmware_new(void)
 }
 
 static gboolean
-fu_novatek_ts_firmware_find_fw_bin_end_flag(const guint8 *base,
-					    guint32 size,
-					    guint32 *flag_offset,
-					    guint32 *delta_out,
-					    GError **error)
-{
-	const guint32 step = 0x1000;
-	guint32 delta = 0;
-	guint32 offset = 0;
-	guint8 end_char[FW_BIN_END_FLAG_LEN] = {0};
-
-	for (delta = 0; delta <= 0x1000; delta += step) {
-		if (size < FW_BIN_END_FLAG_LEN + delta)
-			return FALSE;
-
-		offset = size - FW_BIN_END_FLAG_LEN - delta;
-		if (!fu_memcpy_safe(end_char,
-				    sizeof(end_char),
-				    0,
-				    base,
-				    size,
-				    offset,
-				    FW_BIN_END_FLAG_LEN,
-				    error)) {
-			g_prefix_error_literal(error, "copying end flag failed: ");
-			return FALSE;
-		}
-		if (memcmp(end_char, FW_BIN_END_FLAG_STR, FW_BIN_END_FLAG_LEN) == 0) {
-			if (flag_offset != NULL)
-				*flag_offset = offset;
-			if (delta_out != NULL)
-				*delta_out = delta;
-			return TRUE;
-		}
-
-		if (size < FW_BIN_END_FLAG_LEN + delta + step)
-			break;
-	}
-
-	return FALSE;
-}
-
-static gboolean
 fu_novatek_ts_firmware_check_end_flag(const guint8 *bin_data, guint32 *bin_size, GError **error)
 {
-	guint32 flag_offset = 0;
-	guint32 delta = 0;
 	const guint8 *base = bin_data;
 	const guint32 sz = *bin_size;
-	guint8 end_char[FW_BIN_END_FLAG_LEN + 1] = {0};
+	if (sz < FW_BIN_END_FLAG_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware blob too small for end flag");
+		return FALSE;
+	}
 
-	if (!fu_novatek_ts_firmware_find_fw_bin_end_flag(base, sz, &flag_offset, &delta, error)) {
+	if (memcmp(base + (sz - FW_BIN_END_FLAG_LEN), FW_BIN_END_FLAG_STR, FW_BIN_END_FLAG_LEN) !=
+	    0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "binary end flag not found at end or at (-0x1000) steps "
-			    "(expected [%s]), abort.",
+			    FWUPD_ERROR_INVALID_FILE,
+			    "binary end flag not found at end (expected [%s])",
 			    FW_BIN_END_FLAG_STR);
 		return FALSE;
 	}
 
-	if (!fu_memcpy_safe((guint8 *)end_char,
-			    sizeof(end_char),
-			    0,
-			    base,
-			    sz,
-			    flag_offset,
-			    FW_BIN_END_FLAG_LEN,
-			    error)) {
-		g_prefix_error_literal(error, "copying end flag failed: ");
-		return FALSE;
-	}
-
-	g_info("found hid fw bin flag [%s] at offset 0x%X (probe delta 0x%X)",
-	       FW_BIN_END_FLAG_STR,
-	       flag_offset,
-	       delta);
-	g_info("raw end bytes = [%s]", end_char);
-
-	/* clamp size to include the full "NVT" trailer */
-	*bin_size = flag_offset + FW_BIN_END_FLAG_LEN;
+	g_info("found hid fw bin flag [%s] at end of firmware", FW_BIN_END_FLAG_STR);
 	return TRUE;
 }
 

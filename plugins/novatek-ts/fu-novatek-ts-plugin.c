@@ -8,8 +8,6 @@
 #include "fu-novatek-ts-device.h"
 #include "fu-novatek-ts-firmware.h"
 
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "FuPluginNovatekTs"
 
 struct _FuNovatekTsPlugin {
 	FuPlugin parent_instance;
@@ -20,9 +18,7 @@ G_DEFINE_TYPE(FuNovatekTsPlugin, fu_novatek_ts_plugin, FU_TYPE_PLUGIN)
 static void
 fu_novatek_ts_plugin_constructed(GObject *obj)
 {
-	FuPlugin *plugin;
-
-	plugin = FU_PLUGIN(obj);
+	FuPlugin *plugin = FU_PLUGIN(obj);
 
 	fu_plugin_add_device_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_NOVATEK_TS_DEVICE);
@@ -32,14 +28,12 @@ fu_novatek_ts_plugin_constructed(GObject *obj)
 static void
 fu_novatek_ts_plugin_class_init(FuNovatekTsPluginClass *klass)
 {
-	GObjectClass *object_class;
-
-	object_class = G_OBJECT_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->constructed = fu_novatek_ts_plugin_constructed;
 }
 
 static void
 fu_novatek_ts_plugin_init(FuNovatekTsPlugin *self)
 {
-	g_info("plugin init, plugin version %s", NVT_TS_PLUGIN_VERSION);
+	g_info("plugin init, fwupd %s (source %s)", VERSION, SOURCE_VERSION);
 }

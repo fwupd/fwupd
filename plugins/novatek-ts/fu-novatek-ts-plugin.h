@@ -8,10 +8,7 @@
 #include <fwupdplugin.h>
 
 #include <fcntl.h>
-#include <stdint.h>
 #include <unistd.h>
-
-#define NVT_TS_PLUGIN_VERSION "4.0.0"
 
 /* plugin type */
 #define FU_TYPE_NOVATEK_TS_PLUGIN (fu_novatek_ts_plugin_get_type())
@@ -29,16 +26,3 @@ G_DECLARE_FINAL_TYPE(FuNovatekTsPlugin, fu_novatek_ts_plugin, FU, NOVATEK_TS_PLU
 #define MAX_BIN_SIZE		 SIZE_320KB
 #define FW_BIN_END_FLAG_STR	 "NVT"
 #define FW_BIN_END_FLAG_LEN	 3
-
-typedef struct {
-	uint8_t flash_cmd;
-	uint32_t flash_addr;
-	uint16_t flash_checksum;
-	uint8_t flash_addr_len;
-	uint8_t pem_byte_len;
-	uint8_t dummy_byte_len;
-	uint8_t *tx_buf;
-	uint16_t tx_len;
-	uint8_t *rx_buf;
-	uint16_t rx_len;
-} FuNovatekTsGcmXfer;

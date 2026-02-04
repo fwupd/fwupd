@@ -9,8 +9,30 @@
 #include "fu-novatek-ts-firmware.h"
 #include "fu-novatek-ts-struct.h"
 
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "FuPluginNovatekTs"
+typedef struct {
+	guint8 flash_cmd;
+	guint32 flash_addr;
+	guint16 flash_checksum;
+	guint8 flash_addr_len;
+	guint8 pem_byte_len;
+	guint8 dummy_byte_len;
+	guint8 *tx_buf;
+	guint16 tx_len;
+	guint8 *rx_buf;
+	guint16 rx_len;
+} FuNovatekTsGcmXfer;
+
+struct _FuNovatekTsDevice {
+	FuHidrawDevice parent_instance;
+	FuNovatekTsMemMap *mmap;
+	FuNovatekTsFlashMap *fmap;
+	guint8 fw_ver;
+	guint16 flash_pid;
+	guint8 flash_prog_data_cmd;
+	guint8 flash_read_data_cmd;
+	guint8 flash_read_pem_byte_len;
+	guint8 flash_read_dummy_byte_len;
+};
 
 static FuNovatekTsMemMap *
 fu_novatek_ts_device_mem_map_new_nt36536(void)
@@ -65,18 +87,6 @@ fu_novatek_ts_device_flash_map_new_nt36536(void)
 						   FU_NOVATEK_TS_FLASH_MAP_CONST_FLASH_MAX_SIZE);
 	return fmap;
 }
-
-struct _FuNovatekTsDevice {
-	FuHidrawDevice parent_instance;
-	FuNovatekTsMemMap *mmap;
-	FuNovatekTsFlashMap *fmap;
-	guint8 fw_ver;
-	guint16 flash_pid;
-	guint8 flash_prog_data_cmd;
-	guint8 flash_read_data_cmd;
-	guint8 flash_read_pem_byte_len;
-	guint8 flash_read_dummy_byte_len;
-};
 
 static gboolean
 fu_novatek_ts_device_hid_read_dev(FuNovatekTsDevice *self,
@@ -278,7 +288,7 @@ fu_novatek_ts_device_gcm_xfer_rx_chunk(FuNovatekTsDevice *self,
 
 typedef struct {
 	guint32 addr;
-	guint8 *buf;
+	GByteArray *buf;
 	guint8 flash_cmd;
 } FuNovatekTsCmdIssueCtx;
 
@@ -288,9 +298,9 @@ fu_novatek_ts_device_wait_cmd_issue_cb(FuDevice *device, gpointer user_data, GEr
 	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(device);
 	FuNovatekTsCmdIssueCtx *ctx = (FuNovatekTsCmdIssueCtx *)user_data;
 
-	if (!fu_novatek_ts_device_hid_read(self, ctx->addr, ctx->buf, 1, error))
+	if (!fu_novatek_ts_device_hid_read(self, ctx->addr, ctx->buf->data, 1, error))
 		return FALSE;
-	if (ctx->buf[0] == FU_NOVATEK_TS_VALUE_CONST_ZERO)
+	if (ctx->buf->data[0] == FU_NOVATEK_TS_VALUE_CONST_ZERO)
 		return TRUE;
 	g_set_error(error,
 		    FWUPD_ERROR,
@@ -310,7 +320,7 @@ fu_novatek_ts_device_retry_busy_cb(FuDevice *device, gpointer user_data, GError 
 static gboolean
 fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer, GError **error)
 {
-	g_autofree guint8 *buf = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 	guint32 flash_cmd_addr = 0;
 	guint32 flash_cmd_issue_addr = 0;
 	guint32 rw_flash_data_addr = 0;
@@ -331,7 +341,7 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	transfer_len = NVT_TRANSFER_LEN;
 
 	total_buf_size = 64 + xfer->tx_len + xfer->rx_len;
-	buf = g_malloc0(total_buf_size);
+	buf = g_byte_array_sized_new(total_buf_size);
 	if (buf == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -340,6 +350,7 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 			    total_buf_size);
 		return FALSE;
 	}
+	g_byte_array_set_size(buf, total_buf_size);
 
 	if ((xfer->tx_len > 0) && xfer->tx_buf != NULL) {
 		chunks_tx = fu_chunk_array_new(xfer->tx_buf,
@@ -351,15 +362,15 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 			chk = g_ptr_array_index(chunks_tx, i);
 			if (!fu_novatek_ts_device_gcm_xfer_tx_chunk(self,
 								    chk,
-								    buf,
-								    total_buf_size,
+								    buf->data,
+								    buf->len,
 								    rw_flash_data_addr,
 								    error))
 				return FALSE;
 		}
 	}
 
-	memset(buf, 0, total_buf_size);
+	memset(buf->data, 0, buf->len);
 	st_cmd = fu_struct_novatek_ts_gcm_cmd_new();
 	fu_struct_novatek_ts_gcm_cmd_set_flash_cmd(st_cmd, xfer->flash_cmd);
 	if (xfer->flash_addr_len > 0)
@@ -394,7 +405,7 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	}
 
 	if ((xfer->rx_len > 0) && xfer->rx_buf != NULL) {
-		memset(buf, 0, xfer->rx_len);
+		memset(buf->data, 0, xfer->rx_len);
 		chunks_rx = fu_chunk_array_new(NULL,
 					       xfer->rx_len,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
@@ -404,8 +415,8 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 			chk = g_ptr_array_index(chunks_rx, i);
 			if (!fu_novatek_ts_device_gcm_xfer_rx_chunk(self,
 								    chk,
-								    buf,
-								    total_buf_size,
+								    buf->data,
+								    buf->len,
 								    rw_flash_data_addr,
 								    xfer->rx_buf,
 								    xfer->rx_len,
@@ -796,8 +807,6 @@ fu_novatek_ts_device_get_checksum_gcm(FuNovatekTsDevice *self,
 		return FALSE;
 	}
 
-	buf[0] = FU_NOVATEK_TS_VALUE_CONST_ZERO;
-	buf[1] = FU_NOVATEK_TS_VALUE_CONST_ZERO;
 	if (!fu_novatek_ts_device_hid_read(
 		self,
 		fu_novatek_ts_mem_map_get_read_flash_checksum_addr(self->mmap),
@@ -807,7 +816,7 @@ fu_novatek_ts_device_get_checksum_gcm(FuNovatekTsDevice *self,
 		g_prefix_error_literal(error, "Get checksum error: ");
 		return FALSE;
 	}
-	*checksum = (buf[1] << 8) | buf[0];
+	*checksum = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	return TRUE;
 }
@@ -1253,7 +1262,8 @@ fu_novatek_ts_device_update_firmware_reset(FuNovatekTsDevice *self,
 						  error))
 		return FALSE;
 
-	(void)fu_novatek_ts_device_bootloader_reset(self, error);
+	if (!fu_novatek_ts_device_bootloader_reset(self, error))
+		return FALSE;
 	return TRUE;
 }
 
@@ -1361,11 +1371,21 @@ fu_novatek_ts_device_read_flash_data_gcm(FuNovatekTsDevice *self,
 {
 	FuNovatekTsReadFlashCtx ctx = {0};
 
-	if (out == NULL || len == 0)
+	if (out == NULL || len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "invalid output buffer or length");
 		return FALSE;
+	}
 	/* keep this simple; expand later if you want >256 */
-	if (len > 256)
+	if (len > 256) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "read length > 256 not supported");
 		return FALSE;
+	}
 
 	ctx.flash_addr = flash_addr;
 	ctx.len = len;
@@ -1513,10 +1533,7 @@ fu_novatek_ts_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	parent_class = FU_DEVICE_CLASS(fu_novatek_ts_device_parent_class);
-	if (parent_class->setup != NULL)
-		return parent_class->setup(device, error);
-
-	return TRUE;
+	return parent_class->setup(device, error);
 }
 
 static void
@@ -1613,9 +1630,6 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 		flash_start_addr,
 		fu_novatek_ts_flash_map_get_flash_max_size(self->fmap),
 		error))
-		return FALSE;
-
-	if (!fu_device_open(device, error))
 		return FALSE;
 
 	ctx.bin_data = bin_data;
