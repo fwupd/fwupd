@@ -332,6 +332,31 @@ fwupd_json_array_add_array(FwupdJsonArray *self, FwupdJsonArray *json_arr)
 }
 
 /**
+ * fwupd_json_array_add_bytes:
+ * @self: a #FwupdJsonArray
+ * @value: (not nullable): string value
+ *
+ * Adds bytes to a JSON array. They will be base64 encoded as a string.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_array_add_bytes(FwupdJsonArray *self, GBytes *value)
+{
+	g_autofree gchar *b64data = NULL;
+	const guint8 *buf;
+	gsize bufsz = 0;
+
+	g_return_if_fail(self != NULL);
+	g_return_if_fail(value != NULL);
+
+	buf = g_bytes_get_data(value, &bufsz);
+	b64data = g_base64_encode(buf, bufsz);
+
+	g_ptr_array_add(self->nodes, fwupd_json_node_new_string(b64data));
+}
+
+/**
  * fwupd_json_array_append_string:
  * @self: a #FwupdJsonArray
  * @str: a #GString
