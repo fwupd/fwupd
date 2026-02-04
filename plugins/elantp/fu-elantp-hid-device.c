@@ -520,8 +520,9 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_read_mcu_ic_type(self, &error_mcu)) {
 		g_debug("no mcu device detected: %s", error_mcu->message);
 	} else {
-		g_autoptr(FuElantpHidMcuDevice) cfg = fu_elantp_hid_mcu_device_new();
-		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
+		g_autoptr(FuElantpHidMcuDevice) cfg =
+		    fu_elantp_hid_mcu_device_new(FU_DEVICE(device));
+		fu_plugin_device_add(self, FU_DEVICE(cfg));
 	}
 
 	/* fix an unsuitable i²c name, e.g. `VEN 04F3:00 04F3:3XXX` or `0672:00 04F3:3187` */
