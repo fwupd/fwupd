@@ -426,7 +426,12 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 static gboolean
 fu_udev_backend_devnode_wait_cb(FuDevice *device, gpointer user_data, GError **error)
 {
+	if (device == NULL)
+		return TRUE;
+
 	const gchar *dev_file = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+	if (dev_file == NULL)
+		return FALSE;
 
 	/* if the device has no associated /dev/ node (e.g. pure sysfs), we skip it */
 	if (dev_file != NULL && !g_file_test(dev_file, G_FILE_TEST_EXISTS)) {
