@@ -21,6 +21,7 @@ struct _FuFastbootDevice {
 	FuUsbDevice parent_instance;
 	guint blocksz;
 	guint operation_delay;
+	gboolean device_version_override_support;
 };
 
 G_DEFINE_TYPE(FuFastbootDevice, fu_fastboot_device, FU_TYPE_USB_DEVICE)
@@ -302,6 +303,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *serialno = NULL;
 	g_autofree gchar *secure = NULL;
 	g_autofree gchar *version_bootloader = NULL;
+	g_autofree gchar *version_device = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_fastboot_device_parent_class)->setup(device, error))
@@ -334,6 +336,20 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	} else {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	}
+
+	/* chance to override device version */
+	if (self->device_version_override_support) {
+		if (!fu_fastboot_device_getvar(self, "version-device", &version_device, error))
+			return FALSE;
+
+		if ((version_device != NULL) && (version_device[0] != '\0')) {
+			const FwupdVersionFormat version_format = fu_version_guess_format(version_device);
+			if (version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
+				fu_device_set_version_format(device, version_format);
+				fu_device_set_version(device, version_device);
+			}
+		}
 	}
 
 	/* success */
@@ -672,6 +688,9 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 
+	if (g_strcmp0(key, "FastbootDeviceVersion") == 0)
+		return fu_strtobool(value, &self->device_version_override_support, error);
+
 	/* failed */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -712,6 +731,7 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 	self->blocksz = 512;
 	/* no delay is applied by default after a read or write operation */
 	self->operation_delay = 0;
+	self->device_version_override_support = FALSE;
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.fastboot");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
