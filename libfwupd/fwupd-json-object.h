@@ -83,6 +83,9 @@ void
 fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_json_object_add_bytes(FwupdJsonObject *self, const gchar *key, GBytes *value)
+    G_GNUC_NON_NULL(1, 2, 3);
+void
 fwupd_json_object_add_array_strv(FwupdJsonObject *self, const gchar *key, gchar **value)
     G_GNUC_NON_NULL(1, 2);
 void

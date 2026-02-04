@@ -790,6 +790,36 @@ fwupd_json_object_add_string(FwupdJsonObject *self, const gchar *key, const gcha
 }
 
 /**
+ * fwupd_json_object_add_bytes:
+ * @self: a #FwupdJsonObject
+ * @key: (not nullable): dictionary key
+ * @value: (not nullable): value
+ *
+ * Adds bytes to the JSON object. They will be base64 encoded as a string.
+ * If the node already exists the old one is replaced.
+ *
+ * Since: 2.1.1
+ **/
+void
+fwupd_json_object_add_bytes(FwupdJsonObject *self, const gchar *key, GBytes *value)
+{
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autofree gchar *b64data = NULL;
+	const guint8 *buf;
+	gsize bufsz = 0;
+
+	g_return_if_fail(self != NULL);
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+
+	buf = g_bytes_get_data(value, &bufsz);
+	b64data = g_base64_encode(buf, bufsz);
+
+	json_node = fwupd_json_node_new_string(b64data);
+	fwupd_json_object_add_node(self, key, json_node);
+}
+
+/**
  * fwupd_json_object_add_array_strv:
  * @self: a #FwupdJsonObject
  * @key: (not nullable): dictionary key
