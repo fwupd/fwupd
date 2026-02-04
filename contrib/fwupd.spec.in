@@ -264,6 +264,7 @@ cd fwupd-1.9.%{libfwupd_19x_version}
     -Dbash_completion=false \
     -Dplugin_msr=disabled \
     -Dintrospection=disabled \
+    -Dplugin_logitech_bulkcontroller=disabled \
     -Dlaunchd=disabled
 %meson_build
 cd -

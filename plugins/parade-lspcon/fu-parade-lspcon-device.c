@@ -403,6 +403,7 @@ fu_parade_lspcon_device_flash_write(FuParadeLspconDevice *self,
 				    GError **error)
 {
 	FuI2cDevice *i2c_device = FU_I2C_DEVICE(self);
+	/* nocheck:magic */
 	const guint8 unlock_writes[] = {0xaa, 0x55, 0x50, 0x41, 0x52, 0x44};
 	g_autoptr(FuChunkArray) chunks = NULL;
 

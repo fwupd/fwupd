@@ -12,6 +12,8 @@ guint32
 fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc);
 guint32
 fu_crc32_done(FuCrcKind kind, guint32 crc);
+guint32
+fu_crc32_fast(const guint8 *buf, gsize bufsz, guint32 crc);
 
 guint16
 fu_crc16_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint16 crc);

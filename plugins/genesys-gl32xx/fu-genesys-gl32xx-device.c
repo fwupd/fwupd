@@ -35,6 +35,7 @@ fu_genesys_gl32xx_device_set_chip_name(FuGenesysGl32xxDevice *self, const gchar 
 static GByteArray *
 fu_genesys_gl32xx_device_cmd_get_version(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0x12, 0x00, 0x00, 0x00, 0x2e, 0x00};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	fu_byte_array_set_size(buf, 0x2E, 0x0);
@@ -51,6 +52,7 @@ fu_genesys_gl32xx_device_cmd_get_version(FuGenesysGl32xxDevice *self, GError **e
 static gboolean
 fu_genesys_gl32xx_device_cmd_switch_to_rom_mode(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x06, 0x00, 0x00, 0x00, 0x00};
 	if (!fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error)) {
 		g_prefix_error_literal(error, "failed to switch into ROM mode: ");
@@ -64,6 +66,7 @@ fu_genesys_gl32xx_device_cmd_switch_to_rom_mode(FuGenesysGl32xxDevice *self, GEr
 static gboolean
 fu_genesys_gl32xx_device_cmd_reset_usb(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xE6, 0x00, 0x00, 0x00, 0x00, 0x00};
 	if (!fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error)) {
 		g_prefix_error_literal(error, "failed to reset USB: ");
@@ -77,6 +80,7 @@ fu_genesys_gl32xx_device_cmd_reset_usb(FuGenesysGl32xxDevice *self, GError **err
 static gboolean
 fu_genesys_gl32xx_device_cmd_write_sr(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x01, 0x00, 0x00, 0x01, 0x00};
 	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
@@ -84,6 +88,7 @@ fu_genesys_gl32xx_device_cmd_write_sr(FuGenesysGl32xxDevice *self, GError **erro
 static gboolean
 fu_genesys_gl32xx_device_cmd_write_enable(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x00, 0x00, 0x00, 0x06, 0x00};
 	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
@@ -91,6 +96,7 @@ fu_genesys_gl32xx_device_cmd_write_enable(FuGenesysGl32xxDevice *self, GError **
 static gboolean
 fu_genesys_gl32xx_device_cmd_write_disable(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x00, 0x00, 0x00, 0x04, 0x00};
 	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
@@ -98,6 +104,7 @@ fu_genesys_gl32xx_device_cmd_write_disable(FuGenesysGl32xxDevice *self, GError *
 static gboolean
 fu_genesys_gl32xx_device_cmd_clear_wp(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x02, 0x00, 0x02, 0x00, 0x00};
 	const guint8 data[] = {0x01, 0x00};
 	return fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
@@ -111,6 +118,7 @@ fu_genesys_gl32xx_device_cmd_clear_wp(FuGenesysGl32xxDevice *self, GError **erro
 static gboolean
 fu_genesys_gl32xx_device_cmd_chip_erase(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x00, 0x00, 0x00, 0xC7, 0x00};
 	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
@@ -118,6 +126,7 @@ fu_genesys_gl32xx_device_cmd_chip_erase(FuGenesysGl32xxDevice *self, GError **er
 static gboolean
 fu_genesys_gl32xx_device_cmd_wait_wip(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd[] = {0xF3, 0x03, 0x01, 0x00, 0x05, 0x00};
 	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
@@ -129,7 +138,19 @@ fu_genesys_gl32xx_device_cmd_read_flash(FuGenesysGl32xxDevice *self,
 					gsize datasz,
 					GError **error)
 {
-	guint8 cmd[] = {0xE4, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	/* nocheck:magic */
+	guint8 cmd[] = {
+	    0xE4,
+	    0x08,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	};
 
 	g_return_val_if_fail(data != NULL && datasz != 0, FALSE);
 
@@ -240,7 +261,9 @@ fu_genesys_gl32xx_device_check_rom_mode(FuGenesysGl32xxDevice *self,
 static gboolean
 fu_genesys_gl32xx_device_ensure_rom_mode(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	guint8 cmd_gl323x[] = {0xE4, 0x01, 0x00, 0xDC, 0x04, 0x00};
+	/* nocheck:magic */
 	guint8 cmd_gl3224[] = {0xE4, 0x01, 0x00, 0xFC, 0x04, 0x00};
 	g_autoptr(GError) error_local = NULL;
 
@@ -267,8 +290,10 @@ fu_genesys_gl32xx_device_ensure_rom_mode(FuGenesysGl32xxDevice *self, GError **e
 static gboolean
 fu_genesys_gl32xx_device_verify_chip_id(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd_req[] = {0xF3, 0x02, 0x00, 0x01, 0x00, 0x03};
 	const guint8 data_req[] = {0x9F};
+	/* nocheck:magic */
 	const guint8 cmd_get[] = {0xF3, 0x04, 0x00, 0x00, 0x00, 0x03};
 	guint8 buf[3] = {0};
 	g_autofree gchar *flash_id = NULL;
@@ -329,7 +354,9 @@ fu_genesys_gl32xx_device_ensure_enforce_requires(FuGenesysGl32xxDevice *self)
 static gboolean
 fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 {
+	/* nocheck:magic */
 	const guint8 cmd_gl3224_cid[] = {0xE4, 0x01, 0xBF, 0x80, 0x04, 0x00};
+	/* nocheck:magic */
 	const guint8 cmd_gl323x_cid[] = {0xE4, 0x01, 0x35, 0x00, 0x04, 0x00};
 	const guint8 *cmd = NULL;
 	guint16 model = fu_device_get_pid(FU_DEVICE(self));
@@ -629,7 +656,19 @@ fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chunk
 	gsize addr = fu_chunk_get_address(chunk);
 	gsize datasz = fu_chunk_get_data_sz(chunk);
 	const guint8 *data = fu_chunk_get_data(chunk);
-	guint8 cmd[] = {0xE5, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+	/* nocheck:magic */
+	guint8 cmd[] = {
+	    0xE5,
+	    0x08,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x01,
+	    0x00,
+	};
 
 	/* build command */
 	if (!fu_memwrite_uint32_safe(cmd, sizeof(cmd), 2, addr, G_BIG_ENDIAN, error))

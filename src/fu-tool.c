@@ -2594,14 +2594,12 @@ fu_util_crc_find(FuUtil *self, gchar **values, GError **error)
 	blob = fu_bytes_get_contents(values[1], error);
 	if (blob == NULL)
 		return FALSE;
-	kind = fu_crc_find(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob), crc_target);
-	if (kind == FU_CRC_KIND_UNKNOWN) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "did not find known CRC kind");
+	if (!fu_crc_find(g_bytes_get_data(blob, NULL),
+			 g_bytes_get_size(blob),
+			 crc_target,
+			 &kind,
+			 error))
 		return FALSE;
-	}
 	fu_console_print_literal(self->console, fu_crc_kind_to_string(kind));
 
 	/* success */

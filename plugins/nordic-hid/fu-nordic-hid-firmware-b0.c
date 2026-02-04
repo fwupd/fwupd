@@ -47,6 +47,7 @@ fu_nordic_hid_firmware_b0_read_fwinfo(FuNordicHidFirmwareB0 *self,
 	guint32 magic_fwinfo;
 	guint32 magic_compat;
 	guint32 offset;
+	/* nocheck:magic */
 	guint32 hdr_offset[5] = {0x0000, 0x0200, 0x400, 0x800, 0x1000};
 	guint8 ver_major = 0;
 	guint8 ver_minor = 0;
