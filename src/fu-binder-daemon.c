@@ -14,7 +14,6 @@
 #include <fwupdplugin.h>
 
 #include <android/binder_ibinder.h>
-#include <android/binder_ibinder_platform.h>
 #include <android/binder_manager.h>
 #include <android/binder_parcel.h>
 #include <android/binder_process.h>
@@ -36,14 +35,6 @@
 #endif
 
 #include "fu-binder-daemon.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-void AIBinder_markVintfStability(AIBinder* binder);
-#ifdef __cplusplus
-}
-#endif
 
 /* this can be tested using:
  * ./build/release/binder-client -v -d /dev/hwbinder -n devices@1.0/org.freedesktop.fwupd
@@ -1237,11 +1228,6 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	// Do we need service started here???
 	// TODO: Wait for service manager?
 	self->binder = AIBinder_new(self->binder_class, self);
-	
-#if __ANDROID_API__ >= 31
-	 AIBinder_markVintfStability(self->binder);
-#endif
-
 
 	nstatus = AServiceManager_addService(self->binder, BINDER_SERVICE_NAME);
 	if (nstatus != STATUS_OK) {
