@@ -18,4 +18,4 @@ G_DECLARE_FINAL_TYPE(FuElantpHidMcuDevice,
 		     FuUdevDevice)
 
 FuElantpHidMcuDevice *
-fu_elantp_hid_mcu_device_new(void);
+fu_elantp_hid_mcu_device_new(FuDevice *proxy);
