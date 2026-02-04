@@ -39,7 +39,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func("/vli/pd-common", fu_test_vli_pd_common_func);
 	return g_test_run();
 }

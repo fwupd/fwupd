@@ -17,7 +17,33 @@
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
 
-G_DEFINE_TYPE(FuEfivars, fu_efivars, G_TYPE_OBJECT)
+typedef struct {
+	FuPathStore *pstore;
+} FuEfivarsPrivate;
+
+enum { PROP_0, PROP_PATH_STORE, PROP_LAST };
+
+G_DEFINE_TYPE_WITH_PRIVATE(FuEfivars, fu_efivars, G_TYPE_OBJECT);
+
+#define GET_PRIVATE(o) (fu_efivars_get_instance_private(o))
+
+/**
+ * fu_efivars_get_path_store:
+ * @self: a #FuEfivars
+ *
+ * Gets the well-known path store.
+ *
+ * Returns: (transfer none): a #FuPathStore, or %NULL if not set
+ *
+ * Since: 2.1.1
+ **/
+FuPathStore *
+fu_efivars_get_path_store(FuEfivars *self)
+{
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
+	return priv->pstore;
+}
 
 /**
  * fu_efivars_supported:
@@ -930,11 +956,66 @@ fu_efivars_get_boot_entries(FuEfivars *self, GError **error)
 }
 
 static void
+fu_efivars_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuEfivars *self = FU_EFIVARS(object);
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_PATH_STORE:
+		g_value_set_object(value, priv->pstore);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_efivars_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuEfivars *self = FU_EFIVARS(object);
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_PATH_STORE:
+		g_set_object(&priv->pstore, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_efivars_init(FuEfivars *self)
 {
 }
 
 static void
+fu_efivars_finalize(GObject *object)
+{
+	FuEfivars *self = FU_EFIVARS(object);
+	FuEfivarsPrivate *priv = GET_PRIVATE(self);
+
+	if (priv->pstore != NULL)
+		g_object_unref(priv->pstore);
+
+	G_OBJECT_CLASS(fu_efivars_parent_class)->finalize(object);
+}
+
+static void
 fu_efivars_class_init(FuEfivarsClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
+	object_class->get_property = fu_efivars_get_property;
+	object_class->set_property = fu_efivars_set_property;
+	object_class->finalize = fu_efivars_finalize;
+
+	pspec = g_param_spec_object("path-store",
+				    NULL,
+				    NULL,
+				    FU_TYPE_PATH_STORE,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PATH_STORE, pspec);
 }

@@ -791,11 +791,20 @@ fu_devlink_device_close(FuDevice *device, GError **error)
 static FuKernelSearchPathLocker *
 fu_devlink_device_search_path_locker_new(FuDevlinkDevice *self, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	g_autofree gchar *devlink_fw_dir = NULL;
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
 	/* create a directory to store firmware files for devlink plugin */
-	devlink_fw_dir = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devlink", "firmware", NULL);
+	devlink_fw_dir = fu_context_build_filename(ctx,
+						   error,
+						   FU_PATH_KIND_CACHEDIR_PKG,
+						   "devlink",
+						   "firmware",
+						   NULL);
+	if (devlink_fw_dir == NULL)
+		return NULL;
 	if (g_mkdir_with_parents(devlink_fw_dir, 0700) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -805,7 +814,7 @@ fu_devlink_device_search_path_locker_new(FuDevlinkDevice *self, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	locker = fu_kernel_search_path_locker_new(devlink_fw_dir, error);
+	locker = fu_kernel_search_path_locker_new(pstore, devlink_fw_dir, error);
 	if (locker == NULL)
 		return NULL;
 	return g_steal_pointer(&locker);

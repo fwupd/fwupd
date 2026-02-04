@@ -10,10 +10,6 @@
 
 #include "fu-path-struct.h"
 
-gchar *
-fu_path_from_kind(FuPathKind path_kind);
-gchar *
-fu_path_build(FuPathKind path_kind, ...) G_GNUC_NULL_TERMINATED;
 GPtrArray *
 fu_path_glob(const gchar *directory, const gchar *pattern, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);

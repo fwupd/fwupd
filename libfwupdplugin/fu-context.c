@@ -19,6 +19,7 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
+#include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-pefile-firmware.h"
 #include "fu-volume-locker.h"
@@ -33,6 +34,7 @@
 
 typedef struct {
 	FuContextFlags flags;
+	FuPathStore *pstore;
 	FuHwids *hwids;
 	FuConfig *config;
 	FuSmbios *smbios;
@@ -120,18 +122,26 @@ fu_context_ensure_smbios_uefi_enabled(FuContext *self, GError **error)
 }
 
 static GFile *
-fu_context_get_fdt_file(GError **error)
+fu_context_get_fdt_file(FuContext *self, GError **error)
 {
 	g_autofree gchar *fdtfn_local = NULL;
 	g_autofree gchar *fdtfn_sys = NULL;
 
 	/* look for override first, fall back to system value */
-	fdtfn_local = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "system.dtb", NULL);
+	fdtfn_local = fu_context_build_filename(self,
+						error,
+						FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						"system.dtb",
+						NULL);
+	if (fdtfn_local == NULL)
+		return NULL;
 	if (g_file_test(fdtfn_local, G_FILE_TEST_EXISTS))
 		return g_file_new_for_path(fdtfn_local);
 
 	/* actual hardware value */
-	fdtfn_sys = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "fdt", NULL);
+	fdtfn_sys = fu_context_build_filename(self, error, FU_PATH_KIND_SYSFSDIR_FW, "fdt", NULL);
+	if (fdtfn_sys == NULL)
+		return NULL;
 	if (g_file_test(fdtfn_sys, G_FILE_TEST_EXISTS))
 		return g_file_new_for_path(fdtfn_sys);
 
@@ -170,7 +180,7 @@ fu_context_get_fdt(FuContext *self, GError **error)
 	/* load if not already parsed */
 	if (priv->fdt == NULL) {
 		g_autoptr(FuFirmware) fdt_tmp = fu_fdt_firmware_new();
-		g_autoptr(GFile) file = fu_context_get_fdt_file(error);
+		g_autoptr(GFile) file = fu_context_get_fdt_file(self, error);
 		if (file == NULL)
 			return NULL;
 		if (!fu_firmware_parse_file(fdt_tmp,
@@ -1228,11 +1238,15 @@ fu_context_detect_hypervisor_privileged(FuContext *self)
 	g_autofree gchar *xen_privileged_fn = NULL;
 
 	/* privileged xen can access most hardware */
-	xen_privileged_fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
-					  "hypervisor",
-					  "start_flags",
-					  "privileged",
-					  NULL);
+	xen_privileged_fn = fu_context_build_filename(self,
+						      NULL,
+						      FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
+						      "hypervisor",
+						      "start_flags",
+						      "privileged",
+						      NULL);
+	if (xen_privileged_fn == NULL)
+		return;
 	if (!g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
 		g_autofree gchar *contents = NULL;
 		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
@@ -1247,10 +1261,11 @@ fu_context_detect_hypervisor_privileged(FuContext *self)
 static void
 fu_context_detect_hypervisor(FuContext *self)
 {
+	FuContextPrivate *priv = GET_PRIVATE(self);
 	const gchar *flags;
 	g_autoptr(GHashTable) cpu_attrs = NULL;
 
-	cpu_attrs = fu_cpu_get_attrs(NULL);
+	cpu_attrs = fu_cpu_get_attrs(priv->pstore, NULL);
 	if (cpu_attrs == NULL)
 		return;
 	flags = g_hash_table_lookup(cpu_attrs, "flags");
@@ -1789,7 +1804,7 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 		return g_ptr_array_ref(priv->esp_volumes);
 
 	/* for the test suite use local directory for ESP */
-	path_tmp = g_getenv("FWUPD_UEFI_ESP_PATH");
+	path_tmp = fu_context_get_path(self, FU_PATH_KIND_UEFI_ESP, NULL);
 	if (path_tmp != NULL) {
 		g_autoptr(FuVolume) vol = fu_volume_new_from_mount_path(path_tmp);
 		fu_volume_set_partition_kind(vol, FU_VOLUME_KIND_ESP);
@@ -2428,6 +2443,134 @@ fu_context_set_data(FuContext *self, const gchar *key, gpointer data)
 	g_object_set_data(G_OBJECT(self), key, data);
 }
 
+/**
+ * fu_context_get_path:
+ * @self: a #FuContext
+ * @kind: a #FuPathKind
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a well-known path.
+ *
+ * Returns: (transfer full): a #FuBackend, or %NULL on error
+ *
+ * Since: 2.1.1
+ **/
+const gchar *
+fu_context_get_path(FuContext *self, FuPathKind kind, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return fu_path_store_get_path(priv->pstore, kind, error);
+}
+
+/**
+ * fu_context_build_filename:
+ * @self: a #FuContext
+ * @error: (nullable): optional return location for an error
+ * @kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ * @...: pairs of string key values, ending with %NULL
+ *
+ * Gets a fwupd-specific system path. These can be overridden with various
+ * environment variables, for instance %FWUPD_DATADIR.
+ *
+ * Returns: a system path, or %NULL if invalid
+ *
+ * Since: 2.1.1
+ **/
+gchar *
+fu_context_build_filename(FuContext *self, GError **error, FuPathKind kind, ...)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	va_list args;
+	gchar *path;
+	const gchar *path_prefix = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+
+	path_prefix = fu_path_store_get_path(priv->pstore, kind, error);
+	if (path_prefix == NULL)
+		return NULL;
+
+	va_start(args, kind);
+	path = g_build_filename_valist(path_prefix, &args);
+	va_end(args);
+
+	return path;
+}
+
+/**
+ * fu_context_set_path:
+ * @self: a #FuContext
+ * @kind: a #FuPathKind
+ *
+ * Sets a well-known path.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_set_path(FuContext *self, FuPathKind kind, const gchar *dirname)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	fu_path_store_set_path(priv->pstore, kind, dirname);
+}
+
+/**
+ * fu_context_set_tmpdir:
+ * @self: a #FuContext
+ * @tmpdir: (not nullable): a #FuTemporaryDirectory
+ *
+ * Sets the @kind to a temporary path.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_set_tmpdir(FuContext *self, FuPathKind kind, FuTemporaryDirectory *tmpdir)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(kind < FU_PATH_KIND_LAST);
+	g_return_if_fail(FU_IS_TEMPORARY_DIRECTORY(tmpdir));
+	fu_path_store_set_tmpdir(priv->pstore, kind, tmpdir);
+}
+
+/**
+ * fu_context_get_path_store:
+ * @self: a #FuContext
+ *
+ * Gets the well-known path store.
+ *
+ * Returns: (transfer none): a #FuPathStore, or %NULL if not set
+ *
+ * Since: 2.1.1
+ **/
+FuPathStore *
+fu_context_get_path_store(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->pstore;
+}
+
+/**
+ * fu_context_load_path_store:
+ * @self: a #FuContext
+ *
+ * Loads the path store defaults and overrides.
+ *
+ * IMPORTANT: This should only be used for binaries, NEVER self tests!
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_context_load_path_store(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	fu_path_store_load_defaults(priv->pstore);
+	fu_path_store_load_from_env(priv->pstore);
+}
+
 static void
 fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -2510,6 +2653,7 @@ fu_context_finalize(GObject *object)
 	g_free(priv->esp_location);
 	g_hash_table_unref(priv->runtime_versions);
 	g_hash_table_unref(priv->compile_versions);
+	g_object_unref(priv->pstore);
 	g_object_unref(priv->hwids);
 	g_object_unref(priv->config);
 	g_hash_table_unref(priv->hwid_flags);
@@ -2525,6 +2669,16 @@ fu_context_finalize(GObject *object)
 }
 
 static void
+fu_context_constructed(GObject *obj)
+{
+	FuContext *self = FU_CONTEXT(obj);
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	priv->efivars = (priv->flags & FU_CONTEXT_FLAG_DUMMY_EFIVARS) > 0
+			    ? fu_dummy_efivars_new()
+			    : fu_efivars_new(priv->pstore);
+}
+
+static void
 fu_context_class_init(FuContextClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -2533,6 +2687,7 @@ fu_context_class_init(FuContextClass *klass)
 	object_class->dispose = fu_context_dispose;
 	object_class->get_property = fu_context_get_property;
 	object_class->set_property = fu_context_set_property;
+	object_class->constructed = fu_context_constructed;
 
 	/**
 	 * FuContext:power-state:
@@ -2627,7 +2782,7 @@ fu_context_class_init(FuContextClass *klass)
 				    FU_CONTEXT_FLAG_NONE,
 				    G_MAXUINT64,
 				    FU_CONTEXT_FLAG_NONE,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
 	/**
@@ -2678,11 +2833,10 @@ fu_context_init(FuContext *self)
 	priv->chassis_kind = FU_SMBIOS_CHASSIS_KIND_UNKNOWN;
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
-	priv->smbios = fu_smbios_new();
+	priv->pstore = fu_path_store_new();
+	priv->smbios = fu_smbios_new(priv->pstore);
 	priv->hwids = fu_hwids_new();
-	priv->config = fu_config_new();
-	priv->efivars = g_strcmp0(g_getenv("FWUPD_EFIVARS"), "dummy") == 0 ? fu_dummy_efivars_new()
-									   : fu_efivars_new();
+	priv->config = fu_config_new(priv->pstore);
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->udev_subsystems = g_hash_table_new_full(g_str_hash,
 						      g_str_equal,
@@ -2690,7 +2844,7 @@ fu_context_init(FuContext *self)
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new(self);
-	priv->host_bios_settings = fu_bios_settings_new();
+	priv->host_bios_settings = fu_bios_settings_new(priv->pstore);
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

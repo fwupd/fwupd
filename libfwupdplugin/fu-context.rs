@@ -18,6 +18,7 @@ enum FuContextFlags {
     IsContainer             = 1 << 11,
     SmbiosUefiEnabled       = 1 << 12,
     NoQuirks                = 1 << 13,
+    DummyEfivars            = 1 << 14,
 }
 
 enum FuContextHwidFlags {

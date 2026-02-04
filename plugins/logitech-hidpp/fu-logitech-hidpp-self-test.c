@@ -21,11 +21,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
-	/* tests go here */
-	g_test_add_func("/unifying/common", fu_logitech_hidpp_common);
+	g_test_add_func("/logitech-hidpp/common", fu_logitech_hidpp_common);
 	return g_test_run();
 }

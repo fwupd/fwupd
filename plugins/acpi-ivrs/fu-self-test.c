@@ -96,14 +96,7 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/acpi-ivrs/dma-remap-support", fu_acpi_ivrs_dma_remap_func);
 	g_test_add_func("/acpi-ivrs/no-dma-remap-support", fu_acpi_ivrs_no_dma_remap_func);
-
 	return g_test_run();
 }
