@@ -17,11 +17,12 @@
 #define FASTBOOT_EP_OUT			   0x01
 #define FASTBOOT_CMD_BUFSZ		   64 /* bytes */
 
+#define FU_DEVICE_PRIVATE_FLAG_OVERRIDE_VERSION "override-version"
+
 struct _FuFastbootDevice {
 	FuUsbDevice parent_instance;
 	guint blocksz;
 	guint operation_delay;
-	gboolean device_version_override_support;
 };
 
 G_DEFINE_TYPE(FuFastbootDevice, fu_fastboot_device, FU_TYPE_USB_DEVICE)
@@ -339,7 +340,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* chance to override device version */
-	if (self->device_version_override_support) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_OVERRIDE_VERSION)) {
 		if (!fu_fastboot_device_getvar(self, "version-device", &version_device, error))
 			return FALSE;
 
@@ -688,9 +689,6 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 
-	if (g_strcmp0(key, "FastbootDeviceVersion") == 0)
-		return fu_strtobool(value, &self->device_version_override_support, error);
-
 	/* failed */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -731,7 +729,6 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 	self->blocksz = 512;
 	/* no delay is applied by default after a read or write operation */
 	self->operation_delay = 0;
-	self->device_version_override_support = FALSE;
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.fastboot");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -740,6 +737,7 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_OVERRIDE_VERSION);
 }
 
 static void
