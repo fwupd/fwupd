@@ -48,7 +48,7 @@ fu_elantp_hid_mcu_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_tp_send_cmd(FuElantpHidDevice *parent,
+fu_elantp_hid_mcu_device_tp_send_cmd(FuElantpHidDevice *proxy,
 				     const guint8 *tx,
 				     gsize txsz,
 				     guint8 *rx,
@@ -58,7 +58,7 @@ fu_elantp_hid_mcu_device_tp_send_cmd(FuElantpHidDevice *parent,
 	g_autofree guint8 *buf = NULL;
 	gsize bufsz = rxsz + 3;
 
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  tx,
 					  txsz,
 					  FU_IOCTL_FLAG_NONE,
@@ -70,7 +70,7 @@ fu_elantp_hid_mcu_device_tp_send_cmd(FuElantpHidDevice *parent,
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(parent),
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(proxy),
 					  buf,
 					  bufsz,
 					  FU_IOCTL_FLAG_NONE,
@@ -89,7 +89,7 @@ fu_elantp_hid_mcu_device_tp_send_cmd(FuElantpHidDevice *parent,
 }
 
 static gint
-fu_elantp_hid_mcu_device_tp_write_cmd(FuElantpHidDevice *parent,
+fu_elantp_hid_mcu_device_tp_write_cmd(FuElantpHidDevice *proxy,
 				      guint16 reg,
 				      guint16 cmd,
 				      GError **error)
@@ -97,11 +97,11 @@ fu_elantp_hid_mcu_device_tp_write_cmd(FuElantpHidDevice *parent,
 	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_mcu_device_tp_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
+	return fu_elantp_hid_mcu_device_tp_send_cmd(proxy, buf, sizeof(buf), NULL, 0, error);
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *parent,
+fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *proxy,
 				  guint16 reg,
 				  guint8 *buf,
 				  gsize bufz,
@@ -109,11 +109,11 @@ fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *parent,
 {
 	guint8 tmp[5] = {FU_ETP_RPTID_MCU_FEATURE, 0x05, 0x03};
 	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_mcu_device_tp_send_cmd(parent, tmp, sizeof(tmp), buf, bufz, error);
+	return fu_elantp_hid_mcu_device_tp_send_cmd(proxy, tmp, sizeof(tmp), buf, bufz, error);
 }
 
 static gint
-fu_elantp_hid_mcu_device_write_cmd(FuElantpHidDevice *parent,
+fu_elantp_hid_mcu_device_write_cmd(FuElantpHidDevice *proxy,
 				   guint16 reg,
 				   guint16 cmd,
 				   GError **error)
@@ -121,16 +121,16 @@ fu_elantp_hid_mcu_device_write_cmd(FuElantpHidDevice *parent,
 	guint8 buf[5] = {FU_ETP_RPTID_MCU_FEATURE};
 	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_mcu_device_tp_send_cmd(parent, buf, sizeof(buf), NULL, 0, error);
+	return fu_elantp_hid_mcu_device_tp_send_cmd(proxy, buf, sizeof(buf), NULL, 0, error);
 }
 
 static gboolean
 fu_elantp_hid_mcu_device_ensure_iap_ctrl(FuElantpHidMcuDevice *self,
-					 FuElantpHidDevice *parent,
+					 FuElantpHidDevice *proxy,
 					 GError **error)
 {
 	guint8 buf[2] = {0x0};
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_IAP_CTRL,
 					       buf,
 					       sizeof(buf),
@@ -158,12 +158,12 @@ fu_elantp_hid_mcu_device_ensure_iap_ctrl(FuElantpHidMcuDevice *self,
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_read_force_table_enable(FuElantpHidDevice *parent, GError **error)
+fu_elantp_hid_mcu_device_read_force_table_enable(FuElantpHidDevice *proxy, GError **error)
 {
 	guint8 buf[2] = {0x0};
 	guint16 value;
 
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE,
 					       buf,
 					       sizeof(buf),
@@ -193,7 +193,7 @@ fu_elantp_hid_mcu_device_read_force_table_enable(FuElantpHidDevice *parent, GErr
 
 static gboolean
 fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
-						FuElantpHidDevice *parent,
+						FuElantpHidDevice *proxy,
 						GError **error)
 {
 	guint8 buf[2] = {0x0};
@@ -210,7 +210,7 @@ fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
 	}
 	if (self->ic_type == 0x14 && self->iap_ver == 4)
 		return TRUE;
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_FORCE_ADDR,
 					       buf,
 					       sizeof(buf),
@@ -235,7 +235,7 @@ fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_write_fw_password(FuElantpHidDevice *parent,
+fu_elantp_hid_mcu_device_write_fw_password(FuElantpHidDevice *proxy,
 					   guint16 ic_type,
 					   guint16 iap_ver,
 					   GError **error)
@@ -253,12 +253,12 @@ fu_elantp_hid_mcu_device_write_fw_password(FuElantpHidDevice *parent,
 	else
 		return TRUE;
 
-	if (!fu_elantp_hid_mcu_device_write_cmd(parent, FU_ETP_CMD_I2C_FW_PW, pw, error)) {
+	if (!fu_elantp_hid_mcu_device_write_cmd(proxy, FU_ETP_CMD_I2C_FW_PW, pw, error)) {
 		g_prefix_error_literal(error, "failed to write fw password cmd: ");
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_FW_PW,
 					       buf,
 					       sizeof(buf),
@@ -284,7 +284,7 @@ static gboolean
 fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidMcuDevice *self = FU_ELANTP_HID_MCU_DEVICE(device);
-	FuElantpHidDevice *parent;
+	FuElantpHidDevice *proxy;
 	guint16 fwver;
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
@@ -292,12 +292,12 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_forcetable = NULL;
 
-	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
+	proxy = FU_ELANTP_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
 
 	/* get pattern */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_GET_HID_ID,
 					       buf,
 					       sizeof(buf),
@@ -309,7 +309,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	self->pattern = tmp != 0xFFFF ? (tmp & 0xFF00) >> 8 : 0;
 
 	/* get current firmware version */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_FW_VERSION,
 					       buf,
 					       sizeof(buf),
@@ -323,7 +323,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_raw(device, fwver);
 
 	/* get IAP firmware version */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       self->pattern == 0 ? FU_ETP_CMD_I2C_IAP_VERSION
 								  : FU_ETP_CMD_I2C_IAP_VERSION_2,
 					       buf,
@@ -341,7 +341,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_bootloader(device, version_bl);
 
 	/* get module ID */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_GET_MODULE_ID,
 					       buf,
 					       sizeof(buf),
@@ -352,7 +352,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* get OSM version */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_OSM_VERSION,
 					       buf,
 					       sizeof(buf),
@@ -362,7 +362,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
-		if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+		if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 						       FU_ETP_CMD_I2C_IAP_ICBODY,
 						       buf,
 						       sizeof(buf),
@@ -401,23 +401,23 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	fu_device_set_firmware_size(device, (guint64)self->ic_page_count * (guint64)64);
 
 	/* is in bootloader mode */
-	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, parent, error))
+	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, proxy, error))
 		return FALSE;
 
 	if (self->ic_type != 0x12 && self->ic_type != 0x13 && self->ic_type != 0x14 &&
 	    self->ic_type != 0x15)
 		return TRUE;
 
-	if (!fu_elantp_hid_mcu_device_read_force_table_enable(parent, &error_forcetable)) {
+	if (!fu_elantp_hid_mcu_device_read_force_table_enable(proxy, &error_forcetable)) {
 		g_debug("no MCU forcetable detected: %s", error_forcetable->message);
 	} else {
-		if (!fu_elantp_hid_mcu_device_get_forcetable_address(self, parent, error)) {
+		if (!fu_elantp_hid_mcu_device_get_forcetable_address(self, proxy, error)) {
 			g_prefix_error_literal(error, "get MCU forcetable address fail: ");
 			return FALSE;
 		}
 		self->force_table_support = TRUE;
 		/* is in bootloader mode */
-		if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, parent, error))
+		if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, proxy, error))
 			return FALSE;
 	}
 
@@ -512,7 +512,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 
 static gboolean
 fu_elantp_hid_mcu_device_write_chunks(FuElantpHidMcuDevice *self,
-				      FuElantpHidDevice *parent,
+				      FuElantpHidDevice *proxy,
 				      FuDevice *device,
 				      GPtrArray *chunks,
 				      guint16 *checksum,
@@ -541,7 +541,7 @@ fu_elantp_hid_mcu_device_write_chunks(FuElantpHidMcuDevice *self,
 				    error))
 			return FALSE;
 		fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 1, csum_tmp, G_LITTLE_ENDIAN);
-		if (!fu_elantp_hid_mcu_device_tp_send_cmd(parent, blk, blksz, NULL, 0, error))
+		if (!fu_elantp_hid_mcu_device_tp_send_cmd(proxy, blk, blksz, NULL, 0, error))
 			return FALSE;
 		fw_section_cnt++;
 		if (self->fw_section_size == self->fw_page_size ||
@@ -550,7 +550,7 @@ fu_elantp_hid_mcu_device_write_chunks(FuElantpHidMcuDevice *self,
 					self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
 								  : ELANTP_DELAY_WRITE_BLOCK);
 
-			if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, parent, error))
+			if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, proxy, error))
 				return FALSE;
 			fw_section_cnt = 0;
 			if (self->iap_ctrl & (ETP_FW_IAP_PAGE_ERR | ETP_FW_IAP_INTF_ERR)) {
@@ -580,7 +580,7 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 					FwupdInstallFlags flags,
 					GError **error)
 {
-	FuElantpHidDevice *parent;
+	FuElantpHidDevice *proxy;
 	FuElantpHidMcuDevice *self = FU_ELANTP_HID_MCU_DEVICE(device);
 	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE(firmware);
 	gsize bufsz = 0;
@@ -610,8 +610,8 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
+	proxy = FU_ELANTP_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
 
 	/* write each block */
@@ -621,7 +621,7 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 	    fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_section_size);
 
 	if (!fu_elantp_hid_mcu_device_write_chunks(self,
-						   parent,
+						   proxy,
 						   device,
 						   chunks,
 						   &checksum,
@@ -631,7 +631,7 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify the written checksum */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_IAP_CHECKSUM,
 					       csum_buf,
 					       sizeof(csum_buf),
@@ -664,11 +664,11 @@ fu_elantp_hid_mcu_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_mcu_device_read_iap_type(FuElantpHidDevice *parent, guint16 *iap_type, GError **error)
+fu_elantp_hid_mcu_device_read_iap_type(FuElantpHidDevice *proxy, guint16 *iap_type, GError **error)
 {
 	guint8 buf[2] = {0x0};
 
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_IAP_TYPE,
 					       buf,
 					       sizeof(buf),
@@ -684,17 +684,17 @@ fu_elantp_hid_mcu_device_read_iap_type(FuElantpHidDevice *parent, guint16 *iap_t
 static gboolean
 fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress, GError **error)
 {
-	FuElantpHidDevice *parent;
+	FuElantpHidDevice *proxy;
 	guint16 iap_ver;
 	guint16 ic_type;
 	guint8 buf[2] = {0x0};
 	guint16 tmp;
 
-	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
+	proxy = FU_ELANTP_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
 
-	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
 						   FU_ETP_CMD_I2C_TP_SETTING,
 						   ETP_I2C_DISABLE_SCAN,
 						   error)) {
@@ -702,7 +702,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
 						   FU_ETP_CMD_I2C_IAP_RESET,
 						   ETP_I2C_DISABLE_REPORT,
 						   error)) {
@@ -710,7 +710,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_mcu_device_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_write_cmd(proxy,
 						FU_ETP_CMD_I2C_IAP_RESET,
 						ETP_I2C_DISABLE_REPORT,
 						error)) {
@@ -721,7 +721,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	/* sanity check */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_info("in bootloader mode, reset MCU IC");
-		if (!fu_elantp_hid_mcu_device_write_cmd(parent,
+		if (!fu_elantp_hid_mcu_device_write_cmd(proxy,
 							FU_ETP_CMD_I2C_IAP_RESET,
 							ETP_I2C_IAP_RESET,
 							error))
@@ -730,7 +730,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	}
 
 	/* get OSM version */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_I2C_OSM_VERSION,
 					       buf,
 					       sizeof(buf),
@@ -740,7 +740,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
-		if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+		if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 						       FU_ETP_CMD_I2C_IAP_ICBODY,
 						       buf,
 						       sizeof(buf),
@@ -754,7 +754,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	}
 
 	/* get IAP firmware version */
-	if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       self->pattern == 0 ? FU_ETP_CMD_I2C_IAP_VERSION
 								  : FU_ETP_CMD_I2C_IAP_VERSION_2,
 					       buf,
@@ -778,7 +778,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type == 0x15)) {
 				self->fw_page_size = 512;
 				if (iap_ver >= 3) {
-					if (!fu_elantp_hid_mcu_device_read_iap_type(parent,
+					if (!fu_elantp_hid_mcu_device_read_iap_type(proxy,
 										    &self->iap_type,
 										    error))
 						return FALSE;
@@ -793,12 +793,12 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 				self->fw_section_size = 128;
 			}
 			if (self->fw_page_size == self->fw_section_size) {
-				if (!fu_elantp_hid_mcu_device_write_cmd(parent,
+				if (!fu_elantp_hid_mcu_device_write_cmd(proxy,
 									FU_ETP_CMD_I2C_IAP_TYPE,
 									self->fw_page_size / 2,
 									error))
 					return FALSE;
-				if (!fu_elantp_hid_mcu_device_read_cmd(parent,
+				if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 								       FU_ETP_CMD_I2C_IAP_TYPE,
 								       buf,
 								       sizeof(buf),
@@ -818,15 +818,15 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 			}
 		}
 	}
-	if (!fu_elantp_hid_mcu_device_write_fw_password(parent, ic_type, iap_ver, error))
+	if (!fu_elantp_hid_mcu_device_write_fw_password(proxy, ic_type, iap_ver, error))
 		return FALSE;
-	if (!fu_elantp_hid_mcu_device_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_write_cmd(proxy,
 						FU_ETP_CMD_I2C_IAP,
 						self->iap_password,
 						error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_UNLOCK);
-	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, parent, error))
+	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, proxy, error))
 		return FALSE;
 	if ((self->iap_ctrl & ETP_FW_IAP_CHECK_PW) == 0) {
 		g_set_error_literal(error,
@@ -843,12 +843,12 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 static gboolean
 fu_elantp_hid_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuElantpHidDevice *parent;
+	FuElantpHidDevice *proxy;
 	FuElantpHidMcuDevice *self = FU_ELANTP_HID_MCU_DEVICE(device);
 
 	/* reset back to runtime */
-	parent = FU_ELANTP_HID_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
+	proxy = FU_ELANTP_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
 
 	/* sanity check */
@@ -858,48 +858,48 @@ fu_elantp_hid_mcu_device_attach(FuDevice *device, FuProgress *progress, GError *
 	}
 
 	/* reset back to runtime */
-	if (!fu_elantp_hid_mcu_device_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_write_cmd(proxy,
 						FU_ETP_CMD_I2C_IAP_RESET,
 						ETP_I2C_IAP_RESET,
 						error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
-	if (!fu_elantp_hid_mcu_device_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_write_cmd(proxy,
 						FU_ETP_CMD_I2C_IAP_RESET,
 						ETP_I2C_ENABLE_REPORT,
 						error)) {
 		g_prefix_error_literal(error, "cannot enable MCU report: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_mcu_device_write_cmd(parent, 0x0306, 0x003, error)) {
+	if (!fu_elantp_hid_mcu_device_write_cmd(proxy, 0x0306, 0x003, error)) {
 		g_prefix_error_literal(error, "cannot switch to MCU PTP mode: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
 						   FU_ETP_CMD_I2C_IAP_RESET,
 						   ETP_I2C_IAP_RESET,
 						   error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
-	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
 						   FU_ETP_CMD_I2C_IAP_RESET,
 						   ETP_I2C_ENABLE_REPORT,
 						   error)) {
 		g_prefix_error_literal(error, "cannot enable TP report: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent, 0x0306, 0x003, error)) {
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy, 0x0306, 0x003, error)) {
 		g_prefix_error_literal(error, "cannot switch to TP PTP mode: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_mcu_device_tp_write_cmd(parent,
+	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
 						   FU_ETP_CMD_I2C_TP_SETTING,
 						   ETP_I2C_ENABLE_SCAN,
 						   error)) {
 		g_prefix_error_literal(error, "cannot enable TP scan: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, parent, error))
+	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, proxy, error))
 		return FALSE;
 
 	/* success */
@@ -958,12 +958,14 @@ fu_elantp_hid_mcu_device_init(FuElantpHidMcuDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp.mcu");
 	fu_device_set_name(FU_DEVICE(self), "HapticPad MCU");
 	fu_device_set_logical_id(FU_DEVICE(self), "mcu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_HID_MCU_DEVICE);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 }
 
@@ -983,9 +985,9 @@ fu_elantp_hid_mcu_device_class_init(FuElantpHidMcuDeviceClass *klass)
 }
 
 FuElantpHidMcuDevice *
-fu_elantp_hid_mcu_device_new(void)
+fu_elantp_hid_mcu_device_new(FuDevice *proxy)
 {
 	FuElantpHidMcuDevice *self;
-	self = g_object_new(FU_TYPE_ELANTP_HID_MCU_DEVICE, NULL);
+	self = g_object_new(FU_TYPE_ELANTP_HID_MCU_DEVICE, "proxy", proxy, NULL);
 	return FU_ELANTP_HID_MCU_DEVICE(self);
 }
