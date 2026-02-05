@@ -1,2 +1,3 @@
 [HIDRAW\VEN_17EF&DEV_62CE]
 Plugin = sunwinon_hid
+Flags = ~no-generic-guids
