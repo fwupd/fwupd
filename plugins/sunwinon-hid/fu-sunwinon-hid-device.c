@@ -98,8 +98,9 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/*
-	 * currently there is a defect in firmware that sending msg before device getting ready
-	 * will cause error and eventually make device reboot again, so we just wait here anyway
+	 * FIXME: Currently there is a defect in firmware that sending msg before device getting
+	 * ready will cause error and eventually make device reboot again. We just wait here
+	 * anyway. Expected to be removed after firmware got fixed.
 	 */
 
 	g_debug("waiting %d ms for device ready", FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
