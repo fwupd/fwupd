@@ -96,15 +96,6 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 	g_debug("HID descriptor parsed successfully");
 	if (!fu_sunwinon_hid_device_check_update_channel(descriptor, error))
 		return FALSE;
-
-	/*
-	 * FIXME: Currently there is a defect in firmware that sending msg before device getting
-	 * ready will cause error and eventually make device reboot again. We just wait here
-	 * anyway. Expected to be removed after firmware got fixed.
-	 */
-
-	g_debug("waiting %d ms for device ready", FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
-	fu_device_sleep(device, FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
 	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
 
