@@ -48,6 +48,8 @@ enum FuEngineLoadFlags {
     DeviceHotplug = 1 << 9,
     ColdplugForce = 1 << 10,    // even without a matched plugin
     Ready = 1 << 11,
+    History = 1 << 12,
+    AllowTestPlugin = 1 << 13,
 }
 
 #[derive(ToString)]

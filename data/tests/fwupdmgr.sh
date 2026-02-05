@@ -115,31 +115,6 @@ fwupdmgr uninhibit test
 expect_rc 3
 
 # ---
-echo " ● Add blocked firmware…"
-fwupdmgr block-firmware foo
-expect_rc 0
-
-# ---
-echo " ● Add blocked firmware (again)…"
-fwupdmgr block-firmware foo
-expect_rc 2
-
-# ---
-echo " ● Getting blocked firmware…"
-fwupdmgr get-blocked-firmware
-expect_rc 0
-
-# ---
-echo " ● Remove blocked firmware…"
-fwupdmgr unblock-firmware foo
-expect_rc 0
-
-# ---
-echo " ● Remove blocked firmware (again)…"
-fwupdmgr unblock-firmware foo
-expect_rc 2
-
-# ---
 echo " ● Setting approved firmware…"
 fwupdmgr set-approved-firmware foo,bar,baz
 expect_rc 0

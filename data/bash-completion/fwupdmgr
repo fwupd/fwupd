@@ -1,6 +1,5 @@
 _fwupdmgr_cmd_list=(
 	'activate'
-	'block-firmware'
 	'check-reboot-needed'
 	'clean-remote'
 	'clear-results'
@@ -17,7 +16,6 @@ _fwupdmgr_cmd_list=(
 	'emulation-save'
 	'get-approved-firmware'
 	'get-bios-setting'
-	'get-blocked-firmware'
 	'get-details'
 	'get-devices'
 	'get-history'
@@ -51,7 +49,6 @@ _fwupdmgr_cmd_list=(
 	'switch-branch'
 	'sync'
 	'unlock'
-	'unblock-firmware'
 	'update'
 	'upgrade'
 	'verify'
@@ -109,7 +106,6 @@ fwupd_modify_config_sections=(
 fwupd_modify_config_opts=(
 	'ArchiveSizeMax'
 	'ApprovedFirmware'
-	'BlockedFirmware'
 	'DisabledDevices'
 	'DisabledPlugins'
 	'EspLocation'
@@ -452,7 +448,7 @@ _fwupdmgr()
 				;;
 			IdleTimeout|ArchiveSizeMax|HostBkc|TrustedUids)
 				;;
-			ApprovedFirmware|BlockedFirmware)
+			ApprovedFirmware)
 				;;
 			DisabledDevices)
 				_show_device_ids

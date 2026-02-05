@@ -260,7 +260,6 @@ fu_usb_device_init(FuUsbDevice *self)
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
-	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
@@ -564,6 +563,9 @@ fu_usb_device_open(FuDevice *device, GError **error)
 		}
 		iface->claimed = TRUE;
 	}
+
+	/* so that we can watch for the device to appear in the non-udev hotplug case */
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	return TRUE;
 }
 
@@ -1190,7 +1192,9 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	/* set the version if the release has been set */
 	release = fu_usb_device_get_release(self);
 	if (release != 0x0 &&
-	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    !fu_device_has_private_flag(FU_DEVICE(self),
+					FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION)) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version_raw(device, release);
 	}

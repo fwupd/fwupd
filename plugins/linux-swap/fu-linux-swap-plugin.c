@@ -32,10 +32,13 @@ fu_linux_swap_plugin_changed_cb(GFileMonitor *monitor,
 static gboolean
 fu_linux_swap_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuLinuxSwapPlugin *self = FU_LINUX_SWAP_PLUGIN(plugin);
 	g_autofree gchar *fn = NULL;
 
-	fn = fu_path_build(FU_PATH_KIND_PROCFS, "swaps", NULL);
+	fn = fu_context_build_filename(ctx, error, FU_PATH_KIND_PROCFS, "swaps", NULL);
+	if (fn == NULL)
+		return FALSE;
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -57,6 +60,8 @@ fu_linux_swap_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 static void
 fu_linux_swap_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuLinuxSwapPlugin *self = FU_LINUX_SWAP_PLUGIN(plugin);
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
@@ -80,7 +85,7 @@ fu_linux_swap_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	swap = fu_linux_swap_new(buf, bufsz, &error_local);
+	swap = fu_linux_swap_new(pstore, buf, bufsz, &error_local);
 	if (swap == NULL) {
 		g_autofree gchar *fn = g_file_get_path(self->file);
 		g_warning("could not parse %s: %s", fn, error_local->message);

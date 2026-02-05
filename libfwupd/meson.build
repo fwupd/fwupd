@@ -256,24 +256,50 @@ if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  e = executable(
-    'fwupd-self-test',
-    sources: ['fwupd-self-test.c'],
+
+  libfwupdtest = static_library(
+    'fwupd-test',
+    sources: ['fwupd-test.c'],
     include_directories: [root_incdir],
-    dependencies: [libfwupd_deps, fwupd_rs_dep],
-    link_with: fwupd,
-    c_args: [
-      '-DG_LOG_DOMAIN="Fwupd"',
-      '-DSRCDIR="' + meson.current_source_dir() + '"',
-      '-DLOCALSTATEDIR="' + localstatedir + '"',
-    ],
+    dependencies: [libfwupd_deps],
+    link_with: [fwupd],
   )
-  test(
-    'fwupd-self-test',
-    e,
-    timeout: 60,
-    env: env,
-  )
+  foreach test_name: [
+    'bios-setting',
+    'client',
+    'common',
+    'device',
+    'enums',
+    'json',
+    'plugin',
+    'release',
+    'remote',
+    'report',
+    'request',
+    'security-attr',
+  ]
+    e = executable(
+      'fwupd-' + test_name + '-test',
+      sources: [
+        'fwupd-' + test_name + '-test.c',
+      ],
+      include_directories: [root_incdir],
+      dependencies: [libfwupd_deps, fwupd_rs_dep],
+      link_with: libfwupdtest,
+      c_args: [
+        '-DG_LOG_DOMAIN="Fwupd"',
+        '-DSRCDIR="' + meson.current_source_dir() + '"',
+        '-DLOCALSTATEDIR="' + localstatedir + '"',
+      ],
+    )
+    test(
+      'fwupd-' + test_name + '-test',
+      e,
+      timeout: 60,
+      env: env,
+    )
+  endforeach
+
   if run_sanitize_unsafe_tests and gio.version().version_compare('>= 2.64.0')
     e = executable(
       'fwupd-thread-test',

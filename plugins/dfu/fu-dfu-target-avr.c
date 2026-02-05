@@ -549,22 +549,25 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 					  GError **error)
 {
 	FuDevice *proxy;
-	const guint8 footer[] = {0x00,
-				 0x00,
-				 0x00,
-				 0x00, /* CRC */
-				 16,   /* len */
-				 'D',
-				 'F',
-				 'U', /* signature */
-				 0x01,
-				 0x10, /* version */
-				 0xff,
-				 0xff, /* vendor ID */
-				 0xff,
-				 0xff, /* product ID */
-				 0xff,
-				 0xff}; /* release */
+	/* nocheck:magic */
+	const guint8 footer[] = {
+	    0x00,
+	    0x00,
+	    0x00,
+	    0x00, /* CRC */
+	    16,	  /* len */
+	    'D',
+	    'F',
+	    'U', /* signature */
+	    0x01,
+	    0x10, /* version */
+	    0xFF,
+	    0xFF, /* vendor ID */
+	    0xFF,
+	    0xFF, /* product ID */
+	    0xFF,
+	    0xFF, /* release */
+	};
 
 	proxy = fu_device_get_proxy(FU_DEVICE(target), error);
 	if (proxy == NULL)

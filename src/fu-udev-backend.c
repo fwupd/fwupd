@@ -422,20 +422,45 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 	}
 }
 
+#ifndef HAVE_UDEV_HOTPLUG
+static gboolean
+fu_udev_backend_devnode_wait_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	const gchar *dev_file = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+
+	/* if the device has no associated /dev/ node (e.g. pure sysfs), we skip it */
+	if (dev_file != NULL && !g_file_test(dev_file, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "device node %s does not exist",
+			    dev_file);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+#endif
+
 /* if enabled, systemd takes the kernel event, runs the udev rules (which might rename devices)
  * and then re-broadcasts on the udev netlink socket */
 static gboolean
 fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **error)
 {
-	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-#ifdef HAVE_UDEV_HOTPLUG
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
+	const gchar *sysfsdir;
+#ifdef HAVE_UDEV_HOTPLUG
 	const guint8 *buf;
 	gsize bufsz = 0;
 	g_autoptr(FuStructUdevMonitorNetlinkHeader) st_hdr = NULL;
 	g_autoptr(FuUdevDevice) device_donor = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
+
+	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
+	if (sysfsdir == NULL)
+		return FALSE;
 
 	/* parse the buffer */
 	st_hdr = fu_struct_udev_monitor_netlink_header_parse_bytes(blob, 0x0, error);
@@ -558,12 +583,23 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 #else
 	g_auto(GStrv) split = fu_strsplit_bytes(blob, "@", 2);
 
+	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
+	if (sysfsdir == NULL)
+		return FALSE;
+
 	action = fu_udev_action_from_string(split[0]);
 	if (action == FU_UDEV_ACTION_ADD) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
 		g_autoptr(FuUdevDevice) device =
 		    fu_udev_backend_create_device(self, sysfspath, error);
 		if (device == NULL)
+			return FALSE;
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_udev_backend_devnode_wait_cb,
+					  200, /* retries */
+					  10,  /* ms */
+					  NULL,
+					  error))
 			return FALSE;
 		fu_udev_backend_device_add_from_device(self, device);
 	} else if (action == FU_UDEV_ACTION_REMOVE) {
@@ -667,8 +703,12 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 {
 	FuContext *ctx = fu_backend_get_context(backend);
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	const gchar *sysfsdir;
 	g_autoptr(GPtrArray) udev_subsystems = fu_context_get_udev_subsystems(ctx);
+
+	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
+	if (sysfsdir == NULL)
+		return FALSE;
 
 	/* get all devices of class */
 	fu_progress_set_id(progress, G_STRLOC);

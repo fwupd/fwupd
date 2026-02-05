@@ -68,6 +68,7 @@ static gboolean
 fu_genesys_scaler_device_enter_serial_debug_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent;
+	/* nocheck:magic */
 	guint8 data[] = {0x53, 0x45, 0x52, 0x44, 0x42};
 
 	parent = fu_device_get_parent(FU_DEVICE(self), error);
@@ -270,6 +271,7 @@ static gboolean
 fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch0(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent;
+	/* nocheck:magic */
 	guint8 data[] = {0x80, 0x82, 0x84, 0x51, 0x7f, 0x37, 0x61};
 
 	parent = fu_device_get_parent(FU_DEVICE(self), error);
@@ -302,6 +304,7 @@ static gboolean
 fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch4(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent;
+	/* nocheck:magic */
 	guint8 data[] = {0x80, 0x82, 0x85, 0x53, 0x7f};
 
 	parent = fu_device_get_parent(FU_DEVICE(self), error);

@@ -8,28 +8,12 @@
 
 #include <string.h>
 
+#include "fwupd-test.h"
+
 #include "fu-context-private.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-private.h"
-
-static gboolean
-fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
-{
-	g_autofree gchar *output = NULL;
-	if (g_strcmp0(txt1, txt2) == 0)
-		return TRUE;
-	if (g_pattern_match_simple(txt2, txt1))
-		return TRUE;
-	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
-		return FALSE;
-	if (!g_file_set_contents("/tmp/b", txt2, -1, error))
-		return FALSE;
-	if (!g_spawn_command_line_sync("diff -urNp /tmp/b /tmp/a", &output, NULL, NULL, error))
-		return FALSE;
-	g_set_error_literal(error, 1, 0, output);
-	return FALSE;
-}
 
 static gchar *
 fu_dfu_target_sectors_to_string(FuDfuTarget *target)
@@ -144,20 +128,9 @@ fu_dfu_target_dfuse_func(void)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-
-	/* environment */
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-
-	/* tests go here */
-	g_test_add_func("/dfu/target{DfuSe}", fu_dfu_target_dfuse_func);
+	g_test_add_func("/dfu/target/dfuse", fu_dfu_target_dfuse_func);
 	return g_test_run();
 }

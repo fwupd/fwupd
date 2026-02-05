@@ -61,6 +61,7 @@ fu_engine_get_release_with_tag(FuEngine *self,
 gboolean
 fu_engine_update_motd(FuEngine *self, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(self);
 	const gchar *host_bkc = fu_engine_get_host_bkc(self);
 	guint upgrade_count = 0;
 	guint sync_count = 0;
@@ -139,7 +140,14 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
 	} else {
-		target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, MOTD_DIR, MOTD_FILE, NULL);
+		target = fu_context_build_filename(ctx,
+						   error,
+						   FU_PATH_KIND_CACHEDIR_PKG,
+						   MOTD_DIR,
+						   MOTD_FILE,
+						   NULL);
+		if (target == NULL)
+			return FALSE;
 	}
 
 	/* create the directory and file, even if zero devices; we want an empty file then */
@@ -200,11 +208,23 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 gboolean
 fu_engine_update_devices_file(FuEngine *self, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(self);
 	FwupdCodecFlags flags = FWUPD_CODEC_FLAG_NONE;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) data = NULL;
-	g_autofree gchar *target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
+	g_autofree gchar *target = NULL;
+
+	target = fu_context_build_filename(ctx,
+					   &error_local,
+					   FU_PATH_KIND_CACHEDIR_PKG,
+					   "devices.json",
+					   NULL);
+	if (target == NULL) {
+		g_debug("ignoring update devices file: %s", error_local->message);
+		return TRUE;
+	}
 
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
@@ -234,9 +254,13 @@ fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(tables); i++) {
-		g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, tables[i], NULL);
+		g_autofree gchar *fn = NULL;
 		g_autoptr(GBytes) blob = NULL;
 
+		fn =
+		    fu_context_build_filename(ctx, NULL, FU_PATH_KIND_ACPI_TABLES, tables[i], NULL);
+		if (fn == NULL)
+			continue;
 		blob = fu_bytes_get_contents(fn, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0) {
 			g_autofree gchar *id = g_strdup_printf("ACPI:%s", tables[i]);

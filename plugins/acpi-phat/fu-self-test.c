@@ -34,7 +34,7 @@ fu_acpi_phat_parse_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	str = fu_acpi_phat_to_report_string(FU_ACPI_PHAT(phat));
-	g_print("%s\n", str);
+	g_debug("%s", str);
 }
 
 int
@@ -42,13 +42,6 @@ main(int argc, char **argv)
 {
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/acpi-phat/parse", fu_acpi_phat_parse_func);
-
 	return g_test_run();
 }

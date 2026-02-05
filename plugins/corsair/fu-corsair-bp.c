@@ -382,7 +382,17 @@ gboolean
 fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
-	guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x16, 0x00, 0x01, 0x03, 0x00, 0x01, 0x01};
+	/* nocheck:magic */
+	guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {
+	    0x08,
+	    0x16,
+	    0x00,
+	    0x01,
+	    0x03,
+	    0x00,
+	    0x01,
+	    0x01,
+	};
 
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL) {
@@ -401,7 +411,16 @@ fu_corsair_bp_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuCorsairBp *self = FU_CORSAIR_BP(device);
 	if (self->is_legacy_attach) {
-		guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x10, 0x01, 0x00, 0x03, 0x00, 0x01};
+		/* nocheck:magic */
+		guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {
+		    0x08,
+		    0x10,
+		    0x01,
+		    0x00,
+		    0x03,
+		    0x00,
+		    0x01,
+		};
 		return fu_corsair_bp_command(self, cmd, CORSAIR_TRANSACTION_TIMEOUT, FALSE, error);
 	}
 	return fu_corsair_bp_set_mode(self, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);

@@ -3,12 +3,6 @@
 exec 0>/dev/null
 exec 2>&1
 
-run_test() {
-    if [ -f @installedtestsbindir@/$1 ]; then
-        @installedtestsbindir@/$1
-    fi
-}
-
 run_device_tests() {
     if [ -n "$CI_NETWORK" ] && [ -d @devicetestdir@ ]; then
         for f in $(grep --files-with-matches -r emulation- @devicetestdir@); do
@@ -37,27 +31,12 @@ run_umockdev_test() {
 
 export LSAN_OPTIONS="suppressions=@installedtestsdatadir@/lsan-suppressions.txt"
 
-run_test acpi-dmar-self-test
-run_test acpi-facp-self-test
-run_test acpi-ivrs-self-test
-run_test acpi-phat-self-test
-run_test ata-self-test
-run_test dfu-self-test
-run_test fwupdplugin-self-test
-run_test linux-swap-self-test
-run_test logitech-hidpp-self-test
-run_test mtd-self-test
-run_test nitrokey-self-test
-run_test nvme-self-test
-run_test pixart-tp-self-test
-run_test redfish-self-test
-run_test snap-self-test
-run_test synaptics-prometheus-self-test
-run_test tpm-self-test
-run_test uefi-dbx-self-test
-run_test uefi-mok-self-test
-run_test vli-self-test
-run_test wacom-usb-self-test
+if [ -d @installedtestsbindir@ ]; then
+    for f in @installedtestsbindir@/*-test; do
+        $f
+    done
+fi
+
 run_umockdev_test fwupd_test.py
 run_umockdev_test pci_psp_test.py
 run_device_tests

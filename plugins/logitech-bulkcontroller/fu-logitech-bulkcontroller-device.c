@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "fu-logitech-bulkcontroller-child.h"
-#include "fu-logitech-bulkcontroller-common.h"
 #include "fu-logitech-bulkcontroller-device.h"
 #include "fu-logitech-bulkcontroller-struct.h"
 
@@ -826,34 +825,107 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 					     GByteArray *buf,
 					     GError **error)
 {
-	FuLogitechBulkcontrollerProtoId proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_UNKNOWN_ID;
-	g_autofree gchar *json = NULL;
-	g_autoptr(GByteArray) decoded_pkt = NULL;
+	g_autofree gchar *payload = NULL;
+	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new_from_data(buf->data, buf->len);
+	g_autoptr(FuProtobuf) pbuf_rsp = NULL;
 
-	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
-									      buf->len,
-									      &proto_id,
-									      error);
-	if (decoded_pkt == NULL) {
-		g_prefix_error_literal(error, "failed to unpack packet for device info request: ");
-		return FALSE;
+	/* as a response */
+	pbuf_rsp =
+	    fu_protobuf_get_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_RESPONSE, NULL);
+	if (pbuf_rsp != NULL) {
+		g_autoptr(FuProtobuf) pbuf_rsp2 = fu_protobuf_get_embedded(
+		    pbuf_rsp,
+		    FU_LOGITECH_BULKCONTROLLER_FNUM_RESPONSE_GET_DEVICE_INFO,
+		    error);
+		if (pbuf_rsp2 == NULL) {
+			g_prefix_error_literal(
+			    error,
+			    "invalid response, expected UsbMsg.Response.GetDeviceInfo: ");
+			return FALSE;
+		}
+		payload = fu_protobuf_get_string(
+		    pbuf_rsp2,
+		    FU_LOGITECH_BULKCONTROLLER_FNUM_GET_DEVICE_INFO_RESPONSE_PAYLOAD,
+		    error);
+		if (payload == NULL) {
+			g_prefix_error_literal(
+			    error,
+			    "incorrect GetDeviceInfo response -- no MQTT payload: ");
+			return FALSE;
+		}
 	}
-	json = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-	g_debug("received device response: id: %u, length %u, data: %s", proto_id, buf->len, json);
-	if (proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_GET_DEVICE_INFO_RESPONSE &&
-	    proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_KONG_EVENT) {
+
+	/* async from device */
+	pbuf_rsp =
+	    fu_protobuf_get_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_EVENT, NULL);
+	if (pbuf_rsp != NULL) {
+		g_autoptr(FuProtobuf) pbuf_rsp2 =
+		    fu_protobuf_get_embedded(pbuf_rsp,
+					     FU_LOGITECH_BULKCONTROLLER_FNUM_EVENT_KONG,
+					     error);
+		if (pbuf_rsp2 == NULL) {
+			g_prefix_error_literal(error,
+					       "invalid response, expected UsbMsg.Event.Kong: ");
+			return FALSE;
+		}
+		payload = fu_protobuf_get_string(pbuf_rsp2,
+						 FU_LOGITECH_BULKCONTROLLER_FNUM_KONG_EVENT_PAYLOAD,
+						 error);
+		if (payload == NULL) {
+			g_prefix_error_literal(
+			    error,
+			    "incorrect UsbMsg.Event.Kong response -- no MQTT payload: ");
+			return FALSE;
+		}
+	}
+	if (payload == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "incorrect response for device info request");
+				    "incorrect response for device info request, expected "
+				    "UsbMsg.Response or UsbMsg.Event");
 		return FALSE;
 	}
-	if (!fu_logitech_bulkcontroller_device_json_parser(self, json, error))
+	if (!fu_logitech_bulkcontroller_device_json_parser(self, payload, error))
 		return FALSE;
 
 	/* success */
-	g_string_assign(self->device_info_response_json, json);
+	g_string_assign(self->device_info_response_json, payload);
 	return TRUE;
+}
+
+static FuProtobuf *
+fu_logitech_bulkcontroller_device_build_header(FuLogitechBulkcontrollerDevice *self)
+{
+	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new();
+
+	/* make predictable */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+		fu_protobuf_add_string(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_HEADER_TIMESTAMP, "0");
+	} else {
+		g_autofree gchar *timestamp =
+		    g_strdup_printf("%" G_GINT64_FORMAT, g_get_real_time() / 1000);
+		g_autofree gchar *id = g_uuid_string_random();
+		fu_protobuf_add_string(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_HEADER_ID, id);
+		fu_protobuf_add_string(pbuf,
+				       FU_LOGITECH_BULKCONTROLLER_FNUM_HEADER_TIMESTAMP,
+				       timestamp);
+	}
+	return g_steal_pointer(&pbuf);
+}
+
+static GByteArray *
+fu_logitech_bulkcontroller_device_build_get_device_info_request(
+    FuLogitechBulkcontrollerDevice *self)
+{
+	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new();
+	g_autoptr(FuProtobuf) pbuf_hdr = fu_logitech_bulkcontroller_device_build_header(self);
+	g_autoptr(FuProtobuf) pbuf_req = fu_protobuf_new();
+	fu_protobuf_add_empty(pbuf_req, FU_LOGITECH_BULKCONTROLLER_FNUM_REQUEST_GET_DEVICE_INFO);
+	fu_protobuf_add_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_HEADER, pbuf_hdr);
+	fu_protobuf_add_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_REQUEST, pbuf_req);
+	return fu_protobuf_write(pbuf);
 }
 
 static gboolean
@@ -873,9 +945,9 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 	 * upgrade
 	 */
 	if (send_req) {
-		g_autoptr(GByteArray) device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(self);
-		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
+		g_autoptr(GByteArray) buf_req =
+		    fu_logitech_bulkcontroller_device_build_get_device_info_request(self);
+		buf = fu_logitech_bulkcontroller_device_sync_write(self, buf_req, error);
 		if (buf == NULL)
 			return FALSE;
 	} else {
@@ -1018,11 +1090,10 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 		return FALSE;
 
 	if (buf == NULL) {
-		g_autoptr(GByteArray) device_request = NULL;
+		g_autoptr(GByteArray) buf_req =
+		    fu_logitech_bulkcontroller_device_build_get_device_info_request(self);
 		g_debug("manually requesting as no pending request: %s", error_local->message);
-		device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(self);
-		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
+		buf = fu_logitech_bulkcontroller_device_sync_write(self, buf_req, error);
 		if (buf == NULL)
 			return FALSE;
 	}
@@ -1224,42 +1295,86 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static GByteArray *
+fu_logitech_bulkcontroller_device_build_set_device_time_request(
+    FuLogitechBulkcontrollerDevice *self,
+    GError **error)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	g_autofree gchar *olson_location = NULL;
+	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new();
+	g_autoptr(FuProtobuf) pbuf_hdr = fu_logitech_bulkcontroller_device_build_header(self);
+	g_autoptr(FuProtobuf) pbuf_req = fu_protobuf_new();
+	g_autoptr(FuProtobuf) pbuf_time = fu_protobuf_new();
+
+	/* the device expects an olson_location, not a timezone */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+		olson_location = g_strdup("Europe/London");
+	} else {
+		olson_location = fu_common_get_olson_timezone_id(pstore, error);
+		if (olson_location == NULL)
+			return NULL;
+	}
+
+	/* send future time to keep PC & device time as close as possible, unless emulated */
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+		fu_protobuf_add_uint64(pbuf_time,
+				       FU_LOGITECH_BULKCONTROLLER_FNUM_SET_DEVICE_TIME_REQUEST_TS,
+				       (g_get_real_time() / 1000) + 500);
+	}
+	fu_protobuf_add_string(pbuf_time,
+			       FU_LOGITECH_BULKCONTROLLER_FNUM_SET_DEVICE_TIME_REQUEST_TIMEZONE,
+			       olson_location);
+	fu_protobuf_add_embedded(pbuf_req,
+				 FU_LOGITECH_BULKCONTROLLER_FNUM_REQUEST_SET_DEVICE_TIME,
+				 pbuf_time);
+	fu_protobuf_add_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_HEADER, pbuf_hdr);
+	fu_protobuf_add_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_REQUEST, pbuf_req);
+	return fu_protobuf_write(pbuf);
+}
+
 static gboolean
 fu_logitech_bulkcontroller_device_send_time_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	FuLogitechBulkcontrollerProtoId proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_UNKNOWN_ID;
-	g_autofree gchar *bufstr = NULL;
-	g_autoptr(GByteArray) decoded_pkt = NULL;
-	g_autoptr(GByteArray) device_request = NULL;
-	g_autoptr(GByteArray) buf = NULL;
+	gboolean success = FALSE;
+	g_autoptr(FuProtobuf) pbuf = NULL;
+	g_autoptr(FuProtobuf) pbuf_ack = NULL;
+	g_autoptr(GByteArray) buf_req = NULL;
+	g_autoptr(GByteArray) buf_rsp = NULL;
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
-	device_request =
-	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(self, error);
-	if (device_request == NULL)
+	buf_req = fu_logitech_bulkcontroller_device_build_set_device_time_request(self, error);
+	if (buf_req == NULL)
 		return FALSE;
-	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
-	if (buf == NULL)
+	buf_rsp = fu_logitech_bulkcontroller_device_sync_write(self, buf_req, error);
+	if (buf_rsp == NULL)
 		return FALSE;
-	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
-									      buf->len,
-									      &proto_id,
-									      error);
-	if (decoded_pkt == NULL) {
-		g_prefix_error_literal(error, "failed to unpack packet: ");
+
+	pbuf = fu_protobuf_new_from_data(buf_rsp->data, buf_rsp->len);
+
+	pbuf_ack = fu_protobuf_get_embedded(pbuf,
+					    FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_ACKNOWLEDGE,
+					    error);
+	if (pbuf_ack == NULL) {
+		g_prefix_error_literal(error, "invalid response, expected UsbMsg.Acknowledge: ");
 		return FALSE;
 	}
-	bufstr = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-	g_debug("received device response while processing: id: %u, length %u, data: %s",
-		proto_id,
-		buf->len,
-		bufstr);
-	if (proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_ACK) {
+	if (!fu_protobuf_get_boolean(pbuf_ack,
+				     FU_LOGITECH_BULKCONTROLLER_FNUM_ACKNOWLEDGE_SUCCESS,
+				     &success,
+				     error)) {
+		g_prefix_error_literal(error, "incorrect UsbMsg.Acknowledge response: ");
+		return FALSE;
+	}
+	if (!success) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "incorrect response");
+				    "incorrect UsbMsg.Acknowledge, expected Success");
 		return FALSE;
 	}
 
@@ -1277,37 +1392,83 @@ fu_logitech_bulkcontroller_device_send_time(FuLogitechBulkcontrollerDevice *self
 			       error);
 }
 
+static GByteArray *
+fu_logitech_bulkcontroller_device_build_transition_to_device_mode_request(
+    FuLogitechBulkcontrollerDevice *self)
+{
+	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new();
+	g_autoptr(FuProtobuf) pbuf_hdr = fu_logitech_bulkcontroller_device_build_header(self);
+	g_autoptr(FuProtobuf) pbuf_req = fu_protobuf_new();
+
+	fu_protobuf_add_empty(pbuf_req,
+			      FU_LOGITECH_BULKCONTROLLER_FNUM_REQUEST_TRANSITION_TO_DEVICE_MODE);
+	fu_protobuf_add_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_HEADER, pbuf_hdr);
+	fu_protobuf_add_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_REQUEST, pbuf_req);
+	return fu_protobuf_write(pbuf);
+}
+
 static gboolean
 fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 							       gpointer user_data,
 							       GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	FuLogitechBulkcontrollerProtoId proto_id = FU_LOGITECH_BULKCONTROLLER_PROTO_ID_UNKNOWN_ID;
-	g_autoptr(GByteArray) req = NULL;
-	g_autoptr(GByteArray) res = NULL;
-	g_autoptr(GByteArray) decoded_pkt = NULL;
+	gboolean success = FALSE;
+	g_autoptr(FuProtobuf) pbuf = NULL;
+	g_autoptr(FuProtobuf) pbuf_rsp = NULL;
+	g_autoptr(FuProtobuf) pbuf_rsp2 = NULL;
+	g_autoptr(GByteArray) buf_req = NULL;
+	g_autoptr(GByteArray) buf_rsp = NULL;
 
-	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(
-	    self);
-	res = fu_logitech_bulkcontroller_device_sync_write(self, req, error);
-	if (res == NULL)
+	buf_req = fu_logitech_bulkcontroller_device_build_transition_to_device_mode_request(self);
+	buf_rsp = fu_logitech_bulkcontroller_device_sync_write(self, buf_req, error);
+	if (buf_rsp == NULL)
 		return FALSE;
-
-	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(res->data,
-									      res->len,
-									      &proto_id,
-									      error);
-	if (decoded_pkt == NULL) {
-		g_prefix_error_literal(error, "failed to unpack packet: ");
+	pbuf = fu_protobuf_new_from_data(buf_rsp->data, buf_rsp->len);
+	pbuf_rsp =
+	    fu_protobuf_get_embedded(pbuf, FU_LOGITECH_BULKCONTROLLER_FNUM_USB_MSG_RESPONSE, error);
+	if (pbuf_rsp == NULL) {
+		g_prefix_error_literal(error, "invalid response, expected UsbMsg.Response: ");
 		return FALSE;
 	}
-	g_debug("received transition mode response: id: %u, length %u", proto_id, res->len);
-	if (proto_id != FU_LOGITECH_BULKCONTROLLER_PROTO_ID_TRANSITION_TO_DEVICE_MODE_RESPONSE) {
-		g_set_error_literal(error,
+	pbuf_rsp2 = fu_protobuf_get_embedded(
+	    pbuf_rsp,
+	    FU_LOGITECH_BULKCONTROLLER_FNUM_RESPONSE_TRANSITION_TO_DEVICE_MODE,
+	    error);
+	if (pbuf_rsp2 == NULL) {
+		g_prefix_error_literal(
+		    error,
+		    "invalid response, expected UsbMsg.Response.TransitionToDeviceMode: ");
+		return FALSE;
+	}
+	if (!fu_protobuf_get_boolean(
+		pbuf_rsp2,
+		FU_LOGITECH_BULKCONTROLLER_FNUM_TRANSITION_TO_DEVICE_MODE_RESPONSE_SUCCESS,
+		&success,
+		error)) {
+		g_prefix_error_literal(
+		    error,
+		    "incorrect UsbMsg.Response.TransitionToDeviceMode response: ");
+		return FALSE;
+	}
+	if (!success) {
+		g_autofree gchar *error_msg = fu_protobuf_get_string(
+		    pbuf_rsp2,
+		    FU_LOGITECH_BULKCONTROLLER_FNUM_TRANSITION_TO_DEVICE_MODE_RESPONSE_ERROR_DESCRIPTION,
+		    NULL);
+		if (error_msg != NULL) {
+			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "incorrect response");
+				    "incorrect UsbMsg.Response.TransitionToDeviceMode: %s",
+				    error_msg);
+			return FALSE;
+		}
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "incorrect UsbMsg.Response.TransitionToDeviceMode, expected Success");
 		return FALSE;
 	}
 

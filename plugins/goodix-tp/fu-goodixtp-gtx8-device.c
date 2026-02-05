@@ -262,7 +262,9 @@ fu_goodixtp_gtx8_device_wait_bl_cb(FuDevice *device, gpointer user_data, GError 
 static gboolean
 fu_goodixtp_gtx8_device_update_prepare(FuGoodixtpGtx8Device *self, GError **error)
 {
+	/* nocheck:magic */
 	guint8 cmd_switch_to_patch[] = {0x00, 0x10, 0x00, 0x00, 0x01, 0x01};
+	/* nocheck:magic */
 	guint8 cmd_start_update[] = {0x00, 0x11, 0x00, 0x00, 0x01, 0x01};
 
 	/* close report */
@@ -312,7 +314,9 @@ fu_goodixtp_gtx8_device_update_prepare(FuGoodixtpGtx8Device *self, GError **erro
 static gboolean
 fu_goodixtp_gtx8_device_soft_reset_ic(FuGoodixtpGtx8Device *self, GError **error)
 {
+	/* nocheck:magic */
 	guint8 cmd_reset[] = {0x0E, 0x13, 0x00, 0x00, 0x01, 0x01};
+	/* nocheck:magic */
 	guint8 cmd_switch_ptp_mode[] = {0x03, 0x03, 0x00, 0x00, 0x01, 0x01};
 
 	if (!fu_goodixtp_gtx8_device_send_cmd(self, cmd_reset, sizeof(cmd_reset), error)) {

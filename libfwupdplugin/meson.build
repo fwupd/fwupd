@@ -6,6 +6,7 @@ fwupdplugin_structs = [
   'fu-archive.rs', # fuzzing
   'fu-cab.rs', # fuzzing
   'fu-cfi.rs', # fuzzing
+  'fu-cfu.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-config.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
@@ -35,6 +36,7 @@ fwupdplugin_structs = [
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
+  'fu-protobuf.rs', # fuzzing
   'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
@@ -179,10 +181,12 @@ fwupdplugin_src = [
   'fu-oprom-firmware.c', # fuzzing
   'fu-partial-input-stream.c', # fuzzing
   'fu-path.c', # fuzzing
+  'fu-path-store.c', # fuzzing
   'fu-pefile-firmware.c', # fuzzing
   'fu-pci-device.c',
   'fu-pkcs7.c',
   'fu-processor-device.c',
+  'fu-protobuf.c', # fuzzing
   'fu-oprom-device.c',
   'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
@@ -196,7 +200,7 @@ fwupdplugin_src = [
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
-  'fu-temporary-directory.c',
+  'fu-temporary-directory.c', # fuzzing
   'fu-tpm-eventlog-item.c', # fuzzing
   'fu-tpm-eventlog.c', # fuzzing
   'fu-tpm-eventlog-v1.c', # fuzzing
@@ -340,6 +344,7 @@ fwupdplugin_headers = [
   'fu-partial-input-stream.h',
   'fu-partial-input-stream-private.h',
   'fu-path.h',
+  'fu-path-store.h',
   'fu-pefile-firmware.h',
   'fu-pci-device.h',
   'fu-pkcs7.h',
@@ -442,6 +447,7 @@ fwupdplugin_rs_dep = declare_dependency(
   sources: fwupdplugin_rs_headers,
 )
 
+fwupdplugin_gir_includes = []
 if introspection.allowed()
   gir_dep = declare_dependency(
     sources: fwupd_gir
@@ -449,7 +455,11 @@ if introspection.allowed()
   girtargets = []
   extra_args = []
   if libxmlb.type_name() == 'internal'
-    girtargets += subproject('libxmlb').get_variable('gir')[0]
+    libxmlb_gir = subproject('libxmlb').get_variable('gir')[0]
+    fwupdplugin_gir_includes += [
+      fs.parent(libxmlb_gir.full_path()),
+    ]
+    girtargets += libxmlb_gir
   else
     girtargets += 'Xmlb-2.0'
   endif
@@ -482,31 +492,89 @@ if get_option('tests')
 
   subdir('tests')
 
+  libfutest = static_library(
+    'fu-test',
+    sources: [
+      'fu-test.c',
+      'fu-self-test-device.c',
+    ],
+    include_directories: [root_incdir, fwupd_incdir],
+    dependencies: [library_deps, fwupdplugin_rs_dep],
+    link_with: [fwupd, libfwupdtest],
+  )
+
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
-  e = executable(
-    'fwupdplugin-self-test',
-    installed_firmware_zip,
-    colorhug_test_firmware,
-    rustgen.process('fu-self-test.rs'),
-    sources: ['fu-self-test-device.c', 'fu-self-test.c'],
-    include_directories: [root_incdir, fwupd_incdir],
-    dependencies: [library_deps, fwupdplugin_rs_dep],
-    link_with: [fwupd, fwupdplugin],
-    c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
-    install: true,
-    install_rpath: libdir_pkg,
-    install_tag: 'tests',
-    install_dir: installed_test_bindir,
-  )
-  test(
-    'fwupdplugin-self-test',
-    e,
-    is_parallel: false,
-    timeout: 180,
-    env: env,
-  )
+  foreach test_name: [
+    'archive',
+    'backend',
+    'bios-settings',
+    'byte-array',
+    'bytes',
+    'cab-firmware',
+    'chunk-array',
+    'common',
+    'composite-input-stream',
+    'config',
+    'context',
+    'device',
+    'device-event',
+    'device-locker',
+    'efi',
+    'efivars',
+    'fdt-firmware',
+    'firmware',
+    'hid-descriptor',
+    'hwids',
+    'ihex-firmware',
+    'input-stream',
+    'intel-me',
+    'kernel',
+    'kernel-search-path',
+    'lzma',
+    'mem',
+    'msgpack',
+    'partial-input-stream',
+    'path-store',
+    'plugin',
+    'progress',
+    'protobuf',
+    'quirks',
+    'security-attrs',
+    'smbios',
+    'srec-firmware',
+    'string',
+    'struct',
+    'temporary-directory',
+    'udev-device',
+    'version',
+    'volume',
+  ]
+    e = executable(
+      'fwupdplugin-' + test_name + '-test',
+      installed_firmware_zip,
+      colorhug_test_firmware,
+      rustgen.process('fu-self-test.rs'),
+      sources: [
+        'fu-' + test_name + '-test.c',
+      ],
+      include_directories: [root_incdir, fwupd_incdir],
+      dependencies: [library_deps, fwupdplugin_rs_dep],
+      link_with: [fwupd, fwupdplugin, libfutest],
+      c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"', '-DG_LOG_DOMAIN="FuTest"'],
+      install: true,
+      install_rpath: libdir_pkg,
+      install_tag: 'tests',
+      install_dir: installed_test_bindir,
+    )
+    test(
+      'fwupdplugin-' + test_name + '-test',
+      e,
+      timeout: 180,
+      env: env,
+    )
+  endforeach
 endif
 
 fwupdplugin_incdir = include_directories('.')

@@ -8,7 +8,6 @@ plugin_deps = [
   libarchive,
   libxmlb,
   libdrm_amdgpu,
-  protobufc,
   fwupdplugin_rs_dep,
 ]
 
@@ -81,6 +80,7 @@ plugins = {
   'kinetic-dp': false,
   'legion-hid': false,
   'legion-hid2': false,
+  'lenovo-accessory': false,
   'lenovo-thinklmi': false,
   'linux-display': false,
   'linux-lockdown': false,

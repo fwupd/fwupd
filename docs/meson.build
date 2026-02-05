@@ -222,6 +222,17 @@ if build_docs
     ],
   )
 
+  doc_fwupdplugin_include_args = []
+  doc_fwupdplugin_gir_includes = [
+    meson.current_build_dir() / '../libfwupd',
+    meson.current_build_dir() / '../libfwupdplugin',
+  ] + fwupdplugin_gir_includes
+  foreach inc: doc_fwupdplugin_gir_includes
+    doc_fwupdplugin_include_args += [
+      '--add-include-path=@0@'.format(inc)
+    ]
+  endforeach
+
   custom_target(
     'doc-fwupdplugin',
     input: [fwupdplugin_toml, fwupdplugin_gir[0]],
@@ -230,8 +241,7 @@ if build_docs
       gidocgen_app,
       'generate',
       '--quiet',
-      '--add-include-path=@0@'.format(meson.current_build_dir() / '../libfwupd'),
-      '--add-include-path=@0@'.format(meson.current_build_dir() / '../libfwupdplugin'),
+    ] + doc_fwupdplugin_include_args + [
       '--config=@INPUT0@',
       '--output-dir=@OUTPUT@',
       '--no-namespace-dir',

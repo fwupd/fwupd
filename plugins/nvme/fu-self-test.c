@@ -103,40 +103,29 @@ fu_nvme_cns_all_func(void)
 		g_autoptr(GError) error = NULL;
 
 		filename = g_build_filename(path, fn, NULL);
-		g_print("parsing %s... ", filename);
+		g_debug("parsing %s... ", filename);
 		if (!g_file_get_contents(filename, &data, &sz, &error)) {
-			g_print("failed to load %s: %s\n", filename, error->message);
+			g_debug("failed to load %s: %s", filename, error->message);
 			continue;
 		}
 		dev = fu_nvme_device_new_from_blob(ctx, (guint8 *)data, sz, &error);
 		if (dev == NULL) {
-			g_print("failed to load %s: %s\n", filename, error->message);
+			g_debug("failed to load %s: %s", filename, error->message);
 			continue;
 		}
 		g_assert_cmpstr(fu_device_get_name(FU_DEVICE(dev)), !=, NULL);
 		g_assert_cmpstr(fu_device_get_version(FU_DEVICE(dev)), !=, NULL);
 		g_assert_cmpstr(fu_device_get_serial(FU_DEVICE(dev)), !=, NULL);
-		g_print("done\n");
 	}
 }
 
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
-
-	/* tests go here */
 	g_test_add_func("/fwupd/serial-suffix", fu_nvme_serial_suffix_func);
 	g_test_add_func("/fwupd/cns", fu_nvme_cns_func);
-	g_test_add_func("/fwupd/cns{all}", fu_nvme_cns_all_func);
+	g_test_add_func("/fwupd/cns/all", fu_nvme_cns_all_func);
 	return g_test_run();
 }
