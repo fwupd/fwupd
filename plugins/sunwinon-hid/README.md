@@ -38,8 +38,7 @@ and exit when receiving `ProgramEnd` command or process failed/timeout in the mi
 
 Commands during handshake are sent under normal runtime mode.
 
-No replug or re-enumeration is needed during the update process. Device will
-reboot into normal runtime mode automatically after procedure finished.
+Device will replug then reboot into normal runtime mode automatically after procedure finished.
 
 ## External Interface Access
 
