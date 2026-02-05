@@ -12,7 +12,7 @@ derived from an update procedure originally designed by GOODIX. See section
 ## GUID Generation
 
 The HID DeviceInstanceId from hidraw is used to build GUID, e.g.
- `HIDRAW\VEN_17EF&DEV_62CC`. See `sunwinon-hid/quirk`.
+ `HIDRAW\VEN_17EF&DEV_62CE`. See `sunwinon-hid/quirk`.
 
 ## Firmware Format
 
