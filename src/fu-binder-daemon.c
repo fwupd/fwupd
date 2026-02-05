@@ -1168,7 +1168,8 @@ log_handler(const gchar *log_domain,
 						      g_date_time_get_minute(dt),
 						      g_date_time_get_second(dt),
 						      g_date_time_get_microsecond(dt) / 1000);
-	FILE *fp = fopen("/data/vendor/fwupd/fwupd.log", "a");
+	g_autofree gchar *log_path = g_build_filename(FWUPD_LOCALSTATEDIR, "fwupd.log", NULL);
+	FILE *fp = fopen(log_path, "a");
 	if (fp == NULL)
 		return;
 	fprintf(fp, "%s %s: %s\n", timestamp, log_domain, message);

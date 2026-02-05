@@ -540,6 +540,24 @@ class Checker:
             linecnt=node.linecnt,
         )
 
+    def _test_magic_numbers_buffer(self, node: Node) -> None:
+
+        # skip tests
+        if self._current_fn:
+            basename = os.path.basename(self._current_fn)
+            if basename.endswith("-test.c"):
+                return
+
+        limit: int = 4
+        idx = node.tokens.find_fuzzy(["~*@INTEGER", ","] * limit)
+        if idx == -1:
+            return
+        token = node.tokens[idx]
+        self.add_failure(
+            f"variable has too many magic values (limit of {limit})",
+            linecnt=token.linecnt,
+        )
+
     def _test_static_vars(self, node: Node) -> None:
 
         if node.depth != 0:
@@ -781,6 +799,7 @@ class Checker:
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
             "memcpy": "Use fu_memcpy_safe or rustgen instead",
+            "g_unsetenv": "This is not thread safe",
             "~GUINT??_FROM_?E": "Use fu_memread_uintXX_safe() or rustgen instead",
             "~GUINT??_TO_?E": "Use fu_memwrite_uintXX_safe() or rustgen instead",
             "ioctl": "Use fu_udev_device_ioctl() instead",
@@ -815,6 +834,10 @@ class Checker:
 
         for search, msg in {
             "__FUNCTION__": "Use G_STRFUNC instead",
+            "__VA_ARGS__": "Use native functions instead",
+            "uint32_t": "Use guint32 instead",
+            "uint16_t": "Use guint16 instead",
+            "uint8_t": "Use guint8 instead",
         }.items():
             for token in node.tokens:
                 if token.data.find(search) != -1:
@@ -1149,7 +1172,7 @@ class Checker:
     def _test_device_convert_version(self, nodes: list[Node]) -> None:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
-            "fu-self-test.c",
+            "fu-engine-test.c",
         ]:
             return
 
@@ -1384,6 +1407,11 @@ class Checker:
             self._current_nocheck = "nocheck:static"
             if self._should_process_node(node):
                 self._test_static_vars(node)
+
+            # test for magic numbers
+            self._current_nocheck = "nocheck:magic"
+            if self._should_process_node(node):
+                self._test_magic_numbers_buffer(node)
 
             # test for rustgen variables
             self._current_nocheck = "nocheck:rustgen"

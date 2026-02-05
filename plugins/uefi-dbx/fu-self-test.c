@@ -17,7 +17,8 @@ static void
 fu_uefi_dbx_zero_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
@@ -115,7 +116,8 @@ static void
 fu_uefi_dbx_not_present_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_DUMMY_EFIVARS);
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) ms_blob = NULL;
@@ -164,23 +166,10 @@ fu_uefi_dbx_not_present_func(void)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
-
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-
-	/* only critical and error are fatal */
-	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
-
-	/* tests go here */
 	g_test_add_func("/uefi-dbx/image", fu_efi_image_func);
 	g_test_add_func("/uefi-dbx/zero", fu_uefi_dbx_zero_func);
 	g_test_add_func("/uefi-dbx/not-present", fu_uefi_dbx_not_present_func);
-
 	return g_test_run();
 }

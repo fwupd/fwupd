@@ -129,9 +129,14 @@ static gboolean
 fu_amd_kria_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 #ifdef __aarch64__
-	g_autofree gchar *esrt_path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	g_autofree gchar *esrt_path = NULL;
 
 	/* if there is an ESRT use that instead and disable the plugin */
+	esrt_path =
+	    fu_context_build_filename(ctx, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	if (esrt_path == NULL)
+		return FALSE;
 	if (g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "system uses ESRT");
 		return FALSE;

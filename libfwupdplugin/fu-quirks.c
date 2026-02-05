@@ -19,6 +19,8 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 
+#include "fu-context-private.h"
+#include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-quirks.h"
 #include "fu-string.h"
@@ -355,8 +357,8 @@ static gboolean
 fu_quirks_check_silo(FuQuirks *self, GError **error)
 {
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_WATCH_BLOB;
-	g_autofree gchar *datadir = NULL;
-	g_autofree gchar *localstatedir = NULL;
+	const gchar *datadir;
+	const gchar *localstatedir = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = NULL;
 	g_autoptr(XbNode) n_any = NULL;
@@ -367,14 +369,18 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 
 	/* system datadir */
 	builder = xb_builder_new();
-	datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_QUIRKS);
-	if (!fu_quirks_add_quirks_for_path(self, builder, datadir, error))
-		return FALSE;
+	datadir = fu_context_get_path(self->ctx, FU_PATH_KIND_DATADIR_QUIRKS, NULL);
+	if (datadir != NULL) {
+		if (!fu_quirks_add_quirks_for_path(self, builder, datadir, error))
+			return FALSE;
+	}
 
 	/* something we can write when using Ostree */
-	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_QUIRKS);
-	if (!fu_quirks_add_quirks_for_path(self, builder, localstatedir, error))
-		return FALSE;
+	localstatedir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_QUIRKS, NULL);
+	if (localstatedir != NULL) {
+		if (!fu_quirks_add_quirks_for_path(self, builder, localstatedir, error))
+			return FALSE;
+	}
 
 	/* load silo */
 	if (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) {
@@ -383,8 +389,14 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		if (file == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *xmlbfn =
-		    fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.xmlb", NULL);
+		g_autofree gchar *xmlbfn = NULL;
+		xmlbfn = fu_context_build_filename(self->ctx,
+						   error,
+						   FU_PATH_KIND_CACHEDIR_PKG,
+						   "quirks.xmlb",
+						   NULL);
+		if (xmlbfn == NULL)
+			return FALSE;
 		file = g_file_new_for_path(xmlbfn);
 	}
 	if (g_getenv("FWUPD_XMLB_VERBOSE") != NULL) {
@@ -591,10 +603,8 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	}
 
 	/* no quirk data */
-	if (self->query_vs == NULL) {
-		g_warning("no quirk data");
+	if (self->query_vs == NULL)
 		return FALSE;
-	}
 
 	/* query */
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
@@ -868,11 +878,18 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		const FuQuirksDbItem *item = &map[i];
 		guint64 mtime;
-		g_autofree gchar *fn =
-		    fu_path_build(FU_PATH_KIND_DATADIR_VENDOR_IDS, item->fn, NULL);
-		g_autoptr(GFile) file = g_file_new_for_path(fn);
+		g_autofree gchar *fn = NULL;
+		g_autoptr(GFile) file = NULL;
 		g_autoptr(GFileInfo) info = NULL;
 
+		fn = fu_context_build_filename(self->ctx,
+					       NULL,
+					       FU_PATH_KIND_DATADIR_VENDOR_IDS,
+					       item->fn,
+					       NULL);
+		if (fn == NULL)
+			continue;
+		file = g_file_new_for_path(fn);
 		if (!g_file_query_exists(file, NULL))
 			continue;
 		info = g_file_query_info(file,
@@ -934,13 +951,21 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	/* populate database */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		const FuQuirksDbItem *item = &map[i];
-		g_autofree gchar *fn =
-		    fu_path_build(FU_PATH_KIND_DATADIR_VENDOR_IDS, item->fn, NULL);
+		g_autofree gchar *fn = NULL;
 		g_autoptr(FuQuirksDbHelper) helper = g_new0(FuQuirksDbHelper, 1);
-		g_autoptr(GFile) file = g_file_new_for_path(fn);
+		g_autoptr(GFile) file = NULL;
 		g_autoptr(GInputStream) stream = NULL;
 
+		fn = fu_context_build_filename(self->ctx,
+					       NULL,
+					       FU_PATH_KIND_DATADIR_VENDOR_IDS,
+					       item->fn,
+					       NULL);
+		if (fn == NULL)
+			continue;
+
 		/* split into lines */
+		file = g_file_new_for_path(fn);
 		if (!g_file_query_exists(file, NULL)) {
 			g_debug("%s not found", fn);
 			continue;
@@ -995,10 +1020,6 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 gboolean
 fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
-#ifdef HAVE_SQLITE
-	g_autofree gchar *quirksdb = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.db", NULL);
-#endif
-
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -1008,6 +1029,15 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 
 #ifdef HAVE_SQLITE
 	if (self->db == NULL && (load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+		g_autofree gchar *quirksdb = NULL;
+
+		quirksdb = fu_context_build_filename(self->ctx,
+						     error,
+						     FU_PATH_KIND_CACHEDIR_PKG,
+						     "quirks.db",
+						     NULL);
+		if (quirksdb == NULL)
+			return FALSE;
 		g_debug("open database %s", quirksdb);
 		if (!fu_path_mkdir_parent(quirksdb, error))
 			return FALSE;

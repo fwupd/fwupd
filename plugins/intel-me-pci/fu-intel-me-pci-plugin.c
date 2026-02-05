@@ -63,6 +63,7 @@ fu_intel_me_pci_plugin_backend_device_added(FuPlugin *plugin,
 {
 	FuIntelMePciPlugin *self = FU_INTEL_ME_PCI_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	/* nocheck:magic */
 	const guint hfs_cfg_addrs[] = {0x0, 0x40, 0x48, 0x60, 0x64, 0x68, 0x6c};
 	g_autofree gchar *device_file = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;

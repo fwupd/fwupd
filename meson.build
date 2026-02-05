@@ -241,6 +241,10 @@ else
   includedir = join_paths(prefix, get_option('includedir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
+  if host_machine.system() == 'android'
+    datadir = '/vendor/usr/share/fwupd'
+    localstatedir = '/data/vendor/fwupd'
+  endif
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
   installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
   daemon_dir = join_paths(libexecdir, 'fwupd')
@@ -711,7 +715,7 @@ if build_standalone
 endif
 
 flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-allow_flashrom = flashrom.allowed()
+libflashrom = disabler()
 if build_standalone
   libflashrom = dependency(
     'flashrom',
@@ -724,12 +728,15 @@ if build_standalone
   )
     conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
   endif
+  allow_flashrom = flashrom.allowed() and libflashrom.found()
   if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
     'flashrom_flash_probe_v2',
     dependencies: libflashrom,
   )
     conf.set('HAVE_FLASHROM_FLASH_PROBE_V2' , '1')
   endif
+else
+  allow_flashrom = false
 endif
 
 if libsystemd.found()
@@ -833,15 +840,6 @@ libdrm_amdgpu = dependency(
   'libdrm_amdgpu',
   version: '>= 2.4.113',
   required: get_option('libdrm'),
-)
-protobufc = dependency(
-  'libprotobuf-c',
-  required: get_option('protobuf'),
-)
-protoc = find_program(
-  'protoc',
-  'protoc-c',
-  required: get_option('protobuf'),
 )
 
 root_incdir = include_directories('.')

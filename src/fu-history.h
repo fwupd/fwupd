@@ -44,13 +44,6 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 GPtrArray *
 fu_history_get_approved_firmware(FuHistory *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_history_clear_blocked_firmware(FuHistory *self, GError **error) G_GNUC_NON_NULL(1);
-gboolean
-fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError **error)
-    G_GNUC_NON_NULL(1, 2);
-GPtrArray *
-fu_history_get_blocked_firmware(FuHistory *self, GError **error) G_GNUC_NON_NULL(1);
-gboolean
 fu_history_add_security_attribute(FuHistory *self,
 				  const gchar *security_attr_json,
 				  const gchar *hsi_score,

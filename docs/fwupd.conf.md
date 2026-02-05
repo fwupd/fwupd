@@ -85,10 +85,6 @@ The `[fwupd]` section can contain the following parameters:
   A list of firmware checksums that has been approved by the site admin
   If unset, all firmware is approved.
 
-**BlockedFirmware={{BlockedFirmware}}**
-
-  Allow blocking specific devices by their cabinet checksum, either SHA-1 or SHA-256.
-
 **UriSchemes={{UriSchemes}}**
 
   Allowed URI schemes in the preference order; failed downloads from the first scheme will be retried with the next in order until no choices remain.

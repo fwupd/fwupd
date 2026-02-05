@@ -8,14 +8,8 @@ plugin_builtins += static_library('fu_plugin_hpi_cfu',
     'fu-hpi-cfu-device.c',
     'fu-hpi-cfu-plugin.c',
   ],
-  include_directories: [ 
-    plugin_incdirs,
-    plugincfu_incdir,
-  ],
-  link_with: [ 
-    plugin_libs,
-    plugin_builtin_cfu,
-  ],
+  include_directories: plugin_incdirs,
+  link_with: plugin_libs,
   c_args: cargs,
   dependencies: plugin_deps,
 )

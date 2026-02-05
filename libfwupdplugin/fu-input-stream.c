@@ -592,6 +592,17 @@ fu_input_stream_compute_crc32_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 	return TRUE;
 }
 
+static gboolean
+fu_input_stream_compute_crc32_fast_cb(const guint8 *buf,
+				      gsize bufsz,
+				      gpointer user_data,
+				      GError **error)
+{
+	guint32 *crc = (guint32 *)user_data;
+	*crc = fu_crc32_fast(buf, bufsz, *crc);
+	return TRUE;
+}
+
 /**
  * fu_input_stream_compute_crc32:
  * @stream: a #GInputStream
@@ -616,8 +627,14 @@ fu_input_stream_compute_crc32(GInputStream *stream, FuCrcKind kind, guint32 *crc
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (kind == FU_CRC_KIND_B32_STANDARD)
-		helper.crc = 0;
+	/* super quick zlib version */
+	if (kind == FU_CRC_KIND_B32_STANDARD && *crc == G_MAXUINT32) {
+		*crc = 0;
+		return fu_input_stream_chunkify(stream,
+						fu_input_stream_compute_crc32_fast_cb,
+						crc,
+						error);
+	}
 	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc32_cb, &helper, error))
 		return FALSE;
 	*crc = fu_crc32_done(kind, helper.crc);

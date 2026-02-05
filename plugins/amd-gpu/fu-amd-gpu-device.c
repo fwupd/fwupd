@@ -48,6 +48,7 @@ fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_amd_gpu_device_set_device_file(FuAmdGpuDevice *self, const gchar *base, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuDeviceEvent *event = NULL;
 	const gchar *f;
 	g_autofree gchar *ddir = NULL;
@@ -87,7 +88,12 @@ fu_amd_gpu_device_set_device_file(FuAmdGpuDevice *self, const gchar *base, GErro
 		return FALSE;
 	while ((f = g_dir_read_name(dir))) {
 		if (g_str_has_prefix(f, "card")) {
-			device_file = fu_path_build(FU_PATH_KIND_DEVFS, "dri", f, NULL);
+			device_file = fu_context_build_filename(ctx,
+								error,
+								FU_PATH_KIND_DEVFS,
+								"dri",
+								f,
+								NULL);
 			break;
 		}
 	}

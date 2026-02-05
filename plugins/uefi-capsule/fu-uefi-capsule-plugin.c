@@ -181,10 +181,11 @@ fu_uefi_capsule_plugin_fwupd_efi_probe(FuUefiCapsulePlugin *self, GError **error
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	g_autofree gchar *fn = NULL;
 
 	/* find the app binary */
-	fn = fu_uefi_get_built_app_path(efivars, "fwupd", error);
+	fn = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
 	if (fn == NULL)
 		return FALSE;
 	self->fwupd_efi_file = g_file_new_for_path(fn);
@@ -313,8 +314,12 @@ fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 
 #ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 static GBytes *
-fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error)
+fu_uefi_capsule_plugin_get_splash_data(FuUefiCapsulePlugin *self,
+				       guint width,
+				       guint height,
+				       GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	const gchar *const *langs = g_get_language_names();
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
@@ -322,7 +327,13 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
-	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.zip", NULL);
+	filename_archive = fu_context_build_filename(ctx,
+						     error,
+						     FU_PATH_KIND_DATADIR_PKG,
+						     "uefi-capsule-ux.zip",
+						     NULL);
+	if (filename_archive == NULL)
+		return NULL;
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
@@ -462,15 +473,16 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	struct {
 		guint32 width;
 		guint32 height;
-	} sizes[] = {{640, 480}, /* matching the sizes in po/make-images */
-		     {800, 600},
-		     {1024, 768},
-		     {1920, 1080},
-		     {3840, 2160},
-		     {5120, 2880},
-		     {5688, 3200},
-		     {7680, 4320},
-		     {0, 0}};
+	} sizes[] = {
+	    {640, 480}, /* matching the sizes in po/make-images */
+	    {800, 600},
+	    {1024, 768},
+	    {1920, 1080},
+	    {3840, 2160},
+	    {5120, 2880},
+	    {5688, 3200},
+	    {7680, 4320},
+	};
 
 	/* no UX capsule support, so deleting var if it exists */
 	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE) &&
@@ -495,7 +507,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 		self->screen_height);
 
 	/* find the 'best sized' pre-generated image */
-	for (guint i = 0; sizes[i].width != 0; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(sizes); i++) {
 		guint32 border_pixels;
 
 		/* disregard any images that are bigger than the screen */
@@ -521,7 +533,8 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	}
 
 	/* get the raw data */
-	image_bmp = fu_uefi_capsule_plugin_get_splash_data(sizes[best_idx].width,
+	image_bmp = fu_uefi_capsule_plugin_get_splash_data(self,
+							   sizes[best_idx].width,
 							   sizes[best_idx].height,
 							   error);
 	if (image_bmp == NULL)
@@ -802,12 +815,15 @@ fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 static FuFirmware *
 fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuFirmware) firmware = fu_acpi_uefi_new();
 	g_autoptr(GFile) file = NULL;
 
 	/* if we have a table, parse it and validate it */
-	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "UEFI", NULL);
+	fn = fu_context_build_filename(ctx, error, FU_PATH_KIND_ACPI_TABLES, "UEFI", NULL);
+	if (fn == NULL)
+		return NULL;
 	file = g_file_new_for_path(fn);
 	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
@@ -882,6 +898,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_acpi_uefi = NULL;
@@ -918,7 +935,8 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	/* now try the now-removed upstream efi-framebuffer */
 	if (self->screen_height == 0 || self->screen_width == 0) {
 		g_autoptr(GError) error_efifb = NULL;
-		if (!fu_uefi_get_framebuffer_size(&self->screen_width,
+		if (!fu_uefi_get_framebuffer_size(pstore,
+						  &self->screen_width,
 						  &self->screen_height,
 						  &error_efifb))
 			g_debug("EFIFB data was not readable: %s", error_efifb->message);
@@ -1290,7 +1308,6 @@ fu_uefi_capsule_plugin_backend_device_added(FuPlugin *plugin,
 static void
 fu_uefi_capsule_plugin_init(FuUefiCapsulePlugin *self)
 {
-	self->bgrt = fu_uefi_bgrt_new();
 	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY);
 }
 
@@ -1299,9 +1316,11 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	g_autoptr(GError) error_local = NULL;
 
+	self->bgrt = fu_uefi_bgrt_new(pstore);
 	self->backend = fu_uefi_capsule_backend_new(ctx);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm");

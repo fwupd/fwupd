@@ -87,14 +87,18 @@ fu_uefi_capsule_backend_linux_device_new(FuUefiCapsuleBackendLinux *self,
 static gboolean
 fu_uefi_capsule_backend_linux_check_efivarfs(FuUefiCapsuleBackendLinux *self, GError **error)
 {
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	gboolean is_readonly;
-	g_autofree gchar *sysfsefivardir =
-	    fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "efivars", NULL);
+	g_autofree gchar *sysfsefivardir = NULL;
 	g_autoptr(GUnixMountEntry) mount = NULL;
 
 	/* in the self tests */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
+	sysfsefivardir =
+	    fu_context_build_filename(ctx, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", "efivars", NULL);
+	if (sysfsefivardir == NULL)
+		return FALSE;
 #if GLIB_CHECK_VERSION(2, 83, 1)
 	mount = g_unix_mount_entry_at(sysfsefivardir, NULL);
 #else
@@ -136,6 +140,7 @@ static gboolean
 fu_uefi_capsule_backend_linux_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUefiCapsuleBackendLinux *self = FU_UEFI_CAPSULE_BACKEND_LINUX(backend);
+	FuContext *ctx = fu_backend_get_context(backend);
 	const gchar *fn;
 	g_autofree gchar *esrt_entries = NULL;
 	g_autofree gchar *esrt_path = NULL;
@@ -146,7 +151,10 @@ fu_uefi_capsule_backend_linux_coldplug(FuBackend *backend, FuProgress *progress,
 		return FALSE;
 
 	/* get the directory of ESRT entries */
-	esrt_path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	esrt_path =
+	    fu_context_build_filename(ctx, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
+	if (esrt_path == NULL)
+		return FALSE;
 	esrt_entries = g_build_filename(esrt_path, "entries", NULL);
 	dir = g_dir_open(esrt_entries, 0, error);
 	if (dir == NULL)
@@ -172,13 +180,12 @@ fu_uefi_capsule_backend_linux_setup(FuBackend *backend,
 {
 	FuContext *ctx = fu_backend_get_context(backend);
 
-	/* using a pre-cooked SMBIOS */
-	if (g_getenv("FWUPD_SYSFSFWDIR") != NULL)
-		return TRUE;
-
 	/* check SMBIOS for 'UEFI Specification is supported' */
 	if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED)) {
-		g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
+		g_autofree gchar *fn =
+		    fu_context_build_filename(ctx, error, FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
+		if (fn == NULL)
+			return FALSE;
 		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
 			g_warning("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
 				  "UEFI specification is unsupported, but %s exists!",

@@ -26,8 +26,8 @@ fu_crc8(FuCrcKind kind, const guint8 *buf, gsize bufsz);
 guint8
 fu_crc8_bytes(FuCrcKind kind, GBytes *blob);
 
-FuCrcKind
-fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target);
+gboolean
+fu_crc_find(const guint8 *buf, gsize bufsz, guint32 crc_target, FuCrcKind *kind, GError **error);
 
 guint16
 fu_crc_misr16(guint16 init, const guint8 *buf, gsize bufsz);

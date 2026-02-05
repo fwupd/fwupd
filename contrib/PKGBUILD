@@ -31,7 +31,6 @@ depends=(
   libxmlb
   passim
   polkit
-  protobuf-c
   python
   shared-mime-info
   sqlite
@@ -92,7 +91,6 @@ package() {
     libcurl.so
     libmm-glib.so
     libpassim.so
-    libprotobuf-c.so
     libqmi-glib.so
   )
   optdepends=(
