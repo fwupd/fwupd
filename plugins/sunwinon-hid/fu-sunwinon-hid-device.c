@@ -8,7 +8,8 @@
 
 #include "fu-sunwinon-hid-device.h"
 #include "fu-sunwinon-util-dfu-master.h"
-#include "glibconfig.h"
+
+#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS 2000
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -35,6 +36,7 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 	guint8 minor = 0;
 	guint8 patch = 0;
 	g_autoptr(FuSwDfuMaster) dfu_master = NULL;
+	g_autofree gchar *version_str = NULL;
 
 	dfu_master = fu_sunwinon_util_dfu_master_new(NULL, 0, FU_DEVICE(device), error);
 	if (!fu_sunwinon_util_dfu_master_fetch_fw_version(dfu_master, &fw_info, error))
@@ -43,10 +45,9 @@ fu_sunwinon_hid_device_fetch_fw_version(FuSunwinonHidDevice *device, GError **er
 	patch = fw_info.version & 0xFF;
 	minor = (fw_info.version >> 8) & 0x0F;
 	major = (fw_info.version >> 12) & 0x0F;
-	g_debug("firmware version fetched: %u.%u.%u", (guint)major, (guint)minor, (guint)patch);
-	fu_device_set_version(
-	    FU_DEVICE(device),
-	    g_strdup_printf("%u.%u.%u", (guint)major, (guint)minor, (guint)patch));
+	version_str = g_strdup_printf("%u.%u.%u", (guint)major, (guint)minor, (guint)patch);
+	g_debug("firmware version fetched: %s", version_str);
+	fu_device_set_version(FU_DEVICE(device), version_str);
 	return TRUE;
 }
 
@@ -95,8 +96,17 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 	g_debug("HID descriptor parsed successfully");
 	if (!fu_sunwinon_hid_device_check_update_channel(descriptor, error))
 		return FALSE;
+
+	/*
+	 * currently there is a defect in firmware that sending msg before device getting ready
+	 * will cause error and eventually make device reboot again, so we just wait here anyway
+	 */
+
+	g_debug("waiting %d ms for device ready", FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
+	fu_device_sleep(device, FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
 	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
+
 	return TRUE;
 }
 
@@ -117,9 +127,11 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.sunwinon.hid");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static gboolean
@@ -152,6 +164,8 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 							FU_SUNWINON_DFU_UPGRADE_MODE_COPY,
 							error))
 		return FALSE;
+
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

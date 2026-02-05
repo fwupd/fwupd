@@ -718,7 +718,7 @@ fu_sunwinon_util_dfu_master_do_update_normal(FuSwDfuMaster *self,
 		}
 		already_sent += data_len;
 
-		fu_progress_set_percentage(progress, (guint)((already_sent * 100) / self->fw_sz));
+		fu_progress_set_percentage_full(progress, already_sent, self->fw_sz);
 	}
 
 	return TRUE;
