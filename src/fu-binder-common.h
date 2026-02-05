@@ -15,7 +15,7 @@
 
 #define BINDER_DEFAULT_IFACE	    "org.freedesktop.fwupd.IFwupd"
 #define BINDER_EVENT_LISTENER_IFACE "org.freedesktop.fwupd.IFwupdEventListener"
-#define BINDER_SERVICE_NAME	    "org.freedesktop.fwupd.IFwupd/default"
+#define BINDER_SERVICE_NAME	    "fwupd"
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
