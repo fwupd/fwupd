@@ -903,7 +903,5 @@ fu_sunwinon_util_dfu_master_write_firmware(FuSwDfuMaster *self,
 			return FALSE;
 	}
 
-	fu_device_sleep(FU_DEVICE(self->device), 10000);
-
 	return TRUE;
 }

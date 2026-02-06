@@ -157,6 +157,7 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 							error))
 		return FALSE;
 
+	fu_device_sleep(device, 10000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
