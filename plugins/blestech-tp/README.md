@@ -5,7 +5,7 @@ title: Plugin: Betterlife Touch Controller Sensor
 ## Introduction
 
 This plugin allows updating Touchpad devices from Betterlife. Devices are enumerated
-using HID and raw I²C nodes. 
+using HID and raw I²C nodes.
 
 ## Firmware Format
 

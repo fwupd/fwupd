@@ -12,7 +12,7 @@
 
 #define FU_TYPE_BLESTECHTP_HID_DEVICE (fu_blestechtp_hid_device_get_type())
 G_DECLARE_FINAL_TYPE(FuBlestechtpHidDevice,
-			 fu_blestechtp_hid_device,
-			 FU,
-			 BLESTECHTP_HID_DEVICE,
-			 FuHidrawDevice)
+		     fu_blestechtp_hid_device,
+		     FU,
+		     BLESTECHTP_HID_DEVICE,
+		     FuHidrawDevice)

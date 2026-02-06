@@ -1,4 +1,29 @@
-[HIDRAW\VEN_347D]
+# BTL 7840
+[HIDRAW\VEN_347D&DEV_7840]
 Plugin = blestechtp
 Flags = enforce-requires
-GType = FuBlestechtpHidDevice
+
+# BTL 7936
+[HIDRAW\VEN_347D&DEV_7936]
+Plugin = blestechtp
+Flags = enforce-requires
+
+# BTL 7940
+[HIDRAW\VEN_347D&DEV_7940]
+Plugin = blestechtp
+Flags = enforce-requires
+
+# BTL 7943
+[HIDRAW\VEN_347D&DEV_7943]
+Plugin = blestechtp
+Flags = enforce-requires
+
+# BTL 7953
+[HIDRAW\VEN_347D&DEV_7953]
+Plugin = blestechtp
+Flags = enforce-requires
+
+# BTL 7955
+[HIDRAW\VEN_347D&DEV_7955]
+Plugin = blestechtp
+Flags = enforce-requires
