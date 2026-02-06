@@ -102,6 +102,13 @@ fu_input_stream_chunkify_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(crc16, ==, fu_crc16(FU_CRC_KIND_B16_XMODEM, buf->data, buf->len));
 
+	ret = fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_MPEG2, &crc32, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(crc32, ==, fu_crc32(FU_CRC_KIND_B32_MPEG2, buf->data, buf->len));
+
+	/* use zlib speedup */
+	crc32 = G_MAXUINT32;
 	ret = fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &crc32, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

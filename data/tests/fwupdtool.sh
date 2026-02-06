@@ -427,4 +427,4 @@ expect_rc 1
 run crc-find 0xaf083b2d ${TMPDIR}/crc.txt
 expect_rc 0
 run crc-find 0x12345678 ${TMPDIR}/crc.txt
-expect_rc 1
+expect_rc 3

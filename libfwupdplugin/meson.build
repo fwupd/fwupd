@@ -447,6 +447,7 @@ fwupdplugin_rs_dep = declare_dependency(
   sources: fwupdplugin_rs_headers,
 )
 
+fwupdplugin_gir_includes = []
 if introspection.allowed()
   gir_dep = declare_dependency(
     sources: fwupd_gir
@@ -454,7 +455,11 @@ if introspection.allowed()
   girtargets = []
   extra_args = []
   if libxmlb.type_name() == 'internal'
-    girtargets += subproject('libxmlb').get_variable('gir')[0]
+    libxmlb_gir = subproject('libxmlb').get_variable('gir')[0]
+    fwupdplugin_gir_includes += [
+      fs.parent(libxmlb_gir.full_path()),
+    ]
+    girtargets += libxmlb_gir
   else
     girtargets += 'Xmlb-2.0'
   endif

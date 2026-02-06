@@ -11,10 +11,11 @@
 
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
-#include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
 #include "fu-synaptics-mst-plugin.h"
+
+#define FU_SYNAPTICS_MST_IEEE_OUI 0x90CC24
 
 static void
 fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
@@ -62,7 +63,7 @@ fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   "device-file",
 				   fn,
 				   "dpcd-ieee-oui",
-				   SYNAPTICS_IEEE_OUI,
+				   FU_SYNAPTICS_MST_IEEE_OUI,
 				   NULL);
 		fu_device_add_private_flag(FU_DEVICE(dev),
 					   FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
