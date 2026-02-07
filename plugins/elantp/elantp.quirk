@@ -105,6 +105,10 @@ ElantpIapPassword = 0x1EA5
 ElantpIcPageCount = 0x500
 ElantpIapPassword = 0x1EA5
 
+[ELANTP\ICTYPE_12]
+ElantpIcPageCount = 0x800
+ElantpIapPassword = 0x1EA5
+
 [ELANTP\ICTYPE_13]
 ElantpIcPageCount = 0x800
 ElantpIapPassword = 0x1EA5
@@ -116,3 +120,12 @@ ElantpIapPassword = 0x1EA5
 [ELANTP\ICTYPE_15]
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
+
+[ELANMCU\ICTYPE_14]
+ElantpIcPageCount = 0x400
+ElantpIapPassword = 0x1EA5
+
+[ELANMCU\ICTYPE_15]
+ElantpIcPageCount = 0x400
+ElantpIapPassword = 0x1EA5
+
