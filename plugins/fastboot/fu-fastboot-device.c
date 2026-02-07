@@ -17,6 +17,8 @@
 #define FASTBOOT_EP_OUT			   0x01
 #define FASTBOOT_CMD_BUFSZ		   64 /* bytes */
 
+#define FU_DEVICE_PRIVATE_FLAG_OVERRIDE_VERSION "override-version"
+
 struct _FuFastbootDevice {
 	FuUsbDevice parent_instance;
 	guint blocksz;
@@ -302,6 +304,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *serialno = NULL;
 	g_autofree gchar *secure = NULL;
 	g_autofree gchar *version_bootloader = NULL;
+	g_autofree gchar *version_device = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_fastboot_device_parent_class)->setup(device, error))
@@ -334,6 +337,20 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	} else {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	}
+
+	/* chance to override device version */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_OVERRIDE_VERSION)) {
+		if (!fu_fastboot_device_getvar(self, "version-device", &version_device, error))
+			return FALSE;
+
+		if ((version_device != NULL) && (version_device[0] != '\0')) {
+			const FwupdVersionFormat version_format = fu_version_guess_format(version_device);
+			if (version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
+				fu_device_set_version_format(device, version_format);
+				fu_device_set_version(device, version_device);
+			}
+		}
 	}
 
 	/* success */
@@ -720,6 +737,7 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_OVERRIDE_VERSION);
 }
 
 static void
