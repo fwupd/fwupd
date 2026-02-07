@@ -24,8 +24,11 @@ These device uses the standard DeviceInstanceId values, e.g.
 
 ## Update Behavior
 
-The firmware is deployed when the device is in normal runtime mode, and the
-device will reset once the new firmware has been written.
+Firmware updates are initiated while the device is in its normal runtime mode.
+Before writing the new image, the plugin switches the controller into a
+dedicated boot/bootloader update mode where the firmware payload is
+transferred. After the transfer completes, the device resets and returns to
+normal runtime mode running the new firmware.
 
 ## Vendor ID Security
 
