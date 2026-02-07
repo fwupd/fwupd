@@ -262,7 +262,7 @@ if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
-if host_machine.system() == 'linux'
+if host_machine.system() in ['linux', 'android']
   conf.set('HAVE_UDEV', '1')
 endif
 if get_option('udev_hotplug')

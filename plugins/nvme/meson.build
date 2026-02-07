@@ -1,4 +1,4 @@
-host_machine.system() == 'linux' or subdir_done()
+host_machine.system() in ['linux', 'android'] or subdir_done()
 cc.has_header('linux/nvme_ioctl.h', required: false) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
