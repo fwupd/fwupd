@@ -96,6 +96,8 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 	g_debug("HID descriptor parsed successfully");
 	if (!fu_sunwinon_hid_device_check_update_channel(descriptor, error))
 		return FALSE;
+	g_debug("sunwinon-hid: wait for service get ready");
+	fu_device_sleep(device, FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
 	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
 
@@ -157,7 +159,6 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 							error))
 		return FALSE;
 
-	fu_device_sleep(device, 10000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }

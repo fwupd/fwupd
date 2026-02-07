@@ -7,14 +7,11 @@
 #include "config.h"
 
 #include "fu-sunwinon-hid-device.h"
+#include "fu-sunwinon-hid-plugin.h"
 
-typedef struct {
+struct _FuSunwinonHidPlugin {
 	FuPlugin parent_instance;
-} FuSunwinonHidPlugin;
-
-typedef struct {
-	FuPluginClass parent_class;
-} FuSunwinonHidPluginClass;
+};
 
 G_DEFINE_TYPE(FuSunwinonHidPlugin, fu_sunwinon_hid_plugin, FU_TYPE_PLUGIN)
 
