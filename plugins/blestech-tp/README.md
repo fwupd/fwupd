@@ -29,7 +29,7 @@ device will reset once the new firmware has been written.
 
 ## Vendor ID Security
 
-The vendor ID is set from the HID vendor, for example set to `HIDRAW:0x01E0`
+The vendor ID is set from the HID vendor, for example set to `HIDRAW:0x347D`
 
 ## External Interface Access
 
