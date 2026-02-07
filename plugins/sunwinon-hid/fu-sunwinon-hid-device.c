@@ -96,7 +96,7 @@ fu_sunwinon_hid_device_setup(FuDevice *device, GError **error)
 	g_debug("HID descriptor parsed successfully");
 	if (!fu_sunwinon_hid_device_check_update_channel(descriptor, error))
 		return FALSE;
-	g_debug("sunwinon-hid: wait for service get ready");
+	g_debug("wait for service get ready");
 	fu_device_sleep(device, FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME_MS);
 	if (!fu_sunwinon_hid_device_fetch_fw_version(FU_SUNWINON_HID_DEVICE(device), error))
 		return FALSE;
@@ -119,7 +119,6 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 	fu_device_set_id(FU_DEVICE(self), "SunwinonHid");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "com.sunwinon.hid");
-	fu_device_add_protocol(FU_DEVICE(self), "unknown");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
