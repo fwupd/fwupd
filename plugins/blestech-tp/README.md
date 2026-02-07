@@ -20,7 +20,7 @@ This plugin supports the following protocol ID:
 
 These device uses the standard DeviceInstanceId values, e.g.
 
-* `HIDRAW\VEN_347D6&DEV_7953`
+* `HIDRAW\VEN_347D&DEV_7953`
 
 ## Update Behavior
 
