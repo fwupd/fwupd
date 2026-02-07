@@ -39,6 +39,8 @@ and exit when receiving `ProgramEnd` command or process failed/timeout in the mi
 Commands during handshake are sent under normal runtime mode.
 
 Device will replug then reboot into normal runtime mode automatically after procedure finished.
+Due to a quirk in the device that it goes into unexpected state if message of HID layer is sent
+between BLE 'Connected' and 'ServiceResolved', a 2000ms delay is added during setup.
 
 ## External Interface Access
 
