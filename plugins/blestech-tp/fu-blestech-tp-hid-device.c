@@ -91,11 +91,11 @@ fu_blestech_tp_hid_device_get_version(FuBlestechTpHidDevice *self, guint16 *fw_v
 	g_autoptr(FuBlestechTpGetFwVerRes) st_res = NULL;
 
 	if (!fu_blestech_tp_hid_device_write(self, st_req->buf, sizeof(buf), error)) {
-		g_prefix_error_literal(error, "read version fail: ");
+		g_prefix_error_literal(error, "failed to request version: ");
 		return FALSE;
 	}
 	if (!fu_blestech_tp_hid_device_read(self, buf, sizeof(buf), error)) {
-		g_prefix_error_literal(error, "read version fail: ");
+		g_prefix_error_literal(error, "failed to read version: ");
 		return FALSE;
 	}
 	st_res = fu_blestech_tp_get_fw_ver_res_parse(buf, sizeof(buf), 0x0, error);
@@ -378,14 +378,14 @@ fu_blestech_tp_hid_device_write_firmware(FuDevice *device,
 
 	/* switch to boot */
 	if (!fu_blestech_tp_hid_device_switch_boot(self, error)) {
-		g_prefix_error_literal(error, "switch boot failed: ");
+		g_prefix_error_literal(error, "failed to switch boot: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
 
 	/* update start */
 	if (!fu_blestech_tp_hid_device_update_start(self, error)) {
-		g_prefix_error_literal(error, "update start failed: ");
+		g_prefix_error_literal(error, "failed to update start: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -395,18 +395,18 @@ fu_blestech_tp_hid_device_write_firmware(FuDevice *device,
 					       firmware,
 					       fu_progress_get_child(progress),
 					       error)) {
-		g_prefix_error_literal(error, "write image failed: ");
+		g_prefix_error_literal(error, "failed to write image: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
 
 	/* finish */
 	if (!fu_blestech_tp_hid_device_program_checksum(self, checksum, error)) {
-		g_prefix_error_literal(error, "program checksum failed: ");
+		g_prefix_error_literal(error, "failed to program checksum: ");
 		return FALSE;
 	}
 	if (!fu_blestech_tp_hid_device_program_end(self, error)) {
-		g_prefix_error_literal(error, "program end failed: ");
+		g_prefix_error_literal(error, "failed to program end: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
