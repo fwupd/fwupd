@@ -177,8 +177,8 @@ fu_blestech_tp_hid_device_program_page_end(FuBlestechTpHidDevice *self,
 	if (checksum_act != checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "checksum error: act:%04X, exp:%04X",
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed checksum: actual 0x%02x, expected 0x%02x",
 			    checksum_act,
 			    checksum);
 		return FALSE;
@@ -277,6 +277,13 @@ fu_blestech_tp_hid_device_program(FuBlestechTpHidDevice *self,
 		return FALSE;
 
 	boot_pack_nums = FU_BLESTECH_TP_DEVICE_BOOT_SIZE / FU_BLESTECH_TP_DEVICE_PAGE_SIZE;
+	if (boot_pack_nums > fu_chunk_array_length(chunks)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "boot pack size is not possible");
+		return FALSE;
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -334,8 +341,8 @@ fu_blestech_tp_hid_device_program_checksum(FuBlestechTpHidDevice *self,
 	if (calc_checksum != checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "checksum failed, exp:%04X, act:%04X",
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed checksum: expected 0x%04x, actual 0x%04x",
 			    checksum,
 			    calc_checksum);
 		return FALSE;
@@ -469,7 +476,6 @@ static void
 fu_blestech_tp_hid_device_class_init(FuBlestechTpHidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-
 	device_class->setup = fu_blestech_tp_hid_device_setup;
 	device_class->reload = fu_blestech_tp_hid_device_setup;
 	device_class->set_progress = fu_blestech_tp_hid_device_set_progress;
