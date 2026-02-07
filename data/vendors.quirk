@@ -24,6 +24,8 @@ Vendor = Hughski
 Vendor = Goodix
 [USB\VID_32AC]
 Vendor = Framework
+[USB\VID_347D]
+Vendor = Blestech
 [USB\VID_8087]
 Vendor = Intel
 

@@ -1,0 +1,18 @@
+{
+  "name": "Blestech Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "022b87d93287c31f6ada246e484b3e771b2cc2bbfa4f9ab095f6e34bda14b030-V2_BL7940_V1.01.02.01_20260130_A4F8_.cab",
+      "emulation-url": "25bc0b3d949a17c60d40ea4e8690194bd08f1ab7719a643c6f5873e93a3dd0d9-blestechtp_1.zip",
+      "components": [
+        {
+          "version": "2.1",
+          "guids": [
+            "05fd88fe-9d96-57f6-a82b-53fc0ad1ab24"
+          ]
+        }
+      ]
+    }
+  ]
+}
