@@ -1,0 +1,18 @@
+{
+  "name": "Sunwinon HID Device",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "d5c67e41825131c5339b46e3adce89140659e2d184268164791704f19c7d7d88-Ln01_user_fw_fw_v0.1.1.cab",
+      "emulation-url": "e34ecaf7405b43a6ea2acca675b0174e0e1776b52e03a40cc8a308556a96572b-Ln01_DVT_emu.zip",
+      "components": [
+        {
+          "version": "0.1.1",
+          "guids": [
+            "34c0111a-956d-5fed-a6c8-91b0bb9440b8"
+          ]
+        }
+      ]
+    }
+  ]
+}
