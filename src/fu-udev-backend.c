@@ -480,14 +480,9 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		g_autofree gchar *kvstr = NULL;
 		g_auto(GStrv) kv = NULL;
 
-		kvstr = fu_strsafe((const gchar *)buf + i, bufsz - i);
-		if (kvstr == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "invalid ASCII buffer");
+		kvstr = fu_memstrsafe(buf, bufsz, i, bufsz - i, error);
+		if (kvstr == NULL)
 			return FALSE;
-		}
 		kv = g_strsplit(kvstr, "=", 2);
 		if (g_strcmp0(kv[0], "ACTION") == 0) {
 			action = fu_udev_action_from_string(kv[1]);
