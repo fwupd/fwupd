@@ -117,7 +117,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 		g_autofree gchar *rsp = NULL;
 		if (rsp_buf->len > 0) {
 			/* make sure the response is printable */
-			rsp = fu_strsafe((const char *)rsp_buf->data, rsp_buf->len + 1);
+			rsp = fu_strsafe((const char *)rsp_buf->data, rsp_buf->len);
 		}
 
 		/* TODO check whether the response is even printable? */
