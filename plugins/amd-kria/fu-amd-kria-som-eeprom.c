@@ -66,19 +66,46 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 
 	/* manufacturer string in board area */
 	str_offset = str_offset + str_len;
+	if (str_offset >= bufsz) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "board info manufacturer offset out of bounds");
+		return FALSE;
+	}
 	str_len = LENGTH(buf[str_offset]);
 	str_offset++;
-	self->manufacturer = fu_strsafe((gchar *)buf + str_offset, str_len);
+	self->manufacturer = fu_memstrsafe(buf, bufsz, str_offset, str_len, error);
+	if (self->manufacturer == NULL)
+		return FALSE;
 
 	str_offset = str_offset + str_len;
+	if (str_offset >= bufsz) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "board info product name offset out of bounds");
+		return FALSE;
+	}
 	str_len = LENGTH(buf[str_offset]);
 	str_offset++;
-	self->product_name = fu_strsafe((gchar *)buf + str_offset, str_len);
+	self->product_name = fu_memstrsafe(buf, bufsz, str_offset, str_len, error);
+	if (self->product_name == NULL)
+		return FALSE;
 
 	str_offset = str_offset + str_len;
+	if (str_offset >= bufsz) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "board info serial number offset out of bounds");
+		return FALSE;
+	}
 	str_len = LENGTH(buf[str_offset]);
 	str_offset++;
-	self->serial_number = fu_strsafe((gchar *)buf + str_offset, str_len);
+	self->serial_number = fu_memstrsafe(buf, bufsz, str_offset, str_len, error);
+	if (self->serial_number == NULL)
+		return FALSE;
 
 	return TRUE;
 }
