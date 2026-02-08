@@ -12,4 +12,5 @@ enum FuCfiDeviceCmd {
     WriteEn,
     WriteStatus,
     BlockErase,
+    ReleasePd,
 }

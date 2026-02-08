@@ -1,0 +1,18 @@
+{
+  "name": "Novatek touchscreen",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "9bca647b316dc94faa1111e07816577b25102746910e558e789c29d2bf24a58c-novatek-ts.cab",
+      "emulation-url": "bce992219c6cf05281fec84b58c44a6a6c0aa1b4bafb424426a1b9c4eb1d4df2-novatek-ts-update-fw.zip",
+      "components": [
+        {
+          "version": "5",
+          "guids": [
+            "6e224830-4877-53c8-9e2c-0ed11e448d73"
+          ]
+        }
+      ]
+    }
+  ]
+}
