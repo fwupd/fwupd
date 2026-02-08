@@ -234,7 +234,9 @@ fu_egis_moc_device_ensure_version(FuEgisMocDevice *self, GError **error)
 				    "invalid version data");
 		return FALSE;
 	}
-	version = fu_strsafe((const gchar *)buf->data + 3, buf->len - 3);
+	version = fu_memstrsafe(buf->data, buf->len, 3, buf->len - 3, error);
+	if (version == NULL)
+		return FALSE;
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* success */
