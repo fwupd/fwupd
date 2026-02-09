@@ -1614,7 +1614,7 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 	if (parent != NULL) {
 		g_autofree gchar *id_display = fu_device_get_id_display(self);
 		g_autofree gchar *id_display_parent = fu_device_get_id_display(parent);
-		g_info("setting parent of %s to be %s", id_display, id_display_parent);
+		g_debug("setting parent of %s to be %s", id_display, id_display_parent);
 	}
 
 	/* set the composite ID on the children and grandchildren */
