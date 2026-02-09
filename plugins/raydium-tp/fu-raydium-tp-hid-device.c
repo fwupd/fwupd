@@ -1004,6 +1004,8 @@ fu_raydium_tp_hid_device_read_firmware_info(FuRaydiumtpHidDevice *self, GError *
 	guint8 rbuf_ft[I2C_BUF_SIZE] = {0};
 	guint16 vid;
 	guint8 mode;
+	guint8 major_ver;
+	guint8 minor_ver;
 
 	mode = fu_raydium_tp_hid_device_read_status(self, error);
 
@@ -1053,12 +1055,16 @@ fu_raydium_tp_hid_device_read_firmware_info(FuRaydiumtpHidDevice *self, GError *
 		if ((vid == VENDOR_ID) &&
 		    ((rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_PID_H] != 0xFF) ||
 		     (rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_PID_L] != 0xFF))) {
+			rbuf[5] = rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_REV_H];
+			rbuf[6] = rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_REV_L];
 			rbuf[9] = rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_PID_H];
 			rbuf[10] = rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_PID_L];
 			rbuf[16] = rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_VID_L];
 			rbuf[17] = rbuf_desc[FU_RAYDIUM_TP_DESC_RECORD_INFO_VID_H];
 		} else if ((rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_PID_H] != 0xFF) ||
 			   (rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_PID_L] != 0xFF)) {
+			rbuf[5] = rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_ASCII_I];
+			rbuf[6] = rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_ASCII_D];
 			rbuf[9] = rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_PID_H];
 			rbuf[10] = rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_PID_L];
 			rbuf[16] = rbuf_ft[FU_RAYDIUM_TP_FT_RECORD_INFO_VID_L];
@@ -1082,7 +1088,9 @@ fu_raydium_tp_hid_device_read_firmware_info(FuRaydiumtpHidDevice *self, GError *
 	}
 
 	vid = fu_memread_uint16(rbuf + 16, G_LITTLE_ENDIAN);
-
+	major_ver = rbuf[5];
+	minor_ver = rbuf[6];
+	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
 	return vid == VENDOR_ID;
 }
 
