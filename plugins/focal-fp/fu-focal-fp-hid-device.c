@@ -53,16 +53,6 @@ fu_focal_fp_hid_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static guint8
-fu_focal_fp_hid_device_generate_checksum(const guint8 *buf, gsize bufsz)
-{
-	guint8 checksum = 0;
-	for (gsize i = 0; i < bufsz; i++)
-		checksum ^= buf[i];
-	checksum++;
-	return checksum;
-}
-
 static gboolean
 fu_focal_fp_hid_device_io(FuFocalFpHidDevice *self,
 			  guint8 *wbuf,
@@ -73,12 +63,18 @@ fu_focal_fp_hid_device_io(FuFocalFpHidDevice *self,
 {
 	/* SetReport */
 	if (wbuf != NULL && wbufsz > 0) {
+		guint8 checksum = 0;
 		guint8 buf[64] = {0x06, 0xff, 0xff};
 		guint8 cmdlen = 4 + wbufsz;
+
 		buf[3] = cmdlen;
 		if (!fu_memcpy_safe(buf, sizeof(buf), 0x04, wbuf, wbufsz, 0x00, wbufsz, error))
 			return FALSE;
-		buf[cmdlen] = fu_focal_fp_hid_device_generate_checksum(&buf[1], cmdlen - 1);
+		if (!fu_xor8_safe(buf, sizeof(buf), 0x1, cmdlen - 1, &checksum, error))
+			return FALSE;
+		checksum++;
+		if (!fu_memwrite_uint8_safe(buf, sizeof(buf), cmdlen, checksum, error))
+			return FALSE;
 		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 						  buf,
 						  sizeof(buf),
@@ -110,7 +106,7 @@ static gboolean
 fu_focal_fp_hid_device_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GError **error)
 {
 	guint8 csum = 0;
-	guint8 csum_actual;
+	guint8 csum_actual = 0;
 
 	/* check was correct response */
 	if (buf[4] != cmd) {
@@ -126,7 +122,9 @@ fu_focal_fp_hid_device_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd,
 	/* check crc */
 	if (!fu_memread_uint8_safe(buf, bufsz, buf[3], &csum, error))
 		return FALSE;
-	csum_actual = fu_focal_fp_hid_device_generate_checksum(buf + 1, buf[3] - 1);
+	if (!fu_xor8_safe(buf, bufsz, 0x1, buf[3] - 1, &csum_actual, error))
+		return FALSE;
+	csum_actual++;
 	if (csum != csum_actual) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -114,15 +114,6 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 	return TRUE;
 }
 
-static guint8
-_fu_xor8(const guint8 *buf, gsize bufsz)
-{
-	guint8 tmp = 0;
-	for (guint i = 0; i < bufsz; i++)
-		tmp ^= buf[i];
-	return tmp;
-}
-
 gboolean
 fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 				       guint8 target_addr,
@@ -145,7 +136,7 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 	fu_byte_array_append_uint8(buf, sub_addr);
 	fu_byte_array_append_uint8(buf, (guint8)datasz | 0x80);
 	g_byte_array_append(buf, data, datasz);
-	fu_byte_array_append_uint8(buf, _fu_xor8(buf->data, buf->len));
+	fu_byte_array_append_uint8(buf, fu_xor8(buf->data, buf->len));
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(self,
 						  target_addr,
@@ -235,7 +226,8 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	}
 
 	/* verify checksum */
-	checksum = 0x50 ^ _fu_xor8(buf, length + 2);
+	if (!fu_xor8_safe(buf, sizeof(buf), 0x0, length + 2, &checksum, error))
+		return FALSE;
 	if (checksum != buf[length + 2]) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
