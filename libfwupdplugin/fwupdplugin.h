@@ -133,10 +133,10 @@
 #include <libfwupdplugin/fu-zip-file.h>
 #include <libfwupdplugin/fu-zip-firmware.h>
 // #include <libfwupdplugin/fu-usb-common.h>
-#include <libfwupdplugin/fu-tpm-eventlog.h>
 #include <libfwupdplugin/fu-tpm-eventlog-item.h>
 #include <libfwupdplugin/fu-tpm-eventlog-v1.h>
 #include <libfwupdplugin/fu-tpm-eventlog-v2.h>
+#include <libfwupdplugin/fu-tpm-eventlog.h>
 #include <libfwupdplugin/fu-uefi-device.h>
 #include <libfwupdplugin/fu-usb-device.h>
 #include <libfwupdplugin/fu-usb-endpoint.h>
@@ -144,5 +144,6 @@
 #include <libfwupdplugin/fu-uswid-firmware.h>
 #include <libfwupdplugin/fu-version-common.h>
 #include <libfwupdplugin/fu-volume.h>
+#include <libfwupdplugin/fu-xor.h>
 
 #undef __FWUPDPLUGIN_H_INSIDE__
