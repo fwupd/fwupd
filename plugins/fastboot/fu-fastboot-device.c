@@ -309,6 +309,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *product = NULL;
 	g_autofree gchar *serialno = NULL;
 	g_autofree gchar *secure = NULL;
+	g_autofree gchar *version_device = NULL;
 	g_autofree gchar *version_bootloader = NULL;
 
 	/* FuUsbDevice->setup */
@@ -321,6 +322,16 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	if (product != NULL && product[0] != '\0') {
 		g_autofree gchar *tmp = g_strdup_printf("Fastboot %s", product);
 		fu_device_set_name(device, tmp);
+	}
+
+	/* device version */
+	if (!fu_fastboot_device_getvar(self, "version-device", &version_device, error))
+		return FALSE;
+	if (version_device != NULL && version_device[0] != '\0') {
+		FwupdVersionFormat version_format = fu_version_guess_format(version_device);
+		if (version_format != FWUPD_VERSION_FORMAT_UNKNOWN)
+			fu_device_set_version_format(device, version_format);
+		fu_device_set_version(device, version_device);
 	}
 
 	/* bootloader version */
