@@ -28,6 +28,8 @@ Vendor = Goodix
 Vendor = Framework
 [USB\VID_347D]
 Vendor = Blestech
+[USB\VID_3558]
+Vendor = Himax
 [USB\VID_8087]
 Vendor = Intel
 
