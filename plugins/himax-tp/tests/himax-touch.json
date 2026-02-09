@@ -1,0 +1,18 @@
+{
+  "name": "Himax touch",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "30896caf56cd9cff760aa4b4be18cec9412ff6cb463948d36dc4d8cc3ab649f3-himax-21f3.cab",
+      "emulation-url": "d43510b2d1e64262ada322a41c89d8965d33eacc1dee155039fcb0b54a115d3e-himaxtp-21f3.zip",
+      "components": [
+        {
+          "version": "5373.8691",
+          "guids": [
+            "3df6137a-8ba8-5394-894d-31080301bba0"
+          ]
+        }
+      ]
+    }
+  ]
+}

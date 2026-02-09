@@ -35,6 +35,7 @@ plugins/framework-qmk/ @JohnAZoidberg
 plugins/genesys/ @adamgene
 plugins/goodix-moc/ @boger047
 plugins/goodix-tp/ @xulinkun
+plugins/himax-tp/ @HimaxSoftware @yamikiri
 plugins/huddly-usb/ @LarsStensen
 plugins/hughski-colorhug/ @hughsie
 plugins/ilitek-its/ @ILITEK-JoeHung
