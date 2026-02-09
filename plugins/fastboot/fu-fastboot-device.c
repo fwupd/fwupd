@@ -203,6 +203,7 @@ fu_fastboot_device_getvar(FuFastbootDevice *self, const gchar *key, gchar **str,
 {
 	g_autofree gchar *tmp = g_strdup_printf("getvar:%s", key);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_fastboot_device_writestr(self, tmp, error))
 		return FALSE;
@@ -210,9 +211,16 @@ fu_fastboot_device_getvar(FuFastbootDevice *self, const gchar *key, gchar **str,
 				     str,
 				     progress,
 				     FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
-				     error)) {
-		g_prefix_error(error, "failed to getvar %s: ", key);
-		return FALSE;
+				     &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+			g_debug("ignoring: %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to getvar %s: ",
+						   key);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
