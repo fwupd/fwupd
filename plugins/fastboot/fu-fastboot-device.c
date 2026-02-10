@@ -157,7 +157,7 @@ fu_fastboot_device_read(FuFastbootDevice *self,
 		}
 
 		/* info */
-		tmp = g_strndup((const gchar *)buf + 4, self->blocksz - 4);
+		tmp = fu_memstrsafe(buf, sizeof(buf), 4, sizeof(buf) - 4, NULL);
 		if (memcmp(buf, "INFO", 4) == 0) {
 			if (g_strcmp0(tmp, "erasing flash") == 0)
 				fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
