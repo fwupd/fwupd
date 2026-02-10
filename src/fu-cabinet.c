@@ -294,45 +294,6 @@ fu_cabinet_parse_release(FuCabinet *self,
 			g_info("verified payload %s: %u", basename, results->len);
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 		}
-
-	} else {
-		g_autofree gchar *basename_sig = NULL;
-		g_autoptr(FuFirmware) img_sig = NULL;
-
-		/* legacy GPG detached signature */
-		basename_sig = g_strdup_printf("%s.asc", basename);
-		img_sig = fu_firmware_get_image_by_id(FU_FIRMWARE(FU_CAB_FIRMWARE(self)),
-						      basename_sig,
-						      NULL);
-		if (img_sig != NULL) {
-			g_autoptr(JcatResult) jcat_result = NULL;
-			g_autoptr(JcatBlob) jcat_blob = NULL;
-			g_autoptr(GBytes) blob = NULL;
-			g_autoptr(GBytes) data_sig = NULL;
-			g_autoptr(GError) error_local = NULL;
-
-			blob = fu_firmware_get_bytes(img_blob, error);
-			if (blob == NULL)
-				return FALSE;
-			data_sig = fu_firmware_get_bytes(img_sig, error);
-			if (data_sig == NULL)
-				return FALSE;
-			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
-			jcat_result = jcat_context_verify_blob(
-			    self->jcat_context,
-			    blob,
-			    jcat_blob,
-			    jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-			    &error_local);
-			if (jcat_result == NULL) {
-				g_info("failed to verify payload %s using detached: %s",
-				       basename,
-				       error_local->message);
-			} else {
-				g_info("verified payload %s using detached", basename);
-				release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
-			}
-		}
 	}
 
 	/* this means we can get the data from fu_keyring_get_release_flags */
