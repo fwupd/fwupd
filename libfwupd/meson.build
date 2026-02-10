@@ -279,6 +279,7 @@ if get_option('tests')
   ]
     e = executable(
       'fwupd-' + test_name + '-test',
+      fwupd_rs_targets,
       sources: [
         'fwupd-' + test_name + '-test.c',
       ],
