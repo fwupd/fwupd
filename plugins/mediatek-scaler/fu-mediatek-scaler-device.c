@@ -73,9 +73,8 @@ fu_mediatek_scaler_device_ddc_write(FuMediatekScalerDevice *self,
 	g_byte_array_append(ddc_msgbox_write, st_req->buf->data, st_req->buf->len);
 
 	chksum ^= FU_DDC_I2C_ADDR_DISPLAY_DEVICE;
-	for (gsize i = 0; i < ddc_msgbox_write->len; i++)
-		chksum ^= ddc_msgbox_write->data[i];
-	g_byte_array_append(ddc_msgbox_write, &chksum, 1);
+	chksum ^= fu_xor8(ddc_msgbox_write->data, ddc_msgbox_write->len);
+	fu_byte_array_append_uint8(ddc_msgbox_write, chksum);
 
 	/* print the raw data */
 	fu_dump_raw(G_LOG_DOMAIN,
@@ -154,8 +153,8 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
 
 	/* verify read buffer: match the checksum */
 	checksum ^= FU_DDC_I2C_ADDR_CHECKSUM;
-	for (gsize i = 0; i < report_data_sz + 2; i++)
-		checksum ^= buf[i];
+	if (!fu_xor8_safe(buf, sizeof(buf), 0x0, report_data_sz + 2, &checksum, error))
+		return NULL;
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), report_data_sz + 2, &checksum_hw, error))
 		return NULL;
 	if (checksum_hw != checksum) {

@@ -1455,17 +1455,6 @@ fu_genesys_scaler_device_write_flash(FuGenesysScalerDevice *self,
 	return TRUE;
 }
 
-static guint8
-fu_genesys_scaler_device_calculate_checksum(const guint8 *buf, gsize bufsz)
-{
-	guint8 checksum = 0x00;
-
-	for (gsize i = 0; i < bufsz; i++)
-		checksum ^= buf[i];
-
-	return checksum;
-}
-
 static gboolean
 fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 					guint8 cmd,
@@ -1477,7 +1466,7 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 	guint8 data[] = {0x6e, 0x51, 0x83, 0xcd, 0x01, 0x00 /* command */, 0x00 /* checksum */};
 
 	data[5] = cmd;
-	data[6] = fu_genesys_scaler_device_calculate_checksum(data, 6);
+	data[6] = fu_xor8(data, sizeof(data) - 1);
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -1542,7 +1531,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 
 	if (buf[0] == 0x6f && buf[1] == 0x6e) {
 		gsize len = buf[2] ^ 0x80;
-		guint8 checksum;
+		guint8 checksum = 0;
 		guint8 checksum_tmp = 0x0;
 
 		if (len > sizeof(buf) - 3) {
@@ -1556,7 +1545,8 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 		}
 
 		buf[0] = 0x50; /* drifted value */
-		checksum = fu_genesys_scaler_device_calculate_checksum(buf, len + 3);
+		if (!fu_xor8_safe(buf, sizeof(buf), 0x0, len + 3, &checksum, error))
+			return FALSE;
 		if (!fu_memread_uint8_safe(buf, sizeof(buf), len + 3, &checksum_tmp, error))
 			return FALSE;
 		if (checksum_tmp != checksum) {

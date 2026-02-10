@@ -665,9 +665,13 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 					  GENESYS_USBHUB_ENCRYPT_REGION_END - 1);
 	offset_end = g_random_int_range(offset_start + 1, /* nocheck:blocked */
 					GENESYS_USBHUB_ENCRYPT_REGION_END);
-	for (guint8 i = offset_start; i <= offset_end; i++) {
-		temp_byte ^= self->st_fwinfo_ts->buf->data[i];
-	}
+	if (!fu_xor8_safe(self->st_fwinfo_ts->buf->data,
+			  self->st_fwinfo_ts->buf->len,
+			  offset_start,
+			  offset_end - offset_start + 1,
+			  &temp_byte,
+			  error))
+		return FALSE;
 	if (!fu_genesys_usbhub_device_authentication_request(self,
 							     offset_start,
 							     offset_end,

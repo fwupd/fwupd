@@ -28,15 +28,6 @@ G_DEFINE_TYPE(FuBlestechTpHidDevice, fu_blestech_tp_hid_device, FU_TYPE_HIDRAW_D
 
 #define FU_BLESTECH_TP_DEVICE_APP_CONFIG_PAGE 96
 
-static guint8
-fu_blestech_tp_hid_device_calc_checksum(const guint8 *buf, gsize bufsz)
-{
-	guint8 checksum = 0;
-	for (guint16 i = 0; i < bufsz; i++)
-		checksum ^= buf[i];
-	return checksum + 1;
-}
-
 static gboolean
 fu_blestech_tp_hid_device_write(FuBlestechTpHidDevice *self,
 				GByteArray *wbuf,
@@ -56,10 +47,14 @@ fu_blestech_tp_hid_device_write(FuBlestechTpHidDevice *self,
 		return FALSE;
 
 	/* checksum */
-	checksum = fu_blestech_tp_hid_device_calc_checksum(
-	    st_hdr->buf->data + FU_BLESTECH_TP_SET_HDR_OFFSET_FRAME_FLAG,
-	    (gsize)(st_hdr->buf->data[FU_BLESTECH_TP_SET_HDR_OFFSET_PACK_LEN] - 1));
-	fu_blestech_tp_set_hdr_set_checksum(st_hdr, checksum);
+	if (!fu_xor8_safe(st_hdr->buf->data,
+			  st_hdr->buf->len,
+			  FU_BLESTECH_TP_SET_HDR_OFFSET_FRAME_FLAG,
+			  st_hdr->buf->data[FU_BLESTECH_TP_SET_HDR_OFFSET_PACK_LEN] - 1,
+			  &checksum,
+			  error))
+		return FALSE;
+	fu_blestech_tp_set_hdr_set_checksum(st_hdr, checksum + 1);
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    st_hdr->buf->data,
 					    st_hdr->buf->len,
@@ -228,8 +223,7 @@ fu_blestech_tp_hid_device_program_page_cb(FuDevice *device, gpointer user_data, 
 	}
 
 	/* page-end */
-	checksum = fu_blestech_tp_hid_device_calc_checksum(fu_chunk_get_data(chk),
-							   fu_chunk_get_data_sz(chk));
+	checksum = fu_xor8(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk)) + 1;
 	return fu_blestech_tp_hid_device_program_page_end(self,
 							  fu_chunk_get_idx(chk),
 							  checksum,

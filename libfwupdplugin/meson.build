@@ -223,6 +223,7 @@ fwupdplugin_src = [
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
   'fu-x509-certificate.c', # fuzzing
+  'fu-xor.c', # fuzzing
   'fu-zip-firmware.c', # fuzzing
   'fu-zip-file.c', # fuzzing
 ]
@@ -394,6 +395,7 @@ fwupdplugin_headers = [
   'fu-volume.h',
   'fu-volume-locker.h',
   'fu-x509-certificate.h',
+  'fu-xor.h',
   'fu-zip-file.h',
   'fu-zip-firmware.h',
 ]
@@ -550,6 +552,7 @@ if get_option('tests')
     'udev-device',
     'version',
     'volume',
+    'xor',
   ]
     e = executable(
       'fwupdplugin-' + test_name + '-test',
