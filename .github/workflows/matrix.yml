@@ -63,23 +63,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  openbmc:
-    runs-on: ubuntu-22.04
-    if: ${{ !inputs.publish }}
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Refresh dependencies
-        run: |
-          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-          sudo apt update
-      - name: Install dependencies
-        run: |
-          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
-      - name: Build
-        run: |
-          ./contrib/build-openbmc.sh --prefix=/home/runner/.root
-
   library:
     runs-on: ubuntu-latest
     outputs:
