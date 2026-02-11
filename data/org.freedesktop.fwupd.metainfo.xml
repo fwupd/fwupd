@@ -38,6 +38,22 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.34" date="2026-02-11">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add timeout to fwupd-refresh.service systemd unit</li>
+          <li>Fix a potential fastboot version buffer over-read</li>
+          <li>Verify the uncompressed size when decompressing CAB files</li>
+          <li>Warn the user if they are using the blocked-firmware functionality</li>
+          <li>Use the UOD approach when updating dell-kestrel docks</li>
+        </ul>
+        <p>
+          This tagged release will probably be the last from the 1_9_X branch, and you should
+          encourage your distributor to upgrade to 2.0.x as soon as possible.
+        </p>
+      </description>
+    </release>
     <release version="1.9.33" date="2025-11-07">
       <description>
         <p>This release fixes the following bugs:</p>
