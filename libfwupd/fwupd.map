@@ -1053,6 +1053,7 @@ LIBFWUPD_2.1.1 {
     fwupd_codec_variant_get_uint32;
     fwupd_codec_variant_get_uint64;
     fwupd_json_array_add_array;
+    fwupd_json_array_add_bytes;
     fwupd_json_array_add_node;
     fwupd_json_array_add_object;
     fwupd_json_array_add_raw;
@@ -1083,6 +1084,7 @@ LIBFWUPD_2.1.1 {
     fwupd_json_object_add_array;
     fwupd_json_object_add_array_strv;
     fwupd_json_object_add_boolean;
+    fwupd_json_object_add_bytes;
     fwupd_json_object_add_integer;
     fwupd_json_object_add_node;
     fwupd_json_object_add_object;

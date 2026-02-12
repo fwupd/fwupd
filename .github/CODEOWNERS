@@ -14,6 +14,7 @@ plugins/analogix/ @xtcui
 plugins/android-boot/ @DylanVanAssche
 plugins/aver-hid/ @AVer-V001598
 plugins/bcm57xx/ @meklort
+plugins/blestech-tp/ @xiaomaoting
 plugins/bnr-dp/ @tmuehlbacher-bnr
 plugins/ccgx/ @IfxBrent
 plugins/ccgx-dmc/ @IfxBrent
@@ -50,6 +51,7 @@ plugins/logitech-tap/ @vcdmp
 plugins/mediatek-scaler/ @CragW @GregLo007
 plugins/modem-manager/ @aleksander0m
 plugins/nordic-hid/ @MarekPieta
+plugins/novatek-ts/ @novatekmsp
 plugins/parade-lspcon/ @Pingyao5115
 plugins/parade-usbhub/ @hublin2024 @jimmytu5167 @andychu5168
 plugins/pci-psp/ @superm1
@@ -61,6 +63,8 @@ plugins/qsi-dock/ @hssinf
 plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn
 plugins/rts54hub/ @AnyProblem
+plugins/snapd-uefi/ @BAMF0 @bboozzoo
+plugins/sunwinon-hid/ @xiaosa-zhz
 plugins/synaptics-cape/ @CNXT-Simon
 plugins/synaptics-mst/ @ApolloLing
 plugins/synaptics-prometheus/ @synavincent

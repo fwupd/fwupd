@@ -2385,27 +2385,27 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_device_set_flags(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PROBLEMS) == 0) {
-		fwupd_device_set_problems(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_problems(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REQUEST_FLAGS) == 0) {
-		fwupd_device_set_request_flags(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_request_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_device_set_created(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_created(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_MODIFIED) == 0) {
-		fwupd_device_set_modified(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_modified(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_BUILD_DATE) == 0) {
-		fwupd_device_set_version_build_date(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_version_build_date(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
@@ -2492,19 +2492,19 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLASHES_LEFT) == 0) {
-		fwupd_device_set_flashes_left(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_flashes_left(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
-		fwupd_device_set_battery_level(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_battery_level(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BATTERY_THRESHOLD) == 0) {
-		fwupd_device_set_battery_threshold(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_battery_threshold(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
-		fwupd_device_set_install_duration(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_install_duration(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
@@ -2512,32 +2512,31 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
-		fwupd_device_set_update_state(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_update_state(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_STATUS) == 0) {
-		fwupd_device_set_status(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_status(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PERCENTAGE) == 0) {
-		fwupd_device_set_percentage(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_percentage(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_FORMAT) == 0) {
-		fwupd_device_set_version_format(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_device_set_version_format(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_RAW) == 0) {
-		fwupd_device_set_version_raw(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_version_raw(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW) == 0) {
-		fwupd_device_set_version_lowest_raw(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_version_lowest_raw(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW) == 0) {
-		fwupd_device_set_version_bootloader_raw(self,
-							fwupd_codec_variant_get_uint64(value));
+		fwupd_device_set_version_bootloader_raw(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 }

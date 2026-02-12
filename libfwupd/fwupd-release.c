@@ -1919,11 +1919,11 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SIZE) == 0) {
-		fwupd_release_set_size(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_release_set_size(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_release_set_created(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_release_set_created(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
@@ -1998,15 +1998,15 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
-		fwupd_release_set_flags(self, fwupd_codec_variant_get_uint64(value));
+		fwupd_release_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URGENCY) == 0) {
-		fwupd_release_set_urgency(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_release_set_urgency(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
-		fwupd_release_set_install_duration(self, fwupd_codec_variant_get_uint32(value));
+		fwupd_release_set_install_duration(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {

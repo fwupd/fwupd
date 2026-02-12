@@ -45,6 +45,8 @@ void
 fwupd_json_array_add_object(FwupdJsonArray *self, FwupdJsonObject *json_obj) G_GNUC_NON_NULL(1, 2);
 void
 fwupd_json_array_add_array(FwupdJsonArray *self, FwupdJsonArray *json_arr) G_GNUC_NON_NULL(1, 2);
+void
+fwupd_json_array_add_bytes(FwupdJsonArray *self, GBytes *value) G_GNUC_NON_NULL(1, 2);
 GString *
 fwupd_json_array_to_string(FwupdJsonArray *self, FwupdJsonExportFlags flags)
     G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;

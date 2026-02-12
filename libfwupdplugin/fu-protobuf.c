@@ -257,7 +257,8 @@ fu_protobuf_process(FuProtobuf *self,
 		FuProtobufWireType wire_type = 0;
 		if (!fu_protobuf_get_tag(self, &wire_type, &field_number_tmp, &offset, error))
 			return FALSE;
-		g_debug("got wire type %s for field %u",
+		g_debug("@0x%x, got wire type %s for field %u",
+			(guint)offset,
 			fu_protobuf_wire_type_to_string(wire_type),
 			field_number_tmp);
 		if (fnums_msg->len > 0)
@@ -305,7 +306,13 @@ fu_protobuf_process(FuProtobuf *self,
 			}
 			if (!fu_protobuf_get_varint_raw(self, &lensz, &offset, error))
 				return FALSE;
-			offset += lensz;
+			if (!g_size_checked_add(&offset, offset, lensz)) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "lensz would overflow for wire type len");
+				return FALSE;
+			}
 		} else if (wire_type == FU_PROTOBUF_WIRE_TYPE_INT32) {
 			if (fnum == field_number_tmp) {
 				if (callbacks->int32 == NULL) {

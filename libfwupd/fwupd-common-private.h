@@ -21,6 +21,10 @@ GVariant *
 fwupd_hash_kv_to_variant(GHashTable *hash) G_GNUC_NON_NULL(1);
 GHashTable *
 fwupd_variant_to_hash_kv(GVariant *dict) G_GNUC_NON_NULL(1);
+guint32
+fwupd_variant_get_uint32(GVariant *value) G_GNUC_NON_NULL(1);
+guint64
+fwupd_variant_get_uint64(GVariant *value) G_GNUC_NON_NULL(1);
 
 #ifdef HAVE_GIO_UNIX
 GUnixInputStream *

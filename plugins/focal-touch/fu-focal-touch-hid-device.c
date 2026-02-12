@@ -47,22 +47,12 @@ fu_focal_touch_hid_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static guint8
-fu_focal_touch_hid_device_generate_checksum(const guint8 *buf, gsize bufsz)
-{
-	guint8 checksum = 0;
-	for (gsize i = 0; i < bufsz; i++)
-		checksum ^= buf[i];
-	checksum++;
-	return checksum;
-}
-
 static gboolean
 fu_focal_touch_hid_device_send(FuFocalTouchHidDevice *self, GByteArray *buf, GError **error)
 {
 	guint buflen = buf->len;
 	fu_byte_array_set_size(buf, REPORT_SIZE, 0x00);
-	buf->data[buflen] = fu_focal_touch_hid_device_generate_checksum(buf->data + 1, buflen - 1);
+	buf->data[buflen] = fu_xor8(buf->data + 1, buflen - 1) + 1;
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    buf->data,
 					    buf->len,
@@ -74,7 +64,7 @@ static GByteArray *
 fu_focal_touch_hid_device_recv_raw(FuFocalTouchHidDevice *self, GError **error)
 {
 	guint8 csum = 0;
-	guint8 csum_actual;
+	guint8 csum_actual = 0;
 	guint8 csum_offset = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -92,7 +82,9 @@ fu_focal_touch_hid_device_recv_raw(FuFocalTouchHidDevice *self, GError **error)
 		return NULL;
 	if (!fu_memread_uint8_safe(buf->data, buf->len, csum_offset, &csum, error))
 		return NULL;
-	csum_actual = fu_focal_touch_hid_device_generate_checksum(buf->data + 1, csum_offset - 1);
+	if (!fu_xor8_safe(buf->data, buf->len, 0x1, csum_offset - 1, &csum_actual, error))
+		return NULL;
+	csum_actual++;
 	if (csum != csum_actual) {
 		g_set_error(error,
 			    FWUPD_ERROR,

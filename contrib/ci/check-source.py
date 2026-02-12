@@ -1273,6 +1273,58 @@ class Checker:
                 f"is nested too deep {node.depth}/{limit}", linecnt=node.linecnt
             )
 
+    def _test_strsafe_offset(self, node: Node) -> None:
+
+        idx = node.tokens.find_fuzzy(
+            [
+                "fu_strsafe@FUNCTION",
+                "(",
+                "(",
+                "const",
+                "~*char",
+                "*",
+                ")",
+                "~*",
+                "+",
+            ]
+        )
+        if idx == -1:
+            idx = node.tokens.find_fuzzy(
+                [
+                    "fu_strsafe@FUNCTION",
+                    "(",
+                    "(",
+                    "gchar",
+                    "*",
+                    ")",
+                    "~*",
+                    "+",
+                ]
+            )
+        if idx == -1:
+            idx = node.tokens.find_fuzzy(
+                [
+                    "fu_strsafe@FUNCTION",
+                    "(",
+                    "(",
+                    "const",
+                    "gchar",
+                    "*",
+                    ")",
+                    "~*",
+                    "-",
+                    ">",
+                    "data",
+                    "+",
+                ]
+            )
+        if idx != -1:
+            token = node.tokens[idx]
+            self.add_failure(
+                "use fu_memstrsafe() rather than fu_strsafe() if reading with an offset",
+                linecnt=token.linecnt,
+            )
+
     def _test_memread(self, node: Node) -> None:
 
         limit: int = 7
@@ -1437,6 +1489,7 @@ class Checker:
             self._current_nocheck = "nocheck:memread"
             if self._should_process_node(node):
                 self._test_memread(node)
+                self._test_strsafe_offset(node)
 
             # test for non-zero'd init
             self._current_nocheck = "nocheck:zero-init"
