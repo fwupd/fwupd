@@ -1815,6 +1815,15 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 			return FALSE;
 		}
 
+		/* sanity check */
+		if (fu_usb_base_hdr_get_length(st_base) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "USB descriptor had impossible zero size");
+			return FALSE;
+		}
+
 		/* config, interface or endpoint */
 		descriptor_kind = fu_usb_base_hdr_get_descriptor_type(st_base);
 		if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_CONFIG) {
