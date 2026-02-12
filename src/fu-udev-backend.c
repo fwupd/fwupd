@@ -161,6 +161,7 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 		return;
 	}
 	fu_device_add_private_flag(FU_DEVICE(udev_device), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_set_proxy_gtype(FU_DEVICE(udev_device), FU_TYPE_I2C_DEVICE);
 	fu_device_set_proxy(FU_DEVICE(udev_device), FU_DEVICE(proxy));
 }
 
