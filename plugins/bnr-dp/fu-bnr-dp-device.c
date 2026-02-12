@@ -35,14 +35,6 @@ struct _FuBnrDpDevice {
 
 G_DEFINE_TYPE(FuBnrDpDevice, fu_bnr_dp_device, FU_TYPE_DPAUX_DEVICE)
 
-static guint8
-fu_bnr_dp_device_xor_checksum(guint8 init, const guint8 *buf, gsize bufsz)
-{
-	for (gsize i = 0; i < bufsz; i++)
-		init ^= buf[i];
-	return init;
-}
-
 static FuStructBnrDpAuxRequest *
 fu_bnr_dp_device_build_request(FuBnrDpOpcodes opcode,
 			       FuBnrDpModuleNumber module_number,
@@ -104,18 +96,16 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 			       gsize bufsz,
 			       GError **error)
 {
-	guint8 checksum;
+	guint8 checksum = FU_BNR_DP_CHECKSUM_INIT_TX;
 	g_autoptr(FuStructBnrDpAuxTxHeader) st_header = fu_struct_bnr_dp_aux_tx_header_new();
 
 	if (!fu_struct_bnr_dp_aux_tx_header_set_request(st_header, st_request, error)) {
 		g_prefix_error_literal(error, "failed to set request: ");
 		return FALSE;
 	}
+	checksum ^= fu_xor8(st_request->buf->data, st_request->buf->len);
 
 	/* write optional data */
-	checksum = fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_TX,
-						 st_request->buf->data,
-						 st_request->buf->len);
 	if (buf != NULL && bufsz > 0) {
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   FU_BNR_DP_DEVICE_DATA_OFFSET,
@@ -127,7 +117,7 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 			return FALSE;
 		}
 
-		checksum = fu_bnr_dp_device_xor_checksum(checksum, buf, bufsz);
+		checksum ^= fu_xor8(buf, bufsz);
 	}
 	fu_struct_bnr_dp_aux_tx_header_set_checksum(st_header, checksum);
 
@@ -146,7 +136,7 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 static gboolean
 fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **error)
 {
-	guint8 actual_checksum;
+	guint8 actual_checksum = FU_BNR_DP_CHECKSUM_INIT_RX;
 	guint8 tmp[FU_STRUCT_BNR_DP_AUX_RX_HEADER_SIZE] = {0};
 	g_autoptr(FuStructBnrDpAuxRxHeader) st_header = NULL;
 	g_autoptr(FuStructBnrDpAuxResponse) st_response = NULL;
@@ -168,9 +158,7 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 	if (st_response == NULL)
 		return FALSE;
 
-	actual_checksum = fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_RX,
-							st_response->buf->data,
-							st_response->buf->len);
+	actual_checksum ^= fu_xor8(st_response->buf->data, st_response->buf->len);
 
 	/* read command output data */
 	g_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(st_response));
@@ -183,8 +171,7 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 					  error))
 			return FALSE;
 
-		actual_checksum =
-		    fu_bnr_dp_device_xor_checksum(actual_checksum, data->data, data->len);
+		actual_checksum ^= fu_xor8(data->data, data->len);
 	}
 
 	if (actual_checksum != fu_struct_bnr_dp_aux_rx_header_get_checksum(st_header)) {

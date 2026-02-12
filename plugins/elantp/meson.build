@@ -1,4 +1,4 @@
-host_machine.system() == 'linux' or subdir_done()
+host_machine.system() in ['linux', 'android'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

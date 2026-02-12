@@ -430,6 +430,27 @@ fwupd_json_array_func(void)
 	g_assert_cmpstr(str->str, ==, "[\n  \"hello\",\n  world\n]");
 }
 
+static void
+fwupd_json_bytes_func(void)
+{
+	const gchar *tmp;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+        g_autoptr(GBytes) bytes = g_bytes_new("bob", 3);
+
+	fwupd_json_array_add_bytes(json_arr, bytes);
+	g_assert_cmpint(fwupd_json_array_get_size(json_arr), ==, 1);
+	tmp = fwupd_json_array_get_string(json_arr, 0, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "Ym9i");
+
+	fwupd_json_object_add_bytes(json_obj, "one", bytes);
+	tmp = fwupd_json_object_get_string(json_obj, "one", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "Ym9i");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -437,6 +458,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/json/node", fwupd_json_node_func);
 	g_test_add_func("/fwupd/json/array", fwupd_json_array_func);
 	g_test_add_func("/fwupd/json/object", fwupd_json_object_func);
+	g_test_add_func("/fwupd/json/bytes", fwupd_json_bytes_func);
 	g_test_add_func("/fwupd/json/parser/valid", fwupd_json_parser_valid_func);
 	g_test_add_func("/fwupd/json/parser/invalid", fwupd_json_parser_invalid_func);
 	g_test_add_func("/fwupd/json/parser/null", fwupd_json_parser_null_func);

@@ -259,10 +259,9 @@ if get_option('tests')
 
   libfwupdtest = static_library(
     'fwupd-test',
-    sources: ['fwupd-test.c'],
+    sources: ['fwupd-test.c'] + libfwupd_src,
     include_directories: [root_incdir],
     dependencies: [libfwupd_deps],
-    link_with: [fwupd],
   )
   foreach test_name: [
     'bios-setting',
@@ -280,6 +279,7 @@ if get_option('tests')
   ]
     e = executable(
       'fwupd-' + test_name + '-test',
+      fwupd_rs_targets,
       sources: [
         'fwupd-' + test_name + '-test.c',
       ],

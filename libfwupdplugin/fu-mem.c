@@ -982,6 +982,7 @@ fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError 
 
 	if (!fu_memchk_read(bufsz, offset, maxsz, error))
 		return NULL;
+	/* nocheck:memread */
 	str = fu_strsafe((const gchar *)buf + offset, maxsz);
 	if (str == NULL) {
 		g_set_error_literal(error,

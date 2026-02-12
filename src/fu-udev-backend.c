@@ -443,8 +443,8 @@ fu_udev_backend_devnode_wait_cb(FuDevice *device, gpointer user_data, GError **e
 }
 #endif
 
-/* if enabled, systemd takes the kernel event, runs the udev rules (which might rename devices)
- * and then re-broadcasts on the udev netlink socket */
+/* if enabled, systemd takes the kernel event, runs the udev rules (which might
+ * rename devices) and then re-broadcasts on the udev netlink socket */
 static gboolean
 fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **error)
 {
@@ -480,14 +480,9 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		g_autofree gchar *kvstr = NULL;
 		g_auto(GStrv) kv = NULL;
 
-		kvstr = fu_strsafe((const gchar *)buf + i, bufsz - i);
-		if (kvstr == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "invalid ASCII buffer");
+		kvstr = fu_memstrsafe(buf, bufsz, i, bufsz - i, error);
+		if (kvstr == NULL)
 			return FALSE;
-		}
 		kv = g_strsplit(kvstr, "=", 2);
 		if (g_strcmp0(kv[0], "ACTION") == 0) {
 			action = fu_udev_action_from_string(kv[1]);
@@ -594,7 +589,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		    fu_udev_backend_create_device(self, sysfspath, error);
 		if (device == NULL)
 			return FALSE;
-		if (!fu_device_retry_full(FU_DEVICE(self),
+		if (!fu_device_retry_full(FU_DEVICE(device),
 					  fu_udev_backend_devnode_wait_cb,
 					  200, /* retries */
 					  10,  /* ms */

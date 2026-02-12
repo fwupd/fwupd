@@ -473,15 +473,6 @@ fu_hughski_colorhug_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static guint8
-fu_hughski_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
-{
-	guint8 checksum = 0xff;
-	for (guint32 i = 0; i < len; i++)
-		checksum ^= data[i];
-	return checksum;
-}
-
 static gboolean
 fu_hughski_colorhug_device_write_blocks(FuHughskiColorhugDevice *self,
 					FuChunkArray *chunks,
@@ -504,8 +495,7 @@ fu_hughski_colorhug_device_write_blocks(FuHughskiColorhugDevice *self,
 		/* set address, length, checksum, data */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
-		buf[3] = fu_hughski_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
-								       fu_chunk_get_data_sz(chk));
+		buf[3] = 0xFF ^ fu_xor8(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
 				    0x4, /* dst */

@@ -99,8 +99,9 @@ The following actions can be used to allow specific firmware releases from being
 
 The following actions can be used to control the allowlist of specific firmwares:
 
-**set-approved-firmware**: Sets the list of approved firmware.
-Once the allow-list has been set to a non-empty value only firmware matching these checksums will be installable.
+**set-approved-firmware**: Sets the list of approved firmware for remotes.
+Once the allow-list has been set to a non-empty value only firmware matching these checksums will be marked as installable.
+It is still possible to install firmware "manually" using `fwupdmgr install` -- this setting only affects firmware updates referenced in enabled remotes with the `ApprovalRequired=true` setting.
 
 **get-approved-firmware**: Gets the list of approved firmware, returning an empty list if there is no allow-list in place.
 

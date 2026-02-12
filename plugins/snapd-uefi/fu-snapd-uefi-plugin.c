@@ -123,7 +123,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 		g_autofree gchar *rsp = NULL;
 		if (rsp_buf->len > 0) {
 			/* make sure the response is printable */
-			rsp = fu_strsafe((const char *)rsp_buf->data, rsp_buf->len + 1);
+			rsp = fu_strsafe((const char *)rsp_buf->data, rsp_buf->len);
 		}
 
 		/* TODO check whether the response is even printable? */
@@ -257,31 +257,41 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 					     GError **error)
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
-	gsize bufsz = 0;
 	const gchar *key_database;
-	const guint8 *buf;
-	g_autofree gchar *b64data = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GString) msg = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 
 	/* not interesting */
 	key_database = fu_snapd_uefi_plugin_device_to_key_database(self, device);
 	if (key_database == NULL)
 		return TRUE;
 
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-	buf = g_bytes_get_data(fw, &bufsz);
-	b64data = g_base64_encode(buf, bufsz);
+	images = fu_firmware_get_images(firmware);
+	if (images->len == 1) {
+		/* get default image */
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes(firmware, error);
+		if (fw == NULL)
+			return FALSE;
+		fwupd_json_object_add_bytes(json_obj, "payload", fw);
+	} else {
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
+		for (guint i = 0; i < images->len; i++) {
+			FuFirmware *image = g_ptr_array_index(images, i);
+			g_autoptr(GBytes) fw = fu_firmware_get_bytes(image, error);
+			if (fw == NULL)
+				return FALSE;
+			fwupd_json_array_add_bytes(json_arr, fw);
+		}
+		fwupd_json_object_add_array(json_obj, "payloads", json_arr);
+	}
 
 	/* Notify of an upcoming update to the DBX. A successful call shall initiate a
 	 * change tracking an update to the DBX on the snapd side */
 	fwupd_json_object_add_string(json_obj, "action", "efi-secureboot-update-db-prepare");
 	fwupd_json_object_add_string(json_obj, "key-database", key_database);
-	fwupd_json_object_add_string(json_obj, "payload", b64data);
+
 	msg = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_NONE);
 	if (!fu_snapd_uefi_plugin_simple_req(self,
 					     "/v2/system-secureboot",
