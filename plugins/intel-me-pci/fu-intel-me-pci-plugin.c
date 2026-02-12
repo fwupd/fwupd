@@ -106,7 +106,6 @@ fu_intel_me_pci_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 
 	/* success */
-	fu_device_set_proxy(FU_DEVICE(me_device), device);
 	fu_plugin_add_device(plugin, FU_DEVICE(me_device));
 	return TRUE;
 }
