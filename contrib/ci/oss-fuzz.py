@@ -458,6 +458,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("oprom"),
         Fuzzer("protobuf", pattern="protobuf"),
         Fuzzer("uswid"),
+        Fuzzer("usb-device", pattern="usb-device"),
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
         Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),

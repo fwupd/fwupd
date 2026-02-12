@@ -16,6 +16,7 @@
 #include "fu-device-locker.h"
 #include "fu-device-private.h"
 #include "fu-dump.h"
+#include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-linear-firmware.h"
 #include "fu-mem.h"
@@ -61,7 +62,15 @@ typedef struct {
 static gboolean
 fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error);
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDevice, fu_usb_device, FU_TYPE_UDEV_DEVICE);
+static void
+fu_usb_device_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuUsbDevice,
+		       fu_usb_device,
+		       FU_TYPE_UDEV_DEVICE,
+		       0,
+		       G_ADD_PRIVATE(FuUsbDevice)
+			   G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_usb_device_fuzzer_iface_init));
 
 enum { PROP_0, PROP_LIBUSB_DEVICE, PROP_LAST };
 
@@ -3142,6 +3151,31 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 						      g_bytes_get_size(hid_descriptor));
 		}
 	}
+}
+
+static gboolean
+fu_usb_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(fuzzer);
+	return fu_usb_device_parse_descriptor(self, blob, error);
+}
+
+static GBytes *
+fu_usb_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	g_autoptr(FuFirmware) fw = NULL;
+	g_type_ensure(FU_TYPE_FIRMWARE);
+	fw = fu_firmware_new_from_xml(g_bytes_get_data(blob, NULL), error);
+	if (fw == NULL)
+		return NULL;
+	return fu_firmware_write(fw, error);
+}
+
+static void
+fu_usb_device_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_usb_device_fuzzer_test_input;
+	iface->build_example = fu_usb_device_fuzzer_build_example;
 }
 
 static void
