@@ -1690,6 +1690,14 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	if (proxy == priv->proxy)
 		return;
 
+	/* check is the correct type */
+	if (proxy != NULL && priv->proxy_gtype != G_TYPE_INVALID &&
+	    !g_type_is_a(G_OBJECT_TYPE(proxy), priv->proxy_gtype)) {
+		g_critical("wrong proxy GType, got %s and expected %s",
+			   G_OBJECT_TYPE_NAME(proxy),
+			   g_type_name(priv->proxy_gtype));
+	}
+
 	/* disconnect from old proxy */
 	if (priv->proxy != NULL && priv->notify_flags_proxy_id != 0) {
 		g_signal_handler_disconnect(priv->proxy, priv->notify_flags_proxy_id);
