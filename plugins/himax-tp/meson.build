@@ -9,10 +9,10 @@ plugin_builtins += static_library('fu_plugin_himaxtp',
     'fu-himaxtp-firmware.c',
     'fu-himaxtp-plugin.c',
   ],
-  include_directories: [ 
+  include_directories: [
     plugin_incdirs,
   ],
-  link_with: [ 
+  link_with: [
     plugin_libs,
   ],
   c_args: [

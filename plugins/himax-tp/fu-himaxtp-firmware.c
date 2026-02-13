@@ -22,8 +22,8 @@ struct _FuHimaxtpFirmware {
 	guint8 tp_cfg_ver;
 	guint8 dd_cfg_ver;
 	guint16 fw_ver;
-	gchar ic_id[12];
-	gchar ic_id_mod[2];
+	gchar *ic_id;
+	gchar *ic_id_mod;
 };
 
 G_DEFINE_TYPE(FuHimaxtpFirmware, fu_himaxtp_firmware, FU_TYPE_FIRMWARE)
@@ -64,60 +64,17 @@ fu_himaxtp_firmware_get_pid(FuHimaxtpFirmware *self)
 	return self->pid;
 }
 
-guint8
-fu_himaxtp_firmware_get_tp_cfg_ver(FuHimaxtpFirmware *self)
-{
-	return self->tp_cfg_ver;
-}
-
-guint8
-fu_himaxtp_firmware_get_dd_cfg_ver(FuHimaxtpFirmware *self)
-{
-	return self->dd_cfg_ver;
-}
-
-guint16
-fu_himaxtp_firmware_get_fw_ver(FuHimaxtpFirmware *self)
-{
-	return self->fw_ver;
-}
-
-gchar *
-fu_himaxtp_firmware_get_ic_id(FuHimaxtpFirmware *self)
-{
-	return self->ic_id;
-}
-
-gchar *
-fu_himaxtp_firmware_get_ic_id_mod(FuHimaxtpFirmware *self)
-{
-	return self->ic_id_mod;
-}
-
-static guint8
-fu_himaxtp_firmware_sum8(const guint8 *data, gsize len)
-{
-	guint8 sum = 0;
-
-	for (gsize i = 0; i < len; i++)
-		sum += data[i];
-	return sum;
-}
-
-static gboolean
-fu_himaxtp_firmware_all_zero(const guint8 *data, gsize len)
-{
-	for (gsize i = 0; i < len; i++) {
-		if (data[i] != 0)
-			return FALSE;
-	}
-	return TRUE;
-}
-
 static guint32
 fu_himaxtp_firmware_calculate_crc32c(const guint8 *data, gsize len)
 {
-	/* Himax HW CRC use special ALG */
+	/* Himax HW CRC use special ALG
+	 * Differences from standard CRC32C (Castagnoli):
+	 * - Standard: processes byte-by-byte with mask 0xFFFFFFFF
+	 * - Himax: processes 4 bytes at a time (DWORD) with mask 0x7FFFFFFF
+	 * - Standard poly: 0x1EDC6F41 (normal), Himax poly: 0x82F63B78 (reversed LE)
+	 * - Himax implementation uses right-shift with modified mask (0x7FFFFFFF)
+	 *   which differs from standard reflected/unreflected CRC32C variants
+	 */
 	guint32 crc = 0xFFFFFFFF;
 	guint32 poly = CRC32C_POLY_LE;
 	const guint32 mask = 0x7FFFFFFF;
@@ -159,14 +116,6 @@ fu_himaxtp_firmware_validate(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 
-	if (streamsz < 255 * 1024) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware image was too small");
-		return FALSE;
-	}
-
 	st = fu_input_stream_read_byte_array(stream, offset, streamsz, NULL, error);
 	if (st == NULL) {
 		g_prefix_error_literal(error, "failed to read firmware: ");
@@ -202,7 +151,7 @@ fu_himaxtp_firmware_validate(FuFirmware *firmware,
 		return FALSE;
 
 	if ((mapcode.cs.byte[2] != HX_HEADER_V1 && mapcode.cs.byte[2] != HX_HEADER_V2) ||
-	    fu_himaxtp_firmware_sum8(st->data, sizeof(struct FuHimaxtpMapCode)) != 0) {
+	    fu_sum8(st->data, sizeof(struct FuHimaxtpMapCode)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -223,6 +172,8 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 	FuHimaxtpFirmware *self = FU_HIMAXTP_FIRMWARE(firmware);
 	guint32 offset;
 	gsize streamsz = 0;
+	FuHimaxtpIcId *main_info;
+	FuHimaxtpIcIdMod *mod_info;
 	struct FuHimaxtpMapCode mapcode = {0};
 	g_autoptr(GByteArray) st = NULL;
 
@@ -256,10 +207,8 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 				    error))
 			return FALSE;
 
-		if (fu_himaxtp_firmware_sum8((const guint8 *)st->data + i,
-					     sizeof(struct FuHimaxtpMapCode)) != 0 ||
-		    fu_himaxtp_firmware_all_zero((const guint8 *)&mapcode,
-						 sizeof(struct FuHimaxtpMapCode)))
+		if (fu_sum8((const guint8 *)st->data + i, sizeof(struct FuHimaxtpMapCode)) != 0 ||
+		    fu_sum8((const guint8 *)&mapcode, sizeof(struct FuHimaxtpMapCode) == 0))
 			break;
 
 		if (!fu_memcpy_safe((guint8 *)&mapcode,
@@ -286,33 +235,20 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 			self->dd_cfg_ver = (guint8)st->data[offset + 1];
 			break;
 		case FU_HIMAXTP_MAPCODE_IC_ID:
-			if (!fu_memcpy_safe((guint8 *)self->ic_id,
-					    sizeof(self->ic_id),
-					    0,
-					    st->data + offset,
-					    sizeof(self->ic_id),
-					    0,
-					    sizeof(self->ic_id) - 1,
-					    error))
-				return FALSE;
-
-			offset += sizeof(self->ic_id);
-			self->vid = (guint16)st->data[offset] << 8 | (guint16)st->data[offset + 1];
-			self->pid =
-			    (guint16)st->data[offset + 2] << 8 | (guint16)st->data[offset + 3];
+			main_info = fu_himaxtp_ic_id_parse(&(st->data[offset]),
+							   sizeof(FuHimaxtpIcId),
+							   0,
+							   error);
+			self->ic_id = g_strdup(fu_himaxtp_ic_id_get_ic_id(main_info));
+			self->vid = fu_himaxtp_ic_id_get_vid(main_info);
+			self->pid = fu_himaxtp_ic_id_get_pid(main_info);
 			break;
 		case FU_HIMAXTP_MAPCODE_IC_ID_MOD:
-			if (!fu_memcpy_safe((guint8 *)self->ic_id_mod,
-					    sizeof(self->ic_id_mod),
-					    0,
-					    st->data + offset,
-					    sizeof(self->ic_id_mod),
-					    0,
-					    sizeof(self->ic_id_mod),
-					    error))
-				return FALSE;
-
-			self->ic_id_mod[sizeof(self->ic_id_mod) - 1] = '\0';
+			mod_info = fu_himaxtp_ic_id_mod_parse(&(st->data[offset]),
+							      sizeof(FuHimaxtpIcIdMod),
+							      0,
+							      error);
+			self->ic_id_mod = g_strdup(fu_himaxtp_ic_id_mod_get_ic_id_mod(mod_info));
 			break;
 		default:
 			continue;

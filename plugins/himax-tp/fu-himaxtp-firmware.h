@@ -15,18 +15,8 @@ FuFirmware *
 fu_himaxtp_firmware_new(void);
 
 guint16
-fu_himaxtp_firmware_get_fw_ver(FuHimaxtpFirmware *self);
-guint16
 fu_himaxtp_firmware_get_cid(FuHimaxtpFirmware *self);
 guint16
 fu_himaxtp_firmware_get_vid(FuHimaxtpFirmware *self);
 guint16
 fu_himaxtp_firmware_get_pid(FuHimaxtpFirmware *self);
-guint8
-fu_himaxtp_firmware_get_tp_cfg_ver(FuHimaxtpFirmware *self);
-guint8
-fu_himaxtp_firmware_get_dd_cfg_ver(FuHimaxtpFirmware *self);
-gchar *
-fu_himaxtp_firmware_get_ic_id(FuHimaxtpFirmware *self);
-gchar *
-fu_himaxtp_firmware_get_ic_id_mod(FuHimaxtpFirmware *self);

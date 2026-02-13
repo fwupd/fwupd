@@ -4,6 +4,73 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+enum FuHimaxtpMapCount {
+    Main = 9,
+    Bl = 1,
+}
+
+enum FuHimaxtpUpdateType {
+    Main,
+    Bl,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuHimaxtpHidFwUnit {
+    cmd: u8,
+    bin_start_offset: u16le,
+    bin_size: u16le,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuHimaxtpHidInfo {
+    main_mapping: [FuHimaxtpHidFwUnit; 9],
+    bl_mapping: FuHimaxtpHidFwUnit,
+    passwd: u16be,
+    cid: u16be,
+    panel_ver: u8,
+    fw_ver: u16be,
+    ic_sign: u8,
+    customer: [char; 12],
+    project: [char; 12],
+    fw_major: [char; 12],
+    fw_minor: [char; 12],
+    date: [char; 12],
+    ic_sign_2: [char; 12],
+    vid: u16be,
+    pid: u16be,
+    cfg_info: [u8; 32],
+    cfg_version: u8,
+    disp_version: u8,
+    rx: u8,
+    tx: u8,
+    yres: u16le,
+    xres: u16le,
+    pt_num: u8,
+    mkey_num: u8,
+    pen_num: u8,
+    pen_yres: u16le,
+    pen_xres: u16le,
+    ic_num: u8,
+    debug_info: [u8; 73],
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuHimaxtpIcId {
+    ic_id: [char; 12],
+    vid: u16be,
+    pid: u16be,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuHimaxtpIcIdMod {
+    ic_id_mod: [char; 2],
+}
+
+
 enum FuHimaxtpMapcode {
     FwCid = 0x10000000,
     FwVer = 0x10000100,

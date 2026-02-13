@@ -28,56 +28,18 @@
 #define HID_UPDATE_TIMEOUT_S	(3)
 #define HID_POLLING_INTERVAL_MS (400)
 
-#pragma pack(1)
-
-struct FuHxHidFwUnit {
-	guint8 cmd;
-	guint16 bin_start_offset;
-	guint16 unit_sz;
-};
-
 union FuHxVal {
 	guint16 word;
 	/* nocheck:zero-init */
 	guint8 byte[2];
 };
 
+#pragma pack(1)
+
 struct FuHxRegRw {
 	guint8 rw_flag;
 	guint32 reg_addr;
 	guint32 reg_value;
-};
-
-struct FuHxHidInfo {
-	struct FuHxHidFwUnit main_mapping[9];
-	struct FuHxHidFwUnit bl_mapping;
-	union FuHxVal passwd;
-	union FuHxVal cid;
-	guint8 panel_ver;
-	union FuHxVal fw_ver;
-	guint8 ic_sign;
-	gchar customer[12];
-	gchar project[12];
-	gchar fw_major[12];
-	gchar fw_minor[12];
-	gchar date[12];
-	gchar ic_sign_2[12];
-	union FuHxVal vid;
-	union FuHxVal pid;
-	guint8 cfg_info[32];
-	guint8 cfg_version;
-	guint8 disp_version;
-	guint8 rx;
-	guint8 tx;
-	guint16 yres;
-	guint16 xres;
-	guint8 pt_num;
-	guint8 mkey_num;
-	guint8 pen_num;
-	guint16 pen_yres;
-	guint16 pen_xres;
-	guint8 ic_num;
-	guint8 debug_info[73];
 };
 
 #pragma pack()
@@ -97,7 +59,7 @@ struct FuHxFlashInfo {
 struct _FuHimaxtpHidDevice {
 	FuHidrawDevice parent_instance;
 	guint16 pid;
-	struct FuHxHidInfo dev_info;
+	FuHimaxtpHidInfo *dev_info;
 	struct FuHxIdSizeTable *id_size_table;
 	guint8 id_size_table_num;
 };
@@ -144,47 +106,50 @@ static gboolean
 fu_himaxtp_hid_device_set_feature(FuHimaxtpHidDevice *self,
 				  guint8 id,
 				  const guint8 *buf,
-				  gsize bufsz,
-				  GError **error)
+				  gsize bufsz)
 {
 	g_autofree guint8 *data = NULL;
-	gsize datasz;
+	g_autoptr(GPtrArray) chunks =
+	    fu_chunk_array_new(buf, bufsz, 0, 0, fu_himaxtp_hid_device_size_lookup(self, id));
+	g_autoptr(GError) error_local = NULL;
 	gsize unit_sz;
 	gboolean ret;
-	guint32 chunk_count;
+	guint32 chunk_count = 0;
 
 	g_return_val_if_fail(FU_IS_HIMAXTP_HID_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(bufsz > 0, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	g_return_val_if_fail(self->id_size_table != NULL, FALSE);
 
 	unit_sz = fu_himaxtp_hid_device_size_lookup(self, id);
 	/* allocate buffer */
 	data = g_malloc0(unit_sz + 1);
-	chunk_count = 0;
-	for (gsize i = 0; i < bufsz; i += unit_sz) {
-		datasz = (unit_sz < (bufsz - i)) ? unit_sz : (bufsz - i);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
 		memset(data, 0, unit_sz + 1);
 		data[0] = id; /* report number */
 		if (!fu_memcpy_safe(data,
 				    unit_sz + 1,
 				    1, /* dst */
-				    buf,
-				    bufsz,
-				    i, /* src */
-				    datasz,
-				    error))
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0, /* src */
+				    fu_chunk_get_data_sz(chk),
+				    &error_local)) {
+			g_debug("failed to copy data for id %u: %s", id, error_local->message);
 			return FALSE;
+		}
 
 		/* SetFeature */
 		ret = fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 						   data,
 						   unit_sz + 1,
 						   FU_IOCTL_FLAG_NONE,
-						   NULL);
-		if (!ret)
+						   &error_local);
+		if (!ret) {
+			g_debug("SetFeature failed for id %u: %s", id, error_local->message);
 			break;
+		}
 		chunk_count++;
 		fu_device_sleep(FU_DEVICE(self), 1);
 	}
@@ -197,19 +162,16 @@ fu_himaxtp_hid_device_set_feature(FuHimaxtpHidDevice *self,
 }
 
 static gboolean
-fu_himaxtp_hid_device_get_feature(FuHimaxtpHidDevice *self,
-				  guint8 id,
-				  guint8 *buf,
-				  gsize bufsz,
-				  GError **error)
+fu_himaxtp_hid_device_get_feature(FuHimaxtpHidDevice *self, guint8 id, guint8 *buf, gsize bufsz)
 {
 	g_autofree guint8 *data = NULL;
+	g_autoptr(GError) error_local = NULL;
+	gboolean ret;
 	gsize datasz;
 
 	g_return_val_if_fail(FU_IS_HIMAXTP_HID_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(bufsz > 0, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* allocate buffer */
 	datasz = bufsz + 1;
@@ -221,18 +183,32 @@ fu_himaxtp_hid_device_get_feature(FuHimaxtpHidDevice *self,
 					  data,
 					  datasz,
 					  FU_IOCTL_FLAG_NONE,
-					  NULL))
+					  &error_local)) {
+		g_debug("GetFeature failed for id %u: %s", id, error_local->message);
 		return FALSE;
+	}
 
 	/* copy out */
-	return fu_memcpy_safe(buf,
-			      bufsz,
-			      0, /* dst */
-			      data,
-			      datasz,
-			      1, /* src */
-			      bufsz,
-			      error);
+	ret = fu_memcpy_safe(buf,
+			     bufsz,
+			     0,
+			     data,
+			     datasz,
+			     1, /* src */
+			     bufsz,
+			     &error_local);
+	if (!ret) {
+		g_debug("failed to copy data for id %u: %s", id, error_local->message);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static long
+fu_himaxtp_hid_device_get_time_diff_ms(struct timespec *start, struct timespec *end)
+{
+	return (end->tv_sec - start->tv_sec) * 1000 + (end->tv_nsec - start->tv_nsec) / 1000000;
 }
 
 static gboolean
@@ -243,14 +219,18 @@ fu_himaxtp_hid_device_polling_for_result(FuHimaxtpHidDevice *self,
 					 guint interval_ms,
 					 guint timeout_ms,
 					 guint8 *received_data,
-					 gsize *received_data_size,
-					 GError **error)
+					 gsize *received_data_size)
 {
-	time_t now = time(NULL);
-	time_t start = now;
+	struct timespec start, current;
 	guint interval_ms_sum = 0;
 	g_autofree guint8 *data = NULL;
+	g_autoptr(GError) error_local = NULL;
 	gboolean ret = FALSE;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+		g_debug("Failed to get start time");
+		return FALSE;
+	}
 	*received_data_size = 0;
 
 	g_return_val_if_fail(FU_IS_HIMAXTP_HID_DEVICE(self), FALSE);
@@ -258,17 +238,12 @@ fu_himaxtp_hid_device_polling_for_result(FuHimaxtpHidDevice *self,
 	g_return_val_if_fail(expected_data_size > 0, FALSE);
 	g_return_val_if_fail(received_data != NULL, FALSE);
 	g_return_val_if_fail(received_data_size != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	data = g_malloc0(expected_data_size);
 	while (interval_ms_sum < timeout_ms) {
 		fu_device_sleep(FU_DEVICE(self), interval_ms);
 		interval_ms_sum += interval_ms;
-		ret = fu_himaxtp_hid_device_get_feature(self,
-							feature_id,
-							data,
-							expected_data_size,
-							error);
+		ret = fu_himaxtp_hid_device_get_feature(self, feature_id, data, expected_data_size);
 		if (!ret) {
 			*received_data_size = expected_data_size;
 			/* return when failed to copy failed reason */
@@ -279,17 +254,26 @@ fu_himaxtp_hid_device_polling_for_result(FuHimaxtpHidDevice *self,
 					    expected_data_size,
 					    0,
 					    expected_data_size,
-					    NULL))
+					    &error_local)) {
+				g_debug("failed to copy received data for id %u: %s",
+					feature_id,
+					error_local->message);
 				return FALSE;
+			}
 			/* continue to polling until timeout */
 		}
 
 		if (ret && memcmp(data, expected_data, expected_data_size) == 0)
 			return TRUE;
 
-		now = time(NULL);
-		if ((now - start) * 1000 >= timeout_ms)
+		if (clock_gettime(CLOCK_MONOTONIC, &current) != 0) {
+			g_debug("Failed to get current time");
 			return FALSE;
+		}
+		if (fu_himaxtp_hid_device_get_time_diff_ms(&start, &current) >= timeout_ms) {
+			g_debug("Polling for expected data timeout for id %u", feature_id);
+			return FALSE;
+		}
 	}
 
 	return FALSE;
@@ -299,8 +283,7 @@ static gboolean
 fu_himaxtp_hid_device_register_operate(FuHimaxtpHidDevice *self,
 				       gboolean is_write,
 				       guint32 reg_addr,
-				       guint32 *reg_value,
-				       GError **error)
+				       guint32 *reg_value)
 {
 	struct FuHxRegRw reg_and_data = {0};
 
@@ -309,27 +292,29 @@ fu_himaxtp_hid_device_register_operate(FuHimaxtpHidDevice *self,
 	if (is_write) {
 		reg_and_data.rw_flag = 0x01;
 		reg_and_data.reg_value = *reg_value;
-		return fu_himaxtp_hid_device_set_feature(self,
-							 HID_REG_RW_ID,
-							 (guint8 *)&reg_and_data,
-							 sizeof(struct FuHxRegRw),
-							 error);
+		if (!fu_himaxtp_hid_device_set_feature(self,
+						       HID_REG_RW_ID,
+						       (guint8 *)&reg_and_data,
+						       sizeof(struct FuHxRegRw))) {
+			g_debug("SetFeature failed for register 0x%08X", reg_addr);
+			return FALSE;
+		}
+		return TRUE;
 	}
 
 	if (!fu_himaxtp_hid_device_set_feature(self,
 					       HID_REG_RW_ID,
 					       (guint8 *)&reg_and_data,
-					       sizeof(struct FuHxRegRw),
-					       error)) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "Register read failed");
+					       sizeof(struct FuHxRegRw))) {
+		g_debug("SetFeature failed for register 0x%08X", reg_addr);
 		return FALSE;
 	}
 
 	if (!fu_himaxtp_hid_device_get_feature(self,
 					       HID_REG_RW_ID,
 					       (guint8 *)&reg_and_data,
-					       sizeof(struct FuHxRegRw),
-					       error)) {
+					       sizeof(struct FuHxRegRw))) {
+		g_debug("GetFeature failed for register 0x%08X", reg_addr);
 		return FALSE;
 	}
 
@@ -365,20 +350,14 @@ fu_himaxtp_hid_device_get_size_by_id(FuHidReport *report, guint8 id, gsize *size
 	return TRUE;
 }
 
-static guint16
-fu_himaxtp_hid_device_swap_bytes(guint16 val)
-{
-	return (val << 8) | (val >> 8);
-}
-
 static guint32
-fu_himaxtp_hid_device_calculate_mapping_entries(struct FuHxHidFwUnit *table, gsize table_size)
+fu_himaxtp_hid_device_calculate_mapping_entries(FuHimaxtpHidInfo *info, gsize max_table_size)
 {
 	guint32 entries = 0;
 
-	for (gsize i = 0; i < table_size / sizeof(struct FuHxHidFwUnit); i++) {
-		struct FuHxHidFwUnit *entry = &table[i];
-		if (entry->unit_sz != 0)
+	for (gsize i = 0; i < max_table_size; i++) {
+		FuHimaxtpHidFwUnit *entry = fu_himaxtp_hid_info_get_main_mapping(info, i);
+		if (fu_himaxtp_hid_fw_unit_get_bin_size(entry) != 0)
 			entries++;
 		else
 			break;
@@ -387,60 +366,73 @@ fu_himaxtp_hid_device_calculate_mapping_entries(struct FuHxHidFwUnit *table, gsi
 	return entries;
 }
 
-static FuHimaxtpUpdateErrorCode
+static gboolean
 fu_himaxtp_hid_device_polling_error_handler(FuHimaxtpHidDevice *self,
-					    time_t start,
+					    struct timespec *start,
 					    gint timeout_s,
 					    guint8 received_code,
+					    FuHimaxtpUpdateErrorCode *status,
 					    GError **error)
 {
-	time_t now = time(NULL);
+	struct timespec now;
+
 	switch (received_code) {
 	case FU_HIMAXTP_UPDATE_ERROR_CODE_MCU_E0:
 	case FU_HIMAXTP_UPDATE_ERROR_CODE_MCU_E1:
-		if (now - start >= timeout_s) {
+		if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Failed to get current time");
+			return FALSE;
+		}
+		if (fu_himaxtp_hid_device_get_time_diff_ms(start, &now) >= timeout_s * 1000) {
+			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_TIMED_OUT,
 					    "Polling for ready state timeout");
-			return FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
+			return FALSE;
 		}
 		fu_device_sleep(FU_DEVICE(self), 10);
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_AGAIN;
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_AGAIN;
+		return TRUE;
 	case FU_HIMAXTP_UPDATE_ERROR_CODE_NO_BL:
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_NO_BL;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "No bootloader found");
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_NO_BL;
+		return FALSE;
 	case FU_HIMAXTP_UPDATE_ERROR_CODE_NO_MAIN:
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_NO_MAIN;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "No main firmware found");
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_NO_MAIN;
+		return FALSE;
 	default:
+		*status = (FuHimaxtpUpdateErrorCode)received_code;
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "Unknown error code received: 0x%02X",
 			    received_code);
-		return (FuHimaxtpUpdateErrorCode)received_code;
+		return FALSE;
 	}
 }
 
 static gboolean
 fu_himaxtp_hid_device_write_register_sequence(FuHimaxtpHidDevice *self,
 					      guint32 *sequence,
-					      gsize seq_count,
-					      GError **error)
+					      gsize seq_count)
 {
 	for (guint i = 0; i < seq_count; i++) {
 		if (!fu_himaxtp_hid_device_register_operate(self,
 							    TRUE,
 							    sequence[i * 2],
-							    &sequence[i * 2 + 1],
-							    error)) {
+							    &sequence[i * 2 + 1])) {
 			g_debug("cannot write register sequence step %u: 0x%08X<-0x%08X",
 				i,
 				sequence[i * 2],
@@ -469,8 +461,7 @@ fu_himaxtp_hid_device_get_flash_id(FuHimaxtpHidDevice *self, gint32 *flash_id, G
 	if (!fu_himaxtp_hid_device_write_register_sequence(self,
 							   flash_id_read_seq,
 							   sizeof(flash_id_read_seq) /
-							       (2 * sizeof(guint32)),
-							   error)) {
+							       (2 * sizeof(guint32)))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -483,9 +474,16 @@ fu_himaxtp_hid_device_get_flash_id(FuHimaxtpHidDevice *self, gint32 *flash_id, G
 	if (!fu_himaxtp_hid_device_register_operate(self,
 						    FALSE,
 						    BLOCK_PROTECT_STATUS_ADDR,
-						    &reg_value,
-						    error)) {
+						    &reg_value)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "cannot read flash id");
+		return FALSE;
+	}
+
+	if (reg_value == 0 || reg_value >= 0x00FFFFFF) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "invalid flash id read");
 		return FALSE;
 	}
 
@@ -516,9 +514,11 @@ fu_himaxtp_hid_device_get_write_delay(guint32 flash_id)
 	return -1;
 }
 
-static gint32
+static gboolean
 fu_himaxtp_hid_device_get_flash_status(FuHimaxtpHidDevice *self,
 				       gint16 block_protect_mask,
+				       gint32 *flash_status,
+				       FuHimaxtpUpdateErrorCode *status,
 				       GError **error)
 {
 	guint32 reg_value = 0;
@@ -531,50 +531,52 @@ fu_himaxtp_hid_device_get_flash_status(FuHimaxtpHidDevice *self,
 	    0x00000005U,
 	};
 
-	if (block_protect_mask < 0)
-		return -1;
-
 	if (!fu_himaxtp_hid_device_write_register_sequence(self,
 							   get_status_seq,
 							   sizeof(get_status_seq) /
-							       (2 * sizeof(guint32)),
-							   error)) {
+							       (2 * sizeof(guint32)))) {
+		*flash_status = -1;
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
 				    "cannot write flash status get sequence");
-		return -1;
+		return FALSE;
 	}
 
 	if (!fu_himaxtp_hid_device_register_operate(self,
 						    FALSE,
 						    BLOCK_PROTECT_STATUS_ADDR,
-						    &reg_value,
-						    error)) {
+						    &reg_value)) {
+		*flash_status = -1;
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
 				    "cannot read flash status");
-		return -1;
+		return FALSE;
 	}
 
 	if (((guint16)reg_value & (guint16)block_protect_mask) != 0) {
 		g_debug("Flash is write protected, status: 0x%08X, mask: 0x%02X",
 			reg_value,
 			(guint16)block_protect_mask);
-		return 1;
+		*flash_status = 1;
+		return TRUE;
 	} else {
 		g_debug("Flash is not write protected, status: 0x%08X, mask: 0x%02X",
 			reg_value,
 			(guint16)block_protect_mask);
 	}
+	*flash_status = 0;
 
-	return 0;
+	return TRUE;
 }
 
 static gboolean
 fu_himaxtp_hid_device_switch_write_protect(FuHimaxtpHidDevice *self,
 					   gboolean enable,
+					   FuHimaxtpUpdateErrorCode *status,
 					   GError **error)
 {
 	guint32 reg_value = 0;
@@ -582,8 +584,8 @@ fu_himaxtp_hid_device_switch_write_protect(FuHimaxtpHidDevice *self,
 	if (!fu_himaxtp_hid_device_register_operate(self,
 						    FALSE,
 						    WRITE_PROTECT_PIN_ADDR,
-						    &reg_value,
-						    error)) {
+						    &reg_value)) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
@@ -592,15 +594,65 @@ fu_himaxtp_hid_device_switch_write_protect(FuHimaxtpHidDevice *self,
 	}
 
 	if (enable)
-		reg_value |= 0x00000001U;
+		FU_BIT_SET(reg_value, 0);
 	else
-		reg_value &= ~0x00000001U;
+		FU_BIT_CLEAR(reg_value, 0);
 
-	return fu_himaxtp_hid_device_register_operate(self,
-						      TRUE,
-						      WRITE_PROTECT_PIN_ADDR,
-						      &reg_value,
-						      error);
+	if (!fu_himaxtp_hid_device_register_operate(self,
+						    TRUE,
+						    WRITE_PROTECT_PIN_ADDR,
+						    &reg_value)) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "cannot write write protect pin status");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/* nocheck:name */
+static gboolean
+fu_himaxtp_hid_device_switch_block_protect_retry_func(FuDevice *device,
+						      gpointer user_data,
+						      GError **error)
+{
+	FuHimaxtpHidDevice *self = FU_HIMAXTP_HID_DEVICE(device);
+	FuHimaxtpUpdateErrorCode *status = (FuHimaxtpUpdateErrorCode *)user_data;
+	guint32 reg_value;
+
+	reg_value = 0x00000005U;
+	if (!fu_himaxtp_hid_device_register_operate(self,
+						    TRUE,
+						    BLOCK_PROTECT_CMD3_ADDR,
+						    &reg_value)) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "cannot write flash block protect status");
+		return FALSE;
+	}
+
+	reg_value = 0;
+	if (!fu_himaxtp_hid_device_register_operate(self,
+						    FALSE,
+						    BLOCK_PROTECT_STATUS_ADDR,
+						    &reg_value)) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "cannot read flash block protect status");
+		return FALSE;
+	}
+
+	if ((reg_value & 0x03) == 0)
+		return TRUE;
+
+	return FALSE;
 }
 
 static gboolean
@@ -608,10 +660,10 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 					   gint16 block_protect_mask,
 					   guint16 write_delay,
 					   gboolean enable,
+					   FuHimaxtpUpdateErrorCode *status,
 					   GError **error)
 {
 	guint32 reg_value = 0;
-	gint i;
 	const gint max_retry = 100;
 	guint32 switch_seq[] = {
 	    BLOCK_PROTECT_CMD1_ADDR,
@@ -633,6 +685,7 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 		block_protect_mask = 0;
 
 	if (block_protect_mask < 0) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -645,8 +698,8 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 	if (!fu_himaxtp_hid_device_write_register_sequence(self,
 							   switch_seq,
 							   sizeof(switch_seq) /
-							       (2 * sizeof(guint32)),
-							   error)) {
+							       (2 * sizeof(guint32)))) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -659,8 +712,8 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 	if (!fu_himaxtp_hid_device_register_operate(self,
 						    TRUE,
 						    BLOCK_PROTECT_CMD2_ADDR,
-						    &reg_value,
-						    error)) {
+						    &reg_value)) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -668,41 +721,12 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 		return FALSE;
 	}
 
-	i = 0;
-	do {
-		reg_value = 0x00000005U;
-		if (!fu_himaxtp_hid_device_register_operate(self,
-							    TRUE,
-							    BLOCK_PROTECT_CMD3_ADDR,
-							    &reg_value,
-							    error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_WRITE,
-					    "cannot write flash block protect status");
-			return FALSE;
-		}
-
-		reg_value = 0;
-		if (!fu_himaxtp_hid_device_register_operate(self,
-							    FALSE,
-							    BLOCK_PROTECT_STATUS_ADDR,
-							    &reg_value,
-							    error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "cannot read flash block protect status");
-			return FALSE;
-		}
-
-		if ((reg_value & 0x03) == 0)
-			break;
-
-		fu_device_sleep(FU_DEVICE(self), 1);
-	} while (++i < max_retry);
-
-	if (i == max_retry) {
+	fu_device_retry_set_delay(FU_DEVICE(self), 1);
+	if (fu_device_retry(FU_DEVICE(self),
+			    fu_himaxtp_hid_device_switch_block_protect_retry_func,
+			    max_retry,
+			    status,
+			    error) == FALSE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_TIMED_OUT,
@@ -714,18 +738,19 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 }
 
 static gboolean
-fu_himaxtp_hid_device_unlock_flash(FuHimaxtpHidDevice *self, gint32 flash_id, GError **error)
+fu_himaxtp_hid_device_unlock_flash(FuHimaxtpHidDevice *self,
+				   gint32 flash_id,
+				   FuHimaxtpUpdateErrorCode *status,
+				   GError **error)
 {
 	gint32 flash_status;
 	gint16 write_delay;
 	gint16 block_protect_mask;
 
-	if (flash_id < 0)
-		return FALSE;
-
 	block_protect_mask = fu_himaxtp_hid_device_get_block_protect_mask(flash_id);
 	write_delay = fu_himaxtp_hid_device_get_write_delay(flash_id);
 	if (write_delay < 0 || block_protect_mask < 0) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 		g_set_error_literal(
 		    error,
 		    FWUPD_ERROR,
@@ -734,88 +759,132 @@ fu_himaxtp_hid_device_unlock_flash(FuHimaxtpHidDevice *self, gint32 flash_id, GE
 		return FALSE;
 	}
 
-	flash_status = fu_himaxtp_hid_device_get_flash_status(self, block_protect_mask, error);
-	if (flash_status > 0) {
-		if (!fu_himaxtp_hid_device_switch_write_protect(self, FALSE, error)) {
-			/* Unable to disable write protect pin */
-			return FALSE;
+	if (fu_himaxtp_hid_device_get_flash_status(self,
+						   block_protect_mask,
+						   &flash_status,
+						   status,
+						   error)) {
+		if (flash_status > 0) {
+			if (!fu_himaxtp_hid_device_switch_write_protect(self,
+									FALSE,
+									status,
+									error)) {
+				/* Unable to disable write protect pin */
+				return FALSE;
+			}
+
+			if (!fu_himaxtp_hid_device_switch_block_protect(self,
+									block_protect_mask,
+									write_delay,
+									FALSE,
+									status,
+									error)) {
+				/* Unable to disable block protect */
+				return FALSE;
+			}
+
+			if (!fu_himaxtp_hid_device_get_flash_status(self,
+								    block_protect_mask,
+								    &flash_status,
+								    status,
+								    error)) {
+				/* Error while getting flash status */
+				return FALSE;
+			}
+
+			if (flash_status > 0) {
+				/* Flash is still write protected after disabling write protect pin
+				and block protect */
+				*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash is still write protected after disabling write protect "
+				    "pin and block protect");
+				return FALSE;
+			}
+
+			return TRUE;
 		}
 
-		if (!fu_himaxtp_hid_device_switch_block_protect(self,
-								block_protect_mask,
-								write_delay,
-								FALSE,
-								error)) {
-			/* Unable to disable block protect */
-			return FALSE;
-		}
-
-		flash_status =
-		    fu_himaxtp_hid_device_get_flash_status(self, block_protect_mask, error);
-		if (flash_status > 0 || flash_status < 0) {
-			/* Flash is still write protected after disabling write protect pin and
-			   block protect */
-			return FALSE;
-		}
-
-		return TRUE;
-	} else if (flash_status == 0) {
-		/* Flash is already unlocked */
 		return TRUE;
 	}
 
 	return FALSE;
 }
 
-static FuHimaxtpUpdateErrorCode
+static gboolean
 fu_himaxtp_hid_device_update_process(FuHimaxtpHidDevice *self,
-				     struct FuHxHidFwUnit *fw_entries,
+				     gint update_type,
 				     guint fw_entry_count,
 				     guint8 start_cmd,
 				     guint8 commit_cmd,
 				     const guint8 *firmware,
 				     gsize fw_size,
+				     FuHimaxtpUpdateErrorCode *status,
 				     GError **error)
 {
-	time_t start;
+	struct timespec start;
 	const guint8 ready_timeout_s = HID_READY_TIMEOUT_S;
 	const guint8 update_timeout_s = HID_UPDATE_TIMEOUT_S;
+	const FuHimaxtpHidInfo *hid_info = self->dev_info;
+	FuHimaxtpHidFwUnit *fw_entry = NULL;
 	guint8 cmd = 0;
 	guint8 received[2] = {0};
 	guint32 tmp_offset;
 	guint32 tmp_size;
 	gint32 flash_id = -1;
 	gsize n_received = 0;
-	FuHimaxtpUpdateErrorCode ret_code;
 
-	if (fu_himaxtp_hid_device_get_feature(self, HID_FW_UPDATE_HANDSHAKING_ID, &cmd, 1, error) ==
+	if (fu_himaxtp_hid_device_get_feature(self, HID_FW_UPDATE_HANDSHAKING_ID, &cmd, 1) ==
 	    FALSE) {
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_INITIAL;
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_INITIAL;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "Failed to get initial handshake status from device");
+		return FALSE;
 	}
 
 	/* unlock flash if flash id exists, otherwise do nothing */
-	if (fu_himaxtp_hid_device_get_flash_id(self, &flash_id, error)) {
-		if (!fu_himaxtp_hid_device_unlock_flash(self, flash_id, error))
-			return FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
-	}
+	if (fu_himaxtp_hid_device_get_flash_id(self, &flash_id, error))
+		if (!fu_himaxtp_hid_device_unlock_flash(self, flash_id, status, error))
+			return FALSE;
 
+	/* restart in bootloader mode */
 	cmd = start_cmd;
-	if (fu_himaxtp_hid_device_set_feature(self, HID_FW_UPDATE_HANDSHAKING_ID, &cmd, 1, error) ==
-	    FALSE) {
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_INITIAL;
+	if (!fu_himaxtp_hid_device_set_feature(self, HID_FW_UPDATE_HANDSHAKING_ID, &cmd, 1)) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_INITIAL;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "Failed to send command to start firmware update");
+		return FALSE;
 	}
 
 	fu_device_sleep(FU_DEVICE(self), 100);
 	/* unlock again after reset if locked before */
-	if (flash_id >= 0)
-		fu_himaxtp_hid_device_unlock_flash(self, flash_id, error);
+	if (flash_id > 0)
+		if (!fu_himaxtp_hid_device_unlock_flash(self, flash_id, status, error))
+			return FALSE;
 
 	for (guint i = 0; i < fw_entry_count; i++) {
-		start = time(NULL);
+		if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Failed to get current time");
+			return FALSE;
+		}
 		while (TRUE) {
-			/* Polling for ready state */
-			cmd = fw_entries[i].cmd;
+			if (update_type == FU_HIMAXTP_UPDATE_TYPE_BL)
+				fw_entry = fu_himaxtp_hid_info_get_bl_mapping(hid_info);
+			else
+				fw_entry = fu_himaxtp_hid_info_get_main_mapping(hid_info, i);
 
+			cmd = fu_himaxtp_hid_fw_unit_get_cmd(fw_entry);
 			if (!fu_himaxtp_hid_device_polling_for_result(self,
 								      HID_FW_UPDATE_HANDSHAKING_ID,
 								      &cmd,
@@ -823,52 +892,52 @@ fu_himaxtp_hid_device_update_process(FuHimaxtpHidDevice *self,
 								      HID_POLLING_INTERVAL_MS,
 								      ready_timeout_s * 1000,
 								      received,
-								      &n_received,
-								      error)) {
+								      &n_received)) {
 				if (n_received > 0) {
-					ret_code = fu_himaxtp_hid_device_polling_error_handler(
-					    self,
-					    start,
-					    ready_timeout_s,
-					    received[0],
-					    error);
-					if (ret_code == FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_AGAIN)
-						continue;
-					return ret_code;
+					if (!fu_himaxtp_hid_device_polling_error_handler(
+						self,
+						&start,
+						ready_timeout_s,
+						received[0],
+						status,
+						error))
+						return FALSE;
+
+					continue;
 				}
+				*status = FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_TIMED_OUT,
 						    "Polling for result timeout");
-
-				return FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
+				return FALSE;
 			} else {
 				/* Ready to send firmware data */
 				break;
 			}
 		}
 
-		tmp_offset = fw_entries[i].bin_start_offset * 1024;
-		tmp_size = fw_entries[i].unit_sz * 1024;
+		tmp_offset = fu_himaxtp_hid_fw_unit_get_bin_start_offset(fw_entry) * 1024;
+		tmp_size = fu_himaxtp_hid_fw_unit_get_bin_size(fw_entry) * 1024;
 		if ((tmp_offset + tmp_size) > fw_size) {
+			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
 					    "Firmware entry exceeds firmware size");
-			return FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
+			return FALSE;
 		}
 
 		if (!fu_himaxtp_hid_device_set_feature(self,
 						       HID_FW_UPDATE_ID,
 						       &(firmware[tmp_offset]),
-						       tmp_size,
-						       error)) {
+						       tmp_size)) {
+			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FW_TRANSFER;
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_WRITE,
 					    "Sending firmware data failed");
-
-			return FU_HIMAXTP_UPDATE_ERROR_CODE_FW_TRANSFER;
+			return FALSE;
 		}
 	}
 	cmd = commit_cmd;
@@ -879,117 +948,114 @@ fu_himaxtp_hid_device_update_process(FuHimaxtpHidDevice *self,
 						      HID_POLLING_INTERVAL_MS,
 						      update_timeout_s * 1000,
 						      received,
-						      &n_received,
-						      error)) {
+						      &n_received)) {
 		if (n_received > 0) {
 			/* received[0] == FU_HIMAXTP_UPDATE_ERROR_CODE_BL: Bootloader error during
-			   update received[0] == FU_HIMAXTP_UPDATE_ERROR_CODE_PW: Password error
-			   during update received[0] == FU_HIMAXTP_UPDATE_ERROR_CODE_ERASE_FLASH:
-			   Flash erase error during update received[0] ==
+			   update
+			   received[0] == FU_HIMAXTP_UPDATE_ERROR_CODE_PW: Password error
+			   during update
+			   received[0] == FU_HIMAXTP_UPDATE_ERROR_CODE_ERASE_FLASH:
+			   Flash erase error during update
+			   received[0] ==
 			   FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROGRAMMING: Flash programming error
 			   during update
 			 */
 
-			return (FuHimaxtpUpdateErrorCode)received[0];
+			*status = (FuHimaxtpUpdateErrorCode)received[0];
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Firmware update failed with error code: 0x%02X",
+				    received[0]);
+			return FALSE;
 		}
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_TIMED_OUT,
 				    "Update commit polling for result timeout");
 
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_POLLING_TIMEOUT;
+		return FALSE;
 	} else {
 		/* Update successfully completed */
 		fu_device_sleep(FU_DEVICE(self), 500);
 	}
 
-	return FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR;
+	*status = FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR;
+	return TRUE;
 }
 
-static FuHimaxtpUpdateErrorCode
+static gboolean
 fu_himaxtp_hid_device_bootloader_update(FuHimaxtpHidDevice *self,
 					const guint8 *firmware,
 					gsize fw_size,
+					FuHimaxtpUpdateErrorCode *status,
 					GError **error)
 {
 	const guint8 bl_update_cmd = HID_UPDATE_BL_CMD;
 	const guint8 bl_update_commit = HID_UPDATE_COMMIT_RET;
-	guint fw_entry_count = 0;
-	struct FuHxHidFwUnit *fw_entries = NULL;
+	FuHimaxtpHidFwUnit *fw_entry = NULL;
 
-	fw_entry_count =
-	    fu_himaxtp_hid_device_calculate_mapping_entries(&self->dev_info.bl_mapping,
-							    sizeof(self->dev_info.bl_mapping));
-	if (fw_entry_count == 0)
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR;
-
-	fw_entries = &self->dev_info.bl_mapping;
-	for (guint i = 0; i < fw_entry_count; i++) {
-		if ((fw_entries[i].bin_start_offset * 1024 + fw_entries[i].unit_sz * 1024) >
-		    fw_size) {
-			return FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
-		}
+	fw_entry = fu_himaxtp_hid_info_get_bl_mapping(self->dev_info);
+	if ((fu_himaxtp_hid_fw_unit_get_bin_start_offset(fw_entry) * 1024 +
+	     fu_himaxtp_hid_fw_unit_get_bin_size(fw_entry) * 1024) > fw_size) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
+		return FALSE;
 	}
 
 	return fu_himaxtp_hid_device_update_process(self,
-						    fw_entries,
-						    fw_entry_count,
+						    FU_HIMAXTP_UPDATE_TYPE_BL,
+						    FU_HIMAXTP_MAP_COUNT_BL,
 						    bl_update_cmd,
 						    bl_update_commit,
 						    firmware,
 						    fw_size,
+						    status,
 						    error);
 }
 
-static FuHimaxtpUpdateErrorCode
+static gboolean
 fu_himaxtp_hid_device_main_update(FuHimaxtpHidDevice *self,
 				  const guint8 *firmware,
 				  gsize fw_size,
+				  FuHimaxtpUpdateErrorCode *status,
 				  GError **error)
 {
 	const guint8 main_update_cmd = HID_UPDATE_MAIN_CMD;
 	const guint8 main_update_commit = HID_UPDATE_COMMIT_RET;
 	guint fw_entry_count = 0;
-	struct FuHxHidFwUnit *fw_entries = NULL;
+	FuHimaxtpHidFwUnit *fw_entry = NULL;
 
-	fw_entry_count =
-	    fu_himaxtp_hid_device_calculate_mapping_entries(&self->dev_info.main_mapping[0],
-							    sizeof(self->dev_info.main_mapping));
-	if (fw_entry_count == 0)
-		return FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR;
+	fw_entry_count = fu_himaxtp_hid_device_calculate_mapping_entries(self->dev_info,
+									 FU_HIMAXTP_MAP_COUNT_MAIN);
+	if (fw_entry_count == 0) {
+		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR;
+		return TRUE;
+	}
 
-	fw_entries = &self->dev_info.main_mapping[0];
 	for (guint i = 0; i < fw_entry_count; i++) {
-		if ((fw_entries[i].bin_start_offset * 1024 + fw_entries[i].unit_sz * 1024) >
-		    fw_size) {
-			return FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
+		fw_entry = fu_himaxtp_hid_info_get_main_mapping(self->dev_info, i);
+		if ((fu_himaxtp_hid_fw_unit_get_bin_start_offset(fw_entry) * 1024 +
+		     fu_himaxtp_hid_fw_unit_get_bin_size(fw_entry) * 1024) > fw_size) {
+			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
+			return FALSE;
 		}
 	}
 
 	return fu_himaxtp_hid_device_update_process(self,
-						    fw_entries,
+						    FU_HIMAXTP_UPDATE_TYPE_MAIN,
 						    fw_entry_count,
 						    main_update_cmd,
 						    main_update_commit,
 						    firmware,
 						    fw_size,
+						    status,
 						    error);
-}
-
-static void
-fu_himaxtp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuHimaxtpHidDevice *self = FU_HIMAXTP_HID_DEVICE(device);
-
-	fwupd_codec_string_append_hex(str, idt, "VID", self->dev_info.vid.word);
-	fwupd_codec_string_append_hex(str, idt, "PID", self->dev_info.pid.word);
-	fwupd_codec_string_append_hex(str, idt, "CID", self->dev_info.cid.word);
 }
 
 static gboolean
 fu_himaxtp_hid_device_probe(FuDevice *device, GError **error)
 {
-	guint16 vid = fu_device_get_vid(device);
 	guint16 device_id = fu_device_get_pid(device);
 	FuHimaxtpHidDevice *self = NULL;
 
@@ -1003,14 +1069,6 @@ fu_himaxtp_hid_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* must be Himax VID */
-	if (vid != HIMAX_VID) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not Himax i2c-hid touchscreen: invalid VID");
-		return FALSE;
-	}
 	self = FU_HIMAXTP_HID_DEVICE(device);
 	self->pid = device_id;
 	self->id_size_table = g_id_size_table;
@@ -1029,9 +1087,9 @@ fu_himaxtp_hid_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuHidDescriptor) hid_desc = NULL;
 	g_autoptr(GPtrArray) reports = NULL;
 	g_autoptr(FuFirmware) item = NULL;
+	g_autofree guint8 *hid_info = NULL;
 	guint8 report_id;
 	FuHidReport *report = NULL;
-	struct FuHxHidInfo *hid_info = NULL;
 	guint64 version;
 
 	hid_desc = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
@@ -1066,33 +1124,42 @@ fu_himaxtp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	hid_info = &self->dev_info;
-	ret = fu_himaxtp_hid_device_get_feature(self,
-						HID_CFG_ID,
-						(guint8 *)hid_info,
-						fu_himaxtp_hid_device_size_lookup(self, HID_CFG_ID),
-						error);
-	if (ret == FALSE)
+	hid_info = g_malloc0(fu_himaxtp_hid_device_size_lookup(self, HID_CFG_ID));
+	ret =
+	    fu_himaxtp_hid_device_get_feature(self,
+					      HID_CFG_ID,
+					      (guint8 *)hid_info,
+					      fu_himaxtp_hid_device_size_lookup(self, HID_CFG_ID));
+	if (ret == FALSE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "Failed to get initial handshake status from device");
 		return FALSE;
+	}
 
-	hid_info->passwd.word = fu_himaxtp_hid_device_swap_bytes(hid_info->passwd.word);
-	hid_info->cid.word = fu_himaxtp_hid_device_swap_bytes(hid_info->cid.word);
-	hid_info->fw_ver.word = fu_himaxtp_hid_device_swap_bytes(hid_info->fw_ver.word);
-	hid_info->vid.word = fu_himaxtp_hid_device_swap_bytes(hid_info->vid.word);
-	hid_info->pid.word = fu_himaxtp_hid_device_swap_bytes(hid_info->pid.word);
+	self->dev_info =
+	    fu_himaxtp_hid_info_parse((guint8 *)hid_info,
+				      fu_himaxtp_hid_device_size_lookup(self, HID_CFG_ID),
+				      0,
+				      error);
 
 	/* define the extra instance IDs */
 	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
 	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
-	fu_device_add_instance_u8(device, "CID", hid_info->cid.byte[1]);
+	fu_device_add_instance_u8(device,
+				  "CID",
+				  (fu_himaxtp_hid_info_get_cid(self->dev_info) & 0xFF00) >> 8);
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "CID", NULL))
 		return FALSE;
 
 	/* version format : pid.cid (decimal) */
-	version = hid_info->pid.word;
+	version = fu_himaxtp_hid_info_get_pid(self->dev_info);
 	version <<= 16;
-	version = version | hid_info->cid.word;
+	version = version | fu_himaxtp_hid_info_get_cid(self->dev_info);
 	fu_device_set_version_raw(device, version);
+	fu_device_set_vid(device, fu_himaxtp_hid_info_get_vid(self->dev_info));
+	fu_device_set_pid(device, fu_himaxtp_hid_info_get_pid(self->dev_info));
 
 	/* success */
 	return TRUE;
@@ -1112,8 +1179,11 @@ fu_himaxtp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **er
 	}
 
 	/* reset the device */
-	if (!fu_himaxtp_hid_device_set_feature(self, HID_SELF_TEST_ID, &cmd, sizeof(cmd), error)) {
-		g_prefix_error_literal(error, "cannot reset device: ");
+	if (!fu_himaxtp_hid_device_set_feature(self, HID_SELF_TEST_ID, &cmd, sizeof(cmd))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "cannot reset device, and no fallback method available");
 		return FALSE;
 	}
 
@@ -1148,35 +1218,39 @@ fu_himaxtp_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	buf = g_bytes_get_data(fw, &bufsz);
-	result = fu_himaxtp_hid_device_main_update(self, buf, bufsz, error);
-	if (result == FU_HIMAXTP_UPDATE_ERROR_CODE_NO_BL) {
-		result = fu_himaxtp_hid_device_bootloader_update(self, buf, bufsz, error);
-		if (result != FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR) {
-			g_prefix_error_literal(error, "failed to update firmware bootloader: ");
+	if (!fu_himaxtp_hid_device_main_update(self, buf, bufsz, &result, error)) {
+		if (result == FU_HIMAXTP_UPDATE_ERROR_CODE_NO_BL) {
+			if (!fu_himaxtp_hid_device_bootloader_update(self,
+								     buf,
+								     bufsz,
+								     &result,
+								     error)) {
+				g_prefix_error_literal(error,
+						       "failed to update firmware bootloader: ");
+				return FALSE;
+			}
+			fu_progress_step_done(progress);
+			if (!fu_himaxtp_hid_device_main_update(self, buf, bufsz, &result, error)) {
+				g_prefix_error_literal(error,
+						       "failed to update firmware main code: ");
+				return FALSE;
+			}
+			fu_progress_step_done(progress);
+		} else {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "firmware update failed");
 			return FALSE;
 		}
-		fu_progress_step_done(progress);
-		result = fu_himaxtp_hid_device_main_update(self, buf, bufsz, error);
-		if (result != FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR) {
-			g_prefix_error_literal(error, "failed to update firmware main code: ");
-			return FALSE;
-		}
-		fu_progress_step_done(progress);
-	} else if (result == FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR) {
+	} else {
 		fu_progress_step_done(progress);
 		fu_device_sleep(device, 100);
-		result = fu_himaxtp_hid_device_bootloader_update(self, buf, bufsz, error);
-		if (result != FU_HIMAXTP_UPDATE_ERROR_CODE_NO_ERROR) {
+		if (!fu_himaxtp_hid_device_bootloader_update(self, buf, bufsz, &result, error)) {
 			g_prefix_error_literal(error, "failed to update firmware bootloader: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
-	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "firmware update failed");
-		return FALSE;
 	}
 
 	return TRUE;
@@ -1216,7 +1290,8 @@ fu_himaxtp_hid_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* check VID */
-	if (self->dev_info.vid.word != fu_himaxtp_firmware_get_vid(FU_HIMAXTP_FIRMWARE(firmware))) {
+	if (fu_himaxtp_hid_info_get_vid(self->dev_info) !=
+	    fu_himaxtp_firmware_get_vid(FU_HIMAXTP_FIRMWARE(firmware))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -1226,7 +1301,8 @@ fu_himaxtp_hid_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* check PID match */
-	if (self->dev_info.pid.word != fu_himaxtp_firmware_get_pid(FU_HIMAXTP_FIRMWARE(firmware))) {
+	if (fu_himaxtp_hid_info_get_pid(self->dev_info) !=
+	    fu_himaxtp_firmware_get_pid(FU_HIMAXTP_FIRMWARE(firmware))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -1235,7 +1311,7 @@ fu_himaxtp_hid_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* check CID high byte match */
-	if (self->dev_info.cid.byte[1] !=
+	if ((fu_himaxtp_hid_info_get_cid(self->dev_info) & 0xFF00) >> 8 !=
 	    fu_himaxtp_firmware_get_cid(FU_HIMAXTP_FIRMWARE(firmware)) >> 8) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1259,9 +1335,9 @@ fu_himaxtp_hid_device_init(FuHimaxtpHidDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_summary(FU_DEVICE(self), "Touchscreen");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
-	fu_device_add_protocol(FU_DEVICE(self), "tw.com.himax.himaxtp");
+	fu_device_add_protocol(FU_DEVICE(self), "tw.com.himax.tp");
 	fu_device_set_name(FU_DEVICE(self), "Touchscreen Controller");
-	fu_device_set_vendor(FU_DEVICE(self), "Himax");
+	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x3FC00);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -1272,7 +1348,6 @@ static void
 fu_himaxtp_hid_device_class_init(FuHimaxtpHidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->to_string = fu_himaxtp_hid_device_to_string;
 	device_class->attach = fu_himaxtp_hid_device_attach;
 	device_class->setup = fu_himaxtp_hid_device_setup;
 	device_class->reload = fu_himaxtp_hid_device_setup;

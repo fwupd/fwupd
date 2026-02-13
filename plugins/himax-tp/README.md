@@ -14,7 +14,7 @@ an unspecified binary file format.
 
 This plugin supports the following protocol ID:
 
-* `tw.com.himax.himaxtp`
+* `tw.com.himax.tp`
 
 ## GUID Generation
 
@@ -43,12 +43,4 @@ This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `2.0.0`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Paul Chang <poyuan_chang@himax.com.tw>
-* Tylor Yang <tylor_yang@himax.com.tw>
+This plugin has been available since fwupd version `2.1.1`.
