@@ -166,9 +166,10 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "image major version is not compatible, got 0x%x, expected 0x%x",
-		    fu_igsc_oprom_firmware_get_major_version(FU_IGSC_OPROM_FIRMWARE(firmware_igsc)),
-		    self->major_version);
+		    "Firmware capsule not compatible with this device SKU "
+		    "(expected 0x%x, got 0x%x)",
+		    self->major_version,
+		    fu_igsc_oprom_firmware_get_major_version(FU_IGSC_OPROM_FIRMWARE(firmware_igsc)));
 		return NULL;
 	}
 
