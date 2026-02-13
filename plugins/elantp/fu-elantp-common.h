@@ -22,7 +22,9 @@
 #define ETP_I2C_DISABLE_SCAN 0x108A
 #define ETP_I2C_ENABLE_SCAN  0x0000
 
-#define ETP_I2C_IAP_RESET     0xF0F0
+#define ETP_I2C_IAP_RESET        0xF0F0
+#define ETP_I2C_IAP_MASTER_RESET 0xCCDD
+
 #define ETP_I2C_MAIN_MODE_ON  (1 << 9)
 #define ETP_I2C_MAIN_MODE_ON2 (1 << 12)
 
@@ -37,6 +39,7 @@
 
 #define ELANTP_DELAY_COMPLETE	     1200 /* ms */
 #define ELANTP_DELAY_RESET	     30	  /* ms */
+#define ELANTP_DELAY_RESET_MASTER    500  /* ms */
 #define ELANTP_EEPROM_READ_DELAY     100  /* ms */
 #define ELANTP_DELAY_UNLOCK	     100  /* ms */
 #define ELANTP_DELAY_WRITE_BLOCK     35	  /* ms */
