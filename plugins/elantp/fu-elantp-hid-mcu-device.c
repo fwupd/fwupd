@@ -876,11 +876,11 @@ fu_elantp_hid_mcu_device_attach(FuDevice *device, FuProgress *progress, GError *
 		return FALSE;
 	}
 	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
-						   FU_ETP_CMD_I2C_IAP_RESET,
-						   ETP_I2C_IAP_RESET,
+						   FU_ETP_CMD_I2C_TP_SETTING,
+						   ETP_I2C_IAP_MASTER_RESET,
 						   error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
+	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET_MASTER);
 	if (!fu_elantp_hid_mcu_device_tp_write_cmd(proxy,
 						   FU_ETP_CMD_I2C_IAP_RESET,
 						   ETP_I2C_ENABLE_REPORT,
@@ -965,7 +965,7 @@ fu_elantp_hid_mcu_device_init(FuElantpHidMcuDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "HapticPad MCU");
 	fu_device_set_logical_id(FU_DEVICE(self), "mcu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_HID_MCU_DEVICE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_HID_DEVICE);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 }
 
