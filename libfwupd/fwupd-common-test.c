@@ -7,10 +7,24 @@
 #include "config.h"
 
 #include "fwupd-client.h"
-#include "fwupd-common.h"
+#include "fwupd-common-private.h"
 #include "fwupd-device.h"
 #include "fwupd-release.h"
 #include "fwupd-test.h"
+
+static void
+fwupd_variant_func(void)
+{
+	g_autoptr(GVariant) v_i32 = g_variant_new_int32(1234);
+	g_autoptr(GVariant) v_i64 = g_variant_new_int64(1234);
+	g_autoptr(GVariant) v_u32 = g_variant_new_uint32(1234);
+	g_autoptr(GVariant) v_u64 = g_variant_new_uint64(1234);
+
+	g_assert_cmpint(fwupd_variant_get_uint32(v_u32), ==, 1234);
+	g_assert_cmpint(fwupd_variant_get_uint32(v_i32), ==, 1234);
+	g_assert_cmpint(fwupd_variant_get_uint64(v_i64), ==, 1234);
+	g_assert_cmpint(fwupd_variant_get_uint64(v_u64), ==, 1234);
+}
 
 static void
 fwupd_common_history_report_func(void)
@@ -175,5 +189,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common/device-id", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common/guid", fwupd_common_guid_func);
 	g_test_add_func("/fwupd/common/history-report", fwupd_common_history_report_func);
+	g_test_add_func("/fwupd/common/variant", fwupd_variant_func);
 	return g_test_run();
 }

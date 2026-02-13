@@ -1,5 +1,7 @@
 host_machine.system() == 'linux' or subdir_done()
 
+subdir('tests')
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -11,7 +13,6 @@ plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
   ),
   sources: [
     'fu-synaptics-mst-plugin.c',
-    'fu-synaptics-mst-common.c',
     'fu-synaptics-mst-device.c',
     'fu-synaptics-mst-firmware.c',      # fuzzing
   ],
@@ -32,8 +33,6 @@ enumeration_data += files(
 )
 
 if get_option('tests')
-  install_data(['tests/synaptics-mst.builder.xml'],
-    install_dir: join_paths(installed_test_datadir, 'tests'))
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())

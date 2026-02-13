@@ -339,7 +339,8 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 }
 
 gboolean
-fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
+fu_uefi_bootmgr_bootnext(FuPathStore *pstore,
+			 FuEfivars *efivars,
 			 FuVolume *esp,
 			 const gchar *description,
 			 FuUefiBootmgrFlags flags,
@@ -359,7 +360,7 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	g_autoptr(GError) error_local = NULL;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
+	source_app = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
 	if (source_app == NULL)
 		return FALSE;
 
@@ -367,12 +368,12 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
 		g_debug("ignoring: %s", error_local->message);
 	if (secureboot_enabled) {
-		shim_app = fu_uefi_get_esp_app_path(esp_path, "shim", error);
+		shim_app = fu_uefi_get_esp_app_path(pstore, esp_path, "shim", error);
 		if (shim_app == NULL)
 			return FALSE;
 
 		/* copy in an updated shim if we have one */
-		source_shim = fu_uefi_get_built_app_path(efivars, "shim", NULL);
+		source_shim = fu_uefi_get_built_app_path(pstore, efivars, "shim", NULL);
 		if (source_shim != NULL) {
 			if (!fu_uefi_esp_target_verify(source_shim, esp, shim_app)) {
 				if (!fu_uefi_bootmgr_shim_is_safe(efivars, source_shim, error))
@@ -385,7 +386,8 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 		if (fu_uefi_esp_target_exists(esp, shim_app)) {
 			/* use a custom copy of shim for firmware updates */
 			if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
-				shim_cpy = fu_uefi_get_esp_app_path(esp_path, "shimfwupd", error);
+				shim_cpy =
+				    fu_uefi_get_esp_app_path(pstore, esp_path, "shimfwupd", error);
 				if (shim_cpy == NULL)
 					return FALSE;
 				if (!fu_uefi_esp_target_verify(shim_app, esp, shim_cpy)) {
@@ -412,7 +414,7 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	}
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path(esp_path, "fwupd", error);
+	target_app = fu_uefi_get_esp_app_path(pstore, esp_path, "fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
 	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {

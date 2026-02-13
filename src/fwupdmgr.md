@@ -93,24 +93,19 @@ the exact same hardware, both available on the LVFS.
 
 **sync**: Install all releases with a matching BKC tag if a "Best Known Configuration" has been set for the local machine.
 
-### Approved and Blocked Firmware
+### Approved Firmware
 
-The following actions can be used to block or allow specific firmware releases from being installed:
-
-**get-blocked-firmware**: Gets the list of blocked firmware as a list of checksums.
-
-**block-firmware**: Blocks a specific firmware from being installed by **install** or **update**.
-
-**unblock-firmware**: Unblocks a specific firmware from being installed or updated.
+The following actions can be used to allow specific firmware releases from being installed:
 
 The following actions can be used to control the allowlist of specific firmwares:
 
-**set-approved-firmware**: Sets the list of approved firmware.
-Once the allow-list has been set to a non-empty value only firmware matching these checksums will be installable.
+**set-approved-firmware**: Sets the list of approved firmware for remotes.
+Once the allow-list has been set to a non-empty value only firmware matching these checksums will be marked as installable.
+It is still possible to install firmware "manually" using `fwupdmgr install` -- this setting only affects firmware updates referenced in enabled remotes with the `ApprovalRequired=true` setting.
 
 **get-approved-firmware**: Gets the list of approved firmware, returning an empty list if there is no allow-list in place.
 
-The checksums used for allowing or disallowing are the cabinet archive checksums in SHA-1 or SHA-256 format.
+The checksums used for allowing are the cabinet archive checksums in SHA-1 or SHA-256 format.
 
 ### Emulation
 

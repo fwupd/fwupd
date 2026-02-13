@@ -12,7 +12,6 @@
 
 #include <fcntl.h>
 
-#include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
 #include "fu-synaptics-mst-struct.h"
@@ -937,7 +936,7 @@ fu_synaptics_mst_device_update_panamera_set_new_valid_cb(FuDevice *device,
 	buf[3] = g_date_time_get_year(dt) - 2000;
 	buf[4] = (helper->checksum >> 8) & 0xff;
 	buf[5] = helper->checksum & 0xff;
-	buf[15] = fu_synaptics_mst_calculate_crc8(0, buf, sizeof(buf) - 1);
+	buf[15] = fu_crc8(FU_CRC_KIND_B8_DVB_S2, buf, sizeof(buf) - 1);
 	g_debug("tag date %x %x %x crc %x %x %x %x",
 		buf[1],
 		buf[2],
@@ -1080,9 +1079,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
-	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
-							    g_bytes_get_data(helper->fw, NULL),
-							    g_bytes_get_size(helper->fw));
+	helper->checksum = fu_crc16_bytes(FU_CRC_KIND_B16_UMTS, helper->fw);
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_BANK_OFFSET * helper->bank_to_update,
@@ -1307,9 +1304,7 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
-	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
-							    g_bytes_get_data(helper->fw, NULL),
-							    g_bytes_get_size(helper->fw));
+	helper->checksum = fu_crc16_bytes(FU_CRC_KIND_B16_UMTS, helper->fw);
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       FU_CHUNK_ADDR_OFFSET_NONE,
@@ -1627,6 +1622,24 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 	return TRUE;
 }
 
+static FuSynapticsMstFamily
+fu_synaptics_mst_device_family_from_chip_id(guint16 chip_id)
+{
+	if (chip_id >= 0x8000 && chip_id < 0xA000)
+		return FU_SYNAPTICS_MST_FAMILY_CARRERA;
+	if (chip_id >= 0x7000 && chip_id < 0x8000)
+		return FU_SYNAPTICS_MST_FAMILY_SPYDER;
+	if ((chip_id >= 0x6000 && chip_id < 0x7000) || (chip_id >= 0x8000 && chip_id < 0x9000))
+		return FU_SYNAPTICS_MST_FAMILY_CAYENNE;
+	if (chip_id >= 0x5000 && chip_id < 0x6000)
+		return FU_SYNAPTICS_MST_FAMILY_PANAMERA;
+	if (chip_id >= 0x3000 && chip_id < 0x4000)
+		return FU_SYNAPTICS_MST_FAMILY_LEAF;
+	if (chip_id >= 0x2000 && chip_id < 0x3000)
+		return FU_SYNAPTICS_MST_FAMILY_TESLA;
+	return FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
+}
+
 static gboolean
 fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 {
@@ -1711,7 +1724,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 				    "invalid chip ID");
 		return FALSE;
 	}
-	self->family = fu_synaptics_mst_family_from_chip_id(self->chip_id);
+	self->family = fu_synaptics_mst_device_family_from_chip_id(self->chip_id);
 
 	/* VMM >= 6 use RSA2048 */
 	switch (self->family) {

@@ -59,6 +59,7 @@ static gboolean
 fu_mm_qcdm_device_switch_to_edl_cb(FuDevice *device, gpointer userdata, GError **error)
 {
 	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
+	/* nocheck:magic */
 	const guint8 buf[] = {0x4B, 0x65, 0x01, 0x00, 0x54, 0x0F, 0x7E};
 
 	/* when the QCDM port does not exist anymore, we are detached */

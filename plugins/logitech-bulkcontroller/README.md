@@ -42,8 +42,8 @@ and the device will reset when the new firmware has been written.
 There are two protocols in use, `LogitechBulkcontrollerSendSync` and `LogitechBulkcontrollerSendUpd`
 which correspond to the two different bulk endpoints.
 
-The "Sync" interface accepts protobuf-formatted binary data as described in `proto/`, encapsulated
-further in a `LogitechBulkcontrollerSendSyncReq` and returned as a `LogitechBulkcontrollerSendSyncRes`.
+The "Sync" interface accepts protobuf-formatted binary data, encapsulated further in a
+`LogitechBulkcontrollerSendSyncReq` and returned as a `LogitechBulkcontrollerSendSyncRes`.
 
 The sequence IDs seem to be used to allow parallel queries, although in practice some of the IDs
 are hardcoded to zero even when setting them in the request.

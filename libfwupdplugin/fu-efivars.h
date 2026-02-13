@@ -9,6 +9,7 @@
 
 #include "fu-efi-load-option.h"
 #include "fu-efi-struct.h"
+#include "fu-path-store.h"
 #include "fu-volume.h"
 
 #define FU_TYPE_EFIVARS (fu_efivars_get_type())
@@ -58,7 +59,7 @@ struct _FuEfivarsClass {
 #define FU_EFIVARS_GUID_SHIM		   "605dab50-e046-4300-abb6-3dd810dd8b23"
 
 FuEfivars *
-fu_efivars_new(void);
+fu_efivars_new(FuPathStore *pstore);
 gboolean
 fu_efivars_supported(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 guint64

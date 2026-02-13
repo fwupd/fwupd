@@ -10,6 +10,7 @@
 #include <xmlb.h>
 
 #include "fu-common-struct.h"
+#include "fu-path-store.h"
 
 /**
  * FU_BIT_SET:
@@ -65,14 +66,14 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
 FuCpuVendor
 fu_cpu_get_vendor(void);
 GHashTable *
-fu_cpu_get_attrs(GError **error);
+fu_cpu_get_attrs(FuPathStore *pstore, GError **error);
 
 guint64
 fu_common_get_memory_size(void);
 gchar *
 fu_common_get_kernel_cmdline(GError **error);
 gchar *
-fu_common_get_olson_timezone_id(GError **error);
+fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error);
 
 gsize
 fu_common_align_up(gsize value, guint8 alignment);

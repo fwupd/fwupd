@@ -577,3 +577,33 @@ fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(fd, TRUE));
 }
 #endif
+
+/**
+ * fwupd_variant_get_uint32: (skip):
+ * @value: a #GVariant
+ *
+ * Gets an unsigned integer from a variant, handling both 'u' and 'i' types.
+ **/
+guint32
+fwupd_variant_get_uint32(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, 0);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT32))
+		return (guint32)g_variant_get_int32(value);
+	return g_variant_get_uint32(value);
+}
+
+/**
+ * fwupd_variant_get_uint64: (skip):
+ * @value: a #GVariant
+ *
+ * Gets an unsigned integer from a variant, handling both 't' and 'x' types.
+ **/
+guint64
+fwupd_variant_get_uint64(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, 0);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT64))
+		return (guint64)g_variant_get_int64(value);
+	return g_variant_get_uint64(value);
+}

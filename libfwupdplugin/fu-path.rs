@@ -72,4 +72,6 @@ enum FuPathKind {
     DatadirVendorIds,
     // The debugfs directory (/sys/kernel/debug)
     Debugfsdir,
+    // The UEFI ESP, typically autodetected using udisks
+    UefiEsp,
 }

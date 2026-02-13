@@ -54,6 +54,7 @@ static gboolean
 fu_logitech_rallysystem_audio_device_ensure_serial(FuLogitechRallysystemAudioDevice *self,
 						   GError **error)
 {
+	/* nocheck:magic */
 	guint8 buf_req[SERIAL_NUMBER_REQUEST_DATA_LEN] =
 	    {0x28, 0x85, 0x08, 0xBB, 0x1B, 0x00, 0x01, 0x30, 0, 0, 0, 0x0C};
 	guint8 buf_res[SERIAL_NUMBER_RESPONSE_DATA_LEN] = {0x29, 0x0};

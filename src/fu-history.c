@@ -603,9 +603,7 @@ fu_history_load(FuHistory *self, GError **error)
 {
 	gint rc;
 	guint schema_ver;
-	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(GFile) file = NULL;
 
 	/* already done */
 	if (self->db != NULL)
@@ -614,16 +612,18 @@ fu_history_load(FuHistory *self, GError **error)
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(self->db == NULL, FALSE);
 
-	/* create directory */
-	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	file = g_file_new_for_path(dirname);
-	if (!g_file_query_exists(file, NULL)) {
-		if (!g_file_make_directory_with_parents(file, NULL, error))
-			return FALSE;
-	}
-
 	/* open */
-	filename = g_build_filename(dirname, "pending.db", NULL);
+	filename = fu_context_build_filename(self->ctx,
+					     error,
+					     FU_PATH_KIND_LOCALSTATEDIR_PKG,
+					     "pending.db",
+					     NULL);
+	if (filename == NULL) {
+		g_prefix_error_literal(error, "no history: ");
+		return FALSE;
+	}
+	if (!fu_path_mkdir_parent(filename, error))
+		return FALSE;
 	if (!fu_history_open(self, filename, error))
 		return FALSE;
 
@@ -1287,138 +1287,6 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 	/* add */
 	rc = sqlite3_prepare_v2(self->db,
 				"INSERT INTO approved_firmware (checksum) "
-				"VALUES (?1)",
-				-1,
-				&stmt,
-				NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to prepare SQL to insert checksum: %s",
-			    sqlite3_errmsg(self->db));
-		return FALSE;
-	}
-	sqlite3_bind_text(stmt, 1, checksum, -1, SQLITE_STATIC);
-	return fu_history_stmt_exec(self, stmt, NULL, error);
-}
-
-/**
- * fu_history_get_blocked_firmware:
- * @self: a #FuHistory
- * @error: (nullable): optional return location for an error
- *
- * Returns blocked firmware records.
- *
- * Returns: (transfer full) (element-type gchar *): records
- *
- * Since: 1.4.6
- **/
-GPtrArray *
-fu_history_get_blocked_firmware(FuHistory *self, GError **error)
-{
-	gint rc;
-	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-
-	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
-
-	/* lazy load */
-	if (self->db == NULL) {
-		if (!fu_history_load(self, error))
-			return NULL;
-	}
-
-	/* get all the blocked firmware */
-	rc =
-	    sqlite3_prepare_v2(self->db, "SELECT checksum FROM blocked_firmware;", -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to prepare SQL to get checksum: %s",
-			    sqlite3_errmsg(self->db));
-		return NULL;
-	}
-	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-		const gchar *tmp = (const gchar *)sqlite3_column_text(stmt, 0);
-		g_ptr_array_add(array, g_strdup(tmp));
-	}
-	if (rc != SQLITE_DONE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "failed to execute prepared statement: %s",
-			    sqlite3_errmsg(self->db));
-		return NULL;
-	}
-	return g_steal_pointer(&array);
-}
-
-/**
- * fu_history_clear_blocked_firmware:
- * @self: a #FuHistory
- * @error: (nullable): optional return location for an error
- *
- * Clear all blocked firmware records
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.4.6
- **/
-gboolean
-fu_history_clear_blocked_firmware(FuHistory *self, GError **error)
-{
-	gint rc;
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-
-	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
-
-	/* lazy load */
-	if (!fu_history_load(self, error))
-		return FALSE;
-
-	/* remove entries */
-	rc = sqlite3_prepare_v2(self->db, "DELETE FROM blocked_firmware;", -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to prepare SQL to delete blocked firmware: %s",
-			    sqlite3_errmsg(self->db));
-		return FALSE;
-	}
-	return fu_history_stmt_exec(self, stmt, NULL, error);
-}
-
-/**
- * fu_history_add_blocked_firmware:
- * @self: a #FuHistory
- * @checksum: a string
- * @error: (nullable): optional return location for an error
- *
- * Add an blocked firmware record to the database
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.4.6
- **/
-gboolean
-fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError **error)
-{
-	gint rc;
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-
-	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
-	g_return_val_if_fail(checksum != NULL, FALSE);
-
-	/* lazy load */
-	if (!fu_history_load(self, error))
-		return FALSE;
-
-	/* add */
-	rc = sqlite3_prepare_v2(self->db,
-				"INSERT INTO blocked_firmware (checksum) "
 				"VALUES (?1)",
 				-1,
 				&stmt,

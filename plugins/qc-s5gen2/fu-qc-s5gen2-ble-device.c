@@ -390,9 +390,11 @@ fu_qc_s5gen2_ble_device_get_serial(FuQcS5gen2BleDevice *self, GError **error)
 	if (st_res == NULL)
 		return FALSE;
 
-	serial = fu_strsafe((gchar *)(buf + FU_STRUCT_QC_GAIA_V3_SERIAL_SIZE),
-			    read_len - FU_STRUCT_QC_GAIA_V3_SERIAL_SIZE);
-
+	serial = fu_memstrsafe(buf,
+			       sizeof(buf),
+			       FU_STRUCT_QC_GAIA_V3_SERIAL_SIZE,
+			       read_len - FU_STRUCT_QC_GAIA_V3_SERIAL_SIZE,
+			       NULL);
 	if (serial != NULL)
 		fu_device_set_serial(FU_DEVICE(self), serial);
 
@@ -422,9 +424,11 @@ fu_qc_s5gen2_ble_device_get_variant(FuQcS5gen2BleDevice *self, GError **error)
 	if (st_res == NULL)
 		return FALSE;
 
-	variant = fu_strsafe((gchar *)(buf + FU_STRUCT_QC_GAIA_V3_VARIANT_SIZE),
-			     read_len - FU_STRUCT_QC_GAIA_V3_VARIANT_SIZE);
-
+	variant = fu_memstrsafe(buf,
+				sizeof(buf),
+				FU_STRUCT_QC_GAIA_V3_VARIANT_SIZE,
+				read_len - FU_STRUCT_QC_GAIA_V3_VARIANT_SIZE,
+				NULL);
 	if (variant == NULL) {
 		g_debug("read non-printable device variant, skipping");
 		return TRUE;

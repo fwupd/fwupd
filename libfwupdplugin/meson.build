@@ -6,6 +6,7 @@ fwupdplugin_structs = [
   'fu-archive.rs', # fuzzing
   'fu-cab.rs', # fuzzing
   'fu-cfi.rs', # fuzzing
+  'fu-cfu.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-config.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
@@ -35,6 +36,7 @@ fwupdplugin_structs = [
   'fu-pefile.rs', # fuzzing
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
+  'fu-protobuf.rs', # fuzzing
   'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
@@ -184,6 +186,7 @@ fwupdplugin_src = [
   'fu-pci-device.c',
   'fu-pkcs7.c',
   'fu-processor-device.c',
+  'fu-protobuf.c', # fuzzing
   'fu-oprom-device.c',
   'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
@@ -220,6 +223,7 @@ fwupdplugin_src = [
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
   'fu-x509-certificate.c', # fuzzing
+  'fu-xor.c', # fuzzing
   'fu-zip-firmware.c', # fuzzing
   'fu-zip-file.c', # fuzzing
 ]
@@ -391,6 +395,7 @@ fwupdplugin_headers = [
   'fu-volume.h',
   'fu-volume-locker.h',
   'fu-x509-certificate.h',
+  'fu-xor.h',
   'fu-zip-file.h',
   'fu-zip-firmware.h',
 ]
@@ -444,6 +449,7 @@ fwupdplugin_rs_dep = declare_dependency(
   sources: fwupdplugin_rs_headers,
 )
 
+fwupdplugin_gir_includes = []
 if introspection.allowed()
   gir_dep = declare_dependency(
     sources: fwupd_gir
@@ -451,7 +457,11 @@ if introspection.allowed()
   girtargets = []
   extra_args = []
   if libxmlb.type_name() == 'internal'
-    girtargets += subproject('libxmlb').get_variable('gir')[0]
+    libxmlb_gir = subproject('libxmlb').get_variable('gir')[0]
+    fwupdplugin_gir_includes += [
+      fs.parent(libxmlb_gir.full_path()),
+    ]
+    girtargets += libxmlb_gir
   else
     girtargets += 'Xmlb-2.0'
   endif
@@ -499,6 +509,8 @@ if get_option('tests')
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
   foreach test_name: [
+    'archive',
+    'backend',
     'bios-settings',
     'byte-array',
     'bytes',
@@ -506,11 +518,17 @@ if get_option('tests')
     'chunk-array',
     'common',
     'composite-input-stream',
+    'config',
+    'context',
+    'device',
     'device-event',
     'device-locker',
     'efi',
+    'efivars',
+    'fdt-firmware',
     'firmware',
     'hid-descriptor',
+    'hwids',
     'ihex-firmware',
     'input-stream',
     'intel-me',
@@ -521,15 +539,20 @@ if get_option('tests')
     'msgpack',
     'partial-input-stream',
     'path-store',
+    'plugin',
     'progress',
+    'protobuf',
+    'quirks',
     'security-attrs',
-    'self',
+    'smbios',
     'srec-firmware',
     'string',
     'struct',
     'temporary-directory',
+    'udev-device',
     'version',
     'volume',
+    'xor',
   ]
     e = executable(
       'fwupdplugin-' + test_name + '-test',
@@ -553,7 +576,6 @@ if get_option('tests')
       e,
       timeout: 180,
       env: env,
-      args: ['--tap'],
     )
   endforeach
 endif

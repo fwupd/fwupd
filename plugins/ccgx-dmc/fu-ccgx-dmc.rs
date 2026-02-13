@@ -214,7 +214,7 @@ struct FuStructCcgxDmcIntRqt {
 #[derive(New, ParseStream, ValidateStream, Default)]
 #[repr(C, packed)]
 struct FuStructCcgxDmcFwctInfo {
-    signature: u32le == 0x54435746, // 'F' 'W' 'C' 'T'
+    signature: [char; 4] == "FWCT",
     size: u16le,
     checksum: u8,
     version: u8,

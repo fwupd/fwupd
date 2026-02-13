@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuAcpiDmarPlugin, fu_acpi_dmar_plugin, FU_TYPE_PLUGIN)
 static void
 fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -34,7 +35,12 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	/* load DMAR table */
-	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "DMAR", NULL);
+	fn = fu_context_build_filename(ctx, &error_local, FU_PATH_KIND_ACPI_TABLES, "DMAR", NULL);
+	if (fn == NULL) {
+		g_debug("failed to build: %s", error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
 	stream = fu_input_stream_from_path(fn, &error_local);
 	if (stream == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);

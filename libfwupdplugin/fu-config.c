@@ -33,11 +33,14 @@ typedef struct {
 } FuConfigItem;
 
 typedef struct {
+	FuPathStore *pstore;
 	GKeyFile *keyfile;
 	GHashTable *default_values;
 	GPtrArray *items; /* (element-type FuConfigItem) */
 	gchar *basename;
 } FuConfigPrivate;
+
+enum { PROP_0, PROP_PATH_STORE, PROP_LAST };
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuConfig, fu_config, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_config_get_instance_private(o))
@@ -172,7 +175,6 @@ fu_config_migrate_keyfile(FuConfig *self)
 		const gchar *value;
 	} key_values[] = {{"fwupd", "ApprovedFirmware", NULL},
 			  {"fwupd", "ArchiveSizeMax", "0"},
-			  {"fwupd", "BlockedFirmware", NULL},
 			  {"fwupd", "DisabledDevices", NULL},
 			  {"fwupd", "EnumerateAllDevices", NULL},
 			  {"fwupd", "EspLocation", NULL},
@@ -395,6 +397,15 @@ fu_config_save(FuConfig *self, GError **error)
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *data = NULL;
 
+	/* sanity check */
+	if (priv->items->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no config locations found");
+		return FALSE;
+	}
+
 	data = g_key_file_to_data(priv->keyfile, NULL, error);
 	if (data == NULL)
 		return FALSE;
@@ -417,6 +428,30 @@ fu_config_save(FuConfig *self, GError **error)
 	/* failed */
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no writable config");
 	return FALSE;
+}
+
+/**
+ * fu_config_set_value_internal:
+ * @self: a #FuConfig
+ * @section: a settings section
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ *
+ * Sets a plugin config value, *not* saving to a config file.
+ *
+ * Since: 2.1.1
+ **/
+void
+fu_config_set_value_internal(FuConfig *self,
+			     const gchar *section,
+			     const gchar *key,
+			     const gchar *value)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONFIG(self));
+	g_return_if_fail(section != NULL);
+	g_return_if_fail(key != NULL);
+	g_key_file_set_string(priv->keyfile, section, key, value);
 }
 
 /**
@@ -693,17 +728,23 @@ gboolean
 fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *configdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALCONFDIR_PKG);
-	g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+	const gchar *configdir_mut;
+	const gchar *configdir;
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	g_return_val_if_fail(priv->items->len == 0, FALSE);
 
 	/* load the main daemon config file */
-	if (!fu_config_add_location(self, configdir, FALSE, error))
-		return FALSE;
-	if (!fu_config_add_location(self, configdir_mut, TRUE, error))
-		return FALSE;
+	configdir = fu_path_store_get_path(priv->pstore, FU_PATH_KIND_SYSCONFDIR_PKG, NULL);
+	if (configdir != NULL) {
+		if (!fu_config_add_location(self, configdir, FALSE, error))
+			return FALSE;
+	}
+	configdir_mut = fu_path_store_get_path(priv->pstore, FU_PATH_KIND_LOCALCONFDIR_PKG, NULL);
+	if (configdir_mut != NULL) {
+		if (!fu_config_add_location(self, configdir_mut, TRUE, error))
+			return FALSE;
+	}
 	if (!fu_config_reload(self, flags, error))
 		return FALSE;
 
@@ -726,6 +767,35 @@ fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 	fu_config_emit_loaded(self);
 	return TRUE;
 }
+static void
+fu_config_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuConfig *self = FU_CONFIG(object);
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_PATH_STORE:
+		g_value_set_object(value, priv->pstore);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_config_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuConfig *self = FU_CONFIG(object);
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_PATH_STORE:
+		g_set_object(&priv->pstore, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
 
 static void
 fu_config_init(FuConfig *self)
@@ -742,6 +812,7 @@ fu_config_finalize(GObject *obj)
 {
 	FuConfig *self = FU_CONFIG(obj);
 	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_object_unref(priv->pstore);
 	g_free(priv->basename);
 	g_key_file_unref(priv->keyfile);
 	g_ptr_array_unref(priv->items);
@@ -753,7 +824,18 @@ static void
 fu_config_class_init(FuConfigClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fu_config_finalize;
+	object_class->get_property = fu_config_get_property;
+	object_class->set_property = fu_config_set_property;
+
+	pspec = g_param_spec_object("path-store",
+				    NULL,
+				    NULL,
+				    FU_TYPE_PATH_STORE,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PATH_STORE, pspec);
 
 	/**
 	 * FuConfig::changed:
@@ -792,6 +874,7 @@ fu_config_class_init(FuConfigClass *klass)
 
 /**
  * fu_config_new:
+ * @pstore: a #FuPathStore
  *
  * Creates a new #FuConfig.
  *
@@ -800,7 +883,10 @@ fu_config_class_init(FuConfigClass *klass)
  * Since: 1.9.1
  **/
 FuConfig *
-fu_config_new(void)
+fu_config_new(FuPathStore *pstore)
 {
-	return FU_CONFIG(g_object_new(FU_TYPE_CONFIG, NULL));
+	FuConfig *self;
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	self = g_object_new(FU_TYPE_CONFIG, "path-store", pstore, NULL);
+	return FU_CONFIG(self);
 }
