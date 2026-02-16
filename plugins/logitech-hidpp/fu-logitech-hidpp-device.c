@@ -1371,6 +1371,11 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID))
 		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 
+	/* the bolt receiver seems to report junk if we query it too quickly -- we're probably
+	 * racing with wither the kernel or Solaar */
+	if (priv->device_idx == FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER)
+		fu_device_sleep(device, 50); /* ms */
+
 	/* ping device to get HID++ version */
 	if (!fu_logitech_hidpp_device_ping(self, error)) {
 		g_prefix_error_literal(error, "failed to ping: ");
