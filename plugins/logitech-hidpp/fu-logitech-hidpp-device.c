@@ -1823,60 +1823,33 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
-					     FuFirmware *firmware,
-					     FuProgress *progress,
-					     FwupdInstallFlags flags,
-					     GError **error)
+fu_logitech_hidpp_device_write_firmware_rdfu_img(FuLogitechHidppDevice *self,
+						 FuLogitechRdfuFirmware *entity_fw,
+						 FuProgress *progress,
+						 FwupdInstallFlags flags,
+						 GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	FuLogitechRdfuFirmware *entity_fw = NULL;
-	guint8 idx;
 	guint retry = 0;
-	g_autoptr(GByteArray) magic = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *entity_id = g_strdup_printf("%u", priv->cached_fw_entity);
-	g_autofree gchar *model_id = NULL;
 
-	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
-	if (idx == 0x00) {
-		g_set_error_literal(error,
+	/* verify model */
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+		g_autofree gchar *model_id = NULL;
+		model_id = fu_logitech_rdfu_firmware_get_model_id(entity_fw, error);
+		if (model_id == NULL)
+			return FALSE;
+		if (g_strcmp0(priv->model_id, model_id) != 0) {
+			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no RDFU feature available");
-		return FALSE;
+				    "firmware for model %s, but the target is %s",
+				    model_id,
+				    priv->model_id);
+			return FALSE;
+		}
 	}
-
-	entity_fw =
-	    (FuLogitechRdfuFirmware *)fu_firmware_get_image_by_id(firmware, entity_id, error);
-	if (entity_fw == NULL)
-		return FALSE;
-
-	model_id = fu_logitech_rdfu_firmware_get_model_id(entity_fw, error);
-	if (model_id == NULL)
-		return FALSE;
-
-	if (g_strcmp0(priv->model_id, model_id) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "firmware for model %s, but the target is %s",
-			    model_id,
-			    priv->model_id);
-		return FALSE;
-	}
-
-	magic = fu_logitech_rdfu_firmware_get_magic(entity_fw, error);
-	if (magic == NULL)
-		return FALSE;
-
-	blocks = fu_logitech_rdfu_firmware_get_blocks(entity_fw, error);
-	if (blocks == NULL)
-		return FALSE;
-
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	fu_progress_set_id(progress, G_STRLOC);
 
 	/* check if we in update mode already */
 	if (!fu_logitech_hidpp_device_rdfu_get_dfu_status(self, &error_local)) {
@@ -1889,10 +1862,20 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
 
 	/* device requested to start or restart for some reason */
 	if (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_NOT_STARTED) {
+		g_autoptr(GByteArray) magic = NULL;
+
+		magic = fu_logitech_rdfu_firmware_get_magic(entity_fw, error);
+		if (magic == NULL)
+			return FALSE;
 		if (!fu_logitech_hidpp_device_rdfu_start_dfu(self, magic, error))
 			return FALSE;
 	}
 
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_id(progress, G_STRLOC);
+	blocks = fu_logitech_rdfu_firmware_get_blocks(entity_fw, error);
+	if (blocks == NULL)
+		return FALSE;
 	while (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_TRANSFER) {
 		/* update progress-bar here to avoid jumps caused dfu-transfer-complete */
 		fu_progress_set_percentage_full(progress, priv->rdfu_block, blocks->len);
@@ -1921,9 +1904,41 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
 	if (!fu_logitech_hidpp_device_rdfu_apply_dfu(self, priv->cached_fw_entity, error))
 		return FALSE;
 
+	/* success */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-
 	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
+					     FuFirmware *firmware,
+					     FuProgress *progress,
+					     FwupdInstallFlags flags,
+					     GError **error)
+{
+	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
+	guint8 idx;
+	g_autoptr(FuFirmware) entity_fw = NULL;
+	g_autofree gchar *entity_id = g_strdup_printf("%u", priv->cached_fw_entity);
+
+	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
+	if (idx == 0x00) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no RDFU feature available");
+		return FALSE;
+	}
+
+	entity_fw = fu_firmware_get_image_by_id(firmware, entity_id, error);
+	if (entity_fw == NULL)
+		return FALSE;
+	return fu_logitech_hidpp_device_write_firmware_rdfu_img(
+	    self,
+	    FU_LOGITECH_RDFU_FIRMWARE(entity_fw),
+	    progress,
+	    flags,
+	    error);
 }
 
 static gboolean
