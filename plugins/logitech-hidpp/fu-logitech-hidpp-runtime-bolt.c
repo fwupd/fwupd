@@ -282,6 +282,10 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 	const guint timeout = 1; /* ms */
 	g_autoptr(GPtrArray) msgs = g_ptr_array_new_with_free_func(g_free);
 
+	/* not predictable for time */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	/* open -- not a locker as we have no kernel driver */
 	if (!fu_device_open(device, error))
 		return FALSE;
