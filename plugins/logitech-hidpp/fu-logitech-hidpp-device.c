@@ -1821,11 +1821,11 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 					    GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	gsize sz = 0;
-	const guint8 *data;
 	guint8 cmd = 0x04;
+	guint8 fw_entity = 0;
 	guint8 idx;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
@@ -1838,27 +1838,39 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 	}
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 0x0, 16, error);
+	if (chunks == NULL)
 		return FALSE;
 
 	/* flash hardware -- the first data byte is the fw entity */
-	data = g_bytes_get_data(fw, &sz);
-	if (priv->cached_fw_entity != data[0]) {
-		g_debug("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, data[0]);
-		priv->cached_fw_entity = data[0];
+	if (!fu_input_stream_read_u8(stream, 0x0, &fw_entity, error))
+		return FALSE;
+	if (priv->cached_fw_entity != fw_entity) {
+		g_debug("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, fw_entity);
+		priv->cached_fw_entity = fw_entity;
 	}
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	for (gsize i = 0; i < sz / 16; i++) {
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+
 		/* send packet and wait for reply */
-		g_debug("send data at addr=0x%04x", (guint)i * 16);
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_logitech_hidpp_device_write_firmware_pkt(self,
 								 idx,
 								 cmd,
-								 data + (i * 16),
-								 16,
+								 fu_chunk_get_data(chk),
+								 fu_chunk_get_data_sz(chk),
 								 error)) {
-			g_prefix_error(error, "failed to write @0x%04x: ", (guint)i * 16);
+			g_prefix_error(error,
+				       "failed to write @0x%04x: ",
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 
@@ -1866,9 +1878,10 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 		cmd = (cmd + 1) % 4;
 
 		/* update progress-bar */
-		fu_progress_set_percentage_full(progress, (i + 1) * 16, sz);
+		fu_progress_step_done(progress);
 	}
 
+	/* success */
 	return TRUE;
 }
 
