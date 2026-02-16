@@ -194,7 +194,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	/* set appropriate limits */
 	fwupd_json_parser_set_max_depth(json_parser, 10);
 	fwupd_json_parser_set_max_items(json_parser, 100);
-	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+	fwupd_json_parser_set_max_quoted(json_parser, 50000);
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
