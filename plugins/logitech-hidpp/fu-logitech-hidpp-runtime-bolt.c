@@ -252,7 +252,6 @@ fu_logitech_hidpp_runtime_bolt_poll_peripheral(FuLogitechHidppRuntime *self,
 		g_autoptr(FuLogitechHidppDevice) child = NULL;
 
 		child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
-		fu_device_set_proxy_gtype(FU_DEVICE(child), FU_TYPE_UDEV_DEVICE);
 		fu_device_set_install_duration(FU_DEVICE(child), 270);
 		fu_device_set_name(FU_DEVICE(child), name);
 		fu_logitech_hidpp_device_set_device_idx(child, i);

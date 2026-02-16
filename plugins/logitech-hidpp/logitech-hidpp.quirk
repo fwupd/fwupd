@@ -17,6 +17,7 @@ InstallDuration = 30
 Plugin = logitech_hidpp
 Name = Bolt Receiver
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
 InstallDuration = 30
 Flags = rebind-attach,force-receiver-id,replug-match-guid,counterpart-visible
@@ -80,6 +81,7 @@ InstallDuration = 18
 [HIDRAW\VEN_046D&DEV_405B]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 ParentGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 150
 
@@ -87,12 +89,14 @@ InstallDuration = 150
 [HIDRAW\VEN_046D&MOD_B02800000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 InstallDuration = 270
 
 # MR0077 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B028]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach
 InstallDuration = 270
 
@@ -100,12 +104,14 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B36300000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 InstallDuration = 270
 
 # YR0073 (BLE direct)
 [HIDRAW\VEN_046D&DEV_B363]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach
 InstallDuration = 270
 
@@ -113,6 +119,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B02A00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = no-request-required
 InstallDuration = 270
 
@@ -120,6 +127,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B02A]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
@@ -127,6 +135,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B02C00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = no-request-required
 InstallDuration = 270
 
@@ -134,6 +143,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B02C]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
@@ -141,6 +151,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B03200000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = no-request-required
 InstallDuration = 270
 
@@ -148,6 +159,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B032]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
@@ -155,6 +167,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B02B00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = no-request-required
 InstallDuration = 270
 
@@ -162,6 +175,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B02B]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
@@ -169,6 +183,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B36F00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = no-request-required
 InstallDuration = 270
 
@@ -176,6 +191,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B36F]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
@@ -183,6 +199,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B37000000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = no-request-required
 InstallDuration = 270
 
@@ -190,6 +207,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B370]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,rebind-attach,no-request-required
 InstallDuration = 270
 
@@ -197,5 +215,6 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&DEV_B34E]
 Plugin = logitech_hidpp
 GType = FuLogitechHidppDevice
+ProxyGType = FuUdevDevice
 Flags = ble,no-request-required
 InstallDuration = 650

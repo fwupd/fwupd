@@ -9,16 +9,11 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_LOGITECH_HIDPP_DEVICE (fu_logitech_hidpp_device_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuLogitechHidppDevice,
-			 fu_logitech_hidpp_device,
-			 FU,
-			 LOGITECH_HIDPP_DEVICE,
-			 FuUdevDevice)
-
-struct _FuLogitechHidppDeviceClass {
-	FuUdevDeviceClass parent_class;
-	/* TODO: overridable methods */
-};
+G_DECLARE_FINAL_TYPE(FuLogitechHidppDevice,
+		     fu_logitech_hidpp_device,
+		     FU,
+		     LOGITECH_HIDPP_DEVICE,
+		     FuDevice)
 
 #define FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID	  "force-receiver-id"
 #define FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE		  "ble"
@@ -34,4 +29,4 @@ void
 fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidppDevice *self, guint16 hidpp_pid)
     G_GNUC_NON_NULL(1);
 FuLogitechHidppDevice *
-fu_logitech_hidpp_device_new(FuUdevDevice *parent) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+fu_logitech_hidpp_device_new(FuUdevDevice *proxy) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
