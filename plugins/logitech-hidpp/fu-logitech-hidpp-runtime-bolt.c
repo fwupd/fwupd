@@ -248,18 +248,21 @@ fu_logitech_hidpp_runtime_bolt_poll_peripheral(FuLogitechHidppRuntime *self,
 		return FALSE;
 	if ((flags & 0x40) == 0) {
 		/* paired device is reachable */
+		g_autoptr(FuDeviceLocker) locker = NULL;
 		g_autoptr(FuLogitechHidppDevice) child = NULL;
+
 		child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
+		fu_device_set_proxy_gtype(FU_DEVICE(child), FU_TYPE_UDEV_DEVICE);
 		fu_device_set_install_duration(FU_DEVICE(child), 270);
 		fu_device_set_name(FU_DEVICE(child), name);
 		fu_logitech_hidpp_device_set_device_idx(child, i);
 		fu_logitech_hidpp_device_set_hidpp_pid(child, hidpp_pid);
-		if (!fu_device_open(FU_DEVICE(child), error))
+
+		locker = fu_device_locker_new(FU_DEVICE(child), error);
+		if (locker == NULL) {
+			g_prefix_error(error, "failed to probe %s: ", name);
 			return FALSE;
-		if (!fu_device_probe(FU_DEVICE(child), error))
-			return FALSE;
-		if (!fu_device_setup(FU_DEVICE(child), error))
-			return FALSE;
+		}
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 	}
 
