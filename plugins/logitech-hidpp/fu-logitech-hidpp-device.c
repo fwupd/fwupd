@@ -745,6 +745,16 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 									error);
 	if (st_rsp == NULL)
 		return FALSE;
+	if ((fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_function_id(st_rsp) &
+	     FU_LOGITECH_HIDPP_RDFU_FUNC_START_DFU) == 0) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "unexpected function_id 0x%x",
+		    fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_function_id(st_rsp));
+		return FALSE;
+	}
 	status = fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_status_code(st_rsp);
 	if (status != FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DATA_TRANSFER_READY) {
 		g_set_error(error,
@@ -753,7 +763,6 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 			    "unexpected status 0x%x = %s",
 			    status,
 			    fu_logitech_hidpp_rdfu_response_code_to_string(status));
-
 		return FALSE;
 	}
 
@@ -1120,12 +1129,12 @@ fu_logitech_hidpp_device_rdfu_transfer_data(FuLogitechHidppDevice *self,
 					    GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	const GByteArray *block = NULL;
-	g_autofree guint8 *data = g_malloc0(FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG);
+	GByteArray *block;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	g_debug("send: block=%u, pkt=%04x", priv->rdfu_block, priv->rdfu_pkt);
 
-	if (blocks->len < priv->rdfu_block) {
+	if (priv->rdfu_block >= blocks->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -1133,23 +1142,17 @@ fu_logitech_hidpp_device_rdfu_transfer_data(FuLogitechHidppDevice *self,
 			    priv->rdfu_block);
 		return FALSE;
 	}
-	block = (GByteArray *)blocks->pdata[priv->rdfu_block];
-
-	if (!fu_memcpy_safe(data,
-			    FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG,
-			    0,
-			    block->data,
-			    block->len,
-			    priv->rdfu_pkt * FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG,
-			    FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG,
-			    error)) {
+	block = g_ptr_array_index(blocks, priv->rdfu_block);
+	if (!fu_byte_array_append_safe(buf,
+				       block->data,
+				       block->len,
+				       priv->rdfu_pkt * FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG,
+				       FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG,
+				       error)) {
+		g_prefix_error(error, "failed to append block %u: ", priv->rdfu_block);
 		return FALSE;
 	}
-
-	return fu_logitech_hidpp_device_rdfu_transfer_pkt(self,
-							  data,
-							  FU_LOGITECH_HIDPP_DEVICE_DATA_PKT_LONG,
-							  error);
+	return fu_logitech_hidpp_device_rdfu_transfer_pkt(self, buf->data, buf->len, error);
 }
 
 static gboolean
@@ -1896,7 +1899,6 @@ fu_logitech_hidpp_device_write_firmware_rdfu_entity(FuLogitechHidppDevice *self,
 		return FALSE;
 
 	/* success */
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

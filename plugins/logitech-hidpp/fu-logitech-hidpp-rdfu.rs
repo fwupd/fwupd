@@ -84,8 +84,9 @@ struct FuStructLogitechHidppRdfuCapabilities {
     report_id: FuLogitechHidppRdfuReportId == Long,
     device_id: u8,
     sub_id: u8,
-    function_id: FuLogitechHidppRdfuFunc == GetCapabilities,
-    capabilities: u8,
+    // this should be GetCapabilities, but a firmware bug makes this 0x7 instead
+    function_id: FuLogitechHidppRdfuFunc,// == GetCapabilities,
+    capabilities: FuLogitechHidppRdfuCapabilities,
     data: [u8; 15],
 }
 
@@ -113,7 +114,7 @@ struct FuStructLogitechHidppRdfuStartDfuResponse {
     report_id: FuLogitechHidppRdfuReportId == Long,
     device_id: u8,
     sub_id: u8,
-    function_id: FuLogitechHidppRdfuFunc == StartDfu,
+    function_id: FuLogitechHidppRdfuFunc,
     fw_entity: u8,
     status_code: FuLogitechHidppRdfuResponseCode,
     status_params: u8,
