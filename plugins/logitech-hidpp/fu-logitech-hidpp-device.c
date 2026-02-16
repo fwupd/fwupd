@@ -25,6 +25,7 @@ typedef struct {
 	guint16 hidpp_pid;
 	guint8 hidpp_version;
 	gchar *model_id;
+	guint16 model_pid;
 	GPtrArray *feature_index; /* of FuLogitechHidppHidppMap */
 	FuLogitechHidppRdfuState rdfu_state;
 	guint8 rdfu_capabilities;
@@ -264,6 +265,7 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_int(str, idt, "HidppVersion", priv->hidpp_version);
 	fwupd_codec_string_append_int(str, idt, "HidppPid", priv->hidpp_pid);
 	fwupd_codec_string_append_hex(str, idt, "DeviceIdx", priv->device_idx);
+	fwupd_codec_string_append_hex(str, idt, "ModelPid", priv->model_pid);
 	fwupd_codec_string_append(str, idt, "ModelId", priv->model_id);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		FuLogitechHidppHidppMap *map = g_ptr_array_index(priv->feature_index, i);
@@ -509,7 +511,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 		g_prefix_error_literal(error, "failed to parse the model ID: ");
 		return FALSE;
 	}
-	fu_device_set_pid(FU_DEVICE(self), (guint32)pid_tmp);
+	priv->model_pid = pid_tmp;
 
 	/* add one more instance ID */
 	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", fu_device_get_vid(FU_DEVICE(self)));
