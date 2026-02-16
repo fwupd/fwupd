@@ -192,6 +192,10 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	g_autoptr(FuLogitechHidppHidppMsg) st_req = fu_logitech_hidpp_msg_new();
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* not predictable for time */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	/* open */
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
