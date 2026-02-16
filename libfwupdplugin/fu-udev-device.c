@@ -1670,6 +1670,7 @@ fu_udev_device_write(FuUdevDevice *self,
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -1688,6 +1689,8 @@ fu_udev_device_write(FuUdevDevice *self,
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
 			return FALSE;
+		if (!fu_device_event_check_error(event, error))
+			return FALSE;
 		return event != NULL;
 	}
 
@@ -1705,8 +1708,17 @@ fu_udev_device_write(FuUdevDevice *self,
 			    id_display);
 		return FALSE;
 	}
-	if (!fu_io_channel_write_raw(priv->io_channel, buf, bufsz, timeout_ms, flags, error))
+	if (!fu_io_channel_write_raw(priv->io_channel,
+				     buf,
+				     bufsz,
+				     timeout_ms,
+				     flags,
+				     &error_local)) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
