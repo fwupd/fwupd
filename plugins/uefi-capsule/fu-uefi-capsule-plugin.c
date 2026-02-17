@@ -664,7 +664,7 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 		fu_uefi_capsule_device_set_esp(dev, self->esp);
 		fu_device_uninhibit(device, "no-esp");
 	}
-	fu_plugin_device_add(plugin, FU_DEVICE(dev));
+	fu_plugin_add_device(plugin, FU_DEVICE(dev));
 }
 
 static void
@@ -1135,7 +1135,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 				 G_CALLBACK(fu_uefi_capsule_plugin_update_state_notify_cb),
 				 plugin);
 
-		fu_plugin_device_add(plugin, FU_DEVICE(dev));
+		fu_plugin_add_device(plugin, FU_DEVICE(dev));
 	}
 	fu_progress_step_done(progress);
 

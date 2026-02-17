@@ -322,7 +322,7 @@ fu_mm_backend_ensure_modem_power_inhibit(FuMmBackend *self, FuDevice *device)
 }
 
 static void
-fu_mm_backend_device_add(FuMmBackend *self, MMObject *omodem)
+fu_mm_backend_add_device(FuMmBackend *self, MMObject *omodem)
 {
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuDevice) device = NULL;
@@ -353,7 +353,7 @@ fu_mm_backend_device_added_cb(MMManager *manager, MMObject *omodem, FuMmBackend 
 			g_debug("ignoring: %s", error_local->message);
 		/* FIXME: perhaps need to mm_firmware_update_settings_get_fastboot_at() */
 	}
-	fu_mm_backend_device_add(self, omodem);
+	fu_mm_backend_add_device(self, omodem);
 }
 
 static void
@@ -459,7 +459,7 @@ fu_mm_backend_setup_manager(FuMmBackend *self)
 	list = g_dbus_object_manager_get_objects(G_DBUS_OBJECT_MANAGER(self->manager));
 	for (GList *l = list; l != NULL; l = g_list_next(l)) {
 		MMObject *modem = MM_OBJECT(l->data);
-		fu_mm_backend_device_add(self, modem);
+		fu_mm_backend_add_device(self, modem);
 	}
 
 	self->manager_ready = TRUE;

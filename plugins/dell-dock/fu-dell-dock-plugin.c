@@ -37,7 +37,7 @@ fu_dell_dock_plugin_create_node(FuPlugin *plugin, FuDevice *device, GError **err
 	if (locker == NULL)
 		return FALSE;
 
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 
 	return TRUE;
 }
@@ -158,13 +158,13 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 	}
 	fu_dell_dock_hub_add_instance(hub, dock_type);
-	fu_plugin_device_add(plugin, FU_DEVICE(hub));
+	fu_plugin_add_device(plugin, FU_DEVICE(hub));
 
 	/* add hub instance id for the cached device */
 	hub_dev = fu_plugin_cache_lookup(plugin, hub_cache_key);
 	if (hub_dev != NULL) {
 		fu_dell_dock_hub_add_instance(FU_DELL_DOCK_HUB(hub_dev), dock_type);
-		fu_plugin_device_add(plugin, FU_DEVICE(hub_dev));
+		fu_plugin_add_device(plugin, FU_DEVICE(hub_dev));
 		fu_plugin_cache_remove(plugin, hub_cache_key);
 	}
 	return TRUE;
@@ -246,7 +246,7 @@ fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, G
 		}
 
 		/* remove parent */
-		fu_plugin_device_remove(plugin, parent);
+		fu_plugin_remove_device(plugin, parent);
 		g_debug("removed device: %s", id_display);
 	}
 

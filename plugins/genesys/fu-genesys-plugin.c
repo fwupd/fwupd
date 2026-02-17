@@ -90,7 +90,7 @@ fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 	if (parent == NULL) {
 		g_warning("hubhid cannot find parent, platform_id(%s)",
 			  fu_device_get_physical_id(usb_parent));
-		fu_plugin_device_remove(self, device);
+		fu_plugin_remove_device(self, device);
 	} else {
 		fu_genesys_usbhub_device_set_hid_channel(FU_GENESYS_USBHUB_DEVICE(parent), device);
 		fu_device_add_child(parent, device);

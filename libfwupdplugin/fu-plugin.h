@@ -498,9 +498,9 @@ fu_plugin_alloc_data(FuPlugin *self, gsize data_sz) G_GNUC_NON_NULL(1);
 FuContext *
 fu_plugin_get_context(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
-fu_plugin_device_add(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
+fu_plugin_add_device(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_device_remove(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
+fu_plugin_remove_device(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
 fu_plugin_device_register(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void

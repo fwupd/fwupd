@@ -34,9 +34,9 @@ fu_egis_moc_device_pkg_header_checksum(GByteArray *buf)
 {
 	guint32 csum = 0;
 	guint16 csum_be = 0;
-	csum = fu_egis_moc_checksum_add(csum, buf->data, 8);
+	csum = fu_egis_moc_checksum_build(csum, buf->data, 8);
 	if (buf->len > 10)
-		csum = fu_egis_moc_checksum_add(csum, buf->data + 10, buf->len - 10);
+		csum = fu_egis_moc_checksum_build(csum, buf->data + 10, buf->len - 10);
 	csum_be = fu_egis_moc_checksum_finish(csum);
 	csum_be = csum_be >> 8 | csum_be << 8;
 	return csum_be;

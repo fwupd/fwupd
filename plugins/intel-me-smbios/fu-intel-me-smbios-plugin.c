@@ -207,7 +207,7 @@ fu_intel_me_smbios_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GErro
 		return FALSE;
 
 	/* success */
-	fu_plugin_device_add(plugin, FU_DEVICE(me_device));
+	fu_plugin_add_device(plugin, FU_DEVICE(me_device));
 	return TRUE;
 }
 

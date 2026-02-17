@@ -30,12 +30,12 @@ fu_dell_kestrel_plugin_create_node(FuPlugin *plugin, FuDevice *device, GError **
 	if (locker == NULL)
 		return FALSE;
 
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 	return TRUE;
 }
 
 static gboolean
-fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_dell_kestrel_plugin_add_device(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuDellDockBaseType dock_type;
 	FuDevice *ec_device = fu_plugin_cache_lookup(plugin, "ec");
@@ -157,7 +157,7 @@ fu_dell_kestrel_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_devi
 		    g_strdup_printf("USB\\VID_%04X&PID_%04X", hw_dev_ids[i].vid, hw_dev_ids[i].pid);
 		device = fu_plugin_cache_lookup(plugin, key);
 		if (device != NULL) {
-			if (!(fu_dell_kestrel_plugin_device_add(plugin, device, error)))
+			if (!(fu_dell_kestrel_plugin_add_device(plugin, device, error)))
 				return FALSE;
 
 			fu_plugin_cache_remove(plugin, key);
@@ -217,7 +217,7 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 		return TRUE;
 	}
 
-	if (!fu_dell_kestrel_plugin_device_add(plugin, device, error))
+	if (!fu_dell_kestrel_plugin_add_device(plugin, device, error))
 		return FALSE;
 
 	return TRUE;

@@ -215,3 +215,5 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `FuArchiveFirmware`: Use `FuZipFirmware` instead.
 * `fu_path_from_kind()`: Use `fu_path_store_get_path()` of `fu_context_get_path()` instead.
 * `fu_path_build()`: Use `fu_path_store_build_filename()` or `fu_context_build_filename()` instead.
+* `fu_plugin_device_add()`: Use `fu_plugin_add_device()` instead.
+* `fu_plugin_device_remove()`: Use `fu_plugin_remove_device()` instead.

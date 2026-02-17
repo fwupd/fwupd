@@ -453,7 +453,7 @@ fu_plugin_device_child_added_cb(FuDevice *device, FuDevice *child, FuPlugin *sel
 	g_debug("child %s added to parent %s after setup, adding to daemon",
 		fu_device_get_id(child),
 		fu_device_get_id(device));
-	fu_plugin_device_add(self, child);
+	fu_plugin_add_device(self, child);
 }
 
 static void
@@ -462,11 +462,11 @@ fu_plugin_device_child_removed_cb(FuDevice *device, FuDevice *child, FuPlugin *s
 	g_debug("child %s removed from parent %s after setup, removing from daemon",
 		fu_device_get_id(child),
 		fu_device_get_id(device));
-	fu_plugin_device_remove(self, child);
+	fu_plugin_remove_device(self, child);
 }
 
 /**
- * fu_plugin_device_add:
+ * fu_plugin_add_device:
  * @self: a #FuPlugin
  * @device: a device
  *
@@ -474,10 +474,10 @@ fu_plugin_device_child_removed_cb(FuDevice *device, FuDevice *child, FuPlugin *s
  * has already been added by a different plugin then this request will be
  * ignored.
  *
- * Since: 0.8.0
+ * Since: 2.1.1
  **/
 void
-fu_plugin_device_add(FuPlugin *self, FuDevice *device)
+fu_plugin_add_device(FuPlugin *self, FuDevice *device)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	GPtrArray *children;
@@ -523,7 +523,7 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
 		if (fu_device_get_created_usec(child) == 0)
-			fu_plugin_device_add(self, child);
+			fu_plugin_add_device(self, child);
 	}
 
 	/* watch to see if children are added or removed at runtime */
@@ -592,16 +592,16 @@ fu_plugin_device_register(FuPlugin *self, FuDevice *device)
 }
 
 /**
- * fu_plugin_device_remove:
+ * fu_plugin_remove_device:
  * @self: a #FuPlugin
  * @device: a device
  *
  * Asks the daemon to remove a device from the exported list.
  *
- * Since: 0.8.0
+ * Since: 2.1.1
  **/
 void
-fu_plugin_device_remove(FuPlugin *self, FuDevice *device)
+fu_plugin_remove_device(FuPlugin *self, FuDevice *device)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 
@@ -1181,7 +1181,7 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 				FuDevice *device = g_ptr_array_index(priv->devices, i);
 				g_warning("removing device %s due to failed coldplug",
 					  fu_device_get_id(device));
-				fu_plugin_device_remove(self, device);
+				fu_plugin_remove_device(self, device);
 			}
 		}
 		g_propagate_prefixed_error(error,
@@ -1744,7 +1744,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	fu_progress_step_done(progress);
 
 	/* add */
-	fu_plugin_device_add(self, dev);
+	fu_plugin_add_device(self, dev);
 	fu_plugin_runner_device_added(self, dev);
 	fu_progress_step_done(progress);
 	return TRUE;
