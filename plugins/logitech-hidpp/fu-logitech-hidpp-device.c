@@ -11,6 +11,7 @@
 #include "fu-logitech-hidpp-rdfu-struct.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 #include "fu-logitech-hidpp-struct.h"
+#include "fu-logitech-rdfu-entity.h"
 #include "fu-logitech-rdfu-firmware.h"
 
 typedef struct {
@@ -1823,32 +1824,27 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_rdfu_img(FuLogitechHidppDevice *self,
-						 FuLogitechRdfuFirmware *entity_fw,
-						 FuProgress *progress,
-						 FwupdInstallFlags flags,
-						 GError **error)
+fu_logitech_hidpp_device_write_firmware_rdfu_entity(FuLogitechHidppDevice *self,
+						    FuLogitechRdfuEntity *entity_fw,
+						    FuProgress *progress,
+						    FwupdInstallFlags flags,
+						    GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint retry = 0;
-	g_autoptr(GPtrArray) blocks = NULL;
+	GPtrArray *blocks = fu_logitech_rdfu_entity_get_blocks(entity_fw);
 	g_autoptr(GError) error_local = NULL;
 
 	/* verify model */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
-		g_autofree gchar *model_id = NULL;
-		model_id = fu_logitech_rdfu_firmware_get_model_id(entity_fw, error);
-		if (model_id == NULL)
-			return FALSE;
-		if (g_strcmp0(priv->model_id, model_id) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware for model %s, but the target is %s",
-				    model_id,
-				    priv->model_id);
-			return FALSE;
-		}
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
+	    g_strcmp0(priv->model_id, fu_logitech_rdfu_entity_get_model_id(entity_fw)) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "firmware for model %s, but the target is %s",
+			    fu_logitech_rdfu_entity_get_model_id(entity_fw),
+			    priv->model_id);
+		return FALSE;
 	}
 
 	/* check if we in update mode already */
@@ -1862,20 +1858,15 @@ fu_logitech_hidpp_device_write_firmware_rdfu_img(FuLogitechHidppDevice *self,
 
 	/* device requested to start or restart for some reason */
 	if (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_NOT_STARTED) {
-		g_autoptr(GByteArray) magic = NULL;
-
-		magic = fu_logitech_rdfu_firmware_get_magic(entity_fw, error);
-		if (magic == NULL)
-			return FALSE;
-		if (!fu_logitech_hidpp_device_rdfu_start_dfu(self, magic, error))
+		if (!fu_logitech_hidpp_device_rdfu_start_dfu(
+			self,
+			fu_logitech_rdfu_entity_get_magic(entity_fw),
+			error))
 			return FALSE;
 	}
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_id(progress, G_STRLOC);
-	blocks = fu_logitech_rdfu_firmware_get_blocks(entity_fw, error);
-	if (blocks == NULL)
-		return FALSE;
 	while (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_TRANSFER) {
 		/* update progress-bar here to avoid jumps caused dfu-transfer-complete */
 		fu_progress_set_percentage_full(progress, priv->rdfu_block, blocks->len);
@@ -1919,7 +1910,6 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 	g_autoptr(FuFirmware) entity_fw = NULL;
-	g_autofree gchar *entity_id = g_strdup_printf("%u", priv->cached_fw_entity);
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -1930,12 +1920,12 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
 		return FALSE;
 	}
 
-	entity_fw = fu_firmware_get_image_by_id(firmware, entity_id, error);
+	entity_fw = fu_firmware_get_image_by_idx(firmware, priv->cached_fw_entity, error);
 	if (entity_fw == NULL)
 		return FALSE;
-	return fu_logitech_hidpp_device_write_firmware_rdfu_img(
+	return fu_logitech_hidpp_device_write_firmware_rdfu_entity(
 	    self,
-	    FU_LOGITECH_RDFU_FIRMWARE(entity_fw),
+	    FU_LOGITECH_RDFU_ENTITY(entity_fw),
 	    progress,
 	    flags,
 	    error);

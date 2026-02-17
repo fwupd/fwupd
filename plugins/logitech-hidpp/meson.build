@@ -17,6 +17,7 @@ plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-runtime.c',
     'fu-logitech-hidpp-runtime-unifying.c',
     'fu-logitech-hidpp-runtime-bolt.c',
+    'fu-logitech-rdfu-entity.c', # fuzzing
     'fu-logitech-rdfu-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
