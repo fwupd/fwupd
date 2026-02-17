@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fwupd-test.h"
+
 #include "fu-context-private.h"
 
 static void
@@ -726,24 +728,26 @@ fu_firmware_func(void)
 	g_assert_cmpstr(fu_firmware_get_id(img_idx), ==, "secondary");
 
 	str = fu_firmware_to_string(firmware);
-	g_assert_cmpstr(str,
-			==,
-			"<firmware>\n"
-			"  <image_gtypes>\n"
-			"    <gtype>FuFirmware</gtype>\n"
-			"  </image_gtypes>\n"
-			"  <firmware>\n"
-			"    <id>primary</id>\n"
-			"    <idx>0xd</idx>\n"
-			"    <addr>0x200</addr>\n"
-			"    <filename>BIOS.bin</filename>\n"
-			"  </firmware>\n"
-			"  <firmware>\n"
-			"    <id>secondary</id>\n"
-			"    <idx>0x17</idx>\n"
-			"    <addr>0x400</addr>\n"
-			"  </firmware>\n"
-			"</firmware>\n");
+	ret = fu_test_compare_lines(str,
+				    "<firmware>\n"
+				    "  <image_gtypes>\n"
+				    "    <gtype>FuFirmware</gtype>\n"
+				    "  </image_gtypes>\n"
+				    "  <firmware>\n"
+				    "    <id>primary</id>\n"
+				    "    <idx>0xd</idx>\n"
+				    "    <addr>0x200</addr>\n"
+				    "    <filename>BIOS.bin</filename>\n"
+				    "  </firmware>\n"
+				    "  <firmware>\n"
+				    "    <id>secondary</id>\n"
+				    "    <idx>0x17</idx>\n"
+				    "    <addr>0x400</addr>\n"
+				    "  </firmware>\n"
+				    "</firmware>\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	ret = fu_firmware_remove_image_by_idx(firmware, 0xd, &error);
 	g_assert_no_error(error);

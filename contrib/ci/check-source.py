@@ -331,6 +331,7 @@ class Checker:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-firmware.c",
+            "fu-firmware-private.h",
         ]:
             return
         if node.depth != 0:

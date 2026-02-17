@@ -22,6 +22,8 @@ Vendor = Egistec
 Vendor = Ilitek
 [USB\VID_273F]
 Vendor = Hughski
+[USB\VID_276F]
+Vendor = Lightware
 [USB\VID_27C6]
 Vendor = Goodix
 [USB\VID_32AC]

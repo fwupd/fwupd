@@ -8,7 +8,6 @@
 
 #include "fu-jabra-gnp-device.h"
 #include "fu-jabra-gnp-firmware.h"
-#include "fu-jabra-gnp-image.h"
 #include "fu-jabra-gnp-plugin.h"
 
 struct _FuJabraGnpPlugin {
@@ -31,7 +30,6 @@ fu_jabra_gnp_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_JABRA_GNP_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_JABRA_GNP_FIRMWARE);
-	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_JABRA_GNP_IMAGE); /* coverage */
 }
 
 static void
