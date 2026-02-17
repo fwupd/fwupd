@@ -528,11 +528,18 @@ class StructItem:
 
     def _parse_default(self, val: str) -> str:
         if self.enum_obj:
-            enum_item = self.enum_obj.item(val)
-            if not enum_item:
-                msg: str = [item.name for item in self.enum_obj.items]
-                raise ValueError(f"enum default unknown, got {val} expected: {msg}")
-            return enum_item.c_define
+            c_defines: list[str] = []
+            for val_section in val.split("|"):
+                enum_item = self.enum_obj.item(val_section)
+                if not enum_item:
+                    msg: str = [item.name for item in self.enum_obj.items]
+                    raise ValueError(
+                        f"enum default unknown, got {val_section} expected: {msg}"
+                    )
+                c_defines.append(enum_item.c_define)
+            if len(c_defines) == 1:
+                return c_defines[0]
+            return "(" + "|".join(c_defines) + ")"
         if self.type == Type.STRING:
             if val.startswith('"') and val.endswith('"'):
                 return val[1:-1]
