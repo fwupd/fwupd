@@ -40,7 +40,7 @@ fu_logitech_rdfu_firmware_get_blocks(FuLogitechRdfuFirmware *self, GError **erro
 }
 
 static gboolean
-fu_logitech_rdfu_firmware_block_add(FuLogitechRdfuFirmware *self,
+fu_logitech_rdfu_firmware_add_block(FuLogitechRdfuFirmware *self,
 				    FwupdJsonObject *json_obj,
 				    GError **error)
 {
@@ -76,7 +76,7 @@ fu_logitech_rdfu_firmware_block_add(FuLogitechRdfuFirmware *self,
 }
 
 static gboolean
-fu_logitech_rdfu_firmware_entry_add(FuLogitechRdfuFirmware *self,
+fu_logitech_rdfu_firmware_add_entry(FuLogitechRdfuFirmware *self,
 				    FwupdJsonObject *json_obj,
 				    GError **error)
 
@@ -241,7 +241,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 		json_obj_tmp = fwupd_json_array_get_object(contents, i, error);
 		if (json_obj_tmp == NULL)
 			return FALSE;
-		if (!fu_logitech_rdfu_firmware_entry_add(entity_fw, json_obj_tmp, error)) {
+		if (!fu_logitech_rdfu_firmware_add_entry(entity_fw, json_obj_tmp, error)) {
 			g_prefix_error(error, "RDFU firmware contents[%u]: ", i);
 			return FALSE;
 		}
@@ -297,7 +297,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 			json_obj_block = fwupd_json_array_get_object(json_arr_blocks, i, error);
 			if (json_obj_block == NULL)
 				return FALSE;
-			if (!fu_logitech_rdfu_firmware_block_add(entity_fw,
+			if (!fu_logitech_rdfu_firmware_add_block(entity_fw,
 								 json_obj_block,
 								 error)) {
 				g_prefix_error(error, "unable to parse block %u: ", i);

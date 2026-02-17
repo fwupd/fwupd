@@ -122,7 +122,7 @@ data from `sysfs` or `/dev`.
         fu_device_get_version_bootloader(dev, "0.1.2");
         fu_device_add_icon(dev, "computer");
         fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-        fu_plugin_device_add(plugin, dev);
+        fu_plugin_add_device(plugin, dev);
         return TRUE;
     }
 

@@ -269,7 +269,7 @@ fu_engine_device_parent_guid_func(void)
 	/* add two together */
 	fu_engine_add_device(engine, device2);
 
-	/* this is normally done by fu_plugin_device_add() */
+	/* this is normally done by fu_plugin_add_device() */
 	fu_engine_add_device(engine, device3);
 
 	/* verify both children were adopted */
@@ -341,7 +341,7 @@ fu_engine_device_parent_id_func(void)
 	fu_device_add_parent_physical_id(device4, "parent-ID");
 	fu_engine_add_device(engine, device4);
 
-	/* this is normally done by fu_plugin_device_add() */
+	/* this is normally done by fu_plugin_add_device() */
 	fu_engine_add_device(engine, device4);
 
 	/* add child with the parent backend ID */
@@ -354,7 +354,7 @@ fu_engine_device_parent_id_func(void)
 	fu_device_add_parent_backend_id(device5, "/sys/devices/foo/bar/baz");
 	fu_engine_add_device(engine, device5);
 
-	/* this is normally done by fu_plugin_device_add() */
+	/* this is normally done by fu_plugin_add_device() */
 	fu_engine_add_device(engine, device5);
 
 	/* verify both children were adopted */
@@ -2458,7 +2458,7 @@ fu_engine_device_better_than_func(void)
 	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device1, "com.acme");
 	fu_device_set_remove_delay(device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_plugin_device_add(plugin1, device1);
+	fu_plugin_add_device(plugin1, device1);
 
 	/* should be ignored */
 	fu_device_set_id(device2, "87ea5dfc8b8e384d848979496e706390b497e547");
@@ -2466,7 +2466,7 @@ fu_engine_device_better_than_func(void)
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_instance_id(device2, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device2, "com.acme");
-	fu_plugin_device_add(plugin2, device2);
+	fu_plugin_add_device(plugin2, device2);
 
 	/* ensure we still have device1 */
 	device_best =
@@ -2477,7 +2477,7 @@ fu_engine_device_better_than_func(void)
 
 	/* should be replaced */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	fu_plugin_device_add(plugin2, device2);
+	fu_plugin_add_device(plugin2, device2);
 
 	/* ensure we now have device2 */
 	device_replug =

@@ -73,7 +73,7 @@ fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 			g_debug("%s", error_local->message);
 			continue;
 		}
-		fu_plugin_device_add(plugin, FU_DEVICE(dev));
+		fu_plugin_add_device(plugin, FU_DEVICE(dev));
 	}
 }
 

@@ -33,7 +33,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 			return FALSE;
 		}
 	}
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		g_autoptr(FuDevice) child1 = NULL;
@@ -53,7 +53,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_add_flag(child1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_device_add_private_flag(child1, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 		fu_device_add_private_flag(child1, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
-		fu_plugin_device_add(plugin, child1);
+		fu_plugin_add_device(plugin, child1);
 
 		child2 = fu_device_new(ctx);
 		fu_device_build_vendor_id_u16(child2, "USB", 0xFFFF);
@@ -69,7 +69,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_add_flag(child2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_device_add_private_flag(child2, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 		fu_device_add_private_flag(child2, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
-		fu_plugin_device_add(plugin, child2);
+		fu_plugin_add_device(plugin, child2);
 	}
 
 	return TRUE;

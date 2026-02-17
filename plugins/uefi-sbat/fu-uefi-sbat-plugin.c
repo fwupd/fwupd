@@ -60,7 +60,7 @@ fu_uefi_sbat_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **er
 	locker = fu_device_locker_new(FU_DEVICE(device), error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add(plugin, FU_DEVICE(device));
+	fu_plugin_add_device(plugin, FU_DEVICE(device));
 
 	/* success */
 	return TRUE;

@@ -336,7 +336,7 @@ fu_udev_backend_device_add_from_device(FuUdevBackend *self, FuUdevDevice *device
 }
 
 static void
-fu_udev_backend_device_remove(FuUdevBackend *self, const gchar *sysfs_path)
+fu_udev_backend_remove_device(FuUdevBackend *self, const gchar *sysfs_path)
 {
 	FuDevice *device_tmp;
 
@@ -516,7 +516,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 
 			/* something got removed */
 			if (action == FU_UDEV_ACTION_REMOVE) {
-				fu_udev_backend_device_remove(self, sysfspath);
+				fu_udev_backend_remove_device(self, sysfspath);
 				return TRUE;
 			}
 
@@ -599,7 +599,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		fu_udev_backend_device_add_from_device(self, device);
 	} else if (action == FU_UDEV_ACTION_REMOVE) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
-		fu_udev_backend_device_remove(self, sysfspath);
+		fu_udev_backend_remove_device(self, sysfspath);
 	} else if (action == FU_UDEV_ACTION_CHANGE) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
 		FuDevice *device_tmp = fu_backend_lookup_by_id(FU_BACKEND(self), sysfspath);

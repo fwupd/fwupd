@@ -397,6 +397,31 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
+        # THING_add
+        idx = node.tokens_pre.find_fuzzy(["~fu_*_add@FUNCTION"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            if (
+                token.data.find("_list_") == -1
+                and token.data.find("_array_") == -1
+                and token.data.find("_cache_") == -1
+                and token.data not in ["fu_size_checked_add"]
+            ):
+                self.add_failure(
+                    "function should be called add_THING, not THING_add",
+                    linecnt=token.linecnt,
+                )
+
+        # THING_remove
+        idx = node.tokens_pre.find_fuzzy(["~fu_*_remove@FUNCTION"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            if token.data.find("_list_") == -1 and token.data.find("_cache_") == -1:
+                self.add_failure(
+                    "function should be called remove_THING, not THING_remove",
+                    linecnt=token.linecnt,
+                )
+
     def _test_function_names_prefix(self, node: Node) -> None:
 
         if node.depth != 0:
