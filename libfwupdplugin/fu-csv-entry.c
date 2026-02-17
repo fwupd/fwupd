@@ -130,14 +130,21 @@ fu_csv_entry_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);
 	FuCsvFirmware *parent = FU_CSV_FIRMWARE(fu_firmware_get_parent(firmware));
-	gboolean add_columns = fu_csv_firmware_get_column_id(parent, 0) == NULL;
+	gboolean add_columns;
 	g_autoptr(GPtrArray) values = NULL;
+
+	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no parent");
+		return FALSE;
+	}
 
 	values = xb_node_query(n, "values/*", 0, error);
 	if (values == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
+	add_columns = fu_csv_firmware_get_column_id(parent, 0) == NULL;
 	for (guint i = 0; i < values->len; i++) {
 		XbNode *c = g_ptr_array_index(values, i);
 		if (add_columns && xb_node_get_element(c) != NULL)
@@ -153,9 +160,13 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	FuCsvEntry *self = FU_CSV_ENTRY(user_data);
 	FuCsvEntryPrivate *priv = GET_PRIVATE(self);
 	FuCsvFirmware *parent = FU_CSV_FIRMWARE(fu_firmware_get_parent(FU_FIRMWARE(self)));
-	const gchar *column_id = fu_csv_firmware_get_column_id(parent, token_idx);
+	const gchar *column_id;
 
 	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no parent");
+		return FALSE;
+	}
 	if (token_idx > FU_CSV_ENTRY_COLUMNS_MAX) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -165,6 +176,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 		return FALSE;
 	}
 
+	column_id = fu_csv_firmware_get_column_id(parent, token_idx);
 	if (g_strcmp0(column_id, "$id") == 0) {
 		fu_firmware_set_id(FU_FIRMWARE(self), token->str);
 	} else if (g_strcmp0(column_id, "$idx") == 0) {

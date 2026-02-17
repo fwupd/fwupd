@@ -12,7 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
-#include "fu-firmware.h"
+#include "fu-firmware-private.h"
 #include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
@@ -1816,6 +1816,25 @@ fu_firmware_add_image_gtype(FuFirmware *self, GType type)
 	g_array_append_val(priv->image_gtypes, type);
 }
 
+/**
+ * fu_firmware_get_image_gtypes:
+ * @self: a #FuFirmware
+ *
+ * Returns all the possible image GTypes.
+ *
+ * Returns: (element-type GType) (transfer none) (nullable): array of #GType.
+ *
+ * Since: 2.1.1
+ **/
+GArray *
+fu_firmware_get_image_gtypes(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	return priv->image_gtypes;
+}
+
 static gboolean
 fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
 {
@@ -2623,6 +2642,9 @@ fu_firmware_constructed(GObject *obj)
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	if (klass->add_magic != NULL)
 		klass->add_magic(self);
+	if (G_TYPE_FROM_CLASS(klass) != FU_TYPE_FIRMWARE && klass->parse_full == NULL &&
+	    klass->parse == NULL)
+		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_IS_ABSTRACT);
 }
 
 static void
