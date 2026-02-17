@@ -6,6 +6,7 @@
 #include "{{basename}}"
 {%- if struct_objs %}
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-mem-private.h"
 #include "fu-string.h"
 {%- endif %}
