@@ -57,6 +57,7 @@ fu_ilitek_its_block_get_crc(FuIlitekItsBlock *self)
 static void
 fu_ilitek_its_block_init(FuIlitekItsBlock *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

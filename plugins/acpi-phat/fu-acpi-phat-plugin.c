@@ -6,10 +6,7 @@
 
 #include "config.h"
 
-#include "fu-acpi-phat-health-record.h"
 #include "fu-acpi-phat-plugin.h"
-#include "fu-acpi-phat-version-element.h"
-#include "fu-acpi-phat-version-record.h"
 #include "fu-acpi-phat.h"
 
 struct _FuAcpiPhatPlugin {
@@ -60,9 +57,6 @@ fu_acpi_phat_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_PHAT);
-	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
-	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_PHAT_VERSION_ELEMENT);
-	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 }
 
 static void
