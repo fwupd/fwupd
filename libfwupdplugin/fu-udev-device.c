@@ -1676,6 +1676,12 @@ fu_udev_device_write(FuUdevDevice *self,
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* sanity check */
+	if ((priv->open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) == 0) {
+		g_critical("trying to write without writable device-file; "
+			   "use fu_udev_device_add_open_flag(self, FU_IO_CHANNEL_OPEN_FLAG_WRITE)");
+	}
+
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
