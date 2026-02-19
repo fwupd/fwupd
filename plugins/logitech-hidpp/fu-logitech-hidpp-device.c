@@ -650,7 +650,7 @@ fu_logitech_hidpp_device_ensure_battery_level(FuLogitechHidppDevice *self, GErro
 		return TRUE;
 
 	/* HID++1.0 */
-	if (self->hidpp_version == 1)
+	if (self->hidpp_version == FU_LOGITECH_HIDPP_VERSION_1)
 		return fu_logitech_hidpp_device_ensure_battery_level_mileage(self, error);
 
 	/* try the HID++2.0 Unified Battery feature first */
@@ -1364,7 +1364,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 
 	/* add known root for HID++2.0 */
 	g_ptr_array_set_size(self->feature_index, 0);
-	if (self->hidpp_version >= 2.f) {
+	if (self->hidpp_version >= FU_LOGITECH_HIDPP_VERSION_2) {
 		FuLogitechHidppHidppMap *map = g_new0(FuLogitechHidppHidppMap, 1);
 		map->idx = 0x00;
 		map->feature = FU_LOGITECH_HIDPP_FEATURE_ROOT;
