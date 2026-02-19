@@ -313,7 +313,6 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "Guid", NULL);
 	if (tmp != NULL)
@@ -324,22 +323,6 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(device, event);
-		}
-	}
 
 	/* success */
 	return TRUE;

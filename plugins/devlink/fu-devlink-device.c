@@ -855,7 +855,6 @@ static void
 fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
-	GPtrArray *events = fu_device_get_events(device);
 
 	/* add device type identifier */
 	fwupd_json_object_add_string(json_obj, "GType", "FuDevlinkDevice");
@@ -865,21 +864,6 @@ fu_devlink_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCod
 		fwupd_json_object_add_string(json_obj, "BusName", self->bus_name);
 	if (self->dev_name != NULL)
 		fwupd_json_object_add_string(json_obj, "DevName", self->dev_name);
-
-	/* serialize recorded events */
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    json_obj_tmp,
-					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
-							       : flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "Events", json_arr);
-	}
 }
 
 static gboolean
@@ -889,7 +873,6 @@ fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError 
 	const gchar *bus_name;
 	const gchar *dev_name;
 	g_autofree gchar *device_id = NULL;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	/* devlink-specific properties */
 	bus_name = fwupd_json_object_get_string(json_obj, "BusName", NULL);
@@ -910,22 +893,6 @@ fu_devlink_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError 
 	fu_device_set_physical_id(FU_DEVICE(self), device_id);
 	fu_device_set_name(FU_DEVICE(self), device_id);
 	fu_device_set_backend_id(device, device_id);
-
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(device, event);
-		}
-	}
 
 	/* success */
 	return TRUE;

@@ -8185,12 +8185,19 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_set_object(&priv->target, target);
 }
 
-/* private; used to save an emulated device */
+static void
+fu_device_add_json_internal(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	if (device_class->add_json != NULL)
+		device_class->add_json(self, json_obj, flags);
+}
+
 void
 fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	GPtrArray *events = fu_device_get_events(self);
 
 	if (fu_device_get_created_usec(self) != 0) {
 #if GLIB_CHECK_VERSION(2, 80, 0)
@@ -8204,17 +8211,28 @@ fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags fl
 		fwupd_json_object_add_string(json_obj, "Created", str);
 	}
 
-	/* subclassed */
-	if (device_class->add_json != NULL) {
-		device_class->add_json(self, json_obj, flags);
-		return;
-	}
+	/* optional proxy */
+	if (priv->proxy != NULL)
+		fu_device_add_json_internal(priv->proxy, json_obj, flags);
 
-	/* proxy */
-	if (priv->proxy != NULL) {
-		device_class = FU_DEVICE_GET_CLASS(priv->proxy);
-		if (device_class->add_json != NULL)
-			device_class->add_json(priv->proxy, json_obj, flags);
+	/* subclass can overwrite */
+	fu_device_add_json_internal(self, json_obj, flags);
+
+	/* events */
+	if (priv->proxy != NULL && fu_device_get_events(priv->proxy)->len > 0)
+		events = fu_device_get_events(priv->proxy);
+	if (events->len > 0) {
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+		for (guint i = 0; i < events->len; i++) {
+			FuDeviceEvent *event = g_ptr_array_index(events, i);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(event),
+					    json_obj_tmp,
+					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
+							       : flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
+		}
+		fwupd_json_object_add_array(json_obj, "Events", json_arr);
 	}
 }
 
@@ -8225,6 +8243,7 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	const gchar *tmp;
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "Created", NULL);
 	if (tmp != NULL) {
@@ -8237,6 +8256,24 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 			fu_device_set_created_usec(self, g_date_time_to_unix(dt) * G_USEC_PER_SEC);
 		}
 #endif
+	}
+
+	/* array of events */
+	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
+	if (json_array_events == NULL)
+		json_array_events = fwupd_json_object_get_array(json_obj, "UsbEvents", NULL);
+	if (json_array_events != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
+			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
+				return FALSE;
+			fu_device_add_event(self, event);
+		}
 	}
 
 	/* subclassed */
