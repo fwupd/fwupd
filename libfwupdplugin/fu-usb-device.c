@@ -2958,17 +2958,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 	fwupd_json_object_add_string(json_obj,
 				     "PlatformId",
 				     fu_device_get_physical_id(FU_DEVICE(self)));
-	if (fu_device_get_created_usec(FU_DEVICE(self)) != 0) {
-#if GLIB_CHECK_VERSION(2, 80, 0)
-		g_autoptr(GDateTime) dt =
-		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(FU_DEVICE(self)));
-#else
-		g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(
-		    fu_device_get_created_usec(FU_DEVICE(self)) / G_USEC_PER_SEC);
-#endif
-		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		fwupd_json_object_add_string(json_obj, "Created", str);
-	}
 	if (fu_device_get_vid(FU_DEVICE(self)) != 0) {
 		fwupd_json_object_add_integer(json_obj,
 					      "IdVendor",
