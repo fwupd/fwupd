@@ -2195,6 +2195,49 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_logitech_hidpp_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
+{
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
+	const gchar *tmp;
+	gint64 tmp64 = 0;
+
+	/* name */
+	tmp = fwupd_json_object_get_string(json_obj, "Name", error);
+	if (tmp == NULL)
+		return FALSE;
+	fu_device_set_name(device, tmp);
+
+	/* idx */
+	if (!fwupd_json_object_get_integer(json_obj, "DeviceIdx", &tmp64, error))
+		return FALSE;
+	fu_logitech_hidpp_device_set_device_idx(self, tmp64);
+
+	/* HID++ pid */
+	if (!fwupd_json_object_get_integer(json_obj, "HidppPid", &tmp64, error))
+		return FALSE;
+	fu_logitech_hidpp_device_set_hidpp_pid(self, tmp64);
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_logitech_hidpp_device_add_json(FuDevice *device,
+				  FwupdJsonObject *json_obj,
+				  FwupdCodecFlags flags)
+{
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
+
+	/* properties */
+	fwupd_json_object_add_string(json_obj,
+				     "GType",
+				     g_type_name(fu_device_get_proxy_gtype(device)));
+	fwupd_json_object_add_string(json_obj, "Name", fu_device_get_name(device));
+	fwupd_json_object_add_integer(json_obj, "DeviceIdx", self->device_idx);
+	fwupd_json_object_add_integer(json_obj, "HidppPid", self->hidpp_pid);
+}
+
 static void
 fu_logitech_hidpp_device_class_init(FuLogitechHidppDeviceClass *klass)
 {
@@ -2213,6 +2256,8 @@ fu_logitech_hidpp_device_class_init(FuLogitechHidppDeviceClass *klass)
 	device_class->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
 	device_class->cleanup = fu_logitech_hidpp_device_cleanup;
 	device_class->set_progress = fu_logitech_hidpp_device_set_progress;
+	device_class->from_json = fu_logitech_hidpp_device_from_json;
+	device_class->add_json = fu_logitech_hidpp_device_add_json;
 }
 
 static void
@@ -2227,6 +2272,7 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_UDEV_DEVICE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID);
