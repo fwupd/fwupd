@@ -2787,7 +2787,6 @@ fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **er
 	g_autoptr(FwupdJsonArray) json_array_cfg = NULL;
 	g_autoptr(FwupdJsonArray) json_array_hid = NULL;
 	g_autoptr(FwupdJsonArray) json_array_ifaces = NULL;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	/* optional properties */
 	tmp = fwupd_json_object_get_string(json_obj, "PlatformId", NULL);
@@ -2920,22 +2919,6 @@ fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **er
 		}
 	}
 
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "UsbEvents", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(FU_DEVICE(self), event);
-		}
-	}
-
 	/* success */
 	priv->interfaces_valid = TRUE;
 	priv->bos_descriptors_valid = TRUE;
@@ -2947,7 +2930,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(device);
 	g_autoptr(GPtrArray) interfaces = NULL;
 	g_autoptr(GError) error_bos = NULL;
 	g_autoptr(GError) error_hid = NULL;
@@ -3050,21 +3032,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 		fwupd_json_object_add_array(json_obj, "UsbInterfaces", json_arr);
-	}
-
-	/* events */
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    json_obj_tmp,
-					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
-							       : flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "UsbEvents", json_arr);
 	}
 }
 
