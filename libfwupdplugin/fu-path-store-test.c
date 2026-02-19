@@ -46,7 +46,7 @@ fu_path_store_env(void)
 	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
-	g_setenv("FWUPD_LOCKDIR", "/tmp/lock", TRUE);
+	(void)g_setenv("FWUPD_LOCKDIR", "/tmp/lock", TRUE);
 
 	fu_path_store_load_from_env(pstore);
 	fu_path_store_load_from_env(pstore);
