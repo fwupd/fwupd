@@ -71,6 +71,16 @@ fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 	FuIoChannelFlags write_flags = FU_IO_CHANNEL_FLAG_FLUSH_INPUT;
 	g_autofree gchar *str = NULL;
 
+	/* sanity check */
+	if (len == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown report_id 0x%02x",
+			    fu_struct_logitech_hidpp_msg_get_report_id(st));
+		return FALSE;
+	}
+
 	/* only for HID++2.0 */
 	if (hidpp_version >= 2) {
 		fu_struct_logitech_hidpp_msg_set_function_id(
