@@ -26,6 +26,7 @@ typedef struct {
 	gchar *name;
 	gchar *description;
 	gchar *path;
+	gchar *value_filename;
 	gchar *current_value;
 	guint64 lower_bound;
 	guint64 upper_bound;
@@ -121,6 +122,48 @@ fwupd_bios_setting_set_read_only(FwupdBiosSetting *self, gboolean val)
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
 	priv->read_only = val;
+}
+
+/**
+ * fwupd_bios_setting_get_filename:
+ * @self: a #FwupdBiosSetting
+ *
+ * Gets the filename within @path where values are read/written.
+ *
+ * Returns: the value filename or NULL if not set
+ *
+ * Since: 2.0.20
+ **/
+const gchar *
+fwupd_bios_setting_get_filename(FwupdBiosSetting *self)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
+	return priv->value_filename;
+}
+
+/**
+ * fwupd_bios_setting_set_filename:
+ * @self: a #FwupdBiosSetting
+ * @filename: the filename within @path for value operations
+ *
+ * Sets the filename within @path where values are read/written.
+ * If not set, defaults to "current_value".
+ *
+ * Since: 2.0.20
+ **/
+void
+fwupd_bios_setting_set_filename(FwupdBiosSetting *self, const gchar *filename)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->value_filename, filename) == 0)
+		return;
+
+	g_free(priv->value_filename);
+	priv->value_filename = g_strdup(filename);
 }
 
 /**
@@ -798,6 +841,12 @@ fwupd_bios_setting_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwup
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
+	if (priv->value_filename != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME,
+				      g_variant_new_string(priv->value_filename));
+	}
 	g_variant_builder_add(builder,
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
@@ -861,6 +910,10 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE) == 0) {
 		fwupd_bios_setting_set_current_value(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME) == 0) {
+		fwupd_bios_setting_set_filename(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
@@ -939,6 +992,11 @@ fwupd_bios_setting_from_json(FwupdCodec *codec, JsonNode *json_node, GError **er
 			fwupd_bios_setting_add_possible_value(self, tmp);
 		}
 	}
+	fwupd_bios_setting_set_filename(
+	    self,
+	    json_object_get_string_member_with_default(obj,
+						       FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME,
+						       NULL));
 	fwupd_bios_setting_set_lower_bound(
 	    self,
 	    json_object_get_int_member_with_default(obj,
@@ -980,6 +1038,10 @@ fwupd_bios_setting_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecF
 				     FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 				     priv->read_only);
 	fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME,
+				priv->value_filename);
+
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
 			json_builder_set_member_name(builder,
@@ -1023,6 +1085,10 @@ fwupd_bios_setting_add_string(FwupdCodec *codec, guint idt, GString *str)
 				  idt,
 				  FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				  priv->current_value);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME,
+				  priv->value_filename);
 	fwupd_codec_string_append(str,
 				  idt,
 				  FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
@@ -1081,6 +1147,7 @@ fwupd_bios_setting_finalize(GObject *object)
 	g_free(priv->name);
 	g_free(priv->description);
 	g_free(priv->path);
+	g_free(priv->value_filename);
 	g_ptr_array_unref(priv->possible_values);
 
 	G_OBJECT_CLASS(fwupd_bios_setting_parent_class)->finalize(object);
