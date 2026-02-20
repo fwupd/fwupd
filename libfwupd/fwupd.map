@@ -1047,3 +1047,10 @@ LIBFWUPD_2.0.17 {
     fwupd_remote_get_mtime;
   local: *;
 } LIBFWUPD_2.0.16;
+
+LIBFWUPD_2.0.20 {
+  global:
+    fwupd_bios_setting_get_filename;
+    fwupd_bios_setting_set_filename;
+  local: *;
+} LIBFWUPD_2.0.17;
