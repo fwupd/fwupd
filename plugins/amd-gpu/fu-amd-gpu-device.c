@@ -19,6 +19,7 @@
 #include "fu-amd-gpu-atom-firmware.h"
 #include "fu-amd-gpu-device.h"
 #include "fu-amd-gpu-psp-firmware.h"
+#include "fu-amd-gpu-uma.h"
 
 struct _FuAmdGpuDevice {
 	FuOpromDevice parent_instance;
@@ -253,6 +254,35 @@ fu_amd_gpu_device_parse_version_string(FuAmdGpuDevice *self, const gchar *str, G
 	return TRUE;
 }
 
+static void
+fu_amd_gpu_device_setup_bios_settings(FuAmdGpuDevice *self)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	const gchar *base = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuBiosSettings) bios_settings = NULL;
+	g_autoptr(FwupdBiosSetting) attr_setting = NULL;
+
+	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	if (!fu_amd_gpu_uma_check_support(base, &error_local)) {
+		g_debug("UMA carveout support not detected on device %s: %s",
+			fu_device_get_name(FU_DEVICE(self)),
+			error_local->message);
+		return;
+	}
+	bios_settings = fu_context_get_bios_settings(ctx);
+	if (bios_settings == NULL)
+		return;
+
+	attr_setting = fu_amd_gpu_uma_get_setting(base, &error_local);
+	if (attr_setting == NULL) {
+		g_debug("failed to get UMA carveout setting: %s", error_local->message);
+		return;
+	}
+	if (!fu_bios_settings_register_attr(bios_settings, attr_setting, &error_local))
+		g_debug("failed to register UMA carveout setting: %s", error_local->message);
+}
+
 static gboolean
 fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 {
@@ -282,6 +312,8 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 
 	model = fu_strsafe((const gchar *)vbios_info.name, sizeof(vbios_info.name));
 	fu_device_set_summary(device, model);
+
+	fu_amd_gpu_device_setup_bios_settings(self);
 
 	return TRUE;
 }

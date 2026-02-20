@@ -15,6 +15,7 @@ plugin_builtins += static_library('fu_plugin_amd_gpu',
     'fu-amd-gpu-device.c',
     'fu-amd-gpu-psp-firmware.c',
     'fu-amd-gpu-atom-firmware.c',
+    'fu-amd-gpu-uma.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -29,3 +30,23 @@ device_tests += files('tests/amd-apu-rembrandt.json',
                       'tests/amd-dgpu.json',
                       'tests/amd-dgpu-navi3x.json',
 )
+
+if get_option('tests')
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  e = executable('fu-amd-gpu-uma-test',
+    sources: 'fu-amd-gpu-uma-test.c',
+    include_directories: plugin_incdirs,
+    dependencies: plugin_deps,
+    link_with: [plugin_libs, plugin_builtins],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: installed_test_bindir,
+    install_tag: 'tests',
+    c_args: [
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
+  )
+  test('amd-gpu-uma-self-test', e, env: env)
+endif
