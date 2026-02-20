@@ -15,6 +15,7 @@ plugin_builtins += static_library('fu_plugin_amd_gpu',
     'fu-amd-gpu-device.c',
     'fu-amd-gpu-psp-firmware.c',
     'fu-amd-gpu-atom-firmware.c',
+    'fu-amd-gpu-uma.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
@@ -29,3 +30,4 @@ device_tests += files('tests/amd-apu-rembrandt.json',
                       'tests/amd-dgpu.json',
                       'tests/amd-dgpu-navi3x.json',
 )
+
