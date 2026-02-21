@@ -349,16 +349,6 @@ if build_standalone
   if passim.found()
     conf.set('HAVE_PASSIM', '1')
   endif
-  libarchive = dependency(
-    'libarchive',
-    required: get_option('libarchive'),
-  )
-  if libarchive.found()
-    conf.set('HAVE_LIBARCHIVE', '1')
-    if cc.has_header_symbol('archive.h', 'archive_write_add_filter_zstd')
-      conf.set('HAVE_LIBARCHIVE_WRITE_ADD_FILTER_ZSTD', '1')
-    endif
-  endif
 endif
 libjcat = dependency(
   'jcat',
@@ -964,7 +954,6 @@ if build_daemon
       'libusb': libusb,
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
-      'libarchive': libarchive.found(),
       'passim': passim,
       'GPG support': supported_gpg,
       'PKCS7 support': supported_pkcs7,
