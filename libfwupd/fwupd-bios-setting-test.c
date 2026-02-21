@@ -47,6 +47,9 @@ fwupd_bios_settings_func(void)
 	g_assert_true(fwupd_bios_setting_has_possible_value(attr1, "Disabled"));
 	g_assert_false(fwupd_bios_setting_has_possible_value(attr1, "NOT_GOING_TO_EXIST"));
 
+	fwupd_bios_setting_set_filename(attr1, "current_value");
+	g_assert_cmpstr(fwupd_bios_setting_get_filename(attr1), ==, "current_value");
+
 	str1 = fwupd_codec_to_string(FWUPD_CODEC(attr1));
 	ret = fu_test_compare_lines(str1,
 				    "FwupdBiosSetting:\n"
@@ -55,6 +58,7 @@ fwupd_bios_settings_func(void)
 				    "  Filename:             /path/to/bar\n"
 				    "  BiosSettingType:      1\n"
 				    "  BiosSettingCurrentValue: Disabled\n"
+				    "  BiosSettingFilename:  current_value\n"
 				    "  BiosSettingReadOnly:  False\n"
 				    "  BiosSettingPossibleValues: Disabled\n"
 				    "  BiosSettingPossibleValues: Enabled\n",
@@ -75,6 +79,7 @@ fwupd_bios_settings_func(void)
 				    "  Filename:             /path/to/bar\n"
 				    "  BiosSettingType:      1\n"
 				    "  BiosSettingCurrentValue: Disabled\n"
+				    "  BiosSettingFilename:  current_value\n"
 				    "  BiosSettingReadOnly:  False\n"
 				    "  BiosSettingPossibleValues: Disabled\n"
 				    "  BiosSettingPossibleValues: Enabled\n",
@@ -92,6 +97,7 @@ fwupd_bios_settings_func(void)
 				    "  \"Description\": \"Controls Secure boot\",\n"
 				    "  \"Filename\": \"/path/to/bar\",\n"
 				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
+				    "  \"BiosSettingFilename\": \"current_value\",\n"
 				    "  \"BiosSettingReadOnly\": false,\n"
 				    "  \"BiosSettingType\": 1,\n"
 				    "  \"BiosSettingPossibleValues\": [\n"
@@ -129,6 +135,7 @@ fwupd_bios_settings_func(void)
 				    "  Description:          Controls Secure boot\n"
 				    "  Filename:             /path/to/bar\n"
 				    "  BiosSettingType:      1\n"
+				    "  BiosSettingFilename:  current_value\n"
 				    "  BiosSettingReadOnly:  False\n"
 				    "  BiosSettingPossibleValues: Disabled\n"
 				    "  BiosSettingPossibleValues: Enabled\n",
@@ -146,6 +153,7 @@ fwupd_bios_settings_func(void)
 				    "  \"Description\": \"Controls Secure boot\",\n"
 				    "  \"Filename\": \"/path/to/bar\",\n"
 				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
+				    "  \"BiosSettingFilename\": \"current_value\",\n"
 				    "  \"BiosSettingReadOnly\": false,\n"
 				    "  \"BiosSettingType\": 1,\n"
 				    "  \"BiosSettingPossibleValues\": [\n"

@@ -631,6 +631,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE "KernelCurrentValue"
 /**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME:
+ *
+ * Result key to represent the filename within @path for BIOS setting value operations.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME "BiosSettingFilename"
+/**
  * FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE:
  *
  * Result key to represent the target kernel setting.

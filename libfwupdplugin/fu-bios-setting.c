@@ -27,7 +27,10 @@ fu_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError *
 
 	if (fwupd_bios_setting_get_path(self) == NULL)
 		return TRUE;
-	fn = g_build_filename(fwupd_bios_setting_get_path(self), "current_value", NULL);
+
+	fn = g_build_filename(fwupd_bios_setting_get_path(self),
+			      fwupd_bios_setting_get_filename(self),
+			      NULL);
 	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io == NULL)
 		return FALSE;
