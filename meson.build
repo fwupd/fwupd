@@ -678,6 +678,15 @@ else
   allow_flashrom = false
 endif
 
+logind = dependency(
+  'systemd', 'libelogind',
+  required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
+)
+
+if logind.found()
+  conf.set('HAVE_LOGIND', '1')
+endif
+
 if libsystemd.found()
   systemd = dependency(
     'systemd',
@@ -685,7 +694,6 @@ if libsystemd.found()
     required: get_option('systemd'),
   )
   conf.set('HAVE_SYSTEMD' , '1')
-  conf.set('HAVE_LOGIND' , '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
   if systemd_root_prefix == ''
     systemdunitdir = systemd.get_variable(
@@ -946,6 +954,7 @@ summary(
     'introspection': introspection.allowed(),
     'libblkid': libblkid,
     'libdrm': libdrm,
+    'logind': logind,
     'valgrind': valgrind,
     'polkit': polkit,
     'python3': python3,

@@ -97,6 +97,11 @@ option(
   description: 'libmnl support',
 )
 option(
+  'logind',
+  type: 'feature',
+  description: 'logind-like support',
+)
+option(
   'lvfs',
   type: 'combo',
   choices: ['true', 'false', 'disabled'],
