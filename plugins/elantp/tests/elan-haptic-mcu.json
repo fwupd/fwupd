@@ -1,0 +1,18 @@
+{
+  "name": "Elan HapticPad MCU",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "457d4049e2f3a3f6f7510aeb1b150c62cf4f12f106d19703305d53cdc8f92a1d-elan_mcu_fw02.cab",
+      "emulation-url": "4bd470cad3f040f6e8487afc798875be2861b1f1a2dad801977f4a5d8fad9a56-mcu_emulation_0212.zip",
+      "components": [
+        {
+          "version": "0x0002",
+          "guids": [
+            "dcda3fcd-3869-512a-96f1-ff8374c7c53b"
+          ]
+        }
+      ]
+    }
+  ]
+}
