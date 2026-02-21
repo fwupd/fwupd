@@ -31,7 +31,6 @@ depends=(
   libxmlb
   passim
   polkit
-  python
   shared-mime-info
   sqlite
   systemd-libs
