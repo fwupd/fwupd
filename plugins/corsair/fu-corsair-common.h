@@ -8,7 +8,5 @@
 
 #include <fwupdplugin.h>
 
-#define FU_CORSAIR_MAX_CMD_SIZE 1024
-
 gchar *
 fu_corsair_version_from_uint32(guint32 val);
