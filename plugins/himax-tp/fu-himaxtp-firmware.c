@@ -200,6 +200,13 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is empty");
+		return FALSE;
+	}
 
 	st = fu_input_stream_read_byte_array(stream, 0, streamsz, NULL, error);
 	if (st == NULL) {
@@ -214,6 +221,14 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 			    "requested 0x%x and got 0x%x",
 			    (guint)streamsz,
 			    (guint)st->len);
+		return FALSE;
+	}
+
+	if (st->len < 1024) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is too small to contain valid mapcode");
 		return FALSE;
 	}
 
@@ -261,7 +276,10 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 							   sizeof(FuHimaxtpIcId),
 							   0,
 							   error);
-			self->ic_id = g_strdup(fu_himaxtp_ic_id_get_ic_id(main_info));
+			if (main_info == NULL)
+				return FALSE;
+			self->ic_id =
+			    g_strdup((const gchar *)fu_himaxtp_ic_id_get_ic_id(main_info, NULL));
 			self->vid = fu_himaxtp_ic_id_get_vid(main_info);
 			self->pid = fu_himaxtp_ic_id_get_pid(main_info);
 			break;
@@ -270,7 +288,10 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 							      sizeof(FuHimaxtpIcIdMod),
 							      0,
 							      error);
-			self->ic_id_mod = g_strdup(fu_himaxtp_ic_id_mod_get_ic_id_mod(mod_info));
+			if (mod_info == NULL)
+				return FALSE;
+			self->ic_id_mod = g_strdup(
+			    (const gchar *)fu_himaxtp_ic_id_mod_get_ic_id_mod(mod_info, NULL));
 			break;
 		default:
 			continue;

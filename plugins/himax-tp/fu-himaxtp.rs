@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#[repr(u32)]
 enum FuHimaxtpMapCount {
     Main = 9,
     Bl = 1,
 }
 
+#[repr(u32)]
 enum FuHimaxtpUpdateType {
     Main,
     Bl,
@@ -31,12 +33,12 @@ struct FuHimaxtpHidInfo {
     _reserved_2: u8,
     _reserved_3: u16be,
     _reserved_4: u8,
-    _reserved_5: [char; 12],
-    _reserved_6: [char; 12],
-    _reserved_7: [char; 12],
-    _reserved_8: [char; 12],
-    _reserved_9: [char; 12],
-    _reserved_10: [char; 12],
+    _reserved_5: [u8; 12],
+    _reserved_6: [u8; 12],
+    _reserved_7: [u8; 12],
+    _reserved_8: [u8; 12],
+    _reserved_9: [u8; 12],
+    _reserved_10: [u8; 12],
     vid: u16be,
     pid: u16be,
     _reserved_11: [u8; 32],
@@ -58,7 +60,7 @@ struct FuHimaxtpHidInfo {
 #[derive(Parse)]
 #[repr(C, packed)]
 struct FuHimaxtpIcId {
-    ic_id: [char; 12],
+    ic_id: [u8; 12],
     vid: u16be,
     pid: u16be,
 }
@@ -66,10 +68,10 @@ struct FuHimaxtpIcId {
 #[derive(Parse)]
 #[repr(C, packed)]
 struct FuHimaxtpIcIdMod {
-    ic_id_mod: [char; 2],
+    ic_id_mod: [u8; 2],
 }
 
-
+#[repr(u32)]
 enum FuHimaxtpMapcode {
     FwCid = 0x10000000,
     FwVer = 0x10000100,
@@ -78,6 +80,7 @@ enum FuHimaxtpMapcode {
     IcIdMod = 0x10000200,
 }
 
+#[repr(u32)]
 enum FuHimaxtpUpdateErrorCode {
     NoError = 0x77,
     McuE0 = 0x00,

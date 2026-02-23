@@ -16,12 +16,6 @@ struct _FuHimaxtpPlugin {
 
 G_DEFINE_TYPE(FuHimaxtpPlugin, fu_himaxtp_plugin, FU_TYPE_PLUGIN)
 
-static gboolean
-fu_himaxtp_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
-{
-	return TRUE;
-}
-
 static void
 fu_himaxtp_plugin_init(FuHimaxtpPlugin *self)
 {
@@ -41,5 +35,4 @@ fu_himaxtp_plugin_class_init(FuHimaxtpPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_himaxtp_plugin_constructed;
-	plugin_class->device_created = fu_himaxtp_plugin_device_created;
 }
