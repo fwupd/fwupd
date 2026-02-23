@@ -9,6 +9,10 @@ Plugin = pixart_tp
 Plugin = pixart_tp
 PixartTpSramSelect = 0x08
 
+[HIDRAW\VEN_093A&DEV_3317]
+Plugin = pixart_tp
+PixartTpSramSelect = 0x08
+
 [HIDRAW\VEN_093A&DEV_4F07]
 Plugin = pixart_tp
 PixartTpHasHaptic = true
