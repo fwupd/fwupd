@@ -92,6 +92,10 @@ fu_himaxtp_firmware_calculate_crc32c(const guint8 *data, gsize len)
 	guint32 current_data;
 	guint32 tmp;
 
+	if (len % 4 != 0) {
+		/* Firmware size should be multiple of 4 bytes for Himax CRC */
+		return 0xFFFFFFFF;
+	}
 	length = len / 4;
 	for (gsize i = 0; i < length; i++) {
 		current_data = data[i * 4];
@@ -125,6 +129,13 @@ fu_himaxtp_firmware_validate(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is empty");
+		return FALSE;
+	}
 
 	st = fu_input_stream_read_byte_array(stream, offset, streamsz, NULL, error);
 	if (st == NULL) {

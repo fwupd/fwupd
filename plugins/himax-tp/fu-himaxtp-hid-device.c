@@ -110,8 +110,7 @@ fu_himaxtp_hid_device_set_feature(FuHimaxtpHidDevice *self,
 				  GError **error)
 {
 	g_autofree guint8 *data = NULL;
-	g_autoptr(GPtrArray) chunks =
-	    fu_chunk_array_new(buf, bufsz, 0, 0, fu_himaxtp_hid_device_size_lookup(self, id));
+	g_autoptr(GPtrArray) chunks = NULL;
 	gsize unit_sz;
 	guint32 chunk_count = 0;
 
@@ -121,6 +120,22 @@ fu_himaxtp_hid_device_set_feature(FuHimaxtpHidDevice *self,
 	g_return_val_if_fail(self->id_size_table != NULL, FALSE);
 
 	unit_sz = fu_himaxtp_hid_device_size_lookup(self, id);
+	if (unit_sz == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported feature id: %u",
+			    id);
+		return FALSE;
+	}
+	chunks = fu_chunk_array_new(buf, bufsz, 0, 0, unit_sz);
+	if (chunks == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to split data into chunks");
+		return FALSE;
+	}
 	/* allocate buffer */
 	data = g_malloc0(unit_sz + 1);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -161,7 +176,6 @@ fu_himaxtp_hid_device_get_feature(FuHimaxtpHidDevice *self, guint8 id, guint8 *b
 {
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GError) error_local = NULL;
-	gboolean ret;
 	gsize datasz;
 
 	g_return_val_if_fail(FU_IS_HIMAXTP_HID_DEVICE(self), FALSE);
@@ -184,26 +198,28 @@ fu_himaxtp_hid_device_get_feature(FuHimaxtpHidDevice *self, guint8 id, guint8 *b
 	}
 
 	/* copy out */
-	ret = fu_memcpy_safe(buf,
-			     bufsz,
-			     0,
-			     data,
-			     datasz,
-			     1, /* src */
-			     bufsz,
-			     &error_local);
-	if (!ret) {
-		g_debug("failed to copy data for id %u: %s", id, error_local->message);
+	if (!fu_memcpy_safe(buf,
+			    bufsz,
+			    0,
+			    data,
+			    datasz,
+			    1, /* src */
+			    bufsz,
+			    &error_local)) {
+		g_debug("failed to copy data for id %u: %s",
+			id,
+			error_local != NULL ? error_local->message : "unknown error");
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-static long
+static guint
 fu_himaxtp_hid_device_get_time_diff_ms(struct timespec *start, struct timespec *end)
 {
-	return (end->tv_sec - start->tv_sec) * 1000 + (end->tv_nsec - start->tv_nsec) / 1000000;
+	return (guint)((end->tv_sec - start->tv_sec) * 1000 +
+		       (end->tv_nsec - start->tv_nsec) / 1000000);
 }
 
 static gboolean
@@ -371,7 +387,7 @@ fu_himaxtp_hid_device_calculate_mapping_entries(FuHimaxtpHidInfo *info, gsize ma
 static gboolean
 fu_himaxtp_hid_device_polling_error_handler(FuHimaxtpHidDevice *self,
 					    struct timespec *start,
-					    gint timeout_s,
+					    guint timeout_s,
 					    guint8 received_code,
 					    FuHimaxtpUpdateErrorCode *status,
 					    GError **error)
@@ -890,14 +906,15 @@ fu_himaxtp_hid_device_update_process(FuHimaxtpHidDevice *self,
 								      &cmd,
 								      sizeof(cmd),
 								      HID_POLLING_INTERVAL_MS,
-								      ready_timeout_s * 1000,
+								      ((guint)ready_timeout_s) *
+									  1000,
 								      received,
 								      &n_received)) {
 				if (n_received > 0) {
 					if (!fu_himaxtp_hid_device_polling_error_handler(
 						self,
 						&start,
-						ready_timeout_s,
+						(guint)ready_timeout_s,
 						received[0],
 						status,
 						error))
