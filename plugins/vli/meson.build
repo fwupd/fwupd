@@ -2,6 +2,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
 plugin_quirks += files([
+  'vli.quirk',
   'vli-bizlink.quirk',
   'vli-cablematters.quirk',
   'vli-dell.quirk',
@@ -16,7 +17,6 @@ plugin_builtin_vli = static_library('fu_plugin_vli',
   rustgen.process('fu-vli.rs'),
   sources: [
     'fu-vli-plugin.c',
-    'fu-vli-common.c',
     'fu-vli-device.c',
     'fu-vli-pd-common.c',
     'fu-vli-pd-device.c',
