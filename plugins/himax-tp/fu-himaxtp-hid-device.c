@@ -722,15 +722,13 @@ fu_himaxtp_hid_device_switch_block_protect(FuHimaxtpHidDevice *self,
 	}
 
 	fu_device_retry_set_delay(FU_DEVICE(self), 1);
-	if (fu_device_retry(FU_DEVICE(self),
-			    fu_himaxtp_hid_device_switch_block_protect_retry_func,
-			    max_retry,
-			    status,
-			    error) == FALSE) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
-				    "flash block protect switch timeout");
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_himaxtp_hid_device_switch_block_protect_retry_func,
+			     max_retry,
+			     status,
+			     error)) {
+		/* nocheck:error */
+		g_prefix_error(error, "flash block protect switch timeout: ");
 		return FALSE;
 	}
 
@@ -1145,6 +1143,8 @@ fu_himaxtp_hid_device_setup(FuDevice *device, GError **error)
 				      fu_himaxtp_hid_device_size_lookup(self, HID_CFG_ID),
 				      0,
 				      error);
+	if (self->dev_info == NULL)
+		return FALSE;
 
 	/* define the extra instance IDs */
 	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));

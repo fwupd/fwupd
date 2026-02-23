@@ -64,6 +64,16 @@ fu_himaxtp_firmware_get_pid(FuHimaxtpFirmware *self)
 	return self->pid;
 }
 
+static gboolean
+fu_himaxtp_firmware_all_zero(const guint8 *data, gsize len)
+{
+	for (gsize i = 0; i < len; i++) {
+		if (data[i] != 0)
+			return FALSE;
+	}
+	return TRUE;
+}
+
 static guint32
 fu_himaxtp_firmware_calculate_crc32c(const guint8 *data, gsize len)
 {
@@ -172,8 +182,8 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 	FuHimaxtpFirmware *self = FU_HIMAXTP_FIRMWARE(firmware);
 	guint32 offset;
 	gsize streamsz = 0;
-	FuHimaxtpIcId *main_info;
-	FuHimaxtpIcIdMod *mod_info;
+	g_autoptr(FuHimaxtpIcId) main_info = NULL;
+	g_autoptr(FuHimaxtpIcIdMod) mod_info = NULL;
 	struct FuHimaxtpMapCode mapcode = {0};
 	g_autoptr(GByteArray) st = NULL;
 
@@ -208,7 +218,8 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		if (fu_sum8((const guint8 *)st->data + i, sizeof(struct FuHimaxtpMapCode)) != 0 ||
-		    fu_sum8((const guint8 *)&mapcode, sizeof(struct FuHimaxtpMapCode) == 0))
+		    fu_himaxtp_firmware_all_zero((const guint8 *)&mapcode,
+						 sizeof(struct FuHimaxtpMapCode)))
 			break;
 
 		if (!fu_memcpy_safe((guint8 *)&mapcode,
@@ -287,12 +298,16 @@ fu_himaxtp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		self->fw_ver = tmp;
 
 	str = xb_node_query_text(n, "ic_id", NULL);
-	if (str != NULL)
-		g_strlcpy(self->ic_id, str, sizeof(self->ic_id));
+	if (str != NULL) {
+		g_free(self->ic_id);
+		self->ic_id = g_strdup(str);
+	}
 
 	str = xb_node_query_text(n, "ic_id_mod", NULL);
-	if (str != NULL)
-		g_strlcpy(self->ic_id_mod, str, sizeof(self->ic_id_mod));
+	if (str != NULL) {
+		g_free(self->ic_id_mod);
+		self->ic_id_mod = g_strdup(str);
+	}
 
 	tmp = xb_node_query_text_as_uint(n, "tp_cfg_ver", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
@@ -307,6 +322,17 @@ fu_himaxtp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
+fu_himaxtp_firmware_finalize(GObject *object)
+{
+	FuHimaxtpFirmware *self = FU_HIMAXTP_FIRMWARE(object);
+
+	g_clear_pointer(&self->ic_id, g_free);
+	g_clear_pointer(&self->ic_id_mod, g_free);
+
+	G_OBJECT_CLASS(fu_himaxtp_firmware_parent_class)->finalize(object);
+}
+
+static void
 fu_himaxtp_firmware_init(FuHimaxtpFirmware *self)
 {
 }
@@ -314,7 +340,9 @@ fu_himaxtp_firmware_init(FuHimaxtpFirmware *self)
 static void
 fu_himaxtp_firmware_class_init(FuHimaxtpFirmwareClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	object_class->finalize = fu_himaxtp_firmware_finalize;
 	firmware_class->validate = fu_himaxtp_firmware_validate;
 	firmware_class->parse = fu_himaxtp_firmware_parse;
 	firmware_class->build = fu_himaxtp_firmware_build;
