@@ -67,17 +67,6 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_version_raw(firmware, fwver);
 
-	/* check size */
-	if (streamsz != fu_vli_common_device_kind_get_size(self->device_kind)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "size invalid, got 0x%x expected 0x%x",
-			    (guint)streamsz,
-			    fu_vli_common_device_kind_get_size(self->device_kind));
-		return FALSE;
-	}
-
 	/* check CRC */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint16 crc_actual = 0xFFFF;
