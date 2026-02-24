@@ -1884,8 +1884,8 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 						     error))
 				return FALSE;
 			if (iface_last == NULL) {
-				g_warning("endpoint 0x%x without prior interface, ignoring",
-					  fu_usb_endpoint_get_number(ep));
+				g_debug("endpoint 0x%x without prior interface, ignoring",
+					fu_usb_endpoint_get_number(ep));
 			} else {
 				fu_usb_interface_add_endpoint(iface_last, ep);
 			}
@@ -1899,7 +1899,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 						     error))
 				return FALSE;
 			if (iface_last == NULL) {
-				g_warning("hid descriptor without prior interface, ignoring");
+				g_debug("hid descriptor without prior interface, ignoring");
 			} else {
 				fu_usb_hid_descriptor_set_iface_number(
 				    hid_descriptor,
