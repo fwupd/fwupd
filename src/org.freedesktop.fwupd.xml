@@ -785,7 +785,7 @@
         <doc:doc>
           <doc:summary>
             <doc:para>
-              File handle to AppStream metadata GPG signature.
+              File handle to AppStream metadata Jcat signature.
             </doc:para>
           </doc:summary>
         </doc:doc>

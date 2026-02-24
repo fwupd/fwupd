@@ -1129,7 +1129,6 @@ fu_cabinet_init(FuCabinet *self)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
 #endif
 }
 

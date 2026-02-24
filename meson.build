@@ -959,7 +959,6 @@ if build_daemon
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,
-      'GPG support': supported_gpg,
       'PKCS7 support': supported_pkcs7,
     },
     section: 'daemon features',

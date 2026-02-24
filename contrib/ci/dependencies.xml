@@ -506,18 +506,6 @@
       <package>gettext</package>
     </distro>
   </dependency>
-  <dependency id="gnupg2">
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="freebsd">
-      <package>gpgme</package>
-    </distro>
-  </dependency>
   <dependency id="gnu-efi-devel">
     <distro id="arch">
       <package variant="x86_64">gnu-efi-libs</package>

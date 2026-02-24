@@ -9370,7 +9370,6 @@ fu_engine_constructed(GObject *obj)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
 #endif
 
 	/* add some runtime versions of things the daemon depends on */
