@@ -18,8 +18,6 @@ G_DECLARE_FINAL_TYPE(FuSynapticsCxaudioFirmware,
 		     SYNAPTICS_CXAUDIO_FIRMWARE,
 		     FuSrecFirmware)
 
-FuFirmware *
-fu_synaptics_cxaudio_firmware_new(void);
 FuSynapticsCxaudioFileKind
 fu_synaptics_cxaudio_firmware_get_file_type(FuSynapticsCxaudioFirmware *self);
 FuSynapticsCxaudioDeviceKind

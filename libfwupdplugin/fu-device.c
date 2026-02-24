@@ -5753,6 +5753,12 @@ fu_device_prepare_firmware(FuDevice *self,
 			return NULL;
 	}
 
+	/* check firmware is compatible with the device */
+	if (device_class->check_firmware != NULL) {
+		if (!device_class->check_firmware(self, firmware, flags, error))
+			return NULL;
+	}
+
 	/* check size */
 	fw_size = fu_firmware_get_size(firmware);
 	if (fw_size != 0) {

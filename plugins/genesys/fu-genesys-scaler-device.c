@@ -1723,27 +1723,21 @@ fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 	return g_bytes_new_take(g_steal_pointer(&buf), size);
 }
 
-static FuFirmware *
-fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FuFirmwareParseFlags flags,
-					  GError **error)
+static gboolean
+fu_genesys_scaler_device_check_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuFirmwareParseFlags flags,
+					GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_genesys_scaler_firmware_new();
 	g_autoptr(GBytes) blob_payload = NULL;
 	g_autoptr(GBytes) blob_public_key = NULL;
-
-	/* parse firmware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 
 	/* check public-key */
 	blob_public_key =
 	    fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
 	if (blob_public_key == NULL)
-		return NULL;
+		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN,
 		    "PublicKey",
 		    g_bytes_get_data(blob_public_key, NULL),
@@ -1756,13 +1750,13 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_SIGNATURE_INVALID,
 				    "mismatch public-key");
-		return NULL;
+		return FALSE;
 	}
 
 	/* check size */
 	blob_payload = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (blob_payload == NULL)
-		return NULL;
+		return FALSE;
 	if (g_bytes_get_size(blob_payload) > fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1770,11 +1764,11 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 			    "firmware too large, got 0x%x, expected <= 0x%x",
 			    (guint)g_bytes_get_size(blob_payload),
 			    (guint)fu_device_get_firmware_size_max(device));
-		return NULL;
+		return FALSE;
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -1971,6 +1965,7 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_PAUSE_R2_CPU);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0);
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_SCALER_FIRMWARE);
 
 	self->sector_size = 0x1000;						/* 4KB */
 	self->page_size = 0x100;						/* 256B */
@@ -1996,7 +1991,7 @@ fu_genesys_scaler_device_class_init(FuGenesysScalerDeviceClass *klass)
 	device_class->probe = fu_genesys_scaler_device_probe;
 	device_class->setup = fu_genesys_scaler_device_setup;
 	device_class->dump_firmware = fu_genesys_scaler_device_dump_firmware;
-	device_class->prepare_firmware = fu_genesys_scaler_device_prepare_firmware;
+	device_class->check_firmware = fu_genesys_scaler_device_check_firmware;
 	device_class->write_firmware = fu_genesys_scaler_device_write_firmware;
 	device_class->set_progress = fu_genesys_scaler_device_set_progress;
 	device_class->detach = fu_genesys_scaler_device_detach;

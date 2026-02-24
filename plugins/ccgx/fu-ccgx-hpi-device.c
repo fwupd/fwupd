@@ -1096,22 +1096,16 @@ fu_ccgx_hpi_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	return TRUE;
 }
 
-static FuFirmware *
-fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
-				    FuProgress *progress,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
+static gboolean
+fu_ccgx_hpi_device_check_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuFirmwareParseFlags flags,
+				  GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxFwMode fw_mode;
 	guint16 fw_app_type;
 	guint16 fw_silicon_id;
-	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
-
-	/* parse all images */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 
 	/* check the silicon ID */
 	fw_silicon_id = fu_ccgx_firmware_get_silicon_id(FU_CCGX_FIRMWARE(firmware));
@@ -1122,7 +1116,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 			    "silicon id mismatch, expected 0x%x, got 0x%x",
 			    self->silicon_id,
 			    fw_silicon_id);
-		return NULL;
+		return FALSE;
 	}
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		fw_app_type = fu_ccgx_firmware_get_app_type(FU_CCGX_FIRMWARE(firmware));
@@ -1133,7 +1127,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 				    "app type mismatch, expected 0x%x, got 0x%x",
 				    self->fw_app_type,
 				    fw_app_type);
-			return NULL;
+			return FALSE;
 		}
 	}
 	fw_mode = fu_ccgx_firmware_get_fw_mode(FU_CCGX_FIRMWARE(firmware));
@@ -1144,9 +1138,11 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 			    "FuCcgxFwMode mismatch, expected %s, got %s",
 			    fu_ccgx_fw_mode_to_string(fu_ccgx_fw_mode_get_alternate(self->fw_mode)),
 			    fu_ccgx_fw_mode_to_string(fw_mode));
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -1591,6 +1587,7 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx");
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CCGX_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
@@ -1622,7 +1619,7 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_ccgx_hpi_device_to_string;
 	device_class->write_firmware = fu_ccgx_hpi_device_write_firmware;
-	device_class->prepare_firmware = fu_ccgx_hpi_device_prepare_firmware;
+	device_class->check_firmware = fu_ccgx_hpi_device_check_firmware;
 	device_class->detach = fu_ccgx_hpi_device_detach;
 	device_class->attach = fu_ccgx_hpi_device_attach;
 	device_class->setup = fu_ccgx_hpi_device_setup;

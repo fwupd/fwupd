@@ -166,9 +166,3 @@ fu_genesys_scaler_firmware_class_init(FuGenesysScalerFirmwareClass *klass)
 	firmware_class->build = fu_genesys_scaler_firmware_build;
 	firmware_class->write = fu_genesys_scaler_firmware_write;
 }
-
-FuFirmware *
-fu_genesys_scaler_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_GENESYS_SCALER_FIRMWARE, NULL));
-}

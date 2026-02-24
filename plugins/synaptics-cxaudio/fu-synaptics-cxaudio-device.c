@@ -594,18 +594,15 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_synaptics_cxaudio_device_prepare_firmware(FuDevice *device,
-					     GInputStream *stream,
-					     FuProgress *progress,
-					     FuFirmwareParseFlags flags,
-					     GError **error)
+static gboolean
+fu_synaptics_cxaudio_device_check_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuFirmwareParseFlags flags,
+					   GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
 	guint32 chip_id_base;
-	g_autoptr(FuFirmware) firmware = fu_synaptics_cxaudio_firmware_new();
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
+
 	chip_id_base =
 	    fu_synaptics_cxaudio_firmware_get_devtype(FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware));
 	if (chip_id_base != self->chip_id_base) {
@@ -615,9 +612,11 @@ fu_synaptics_cxaudio_device_prepare_firmware(FuDevice *device,
 			    "device 0x%04u is incompatible with firmware 0x%04u",
 			    self->chip_id_base,
 			    chip_id_base);
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -875,6 +874,7 @@ fu_synaptics_cxaudio_device_init(FuSynapticsCxaudioDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_install_duration(FU_DEVICE(self), 3); /* seconds */
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SYNAPTICS_CXAUDIO_FIRMWARE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.cxaudio");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100); /* ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -889,6 +889,6 @@ fu_synaptics_cxaudio_device_class_init(FuSynapticsCxaudioDeviceClass *klass)
 	device_class->setup = fu_synaptics_cxaudio_device_setup;
 	device_class->write_firmware = fu_synaptics_cxaudio_device_write_firmware;
 	device_class->attach = fu_synaptics_cxaudio_device_attach;
-	device_class->prepare_firmware = fu_synaptics_cxaudio_device_prepare_firmware;
+	device_class->check_firmware = fu_synaptics_cxaudio_device_check_firmware;
 	device_class->set_progress = fu_synaptics_cxaudio_device_set_progress;
 }

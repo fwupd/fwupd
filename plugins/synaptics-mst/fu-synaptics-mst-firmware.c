@@ -199,9 +199,3 @@ fu_synaptics_mst_firmware_class_init(FuSynapticsMstFirmwareClass *klass)
 	firmware_class->write = fu_synaptics_mst_firmware_write;
 	firmware_class->build = fu_synaptics_mst_firmware_build;
 }
-
-FuFirmware *
-fu_synaptics_mst_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_MST_FIRMWARE, NULL));
-}

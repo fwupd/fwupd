@@ -20,8 +20,6 @@ typedef struct {
 	GBytes *data;
 } FuCcgxFirmwareRecord;
 
-FuFirmware *
-fu_ccgx_firmware_new(void);
 GPtrArray *
 fu_ccgx_firmware_get_records(FuCcgxFirmware *self);
 guint16

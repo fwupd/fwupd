@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuParadeUsbhubFirmware,
 		     FU,
 		     PARADE_USBHUB_FIRMWARE,
 		     FuFirmware)
-
-FuFirmware *
-fu_parade_usbhub_firmware_new(void);

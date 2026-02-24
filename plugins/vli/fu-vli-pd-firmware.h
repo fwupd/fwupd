@@ -14,7 +14,5 @@
 #define FU_TYPE_VLI_PD_FIRMWARE (fu_vli_pd_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuVliPdFirmware, fu_vli_pd_firmware, FU, VLI_PD_FIRMWARE, FuFirmware)
 
-FuFirmware *
-fu_vli_pd_firmware_new(void);
 FuVliDeviceKind
 fu_vli_pd_firmware_get_kind(FuVliPdFirmware *self);

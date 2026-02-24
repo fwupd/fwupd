@@ -169,20 +169,16 @@ fu_vli_usbhub_pd_device_reload(FuDevice *device, GError **error)
 	return fu_vli_usbhub_pd_device_setup(device, error);
 }
 
-static FuFirmware *
-fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
-					 FuProgress *progress,
-					 FuFirmwareParseFlags flags,
-					 GError **error)
+static gboolean
+fu_vli_usbhub_pd_device_check_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuFirmwareParseFlags flags,
+				       GError **error)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
 	FuVliDeviceKind device_kind;
-	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new();
 
 	/* check is compatible with firmware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	device_kind = fu_vli_pd_firmware_get_kind(FU_VLI_PD_FIRMWARE(firmware));
 	if (self->device_kind != device_kind) {
 		g_set_error(error,
@@ -191,12 +187,11 @@ fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 			    "firmware incompatible, got %s, expected %s",
 			    fu_vli_device_kind_to_string(device_kind),
 			    fu_vli_device_kind_to_string(self->device_kind));
-		return NULL;
+		return FALSE;
 	}
 
-	/* we could check this against flags */
-	g_info("parsed version: %s", fu_firmware_get_version(firmware));
-	return g_steal_pointer(&firmware);
+	/* success */
+	return TRUE;
 }
 
 static GBytes *
@@ -356,6 +351,7 @@ fu_vli_usbhub_pd_device_init(FuVliUsbhubPdDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration(FU_DEVICE(self), 15); /* seconds */
 	fu_device_set_logical_id(FU_DEVICE(self), "PD");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_VLI_PD_FIRMWARE);
 	fu_device_set_summary(FU_DEVICE(self), "USB-C power delivery device");
 }
 
@@ -370,7 +366,7 @@ fu_vli_usbhub_pd_device_class_init(FuVliUsbhubPdDeviceClass *klass)
 	device_class->attach = fu_vli_usbhub_pd_device_attach;
 	device_class->dump_firmware = fu_vli_usbhub_pd_device_dump_firmware;
 	device_class->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
-	device_class->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
+	device_class->check_firmware = fu_vli_usbhub_pd_device_check_firmware;
 	device_class->convert_version = fu_vli_usbhub_pd_device_convert_version;
 	device_class->set_quirk_kv = fu_vli_usbhub_pd_device_set_quirk_kv;
 	device_class->set_progress = fu_vli_usbhub_pd_device_set_progress;

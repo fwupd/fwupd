@@ -220,16 +220,3 @@ fu_amd_gpu_psp_firmware_class_init(FuAmdGpuPspFirmwareClass *klass)
 	firmware_class->parse = fu_amd_gpu_psp_firmware_parse;
 	firmware_class->export = fu_amd_gpu_psp_firmware_export;
 }
-
-/**
- * fu_amd_gpu_psp_firmware_new
- *
- * Creates a new #FuFirmware of sub type amd-gpu-psp
- *
- * Since: 1.9.6
- **/
-FuFirmware *
-fu_amd_gpu_psp_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_AMD_GPU_PSP_FIRMWARE, NULL));
-}

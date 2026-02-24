@@ -72,9 +72,3 @@ fu_fresco_pd_firmware_class_init(FuFrescoPdFirmwareClass *klass)
 	firmware_class->parse = fu_fresco_pd_firmware_parse;
 	firmware_class->export = fu_fresco_pd_firmware_export;
 }
-
-FuFirmware *
-fu_fresco_pd_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_FRESCO_PD_FIRMWARE, NULL));
-}

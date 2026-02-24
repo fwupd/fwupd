@@ -441,20 +441,16 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_vli_pd_device_prepare_firmware(FuDevice *device,
-				  GInputStream *stream,
-				  FuProgress *progress,
-				  FuFirmwareParseFlags flags,
-				  GError **error)
+static gboolean
+fu_vli_pd_device_check_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuFirmwareParseFlags flags,
+				GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE(device);
 	FuVliDeviceKind device_kind;
-	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new();
 
 	/* check size */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if (fu_firmware_get_size(firmware) > fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -462,7 +458,7 @@ fu_vli_pd_device_prepare_firmware(FuDevice *device,
 			    "firmware too large, got 0x%x, expected <= 0x%x",
 			    (guint)fu_firmware_get_size(firmware),
 			    (guint)fu_device_get_firmware_size_max(device));
-		return NULL;
+		return FALSE;
 	}
 
 	/* check is compatible with firmware */
@@ -475,12 +471,11 @@ fu_vli_pd_device_prepare_firmware(FuDevice *device,
 		    "firmware incompatible, got %s, expected %s",
 		    fu_vli_device_kind_to_string(device_kind),
 		    fu_vli_device_kind_to_string(fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
-		return NULL;
+		return FALSE;
 	}
 
-	/* we could check this against flags */
-	g_debug("parsed version: %s", fu_firmware_get_version(firmware));
-	return g_steal_pointer(&firmware);
+	/* success */
+	return TRUE;
 }
 
 static GBytes *
@@ -904,6 +899,7 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_VLI_PD_FIRMWARE);
 	fu_vli_device_set_spi_auto_detect(FU_VLI_DEVICE(self), FALSE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM);
@@ -922,7 +918,7 @@ fu_vli_pd_device_class_init(FuVliPdDeviceClass *klass)
 	FuVliDeviceClass *vli_device_class = FU_VLI_DEVICE_CLASS(klass);
 	device_class->dump_firmware = fu_vli_pd_device_dump_firmware;
 	device_class->write_firmware = fu_vli_pd_device_write_firmware;
-	device_class->prepare_firmware = fu_vli_pd_device_prepare_firmware;
+	device_class->check_firmware = fu_vli_pd_device_check_firmware;
 	device_class->attach = fu_vli_pd_device_attach;
 	device_class->detach = fu_vli_pd_device_detach;
 	device_class->setup = fu_vli_pd_device_setup;
