@@ -66,10 +66,6 @@ fu_amd_gpu_uma_check_support_with_support_func(void)
 	g_assert_true(
 	    fu_amd_gpu_uma_check_support(fu_temporary_directory_get_path(tmpdir), &error));
 	g_assert_no_error(error);
-
-	g_unlink(carveout_file);
-	g_unlink(options_file);
-	g_rmdir(uma_dir);
 }
 
 static void
@@ -121,9 +117,6 @@ fu_amd_gpu_uma_get_setting_valid_func(void)
 	g_assert_cmpint(possible_values->len, ==, 3);
 
 	g_assert_cmpstr(fwupd_bios_setting_get_current_value(setting), ==, "Minimum (512 MB)");
-	g_unlink(carveout_file);
-	g_unlink(options_file);
-	g_rmdir(uma_dir);
 }
 
 static void
@@ -193,10 +186,6 @@ fu_amd_gpu_uma_write_value_func(void)
 	g_assert_cmpstr(g_strstrip(carveout_contents), ==, "1");
 
 	g_assert_cmpstr(fwupd_bios_setting_get_current_value(setting), ==, "(1 GB)");
-
-	g_unlink(carveout_file);
-	g_unlink(options_file);
-	g_rmdir(uma_dir);
 }
 
 int
