@@ -19,8 +19,6 @@ BUILD_DEPENDS=	gi-docgen:textproc/gi-docgen \
 LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libefiboot.so:devel/libefiboot \
 		libgnutls.so:security/gnutls \
-		libgpg-error.so:security/libgpg-error \
-		libgpgme.so:security/gpgme \
 		libusb.so:devel/libusb \
 		libjcat.so:textproc/libjcat \
 		libcbor.so:devel/libcbor \

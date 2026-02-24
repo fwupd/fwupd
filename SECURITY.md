@@ -54,7 +54,7 @@ Important things to note:
 * OEMs and ODMs can only upload for devices that match their device-supplied vendor-id
 * The relationship between the OEM/ODM and affiliate ISV/IBV is implemented using per-task ACLs
 * The LVFS is assumed to be managed by a vendor-neutral trusted team
-* Signing of the metadata and firmware is implemented using PKCS#7 and GPG
+* Signing of the metadata and firmware is implemented using PKCS#7
 * End users only trust the LVFS signing signatures by default
 * Metadata contains SHA-1 and SHA-256 hashes of the firmware archive
 * Access to the embargo remotes requires knowing the secret vendor hash, but not a token

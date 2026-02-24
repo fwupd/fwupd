@@ -330,7 +330,7 @@ cd -
 
 %meson_install
 
-mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
+mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd
 
 # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1757948
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/fwupd
@@ -426,7 +426,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
 %{_libdir}/fwupd-%{version}/libfwupd*.so
-%ghost %{_localstatedir}/lib/fwupd/gnupg
+%ghost %{_localstatedir}/lib/fwupd
 
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager

@@ -3,7 +3,7 @@ subdir('efi')
 
 installed_firmware_zip = custom_target(
   'installed-firmware-zip',
-  input: ['colorhug/firmware.txt', 'colorhug/firmware.txt.asc'],
+  input: ['colorhug/firmware.txt'],
   output: 'firmware.zip',
   command: [python3, '-m', 'zipfile', '-c', '@OUTPUT@', '@INPUT@'],
   install: true,
