@@ -527,9 +527,3 @@ fu_ccgx_firmware_class_init(FuCcgxFirmwareClass *klass)
 	firmware_class->build = fu_ccgx_firmware_build;
 	firmware_class->export = fu_ccgx_firmware_export;
 }
-
-FuFirmware *
-fu_ccgx_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_CCGX_FIRMWARE, NULL));
-}

@@ -2161,22 +2161,16 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FuFirmwareParseFlags flags,
-					  GError **error)
+static gboolean
+fu_genesys_usbhub_device_check_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuFirmwareParseFlags flags,
+					GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_genesys_usbhub_firmware_new();
-
-	/* parse firmware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 
 	/* has codesign */
-	if (self->has_codesign && (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if (self->has_codesign) {
 		g_autoptr(FuFirmware) img = NULL;
 
 		if (self->st_public_key == NULL) {
@@ -2184,7 +2178,7 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_FOUND,
 					    "device does not have public-key");
-			return NULL;
+			return FALSE;
 		}
 
 		img = fu_firmware_get_image_by_idx(firmware, FU_GENESYS_FW_TYPE_CODESIGN, error);
@@ -2192,19 +2186,19 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 			g_prefix_error(error,
 				       "firmware does not have %s: ",
 				       fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_CODESIGN));
-			return NULL;
+			return FALSE;
 		}
 
 		if (!fu_genesys_usbhub_device_compare_fw_public_key(self, img, error))
-			return NULL;
+			return FALSE;
 	}
 
 	/* set write address into each firmware address */
 	if (!fu_genesys_usbhub_device_adjust_fw_addr(self, firmware, error))
-		return NULL;
+		return FALSE;
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -3208,6 +3202,7 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY);
 	fu_device_set_install_duration(FU_DEVICE(self), 9); /* 9 s */
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_FIRMWARE);
 
 	self->vcs.req_switch = GENESYS_USBHUB_GL_HUB_SWITCH;
 	self->vcs.req_read = GENESYS_USBHUB_GL_HUB_READ;
@@ -3265,7 +3260,7 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	device_class->setup = fu_genesys_usbhub_device_setup;
 	device_class->dump_firmware = fu_genesys_usbhub_device_dump_firmware;
 	device_class->prepare = fu_genesys_usbhub_device_prepare;
-	device_class->prepare_firmware = fu_genesys_usbhub_device_prepare_firmware;
+	device_class->check_firmware = fu_genesys_usbhub_device_check_firmware;
 	device_class->write_firmware = fu_genesys_usbhub_device_write_firmware;
 	device_class->set_progress = fu_genesys_usbhub_device_set_progress;
 	device_class->detach = fu_genesys_usbhub_device_detach;

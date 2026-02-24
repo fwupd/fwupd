@@ -15,7 +15,5 @@ G_DECLARE_FINAL_TYPE(FuAlgoltekUsbcrFirmware,
 		     ALGOLTEK_USBCR_FIRMWARE,
 		     FuFirmware)
 
-FuFirmware *
-fu_algoltek_usbcr_firmware_new(void);
 guint16
 fu_algoltek_usbcr_firmware_get_boot_ver(FuAlgoltekUsbcrFirmware *self);

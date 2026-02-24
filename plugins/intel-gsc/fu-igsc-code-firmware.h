@@ -16,8 +16,6 @@ G_DECLARE_FINAL_TYPE(FuIgscCodeFirmware,
 		     IGSC_CODE_FIRMWARE,
 		     FuIfwiFptFirmware)
 
-FuFirmware *
-fu_igsc_code_firmware_new(void);
 guint32
 fu_igsc_code_firmware_get_hw_sku(FuIgscCodeFirmware *self);
 guint32

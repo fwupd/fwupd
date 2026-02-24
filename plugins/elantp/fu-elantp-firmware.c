@@ -284,9 +284,3 @@ fu_elantp_firmware_class_init(FuElantpFirmwareClass *klass)
 	firmware_class->write = fu_elantp_firmware_write;
 	firmware_class->export = fu_elantp_firmware_export;
 }
-
-FuFirmware *
-fu_elantp_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ELANTP_FIRMWARE, NULL));
-}

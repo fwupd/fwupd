@@ -145,9 +145,3 @@ fu_igsc_code_firmware_class_init(FuIgscCodeFirmwareClass *klass)
 	firmware_class->parse = fu_igsc_code_firmware_parse;
 	firmware_class->export = fu_igsc_code_firmware_export;
 }
-
-FuFirmware *
-fu_igsc_code_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_IGSC_CODE_FIRMWARE, NULL));
-}

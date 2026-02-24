@@ -140,9 +140,3 @@ fu_jabra_file_firmware_class_init(FuJabraFileFirmwareClass *klass)
 	firmware_class->parse = fu_jabra_file_firmware_parse;
 	firmware_class->export = fu_jabra_file_firmware_export;
 }
-
-FuFirmware *
-fu_jabra_file_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_JABRA_FILE_FIRMWARE, NULL));
-}

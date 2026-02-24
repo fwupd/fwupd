@@ -437,21 +437,15 @@ fu_intel_usb4_device_activate(FuDevice *device, FuProgress *progress, GError **e
 	return TRUE;
 }
 
-static FuFirmware *
-fu_intel_usb4_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
-				      FuProgress *progress,
-				      FuFirmwareParseFlags flags,
-				      GError **error)
+static gboolean
+fu_intel_usb4_device_check_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
 	guint16 fw_vendor_id;
 	guint16 fw_model_id;
-	g_autoptr(FuFirmware) firmware = fu_intel_thunderbolt_firmware_new();
-
-	/* get vid:pid:rev */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 
 	/* check is compatible */
 	fw_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
@@ -466,7 +460,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 				    fw_model_id,
 				    self->nvm_vendor_id,
 				    self->nvm_model_id);
-			return NULL;
+			return FALSE;
 		}
 		g_warning("firmware 0x%04x:0x%04x does not match device 0x%04x:0x%04x",
 			  fw_vendor_id,
@@ -476,7 +470,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -589,6 +583,7 @@ fu_intel_usb4_device_init(FuIntelUsb4Device *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_INTEL_USB4_DEVICE_REMOVE_DELAY);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE);
 }
 
 static void
@@ -597,7 +592,7 @@ fu_intel_usb4_device_class_init(FuIntelUsb4DeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_intel_usb4_device_to_string;
 	device_class->setup = fu_intel_usb4_device_setup;
-	device_class->prepare_firmware = fu_intel_usb4_device_prepare_firmware;
+	device_class->check_firmware = fu_intel_usb4_device_check_firmware;
 	device_class->write_firmware = fu_intel_usb4_device_write_firmware;
 	device_class->activate = fu_intel_usb4_device_activate;
 	device_class->set_progress = fu_intel_usb4_device_set_progress;

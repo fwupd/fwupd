@@ -368,9 +368,3 @@ fu_vli_usbhub_firmware_class_init(FuVliUsbhubFirmwareClass *klass)
 	firmware_class->parse = fu_vli_usbhub_firmware_parse;
 	firmware_class->export = fu_vli_usbhub_firmware_export;
 }
-
-FuFirmware *
-fu_vli_usbhub_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_VLI_USBHUB_FIRMWARE, NULL));
-}

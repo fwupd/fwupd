@@ -363,9 +363,3 @@ fu_synaptics_cxaudio_firmware_class_init(FuSynapticsCxaudioFirmwareClass *klass)
 	firmware_class->parse = fu_synaptics_cxaudio_firmware_parse;
 	firmware_class->export = fu_synaptics_cxaudio_firmware_export;
 }
-
-FuFirmware *
-fu_synaptics_cxaudio_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_CXAUDIO_FIRMWARE, NULL));
-}

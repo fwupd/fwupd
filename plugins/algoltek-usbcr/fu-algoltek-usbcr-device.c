@@ -427,18 +427,13 @@ fu_algoltek_usbcr_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_algoltek_usbcr_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FuFirmwareParseFlags flags,
-					  GError **error)
+static gboolean
+fu_algoltek_usbcr_device_check_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuFirmwareParseFlags flags,
+					GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_algoltek_usbcr_firmware_new();
-
 	/* validate compatibility */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if (fu_algoltek_usbcr_firmware_get_boot_ver(FU_ALGOLTEK_USBCR_FIRMWARE(firmware)) !=
 	    fu_device_get_version_bootloader_raw(device)) {
 		g_set_error(
@@ -448,11 +443,11 @@ fu_algoltek_usbcr_device_prepare_firmware(FuDevice *device,
 		    "firmware boot version is 0x%x while expecting value is 0x%x",
 		    fu_algoltek_usbcr_firmware_get_boot_ver(FU_ALGOLTEK_USBCR_FIRMWARE(firmware)),
 		    (guint)fu_device_get_version_bootloader_raw(device));
-		return NULL;
+		return FALSE;
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -648,6 +643,7 @@ fu_algoltek_usbcr_device_init(FuAlgoltekUsbcrDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_name(FU_DEVICE(self), "USB Card Reader");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALGOLTEK_USBCR_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
 }
@@ -657,7 +653,7 @@ fu_algoltek_usbcr_device_class_init(FuAlgoltekUsbcrDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_algoltek_usbcr_device_setup;
-	device_class->prepare_firmware = fu_algoltek_usbcr_device_prepare_firmware;
+	device_class->check_firmware = fu_algoltek_usbcr_device_check_firmware;
 	device_class->write_firmware = fu_algoltek_usbcr_device_write_firmware;
 	device_class->set_progress = fu_algoltek_usbcr_device_set_progress;
 	device_class->convert_version = fu_algoltek_usbcr_device_convert_version;
