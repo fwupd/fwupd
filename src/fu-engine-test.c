@@ -1836,11 +1836,6 @@ fu_engine_multiple_rels_func(void)
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
-#ifndef HAVE_LIBARCHIVE
-	g_test_skip("no libarchive support");
-	return;
-#endif
-
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
