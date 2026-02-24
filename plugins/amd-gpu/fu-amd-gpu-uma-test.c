@@ -26,6 +26,7 @@ fu_amd_gpu_uma_check_support_no_support_func(void)
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
 
 	g_assert_false(
 	    fu_amd_gpu_uma_check_support(fu_temporary_directory_get_path(tmpdir), &error));
@@ -35,6 +36,7 @@ fu_amd_gpu_uma_check_support_no_support_func(void)
 static void
 fu_amd_gpu_uma_check_support_with_support_func(void)
 {
+	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autofree gchar *uma_dir = NULL;
@@ -43,17 +45,23 @@ fu_amd_gpu_uma_check_support_with_support_func(void)
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
 
 	uma_dir = fu_temporary_directory_build(tmpdir, "uma", NULL);
+	g_assert_nonnull(uma_dir);
 	g_mkdir(uma_dir, 0755);
 
 	carveout_file = fu_temporary_directory_build(tmpdir, "uma", "carveout", NULL);
-	g_file_set_contents(carveout_file, "0\n", -1, &error);
+	g_assert_nonnull(carveout_file);
+	ret = g_file_set_contents(carveout_file, "0\n", -1, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	options_file = fu_temporary_directory_build(tmpdir, "uma", "carveout_options", NULL);
-	g_file_set_contents(options_file, "0: Minimum (512 MB)\n1: (1 GB)\n", -1, &error);
+	g_assert_nonnull(options_file);
+	ret = g_file_set_contents(options_file, "0: Minimum (512 MB)\n1: (1 GB)\n", -1, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	g_assert_true(
 	    fu_amd_gpu_uma_check_support(fu_temporary_directory_get_path(tmpdir), &error));
@@ -67,6 +75,7 @@ fu_amd_gpu_uma_check_support_with_support_func(void)
 static void
 fu_amd_gpu_uma_get_setting_valid_func(void)
 {
+	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autofree gchar *uma_dir = NULL;
@@ -77,20 +86,26 @@ fu_amd_gpu_uma_get_setting_valid_func(void)
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
 
 	uma_dir = fu_temporary_directory_build(tmpdir, "uma", NULL);
+	g_assert_nonnull(uma_dir);
 	g_mkdir(uma_dir, 0755);
 
 	carveout_file = fu_temporary_directory_build(tmpdir, "uma", "carveout", NULL);
-	g_file_set_contents(carveout_file, "0\n", -1, &error);
+	g_assert_nonnull(carveout_file);
+	ret = g_file_set_contents(carveout_file, "0\n", -1, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	options_file = fu_temporary_directory_build(tmpdir, "uma", "carveout_options", NULL);
-	g_file_set_contents(options_file,
-			    "0: Minimum (512 MB)\n1: (1 GB)\n2: (2 GB)\n",
-			    -1,
-			    &error);
+	g_assert_nonnull(options_file);
+	ret = g_file_set_contents(options_file,
+				  "0: Minimum (512 MB)\n1: (1 GB)\n2: (2 GB)\n",
+				  -1,
+				  &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	setting = fu_amd_gpu_uma_get_setting(fu_temporary_directory_get_path(tmpdir), &error);
 	g_assert_nonnull(setting);
@@ -121,8 +136,10 @@ fu_amd_gpu_uma_get_setting_invalid_func(void)
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
 
 	fn = fu_temporary_directory_build(tmpdir, "uma", NULL);
+	g_assert_nonnull(fn);
 
 	setting = fu_amd_gpu_uma_get_setting(fn, &error);
 	g_assert_null(setting);
@@ -132,6 +149,7 @@ fu_amd_gpu_uma_get_setting_invalid_func(void)
 static void
 fu_amd_gpu_uma_write_value_func(void)
 {
+	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autofree gchar *uma_dir = NULL;
@@ -142,20 +160,26 @@ fu_amd_gpu_uma_write_value_func(void)
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
 
 	uma_dir = fu_temporary_directory_build(tmpdir, "uma", NULL);
+	g_assert_nonnull(uma_dir);
 	g_mkdir(uma_dir, 0755);
 
 	carveout_file = fu_temporary_directory_build(tmpdir, "uma", "carveout", NULL);
-	g_file_set_contents(carveout_file, "0\n", -1, &error);
+	g_assert_nonnull(carveout_file);
+	ret = g_file_set_contents(carveout_file, "0\n", -1, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	options_file = fu_temporary_directory_build(tmpdir, "uma", "carveout_options", NULL);
-	g_file_set_contents(options_file,
-			    "0: Minimum (512 MB)\n1: (1 GB)\n2: (2 GB)\n",
-			    -1,
-			    &error);
+	g_assert_nonnull(options_file);
+	ret = g_file_set_contents(options_file,
+				  "0: Minimum (512 MB)\n1: (1 GB)\n2: (2 GB)\n",
+				  -1,
+				  &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	setting = fu_amd_gpu_uma_get_setting(fu_temporary_directory_get_path(tmpdir), &error);
 	g_assert_nonnull(setting);
