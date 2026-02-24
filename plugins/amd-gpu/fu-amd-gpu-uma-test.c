@@ -20,7 +20,6 @@ fu_amd_gpu_uma_check_support_no_support_func(void)
 {
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autofree gchar *fn = NULL;
 
 	tmpdir = fu_temporary_directory_new("uma", &error);
 	g_assert_no_error(error);

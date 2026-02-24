@@ -101,7 +101,6 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) entity_fw = NULL;
 		g_autoptr(FwupdJsonArray) json_arr_blocks = NULL;
 		g_autoptr(FwupdJsonObject) json_obj_payload = NULL;
-		g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 		/* get entity child */
 		entity_fw = fu_firmware_get_image_by_id(firmware, payload_id, error);
