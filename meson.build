@@ -377,19 +377,14 @@ libdrm = dependency(
 if libdrm.found()
   conf.set('HAVE_LIBDRM' , '1')
 endif
-polkit = dependency(
-  'polkit-gobject-1',
-  version: '>= 0.114',
-  required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'),
-)
+polkit = dependency('polkit-gobject-1', version: '>= 0.103',
+         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
-  conf.set_quoted(
-    'POLKIT_ACTIONDIR',
-    polkit.get_variable(
-      pkgconfig: 'actiondir'
-    ),
-  )
+  if polkit.version().version_compare('>= 0.114')
+    conf.set('HAVE_POLKIT_0_114', '1')
+  endif
+  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
 endif
 if build_daemon
   if not polkit.found()
