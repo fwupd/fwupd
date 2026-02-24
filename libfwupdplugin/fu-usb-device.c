@@ -1890,7 +1890,8 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 				fu_usb_interface_add_endpoint(iface_last, ep);
 			}
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_HID) {
-			g_autoptr(FuUsbHidDescriptor) hid_descriptor = fu_usb_hid_descriptor_new();
+			g_autoptr(FuUsbHidDescriptor) hid_descriptor =
+			    g_object_new(FU_TYPE_USB_HID_DESCRIPTOR, NULL);
 			if (!fu_firmware_parse_bytes(FU_FIRMWARE(hid_descriptor),
 						     blob,
 						     offset,

@@ -8,8 +8,6 @@
 
 #include "fu-usb-hid-descriptor.h"
 
-FuUsbHidDescriptor *
-fu_usb_hid_descriptor_new(void);
 guint8
 fu_usb_hid_descriptor_get_iface_number(FuUsbHidDescriptor *self) G_GNUC_NON_NULL(1);
 void
