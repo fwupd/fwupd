@@ -13,8 +13,6 @@
 
 #include <fwupdplugin.h>
 
-#include <glib/gstdio.h>
-
 #include "fu-amd-gpu-uma.h"
 
 static void
@@ -49,7 +47,9 @@ fu_amd_gpu_uma_check_support_with_support_func(void)
 
 	uma_dir = fu_temporary_directory_build(tmpdir, "uma", NULL);
 	g_assert_nonnull(uma_dir);
-	g_mkdir(uma_dir, 0755);
+	ret = fu_path_mkdir(uma_dir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	carveout_file = fu_temporary_directory_build(tmpdir, "uma", "carveout", NULL);
 	g_assert_nonnull(carveout_file);
@@ -86,7 +86,9 @@ fu_amd_gpu_uma_get_setting_valid_func(void)
 
 	uma_dir = fu_temporary_directory_build(tmpdir, "uma", NULL);
 	g_assert_nonnull(uma_dir);
-	g_mkdir(uma_dir, 0755);
+	ret = fu_path_mkdir(uma_dir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	carveout_file = fu_temporary_directory_build(tmpdir, "uma", "carveout", NULL);
 	g_assert_nonnull(carveout_file);
@@ -157,7 +159,9 @@ fu_amd_gpu_uma_write_value_func(void)
 
 	uma_dir = fu_temporary_directory_build(tmpdir, "uma", NULL);
 	g_assert_nonnull(uma_dir);
-	g_mkdir(uma_dir, 0755);
+	ret = fu_path_mkdir(uma_dir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	carveout_file = fu_temporary_directory_build(tmpdir, "uma", "carveout", NULL);
 	g_assert_nonnull(carveout_file);
