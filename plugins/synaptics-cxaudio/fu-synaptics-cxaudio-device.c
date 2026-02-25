@@ -623,7 +623,7 @@ fu_synaptics_cxaudio_device_prepare_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "device 0x%04u is incompatible with firmware 0x%04u",
+			    "device 0x%04x is incompatible with firmware 0x%04x",
 			    self->chip_id_base,
 			    chip_id_base);
 		return NULL;
