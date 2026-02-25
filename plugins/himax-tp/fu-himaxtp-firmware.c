@@ -273,7 +273,7 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 			break;
 		case FU_HIMAXTP_MAPCODE_IC_ID:
 			main_info = fu_himaxtp_ic_id_parse(&(st->data[offset]),
-							   sizeof(FuHimaxtpIcId),
+							   FU_HIMAXTP_IC_ID_SIZE,
 							   0,
 							   error);
 			if (main_info == NULL)
@@ -285,7 +285,7 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 			break;
 		case FU_HIMAXTP_MAPCODE_IC_ID_MOD:
 			mod_info = fu_himaxtp_ic_id_mod_parse(&(st->data[offset]),
-							      sizeof(FuHimaxtpIcIdMod),
+							      FU_HIMAXTP_IC_ID_MOD_SIZE,
 							      0,
 							      error);
 			if (mod_info == NULL)
