@@ -1302,10 +1302,8 @@ fu_himaxtp_hid_device_write_firmware(FuDevice *device,
 			}
 			fu_progress_step_done(progress);
 		} else {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "firmware update failed");
+			/* nocheck:error */
+			g_prefix_error_literal(error, "firmware update failed: ");
 			return FALSE;
 		}
 	} else {
