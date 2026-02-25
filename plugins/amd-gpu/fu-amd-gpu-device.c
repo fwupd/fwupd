@@ -350,7 +350,7 @@ fu_amd_gpu_device_check_firmware(FuDevice *device,
 	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(FU_AMD_GPU_ATOM_FIRMWARE(csm)),
 			   PART_NUM_STR_SIZE);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
