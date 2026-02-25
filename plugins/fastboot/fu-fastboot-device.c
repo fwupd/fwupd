@@ -157,7 +157,7 @@ fu_fastboot_device_read(FuFastbootDevice *self,
 		}
 
 		/* info */
-		tmp = g_strndup((const gchar *)buf + 4, self->blocksz - 4);
+		tmp = fu_memstrsafe(buf, sizeof(buf), 4, sizeof(buf) - 4, NULL);
 		if (memcmp(buf, "INFO", 4) == 0) {
 			if (g_strcmp0(tmp, "erasing flash") == 0)
 				fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
@@ -203,6 +203,7 @@ fu_fastboot_device_getvar(FuFastbootDevice *self, const gchar *key, gchar **str,
 {
 	g_autofree gchar *tmp = g_strdup_printf("getvar:%s", key);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_fastboot_device_writestr(self, tmp, error))
 		return FALSE;
@@ -210,9 +211,16 @@ fu_fastboot_device_getvar(FuFastbootDevice *self, const gchar *key, gchar **str,
 				     str,
 				     progress,
 				     FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
-				     error)) {
-		g_prefix_error(error, "failed to getvar %s: ", key);
-		return FALSE;
+				     &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+			g_debug("ignoring: %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to getvar %s: ",
+						   key);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
@@ -301,6 +309,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *product = NULL;
 	g_autofree gchar *serialno = NULL;
 	g_autofree gchar *secure = NULL;
+	g_autofree gchar *version_device = NULL;
 	g_autofree gchar *version_bootloader = NULL;
 
 	/* FuUsbDevice->setup */
@@ -313,6 +322,16 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	if (product != NULL && product[0] != '\0') {
 		g_autofree gchar *tmp = g_strdup_printf("Fastboot %s", product);
 		fu_device_set_name(device, tmp);
+	}
+
+	/* device version */
+	if (!fu_fastboot_device_getvar(self, "version-device", &version_device, error))
+		return FALSE;
+	if (version_device != NULL && version_device[0] != '\0') {
+		FwupdVersionFormat version_format = fu_version_guess_format(version_device);
+		if (version_format != FWUPD_VERSION_FORMAT_UNKNOWN)
+			fu_device_set_version_format(device, version_format);
+		fu_device_set_version(device, version_device);
 	}
 
 	/* bootloader version */

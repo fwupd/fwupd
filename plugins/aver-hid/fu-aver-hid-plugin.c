@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-aver-hid-device.h"
-#include "fu-aver-hid-firmware.h"
 #include "fu-aver-hid-plugin.h"
 #include "fu-aver-safeisp-device.h"
 
@@ -30,7 +29,6 @@ fu_aver_hid_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AVER_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AVER_SAFEISP_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_AVER_HID_FIRMWARE);
 }
 
 static void

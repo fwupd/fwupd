@@ -21,7 +21,7 @@
 /**
  * FuUswidFirmware:
  *
- * A uSWID header with multiple optionally-compressed coSWID CBOR sections.
+ * A uSWID header with multiple optionally-compressed SBOM sections.
  *
  * See also: [class@FuCoswidFirmware]
  */
@@ -29,6 +29,7 @@
 typedef struct {
 	guint8 hdrver;
 	FuUswidPayloadCompression compression;
+	FuUswidPayloadFormat format;
 } FuUswidFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUswidFirmware, fu_uswid_firmware, FU_TYPE_FIRMWARE)
@@ -48,12 +49,30 @@ fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 		    "compression",
 		    fu_uswid_payload_compression_to_string(priv->compression));
 	}
+	fu_xmlb_builder_insert_kv(bn, "format", fu_uswid_payload_format_to_string(priv->format));
 }
 
 static gboolean
 fu_uswid_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_uswid_validate_stream(stream, offset, error);
+}
+
+static GType
+fu_uswid_firmware_format_to_gtype(FuUswidPayloadFormat format, GError **error)
+{
+	if (format == FU_USWID_PAYLOAD_FORMAT_COSWID)
+		return FU_TYPE_COSWID_FIRMWARE;
+	if (format == FU_USWID_PAYLOAD_FORMAT_CYCLONEDX)
+		return FU_TYPE_FIRMWARE;
+	if (format == FU_USWID_PAYLOAD_FORMAT_SPDX)
+		return FU_TYPE_FIRMWARE;
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "format 0x%x is not supported",
+		    format);
+	return G_TYPE_INVALID;
 }
 
 static gboolean
@@ -64,6 +83,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	GType img_gtype;
 	guint16 hdrsz;
 	guint32 payloadsz;
 	g_autoptr(FuStructUswid) st = NULL;
@@ -96,7 +116,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	}
 	fu_firmware_set_size(firmware, hdrsz + payloadsz);
 
-	/* flags */
+	/* payload compression */
 	if (priv->hdrver >= 0x03) {
 		if (fu_struct_uswid_get_flags(st) & FU_USWID_HEADER_FLAG_COMPRESSED) {
 			priv->compression = fu_struct_uswid_get_compression(st);
@@ -109,6 +129,17 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 					: FU_USWID_PAYLOAD_COMPRESSION_NONE;
 	} else {
 		priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
+	}
+
+	/* payload format */
+	if (priv->hdrver >= 0x04) {
+		priv->format = fu_struct_uswid_get_format(st);
+		img_gtype = fu_uswid_firmware_format_to_gtype(priv->format, error);
+		if (img_gtype == G_TYPE_INVALID)
+			return FALSE;
+	} else {
+		priv->format = FU_USWID_PAYLOAD_FORMAT_COSWID;
+		img_gtype = FU_TYPE_COSWID_FIRMWARE;
 	}
 
 	/* zlib stream */
@@ -153,29 +184,29 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	/* payload */
 	payloadsz = g_bytes_get_size(payload);
 	for (gsize offset_tmp = 0; offset_tmp < payloadsz;) {
-		g_autoptr(FuFirmware) firmware_coswid = fu_coswid_firmware_new();
-		g_autoptr(GBytes) fw2 = NULL;
+		g_autoptr(FuFirmware) img = g_object_new(img_gtype, NULL);
+		g_autoptr(GBytes) img_blob = NULL;
 
-		/* CBOR parse */
-		fw2 = fu_bytes_new_offset(payload, offset_tmp, payloadsz - offset_tmp, error);
-		if (fw2 == NULL)
+		/* parse SBOM component */
+		img_blob = fu_bytes_new_offset(payload, offset_tmp, payloadsz - offset_tmp, error);
+		if (img_blob == NULL)
 			return FALSE;
-		if (!fu_firmware_parse_bytes(firmware_coswid,
-					     fw2,
+		if (!fu_firmware_parse_bytes(img,
+					     img_blob,
 					     0x0,
 					     flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
-		if (!fu_firmware_add_image(firmware, firmware_coswid, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		if (fu_firmware_get_size(firmware_coswid) == 0) {
+		if (fu_firmware_get_size(img) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "coSWID read no bytes");
+					    "read no bytes from uSWID child");
 			return FALSE;
 		}
-		offset_tmp += fu_firmware_get_size(firmware_coswid);
+		offset_tmp += fu_firmware_get_size(img);
 	}
 
 	/* success */
@@ -187,21 +218,36 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuUswidHeaderFlags flags = FU_USWID_HEADER_FLAG_NONE;
 	g_autoptr(FuStructUswid) st = fu_struct_uswid_new();
 	g_autoptr(GByteArray) payload = g_byte_array_new();
 	g_autoptr(GBytes) payload_blob = NULL;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
+	/* sanity check */
+	if (priv->hdrver > FU_STRUCT_USWID_DEFAULT_HDRVER) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no idea how to write header format 0x%02x",
+			    priv->hdrver);
+		return NULL;
+	}
+
 	/* generate early so we know the size */
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *firmware_coswid = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_write(firmware_coswid, error);
+		FuFirmware *img = g_ptr_array_index(images, i);
+		g_autoptr(GBytes) fw = fu_firmware_write(img, error);
 		if (fw == NULL)
 			return NULL;
 		fu_byte_array_append_bytes(payload, fw);
 	}
 
-	/* zlibify */
+	/* compression flag */
+	if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE)
+		flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
+
+	/* compression format */
 	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
 		g_autoptr(GConverter) conv = NULL;
 		g_autoptr(GInputStream) istream1 = NULL;
@@ -225,34 +271,30 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	/* pack */
 	fu_struct_uswid_set_hdrver(st, priv->hdrver);
 	fu_struct_uswid_set_payloadsz(st, g_bytes_get_size(payload_blob));
-	if (priv->hdrver >= 3) {
-		guint8 flags = 0;
-		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE)
-			flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
-		fu_struct_uswid_set_flags(st, flags);
-		fu_struct_uswid_set_compression(st, priv->compression);
-	} else if (priv->hdrver >= 2) {
-		guint8 flags = 0;
-		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE) {
-			if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_SUPPORTED,
-						    "hdrver 0x02 only supports zlib compression");
-				return NULL;
-			}
-			flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
-		}
-		fu_struct_uswid_set_flags(st, flags);
+	fu_struct_uswid_set_flags(st, flags);
+	fu_struct_uswid_set_compression(st, priv->compression);
+	fu_struct_uswid_set_format(st, priv->format);
+
+	/* previous headers were smaller in size */
+	if (priv->hdrver == 3) {
 		g_byte_array_set_size(st->buf, st->buf->len - 1);
-		fu_struct_uswid_set_hdrsz(st, st->buf->len);
-	} else {
+	} else if (priv->hdrver == 2) {
+		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE &&
+		    priv->compression != FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "hdrver 0x02 only supports zlib compression");
+			return NULL;
+		}
 		g_byte_array_set_size(st->buf, st->buf->len - 2);
-		fu_struct_uswid_set_hdrsz(st, st->buf->len);
+	} else if (priv->hdrver == 1) {
+		g_byte_array_set_size(st->buf, st->buf->len - 3);
 	}
-	fu_byte_array_append_bytes(st->buf, payload_blob);
+	fu_struct_uswid_set_hdrsz(st, st->buf->len);
 
 	/* success */
+	fu_byte_array_append_bytes(st->buf, payload_blob);
 	return g_steal_pointer(&st->buf);
 }
 
@@ -304,10 +346,12 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->hdrver = FU_USWID_FIRMARE_MINIMUM_HDRVER;
 	priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
+	priv->format = FU_USWID_PAYLOAD_FORMAT_COSWID;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_COSWID_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

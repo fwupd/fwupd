@@ -144,7 +144,6 @@ fu_protobuf_embedded_func(void)
 {
 	g_autofree gchar *bufstr = NULL;
 	g_autofree gchar *bufstr3 = NULL;
-	g_autofree gchar *str = NULL;
 	g_autoptr(FuProtobuf) pbuf = fu_protobuf_new();
 	g_autoptr(FuProtobuf) pbuf2 = fu_protobuf_new();
 	g_autoptr(FuProtobuf) pbuf3 = NULL;

@@ -22,7 +22,7 @@
  *
  * Cabinet archive parser and writer.
  *
- * See also: [class@FuArchive]
+ * See also: [class@FuCabFirmware]
  */
 
 struct _FuCabinet {
@@ -33,6 +33,7 @@ struct _FuCabinet {
 	XbSilo *silo;
 	JcatContext *jcat_context;
 	JcatFile *jcat_file;
+	GHashTable *trustlist; /* basename:FwupdReleaseFlags-as-ptr */
 };
 
 G_DEFINE_TYPE(FuCabinet, fu_cabinet, FU_TYPE_CAB_FIRMWARE)
@@ -104,6 +105,127 @@ fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data, GError
 	return fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error);
 }
 
+#if JCAT_CHECK_VERSION(0, 2, 0)
+static gboolean
+fu_cabinet_verify_payload_target(FuCabinet *self,
+				 const gchar *basename,
+				 FuFirmware *img_blob,
+				 JcatVerifyFlags jcat_flags,
+				 GError **error)
+{
+	g_autofree gchar *checksum_sha256 = NULL;
+	g_autofree gchar *checksum_sha512 = NULL;
+	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(JcatBlob) blob_target_sha256 = NULL;
+	g_autoptr(JcatBlob) blob_target_sha512 = NULL;
+	g_autoptr(JcatItem) item = NULL;
+	g_autoptr(JcatItem) item_target = jcat_item_new(basename);
+
+	/* get item */
+	item = jcat_file_get_item_by_id(self->jcat_file, basename, error);
+	if (item == NULL)
+		return FALSE;
+
+	/* add SHA-256 */
+	stream = fu_firmware_get_stream(img_blob, error);
+	if (stream == NULL)
+		return FALSE;
+	checksum_sha256 = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
+	if (checksum_sha256 == NULL)
+		return FALSE;
+	blob_target_sha256 = jcat_blob_new_utf8(JCAT_BLOB_KIND_SHA256, checksum_sha256);
+	jcat_item_add_blob(item_target, blob_target_sha256);
+
+	/* add SHA-512 */
+	checksum_sha512 = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA512, error);
+	if (checksum_sha512 == NULL)
+		return FALSE;
+	blob_target_sha512 = jcat_blob_new_utf8(JCAT_BLOB_KIND_SHA512, checksum_sha512);
+	jcat_item_add_blob(item_target, blob_target_sha512);
+
+	results = jcat_context_verify_target(self->jcat_context,
+					     item_target,
+					     item,
+					     jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+					     error);
+	if (results == NULL) {
+		g_prefix_error_literal(error, "failed to verify indirect item: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+#endif
+
+static gboolean
+fu_cabinet_verify_payload(FuCabinet *self,
+			  const gchar *basename,
+			  FuFirmware *img_blob,
+			  JcatVerifyFlags jcat_flags,
+			  GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(JcatItem) item = NULL;
+
+	/* get item */
+	item = jcat_file_get_item_by_id(self->jcat_file, basename, error);
+	if (item == NULL)
+		return FALSE;
+
+#if JCAT_CHECK_VERSION(0, 2, 0)
+	/* the jcat file signed the *checksum of the payload*, not the payload itself */
+	if (jcat_item_has_target(item)) {
+		return fu_cabinet_verify_payload_target(self,
+							basename,
+							img_blob,
+							jcat_flags,
+							error);
+	}
+#endif
+
+	/* verify the binary item */
+	blob = fu_firmware_get_bytes(img_blob, error);
+	if (blob == NULL)
+		return FALSE;
+	results = jcat_context_verify_item(self->jcat_context,
+					   blob,
+					   item,
+					   jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+					       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+					   error);
+	if (results == NULL) {
+		g_prefix_error_literal(error, "failed to verify item: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_cabinet_trustlist_add_basename(FuCabinet *self,
+				  const gchar *basename,
+				  FwupdReleaseFlags release_flags)
+{
+	g_hash_table_insert(self->trustlist, g_strdup(basename), GUINT_TO_POINTER(release_flags));
+}
+
+static gboolean
+fu_cabinet_trustlist_check_basename(FuCabinet *self,
+				    const gchar *basename,
+				    FwupdReleaseFlags *release_flags)
+{
+	gpointer value = NULL;
+	if (!g_hash_table_lookup_extended(self->trustlist, basename, NULL, &value))
+		return FALSE;
+	*release_flags = GPOINTER_TO_UINT(value);
+	return TRUE;
+}
+
 /* sets the firmware and signature blobs on XbNode */
 static gboolean
 fu_cabinet_parse_release(FuCabinet *self,
@@ -117,14 +239,15 @@ fu_cabinet_parse_release(FuCabinet *self,
 	g_autoptr(FuFirmware) img_blob = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local2 = NULL;
+	g_autoptr(GError) error_payload = NULL;
 	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) csum_tmp = NULL;
 	g_autoptr(XbNode) metadata_trust = NULL;
 	g_autoptr(XbNode) nsize = NULL;
-	g_autoptr(JcatItem) item = NULL;
 	g_autoptr(GBytes) release_flags_blob = NULL;
 	g_autoptr(GBytes) filename_blob = NULL;
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
+	FwupdReleaseFlags release_flags_tl = FWUPD_RELEASE_FLAG_NONE;
 	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS;
 
 	/* distrusting RSA? */
@@ -228,111 +351,24 @@ fu_cabinet_parse_release(FuCabinet *self,
 		}
 	}
 
-	/* the jcat file signed the *checksum of the payload*, not the payload itself */
-	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
-#if JCAT_CHECK_VERSION(0, 2, 0)
-	if (item != NULL && jcat_item_has_target(item)) {
-		g_autofree gchar *checksum_sha256 = NULL;
-		g_autofree gchar *checksum_sha512 = NULL;
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GPtrArray) results = NULL;
-		g_autoptr(JcatBlob) blob_target_sha256 = NULL;
-		g_autoptr(JcatBlob) blob_target_sha512 = NULL;
-		g_autoptr(JcatItem) item_target = jcat_item_new(basename);
-
-		/* add SHA-256 */
-		checksum_sha256 =
-		    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
-		if (checksum_sha256 == NULL)
-			return FALSE;
-		blob_target_sha256 = jcat_blob_new_utf8(JCAT_BLOB_KIND_SHA256, checksum_sha256);
-		jcat_item_add_blob(item_target, blob_target_sha256);
-
-		/* add SHA-512 */
-		checksum_sha512 =
-		    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA512, error);
-		if (checksum_sha512 == NULL)
-			return FALSE;
-		blob_target_sha512 = jcat_blob_new_utf8(JCAT_BLOB_KIND_SHA512, checksum_sha512);
-		jcat_item_add_blob(item_target, blob_target_sha512);
-
-		results =
-		    jcat_context_verify_target(self->jcat_context,
-					       item_target,
-					       item,
-					       jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						   JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-					       &error_local);
-		if (results == NULL) {
-			g_info("failed to verify indirect payload %s: %s",
-			       basename,
-			       error_local->message);
-		} else {
-			g_info("verified indirect payload %s: %u", basename, results->len);
-			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
-		}
-	}
-#endif
-	if (item != NULL) {
-		g_autoptr(GBytes) blob = NULL;
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GPtrArray) results = NULL;
-
-		/* verify the binary item */
-		blob = fu_firmware_get_bytes(img_blob, error);
-		if (blob == NULL)
-			return FALSE;
-		results = jcat_context_verify_item(self->jcat_context,
-						   blob,
-						   item,
-						   jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						   &error_local);
-		if (results == NULL) {
-			g_info("failed to verify payload %s: %s", basename, error_local->message);
-		} else {
-			g_info("verified payload %s: %u", basename, results->len);
-			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
-		}
-
+	/* is the payload signed? */
+	if (fu_cabinet_trustlist_check_basename(self, basename, &release_flags_tl)) {
+		g_info("cached verification result for %s", basename);
+		release_flags |= (release_flags_tl & FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
 	} else {
-		g_autofree gchar *basename_sig = NULL;
-		g_autoptr(FuFirmware) img_sig = NULL;
-
-		/* legacy GPG detached signature */
-		basename_sig = g_strdup_printf("%s.asc", basename);
-		img_sig = fu_firmware_get_image_by_id(FU_FIRMWARE(FU_CAB_FIRMWARE(self)),
-						      basename_sig,
-						      NULL);
-		if (img_sig != NULL) {
-			g_autoptr(JcatResult) jcat_result = NULL;
-			g_autoptr(JcatBlob) jcat_blob = NULL;
-			g_autoptr(GBytes) blob = NULL;
-			g_autoptr(GBytes) data_sig = NULL;
-			g_autoptr(GError) error_local = NULL;
-
-			blob = fu_firmware_get_bytes(img_blob, error);
-			if (blob == NULL)
-				return FALSE;
-			data_sig = fu_firmware_get_bytes(img_sig, error);
-			if (data_sig == NULL)
-				return FALSE;
-			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
-			jcat_result = jcat_context_verify_blob(
-			    self->jcat_context,
-			    blob,
-			    jcat_blob,
-			    jcat_flags | JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-			    &error_local);
-			if (jcat_result == NULL) {
-				g_info("failed to verify payload %s using detached: %s",
-				       basename,
-				       error_local->message);
-			} else {
-				g_info("verified payload %s using detached", basename);
-				release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
-			}
+		if (!fu_cabinet_verify_payload(self,
+					       basename,
+					       img_blob,
+					       jcat_flags,
+					       &error_payload)) {
+			g_info("failed to verify payload %s: %s", basename, error_payload->message);
+		} else {
+			g_info("verified payload %s", basename);
+			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 		}
+		/* save the trustlist, so that if there are multiple metainfos pointing to the
+		 * same payload we only hash and verify once */
+		fu_cabinet_trustlist_add_basename(self, basename, release_flags);
 	}
 
 	/* this means we can get the data from fu_keyring_get_release_flags */
@@ -954,7 +990,6 @@ fu_cabinet_parse(FuFirmware *firmware,
 		 GError **error)
 {
 	FuCabinet *self = FU_CABINET(firmware);
-
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbQuery) query = NULL;
@@ -1089,6 +1124,7 @@ fu_cabinet_init(FuCabinet *self)
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();
 	self->jcat_context = jcat_context_new();
+	self->trustlist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #if JCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
@@ -1107,6 +1143,7 @@ fu_cabinet_finalize(GObject *obj)
 		g_object_unref(self->builder);
 	g_free(self->container_checksum);
 	g_free(self->container_checksum_alt);
+	g_hash_table_unref(self->trustlist);
 	g_object_unref(self->jcat_context);
 	g_object_unref(self->jcat_file);
 	G_OBJECT_CLASS(fu_cabinet_parent_class)->finalize(obj);

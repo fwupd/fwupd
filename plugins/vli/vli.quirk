@@ -1,0 +1,130 @@
+[VLI\DEV_VL100]
+FirmwareSizeMax = 0x8000 # 32KB
+VliPdOffset = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL101]
+FirmwareSizeMax = 0xC000 # 48KB
+VliPdOffset = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL102]
+FirmwareSizeMax = 0x8000 # 32KB
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL103]
+FirmwareSizeMax = 0x8000 # 32KB
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL104]
+FirmwareSizeMax = 0xC000 # 48KB
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL105]
+FirmwareSizeMax = 0xC000 # 48KB
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL106]
+FirmwareSizeMax = 0x8000 # 32KB
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL107]
+FirmwareSizeMax = 0xC800 # 50KB
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL108]
+FirmwareSizeMax = 0x10000
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL109]
+FirmwareSizeMax = 0x10000
+VliPdOffset = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL122]
+FirmwareSizeMax = 0x80000
+Flags = unsigned-payload
+[VLI\DEV_VL210]
+FirmwareSizeMax = 0x40000
+Flags = unsigned-payload
+[VLI\DEV_VL211]
+FirmwareSizeMax = 0x40000
+Flags = unsigned-payload
+[VLI\DEV_VL212]
+FirmwareSizeMax = 0x40000
+Flags = unsigned-payload
+[VLI\DEV_VL810]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL811]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL811PB0]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL811PB3]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL812B0]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL812B3]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL812Q4S]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL813]
+FirmwareSizeMax = 0x8000
+Flags = unsigned-payload
+[VLI\DEV_VL815]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL817]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL817S]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL819Q7]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL819Q8]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL820Q7]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL820Q8]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL821Q7]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL821Q8]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL822T]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL822Q5]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL822Q7]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL822Q8]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_VL822C0]
+FirmwareSizeMax = 0x10000
+Flags = unsigned-payload
+[VLI\DEV_PS186]
+FirmwareSizeMax = 0x40000
+Flags = unsigned-payload
+[VLI\DEV_VL650]
+FirmwareSizeMax = 0x40000
+Flags = signed-payload
+[VLI\DEV_VL830]
+FirmwareSizeMax = 0x20000
+Flags = unsigned-payload
+[VLI\DEV_VL832]
+FirmwareSizeMax = 0x28000
+Flags = unsigned-payload

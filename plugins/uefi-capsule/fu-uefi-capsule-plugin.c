@@ -121,22 +121,22 @@ fu_uefi_capsule_plugin_fwupd_efi_parse_sbom(FuUefiCapsulePlugin *self, GError **
 {
 	g_autoptr(FuFirmware) fw = fu_pefile_firmware_new();
 	g_autoptr(FuFirmware) fw_sbom = NULL;
-	g_autoptr(GPtrArray) fw_coswids = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
 
 	if (!fu_firmware_parse_file(fw, self->fwupd_efi_file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	fw_sbom = fu_firmware_get_image_by_id(fw, ".sbom", error);
 	if (fw_sbom == NULL)
 		return FALSE;
-	fw_coswids = fu_firmware_get_images(fw_sbom);
-	for (guint i = 0; i < fw_coswids->len; i++) {
-		FuFirmware *fw_coswid = g_ptr_array_index(fw_coswids, i);
-		if (!FU_IS_COSWID_FIRMWARE(fw_coswid))
+	imgs = fu_firmware_get_images(fw_sbom);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img_coswid = g_ptr_array_index(imgs, i);
+		if (!FU_IS_COSWID_FIRMWARE(img_coswid))
 			continue;
 		fu_uefi_capsule_plugin_fwupd_efi_add_sbom(
 		    self,
-		    fu_coswid_firmware_get_product(FU_COSWID_FIRMWARE(fw_coswid)),
-		    fu_firmware_get_version(fw_coswid));
+		    fu_coswid_firmware_get_product(FU_COSWID_FIRMWARE(img_coswid)),
+		    fu_firmware_get_version(img_coswid));
 	}
 
 	/* success */
@@ -664,7 +664,7 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 		fu_uefi_capsule_device_set_esp(dev, self->esp);
 		fu_device_uninhibit(device, "no-esp");
 	}
-	fu_plugin_device_add(plugin, FU_DEVICE(dev));
+	fu_plugin_add_device(plugin, FU_DEVICE(dev));
 }
 
 static void
@@ -1135,7 +1135,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 				 G_CALLBACK(fu_uefi_capsule_plugin_update_state_notify_cb),
 				 plugin);
 
-		fu_plugin_device_add(plugin, FU_DEVICE(dev));
+		fu_plugin_add_device(plugin, FU_DEVICE(dev));
 	}
 	fu_progress_step_done(progress);
 

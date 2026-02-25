@@ -360,7 +360,7 @@ fu_tpm_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		locker = fu_device_locker_new(FU_DEVICE(self->tpm_device), error);
 		if (locker == NULL)
 			return FALSE;
-		fu_plugin_device_add(plugin, FU_DEVICE(self->tpm_device));
+		fu_plugin_add_device(plugin, FU_DEVICE(self->tpm_device));
 		return TRUE;
 	}
 
@@ -379,7 +379,7 @@ fu_tpm_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_set_physical_id(FU_DEVICE(self->tpm_device), "tpm");
 		if (!fu_device_probe(FU_DEVICE(self->tpm_device), error))
 			return FALSE;
-		fu_plugin_device_add(plugin, FU_DEVICE(self->tpm_device));
+		fu_plugin_add_device(plugin, FU_DEVICE(self->tpm_device));
 	}
 
 	/* success */

@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include <glib.h>
+#include <fwupdplugin.h>
+
+#include "fu-logitech-hidpp-struct.h"
 
 #define FU_LOGITECH_HIDPP_DEVICE_VID 0x046d
 
@@ -24,7 +26,39 @@
 #define FU_LOGITECH_HIDPP_DEVICE_POLLING_INTERVAL	    30000
 #define FU_LOGITECH_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL 5000
 
+#define FU_LOGITECH_HIDPP_VERSION_1   0x01
+#define FU_LOGITECH_HIDPP_VERSION_2   0x02
 #define FU_LOGITECH_HIDPP_VERSION_BLE 0xFE
 
+/* this is specific to fwupd */
+#define FU_LOGITECH_HIDPP_HIDPP_MSG_SW_ID 0x07
+
+gboolean
+fu_logitech_hidpp_msg_is_reply(FuStructLogitechHidppMsg *st1,
+			       FuStructLogitechHidppMsg *st2,
+			       FuLogitechHidppMsgFlags flags) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_logitech_hidpp_msg_is_error(FuStructLogitechHidppMsg *st, GError **error) G_GNUC_NON_NULL(1);
+
+gboolean
+fu_logitech_hidpp_send(FuUdevDevice *udev_device,
+		       FuStructLogitechHidppMsg *st,
+		       guint8 hidpp_version,
+		       guint timeout,
+		       FuLogitechHidppMsgFlags flags,
+		       GError **error) G_GNUC_NON_NULL(1, 2);
+
+FuStructLogitechHidppMsg *
+fu_logitech_hidpp_receive(FuUdevDevice *udev_device,
+			  guint timeout,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+FuStructLogitechHidppMsg *
+fu_logitech_hidpp_transfer(FuUdevDevice *udev_device,
+			   FuStructLogitechHidppMsg *st,
+			   guint8 hidpp_version,
+			   FuLogitechHidppMsgFlags flags,
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
 gchar *
-fu_logitech_hidpp_format_version(const gchar *name, guint8 major, guint8 minor, guint16 build);
+fu_logitech_hidpp_format_version(const gchar *name, guint8 major, guint8 minor, guint16 build)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

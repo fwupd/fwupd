@@ -8003,7 +8003,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 			if (plugin == NULL)
 				continue;
 			g_info("auto-removing backend device %s", id_display);
-			fu_plugin_device_remove(plugin, device_tmp);
+			fu_plugin_remove_device(plugin, device_tmp);
 		}
 	}
 }

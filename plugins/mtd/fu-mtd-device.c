@@ -190,10 +190,10 @@ fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, GInputStream *stream, GErro
 		return FALSE;
 	}
 
-	/* coSWID */
+	/* only a single SBOM component is supported */
 	img0 = fu_firmware_get_image_by_idx(firmware, 0, error);
 	if (img0 == NULL) {
-		g_prefix_error_literal(error, "no coSWID image: ");
+		g_prefix_error_literal(error, "no SBOM image: ");
 		return FALSE;
 	}
 
@@ -240,6 +240,8 @@ fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError
 	imgs = fu_firmware_get_images(firmware_sbom);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (!FU_IS_COSWID_FIRMWARE(img))
+			continue;
 		if (g_strcmp0(fu_coswid_firmware_get_persistent_id(FU_COSWID_FIRMWARE(img)),
 			      "org.coreboot.rocks") == 0 ||
 		    g_strcmp0(fu_coswid_firmware_get_device_id(FU_COSWID_FIRMWARE(img)),

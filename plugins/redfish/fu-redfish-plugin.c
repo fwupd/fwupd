@@ -124,7 +124,7 @@ fu_redfish_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 		FuDevice *device = g_ptr_array_index(devices, i);
 		if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "reset-required"))
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		fu_plugin_device_add(plugin, device);
+		fu_plugin_add_device(plugin, device);
 	}
 
 	/* this is no longer relevant */

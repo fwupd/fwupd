@@ -7,9 +7,7 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
-
-#include "fu-vli-common.h"
+#include "fu-vli-struct.h"
 
 #define VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY 0x4000
 #define VLI_USBHUB_PD_FLASHMAP_ADDR	   0x1003

@@ -259,6 +259,7 @@ if get_option('tests')
 
   libfwupdtest = static_library(
     'fwupd-test',
+    fwupd_rs_targets,
     sources: ['fwupd-test.c'] + libfwupd_src,
     include_directories: [root_incdir],
     dependencies: [libfwupd_deps],
@@ -279,6 +280,7 @@ if get_option('tests')
   ]
     e = executable(
       'fwupd-' + test_name + '-test',
+      fwupd_rs_targets,
       sources: [
         'fwupd-' + test_name + '-test.c',
       ],

@@ -16,6 +16,7 @@
 #include "fu-device-locker.h"
 #include "fu-device-private.h"
 #include "fu-dump.h"
+#include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-linear-firmware.h"
 #include "fu-mem.h"
@@ -61,7 +62,15 @@ typedef struct {
 static gboolean
 fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error);
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDevice, fu_usb_device, FU_TYPE_UDEV_DEVICE);
+static void
+fu_usb_device_fuzzer_iface_init(FuFuzzerInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuUsbDevice,
+		       fu_usb_device,
+		       FU_TYPE_UDEV_DEVICE,
+		       0,
+		       G_ADD_PRIVATE(FuUsbDevice)
+			   G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_usb_device_fuzzer_iface_init));
 
 enum { PROP_0, PROP_LIBUSB_DEVICE, PROP_LAST };
 
@@ -1815,6 +1824,15 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 			return FALSE;
 		}
 
+		/* sanity check */
+		if (fu_usb_base_hdr_get_length(st_base) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "USB descriptor had impossible zero size");
+			return FALSE;
+		}
+
 		/* config, interface or endpoint */
 		descriptor_kind = fu_usb_base_hdr_get_descriptor_type(st_base);
 		if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_CONFIG) {
@@ -1866,13 +1884,14 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 						     error))
 				return FALSE;
 			if (iface_last == NULL) {
-				g_warning("endpoint 0x%x without prior interface, ignoring",
-					  fu_usb_endpoint_get_number(ep));
+				g_debug("endpoint 0x%x without prior interface, ignoring",
+					fu_usb_endpoint_get_number(ep));
 			} else {
 				fu_usb_interface_add_endpoint(iface_last, ep);
 			}
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_HID) {
-			g_autoptr(FuUsbHidDescriptor) hid_descriptor = fu_usb_hid_descriptor_new();
+			g_autoptr(FuUsbHidDescriptor) hid_descriptor =
+			    g_object_new(FU_TYPE_USB_HID_DESCRIPTOR, NULL);
 			if (!fu_firmware_parse_bytes(FU_FIRMWARE(hid_descriptor),
 						     blob,
 						     offset,
@@ -1880,7 +1899,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 						     error))
 				return FALSE;
 			if (iface_last == NULL) {
-				g_warning("hid descriptor without prior interface, ignoring");
+				g_debug("hid descriptor without prior interface, ignoring");
 			} else {
 				fu_usb_hid_descriptor_set_iface_number(
 				    hid_descriptor,
@@ -2769,7 +2788,6 @@ fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **er
 	g_autoptr(FwupdJsonArray) json_array_cfg = NULL;
 	g_autoptr(FwupdJsonArray) json_array_hid = NULL;
 	g_autoptr(FwupdJsonArray) json_array_ifaces = NULL;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	/* optional properties */
 	tmp = fwupd_json_object_get_string(json_obj, "PlatformId", NULL);
@@ -2902,22 +2920,6 @@ fu_usb_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **er
 		}
 	}
 
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "UsbEvents", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(FU_DEVICE(self), event);
-		}
-	}
-
 	/* success */
 	priv->interfaces_valid = TRUE;
 	priv->bos_descriptors_valid = TRUE;
@@ -2929,7 +2931,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(device);
 	g_autoptr(GPtrArray) interfaces = NULL;
 	g_autoptr(GError) error_bos = NULL;
 	g_autoptr(GError) error_hid = NULL;
@@ -2940,17 +2941,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 	fwupd_json_object_add_string(json_obj,
 				     "PlatformId",
 				     fu_device_get_physical_id(FU_DEVICE(self)));
-	if (fu_device_get_created_usec(FU_DEVICE(self)) != 0) {
-#if GLIB_CHECK_VERSION(2, 80, 0)
-		g_autoptr(GDateTime) dt =
-		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(FU_DEVICE(self)));
-#else
-		g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(
-		    fu_device_get_created_usec(FU_DEVICE(self)) / G_USEC_PER_SEC);
-#endif
-		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		fwupd_json_object_add_string(json_obj, "Created", str);
-	}
 	if (fu_device_get_vid(FU_DEVICE(self)) != 0) {
 		fwupd_json_object_add_integer(json_obj,
 					      "IdVendor",
@@ -3044,21 +3034,6 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 		}
 		fwupd_json_object_add_array(json_obj, "UsbInterfaces", json_arr);
 	}
-
-	/* events */
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    json_obj_tmp,
-					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
-							       : flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "UsbEvents", json_arr);
-	}
 }
 
 /**
@@ -3133,6 +3108,31 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 						      g_bytes_get_size(hid_descriptor));
 		}
 	}
+}
+
+static gboolean
+fu_usb_device_fuzzer_test_input(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(fuzzer);
+	return fu_usb_device_parse_descriptor(self, blob, error);
+}
+
+static GBytes *
+fu_usb_device_fuzzer_build_example(FuFuzzer *fuzzer, GBytes *blob, GError **error)
+{
+	g_autoptr(FuFirmware) fw = NULL;
+	g_type_ensure(FU_TYPE_FIRMWARE);
+	fw = fu_firmware_new_from_xml(g_bytes_get_data(blob, NULL), error);
+	if (fw == NULL)
+		return NULL;
+	return fu_firmware_write(fw, error);
+}
+
+static void
+fu_usb_device_fuzzer_iface_init(FuFuzzerInterface *iface)
+{
+	iface->test_input = fu_usb_device_fuzzer_test_input;
+	iface->build_example = fu_usb_device_fuzzer_build_example;
 }
 
 static void

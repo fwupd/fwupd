@@ -18,10 +18,6 @@ All devices handled by one object (FuCorsairDevice). Receivers with wireless-onl
 devices will be shown as two entities: parent device as a receiver and wireless
 device as a child. Difference in behavior is handled by private flags.
 
-FuCorsairBp contains low-level protocol related routines. Device objects should
-call correct versions of these routines in order to update firmware. Correct
-routines chosen by device quirks and private flags.
-
 ## Wired mice update behavior
 
 Mice and/or it's wireless adapter must be connected to host via USB cable
@@ -32,6 +28,16 @@ updates, and is reset automatically to new firmware after flashing.
 
 The receiver should be connected to host and the mouse should be turned on
 and not sleeping.
+
+## GUID Generation
+
+These devices use the standard USB DeviceInstanceId values, e.g.
+
+* `USB\VID_1B1C&PID_1B94`
+
+Additionally, an extra instance ID is used for the wireless subdevice, e.g.
+
+* `USB\VID_1B1C&PID_1B94&DEV_MOUSE`
 
 ## Quirk Use
 
@@ -44,22 +50,15 @@ This quirk should be set if protocol interface is not 1.
 
 Since: 1.8.0
 
-### CorsairSubdeviceId
+### Flags:is-receiver
 
-Specifies ID of any wireless child device which can be updated. Polling will
-be turned on if a subdevice is not connected when parent is being probed.
+This flag is used if the device is a wireless receiver.
+
+Since: 2.1.1
 
 ### Flags:legacy-attach
 
-This flag is used if legacy attach command should be used
-
-### Flags:no-version-in-bl
-
-This flag handles cases if device reports incorrect firmware version in bootloader mode.
-
-### Flags:is-subdevice
-
-This flag tells device that it is a child device. All subdevice behavior tweaks will be applied.
+This flag is used if legacy attach command should be used.
 
 ## Version Considerations
 

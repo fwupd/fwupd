@@ -543,7 +543,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 
 	/* check spi fw1 crc16 */
 	spi_fw = fu_vli_device_spi_read(FU_VLI_DEVICE(self),
-					fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+					fu_vli_device_get_pd_offset(FU_VLI_DEVICE(self)),
 					fu_device_get_firmware_size_max(FU_DEVICE(self)),
 					fu_progress_get_child(progress),
 					error);
@@ -578,7 +578,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 			return FALSE;
 		fu_progress_step_done(progress);
 		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
-					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+					     fu_vli_device_get_pd_offset(FU_VLI_DEVICE(self)),
 					     buf,
 					     bufsz,
 					     fu_progress_get_child(progress),
@@ -589,7 +589,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 		/* else update fw1 first */
 	} else {
 		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
-					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+					     fu_vli_device_get_pd_offset(FU_VLI_DEVICE(self)),
 					     buf,
 					     bufsz,
 					     fu_progress_get_child(progress),
@@ -666,7 +666,7 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 	/* write in chunks */
 	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
-				     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+				     fu_vli_device_get_pd_offset(FU_VLI_DEVICE(self)),
 				     buf,
 				     bufsz,
 				     fu_progress_get_child(progress),

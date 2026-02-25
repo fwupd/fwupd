@@ -18,6 +18,7 @@
 struct _FuVliUsbhubPdDevice {
 	FuDevice parent_instance;
 	FuVliDeviceKind device_kind;
+	guint32 pd_offset;
 };
 
 G_DEFINE_TYPE(FuVliUsbhubPdDevice, fu_vli_usbhub_pd_device, FU_TYPE_DEVICE)
@@ -30,14 +31,7 @@ fu_vli_usbhub_pd_device_to_string(FuDevice *device, guint idt, GString *str)
 				  idt,
 				  "DeviceKind",
 				  fu_vli_device_kind_to_string(self->device_kind));
-	fwupd_codec_string_append_hex(str,
-				      idt,
-				      "FwOffset",
-				      fu_vli_common_device_kind_get_offset(self->device_kind));
-	fwupd_codec_string_append_hex(str,
-				      idt,
-				      "FwSize",
-				      fu_vli_common_device_kind_get_size(self->device_kind));
+	fwupd_codec_string_append_hex(str, idt, "FwOffset", self->pd_offset);
 }
 
 static gboolean
@@ -108,6 +102,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 			    fwver);
 		return FALSE;
 	}
+
 	name = fu_vli_device_kind_to_string(self->device_kind);
 	fu_device_set_name(device, name);
 
@@ -118,12 +113,19 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "VID", fu_struct_vli_pd_hdr_get_vid(st));
 	fu_device_add_instance_u16(device, "PID", fu_struct_vli_pd_hdr_get_pid(st));
 	fu_device_add_instance_u8(device, "APP", fwver & 0xff);
-	fu_device_add_instance_str(device, "DEV", name);
+	fu_device_add_instance_strup(device, "DEV", name);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
 					      "USB",
 					      "VID",
+					      NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "VLI",
+					      "DEV",
 					      NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
@@ -133,9 +135,18 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "APP", NULL))
 		return FALSE;
 
+	/* ensure the quirk was applied */
+	if (self->pd_offset == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no VliPdOffset quirk defined for %s",
+			    fu_vli_device_kind_to_string(self->device_kind));
+		return FALSE;
+	}
+
 	/* these have a backup section */
-	if (fu_vli_common_device_kind_get_offset(self->device_kind) ==
-	    FU_VLI_USBHUB_FLASHMAP_ADDR_PD)
+	if (self->pd_offset == FU_VLI_USBHUB_FLASHMAP_ADDR_PD)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 
 	/* success */
@@ -206,7 +217,7 @@ fu_vli_usbhub_pd_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 	/* read */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	return fu_vli_device_spi_read(FU_VLI_DEVICE(parent),
-				      fu_vli_common_device_kind_get_offset(self->device_kind),
+				      self->pd_offset,
 				      fu_device_get_firmware_size_max(device),
 				      progress,
 				      error);
@@ -247,7 +258,7 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 	/* erase */
 	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(parent),
-				     fu_vli_common_device_kind_get_offset(self->device_kind),
+				     self->pd_offset,
 				     bufsz,
 				     fu_progress_get_child(progress),
 				     error))
@@ -256,7 +267,7 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 
 	/* write */
 	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(parent),
-				     fu_vli_common_device_kind_get_offset(self->device_kind),
+				     self->pd_offset,
 				     buf,
 				     bufsz,
 				     fu_progress_get_child(progress),
@@ -305,6 +316,29 @@ fu_vli_usbhub_pd_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gboolean
+fu_vli_usbhub_pd_device_set_quirk_kv(FuDevice *device,
+				     const gchar *key,
+				     const gchar *value,
+				     GError **error)
+{
+	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
+
+	if (g_strcmp0(key, "VliPdOffset") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->pd_offset = tmp;
+		return TRUE;
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static gchar *
 fu_vli_usbhub_pd_device_convert_version(FuDevice *device, guint64 version_raw)
 {
@@ -338,6 +372,7 @@ fu_vli_usbhub_pd_device_class_init(FuVliUsbhubPdDeviceClass *klass)
 	device_class->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
 	device_class->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
 	device_class->convert_version = fu_vli_usbhub_pd_device_convert_version;
+	device_class->set_quirk_kv = fu_vli_usbhub_pd_device_set_quirk_kv;
 	device_class->set_progress = fu_vli_usbhub_pd_device_set_progress;
 }
 

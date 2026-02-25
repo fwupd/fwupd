@@ -5,7 +5,6 @@ plugin_deps = [
   gnutls,
   gmodule,
   libusb,
-  libarchive,
   libxmlb,
   libdrm_amdgpu,
   fwupdplugin_rs_dep,

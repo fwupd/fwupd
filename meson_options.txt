@@ -82,11 +82,6 @@ option(
   description: 'Directory to put the launchd agent',
 )
 option(
-  'libarchive',
-  type: 'feature',
-  description: 'libarchive support',
-)
-option(
   'libdrm',
   type: 'feature',
   description: 'libdrm support',
@@ -95,6 +90,11 @@ option(
   'libmnl',
   type: 'feature',
   description: 'libmnl support',
+)
+option(
+  'logind',
+  type: 'feature',
+  description: 'logind-like support',
 )
 option(
   'lvfs',

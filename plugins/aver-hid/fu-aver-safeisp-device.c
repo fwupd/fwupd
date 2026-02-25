@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-aver-hid-firmware.h"
 #include "fu-aver-hid-struct.h"
 #include "fu-aver-safeisp-device.h"
 
@@ -269,7 +268,6 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	const guint8 *m12_fw_buf;
 	guint32 cx3_checksum = 0;
 	guint32 m12_checksum = 0;
-	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) cx3_fw = NULL;
 	g_autoptr(GBytes) m12_fw = NULL;
@@ -290,13 +288,10 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* decompress */
-	archive = fu_archive_new_stream(stream, FU_FIRMWARE_PARSE_FLAG_NONE, error);
-	if (archive == NULL)
-		return FALSE;
-	cx3_fw = fu_archive_lookup_by_fn(archive, "update/cx3uvc.img", error);
+	cx3_fw = fu_firmware_get_image_by_id_bytes(firmware, "update/cx3uvc.img", error);
 	if (cx3_fw == NULL)
 		return FALSE;
-	m12_fw = fu_archive_lookup_by_fn(archive, "update/RS_M12MO.bin", error);
+	m12_fw = fu_firmware_get_image_by_id_bytes(firmware, "update/RS_M12MO.bin", error);
 	if (m12_fw == NULL)
 		return FALSE;
 
@@ -308,7 +303,6 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "cx3 file size is invalid: 0x%x",
 			    (guint)cx3_fw_size);
-
 		return FALSE;
 	}
 	/* calculate CX3 firmware checksum */
@@ -410,8 +404,8 @@ static void
 fu_aver_safeisp_device_init(FuAverSafeispDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_add_protocol(FU_DEVICE(self), "com.aver.safeisp");
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_AVER_HID_FIRMWARE);
+	fu_device_add_protocol(FU_DEVICE(self), "com.aver.safeisp2");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
