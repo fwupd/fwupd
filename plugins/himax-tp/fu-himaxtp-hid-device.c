@@ -240,17 +240,17 @@ fu_himaxtp_hid_device_polling_for_result(FuHimaxtpHidDevice *self,
 	g_autoptr(GError) error_local = NULL;
 	gboolean ret = FALSE;
 
-	if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
-		g_debug("Failed to get start time");
-		return FALSE;
-	}
-
 	g_return_val_if_fail(FU_IS_HIMAXTP_HID_DEVICE(self), FALSE);
 	g_return_val_if_fail(expected_data != NULL, FALSE);
 	g_return_val_if_fail(expected_data_size > 0, FALSE);
 	g_return_val_if_fail(received_data != NULL, FALSE);
 	g_return_val_if_fail(received_data_size != NULL, FALSE);
 	*received_data_size = 0;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+		g_debug("Failed to get start time");
+		return FALSE;
+	}
 
 	data = g_malloc0(expected_data_size);
 	while (interval_ms_sum < timeout_ms) {
@@ -892,7 +892,7 @@ fu_himaxtp_hid_device_update_process(FuHimaxtpHidDevice *self,
 			/* other error occurs during getting flash id, return error */
 			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FLASH_PROTECT;
 			if (error_local != NULL) {
-				g_propagate_error(error, error_local);
+				g_propagate_error(error, g_steal_pointer(&error_local));
 				/* nocheck:error */
 				g_prefix_error(error, "Failed to get flash id: ");
 				return FALSE;
@@ -1057,6 +1057,10 @@ fu_himaxtp_hid_device_bootloader_update(FuHimaxtpHidDevice *self,
 	if ((fu_himaxtp_hid_fw_unit_get_bin_start_offset(fw_entry) * 1024 +
 	     fu_himaxtp_hid_fw_unit_get_bin_size(fw_entry) * 1024) > fw_size) {
 		*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Firmware entry exceeds firmware size");
 		return FALSE;
 	}
 
@@ -1095,6 +1099,10 @@ fu_himaxtp_hid_device_main_update(FuHimaxtpHidDevice *self,
 		if ((fu_himaxtp_hid_fw_unit_get_bin_start_offset(fw_entry) * 1024 +
 		     fu_himaxtp_hid_fw_unit_get_bin_size(fw_entry) * 1024) > fw_size) {
 			*status = FU_HIMAXTP_UPDATE_ERROR_CODE_FW_ENTRY_INVALID;
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "Firmware entry exceeds firmware size");
 			return FALSE;
 		}
 	}
@@ -1368,8 +1376,8 @@ fu_himaxtp_hid_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* check CID high byte match */
-	if ((fu_himaxtp_hid_info_get_cid(self->dev_info) & 0xFF00) >> 8 !=
-	    fu_himaxtp_firmware_get_cid(FU_HIMAXTP_FIRMWARE(firmware)) >> 8) {
+	if (((fu_himaxtp_hid_info_get_cid(self->dev_info) & 0xFF00) >> 8) !=
+	    (fu_himaxtp_firmware_get_cid(FU_HIMAXTP_FIRMWARE(firmware)) >> 8)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,

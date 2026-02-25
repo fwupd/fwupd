@@ -261,17 +261,48 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 		offset = mapcode.flash_addr.dword;
 		switch (mapcode.mcode.dword) {
 		case FU_HIMAXTP_MAPCODE_FW_CID:
+			if (offset + sizeof(guint16) >= st->len) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "firmware stream is too small to contain CID");
+				return FALSE;
+			}
 			self->cid = (guint16)st->data[offset] << 8 | (guint16)st->data[offset + 1];
 			break;
 		case FU_HIMAXTP_MAPCODE_FW_VER:
+			if (offset + sizeof(guint16) >= st->len) {
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is too small to contain FW_VER");
+				return FALSE;
+			}
 			self->fw_ver =
 			    (guint16)st->data[offset] << 8 | (guint16)st->data[offset + 1];
 			break;
 		case FU_HIMAXTP_MAPCODE_CFG_VER:
+			if (offset + sizeof(guint8) * 2 >= st->len) {
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is too small to contain CFG_VER");
+				return FALSE;
+			}
 			self->tp_cfg_ver = (guint8)st->data[offset];
 			self->dd_cfg_ver = (guint8)st->data[offset + 1];
 			break;
 		case FU_HIMAXTP_MAPCODE_IC_ID:
+			if (offset + FU_HIMAXTP_IC_ID_SIZE >= st->len) {
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is too small to contain IC_ID");
+				return FALSE;
+			}
 			main_info = fu_himaxtp_ic_id_parse(&(st->data[offset]),
 							   FU_HIMAXTP_IC_ID_SIZE,
 							   0,
@@ -284,6 +315,14 @@ fu_himaxtp_firmware_parse(FuFirmware *firmware,
 			self->pid = fu_himaxtp_ic_id_get_pid(main_info);
 			break;
 		case FU_HIMAXTP_MAPCODE_IC_ID_MOD:
+			if (offset + FU_HIMAXTP_IC_ID_MOD_SIZE >= st->len) {
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware stream is too small to contain IC_ID_MOD");
+				return FALSE;
+			}
 			mod_info = fu_himaxtp_ic_id_mod_parse(&(st->data[offset]),
 							      FU_HIMAXTP_IC_ID_MOD_SIZE,
 							      0,
