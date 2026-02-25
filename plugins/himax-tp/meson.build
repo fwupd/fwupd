@@ -21,3 +21,5 @@ plugin_builtins += static_library('fu_plugin_himaxtp',
   ],
   dependencies: plugin_deps,
 )
+
+device_tests += files('tests/himax-touch.json')
