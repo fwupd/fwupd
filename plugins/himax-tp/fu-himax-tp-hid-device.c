@@ -56,7 +56,7 @@ fu_himax_tp_hid_device_size_lookup(FuHimaxTpHidDevice *self,
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "invalid HID id size: %u",
+					    "invalid HID report size: %u",
 					    report_id);
 				return FALSE;
 			}
@@ -68,7 +68,7 @@ fu_himax_tp_hid_device_size_lookup(FuHimaxTpHidDevice *self,
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "unsupported HID id: %u",
+		    "unsupported HID report: %u",
 		    report_id);
 	return FALSE;
 }
@@ -223,7 +223,8 @@ fu_himax_tp_hid_device_get_size_by_id(FuHidReport *report,
 				      gsize *size,
 				      GError **error)
 {
-	gsize value;
+	guint32 item_size_value;
+	guint32 item_count_value;
 	g_autoptr(FuFirmware) item_count = NULL;
 	g_autoptr(FuFirmware) item_size = NULL;
 
@@ -234,9 +235,17 @@ fu_himax_tp_hid_device_get_size_by_id(FuHidReport *report,
 	if (item_size == NULL)
 		return FALSE;
 
-	value = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_size)) / 8;
-	value *= fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_count));
-	*size = value;
+	item_size_value = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_size));
+	if (item_size_value % 8 != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "report-id %u has misaligned report-size",
+			    report_id);
+		return FALSE;
+	}
+	item_count_value = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_count));
+	*size = (item_size_value / 8) * item_count_value;
 
 	/* success */
 	return TRUE;
@@ -992,6 +1001,10 @@ fu_himax_tp_hid_device_check_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuHimaxTpHidDevice *self = FU_HIMAX_TP_HID_DEVICE(device);
+
+	/* for coverage */
+	if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID)
+		return TRUE;
 
 	/* check VID */
 	if (fu_device_get_vid(device) !=

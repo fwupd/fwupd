@@ -131,17 +131,14 @@ fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
 	cs_header_ver = fu_struct_himax_tp_map_code_get_cs(st) >> 16;
 	if (cs_header_ver != FU_HIMAX_TP_FIRMWARE_HEADER_V1 &&
 	    cs_header_ver != FU_HIMAX_TP_FIRMWARE_HEADER_V2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware header invalid");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "header invalid");
 		return FALSE;
 	}
 	if (fu_sum8(st->buf->data, st->buf->len) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware mapcode checksum invalid");
+				    "mapcode checksum invalid");
 		return FALSE;
 	}
 
@@ -169,6 +166,14 @@ fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
 	}
 	if (fu_struct_himax_tp_map_code_get_mcode(st) == FU_HIMAX_TP_MAPCODE_IC_ID) {
 		g_autoptr(FuStructHimaxTpIcId) st_main = NULL;
+
+		if (self->ic_id != NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "already set ic id value");
+			return FALSE;
+		}
 		st_main = fu_struct_himax_tp_ic_id_parse_stream(stream, offset_data, error);
 		if (st_main == NULL)
 			return FALSE;
@@ -179,6 +184,14 @@ fu_himax_tp_firmware_parse_map_code(FuHimaxTpFirmware *self,
 	}
 	if (fu_struct_himax_tp_map_code_get_mcode(st) == FU_HIMAX_TP_MAPCODE_IC_ID_MOD) {
 		g_autoptr(FuStructHimaxTpIcIdMod) st_mod = NULL;
+
+		if (self->ic_id_mod != NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "already set ic id mod value");
+			return FALSE;
+		}
 		st_mod = fu_struct_himax_tp_ic_id_mod_parse_stream(stream, offset_data, error);
 		if (st_mod == NULL)
 			return FALSE;
@@ -206,7 +219,7 @@ fu_himax_tp_firmware_parse(FuFirmware *firmware,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware crc32c checksum invalid");
+				    "crc32c checksum invalid");
 		return FALSE;
 	}
 
