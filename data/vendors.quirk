@@ -73,3 +73,58 @@ Vendor = MAXIO
 Vendor = Kingston
 [PCI\VEN_8086]
 Vendor = Intel
+
+[CPUID\VEN_GenuineIntel]
+Vendor = Intel
+[CPUID\VEN_AuthenticAMD]
+Vendor = AMD
+[CPUID\VEN_AMDisbetter!]
+Vendor = AMD
+[CPUID\VEN_CentaurHauls]
+Vendor = IDT
+[CPUID\VEN_CyrixInstead]
+Vendor = Cyrix
+[CPUID\VEN_TransmetaCPU]
+Vendor = Transmeta
+[CPUID\VEN_GenuineTMx86]
+Vendor = Transmeta
+[CPUID\VEN_Geode-by-NSC]
+Vendor = National-Semiconductor
+[CPUID\VEN_NexGenDriven]
+Vendor = NexGen
+[CPUID\VEN_RiseRiseRise]
+Vendor = Rise
+[CPUID\VEN_SiS-SiS-SiS]
+Vendor = SiS
+[CPUID\VEN_UMC-UMC-UMC]
+Vendor = UMC
+[CPUID\VEN_VIA-VIA-VIA]
+Vendor = VIA
+[CPUID\VEN_Vortex86-SoC]
+Vendor = Vortex
+[CPUID\VEN_Shanghai]
+Vendor = Zhaoxin
+[CPUID\VEN_HygonGenuine]
+Vendor = Hygon
+[CPUID\VEN_E2K-MACHINE]
+Vendor = MCST
+[CPUID\VEN_bhyve-bhyve]
+Vendor = bhyve
+[CPUID\VEN_KVMKVMKVM]
+Vendor = KVM
+[CPUID\VEN_TCGTCGTCGTCG]
+Vendor = QEMU
+[CPUID\VEN_Microsoft-Hv]
+Vendor = Microsoft
+[CPUID\VEN_lrpepyh-vr]
+Vendor = Parallels
+[CPUID\VEN_VMwareVMware]
+Vendor = VMware
+[CPUID\VEN_XenVMMXenVMM]
+Vendor = Xen
+[CPUID\VEN_ACRNACRNACRN]
+Vendor = ACRN
+[CPUID\VEN_QNXQVMBSQG]
+Vendor = QNX
+[CPUID\VEN_VirtualApple]
+Vendor = Apple
