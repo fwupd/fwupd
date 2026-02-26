@@ -38,6 +38,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.20" date="2026-02-26">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for changing AMD UMA carveout size</li>
+          <li>Warn the user if they are using the blocked-firmware functionality</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Disable the UEFI plugins on 32bit x86</li>
+          <li>Do not hang when parsing an invalid USB descriptor</li>
+          <li>Do not return an error if the fastboot property is not provided</li>
+          <li>Fix a CCGX DMC regression when installing on the HP G5 dock</li>
+          <li>Fix a harmless heap OOB read in AMD kria SOM EEPROM parser</li>
+          <li>Fix a potential fastboot string over-read</li>
+          <li>Fix a regression causing MBIM QDU updates to fail</li>
+          <li>Honor polkit auth for emulation tag modify device</li>
+          <li>Speed up calculating the cab checksum by ~21%</li>
+          <li>Verify the uncompressed size when decompressing CAB files</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP Engage One G2 Advanced Hub</li>
+          <li>PixArt PJP274 (Framework Laptop)</li>
+          <li>Several new Jabra GNP devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.19" date="2025-12-19">
       <description>
         <p>
