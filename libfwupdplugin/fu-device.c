@@ -7621,7 +7621,9 @@ fu_device_strsafe_instance_id(const gchar *str)
 		}
 	}
 
-	/* remove any trailing replacements */
+	/* remove any leading or trailing replacements */
+	if (tmp->len > 0 && tmp->str[0] == '-')
+		g_string_erase(tmp, 0, 1);
 	if (tmp->len > 0 && tmp->str[tmp->len - 1] == '-')
 		g_string_truncate(tmp, tmp->len - 1);
 
