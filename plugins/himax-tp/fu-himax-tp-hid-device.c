@@ -1033,7 +1033,8 @@ static void
 fu_himax_tp_hid_device_finalize(GObject *object)
 {
 	FuHimaxTpHidDevice *self = FU_HIMAX_TP_HID_DEVICE(object);
-	fu_struct_himax_tp_hid_info_unref(self->st_info);
+	if (self->st_info != NULL)
+		fu_struct_himax_tp_hid_info_unref(self->st_info);
 	g_ptr_array_unref(self->id_items);
 	G_OBJECT_CLASS(fu_himax_tp_hid_device_parent_class)->finalize(object);
 }
