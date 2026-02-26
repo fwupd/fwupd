@@ -22,10 +22,12 @@ fu_engine_plugin_device_gtype(GType gtype)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
@@ -114,6 +116,15 @@ fu_engine_plugin_device_gtype(GType gtype)
 			g_debug("did ->write_firmware()!");
 		}
 	}
+
+	/* incorporate */
+	device2 = g_object_new(gtype, "context", ctx, NULL);
+	fu_device_incorporate(device2, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
+
+	/* roundtrip to JSON */
+	fu_device_add_json(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+	if (fu_device_from_json(device2, json_obj, NULL))
+		g_debug("did ->from_json()");
 }
 
 static void
