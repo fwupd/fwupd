@@ -111,6 +111,10 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 			}
 		}
 
+		/* ignore all subsequent no-action events */
+		if (item->kind == FU_TPM_EVENTLOG_ITEM_KIND_NO_ACTION)
+			continue;
+
 		if (item->checksum_sha1 != NULL) {
 			g_autoptr(GChecksum) csum_sha1 = g_checksum_new(G_CHECKSUM_SHA1);
 			g_checksum_update(csum_sha1, (const guchar *)digest_sha1, digest_sha1_len);
