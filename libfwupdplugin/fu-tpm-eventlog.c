@@ -80,6 +80,10 @@ fu_tpm_eventlog_calc_checksums(FuTpmEventlog *self, guint8 pcr, GError **error)
 			}
 		}
 
+		/* ignore all subsequent no-action events */
+		if (item_kind == FU_TPM_EVENTLOG_ITEM_KIND_NO_ACTION)
+			continue;
+
 		item_checksum_sha1 = fu_tpm_eventlog_item_get_checksum(item, FU_TPM_ALG_SHA1, NULL);
 		if (item_checksum_sha1 != NULL) {
 			g_autoptr(GChecksum) csum_sha1 = g_checksum_new(G_CHECKSUM_SHA1);

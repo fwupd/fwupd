@@ -543,6 +543,7 @@ if get_option('tests')
     'string',
     'struct',
     'temporary-directory',
+    'tpm-eventlog',
     'udev-device',
     'version',
     'volume',
