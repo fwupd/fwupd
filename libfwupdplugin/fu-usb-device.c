@@ -1505,6 +1505,14 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 		return fu_device_event_copy_data(event, "Data", data, length, actual_length, error);
 	}
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(data, 0x0, length);
+		if (actual_length != NULL)
+			*actual_length = length;
+		return TRUE;
+	}
+
 	/* sanity check */
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
@@ -1619,6 +1627,14 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 		return fu_device_event_copy_data(event, "Data", data, length, actual_length, error);
 	}
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(data, 0x0, length);
+		if (actual_length != NULL)
+			*actual_length = length;
+		return TRUE;
+	}
+
 	/* sanity check */
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
@@ -1713,6 +1729,14 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 		if (rc_tmp != G_MAXINT64)
 			return fu_usb_device_libusb_status_to_gerror(rc_tmp, error);
 		return fu_device_event_copy_data(event, "Data", data, length, actual_length, error);
+	}
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(data, 0x0, length);
+		if (actual_length != NULL)
+			*actual_length = length;
+		return TRUE;
 	}
 
 	/* sanity check */
