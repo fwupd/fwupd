@@ -703,6 +703,10 @@ fu_device_retry_full(FuDevice *self,
 	g_return_val_if_fail(count >= 1, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* fuzzing, so just do each action once */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		count = 1;
+
 	for (guint i = 0;; i++) {
 		g_autoptr(GError) error_local = NULL;
 
@@ -8044,7 +8048,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		return fu_device_load_event(priv->target, id, error);
 
 	/* sanity check */
-	if (priv->events == NULL) {
+	if (priv->events == NULL || priv->events->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
