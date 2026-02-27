@@ -1,33 +1,33 @@
 [VLI\DEV_VL100]
-FirmwareSizeMax = 0x8000 # 32KB
+FirmwareSizeMax = 0x8000
 VliPdOffset = 0x10000
 Flags = unsigned-payload
 [VLI\DEV_VL101]
-FirmwareSizeMax = 0xC000 # 48KB
+FirmwareSizeMax = 0xC000
 VliPdOffset = 0x10000
 Flags = unsigned-payload
 [VLI\DEV_VL102]
-FirmwareSizeMax = 0x8000 # 32KB
+FirmwareSizeMax = 0x8000
 VliPdOffset = 0x20000
 Flags = unsigned-payload
 [VLI\DEV_VL103]
-FirmwareSizeMax = 0x8000 # 32KB
+FirmwareSizeMax = 0x8000
 VliPdOffset = 0x20000
 Flags = unsigned-payload
 [VLI\DEV_VL104]
-FirmwareSizeMax = 0xC000 # 48KB
+FirmwareSizeMax = 0xC000
 VliPdOffset = 0x20000
 Flags = unsigned-payload
 [VLI\DEV_VL105]
-FirmwareSizeMax = 0xC000 # 48KB
+FirmwareSizeMax = 0xC000
 VliPdOffset = 0x20000
 Flags = unsigned-payload
 [VLI\DEV_VL106]
-FirmwareSizeMax = 0x8000 # 32KB
+FirmwareSizeMax = 0x8000
 VliPdOffset = 0x20000
 Flags = unsigned-payload
 [VLI\DEV_VL107]
-FirmwareSizeMax = 0xC800 # 50KB
+FirmwareSizeMax = 0xC800
 VliPdOffset = 0x20000
 Flags = unsigned-payload
 [VLI\DEV_VL108]
