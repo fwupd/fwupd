@@ -293,12 +293,12 @@ fu_vli_pd_device_spi_write_data(FuVliDevice *self,
 static gboolean
 fu_vli_pd_device_parade_setup(FuVliPdDevice *self, GError **error)
 {
-	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuVliPdParadeDevice) device_child = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	dev = fu_vli_pd_parade_device_new(FU_VLI_DEVICE(self));
-	if (!fu_device_probe(dev, &error_local)) {
+	device_child = fu_vli_pd_parade_device_new(FU_DEVICE(self));
+	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -306,11 +306,7 @@ fu_vli_pd_device_parade_setup(FuVliPdDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	if (!fu_device_setup(dev, error)) {
-		g_prefix_error_literal(error, "failed to set up parade device: ");
-		return FALSE;
-	}
-	fu_device_add_child(FU_DEVICE(self), dev);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	return TRUE;
 }
 

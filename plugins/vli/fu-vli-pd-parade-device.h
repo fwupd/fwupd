@@ -18,5 +18,5 @@ G_DECLARE_FINAL_TYPE(FuVliPdParadeDevice,
 		     VLI_PD_PARADE_DEVICE,
 		     FuUsbDevice)
 
-FuDevice *
-fu_vli_pd_parade_device_new(FuVliDevice *parent);
+FuVliPdParadeDevice *
+fu_vli_pd_parade_device_new(FuDevice *proxy);

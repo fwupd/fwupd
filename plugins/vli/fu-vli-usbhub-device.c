@@ -674,14 +674,12 @@ fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_device_pd_setup(FuVliUsbhubDevice *self, GError **error)
 {
-	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuVliUsbhubPdDevice) device_child = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	dev = fu_vli_usbhub_pd_device_new(self);
-	if (!fu_device_probe(dev, error))
-		return FALSE;
-	if (!fu_device_setup(dev, &error_local)) {
+	device_child = fu_vli_usbhub_pd_device_new(FU_DEVICE(self));
+	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -689,21 +687,19 @@ fu_vli_usbhub_device_pd_setup(FuVliUsbhubDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	fu_device_add_child(FU_DEVICE(self), dev);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	return TRUE;
 }
 
 static gboolean
 fu_vli_usbhub_device_msp430_setup(FuVliUsbhubDevice *self, GError **error)
 {
-	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuVliUsbhubMsp430Device) device_child = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	dev = fu_vli_usbhub_msp430_device_new(self);
-	if (!fu_device_probe(dev, error))
-		return FALSE;
-	if (!fu_device_setup(dev, &error_local)) {
+	device_child = fu_vli_usbhub_msp430_device_new(FU_DEVICE(self));
+	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -711,21 +707,19 @@ fu_vli_usbhub_device_msp430_setup(FuVliUsbhubDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	fu_device_add_child(FU_DEVICE(self), dev);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	return TRUE;
 }
 
 static gboolean
 fu_vli_usbhub_device_rtd21xx_setup(FuVliUsbhubDevice *self, GError **error)
 {
-	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuVliUsbhubRtd21xxDevice) device_child = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	dev = fu_vli_usbhub_rtd21xx_device_new(self);
-	if (!fu_device_probe(dev, error))
-		return FALSE;
-	if (!fu_device_setup(dev, &error_local)) {
+	device_child = fu_vli_usbhub_rtd21xx_device_new(FU_DEVICE(self));
+	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -733,7 +727,7 @@ fu_vli_usbhub_device_rtd21xx_setup(FuVliUsbhubDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	fu_device_add_child(FU_DEVICE(self), dev);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	return TRUE;
 }
 
