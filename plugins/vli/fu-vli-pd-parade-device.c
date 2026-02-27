@@ -470,10 +470,8 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	FuDevice *parent;
 	guint8 buf[0x20] = {0};
 	guint block_idx_tmp;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) buf_verify = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
@@ -491,14 +489,6 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
-		return FALSE;
-
-	/* open device */
-	parent = fu_device_get_parent(device, error);
-	if (parent == NULL)
-		return FALSE;
-	locker = fu_device_locker_new(parent, error);
-	if (locker == NULL)
 		return FALSE;
 
 	/*  stop MPU and reset SPI */
@@ -657,19 +647,9 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 static GBytes *
 fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent;
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) fw = g_byte_array_new();
 	g_autoptr(GPtrArray) blocks = NULL;
-
-	/* open device */
-	parent = fu_device_get_parent(device, error);
-	if (parent == NULL)
-		return NULL;
-	locker = fu_device_locker_new(parent, error);
-	if (locker == NULL)
-		return NULL;
 
 	/*  stop MPU and reset SPI */
 	if (!fu_vli_pd_parade_device_stop_mcu(self, error))
@@ -729,6 +709,9 @@ fu_vli_pd_parade_device_init(FuVliPdParadeDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_VLI_PD_DEVICE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.i2c");
 	fu_device_set_install_duration(FU_DEVICE(self), 15); /* seconds */
@@ -748,10 +731,8 @@ fu_vli_pd_parade_device_class_init(FuVliPdParadeDeviceClass *klass)
 	device_class->set_progress = fu_vli_pd_parade_device_set_progress;
 }
 
-FuDevice *
-fu_vli_pd_parade_device_new(FuVliDevice *parent)
+FuVliPdParadeDevice *
+fu_vli_pd_parade_device_new(FuDevice *proxy)
 {
-	FuVliPdParadeDevice *self =
-	    g_object_new(FU_TYPE_VLI_PD_PARADE_DEVICE, "parent", parent, NULL);
-	return FU_DEVICE(self);
+	return g_object_new(FU_TYPE_VLI_PD_PARADE_DEVICE, "proxy", proxy, NULL);
 }
