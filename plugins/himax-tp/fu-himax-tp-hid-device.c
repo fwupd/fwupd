@@ -10,8 +10,9 @@
 #include "fu-himax-tp-hid-device.h"
 #include "fu-himax-tp-struct.h"
 
-#define HID_UPDATE_MAIN_CMD 0x55 /* TODO: move to the .rs file -- is this a FuHimaxTpFwStatus? */
-#define HID_UPDATE_BL_CMD   0x77 /* TODO: move to the .rs file */
+/* used to trigger the FW update sequence, not as a return code */
+#define FU_HIMAX_TP_HID_DEVICE_CMD_UPDATE_MAIN 0x55
+#define FU_HIMAX_TP_HID_DEVICE_CMD_UPDATE_BL   0x77
 
 #define FLASH_ID_P25Q40SL 0x00136085
 
@@ -743,7 +744,7 @@ fu_himax_tp_hid_device_bootloader_update(FuHimaxTpHidDevice *self,
 	g_ptr_array_add(st_units, fu_struct_himax_tp_hid_info_get_bl_mapping(self->st_info));
 	return fu_himax_tp_hid_device_write_process(self,
 						    st_units,
-						    HID_UPDATE_BL_CMD,
+						    FU_HIMAX_TP_HID_DEVICE_CMD_UPDATE_BL,
 						    fw,
 						    progress,
 						    error);
@@ -768,7 +769,7 @@ fu_himax_tp_hid_device_main_update(FuHimaxTpHidDevice *self,
 	}
 	return fu_himax_tp_hid_device_write_process(self,
 						    st_units,
-						    HID_UPDATE_MAIN_CMD,
+						    FU_HIMAX_TP_HID_DEVICE_CMD_UPDATE_MAIN,
 						    fw,
 						    progress,
 						    error);
