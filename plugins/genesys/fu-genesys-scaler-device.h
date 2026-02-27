@@ -16,4 +16,4 @@ G_DECLARE_FINAL_TYPE(FuGenesysScalerDevice,
 		     FuDevice)
 
 FuGenesysScalerDevice *
-fu_genesys_scaler_device_new(FuContext *ctx);
+fu_genesys_scaler_device_new(FuDevice *proxy);
