@@ -356,40 +356,58 @@ fu_mm_dfota_device_parse_fota_response(FuMmDfotaDevice *self,
 }
 
 static gboolean
-fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_mm_dfota_device_attach_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuMmDfotaDevice *self = FU_MM_DFOTA_DEVICE(device);
+	FuProgress *progress = FU_PROGRESS(user_data);
 	gboolean finished = FALSE;
+	g_autofree gchar *result = NULL;
+	g_autoptr(GBytes) bytes = NULL;
 
-	while (!finished) {
-		g_autoptr(GBytes) bytes = NULL;
-		g_autofree gchar *result = NULL;
+	bytes = fu_udev_device_read_bytes(FU_UDEV_DEVICE(self),
+					  4096,
+					  FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS * 1000,
+					  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					  error);
+	if (bytes == NULL)
+		return FALSE;
 
-		bytes = fu_udev_device_read_bytes(FU_UDEV_DEVICE(self),
-						  4096,
-						  FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS * 1000,
-						  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-						  error);
-		if (bytes == NULL)
-			return FALSE;
-		result = fu_strsafe_bytes(bytes, G_MAXSIZE);
-
-		/* ignore empty responses */
-		if (result == NULL)
-			continue;
-
-		g_strstrip(result);
-		if (strlen(result) == 0)
-			continue;
-
-		if (!fu_mm_dfota_device_parse_fota_response(self,
-							    result,
-							    progress,
-							    &finished,
-							    error))
-			return FALSE;
+	/* ignore empty responses */
+	result = fu_strsafe_bytes(bytes, G_MAXSIZE);
+	if (result == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "no response");
+		return FALSE;
+	}
+	g_strstrip(result);
+	if (strlen(result) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "empty response");
+		return FALSE;
 	}
 
+	/* parse */
+	if (!fu_mm_dfota_device_parse_fota_response(self, result, progress, &finished, error))
+		return FALSE;
+	if (!finished) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "not finished");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	if (!fu_device_retry_full(device,
+				  fu_mm_dfota_device_attach_cb,
+				  5000,
+				  100, /* ms */
+				  progress,
+				  error))
+		return FALSE;
+
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
