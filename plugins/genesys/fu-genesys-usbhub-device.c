@@ -205,8 +205,8 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 static gboolean
 fu_genesys_usbhub_device_mstar_scaler_setup(FuGenesysUsbhubDevice *self, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	g_autoptr(FuGenesysScalerDevice) scaler_device = fu_genesys_scaler_device_new(ctx);
+	g_autoptr(FuGenesysScalerDevice) scaler_device =
+	    fu_genesys_scaler_device_new(FU_DEVICE(self));
 
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(scaler_device));
 
