@@ -710,6 +710,19 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER:
+ *
+ * Do not allow out-of-order or skipped emulation events. This allows a developer to refactor a
+ * plugin ensuring that the device behavior remains 100% unchanged.
+ *
+ * NOTE: This is probably only useful to set in `FuDevice->prepare()` or
+ * `FuDevice->write_firmware()` as enumeration may be different when loading emulated devices.
+ *
+ * Since: 2.1.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER "strict-emulation-order"
+
 /* standard icons */
 
 /**

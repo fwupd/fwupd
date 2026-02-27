@@ -324,6 +324,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT,
 	    FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED,
 	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION,
+	    FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -8074,7 +8075,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		return fu_device_load_event(priv->target, id, error);
 
 	/* sanity check */
-	if (priv->events == NULL) {
+	if (priv->events == NULL || priv->events->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -8087,6 +8088,35 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
 		return g_ptr_array_index(priv->events, 0);
 
+	/* in strict ordering mode */
+	id_hash = fu_device_event_build_id(id);
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER)) {
+		FuDeviceEvent *event;
+		if (priv->event_idx >= priv->events->len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no event with ID %s [%s]: no more events",
+				    id,
+				    id_hash);
+			return NULL;
+		}
+		event = g_ptr_array_index(priv->events, priv->event_idx);
+		if (g_strcmp0(fu_device_event_get_id(event), id_hash) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no event with ID %s [%s]: got %s instead",
+				    id,
+				    id_hash,
+				    fu_device_event_get_id(event));
+			return NULL;
+		}
+		priv->event_idx++;
+		g_debug("found event with ID %s [%s]", id, id_hash);
+		return event;
+	}
+
 	/* reset back to the beginning */
 	if (priv->event_idx >= priv->events->len) {
 		g_debug("resetting event index");
@@ -8094,7 +8124,6 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* look for the next event in the sequence */
-	id_hash = fu_device_event_build_id(id);
 	for (guint i = priv->event_idx; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
