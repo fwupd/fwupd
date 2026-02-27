@@ -592,11 +592,12 @@ fu_himax_tp_hid_device_write_unit(FuHimaxTpHidDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "main");
 
-	/* wait for 0xA1 */
-	if (!fu_himax_tp_hid_device_wait_fw_update_handshaking(self,
-							       FU_HIMAX_TP_FW_STATUS_UNKNOWN_A1,
-							       7000,
-							       error))
+	/* wait for correct cmd */
+	if (!fu_himax_tp_hid_device_wait_fw_update_handshaking(
+		self,
+		fu_struct_himax_tp_hid_fw_unit_get_cmd(st_unit),
+		7000,
+		error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -721,7 +722,7 @@ fu_himax_tp_hid_device_write_process(FuHimaxTpHidDevice *self,
 
 	/* wait for commit */
 	if (!fu_himax_tp_hid_device_wait_fw_update_handshaking(self,
-							       FU_HIMAX_TP_FW_STATUS_UNKNOWN_B1,
+							       FU_HIMAX_TP_FW_STATUS_COMMIT,
 							       3000,
 							       error))
 		return FALSE;

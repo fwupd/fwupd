@@ -73,8 +73,7 @@ enum FuHimaxTpFwStatus {
     NoError = 0x77,
     McuE0 = 0x00,
     McuE1 = 0xA0,
-    UnknownA1 = 0xA1, // FIXME
-    UnknownB1 = 0xB1, // FIXME
+    Commit = 0xB1,
     Bl = 0xB2,
     Pw = 0xB3,
     EraseFlash = 0xB4,
