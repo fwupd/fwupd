@@ -522,6 +522,10 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 		return FALSE;
 	}
 	at_res_safe = fu_strsafe_bytes(at_res, 32);
+	if (at_res_safe == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no AT res");
+		return FALSE;
+	}
 	g_debug("res: %s", at_res_safe);
 
 	/*
