@@ -541,8 +541,8 @@ fu_plugin_add_device(FuPlugin *self, FuDevice *device)
  * fu_plugin_get_devices:
  * @self: a #FuPlugin
  *
- * Returns all devices added by the plugin using [method@FuPlugin.device_add] and
- * not yet removed with [method@FuPlugin.device_remove].
+ * Returns all devices added by the plugin using [method@FuPlugin.add_device] and
+ * not yet removed with [method@FuPlugin.remove_device].
  *
  * Returns: (transfer none) (element-type FuDevice): devices
  *
