@@ -33,16 +33,12 @@ static gboolean
 fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuDevice *parent = fu_device_get_parent(device, error);
+	FuDevice *proxy;
 
 	/* from the self tests */
-	if (parent == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no parent FuIgscDevice");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 
 	/* set strings now we know the type */
 	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
@@ -50,7 +46,7 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_str(
 		    device,
 		    "PART",
-		    fu_device_has_private_flag(parent, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
+		    fu_device_has_private_flag(proxy, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
 			? "OPROMCODE_RECOVERY"
 			: "OPROMCODE");
 		fu_device_set_logical_id(FU_DEVICE(self), "oprom-code");
@@ -60,7 +56,7 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_str(
 		    device,
 		    "PART",
-		    fu_device_has_private_flag(parent, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
+		    fu_device_has_private_flag(proxy, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
 			? "OPROMDATA_RECOVERY"
 			: "OPROMDATA");
 		fu_device_set_logical_id(FU_DEVICE(self), "oprom-data");
@@ -84,13 +80,16 @@ static gboolean
 fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	FuDevice *proxy;
 	guint8 buf[FU_STRUCT_IGSC_OPROM_VERSION_SIZE] = {0x0};
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructIgscOpromVersion) st = NULL;
 
 	/* get version */
-	if (!fu_igsc_device_get_version_raw(igsc_parent,
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_igsc_device_get_version_raw(FU_IGSC_DEVICE(proxy),
 					    self->partition_version,
 					    buf,
 					    sizeof(buf),
@@ -102,7 +101,7 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 	if (st == NULL)
 		return FALSE;
 	self->major_version = fu_struct_igsc_oprom_version_get_major(st);
-	if (fu_device_has_private_flag(FU_DEVICE(igsc_parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
+	if (fu_device_has_private_flag(proxy, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
 		version = g_strdup_printf("%u.%u.%u.%u",
@@ -125,17 +124,16 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	FuDevice *proxy;
 	g_autoptr(GInputStream) stream_igsc = NULL;
 	g_autoptr(FuFirmware) firmware_igsc = g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL);
 	g_autoptr(FuFirmware) firmware_oprom = NULL;
 	g_autoptr(FuFirmware) fw_linear = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
 
 	/* sanity check */
-	if (igsc_parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no IGSC parent");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return NULL;
-	}
 
 	/* parse container */
 	if (!fu_firmware_parse_stream(fw_linear, stream, 0x0, flags, error))
@@ -179,13 +177,13 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	 *    The update is accepted only if the update file does not contain a Device ID allowlist
 	 */
 	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
-		if (fu_igsc_device_get_oprom_code_devid_enforcement(igsc_parent)) {
+		if (fu_igsc_device_get_oprom_code_devid_enforcement(FU_IGSC_DEVICE(proxy))) {
 			if (!fu_igsc_oprom_firmware_match_device(
 				FU_IGSC_OPROM_FIRMWARE(firmware_igsc),
-				fu_device_get_vid(FU_DEVICE(igsc_parent)),
-				fu_device_get_pid(FU_DEVICE(igsc_parent)),
-				fu_igsc_device_get_ssvid(igsc_parent),
-				fu_igsc_device_get_ssdid(igsc_parent),
+				fu_device_get_vid(proxy),
+				fu_device_get_pid(proxy),
+				fu_igsc_device_get_ssvid(FU_IGSC_DEVICE(proxy)),
+				fu_igsc_device_get_ssdid(FU_IGSC_DEVICE(proxy)),
 				error))
 				return NULL;
 		} else {
@@ -211,15 +209,15 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 		if (fu_igsc_oprom_firmware_has_allowlist(FU_IGSC_OPROM_FIRMWARE(firmware_igsc))) {
 			if (!fu_igsc_oprom_firmware_match_device(
 				FU_IGSC_OPROM_FIRMWARE(firmware_igsc),
-				fu_device_get_vid(FU_DEVICE(igsc_parent)),
-				fu_device_get_pid(FU_DEVICE(igsc_parent)),
-				fu_igsc_device_get_ssvid(igsc_parent),
-				fu_igsc_device_get_ssdid(igsc_parent),
+				fu_device_get_vid(proxy),
+				fu_device_get_pid(proxy),
+				fu_igsc_device_get_ssvid(FU_IGSC_DEVICE(proxy)),
+				fu_igsc_device_get_ssdid(FU_IGSC_DEVICE(proxy)),
 				error))
 				return NULL;
 		} else {
-			if (fu_igsc_device_get_ssvid(igsc_parent) != 0x0 ||
-			    fu_igsc_device_get_ssdid(igsc_parent) != 0x0) {
+			if (fu_igsc_device_get_ssvid(FU_IGSC_DEVICE(proxy)) != 0x0 ||
+			    fu_igsc_device_get_ssdid(FU_IGSC_DEVICE(proxy)) != 0x0) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_SUPPORTED,
@@ -242,7 +240,7 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuIgscDevice *parent;
+	FuDevice *proxy;
 	g_autoptr(FuStructIgscFwuHeciImageMetadata) st_md = NULL;
 	g_autoptr(GBytes) fw_info = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
@@ -263,10 +261,10 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 	fw_info = fu_struct_igsc_fwu_heci_image_metadata_to_bytes(st_md);
 
 	/* OPROM image doesn't require metadata */
-	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	return fu_igsc_device_write_blob(parent,
+	return fu_igsc_device_write_blob(FU_IGSC_DEVICE(proxy),
 					 self->payload_type,
 					 fw_info,
 					 partial_stream,
@@ -293,6 +291,7 @@ fu_igsc_oprom_device_init(FuIgscOpromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_IGSC_DEVICE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
