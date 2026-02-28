@@ -665,7 +665,7 @@ fu_vli_device_constructed(GObject *obj)
 {
 	FuVliDevice *self = FU_VLI_DEVICE(obj);
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	priv->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), NULL);
+	priv->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
 }
 
 static void
