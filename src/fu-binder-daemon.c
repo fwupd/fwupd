@@ -10,6 +10,7 @@
 #include "config.h"
 
 #include <glib.h>
+#include <glib/gstdio.h>
 // AOSP binder service management
 #include <fwupdplugin.h>
 
@@ -1169,7 +1170,22 @@ log_handler(const gchar *log_domain,
 						      g_date_time_get_second(dt),
 						      g_date_time_get_microsecond(dt) / 1000);
 	g_autofree gchar *log_path = g_build_filename(FWUPD_LOCALSTATEDIR, "fwupd.log", NULL);
-	FILE *fp = fopen(log_path, "a");
+	GStatBuf st;
+
+	/* rotate if > 5MB */
+	if (g_stat(log_path, &st) == 0 && st.st_size > 5 * 1024 * 1024) {
+		for (guint i = 2; i > 0; i--) {
+			g_autofree gchar *path_old =
+			    g_strdup_printf("%s.%u", log_path, i);
+			g_autofree gchar *path_new =
+			    g_strdup_printf("%s.%u", log_path, i + 1);
+			(void)g_rename(path_old, path_new);
+		}
+		g_autofree gchar *log_path_1 = g_strdup_printf("%s.1", log_path);
+		(void)g_rename(log_path, log_path_1);
+	}
+
+	FILE *fp = g_fopen(log_path, "a");
 	if (fp == NULL)
 		return;
 	fprintf(fp, "%s %s: %s\n", timestamp, log_domain, message);
