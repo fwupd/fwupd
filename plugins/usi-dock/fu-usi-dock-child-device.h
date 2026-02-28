@@ -18,7 +18,7 @@ G_DECLARE_FINAL_TYPE(FuUsiDockChildDevice,
 		     FuDevice)
 
 FuDevice *
-fu_usi_dock_child_device_new(FuContext *ctx) G_GNUC_NON_NULL(1);
+fu_usi_dock_child_device_new(FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuUsiDockFirmwareIdx
 fu_usi_dock_child_device_get_chip_idx(FuUsiDockChildDevice *self) G_GNUC_NON_NULL(1);
 void
