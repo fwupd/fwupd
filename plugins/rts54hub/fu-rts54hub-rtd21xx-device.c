@@ -88,17 +88,19 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 				     gsize datasz,
 				     GError **error)
 {
-	FuRts54hubDevice *parent;
+	FuDevice *proxy;
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
 
-	parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_VENDOR_CMD_ENABLE, error))
+	if (!fu_rts54hub_device_vendor_cmd(FU_RTS54HUB_DEVICE(proxy),
+					   FU_RTS54HUB_VENDOR_CMD_ENABLE,
+					   error))
 		return FALSE;
 
 	if (target_addr != priv->target_addr) {
-		if (!fu_rts54hub_device_i2c_config(parent,
+		if (!fu_rts54hub_device_i2c_config(FU_RTS54HUB_DEVICE(proxy),
 						   target_addr,
 						   1,
 						   FU_RTS54HUB_I2C_SPEED_200K,
@@ -106,7 +108,11 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 			return FALSE;
 		priv->target_addr = target_addr;
 	}
-	if (!fu_rts54hub_device_i2c_write(parent, sub_addr, data, datasz, error)) {
+	if (!fu_rts54hub_device_i2c_write(FU_RTS54HUB_DEVICE(proxy),
+					  sub_addr,
+					  data,
+					  datasz,
+					  error)) {
 		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", target_addr, sub_addr);
 		return FALSE;
 	}
@@ -159,16 +165,18 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 				    gsize datasz,
 				    GError **error)
 {
-	FuRts54hubDevice *parent;
+	FuDevice *proxy;
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
 
-	parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_VENDOR_CMD_ENABLE, error))
+	if (!fu_rts54hub_device_vendor_cmd(FU_RTS54HUB_DEVICE(proxy),
+					   FU_RTS54HUB_VENDOR_CMD_ENABLE,
+					   error))
 		return FALSE;
 	if (target_addr != priv->target_addr) {
-		if (!fu_rts54hub_device_i2c_config(parent,
+		if (!fu_rts54hub_device_i2c_config(FU_RTS54HUB_DEVICE(proxy),
 						   target_addr,
 						   1,
 						   FU_RTS54HUB_I2C_SPEED_200K,
@@ -176,7 +184,11 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 			return FALSE;
 		priv->target_addr = target_addr;
 	}
-	if (!fu_rts54hub_device_i2c_read(parent, sub_addr, data, datasz, error)) {
+	if (!fu_rts54hub_device_i2c_read(FU_RTS54HUB_DEVICE(proxy),
+					 sub_addr,
+					 data,
+					 datasz,
+					 error)) {
 		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
 	}
@@ -292,6 +304,34 @@ fu_rts54hub_rtd21xx_device_read_status(FuRts54hubRtd21xxDevice *self,
 }
 
 static void
+fu_rts54hub_rtd21xx_device_sync_parent_proxy(FuRts54hubRtd21xxDevice *self)
+{
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), NULL);
+	if (FU_IS_RTS54HUB_DEVICE(parent))
+		fu_device_set_proxy(FU_DEVICE(self), FU_DEVICE(parent));
+}
+
+static void
+fu_rts54hub_rtd21xx_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(device);
+	fu_rts54hub_rtd21xx_device_sync_parent_proxy(self);
+}
+
+static void
+fu_rts54hub_rtd21xx_device_constructed(GObject *object)
+{
+	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(object);
+
+	fu_rts54hub_rtd21xx_device_sync_parent_proxy(self);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::parent",
+			 G_CALLBACK(fu_rts54hub_rtd21xx_device_parent_notify_cb),
+			 NULL);
+	G_OBJECT_CLASS(fu_rts54hub_rtd21xx_device_parent_class)->constructed(object);
+}
+
+static void
 fu_rts54hub_rtd21xx_device_init(FuRts54hubRtd21xxDevice *self)
 {
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
@@ -299,7 +339,9 @@ fu_rts54hub_rtd21xx_device_init(FuRts54hubRtd21xxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_RTS54HUB_DEVICE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration(FU_DEVICE(self), 100); /* seconds */
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
@@ -310,6 +352,8 @@ static void
 fu_rts54hub_rtd21xx_device_class_init(FuRts54hubRtd21xxDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->constructed = fu_rts54hub_rtd21xx_device_constructed;
 	device_class->to_string = fu_rts54hub_rtd21xx_device_to_string;
 	device_class->set_quirk_kv = fu_rts54hub_rtd21xx_device_set_quirk_kv;
 }
