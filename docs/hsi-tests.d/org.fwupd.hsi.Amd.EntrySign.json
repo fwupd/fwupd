@@ -1,0 +1,23 @@
+{
+  "id": "org.fwupd.hsi.Amd.EntrySign",
+  "name": "AMD Microcode signature vulnerability",
+  "description": [
+    "AMD systems from Zen 1 through Zen 4 have a vulnerability that may allow an attacker with system administrative privilege to load malicious CPU microcode patches.",
+    "There are software mitigations for this vulnerability, but this check is whether the firmware has been updated to prevent it"
+  ],
+  "failure-impact": [
+    "The attacker is able to load malicious microcode."
+  ],
+  "failure-results": {
+    "not-locked": "platform is not vulnerable to the attack"
+  },
+  "success-results": {
+    "locked": "platform is vulnerable to the attack"
+  },
+  "hsi-level": 1,
+  "references": {
+    "https://bughunters.google.com/blog/5424842357473280/zen-and-the-art-of-microcode-hacking": "Zen and the Art of Microcode Hacking",
+    "https://www.amd.com/en/resources/product-security/bulletin/amd-sb-7033.html": "AMD SB-7033"
+  },
+  "fwupd-version": "2.0.10"
+}
