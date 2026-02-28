@@ -26,7 +26,7 @@ struct _FuCfiDeviceClass {
 };
 
 FuCfiDevice *
-fu_cfi_device_new(FuContext *ctx, const gchar *flash_id) G_GNUC_NON_NULL(1);
+fu_cfi_device_new(FuDevice *proxy, const gchar *flash_id) G_GNUC_NON_NULL(1);
 const gchar *
 fu_cfi_device_get_flash_id(FuCfiDevice *self) G_GNUC_NON_NULL(1);
 void

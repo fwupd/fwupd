@@ -1659,7 +1659,7 @@ fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *flash_id = NULL;
 
 	flash_id = g_strdup_printf("%06X", self->cfi_flash_id);
-	self->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
+	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), flash_id);
 	if (!fu_device_setup(FU_DEVICE(self->cfi_device), error))
 		return FALSE;
 

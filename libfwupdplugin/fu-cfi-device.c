@@ -952,7 +952,8 @@ fu_cfi_device_init(FuCfiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_build_vendor_id(FU_DEVICE(self), "SPI", "*");
 	fu_device_set_summary(FU_DEVICE(self), "CFI flash chip");
@@ -1000,16 +1001,16 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 
 /**
  * fu_cfi_device_new:
- * @ctx: a #FuContext
+ * @proxy: a #FuDevice
  *
  * Creates a new #FuCfiDevice.
  *
  * Returns: (transfer full): a #FuCfiDevice
  *
- * Since: 1.7.1
+ * Since: 2.1.1
  **/
 FuCfiDevice *
-fu_cfi_device_new(FuContext *ctx, const gchar *flash_id)
+fu_cfi_device_new(FuDevice *proxy, const gchar *flash_id)
 {
-	return g_object_new(FU_TYPE_CFI_DEVICE, "context", ctx, "flash-id", flash_id, NULL);
+	return g_object_new(FU_TYPE_CFI_DEVICE, "proxy", proxy, "flash-id", flash_id, NULL);
 }

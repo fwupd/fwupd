@@ -470,7 +470,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 			flash_id = g_strdup_printf("%02X%02X%02X", buf[0], buf[1], buf[2]);
 		}
 
-		cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
+		cfi_device = fu_cfi_device_new(FU_DEVICE(self), flash_id);
 		if (cfi_device == NULL)
 			continue;
 
