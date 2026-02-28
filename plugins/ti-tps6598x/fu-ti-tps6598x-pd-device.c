@@ -34,14 +34,14 @@ fu_ti_tps6598x_pd_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_ti_tps6598x_pd_device_ensure_version(FuTiTps6598xPdDevice *self, GError **error)
 {
-	FuTiTps6598xDevice *proxy;
+	FuDevice *proxy;
 	g_autoptr(GByteArray) buf = NULL;
 	g_autofree gchar *str = NULL;
 
-	proxy = FU_TI_TPS6598X_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	buf = fu_ti_tps6598x_device_read_target_register(proxy,
+	buf = fu_ti_tps6598x_device_read_target_register(FU_TI_TPS6598X_DEVICE(proxy),
 							 self->target,
 							 FU_TI_TPS6598X_REGISTER_VERSION,
 							 4,
@@ -60,14 +60,14 @@ fu_ti_tps6598x_pd_device_ensure_version(FuTiTps6598xPdDevice *self, GError **err
 static gboolean
 fu_ti_tps6598x_pd_device_ensure_tx_identity(FuTiTps6598xPdDevice *self, GError **error)
 {
-	FuTiTps6598xDevice *proxy;
+	FuDevice *proxy;
 	guint16 val = 0;
 	g_autoptr(GByteArray) buf = NULL;
 
-	proxy = FU_TI_TPS6598X_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	buf = fu_ti_tps6598x_device_read_target_register(proxy,
+	buf = fu_ti_tps6598x_device_read_target_register(FU_TI_TPS6598X_DEVICE(proxy),
 							 self->target,
 							 FU_TI_TPS6598X_REGISTER_TX_IDENTITY,
 							 47,
@@ -119,19 +119,19 @@ static void
 fu_ti_tps6598x_pd_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 {
 	FuTiTps6598xPdDevice *self = FU_TI_TPS6598X_PD_DEVICE(device);
-	FuTiTps6598xDevice *proxy;
+	FuDevice *proxy;
 
 	/* this is too slow to do for each update... */
 	if (g_getenv("FWUPD_TI_TPS6598X_VERBOSE") == NULL)
 		return;
-	proxy = FU_TI_TPS6598X_DEVICE(fu_device_get_proxy(device, NULL));
+	proxy = fu_device_get_proxy(device, NULL);
 	if (proxy == NULL)
 		return;
 	for (guint i = 0; i < 0x80; i++) {
 		g_autoptr(GByteArray) buf = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		buf = fu_ti_tps6598x_device_read_target_register(proxy,
+		buf = fu_ti_tps6598x_device_read_target_register(FU_TI_TPS6598X_DEVICE(proxy),
 								 self->target,
 								 i,
 								 63,
@@ -155,10 +155,10 @@ fu_ti_tps6598x_pd_device_report_metadata_pre(FuDevice *device, GHashTable *metad
 static gboolean
 fu_ti_tps6598x_pd_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuTiTps6598xDevice *proxy = FU_TI_TPS6598X_DEVICE(fu_device_get_proxy(device, error));
+	FuDevice *proxy = fu_device_get_proxy(device, error);
 	if (proxy == NULL)
 		return FALSE;
-	return fu_device_attach_full(FU_DEVICE(proxy), progress, error);
+	return fu_device_attach_full(proxy, progress, error);
 }
 
 static gboolean
@@ -168,14 +168,10 @@ fu_ti_tps6598x_pd_device_write_firmware(FuDevice *device,
 					FwupdInstallFlags flags,
 					GError **error)
 {
-	FuTiTps6598xDevice *proxy = FU_TI_TPS6598X_DEVICE(fu_device_get_proxy(device, error));
+	FuDevice *proxy = fu_device_get_proxy(device, error);
 	if (proxy == NULL)
 		return FALSE;
-	return fu_ti_tps6598x_device_write_firmware(FU_DEVICE(proxy),
-						    firmware,
-						    progress,
-						    flags,
-						    error);
+	return fu_ti_tps6598x_device_write_firmware(proxy, firmware, progress, flags, error);
 }
 
 static void
@@ -197,7 +193,8 @@ fu_ti_tps6598x_pd_device_init(FuTiTps6598xPdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_TI_TPS6598X_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_TI_TPS6598X_DEVICE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 30000);
@@ -219,8 +216,6 @@ FuDevice *
 fu_ti_tps6598x_pd_device_new(FuDevice *proxy, guint8 target)
 {
 	FuTiTps6598xPdDevice *self = g_object_new(FU_TYPE_TI_TPS6598X_PD_DEVICE,
-						  "context",
-						  fu_device_get_context(proxy),
 						  "proxy",
 						  proxy,
 						  NULL);
