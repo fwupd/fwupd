@@ -297,7 +297,7 @@ fu_jabra_gnp_device_add_child(FuJabraGnpDevice *self, guint16 dfu_pid, GError **
 		return FALSE;
 	}
 
-	child = g_object_new(FU_TYPE_JABRA_GNP_CHILD_DEVICE, "parent", FU_DEVICE(self), NULL);
+	child = g_object_new(FU_TYPE_JABRA_GNP_CHILD_DEVICE, "proxy", FU_DEVICE(self), NULL);
 	fu_jabra_gnp_child_device_set_dfu_pid_and_seq(child, dfu_pid);
 	fu_device_incorporate(FU_DEVICE(child),
 			      FU_DEVICE(self),
