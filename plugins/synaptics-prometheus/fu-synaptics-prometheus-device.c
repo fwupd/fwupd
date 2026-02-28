@@ -238,7 +238,7 @@ fu_synaptics_prometheus_device_setup(FuDevice *device, GError **error)
 	    fu_struct_synaptics_prometheus_reply_get_version_get_security1(st_reply) &
 		FU_SYNAPTICS_PROMETHEUS_SECURITY1_PROD_SENSOR) {
 		g_autoptr(FuSynapticsPrometheusConfig) cfg =
-		    fu_synaptics_prometheus_config_new(self);
+		    fu_synaptics_prometheus_config_new(FU_DEVICE(self));
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 

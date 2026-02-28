@@ -11,6 +11,7 @@
 
 #include "fu-synaptics-prometheus-common.h"
 #include "fu-synaptics-prometheus-config.h"
+#include "fu-synaptics-prometheus-device.h"
 #include "fu-synaptics-prometheus-firmware.h"
 #include "fu-synaptics-prometheus-struct.h"
 
@@ -35,7 +36,7 @@ G_DEFINE_TYPE(FuSynapticsPrometheusConfig, fu_synaptics_prometheus_config, FU_TY
 static gboolean
 fu_synaptics_prometheus_config_setup(FuDevice *device, GError **error)
 {
-	FuDevice *parent;
+	FuDevice *proxy;
 	FuSynapticsPrometheusConfig *self = FU_SYNAPTICS_PROMETHEUS_CONFIG(device);
 	g_autofree gchar *configid1_str = NULL;
 	g_autofree gchar *configid2_str = NULL;
@@ -63,10 +64,10 @@ fu_synaptics_prometheus_config_setup(FuDevice *device, GError **error)
 	reply = fu_synaptics_prometheus_reply_new(
 	    FU_STRUCT_SYNAPTICS_PROMETHEUS_REPLY_IOTA_FIND_HDR_SIZE +
 	    FU_SYNAPTICS_PROMETHEUS_MAX_IOTA_READ_SIZE);
-	parent = fu_device_get_parent(device, error);
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	if (!fu_synaptics_prometheus_device_cmd_send(FU_SYNAPTICS_PROMETHEUS_DEVICE(parent),
+	if (!fu_synaptics_prometheus_device_cmd_send(FU_SYNAPTICS_PROMETHEUS_DEVICE(proxy),
 						     st_request->buf,
 						     reply,
 						     progress,
@@ -133,20 +134,19 @@ fu_synaptics_prometheus_config_prepare_firmware(FuDevice *device,
 						GError **error)
 {
 	FuSynapticsPrometheusConfig *self = FU_SYNAPTICS_PROMETHEUS_CONFIG(device);
-	FuDevice *parent = fu_device_get_parent(device, error);
+	FuDevice *proxy;
 	g_autoptr(FuStructSynapticsPrometheusCfgHdr) st_hdr = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_prometheus_firmware_new();
 	g_autoptr(FuFirmware) img_hdr = NULL;
 
 	/* sanity check */
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return NULL;
-	}
 
 	if (fu_synaptics_prometheus_device_get_product_type(FU_SYNAPTICS_PROMETHEUS_DEVICE(
-		parent)) == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TYPE_TRITON) {
+		proxy)) == FU_SYNAPTICS_PROMETHEUS_PRODUCT_TYPE_TRITON) {
 		if (!fu_synaptics_prometheus_firmware_set_signature_size(
 			FU_SYNAPTICS_PROMETHEUS_FIRMWARE(firmware),
 			FU_SYNAPTICS_PROMETHEUS_FIRMWARE_TRITON_SIGSIZE))
@@ -221,7 +221,7 @@ fu_synaptics_prometheus_config_write_firmware(FuDevice *device,
 					      FwupdInstallFlags flags,
 					      GError **error)
 {
-	FuDevice *parent;
+	FuDevice *proxy;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
@@ -230,10 +230,10 @@ fu_synaptics_prometheus_config_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* I assume the CFG/MFW difference is detected in the device...*/
-	parent = fu_device_get_parent(device, error);
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	return fu_synaptics_prometheus_device_write_fw(FU_SYNAPTICS_PROMETHEUS_DEVICE(parent),
+	return fu_synaptics_prometheus_device_write_fw(FU_SYNAPTICS_PROMETHEUS_DEVICE(proxy),
 						       fw,
 						       progress,
 						       error);
@@ -246,9 +246,11 @@ fu_synaptics_prometheus_config_init(FuSynapticsPrometheusConfig *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_SYNAPTICS_PROMETHEUS_DEVICE);
 	fu_device_set_logical_id(FU_DEVICE(self), "cfg");
 	fu_device_set_name(FU_DEVICE(self), "IOTA Config");
 	fu_device_set_summary(FU_DEVICE(self), "Fingerprint reader config");
@@ -259,14 +261,14 @@ static void
 fu_synaptics_prometheus_config_constructed(GObject *obj)
 {
 	FuSynapticsPrometheusConfig *self = FU_SYNAPTICS_PROMETHEUS_CONFIG(obj);
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), NULL);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), NULL);
 
 	/* append the firmware kind to the generated GUID */
-	if (parent != NULL) {
+	if (proxy != NULL) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X-cfg",
-					fu_device_get_vid(parent),
-					fu_device_get_pid(parent));
+					fu_device_get_vid(proxy),
+					fu_device_get_pid(proxy));
 		fu_device_add_instance_id(FU_DEVICE(self), devid);
 	}
 
@@ -276,19 +278,19 @@ fu_synaptics_prometheus_config_constructed(GObject *obj)
 static gboolean
 fu_synaptics_prometheus_config_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device, error);
-	if (parent == NULL)
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	return fu_device_attach_full(parent, progress, error);
+	return fu_device_attach_full(proxy, progress, error);
 }
 
 static gboolean
 fu_synaptics_prometheus_config_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device, error);
-	if (parent == NULL)
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	return fu_device_detach_full(parent, progress, error);
+	return fu_device_detach_full(proxy, progress, error);
 }
 
 static void
@@ -306,9 +308,7 @@ fu_synaptics_prometheus_config_class_init(FuSynapticsPrometheusConfigClass *klas
 }
 
 FuSynapticsPrometheusConfig *
-fu_synaptics_prometheus_config_new(FuSynapticsPrometheusDevice *device)
+fu_synaptics_prometheus_config_new(FuDevice *proxy)
 {
-	FuSynapticsPrometheusConfig *self;
-	self = g_object_new(FU_TYPE_SYNAPTICS_PROMETHEUS_CONFIG, "parent", device, NULL);
-	return FU_SYNAPTICS_PROMETHEUS_CONFIG(self);
+	return g_object_new(FU_TYPE_SYNAPTICS_PROMETHEUS_CONFIG, "proxy", proxy, NULL);
 }
