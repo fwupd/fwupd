@@ -13,6 +13,13 @@ struct FuStructElantpHapticFirmwareHdr {
     magic: [u8; 4] == 0xFF40A25B,
 }
 
+enum FuEtpRptid {
+    TpFeature = 0x0d,
+    TpIap = 0x0b,
+    McuFeature = 0x70,
+    McuIap = 0x72,    
+}
+
 enum FuEtpCmd {
     I2cEepromSettingInitial = 0x0000,
     GetHidDescriptor = 0x0001,
@@ -33,7 +40,7 @@ enum FuEtpCmd {
     I2cIapReset = 0x0314,
     I2cIapChecksum = 0x0315,
     I2cSetEepromCtrl = 0x0321,
-    I2cEepromSetting = 0x0322,
+    I2cTpSetting = 0x0322,
     ForceAddr = 0x03ad,
     I2cEepromWriteChecksum = 0x048B,
     I2cHapticRestart = 0x0601,
