@@ -455,7 +455,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_read_haptic_enable(self, &error_local)) {
 		g_debug("no haptic device detected: %s", error_local->message);
 	} else {
-		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new();
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new(device);
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
