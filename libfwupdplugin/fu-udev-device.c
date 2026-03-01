@@ -1196,6 +1196,14 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(buf, 0x0, bufsz);
+		if (rc != NULL)
+			*rc = 0;
+		return TRUE;
+	}
+
 	/* not open! */
 	if (priv->io_channel == NULL) {
 		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
@@ -1445,6 +1453,10 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	/* not open! */
 	if (priv->io_channel == NULL) {
 		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
@@ -1543,6 +1555,14 @@ fu_udev_device_read(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(buf, 0x0, bufsz);
+		if (bytes_read != NULL)
+			*bytes_read = bufsz;
+		return TRUE;
+	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1703,6 +1723,10 @@ fu_udev_device_write(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -2076,6 +2100,10 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 		return event != NULL;
 	}
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error,
@@ -2151,6 +2179,10 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 		return event != NULL;
 	}
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error,
@@ -2225,6 +2257,10 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		return event != NULL;
 	}
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {

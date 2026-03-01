@@ -314,7 +314,7 @@ fu_genesys_gl32xx_device_verify_chip_id(FuGenesysGl32xxDevice *self, GError **er
 					    error))
 		return FALSE;
 	flash_id = g_strdup_printf("%02X%02X%02X", buf[0], buf[1], buf[2]);
-	cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
+	cfi_device = fu_cfi_device_new(FU_DEVICE(self), flash_id);
 	if (!fu_device_setup(FU_DEVICE(cfi_device), error))
 		return FALSE;
 	if (fu_device_get_name(cfi_device) == NULL) {

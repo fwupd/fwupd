@@ -75,6 +75,11 @@ fu_steelseries_device_response(FuSteelseriesDevice *self, GError **error)
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
+	/* sanity check */
+	if (priv->ep_in_size == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "ep in size invalid");
+		return NULL;
+	}
 	fu_byte_array_set_size(buf, priv->ep_in_size, 0x00);
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      priv->ep,
@@ -208,6 +213,8 @@ fu_steelseries_device_set_quirk_kv(FuDevice *device,
 static void
 fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
+	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
+	priv->ep_in_size = FU_STEELSERIES_BUFFER_CONTROL_SIZE;
 	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
 }

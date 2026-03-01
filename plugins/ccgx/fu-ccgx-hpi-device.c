@@ -671,6 +671,33 @@ fu_ccgx_hpi_device_app_read_intr_reg(FuCcgxHpiDevice *self,
 	return TRUE;
 }
 
+typedef struct {
+	FuCcgxHpiRegSection section;
+	FuCcgxHpiEvent *event_array;
+} FuCcgxHpiDeviceEventHelper;
+
+static gboolean
+fu_ccgx_hpi_device_wait_for_event_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
+	FuCcgxHpiDeviceEventHelper *helper = (FuCcgxHpiDeviceEventHelper *)user_data;
+	guint8 event_count = 0;
+
+	if (!fu_ccgx_hpi_device_app_read_intr_reg(self,
+						  helper->section,
+						  helper->event_array,
+						  &event_count,
+						  error))
+		return FALSE;
+	if (event_count == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "no event");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_ccgx_hpi_device_wait_for_event(FuCcgxHpiDevice *self,
 				  FuCcgxHpiRegSection section,
@@ -678,26 +705,23 @@ fu_ccgx_hpi_device_wait_for_event(FuCcgxHpiDevice *self,
 				  guint32 timeout_ms,
 				  GError **error)
 {
-	guint8 event_count = 0;
-	g_autoptr(GTimer) start_time = g_timer_new();
-	do {
-		if (!fu_ccgx_hpi_device_app_read_intr_reg(self,
-							  section,
-							  event_array,
-							  &event_count,
-							  error))
-			return FALSE;
-		if (event_count > 0)
-			return TRUE;
-	} while (g_timer_elapsed(start_time, NULL) * 1000.f <= timeout_ms);
+	FuCcgxHpiDeviceEventHelper helper = {
+	    .section = section,
+	    .event_array = event_array,
+	};
 
-	/* timed out */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_TIMED_OUT,
-		    "failed to wait for event in %ums",
-		    timeout_ms);
-	return FALSE;
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_ccgx_hpi_device_wait_for_event_cb,
+				  MAX(1, timeout_ms / 10),
+				  10, /* ms */
+				  &helper,
+				  error)) {
+		g_prefix_error_literal(error, "failed to get event: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean

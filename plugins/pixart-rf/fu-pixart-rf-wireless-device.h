@@ -18,4 +18,4 @@ G_DECLARE_FINAL_TYPE(FuPixartRfWirelessDevice,
 		     FuDevice)
 
 FuPixartRfWirelessDevice *
-fu_pixart_rf_wireless_device_new(FuContext *ctx, FuPixartRfOtaFwDevModel *model);
+fu_pixart_rf_wireless_device_new(FuDevice *proxy, FuPixartRfOtaFwDevModel *model);

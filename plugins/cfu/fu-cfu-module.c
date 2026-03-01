@@ -140,7 +140,7 @@ fu_cfu_module_write_firmware(FuDevice *device,
 	FuDevice *proxy;
 	FuDeviceClass *device_class;
 
-	/* process by the parent */
+	/* process by the proxy */
 	proxy = fu_device_get_proxy(device, error);
 	if (proxy == NULL)
 		return FALSE;
@@ -176,7 +176,8 @@ fu_cfu_module_init(FuCfuModule *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 }
 
@@ -192,9 +193,7 @@ fu_cfu_module_class_init(FuCfuModuleClass *klass)
 }
 
 FuCfuModule *
-fu_cfu_module_new(FuDevice *parent)
+fu_cfu_module_new(FuDevice *proxy)
 {
-	FuCfuModule *self;
-	self = g_object_new(FU_TYPE_CFU_MODULE, "proxy", parent, "parent", parent, NULL);
-	return self;
+	return g_object_new(FU_TYPE_CFU_MODULE, "proxy", proxy, NULL);
 }

@@ -489,12 +489,19 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	const gchar *buf;
 	gsize bufsz = 0;
 	g_autofree gchar *at_res_safe = NULL;
-	g_autofree gchar *cmd_cr = g_strdup_printf("%s\r\n", helper->cmd);
+	g_autofree gchar *cmd_cr = NULL;
 	g_autoptr(GBytes) at_req = NULL;
 	g_autoptr(GBytes) at_res = NULL;
 
+	/* sanity check */
+	if (helper->cmd == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no cmd");
+		return FALSE;
+	}
+
 	/* command */
 	g_debug("req: %s", helper->cmd);
+	cmd_cr = g_strdup_printf("%s\r\n", helper->cmd);
 	at_req = g_bytes_new(cmd_cr, strlen(cmd_cr));
 	if (!fu_udev_device_write_bytes(FU_UDEV_DEVICE(self),
 					at_req,
@@ -522,6 +529,10 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 		return FALSE;
 	}
 	at_res_safe = fu_strsafe_bytes(at_res, 32);
+	if (at_res_safe == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no AT res");
+		return FALSE;
+	}
 	g_debug("res: %s", at_res_safe);
 
 	/*
