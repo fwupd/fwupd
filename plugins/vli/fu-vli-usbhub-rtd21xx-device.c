@@ -486,12 +486,13 @@ static gboolean
 fu_vli_usbhub_rtd21xx_device_probe(FuDevice *device, GError **error)
 {
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_RTD21XX;
-	FuDevice *proxy = fu_device_get_proxy(device, NULL);
+	FuDevice *proxy;
 
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	fu_device_set_name(device, fu_vli_device_kind_to_string(device_kind));
-	if (proxy != NULL) {
-		fu_device_incorporate(device, proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-	}
+	fu_device_incorporate(device, proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 
 	/* add instance ID */
 	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(device_kind));
