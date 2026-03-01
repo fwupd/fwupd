@@ -134,9 +134,6 @@ struct _FuGenesysUsbhubDevice {
 	FuStructGenesysFwEcdsaPublicKey *st_ecdsa_pubkey;
 	FuStructGenesysFwCodesignInfoEcdsa *st_codesign_ecdsa;
 	GByteArray *st_public_key;
-
-	/* hid channel */
-	FuGenesysHubhidDevice *hid_channel;
 };
 
 G_DEFINE_TYPE(FuGenesysUsbhubDevice, fu_genesys_usbhub_device, FU_TYPE_USB_DEVICE)
@@ -144,14 +141,22 @@ G_DEFINE_TYPE(FuGenesysUsbhubDevice, fu_genesys_usbhub_device, FU_TYPE_USB_DEVIC
 void
 fu_genesys_usbhub_device_set_hid_channel(FuGenesysUsbhubDevice *self, FuDevice *channel)
 {
+	FuDevice *proxy;
+	g_autoptr(GError) error_local = NULL;
+
 	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
 	g_return_if_fail(FU_IS_GENESYS_HUBHID_DEVICE(channel));
 
-	if (self->hid_channel != NULL) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), &error_local);
+	if (proxy != NULL) {
 		g_warning("already set hid_channel, physical_id(%s)",
-			  fu_device_get_physical_id(FU_DEVICE(self->hid_channel)));
+			  fu_device_get_physical_id(proxy));
 	} else {
-		self->hid_channel = FU_GENESYS_HUBHID_DEVICE(channel);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+		fu_device_set_proxy(FU_DEVICE(self), channel);
 		/* align usb max length(0xffff) to usb2 packet size(0x40) */
 		self->flash_rw_size = 0xffc0;
 	}
@@ -173,8 +178,12 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 				       GCancellable *cancellable,
 				       GError **error)
 {
-	if (self->hid_channel != NULL) {
-		return fu_genesys_hubhid_device_send_report(self->hid_channel,
+	FuDevice *proxy;
+	g_autoptr(GError) error_local = NULL;
+
+	proxy = fu_device_get_proxy(FU_DEVICE(self), &error_local);
+	if (proxy != NULL) {
+		return fu_genesys_hubhid_device_send_report(FU_GENESYS_HUBHID_DEVICE(proxy),
 							    progress,
 							    direction,
 							    request_type,
@@ -185,21 +194,21 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 							    data,
 							    length,
 							    error);
-	} else {
-		return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-						      direction,
-						      request_type,
-						      recipient,
-						      request,
-						      value,
-						      idx,
-						      data,
-						      length,
-						      actual_length,
-						      timeout,
-						      cancellable,
-						      error);
 	}
+
+	return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					      direction,
+					      request_type,
+					      recipient,
+					      request,
+					      value,
+					      idx,
+					      data,
+					      length,
+					      actual_length,
+					      timeout,
+					      cancellable,
+					      error);
 }
 
 static gboolean
@@ -1360,11 +1369,15 @@ static gboolean
 fu_genesys_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+	FuDevice *proxy;
+	g_autoptr(GError) error_local = NULL;
+
 	if (!fu_genesys_usbhub_device_reset(self, error))
 		return FALSE;
 
-	if (self->hid_channel != NULL) {
-		fu_device_add_flag(FU_DEVICE(self->hid_channel), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	proxy = fu_device_get_proxy(device, &error_local);
+	if (proxy != NULL) {
+		fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}
 
 	/* success */
@@ -1431,42 +1444,6 @@ fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "unsupported USB3 hub");
 		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_genesys_usbhub_device_open(FuDevice *device, GError **error)
-{
-	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->open(device, error))
-		return FALSE;
-
-	/* FuGenesysHubhidDevice->open */
-	if (self->hid_channel != NULL) {
-		if (!fu_device_open(FU_DEVICE(self->hid_channel), error))
-			return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_genesys_usbhub_device_close(FuDevice *device, GError **error)
-{
-	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-
-	/* FuUsbDevice->close */
-	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->close(device, error))
-		return FALSE;
-
-	/* FuGenesysHubhidDevice->close */
-	if (self->hid_channel != NULL) {
-		if (!fu_device_close(FU_DEVICE(self->hid_channel), error))
-			return FALSE;
 	}
 
 	return TRUE;
@@ -3201,6 +3178,7 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* 5s */
 	fu_device_register_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_HUBHID_DEVICE);
 	fu_device_set_install_duration(FU_DEVICE(self), 9); /* 9 s */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_FIRMWARE);
 
@@ -3255,8 +3233,6 @@ fu_genesys_usbhub_device_class_init(FuGenesysUsbhubDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_genesys_usbhub_device_finalize;
 	device_class->probe = fu_genesys_usbhub_device_probe;
-	device_class->open = fu_genesys_usbhub_device_open;
-	device_class->close = fu_genesys_usbhub_device_close;
 	device_class->setup = fu_genesys_usbhub_device_setup;
 	device_class->dump_firmware = fu_genesys_usbhub_device_dump_firmware;
 	device_class->prepare = fu_genesys_usbhub_device_prepare;
