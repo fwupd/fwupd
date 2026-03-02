@@ -97,8 +97,9 @@ fu_elantp_hid_haptic_device_read_cmd(FuElantpHidDevice *parent,
 				     gsize bufz,
 				     GError **error)
 {
-	guint8 tmp[5] = {FU_ETP_RPTID_TP_FEATURE, 0x05, 0x03};
-	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
+	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE};
+	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_haptic_device_send_cmd(parent, tmp, sizeof(tmp), buf, bufz, error);
 }
 
@@ -937,8 +938,8 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 	if (self->tp_ic_type >= 0x10) {
 		if (self->tp_iap_ver >= 1) {
 			/* set the IAP type, presumably some kind of ABI */
-			if (self->tp_iap_ver >= 2 &&
-			    (self->tp_ic_type == 0x14 || self->tp_ic_type == 0x15)) {
+			if (self->tp_iap_ver >= 2 && (self->tp_ic_type == FU_ETP_IC_NUM14 ||
+						      self->tp_ic_type == FU_ETP_IC_NUM15)) {
 				self->fw_page_size = 512;
 			} else {
 				self->fw_page_size = 128;
