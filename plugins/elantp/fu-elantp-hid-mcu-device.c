@@ -377,6 +377,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 
 	/* define the extra instance IDs (ic_type + module_id + driver) */
 	fu_device_add_instance_u8(device, "ICTYPE", self->ic_type);
+	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
@@ -771,6 +772,7 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 
 	/* set the page size */
 	self->fw_page_size = 64;
+	self->fw_section_size = 64;
 	self->fw_no_of_sections = 1;
 	if (ic_type >= 0x10) {
 		if (iap_ver >= 1) {
