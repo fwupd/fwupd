@@ -2992,7 +2992,7 @@ msgid "System has been signed with an insecure key"
 msgstr ""
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
+msgid "Device firmware has been locked"
 msgstr ""
 
 #. TRANSLATORS: Name of hardware
