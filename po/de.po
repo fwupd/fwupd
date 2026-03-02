@@ -12,20 +12,22 @@
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
 # Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>, 2025.
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Poolitzer <weblate@poolitzer.eu>, 2026.
+# DerDilla <derdilla06@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 10:02+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-02 14:07+0000\n"
+"Last-Translator: Poolitzer <weblate@poolitzer.eu>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-Hersteller-Firmwaredienst (stabile Firmware)"
@@ -143,11 +145,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Zum Ändern einer konfigurierten Gegenstelle, die für Firmware-Aktualisierungen verwendet wird, ist eine Authentifizierung erforderlich"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Eine konfigurierte Gegenstelle reinigen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Zum Löschen von Metadaten auf einer Gegenstelle ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -329,13 +331,13 @@ msgstr "Keine Aktion angegeben!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Bitte geben eine Zahl von 0 bis %u ein:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Bitte geben entweder %s oder %s ein:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -435,13 +437,13 @@ msgstr "Defektlokalisierungsoptionen anzeigen"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Ein Gerät wurde aktualisiert und muss neu gestartet werden."
+msgstr[1] "%u Geräte wurden aktualisiert und müssen neu gestartet werden."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Neustarten, um die Aktualisierung abzuschließen."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -670,7 +672,7 @@ msgstr "Prozessor-Rückrollschutz"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Secure Boot Plattform"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -714,7 +716,7 @@ msgstr "UEFI-DB"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -853,7 +855,7 @@ msgstr "Rückrollschutz des AMD Sicherheitsprozessors"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "AMD Secure Boot Plattform"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -1008,7 +1010,7 @@ msgstr "Der Rückrollschutz verhindert, dass die Gerätesoftware auf eine älter
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Die Secure Boot Plattform verhindert, dass unsignierte Software geladen wird, wenn das Gerät startet."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1032,7 +1034,7 @@ msgstr "Die UEFI-DB enthält die Liste der gültigen Zertifikate, die zur Autori
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart ist ein Firmware-Sicherheitsfeature, welche das BIOS vor Manipulation schützt."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1073,7 +1075,7 @@ msgstr "Gerät auswählen"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Geräte ohne verfügbare Firmware-Aktualisierungen:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1110,16 +1112,16 @@ msgstr "Von %s wird gelesen …"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s kann derzeit nicht aktualisiert werden:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Nichts zu tun"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Geräte mit Firmware-Aktualisierung, die eine Benutzeraktion erfordern:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1135,7 +1137,7 @@ msgstr "Erfolgreich modifizierte Gegenstelle"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Gegenstelle erfolgreich bereinigt"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1143,7 +1145,7 @@ msgstr "Erfolgreich deaktivierte Gegenstelle"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Die jetzt unbenutzten Gegenstelle-Cachedatein löschen?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1195,7 +1197,7 @@ msgstr "Datei wird geschrieben:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Die Metadaten sind bereits aktuell"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -1486,7 +1488,7 @@ msgstr "HWIDS-DATEI"
 
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
-msgstr "Eine Datei speichern, die die Erstellung von Hardware-Kennungen ermöglicht"
+msgstr "Eine Datei speichern, welche die Erstellung von Hardware-Kennungen ermöglicht"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -1631,7 +1633,7 @@ msgstr "Den Firmware-Zweig auf dem Gerät wechseln"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr ""
+msgstr "GERÄTEKENNUNG"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1643,7 +1645,7 @@ msgstr "Gesamten Firmware-Aktualisierungsverlauf löschen"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[EINSTELLUNG1] [EINSTELLUNG2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1768,7 +1770,7 @@ msgstr "GEGENSTELLENKENNUNG"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Reinigt die angegebene Gegenstelle"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1808,27 +1810,27 @@ msgstr "Findet Firmware-Versionen aus den Metadaten"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "ART DATEINAME"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Berechnet eine CRC Prüfsumme für eine Datei"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC-PRÜFSUMME DATEINAME"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Findet einen Algorithmus, der zur CRC der Datei passt"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PRC]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Parst das System PCR Eventlog"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2990,11 +2992,11 @@ msgstr "Gerät hat eine niedrigere Priorität als ein gleichwertiges Gerät"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "System wurde mit einem unsicherem Schlüssel signiert"
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
-msgstr ""
+msgid "Device firmware has been locked"
+msgstr "Geräte-Firmware wurde gesperrt"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3547,7 +3549,7 @@ msgstr "Der UEFI-Zertifikatspeicher ist jetzt auf dem neuesten Stand"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart ist aktiviert"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
