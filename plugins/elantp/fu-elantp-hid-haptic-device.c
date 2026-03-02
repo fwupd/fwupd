@@ -97,9 +97,9 @@ fu_elantp_hid_haptic_device_read_cmd(FuElantpHidDevice *parent,
 				     gsize bufz,
 				     GError **error)
 {
-	guint8 buf[5] = {FU_ETP_RPTID_TP_FEATURE};
-	fu_memwrite_uint16(buf + 0x1, FU_ETP_CMD_I2C_GET_FEATURE_ADDR, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(buf + 0x3, reg, G_LITTLE_ENDIAN);
+	guint8 tmp[5] = {FU_ETP_RPTID_TP_FEATURE};
+	fu_memwrite_uint16(tmp + 0x1, FU_ETP_CMD_I2C_GET_FEATURE_ADDR, G_LITTLE_ENDIAN);
+	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_haptic_device_send_cmd(parent, tmp, sizeof(tmp), buf, bufz, error);
 }
 
