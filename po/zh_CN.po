@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-02 14:07+0000\n"
+"PO-Revision-Date: 2026-03-02 15:26+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -537,7 +537,7 @@ msgstr "Intel BootGuard OTP 保险丝"
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "CET Platform"
-msgstr "CET 平台"
+msgstr "CET platform"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * Utilized by OS means the distribution enabled it
@@ -579,7 +579,7 @@ msgstr "挂起到空闲"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
-msgstr "UEFI 平台密钥"
+msgstr "UEFI platform密钥"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -591,7 +591,7 @@ msgstr "UEFI bootservice 变量"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM empty PCRs"
-msgstr ""
+msgstr "TPM 空 PCR"
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
@@ -625,7 +625,7 @@ msgstr "MEI 覆写"
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
 #. * to the private/public key used to secure loading of firmware
 msgid "MEI key manifest"
-msgstr ""
+msgstr "MEI key 清单"
 
 #. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
 #.
@@ -655,43 +655,43 @@ msgstr "fwupd 插件"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
-msgstr ""
+msgstr "platform调试"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Supported CPU"
-msgstr ""
+msgstr "支持的 CPU"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "Processor rollback protection"
-msgstr ""
+msgstr "处理器回滚保护"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "platform安全启动"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
-msgstr ""
+msgstr "SPI 重放保护"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "SPI write protection"
-msgstr ""
+msgstr "SPI 写入保护"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
-msgstr ""
+msgstr "Fused 平台"
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
-msgstr ""
+msgstr "仿真主机"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
-msgstr ""
+msgstr "BIOS 回滚保护"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS mitigation"
-msgstr ""
+msgstr "Intel GDS 缓解"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS firmware updates"
@@ -699,19 +699,19 @@ msgstr "BIOS 固件更新"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "SMM locked down"
-msgstr ""
+msgstr "SMM 锁定"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
-msgstr ""
+msgstr "UEFI 内存保护"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
-msgstr ""
+msgstr "UEFI 数据库"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -723,79 +723,79 @@ msgstr "固件写保护锁"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "Firmware BIOS Region"
-msgstr ""
+msgstr "固件 BIOS 区域"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware BIOS Descriptor"
-msgstr ""
+msgstr "固件 BIOS 描述符"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
-msgstr ""
+msgstr "启动前 DMA 保护"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
 msgid "Intel BootGuard Verified Boot"
-msgstr ""
+msgstr "Intel BootGuard 验证启动"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM Protected"
-msgstr ""
+msgstr "Intel BootGuard ACM 受保护"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard Error Policy"
-msgstr ""
+msgstr "Intel BootGuard 错误策略"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
-msgstr ""
+msgstr "Intel BootGuard Fuse"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
 msgid "Control-flow Enforcement Technology"
-msgstr ""
+msgstr "控制流强制技术"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Supervisor Mode Access Prevention"
-msgstr ""
+msgstr "管理模式访问保护"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU Protection"
-msgstr ""
+msgstr "IOMMU 保护"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux Kernel Lockdown"
-msgstr ""
+msgstr "Linux 内核锁定"
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux Kernel Verification"
-msgstr ""
+msgstr "Linux 内核验证"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux Swap"
-msgstr ""
+msgstr "Linux Swap"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend To RAM"
-msgstr ""
+msgstr "睡眠状态"
 
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend To Idle"
-msgstr ""
+msgstr "挂起到空闲状态"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
-msgstr ""
+msgstr "UEFI Platform Key"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI Secure Boot"
-msgstr ""
+msgstr "UEFI 安全启动"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI Bootservice Variables"
-msgstr ""
+msgstr "UEFI Bootservice 变量"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM Platform Configuration"
