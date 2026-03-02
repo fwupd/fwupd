@@ -193,16 +193,3 @@ fu_usb_hid_descriptor_class_init(FuUsbHidDescriptorClass *klass)
 	object_class->finalize = fu_usb_hid_descriptor_finalize;
 	firmware_class->parse = fu_usb_hid_descriptor_parse;
 }
-
-/**
- * fu_usb_hid_descriptor_new:
- *
- * Return value: a new #FuUsbHidDescriptor object.
- *
- * Since: 2.0.2
- **/
-FuUsbHidDescriptor *
-fu_usb_hid_descriptor_new(void)
-{
-	return FU_USB_HID_DESCRIPTOR(g_object_new(FU_TYPE_USB_HID_DESCRIPTOR, NULL));
-}

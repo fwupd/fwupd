@@ -295,15 +295,6 @@ fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 	if (priv->name != NULL)
 		fwupd_json_object_add_string(json_obj, "Name", priv->name);
 
-#if GLIB_CHECK_VERSION(2, 80, 0)
-	if (fu_device_get_created_usec(device) != 0) {
-		g_autoptr(GDateTime) dt =
-		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(device));
-		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		fwupd_json_object_add_string(json_obj, "Created", str);
-	}
-#endif
-
 	/* events */
 	if (events->len > 0) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
@@ -322,7 +313,6 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "Guid", NULL);
 	if (tmp != NULL)
@@ -333,31 +323,6 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-
-#if GLIB_CHECK_VERSION(2, 80, 0)
-	tmp = fwupd_json_object_get_string(json_obj, "Created", NULL);
-	if (tmp != NULL) {
-		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
-		if (dt != NULL)
-			fu_device_set_created_usec(device, g_date_time_to_unix_usec(dt));
-	}
-#endif
-
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(device, event);
-		}
-	}
 
 	/* success */
 	return TRUE;

@@ -15,21 +15,21 @@ fu_egis_moc_checksum_func(void)
 	const guint8 buf[] = {0x40, 0xC3, 0xE6, 0xC8, 0xDF, 0x5B};
 
 	/* even */
-	temp_chksum = fu_egis_moc_checksum_add(0, buf, sizeof(buf));
+	temp_chksum = fu_egis_moc_checksum_build(0, buf, sizeof(buf));
 	g_assert_cmpint(temp_chksum, ==, 124933);
 	temp_chksum = fu_egis_moc_checksum_finish(temp_chksum);
 	g_assert_cmpint(temp_chksum, ==, 6137);
 
 	/* odd */
-	temp_chksum = fu_egis_moc_checksum_add(0, buf, sizeof(buf) - 1);
+	temp_chksum = fu_egis_moc_checksum_build(0, buf, sizeof(buf) - 1);
 	g_assert_cmpint(temp_chksum, ==, 101637);
 	temp_chksum = fu_egis_moc_checksum_finish(temp_chksum);
 	g_assert_cmpint(temp_chksum, ==, 29433);
 
 	/* chained */
-	temp_chksum = fu_egis_moc_checksum_add(0, buf, sizeof(buf));
+	temp_chksum = fu_egis_moc_checksum_build(0, buf, sizeof(buf));
 	g_assert_cmpint(temp_chksum, ==, 124933);
-	temp_chksum = fu_egis_moc_checksum_add(temp_chksum, buf, sizeof(buf) - 1);
+	temp_chksum = fu_egis_moc_checksum_build(temp_chksum, buf, sizeof(buf) - 1);
 	g_assert_cmpint(temp_chksum, ==, 226570);
 	temp_chksum = fu_egis_moc_checksum_finish(temp_chksum);
 	g_assert_cmpint(temp_chksum, ==, 35570);

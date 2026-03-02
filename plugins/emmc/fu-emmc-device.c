@@ -329,15 +329,13 @@ fu_emmc_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_emmc_device_prepare_firmware(FuDevice *device,
-				GInputStream *stream,
-				FuProgress *progress,
-				FuFirmwareParseFlags flags,
-				GError **error)
+static gboolean
+fu_emmc_device_check_firmware(FuDevice *device,
+			      FuFirmware *firmware,
+			      FuFirmwareParseFlags flags,
+			      GError **error)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
 	/* sanity check */
 	if (self->sect_size == 0) {
@@ -345,21 +343,21 @@ fu_emmc_device_prepare_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "sector size invalid");
-		return NULL;
+		return FALSE;
 	}
 
 	/* check alignment */
-	if (fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if ((fu_firmware_get_size(firmware) % self->sect_size) > 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware data size (%" G_GSIZE_FORMAT ") is not aligned",
 			    fu_firmware_get_size(firmware));
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -620,6 +618,7 @@ fu_emmc_device_init(FuEmmcDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MEMORY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
@@ -631,7 +630,7 @@ fu_emmc_device_class_init(FuEmmcDeviceClass *klass)
 	device_class->set_quirk_kv = fu_emmc_device_set_quirk_kv;
 	device_class->setup = fu_emmc_device_setup;
 	device_class->to_string = fu_emmc_device_to_string;
-	device_class->prepare_firmware = fu_emmc_device_prepare_firmware;
+	device_class->check_firmware = fu_emmc_device_check_firmware;
 	device_class->probe = fu_emmc_device_probe;
 	device_class->write_firmware = fu_emmc_device_write_firmware;
 	device_class->set_progress = fu_emmc_device_set_progress;

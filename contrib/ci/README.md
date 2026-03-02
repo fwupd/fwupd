@@ -67,7 +67,7 @@ For every commit or pull request 6 builds are performed:
 * A flatpak bundle with all plugins enabled
 * Compiled under gcc with the org.gnome.Sdk/x86_64/3.28 runtime
 * Builds without the daemon, so only fwupdtool is available
-* No GPG, PKCS-7, GObjectIntrospection, systemd or ConsoleKit support
+* No PKCS-7, GObjectIntrospection, systemd or ConsoleKit support
 * No tests
 
 ## Adding a new target

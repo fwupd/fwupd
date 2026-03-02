@@ -93,6 +93,10 @@ struct _FuDeviceClass {
 	gboolean (*from_json)(FuDevice *self,
 			      FwupdJsonObject *json_obj,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	gboolean (*check_firmware)(FuDevice *self,
+				   FuFirmware *firmware,
+				   FuFirmwareParseFlags flags,
+				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
 #endif
 };
 

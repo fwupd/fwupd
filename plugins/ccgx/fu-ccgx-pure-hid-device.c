@@ -196,12 +196,11 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
-					 FuProgress *progress,
-					 FuFirmwareParseFlags flags,
-					 GError **error)
+static gboolean
+fu_ccgx_pure_hid_device_check_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuFirmwareParseFlags flags,
+				       GError **error)
 {
 	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
 	FuCcgxFwMode fw_mode;
@@ -211,10 +210,6 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 	gsize fw_size = 0;
 	guint16 vid;
 	guint16 pid;
-	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
-
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 
 	/* check the silicon ID */
 	fw_silicon_id = fu_ccgx_firmware_get_silicon_id(FU_CCGX_FIRMWARE(firmware));
@@ -225,7 +220,7 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 			    "silicon id mismatch, expected 0x%x, got 0x%x",
 			    self->silicon_id,
 			    fw_silicon_id);
-		return NULL;
+		return FALSE;
 	}
 
 	fw_mode = fu_ccgx_firmware_get_fw_mode(FU_CCGX_FIRMWARE(firmware));
@@ -237,7 +232,7 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 			    fu_ccgx_fw_mode_to_string(
 				fu_ccgx_fw_mode_get_alternate((FuCcgxFwMode)self->operating_mode)),
 			    fu_ccgx_fw_mode_to_string(fw_mode));
-		return NULL;
+		return FALSE;
 	}
 
 	/* validate all records has proper size */
@@ -260,7 +255,7 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 				    record->array_id,
 				    record->row_number,
 				    (guint)record_size);
-			return NULL;
+			return FALSE;
 		}
 		fw_size += record_size;
 	}
@@ -273,7 +268,7 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "unable to read VID and PID from the image");
-		return NULL;
+		return FALSE;
 	}
 	vidpid_rcd = g_ptr_array_index(records, VIDPID_BLOCK_ID);
 	if (!fu_memread_uint16_safe(g_bytes_get_data(vidpid_rcd->data, NULL),
@@ -282,14 +277,14 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 				    &vid,
 				    G_LITTLE_ENDIAN,
 				    error))
-		return NULL;
+		return FALSE;
 	if (!fu_memread_uint16_safe(g_bytes_get_data(vidpid_rcd->data, NULL),
 				    g_bytes_get_size(vidpid_rcd->data),
 				    2,
 				    &pid,
 				    G_LITTLE_ENDIAN,
 				    error))
-		return NULL;
+		return FALSE;
 
 	if (vid != fu_device_get_vid(device) || pid != fu_device_get_pid(device)) {
 		g_set_error(error,
@@ -300,10 +295,11 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 			    fu_device_get_pid(device),
 			    vid,
 			    pid);
-		return NULL;
+		return FALSE;
 	}
 
-	return g_steal_pointer(&firmware);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -413,6 +409,7 @@ fu_ccgx_pure_hid_device_init(FuCcgxPureHidDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CCGX_FIRMWARE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME2);
 }
 
@@ -470,5 +467,5 @@ fu_ccgx_pure_hid_device_class_init(FuCcgxPureHidDeviceClass *klass)
 	klass_device->set_progress = fu_ccgx_pure_hid_device_set_progress;
 	klass_device->set_quirk_kv = fu_ccgx_pure_hid_device_set_quirk_kv;
 	klass_device->convert_version = fu_ccgx_pure_hid_device_convert_version;
-	klass_device->prepare_firmware = fu_ccgx_pure_hid_device_prepare_firmware;
+	klass_device->check_firmware = fu_ccgx_pure_hid_device_check_firmware;
 }

@@ -279,7 +279,7 @@ void
 fu_bios_settings_add_attribute(FuBiosSettings *self, FwupdBiosSetting *attr)
 {
 	g_return_if_fail(FU_IS_BIOS_SETTINGS(self));
-	g_return_if_fail(FU_IS_BIOS_SETTING(attr));
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(attr));
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
 }
 
@@ -310,6 +310,7 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 	fwupd_bios_setting_set_id(attr, id);
 
 	if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
+		fwupd_bios_setting_set_filename(attr, "current_value");
 		if (!fu_bios_settings_set_folder_attributes(self, attr, error))
 			return FALSE;
 	} else {
@@ -656,4 +657,45 @@ fu_bios_settings_new(FuPathStore *pstore)
 	if (pstore != NULL)
 		self->pstore = g_object_ref(pstore);
 	return self;
+}
+
+/**
+ * fu_bios_settings_register_attr:
+ * @self: a #FuBiosSettings
+ * @attr: a #FwupdBiosSetting
+ * @error: (nullable): optional return location for an error
+ *
+ * Registers a BIOS setting that was created by a plugin.
+ * This is a public API for plugins to register custom BIOS settings.
+ *
+ * Returns: TRUE if the setting was registered successfully
+ *
+ * Since: 2.1.1
+ **/
+gboolean
+fu_bios_settings_register_attr(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
+{
+	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (fwupd_bios_setting_get_id(attr) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "BIOS setting missing required id property");
+		return FALSE;
+	}
+
+	if (fu_bios_settings_get_attr(self, fwupd_bios_setting_get_id(attr)) != NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "BIOS setting with id %s already exists",
+			    fwupd_bios_setting_get_id(attr));
+		return FALSE;
+	}
+
+	fu_bios_settings_add_attribute(self, attr);
+	return TRUE;
 }

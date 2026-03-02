@@ -2507,15 +2507,19 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
-	/* parse this */
-	fn = fu_context_build_filename(self->ctx,
-				       error,
-				       FU_PATH_KIND_SYSFSDIR_SECURITY,
-				       "tpm0",
-				       "binary_bios_measurements",
-				       NULL);
-	if (fn == NULL)
-		return FALSE;
+	/* parse file */
+	if (g_strv_length(values) > 1) {
+		fn = g_strdup(values[1]);
+	} else {
+		fn = fu_context_build_filename(self->ctx,
+					       error,
+					       FU_PATH_KIND_SYSFSDIR_SECURITY,
+					       "tpm0",
+					       "binary_bios_measurements",
+					       NULL);
+		if (fn == NULL)
+			return FALSE;
+	}
 	blob = fu_bytes_get_contents(fn, error);
 	stream = g_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,

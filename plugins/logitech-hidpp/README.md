@@ -114,11 +114,8 @@ Here's how the different devices are handled in the plugin:
 FuLogitechHidppDevice effectively handles all devices that use the
 HID++2.0 protocol.
 
-Every device contains two updatable entities, the main application FW
-and the radio stack FW (SoftDevice). The latter will show up as a child
-device of the actual device and is handled by FuLogitechHidppRadio
-(fu-logitech-hidpp-radio.c), which simply defers to the parent device
-for most operations.
+Every device contains two updatable entities, the main application FW and the radio stack FW (SoftDevice).
+The SoftDevice must be updated at the same time as the main application and is not exposed as a child device.
 
 ### Quirk Use
 
@@ -157,12 +154,6 @@ Since: 1.7.0
 ### `Flags=no-request-required`
 
 No user-action is required for detach and attach.
-
-Since: 1.7.0
-
-### `Flags=add-radio`
-
-The device should add a softdevice (index 0x5), typically a radio.
 
 Since: 1.7.0
 

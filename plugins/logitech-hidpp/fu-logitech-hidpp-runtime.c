@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-logitech-hidpp-common.h"
-#include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime.h"
 #include "fu-logitech-hidpp-struct.h"
 
@@ -31,17 +30,31 @@ fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self)
 gboolean
 fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error)
 {
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_REGISTER;
-	msg->function_id = FU_LOGITECH_HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
-	msg->data[0] = 0x00;
-	msg->data[1] = 0x05; /* wireless + softwarepresent */
-	msg->data[2] = 0x00;
-	msg->hidpp_version = 1;
-	return fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error);
+	g_autoptr(FuStructLogitechHidppMsg) st_req = fu_struct_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
+	const guint8 buf[] = {
+	    0x00,
+	    0x05, /* wireless + softwarepresent */
+	    0x00,
+	};
+	fu_struct_logitech_hidpp_msg_set_report_id(st_req, FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+	fu_struct_logitech_hidpp_msg_set_device_id(st_req, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st_req, FU_LOGITECH_HIDPP_SUBID_SET_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(
+	    st_req,
+	    FU_LOGITECH_HIDPP_REGISTER_HIDPP_NOTIFICATIONS);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self),
+					    st_req,
+					    FU_LOGITECH_HIDPP_VERSION_1,
+					    FU_LOGITECH_HIDPP_MSG_FLAG_NONE,
+					    error);
+	if (st_rsp == NULL) {
+		g_prefix_error_literal(error, "failed to enable notifications: ");
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean

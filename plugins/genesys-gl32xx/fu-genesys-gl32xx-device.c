@@ -621,18 +621,12 @@ fu_genesys_gl32xx_device_read_firmware(FuDevice *device, FuProgress *progress, G
 	return g_steal_pointer(&firmware);
 }
 
-static FuFirmware *
-fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FuFirmwareParseFlags flags,
-					  GError **error)
+static gboolean
+fu_genesys_gl32xx_device_check_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuFirmwareParseFlags flags,
+					GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_genesys_gl32xx_firmware_new();
-
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
 	/* check size */
 	if (fu_firmware_get_size(firmware) != fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
@@ -641,13 +635,11 @@ fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
 			    "firmware size 0x%x while expecting 0x%x bytes",
 			    (guint)fu_firmware_get_size(firmware),
 			    (guint)fu_device_get_firmware_size_max(device));
-		return NULL;
+		return FALSE;
 	}
 
-	/* TODO: validate compatibility? */
-
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -824,6 +816,7 @@ fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_GL32XX_FIRMWARE);
 	fu_device_set_firmware_size(FU_DEVICE(self),
 				    FU_GENESYS_GL32XX_FW_SIZE); /* defaults to 64K */
 	fu_device_add_protocol(FU_DEVICE(self), "com.genesys.gl32xx");
@@ -858,7 +851,7 @@ fu_genesys_gl32xx_device_class_init(FuGenesysGl32xxDeviceClass *klass)
 	device_class->dump_firmware = fu_genesys_gl32xx_device_dump_firmware;
 	device_class->write_firmware = fu_genesys_gl32xx_device_write_firmware;
 	device_class->read_firmware = fu_genesys_gl32xx_device_read_firmware;
-	device_class->prepare_firmware = fu_genesys_gl32xx_device_prepare_firmware;
+	device_class->check_firmware = fu_genesys_gl32xx_device_check_firmware;
 	device_class->set_progress = fu_genesys_gl32xx_device_set_progress;
 	device_class->set_quirk_kv = fu_genesys_gl32xx_device_set_quirk_kv;
 }

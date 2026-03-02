@@ -396,20 +396,16 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 	return fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0x0, tx_buf, sizeof(tx_buf), error);
 }
 
-static FuFirmware *
-fu_elantp_i2c_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
-				      FuProgress *progress,
-				      FuFirmwareParseFlags flags,
-				      GError **error)
+static gboolean
+fu_elantp_i2c_device_check_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
 	guint16 module_id;
-	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	module_id = fu_elantp_firmware_get_module_id(FU_ELANTP_FIRMWARE(firmware));
 	if (self->module_id != module_id) {
 		g_set_error(error,
@@ -418,11 +414,11 @@ fu_elantp_i2c_device_prepare_firmware(FuDevice *device,
 			    "firmware incompatible, got 0x%04x, expected 0x%04x",
 			    module_id,
 			    self->module_id);
-		return NULL;
+		return FALSE;
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -805,6 +801,7 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_vendor(FU_DEVICE(self), "Elan");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_ELANTP_I2C_DEVICE_ABSOLUTE);
@@ -831,7 +828,7 @@ fu_elantp_i2c_device_class_init(FuElantpI2cDeviceClass *klass)
 	device_class->setup = fu_elantp_i2c_device_setup;
 	device_class->reload = fu_elantp_i2c_device_setup;
 	device_class->write_firmware = fu_elantp_i2c_device_write_firmware;
-	device_class->prepare_firmware = fu_elantp_i2c_device_prepare_firmware;
+	device_class->check_firmware = fu_elantp_i2c_device_check_firmware;
 	device_class->probe = fu_elantp_i2c_device_probe;
 	device_class->open = fu_elantp_i2c_device_open;
 	device_class->set_progress = fu_elantp_i2c_device_set_progress;

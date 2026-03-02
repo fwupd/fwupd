@@ -19,8 +19,6 @@ BUILD_DEPENDS=	gi-docgen:textproc/gi-docgen \
 LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libefiboot.so:devel/libefiboot \
 		libgnutls.so:security/gnutls \
-		libgpg-error.so:security/libgpg-error \
-		libgpgme.so:security/gpgme \
 		libusb.so:devel/libusb \
 		libjcat.so:textproc/libjcat \
 		libcbor.so:devel/libcbor \
@@ -29,7 +27,7 @@ LIB_DEPENDS=	libcurl.so:ftp/curl \
 
 RUN_DEPENDS=	${LOCALBASE}/libexec/fwupd/efi/fwupdx64.efi:sysutils/fwupd-efi
 
-USES=		gnome libarchive meson pkgconfig python:3.8+ shebangfix sqlite
+USES=		gnome meson pkgconfig python:3.8+ shebangfix sqlite
 USE_GITHUB=	yes
 USE_GNOME=	glib20 introspection:build
 GH_ACCOUNT=

@@ -45,3 +45,59 @@ FastbootOperationDelay = 0
 Summary = Rolling RW101 Modem (fastboot)
 CounterpartGuid = USB\VID_33F8&PID_0301
 CounterpartGuid = USB\VID_33F8&PID_0302
+
+# Taurus HC40 4x2
+[USB\VID_276F&PID_0188]
+Plugin = fastboot
+Name = Taurus UCX 4x2 HC40
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC40 4x3
+[USB\VID_276F&PID_0189]
+Plugin = fastboot
+Name = Taurus UCX 4x3 HC40
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC40D
+[USB\VID_276F&PID_018A]
+Plugin = fastboot
+Name = Taurus UCX 4x2 HC40D
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC40-BD
+[USB\VID_276F&PID_018B]
+Plugin = fastboot
+Name = Taurus UCX 4x3 HC40-BD
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC60 4x2
+[USB\VID_276F&PID_0193]
+Plugin = fastboot
+Name = Taurus UCX 4x2 HC60
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC60 4x3
+[USB\VID_276F&PID_0194]
+Plugin = fastboot
+Name = Taurus UCX 4x3 HC60
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC60D
+[USB\VID_276F&PID_0195]
+Plugin = fastboot
+Name = Taurus UCX 4x2 HC60D
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000
+
+# Taurus HC60-BD
+[USB\VID_276F&PID_0196]
+Plugin = fastboot
+Name = Taurus UCX 4x3 HC60-BD
+Flags = unsigned-payload,will-disappear
+FastbootBlockSize = 0x4000

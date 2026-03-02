@@ -118,9 +118,9 @@ fu_plugin_devices_func(void)
 
 	fu_device_set_id(device, "testdev");
 	fu_device_set_name(device, "testdev");
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 	g_assert_cmpint(devices->len, ==, 1);
-	fu_plugin_device_remove(plugin, device);
+	fu_plugin_remove_device(plugin, device);
 	g_assert_cmpint(devices->len, ==, 0);
 
 	/* add a child after adding the parent to the plugin */
@@ -154,7 +154,7 @@ fu_plugin_delay_func(void)
 	/* add device straight away */
 	device = fu_device_new(NULL);
 	fu_device_set_id(device, "testdev");
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 	g_assert_nonnull(device_tmp);
 	g_assert_cmpstr(fu_device_get_id(device_tmp),
 			==,
@@ -162,7 +162,7 @@ fu_plugin_delay_func(void)
 	g_clear_object(&device_tmp);
 
 	/* remove device */
-	fu_plugin_device_remove(plugin, device);
+	fu_plugin_remove_device(plugin, device);
 	g_assert_nonnull(device_tmp);
 	g_assert_cmpstr(fu_device_get_id(device_tmp),
 			==,

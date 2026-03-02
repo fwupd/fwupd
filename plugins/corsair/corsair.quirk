@@ -1,20 +1,21 @@
 [USB\VID_1B1C&PID_1BAC]
 Plugin = corsair
-GType = FuCorsairDevice
-Name = KATAR PRO XT Gaming Mouse
-CorsairDeviceKind = mouse
 Flags = legacy-attach,no-version-in-bl
 
 [USB\VID_1B1C&PID_1B7A]
 Plugin = corsair
-GType = FuCorsairDevice
-Name = SABRE PRO Gaming Mouse
-CorsairDeviceKind = mouse
 Flags = legacy-attach,no-version-in-bl
 
 [USB\VID_1B1C&PID_1B79]
 Plugin = corsair
-GType = FuCorsairDevice
-Name = SABRE RGB PRO Gaming Mouse
-CorsairDeviceKind = mouse
 Flags = legacy-attach,no-version-in-bl
+
+# KATAR PRO WIRELESS receiver
+[USB\VID_1B1C&PID_1B94]
+Plugin = corsair
+Flags = is-receiver,legacy-attach,no-version-in-bl
+
+# SLIPSTREAM WIRELESS USB Receiver
+[USB\VID_1B1C&PID_1BA6]
+Plugin = corsair
+Flags = is-receiver

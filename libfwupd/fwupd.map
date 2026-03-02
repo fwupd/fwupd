@@ -1050,6 +1050,8 @@ LIBFWUPD_2.0.17 {
 
 LIBFWUPD_2.1.1 {
   global:
+    fwupd_bios_setting_get_filename;
+    fwupd_bios_setting_set_filename;
     fwupd_json_array_add_array;
     fwupd_json_array_add_bytes;
     fwupd_json_array_add_node;

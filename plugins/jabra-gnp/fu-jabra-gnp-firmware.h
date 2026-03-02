@@ -18,8 +18,6 @@ struct _FuJabraGnpFirmware {
 	FuJabraGnpVersionData version_data;
 };
 
-FuFirmware *
-fu_jabra_gnp_firmware_new(void);
 guint16
 fu_jabra_gnp_firmware_get_dfu_pid(FuJabraGnpFirmware *self);
 FuJabraGnpVersionData *

@@ -16,6 +16,7 @@ typedef struct {
 	gboolean spi_auto_detect;
 	guint8 spi_cmd_read_id_sz;
 	guint32 flash_id;
+	guint32 pd_offset;
 } FuVliDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuVliDevice, fu_vli_device, FU_TYPE_USB_DEVICE)
@@ -419,7 +420,6 @@ void
 fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	guint32 sz;
 
 	/* set and notify if different */
 	if (priv->kind != device_kind) {
@@ -427,72 +427,17 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 		g_object_notify(G_OBJECT(self), "kind");
 	}
 
-	/* newer chips use SHA-256 and ECDSA-256 */
-	switch (device_kind) {
-	case FU_VLI_DEVICE_KIND_MSP430:
-	case FU_VLI_DEVICE_KIND_PS186:
-	case FU_VLI_DEVICE_KIND_RTD21XX:
-	case FU_VLI_DEVICE_KIND_VL100:
-	case FU_VLI_DEVICE_KIND_VL101:
-	case FU_VLI_DEVICE_KIND_VL102:
-	case FU_VLI_DEVICE_KIND_VL103:
-	case FU_VLI_DEVICE_KIND_VL104:
-	case FU_VLI_DEVICE_KIND_VL105:
-	case FU_VLI_DEVICE_KIND_VL106:
-	case FU_VLI_DEVICE_KIND_VL107:
-	case FU_VLI_DEVICE_KIND_VL108:
-	case FU_VLI_DEVICE_KIND_VL109:
-	case FU_VLI_DEVICE_KIND_VL120:
-	case FU_VLI_DEVICE_KIND_VL122:
-	case FU_VLI_DEVICE_KIND_VL210:
-	case FU_VLI_DEVICE_KIND_VL211:
-	case FU_VLI_DEVICE_KIND_VL212:
-	case FU_VLI_DEVICE_KIND_VL810:
-	case FU_VLI_DEVICE_KIND_VL811:
-	case FU_VLI_DEVICE_KIND_VL811PB0:
-	case FU_VLI_DEVICE_KIND_VL811PB3:
-	case FU_VLI_DEVICE_KIND_VL812B0:
-	case FU_VLI_DEVICE_KIND_VL812B3:
-	case FU_VLI_DEVICE_KIND_VL812Q4S:
-	case FU_VLI_DEVICE_KIND_VL813:
-	case FU_VLI_DEVICE_KIND_VL815:
-	case FU_VLI_DEVICE_KIND_VL817:
-	case FU_VLI_DEVICE_KIND_VL817S:
-	case FU_VLI_DEVICE_KIND_VL819Q7:
-	case FU_VLI_DEVICE_KIND_VL819Q8:
-	case FU_VLI_DEVICE_KIND_VL820Q7:
-	case FU_VLI_DEVICE_KIND_VL820Q8:
-	case FU_VLI_DEVICE_KIND_VL821Q7:
-	case FU_VLI_DEVICE_KIND_VL821Q8:
-	case FU_VLI_DEVICE_KIND_VL822T:
-	case FU_VLI_DEVICE_KIND_VL822Q5:
-	case FU_VLI_DEVICE_KIND_VL822Q7:
-	case FU_VLI_DEVICE_KIND_VL822Q8:
-	case FU_VLI_DEVICE_KIND_VL822C0:
-	case FU_VLI_DEVICE_KIND_VL830:
-	case FU_VLI_DEVICE_KIND_VL832:
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-		break;
-	case FU_VLI_DEVICE_KIND_VL650:
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-		break;
-	default:
-		g_warning("device kind %s [0x%02x] does not indicate unsigned/signed payload",
-			  fu_vli_device_kind_to_string(device_kind),
-			  device_kind);
-		break;
-	}
-
-	/* set maximum firmware size */
-	sz = fu_vli_common_device_kind_get_size(device_kind);
-	if (sz > 0x0)
-		fu_device_set_firmware_size_max(FU_DEVICE(self), sz);
-
 	/* add extra DEV GUID too */
-	fu_device_add_instance_str(FU_DEVICE(self),
-				   "DEV",
-				   fu_vli_device_kind_to_string(priv->kind));
+	fu_device_add_instance_strup(FU_DEVICE(self),
+				     "DEV",
+				     fu_vli_device_kind_to_string(priv->kind));
 	fu_device_build_instance_id(FU_DEVICE(self), NULL, "USB", "VID", "PID", "DEV", NULL);
+	fu_device_build_instance_id_full(FU_DEVICE(self),
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "VLI",
+					 "DEV",
+					 NULL);
 }
 
 void
@@ -510,10 +455,10 @@ fu_vli_device_get_kind(FuVliDevice *self)
 }
 
 guint32
-fu_vli_device_get_offset(FuVliDevice *self)
+fu_vli_device_get_pd_offset(FuVliDevice *self)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	return fu_vli_common_device_kind_get_offset(priv->kind);
+	return priv->pd_offset;
 }
 
 static void
@@ -528,6 +473,7 @@ fu_vli_device_to_string(FuDevice *device, guint idt, GString *str)
 					  "DeviceKind",
 					  fu_vli_device_kind_to_string(priv->kind));
 	fwupd_codec_string_append_bool(str, idt, "SpiAutoDetect", priv->spi_auto_detect);
+	fwupd_codec_string_append_hex(str, idt, "PdOffset", priv->pd_offset);
 	if (priv->flash_id != 0x0) {
 		g_autofree gchar *tmp = fu_vli_device_get_flash_id_str(self);
 		fwupd_codec_string_append(str, idt, "FlashId", tmp);
@@ -649,6 +595,12 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->spi_auto_detect = tmp > 0;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "VliPdOffset") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		priv->pd_offset = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliDeviceKind") == 0) {

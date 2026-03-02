@@ -81,9 +81,3 @@ fu_mediatek_scaler_firmware_class_init(FuMediatekScalerFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_mediatek_scaler_firmware_parse;
 }
-
-FuFirmware *
-fu_mediatek_scaler_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_MEDIATEK_SCALER_FIRMWARE, NULL));
-}

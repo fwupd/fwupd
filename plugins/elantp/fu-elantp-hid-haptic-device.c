@@ -601,20 +601,16 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
-					     GInputStream *stream,
-					     FuProgress *progress,
-					     FuFirmwareParseFlags flags,
-					     GError **error)
+static gboolean
+fu_elantp_hid_haptic_device_check_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuFirmwareParseFlags flags,
+					   GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 	guint16 driver_ic;
-	g_autoptr(FuFirmware) firmware = fu_elantp_haptic_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	driver_ic = fu_elantp_haptic_firmware_get_driver_ic(FU_ELANTP_HAPTIC_FIRMWARE(firmware));
 	if (driver_ic != self->driver_ic) {
 		g_set_error(error,
@@ -623,11 +619,11 @@ fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
 			    "driver IC 0x%x != 0x%x",
 			    (guint)driver_ic,
 			    (guint)self->driver_ic);
-		return NULL;
+		return FALSE;
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 typedef struct {
@@ -1100,6 +1096,7 @@ fu_elantp_hid_haptic_device_init(FuElantpHidHapticDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "HapticPad EEPROM");
 	fu_device_set_logical_id(FU_DEVICE(self), "eeprom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_HAPTIC_FIRMWARE);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 }
 
@@ -1113,7 +1110,7 @@ fu_elantp_hid_haptic_device_class_init(FuElantpHidHapticDeviceClass *klass)
 	device_class->setup = fu_elantp_hid_haptic_device_setup;
 	device_class->reload = fu_elantp_hid_haptic_device_setup;
 	device_class->write_firmware = fu_elantp_hid_haptic_device_write_firmware;
-	device_class->prepare_firmware = fu_elantp_hid_haptic_device_prepare_firmware;
+	device_class->check_firmware = fu_elantp_hid_haptic_device_check_firmware;
 	device_class->set_progress = fu_elantp_hid_haptic_device_set_progress;
 }
 

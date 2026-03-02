@@ -3,7 +3,7 @@ subdir('efi')
 
 installed_firmware_zip = custom_target(
   'installed-firmware-zip',
-  input: ['colorhug/firmware.txt', 'colorhug/firmware.txt.asc'],
+  input: ['colorhug/firmware.txt'],
   output: 'firmware.zip',
   command: [python3, '-m', 'zipfile', '-c', '@OUTPUT@', '@INPUT@'],
   install: true,
@@ -68,6 +68,7 @@ install_data(
     'tpm-eventlog-v1.builder.xml',
     'tpm-eventlog-v2.builder.xml',
     'usb-bos-descriptor.builder.xml',
+    'usb-device.builder.xml',
     'uswid.builder.xml',
     'uswid-compressed.builder.xml',
     'zip.builder.xml',

@@ -556,9 +556,3 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 	firmware_class->build = fu_genesys_usbhub_firmware_build;
 	firmware_class->write = fu_genesys_usbhub_firmware_write;
 }
-
-FuFirmware *
-fu_genesys_usbhub_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_GENESYS_USBHUB_FIRMWARE, NULL));
-}
