@@ -6,30 +6,32 @@
 # Philip Goto <philip.goto@gmail.com>, 2023
 # Richard E. van der Luit <nippur@fedoraproject.org>, 2017,2023
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# A Soete <arsospa+weblate.org@gmail.com>, 2026.
+# Tom De Moor <github3@controlaltdieliet.be>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 10:22+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-02 14:07+0000\n"
+"Last-Translator: Tom De Moor <github3@controlaltdieliet.be>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/fwupd/fwupd/nl/>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabiele firmware)"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr ""
+msgstr "LVFS is een gratis dienst die als een onafhankelijke legale entiteit fungeert en heeft geen connecties met $OS_RELEASE:NAME$. Het is mogelijk dat uw distributeur de firmware updates niet op compatibiliteit met uw systeem, of aangesloten toestellen, heeft getest . Alle firmware wordt enkel door de originele toestel fabrikant aangeboden."
 
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
-msgstr ""
+msgstr "Het activeren van deze functionaliteit gebeurt op eigen risico. Dit betekent dat je de originele toestel fabrikant moet contacteren bij problemen veroorzaakt door deze updates. Alleen problemen met het update proces zelf moeten bij $OS_RELEASE:BUG_REPORT_URL$ gerapporteerd worden."
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux Vendor Firmware Service (test-firmware)"
@@ -54,11 +56,11 @@ msgid "Enabled"
 msgstr "Ingeschakeld"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "De fwupd service stoppen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "Authenticatie is vereist om de firmware update service te stoppen"
 
 msgid "Install signed system firmware"
 msgstr "Ondertekende systeemfirmware installeren"
@@ -109,11 +111,11 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Authenticatie is vereist om daemon-configuratie aan te passen"
 
 msgid "Reset daemon configuration"
-msgstr ""
+msgstr "Reset de daemon configuratie"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr ""
+msgstr "Authenticatie is vereist om de daemon-configuratie te resetten naar de standaardinstellingen"
 
 msgid "Activate the new firmware on the device"
 msgstr "De nieuwe firmware op het apparaat activeren"
@@ -2987,7 +2989,7 @@ msgid "System has been signed with an insecure key"
 msgstr ""
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
+msgid "Device firmware has been locked"
 msgstr ""
 
 #. TRANSLATORS: Name of hardware
