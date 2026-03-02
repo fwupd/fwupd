@@ -11,23 +11,25 @@
 # Paragoumba <transifex.unedited741@simplelogin.com>, 2024
 # Yolopix ​, 2022
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Donald Duck <contact-weblate@yfournel.eu>, 2026.
+# Gael <lvfs.weblate.org@umessage.me>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 10:07+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-02 14:07+0000\n"
+"Last-Translator: Gael <lvfs.weblate.org@umessage.me>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/fwupd/fwupd/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr ""
+msgstr "Linux Vendor Firmware Service (version stable)"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -37,10 +39,10 @@ msgid "Enabling this functionality is done at your own risk, which means you hav
 msgstr "L'activation de cette fonctionnalité est à vos propres risques, ce qui signifie que vous devrez contacter le fabricant d'origine de votre équipement au sujet de tout problème éventuel causé par ces mises à jour. Seuls les problèmes liés au processus de mise à jour doivent être signalés à $OS_RELEASE:BUG_REPORT_URL$."
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr ""
+msgstr "Linux Vendor Firmware Service (version de test)"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr ""
+msgstr "Ce dépot en ligne contient des micrologiciels qui, bien qu'ils ne soient pas sous embargo, sont encore en phase de test par le fabricant matériel. Nous vous recommandons de vous assurer que vous pouvez manuellement repasser à une version précédente en cas d'échec de la mise à jour."
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
@@ -76,14 +78,14 @@ msgid "Install unsigned system firmware"
 msgstr "Installer le micrologiciel non signé du système"
 
 msgid "Install old version of signed system firmware"
-msgstr ""
+msgstr "Installer une version antérieure signée du micrologiciel"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr ""
+msgstr "Veuillez vous authentifier pour repasser le micrologiciel à une version inférieure"
 
 msgid "Install old version of unsigned system firmware"
-msgstr ""
+msgstr "Installer une version antérieure non signée du micrologiciel"
 
 msgid "Install signed device firmware"
 msgstr "Installer le micrologiciel signé du périphérique"
@@ -93,11 +95,11 @@ msgid "Authentication is required to update the firmware on a removable device"
 msgstr "Authentification requise pour mettre à jour le micrologiciel sur un périphérique amovible"
 
 msgid "Install unsigned device firmware"
-msgstr ""
+msgstr "Installer une version non signée du micrologiciel"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr ""
+msgstr "Veuillez vous authentifier pour repasser le micrologiciel à une version inférieure sur un périphérique amovible"
 
 msgid "Unlock the device to allow access"
 msgstr "Déverrouillez l'appareil pour autoriser l'accès"
@@ -111,42 +113,42 @@ msgstr "Modifiez la configuration du démon"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr ""
+msgstr "Authentification requise pour modifier la configuration du service"
 
 msgid "Reset daemon configuration"
-msgstr ""
+msgstr "Réinitialisation de la configuration du service en arrière plan"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr ""
+msgstr "Authentification requise pour restorer la configuration par défaut du service"
 
 msgid "Activate the new firmware on the device"
-msgstr ""
+msgstr "Activer le nouveau micrologiciel sur le périphérique"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr ""
+msgstr "Veuillez vous authentifier pour passer à une nouvelle version du micrologiciel"
 
 msgid "Update the stored device verification information"
-msgstr ""
+msgstr "Mettre à jour les informations locales de vérification des périphériques"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr ""
+msgstr "Veuillez vous authentifier pour mettre à jour la base de donnée locale des sommes de contrôle pour le périphérique"
 
 msgid "Modify a configured remote"
-msgstr ""
+msgstr "Modifier la configuration d'un dépôt en ligne"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr ""
+msgstr "Veuillez vous authentifier pour modifier la configuration un dépôt en ligne pour les mises à jour des micrologiciels"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Nettoyer la configuration d'un dépôt en ligne"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Veuillez vous authentifier pour supprimer les métadonnées liées à un dépôt en ligne"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -175,22 +177,22 @@ msgstr "Définissez un ou plusieurs paramètres du BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr ""
+msgstr "Authentification requise pour modifier la configuration du BIOS"
 
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "Renforcement de sécurité (pour HSI)"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
-msgstr ""
+msgstr "Veuillez vous authentifier pour corriger un problème de sécurité sur votre machine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
-msgstr ""
+msgstr "Veuillez vous authentifier pour annuler la correction d'un problème de sécurité avec votre machine"
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
-msgstr ""
+msgstr "Charger les données d'émulation pour le périphérique"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
@@ -198,7 +200,7 @@ msgstr "Une authentification est requise pour charger les données d'émulation 
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
-msgstr ""
+msgstr "Sauvegarder les données d'émulation pour le périphérique"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
@@ -209,7 +211,7 @@ msgstr "Activer la collecte de données d'émulation"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
-msgstr "Une authentification est requise pour activer la collecte des données d'émulation"
+msgstr "Veuillez vous authentifier pour activer la collecte des données d'émulation"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -237,11 +239,11 @@ msgstr "Indiquer le fichier de base de données dbx"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
-msgstr ""
+msgstr "NOM DE FICHIER"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
-msgstr ""
+msgstr "Replacer le chemin par défaut vers ESP"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -266,11 +268,11 @@ msgstr "Echec de l'analyse des paramètres"
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
 msgid "Failed to load local dbx"
-msgstr "Échec de chargement du dbx local"
+msgstr "Échec de chargement de la base dbx locale"
 
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
-msgstr "Échec de chargement du dbx système"
+msgstr "Échec de chargement de la base dbx système"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -278,7 +280,7 @@ msgstr "Version"
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
-msgstr ""
+msgstr "Droits root nécessaires à l'exécution de ce programme"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -290,15 +292,15 @@ msgstr "Analyse de la base dbx système…"
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr "Analyse de la mise à jour dbx…"
+msgstr "Analyse de la mise à jour base dbx…"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
-msgstr "Échec d'analyse du dbx local"
+msgstr "Échec d'analyse de la base dbx locale"
 
 #. TRANSLATORS: same or newer update already applied
 msgid "Cannot apply as dbx update has already been applied."
-msgstr "Impossible d'appliquer car la mise à jour dbx a déjà été appliquée."
+msgstr "Impossible d'appliquer car la mise à jour de la base dbx a déjà été appliquée."
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
@@ -319,22 +321,22 @@ msgstr "Échec d'application de la mise à jour"
 
 #. TRANSLATORS: success
 msgid "Done!"
-msgstr "Terminé !"
+msgstr "Terminé !"
 
 #. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
-msgstr "Aucune action indiquée !"
+msgstr "Aucune action indiquée !"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Saisir un nombre entre 0 et %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Saisir %s ou %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -405,23 +407,24 @@ msgstr[2] "%.0f minutes restantes"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
-msgstr ""
+msgstr "ATTENTION"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
-msgstr ""
+msgstr "Afficher les informations de débogage pour tous les domaines"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
-msgstr ""
+msgstr "Ne pas inclure de préfixe d'horodatage"
 
 #. TRANSLATORS: turn on all debugging
+#, fuzzy
 msgid "Do not include log domain prefix"
-msgstr ""
+msgstr "Ne pas inclure de préfixe de domaine de journal"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information for a particular domain"
-msgstr ""
+msgstr "Afficher les informations détaillées du service pour un domaine spécifique"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -435,14 +438,14 @@ msgstr "Montrer les options de débogage"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u périphérique a été mis à jour et doit être redémarré."
+msgstr[1] "%u périphériques ont été mis à jour et doivent être redémarrés."
+msgstr[2] "%u périphériques ont été mis à jour et doivent être redémarrés."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Redémarrer pour finaliser la mise à jour."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -456,7 +459,7 @@ msgstr[2] ""
 #. * command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "Run `%s` to complete this action."
-msgstr ""
+msgstr "Exécuter `%s` pour finaliser cette action."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -470,7 +473,7 @@ msgstr[2] "Une mise à jour de micrologiciel est disponible pour %u appareils."
 #. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
 msgid "Run `%s` for more information."
-msgstr ""
+msgstr "Exécuter `%s` pour plus de détails."
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -490,7 +493,7 @@ msgstr "Service D-Bus de mise à jour des micrologiciels"
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
-msgstr ""
+msgstr "Votre fournisseur n’a peut-être pas vérifié les mises à jour du micrologiciel pour s’assurer de leur compatibilité avec votre système ou vos périphériques."
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
@@ -3006,7 +3009,7 @@ msgid "System has been signed with an insecure key"
 msgstr ""
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
+msgid "Device firmware has been locked"
 msgstr ""
 
 #. TRANSLATORS: Name of hardware
