@@ -3840,7 +3840,7 @@ msgstr ""
 
 #. TRANSLATORS: firmware is locked from the BIOS
 #: src/fu-util-common.c:1302
-msgid "Device firmware has been locked "
+msgid "Device firmware has been locked"
 msgstr ""
 
 #. TRANSLATORS: Name of hardware
