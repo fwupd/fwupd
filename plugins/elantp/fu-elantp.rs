@@ -20,6 +20,14 @@ enum FuEtpRptid {
     McuIap = 0x72,    
 }
 
+enum FuEtpIc {
+    Num12 = 0x12,
+    Num13 = 0x13,
+    Num14 = 0x14,
+    Num15 = 0x15,
+    Num16 = 0x16,
+}
+
 enum FuEtpCmd {
     I2cEepromSettingInitial = 0x0000,
     GetHidDescriptor = 0x0001,
@@ -33,6 +41,7 @@ enum FuEtpCmd {
     I2cIapVersion_2 = 0x0110,
     I2cIapVersion = 0x0111,
     I2cIapType = 0x0304,
+    I2cGetFeatureAddr = 0x0305,
     I2cFwPw = 0x030e,
     I2cFwChecksum = 0x030f,
     I2cIapCtrl = 0x0310,
