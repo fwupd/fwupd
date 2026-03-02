@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-02 08:08+0000\n"
+"PO-Revision-Date: 2026-03-02 14:07+0000\n"
 "Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: English (United Kingdom) <https://hosted.weblate.org/projects/fwupd/fwupd/en_GB/>\n"
 "Language: en_GB\n"
@@ -137,12 +137,10 @@ msgstr "Modify a configured remote"
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Authentication is required to modify a configured remote used for firmware updates"
 
-#, fuzzy
 msgid "Clean a configured remote"
 msgstr "Clean a configured remote"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
-#, fuzzy
 msgid "Authentication is required to delete metadata from a remote"
 msgstr "Authentication is required to delete metadata from a remote"
 
@@ -324,13 +322,13 @@ msgid "No action specified!"
 msgstr "No action specified!"
 
 #. TRANSLATORS: the user isn't reading the question
-#, fuzzy, c-format
+#, c-format
 msgid "Please enter a number from 0 to %u:"
 msgstr "Please enter a number from 0 to %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
-#, fuzzy, c-format
+#, c-format
 msgid "Please enter either %s or %s:"
 msgstr "Please enter either %s or %s:"
 
@@ -436,7 +434,7 @@ msgstr[0] "%u device has been updated and needs a reboot."
 msgstr[1] "%u devices have been updated and need a reboot."
 
 #. TRANSLATORS: this is shown in the MOTD
-#, fuzzy, c-format
+#, c-format
 msgid "Reboot to complete the update."
 msgstr "Reboot to complete the update."
 
@@ -666,7 +664,6 @@ msgid "Processor rollback protection"
 msgstr "Processor rollback protection"
 
 #. TRANSLATORS: Title: APU is root of trust
-#, fuzzy
 msgid "Platform secure boot"
 msgstr "Platform secure boot"
 
@@ -711,7 +708,6 @@ msgid "UEFI db"
 msgstr "UEFI db"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
-#, fuzzy
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
@@ -851,7 +847,6 @@ msgid "AMD Secure Processor Rollback Protection"
 msgstr "AMD Secure Processor Rollback Protection"
 
 #. TRANSLATORS: Title: APU is root of trust
-#, fuzzy
 msgid "AMD Platform Secure Boot"
 msgstr "AMD Platform Secure Boot"
 
@@ -1007,7 +1002,6 @@ msgid "Rollback Protection prevents device software from being downgraded to an 
 msgstr "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 
 #. TRANSLATORS: longer description
-#, fuzzy
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
 msgstr "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
 
@@ -1033,7 +1027,7 @@ msgstr "The UEFI db contains the list of valid certificates that can be used to 
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1074,7 +1068,7 @@ msgstr "Choose device"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Devices with no available firmware updates:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1111,16 +1105,16 @@ msgstr "Reading from %s…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s is not currently updatable:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Nothing to do"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Devices with firmware updates that need user action:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1136,7 +1130,7 @@ msgstr "Successfully modified remote"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Successfully cleaned remote"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1144,7 +1138,7 @@ msgstr "Successfully disabled remote"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Delete the now-unused remote cache files?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1196,7 +1190,7 @@ msgstr "Writing file:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Metadata is already up to date"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -1632,7 +1626,7 @@ msgstr "Switch the firmware branch on the device"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr ""
+msgstr "DEVICE-ID"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1644,7 +1638,7 @@ msgstr "Erase all firmware update history"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[SETTING1] [SETTING2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1769,7 +1763,7 @@ msgstr "REMOTE-ID"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Cleans a given remote"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1809,27 +1803,27 @@ msgstr "Finds firmware releases from the metadata"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "KIND FILENAME"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Calculates a CRC of a file"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC FILENAME"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Finds a algorithm that matches the file CRC"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Parse the system PCR eventlog"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2991,11 +2985,11 @@ msgstr "Device is lower priority than an equivalent device"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "System has been signed with an insecure key"
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
-msgstr ""
+msgid "Device firmware has been locked"
+msgstr "Device firmware has been locked"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3548,7 +3542,7 @@ msgstr "The UEFI certificate store is now up to date"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart is enabled"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
@@ -3641,6 +3635,9 @@ msgstr "Enable new remote?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Agree and enable the remote?"
+
+#~ msgid "Device firmware has been locked "
+#~ msgstr "Device firmware has been locked "
 
 #~ msgid "[SETTING1] [SETTING2]..."
 #~ msgstr "[SETTING1] [SETTING2]..."
