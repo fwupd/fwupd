@@ -12,13 +12,13 @@
 # Mingye Wang <arthur2e5@aosc.xyz>, 2015
 # Richard Hughes <richard@hughsie.com>, 2023
 # Richard Hughes <hughsient@gmail.com>, 2025.
-# 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>, 2025.
+# 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-11-05 12:51+0000\n"
+"PO-Revision-Date: 2026-03-02 14:07+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -61,11 +61,11 @@ msgid "Enabled"
 msgstr "已启用"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "停止 fwupd 服务"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "需要身份认证来停止固件更新服务"
 
 msgid "Install signed system firmware"
 msgstr "安装已签名的系统固件"
@@ -116,11 +116,11 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "需要认证：修改守护进程配置"
 
 msgid "Reset daemon configuration"
-msgstr ""
+msgstr "重置 daemon 配置"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr ""
+msgstr "需要身份认证来重置 daemon 配置到默认值"
 
 msgid "Activate the new firmware on the device"
 msgstr "激活设备上的新固件"
@@ -144,7 +144,7 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "需要认证：修改用于固件更新的已配置远程源"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "清理已配置的远端设备"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
@@ -166,52 +166,52 @@ msgid "Authentication is required to sign data using the client certificate"
 msgstr "需要认证：使用客户端证书签名数据"
 
 msgid "Get BIOS settings"
-msgstr ""
+msgstr "获取 BIOS 设置"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
-msgstr ""
+msgstr "需要身份认证来读取 BIOS 设置"
 
 msgid "Set one or more BIOS settings"
-msgstr ""
+msgstr "设置一个或多个 BIOS 设置"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr ""
+msgstr "需要身份认证来修改 BIOS 设置"
 
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "HSI 安全加固"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
-msgstr ""
+msgstr "需要身份认证来修复主机安全问题"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
-msgstr ""
+msgstr "需要身份认证来撤销主机安全问题的修复"
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
-msgstr ""
+msgstr "加载设备仿真数据"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
-msgstr ""
+msgstr "需要身份认证来加载硬件仿真数据"
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
-msgstr ""
+msgstr "保存设备仿真数据"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
-msgstr ""
+msgstr "需要身份认证来保存硬件仿真数据"
 
 msgid "Enable emulation data collection"
-msgstr ""
+msgstr "开启仿真数据收集"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
-msgstr ""
+msgstr "需要身份认证开启仿真数据收集"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -330,13 +330,13 @@ msgstr "未指定操作！"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "请输入一个 0 到 %u 的数字："
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "请输入 %s 或 %s："
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -405,7 +405,7 @@ msgstr[0] "还剩 %.0f 分钟"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
-msgstr ""
+msgstr "警告"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
@@ -435,24 +435,24 @@ msgstr "显示调试选项"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
+msgstr[0] "%u 台设备已更新，需要重启。"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "重启完成更新。"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
-msgstr[0] ""
+msgstr[0] "%u 台设备不是最佳的已知配置。"
 
 #. TRANSLATORS: this is shown in the MOTD -- %1 is the
 #. * command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "Run `%s` to complete this action."
-msgstr ""
+msgstr "运行 `%s` 完成此操作。"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -464,7 +464,7 @@ msgstr[0] "%u 个设备有可升级的固件。"
 #. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
 msgid "Run `%s` for more information."
-msgstr ""
+msgstr "运行 `%s` 获取更多信息。"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -537,16 +537,16 @@ msgstr "Intel BootGuard OTP 保险丝"
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "CET Platform"
-msgstr ""
+msgstr "CET 平台"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * Utilized by OS means the distribution enabled it
 msgid "CET OS Support"
-msgstr ""
+msgstr "操作系统 CET 支持"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"
-msgstr ""
+msgstr "SMAP"
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
@@ -587,7 +587,7 @@ msgstr "UEFI 安全引导"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI bootservice variables"
-msgstr ""
+msgstr "UEFI bootservice 变量"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM empty PCRs"
@@ -2980,7 +2980,7 @@ msgid "System has been signed with an insecure key"
 msgstr ""
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
+msgid "Device firmware has been locked"
 msgstr ""
 
 #. TRANSLATORS: Name of hardware
