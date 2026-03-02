@@ -6,20 +6,21 @@
 # scootergrisen, 2019
 # scootergrisen, 2019-2021
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Anton <dev@atjn.dk>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 09:59+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-02 14:07+0000\n"
+"Last-Translator: Anton <dev@atjn.dk>\n"
 "Language-Team: Danish <https://hosted.weblate.org/projects/fwupd/fwupd/da/>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilt firmware)"
@@ -39,14 +40,14 @@ msgstr "Fjernen indeholder firmware som der ikke er embargo på, men som stadigv
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
-msgstr ""
+msgstr "Indstillinger vil gælde efter systemet genstarter"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
-msgstr ""
+msgstr "BIOS-opdateringer leveret via LVFS eller Windows Update"
 
 msgid "Enable"
-msgstr ""
+msgstr "Aktivér"
 
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
@@ -54,7 +55,7 @@ msgid "Enabled"
 msgstr "Aktiveret"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "Stop fwupd-tjenesten"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
@@ -71,14 +72,14 @@ msgid "Install unsigned system firmware"
 msgstr "Installer systemfirmware der ikke er underskrevet"
 
 msgid "Install old version of signed system firmware"
-msgstr ""
+msgstr "Installér gammel version af signeret systemfirmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Der kræves autentifikation for at nedgradere firmwaren på maskinen"
 
 msgid "Install old version of unsigned system firmware"
-msgstr ""
+msgstr "Installér gammel version af usigneret systemfirmware"
 
 msgid "Install signed device firmware"
 msgstr "Installer enhedsfirmware der er underskrevet"
@@ -159,21 +160,21 @@ msgid "Authentication is required to sign data using the client certificate"
 msgstr "Der kræves autentifikation for at underskrive data med klientcertifikatet"
 
 msgid "Get BIOS settings"
-msgstr ""
+msgstr "Hent BIOS-indstillinger"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
 msgstr ""
 
 msgid "Set one or more BIOS settings"
-msgstr ""
+msgstr "Indstil én eller flere BIOS-indstillinger"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr ""
 
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "Sikkerhedshærdning for HSI"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
@@ -185,7 +186,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
-msgstr ""
+msgstr "Indlæs enhedsemuleringsdata"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
@@ -193,14 +194,14 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
-msgstr ""
+msgstr "Gem enhedsemuleringsdata"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
 msgstr ""
 
 msgid "Enable emulation data collection"
-msgstr ""
+msgstr "Aktivér indsamling af emuleringsdata"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
@@ -323,13 +324,13 @@ msgstr "Der er ikke angivet nogen handling!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Indtast venligst et tal fra 0 til %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Indtast venligst enten %s eller %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -399,7 +400,7 @@ msgstr[1] "%.0f minutter tilbage"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
-msgstr ""
+msgstr "ADVARSEL"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
@@ -429,13 +430,13 @@ msgstr "Vis fejlsøgningsindstillinger"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u enhed er blevet opdateret og skal genstartes."
+msgstr[1] "%u enheder er blevet opdateret og skal genstartes."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Genstart for at fuldføre opdateringen."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -2987,7 +2988,7 @@ msgid "System has been signed with an insecure key"
 msgstr ""
 
 #. TRANSLATORS: firmware is locked from the BIOS
-msgid "Device firmware has been locked "
+msgid "Device firmware has been locked"
 msgstr ""
 
 #. TRANSLATORS: Name of hardware
