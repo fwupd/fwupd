@@ -10,7 +10,7 @@
 # Luna Jernberg <droidbittin@gmail.com>, 2020-2021
 # Sebastian Rasmussen <sebras@gmail.com>, 2018-2020
 # Sebastian Rasmussen <sebras@gmail.com>, 2018
-# Anders Jonsson <anders.jonsson@norsjovallen.se>, 2025.
+# Anders Jonsson <anders.jonsson@norsjovallen.se>, 2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Daniel Nylander <daniel@danielnylander.se>, 2026.
 msgid ""
@@ -18,15 +18,15 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-01-21 13:01+0000\n"
-"Last-Translator: Daniel Nylander <daniel@danielnylander.se>\n"
+"PO-Revision-Date: 2026-03-02 15:26+0000\n"
+"Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.16-dev\n"
+"X-Generator: Weblate 5.16.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -144,11 +144,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Autentisering krävs för att ändra en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Rensa en konfigurerad fjärrkälla"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Autentisering krävs för att ta bort metadata från en fjärrkälla"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -330,13 +330,13 @@ msgstr "Ingen åtgärd angiven!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Ange ett tal från 0 till %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Ange antingen %s eller %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -436,13 +436,13 @@ msgstr "Visa felsökningsalternativ"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u enhet har uppdaterats och behöver startas om."
+msgstr[1] "%u enheter har uppdaterats och behöver startas om."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Starta om för att slutföra uppdateringen."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -671,7 +671,7 @@ msgstr "Processortillbakarullningsskydd"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Säker plattformsuppstart"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -715,7 +715,7 @@ msgstr "UEFI-db"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -1009,7 +1009,7 @@ msgstr "Tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgrader
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Säker plattformsuppstart förhindrar osignerad programvara från att läsas in när enheten startas."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
