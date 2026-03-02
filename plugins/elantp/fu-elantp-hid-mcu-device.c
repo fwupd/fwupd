@@ -107,7 +107,8 @@ fu_elantp_hid_mcu_device_read_cmd(FuElantpHidDevice *proxy,
 				  gsize bufz,
 				  GError **error)
 {
-	guint8 tmp[5] = {FU_ETP_RPTID_MCU_FEATURE, 0x05, 0x03};
+	guint8 tmp[5] = {FU_ETP_RPTID_MCU_FEATURE};
+	fu_memwrite_uint16(tmp + 0x1, FU_ETP_CMD_I2C_GET_FEATURE_ADDR, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_hid_mcu_device_tp_send_cmd(proxy, tmp, sizeof(tmp), buf, bufz, error);
 }
@@ -201,14 +202,13 @@ fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
 	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	if (self->iap_ver == 0x3) {
-		if (self->module_id == 0x130 || self->module_id == 0x133) {
+		if (self->module_id == 0x130 || self->module_id == 0x133)
 			self->force_table_addr = 0xFF40 * 2;
-			return TRUE;
-		} else {
-			return TRUE;
-		}
+		else
+			self->force_table_addr = 0;
+		return TRUE;
 	}
-	if (self->ic_type == 0x14 && self->iap_ver == 4)
+	if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
 		return TRUE;
 	if (!fu_elantp_hid_mcu_device_read_cmd(proxy,
 					       FU_ETP_CMD_FORCE_ADDR,
@@ -223,7 +223,7 @@ fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "illegal force table address (%x)",
+			    "illegal force table address (0x%x)",
 			    addr_wrds);
 		return FALSE;
 	}
@@ -244,11 +244,11 @@ fu_elantp_hid_mcu_device_write_fw_password(FuElantpHidDevice *proxy,
 	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
 	guint16 value;
 
-	if (iap_ver >= 0x7 && ic_type == 0x13)
+	if (iap_ver >= 0x7 && ic_type == FU_ETP_IC_NUM13)
 		pw = ETP_I2C_IC13_IAPV7_PW;
-	else if (iap_ver >= 0x5 && ic_type == 0x13)
+	else if (iap_ver >= 0x5 && ic_type == FU_ETP_IC_NUM13)
 		pw = ETP_I2C_IC13_IAPV5_PW;
-	else if ((iap_ver >= 0x4) && (ic_type == 0x14 || ic_type == 0x15))
+	else if ((iap_ver >= 0x4) && (ic_type == FU_ETP_IC_NUM14 || ic_type == FU_ETP_IC_NUM15))
 		pw = ETP_I2C_IC13_IAPV5_PW;
 	else
 		return TRUE;
@@ -404,8 +404,8 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_mcu_device_ensure_iap_ctrl(self, proxy, error))
 		return FALSE;
 
-	if (self->ic_type != 0x12 && self->ic_type != 0x13 && self->ic_type != 0x14 &&
-	    self->ic_type != 0x15)
+	if (self->ic_type != FU_ETP_IC_NUM12 && self->ic_type != FU_ETP_IC_NUM13 &&
+	    self->ic_type != FU_ETP_IC_NUM14 && self->ic_type != FU_ETP_IC_NUM15)
 		return TRUE;
 
 	if (!fu_elantp_hid_mcu_device_read_force_table_enable(proxy, &error_forcetable)) {
@@ -467,7 +467,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
-	if (self->ic_type == 0x14 && self->iap_ver == 4)
+	if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
 		self->force_table_support = force_table_support;
 	if (self->force_table_support != force_table_support) {
 		g_set_error_literal(error,
@@ -481,7 +481,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 		guint32 diff_size;
 		force_table_addr =
 		    fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware));
-		if (self->ic_type == 0x14 && self->iap_ver == 4)
+		if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
 			self->force_table_addr = force_table_addr;
 		if (self->force_table_addr < force_table_addr) {
 			g_set_error(error,
@@ -775,7 +775,8 @@ fu_elantp_hid_mcu_device_detach(FuElantpHidMcuDevice *self, FuProgress *progress
 	if (ic_type >= 0x10) {
 		if (iap_ver >= 1) {
 			/* set the IAP type, presumably some kind of ABI */
-			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type == 0x15)) {
+			if (iap_ver >= 2 &&
+			    (ic_type == FU_ETP_IC_NUM14 || ic_type == FU_ETP_IC_NUM15)) {
 				self->fw_page_size = 512;
 				if (iap_ver >= 3) {
 					if (!fu_elantp_hid_mcu_device_read_iap_type(proxy,
