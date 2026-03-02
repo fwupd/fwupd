@@ -199,7 +199,6 @@ fu_elantp_hid_mcu_device_get_forcetable_address(FuElantpHidMcuDevice *self,
 {
 	guint8 buf[2] = {0x0};
 	guint16 addr_wrds;
-	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	if (self->iap_ver == 0x3) {
 		if (self->module_id == 0x130 || self->module_id == 0x133)
@@ -430,22 +429,18 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FuFirmwareParseFlags flags,
-					  GError **error)
+static gboolean
+fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
+				    	FuFirmware *firmware,
+				    	FuFirmwareParseFlags flags,
+				    	GError **error)
 {
 	FuElantpHidMcuDevice *self = FU_ELANTP_HID_MCU_DEVICE(device);
 	guint16 module_id;
 	guint16 ic_type;
 	gboolean force_table_support;
-	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	module_id = fu_elantp_firmware_get_module_id(FU_ELANTP_FIRMWARE(firmware));
 	if (self->module_id != module_id) {
 		g_set_error(error,
@@ -454,7 +449,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 			    "mcu firmware incompatible, got 0x%04x, expected 0x%04x",
 			    module_id,
 			    self->module_id);
-		return NULL;
+		return FALSE;
 	}
 	ic_type = fu_elantp_firmware_get_ic_type(FU_ELANTP_FIRMWARE(firmware));
 	if (self->ic_type != ic_type) {
@@ -464,7 +459,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 			    "mcu firmware ic type incompatible, got 0x%04x, expected 0x%04x",
 			    ic_type,
 			    self->ic_type);
-		return NULL;
+		return FALSE;
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
@@ -475,7 +470,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "mcu firmware incompatible, forcetable incorrect.");
-		return NULL;
+		return FALSE;
 	}
 	if (self->force_table_support) {
 		guint32 force_table_addr;
@@ -492,7 +487,7 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 				    "expected 0x%04x",
 				    force_table_addr / 2,
 				    self->force_table_addr / 2);
-			return NULL;
+			return FALSE;
 		}
 		diff_size = self->force_table_addr - force_table_addr;
 		if (diff_size % 64 != 0) {
@@ -503,12 +498,12 @@ fu_elantp_hid_mcu_device_prepare_firmware(FuDevice *device,
 				    "expected 0x%04x",
 				    force_table_addr / 2,
 				    self->force_table_addr / 2);
-			return NULL;
+			return FALSE;
 		}
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -968,6 +963,7 @@ fu_elantp_hid_mcu_device_init(FuElantpHidMcuDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "HapticPad MCU");
 	fu_device_set_logical_id(FU_DEVICE(self), "mcu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_HID_DEVICE);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 }
@@ -982,7 +978,7 @@ fu_elantp_hid_mcu_device_class_init(FuElantpHidMcuDeviceClass *klass)
 	device_class->setup = fu_elantp_hid_mcu_device_setup;
 	device_class->reload = fu_elantp_hid_mcu_device_setup;
 	device_class->write_firmware = fu_elantp_hid_mcu_device_write_firmware;
-	device_class->prepare_firmware = fu_elantp_hid_mcu_device_prepare_firmware;
+	device_class->check_firmware = fu_elantp_hid_mcu_device_check_firmware;
 	device_class->set_progress = fu_elantp_hid_mcu_device_set_progress;
 	device_class->convert_version = fu_elantp_hid_mcu_device_convert_version;
 }
