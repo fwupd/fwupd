@@ -7,7 +7,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # F Bausch, 2024-2025
-# Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018, 2025.
+# Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018, 2025, 2026.
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2025
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # LucasMZ <git@lucasmz.dev>, 2025.
@@ -17,15 +17,15 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-02 14:07+0000\n"
-"Last-Translator: burns <ahoradocafezinho@gmail.com>\n"
+"PO-Revision-Date: 2026-03-03 17:09+0000\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/fwupd/fwupd/pt_BR/>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 5.16.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware estável)"
@@ -674,7 +674,7 @@ msgstr "Proteção contra reversão do processador"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr "Plataforma secure boot"
+msgstr "Secure boot da plataforma"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -718,7 +718,7 @@ msgstr "db de UEFI"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -857,7 +857,7 @@ msgstr "Proteção contra reversão de processador seguro AMD"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "Secure boot da plataforma AMD"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -1036,7 +1036,7 @@ msgstr "O banco de dados UEFI contém a lista de certificados válidos que podem
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart é um recurso de segurança de firmware que protege a BIOS de adulteração."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1812,27 +1812,27 @@ msgstr "Encontra versões de firmware a partir dos metadados"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "TIPO NOME-DE-ARQUIVO"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Calcula um CRC de um arquivo"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC NOME-DE-ARQUIVO"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Encontra um algoritmo que corresponde ao CRC do arquivo"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Analisa o log de eventos de PCR do sistema"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -3564,7 +3564,7 @@ msgstr "O armazenamento de certificados UEFI agora está atualizado"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart está habilitado"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
