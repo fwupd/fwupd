@@ -23,7 +23,6 @@ struct _FuUefiCapsuleDeviceClass {
 };
 
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE	     "no-ux-capsule"
-#define FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_UNIQUE	     "use-shim-unique"
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC  "use-legacy-bootmgr-desc"
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK "supports-boot-order-lock"
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB	     "use-shim-for-sb"
@@ -46,6 +45,12 @@ const gchar *
 fu_uefi_capsule_device_get_guid(FuUefiCapsuleDevice *self);
 FuVolume *
 fu_uefi_capsule_device_get_esp(FuUefiCapsuleDevice *self);
+gchar *
+fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
+				      GError **error,
+				      const gchar *filename,
+				      ...) G_GNUC_NULL_TERMINATED;
+
 gchar *
 fu_uefi_capsule_device_build_varname(FuUefiCapsuleDevice *self);
 guint32

@@ -348,18 +348,36 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 }
 
 FuEfiDevicePathList *
-fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *capsule_path, GError **error)
+fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *filename, GError **error)
 {
 	g_autoptr(FuEfiDevicePathList) dp_buf = fu_efi_device_path_list_new();
 	g_autoptr(FuEfiFilePathDevicePath) dp_file = fu_efi_file_path_device_path_new();
 	g_autoptr(FuEfiHardDriveDevicePath) dp_hd = NULL;
-	g_autofree gchar *name_with_root = NULL;
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
+
+	/* capsule path should have the ESP mountpoint prefixed, so remove it */
+	if (esp_path == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "ESP is not mounted");
+		return NULL;
+	}
+	if (!g_str_has_prefix(filename, esp_path)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "%s was not prefixed by the ESP %s",
+			    filename,
+			    esp_path);
+		return NULL;
+	}
+	filename += strlen(esp_path);
 
 	dp_hd = fu_efi_hard_drive_device_path_new_from_volume(esp, error);
 	if (dp_hd == NULL)
 		return NULL;
-	name_with_root = g_strdup_printf("/%s", capsule_path);
-	if (!fu_efi_file_path_device_path_set_name(dp_file, name_with_root, error))
+	if (!fu_efi_file_path_device_path_set_name(dp_file, filename, error))
 		return NULL;
 	if (!fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_hd), error))
 		return NULL;
@@ -484,23 +502,21 @@ fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	gboolean secureboot_enabled = FALSE;
-	g_autofree gchar *source_app = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
-		g_debug("ignoring: %s", error_local->message);
+	g_autofree gchar *app_basename = NULL;
+	g_autofree gchar *app_fn = NULL;
 
 	/* if fwupd-efi isn't in use, skip checks for the signed binary */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))
 		return TRUE;
 
-	source_app = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
-	if (source_app == NULL && secureboot_enabled) {
-		g_prefix_error_literal(error, "missing signed bootloader for secure boot: ");
+	app_basename = fu_uefi_capsule_build_app_basename(pstore, "fwupd", error);
+	if (app_basename == NULL)
 		return FALSE;
-	}
+	app_fn = fu_uefi_get_built_app_path(pstore, efivars, app_basename, error);
+	if (app_fn == NULL)
+		return FALSE;
 
+	/* success*/
 	return TRUE;
 }
 
@@ -694,6 +710,84 @@ fu_uefi_capsule_device_get_esp(FuUefiCapsuleDevice *self)
 	return priv->esp;
 }
 
+/**
+ * fu_uefi_capsule_device_build_efi_path:
+ * @self: a #FuUefiCapsuleDevice
+ * @path: a filename to append to the EFI path
+ * @error: a #GError or %NULL
+ *
+ * Builds the full local path where @filename should be loaded or saved from.
+ *
+ * If `EFI_OS_DIR` has not been set then we look for the presence of the `systemd` directory,
+ * falling back to the os-release `ID` or `ID_LIKE` directories.
+ *
+ * Returns: (transfer full): a path or %NULL for error
+ */
+gchar *
+fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
+				      GError **error,
+				      const gchar *filename,
+				      ...)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(priv->esp);
+	va_list args;
+	g_autofree gchar *filename_built = NULL;
+#ifndef EFI_OS_DIR
+	g_autofree gchar *os_release_id = NULL;
+	g_autofree gchar *os_release_id_like = NULL;
+	g_autofree gchar *systemd_path = NULL;
+#endif
+
+	/* sanity check */
+	if (esp_path == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "ESP is not mounted");
+		return NULL;
+	}
+
+	va_start(args, filename);
+	filename_built = g_build_filename_valist(filename, &args);
+	va_end(args);
+
+#ifndef EFI_OS_DIR
+	/* distro (or user) is using systemd-boot */
+	systemd_path = g_build_filename(esp_path, "EFI", "systemd", NULL);
+	if (g_file_test(systemd_path, G_FILE_TEST_IS_DIR))
+		return g_build_filename(systemd_path, filename_built, NULL);
+
+	/* try to lookup /etc/os-release ID and ID_LIKE keys */
+	os_release_id = g_get_os_info(G_OS_INFO_KEY_ID);
+	if (os_release_id != NULL) {
+		g_autofree gchar *path_tmp = g_build_filename(esp_path, "EFI", os_release_id, NULL);
+		if (g_file_test(path_tmp, G_FILE_TEST_IS_DIR))
+			return g_build_filename(path_tmp, filename_built, NULL);
+	}
+	os_release_id_like = g_get_os_info("ID_LIKE");
+	if (os_release_id_like != NULL) {
+		g_auto(GStrv) id_like_parts = g_strsplit(os_release_id_like, " ", -1);
+		for (guint i = 0; id_like_parts[i] != NULL; i++) {
+			g_autofree gchar *path_tmp =
+			    g_build_filename(esp_path, "EFI", id_like_parts[i], NULL);
+			if (g_file_test(path_tmp, G_FILE_TEST_IS_DIR))
+				return g_build_filename(path_tmp, filename_built, NULL);
+		}
+	}
+
+	/* nothing sensible to do*/
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_BROKEN_SYSTEM,
+		    "cannot find either EFI/systemd or EFI/%s in ESP",
+		    os_release_id);
+	return NULL;
+#else
+	return g_build_filename(esp_path, "EFI", EFI_OS_DIR, filename_built, NULL);
+#endif
+}
+
 static FuFirmware *
 fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
@@ -802,8 +896,6 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_UNIQUE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
 	fu_device_register_private_flag(FU_DEVICE(self),
