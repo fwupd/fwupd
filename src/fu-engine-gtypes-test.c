@@ -15,12 +15,11 @@
 #include "fu-security-attrs-private.h"
 
 static void
-fu_engine_plugin_device_gtype(GType gtype)
+fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 {
 	GType proxy_gtype;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -38,6 +37,9 @@ fu_engine_plugin_device_gtype(GType gtype)
 	g_assert_nonnull(device);
 	fu_device_set_plugin(device, "test");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	if (is_fake)
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 
 	/* version convert */
 	if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -75,6 +77,9 @@ fu_engine_plugin_device_gtype(GType gtype)
 	if (proxy_gtype != G_TYPE_INVALID && G_TYPE_FUNDAMENTAL(proxy_gtype) == G_TYPE_OBJECT) {
 		g_autoptr(FuDevice) proxy =
 		    g_object_new(proxy_gtype, "context", ctx, "physical-id", "/sys", NULL);
+		fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED);
+		if (is_fake)
+			fu_device_add_private_flag(proxy, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 		fu_device_set_proxy(device, proxy);
 	}
@@ -372,7 +377,8 @@ fu_engine_gtypes_func(void)
 		GArray *device_gtypes = fu_plugin_get_device_gtypes(plugin);
 		for (guint j = 0; device_gtypes != NULL && j < device_gtypes->len; j++) {
 			GType gtype = g_array_index(device_gtypes, GType, j);
-			fu_engine_plugin_device_gtype(gtype);
+			fu_engine_plugin_device_gtype(ctx, gtype, TRUE);
+			fu_engine_plugin_device_gtype(ctx, gtype, FALSE);
 		}
 	}
 

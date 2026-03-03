@@ -285,9 +285,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET,
 	    FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN,
 	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN,
-	    FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN,
 	    FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN,
-	    FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY,
 	    FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK,
 	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR,
@@ -324,6 +322,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT,
 	    FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED,
 	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION,
+	    FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -704,6 +703,10 @@ fu_device_retry_full(FuDevice *self,
 	g_return_val_if_fail(func != NULL, FALSE);
 	g_return_val_if_fail(count >= 1, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* fuzzing, so just do each action once */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		count = 1;
 
 	for (guint i = 0;; i++) {
 		g_autoptr(GError) error_local = NULL;
@@ -5052,14 +5055,6 @@ guint
 fu_device_get_battery_level(FuDevice *self)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
-
-	/* use the parent if the child is unset */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&
-	    fwupd_device_get_battery_level(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
-		FuDevice *parent = fu_device_get_parent_internal(self);
-		if (parent != NULL)
-			return fu_device_get_battery_level(parent);
-	}
 	return fwupd_device_get_battery_level(FWUPD_DEVICE(self));
 }
 
@@ -5102,14 +5097,6 @@ guint
 fu_device_get_battery_threshold(FuDevice *self)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
-
-	/* use the parent if the child is unset */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&
-	    fwupd_device_get_battery_threshold(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
-		FuDevice *parent = fu_device_get_parent_internal(self);
-		if (parent != NULL)
-			return fu_device_get_battery_threshold(parent);
-	}
 	return fwupd_device_get_battery_threshold(FWUPD_DEVICE(self));
 }
 
@@ -6175,13 +6162,7 @@ fu_device_open(FuDevice *self, GError **error)
 		return fu_device_ensure_id(self, error);
 	}
 
-	/* use parent */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
-		FuDevice *parent = fu_device_get_parent(self, error);
-		if (parent == NULL)
-			return FALSE;
-		return fu_device_open_internal(parent, error);
-	}
+	/* use proxy */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
 		FuDevice *proxy = fu_device_get_proxy(self, error);
 		if (proxy == NULL)
@@ -6254,13 +6235,7 @@ fu_device_close(FuDevice *self, GError **error)
 	if (!fu_device_close_internal(self, error))
 		return FALSE;
 
-	/* use parent */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
-		FuDevice *parent = fu_device_get_parent(self, error);
-		if (parent == NULL)
-			return FALSE;
-		return fu_device_close_internal(parent, error);
-	}
+	/* use proxy */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
 		FuDevice *proxy = fu_device_get_proxy(self, error);
 		if (proxy == NULL)
@@ -8074,7 +8049,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		return fu_device_load_event(priv->target, id, error);
 
 	/* sanity check */
-	if (priv->events == NULL) {
+	if (priv->events == NULL || priv->events->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -8087,6 +8062,35 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
 		return g_ptr_array_index(priv->events, 0);
 
+	/* in strict ordering mode */
+	id_hash = fu_device_event_build_id(id);
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER)) {
+		FuDeviceEvent *event;
+		if (priv->event_idx >= priv->events->len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no event with ID %s [%s]: no more events",
+				    id,
+				    id_hash);
+			return NULL;
+		}
+		event = g_ptr_array_index(priv->events, priv->event_idx);
+		if (g_strcmp0(fu_device_event_get_id(event), id_hash) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no event with ID %s [%s]: got %s instead",
+				    id,
+				    id_hash,
+				    fu_device_event_get_id(event));
+			return NULL;
+		}
+		priv->event_idx++;
+		g_debug("found event with ID %s [%s]", id, id_hash);
+		return event;
+	}
+
 	/* reset back to the beginning */
 	if (priv->event_idx >= priv->events->len) {
 		g_debug("resetting event index");
@@ -8094,7 +8098,6 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* look for the next event in the sequence */
-	id_hash = fu_device_event_build_id(id);
 	for (guint i = priv->event_idx; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {

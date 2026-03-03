@@ -748,9 +748,8 @@ fu_pixart_rf_receiver_device_add_peripherals(FuPixartRfReceiverDevice *device,
 						 NULL))
 			return FALSE;
 	} else {
-		FuContext *ctx = fu_device_get_context(FU_DEVICE(device));
 		g_autoptr(FuPixartRfWirelessDevice) child =
-		    fu_pixart_rf_wireless_device_new(ctx, &model);
+		    fu_pixart_rf_wireless_device_new(FU_DEVICE(device), &model);
 		g_autofree gchar *logical_id = g_strdup_printf("IDX:0x%02x", idx);
 		fu_device_add_instance_u16(FU_DEVICE(child),
 					   "VEN",

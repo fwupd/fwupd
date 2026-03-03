@@ -1659,7 +1659,7 @@ fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *flash_id = NULL;
 
 	flash_id = g_strdup_printf("%06X", self->cfi_flash_id);
-	self->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
+	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), flash_id);
 	if (!fu_device_setup(FU_DEVICE(self->cfi_device), error))
 		return FALSE;
 
@@ -1962,7 +1962,8 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_PAUSE_R2_CPU);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0);
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */

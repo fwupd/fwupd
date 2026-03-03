@@ -23,6 +23,7 @@ struct _FuCorsairDevice {
 G_DEFINE_TYPE(FuCorsairDevice, fu_corsair_device, FU_TYPE_USB_DEVICE)
 
 #define CORSAIR_DEFAULT_VENDOR_INTERFACE_ID 1
+#define CORSAIR_DEFAULT_CMD_SIZE	    64
 #define CORSAIR_ACTIVATION_TIMEOUT	    30000
 #define CORSAIR_TRANSACTION_TIMEOUT	    10000
 #define CORSAIR_FIRST_CHUNK_HEADER_SIZE	    7
@@ -49,6 +50,12 @@ fu_corsair_device_send(FuCorsairDevice *self, GByteArray *buf, guint timeout, GE
 {
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf2 = g_byte_array_new();
+
+	/* sanity check */
+	if (self->cmd_write_size == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cmd size invalid");
+		return FALSE;
+	}
 
 	g_byte_array_append(buf2, buf->data, buf->len);
 	fu_byte_array_set_size(buf2, self->cmd_write_size, 0x0);
@@ -82,6 +89,12 @@ fu_corsair_device_recv(FuCorsairDevice *self, guint timeout, GError **error)
 {
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	/* sanity check */
+	if (self->cmd_read_size == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cmd size invalid");
+		return NULL;
+	}
 
 	fu_byte_array_set_size(buf, self->cmd_read_size, 0x0);
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
@@ -811,6 +824,8 @@ static void
 fu_corsair_device_init(FuCorsairDevice *self)
 {
 	self->vendor_interface = CORSAIR_DEFAULT_VENDOR_INTERFACE_ID;
+	self->cmd_read_size = CORSAIR_DEFAULT_CMD_SIZE;
+	self->cmd_write_size = CORSAIR_DEFAULT_CMD_SIZE;
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CORSAIR_DEVICE_FLAG_IS_RECEIVER);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

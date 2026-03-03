@@ -20,4 +20,4 @@ fu_cfu_module_setup(FuCfuModule *self,
 		    gsize offset,
 		    GError **error);
 FuCfuModule *
-fu_cfu_module_new(FuDevice *parent);
+fu_cfu_module_new(FuDevice *proxy);

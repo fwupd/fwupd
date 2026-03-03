@@ -1263,7 +1263,7 @@ fu_parade_usbhub_device_constructed(GObject *object)
 {
 	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(object);
 	self->chip = FU_PARADE_USBHUB_CHIP_PS5512;
-	self->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), NULL);
+	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
 }
 
 static void

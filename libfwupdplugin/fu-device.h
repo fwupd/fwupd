@@ -328,22 +328,6 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN "no-auto-remove-children"
 /**
- * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN:
- *
- * Use parent to open and close the device.
- *
- * Since: 1.6.2
- */
-#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN "use-parent-for-open"
-/**
- * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY:
- *
- * Use parent for the battery level and threshold.
- *
- * Since: 1.6.3
- */
-#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY "use-parent-for-battery"
-/**
  * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK:
  *
  * Use parent for the battery level and threshold.
@@ -709,6 +693,19 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.18
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER:
+ *
+ * Do not allow out-of-order or skipped emulation events. This allows a developer to refactor a
+ * plugin ensuring that the device behavior remains 100% unchanged.
+ *
+ * NOTE: This is probably only useful to set in `FuDevice->prepare()` or
+ * `FuDevice->write_firmware()` as enumeration may be different when loading emulated devices.
+ *
+ * Since: 2.1.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER "strict-emulation-order"
 
 /* standard icons */
 
