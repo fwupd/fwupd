@@ -117,13 +117,9 @@ fu_legion_hid_child_init(FuLegionHidChild *self)
 }
 
 FuLegionHidChild *
-fu_legion_hid_child_new(FuDevice *parent, FuLegionHidDeviceId id)
+fu_legion_hid_child_new(FuDevice *proxy, FuLegionHidDeviceId id)
 {
-	FuLegionHidChild *self =
-	    g_object_new(FU_TYPE_LEGION_HID_CHILD, "proxy", parent, "parent", parent, NULL);
+	FuLegionHidChild *self = g_object_new(FU_TYPE_LEGION_HID_CHILD, "proxy", proxy, NULL);
 	self->id = id;
-	fu_device_incorporate(FU_DEVICE(self),
-			      parent,
-			      FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID);
 	return self;
 }
