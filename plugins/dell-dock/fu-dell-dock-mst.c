@@ -668,6 +668,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *crc_tag;
 	const guint8 *new_tag;
+	gsize crc_len = 0;
 	guint32 crc_offset;
 	guint retries = 2;
 
@@ -688,9 +689,16 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 		g_prefix_error_literal(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_mst_read_register(self, PANAMERA_MST_RC_DATA_ADDR, 1, &bytes, error))
+	if (!fu_dell_dock_mst_read_register(self, PANAMERA_MST_RC_DATA_ADDR, 4, &bytes, error))
 		return FALSE;
-	crc_tag = g_bytes_get_data(bytes, NULL);
+	crc_tag = g_bytes_get_data(bytes, &crc_len);
+	if (crc_len < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "CRC tag response invalid");
+		return FALSE;
+	}
 	g_debug("CRC byte is currently 0x%x", crc_tag[3]);
 
 	for (guint32 retries_cnt = 0;; retries_cnt++) {
