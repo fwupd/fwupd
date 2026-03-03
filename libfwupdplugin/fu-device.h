@@ -164,6 +164,7 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_flashes_left(d, v)     fwupd_device_set_flashes_left(FWUPD_DEVICE(d), v)
 #define fu_device_set_install_duration(d, v) fwupd_device_set_install_duration(FWUPD_DEVICE(d), v)
 #define fu_device_get_checksums(d)	     fwupd_device_get_checksums(FWUPD_DEVICE(d))
+#define fu_device_get_created(d)	     fwupd_device_get_created(FWUPD_DEVICE(d))
 #define fu_device_get_flags(d)		     fwupd_device_get_flags(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)		     fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)	     fwupd_device_get_guid_default(FWUPD_DEVICE(d))

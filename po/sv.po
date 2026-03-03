@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-02 15:26+0000\n"
+"PO-Revision-Date: 2026-03-03 17:09+0000\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.16.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -854,7 +854,7 @@ msgstr "Säkert AMD-tillbakarullningsskydd för processorn"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "Säkerhetsstart för AMD-plattformen"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -1009,7 +1009,7 @@ msgstr "Tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgrader
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr "Säker plattformsuppstart förhindrar osignerad programvara från att läsas in när enheten startas."
+msgstr "Plattformssäkerhetsstart förhindrar osignerad programvara från att läsas in när enheten startas."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1033,7 +1033,7 @@ msgstr "UEFI-databasen innehåller listan med giltiga certifikat som kan använd
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart är en säkerhetsfunktion för fast programvara som skyddar BIOS från att mixtras med."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1074,7 +1074,7 @@ msgstr "Välj enhet"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Enheter utan tillgängliga uppdateringar för fast programvara:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1111,16 +1111,16 @@ msgstr "Läser från %s…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s är för närvarande inte uppdateringsbar:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Inget att göra"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Enheter med uppdateringar för fast programvara som behöver användaråtgärd:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1136,7 +1136,7 @@ msgstr "Modifierade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Rensade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1144,7 +1144,7 @@ msgstr "Inaktiverade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Ta bort de nu oanvända fjärrcachefilerna?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1196,7 +1196,7 @@ msgstr "Skriver fil:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Metadata är redan uppdaterade"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -1632,7 +1632,7 @@ msgstr "Byt gren för fast programvara på enheten"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr ""
+msgstr "ENHETS-ID"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1644,7 +1644,7 @@ msgstr "Ta bort all historik för fast programvara"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[INSTÄLLNING1] [INSTÄLLNING2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1769,7 +1769,7 @@ msgstr "FJÄRR-ID"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Rensar en given fjärrkälla"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1809,27 +1809,27 @@ msgstr "Hittar fast programvaruutgåvor från metadata"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "TYP FILNAMN"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Beräknar CRC-värde för en fil"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC FILNAMN"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Hittar en algoritm som matchar filens CRC"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "TOLKA systemets PCR-händelselogg"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2991,11 +2991,11 @@ msgstr "Enheten har lägre prioritet än en likvärdig enhet"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "Systemet har signerats med en osäker nyckel"
 
 #. TRANSLATORS: firmware is locked from the BIOS
 msgid "Device firmware has been locked"
-msgstr ""
+msgstr "Fast programvara för enhet har låsts"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3548,7 +3548,7 @@ msgstr "UEFI-certifikatlagringen är nu uppdaterad"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart är aktiverat"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"

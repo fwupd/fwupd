@@ -24,6 +24,7 @@
 #include "fu-byte-array.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
+#include "fu-dpaux-device.h"
 #include "fu-ioctl-private.h"
 #include "fu-output-stream.h"
 #include "fu-path.h"
@@ -46,6 +47,7 @@ typedef struct {
 	gchar *devtype;
 	guint64 number;
 	FuIOChannel *io_channel;
+	goffset emulated_offset;
 	FuIoChannelOpenFlags open_flags;
 	GHashTable *properties;
 	gboolean properties_valid;
@@ -1377,8 +1379,10 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		priv->emulated_offset = offset;
 		return TRUE;
+	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1539,7 +1543,15 @@ fu_udev_device_read(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
+		/* the created value is 2025-10-24T15:32:39.198922Z i.e. just bnr-dp-0.13.zip */
+		if (fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.2") ||
+		    fu_device_get_created(FU_DEVICE(self)) == 0x68FB9C17) {
+			event_id = g_strdup_printf("Read:Length=0x%x,Offset=0x%x",
+						   (guint)bufsz,
+						   (guint)priv->emulated_offset);
+		} else {
+			event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
+		}
 	}
 
 	/* emulated */

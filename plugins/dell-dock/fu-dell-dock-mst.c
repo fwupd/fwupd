@@ -172,17 +172,20 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error);
 
 static gboolean
-fu_dell_dock_mst_read_register(FuDevice *proxy,
+fu_dell_dock_mst_read_register(FuDellDockMst *self,
 			       guint32 address,
 			       gsize length,
 			       GBytes **bytes,
 			       GError **error)
 {
-	g_return_val_if_fail(proxy != NULL, FALSE);
+	FuDevice *proxy;
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(length <= 32, FALSE);
 
 	/* write the offset we're querying */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_dell_dock_hid_i2c_write(proxy, (guint8 *)&address, 4, &mst_base_settings, error))
 		return FALSE;
 
@@ -194,32 +197,35 @@ fu_dell_dock_mst_read_register(FuDevice *proxy,
 }
 
 static gboolean
-fu_dell_dock_mst_write_register(FuDevice *proxy,
+fu_dell_dock_mst_write_register(FuDellDockMst *self,
 				guint32 address,
 				guint8 *data,
 				gsize length,
 				GError **error)
 {
+	FuDevice *proxy;
 	g_autofree guint8 *buffer = g_malloc0(length + 4);
 
-	g_return_val_if_fail(proxy != NULL, FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
 
 	memcpy(buffer, &address, 4);	  /* nocheck:blocked */
 	memcpy(buffer + 4, data, length); /* nocheck:blocked */
 
 	/* write the offset we're querying */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_dell_dock_hid_i2c_write(proxy, buffer, length + 4, &mst_base_settings, error);
 }
 
 static gboolean
-fu_dell_dock_mst_query_active_bank(FuDevice *proxy, FuDellDockMstBank *active, GError **error)
+fu_dell_dock_mst_query_active_bank(FuDellDockMst *self, FuDellDockMstBank *active, GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
 	const guint32 *data = NULL;
 	gsize length = 4;
 
-	if (!fu_dell_dock_mst_read_register(proxy,
+	if (!fu_dell_dock_mst_read_register(self,
 					    PANAMERA_MST_CORE_MCU_BOOTLOADER_STS,
 					    length,
 					    &bytes,
@@ -276,15 +282,11 @@ static gboolean
 fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 {
 	const guint8 *result = NULL;
-	FuDevice *proxy;
 	guint32 tmp;
 
 	/* trigger the write */
 	tmp = MST_TRIGGER_WRITE;
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_dell_dock_mst_write_register(proxy,
+	if (!fu_dell_dock_mst_write_register(self,
 					     self->mst_rc_trigger_addr,
 					     (guint8 *)&tmp,
 					     sizeof(guint32),
@@ -296,7 +298,7 @@ fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 	tmp = 0xffff;
 	for (guint i = 0; i < 1000; i++) {
 		g_autoptr(GBytes) bytes = NULL;
-		if (!fu_dell_dock_mst_read_register(proxy,
+		if (!fu_dell_dock_mst_read_register(self,
 						    self->mst_rc_command_addr,
 						    sizeof(guint32),
 						    &bytes,
@@ -355,7 +357,6 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	FuDevice *proxy;
 	gint buffer_len = (data == NULL) ? 12 : length + 16;
 	g_autofree guint8 *buffer = g_malloc0(buffer_len);
 	guint32 tmp;
@@ -372,10 +373,7 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 		memcpy(buffer + 16, data, length); /* nocheck:blocked */
 
 	/* write the combined register stream */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_dell_dock_mst_write_register(proxy,
+	if (!fu_dell_dock_mst_write_register(self,
 					     self->mst_rc_command_addr,
 					     buffer,
 					     buffer_len,
@@ -405,12 +403,8 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *data;
 	gsize length = 4;
-	FuDevice *proxy;
 
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_dell_dock_mst_read_register(proxy,
+	if (!fu_dell_dock_mst_read_register(self,
 					    self->mst_core_mcu_bootloader_addr,
 					    length,
 					    &bytes,
@@ -441,7 +435,6 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 			       gboolean *checksum,
 			       GError **error)
 {
-	FuDevice *proxy;
 	g_autoptr(GBytes) csum_bytes = NULL;
 	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize length = 0;
@@ -488,10 +481,7 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 		return FALSE;
 	}
 	/* read result from data register */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_dell_dock_mst_read_register(proxy, self->mst_rc_data_addr, 4, &csum_bytes, error))
+	if (!fu_dell_dock_mst_read_register(self, self->mst_rc_data_addr, 4, &csum_bytes, error))
 		return FALSE;
 	data = g_bytes_get_data(csum_bytes, NULL);
 	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | /* nocheck:blocked nocheck:endian */
@@ -595,7 +585,6 @@ fu_dell_dock_mst_write_flash_bank(FuDellDockMst *self,
 static gboolean
 fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 {
-	FuDevice *proxy;
 	g_autoptr(GBytes) quad_bytes = NULL;
 	g_autoptr(GBytes) hdcp_bytes = NULL;
 	guint32 payload = 0x21;
@@ -624,10 +613,7 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 					 error))
 		return FALSE;
 
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_dell_dock_mst_read_register(proxy,
+	if (!fu_dell_dock_mst_read_register(self,
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    length,
 					    &quad_bytes,
@@ -654,7 +640,7 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 					 error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register(proxy,
+	if (!fu_dell_dock_mst_read_register(self,
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    length,
 					    &hdcp_bytes,
@@ -678,11 +664,11 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 static gboolean
 fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_use, GError **error)
 {
-	FuDevice *proxy;
 	const FuDellDockMstBankAttributes *attribs;
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *crc_tag;
 	const guint8 *new_tag;
+	gsize crc_len = 0;
 	guint32 crc_offset;
 	guint retries = 2;
 
@@ -703,13 +689,16 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 		g_prefix_error_literal(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
+	if (!fu_dell_dock_mst_read_register(self, PANAMERA_MST_RC_DATA_ADDR, 4, &bytes, error))
 		return FALSE;
-	if (!fu_dell_dock_mst_read_register(proxy, PANAMERA_MST_RC_DATA_ADDR, 1, &bytes, error)) {
+	crc_tag = g_bytes_get_data(bytes, &crc_len);
+	if (crc_len < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "CRC tag response invalid");
 		return FALSE;
 	}
-	crc_tag = g_bytes_get_data(bytes, NULL);
 	g_debug("CRC byte is currently 0x%x", crc_tag[3]);
 
 	for (guint32 retries_cnt = 0;; retries_cnt++) {
@@ -757,7 +746,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 			g_prefix_error_literal(error, "failed to read tag from flash: ");
 			return FALSE;
 		}
-		if (!fu_dell_dock_mst_read_register(proxy,
+		if (!fu_dell_dock_mst_read_register(self,
 						    PANAMERA_MST_RC_DATA_ADDR,
 						    4,
 						    &bytes_new,
@@ -851,7 +840,6 @@ fu_dell_dock_mst_write_panamera(FuDellDockMst *self,
 				FuProgress *progress,
 				GError **error)
 {
-	FuDevice *proxy;
 	gboolean checksum = FALSE;
 	FuDellDockMstBank bank_in_use = 0;
 	guint8 order[2] = {FU_DELL_DOCK_MST_BANK_ESM, FU_DELL_DOCK_MST_BANK_0};
@@ -862,10 +850,7 @@ fu_dell_dock_mst_write_panamera(FuDellDockMst *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
 
 	/* determine the flash order */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_dell_dock_mst_query_active_bank(proxy, &bank_in_use, error))
+	if (!fu_dell_dock_mst_query_active_bank(self, &bank_in_use, error))
 		return FALSE;
 
 	if (bank_in_use == FU_DELL_DOCK_MST_BANK_0)

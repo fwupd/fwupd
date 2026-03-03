@@ -3,22 +3,22 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2024-2025
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2024-2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 10:32+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-03 17:09+0000\n"
+"Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Serviciul de furnizare a firmware-ului Linux de la producător „LVFS” (firmware stabil)"
@@ -136,11 +136,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Autentificarea este necesară pentru a modifica un depozit configurat utilizat pentru actualizările firmware"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Curăță un depozit/dispozitiv de la distanță configurat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Autentificarea este necesară pentru a șterge metadatele dintr-un dispozitiv la distanță"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -322,13 +322,13 @@ msgstr "Nicio acțiune specificată!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Introduceți un număr de la 0 la %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Introduceți %s sau %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -429,14 +429,14 @@ msgstr "Afișează opțiunile de depanare"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u dispozitiv a fost actualizat și necesită o repornire."
+msgstr[1] "%u dispozitive au fost actualizate și necesită o repornire."
+msgstr[2] "%u de dispozitive au fost actualizate și necesită o repornire."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Reporniți pentru a finaliza actualizarea."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -667,7 +667,7 @@ msgstr "Protecție de restaurare la starea anterioară a procesorului"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Platformă de pornire securizată"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -711,7 +711,7 @@ msgstr "Baza de date UEFI (UEFI db)"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -850,7 +850,7 @@ msgstr "Protecție de restaurare securizată la starea anterioară a procesorulu
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "Platformă AMD de pornire securizată"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -1005,7 +1005,7 @@ msgstr "Protecția de restaurare la starea anterioară previne ca software-ul di
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Platforma de pornire securizată împiedică încărcarea software-ului nesemnat la pornirea dispozitivului."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1029,7 +1029,7 @@ msgstr "Baza de date UEFI (UEFI db) conține lista certificatelor valide care po
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart este o caracteristică de securitate a firmware-ului care protejează BIOS-ul de falsificare/manipulare."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1070,7 +1070,7 @@ msgstr "Alegeți dispozitivul"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Dispozitive fără actualizări firmware disponibile:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1107,16 +1107,16 @@ msgstr "Se citește din %s…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s nu este actualizabil în prezent:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Nimic de făcut"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Dispozitive cu actualizări de firmware care necesită intervenția utilizatorului:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1132,7 +1132,7 @@ msgstr "Depozit modificat cu succes"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Depozitul de la distanță a fost curățat cu succes"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1140,7 +1140,7 @@ msgstr "Depozit dezactivat cu succes"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Șterge fișierele cache de la distanță care nu mai sunt utilizate?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1192,7 +1192,7 @@ msgstr "Se scrie fișierul:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Metadatele sunt deja actualizate"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -1628,7 +1628,7 @@ msgstr "Schimbă ramura firmware a dispozitivului"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr ""
+msgstr "ID-DISPOZITIV"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1640,7 +1640,7 @@ msgstr "Șterge tot istoricul actualizărilor firmware"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[PARAMETRU1] [ PARAMETRU2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1765,7 +1765,7 @@ msgstr "ID-DEPOZIT"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Curăță un depozit de la distanță specificat"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1805,27 +1805,27 @@ msgstr "Găsește versiunile firmware din metadate"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "TIP NUME_FIȘIER"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Calculează CRC-ul unui fișier"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC NUME_FIȘIER"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Găsește un algoritm care se potrivește cu codul CRC al fișierului"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Analizează jurnalul de evenimente PCR al sistemului"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2997,11 +2997,11 @@ msgstr "Dispozitivul are o prioritate mai mică decât un dispozitiv echivalent"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "Sistemul a fost semnat cu o cheie nesigură"
 
 #. TRANSLATORS: firmware is locked from the BIOS
 msgid "Device firmware has been locked"
-msgstr ""
+msgstr "Firmware-ul dispozitivului a fost blocat"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3557,7 +3557,7 @@ msgstr "Stocul de certificate UEFI este acum actualizat"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart este activat"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"

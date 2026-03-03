@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-02 15:26+0000\n"
+"PO-Revision-Date: 2026-03-03 17:09+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.16.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -148,7 +148,7 @@ msgstr "清理已配置的远端设备"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "从远程源删除元数据需要进行身份认证"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -779,7 +779,7 @@ msgstr "Linux Swap"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend To RAM"
-msgstr "睡眠状态"
+msgstr "挂起到 RAM"
 
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend To Idle"
@@ -799,237 +799,237 @@ msgstr "UEFI Bootservice 变量"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM Platform Configuration"
-msgstr ""
+msgstr "TPM Platform 配置"
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM Reconstruction"
-msgstr ""
+msgstr "TPM 重建"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
-msgstr ""
+msgstr "Intel ME 制造模式"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is enabled
 #. * with a jumper -- luckily it is probably not accessible to end users on consumer
 #. * boards
 msgid "Intel Management Engine Override"
-msgstr ""
+msgstr "Intel ME 引擎覆盖"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
 #. * to the private/public key used to secure loading of firmware
 msgid "MEI Key Manifest"
-msgstr ""
+msgstr "MEI Key 清单"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
-msgstr ""
+msgstr "Intel ME 版本"
 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware Updates"
-msgstr ""
+msgstr "固件更新"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
-msgstr ""
+msgstr "固件验证"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "Firmware Updater Verification"
-msgstr ""
+msgstr "固件更新器验证"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform Debugging"
-msgstr ""
+msgstr "Platform 调试"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
-msgstr ""
+msgstr "处理器安全检查"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
-msgstr ""
+msgstr "AMD 安全处理器回滚保护"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "AMD Platform 安全启动"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
-msgstr ""
+msgstr "AMD 固件重放保护"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
-msgstr ""
+msgstr "AMD 固件写入保护"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
-msgstr ""
+msgstr "Fused Platform"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
-msgstr ""
+msgstr "BIOS 回滚保护"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS Mitigation"
-msgstr ""
+msgstr "Intel GDS 缓解"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS Firmware Updates"
-msgstr ""
+msgstr "BIOS 固件更新"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "System Management Mode"
-msgstr ""
+msgstr "系统管理模式"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
-msgstr ""
+msgstr "UEFI 内存保护"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
-msgstr ""
+msgstr "固件写入保护技术保护设备固件内存免于篡改。"
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
-msgstr ""
+msgstr "固件 BIOS 区域保护设备固件内存免遭篡改。"
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
-msgstr ""
+msgstr "固件 BIOS 描述符保护设备固件内存免遭篡改。"
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr ""
+msgstr "启动前 DMA 保护防止设备在被连接到计算机后访问系统内存。"
 
 #. TRANSLATORS: longer description
 msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
-msgstr ""
+msgstr "Intel BootGuard 阻止未经授权的设备软件在设备启动时运行。"
 
 msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
-msgstr ""
+msgstr "Intel BootGuard 错误策略确保如果设备软件已遭篡改，则设备不会继续启动。"
 
 #. TRANSLATORS: longer description
 msgid "Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
-msgstr ""
+msgstr "控制流强制技术检测并阻止某些在设备上运行恶意软件的方法。"
 
 #. TRANSLATORS: longer description
 msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
-msgstr ""
+msgstr "管理者模式访问阻止确保设备内存关键部分不被不安全程序访问。"
 
 msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
-msgstr ""
+msgstr "加密的 RAM 作用是如果内存芯片被移除并进行访问，则存储在设备上的信息不可能被读取。"
 
 #. TRANSLATORS: longer description
 msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
-msgstr ""
+msgstr "IOMMU 保护阻止已连接设备访问系统内存未经授权的部分。"
 
 #. TRANSLATORS: longer description
 msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
-msgstr ""
+msgstr "Linux 内核锁定模式阻止管理员 (root) 账户访问并更改系统软件的关键部分。"
 
 msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
-msgstr ""
+msgstr "Linux 内核验证确保关键系统软件未遭篡改。适应不随系统提供的设备驱动可能阻止此安全特性正常工作。"
 
 msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
-msgstr ""
+msgstr "Linux 内核 Swap 在你工作时临时将信息保存到磁盘。如果信息未受保护，它可能被某人访问，假如这个人获得了磁盘。"
 
 #. TRANSLATORS: longer description
 msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
-msgstr ""
+msgstr "挂起到 RAM 允许设备快速进入睡眠以节电。虽然设备已挂起，但可以用物理方式移除其内存条，访问其信息。"
 
 #. TRANSLATORS: longer description
 msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
-msgstr ""
+msgstr "挂起到空闲允许设备快递进入睡眠以节电。虽然设备已被刮起，但可以用物理方式移除其内存，访问其信息。"
 
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
-msgstr ""
+msgstr "UEFI Platform Key 用于确定设备软件是否来自可信源。"
 
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
-msgstr ""
+msgstr "UEFI 安全启动阻止恶意软件在设备启动时加载。"
 
 #. TRANSLATORS: longer description
 msgid "UEFI boot service variables should not be readable from runtime mode."
-msgstr ""
+msgstr "UEFI 启动服务变量在运行时模式下不应可读。"
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
-msgstr ""
+msgstr "TPM（可信平台模块） Platform 配置用于检查设备启动过程是否被修改。"
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
-msgstr ""
+msgstr "TPM（可信平台模块）重建用于检查设备启动进程是否已被修改。"
 
 #. TRANSLATORS: longer description
 msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
-msgstr ""
+msgstr "TPM （可信平台模块）是检测硬件组件何时被篡改的计算机芯片。"
 
 #. TRANSLATORS: longer description
 msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
-msgstr ""
+msgstr "制造模式在制造设备和安全特性尚未启用时使用。"
 
 #. TRANSLATORS: longer description
 msgid "Intel Management Engine Override disables checks for device software tampering."
-msgstr ""
+msgstr "Intel ME 引擎覆盖禁用设备软件篡改检查。"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
-msgstr ""
+msgstr "Intel ME 引擎 Key 清单必须有效，以使设备固件可被 CPU 信任。"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
-msgstr ""
+msgstr "Intel ME 引擎控制设备组件，需要有最近版本避免安全问题。"
 
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
-msgstr ""
+msgstr "为此设备提供设备软件更新。"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
-msgstr ""
+msgstr "固件验证使用参照副本检查设备软件确保固件没有被更改。"
 
 msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
-msgstr ""
+msgstr "固件更新器验证检查用于更新的软件未遭篡改。"
 
 #. TRANSLATORS: longer description
 msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
-msgstr ""
+msgstr "Platform 调试禁用设备安全特性。这应只由硬件制造商使用。"
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
-msgstr ""
+msgstr "每个系统应该进行测试确保固件安全性。"
 
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
-msgstr ""
+msgstr "回滚保护阻止设备软件被降级到又安全问题的较老版本。"
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "TPM 安全启动阻止未签名软件在设备启动时被加载。"
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
-msgstr ""
+msgstr "必须更新 CPU 微代码来缓解多个信息披露安全问题。"
 
 #. TRANSLATORS: longer description
 msgid "Enabling firmware updates for the BIOS allows fixing security issues."
-msgstr ""
+msgstr "启用 BIOS 固件更新允许修复安全问题。"
 
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
-msgstr ""
+msgstr "固件使用系统管理模式来访问常驻 BIOS 代码和数据。"
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
-msgstr ""
+msgstr "UEFI 系统可以在启动时设置内存属性，阻止常见漏洞运行。"
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
-msgstr ""
+msgstr "UEFI 数据库包含有效证书的列表，可用于授权允许运行的 EFI 二进制文件。"
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart 是保护 BIOS 免遭篡改的固件安全特性。"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1059,7 +1059,7 @@ msgstr "取消"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose device"
-msgstr ""
+msgstr "选择设备"
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -1070,7 +1070,7 @@ msgstr ""
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "固件更新不可用的设备："
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1107,16 +1107,16 @@ msgstr "正在读取 %s……"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s 当前不可更新："
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "无可安装更新"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "有需要用户操作的固件更新的设备："
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1124,7 +1124,7 @@ msgstr "修改配置值成功"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully reset configuration section"
-msgstr ""
+msgstr "成功重置了配置部分"
 
 #. TRANSLATORS: success message for a per-remote setting change
 msgid "Successfully modified remote"
@@ -1132,7 +1132,7 @@ msgstr "修改远程源成功"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "成功清除了远程源"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1140,7 +1140,7 @@ msgstr "禁用远程源成功"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "删除现在不用的远程缓存文件？"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
