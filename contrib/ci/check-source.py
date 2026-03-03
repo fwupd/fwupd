@@ -263,7 +263,7 @@ class Checker:
             return
         if node.depth != 0:
             return
-        idx = node.tokens_pre.find_fuzzy(["@FUNCTION", "(", "FuDevice", "~*", "device"])
+        idx = node.tokens_pre.find_fuzzy(["@FUNCTION", "(", "FuDevice", "~*"])
         if idx == -1:
             return
         token = node.tokens_pre[idx]
@@ -271,8 +271,13 @@ class Checker:
             return
         if token.data in self._klass_funcs:
             return
+        token_param = node.tokens_pre[idx + 4]
+        if token_param.data == "self":
+            return
+        if token.data.endswith("_new") and token_param.data == "proxy":
+            return
         self.add_failure(
-            "native device functions should use self as the first parameter not device",
+            f"native device functions should use self as the first parameter not {token_param.data}",
             linecnt=token.linecnt,
         )
 
