@@ -565,7 +565,7 @@ fu_plugin_get_devices(FuPlugin *self)
  * Registers the device with other plugins so they can set metadata.
  *
  * Plugins do not have to call this manually as this is done automatically
- * when using [method@FuPlugin.device_add]. They may wish to use this manually
+ * when using [method@FuPlugin.add_device]. They may wish to use this manually
  * if for instance the coldplug should be ignored based on the metadata
  * set from other plugins.
  *
