@@ -97,11 +97,12 @@ fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error)
 }
 
 static gboolean
-fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
+fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuUefiCapsuleDevice *capsule_device,
 					    FuEfiLoadOption *loadopt,
-					    FuUefiBootmgrFlags flags,
 					    GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(capsule_device));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	const gchar *name = NULL;
 	guint16 boot_next = G_MAXUINT16;
 	g_autofree guint8 *set_entries = g_malloc0(G_MAXUINT16);
@@ -205,7 +206,8 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 	}
 
 	/* TODO: conditionalize this on the UEFI version? */
-	if (flags & FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER) {
+	if (fu_device_has_private_flag(FU_DEVICE(capsule_device),
+				       FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER)) {
 		if (!fu_uefi_bootmgr_add_to_boot_order(efivars, boot_next, error))
 			return FALSE;
 	}
@@ -339,109 +341,96 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 }
 
 gboolean
-fu_uefi_bootmgr_bootnext(FuPathStore *pstore,
-			 FuEfivars *efivars,
-			 FuVolume *esp,
+fu_uefi_bootmgr_bootnext(FuUefiCapsuleDevice *capsule_device,
 			 const gchar *description,
-			 FuUefiBootmgrFlags flags,
 			 GError **error)
 {
-	const gchar *filepath = NULL;
-	gboolean use_fwup_path = TRUE;
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(capsule_device));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	FuVolume *esp = fu_uefi_capsule_device_get_esp(capsule_device);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	gboolean secureboot_enabled = FALSE;
-	g_autofree gchar *shim_app = NULL;
-	g_autofree gchar *shim_cpy = NULL;
-	g_autofree gchar *source_app = NULL;
-	g_autofree gchar *source_shim = NULL;
-	g_autofree gchar *target_app = NULL;
-	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
-	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
+	g_autofree gchar *shim_dst = NULL;
+	g_autofree gchar *app_src = NULL;
+	g_autofree gchar *app_basename = NULL;
+	g_autofree gchar *app_dst = NULL;
 	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(GError) error_local = NULL;
 
-	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
-	if (source_app == NULL)
+	/* copy fwupdx64.efi to the ESP */
+	app_basename = fu_uefi_capsule_build_app_basename(pstore, "fwupd", error);
+	if (app_basename == NULL)
 		return FALSE;
+	app_src = fu_uefi_get_built_app_path(pstore, efivars, app_basename, error);
+	if (app_src == NULL)
+		return FALSE;
+	app_dst = fu_uefi_capsule_device_build_efi_path(capsule_device, error, app_basename, NULL);
+	if (app_dst == NULL)
+		return FALSE;
+	if (!fu_uefi_esp_target_verify(app_src, app_dst)) {
+		if (!fu_uefi_esp_target_copy(app_src, app_dst, error))
+			return FALSE;
+	}
 
-	/* test if we should use shim */
+	/* SecureBoot has to use shim */
 	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
 		g_debug("ignoring: %s", error_local->message);
-	if (secureboot_enabled) {
-		shim_app = fu_uefi_get_esp_app_path(pstore, esp_path, "shim", error);
-		if (shim_app == NULL)
+	if (fu_device_has_private_flag(FU_DEVICE(capsule_device),
+				       FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB) &&
+	    secureboot_enabled) {
+		g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
+		g_autofree gchar *shim_basename = NULL;
+		g_autofree gchar *shim_src = NULL;
+
+		shim_basename = fu_uefi_capsule_build_app_basename(pstore, "shim", error);
+		if (shim_basename == NULL)
+			return FALSE;
+		shim_dst = fu_uefi_capsule_device_build_efi_path(capsule_device,
+								 error,
+								 shim_basename,
+								 NULL);
+		if (shim_dst == NULL)
 			return FALSE;
 
-		/* copy in an updated shim if we have one */
-		source_shim = fu_uefi_get_built_app_path(pstore, efivars, "shim", NULL);
-		if (source_shim != NULL) {
-			if (!fu_uefi_esp_target_verify(source_shim, esp, shim_app)) {
-				if (!fu_uefi_bootmgr_shim_is_safe(efivars, source_shim, error))
+		/* copy an updated shim if we have one */
+		shim_src = fu_uefi_get_built_app_path(pstore, efivars, shim_basename, NULL);
+		if (shim_src != NULL) {
+			if (!fu_uefi_esp_target_verify(shim_src, shim_dst)) {
+				if (!fu_uefi_bootmgr_shim_is_safe(efivars, shim_src, error))
 					return FALSE;
-				if (!fu_uefi_esp_target_copy(source_shim, esp, shim_app, error))
+				if (!fu_uefi_esp_target_copy(shim_src, shim_dst, error))
 					return FALSE;
 			}
-		}
-
-		if (fu_uefi_esp_target_exists(esp, shim_app)) {
-			/* use a custom copy of shim for firmware updates */
-			if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
-				shim_cpy =
-				    fu_uefi_get_esp_app_path(pstore, esp_path, "shimfwupd", error);
-				if (shim_cpy == NULL)
-					return FALSE;
-				if (!fu_uefi_esp_target_verify(shim_app, esp, shim_cpy)) {
-					if (!fu_uefi_esp_target_copy(shim_app,
-								     esp,
-								     shim_cpy,
-								     error))
-						return FALSE;
-				}
-				filepath = shim_cpy;
-			} else {
-				filepath = shim_app;
-			}
-			use_fwup_path = FALSE;
-		} else if ((flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
+		} else if (!g_file_test(shim_dst, G_FILE_TEST_EXISTS)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_BROKEN_SYSTEM,
-				    "Secure boot is enabled, but shim isn't installed to "
-				    "%s",
-				    shim_app);
+				    FWUPD_ERROR_NOT_FOUND,
+				    "shim is required but was not found: %s",
+				    shim_dst);
 			return FALSE;
 		}
-	}
 
-	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path(pstore, esp_path, "fwupd", error);
-	if (target_app == NULL)
-		return FALSE;
-	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {
-		if (!fu_uefi_esp_target_copy(source_app, esp, target_app, error))
+		/* shim chainloads fwupd */
+		dp_buf = fu_uefi_capsule_device_build_dp_buf(esp, shim_dst, error);
+		if (dp_buf == NULL)
+			return FALSE;
+		if (!fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf), error))
+			return FALSE;
+		fu_efi_load_option_set_metadata(loadopt,
+						FU_EFI_LOAD_OPTION_METADATA_PATH,
+						app_basename);
+	} else {
+		g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
+
+		/* fwupd is loaded directly */
+		dp_buf = fu_uefi_capsule_device_build_dp_buf(esp, app_dst, error);
+		if (dp_buf == NULL)
+			return FALSE;
+		if (!fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf), error))
 			return FALSE;
 	}
 
-	/* no shim, so use this directly */
-	if (use_fwup_path)
-		filepath = target_app;
-
-	/* add the fwupdx64.efi ESP path as the shim loadopt data */
-	if (!use_fwup_path) {
-		g_autofree gchar *fwup_fs_basename = g_path_get_basename(target_app);
-		fu_efi_load_option_set_metadata(loadopt,
-						FU_EFI_LOAD_OPTION_METADATA_PATH,
-						fwup_fs_basename);
-	}
-
-	/* add DEVICE_PATH */
-	dp_buf = fu_uefi_capsule_device_build_dp_buf(esp, filepath, error);
-	if (dp_buf == NULL)
-		return FALSE;
-	if (!fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf), error))
-		return FALSE;
-	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
-
 	/* save as BootNext */
-	return fu_uefi_bootmgr_setup_bootnext_with_loadopt(efivars, loadopt, flags, error);
+	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
+	return fu_uefi_bootmgr_setup_bootnext_with_loadopt(capsule_device, loadopt, error);
 }
