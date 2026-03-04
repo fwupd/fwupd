@@ -15,7 +15,7 @@ G_DECLARE_FINAL_TYPE(FuElantpHidHapticDevice,
 		     fu_elantp_hid_haptic_device,
 		     FU,
 		     ELANTP_HID_HAPTIC_DEVICE,
-		     FuUdevDevice)
+		     FuDevice)
 
 FuElantpHidHapticDevice *
 fu_elantp_hid_haptic_device_new(FuDevice *proxy);

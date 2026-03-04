@@ -171,7 +171,8 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 				      error))
 		return FALSE;
 
-	if (self->ic_type != 0x12 && self->ic_type != 0x13)
+	if (self->ic_type != FU_ETP_IC_NUM12 && self->ic_type != FU_ETP_IC_NUM13 &&
+	    self->ic_type != FU_ETP_IC_NUM14 && self->ic_type != FU_ETP_IC_NUM15)
 		return TRUE;
 
 	if (self->iap_ver <= 4) {
