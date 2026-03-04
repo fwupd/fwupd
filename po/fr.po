@@ -4,7 +4,7 @@
 #
 # Translators:
 # Claude Paroz <claude@2xlibre.net>, 2021
-# Corentin Noël <tintou@noel.tf>, 2020
+# Corentin Noël <tintou@noel.tf>, 2020, 2026.
 # Franck <franck.routier@gmail.com>, 2015
 # Julien Humbert <julroy67@gmail.com>, 2020-2021
 # Léane GRASSER, 2025
@@ -18,15 +18,15 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-02 14:07+0000\n"
-"Last-Translator: Gael <lvfs.weblate.org@umessage.me>\n"
+"PO-Revision-Date: 2026-03-04 18:09+0000\n"
+"Last-Translator: Corentin Noël <tintou@noel.tf>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/fwupd/fwupd/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 5.16.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (version stable)"
@@ -418,9 +418,8 @@ msgid "Do not include timestamp prefix"
 msgstr "Ne pas inclure de préfixe d'horodatage"
 
 #. TRANSLATORS: turn on all debugging
-#, fuzzy
 msgid "Do not include log domain prefix"
-msgstr "Ne pas inclure de préfixe de domaine de journal"
+msgstr "Ne pas inclure de préfixe de domaine dans le journal"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information for a particular domain"
