@@ -378,6 +378,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_forcetable = NULL;
 	g_autoptr(GError) error_mcu = NULL;
+	const gchar *name;
 
 	/* get pattern */
 	if (!fu_elantp_hid_device_read_cmd(self,
@@ -528,7 +529,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* fix an unsuitable i²c name, e.g. `VEN 04F3:00 04F3:3XXX` or `0672:00 04F3:3187` */
-	if (g_strstr_len(fu_device_get_name(device), -1, ":00 ") != NULL)
+	name = fu_device_get_name(device);
+	if (name != NULL && g_strstr_len(name, -1, ":00 ") != NULL)
 		fu_device_set_name(device, "Touchpad");
 
 	/* success */
