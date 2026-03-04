@@ -290,6 +290,7 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version_bl = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_forcetable = NULL;
+	const gchar *name;
 
 	proxy = FU_ELANTP_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
 	if (proxy == NULL)
@@ -422,7 +423,8 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* fix an unsuitable i²c name, e.g. `VEN 04F3:00 04F3:3XXX` or `0672:00 04F3:3187` */
-	if (g_strstr_len(fu_device_get_name(device), -1, ":00 ") != NULL)
+	name = fu_device_get_name(device);
+	if (name != NULL && g_strstr_len(name, -1, ":00 ") != NULL)
 		fu_device_set_name(device, "MCU");
 
 	/* success */
