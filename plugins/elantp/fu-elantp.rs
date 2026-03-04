@@ -13,6 +13,23 @@ struct FuStructElantpHapticFirmwareHdr {
     magic: [u8; 4] == 0xFF40A25B,
 }
 
+#[repr(u8)]
+enum FuEtpRptid {
+    TpFeature = 0x0d,
+    TpIap = 0x0b,
+    McuFeature = 0x70,
+    McuIap = 0x72,
+}
+
+enum FuEtpIc {
+    Num12 = 0x12,
+    Num13 = 0x13,
+    Num14 = 0x14,
+    Num15 = 0x15,
+    Num16 = 0x16,
+}
+
+#[repr(u16le)]
 enum FuEtpCmd {
     I2cEepromSettingInitial = 0x0000,
     GetHidDescriptor = 0x0001,
@@ -26,6 +43,7 @@ enum FuEtpCmd {
     I2cIapVersion_2 = 0x0110,
     I2cIapVersion = 0x0111,
     I2cIapType = 0x0304,
+    I2cGetFeatureAddr = 0x0305,
     I2cFwPw = 0x030e,
     I2cFwChecksum = 0x030f,
     I2cIapCtrl = 0x0310,
@@ -33,7 +51,7 @@ enum FuEtpCmd {
     I2cIapReset = 0x0314,
     I2cIapChecksum = 0x0315,
     I2cSetEepromCtrl = 0x0321,
-    I2cEepromSetting = 0x0322,
+    I2cTpSetting = 0x0322,
     ForceAddr = 0x03ad,
     I2cEepromWriteChecksum = 0x048B,
     I2cHapticRestart = 0x0601,
@@ -46,4 +64,28 @@ enum FuEtpCmd {
     I2cGetEepromIapVersion = 0x0711,
     I2cEepromLongTransEnable = 0x4607,
     I2cEepromWriteInformation = 0x4600,
+}
+
+#[derive(New)]
+#[repr(C, packed)]
+struct FuStructElantpReadCmdReq {
+    report_id: FuEtpRptid,
+    cmd: FuEtpCmd,
+    reg: u16le,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructElantpReadCmdRes {
+    report_id: FuEtpRptid,
+    _unknown: u16le,
+    value: u16le,
+}
+
+#[derive(New)]
+#[repr(C, packed)]
+struct FuStructElantpWriteCmdReq {
+    report_id: FuEtpRptid,
+    reg: u16le,
+    cmd: FuEtpCmd,
 }

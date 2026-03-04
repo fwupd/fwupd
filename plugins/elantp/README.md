@@ -35,6 +35,10 @@ These devices also use custom GUID values for the IC configuration, e.g.
 
 * `ELANTP\ICTYPE_09&MOD_1234`
 
+ Additionally another instance ID is added which corresponds to the IC type, module ID and part:
+
+* `ELANTP\ICTYPE_09&MOD_1234&PART_MCU`
+
  Additionally another instance ID is added which corresponds to the IC Type & module ID and Driver in order to distinguish HID/ABS devices:
 
 * `ELANTP\ICTYPE_09&MOD_1234&DRIVER_HID` -> HID Device
@@ -73,6 +77,12 @@ Since: 1.4.6
 The IAP password.
 
 Since: 1.4.6
+
+### Flags=can-query-haptic-function
+
+The IC supports querying the haptic functionality.
+
+Since: 2.1.1
 
 ## External Interface Access
 
