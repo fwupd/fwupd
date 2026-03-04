@@ -49,34 +49,26 @@ fu_elantp_haptic_firmware_parse(FuFirmware *firmware,
 				GError **error)
 {
 	FuElantpHapticFirmware *self = FU_ELANTP_HAPTIC_FIRMWARE(firmware);
-	guint8 v_s = 0;
-	guint8 v_d = 0;
-	guint8 v_m = 0;
-	guint8 v_y = 0;
-	guint8 tmp = 0;
 	g_autofree gchar *version_str = NULL;
+	g_autoptr(FuStructElantpHapticFirmwareHdr) st = NULL;
 
-	if (!fu_input_stream_read_u8(stream, 0x4, &tmp, error))
+	st = fu_struct_elantp_haptic_firmware_hdr_parse_stream(stream, 0x0, error);
+	if (st == NULL)
 		return FALSE;
-	v_m = tmp & 0xF;
-	v_s = (tmp & 0xF0) >> 4;
-	if (!fu_input_stream_read_u8(stream, 0x5, &v_d, error))
-		return FALSE;
-	if (!fu_input_stream_read_u8(stream, 0x6, &v_y, error))
-		return FALSE;
-	if (v_y == 0xFF || v_d == 0xFF || v_m == 0xF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "bad firmware version %02d%02d%02d%02d",
-			    v_y,
-			    v_m,
-			    v_d,
-			    v_s);
+	if (fu_struct_elantp_haptic_firmware_hdr_get_ver_y(st) == 0xFF ||
+	    fu_struct_elantp_haptic_firmware_hdr_get_ver_d(st) == 0xFF ||
+	    fu_struct_elantp_haptic_firmware_hdr_get_ver_sm(st) == 0xFF) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "bad firmware version");
 		return FALSE;
 	}
-
-	version_str = g_strdup_printf("%02d%02d%02d%02d", v_y, v_m, v_d, v_s);
+	version_str = g_strdup_printf("%02d%02d%02d%02d",
+				      fu_struct_elantp_haptic_firmware_hdr_get_ver_y(st),
+				      fu_struct_elantp_haptic_firmware_hdr_get_ver_sm(st) & 0xF,
+				      fu_struct_elantp_haptic_firmware_hdr_get_ver_d(st),
+				      fu_struct_elantp_haptic_firmware_hdr_get_ver_sm(st) >> 4);
 	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
 
 	/* success */

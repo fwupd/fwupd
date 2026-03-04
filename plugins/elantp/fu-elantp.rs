@@ -7,10 +7,13 @@ struct FuStructElantpFirmwareHdr {
     magic: [u8; 6] == 0xAA55CC33FFFF,
 }
 
-#[derive(ValidateStream, Default)]
+#[derive(ValidateStream, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructElantpHapticFirmwareHdr {
     magic: [u8; 4] == 0xFF40A25B,
+    ver_sm: u8,
+    ver_d: u8,
+    ver_y: u8,
 }
 
 #[repr(u8)]
