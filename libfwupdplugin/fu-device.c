@@ -6447,12 +6447,6 @@ fu_device_setup(FuDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* skip */
-	if (fu_device_has_private_flag_quark(self, quarks[QUARK_IS_FAKE])) {
-		fu_device_convert_instance_ids(self);
-		return TRUE;
-	}
-
 	/* should have already been called */
 	if (!fu_device_probe(self, error))
 		return FALSE;

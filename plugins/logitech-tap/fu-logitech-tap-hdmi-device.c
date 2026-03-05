@@ -493,6 +493,10 @@ fu_logitech_tap_hdmi_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->setup(device, error))
 		return FALSE;
 
+	/* self tests */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	/* only interested in video capture device */
 	if ((fu_v4l_device_get_caps(FU_V4L_DEVICE(self)) & FU_V4L_CAP_VIDEO_CAPTURE) == 0) {
 		g_autofree gchar *caps =
