@@ -10,6 +10,14 @@ GType = FuElantpHidDevice
 Plugin = elantp
 GType = FuElantpHidDevice
 
+[HIDRAW\VEN_04F3&DEV_323B]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+[HIDRAW\VEN_04F3&DEV_3377]
+Plugin = elantp
+GType = FuElantpHidDevice
+
 # ThinkPad X1 Carbon Gen 9
 [6c87726f-b545-549e-840a-189422ea21d0]
 Flags = elantp-recovery
