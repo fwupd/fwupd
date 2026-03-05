@@ -6,6 +6,7 @@ plugin_quirks += files('pixart-tp.quirk')
 plugin_builtin_pixart_tp = static_library('fu_plugin_pixart_tp',
   rustgen.process('fu-pixart-tp.rs'),
   sources: [
+    'fu-pixart-tp-plp239-device.c',
     'fu-pixart-tp-haptic-device.c',
     'fu-pixart-tp-device.c',
     'fu-pixart-tp-section.c',
@@ -19,7 +20,11 @@ plugin_builtin_pixart_tp = static_library('fu_plugin_pixart_tp',
 )
 plugin_builtins += plugin_builtin_pixart_tp
 
-device_tests += files('tests/pixart-tp.json')
+device_tests += files(
+  'tests/pixart-tp.json',
+  'tests/pixart-tp-plp239.json',
+  'tests/pixart-tp-pjp274.json',
+)
 
 if get_option('tests')
   install_data(
