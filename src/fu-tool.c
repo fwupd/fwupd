@@ -6223,6 +6223,10 @@ main(int argc, char *argv[])
 		self->no_reboot_check = TRUE;
 		self->no_safety_check = TRUE;
 		self->no_device_prompt = TRUE;
+		fu_engine_request_set_feature_flags(
+		    self->request,
+		    FWUPD_FEATURE_FLAG_SWITCH_BRANCH | FWUPD_FEATURE_FLAG_FDE_WARNING |
+			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
 	} else {
 		self->interactive = TRUE;
 		/* set our implemented feature set */
