@@ -8,20 +8,21 @@
 # Marek Černocký <marek@manet.cz>, 2016,2018
 # Pavel Borecki <pavel.borecki@gmail.com>, 2020-2023,2025
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Marián Kyral <mkyral@email.cz>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 09:58+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-04 18:09+0000\n"
+"Last-Translator: Marián Kyral <mkyral@email.cz>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -139,11 +140,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Ke změně nastaveného vzdáleného zdroje, který se používá pro aktualizace firmwarů, je vyžadováno ověření se"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Vymazat nastavený vzdálený stroj"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Pro vymazání metadat ze vzdáleného stroje je vyžadováno ověření"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -325,13 +326,13 @@ msgstr "Není zadána žádné akce!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Vložte prosím číslo od 0 do %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Vložte prosím buď %s nebo %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -433,15 +434,15 @@ msgstr "Zobrazit předvolby ladění"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
+msgstr[0] "%u zařízení bylo aktualizováno a vyžaduje restart."
+msgstr[1] "%u zařízení byla aktualizována a vyžadují restart."
+msgstr[2] "%u zařízení byla aktualizována a vyžadují restart."
+msgstr[3] "%u zařízení bylo aktualizováno a vyžadují restart."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Pro dokončení aktualizace je nutný restart."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -674,7 +675,7 @@ msgstr "Zamezení instalace starší verze na procesoru"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Platform secure boot"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -718,7 +719,7 @@ msgstr "UEFI db"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -857,7 +858,7 @@ msgstr "AMD zamezení instalace starší verze na procesoru"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "AMD - Platforma zabezpečeného spuštění"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -1012,7 +1013,7 @@ msgstr "Zamezení instalace starší verze brání přechodu na starší verzi s
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Platforma zabezpečeného spuštění zabrání zavedení nepodepsaného programu během startu zařízení."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1036,7 +1037,7 @@ msgstr "UEFI db obsahuje seznam platných certifikátů, které je možné použ
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart je bezpečnostní vlastnost firmware, která chrání BIOS před neoprávněnými zásahy."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1077,7 +1078,7 @@ msgstr "Vyberte zařízení"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Zařízení bez dostupných aktualizací firmwaru:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1114,16 +1115,16 @@ msgstr "Čtení z %s…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s nelze momentálně aktualizovat:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Není co dělat"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Zařízení s aktualizacemi firmware které vyžadují akci uživatele:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1139,7 +1140,7 @@ msgstr "Vzdálený zdroj úspěšně změněn"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Vzdálený stroj úspěšně vyčištěn"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1147,7 +1148,7 @@ msgstr "Vzdálený zdroj úspěšně zakázán"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Smazat nyní nepoužívané vyrovnávací soubory na vzdáleném zařízení?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1199,7 +1200,7 @@ msgstr "Zapisování souboru:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Metadata jsou již aktuální"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -1635,7 +1636,7 @@ msgstr "Přepnout větev firmware na zařízení"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr ""
+msgstr "IDENTIFIKÁTOR-ZAŘÍZENÍ"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1647,7 +1648,7 @@ msgstr "Smazat veškerou historii aktualizací firmware"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[NASTAVENÍ1] [NASTAVENÍ2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1772,7 +1773,7 @@ msgstr "IDENTIFIKÁTOR-VZDÁLENÉHO-ZDROJE"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Vyčistí zadaný vzdálený stroj"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1804,35 +1805,35 @@ msgstr "Porovná dvě verze ohledně shodnosti"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "WORD"
-msgstr ""
+msgstr "SLOVO"
 
 #. TRANSLATORS: command description
 msgid "Finds firmware releases from the metadata"
-msgstr ""
+msgstr "V metadatech vyhledá vydání firmware"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "VLÍDNÝ NÁZEV-SOUBORU"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Spočítá kontrolní součet souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "KONTROLNÍ-SOUČET NÁZEV-SOUBORU"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Nalezne algoritmus který odpovídá kontrolnímu součtu souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Zpracuje systémový záznam PCR událostí"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2044,7 +2045,7 @@ msgstr "Nejsou k dispozici žádná vydání"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No matching releases for search token"
-msgstr ""
+msgstr "Bez odpovídajících vydání pro hledaný token"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
@@ -3014,11 +3015,11 @@ msgstr "Zařízení je nižší priority, než ekvivalentní zařízení"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "Systém byl podepsán nedůvěryhodným klíčem"
 
 #. TRANSLATORS: firmware is locked from the BIOS
 msgid "Device firmware has been locked"
-msgstr ""
+msgstr "Firmware zařízení bylo uzamčeno"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3577,7 +3578,7 @@ msgstr "UEFI úložiště certifikátů je nyní aktuální"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart je zapnut"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
