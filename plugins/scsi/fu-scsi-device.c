@@ -164,14 +164,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
-	/* fake something as we cannot use ioctls */
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
-		fu_device_add_instance_str(device, "VEN", "fwupd");
-		fu_device_add_instance_str(device, "DEV", "DEVICE");
-		if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
-			return FALSE;
-	}
-
 	/* success */
 	return TRUE;
 }
@@ -239,7 +231,15 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	/* include these when generating the emulation event */
 	fu_ioctl_add_key_as_u16(ioctl, "Request", SG_IO);
 	fu_ioctl_add_key_as_u8(ioctl, "DxferDirection", io_hdr.dxfer_direction);
-	fu_ioctl_add_const_buffer(ioctl, NULL, buf, bufsz, fu_scsi_device_ioctl_buf_cb);
+	if (io_hdr.dxfer_direction == SG_DXFER_TO_DEV) {
+		fu_ioctl_add_const_buffer(ioctl, NULL, buf, bufsz, fu_scsi_device_ioctl_buf_cb);
+	} else {
+		fu_ioctl_add_mutable_buffer(ioctl,
+					    NULL,
+					    (guint8 *)buf,
+					    bufsz,
+					    fu_scsi_device_ioctl_buf_cb);
+	}
 	fu_ioctl_add_const_buffer(ioctl, "Cdb", cdb, cdbsz, fu_scsi_device_ioctl_cdb_cb);
 	fu_ioctl_add_mutable_buffer(ioctl,
 				    "Sense",
