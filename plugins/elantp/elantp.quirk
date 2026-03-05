@@ -1,3 +1,6 @@
+[HIDRAW\VEN_04F3]
+Flags = enforce-requires
+
 # i2c-hid
 [HIDRAW\VEN_04F3&DEV_0400]
 Plugin = elantp
