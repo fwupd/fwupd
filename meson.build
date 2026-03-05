@@ -242,7 +242,7 @@ else
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
   if host_machine.system() == 'android'
-    datadir = '/vendor/usr/share'
+    datadir = join_paths(prefix, 'usr/share')
     localstatedir = '/data/vendor/fwupd'
   endif
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
