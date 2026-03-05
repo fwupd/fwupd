@@ -17,7 +17,7 @@ fu_elantp_firmware_xml_func(void)
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "elantp.builder.xml", NULL);
 	ret = fu_firmware_roundtrip_from_filename(filename,
-						  "de53a29a438ff297202055151381433b86a2f64d",
+						  "27056fc55254b1fda799b22b6339e62d2514fb6f",
 						  FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 						  &error);
 	g_assert_no_error(error);

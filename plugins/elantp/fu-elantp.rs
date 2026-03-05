@@ -1,10 +1,21 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ValidateStream, Default)]
+#[derive(ValidateStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructElantpFirmwareFtr {
+    magic: [u8; 6] == 0xAA55CC33FFFF,
+}
+
+#[derive(ParseStream, New)]
 #[repr(C, packed)]
 struct FuStructElantpFirmwareHdr {
-    magic: [u8; 6] == 0xAA55CC33FFFF,
+    ic_type: u16le,
+    _unknown: u16le,
+    iap_ver: u16le,
+    iap_start: u16le, // in words, not bytes
+    _unknown: u16le,
+    iap_forcetable: u16le,
 }
 
 #[derive(ValidateStream, ParseStream, Default)]
