@@ -14,7 +14,7 @@ int
 LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 {
 	g_autoptr(GObject) object = g_object_new(@GTYPE@, NULL);
-	g_autoptr(GBytes) blob = g_bytes_new(data, size);
+	g_autoptr(GBytes) blob = g_bytes_new_static(data, size);
 
 	(void)g_setenv("G_DEBUG", "fatal-criticals", TRUE);
 	(void)g_setenv("FWUPD_FUZZER_RUNNING", "1", TRUE);
