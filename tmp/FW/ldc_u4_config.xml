@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config_table>
+
+	<!--Usage information table for the dock MCU external flash
+		ver : 			Usage information version in x1.x2.x3 format. Increase the table_ver when table structure need to change .
+                        x1 = major version
+                        x2 = minor version
+                        x3 = patch number
+                        (all in decimal)
+		table_dsa :  	Algorithm used for signed this usage information table.
+                        0 = Unsigned
+						1 = RSA-2048
+                        2 = RSA-3072
+                        16= ECC-256
+                        17= ECC-384
+		flash_id_num :  Number of flash id in the usage information table.
+                        Max device count should be 254.
+		dock_vid : 		The USB VID that need to match with MCU HID interface.
+		dock_pid	:	The USB PID that need to match with MCU HID interface.
+		dock_fw_ver :   Composite fw version of generated image in x1.x2.x3 format. Every new composite dock image must have incremental composite_fw_version.
+                        x1 = major version
+                        x2 = minor version
+                        x3 = patch number
+                        (all in decimal)
+		dummy_label :   The dummy_label is used to differentiate the value that should be assigned to unused memory locations. Depending on the value of the dummy_label, the unused memory will be filled with either 0x00 or 0xFF.
+						0 = 0x00
+						1 = 0xFF
+		iot_update_flag:Flag to indicator the external flash is update by IoT Module.
+						0 = Default
+						1 = IoT module update content.DMC will check this flag to know IoT FW upgrade happened and start FW upgrade phase 2 check.
+    -->
+	<usage_info
+		ver="0.0.1"
+		table_dsa="1"
+        flash_id_num="7"
+		dock_vid="0x17EF"
+        dock_pid="0x111E"
+		dock_fw_ver="1.0.12"
+		dummy_label="1"
+		iot_update_flag="0"
+		>
+
+		<flash_id_list>
+			<!-- flash_id node contains the firmware information related to specific device
+                id :        		Flash ID of usage information table
+                name :      		Correspond usage information name of this flash_id in ASCII format.
+				region_size :		The flash_id region total size
+				data_type :			The content type in this usage information of flash_id
+									0 = User define
+									1 = FW image
+									2 = OSD picture
+				data_size :			The flash_id content's size
+				data_dig_sig_algo :	Algorithm used for signed this flash_id's usage information.
+									0 = Unsigned
+									1 = RSA-2048
+									2 = RSA-3072
+									16= ECC-256
+									17= ECC-384
+				file_path : 		Data content file path for the flasi_id.
+            -->
+
+
+			<!-- MCU -->
+			<flash_id
+                id="1"
+				name="DMC - M2L31SIDAE"
+				region_size="524288"
+				data_type="1"
+				data_size="466944"
+				version="00.00.06.25"
+				file_path="ldc-u4_mcu_app_dual_v0637.bin"
+				dummy_label="1">
+            </flash_id>
+
+			<!-- MST Hub -->
+			<flash_id
+                id="2"
+				name="DP - VMM8432S"
+				region_size="1048576"
+				data_type="1"
+				data_size="524288"
+				version="00.09.03.09"
+				file_path="Carrera_fw_usb4t4_Ver9_03_009.bin"
+				dummy_label="1">
+            </flash_id>
+
+			<!-- PD -->
+			<flash_id
+                id="3"
+				name="PD - VL109SQ6"
+				region_size="524288"
+				data_type="1"
+				data_size="65536"
+				version="a2.94.25.16"
+				file_path="VL109S_App7_0094_0016_A2_94_25_16-20250910_Wistron.bin"
+				dummy_label="1">
+            </flash_id>
+
+			<!-- USB3 Hub -->
+			<flash_id
+                id="4"
+				name="USB3 - VL822Q8"
+				region_size="524288"
+				data_type="1"
+				data_size="46424"
+				version="00.00.50.83"
+				file_path="VL822_Q7_5083_Wistron_Lenovo USB4 dock_20250829.MCUimage.bin"
+				dummy_label="1">
+            </flash_id>
+
+			<!-- USB4 Hub -->
+			<flash_id
+                id="5"
+				name="USB4 - VL832"
+				region_size="1048576"
+				data_type="1"
+				data_size="121488"
+				version="00.00.50.c3"
+				file_path="VL832_50C3_Sign_Wistron_Lenovo USB4 dock_20250910.MCUimage.bin"
+				dummy_label="1">
+            </flash_id>
+
+			<!-- OSD Picture -->
+			<flash_id
+                id="6"
+				name="OSD Picture"
+				region_size="163840"
+				data_type="2"
+				data_size="0"
+				version="0"
+				file_path="0"
+				dummy_label="1">
+            </flash_id>
+
+			<!-- Debug Message -->
+			<flash_id
+                id="7"
+				name="Debug Message"
+				region_size="4096"
+				data_type="0"
+				data_size="0"
+				version="0"
+				file_path="0"
+				dummy_label="1">
+            </flash_id>
+
+		</flash_id_list>
+    </usage_info>
+</config_table>
