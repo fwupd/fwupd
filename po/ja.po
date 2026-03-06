@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-05 08:14+0000\n"
+"PO-Revision-Date: 2026-03-06 16:09+0000\n"
 "Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
 "Language: ja\n"
@@ -143,11 +143,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "ファームウェア更新用の遠隔構成を変更するには認証が必要です"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "設定済みリモートのクリーンアップ"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "リモートからメタデータを削除するには認証が必要です"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -329,7 +329,7 @@ msgstr "アクションが指定されていません!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "0 から %u までの数字を入力してください:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
