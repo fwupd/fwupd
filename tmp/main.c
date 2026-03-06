@@ -1,38 +1,36 @@
 #include <errno.h>
+#include <glib.h>
 #include <libusb-1.0/libusb.h>
-#include <mcheck.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <threads.h>
-#include <unistd.h>
 
-static const char *Path_Of_Usage_Information_Table = "FW/ldc_u4_usage_information_table.bin";
+static const gchar *Path_Of_Usage_Information_Table = "FW/ldc_u4_usage_information_table.bin";
 
-static const uint8_t UsageTableFlashID = 0xff;
-static const int UsageTableSize = 4096;
+static const guint8 UsageTableFlashID = 0xff;
+static const gint UsageTableSize = 4096;
 
 typedef enum { Unsigned, RSA2048, RSA3072, ECC256, ECC384 } DSAType;
 
-uint8_t CurrentFwVerForGUI[8][4];
+guint8 CurrentFwVerForGUI[8][4];
 
-static const int FlashIdUsageLength = 32;
+static const gint FlashIdUsageLength = 32;
 struct FlashIdUsageInformation {
-	uint8_t PhysicalAddress[4];
-	uint8_t MaxSize[4];
-	uint8_t CurrentFwVersion[4];
-	uint8_t TargetFwVersion[4];
-	uint8_t TargetFwFileSize[4];
-	uint8_t TargetFwFileCrc32[4];
-	uint8_t ComponentID;
-	bool Flag;
+	guint8 PhysicalAddress[4];
+	guint8 MaxSize[4];
+	guint8 CurrentFwVersion[4];
+	guint8 TargetFwVersion[4];
+	guint8 TargetFwFileSize[4];
+	guint8 TargetFwFileCrc32[4];
+	guint8 ComponentID;
+	gboolean Flag;
 };
 
-static const uint16_t DockVid = 0x17ef;
-static const uint16_t DockPid = 0x111e;
+static const guint16 DockVid = 0x17ef;
+static const guint16 DockPid = 0x111e;
 
 enum Target_Status {
 	CommandDefault = 0x00,
@@ -53,22 +51,22 @@ enum ClassID {
 };
 
 /*External Flash ID*/
-static const uint8_t Set_Flash_ID_Usage_Information = 0x03;
-static const uint8_t Set_Flash_Memory_Access = 0x04;
-static const uint8_t Get_Support_List = 0x80;
-static const uint8_t Get_Flash_ID_List = 0x81;
-static const uint8_t Get_Flash_Attribute = 0x82;
-static const uint8_t Get_Flash_ID_Usage_Information = 0x83;
-static const uint8_t Get_Flash_Memory_Access = 0x84;
-static const uint8_t Get_Flash_Memory_Self_Verify = 0x85;
+static const guint8 Set_Flash_ID_Usage_Information = 0x03;
+static const guint8 Set_Flash_Memory_Access = 0x04;
+static const guint8 Get_Support_List = 0x80;
+static const guint8 Get_Flash_ID_List = 0x81;
+static const guint8 Get_Flash_Attribute = 0x82;
+static const guint8 Get_Flash_ID_Usage_Information = 0x83;
+static const guint8 Get_Flash_Memory_Access = 0x84;
+static const guint8 Get_Flash_Memory_Self_Verify = 0x85;
 typedef enum { Common, ApplicationData, ImageData, FirmwareFile } ExternalFlashIdPurpose;
 
 struct FlashIdAttribute {
-	int FLashId;
+	gint FLashId;
 	ExternalFlashIdPurpose Purpose;
-	int StorageSize;
-	int EraseSize;
-	int ProgramSize;
+	gint StorageSize;
+	gint EraseSize;
+	gint ProgramSize;
 };
 
 struct FlashMemoryAccessCMD {
@@ -94,62 +92,62 @@ struct FlashMemorySelfVerify {
 };
 
 /*Dock Command ID*/
-static const uint8_t Set_Dock_Port_Ctrl = 0x03;
-static const uint8_t Set_Dock_Fan_Ctrl = 0x05;
-static const uint8_t Set_Dock_IoT_Configure = 0x06;
-static const uint8_t Set_Dock_USB_Container_ID = 0x07;
-static const uint8_t Set_Dock_Lan_Mac_Address = 0x08;
-static const uint8_t Set_Dock_Aux_Log = 0x09;
-static const uint8_t Set_Dock_Firmware_Upgrade_Ctrl = 0x0A;
-static const uint8_t Get_CMD_Support_List = 0x80;
-static const uint8_t Get_Dock_Attribute = 0x81;
-static const uint8_t Get_Dock_Port_Status = 0x82;
-static const uint8_t Get_Dock_Port_Ctrl = 0x83;
-static const uint8_t Get_Dock_Port_Connected_Device_Information = 0x84;
-static const uint8_t Get_Dock_Dock_Fan_Ctrl = 0x85;
-static const uint8_t Get_Dock_IoT_Configure = 0x86;
-static const uint8_t Get_Dock_USB_Container_ID = 0x87;
-static const uint8_t Get_Dock_Lan_Mac_Address = 0x88;
-static const uint8_t Get_Dock_Aux_Log = 0x89;
-static const uint8_t Get_Dock_Firmware_Upgrade_Ctrl = 0x8A;
+static const guint8 Set_Dock_Port_Ctrl = 0x03;
+static const guint8 Set_Dock_Fan_Ctrl = 0x05;
+static const guint8 Set_Dock_IoT_Configure = 0x06;
+static const guint8 Set_Dock_USB_Container_ID = 0x07;
+static const guint8 Set_Dock_Lan_Mac_Address = 0x08;
+static const guint8 Set_Dock_Aux_Log = 0x09;
+static const guint8 Set_Dock_Firmware_Upgrade_Ctrl = 0x0A;
+static const guint8 Get_CMD_Support_List = 0x80;
+static const guint8 Get_Dock_Attribute = 0x81;
+static const guint8 Get_Dock_Port_Status = 0x82;
+static const guint8 Get_Dock_Port_Ctrl = 0x83;
+static const guint8 Get_Dock_Port_Connected_Device_Information = 0x84;
+static const guint8 Get_Dock_Dock_Fan_Ctrl = 0x85;
+static const guint8 Get_Dock_IoT_Configure = 0x86;
+static const guint8 Get_Dock_USB_Container_ID = 0x87;
+static const guint8 Get_Dock_Lan_Mac_Address = 0x88;
+static const guint8 Get_Dock_Aux_Log = 0x89;
+static const guint8 Get_Dock_Firmware_Upgrade_Ctrl = 0x8A;
 
-static const int ReportIdOffset = 1;
-static const int Target_Status_Defult = 0;
-static const int Interface1Length = 64;
-static const int Interface2Length = 272;
+static const gint ReportIdOffset = 1;
+static const gint Target_Status_Defult = 0;
+static const gint Interface1Length = 64;
+static const gint Interface2Length = 272;
 
 // FlashSize
-static const int UsageInfo = 4096;
-static const int SignatureSize = 256;
-static const int EraseSizeByteLength = 2;
-static const int ProgramSizeByteLength = 2;
-static const int AddressByteLength = 4;
-static const int StorageSizeByteLength = 4;
-static const int DfuFilePayLoadLength = 5;
+static const gint UsageInfo = 4096;
+static const gint SignatureSize = 256;
+static const gint EraseSizeByteLength = 2;
+static const gint ProgramSizeByteLength = 2;
+static const gint AddressByteLength = 4;
+static const gint StorageSizeByteLength = 4;
+static const gint DfuFilePayLoadLength = 5;
 
 // Flash Address
-static const int ImageStart = 0;
-static const int UsageInfoStart = 16773120;
+static const gint ImageStart = 0;
+static const gint UsageInfoStart = 16773120;
 
 // Device Information ID
-static const uint8_t Set_Hardware_Version = 0x02;
-static const uint8_t Set_Serial_Number = 0x03;
-static const uint8_t Set_Device_Mode = 0x04;
-static const uint8_t Set_Device_Edition = 0x06;
-static const uint8_t Set_Device_Name = 0x08;
-static const uint8_t Set_Device_Reset = 0x09;
-static const uint8_t Set_Device_UUID = 0x14;
-static const uint8_t Get_Command_Support_List = 0x80;
-static const uint8_t Get_Firmware_Version = 0x81;
-static const uint8_t Get_Hardware_Version = 0x82;
-static const uint8_t Get_Serial_Number = 0x83;
-static const uint8_t Get_Device_Mode = 0x84;
-static const uint8_t Get_Device_Edition = 0x86;
-static const uint8_t Get_Device_Name = 0x88;
-static const uint8_t Get_Device_UUID = 0x9;
+static const guint8 Set_Hardware_Version = 0x02;
+static const guint8 Set_Serial_Number = 0x03;
+static const guint8 Set_Device_Mode = 0x04;
+static const guint8 Set_Device_Edition = 0x06;
+static const guint8 Set_Device_Name = 0x08;
+static const guint8 Set_Device_Reset = 0x09;
+static const guint8 Set_Device_UUID = 0x14;
+static const guint8 Get_Command_Support_List = 0x80;
+static const guint8 Get_Firmware_Version = 0x81;
+static const guint8 Get_Hardware_Version = 0x82;
+static const guint8 Get_Serial_Number = 0x83;
+static const guint8 Get_Device_Mode = 0x84;
+static const guint8 Get_Device_Edition = 0x86;
+static const guint8 Get_Device_Name = 0x88;
+static const guint8 Get_Device_UUID = 0x9;
 
 libusb_context *ctx = NULL;
-volatile int device_connected = 1; // 1表示设备连接，0表示设备已断开
+volatile gint device_connected = 1; // 1表示设备连接，0表示设备已断开
 libusb_device_handle *devh = NULL;
 
 struct DockFwCtrl {
@@ -164,26 +162,26 @@ struct DockFwCtrl {
 };
 
 /*error code*/
-static const int SUCCESS = 0;
-static const int PARAM_ERROR = 1300;
-static const int REPORT_DATA_FAILED = 1027;
-static const int COMMAND_FALIURE = 1281;
-static const int COMMAND_TIMEOUT = 1282;
-static const int AP_TOOL_FAILED = 1;
-static const int COMMAND_OVER_RETRY_TIMES = 1283;
-static const int USAGE_INFORMATION_NOT_FOUND = 258;
-static const int USAGE_INFORMATION_FILE_ERROR = 259;
-static const int ARGUMENTS_SETTING_ERROR = 0x300;
-static const int USAGE_INFORMATION_CRC_FAILED = 266;
-static const int USAGE_INFORMATION_PAGE_FAILED = 1030;
-static const int XML_FILE_FORMAT_ERROR = 265;
-static const int COMPOSITE_IMAGE_FILE_NOT_FOUND = 260;
-static const int COMPOSITE_IMAGE_FILE_ERROR = 261;
-static const int UPDATE_USAGE_INFORMATION_PAGE_FAILED = 1030;
-static const int UPDATE_DOCK_FAILED = 0x400;
+static const gint SUCCESS = 0;
+static const gint PARAM_ERROR = 1300;
+static const gint REPORT_DATA_FAILED = 1027;
+static const gint COMMAND_FALIURE = 1281;
+static const gint COMMAND_TIMEOUT = 1282;
+static const gint AP_TOOL_FAILED = 1;
+static const gint COMMAND_OVER_RETRY_TIMES = 1283;
+static const gint USAGE_INFORMATION_NOT_FOUND = 258;
+static const gint USAGE_INFORMATION_FILE_ERROR = 259;
+static const gint ARGUMENTS_SETTING_ERROR = 0x300;
+static const gint USAGE_INFORMATION_CRC_FAILED = 266;
+static const gint USAGE_INFORMATION_PAGE_FAILED = 1030;
+static const gint XML_FILE_FORMAT_ERROR = 265;
+static const gint COMPOSITE_IMAGE_FILE_NOT_FOUND = 260;
+static const gint COMPOSITE_IMAGE_FILE_ERROR = 261;
+static const gint UPDATE_USAGE_INFORMATION_PAGE_FAILED = 1030;
+static const gint UPDATE_DOCK_FAILED = 0x400;
 
-static const int waitMcuBusyTime = 25000000; // 0.025sec
-static const int maxRetry = 1600;
+static const gint waitMcuBusyTime = 25000000; // 0.025sec
+static const gint maxRetry = 1600;
 
 struct timespec req = {0, waitMcuBusyTime};
 
@@ -196,7 +194,7 @@ typedef enum {
 	FWU_OTA_DEPLOYEEING = 3
 } FwUpdatgeResult;
 
-static const uint32_t crcTable[256] = {
+static const guint32 crcTable[256] = {
     0x00000000u, 0x77073096u, 0xee0e612cu, 0x990951bau, 0x076dc419u, 0x706af48fu, 0xe963a535u,
     0x9e6495a3u, 0x0edb8832u, 0x79dcb8a4u, 0xe0d5e91eu, 0x97d2d988u, 0x09b64c2bu, 0x7eb17cbdu,
     0xe7b82d07u, 0x90bf1d91u, 0x1db71064u, 0x6ab020f2u, 0xf3b97148u, 0x84be41deu, 0x1adad47du,
@@ -236,21 +234,21 @@ static const uint32_t crcTable[256] = {
     0xb40bbe37u, 0xc30c8ea1u, 0x5a05df1bu, 0x2d02ef8du};
 
 struct UsageInformation {
-	uint8_t Totalnumber;
-	uint8_t MajorVersion;
-	uint8_t MinorVersion;
+	guint8 Totalnumber;
+	guint8 MajorVersion;
+	guint8 MinorVersion;
 	DSAType Dsa;
-	uint8_t IoTUpdateFlag;
-	uint8_t CompositeFwVersion[4];
-	uint8_t DockPid[2];
-	uint8_t Crc32[4];
+	guint8 IoTUpdateFlag;
+	guint8 CompositeFwVersion[4];
+	guint8 DockPid[2];
+	guint8 Crc32[4];
 	struct FlashIdUsageInformation *FlashIdList;
 };
 
-int
-BytesToInt(uint8_t *data, int length)
+gint
+BytesToInt(guint8 *data, gint length)
 {
-	int size = 0;
+	gint size = 0;
 	if (length == 2) {
 		size = (data[1] << 8) + data[0];
 	} else if (length == 4) {
@@ -260,37 +258,38 @@ BytesToInt(uint8_t *data, int length)
 
 	return size;
 }
-uint8_t *
-IntToBytes(int size)
+guint8 *
+IntToBytes(gint size)
 {
-	static uint8_t res[4];
-	res[3] = (uint8_t)((size >> 24) & 0xff);
-	res[2] = (uint8_t)((size >> 16) & 0xff);
-	res[1] = (uint8_t)((size >> 8) & 0xff);
-	res[0] = (uint8_t)(size & 0xff);
+	static guint8 res[4];
+	res[3] = (guint8)((size >> 24) & 0xff);
+	res[2] = (guint8)((size >> 16) & 0xff);
+	res[1] = (guint8)((size >> 8) & 0xff);
+	res[0] = (guint8)(size & 0xff);
 
 	return res;
 }
-uint8_t *
-ToBytes(uint32_t size)
+guint8 *
+ToBytes(guint32 size)
 {
-	static uint8_t res[4];
-	res[3] = (uint8_t)((size >> 24) & 0xff);
-	res[2] = (uint8_t)((size >> 16) & 0xff);
-	res[1] = (uint8_t)((size >> 8) & 0xff);
-	res[0] = (uint8_t)(size & 0xff);
+	static guint8 res[4];
+	res[3] = (guint8)((size >> 24) & 0xff);
+	res[2] = (guint8)((size >> 16) & 0xff);
+	res[1] = (guint8)((size >> 8) & 0xff);
+	res[0] = (guint8)(size & 0xff);
 
 	return res;
 }
-uint32_t
-Compute(uint8_t *buffer, size_t bufferlength, int offset, int length)
+
+guint32
+Compute(guint8 *buffer, size_t bufferlength, gint offset, gint length)
 {
 	if (!((buffer != NULL) && (offset >= 0) && (length >= 0) &&
 	      (offset <= bufferlength - length))) {
 		return ARGUMENTS_SETTING_ERROR;
 	}
 
-	uint32_t crc32 = 0xffffffffU;
+	guint32 crc32 = 0xffffffffU;
 
 	while (--length >= 0) {
 		crc32 = crcTable[(crc32 ^ buffer[offset++]) & 0xFF] ^ (crc32 >> 8);
@@ -298,8 +297,9 @@ Compute(uint8_t *buffer, size_t bufferlength, int offset, int length)
 	crc32 ^= 0xffffffffU;
 	return crc32;
 }
-bool
-arraysEqual(uint8_t *array1, uint8_t *array2, size_t length)
+
+gboolean
+arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 {
 	for (size_t i = 0; i < length; i++) {
 		if (array1[i] != array2[i])
@@ -308,9 +308,9 @@ arraysEqual(uint8_t *array1, uint8_t *array2, size_t length)
 	return true;
 }
 
-static const char *Path_Of_Composite_Image = "FW/ldc_u4_composite_image.bin";
+static const gchar *Path_Of_Composite_Image = "FW/ldc_u4_composite_image.bin";
 
-int
+gint
 ReadCompositeImageFile(char **data)
 {
 	struct stat fileInfo;
@@ -333,27 +333,27 @@ ReadCompositeImageFile(char **data)
 		return COMPOSITE_IMAGE_FILE_NOT_FOUND;
 }
 
-uint8_t *
+guint8 *
 GetBytes(struct UsageInformation targetUsageInformationTable)
 {
-	uint8_t *table = (uint8_t *)calloc(UsageTableSize, sizeof(uint8_t));
+	guint8 *table = (guint8 *)calloc(UsageTableSize, sizeof(guint8));
 	// Header
 	table[0] = targetUsageInformationTable.Totalnumber;
 	table[1] = (targetUsageInformationTable.MajorVersion << 4) +
 		   (targetUsageInformationTable.MinorVersion & 0x0f);
-	table[2] = (uint8_t)targetUsageInformationTable.Dsa;
+	table[2] = (guint8)targetUsageInformationTable.Dsa;
 	table[3] = targetUsageInformationTable.IoTUpdateFlag;
-	for (int i = 0; i < 4; i++)
+	for (gint i = 0; i < 4; i++)
 		table[4 + i] = targetUsageInformationTable.CompositeFwVersion[i];
-	for (int i = 0; i < 2; i++)
+	for (gint i = 0; i < 2; i++)
 		table[8 + i] = targetUsageInformationTable.DockPid[i];
 	// Body
-	for (int i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
-		int flashId = i;
-		uint8_t flashIdData[FlashIdUsageLength];
-		for (int j = 0; j < FlashIdUsageLength; j++)
+	for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
+		gint flashId = i;
+		guint8 flashIdData[FlashIdUsageLength];
+		for (gint j = 0; j < FlashIdUsageLength; j++)
 			flashIdData[j] = 0;
-		for (int j = 0; j < 4; j++) {
+		for (gint j = 0; j < 4; j++) {
 			flashIdData[0 + j] =
 			    targetUsageInformationTable.FlashIdList[i].PhysicalAddress[j];
 			flashIdData[4 + j] = targetUsageInformationTable.FlashIdList[i].MaxSize[j];
@@ -367,27 +367,27 @@ GetBytes(struct UsageInformation targetUsageInformationTable)
 			    targetUsageInformationTable.FlashIdList[i].TargetFwFileCrc32[j];
 			flashIdData[24] = targetUsageInformationTable.FlashIdList[i].ComponentID;
 		}
-		for (int j = 0; j < FlashIdUsageLength; j++) {
-			int addr = (flashId * 32) + j;
+		for (gint j = 0; j < FlashIdUsageLength; j++) {
+			gint addr = (flashId * 32) + j;
 			table[addr] = flashIdData[j];
-			// printf("%02X ",table[addr]);
+			// g_print("%02X ",table[addr]);
 		}
 	}
 	// Crc32
-	uint32_t tableCrc = Compute(table, UsageTableSize, 0, 4092);
-	uint8_t *computecrc = ToBytes(tableCrc);
-	for (int i = 0; i < 4; i++) {
+	guint32 tableCrc = Compute(table, UsageTableSize, 0, 4092);
+	guint8 *computecrc = ToBytes(tableCrc);
+	for (gint i = 0; i < 4; i++) {
 		table[4092 + i] = computecrc[i];
-		// printf("CRC: %02X\n",computecrc[i]);
+		// g_print("CRC: %02X\n",computecrc[i]);
 	}
 
 	return table;
 }
 
 #if 0
-int
+gint
 init();
-int LIBUSB_CALL
+gint LIBUSB_CALL
 hotplug_callback(struct libusb_context *ctx,
 		 struct libusb_device *dev,
 		 libusb_hotplug_event event,
@@ -396,68 +396,68 @@ void *
 usb_event_thread(void *arg);
 struct FlashIdUsageInformation *
 check();
-int
-FWUpdate(bool forceUpdate, bool noUnplug);
-bool
+gint
+FWUpdate(gboolean forceUpdate, gboolean noUnplug);
+gboolean
 CheckDockReadyForEnterPhase2Update();
-int
+gint
 GetCompositeVersion(char *out, size_t outSize);
 #endif
 
-uint8_t *
-GetCompositeData(int addr, int size, char *data)
+guint8 *
+GetCompositeData(gint addr, gint size, char *data)
 {
-	uint8_t *temp = (uint8_t *)calloc(size, sizeof(uint8_t));
-	for (int i = 0; i < size; i++) {
-		temp[i] = (uint8_t)data[addr + i];
+	guint8 *temp = (guint8 *)calloc(size, sizeof(guint8));
+	for (gint i = 0; i < size; i++) {
+		temp[i] = (guint8)data[addr + i];
 	}
 	return temp;
 }
 
-bool
-CheckFwVerify(int flashId,
+gboolean
+CheckFwVerify(gint flashId,
 	      struct UsageInformation targetUsageInformationTable,
 	      char *compositeImageData)
 {
-	int maxSize = BytesToInt(targetUsageInformationTable.FlashIdList[flashId].MaxSize, 4);
-	int targetFwSize =
+	gint maxSize = BytesToInt(targetUsageInformationTable.FlashIdList[flashId].MaxSize, 4);
+	gint targetFwSize =
 	    BytesToInt(targetUsageInformationTable.FlashIdList[flashId].TargetFwFileSize, 4);
 	if (targetFwSize + SignatureSize > maxSize)
 		return false;
 
-	int startAddr =
+	gint startAddr =
 	    BytesToInt(targetUsageInformationTable.FlashIdList[flashId].PhysicalAddress, 4) +
 	    SignatureSize;
-	uint8_t *flashIdImageData = GetCompositeData(startAddr, targetFwSize, compositeImageData);
-	int a = BytesToInt(targetUsageInformationTable.FlashIdList[flashId].TargetFwFileCrc32, 4);
-	uint32_t b = Compute(flashIdImageData, targetFwSize, 0, targetFwSize);
+	guint8 *flashIdImageData = GetCompositeData(startAddr, targetFwSize, compositeImageData);
+	gint a = BytesToInt(targetUsageInformationTable.FlashIdList[flashId].TargetFwFileCrc32, 4);
+	guint32 b = Compute(flashIdImageData, targetFwSize, 0, targetFwSize);
 	free(flashIdImageData);
-	if ((uint32_t)a != b)
+	if ((guint32)a != b)
 		return false;
 
 	return true;
 }
 
 struct FlashIdAttribute
-GetFlashIdAttribute(uint8_t *data)
+GetFlashIdAttribute(guint8 *data)
 {
 	struct FlashIdAttribute fa;
 	fa.FLashId = data[0];
 	fa.Purpose = (ExternalFlashIdPurpose)data[1];
 
-	int count = 2;
-	uint8_t storageBuf[StorageSizeByteLength];
-	for (int i = 0; i < StorageSizeByteLength; i++)
+	gint count = 2;
+	guint8 storageBuf[StorageSizeByteLength];
+	for (gint i = 0; i < StorageSizeByteLength; i++)
 		storageBuf[i] = data[count++];
 	fa.StorageSize = BytesToInt(storageBuf, StorageSizeByteLength);
 
-	uint8_t eraseSizeBuf[EraseSizeByteLength];
-	for (int i = 0; i < EraseSizeByteLength; i++)
+	guint8 eraseSizeBuf[EraseSizeByteLength];
+	for (gint i = 0; i < EraseSizeByteLength; i++)
 		eraseSizeBuf[i] = data[count++];
 	fa.EraseSize = BytesToInt(eraseSizeBuf, EraseSizeByteLength);
 
-	uint8_t programSizeBuf[ProgramSizeByteLength];
-	for (int i = 0; i < ProgramSizeByteLength; i++)
+	guint8 programSizeBuf[ProgramSizeByteLength];
+	for (gint i = 0; i < ProgramSizeByteLength; i++)
 		programSizeBuf[i] = data[count++];
 	fa.ProgramSize = BytesToInt(programSizeBuf, ProgramSizeByteLength);
 
@@ -465,9 +465,9 @@ GetFlashIdAttribute(uint8_t *data)
 }
 
 void
-SetFeature(uint8_t *cmd, int interface)
+SetFeature(guint8 *cmd, gint interface)
 {
-	int res;
+	gint res;
 	switch (interface) {
 	case 1:
 		res = libusb_control_transfer(devh,
@@ -478,7 +478,7 @@ SetFeature(uint8_t *cmd, int interface)
 					      cmd,
 					      Interface1Length,
 					      0);
-		// printf("set: %d\n",res);
+		// g_print("set: %d\n",res);
 		break;
 	case 2:
 		res = libusb_control_transfer(devh,
@@ -489,20 +489,20 @@ SetFeature(uint8_t *cmd, int interface)
 					      cmd,
 					      Interface2Length,
 					      0);
-		// printf("set: %d\n",res);
+		// g_print("set: %d\n",res);
 		break;
 	default:
 		break;
 	}
 
 	// if(res < 0)
-	//     printf("SetFeature failed : %d\n", res);
+	//     g_print("SetFeature failed : %d\n", res);
 }
 
 void
-GetFeature(uint8_t *cmd, int interface)
+GetFeature(guint8 *cmd, gint interface)
 {
-	int res;
+	gint res;
 	switch (interface) {
 	case 1:
 		res = libusb_control_transfer(devh,
@@ -513,7 +513,7 @@ GetFeature(uint8_t *cmd, int interface)
 					      cmd,
 					      Interface1Length,
 					      0);
-		// printf("get: %d\n",res);
+		// g_print("get: %d\n",res);
 		break;
 	case 2:
 		res = libusb_control_transfer(devh,
@@ -524,29 +524,29 @@ GetFeature(uint8_t *cmd, int interface)
 					      cmd,
 					      Interface2Length,
 					      0);
-		// printf("get: %d\n",res);
+		// g_print("get: %d\n",res);
 		break;
 	default:
 		break;
 	}
 
 	// if(res < 0)
-	//     printf("GetFeature failed : %d\n", res);
+	//     g_print("GetFeature failed : %d\n", res);
 }
 
-int
-Function1(uint8_t CmdClass,
-	  uint8_t CmdId,
-	  uint8_t FlashId,
-	  uint8_t *data,
-	  int dataSize,
-	  uint8_t *output)
+gint
+Function1(guint8 CmdClass,
+	  guint8 CmdId,
+	  guint8 FlashId,
+	  guint8 *data,
+	  gint dataSize,
+	  guint8 *output)
 {
-	int interface = 1;
-	int PacketSize = Interface1Length;
+	gint interface = 1;
+	gint PacketSize = Interface1Length;
 
-	uint8_t *cmd = (uint8_t *)calloc(PacketSize, sizeof(uint8_t));
-	uint8_t *cmd2 = (uint8_t *)calloc(PacketSize, sizeof(uint8_t));
+	guint8 *cmd = (guint8 *)calloc(PacketSize, sizeof(guint8));
+	guint8 *cmd2 = (guint8 *)calloc(PacketSize, sizeof(guint8));
 
 	cmd2[0] = 0x00;
 
@@ -572,34 +572,34 @@ Function1(uint8_t CmdClass,
 		return PARAM_ERROR;
 	}
 
-	for (int i = 0; i < dataSize; i++)
+	for (gint i = 0; i < dataSize; i++)
 		cmd[6 + i] = data[i];
 
 	SetFeature(cmd, interface);
-	for (int i = 0; i < PacketSize; i++)
-		printf("%02X ", cmd[i]);
-	printf("\n");
-	printf("******************SetFeature for interface 1 PackagetSize = "
-	       "%d******************",
-	       PacketSize);
-	printf("\n");
+	for (gint i = 0; i < PacketSize; i++)
+		g_print("%02X ", cmd[i]);
+	g_print("\n");
+	g_print("******************SetFeature for interface 1 PackagetSize = "
+		"%d******************",
+		PacketSize);
+	g_print("\n");
 	free(cmd);
 
-	int count = 0;
+	gint count = 0;
 
 	do {
 		GetFeature(cmd2, interface);
-		for (int i = 0; i < PacketSize; i++)
-			printf("%02X ", cmd2[i]);
-		printf("\n");
+		for (gint i = 0; i < PacketSize; i++)
+			g_print("%02X ", cmd2[i]);
+		g_print("\n");
 
-		printf("******************GetFeature for interface 1 PackagetSize "
-		       "%d******************",
-		       PacketSize);
-		printf("\n");
+		g_print("******************GetFeature for interface 1 PackagetSize "
+			"%d******************",
+			PacketSize);
+		g_print("\n");
 		switch (cmd2[0]) {
 		case CommandDefault:
-			// printf("Function error: %d",REPORT_DATA_FAILED);
+			// g_print("Function error: %d",REPORT_DATA_FAILED);
 			free(cmd2);
 			return REPORT_DATA_FAILED;
 		case CommandBusy:
@@ -609,10 +609,10 @@ Function1(uint8_t CmdClass,
 		case CommandSuccess:
 			if (cmd2[4] != FlashId) {
 				free(cmd2);
-				// printf("Function error: %d",REPORT_DATA_FAILED);
+				// g_print("Function error: %d",REPORT_DATA_FAILED);
 				return REPORT_DATA_FAILED;
 			} else {
-				for (int i = 0; i < PacketSize; i++) {
+				for (gint i = 0; i < PacketSize; i++) {
 					output[i] = cmd2[i];
 				}
 				free(cmd2);
@@ -620,76 +620,76 @@ Function1(uint8_t CmdClass,
 			}
 
 		case CommandFaliure:
-			// printf("Function error: %d",COMMAND_FALIURE);
+			// g_print("Function error: %d",COMMAND_FALIURE);
 			free(cmd2);
 			return COMMAND_FALIURE;
 		case CommandTimeout:
-			// printf("Function error: %d",COMMAND_TIMEOUT);
+			// g_print("Function error: %d",COMMAND_TIMEOUT);
 			free(cmd2);
 			return COMMAND_TIMEOUT;
 		case CommandNotSupport:
-			// printf("Function error: %d",AP_TOOL_FAILED);
+			// g_print("Function error: %d",AP_TOOL_FAILED);
 			free(cmd2);
 			return AP_TOOL_FAILED;
 		}
 	} while (count < maxRetry);
 
-	// printf("Function error: %d",COMMAND_OVER_RETRY_TIMES);
+	// g_print("Function error: %d",COMMAND_OVER_RETRY_TIMES);
 	free(cmd2);
 	return COMMAND_OVER_RETRY_TIMES;
 }
 
 void
-TriggerPhase2(bool noUnplug)
+TriggerPhase2(gboolean noUnplug)
 {
-	uint8_t DfuCtrl[2] = {0};
-	uint8_t output1[Interface1Length];
-	for (int i = 0; i < Interface1Length; i++)
+	guint8 DfuCtrl[2] = {0};
+	guint8 output1[Interface1Length];
+	for (gint i = 0; i < Interface1Length; i++)
 		output1[i] = 0;
 	if (noUnplug) {
 		DfuCtrl[0] = Locked;
 		DfuCtrl[1] = nonUnplug;
-		int r = Function1(Dock, Set_Dock_Firmware_Upgrade_Ctrl, 0, DfuCtrl, 2, output1);
+		gint r = Function1(Dock, Set_Dock_Firmware_Upgrade_Ctrl, 0, DfuCtrl, 2, output1);
 	} else {
 		DfuCtrl[0] = Locked;
 		DfuCtrl[1] = unplug;
-		int r = Function1(Dock, Set_Dock_Firmware_Upgrade_Ctrl, 0, DfuCtrl, 2, output1);
+		gint r = Function1(Dock, Set_Dock_Firmware_Upgrade_Ctrl, 0, DfuCtrl, 2, output1);
 	}
 }
 
-uint8_t *
-GetCommandBody1(uint8_t *data)
+guint8 *
+GetCommandBody1(guint8 *data)
 {
-	int size = data[1];
-	uint8_t *res = (uint8_t *)calloc(size, sizeof(uint8_t));
-	for (int i = 0; i < size; i++)
+	gint size = data[1];
+	guint8 *res = (guint8 *)calloc(size, sizeof(guint8));
+	for (gint i = 0; i < size; i++)
 		res[i] = data[6 + i];
 
 	return res;
 }
-uint8_t *
-GetCommandBody2(uint8_t *data)
+guint8 *
+GetCommandBody2(guint8 *data)
 {
-	int size = data[2];
-	uint8_t *res = (uint8_t *)calloc(size, sizeof(uint8_t));
-	for (int i = 0; i < size; i++)
+	gint size = data[2];
+	guint8 *res = (guint8 *)calloc(size, sizeof(guint8));
+	for (gint i = 0; i < size; i++)
 		res[i] = data[7 + i];
 
 	return res;
 }
 
-int
-Function2(uint8_t CmdClass,
-	  uint8_t CmdId,
-	  uint8_t FlashId,
-	  uint8_t *data,
-	  int dataSize,
-	  uint8_t *output)
+gint
+Function2(guint8 CmdClass,
+	  guint8 CmdId,
+	  guint8 FlashId,
+	  guint8 *data,
+	  gint dataSize,
+	  guint8 *output)
 {
-	int interface = 2;
-	int PacketSize = Interface2Length;
-	uint8_t *cmd = (uint8_t *)calloc(PacketSize, sizeof(uint8_t));
-	uint8_t *cmd2 = (uint8_t *)calloc(PacketSize, sizeof(uint8_t));
+	gint interface = 2;
+	gint PacketSize = Interface2Length;
+	guint8 *cmd = (guint8 *)calloc(PacketSize, sizeof(guint8));
+	guint8 *cmd2 = (guint8 *)calloc(PacketSize, sizeof(guint8));
 
 	if (!cmd || !cmd2) {
 		if (cmd)
@@ -728,33 +728,33 @@ Function2(uint8_t CmdClass,
 	cmd[6] = 0x00; // reserved
 
 	// Body
-	for (int i = 0; i < dataSize; i++)
+	for (gint i = 0; i < dataSize; i++)
 		cmd[7 + i] = data[i];
 
 	SetFeature(cmd, interface);
-	for (int i = 0; i < PacketSize; i++)
-		printf("%02X ", cmd[i]);
-	printf("\n");
-	printf("******************SetFeature for interface 2 PackagetSize = "
-	       "%d******************",
-	       PacketSize);
-	printf("\n");
+	for (gint i = 0; i < PacketSize; i++)
+		g_print("%02X ", cmd[i]);
+	g_print("\n");
+	g_print("******************SetFeature for interface 2 PackagetSize = "
+		"%d******************",
+		PacketSize);
+	g_print("\n");
 	free(cmd);
 
-	int count = 0;
+	gint count = 0;
 
 	do {
 		GetFeature(cmd2, interface);
-		for (int i = 0; i < PacketSize; i++)
-			printf("%02X ", cmd2[i]);
-		printf("\n");
-		printf("******************GetFeature for interface 2 PackagetSize = "
-		       "%d******************",
-		       PacketSize);
-		printf("\n");
+		for (gint i = 0; i < PacketSize; i++)
+			g_print("%02X ", cmd2[i]);
+		g_print("\n");
+		g_print("******************GetFeature for interface 2 PackagetSize = "
+			"%d******************",
+			PacketSize);
+		g_print("\n");
 		switch (cmd2[0 + ReportIdOffset]) {
 		case CommandDefault:
-			// printf("Function error: %d",REPORT_DATA_FAILED);
+			// g_print("Function error: %d",REPORT_DATA_FAILED);
 			free(cmd2);
 			return REPORT_DATA_FAILED;
 		case CommandBusy:
@@ -763,10 +763,10 @@ Function2(uint8_t CmdClass,
 			break;
 		case CommandSuccess:
 			if (cmd2[4 + ReportIdOffset] != FlashId) {
-				// printf("Function error: %d",REPORT_DATA_FAILED);
+				// g_print("Function error: %d",REPORT_DATA_FAILED);
 				return REPORT_DATA_FAILED;
 			} else {
-				for (int i = 0; i < PacketSize; i++) {
+				for (gint i = 0; i < PacketSize; i++) {
 					output[i] = cmd2[i];
 				}
 				free(cmd2);
@@ -774,61 +774,61 @@ Function2(uint8_t CmdClass,
 			}
 
 		case CommandFaliure:
-			// printf("Function error: %d",COMMAND_FALIURE);
+			// g_print("Function error: %d",COMMAND_FALIURE);
 			free(cmd2);
 			return COMMAND_FALIURE;
 		case CommandTimeout:
-			// printf("Function error: %d",COMMAND_TIMEOUT);
+			// g_print("Function error: %d",COMMAND_TIMEOUT);
 			free(cmd2);
 			return COMMAND_TIMEOUT;
 		case CommandNotSupport:
-			// printf("Function error: %d",AP_TOOL_FAILED);
+			// g_print("Function error: %d",AP_TOOL_FAILED);
 			free(cmd2);
 			return AP_TOOL_FAILED;
 		}
 	} while (count < maxRetry);
 
 	free(cmd2);
-	// printf("Function error: %d",COMMAND_OVER_RETRY_TIMES);
+	// g_print("Function error: %d",COMMAND_OVER_RETRY_TIMES);
 	return COMMAND_OVER_RETRY_TIMES;
 }
 
-int
-WriteUsageInformationTable(uint8_t *usageInformationData)
+gint
+WriteUsageInformationTable(guint8 *usageInformationData)
 {
-	int errorHandle = 0;
+	gint errorHandle = 0;
 	// Get Usage Information Attribute
-	uint8_t output1[Interface1Length];
-	uint8_t output2[Interface2Length];
-	for (int i = 0; i < Interface1Length; i++)
+	guint8 output1[Interface1Length];
+	guint8 output2[Interface2Length];
+	for (gint i = 0; i < Interface1Length; i++)
 		output1[i] = 0;
-	int usageInformationAttributeData =
+	gint usageInformationAttributeData =
 	    Function1(External_Flash, Get_Flash_Attribute, UsageTableFlashID, 0, 0, output1);
 	if (usageInformationAttributeData != 0)
 		return usageInformationAttributeData;
-	uint8_t *usageInformationAttributeBody = GetCommandBody1(output1);
+	guint8 *usageInformationAttributeBody = GetCommandBody1(output1);
 	struct FlashIdAttribute usageInformationAttribute =
 	    GetFlashIdAttribute(usageInformationAttributeBody);
 	free(usageInformationAttributeBody);
 
 	// Set Usage Information Memory Access (Erase)
-	for (int readBytes = 0; readBytes < UsageTableSize;
+	for (gint readBytes = 0; readBytes < UsageTableSize;
 	     readBytes += usageInformationAttribute.EraseSize) {
-		int address = UsageInfoStart + readBytes;
-		uint8_t *eraseUsageInformationAddress = IntToBytes(address);
-		uint8_t setUsageInformationMemoryErase[2 + AddressByteLength + EraseSizeByteLength];
-		for (int i = 0; i < 2 + AddressByteLength + EraseSizeByteLength; i++)
+		gint address = UsageInfoStart + readBytes;
+		guint8 *eraseUsageInformationAddress = IntToBytes(address);
+		guint8 setUsageInformationMemoryErase[2 + AddressByteLength + EraseSizeByteLength];
+		for (gint i = 0; i < 2 + AddressByteLength + EraseSizeByteLength; i++)
 			setUsageInformationMemoryErase[i] = 0;
 
 		setUsageInformationMemoryErase[0] = Dock_Erase_With_Address;
 		setUsageInformationMemoryErase[1] = 0x00;
-		for (int i = 0; i < AddressByteLength; i++)
+		for (gint i = 0; i < AddressByteLength; i++)
 			setUsageInformationMemoryErase[2 + EraseSizeByteLength + i] =
 			    eraseUsageInformationAddress[i];
-		for (int i = 0; i < EraseSizeByteLength; i++)
+		for (gint i = 0; i < EraseSizeByteLength; i++)
 			setUsageInformationMemoryErase[2 + i] =
 			    IntToBytes(usageInformationAttribute.EraseSize)[i];
-		for (int i = 0; i < Interface2Length; i++)
+		for (gint i = 0; i < Interface2Length; i++)
 			output2[i] = 0;
 		errorHandle = Function2(External_Flash,
 					Set_Flash_Memory_Access,
@@ -841,25 +841,25 @@ WriteUsageInformationTable(uint8_t *usageInformationData)
 	}
 
 	// Set Usage Information Memory Access (Program)
-	for (int readBytes = 0; readBytes < UsageTableSize;
+	for (gint readBytes = 0; readBytes < UsageTableSize;
 	     readBytes += usageInformationAttribute.ProgramSize) {
-		int address = UsageInfoStart + readBytes;
-		uint8_t *addrBytes = IntToBytes(address);
+		gint address = UsageInfoStart + readBytes;
+		guint8 *addrBytes = IntToBytes(address);
 
-		int payloadLength = 2 + AddressByteLength + ProgramSizeByteLength;
-		uint8_t write[usageInformationAttribute.ProgramSize + payloadLength];
-		for (int i = 0; i < usageInformationAttribute.ProgramSize + payloadLength; i++)
+		gint payloadLength = 2 + AddressByteLength + ProgramSizeByteLength;
+		guint8 write[usageInformationAttribute.ProgramSize + payloadLength];
+		for (gint i = 0; i < usageInformationAttribute.ProgramSize + payloadLength; i++)
 			write[i] = 0;
 		write[0] = Dock_Program_With_Address;
 		write[1] = 0x00;
-		for (int i = 0; i < AddressByteLength; i++)
+		for (gint i = 0; i < AddressByteLength; i++)
 			write[2 + ProgramSizeByteLength + i] = addrBytes[i];
-		for (int i = 0; i < ProgramSizeByteLength; i++)
+		for (gint i = 0; i < ProgramSizeByteLength; i++)
 			write[2 + i] = IntToBytes(usageInformationAttribute.ProgramSize)[i];
-		for (int i = 0; i < usageInformationAttribute.ProgramSize; i++)
+		for (gint i = 0; i < usageInformationAttribute.ProgramSize; i++)
 			write[payloadLength + i] = usageInformationData[readBytes + i];
 
-		for (int i = 0; i < Interface2Length; i++)
+		for (gint i = 0; i < Interface2Length; i++)
 			output2[i] = 0;
 		errorHandle = Function2(External_Flash,
 					Set_Flash_Memory_Access,
@@ -872,30 +872,30 @@ WriteUsageInformationTable(uint8_t *usageInformationData)
 	}
 
 	// Get Usage Information Page Self-Verify
-	uint8_t writeSelfVerify[1];
+	guint8 writeSelfVerify[1];
 	writeSelfVerify[0] = CRC;
-	for (int i = 0; i < Interface1Length; i++)
+	for (gint i = 0; i < Interface1Length; i++)
 		output1[i] = 0;
-	int pageSelfVerifyData = Function1(External_Flash,
-					   Get_Flash_Memory_Self_Verify,
-					   UsageTableFlashID,
-					   writeSelfVerify,
-					   1,
-					   output1);
+	gint pageSelfVerifyData = Function1(External_Flash,
+					    Get_Flash_Memory_Self_Verify,
+					    UsageTableFlashID,
+					    writeSelfVerify,
+					    1,
+					    output1);
 	if (pageSelfVerifyData != 0)
 		return pageSelfVerifyData;
-	uint8_t *pageSelfVerifyBody = GetCommandBody1(output1);
-	uint8_t pageSelfVerifyCrc[4];
-	for (int i = 0; i < 4; i++) {
+	guint8 *pageSelfVerifyBody = GetCommandBody1(output1);
+	guint8 pageSelfVerifyCrc[4];
+	for (gint i = 0; i < 4; i++) {
 		pageSelfVerifyCrc[i] = pageSelfVerifyBody[1 + i];
-		// printf("%02X\n",pageSelfVerifyCrc[i]);
+		// g_print("%02X\n",pageSelfVerifyCrc[i]);
 	}
 
 	// Usge Information CRC
-	uint8_t uiCrc[4];
-	for (int i = 0; i < 4; i++) {
+	guint8 uiCrc[4];
+	for (gint i = 0; i < 4; i++) {
 		uiCrc[i] = usageInformationData[4092 + i];
-		// printf("%02X\n",uiCrc[i]);
+		// g_print("%02X\n",uiCrc[i]);
 	}
 	if (!arraysEqual(uiCrc, pageSelfVerifyCrc, 4))
 		return USAGE_INFORMATION_PAGE_FAILED;
@@ -903,40 +903,40 @@ WriteUsageInformationTable(uint8_t *usageInformationData)
 	return 0;
 }
 
-int
-WriteFlashIdData(int flashId,
+gint
+WriteFlashIdData(gint flashId,
 		 struct FlashIdAttribute flashIdAttribute,
 		 struct UsageInformation changeTagetUsageInformationTable,
 		 char *compositeImageData)
 {
-	int errorHandle = 0;
-	uint8_t output1[Interface1Length];
-	uint8_t output2[Interface2Length];
+	gint errorHandle = 0;
+	guint8 output1[Interface1Length];
+	guint8 output2[Interface2Length];
 	// Check FW Data In Host Self-Verify
 	if (!CheckFwVerify(flashId, changeTagetUsageInformationTable, compositeImageData))
 		return UPDATE_USAGE_INFORMATION_PAGE_FAILED;
 
 	// Set Flash Memory Access (Erase)
-	uint8_t *eraseStartAddrBytes =
+	guint8 *eraseStartAddrBytes =
 	    changeTagetUsageInformationTable.FlashIdList[flashId].PhysicalAddress;
-	int targetMaxSize =
+	gint targetMaxSize =
 	    BytesToInt(changeTagetUsageInformationTable.FlashIdList[flashId].MaxSize, 4);
-	int targetFwSize =
+	gint targetFwSize =
 	    BytesToInt(changeTagetUsageInformationTable.FlashIdList[flashId].TargetFwFileSize, 4);
-	for (int eraseBytes = 0; eraseBytes < targetMaxSize;
+	for (gint eraseBytes = 0; eraseBytes < targetMaxSize;
 	     eraseBytes += flashIdAttribute.EraseSize) {
-		uint8_t setFlashMemoryErase[2 + EraseSizeByteLength + AddressByteLength];
-		for (int i = 0; i < 2 + EraseSizeByteLength + AddressByteLength; i++)
+		guint8 setFlashMemoryErase[2 + EraseSizeByteLength + AddressByteLength];
+		for (gint i = 0; i < 2 + EraseSizeByteLength + AddressByteLength; i++)
 			setFlashMemoryErase[i] = 0;
 		setFlashMemoryErase[0] = Dock_Erase_With_Address;
 		setFlashMemoryErase[1] = 0x00;
-		int eraseAddr = BytesToInt(eraseStartAddrBytes, 4) + eraseBytes;
-		for (int i = 0; i < EraseSizeByteLength; i++)
+		gint eraseAddr = BytesToInt(eraseStartAddrBytes, 4) + eraseBytes;
+		for (gint i = 0; i < EraseSizeByteLength; i++)
 			setFlashMemoryErase[2 + i] = IntToBytes(flashIdAttribute.EraseSize)[i];
-		for (int i = 0; i < AddressByteLength; i++)
+		for (gint i = 0; i < AddressByteLength; i++)
 			setFlashMemoryErase[2 + EraseSizeByteLength + i] = IntToBytes(eraseAddr)[i];
 
-		for (int i = 0; i < Interface2Length; i++)
+		for (gint i = 0; i < Interface2Length; i++)
 			output2[i] = 0;
 		errorHandle = Function2(External_Flash,
 					Set_Flash_Memory_Access,
@@ -949,29 +949,29 @@ WriteFlashIdData(int flashId,
 	}
 
 	// Set Flash Memory Access (program)
-	int flashIdStartAddr =
+	gint flashIdStartAddr =
 	    BytesToInt(changeTagetUsageInformationTable.FlashIdList[flashId].PhysicalAddress, 4);
-	int flashIdDataSize =
+	gint flashIdDataSize =
 	    BytesToInt(changeTagetUsageInformationTable.FlashIdList[flashId].MaxSize, 4);
-	uint8_t *flashIdCompositeData =
+	guint8 *flashIdCompositeData =
 	    GetCompositeData(flashIdStartAddr, flashIdDataSize, compositeImageData);
-	for (int readBytes = 0; readBytes < targetFwSize + SignatureSize;
+	for (gint readBytes = 0; readBytes < targetFwSize + SignatureSize;
 	     readBytes += flashIdAttribute.ProgramSize) {
-		int address = flashIdStartAddr + readBytes;
-		uint8_t *addrBytes = IntToBytes(address);
+		gint address = flashIdStartAddr + readBytes;
+		guint8 *addrBytes = IntToBytes(address);
 
-		int payloadLength = 2 + AddressByteLength + ProgramSizeByteLength;
-		uint8_t write[flashIdAttribute.ProgramSize + payloadLength];
+		gint payloadLength = 2 + AddressByteLength + ProgramSizeByteLength;
+		guint8 write[flashIdAttribute.ProgramSize + payloadLength];
 		write[0] = Dock_Program_With_Address;
 		write[1] = 0x00;
-		for (int i = 0; i < AddressByteLength; i++)
+		for (gint i = 0; i < AddressByteLength; i++)
 			write[2 + ProgramSizeByteLength + i] = addrBytes[i];
-		for (int i = 0; i < ProgramSizeByteLength; i++)
+		for (gint i = 0; i < ProgramSizeByteLength; i++)
 			write[2 + i] = IntToBytes(flashIdAttribute.ProgramSize)[i];
-		for (int i = 0; i < flashIdAttribute.ProgramSize; i++)
+		for (gint i = 0; i < flashIdAttribute.ProgramSize; i++)
 			write[payloadLength + i] = flashIdCompositeData[readBytes + i];
 
-		for (int i = 0; i < Interface2Length; i++)
+		for (gint i = 0; i < Interface2Length; i++)
 			output2[i] = 0;
 		errorHandle = Function2(External_Flash,
 					Set_Flash_Memory_Access,
@@ -986,39 +986,39 @@ WriteFlashIdData(int flashId,
 	free(flashIdCompositeData);
 
 	// Get Flash Usage Information Memory Self-Verify
-	uint8_t writeFlashUpdateCheckSignature[1];
+	guint8 writeFlashUpdateCheckSignature[1];
 	writeFlashUpdateCheckSignature[0] = Signature;
-	for (int i = 0; i < Interface1Length; i++)
+	for (gint i = 0; i < Interface1Length; i++)
 		output1[i] = 0;
-	int flashUpdateCheckSignatureData = Function1(External_Flash,
-						      Get_Flash_Memory_Self_Verify,
-						      flashId,
-						      writeFlashUpdateCheckSignature,
-						      1,
-						      output1);
+	gint flashUpdateCheckSignatureData = Function1(External_Flash,
+						       Get_Flash_Memory_Self_Verify,
+						       flashId,
+						       writeFlashUpdateCheckSignature,
+						       1,
+						       output1);
 	if (flashUpdateCheckSignatureData != 0)
 		return flashUpdateCheckSignatureData;
-	uint8_t *flashUpdateCheckSignatureBody = GetCommandBody1(output1);
-	if (flashUpdateCheckSignatureBody[1] != (uint8_t)Pass)
+	guint8 *flashUpdateCheckSignatureBody = GetCommandBody1(output1);
+	if (flashUpdateCheckSignatureBody[1] != (guint8)Pass)
 		return UPDATE_DOCK_FAILED;
 
-	uint8_t writeFlashUpdateCheckVerify[1];
+	guint8 writeFlashUpdateCheckVerify[1];
 	writeFlashUpdateCheckVerify[0] = CRC;
-	for (int i = 0; i < Interface1Length; i++)
+	for (gint i = 0; i < Interface1Length; i++)
 		output1[i] = 0;
-	int flashUpdateCheckVerifyData = Function1(External_Flash,
-						   Get_Flash_Memory_Self_Verify,
-						   flashId,
-						   writeFlashUpdateCheckVerify,
-						   1,
-						   output1);
+	gint flashUpdateCheckVerifyData = Function1(External_Flash,
+						    Get_Flash_Memory_Self_Verify,
+						    flashId,
+						    writeFlashUpdateCheckVerify,
+						    1,
+						    output1);
 	if (flashUpdateCheckVerifyData != 0)
 		return flashUpdateCheckVerifyData;
-	uint8_t *flashUpdateCheckVerifyBody = GetCommandBody1(output1);
-	uint8_t flashUpdateCheckVerifyCrc[4];
-	for (int i = 0; i < 4; i++) {
+	guint8 *flashUpdateCheckVerifyBody = GetCommandBody1(output1);
+	guint8 flashUpdateCheckVerifyCrc[4];
+	for (gint i = 0; i < 4; i++) {
 		flashUpdateCheckVerifyCrc[i] = flashUpdateCheckVerifyBody[1 + i];
-		// printf("%02X\n",flashUpdateCheckVerifyCrc[i]);
+		// g_print("%02X\n",flashUpdateCheckVerifyCrc[i]);
 	}
 	if (!arraysEqual(changeTagetUsageInformationTable.FlashIdList[flashId].TargetFwFileCrc32,
 			 flashUpdateCheckVerifyCrc,
@@ -1046,28 +1046,28 @@ WriteFlashIdData(int flashId,
  *        If true, skip unplug detection during the firmware update process.
  *
  * @return SUCCESS on success, otherwise returns an error code defined in the
- * firmware update error definitions.(int)
+ * firmware update error definitions.(gint)
  */
 
-int
-FWUpdate(bool forceUpdate, bool noUnplug)
+gint
+FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 {
-	// bool forceUpdate = false;
-	// bool noUnplug = false;
+	// gboolean forceUpdate = false;
+	// gboolean noUnplug = false;
 	char *compositeImageData;
-	int r;
+	gint r;
 	r = ReadCompositeImageFile(&compositeImageData);
 	if (r != 0) {
-		// printf("Read composite image error: %d\n",r);
+		// g_print("Read composite image error: %d\n",r);
 		return r;
 	}
 	// Set Flash Memory Access (Request)
-	uint8_t setFlashMemoryRequest[2];
-	uint8_t output1[Interface1Length];
-	uint8_t output2[Interface2Length];
+	guint8 setFlashMemoryRequest[2];
+	guint8 output1[Interface1Length];
+	guint8 output2[Interface2Length];
 	setFlashMemoryRequest[0] = AcccessCtrl;
 	setFlashMemoryRequest[1] = Request;
-	for (int i = 0; i < Interface2Length; i++)
+	for (gint i = 0; i < Interface2Length; i++)
 		output2[i] = 0;
 	r = Function2(External_Flash,
 		      Set_Flash_Memory_Access,
@@ -1076,13 +1076,13 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 		      2,
 		      output2);
 	if (r != 0) {
-		printf("Set Flash Memory Access (Request) error: %d\n", r);
+		g_print("Set Flash Memory Access (Request) error: %d\n", r);
 		return FWU_OTA_DEPLOYEEING;
 	}
 	// Read Target Usage Information Table
 	struct stat fileInfo;
 	struct UsageInformation targetUsageInformationTable;
-	uint8_t ds[FlashIdUsageLength];
+	guint8 ds[FlashIdUsageLength];
 	FILE *fp;
 	if (stat(Path_Of_Usage_Information_Table, &fileInfo) == 0) {
 		if (fileInfo.st_size != UsageTableSize) {
@@ -1092,30 +1092,30 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 			fp = fopen(Path_Of_Usage_Information_Table, "rb");
 			char buffer[UsageTableSize];
 			size_t bytesRead = fread(&buffer, sizeof(char), UsageTableSize, fp);
-			targetUsageInformationTable.Totalnumber = (uint8_t)buffer[0];
+			targetUsageInformationTable.Totalnumber = (guint8)buffer[0];
 			targetUsageInformationTable.MajorVersion =
-			    (((uint8_t)buffer[1] >> 4) & 0x0f);
-			targetUsageInformationTable.MinorVersion = ((uint8_t)buffer[1] & 0x0f);
+			    (((guint8)buffer[1] >> 4) & 0x0f);
+			targetUsageInformationTable.MinorVersion = ((guint8)buffer[1] & 0x0f);
 			targetUsageInformationTable.Dsa = (DSAType)buffer[2];
-			targetUsageInformationTable.IoTUpdateFlag = (uint8_t)buffer[3];
-			for (int i = 0; i < 4; i++) {
+			targetUsageInformationTable.IoTUpdateFlag = (guint8)buffer[3];
+			for (gint i = 0; i < 4; i++) {
 				targetUsageInformationTable.CompositeFwVersion[i] =
-				    (uint8_t)buffer[4 + i];
+				    (guint8)buffer[4 + i];
 				targetUsageInformationTable.Crc32[i] =
-				    (uint8_t)buffer[UsageTableSize - 4 + i];
+				    (guint8)buffer[UsageTableSize - 4 + i];
 			}
-			for (int i = 0; i < 2; i++) {
-				targetUsageInformationTable.DockPid[i] = (uint8_t)buffer[8 + i];
+			for (gint i = 0; i < 2; i++) {
+				targetUsageInformationTable.DockPid[i] = (guint8)buffer[8 + i];
 			}
 			targetUsageInformationTable.FlashIdList =
 			    (struct FlashIdUsageInformation *)calloc(
 				targetUsageInformationTable.Totalnumber + 1,
 				sizeof(struct FlashIdUsageInformation));
-			for (int i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
-				for (int j = 0; j < FlashIdUsageLength; j++) {
-					ds[j] = (uint8_t)buffer[i * 32 + j];
+			for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
+				for (gint j = 0; j < FlashIdUsageLength; j++) {
+					ds[j] = (guint8)buffer[i * 32 + j];
 				}
-				for (int j = 0; j < 4; j++) {
+				for (gint j = 0; j < 4; j++) {
 					targetUsageInformationTable.FlashIdList[i]
 					    .PhysicalAddress[j] = ds[j];
 					targetUsageInformationTable.FlashIdList[i].MaxSize[j] =
@@ -1142,54 +1142,54 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 				    UsageTableSize - 4))
 				return USAGE_INFORMATION_CRC_FAILED;
 
-			uint16_t targetPid =
-			    (uint16_t)((targetUsageInformationTable.DockPid[0] << 8) +
-				       targetUsageInformationTable.DockPid[1]);
+			guint16 targetPid =
+			    (guint16)((targetUsageInformationTable.DockPid[0] << 8) +
+				      targetUsageInformationTable.DockPid[1]);
 			if (DockPid != targetPid)
 				return XML_FILE_FORMAT_ERROR;
 		}
 	}
 	// Check Flash Id List Count
-	for (int i = 0; i < Interface1Length; i++)
+	for (gint i = 0; i < Interface1Length; i++)
 		output1[i] = 0;
-	int getFlashIdListData = Function1(External_Flash, Get_Flash_ID_List, 0, 0, 0, output1);
-	uint8_t flashIdListTotal = output1[6];
-	uint8_t flashIdList[flashIdListTotal - 1];
-	for (int i = 0; i < flashIdListTotal - 1; i++) {
+	gint getFlashIdListData = Function1(External_Flash, Get_Flash_ID_List, 0, 0, 0, output1);
+	guint8 flashIdListTotal = output1[6];
+	guint8 flashIdList[flashIdListTotal - 1];
+	for (gint i = 0; i < flashIdListTotal - 1; i++) {
 		flashIdList[i] = output1[7 + i];
 	}
 	if ((targetUsageInformationTable.Totalnumber + 1) != flashIdListTotal)
 		return USAGE_INFORMATION_CRC_FAILED;
 
 	// Read MCU Usage Information Memory Access (Read)
-	const int readCountByCycle = 256;
-	int mcuUsageInformationCount = 0;
-	uint8_t mcuUsageInformationData[UsageInfo];
+	const gint readCountByCycle = 256;
+	gint mcuUsageInformationCount = 0;
+	guint8 mcuUsageInformationData[UsageInfo];
 	do {
-		int payload = 8;
-		uint8_t setmcuUsageInformationTable[payload];
+		gint payload = 8;
+		guint8 setmcuUsageInformationTable[payload];
 		setmcuUsageInformationTable[0] = Dock_Read_With_Address;
 		setmcuUsageInformationTable[1] = 0x00;
 
-		uint8_t *size = IntToBytes(readCountByCycle);
+		guint8 *size = IntToBytes(readCountByCycle);
 		setmcuUsageInformationTable[2] = size[0];
 		setmcuUsageInformationTable[3] = size[1];
 
-		uint8_t *addr = IntToBytes(UsageInfoStart + mcuUsageInformationCount);
+		guint8 *addr = IntToBytes(UsageInfoStart + mcuUsageInformationCount);
 		setmcuUsageInformationTable[4] = addr[0];
 		setmcuUsageInformationTable[5] = addr[1];
 		setmcuUsageInformationTable[6] = addr[2];
 		setmcuUsageInformationTable[7] = addr[3];
 
-		for (int i = 0; i < Interface2Length; i++)
+		for (gint i = 0; i < Interface2Length; i++)
 			output2[i] = 0;
-		int tempBytes = Function2(External_Flash,
-					  Get_Flash_Memory_Access,
-					  UsageTableFlashID,
-					  setmcuUsageInformationTable,
-					  payload,
-					  output2);
-		for (int i = 0; i < readCountByCycle; i++) {
+		gint tempBytes = Function2(External_Flash,
+					   Get_Flash_Memory_Access,
+					   UsageTableFlashID,
+					   setmcuUsageInformationTable,
+					   payload,
+					   output2);
+		for (gint i = 0; i < readCountByCycle; i++) {
 			mcuUsageInformationData[mcuUsageInformationCount + i] =
 			    output2[7 + payload + i];
 		}
@@ -1198,33 +1198,33 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 	} while (mcuUsageInformationCount < UsageInfo);
 
 	// Check & Transfer MCU Usage Information Table
-	uint8_t mcuUIcrc[4];
-	for (int i = 0; i < 4; i++) {
+	guint8 mcuUIcrc[4];
+	for (gint i = 0; i < 4; i++) {
 		mcuUIcrc[i] = mcuUsageInformationData[UsageTableSize - 4 + i];
-		// printf("%02X\n",mcuUIcrc[i]);
+		// g_print("%02X\n",mcuUIcrc[i]);
 	}
-	uint32_t t = Compute(mcuUsageInformationData, UsageTableSize, 0, 4092);
-	uint8_t *computecrc = ToBytes(t);
+	guint32 t = Compute(mcuUsageInformationData, UsageTableSize, 0, 4092);
+	guint8 *computecrc = ToBytes(t);
 	if (!arraysEqual(mcuUIcrc, computecrc, 4)) {
 		forceUpdate = true;
 	}
 
 	// Check Package Version to Clean Update List
-	bool bcdVerUpdateReq = false;
+	gboolean bcdVerUpdateReq = false;
 	if (forceUpdate)
 		bcdVerUpdateReq = true;
 
 	if (!forceUpdate) {
-		for (int i = 0; i < Interface1Length; i++)
+		for (gint i = 0; i < Interface1Length; i++)
 			output1[i] = 0;
-		int GetBcdData =
+		gint GetBcdData =
 		    Function1(Device_Information, Get_Firmware_Version, 0, 0, 0, output1);
-		uint8_t *dockFWPackageVer = GetCommandBody1(output1);
-		uint8_t *targetFWPackageVer = targetUsageInformationTable.CompositeFwVersion;
-		int dockFWPackageVerInt =
+		guint8 *dockFWPackageVer = GetCommandBody1(output1);
+		guint8 *targetFWPackageVer = targetUsageInformationTable.CompositeFwVersion;
+		gint dockFWPackageVerInt =
 		    (dockFWPackageVer[0] << 16) + (dockFWPackageVer[1] << 8) + dockFWPackageVer[2];
-		int targetFWPackageVerInt = (targetFWPackageVer[1] << 16) +
-					    (targetFWPackageVer[2] << 8) + targetFWPackageVer[3];
+		gint targetFWPackageVerInt = (targetFWPackageVer[1] << 16) +
+					     (targetFWPackageVer[2] << 8) + targetFWPackageVer[3];
 		free(dockFWPackageVer);
 
 		if (targetFWPackageVerInt > dockFWPackageVerInt)
@@ -1236,7 +1236,7 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 
 	// if (bcdVerUpdateReq) {
 	if (forceUpdate) {
-		for (int i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
+		for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
 			changeTagetUsageInformationTable.FlashIdList[i] =
 			    targetUsageInformationTable.FlashIdList[i];
 			changeTagetUsageInformationTable.FlashIdList[i].Flag = true;
@@ -1254,24 +1254,24 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 			mcuUsageInformationTable.MinorVersion = (mcuUsageInformationData[1] & 0x0f);
 			mcuUsageInformationTable.Dsa = (DSAType)mcuUsageInformationData[2];
 			mcuUsageInformationTable.IoTUpdateFlag = mcuUsageInformationData[3];
-			for (int i = 0; i < 4; i++) {
+			for (gint i = 0; i < 4; i++) {
 				mcuUsageInformationTable.CompositeFwVersion[i] =
 				    mcuUsageInformationData[4 + i];
 				mcuUsageInformationTable.Crc32[i] =
 				    mcuUsageInformationData[UsageTableSize - 4 + i];
 			}
-			for (int i = 0; i < 2; i++) {
+			for (gint i = 0; i < 2; i++) {
 				mcuUsageInformationTable.DockPid[i] =
 				    mcuUsageInformationData[8 + i];
 			}
 			mcuFlashIdList = (struct FlashIdUsageInformation *)calloc(
 			    mcuUsageInformationTable.Totalnumber,
 			    sizeof(struct FlashIdUsageInformation));
-			for (int i = 1; i <= mcuUsageInformationTable.Totalnumber; i++) {
-				for (int j = 0; j < FlashIdUsageLength; j++) {
+			for (gint i = 1; i <= mcuUsageInformationTable.Totalnumber; i++) {
+				for (gint j = 0; j < FlashIdUsageLength; j++) {
 					ds[j] = mcuUsageInformationData[i * 32 + j];
 				}
-				for (int j = 0; j < 4; j++) {
+				for (gint j = 0; j < 4; j++) {
 					mcuFlashIdList[i].PhysicalAddress[j] = ds[j];
 					mcuFlashIdList[i].MaxSize[j] = ds[4 + j];
 					mcuFlashIdList[i].CurrentFwVersion[j] = ds[8 + j];
@@ -1282,7 +1282,7 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 				}
 			}
 
-			for (int i = 1; i <= mcuUsageInformationTable.Totalnumber; i++) {
+			for (gint i = 1; i <= mcuUsageInformationTable.Totalnumber; i++) {
 				if (!arraysEqual(
 					mcuFlashIdList[i].TargetFwVersion,
 					targetUsageInformationTable.FlashIdList[i].TargetFwVersion,
@@ -1302,8 +1302,8 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 	}
 
 	// Check MCU in to phase-1 process
-	bool NeedWriteTable = false;
-	for (int i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
+	gboolean NeedWriteTable = false;
+	for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
 		if (changeTagetUsageInformationTable.FlashIdList[i].Flag) {
 			NeedWriteTable = true;
 			break;
@@ -1311,22 +1311,22 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 	}
 	if (NeedWriteTable) {
 		// Set Dock FW Update Ctrl
-		uint8_t mcuUpdateCtrl[2];
+		guint8 mcuUpdateCtrl[2];
 		mcuUpdateCtrl[0] = nonLock;
 		mcuUpdateCtrl[1] = InPhase1;
-		for (int i = 0; i < Interface1Length; i++)
+		for (gint i = 0; i < Interface1Length; i++)
 			output1[i] = 0;
 		r = Function1(Dock, Set_Dock_Firmware_Upgrade_Ctrl, 0, mcuUpdateCtrl, 2, output1);
 
 		// Clean Target Fw Version
-		for (int i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
-			for (int j = 0; j < 4; j++)
+		for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
+			for (gint j = 0; j < 4; j++)
 				changeTagetUsageInformationTable.FlashIdList[i].TargetFwVersion[j] =
 				    0x00;
 		}
 
 		// Write Usage Information Table
-		uint8_t *changeTagetUsageInformationTableBytes =
+		guint8 *changeTagetUsageInformationTableBytes =
 		    GetBytes(changeTagetUsageInformationTable);
 		r = WriteUsageInformationTable(changeTagetUsageInformationTableBytes);
 		free(changeTagetUsageInformationTableBytes);
@@ -1335,18 +1335,18 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 	}
 
 	// Phase-1 Start
-	for (int i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
+	for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
 		// Flash ID update start
-		int flashId = i;
+		gint flashId = i;
 
 		// Get Flash ID Attribute
-		for (int j = 0; j < Interface1Length; j++)
+		for (gint j = 0; j < Interface1Length; j++)
 			output1[j] = 0;
-		int flashIdAttributeData =
+		gint flashIdAttributeData =
 		    Function1(External_Flash, Get_Flash_Attribute, flashId, 0, 0, output1);
 		if (flashIdAttributeData != 0)
 			return flashIdAttributeData;
-		uint8_t *flashIdAttributeBody = GetCommandBody1(output1);
+		guint8 *flashIdAttributeBody = GetCommandBody1(output1);
 		struct FlashIdAttribute flashIdAttribute =
 		    GetFlashIdAttribute(flashIdAttributeBody);
 		free(flashIdAttributeBody);
@@ -1378,10 +1378,10 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 	}
 
 	// Set Flash Memory Access (Release)
-	uint8_t SetFlashMemoryAccessRelease[2];
+	guint8 SetFlashMemoryAccessRelease[2];
 	SetFlashMemoryAccessRelease[0] = AcccessCtrl;
 	SetFlashMemoryAccessRelease[1] = Release;
-	for (int i = 0; i < Interface2Length; i++)
+	for (gint i = 0; i < Interface2Length; i++)
 		output2[i] = 0;
 	r = Function2(External_Flash,
 		      Set_Flash_Memory_Access,
@@ -1398,40 +1398,40 @@ FWUpdate(bool forceUpdate, bool noUnplug)
 	return 0;
 }
 
-bool
+gboolean
 CheckDockReadyForEnterPhase2Update()
 {
-	bool rs = false;
+	gboolean rs = false;
 
-	uint8_t buffer[65];
+	guint8 buffer[65];
 	rs = Function1(Dock, Get_Dock_Firmware_Upgrade_Ctrl, 0, 0, 0, buffer);
-	uint8_t *DockFirmwareCtrlBody = GetCommandBody1(buffer);
+	guint8 *DockFirmwareCtrlBody = GetCommandBody1(buffer);
 	if (DockFirmwareCtrlBody[0] == Locked && DockFirmwareCtrlBody[1] == 2)
 		rs = true;
 
 	return rs;
 }
 
-int
-myclaim(int interface)
+gint
+myclaim(gint interface)
 {
-	// int release_interface = libusb_release_interface(devh,interface);
-	// printf("release_interface%d :
+	// gint release_interface = libusb_release_interface(devh,interface);
+	// g_print("release_interface%d :
 	// %s\n",interface,libusb_strerror(release_interface));
-	int r = libusb_claim_interface(devh, interface);
+	gint r = libusb_claim_interface(devh, interface);
 	if (r != 0)
-		printf("interface%d error: %s\n", interface, libusb_strerror(r));
+		g_print("interface%d error: %s\n", interface, libusb_strerror(r));
 
 	return r;
 }
-int
+gint
 init()
 {
 	libusb_close(devh);
 	libusb_exit(ctx);
-	// int r = libusb_init_context(/*ctx=*/NULL, /*options=*/NULL,
+	// gint r = libusb_init_context(/*ctx=*/NULL, /*options=*/NULL,
 	// /*num_options=*/0);
-	int r = libusb_init(&ctx);
+	gint r = libusb_init(&ctx);
 	if (r < 0) {
 		// fprintf(stderr, "failed to initialize libusb %d - %s\n", r,
 		// libusb_strerror(r));
@@ -1440,7 +1440,7 @@ init()
 	devh = libusb_open_device_with_vid_pid(NULL, 0x17ef, 0x111e);
 	if (!devh) {
 		errno = ENODEV;
-		// printf("open device failed\n");
+		// g_print("open device failed\n");
 		return errno;
 	}
 	// 如果內核驅動佔用，先 detach
@@ -1460,13 +1460,13 @@ init()
 			return r;
 		}
 	}
-	int interface1 = myclaim(1);
-	int interface2 = myclaim(2);
+	gint interface1 = myclaim(1);
+	gint interface2 = myclaim(2);
 
 	return 0;
 }
 // 回调函数：处理设备的插入和断开事件
-int LIBUSB_CALL
+gint LIBUSB_CALL
 hotplug_callback(struct libusb_context *ctx,
 		 struct libusb_device *dev,
 		 libusb_hotplug_event event,
@@ -1476,13 +1476,13 @@ hotplug_callback(struct libusb_context *ctx,
 	libusb_get_device_descriptor(dev, &desc);
 
 	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		printf("Device disconnected: VID=0x%04x, PID=0x%04x\n",
-		       desc.idVendor,
-		       desc.idProduct);
+		g_print("Device disconnected: VID=0x%04x, PID=0x%04x\n",
+			desc.idVendor,
+			desc.idProduct);
 
 		// 检查是否是目标设备
 		if (desc.idVendor == DockVid && desc.idProduct == DockPid) {
-			printf("Target device disconnected! Terminating program...\n");
+			g_print("Target device disconnected! Terminating program...\n");
 			exit(-1);
 		}
 	}
@@ -1498,8 +1498,8 @@ usb_event_thread(void *arg)
 	return NULL;
 }
 
-uint8_t
-GetCurrentFwVerForGUI(int flashId, int index)
+guint8
+GetCurrentFwVerForGUI(gint flashId, gint index)
 {
 	return CurrentFwVerForGUI[flashId][index];
 }
@@ -1507,31 +1507,31 @@ GetCurrentFwVerForGUI(int flashId, int index)
 struct FlashIdUsageInformation *
 check()
 {
-	uint8_t output[Interface1Length];
-	for (int i = 0; i < Interface1Length; i++)
+	guint8 output[Interface1Length];
+	for (gint i = 0; i < Interface1Length; i++)
 		output[i] = 0;
-	int getFlashIdList = Function1(External_Flash, Get_Flash_ID_List, 0, 0, 0, output);
-	// printf("getFlashIdList return %d\n",getFlashIdList);
-	uint8_t totalFlashId = output[6];
+	gint getFlashIdList = Function1(External_Flash, Get_Flash_ID_List, 0, 0, 0, output);
+	// g_print("getFlashIdList return %d\n",getFlashIdList);
+	guint8 totalFlashId = output[6];
 	struct FlashIdUsageInformation *Info =
 	    (struct FlashIdUsageInformation *)calloc(totalFlashId,
 						     sizeof(struct FlashIdUsageInformation));
 
-	for (int flashId = 1; flashId < totalFlashId; flashId++) {
-		int getFlashIdAttribute =
+	for (gint flashId = 1; flashId < totalFlashId; flashId++) {
+		gint getFlashIdAttribute =
 		    Function1(External_Flash, Get_Flash_Attribute, flashId, 0, 0, output);
-		uint8_t getPurpose = output[7];
+		guint8 getPurpose = output[7];
 		if (getPurpose == FirmwareFile) {
-			for (int i = 0; i < Interface1Length; i++)
+			for (gint i = 0; i < Interface1Length; i++)
 				output[i] = 0;
-			uint8_t getFlashIdUsageInformation =
+			guint8 getFlashIdUsageInformation =
 			    Function1(External_Flash,
 				      Get_Flash_ID_Usage_Information,
 				      flashId,
 				      0,
 				      0,
 				      output);
-			for (int i = 0; i < 4; i++) {
+			for (gint i = 0; i < 4; i++) {
 				Info[flashId].PhysicalAddress[i] = output[6 + i];
 				Info[flashId].MaxSize[i] = output[10 + i];
 				Info[flashId].CurrentFwVersion[i] = output[14 + i];
@@ -1546,26 +1546,26 @@ check()
 	return Info;
 }
 
-int
+gint
 GetCompositeVersion(char *out, size_t outSize)
 {
 	if (!out || outSize == 0)
 		return -1;
 
-	uint8_t buffer[65] = {0};
-	int rc = Function1(Device_Information, Get_Firmware_Version, 0, 0, 0, buffer);
+	guint8 buffer[65] = {0};
+	gint rc = Function1(Device_Information, Get_Firmware_Version, 0, 0, 0, buffer);
 	if (rc != 0) {
 		snprintf(out, outSize, "0.0.0.0");
 		return -1;
 	}
 
-	uint8_t *body = GetCommandBody1(buffer);
+	guint8 *body = GetCommandBody1(buffer);
 	if (!body) {
 		snprintf(out, outSize, "0.0.0.0");
 		return -1;
 	}
 
-	int n = snprintf(out, outSize, "%X.%X.%02X", body[0], body[1], body[2]);
+	gint n = snprintf(out, outSize, "%X.%X.%02X", body[0], body[1], body[2]);
 
 	if (n < 0 || (size_t)n >= outSize) {
 		return -1;
@@ -1574,25 +1574,24 @@ GetCompositeVersion(char *out, size_t outSize)
 	return 0;
 }
 
-int
-main(int argc, char *argv[])
+gint
+main(gint argc, char *argv[])
 {
-	mcheck(NULL);
 	libusb_context *ctx = NULL;
-	volatile int device_connected = 1; // 1表示设备连接，0表示设备已断开
-	int r = init();
+	volatile gint device_connected = 1; // 1表示设备连接，0表示设备已断开
+	gint r = init();
 	// 注册热插拔回调
 	libusb_hotplug_callback_handle callback_handle;
-	int rc = libusb_hotplug_register_callback(ctx,
-						  LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
-						      LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
-						  0,
-						  DockVid,
-						  DockPid,
-						  LIBUSB_HOTPLUG_MATCH_ANY,
-						  hotplug_callback,
-						  NULL, // 用户数据传递
-						  &callback_handle);
+	gint rc = libusb_hotplug_register_callback(ctx,
+						   LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED |
+						       LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
+						   0,
+						   DockVid,
+						   DockPid,
+						   LIBUSB_HOTPLUG_MATCH_ANY,
+						   hotplug_callback,
+						   NULL, // 用户数据传递
+						   &callback_handle);
 	if (rc != LIBUSB_SUCCESS) {
 		fprintf(stderr, "Error registering hotplug callback: %s\n", libusb_strerror(rc));
 		libusb_exit(ctx);
@@ -1608,55 +1607,55 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	for (int i = 1; i < argc; i++) {
+	for (gint i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "/c") == 0) {
-			printf("Checking current FW version\n");
+			g_print("Checking current FW version\n");
 			struct FlashIdUsageInformation *Info = check();
 			char version[64]; // 準備一個足夠大的 buffer
 
-			int ret = GetCompositeVersion(version, sizeof(version));
+			gint ret = GetCompositeVersion(version, sizeof(version));
 
 			if (ret == 0) {
-				printf("Composite Version = %s\n", version);
+				g_print("Composite Version = %s\n", version);
 			}
 
-			printf("DMC: ");
-			printf("%d.%d.%02d\n",
-			       Info[1].CurrentFwVersion[1],
-			       Info[1].CurrentFwVersion[2],
-			       Info[1].CurrentFwVersion[3]);
-			printf("DP: ");
-			printf("%d.%02d.%03d\n",
-			       Info[2].CurrentFwVersion[1],
-			       Info[2].CurrentFwVersion[2],
-			       Info[2].CurrentFwVersion[3]);
-			printf("PD: ");
-			for (int i = 0; i < 3; i++)
-				printf("%02X.", Info[3].CurrentFwVersion[i]);
-			printf("%02X\n", Info[3].CurrentFwVersion[3]);
-			printf("USB3: ");
-			printf("%02X%02X\n",
-			       Info[4].CurrentFwVersion[2],
-			       Info[4].CurrentFwVersion[3]);
-			printf("USB4: ");
-			printf("%02X%02X\n",
-			       Info[5].CurrentFwVersion[2],
-			       Info[5].CurrentFwVersion[3]);
+			g_print("DMC: ");
+			g_print("%d.%d.%02d\n",
+				Info[1].CurrentFwVersion[1],
+				Info[1].CurrentFwVersion[2],
+				Info[1].CurrentFwVersion[3]);
+			g_print("DP: ");
+			g_print("%d.%02d.%03d\n",
+				Info[2].CurrentFwVersion[1],
+				Info[2].CurrentFwVersion[2],
+				Info[2].CurrentFwVersion[3]);
+			g_print("PD: ");
+			for (gint i = 0; i < 3; i++)
+				g_print("%02X.", Info[3].CurrentFwVersion[i]);
+			g_print("%02X\n", Info[3].CurrentFwVersion[3]);
+			g_print("USB3: ");
+			g_print("%02X%02X\n",
+				Info[4].CurrentFwVersion[2],
+				Info[4].CurrentFwVersion[3]);
+			g_print("USB4: ");
+			g_print("%02X%02X\n",
+				Info[5].CurrentFwVersion[2],
+				Info[5].CurrentFwVersion[3]);
 
 			return 0;
 		} else if (strcmp(argv[i], "/u") == 0) {
-			bool rs = CheckDockReadyForEnterPhase2Update();
-			// printf("%s\n", rs ? "true" : "false");
+			gboolean rs = CheckDockReadyForEnterPhase2Update();
+			// g_print("%s\n", rs ? "true" : "false");
 			if (rs == true) {
-				printf("Phase-1 update is already done, by rc %d",
-				       FWU_PHASE1_LOCKED);
+				g_print("Phase-1 update is already done, by rc %d",
+					FWU_PHASE1_LOCKED);
 				return FWU_PHASE1_LOCKED;
 			}
 
-			printf("Please DO NOT remove the dock and wait for a few minutes until "
-			       "the white light stops blinking.\n");
-			printf("Start updating........\n");
-			int r = FWUpdate(true, true);
+			g_print("Please DO NOT remove the dock and wait for a few minutes until "
+				"the white light stops blinking.\n");
+			g_print("Start updating........\n");
+			gint r = FWUpdate(true, true);
 			if (r == 0) {
 				/*Notice : rc == 0 includes 2 condition of FW update result as below
 				   .
@@ -1667,18 +1666,19 @@ main(int argc, char *argv[])
 				   composite version. *Assume fwupd pluggin will cover for the
 				   condition with message output*/
 
-				printf("Phase-1 finished. Please unplug the cable and wait for 30 "
-				       "seconds.\nPhase-2 will start automatically with the orange "
-				       "light starts blinking.\n");
+				g_print(
+				    "Phase-1 finished. Please unplug the cable and wait for 30 "
+				    "seconds.\nPhase-2 will start automatically with the orange "
+				    "light starts blinking.\n");
 				return 0;
 			} else {
-				printf("Phase-1 update failed, by error %d", r);
+				g_print("Phase-1 update failed, by error %d", r);
 				return r;
 			}
 		}
 
 		else {
-			printf("Wrong command. Please use /c or /u.\n");
+			g_print("Wrong command. Please use /c or /u.\n");
 			return 0;
 		}
 	}
