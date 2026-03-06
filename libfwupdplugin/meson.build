@@ -544,6 +544,7 @@ if get_option('tests')
     'struct',
     'temporary-directory',
     'tpm-eventlog',
+    'uefi-device',
     'udev-device',
     'version',
     'volume',
