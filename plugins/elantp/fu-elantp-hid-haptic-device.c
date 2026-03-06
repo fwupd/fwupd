@@ -12,7 +12,7 @@
 #include "fu-elantp-struct.h"
 
 struct _FuElantpHidHapticDevice {
-	FuUdevDevice parent_instance;
+	FuDevice parent_instance;
 	guint16 ic_page_count;
 	guint16 iap_type;
 	guint16 tp_iap_ctrl;
@@ -27,7 +27,7 @@ struct _FuElantpHidHapticDevice {
 	guint8 iap_ver;
 };
 
-G_DEFINE_TYPE(FuElantpHidHapticDevice, fu_elantp_hid_haptic_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuElantpHidHapticDevice, fu_elantp_hid_haptic_device, FU_TYPE_DEVICE)
 
 static gboolean
 fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
@@ -50,95 +50,23 @@ fu_elantp_hid_haptic_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_send_cmd(FuElantpHidHapticDevice *self,
-				     const guint8 *tx,
-				     gsize txsz,
-				     guint8 *rx,
-				     gsize rxsz,
-				     GError **error)
+fu_elantp_hid_haptic_device_ensure_iap_ctrl(FuElantpHidHapticDevice *self, GError **error)
 {
-	g_autofree guint8 *buf = NULL;
-	gsize bufsz = rxsz + 3;
 	FuDevice *proxy;
 
 	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
-					  tx,
-					  txsz,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
-		return FALSE;
-	if (rxsz == 0)
-		return TRUE;
-
-	/* GetFeature */
-	buf = g_malloc0(bufsz);
-	buf[0] = tx[0]; /* report number */
-	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(proxy),
-					  buf,
-					  bufsz,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
-		return FALSE;
-
-	/* success */
-	return fu_memcpy_safe(rx,
-			      rxsz,
-			      0x0, /* dst */
-			      buf,
-			      bufsz,
-			      0x3, /* src */
-			      rxsz,
-			      error);
-}
-
-static gboolean
-fu_elantp_hid_haptic_device_read_cmd(FuElantpHidHapticDevice *self,
-				     guint16 reg,
-				     guint8 *buf,
-				     gsize bufz,
-				     GError **error)
-{
-	guint8 tmp[5] = {0x0D, 0x05, 0x03};
-	fu_memwrite_uint16(tmp + 0x3, reg, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_haptic_device_send_cmd(self, tmp, sizeof(tmp), buf, bufz, error);
-}
-
-static gint
-fu_elantp_hid_haptic_device_write_cmd(FuElantpHidHapticDevice *self,
-				      guint16 reg,
-				      guint16 cmd,
-				      GError **error)
-{
-	guint8 buf[5] = {0x0D};
-	fu_memwrite_uint16(buf + 0x1, reg, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_haptic_device_send_cmd(self, buf, sizeof(buf), NULL, 0, error);
-}
-
-static gboolean
-fu_elantp_hid_haptic_device_ensure_iap_ctrl(FuElantpHidHapticDevice *self,
-					    GError **error)
-{
-	FuDevice *proxy;
-	guint8 buf[2] = {0x0};
-
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_IAP_CTRL,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_IAP_CTRL,
+					   &self->tp_iap_ctrl,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read IAPControl: ");
 		return FALSE;
 	}
-	self->tp_iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* in bootloader mode? */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
 	if (self->tp_iap_ver <= 5) {
 		if ((self->tp_iap_ctrl & ETP_I2C_MAIN_MODE_ON2) == 0)
 			fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -156,20 +84,21 @@ fu_elantp_hid_haptic_device_ensure_iap_ctrl(FuElantpHidHapticDevice *self,
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FuElantpHidHapticDevice *self,
-						   GError **error)
+fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FuElantpHidHapticDevice *self, GError **error)
 {
-	guint8 buf[2] = {0x0};
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	FuDevice *proxy;
+
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					   &self->iap_ctrl,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read IAPControl: ");
 		return FALSE;
 	}
-	self->iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-
 	if ((self->iap_ctrl & 0x800) != 0x800) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bit11 fail");
 		return FALSE;
@@ -183,20 +112,22 @@ fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FuElantpHidHapticDevice *self
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuElantpHidHapticDevice *self,
-						 GError **error)
+fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuElantpHidHapticDevice *self, GError **error)
 {
-	guint8 buf[2] = {0x0};
-	guint16 value;
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	guint16 value = 0;
+	FuDevice *proxy;
+
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE,
+					   &value,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read haptic enable cmd: ");
 		return FALSE;
 	}
-	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -205,8 +136,8 @@ fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuElantpHidHapticDevice *self,
 		return FALSE;
 	}
 
-	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
-	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
+	if (((value & 0xFF) & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
+	    ((value & 0xFF) & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -215,52 +146,65 @@ fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuElantpHidHapticDevice *self,
 	}
 
 	/* success */
-	self->driver_ic = (buf[0] >> 4) & 0xF;
+	self->driver_ic = ((value & 0xFF) >> 4) & 0xF;
 	return TRUE;
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_get_version(FuElantpHidHapticDevice *self,
-					GError **error)
+fu_elantp_hid_haptic_device_get_version(FuElantpHidHapticDevice *self, GError **error)
 {
+	guint16 tmp = 0;
 	guint16 v_s = 0;
 	guint16 v_d = 0;
 	guint16 v_m = 0;
 	guint16 v_y = 0;
-	guint8 buf[2] = {0x0};
+	FuDevice *proxy;
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_GET_EEPROM_FW_VERSION,
-						   error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_GET_EEPROM_FW_VERSION,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write haptic version cmd: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
 
-	if (!fu_elantp_hid_haptic_device_read_cmd(self, 0x0321, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   0x0321,
+					   &tmp,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read haptic version cmd: ");
 		return FALSE;
 	}
-	v_d = buf[0];
-	v_m = buf[1] & 0xF;
-	v_s = (buf[1] & 0xF0) >> 4;
+	v_d = tmp & 0xFF;
+	v_m = (tmp >> 8) & 0xF;
+	v_s = ((tmp >> 8) & 0xF0) >> 4;
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_GET_EEPROM_IAP_VERSION,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_GET_EEPROM_IAP_VERSION,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write haptic iap version cmd: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
 
-	if (!fu_elantp_hid_haptic_device_read_cmd(self, 0x0321, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   0x0321,
+					   &tmp,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read haptic iap version cmd: ");
 		return FALSE;
 	}
-	v_y = buf[0];
-	self->iap_ver = buf[1];
+	v_y = tmp & 0xFF;
+	self->iap_ver = tmp >> 8;
 
 	if (v_y == 0xFF && v_d == 0xFF && v_m == 0xF) {
 		fu_device_set_version(FU_DEVICE(self), "0");
@@ -278,32 +222,37 @@ fu_elantp_hid_haptic_device_write_fw_password(FuElantpHidHapticDevice *self,
 					      guint16 tp_iap_ver,
 					      GError **error)
 {
-	guint8 buf[2] = {0x0};
+	FuDevice *proxy;
 	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
-	guint16 value;
+	guint16 value = 0;
 
 	if (tp_iap_ver < 0x5 || tp_ic_type != 0x13)
 		return TRUE;
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self, FU_ETP_CMD_I2C_FW_PW, pw, error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_FW_PW,
+					    pw,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write fw password cmd: ");
 		return FALSE;
 	}
-
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_FW_PW,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_FW_PW,
+					   &value,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read fw password cmd: ");
 		return FALSE;
 	}
-	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value != pw) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "can't set fw password got:%x",
+			    "can't set fw password got: 0x%x",
 			    value);
 		return FALSE;
 	}
@@ -323,27 +272,29 @@ static gboolean
 fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
-	guint8 buf[2] = {0x0};
-	guint16 value;
+	guint16 value = 0;
 	FuElantpHaptictpWaitFlashEEPROMChecksumHelper *helper = user_data;
+	FuDevice *proxy;
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
-						   FU_ETP_CMD_I2C_EEPROM_WRITE_INFORMATION,
-						   error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_TP_SETTING,
+					    FU_ETP_CMD_I2C_EEPROM_WRITE_INFORMATION,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write haptic info: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_EEPROM_SETTING,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_TP_SETTING,
+					   &value,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read haptic info: ");
 		return FALSE;
 	}
-	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-
 	if ((value & 0xFFFF) != FU_ETP_CMD_I2C_EEPROM_WRITE_INFORMATION) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -357,36 +308,38 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *device, gpointer user_da
 							   helper->tp_iap_ver,
 							   error))
 		return FALSE;
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_IAP,
-						   helper->iap_password,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_IAP,
+					    helper->iap_password,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write iap password: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_EEPROM_WRITE_CHECKSUM,
-						   helper->checksum,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_EEPROM_WRITE_CHECKSUM,
+					    helper->checksum,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write eeprom checksum: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_TP_SETTING,
+					    FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
+					    error)) {
 		g_prefix_error_literal(error, "failed to set haptic initial setting: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_EEPROM_WRITE_CHECKSUM,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_EEPROM_WRITE_CHECKSUM,
+					   &value,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read haptic checksum: ");
 		return FALSE;
 	}
-	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if ((value & 0xFFFF) != helper->checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -407,25 +360,29 @@ fu_elantp_hid_haptic_device_wait_calc_checksum_cb(FuDevice *device,
 						  GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
-	guint16 ctrl;
-	guint8 buf[2] = {0x0};
+	guint16 ctrl = 0;
+	FuDevice *proxy;
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_SET_EEPROM_DATATYPE,
-						   error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_SET_EEPROM_DATATYPE,
+					    error)) {
 		g_prefix_error_literal(error, "failed to write eeprom datatype: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					   &ctrl,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read calc haptic cmd: ");
 		return FALSE;
 	}
-	ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if ((ctrl & 0x20) == 0x20) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -443,13 +400,17 @@ fu_elantp_hid_haptic_device_get_checksum(FuElantpHidHapticDevice *self,
 					 guint16 *checksum,
 					 GError **error)
 {
-	guint8 buf[2] = {0x0};
+	FuDevice *proxy;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_CALC_EEPROM_CHECKSUM,
-						   error))
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_CALC_EEPROM_CHECKSUM,
+					    error))
 		return FALSE;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_elantp_hid_haptic_device_wait_calc_checksum_cb,
@@ -464,20 +425,20 @@ fu_elantp_hid_haptic_device_get_checksum(FuElantpHidHapticDevice *self,
 			    error_local->message);
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_READ_EEPROM_CHECKSUM,
-						   error))
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_READ_EEPROM_CHECKSUM,
+					    error))
 		return FALSE;
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					   checksum,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read haptic checksum cmd: ");
 		return FALSE;
 	}
-	*checksum = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	return TRUE;
 }
@@ -488,8 +449,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 	FuDevice *proxy;
 	guint8 ic_type;
-	guint16 tmp;
-	guint8 buf[2] = {0x0};
+	guint16 tmp = 0;
 	g_autofree gchar *version_bl = NULL;
 
 	if (!fu_elantp_hid_haptic_device_get_haptic_driver_ic(self, error)) {
@@ -498,15 +458,17 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get pattern */
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_GET_HID_ID,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_GET_HID_ID,
+					   &tmp,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read HID ID: ");
 		return FALSE;
 	}
-	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	self->pattern = tmp != 0xFFFF ? (tmp & 0xFF00) >> 8 : 0;
 
 	if (!fu_elantp_hid_haptic_device_get_version(self, error))
@@ -516,22 +478,16 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_bootloader(device, version_bl);
 
 	/* get module ID */
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_GET_MODULE_ID,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_GET_MODULE_ID,
+					   &self->module_id,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read module ID: ");
 		return FALSE;
 	}
-	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* define the extra instance IDs */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(proxy));
-	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(proxy));
 	fu_device_add_instance_u16(device, "DRIVERIC", self->driver_ic);
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	if (!fu_device_build_instance_id(device,
@@ -545,27 +501,27 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get OSM version */
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_OSM_VERSION,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_OSM_VERSION,
+					   &tmp,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read OSM version: ");
 		return FALSE;
 	}
-	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
-		if (!fu_elantp_hid_haptic_device_read_cmd(self,
-							  FU_ETP_CMD_I2C_IAP_ICBODY,
-							  buf,
-							  sizeof(buf),
-							  error)) {
+		if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+						   FU_ETP_RPTID_TP_FEATURE,
+						   FU_ETP_CMD_I2C_IAP_ICBODY,
+						   &tmp,
+						   error)) {
 			g_prefix_error_literal(error, "failed to read IC body: ");
 			return FALSE;
 		}
-		ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
-	} else
-		ic_type = (tmp >> 8) & 0xFF;
+		ic_type = tmp & 0xFF;
+	} else {
+		ic_type = tmp >> 8;
+	}
 
 	/* define the extra instance IDs (ic_type + module_id + driver) */
 	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
@@ -645,6 +601,11 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 	const guint16 eeprom_fw_page_size = 32;
 	g_autoptr(FuChunkArray) chunks = NULL;
+	FuDevice *proxy;
+
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 
 	/* progress */
 	chunks = fu_chunk_array_new_from_bytes(helper->fw,
@@ -669,7 +630,7 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 			return FALSE;
 
 		/* write block */
-		blk[0] = 0x0B; /* report ID */
+		blk[0] = FU_ETP_RPTID_TP_IAP; /* report ID */
 		blk[1] = eeprom_fw_page_size + 5;
 		blk[2] = 0xA2;
 		fu_memwrite_uint16(blk + 0x3, i * eeprom_fw_page_size, G_BIG_ENDIAN);
@@ -706,22 +667,25 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 					   csum_tmp,
 					   G_BIG_ENDIAN);
 		}
-
-		if (!fu_elantp_hid_haptic_device_send_cmd(self, blk, blksz, NULL, 0, error))
+		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
+						  blk,
+						  blksz,
+						  FU_IOCTL_FLAG_NONE,
+						  error))
 			return FALSE;
 
 		fu_device_sleep(device,
 				self->fw_page_size == 512 ? ELANTP_DELAY_WRITE_BLOCK_512
 							  : ELANTP_DELAY_WRITE_BLOCK);
 
-		if (!fu_elantp_hid_haptic_device_write_cmd(self,
-							   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-							   FU_ETP_CMD_I2C_SET_EEPROM_DATATYPE,
-							   error))
+		if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+						    FU_ETP_RPTID_TP_FEATURE,
+						    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+						    FU_ETP_CMD_I2C_SET_EEPROM_DATATYPE,
+						    error))
 			return FALSE;
 
-		if (!fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(self,
-									&error_iapctrl)) {
+		if (!fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(self, &error_iapctrl)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -752,9 +716,10 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	guint16 checksum_device = 0;
 	const gchar *fw_ver;
 	const gchar *fw_ver_device;
-	g_autoptr(GBytes) fw = NULL;
 	FuElantpHaptictpWaitFlashEEPROMChecksumHelper helper = {0x0};
 	FuElantpHaptictpWriteHelper helper_write = {0x0};
+	FuDevice *proxy;
+	g_autoptr(GBytes) fw = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -763,17 +728,15 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, NULL);
 
-	/* simple image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
 	/* detach */
 	if (!fu_elantp_hid_haptic_device_detach(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write each block */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
 	helper_write.fw = fw;
 	helper_write.progress = fu_progress_get_child(progress);
 	if (!fu_device_retry_full(device,
@@ -785,17 +748,22 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
-						   error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_TP_SETTING,
+					    FU_ETP_CMD_I2C_EEPROM_SETTING_INITIAL,
+					    error)) {
 		g_prefix_error_literal(error, "cannot disable EEPROM Long Transmission mode: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_SET_EEPROM_LEAVE_IAP,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_SET_EEPROM_LEAVE_IAP,
+					    error)) {
 		g_prefix_error_literal(error, "cannot leave EEPROM IAP: ");
 		return FALSE;
 	}
@@ -844,10 +812,11 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_HAPTIC_RESTART,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_HAPTIC_RESTART,
+					    error)) {
 		g_prefix_error_literal(error, "cannot restart haptic DriverIC: ");
 		return FALSE;
 	}
@@ -861,9 +830,9 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
-	guint8 buf[2] = {0x0};
-	guint16 ctrl;
-	guint16 tmp;
+	FuDevice *proxy;
+	guint16 ctrl = 0;
+	guint16 tmp = 0;
 
 	/* haptic EEPROM IAP process runs in the TP main code */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -885,69 +854,70 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 	}
 
 	/* get OSM version */
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_OSM_VERSION,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_OSM_VERSION,
+					   &tmp,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read OSM version: ");
 		return FALSE;
 	}
-	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
-		if (!fu_elantp_hid_haptic_device_read_cmd(self,
-							  FU_ETP_CMD_I2C_IAP_ICBODY,
-							  buf,
-							  sizeof(buf),
-							  error)) {
+		if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+						   FU_ETP_RPTID_TP_FEATURE,
+						   FU_ETP_CMD_I2C_IAP_ICBODY,
+						   &self->tp_ic_type,
+						   error)) {
 			g_prefix_error_literal(error, "failed to read IC body: ");
 			return FALSE;
 		}
-		self->tp_ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
-	} else
-		self->tp_ic_type = (tmp >> 8) & 0xFF;
+		self->tp_ic_type &= 0xFF;
+	} else {
+		self->tp_ic_type = tmp >> 8;
+	}
 
 	/* get IAP firmware version */
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  self->pattern == 0 ? FU_ETP_CMD_I2C_IAP_VERSION
-								     : FU_ETP_CMD_I2C_IAP_VERSION_2,
-						  buf,
-						  sizeof(buf),
-						  error)) {
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   self->pattern == 0 ? FU_ETP_CMD_I2C_IAP_VERSION
+							      : FU_ETP_CMD_I2C_IAP_VERSION_2,
+					   &self->tp_iap_ver,
+					   error)) {
 		g_prefix_error_literal(error, "failed to read bootloader version: ");
 		return FALSE;
 	}
 	if (self->pattern >= 1)
-		self->tp_iap_ver = buf[1];
-	else
-		self->tp_iap_ver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+		self->tp_iap_ver >>= 8;
 
 	/* set the page size */
 	self->fw_page_size = 64;
 	if (self->tp_ic_type >= 0x10) {
 		if (self->tp_iap_ver >= 1) {
 			/* set the IAP type, presumably some kind of ABI */
-			if (self->tp_iap_ver >= 2 &&
-			    (self->tp_ic_type == 0x14 || self->tp_ic_type == 0x15)) {
+			if (self->tp_iap_ver >= 2 && (self->tp_ic_type == FU_ETP_IC_NUM14 ||
+						      self->tp_ic_type == FU_ETP_IC_NUM15)) {
 				self->fw_page_size = 512;
 			} else {
 				self->fw_page_size = 128;
 			}
 
-			if (!fu_elantp_hid_haptic_device_write_cmd(self,
-								   FU_ETP_CMD_I2C_IAP_TYPE,
-								   self->fw_page_size / 2,
-								   error))
+			if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+							    FU_ETP_RPTID_TP_FEATURE,
+							    FU_ETP_CMD_I2C_IAP_TYPE,
+							    self->fw_page_size / 2,
+							    error))
 				return FALSE;
-			if (!fu_elantp_hid_haptic_device_read_cmd(self,
-								  FU_ETP_CMD_I2C_IAP_TYPE,
-								  buf,
-								  sizeof(buf),
-								  error)) {
+			if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+							   FU_ETP_RPTID_TP_FEATURE,
+							   FU_ETP_CMD_I2C_IAP_TYPE,
+							   &self->iap_type,
+							   error)) {
 				g_prefix_error_literal(error, "failed to read IAP type: ");
 				return FALSE;
 			}
-			self->iap_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 			if (self->iap_type != self->fw_page_size / 2) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
@@ -958,29 +928,30 @@ fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
 		}
 	}
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_EEPROM_SETTING,
-						   FU_ETP_CMD_I2C_EEPROM_LONG_TRANS_ENABLE,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_TP_SETTING,
+					    FU_ETP_CMD_I2C_EEPROM_LONG_TRANS_ENABLE,
+					    error)) {
 		g_prefix_error_literal(error, "cannot enable EEPROM Long Transmission mode: ");
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						   FU_ETP_CMD_I2C_SET_EEPROM_ENTER_IAP,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					    FU_ETP_CMD_I2C_SET_EEPROM_ENTER_IAP,
+					    error)) {
 		g_prefix_error_literal(error, "cannot enter EEPROM IAP: ");
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_haptic_device_read_cmd(self,
-						  FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
-						  buf,
-						  sizeof(buf),
-						  error))
+	if (!fu_elantp_hid_device_read_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					   FU_ETP_RPTID_TP_FEATURE,
+					   FU_ETP_CMD_I2C_SET_EEPROM_CTRL,
+					   &ctrl,
+					   error))
 		return FALSE;
-	ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if ((ctrl & 0x800) == 0x800) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -998,24 +969,34 @@ static gboolean
 fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
+	FuDevice *proxy;
 
 	/* reset back to runtime */
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_IAP_RESET,
-						   ETP_I2C_IAP_RESET,
-						   error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_IAP_RESET,
+					    ETP_I2C_IAP_RESET,
+					    error)) {
 		g_prefix_error_literal(error, "cannot reset TP: ");
 		return FALSE;
 	}
 	fu_device_sleep(device, ELANTP_DELAY_RESET);
-	if (!fu_elantp_hid_haptic_device_write_cmd(self,
-						   FU_ETP_CMD_I2C_IAP_RESET,
-						   ETP_I2C_ENABLE_REPORT,
-						   error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    FU_ETP_CMD_I2C_IAP_RESET,
+					    ETP_I2C_ENABLE_REPORT,
+					    error)) {
 		g_prefix_error_literal(error, "cannot enable TP report: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_haptic_device_write_cmd(self, 0x0306, 0x003, error)) {
+	if (!fu_elantp_hid_device_write_cmd(FU_ELANTP_HID_DEVICE(proxy),
+					    FU_ETP_RPTID_TP_FEATURE,
+					    0x0306,
+					    0x003,
+					    error)) {
 		g_prefix_error_literal(error, "cannot switch to TP PTP mode: ");
 		return FALSE;
 	}

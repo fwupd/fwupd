@@ -22,13 +22,7 @@ struct _FuElantpFirmware {
 
 G_DEFINE_TYPE(FuElantpFirmware, fu_elantp_firmware, FU_TYPE_FIRMWARE)
 
-/* firmware block update */
-#define ETP_IC_TYPE_ADDR_WRDS	   0x0080
-#define ETP_IAP_VER_ADDR_WRDS	   0x0082
-#define ETP_IAP_START_ADDR_WRDS	   0x0083
-#define ETP_IAP_FORCETABLE_ADDR_V5 0x0085
-
-const guint8 elantp_signature[] = {0xAA, 0x55, 0xCC, 0x33, 0xFF, 0xFF};
+#define FU_ELANTP_FIRMWARE_OFFSET_IAP 0x100 /* bytes */
 
 guint16
 fu_elantp_firmware_get_module_id(FuElantpFirmware *self)
@@ -69,6 +63,7 @@ static void
 fu_elantp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
+	fu_xmlb_builder_insert_kx(bn, "ic_type", self->ic_type);
 	fu_xmlb_builder_insert_kx(bn, "iap_addr", self->iap_addr);
 	fu_xmlb_builder_insert_kx(bn, "module_id", self->module_id);
 }
@@ -79,30 +74,22 @@ fu_elantp_firmware_validate(FuFirmware *firmware,
 			    gsize offset,
 			    GError **error)
 {
-	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz < FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE) {
+	if (streamsz < FU_STRUCT_ELANTP_FIRMWARE_FTR_SIZE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "stream was too small");
 		return FALSE;
 	}
-	if (!fu_struct_elantp_firmware_hdr_validate_stream(stream,
+	if (!fu_struct_elantp_firmware_ftr_validate_stream(stream,
 							   streamsz -
-							       FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE,
+							       FU_STRUCT_ELANTP_FIRMWARE_FTR_SIZE,
 							   error))
 		return FALSE;
-	if (self->force_table_addr != 0) {
-		if (!fu_struct_elantp_firmware_hdr_validate_stream(
-			stream,
-			self->force_table_addr - 1 + FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE,
-			error))
-			return FALSE;
-	}
 
 	/* success */
 	return TRUE;
@@ -115,27 +102,31 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 			 GError **error)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
-	guint16 iap_addr_wrds;
 	guint16 force_table_addr_wrds;
 	guint16 module_id_wrds;
-	g_autoptr(GError) error_local = NULL;
+	guint32 iap_addr_tmp;
+	g_autoptr(FuStructElantpFirmwareHdr) st = NULL;
 
-	/* presumably in words */
-	if (!fu_input_stream_read_u16(stream,
-				      ETP_IAP_START_ADDR_WRDS * 2,
-				      &iap_addr_wrds,
-				      G_LITTLE_ENDIAN,
-				      error))
+	st = fu_struct_elantp_firmware_hdr_parse_stream(stream,
+							FU_ELANTP_FIRMWARE_OFFSET_IAP,
+							error);
+	if (st == NULL)
 		return FALSE;
-	if (iap_addr_wrds < ETP_IAP_START_ADDR_WRDS || iap_addr_wrds == 0xFFFF) {
+
+	/* convert from words */
+	iap_addr_tmp = (guint32)fu_struct_elantp_firmware_hdr_get_iap_start(st) * 2;
+	if (iap_addr_tmp >= G_MAXUINT16 ||
+	    iap_addr_tmp < (FU_ELANTP_FIRMWARE_OFFSET_IAP + FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "IAP address invalid: 0x%x",
-			    iap_addr_wrds);
+			    iap_addr_tmp);
 		return FALSE;
 	}
-	self->iap_addr = iap_addr_wrds * 2;
+	self->iap_addr = (guint16)iap_addr_tmp;
+	self->ic_type = fu_struct_elantp_firmware_hdr_get_ic_type(st);
+	self->iap_ver = fu_struct_elantp_firmware_hdr_get_iap_ver(st);
 
 	/* read module ID */
 	if (!fu_input_stream_read_u16(stream,
@@ -158,45 +149,35 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 				      G_LITTLE_ENDIAN,
 				      error))
 		return FALSE;
-	if (!fu_input_stream_read_u16(stream,
-				      ETP_IC_TYPE_ADDR_WRDS * 2,
-				      &self->ic_type,
-				      G_LITTLE_ENDIAN,
-				      error))
-		return FALSE;
-	if (!fu_input_stream_read_u16(stream,
-				      ETP_IAP_VER_ADDR_WRDS * 2,
-				      &self->iap_ver,
-				      G_LITTLE_ENDIAN,
-				      error))
-		return FALSE;
 
-	if (self->ic_type != 0x12 && self->ic_type != 0x13)
-		return TRUE;
-
-	if (self->iap_ver <= 4) {
-		if (!fu_input_stream_read_u16(stream,
-					      self->iap_addr + 6,
-					      &force_table_addr_wrds,
-					      G_LITTLE_ENDIAN,
-					      &error_local)) {
-			g_debug("forcetable address wrong: %s", error_local->message);
-			return TRUE;
+	/* get the forcetable address */
+	if (self->ic_type == FU_ETP_IC_NUM12 || self->ic_type == FU_ETP_IC_NUM13 ||
+	    self->ic_type == FU_ETP_IC_NUM14 || self->ic_type == FU_ETP_IC_NUM15) {
+		if (self->iap_ver <= 4) {
+			if (!fu_input_stream_read_u16(stream,
+						      self->iap_addr + 6,
+						      &force_table_addr_wrds,
+						      G_LITTLE_ENDIAN,
+						      error))
+				return FALSE;
+		} else {
+			force_table_addr_wrds =
+			    fu_struct_elantp_firmware_hdr_get_iap_forcetable(st);
 		}
-	} else {
-		if (!fu_input_stream_read_u16(stream,
-					      ETP_IAP_FORCETABLE_ADDR_V5 * 2,
-					      &force_table_addr_wrds,
-					      G_LITTLE_ENDIAN,
-					      &error_local)) {
-			g_debug("forcetable address wrong: %s", error_local->message);
-			return TRUE;
+		if (force_table_addr_wrds == 0xFFFF) {
+			self->force_table_support = FALSE;
+		} else {
+			if (force_table_addr_wrds % 32 != 0 || force_table_addr_wrds >= 0x7FFF) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "forcetable address invalid: 0x%x",
+					    force_table_addr_wrds);
+				return FALSE;
+			}
+			self->force_table_addr = force_table_addr_wrds * 2;
+			self->force_table_support = TRUE;
 		}
-	}
-
-	if (force_table_addr_wrds % 32 == 0) {
-		self->force_table_addr = force_table_addr_wrds * 2;
-		self->force_table_support = TRUE;
 	}
 
 	/* success */
@@ -209,7 +190,10 @@ fu_elantp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
 	guint64 tmp;
 
-	/* two simple properties */
+	/* optional properties */
+	tmp = xb_node_query_text_as_uint(n, "ic_type", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		self->ic_type = tmp;
 	tmp = xb_node_query_text_as_uint(n, "module_id", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
 		self->module_id = tmp;
@@ -227,29 +211,31 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuStructElantpFirmwareHdr) st_hdr = fu_struct_elantp_firmware_hdr_new();
+	g_autoptr(FuStructElantpFirmwareFtr) st_ftr = fu_struct_elantp_firmware_ftr_new();
 
-	/* only one image supported */
-	blob = fu_firmware_get_bytes_with_patches(firmware, error);
-	if (blob == NULL)
+	/* sanity check */
+	if (self->iap_addr < FU_ELANTP_FIRMWARE_OFFSET_IAP + FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "IAP address 0x%x would truncate header",
+			    self->iap_addr);
 		return NULL;
+	}
 
-	/* lets build a simple firmware like this:
-	 * ------ 0x0
-	 * HEADER (containing IAP offset and module ID)
-	 * ------ ~0x10a
-	 *  DATA
-	 * ------
-	 *  SIGNATURE
-	 * ------
-	 */
-	fu_byte_array_set_size(buf, self->iap_addr + 0x2 + 0x2, 0x00);
-	if (!fu_memwrite_uint16_safe(buf->data,
-				     buf->len,
-				     ETP_IAP_START_ADDR_WRDS * 2,
-				     self->iap_addr / 2,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
+	/* header */
+	fu_byte_array_set_size(buf, FU_ELANTP_FIRMWARE_OFFSET_IAP, 0x00);
+	fu_struct_elantp_firmware_hdr_set_ic_type(st_hdr, self->ic_type);
+	fu_struct_elantp_firmware_hdr_set_iap_ver(st_hdr, self->iap_ver);
+	fu_struct_elantp_firmware_hdr_set_iap_start(st_hdr, self->iap_addr / 2);
+	fu_struct_elantp_firmware_hdr_set_iap_forcetable(
+	    st_hdr,
+	    self->force_table_support ? self->force_table_addr / 2 : 0xFFFF);
+	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
+
+	/* IAP */
+	fu_byte_array_set_size(buf, self->iap_addr + 0x4, 0x00);
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
 				     self->iap_addr,
@@ -264,8 +250,15 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 				     G_LITTLE_ENDIAN,
 				     error))
 		return NULL;
+
+	/* data */
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
+	if (blob == NULL)
+		return NULL;
 	fu_byte_array_append_bytes(buf, blob);
-	g_byte_array_append(buf, elantp_signature, sizeof(elantp_signature));
+
+	/* footer */
+	g_byte_array_append(buf, st_ftr->buf->data, st_ftr->buf->len);
 	return g_steal_pointer(&buf);
 }
 

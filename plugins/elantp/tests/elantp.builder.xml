@@ -1,4 +1,5 @@
 <firmware gtype="FuElantpFirmware">
+  <ic_type>0x16</ic_type>
   <iap_addr>0xe00</iap_addr>
   <module_id>0x2</module_id>
   <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
