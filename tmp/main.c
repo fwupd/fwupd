@@ -245,7 +245,7 @@ struct UsageInformation {
 	struct FlashIdUsageInformation *FlashIdList;
 };
 
-gint
+static gint
 BytesToInt(guint8 *data, gint length)
 {
 	gint size = 0;
@@ -258,7 +258,8 @@ BytesToInt(guint8 *data, gint length)
 
 	return size;
 }
-guint8 *
+
+static guint8 *
 IntToBytes(gint size)
 {
 	static guint8 res[4];
@@ -269,7 +270,8 @@ IntToBytes(gint size)
 
 	return res;
 }
-guint8 *
+
+static guint8 *
 ToBytes(guint32 size)
 {
 	static guint8 res[4];
@@ -281,7 +283,7 @@ ToBytes(guint32 size)
 	return res;
 }
 
-guint32
+static guint32
 Compute(guint8 *buffer, size_t bufferlength, gint offset, gint length)
 {
 	if (!((buffer != NULL) && (offset >= 0) && (length >= 0) &&
@@ -298,7 +300,7 @@ Compute(guint8 *buffer, size_t bufferlength, gint offset, gint length)
 	return crc32;
 }
 
-gboolean
+static gboolean
 arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 {
 	for (size_t i = 0; i < length; i++) {
@@ -310,7 +312,7 @@ arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 
 static const gchar *Path_Of_Composite_Image = "FW/ldc_u4_composite_image.bin";
 
-gint
+static gint
 ReadCompositeImageFile(char **data)
 {
 	struct stat fileInfo;
@@ -333,7 +335,7 @@ ReadCompositeImageFile(char **data)
 		return COMPOSITE_IMAGE_FILE_NOT_FOUND;
 }
 
-guint8 *
+static guint8 *
 GetBytes(struct UsageInformation targetUsageInformationTable)
 {
 	guint8 *table = (guint8 *)calloc(UsageTableSize, sizeof(guint8));
@@ -384,27 +386,7 @@ GetBytes(struct UsageInformation targetUsageInformationTable)
 	return table;
 }
 
-#if 0
-gint
-init();
-gint LIBUSB_CALL
-hotplug_callback(struct libusb_context *ctx,
-		 struct libusb_device *dev,
-		 libusb_hotplug_event event,
-		 void *user_data);
-void *
-usb_event_thread(void *arg);
-struct FlashIdUsageInformation *
-check();
-gint
-FWUpdate(gboolean forceUpdate, gboolean noUnplug);
-gboolean
-CheckDockReadyForEnterPhase2Update();
-gint
-GetCompositeVersion(char *out, size_t outSize);
-#endif
-
-guint8 *
+static guint8 *
 GetCompositeData(gint addr, gint size, char *data)
 {
 	guint8 *temp = (guint8 *)calloc(size, sizeof(guint8));
@@ -414,7 +396,7 @@ GetCompositeData(gint addr, gint size, char *data)
 	return temp;
 }
 
-gboolean
+static gboolean
 CheckFwVerify(gint flashId,
 	      struct UsageInformation targetUsageInformationTable,
 	      char *compositeImageData)
@@ -464,7 +446,7 @@ GetFlashIdAttribute(guint8 *data)
 	return fa;
 }
 
-void
+static void
 SetFeature(guint8 *cmd, gint interface)
 {
 	gint res;
@@ -499,7 +481,7 @@ SetFeature(guint8 *cmd, gint interface)
 	//     g_print("SetFeature failed : %d\n", res);
 }
 
-void
+static void
 GetFeature(guint8 *cmd, gint interface)
 {
 	gint res;
@@ -534,7 +516,7 @@ GetFeature(guint8 *cmd, gint interface)
 	//     g_print("GetFeature failed : %d\n", res);
 }
 
-gint
+static gint
 Function1(guint8 CmdClass,
 	  guint8 CmdId,
 	  guint8 FlashId,
@@ -639,7 +621,7 @@ Function1(guint8 CmdClass,
 	return COMMAND_OVER_RETRY_TIMES;
 }
 
-void
+static void
 TriggerPhase2(gboolean noUnplug)
 {
 	guint8 DfuCtrl[2] = {0};
@@ -657,7 +639,7 @@ TriggerPhase2(gboolean noUnplug)
 	}
 }
 
-guint8 *
+static guint8 *
 GetCommandBody1(guint8 *data)
 {
 	gint size = data[1];
@@ -667,7 +649,8 @@ GetCommandBody1(guint8 *data)
 
 	return res;
 }
-guint8 *
+
+static guint8 *
 GetCommandBody2(guint8 *data)
 {
 	gint size = data[2];
@@ -678,7 +661,7 @@ GetCommandBody2(guint8 *data)
 	return res;
 }
 
-gint
+static gint
 Function2(guint8 CmdClass,
 	  guint8 CmdId,
 	  guint8 FlashId,
@@ -793,7 +776,7 @@ Function2(guint8 CmdClass,
 	return COMMAND_OVER_RETRY_TIMES;
 }
 
-gint
+static gint
 WriteUsageInformationTable(guint8 *usageInformationData)
 {
 	gint errorHandle = 0;
@@ -903,7 +886,7 @@ WriteUsageInformationTable(guint8 *usageInformationData)
 	return 0;
 }
 
-gint
+static gint
 WriteFlashIdData(gint flashId,
 		 struct FlashIdAttribute flashIdAttribute,
 		 struct UsageInformation changeTagetUsageInformationTable,
@@ -1049,7 +1032,7 @@ WriteFlashIdData(gint flashId,
  * firmware update error definitions.(gint)
  */
 
-gint
+static gint
 FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 {
 	// gboolean forceUpdate = false;
@@ -1398,7 +1381,7 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 	return 0;
 }
 
-gboolean
+static gboolean
 CheckDockReadyForEnterPhase2Update()
 {
 	gboolean rs = false;
@@ -1412,7 +1395,7 @@ CheckDockReadyForEnterPhase2Update()
 	return rs;
 }
 
-gint
+static gint
 myclaim(gint interface)
 {
 	// gint release_interface = libusb_release_interface(devh,interface);
@@ -1424,7 +1407,8 @@ myclaim(gint interface)
 
 	return r;
 }
-gint
+
+static gint
 init()
 {
 	libusb_close(devh);
@@ -1466,7 +1450,7 @@ init()
 	return 0;
 }
 // 回调函数：处理设备的插入和断开事件
-gint LIBUSB_CALL
+static gint LIBUSB_CALL
 hotplug_callback(struct libusb_context *ctx,
 		 struct libusb_device *dev,
 		 libusb_hotplug_event event,
@@ -1489,7 +1473,8 @@ hotplug_callback(struct libusb_context *ctx,
 
 	return 0; // 返回 0 表示回调未被注销
 }
-void *
+
+static void *
 usb_event_thread(void *arg)
 {
 	while (device_connected) {
@@ -1498,7 +1483,7 @@ usb_event_thread(void *arg)
 	return NULL;
 }
 
-guint8
+static guint8
 GetCurrentFwVerForGUI(gint flashId, gint index)
 {
 	return CurrentFwVerForGUI[flashId][index];
@@ -1546,7 +1531,7 @@ check()
 	return Info;
 }
 
-gint
+static gint
 GetCompositeVersion(char *out, size_t outSize)
 {
 	if (!out || outSize == 0)
@@ -1574,8 +1559,8 @@ GetCompositeVersion(char *out, size_t outSize)
 	return 0;
 }
 
-gint
-main(gint argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	libusb_context *ctx = NULL;
 	volatile gint device_connected = 1; // 1表示设备连接，0表示设备已断开
