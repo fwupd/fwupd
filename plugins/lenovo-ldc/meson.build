@@ -8,7 +8,6 @@ plugin_builtins += static_library('fu_plugin_lenovo_ldc',
   sources: [
     'fu-lenovo-ldc-common.c',
     'fu-lenovo-ldc-device.c',
-    'fu-lenovo-ldc-firmware.c',
     'fu-lenovo-ldc-plugin.c',
   ],
   include_directories: plugin_incdirs,

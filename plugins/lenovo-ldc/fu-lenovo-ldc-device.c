@@ -8,7 +8,6 @@
 
 #include "fu-lenovo-ldc-common.h"
 #include "fu-lenovo-ldc-device.h"
-#include "fu-lenovo-ldc-firmware.h"
 #include "fu-lenovo-ldc-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
@@ -139,30 +138,6 @@ fu_lenovo_ldc_device_cleanup(FuDevice *device,
 }
 
 static gboolean
-fu_lenovo_ldc_device_check_firmware(FuDevice *device,
-				    FuFirmware *firmware,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-
-	/* TODO: you do not need to use this vfunc if not checking attributes */
-	if (self->start_addr !=
-	    fu_lenovo_ldc_firmware_get_start_addr(FU_LENOVO_LDC_FIRMWARE(firmware))) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "start address mismatch, got 0x%04x, expected 0x%04x",
-			    fu_lenovo_ldc_firmware_get_start_addr(FU_LENOVO_LDC_FIRMWARE(firmware)),
-			    self->start_addr);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_lenovo_ldc_device_write_blocks(FuLenovoLdcDevice *self,
 				  FuChunkArray *chunks,
 				  FuProgress *progress,
@@ -280,6 +255,7 @@ fu_lenovo_ldc_device_init(FuLenovoLdcDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), "icon-name");
+	fu_device_set_firmware_size(FU_DEVICE(self), 0xFFF000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_LDC_DEVICE_FLAG_EXAMPLE);
 }
 
@@ -308,7 +284,6 @@ fu_lenovo_ldc_device_class_init(FuLenovoLdcDeviceClass *klass)
 	device_class->cleanup = fu_lenovo_ldc_device_cleanup;
 	device_class->attach = fu_lenovo_ldc_device_attach;
 	device_class->detach = fu_lenovo_ldc_device_detach;
-	device_class->check_firmware = fu_lenovo_ldc_device_check_firmware;
 	device_class->write_firmware = fu_lenovo_ldc_device_write_firmware;
 	device_class->set_quirk_kv = fu_lenovo_ldc_device_set_quirk_kv;
 	device_class->set_progress = fu_lenovo_ldc_device_set_progress;
