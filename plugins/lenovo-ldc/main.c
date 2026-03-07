@@ -305,9 +305,9 @@ arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 {
 	for (size_t i = 0; i < length; i++) {
 		if (array1[i] != array2[i])
-			return false;
+			return FALSE;
 	}
-	return true;
+	return TRUE;
 }
 
 static const gchar *Path_Of_Composite_Image = "FW/ldc_u4_composite_image.bin";
@@ -405,7 +405,7 @@ CheckFwVerify(gint flashId,
 	gint targetFwSize =
 	    BytesToInt(targetUsageInformationTable.FlashIdList[flashId].TargetFwFileSize, 4);
 	if (targetFwSize + SignatureSize > maxSize)
-		return false;
+		return FALSE;
 
 	gint startAddr =
 	    BytesToInt(targetUsageInformationTable.FlashIdList[flashId].PhysicalAddress, 4) +
@@ -415,9 +415,9 @@ CheckFwVerify(gint flashId,
 	guint32 b = Compute(flashIdImageData, targetFwSize, 0, targetFwSize);
 	free(flashIdImageData);
 	if ((guint32)a != b)
-		return false;
+		return FALSE;
 
-	return true;
+	return TRUE;
 }
 
 struct FlashIdAttribute
@@ -1022,11 +1022,11 @@ WriteFlashIdData(gint flashId,
  * - Perform firmware programming for each component
  *
  * @param forceUpdate
- *        If true, firmware will be updated even if the current firmware version
+ *        If TRUE, firmware will be updated even if the current firmware version
  * is => the target version.
  *
  * @param noUnplug
- *        If true, skip unplug detection during the firmware update process.
+ *        If TRUE, skip unplug detection during the firmware update process.
  *
  * @return SUCCESS on success, otherwise returns an error code defined in the
  * firmware update error definitions.(gint)
@@ -1035,8 +1035,8 @@ WriteFlashIdData(gint flashId,
 static gint
 FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 {
-	// gboolean forceUpdate = false;
-	// gboolean noUnplug = false;
+	// gboolean forceUpdate = FALSE;
+	// gboolean noUnplug = FALSE;
 	char *compositeImageData;
 	gint r;
 	r = ReadCompositeImageFile(&compositeImageData);
@@ -1115,7 +1115,7 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 					    ds[24];
 
 					//
-					targetUsageInformationTable.FlashIdList[i].Flag = false;
+					targetUsageInformationTable.FlashIdList[i].Flag = FALSE;
 				}
 			}
 			if (BytesToInt(targetUsageInformationTable.Crc32, 4) !=
@@ -1189,13 +1189,13 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 	guint32 t = Compute(mcuUsageInformationData, UsageTableSize, 0, 4092);
 	guint8 *computecrc = ToBytes(t);
 	if (!arraysEqual(mcuUIcrc, computecrc, 4)) {
-		forceUpdate = true;
+		forceUpdate = TRUE;
 	}
 
 	// Check Package Version to Clean Update List
-	gboolean bcdVerUpdateReq = false;
+	gboolean bcdVerUpdateReq = FALSE;
 	if (forceUpdate)
-		bcdVerUpdateReq = true;
+		bcdVerUpdateReq = TRUE;
 
 	if (!forceUpdate) {
 		for (gint i = 0; i < Interface1Length; i++)
@@ -1211,7 +1211,7 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 		free(dockFWPackageVer);
 
 		if (targetFWPackageVerInt > dockFWPackageVerInt)
-			bcdVerUpdateReq = true;
+			bcdVerUpdateReq = TRUE;
 	}
 	// Check Dock Component Need to Update
 	struct FlashIdUsageInformation *FlashIdUpdateList;
@@ -1222,7 +1222,7 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 		for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
 			changeTagetUsageInformationTable.FlashIdList[i] =
 			    targetUsageInformationTable.FlashIdList[i];
-			changeTagetUsageInformationTable.FlashIdList[i].Flag = true;
+			changeTagetUsageInformationTable.FlashIdList[i].Flag = TRUE;
 		}
 	}
 
@@ -1272,12 +1272,12 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 					4)) {
 					changeTagetUsageInformationTable.FlashIdList[i] =
 					    targetUsageInformationTable.FlashIdList[i];
-					changeTagetUsageInformationTable.FlashIdList[i].Flag = true;
+					changeTagetUsageInformationTable.FlashIdList[i].Flag = TRUE;
 				} else {
 					changeTagetUsageInformationTable.FlashIdList[i] =
 					    mcuFlashIdList[i];
 					changeTagetUsageInformationTable.FlashIdList[i].Flag =
-					    false;
+					    FALSE;
 				}
 			}
 			free(mcuFlashIdList);
@@ -1285,10 +1285,10 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 	}
 
 	// Check MCU in to phase-1 process
-	gboolean NeedWriteTable = false;
+	gboolean NeedWriteTable = FALSE;
 	for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
 		if (changeTagetUsageInformationTable.FlashIdList[i].Flag) {
-			NeedWriteTable = true;
+			NeedWriteTable = TRUE;
 			break;
 		}
 	}
@@ -1384,13 +1384,13 @@ FWUpdate(gboolean forceUpdate, gboolean noUnplug)
 static gboolean
 CheckDockReadyForEnterPhase2Update()
 {
-	gboolean rs = false;
+	gboolean rs = FALSE;
 
 	guint8 buffer[65];
 	rs = Function1(Dock, Get_Dock_Firmware_Upgrade_Ctrl, 0, 0, 0, buffer);
 	guint8 *DockFirmwareCtrlBody = GetCommandBody1(buffer);
 	if (DockFirmwareCtrlBody[0] == Locked && DockFirmwareCtrlBody[1] == 2)
-		rs = true;
+		rs = TRUE;
 
 	return rs;
 }
@@ -1630,8 +1630,8 @@ main(int argc, char *argv[])
 			return 0;
 		} else if (strcmp(argv[i], "/u") == 0) {
 			gboolean rs = CheckDockReadyForEnterPhase2Update();
-			// g_print("%s\n", rs ? "true" : "false");
-			if (rs == true) {
+			// g_print("%s\n", rs ? "TRUE" : "FALSE");
+			if (rs == TRUE) {
 				g_print("Phase-1 update is already done, by rc %d",
 					FWU_PHASE1_LOCKED);
 				return FWU_PHASE1_LOCKED;
@@ -1640,7 +1640,7 @@ main(int argc, char *argv[])
 			g_print("Please DO NOT remove the dock and wait for a few minutes until "
 				"the white light stops blinking.\n");
 			g_print("Start updating........\n");
-			gint r = FWUpdate(true, true);
+			gint r = FWUpdate(TRUE, TRUE);
 			if (r == 0) {
 				/*Notice : rc == 0 includes 2 condition of FW update result as below
 				   .

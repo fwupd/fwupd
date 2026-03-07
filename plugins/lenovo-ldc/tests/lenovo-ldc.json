@@ -1,0 +1,31 @@
+{
+  "name": "Lenovo Ldc",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "lenovo-ldc-1.2.3.cab",
+      "emulation-file": "@enumeration_datadir@/lenovo-ldc-setup.json",
+      "emulation-url": "lenovo-ldc-1.2.3.zip",
+      "components": [
+        {
+          "version": "1.2.3",
+          "guids": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "lenovo-ldc-1.2.4.cab",
+      "emulation-url": "lenovo-ldc-1.2.4.zip",
+      "components": [
+        {
+          "version": "1.2.4",
+          "guids": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      ]
+    }
+  ]
+}
