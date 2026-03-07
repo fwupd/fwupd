@@ -2470,6 +2470,11 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("HP SureStart is enabled")},
+		     {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("AMD microcode signature vulnerability fixed")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
