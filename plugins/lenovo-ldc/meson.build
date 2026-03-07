@@ -19,6 +19,7 @@ plugin_builtins += static_library('fu_plugin_lenovo_ldc',
 
 executable(
   'main',
+  rustgen.process('fu-lenovo-ldc.rs'),
   sources: ['main.c'],
   include_directories: plugin_incdirs,
   dependencies: plugin_deps,
