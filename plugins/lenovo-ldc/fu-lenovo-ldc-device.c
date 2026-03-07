@@ -13,6 +13,12 @@
 /* this can be set using Flags=example in the quirk file  */
 #define FU_LENOVO_LDC_DEVICE_FLAG_EXAMPLE "example"
 
+#define FU_LENOVO_LDC_DEVICE_IFACE1_LEN 64
+#define FU_LENOVO_LDC_DEVICE_IFACE2_LEN 272
+
+#define FU_LENOVO_LDC_DEVICE_DELAY   25 /* ms */
+#define FU_LENOVO_LDC_DEVICE_RETRIES 1600
+
 struct _FuLenovoLdcDevice {
 	FuHidrawDevice parent_instance;
 	guint16 start_addr;
@@ -97,6 +103,99 @@ fu_lenovo_ldc_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_lenovo_ldc_device_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
+	FuLenovoLdcTargetStatus status;
+	GByteArray *buf = (GByteArray *)user_data;
+	g_autoptr(FuStructLenovoLdcGenericRes) st = NULL;
+
+	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
+					 buf->data,
+					 buf->len,
+					 FU_IO_CHANNEL_FLAG_NONE,
+					 error))
+		return FALSE;
+	st = fu_struct_lenovo_ldc_generic_res_parse(buf->data, buf->len, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	status = fu_struct_lenovo_ldc_generic_res_get_target_status(st);
+	if (status == FU_LENOVO_LDC_TARGET_STATUS_COMMAND_BUSY) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "not ready");
+		return FALSE;
+	}
+	if (status != FU_LENOVO_LDC_TARGET_STATUS_COMMAND_SUCCESS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "status was %s",
+			    fu_lenovo_ldc_target_status_to_string(status));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static GByteArray *
+fu_lenovo_ldc_device_get_report(FuLenovoLdcDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	fu_byte_array_set_size(buf, FU_LENOVO_LDC_DEVICE_IFACE1_LEN, 0x0);
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_lenovo_ldc_device_get_report_cb,
+				  FU_LENOVO_LDC_DEVICE_RETRIES,
+				  FU_LENOVO_LDC_DEVICE_DELAY,
+				  buf,
+				  error))
+		return NULL;
+
+	/* success */
+	return g_steal_pointer(&buf);
+}
+
+static gboolean
+fu_lenovo_ldc_device_set_report(FuLenovoLdcDevice *self, GByteArray *buf, GError **error)
+{
+	fu_byte_array_set_size(buf, FU_LENOVO_LDC_DEVICE_IFACE1_LEN, 0x0);
+	return fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
+					   buf->data,
+					   buf->len,
+					   FU_IO_CHANNEL_FLAG_NONE,
+					   error);
+}
+
+static gboolean
+fu_lenovo_ldc_device_ensure_version(FuLenovoLdcDevice *self, GError **error)
+{
+	g_autofree gchar *version = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoLdcGetCompositeVersionReq) st_req =
+	    fu_struct_lenovo_ldc_get_composite_version_req_new();
+	g_autoptr(FuStructLenovoLdcGetCompositeVersionRes) st_res = NULL;
+
+	if (!fu_lenovo_ldc_device_set_report(self, st_req->buf, error))
+		return FALSE;
+	buf = fu_lenovo_ldc_device_get_report(self, error);
+	if (buf == NULL)
+		return FALSE;
+	st_res =
+	    fu_struct_lenovo_ldc_get_composite_version_res_parse(buf->data, buf->len, 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
+	version = g_strdup_printf(
+	    "%X.%X.%02X",
+	    fu_struct_lenovo_ldc_get_composite_version_res_get_version_major(st_res),
+	    fu_struct_lenovo_ldc_get_composite_version_res_get_version_minor(st_res),
+	    fu_struct_lenovo_ldc_get_composite_version_res_get_version_micro(st_res));
+	fu_device_set_version(FU_DEVICE(self), version);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_lenovo_ldc_device_setup(FuDevice *device, GError **error)
 {
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
@@ -105,9 +204,9 @@ fu_lenovo_ldc_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_lenovo_ldc_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* TODO: get the version and other properties from the hardware while open */
-	g_assert(self != NULL);
-	fu_device_set_version(device, "1.2.3");
+	/* get version */
+	if (!fu_lenovo_ldc_device_ensure_version(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

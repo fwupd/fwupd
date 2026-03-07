@@ -9,11 +9,13 @@ struct FuStructLenovoLdcHdr {
 }
 
 #[derive(ToString)]
-enum FuLenovoLdcStatus {
+enum FuLenovoLdcStatusXXXXXXXXXXXXXXXXXXx {
     Unknown,
     Failed,
 }
 
+#[derive(ToString)]
+#[repr(u8)]
 enum FuLenovoLdcTargetStatus {
 	CommandDefault = 0x00,
 	CommandBusy = 0x01,
@@ -23,6 +25,7 @@ enum FuLenovoLdcTargetStatus {
 	CommandNotSupport = 0x05,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcClassId {
 	DeviceInformation = 0x00,
 	Dfu = 0x09,
@@ -31,6 +34,7 @@ enum FuLenovoLdcClassId {
 	Dock = 0x0E,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcDeviceInformationCmd {
     SetHardwareVersion = 0x02,
     SetSerialNumber = 0x03,
@@ -49,6 +53,36 @@ enum FuLenovoLdcDeviceInformationCmd {
     GetDeviceUuid = 0x9,
 }
 
+#[derive(Default, New)] 
+struct FuStructLenovoLdcGetCompositeVersionReq {
+
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8 == 0x02,
+    cmd_class: FuLenovoLdcClassId == DeviceInformation,
+	cmd_id: FuLenovoLdcDeviceInformationCmd == GetFirmwareVersion,
+    flash_id: u8 == 0,
+    _reserved: u8,
+}
+
+#[derive(Default, Parse)] 
+struct FuStructLenovoLdcGenericRes {
+    target_status: FuLenovoLdcTargetStatus,
+}
+
+#[derive(Default, Parse)] 
+struct FuStructLenovoLdcGetCompositeVersionRes {
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x03,
+    cmd_class: FuLenovoLdcClassId == DeviceInformation,
+	cmd_id: FuLenovoLdcDeviceInformationCmd == GetFirmwareVersion,
+    flash_id: u8 == 0,
+    _reserved: u8,
+    version_major: u8,    
+    version_minor: u8,    
+    version_micro: u8,    
+}
+
+#[repr(u8)]
 enum FuLenovoLdcExternalFlashCmd {
     SetFlashIdUsageInformation = 0x03,
     SetFlashMemoryAccess = 0x04,
@@ -60,6 +94,7 @@ enum FuLenovoLdcExternalFlashCmd {
     GetFlashMemorySelfVerify = 0x85,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcExternalDockCmd {
     SetDockPortCtrl = 0x03,
     SetDockFanCtrl = 0x05,
@@ -96,6 +131,7 @@ enum FuLenovoLdcExternalFlashIdPurpose {
     FirmwareFile,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcFlashMemoryAccessCmd {
     AcccessCtrl,
     Erase,
@@ -109,26 +145,31 @@ enum FuLenovoLdcFlashMemoryAccessCmd {
     DockReadWithAddress,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcFlashMemoryAccessCtrl {
     Release,
     Request,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcFlashMemorySelfVerifyType {
     Signature,
     Crc,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcFlashMemorySelfVerifyResult {
 	Fail,
     Pass,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcDockFwCtrlUpgradeStatus {
     NonLock,
     Locked,
 }
 
+#[repr(u8)]
 enum FuLenovoLdcDockFwCtrlUpgradePhaseCtrl {
     Na,
     InPhase1,
