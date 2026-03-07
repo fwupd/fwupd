@@ -10,6 +10,3 @@
 
 #define FU_TYPE_LENOVO_LDC_DEVICE (fu_lenovo_ldc_device_get_type())
 G_DECLARE_FINAL_TYPE(FuLenovoLdcDevice, fu_lenovo_ldc_device, FU, LENOVO_LDC_DEVICE, FuHidrawDevice)
-
-guint16
-fu_lenovo_ldc_device_get_start_addr(FuLenovoLdcDevice *self);

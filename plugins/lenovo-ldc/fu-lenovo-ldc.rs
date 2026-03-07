@@ -53,20 +53,19 @@ enum FuLenovoLdcDeviceInformationCmd {
     GetDeviceUuid = 0x9,
 }
 
+#[derive(Default, Parse)] 
+struct FuStructLenovoLdcGenericRes {
+    target_status: FuLenovoLdcTargetStatus,
+}
+
 #[derive(Default, New)] 
 struct FuStructLenovoLdcGetCompositeVersionReq {
-
     target_status: FuLenovoLdcTargetStatus == CommandDefault,
     bufsz: u8 == 0x02,
     cmd_class: FuLenovoLdcClassId == DeviceInformation,
 	cmd_id: FuLenovoLdcDeviceInformationCmd == GetFirmwareVersion,
     flash_id: u8 == 0,
     _reserved: u8,
-}
-
-#[derive(Default, Parse)] 
-struct FuStructLenovoLdcGenericRes {
-    target_status: FuLenovoLdcTargetStatus,
 }
 
 #[derive(Default, Parse)] 
@@ -176,4 +175,26 @@ enum FuLenovoLdcDockFwCtrlUpgradePhaseCtrl {
     Unplug,
     NonUnplug,
     WaitForTimer,
+}
+
+#[derive(Default, New)] 
+struct FuStructLenovoLdcDfuControlReq {
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8 == 0x02,
+    cmd_class: FuLenovoLdcClassId == Dock,
+	cmd_id: FuLenovoLdcExternalDockCmd == SetDockFirmwareUpgradeCtrl,
+    flash_id: u8 == 0,
+    _reserved: u8,
+    status: FuLenovoLdcDockFwCtrlUpgradeStatus == Locked,
+    ctrl: FuLenovoLdcDockFwCtrlUpgradePhaseCtrl = NonUnplug,
+}
+
+#[derive(Default, Parse)] 
+struct FuStructLenovoLdcDfuControlRes {
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x00,
+    cmd_class: FuLenovoLdcClassId == Dock,
+	cmd_id: FuLenovoLdcExternalDockCmd == SetDockFirmwareUpgradeCtrl,
+    flash_id: u8 == 0,
+    _reserved: u8,
 }

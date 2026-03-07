@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-lenovo-ldc-common.h"
 #include "fu-lenovo-ldc-device.h"
 #include "fu-lenovo-ldc-struct.h"
 
@@ -31,14 +30,6 @@ fu_lenovo_ldc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "StartAddr", self->start_addr);
-}
-
-/* TODO: this is only required if the device instance state is required elsewhere */
-guint16
-fu_lenovo_ldc_device_get_start_addr(FuLenovoLdcDevice *self)
-{
-	g_return_val_if_fail(FU_IS_LENOVO_LDC_DEVICE(self), G_MAXUINT16);
-	return self->start_addr;
 }
 
 static gboolean
@@ -74,31 +65,6 @@ fu_lenovo_ldc_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	g_assert(self != NULL);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-static gboolean
-fu_lenovo_ldc_device_reload(FuDevice *device, GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-	/* TODO: reprobe the hardware, or delete this vfunc to use ->setup() as a fallback */
-	g_assert(self != NULL);
-	return TRUE;
-}
-
-static gboolean
-fu_lenovo_ldc_device_probe(FuDevice *device, GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-
-	/* FuFuhidrawdeviceDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_lenovo_ldc_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* TODO: probe the device for properties available before it is opened */
-	if (fu_device_has_private_flag(device, FU_LENOVO_LDC_DEVICE_FLAG_EXAMPLE))
-		self->start_addr = 0x100;
-	/* success */
 	return TRUE;
 }
 
@@ -164,6 +130,27 @@ fu_lenovo_ldc_device_set_report(FuLenovoLdcDevice *self, GByteArray *buf, GError
 					   buf->len,
 					   FU_IO_CHANNEL_FLAG_NONE,
 					   error);
+}
+
+static gboolean
+fu_lenovo_ldc_device_trigger_phase2(FuLenovoLdcDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoLdcDfuControlReq) st_req =
+	    fu_struct_lenovo_ldc_dfu_control_req_new();
+	g_autoptr(FuStructLenovoLdcDfuControlRes) st_res = NULL;
+
+	if (!fu_lenovo_ldc_device_set_report(self, st_req->buf, error))
+		return FALSE;
+	buf = fu_lenovo_ldc_device_get_report(self, error);
+	if (buf == NULL)
+		return FALSE;
+	st_res = fu_struct_lenovo_ldc_dfu_control_res_parse(buf->data, buf->len, 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -376,9 +363,7 @@ fu_lenovo_ldc_device_class_init(FuLenovoLdcDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_lenovo_ldc_device_finalize;
 	device_class->to_string = fu_lenovo_ldc_device_to_string;
-	device_class->probe = fu_lenovo_ldc_device_probe;
 	device_class->setup = fu_lenovo_ldc_device_setup;
-	device_class->reload = fu_lenovo_ldc_device_reload;
 	device_class->prepare = fu_lenovo_ldc_device_prepare;
 	device_class->cleanup = fu_lenovo_ldc_device_cleanup;
 	device_class->attach = fu_lenovo_ldc_device_attach;

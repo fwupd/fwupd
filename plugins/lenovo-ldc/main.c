@@ -800,7 +800,7 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
  */
 
 static gint
-FWUpdate(gboolean forceUpdate, gboolean noUnplug)
+fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 {
 	// gboolean forceUpdate = FALSE;
 	// gboolean noUnplug = FALSE;
@@ -1433,7 +1433,7 @@ main(int argc, char *argv[])
 			g_print("Please DO NOT remove the dock and wait for a few minutes until "
 				"the white light stops blinking.\n");
 			g_print("Start updating........\n");
-			gint r = FWUpdate(TRUE, TRUE);
+			gint r = fu_lenovo_ldc_device_fw_update(TRUE, TRUE);
 			if (r == 0) {
 				/*Notice : rc == 0 includes 2 condition of FW update result as below
 				   .
@@ -1441,7 +1441,7 @@ main(int argc, char *argv[])
 				   Dock's current composite is < target composite version.
 					   2. FW update process doesn't which actually erase & flash
 				   FW image since the Dock's current composite version is >= target
-				   composite version. *Assume fwupd pluggin will cover for the
+				   composite version. *Assume fwupd plugin will cover for the
 				   condition with message output*/
 
 				g_print(

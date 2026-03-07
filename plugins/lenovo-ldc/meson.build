@@ -6,7 +6,6 @@ plugin_quirks += files('lenovo-ldc.quirk')
 plugin_builtins += static_library('fu_plugin_lenovo_ldc',
   rustgen.process('fu-lenovo-ldc.rs'),
   sources: [
-    'fu-lenovo-ldc-common.c',
     'fu-lenovo-ldc-device.c',
     'fu-lenovo-ldc-plugin.c',
   ],
