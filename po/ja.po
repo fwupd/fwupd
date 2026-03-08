@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-06 16:09+0000\n"
+"PO-Revision-Date: 2026-03-08 05:09+0000\n"
 "Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
 "Language: ja\n"
@@ -335,7 +335,7 @@ msgstr "0 から %u までの数字を入力してください:"
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "%s または %s を入力してください:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1004,7 +1004,7 @@ msgstr "ロールバック保護は、セキュリティ上の問題がある古
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "プラットフォームセキュアブートにより、デバイス起動時に未署名のソフトウェアが読み込まれることを防止します。"
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1028,7 +1028,7 @@ msgstr "UEFI db には、EFI バイナリの実行を許可するための有効
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart は、BIOS を改ざんから保護するファームウェアセキュリティ機能です。"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1069,7 +1069,7 @@ msgstr "デバイスを選択"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "利用可能なファームウェアアップデートがないデバイス:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
