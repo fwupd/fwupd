@@ -179,13 +179,18 @@ fu_lenovo_ldc_device_set_flash_memory_access(FuLenovoLdcDevice *self,
 }
 
 static gboolean
-fu_lenovo_ldc_device_trigger_phase2(FuLenovoLdcDevice *self, GError **error)
+fu_lenovo_ldc_device_dfu_control(FuLenovoLdcDevice *self,
+				 FuLenovoLdcDockFwCtrlUpgradeStatus status,
+				 FuLenovoLdcDockFwCtrlUpgradePhaseCtrl ctrl,
+				 GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(FuStructLenovoLdcDfuControlReq) st_req =
 	    fu_struct_lenovo_ldc_dfu_control_req_new();
 	g_autoptr(FuStructLenovoLdcDfuControlRes) st_res = NULL;
 
+	fu_struct_lenovo_ldc_dfu_control_req_set_status(st_req, status);
+	fu_struct_lenovo_ldc_dfu_control_req_set_ctrl(st_req, ctrl);
 	buf = fu_lenovo_ldc_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
@@ -425,6 +430,16 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
+	/* Set Dock FW Update Ctrl */
+	if (!fu_lenovo_ldc_device_dfu_control(
+		self,
+		FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_STATUS_NON_LOCK,
+		FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_IN_PHASE1,
+		error)) {
+		g_prefix_error_literal(error, "failed to trigger phase2: ");
+		return FALSE;
+	}
+
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
@@ -456,7 +471,11 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to release flash memory access: ");
 		return FALSE;
 	}
-	if (!fu_lenovo_ldc_device_trigger_phase2(self, error)) {
+	if (!fu_lenovo_ldc_device_dfu_control(
+		self,
+		FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED,
+		FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_NON_UNPLUG,
+		error)) {
 		g_prefix_error_literal(error, "failed to trigger phase2: ");
 		return FALSE;
 	}

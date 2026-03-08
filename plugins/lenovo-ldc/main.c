@@ -964,8 +964,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		bcdVerUpdateReq = TRUE;
 
 	if (!forceUpdate) {
-		for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE1_LEN; i++)
-			output1[i] = 0;
+		memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
 		gint GetBcdData = fu_lenovo_ldc_device_function1(
 		    FU_LENOVO_LDC_CLASS_ID_DEVICE_INFORMATION,
 		    FU_LENOVO_LDC_DEVICE_INFORMATION_CMD_GET_FIRMWARE_VERSION,
@@ -1066,8 +1065,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		guint8 mcuUpdateCtrl[2];
 		mcuUpdateCtrl[0] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_STATUS_NON_LOCK;
 		mcuUpdateCtrl[1] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_IN_PHASE1;
-		for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE1_LEN; i++)
-			output1[i] = 0;
+		memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
 		r = fu_lenovo_ldc_device_function1(
 		    FU_LENOVO_LDC_CLASS_ID_DOCK,
 		    FU_LENOVO_LDC_EXTERNAL_DOCK_CMD_SET_DOCK_FIRMWARE_UPGRADE_CTRL,
