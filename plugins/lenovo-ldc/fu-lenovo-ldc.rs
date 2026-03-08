@@ -53,12 +53,12 @@ enum FuLenovoLdcDeviceInformationCmd {
     GetDeviceUuid = 0x9,
 }
 
-#[derive(Default, Parse)] 
+#[derive(Default, Parse)]
 struct FuStructLenovoLdcGenericRes {
     target_status: FuLenovoLdcTargetStatus,
 }
 
-#[derive(Default, New)] 
+#[derive(Default, New)]
 struct FuStructLenovoLdcGetCompositeVersionReq {
     target_status: FuLenovoLdcTargetStatus == CommandDefault,
     bufsz: u8 == 0x02,
@@ -68,7 +68,7 @@ struct FuStructLenovoLdcGetCompositeVersionReq {
     _reserved: u8,
 }
 
-#[derive(Default, Parse)] 
+#[derive(Default, Parse)]
 struct FuStructLenovoLdcGetCompositeVersionRes {
     target_status: FuLenovoLdcTargetStatus == CommandSuccess,
     bufsz: u8 == 0x03,
@@ -76,9 +76,9 @@ struct FuStructLenovoLdcGetCompositeVersionRes {
 	cmd_id: FuLenovoLdcDeviceInformationCmd == GetFirmwareVersion,
     flash_id: u8 == 0,
     _reserved: u8,
-    version_major: u8,    
-    version_minor: u8,    
-    version_micro: u8,    
+    version_major: u8,
+    version_minor: u8,
+    version_micro: u8,
 }
 
 #[repr(u8)]
@@ -150,6 +150,31 @@ enum FuLenovoLdcFlashMemoryAccessCtrl {
     Request,
 }
 
+#[derive(Default, New)]
+struct FuStructLenovoLdcSetFlashMemoryAccessReq {
+    report_id: u8 == 0x10, // function2
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8 == 0x02,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == SetFlashMemoryAccess,
+    flash_id: u8 == 0,
+    _reserved: u8,
+    status: FuLenovoLdcFlashMemoryAccessCmd == AcccessCtrl,
+    ctrl: FuLenovoLdcFlashMemoryAccessCtrl,
+}
+
+#[derive(Default, Parse)]
+struct FuStructLenovoLdcSetFlashMemoryAccessRes {
+    report_id: u8 == 0x10, // function2
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x00,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == SetFlashMemoryAccess,
+    flash_id: u8 == 0,
+    _reserved: u8,
+}
+
+
 #[repr(u8)]
 enum FuLenovoLdcFlashMemorySelfVerifyType {
     Signature,
@@ -177,7 +202,7 @@ enum FuLenovoLdcDockFwCtrlUpgradePhaseCtrl {
     WaitForTimer,
 }
 
-#[derive(Default, New)] 
+#[derive(Default, New)]
 struct FuStructLenovoLdcDfuControlReq {
     target_status: FuLenovoLdcTargetStatus == CommandDefault,
     bufsz: u8 == 0x02,
@@ -189,7 +214,7 @@ struct FuStructLenovoLdcDfuControlReq {
     ctrl: FuLenovoLdcDockFwCtrlUpgradePhaseCtrl = NonUnplug,
 }
 
-#[derive(Default, Parse)] 
+#[derive(Default, Parse)]
 struct FuStructLenovoLdcDfuControlRes {
     target_status: FuLenovoLdcTargetStatus == CommandSuccess,
     bufsz: u8 == 0x00,
@@ -197,4 +222,55 @@ struct FuStructLenovoLdcDfuControlRes {
 	cmd_id: FuLenovoLdcExternalDockCmd == SetDockFirmwareUpgradeCtrl,
     flash_id: u8 == 0,
     _reserved: u8,
+}
+
+#[derive(Default, New)]
+struct FuStructLenovoLdcGetFlashIdListReq {
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8 == 0x02,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashIdList,
+    flash_id: u8 == 0,
+    _reserved: u8,
+}
+
+#[derive(Default, Parse)]
+struct FuStructLenovoLdcGetFlashIdListRes {
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x00,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashIdList,
+    flash_id: u8 == 0,
+    _reserved: u8,
+    total: u8,
+}
+
+
+#[derive(Default, New)]
+struct FuStructLenovoLdcDockReadWithAddressReq {
+    report_id: u8 == 0x10, // function2
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8 == 0x02,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashMemoryAccess,
+    flash_id: u8 == 0,
+    _reserved: u8,
+    memory_access_cmd: FuLenovoLdcFlashMemoryAccessCmd == DockReadWithAddress,
+    _unknown: u8,
+    size: u16le,
+    addr: u32le,
+}
+
+#[derive(Default, Parse)]
+struct FuStructLenovoLdcDockReadWithAddressRes {
+    report_id: u8 == 0x10, // function2
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x00,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashMemoryAccess,
+    flash_id: u8 == 0,
+    _reserved: u8,
+    _size: u16le,
+    _addr: u32le,
+    data: [u8; 256],
 }
