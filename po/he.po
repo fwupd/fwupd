@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-03 17:09+0000\n"
+"PO-Revision-Date: 2026-03-08 05:09+0000\n"
 "Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
 "Language-Team: Hebrew <https://hosted.weblate.org/projects/fwupd/fwupd/he/>\n"
 "Language: he\n"
@@ -3637,11 +3637,11 @@ msgstr ""
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
 msgid "See %s for more details."
-msgstr ""
+msgstr "יש לגשת אל %s לפרטים נוספים."
 
 #. TRANSLATORS: title text, shown as a warning
 msgid "Full Disk Encryption Detected"
-msgstr ""
+msgstr "זוהתה הצפנת כונן מלא"
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
