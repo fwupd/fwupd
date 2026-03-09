@@ -19,4 +19,4 @@ G_DECLARE_FINAL_TYPE(FuSynapticsPrometheusConfig,
 		     FuDevice)
 
 FuSynapticsPrometheusConfig *
-fu_synaptics_prometheus_config_new(FuSynapticsPrometheusDevice *device);
+fu_synaptics_prometheus_config_new(FuDevice *proxy);

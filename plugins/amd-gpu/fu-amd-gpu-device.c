@@ -19,6 +19,7 @@
 #include "fu-amd-gpu-atom-firmware.h"
 #include "fu-amd-gpu-device.h"
 #include "fu-amd-gpu-psp-firmware.h"
+#include "fu-amd-gpu-uma.h"
 
 struct _FuAmdGpuDevice {
 	FuOpromDevice parent_instance;
@@ -253,6 +254,35 @@ fu_amd_gpu_device_parse_version_string(FuAmdGpuDevice *self, const gchar *str, G
 	return TRUE;
 }
 
+static void
+fu_amd_gpu_device_setup_bios_settings(FuAmdGpuDevice *self)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	const gchar *base = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuBiosSettings) bios_settings = NULL;
+	g_autoptr(FwupdBiosSetting) attr_setting = NULL;
+
+	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	if (!fu_amd_gpu_uma_check_support(base, &error_local)) {
+		g_debug("UMA carveout support not detected on device %s: %s",
+			fu_device_get_name(FU_DEVICE(self)),
+			error_local->message);
+		return;
+	}
+	bios_settings = fu_context_get_bios_settings(ctx);
+	if (bios_settings == NULL)
+		return;
+
+	attr_setting = fu_amd_gpu_uma_get_setting(base, &error_local);
+	if (attr_setting == NULL) {
+		g_debug("failed to get UMA carveout setting: %s", error_local->message);
+		return;
+	}
+	if (!fu_bios_settings_register_attr(bios_settings, attr_setting, &error_local))
+		g_debug("failed to register UMA carveout setting: %s", error_local->message);
+}
+
 static gboolean
 fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 {
@@ -283,6 +313,8 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	model = fu_strsafe((const gchar *)vbios_info.name, sizeof(vbios_info.name));
 	fu_device_set_summary(device, model);
 
+	fu_amd_gpu_device_setup_bios_settings(self);
+
 	return TRUE;
 }
 
@@ -292,52 +324,48 @@ fu_amd_gpu_device_convert_version(FuDevice *device, guint64 version_raw)
 	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
-static FuFirmware *
-fu_amd_gpu_device_prepare_firmware(FuDevice *device,
-				   GInputStream *stream,
-				   FuProgress *progress,
-				   FuFirmwareParseFlags flags,
-				   GError **error)
+static gboolean
+fu_amd_gpu_device_check_firmware(FuDevice *device,
+				 FuFirmware *firmware,
+				 FuFirmwareParseFlags flags,
+				 GError **error)
 {
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_amd_gpu_psp_firmware_new();
 	g_autoptr(FuFirmware) ish_a = NULL;
 	g_autoptr(FuFirmware) partition_a = NULL;
 	g_autoptr(FuFirmware) csm = NULL;
 	g_autofree gchar *fw_pn = NULL;
 
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
 	/* we will always flash the contents of partition A */
 	ish_a = fu_firmware_get_image_by_id(firmware, "ISH_A", error);
 	if (ish_a == NULL)
-		return NULL;
+		return FALSE;
 	partition_a = fu_firmware_get_image_by_id(ish_a, "PARTITION_A", error);
 	if (partition_a == NULL)
-		return NULL;
+		return FALSE;
 	csm = fu_firmware_get_image_by_id(partition_a, "ATOM_CSM_A", error);
 	if (csm == NULL)
-		return NULL;
+		return FALSE;
 
 	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(FU_AMD_GPU_ATOM_FIRMWARE(csm)),
 			   PART_NUM_STR_SIZE);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "firmware for %s does not match %s",
 				    fw_pn,
 				    self->vbios_pn);
-			return NULL;
+			return FALSE;
 		}
 		g_warning("firmware for %s does not match %s but is being force installed anyway",
 			  fw_pn,
 			  self->vbios_pn);
 	}
 
-	return g_steal_pointer(&firmware);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -436,6 +464,7 @@ fu_amd_gpu_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_amd_gpu_device_init(FuAmdGpuDevice *self)
 {
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_AMD_GPU_PSP_FIRMWARE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
@@ -459,7 +488,7 @@ fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 	device_class->setup = fu_amd_gpu_device_setup;
 	device_class->set_progress = fu_amd_gpu_device_set_progress;
 	device_class->write_firmware = fu_amd_gpu_device_write_firmware;
-	device_class->prepare_firmware = fu_amd_gpu_device_prepare_firmware;
+	device_class->check_firmware = fu_amd_gpu_device_check_firmware;
 	device_class->to_string = fu_amd_gpu_device_to_string;
 	device_class->convert_version = fu_amd_gpu_device_convert_version;
 }

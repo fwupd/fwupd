@@ -186,20 +186,16 @@ fu_fresco_pd_device_setup(FuDevice *device, GError **error)
 	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "CID", NULL);
 }
 
-static FuFirmware *
-fu_fresco_pd_device_prepare_firmware(FuDevice *device,
-				     GInputStream *stream,
-				     FuProgress *progress,
-				     FuFirmwareParseFlags flags,
-				     GError **error)
+static gboolean
+fu_fresco_pd_device_check_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FuFirmwareParseFlags flags,
+				   GError **error)
 {
 	FuFrescoPdDevice *self = FU_FRESCO_PD_DEVICE(device);
 	guint8 customer_id;
-	g_autoptr(FuFirmware) firmware = fu_fresco_pd_firmware_new();
 
 	/* check firmware is suitable */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	customer_id = fu_fresco_pd_firmware_get_customer_id(FU_FRESCO_PD_FIRMWARE(firmware));
 	if (customer_id != self->customer_id) {
 		g_set_error(error,
@@ -207,9 +203,11 @@ fu_fresco_pd_device_prepare_firmware(FuDevice *device,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "device is incompatible with firmware x.%u.x.x",
 			    customer_id);
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -424,6 +422,7 @@ fu_fresco_pd_device_init(FuFrescoPdDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
 	fu_device_set_remove_delay(FU_DEVICE(self), 20000);
 	fu_device_set_firmware_size(FU_DEVICE(self), 0x4400);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_FRESCO_PD_FIRMWARE);
 }
 
 static void
@@ -433,6 +432,6 @@ fu_fresco_pd_device_class_init(FuFrescoPdDeviceClass *klass)
 	device_class->to_string = fu_fresco_pd_device_to_string;
 	device_class->setup = fu_fresco_pd_device_setup;
 	device_class->write_firmware = fu_fresco_pd_device_write_firmware;
-	device_class->prepare_firmware = fu_fresco_pd_device_prepare_firmware;
+	device_class->check_firmware = fu_fresco_pd_device_check_firmware;
 	device_class->set_progress = fu_fresco_pd_device_set_progress;
 }

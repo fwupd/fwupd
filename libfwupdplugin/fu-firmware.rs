@@ -40,6 +40,7 @@ enum FuFirmwareFlags {
     HasCheckCompatible = 1 << 8,
     IsLastImage = 1 << 9, // use for FuLinearFirmware when padding is present
     AllowLinear = 1 << 10, // parse as an array of firmwares
+    IsAbstract = 1 << 11, // cannot parse a blob directly
 }
 
 enum FuFirmwareAlignment {

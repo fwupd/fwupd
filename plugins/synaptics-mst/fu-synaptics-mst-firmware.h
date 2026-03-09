@@ -17,8 +17,6 @@ G_DECLARE_FINAL_TYPE(FuSynapticsMstFirmware,
 		     SYNAPTICS_MST_FIRMWARE,
 		     FuFirmware)
 
-FuFirmware *
-fu_synaptics_mst_firmware_new(void);
 guint16
 fu_synaptics_mst_firmware_get_board_id(FuSynapticsMstFirmware *self);
 void

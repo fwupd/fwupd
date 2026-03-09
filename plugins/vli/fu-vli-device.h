@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-vli-common.h"
+#include "fu-vli-struct.h"
 
 #define FU_TYPE_VLI_DEVICE (fu_vli_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuVliDevice, fu_vli_device, FU, VLI_DEVICE, FuUsbDevice)
@@ -42,7 +42,7 @@ fu_vli_device_set_spi_auto_detect(FuVliDevice *self, gboolean spi_auto_detect);
 FuVliDeviceKind
 fu_vli_device_get_kind(FuVliDevice *self);
 guint32
-fu_vli_device_get_offset(FuVliDevice *self);
+fu_vli_device_get_pd_offset(FuVliDevice *self);
 FuCfiDevice *
 fu_vli_device_get_cfi_device(FuVliDevice *self);
 gboolean

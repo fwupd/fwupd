@@ -45,34 +45,6 @@ fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_device_probe(FuDevice *device, GError **error)
-{
-	guint16 device_id = fu_device_get_pid(device);
-
-	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
-	/* i2c-hid */
-	if (device_id != 0x400 && (device_id < 0x3000 || device_id >= 0x4000)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not i2c-hid touchpad");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 			      guint8 *tx,
 			      gsize txsz,
@@ -455,7 +427,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_read_haptic_enable(self, &error_local)) {
 		g_debug("no haptic device detected: %s", error_local->message);
 	} else {
-		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new();
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new(device);
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
@@ -467,22 +439,18 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_elantp_hid_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
-				      FuProgress *progress,
-				      FuFirmwareParseFlags flags,
-				      GError **error)
+static gboolean
+fu_elantp_hid_device_check_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
 	guint16 module_id;
 	guint16 ic_type;
 	gboolean force_table_support;
-	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	module_id = fu_elantp_firmware_get_module_id(FU_ELANTP_FIRMWARE(firmware));
 	if (self->module_id != module_id) {
 		g_set_error(error,
@@ -491,7 +459,7 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 			    "firmware incompatible, got 0x%04x, expected 0x%04x",
 			    module_id,
 			    self->module_id);
-		return NULL;
+		return FALSE;
 	}
 	ic_type = fu_elantp_firmware_get_ic_type(FU_ELANTP_FIRMWARE(firmware));
 	if (self->ic_type != ic_type) {
@@ -501,7 +469,7 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 			    "firmware ic type incompatible, got 0x%04x, expected 0x%04x",
 			    ic_type,
 			    self->ic_type);
-		return NULL;
+		return FALSE;
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
@@ -512,7 +480,7 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "firmware incompatible, forcetable incorrect.");
-		return NULL;
+		return FALSE;
 	}
 	if (self->force_table_support) {
 		guint32 force_table_addr;
@@ -527,7 +495,7 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 			    "firmware forcetable address incompatible, got 0x%04x, expected 0x%04x",
 			    force_table_addr / 2,
 			    self->force_table_addr / 2);
-			return NULL;
+			return FALSE;
 		}
 		diff_size = self->force_table_addr - force_table_addr;
 		if (diff_size % 64 != 0) {
@@ -538,12 +506,12 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 			    "firmware forcetable address incompatible, got 0x%04x, expected 0x%04x",
 			    force_table_addr / 2,
 			    self->force_table_addr / 2);
-			return NULL;
+			return FALSE;
 		}
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -982,6 +950,7 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_FIRMWARE);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -998,8 +967,7 @@ fu_elantp_hid_device_class_init(FuElantpHidDeviceClass *klass)
 	device_class->setup = fu_elantp_hid_device_setup;
 	device_class->reload = fu_elantp_hid_device_setup;
 	device_class->write_firmware = fu_elantp_hid_device_write_firmware;
-	device_class->prepare_firmware = fu_elantp_hid_device_prepare_firmware;
-	device_class->probe = fu_elantp_hid_device_probe;
+	device_class->check_firmware = fu_elantp_hid_device_check_firmware;
 	device_class->set_progress = fu_elantp_hid_device_set_progress;
 	device_class->convert_version = fu_elantp_hid_device_convert_version;
 }

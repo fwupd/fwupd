@@ -15,8 +15,5 @@ G_DECLARE_FINAL_TYPE(FuIlitekItsFirmware,
 		     ILITEK_ITS_FIRMWARE,
 		     FuIhexFirmware)
 
-FuFirmware *
-fu_ilitek_its_firmware_new(void);
-
 const gchar *
 fu_ilitek_its_firmware_get_ic_name(FuIlitekItsFirmware *self) G_GNUC_NON_NULL(1);

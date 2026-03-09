@@ -43,7 +43,7 @@ fu_mm_plugin_backend_device_added(FuPlugin *plugin,
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 
 	/* success */
 	return TRUE;

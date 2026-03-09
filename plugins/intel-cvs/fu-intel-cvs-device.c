@@ -96,19 +96,15 @@ fu_intel_cvs_device_pid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer 
 	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
 }
 
-static FuFirmware *
-fu_intel_cvs_device_prepare_firmware(FuDevice *device,
-				     GInputStream *stream,
-				     FuProgress *progress,
-				     FuFirmwareParseFlags flags,
-				     GError **error)
+static gboolean
+fu_intel_cvs_device_check_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FuFirmwareParseFlags flags,
+				   GError **error)
 {
 	FuIntelCvsDevice *self = FU_INTEL_CVS_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_intel_cvs_firmware_new();
 
 	/* check is compatible */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if (fu_device_get_vid(FU_DEVICE(self)) !=
 		fu_intel_cvs_firmware_get_vid(FU_INTEL_CVS_FIRMWARE(firmware)) ||
 	    fu_device_get_pid(FU_DEVICE(self)) !=
@@ -121,9 +117,11 @@ fu_intel_cvs_device_prepare_firmware(FuDevice *device,
 			    fu_intel_cvs_firmware_get_pid(FU_INTEL_CVS_FIRMWARE(firmware)),
 			    fu_device_get_vid(FU_DEVICE(self)),
 			    fu_device_get_pid(FU_DEVICE(self)));
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -278,6 +276,7 @@ fu_intel_cvs_device_init(FuIntelCvsDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 200000);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_INTEL_CVS_FIRMWARE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.cvs");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -306,7 +305,7 @@ fu_intel_cvs_device_class_init(FuIntelCvsDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_intel_cvs_device_to_string;
 	device_class->setup = fu_intel_cvs_device_setup;
-	device_class->prepare_firmware = fu_intel_cvs_device_prepare_firmware;
+	device_class->check_firmware = fu_intel_cvs_device_check_firmware;
 	device_class->write_firmware = fu_intel_cvs_device_write_firmware;
 	device_class->set_quirk_kv = fu_intel_cvs_device_set_quirk_kv;
 	device_class->set_progress = fu_intel_cvs_device_set_progress;

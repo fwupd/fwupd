@@ -97,9 +97,3 @@ fu_elantp_haptic_firmware_class_init(FuElantpHapticFirmwareClass *klass)
 	firmware_class->parse = fu_elantp_haptic_firmware_parse;
 	firmware_class->export = fu_elantp_haptic_firmware_export;
 }
-
-FuFirmware *
-fu_elantp_haptic_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ELANTP_HAPTIC_FIRMWARE, NULL));
-}

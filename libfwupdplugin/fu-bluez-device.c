@@ -1074,7 +1074,6 @@ fu_bluez_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodec
 {
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(device);
 	GPtrArray *icons = fu_device_get_icons(device);
 
 	/* optional properties */
@@ -1102,21 +1101,6 @@ fu_bluez_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodec
 		}
 		fwupd_json_object_add_array(json_obj, "Uuids", json_arr);
 	}
-
-	/* events */
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    json_obj_tmp,
-					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
-							       : flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "Events", json_arr);
-	}
 }
 
 static gboolean
@@ -1125,7 +1109,6 @@ fu_bluez_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **
 	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
 	const gchar *tmp;
 	gint64 tmp64 = 0;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 	g_autoptr(FwupdJsonArray) json_array_uuids = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "PhysicalId", NULL);
@@ -1149,22 +1132,6 @@ fu_bluez_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **
 	if (!fwupd_json_object_get_integer_with_default(json_obj, "Battery", &tmp64, 100, error))
 		return FALSE;
 	fu_device_set_battery_level(device, tmp64);
-
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(device, event);
-		}
-	}
 
 	/* array of UUIDs -> paths */
 	json_array_uuids = fwupd_json_object_get_array(json_obj, "Uuids", NULL);

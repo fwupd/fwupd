@@ -290,14 +290,9 @@ fu_genesys_hubhid_device_send_report(FuGenesysHubhidDevice *self,
 							     datasz,
 							     progress,
 							     error);
-	} else {
-		return fu_genesys_hubhid_device_command_write(self,
-							      setup,
-							      data,
-							      datasz,
-							      progress,
-							      error);
 	}
+
+	return fu_genesys_hubhid_device_command_write(self, setup, data, datasz, progress, error);
 }
 
 static gboolean
@@ -367,8 +362,10 @@ fu_genesys_hubhid_device_setup(FuDevice *device, GError **error)
 	FuGenesysHubhidDevice *self = FU_GENESYS_HUBHID_DEVICE(device);
 
 	/* validate by string token */
-	if (!fu_genesys_hubhid_device_validate_token(self, error))
+	if (!fu_genesys_hubhid_device_validate_token(self, error)) {
+		g_prefix_error_literal(error, "error validate token: ");
 		return FALSE;
+	}
 
 	/* FuHidDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_hubhid_device_parent_class)->setup(device, error)) {

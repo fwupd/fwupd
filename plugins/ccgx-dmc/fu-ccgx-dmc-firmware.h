@@ -26,8 +26,6 @@ typedef struct {
 	GPtrArray *seg_records;
 } FuCcgxDmcFirmwareRecord;
 
-FuFirmware *
-fu_ccgx_dmc_firmware_new(void);
 GPtrArray *
 fu_ccgx_dmc_firmware_get_image_records(FuCcgxDmcFirmware *self);
 GBytes *

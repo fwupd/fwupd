@@ -121,22 +121,22 @@ fu_uefi_capsule_plugin_fwupd_efi_parse_sbom(FuUefiCapsulePlugin *self, GError **
 {
 	g_autoptr(FuFirmware) fw = fu_pefile_firmware_new();
 	g_autoptr(FuFirmware) fw_sbom = NULL;
-	g_autoptr(GPtrArray) fw_coswids = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
 
 	if (!fu_firmware_parse_file(fw, self->fwupd_efi_file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	fw_sbom = fu_firmware_get_image_by_id(fw, ".sbom", error);
 	if (fw_sbom == NULL)
 		return FALSE;
-	fw_coswids = fu_firmware_get_images(fw_sbom);
-	for (guint i = 0; i < fw_coswids->len; i++) {
-		FuFirmware *fw_coswid = g_ptr_array_index(fw_coswids, i);
-		if (!FU_IS_COSWID_FIRMWARE(fw_coswid))
+	imgs = fu_firmware_get_images(fw_sbom);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img_coswid = g_ptr_array_index(imgs, i);
+		if (!FU_IS_COSWID_FIRMWARE(img_coswid))
 			continue;
 		fu_uefi_capsule_plugin_fwupd_efi_add_sbom(
 		    self,
-		    fu_coswid_firmware_get_product(FU_COSWID_FIRMWARE(fw_coswid)),
-		    fu_firmware_get_version(fw_coswid));
+		    fu_coswid_firmware_get_product(FU_COSWID_FIRMWARE(img_coswid)),
+		    fu_firmware_get_version(img_coswid));
 	}
 
 	/* success */
@@ -380,11 +380,8 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	guint32 width;
 	guint8 csum = 0;
 	fwupd_guid_t guid = {0x0};
-	g_autofree gchar *capsule_path = NULL;
-	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *basename = NULL;
-	g_autofree gchar *directory = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(FuStructEfiCapsuleHeader) st_cap = fu_struct_efi_capsule_header_new();
 	g_autoptr(FuStructEfiUxCapsuleHeader) st_uxh = fu_struct_efi_ux_capsule_header_new();
@@ -402,11 +399,14 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	width = fu_bitmap_image_get_width(bmp_image);
 
 	/* save to a predictable filename */
-	esp_path = fu_volume_get_mount_point(self->esp);
-	directory = fu_uefi_get_esp_path_for_os(esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVARS_GUID_UX_CAPSULE);
-	capsule_path = g_build_filename(directory, "fw", basename, NULL);
-	fn = g_build_filename(esp_path, capsule_path, NULL);
+	fn = fu_uefi_capsule_device_build_efi_path(FU_UEFI_CAPSULE_DEVICE(device),
+						   error,
+						   "fw",
+						   basename,
+						   NULL);
+	if (fn == NULL)
+		return FALSE;
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	ostream = fu_output_stream_from_path(fn, error);
@@ -455,7 +455,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 
 	/* write display capsule location as UPDATE_INFO */
 	return fu_uefi_capsule_device_write_update_info(FU_UEFI_CAPSULE_DEVICE(device),
-							capsule_path,
+							fn,
 							"fwupd-ux-capsule",
 							FU_EFIVARS_GUID_UX_CAPSULE,
 							error);
@@ -664,7 +664,7 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 		fu_uefi_capsule_device_set_esp(dev, self->esp);
 		fu_device_uninhibit(device, "no-esp");
 	}
-	fu_plugin_device_add(plugin, FU_DEVICE(dev));
+	fu_plugin_add_device(plugin, FU_DEVICE(dev));
 }
 
 static void
@@ -1135,7 +1135,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 				 G_CALLBACK(fu_uefi_capsule_plugin_update_state_notify_cb),
 				 plugin);
 
-		fu_plugin_device_add(plugin, FU_DEVICE(dev));
+		fu_plugin_add_device(plugin, FU_DEVICE(dev));
 	}
 	fu_progress_step_done(progress);
 

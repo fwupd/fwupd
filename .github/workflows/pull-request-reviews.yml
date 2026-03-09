@@ -11,12 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Docker login
-        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        run: docker login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Run pre-commit hooks
         run: |
-          docker run --privileged -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-precommit:latest
+          docker run --privileged -t -v $GITHUB_WORKSPACE:/github/workspace ghcr.io/fwupd/fwupd/fwupd-precommit:latest
 
   snap:
     needs: pre-commit

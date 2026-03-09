@@ -13,13 +13,11 @@ plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-bootloader-nordic.c',
     'fu-logitech-hidpp-bootloader-texas.c',
     'fu-logitech-hidpp-common.c',
-    'fu-logitech-hidpp-hidpp.c',
     'fu-logitech-hidpp-device.c',
-    'fu-logitech-hidpp-hidpp-msg.c',
     'fu-logitech-hidpp-runtime.c',
     'fu-logitech-hidpp-runtime-unifying.c',
     'fu-logitech-hidpp-runtime-bolt.c',
-    'fu-logitech-hidpp-radio.c',
+    'fu-logitech-rdfu-entity.c', # fuzzing
     'fu-logitech-rdfu-firmware.c', # fuzzing
   ],
   include_directories: plugin_incdirs,
@@ -35,13 +33,11 @@ device_tests += files(
   'tests/logitech-m650.json',
   'tests/logitech-m750.json',
   'tests/logitech-mr0077.json',
+  'tests/logitech-pollux.json',
   'tests/logitech-rqr12.json',
   'tests/logitech-rqr12-signed.json',
   'tests/logitech-rqr24.json',
   'tests/logitech-rqr24-signed.json',
-)
-enumeration_data += files(
-  'tests/logitech-bolt-receiver-setup.json',
 )
 
 if get_option('tests')
@@ -50,6 +46,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'logitech-hidpp-self-test',
+    rustgen.process('fu-logitech-hidpp.rs'),
     sources: [
       'fu-logitech-hidpp-self-test.c',
     ],

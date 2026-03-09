@@ -732,12 +732,6 @@ fu_synaptics_rmi_firmware_class_init(FuSynapticsRmiFirmwareClass *klass)
 	firmware_class->write = fu_synaptics_rmi_firmware_write;
 }
 
-FuFirmware *
-fu_synaptics_rmi_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_RMI_FIRMWARE, NULL));
-}
-
 static gboolean
 fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
 						  GInputStream *stream,

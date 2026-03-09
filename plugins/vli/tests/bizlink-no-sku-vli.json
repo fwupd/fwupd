@@ -3,7 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "e0d6f62140663744f114d59b1ec48dd3e4743006bb06d0643efe178b8bdb2a04-BizLink-Cayenne_New.cab",
+      "url": "e827aa06440e89dd90feb9c5f84efa685cff7a08711576f1a9d0ad89951fd397-BizLink-Cayenne_New.cab",
+      "emulation-url": "9c380dd11ad99f59769034a850b2690010813534a0a7f86ccc711333ffa8a9df-BizLink-Cayenne_New.zip",
       "components": [
         {
           "name": "tier1",
@@ -26,7 +27,7 @@
       "components": [
         {
           "name": "tier1",
-          "version": "06.83",
+          "version": "6.83",
           "guids": [
             "a0eff862-6b0b-5571-91ec-a0c4bb25b539"
           ]

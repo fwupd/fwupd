@@ -541,12 +541,16 @@ fu_ccgx_dmc_device_write_firmware(FuDevice *device,
 
 	/* get fwct record */
 	fwct_blob = fu_ccgx_dmc_firmware_get_fwct_record(FU_CCGX_DMC_FIRMWARE(firmware));
-	fwct_buf = g_bytes_get_data(fwct_blob, &fwct_sz);
-	if (fwct_buf == NULL) {
+	if (fwct_blob == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid fwct data");
+				    "missing fwct data");
+		return FALSE;
+	}
+	fwct_buf = fu_bytes_get_data_safe(fwct_blob, &fwct_sz, error);
+	if (fwct_buf == NULL) {
+		g_prefix_error_literal(error, "invalid fwct data: ");
 		return FALSE;
 	}
 
@@ -646,28 +650,21 @@ fu_ccgx_dmc_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
-				    FuProgress *progress,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
+static gboolean
+fu_ccgx_dmc_device_check_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuFirmwareParseFlags flags,
+				  GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_ccgx_dmc_firmware_new();
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	GBytes *custom_meta_blob = NULL;
 	gboolean custom_meta_exist = FALSE;
 
-	/* parse all images */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
 	/* get custom meta record */
 	custom_meta_blob =
 	    fu_ccgx_dmc_firmware_get_custom_meta_record(FU_CCGX_DMC_FIRMWARE(firmware));
-	if (custom_meta_blob)
-		if (g_bytes_get_size(custom_meta_blob) > 0)
-			custom_meta_exist = TRUE;
+	if (custom_meta_blob != NULL && g_bytes_get_size(custom_meta_blob) > 0)
+		custom_meta_exist = TRUE;
 
 	/* check custom meta flag */
 	if (self->custom_meta_flag != custom_meta_exist) {
@@ -675,9 +672,11 @@ fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "custom metadata mismatch");
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -835,6 +834,7 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx.dmc");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CCGX_DMC_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
@@ -848,7 +848,7 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_ccgx_dmc_device_to_string;
 	device_class->write_firmware = fu_ccgx_dmc_device_write_firmware;
-	device_class->prepare_firmware = fu_ccgx_dmc_device_prepare_firmware;
+	device_class->check_firmware = fu_ccgx_dmc_device_check_firmware;
 	device_class->attach = fu_ccgx_dmc_device_attach;
 	device_class->probe = fu_ccgx_dmc_device_probe;
 	device_class->setup = fu_ccgx_dmc_device_setup;

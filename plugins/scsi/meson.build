@@ -18,3 +18,6 @@ plugin_builtins += static_library('fu_plugin_scsi',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/scsi-sandisk-setup.json')
+device_tests += files('tests/scsi-sandisk.json')

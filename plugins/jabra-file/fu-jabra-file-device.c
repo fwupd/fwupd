@@ -568,18 +568,14 @@ fu_jabra_file_device_start_update(FuJabraFileDevice *self, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_jabra_file_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
-				      FuProgress *progress,
-				      FuFirmwareParseFlags flags,
-				      GError **error)
+static gboolean
+fu_jabra_file_device_check_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuJabraFileDevice *self = FU_JABRA_FILE_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_jabra_file_firmware_new();
 
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if (fu_jabra_file_firmware_get_dfu_pid(FU_JABRA_FILE_FIRMWARE(firmware)) != self->dfu_pid) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -587,9 +583,11 @@ fu_jabra_file_device_prepare_firmware(FuDevice *device,
 			    "wrong DFU PID, got 0x%x, expected 0x%x",
 			    fu_jabra_file_firmware_get_dfu_pid(FU_JABRA_FILE_FIRMWARE(firmware)),
 			    self->dfu_pid);
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -721,7 +719,7 @@ fu_jabra_file_device_class_init(FuJabraFileDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_jabra_file_device_to_string;
 	device_class->probe = fu_jabra_file_device_probe;
-	device_class->prepare_firmware = fu_jabra_file_device_prepare_firmware;
+	device_class->check_firmware = fu_jabra_file_device_check_firmware;
 	device_class->setup = fu_jabra_file_device_setup;
 	device_class->write_firmware = fu_jabra_file_device_write_firmware;
 	device_class->attach = fu_jabra_file_device_attach;

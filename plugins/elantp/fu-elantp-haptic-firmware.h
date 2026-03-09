@@ -15,8 +15,5 @@ G_DECLARE_FINAL_TYPE(FuElantpHapticFirmware,
 		     ELANTP_HAPTIC_FIRMWARE,
 		     FuFirmware)
 
-FuFirmware *
-fu_elantp_haptic_firmware_new(void);
-
 guint16
 fu_elantp_haptic_firmware_get_driver_ic(FuElantpHapticFirmware *self);

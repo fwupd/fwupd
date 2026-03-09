@@ -8,8 +8,6 @@
 
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
-#include "fu-logitech-hidpp-hidpp.h"
-#include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 #include "fu-logitech-hidpp-struct.h"
 
@@ -26,22 +24,31 @@ static gboolean
 fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st = fu_struct_logitech_hidpp_msg_new();
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
 	g_autoptr(GError) error_local = NULL;
+	const guint8 buf[] = {
+	    0x01, /* enable DFU */
+	    0x00,
+	    0x00,
+	    0x00,
+	    'P',
+	    'R',
+	    'E',
+	};
 
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
-	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_LONG_REGISTER;
-	msg->function_id = BOLT_REGISTER_DFU_CONTROL;
-	msg->data[0] = 1; /* enable DFU */
-	msg->data[4] = 'P';
-	msg->data[5] = 'R';
-	msg->data[6] = 'E';
-	msg->hidpp_version = 1;
-	msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
+	fu_struct_logitech_hidpp_msg_set_report_id(st, FU_LOGITECH_HIDPP_REPORT_ID_LONG);
+	fu_struct_logitech_hidpp_msg_set_device_id(st, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st, FU_LOGITECH_HIDPP_SUBID_SET_LONG_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(st,
+						     FU_LOGITECH_HIDPP_BOLT_REGISTER_DFU_CONTROL);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st, buf, sizeof(buf), error))
+		return FALSE;
 	if (!fu_logitech_hidpp_send(FU_UDEV_DEVICE(self),
-				    msg,
-				    FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
+				    st,
+				    FU_LOGITECH_HIDPP_VERSION_1,
+				    FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS * 10,
+				    FU_LOGITECH_HIDPP_MSG_FLAG_NON_BLOCKING_IO,
 				    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
@@ -52,6 +59,15 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 			return FALSE;
 		}
 	}
+
+	/* the user has to do something for Logitech "security" reasons */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
+
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -85,40 +101,60 @@ fu_logitech_hidpp_runtime_bolt_query_device_name(FuLogitechHidppRuntime *self,
 						 guint8 slot,
 						 GError **error)
 {
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-	g_autoptr(GString) dev_name = g_string_new(NULL);
-	guint namelen;
+	g_autoptr(FuStructLogitechHidppMsg) st = fu_struct_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
+	const guint8 *data;
+	gsize datasz = 0;
+	guint8 namelen = 0;
+	const guint8 buf[] = {
+	    0x60 | slot, /* device name */
+	    0x01,
+	};
 
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
-	msg->function_id = BOLT_REGISTER_PAIRING_INFORMATION;
-	msg->data[0] = 0x60 | slot; /* device name */
-	msg->data[1] = 1;
-	msg->hidpp_version = 1;
-	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+	fu_struct_logitech_hidpp_msg_set_report_id(st, FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+	fu_struct_logitech_hidpp_msg_set_device_id(st, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st, FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(
+	    st,
+	    FU_LOGITECH_HIDPP_BOLT_REGISTER_PAIRING_INFORMATION);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st, buf, sizeof(buf), error))
+		return NULL;
+
+	st_rsp = fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self),
+					    st,
+					    FU_LOGITECH_HIDPP_VERSION_1,
+					    FU_LOGITECH_HIDPP_MSG_FLAG_NONE,
+					    error);
+	if (st_rsp == NULL) {
 		g_prefix_error(error, "failed to retrieve the device name for slot %d: ", slot);
 		return NULL;
 	}
-	namelen = msg->data[2];
-	g_string_append_len(dev_name, (const char *)(&(msg->data[3])), namelen);
-
-	return g_string_free(g_steal_pointer(&dev_name), FALSE);
+	data = fu_struct_logitech_hidpp_msg_get_data(st_rsp, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, 0x2, &namelen, error))
+		return NULL;
+	return fu_memstrsafe(data, datasz, 0x3, namelen, error);
 }
 
 static gboolean
 fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *self,
-						    FuLogitechHidppHidppMsg *msg,
+						    FuStructLogitechHidppMsg *st,
 						    GError **error)
 {
 	FuLogitechHidppRuntime *runtime = FU_LOGITECH_HIDPP_RUNTIME(self);
+	const guint8 *data;
 	gboolean reachable = FALSE;
+	gsize datasz = 0;
 	guint16 hidpp_pid;
+	guint8 flags = 0;
 	g_autoptr(FuLogitechHidppDevice) child = NULL;
 
-	if ((msg->data[0] & 0x40) == 0)
+	data = fu_struct_logitech_hidpp_msg_get_data(st, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, 0x0, &flags, error))
+		return FALSE;
+	if (!fu_memread_uint16_safe(data, datasz, 0x1, &hidpp_pid, G_BIG_ENDIAN, error))
+		return FALSE;
+	if ((flags & 0x40) == 0)
 		reachable = TRUE;
-	hidpp_pid = (msg->data[1] << 8) | msg->data[2];
 
 	child = fu_logitech_hidpp_runtime_bolt_find_paired_device(self, hidpp_pid);
 	if (child != NULL) {
@@ -136,27 +172,24 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 			}
 			fu_device_remove_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		} else {
-			GPtrArray *children = NULL;
 			/* any successful 'ping' will clear this */
 			fu_device_add_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_UNREACHABLE);
-			children = fu_device_get_children(FU_DEVICE(child));
-			for (guint i = 0; i < children->len; i++) {
-				FuDevice *radio = g_ptr_array_index(children, i);
-				fu_device_add_flag(radio, FWUPD_DEVICE_FLAG_UNREACHABLE);
-			}
 		}
 	} else if (reachable) {
 		g_autofree gchar *name = NULL;
 
 		/* unknown paired device, reachable state */
-		name = fu_logitech_hidpp_runtime_bolt_query_device_name(runtime,
-									msg->device_id,
-									error);
+		name = fu_logitech_hidpp_runtime_bolt_query_device_name(
+		    runtime,
+		    fu_struct_logitech_hidpp_msg_get_device_id(st),
+		    error);
 		if (name == NULL)
 			return FALSE;
 		child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
 		fu_device_set_name(FU_DEVICE(child), name);
-		fu_logitech_hidpp_device_set_device_idx(child, msg->device_id);
+		fu_logitech_hidpp_device_set_device_idx(
+		    child,
+		    fu_struct_logitech_hidpp_msg_get_device_id(st));
 		fu_logitech_hidpp_device_set_hidpp_pid(child, hidpp_pid);
 		if (!fu_device_open(FU_DEVICE(child), error))
 			return FALSE;
@@ -167,11 +200,72 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 	} else {
 		/* unknown paired device, unreachable state */
-		g_warning("unknown paired device 0x%0x in slot %d (unreachable)",
+		g_warning("unknown paired device 0x%0x in slot %u (unreachable)",
 			  hidpp_pid,
-			  msg->device_id);
+			  fu_struct_logitech_hidpp_msg_get_device_id(st));
 	}
 
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_runtime_bolt_poll_peripheral(FuLogitechHidppRuntime *self,
+					       guint i,
+					       GError **error)
+{
+	const guint8 *data;
+	gsize datasz = 0;
+	guint16 hidpp_pid = 0;
+	guint8 flags = 0;
+	g_autofree gchar *name = NULL;
+	g_autoptr(FuStructLogitechHidppMsg) st_req = fu_struct_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
+	const guint8 buf[] = {0x50 | i}; /* pairing information */
+
+	name = fu_logitech_hidpp_runtime_bolt_query_device_name(self, i, error);
+	if (name == NULL)
+		return FALSE;
+
+	fu_struct_logitech_hidpp_msg_set_report_id(st_req, FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+	fu_struct_logitech_hidpp_msg_set_device_id(st_req, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st_req, FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(
+	    st_req,
+	    FU_LOGITECH_HIDPP_BOLT_REGISTER_PAIRING_INFORMATION);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self),
+					    st_req,
+					    FU_LOGITECH_HIDPP_VERSION_1,
+					    FU_LOGITECH_HIDPP_MSG_FLAG_NONE,
+					    error);
+	if (st_rsp == NULL)
+		return FALSE;
+	data = fu_struct_logitech_hidpp_msg_get_data(st_rsp, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, 0x1, &flags, error))
+		return FALSE;
+	if (!fu_memread_uint16_safe(data, datasz, 0x2, &hidpp_pid, G_BIG_ENDIAN, error))
+		return FALSE;
+	if ((flags & 0x40) == 0) {
+		/* paired device is reachable */
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(FuLogitechHidppDevice) child = NULL;
+
+		child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
+		fu_device_set_install_duration(FU_DEVICE(child), 270);
+		fu_device_set_name(FU_DEVICE(child), name);
+		fu_logitech_hidpp_device_set_device_idx(child, i);
+		fu_logitech_hidpp_device_set_hidpp_pid(child, hidpp_pid);
+
+		locker = fu_device_locker_new(FU_DEVICE(child), error);
+		if (locker == NULL) {
+			g_prefix_error(error, "failed to probe %s: ", name);
+			return FALSE;
+		}
+		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -179,69 +273,35 @@ static void
 fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuLogitechHidppRuntime *self)
 {
 	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(self);
-
 	for (guint i = 1; i <= bolt->pairing_slots; i++) {
-		g_autofree gchar *name = NULL;
-		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 		g_autoptr(GError) error_local = NULL;
-		guint16 hidpp_pid;
-
-		name = fu_logitech_hidpp_runtime_bolt_query_device_name(self, i, &error_local);
-		if (name == NULL) {
-			g_debug("cannot query paired device name for slot %u", i);
+		if (!fu_logitech_hidpp_runtime_bolt_poll_peripheral(self, i, &error_local)) {
+			g_debug("cannot poll slot %u: %s", i, error_local->message);
 			continue;
-		}
-
-		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-		msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
-		msg->function_id = BOLT_REGISTER_PAIRING_INFORMATION;
-		msg->data[0] = 0x50 | i; /* pairing information */
-		msg->hidpp_version = 1;
-		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, &error_local))
-			continue;
-		hidpp_pid = (msg->data[2] << 8) | msg->data[3];
-		if ((msg->data[1] & 0x40) == 0) {
-			/* paired device is reachable */
-			g_autoptr(FuLogitechHidppDevice) child = NULL;
-			child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
-			fu_device_set_install_duration(FU_DEVICE(child), 270);
-			fu_device_add_private_flag(FU_DEVICE(child),
-						   FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
-			fu_device_set_name(FU_DEVICE(child), name);
-			fu_logitech_hidpp_device_set_device_idx(child, i);
-			fu_logitech_hidpp_device_set_hidpp_pid(child, hidpp_pid);
-			if (!fu_device_open(FU_DEVICE(child), &error_local))
-				continue;
-			if (!fu_device_probe(FU_DEVICE(child), &error_local))
-				continue;
-			if (!fu_device_setup(FU_DEVICE(child), &error_local))
-				continue;
-			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 		}
 	}
 }
 
 static gboolean
 fu_logitech_hidpp_runtime_bolt_process_notification(FuLogitechHidppRuntimeBolt *self,
-						    FuLogitechHidppHidppMsg *msg)
+						    FuStructLogitechHidppMsg *st)
 {
 	g_autoptr(GError) error_local = NULL;
 
 	/* HID++1.0 error */
-	if (!fu_logitech_hidpp_msg_is_error(msg, &error_local)) {
+	if (!fu_logitech_hidpp_msg_is_error(st, &error_local)) {
 		g_warning("failed to get pending read: %s", error_local->message);
 		return TRUE;
 	}
 
 	/* unifying receiver notification */
-	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_SHORT) {
-		switch (msg->sub_id) {
+	if (fu_struct_logitech_hidpp_msg_get_report_id(st) == FU_LOGITECH_HIDPP_REPORT_ID_SHORT) {
+		switch (fu_struct_logitech_hidpp_msg_get_sub_id(st)) {
 		case FU_LOGITECH_HIDPP_SUBID_DEVICE_CONNECTION:
 		case FU_LOGITECH_HIDPP_SUBID_DEVICE_DISCONNECTION:
 		case FU_LOGITECH_HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
 			if (!fu_logitech_hidpp_runtime_bolt_update_paired_device(self,
-										 msg,
+										 st,
 										 &error_local)) {
 				g_warning("failed to update paired device status: %s",
 					  error_local->message);
@@ -255,7 +315,7 @@ fu_logitech_hidpp_runtime_bolt_process_notification(FuLogitechHidppRuntimeBolt *
 			g_debug("ignoring error message");
 			break;
 		default:
-			g_debug("unknown SubID %02x", msg->sub_id);
+			g_debug("unknown SubID %02x", fu_struct_logitech_hidpp_msg_get_sub_id(st));
 			break;
 		}
 	}
@@ -263,13 +323,14 @@ fu_logitech_hidpp_runtime_bolt_process_notification(FuLogitechHidppRuntimeBolt *
 	return TRUE;
 }
 
-static FuLogitechHidppHidppMsg *
-fu_logitech_hidpp_runtime_bolt_find_newest_msg(GPtrArray *msgs, guint8 device_id, guint8 sub_id)
+static FuStructLogitechHidppMsg *
+fu_logitech_hidpp_runtime_bolt_find_newest_msg(GPtrArray *st_rsps, guint8 device_id, guint8 sub_id)
 {
-	for (guint i = 0; i < msgs->len; i++) {
-		FuLogitechHidppHidppMsg *msg = g_ptr_array_index(msgs, msgs->len - (i + 1));
-		if (msg->device_id == device_id && msg->sub_id == sub_id)
-			return msg;
+	for (guint i = 0; i < st_rsps->len; i++) {
+		FuStructLogitechHidppMsg *st = g_ptr_array_index(st_rsps, st_rsps->len - (i + 1));
+		if (fu_struct_logitech_hidpp_msg_get_device_id(st) == device_id &&
+		    fu_struct_logitech_hidpp_msg_get_sub_id(st) == sub_id)
+			return st;
 	}
 	return NULL;
 }
@@ -280,7 +341,12 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 	FuLogitechHidppRuntime *runtime = FU_LOGITECH_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimeBolt *self = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
 	const guint timeout = 1; /* ms */
-	g_autoptr(GPtrArray) msgs = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) st_rsps =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_logitech_hidpp_msg_unref);
+
+	/* not predictable for time */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* open -- not a locker as we have no kernel driver */
 	if (!fu_device_open(device, error))
@@ -288,13 +354,11 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 
 	/* drain all the pending messages into the array */
 	for (guint i = 0; i < 50; i++) {
-		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+		g_autoptr(FuStructLogitechHidppMsg) st = NULL;
 		g_autoptr(GError) error_local = NULL;
-		msg->hidpp_version = 1;
-		if (!fu_logitech_hidpp_receive(FU_UDEV_DEVICE(runtime),
-					       msg,
-					       timeout,
-					       &error_local)) {
+
+		st = fu_logitech_hidpp_receive(FU_UDEV_DEVICE(runtime), timeout, &error_local);
+		if (st == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
 				break;
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
@@ -306,140 +370,144 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 						   "error polling Bolt receiver: ");
 			return FALSE;
 		}
-		g_ptr_array_add(msgs, g_steal_pointer(&msg));
+		g_ptr_array_add(st_rsps, g_steal_pointer(&st));
 	}
 
 	/* process messages in order, but discard any message with a newer version */
-	for (guint i = 0; i < msgs->len; i++) {
-		FuLogitechHidppHidppMsg *msg = g_ptr_array_index(msgs, i);
-		FuLogitechHidppHidppMsg *msg_newest;
+	for (guint i = 0; i < st_rsps->len; i++) {
+		FuStructLogitechHidppMsg *st = g_ptr_array_index(st_rsps, i);
+		FuStructLogitechHidppMsg *st_newest;
 
 		/* find the newest message with the matching device and sub-IDs */
-		msg_newest = fu_logitech_hidpp_runtime_bolt_find_newest_msg(msgs,
-									    msg->device_id,
-									    msg->sub_id);
-		if (msg != msg_newest) {
+		st_newest = fu_logitech_hidpp_runtime_bolt_find_newest_msg(
+		    st_rsps,
+		    fu_struct_logitech_hidpp_msg_get_device_id(st),
+		    fu_struct_logitech_hidpp_msg_get_sub_id(st));
+		if (st != st_newest) {
 			g_debug("ignoring duplicate message device-id:%02x [%s] sub-id:%02x [%s]",
-				msg->device_id,
-				fu_logitech_hidpp_device_idx_to_string(msg->device_id),
-				msg->sub_id,
-				fu_logitech_hidpp_subid_to_string(msg->sub_id));
+				fu_struct_logitech_hidpp_msg_get_device_id(st),
+				fu_logitech_hidpp_device_idx_to_string(
+				    fu_struct_logitech_hidpp_msg_get_device_id(st)),
+				fu_struct_logitech_hidpp_msg_get_sub_id(st),
+				fu_logitech_hidpp_subid_to_string(
+				    fu_struct_logitech_hidpp_msg_get_sub_id(st)));
 			continue;
 		}
-		fu_logitech_hidpp_runtime_bolt_process_notification(self, msg);
+		fu_logitech_hidpp_runtime_bolt_process_notification(self, st);
 	}
 
 	return TRUE;
 }
 
 static gboolean
+fu_logitech_hidpp_runtime_bolt_setup_slot(FuLogitechHidppRuntime *self, guint i, GError **error)
+{
+	const guint8 *data;
+	gsize datasz = 0;
+	guint16 version_raw = 0;
+	guint8 fw_type = 0;
+	g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
+	g_autoptr(FuStructLogitechHidppMsg) st_req = fu_struct_logitech_hidpp_msg_new();
+	const guint8 buf[] = {i};
+
+	fu_struct_logitech_hidpp_msg_set_report_id(st_req, FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+	fu_struct_logitech_hidpp_msg_set_device_id(st_req, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st_req, FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(
+	    st_req,
+	    FU_LOGITECH_HIDPP_BOLT_REGISTER_RECEIVER_FW_INFORMATION);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st_req, buf, sizeof(buf), error))
+		return FALSE;
+	st_rsp = fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self),
+					    st_req,
+					    FU_LOGITECH_HIDPP_VERSION_1,
+					    FU_LOGITECH_HIDPP_MSG_FLAG_NONE,
+					    error);
+	if (st_rsp == NULL) {
+		g_prefix_error_literal(error, "failed to read device config: ");
+		return FALSE;
+	}
+
+	/* main application */
+	data = fu_struct_logitech_hidpp_msg_get_data(st_rsp, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, 0x0, &fw_type, error))
+		return FALSE;
+	if (fw_type == 0) {
+		guint8 vmaj = 0;
+		guint8 vmin = 0;
+		g_autofree gchar *version = NULL;
+
+		if (!fu_memread_uint8_safe(data, datasz, 0x1, &vmaj, error))
+			return FALSE;
+		if (!fu_memread_uint8_safe(data, datasz, 0x2, &vmin, error))
+			return FALSE;
+		if (!fu_memread_uint16_safe(data, datasz, 0x03, &version_raw, G_BIG_ENDIAN, error))
+			return FALSE;
+		version = fu_logitech_hidpp_format_version("MPR", vmaj, vmin, version_raw);
+		fu_device_set_version(FU_DEVICE(self), version);
+		return TRUE;
+	}
+
+	/* bootloader */
+	if (fw_type == 1) {
+		g_autofree gchar *version = NULL;
+		guint8 vmaj = 0;
+		guint8 vmin = 0;
+
+		if (!fu_memread_uint8_safe(data, datasz, 0x1, &vmaj, error))
+			return FALSE;
+		if (!fu_memread_uint8_safe(data, datasz, 0x2, &vmin, error))
+			return FALSE;
+		if (!fu_memread_uint16_safe(data, datasz, 0x03, &version_raw, G_BIG_ENDIAN, error))
+			return FALSE;
+		version = fu_logitech_hidpp_format_version("BOT", vmaj, vmin, version_raw);
+		fu_device_set_version_bootloader(FU_DEVICE(self), version);
+		return TRUE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_hidpp_runtime_bolt_setup_internal(FuLogitechHidppRuntime *self, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(self);
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st = fu_struct_logitech_hidpp_msg_new();
+	g_autoptr(FuStructLogitechHidppMsg) st_rsp = NULL;
+	const guint8 *data;
+	const guint8 buf[] = {0x02}; /* FW Version (contains the number of pairing slots) */
+	gsize datasz = 0;
 
-	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
-	msg->function_id = BOLT_REGISTER_PAIRING_INFORMATION;
-	msg->data[0] = 0x02; /* FW Version (contains the number of pairing slots) */
-	msg->hidpp_version = 1;
-	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
+	fu_struct_logitech_hidpp_msg_set_report_id(st, FU_LOGITECH_HIDPP_REPORT_ID_SHORT);
+	fu_struct_logitech_hidpp_msg_set_device_id(st, FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER);
+	fu_struct_logitech_hidpp_msg_set_sub_id(st, FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER);
+	fu_struct_logitech_hidpp_msg_set_function_id(
+	    st,
+	    FU_LOGITECH_HIDPP_BOLT_REGISTER_PAIRING_INFORMATION);
+	if (!fu_struct_logitech_hidpp_msg_set_data(st, buf, sizeof(buf), error))
+		return FALSE;
+
+	st_rsp = fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self),
+					    st,
+					    FU_LOGITECH_HIDPP_VERSION_1,
+					    FU_LOGITECH_HIDPP_MSG_FLAG_NONE,
+					    error);
+	if (st_rsp == NULL) {
 		g_prefix_error_literal(error, "failed to fetch the number of pairing slots: ");
 		return FALSE;
 	}
-	bolt->pairing_slots = msg->data[8];
+	data = fu_struct_logitech_hidpp_msg_get_data(st_rsp, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, 0x8, &bolt->pairing_slots, error))
+		return FALSE;
 
 	/*
 	 * TODO: Iterate only over the first three entity indexes for
 	 * now.
 	 */
 	for (guint i = 0; i < 3; i++) {
-		guint16 version_raw = 0;
-		g_autofree gchar *version = NULL;
-		g_autoptr(FuLogitechHidppRadio) radio = NULL;
-		g_autoptr(GString) radio_version = NULL;
-
-		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
-		msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-		msg->sub_id = FU_LOGITECH_HIDPP_SUBID_GET_LONG_REGISTER;
-		msg->function_id = BOLT_REGISTER_RECEIVER_FW_INFORMATION;
-		msg->data[0] = i;
-		msg->hidpp_version = 1;
-		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error_literal(error, "failed to read device config: ");
+		if (!fu_logitech_hidpp_runtime_bolt_setup_slot(self, i, error))
 			return FALSE;
-		}
-
-		switch (msg->data[0]) {
-		case 0:
-			/* main application */
-			if (!fu_memread_uint16_safe(msg->data,
-						    sizeof(msg->data),
-						    0x03,
-						    &version_raw,
-						    G_BIG_ENDIAN,
-						    error))
-				return FALSE;
-			version = fu_logitech_hidpp_format_version("MPR",
-								   msg->data[1],
-								   msg->data[2],
-								   version_raw);
-			fu_device_set_version(FU_DEVICE(self), version);
-			break;
-		case 1:
-			/* bootloader */
-			if (!fu_memread_uint16_safe(msg->data,
-						    sizeof(msg->data),
-						    0x03,
-						    &version_raw,
-						    G_BIG_ENDIAN,
-						    error))
-				return FALSE;
-			version = fu_logitech_hidpp_format_version("BOT",
-								   msg->data[1],
-								   msg->data[2],
-								   version_raw);
-			fu_device_set_version_bootloader(FU_DEVICE(self), version);
-			break;
-		case 5:
-			/* SoftDevice */
-			radio_version = g_string_new(NULL);
-			radio = fu_logitech_hidpp_radio_new(ctx, i);
-			fu_device_add_instance_u16(FU_DEVICE(radio),
-						   "VEN",
-						   fu_device_get_vid(FU_DEVICE(self)));
-			fu_device_add_instance_u16(FU_DEVICE(radio),
-						   "DEV",
-						   fu_device_get_pid(FU_DEVICE(self)));
-			fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", msg->data[0]);
-			fu_device_incorporate(FU_DEVICE(radio),
-					      FU_DEVICE(self),
-					      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-			fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
-			if (!fu_device_build_instance_id(FU_DEVICE(radio),
-							 error,
-							 "HIDRAW",
-							 "VEN",
-							 "DEV",
-							 "ENT",
-							 NULL))
-				return FALSE;
-			if (!fu_memread_uint16_safe(msg->data,
-						    sizeof(msg->data),
-						    0x03,
-						    &version_raw,
-						    G_BIG_ENDIAN,
-						    error))
-				return FALSE;
-			g_string_append_printf(radio_version, "0x%.4x", version_raw);
-			fu_device_set_version(FU_DEVICE(radio), radio_version->str);
-			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(radio));
-			break;
-		default:
-			break;
-		}
 	}
 
 	/* enable HID++ notifications */
@@ -476,6 +544,17 @@ fu_logitech_hidpp_runtime_bolt_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_logitech_hidpp_runtime_bolt_set_progress(FuDevice *device, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 16, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 84, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static void
 fu_logitech_hidpp_runtime_bolt_class_init(FuLogitechHidppRuntimeBoltClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
@@ -484,6 +563,7 @@ fu_logitech_hidpp_runtime_bolt_class_init(FuLogitechHidppRuntimeBoltClass *klass
 	device_class->setup = fu_logitech_hidpp_runtime_bolt_setup;
 	device_class->poll = fu_logitech_hidpp_runtime_bolt_poll;
 	device_class->to_string = fu_logitech_hidpp_runtime_bolt_to_string;
+	device_class->set_progress = fu_logitech_hidpp_runtime_bolt_set_progress;
 }
 
 static void
@@ -491,6 +571,8 @@ fu_logitech_hidpp_runtime_bolt_init(FuLogitechHidppRuntimeBolt *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_set_name(FU_DEVICE(self), "Bolt Receiver");
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
 }

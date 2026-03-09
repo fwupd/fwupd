@@ -555,34 +555,29 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_synaptics_rmi_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
-					 FuProgress *progress,
-					 FuFirmwareParseFlags flags,
-					 GError **error)
+static gboolean
+fu_synaptics_rmi_device_check_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuFirmwareParseFlags flags,
+				       GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuFirmware) firmware = fu_synaptics_rmi_firmware_new();
 	g_autoptr(GBytes) bytes_cfg = NULL;
 	g_autoptr(GBytes) bytes_bin = NULL;
 	gsize size_expected;
 
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if (priv->flash.bootloader_id[1] >= 10) {
 		g_info("bootloader >= 10 (%d.%d), skip checking firmware size.",
 		       priv->flash.bootloader_id[1],
 		       priv->flash.bootloader_id[0]);
-
-		return g_steal_pointer(&firmware);
+		return TRUE;
 	}
 
 	/* check sizes */
 	bytes_bin = fu_firmware_get_image_by_id_bytes(firmware, "ui", error);
 	if (bytes_bin == NULL)
-		return NULL;
+		return FALSE;
 	size_expected = ((gsize)priv->flash.block_count_fw * (gsize)priv->flash.block_size) +
 			fu_synaptics_rmi_firmware_get_sig_size(FU_SYNAPTICS_RMI_FIRMWARE(firmware));
 	if (g_bytes_get_size(bytes_bin) != size_expected) {
@@ -592,11 +587,11 @@ fu_synaptics_rmi_device_prepare_firmware(FuDevice *device,
 			    "file firmware invalid size 0x%04x, expected 0x%04x",
 			    (guint)g_bytes_get_size(bytes_bin),
 			    (guint)size_expected);
-		return NULL;
+		return FALSE;
 	}
 	bytes_cfg = fu_firmware_get_image_by_id_bytes(firmware, "config", error);
 	if (bytes_cfg == NULL)
-		return NULL;
+		return FALSE;
 	size_expected = (gsize)priv->flash.block_count_cfg * (gsize)priv->flash.block_size;
 	if (g_bytes_get_size(bytes_cfg) != size_expected) {
 		g_set_error(error,
@@ -605,10 +600,11 @@ fu_synaptics_rmi_device_prepare_firmware(FuDevice *device,
 			    "file config invalid size 0x%04x, expected 0x%04x",
 			    (guint)g_bytes_get_size(bytes_cfg),
 			    (guint)size_expected);
-		return NULL;
+		return FALSE;
 	}
 
-	return g_steal_pointer(&firmware);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -839,6 +835,12 @@ fu_synaptics_rmi_device_write_firmware(FuDevice *device,
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* sanity check */
+	if (priv->f34 == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "f34 missing");
+		return FALSE;
+	}
 	if (priv->f34->function_version == 0x0 || priv->f34->function_version == 0x1) {
 		return fu_synaptics_rmi_v5_device_write_firmware(self,
 								 firmware,
@@ -869,6 +871,7 @@ fu_synaptics_rmi_device_init(FuSynapticsRmiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SYNAPTICS_RMI_FIRMWARE);
 	priv->current_page = 0xfe;
 	priv->functions = g_ptr_array_new_with_free_func(g_free);
 }
@@ -901,7 +904,7 @@ fu_synaptics_rmi_device_class_init(FuSynapticsRmiDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_synaptics_rmi_device_finalize;
 	device_class->to_string = fu_synaptics_rmi_device_to_string;
-	device_class->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
+	device_class->check_firmware = fu_synaptics_rmi_device_check_firmware;
 	device_class->setup = fu_synaptics_rmi_device_setup;
 	device_class->write_firmware = fu_synaptics_rmi_device_write_firmware;
 	device_class->replace = fu_synaptics_rmi_device_replace;

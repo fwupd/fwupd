@@ -799,19 +799,15 @@ fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 	return FU_DEVICE_CLASS(fu_ilitek_its_device_parent_class)->setup(device, error);
 }
 
-static FuFirmware *
-fu_ilitek_its_device_prepare_firmware(FuDevice *device,
-				      GInputStream *stream,
-				      FuProgress *progress,
-				      FuFirmwareParseFlags flags,
-				      GError **error)
+static gboolean
+fu_ilitek_its_device_check_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
 	const gchar *fw_ic_name;
-	g_autoptr(FuFirmware) firmware = fu_ilitek_its_firmware_new();
 
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	fw_ic_name = fu_ilitek_its_firmware_get_ic_name(FU_ILITEK_ITS_FIRMWARE(firmware));
 	if (g_strcmp0(self->ic_name, fw_ic_name) != 0) {
 		g_set_error(error,
@@ -820,11 +816,11 @@ fu_ilitek_its_device_prepare_firmware(FuDevice *device,
 			    "firmware ic name %s does not match device ic name %s",
 			    fw_ic_name,
 			    fu_device_get_name(device));
-		return NULL;
+		return FALSE;
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -1015,6 +1011,7 @@ fu_ilitek_its_device_init(FuIlitekItsDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.ilitek.its");
 	fu_device_set_summary(FU_DEVICE(self), "Touch controller");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ILITEK_ITS_FIRMWARE);
 
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -1042,7 +1039,7 @@ fu_ilitek_its_device_class_init(FuIlitekItsDeviceClass *klass)
 	device_class->attach = fu_ilitek_its_device_attach;
 	device_class->detach = fu_ilitek_its_device_detach;
 	device_class->set_quirk_kv = fu_ilitek_its_device_set_quirk_kv;
-	device_class->prepare_firmware = fu_ilitek_its_device_prepare_firmware;
+	device_class->check_firmware = fu_ilitek_its_device_check_firmware;
 	device_class->write_firmware = fu_ilitek_its_device_write_firmware;
 	device_class->set_progress = fu_ilitek_its_device_set_progress;
 	device_class->convert_version = fu_ilitek_its_device_convert_version;

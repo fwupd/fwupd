@@ -118,6 +118,39 @@ fu_device_event_uncompressed_func(void)
 			"}");
 }
 
+static void
+fu_device_event_strict_order_func(void)
+{
+	FuDeviceEvent *event_tmp;
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDeviceEvent) event1 = fu_device_event_new("foo:bar:baz");
+	g_autoptr(FuDeviceEvent) event2 = fu_device_event_new("aaa:bbb:ccc");
+	g_autoptr(FuDeviceEvent) event3 = fu_device_event_new("www:yyy:zzz");
+	g_autoptr(FuDeviceEvent) event4 = fu_device_event_new("ddd:eee:fff");
+	g_autoptr(FuDeviceEvent) event5 = fu_device_event_new("mmm.nnn.ooo");
+	g_autoptr(GError) error = NULL;
+
+	fu_device_add_event(device, event1);
+	fu_device_add_event(device, event2);
+	fu_device_add_event(device, event3);
+	fu_device_add_event(device, event4);
+	fu_device_add_event(device, event5);
+
+	/* allows skipping first event */
+	event_tmp = fu_device_load_event(device, "aaa:bbb:ccc", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(event_tmp);
+
+	/* only accept strict order from now on */
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER);
+	event_tmp = fu_device_load_event(device, "www:yyy:zzz", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(event_tmp);
+	event_tmp = fu_device_load_event(device, "mmm.nnn.ooo", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(event_tmp);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -125,5 +158,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device-event", fu_device_event_func);
 	g_test_add_func("/fwupd/device-event/uncompressed", fu_device_event_uncompressed_func);
 	g_test_add_func("/fwupd/device-event/donor", fu_device_event_donor_func);
+	g_test_add_func("/fwupd/device-event/strict-order", fu_device_event_strict_order_func);
 	return g_test_run();
 }
