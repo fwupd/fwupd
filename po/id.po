@@ -6,20 +6,21 @@
 # Andika Triwidada <andika@gmail.com>, 2017-2019,2021,2024
 # Andika Triwidada <andika@gmail.com>, 2021
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Arif Budiman <arifpedia@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2025-10-24 10:17+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-09 10:09+0000\n"
+"Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -137,11 +138,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Autentikasi diperlukan untuk mengubah sebuah remote yang ditata yang dipakai untuk pembaruan firmware"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Bersihkan remote yang dikonfigurasi"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Autentikasi diperlukan untuk menghapus metadata dari remote"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -323,13 +324,13 @@ msgstr "Tidak ada tindakan yang ditentukan!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Silakan masukkan angka dari 0 hingga %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Silakan masukkan salah satu dari %s atau %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -428,12 +429,12 @@ msgstr "Tampilkan opsi debugging"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
+msgstr[0] "%u perangkat telah diperbarui dan memerlukan reboot."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Reboot untuk menyelesaikan pembaruan."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -660,7 +661,7 @@ msgstr "Perlindungan rollback prosesor"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Boot aman platform"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -692,19 +693,19 @@ msgstr "Pemutakhiran firmware BIOS"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "SMM locked down"
-msgstr ""
+msgstr "SMM terkunci"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
-msgstr ""
+msgstr "Perlindungan memori UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
-msgstr ""
+msgstr "db UEFI"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -843,7 +844,7 @@ msgstr "Perlindungan Rollback Prosesor Aman AMD"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "Boot Aman Platform AMD"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -871,11 +872,11 @@ msgstr "Pemutakhiran Firmware BIOS"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "System Management Mode"
-msgstr ""
+msgstr "Mode Manajemen Sistem"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
-msgstr ""
+msgstr "Perlindungan Memori UEFI"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -998,7 +999,7 @@ msgstr "Perlindungan Rollback mencegah perangkat lunak perangkat diturunkan ke v
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Boot aman platform mencegah perangkat lunak yang tidak ditandatangani dimuat saat perangkat dinyalakan."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1010,19 +1011,19 @@ msgstr "Memfungsikan pembaruan firmware untuk BIOS memungkinkan memperbaiki masa
 
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
-msgstr ""
+msgstr "Mode manajemen sistem digunakan oleh firmware untuk mengakses kode dan data BIOS yang berada di memori."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
-msgstr ""
+msgstr "Sistem UEFI dapat mengatur atribut memori saat boot yang mencegah eksploit umum berjalan."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
-msgstr ""
+msgstr "db UEFI berisi daftar sertifikat yang valid yang dapat digunakan untuk mengotorisasi biner EFI mana yang diizinkan untuk berjalan."
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart adalah fitur keamanan firmware yang melindungi BIOS dari manipulasi."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1063,7 +1064,7 @@ msgstr "Pilih perangkat"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Perangkat tanpa pembaruan firmware yang tersedia:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1100,16 +1101,16 @@ msgstr "Membaca dari %s…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s saat ini tidak dapat diperbarui:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Tidak ada yang perlu dilakukan"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Perangkat dengan pembaruan firmware yang memerlukan tindakan pengguna:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1125,7 +1126,7 @@ msgstr "Remote yang berhasil dimodifikasi"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Berhasil membersihkan remote"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1133,7 +1134,7 @@ msgstr "Remote yang berhasil dinonaktifkan"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Hapus file cache remote yang sekarang tidak digunakan?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1185,7 +1186,7 @@ msgstr "Menulis berkas:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Metadata sudah mutakhir"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -1242,37 +1243,37 @@ msgstr "Tidak dapat menemukan atribut"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
-msgstr ""
+msgstr "Argumen tidak valid, diharapkan INDEX NAME TARGET [MOUNTPOINT]"
 
 #. TRANSLATORS: error message
 msgid "Already exists, and no --force specified"
-msgstr ""
+msgstr "Sudah ada, dan tidak ada --force yang ditentukan"
 
 #. TRANSLATORS: error message
 #, c-format
 msgid "No volume matched %s"
-msgstr ""
+msgstr "Tidak ada volume yang cocok dengan %s"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected base-16 integer"
-msgstr ""
+msgstr "Argumen tidak valid, diharapkan bilangan bulat basis-16"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected INDEX KEY [VALUE]"
-msgstr ""
+msgstr "Argumen tidak valid, diharapkan INDEX KEY [VALUE]"
 
 #. TRANSLATORS: try to treat the legacy format as a hive
 msgid "The EFI boot entry was not in hive format, falling back"
-msgstr ""
+msgstr "Entri boot EFI tidak dalam format hive, menggunakan metode cadangan"
 
 #. TRANSLATORS: the boot entry was in a legacy format
 msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
-msgstr ""
+msgstr "Entri boot EFI tidak dalam format hive, dan shim mungkin tidak cukup baru untuk membacanya."
 
 #. TRANSLATORS: ask the user if it's okay to convert,
 #. * "it" being the data contained in the EFI boot entry
 msgid "Do you want to convert it now?"
-msgstr ""
+msgstr "Apakah Anda ingin mengonversinya sekarang?"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected GUID"
@@ -1368,7 +1369,7 @@ msgstr "Menjawab ya untuk semua pertanyaan"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
-msgstr ""
+msgstr "Keluaran dalam format JSON (menonaktifkan semua prompt interaktif)"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1396,7 +1397,7 @@ msgstr "[ID-PERANTI|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
-msgstr ""
+msgstr "Mendapatkan daftar pembaruan untuk semua perangkat yang ditentukan, atau semua perangkat jika tidak ditentukan"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1412,7 +1413,7 @@ msgstr "Awasi perubahan perangkat keras"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID [VERSION]"
-msgstr ""
+msgstr "FILENAME DEVICE-ID [VERSION]"
 
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
@@ -1581,7 +1582,7 @@ msgstr "Segarkan metadata dari server remote"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FWUPD-VERSION]"
-msgstr ""
+msgstr "[FWUPD-VERSION]"
 
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
@@ -1597,7 +1598,7 @@ msgstr "Menghapus perangkat yang akan diawasi untuk emulasi di masa mendatang"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "EMULATION-FILE [ARCHIVE-FILE]"
-msgstr ""
+msgstr "EMULATION-FILE [ARCHIVE-FILE]"
 
 #. TRANSLATORS: command description
 msgid "Mounts the ESP"
@@ -1621,7 +1622,7 @@ msgstr "Beralih cabang firmware pada perangkat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr ""
+msgstr "DEVICE-ID"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1633,7 +1634,7 @@ msgstr "Menghapus semua riwayat pembaruan firmware"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[SETTING1] [SETTING2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1670,39 +1671,39 @@ msgstr "Mencantumkan daftar parameter boot EFI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX"
-msgstr ""
+msgstr "INDEX"
 
 #. TRANSLATORS: command description
 msgid "Set the EFI boot next"
-msgstr ""
+msgstr "Atur boot EFI berikutnya"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX1,INDEX2"
-msgstr ""
+msgstr "INDEX1,INDEX2"
 
 #. TRANSLATORS: command description
 msgid "Set the EFI boot order"
-msgstr ""
+msgstr "Atur urutan boot EFI"
 
 #. TRANSLATORS: command description
 msgid "Delete an EFI boot entry"
-msgstr ""
+msgstr "Hapus entri boot EFI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX NAME TARGET [MOUNTPOINT]"
-msgstr ""
+msgstr "INDEX NAME TARGET [MOUNTPOINT]"
 
 #. TRANSLATORS: command description
 msgid "Create an EFI boot entry"
-msgstr ""
+msgstr "Buat entri boot EFI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX KEY [VALUE]"
-msgstr ""
+msgstr "INDEX KEY [VALUE]"
 
 #. TRANSLATORS: command description
 msgid "Set or remove an EFI boot hive entry"
-msgstr ""
+msgstr "Atur atau hapus entri hive boot EFI"
 
 #. TRANSLATORS: command description
 msgid "List EFI boot files"
@@ -1758,7 +1759,7 @@ msgstr "ID-REMOTE"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Membersihkan remote yang diberikan"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1778,47 +1779,47 @@ msgstr "Menonaktifkan perangkat pengujian virtual"
 
 #. TRANSLATORS: command description
 msgid "Get all known version formats"
-msgstr ""
+msgstr "Dapatkan semua format versi yang diketahui"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "VERSION1 VERSION2 [FORMAT]"
-msgstr ""
+msgstr "VERSION1 VERSION2 [FORMAT]"
 
 #. TRANSLATORS: command description
 msgid "Compares two versions for equality"
-msgstr ""
+msgstr "Membandingkan dua versi untuk kesetaraan"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "WORD"
-msgstr ""
+msgstr "WORD"
 
 #. TRANSLATORS: command description
 msgid "Finds firmware releases from the metadata"
-msgstr ""
+msgstr "Menemukan rilis firmware dari metadata"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "KIND FILENAME"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
-msgstr ""
+msgstr "Menghitung CRC dari sebuah file"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC FILENAME"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
-msgstr ""
+msgstr "Menemukan algoritma yang cocok dengan CRC file"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Mengurai eventlog PCR sistem"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -1885,7 +1886,7 @@ msgstr "Apakah Anda ingin mengunggah laporan secara otomatis untuk pembaruan di 
 
 #. TRANSLATORS: no rebooting needed
 msgid "No reboot is necessary"
-msgstr ""
+msgstr "Tidak perlu reboot"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
@@ -1907,7 +1908,7 @@ msgstr "ID Inhibit adalah %s."
 #. TRANSLATORS: we can auto-uninhibit after a timeout
 #, c-format
 msgid "Automatically uninhibiting in %ums…"
-msgstr ""
+msgstr "Secara otomatis menghentikan penghambatan dalam %ums…"
 
 #. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the program
 msgid "Use CTRL^C to cancel."
@@ -1930,7 +1931,7 @@ msgstr "Berhasil menunggu %.0fms untuk perangkat"
 #, c-format
 msgid "%u test was skipped"
 msgid_plural "%u tests were skipped"
-msgstr[0] ""
+msgstr[0] "%u pengujian dilewati"
 
 #. show the user the entire data blob
 msgid "Target"
@@ -1988,25 +1989,25 @@ msgstr "Memutakhirkan"
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata:"
-msgstr ""
+msgstr "Berhasil mengunduh metadata baru:"
 
 #. TRANSLATORS: no devices that can be upgraded with new firmware
 msgid "No devices are updatable"
-msgstr ""
+msgstr "Tidak ada perangkat yang dapat diperbarui"
 
 #. TRANSLATORS: how many devices could be updated in theory if
 #. we had the firmware locally
 #, c-format
 msgid "%u device is updatable"
 msgid_plural "%u devices are updatable"
-msgstr[0] ""
+msgstr[0] "%u perangkat dapat diperbarui"
 
 #. TRANSLATORS: how many devices have published updates on
 #. something like the LVFS
 #, c-format
 msgid "%u device is supported in the enabled remotes (an update has been published)"
 msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
-msgstr[0] ""
+msgstr[0] "%u perangkat didukung di remote yang diaktifkan (sebuah pembaruan telah diterbitkan)"
 
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
@@ -2018,7 +2019,7 @@ msgstr "Tidak ada rilis yang tersedia"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No matching releases for search token"
-msgstr ""
+msgstr "Tidak ada rilis yang cocok untuk token pencarian"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
@@ -2183,7 +2184,7 @@ msgstr "Menyetel percobaan ulang unduhan untuk kesalahan sementara"
 
 #. TRANSLATORS: command line option
 msgid "Only install onto emulated devices"
-msgstr ""
+msgstr "Hanya instal pada perangkat yang diemulasikan"
 
 #. TRANSLATORS: command line option
 msgid "Sign the uploaded data with the client certificate"
@@ -2219,7 +2220,7 @@ msgstr "Jangan meminta autentikasi (detail yang ditampilkan mungkin lebih sediki
 
 #. TRANSLATORS: command description
 msgid "Check if any devices are pending a reboot to complete update"
-msgstr ""
+msgstr "Periksa apakah ada perangkat yang menunggu reboot untuk menyelesaikan pembaruan"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -2307,7 +2308,7 @@ msgstr "Mengemulasi perangkat menggunakan manifes JSON"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON] [TIMEOUT]"
-msgstr ""
+msgstr "[REASON] [TIMEOUT]"
 
 #. TRANSLATORS: command description
 msgid "Inhibit the system to prevent upgrades"
@@ -2696,12 +2697,12 @@ msgstr "Pembaruan Pengendali Masukan %s"
 #. TRANSLATORS: two miniature speakers attached to your ears
 #, c-format
 msgid "%s Headphones Update"
-msgstr ""
+msgstr "Pembaruan Headphone %s"
 
 #. TRANSLATORS: headphones with an integrated microphone
 #, c-format
 msgid "%s Headset Update"
-msgstr ""
+msgstr "Pembaruan Headset %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -2908,12 +2909,12 @@ msgstr "Perlu reboot"
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low"
-msgstr ""
+msgstr "Daya sistem terlalu rendah"
 
 #. TRANSLATORS: as in laptop battery power
 #, c-format
 msgid "System power is too low (%u%%, requires %u%%)"
-msgstr ""
+msgstr "Daya sistem terlalu rendah (%u%%, memerlukan %u%%)"
 
 #. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
 msgid "Device is unreachable, or out of wireless range"
@@ -2970,11 +2971,11 @@ msgstr "Perangkat memiliki prioritas lebih rendah daripada perangkat yang setara
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "Sistem telah ditandatangani dengan kunci yang tidak aman"
 
 #. TRANSLATORS: firmware is locked from the BIOS
 msgid "Device firmware has been locked"
-msgstr ""
+msgstr "Firmware perangkat telah dikunci"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3136,7 +3137,7 @@ msgstr "Plugin hanya untuk pengujian"
 
 #. TRANSLATORS: The plugin enumeration might change the device current mode
 msgid "Plugin enumeration may change device state"
-msgstr ""
+msgstr "Enumerasi plugin dapat mengubah keadaan perangkat"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -3266,7 +3267,7 @@ msgstr "Sumber"
 
 #. TRANSLATORS: Software Bill of Materials link
 msgid "SBOM"
-msgstr ""
+msgstr "SBOM"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -3504,27 +3505,27 @@ msgstr "Rekonstruksi PCR0 TPM kini valid"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection enabled but not locked"
-msgstr ""
+msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection enabled and locked"
-msgstr ""
+msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
-msgstr ""
+msgstr "Perlindungan memori UEFI sekarang dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
-msgstr ""
+msgstr "Perlindungan memori UEFI sekarang tidak dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
-msgstr ""
+msgstr "Penyimpanan sertifikat UEFI sekarang sudah mutakhir"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart diaktifkan"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
