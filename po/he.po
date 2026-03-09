@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-08 05:09+0000\n"
+"PO-Revision-Date: 2026-03-09 10:09+0000\n"
 "Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
 "Language-Team: Hebrew <https://hosted.weblate.org/projects/fwupd/fwupd/he/>\n"
 "Language: he\n"
@@ -460,15 +460,15 @@ msgstr ""
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "לאחד המכשירים יש שדרוג קושחה."
+msgstr[1] "לשניים מהמכשירים יש שדרוג קושחה."
+msgstr[2] "ל־%u מהמכשירים יש שדרוג קושחה."
 
 #. TRANSLATORS: this is shown in the MOTD -- %1 is the
 #. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
 msgid "Run `%s` for more information."
-msgstr ""
+msgstr "יש להריץ את `%s` למידע נוסף."
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
