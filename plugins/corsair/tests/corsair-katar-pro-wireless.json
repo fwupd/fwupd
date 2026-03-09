@@ -1,0 +1,56 @@
+{
+  "name": "Corsair KATAR PRO WIRELESS",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "03c478a9248c658d985267c6a67da878ab8c856e71bbd49105424d48e7fbf98c-corsair-mandarin-receiver-2.3.22.cab",
+      "emulation-url": "1304c41d102fcb795d42588b404446bc8cd7c9c0cd0f2b0a86db944d14749d4c-corsair-mandarin-receiver-2.3.22.zip",
+      "components": [
+        {
+          "version": "2.3.22",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "8bf1f03f-3c6f-53a1-9169-800fddf0952c"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "e89d2bda6e66c1af342ffe307e313c49a16371a83a7e9a5f87dcdeadba61f4ad-corsair-mandarin-receiver-2.3.23.cab",
+      "emulation-url": "745443f4b37aee86db7a14e6611e7f552e85dbe3ee6b550bc48e59c9ad2f9cae-corsair-mandarin-receiver-2.3.23.zip",
+      "components": [
+        {
+          "version": "2.3.23",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "8bf1f03f-3c6f-53a1-9169-800fddf0952c"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "09db7123181fed5382bc0a4f0770372d1588eabc27e413f23616bc1d0555267c-corsair-mandarin-mouse-2.5.32.cab",
+      "components": [
+        {
+          "version": "2.5.32",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "7235bc76-2e5a-5312-b848-882871503152"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "1bfc6bb21184ed6677f5cbf48f660169737bfc1924133020da12a038b4b326bf-corsair-mandarin-mouse-2.5.33.cab",
+      "components": [
+        {
+          "version": "2.5.33",
+          "protocol": "com.corsair.bp",
+          "guids": [
+            "7235bc76-2e5a-5312-b848-882871503152"
+          ]
+        }
+      ]
+    }
+  ]
+}

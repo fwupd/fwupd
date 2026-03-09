@@ -122,7 +122,7 @@ data from `sysfs` or `/dev`.
         fu_device_get_version_bootloader(dev, "0.1.2");
         fu_device_add_icon(dev, "computer");
         fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-        fu_plugin_device_add(plugin, dev);
+        fu_plugin_add_device(plugin, dev);
         return TRUE;
     }
 
@@ -554,14 +554,25 @@ If implemented, this takes care of decompressing or parsing the firmware
 data. For example, to check if the firmware is valid, if it's suitable
 for the device, etc.
 
-It takes a stream of bytes (`GBytes`) as a parameter, representing the
+It takes a stream of payload (`GInputStream`) as a parameter, representing the
 raw binary firmware data.
+
+If the firmware type can be set with `fu_device_set_firmware_gtype()` and
+parsed as a single image, then implementing `->check_firmware()` is usually a
+better choice than using `->prepare_firmware()`.
 
 It should create the firmware object and call the appropriate method to
 load the firmware. Otherwise, if it's not implemented for the specific
 device type, the generic implementation in
 [libfwupdplugin/fu-device.c](https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-device.c):`fu_device_prepare_firmware()`
 creates a firmware object loaded with a provided image.
+
+#### check_firmware
+
+If implemented, this checks that the firmware is compatible with the device.
+
+It takes a firmware subclass (e.g. a `FuIhexFirmware`) as a parameter, representing the
+parsed firmware data.
 
 #### detach
 

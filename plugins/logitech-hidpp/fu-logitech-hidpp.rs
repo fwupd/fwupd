@@ -36,12 +36,13 @@ enum FuLogitechHidppFeature {
 }
 
 #[derive(ToString)]
+#[repr(u8)]
 enum FuLogitechHidppDeviceIdx {
     Wired = 0x00,
     Receiver = 0xFF,
 }
 
-#[derive(ToString)]
+#[repr(u8)]
 enum FuLogitechHidppReportId {
     Short = 0x10,
     Long = 0x11,
@@ -49,7 +50,6 @@ enum FuLogitechHidppReportId {
 }
 
 // HID++1.0 registers
-#[derive(ToString)]
 enum FuLogitechHidppRegister {
     HidppNotifications = 0x00,
     EnableIndividualFeatures = 0x01,
@@ -72,6 +72,7 @@ enum FuLogitechHidppRegister {
 }
 
 #[derive(ToString)]
+#[repr(u8)]
 enum FuLogitechHidppSubid {
     VendorSpecificKeys = 0x03,
     PowerKeys = 0x04,
@@ -224,4 +225,35 @@ struct FuStructLogitechHidppBootloaderPkt {
     addr: u16be,
     len: u8,
     data: [u8; 28],
+}
+
+enum FuLogitechHidppMsgFlags {
+    None,
+    NonBlockingIo = 1 << 0,
+    IgnoreSubId = 1 << 1,
+    IgnoreFnctId = 1 << 2,
+    IgnoreSwid = 1 << 3,
+    RetryStuck = 1 << 4,
+}
+
+#[derive(New, ToString, Parse)]
+struct FuStructLogitechHidppMsg {
+    report_id: FuLogitechHidppReportId,
+    device_id: FuLogitechHidppDeviceIdx,
+    sub_id: FuLogitechHidppSubid,
+    function_id: u8, // funcId:software_id
+    data: [u8; 47], // maximum supported by Windows XP SP2
+}
+
+enum FuLogitechHidppBoltRegister {
+    HidppReporting          = 0x00,
+    ConnectionState         = 0x02,
+    DeviceActivity          = 0xB3,
+    PairingInformation      = 0xB5,
+    PerformDeviceDiscovery  = 0xC0,
+    PerformDevicePairing    = 0xC1,
+    Reset                   = 0xF2,
+    ReceiverFwInformation   = 0xF4,
+    DfuControl              = 0xF5,
+    UniqueIdentifier        = 0xFB,
 }

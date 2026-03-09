@@ -34,6 +34,7 @@ fu_vli_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "VliDeviceKind");
 	fu_context_add_quirk_key(ctx, "VliSpiAutoDetect");
+	fu_context_add_quirk_key(ctx, "VliPdOffset");
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_VLI_USBHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_VLI_PD_FIRMWARE);

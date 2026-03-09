@@ -888,7 +888,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 	}
 	if (g_strcmp0(action, "remove") == 0) {
 		if (tt->tree->fu_device != NULL)
-			fu_plugin_device_remove(tt->plugin, tt->tree->fu_device);
+			fu_plugin_remove_device(tt->plugin, tt->tree->fu_device);
 		return;
 	}
 	if (g_strcmp0(action, "change") == 0) {

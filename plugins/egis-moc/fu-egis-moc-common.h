@@ -9,6 +9,6 @@
 #include <fwupdplugin.h>
 
 guint32
-fu_egis_moc_checksum_add(guint32 csum, const guint8 *buf, gsize bufsz);
+fu_egis_moc_checksum_build(guint32 csum, const guint8 *buf, gsize bufsz);
 guint16
 fu_egis_moc_checksum_finish(guint32 csum);

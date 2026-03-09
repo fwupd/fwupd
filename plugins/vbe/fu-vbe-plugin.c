@@ -83,7 +83,7 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 			   "fdt-node",
 			   fdt_node,
 			   NULL);
-	fu_plugin_device_add(plugin, dev);
+	fu_plugin_add_device(plugin, dev);
 	return TRUE;
 }
 

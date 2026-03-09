@@ -475,9 +475,3 @@ fu_ccgx_dmc_firmware_class_init(FuCcgxDmcFirmwareClass *klass)
 	firmware_class->export = fu_ccgx_dmc_firmware_export;
 	firmware_class->add_magic = fu_ccgx_dmc_firmware_add_magic;
 }
-
-FuFirmware *
-fu_ccgx_dmc_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_CCGX_DMC_FIRMWARE, NULL));
-}

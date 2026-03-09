@@ -126,7 +126,7 @@ Always test at least one complete end-to-end scenario:
 - `.github/workflows/matrix.yml` - CI build matrix (Fedora, Debian, Arch, etc.)
 
 ### Build Dependencies (Ubuntu)
-Over 80 packages including: meson, libglib2.0-dev, libxmlb-dev, libjcat-dev, libarchive-dev, libcbor-dev, libcurl4-gnutls-dev, valgrind, clang-tools, python3-gi-cairo, and many more.
+Over 80 packages including: meson, libglib2.0-dev, libxmlb-dev, libjcat-dev, libcbor-dev, libcurl4-gnutls-dev, valgrind, clang-tools, python3-gi-cairo, and many more.
 
 ## Common Tasks
 

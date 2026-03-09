@@ -877,24 +877,6 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_mediatek_scaler_device_prepare_firmware(FuDevice *device,
-					   GInputStream *stream,
-					   FuProgress *progress,
-					   FuFirmwareParseFlags flags,
-					   GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_mediatek_scaler_firmware_new();
-
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
-	g_info("firmware version old: %s, new: %s",
-	       fu_device_get_version(device),
-	       fu_firmware_get_version(firmware));
-	return g_steal_pointer(&firmware);
-}
-
 static gchar *
 fu_mediatek_scaler_device_convert_version(FuDevice *device, guint64 version_raw)
 {
@@ -926,6 +908,7 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Display Controller");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_MEDIATEK_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_I2C_DEVICE);
 	fu_device_register_private_flag(FU_DEVICE(self), FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY);
 }
@@ -938,7 +921,6 @@ fu_mediatek_scaler_device_class_init(FuMediatekScalerDeviceClass *klass)
 	device_class->setup = fu_mediatek_scaler_device_setup;
 	device_class->open = fu_mediatek_scaler_device_open;
 	device_class->close = fu_mediatek_scaler_device_close;
-	device_class->prepare_firmware = fu_mediatek_scaler_device_prepare_firmware;
 	device_class->write_firmware = fu_mediatek_scaler_device_write_firmware;
 	device_class->reload = fu_mediatek_scaler_device_setup;
 	device_class->set_progress = fu_mediatek_scaler_device_set_progress;

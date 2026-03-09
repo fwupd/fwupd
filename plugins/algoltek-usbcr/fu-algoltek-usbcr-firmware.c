@@ -149,9 +149,3 @@ fu_algoltek_usbcr_firmware_class_init(FuAlgoltekUsbcrFirmwareClass *klass)
 	firmware_class->build = fu_algoltek_usbcr_firmware_build;
 	firmware_class->write = fu_algoltek_usbcr_firmware_write;
 }
-
-FuFirmware *
-fu_algoltek_usbcr_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ALGOLTEK_USBCR_FIRMWARE, NULL));
-}

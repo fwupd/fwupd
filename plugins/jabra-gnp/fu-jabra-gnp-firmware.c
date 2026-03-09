@@ -187,9 +187,3 @@ fu_jabra_gnp_firmware_class_init(FuJabraGnpFirmwareClass *klass)
 	firmware_class->parse = fu_jabra_gnp_firmware_parse;
 	firmware_class->export = fu_jabra_gnp_firmware_export;
 }
-
-FuFirmware *
-fu_jabra_gnp_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_JABRA_GNP_FIRMWARE, NULL));
-}

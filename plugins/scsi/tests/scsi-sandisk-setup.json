@@ -1,0 +1,286 @@
+{
+  "FwupdVersion": "2.1.1",
+  "UsbDevices": [
+    {
+      "Created": "2026-03-05T16:00:37.426260Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb2/2-8/2-8.4/2-8.4:1.0/host10/target10:0:0/10:0:0:0/block/sda",
+      "DeviceFile": "/dev/sda",
+      "Subsystem": "block",
+      "Devtype": "disk",
+      "Vendor": 1921,
+      "Model": 21891,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "block"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "disk"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=8\nMINOR=0\nDEVNAME=sda\nDEVTYPE=disk\nDISKSEQ=4"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "sda"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "disk"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=usb:usb_device",
+          "GType": "FuUsbDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb2/2-8/2-8.4",
+          "PhysicalId": "2-8.4"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=131\nDEVNAME=bus/usb/002/004\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=781/5583/100\nTYPE=0/0/0\nBUSNUM=002\nDEVNUM=004"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/002/004"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "002"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=131\nDEVNAME=bus/usb/002/004\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=781/5583/100\nTYPE=0/0/0\nBUSNUM=002\nDEVNUM=004"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "004"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEgAwAAAAmBB4NVAAEBAgMBCQIsAAEBAIBwCQQAAAIIBlAABwWBAgAEAAYwAQAAAAcFAgIABAAGMA8AAAA="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors",
+          "Data": "BQ8WAAIHEAICAAAAChADAA4AAQoAAQ=="
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:14.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "xhci_hcd"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=xhci_hcd\nPCI_CLASS=C0330\nPCI_ID=8086:7A60\nPCI_SUBSYS_ID=1043:8882\nPCI_SLOT_NAME=0000:00:14.0\nMODALIAS=pci:v00008086d00007A60sv00001043sd00008882bc0Csc03i30"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x7a60"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x0c0330"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=xhci_hcd\nPCI_CLASS=C0330\nPCI_ID=8086:7A60\nPCI_SUBSYS_ID=1043:8882\nPCI_SLOT_NAME=0000:00:14.0\nMODALIAS=pci:v00008086d00007A60sv00001043sd00008882bc0Csc03i30"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x7a60"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x0c0330"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x0c0330"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x11"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x1043"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x8882"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:14.0"
+        },
+        {
+          "Id": "ReadAttr:Attr=device_descriptor/ufs_features"
+        },
+        {
+          "Id": "ReadAttr:Attr=removable",
+          "Data": "1"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=scsi:scsi_target",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb2/2-8/2-8.4/2-8.4:1.0/host10/target10:0:0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "scsi"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "scsi_target"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DEVTYPE=scsi_target"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "scsi_target"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=scsi:scsi_device",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb2/2-8/2-8.4/2-8.4:1.0/host10/target10:0:0/10:0:0:0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "scsi"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "sd"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "scsi_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DEVTYPE=scsi_device\nDRIVER=sd\nMODALIAS=scsi:t-0x00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": " USB    "
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "scsi_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": " USB    "
+        },
+        {
+          "Id": "ReadAttr:Attr=model",
+          "Data": " SanDisk 3.2Gen1"
+        },
+        {
+          "Id": "Ioctl:Request=0x2285,DxferDirection=0xfffffffd,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0xfe,CdbData=EgAAAP4A,CdbLength=0x6,SenseData=AAAAAAAAAAAAAAAAAAAAAAAA,SenseLength=0x12",
+          "DataOut": "AIAGEkMAAAAgVVNCAAAAACBTYW5EaXNrIDMuMkdlbjExLjAwMDEwMTVhMjcyNWU5NDg5MGE3ZmEAAGAEhwAAADAXwAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+          "SenseDataOut": "AAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    }
+  ]
+}

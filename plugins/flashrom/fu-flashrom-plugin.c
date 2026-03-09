@@ -232,7 +232,7 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 		fu_device_set_metadata_integer(device, "PciBcrAddr", 0x0);
 
 	/* success */
-	fu_plugin_device_add(plugin, device);
+	fu_plugin_add_device(plugin, device);
 	return g_steal_pointer(&device);
 }
 

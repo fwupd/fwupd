@@ -19,6 +19,3 @@ G_DECLARE_FINAL_TYPE(FuAmdGpuPspFirmware,
 		     FU,
 		     AMD_GPU_PSP_FIRMWARE,
 		     FuFirmware)
-
-FuFirmware *
-fu_amd_gpu_psp_firmware_new(void);

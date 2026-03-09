@@ -10,7 +10,7 @@
 #include "fu-egis-moc-common.h"
 
 guint32
-fu_egis_moc_checksum_add(guint32 csum, const guint8 *buf, gsize bufsz)
+fu_egis_moc_checksum_build(guint32 csum, const guint8 *buf, gsize bufsz)
 {
 	if (bufsz > 0) {
 		for (gsize i = 0; i < bufsz - 1; i += 2)

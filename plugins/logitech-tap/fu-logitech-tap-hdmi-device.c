@@ -16,6 +16,7 @@
 
 #define FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 #define XU_INPUT_DATA_LEN			  8
+#define XU_GET_MMP_RESULT_DATA_LEN_MAX		  1024
 
 /* 2 byte for get len query */
 #define kDefaultUvcGetLenQueryControlSize 2
@@ -284,6 +285,14 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			&data_len,
 			error))
 			return FALSE;
+		if (data_len == 0 || data_len > XU_GET_MMP_RESULT_DATA_LEN_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "MMP result size 0x%x is outside valid range",
+				    data_len);
+			return FALSE;
+		}
 		mmp_get_data = g_malloc0(data_len);
 		if (!fu_logitech_tap_hdmi_device_get_xu_control(
 			self,
@@ -483,6 +492,10 @@ fu_logitech_tap_hdmi_device_setup(FuDevice *device, GError **error)
 	/* FuV4lDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* self tests */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* only interested in video capture device */
 	if ((fu_v4l_device_get_caps(FU_V4L_DEVICE(self)) & FU_V4L_CAP_VIDEO_CAPTURE) == 0) {

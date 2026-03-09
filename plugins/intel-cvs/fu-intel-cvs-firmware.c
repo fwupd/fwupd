@@ -111,9 +111,3 @@ fu_intel_cvs_firmware_class_init(FuIntelCvsFirmwareClass *klass)
 	firmware_class->parse = fu_intel_cvs_firmware_parse;
 	firmware_class->export = fu_intel_cvs_firmware_export;
 }
-
-FuFirmware *
-fu_intel_cvs_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_INTEL_CVS_FIRMWARE, NULL));
-}

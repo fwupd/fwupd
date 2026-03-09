@@ -24,6 +24,7 @@
 #include "fu-byte-array.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
+#include "fu-dpaux-device.h"
 #include "fu-ioctl-private.h"
 #include "fu-output-stream.h"
 #include "fu-path.h"
@@ -46,6 +47,7 @@ typedef struct {
 	gchar *devtype;
 	guint64 number;
 	FuIOChannel *io_channel;
+	goffset emulated_offset;
 	FuIoChannelOpenFlags open_flags;
 	GHashTable *properties;
 	gboolean properties_valid;
@@ -1196,6 +1198,14 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(buf, 0x0, bufsz);
+		if (rc != NULL)
+			*rc = 0;
+		return TRUE;
+	}
+
 	/* not open! */
 	if (priv->io_channel == NULL) {
 		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
@@ -1369,8 +1379,10 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		priv->emulated_offset = offset;
 		return TRUE;
+	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1444,6 +1456,10 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1527,7 +1543,15 @@ fu_udev_device_read(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
+		/* the created value is 2025-10-24T15:32:39.198922Z i.e. just bnr-dp-0.13.zip */
+		if (fu_device_check_fwupd_version(FU_DEVICE(self), "2.1.2") ||
+		    fu_device_get_created(FU_DEVICE(self)) == 0x68FB9C17) {
+			event_id = g_strdup_printf("Read:Length=0x%x,Offset=0x%x",
+						   (guint)bufsz,
+						   (guint)priv->emulated_offset);
+		} else {
+			event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
+		}
 	}
 
 	/* emulated */
@@ -1543,6 +1567,14 @@ fu_udev_device_read(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		memset(buf, 0x0, bufsz);
+		if (bytes_read != NULL)
+			*bytes_read = bufsz;
+		return TRUE;
+	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1670,10 +1702,17 @@ fu_udev_device_write(FuUdevDevice *self,
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if ((priv->open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) == 0) {
+		g_critical("trying to write without writable device-file; "
+			   "use fu_udev_device_add_open_flag(self, FU_IO_CHANNEL_OPEN_FLAG_WRITE)");
+	}
 
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -1688,12 +1727,18 @@ fu_udev_device_write(FuUdevDevice *self,
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
 			return FALSE;
+		if (!fu_device_event_check_error(event, error))
+			return FALSE;
 		return event != NULL;
 	}
 
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1705,8 +1750,17 @@ fu_udev_device_write(FuUdevDevice *self,
 			    id_display);
 		return FALSE;
 	}
-	if (!fu_io_channel_write_raw(priv->io_channel, buf, bufsz, timeout_ms, flags, error))
+	if (!fu_io_channel_write_raw(priv->io_channel,
+				     buf,
+				     bufsz,
+				     timeout_ms,
+				     flags,
+				     &error_local)) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -2058,6 +2112,10 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 		return event != NULL;
 	}
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error,
@@ -2133,6 +2191,10 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 		return event != NULL;
 	}
 
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
+
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error,
@@ -2207,6 +2269,10 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		return event != NULL;
 	}
+
+	/* for fuzzing */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
+		return TRUE;
 
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
@@ -2380,7 +2446,6 @@ fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
 	fwupd_json_object_add_string(json_obj, "GType", "FuUdevDevice");
@@ -2403,21 +2468,6 @@ fu_udev_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecF
 		fwupd_json_object_add_integer(json_obj, "Vendor", fu_device_get_vid(device));
 	if (fu_device_get_pid(device) != 0)
 		fwupd_json_object_add_integer(json_obj, "Model", fu_device_get_pid(device));
-
-	/* events */
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    json_obj_tmp,
-					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
-							       : flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "Events", json_arr);
-	}
 }
 
 static gboolean
@@ -2426,7 +2476,6 @@ fu_udev_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	const gchar *tmp;
 	gint64 tmp64 = 0;
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
 	if (tmp != NULL)
@@ -2454,22 +2503,6 @@ fu_udev_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 		return FALSE;
 	if (tmp64 != 0)
 		fu_device_set_pid(device, tmp64);
-
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(device, event);
-		}
-	}
 
 	/* success */
 	return TRUE;

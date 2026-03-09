@@ -1,0 +1,19 @@
+{
+  "name": "Logitech MX-Mechanical",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "56ad43c4946d77f7b176a9215e3ec516fbdba0d4b648102e01d57a705f30da44-Logitech-mxmech-RBO03.00_B9009.cab",
+      "emulation-url": "6aac8f8dcc5c921881828758397ea3f8df1ebb5764cda0d5cbd5e0ccae546259-Logitech-mxmech-RBO03.00_B9009.zip",
+      "components": [
+        {
+          "version": "RBO03.00_B9009",
+          "protocol": "com.logitech.rdfu",
+          "guids": [
+            "dd782f98-9020-5e7e-8b8c-1b1a2bd274e5"
+          ]
+        }
+      ]
+    }
+  ]
+}

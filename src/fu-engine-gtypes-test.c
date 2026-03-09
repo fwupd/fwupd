@@ -10,21 +10,23 @@
 #include "fu-device-private.h"
 #include "fu-drm-device-private.h"
 #include "fu-engine.h"
+#include "fu-firmware-private.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 
 static void
-fu_engine_plugin_device_gtype(GType gtype)
+fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 {
 	GType proxy_gtype;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
@@ -35,6 +37,9 @@ fu_engine_plugin_device_gtype(GType gtype)
 	g_assert_nonnull(device);
 	fu_device_set_plugin(device, "test");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	if (is_fake)
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 
 	/* version convert */
 	if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -72,6 +77,9 @@ fu_engine_plugin_device_gtype(GType gtype)
 	if (proxy_gtype != G_TYPE_INVALID && G_TYPE_FUNDAMENTAL(proxy_gtype) == G_TYPE_OBJECT) {
 		g_autoptr(FuDevice) proxy =
 		    g_object_new(proxy_gtype, "context", ctx, "physical-id", "/sys", NULL);
+		fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED);
+		if (is_fake)
+			fu_device_add_private_flag(proxy, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 		fu_device_set_proxy(device, proxy);
 	}
@@ -113,25 +121,38 @@ fu_engine_plugin_device_gtype(GType gtype)
 			g_debug("did ->write_firmware()!");
 		}
 	}
+
+	/* incorporate */
+	device2 = g_object_new(gtype, "context", ctx, NULL);
+	fu_device_incorporate(device2, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
+
+	/* roundtrip to JSON */
+	fu_device_add_json(device2, json_obj, FWUPD_CODEC_FLAG_TRUSTED);
+	if (fu_device_from_json(device2, json_obj, NULL))
+		g_debug("did ->from_json()");
 }
 
 static void
-fu_engine_plugin_firmware_gtype(GType gtype)
+fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 {
 	gboolean ret;
+	GArray *image_gtypes;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
 	g_autoptr(GError) error = NULL;
 	const gchar *noxml[] = {
+	    "FuCsvEntry",
 	    "FuFirmware",
 	    "FuGenesysUsbhubFirmware",
-	    "FuIntelThunderboltFirmware",
-	    "FuIntelThunderboltNvm",
 	    "FuJsonFirmware",
-	    "FuUefiUpdateInfo",
 	    NULL,
 	};
+
+	/* do not parse the same type more than once */
+	if (g_hash_table_contains(gtype_map, GINT_TO_POINTER(gtype)))
+		return;
+	g_hash_table_add(gtype_map, GINT_TO_POINTER(gtype));
 
 	g_debug("loading %s", g_type_name(gtype));
 	firmware = g_object_new(gtype, NULL);
@@ -146,7 +167,8 @@ fu_engine_plugin_firmware_gtype(GType gtype)
 
 	/* parse nonsense */
 	if (gtype != FU_TYPE_FIRMWARE &&
-	    !fu_firmware_has_flag(FU_FIRMWARE(firmware), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
+	    !fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_IS_ABSTRACT) &&
+	    !fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
 		ret = fu_firmware_parse_bytes(firmware,
 					      fw,
 					      0x0,
@@ -173,6 +195,17 @@ fu_engine_plugin_firmware_gtype(GType gtype)
 			g_assert_nonnull(firmware2);
 		}
 	}
+
+	/* check child GType's too */
+	image_gtypes = fu_firmware_get_image_gtypes(firmware);
+	if (image_gtypes != NULL) {
+		for (guint i = 0; i < image_gtypes->len; i++) {
+			GType gtype_tmp = g_array_index(image_gtypes, GType, i);
+			if (gtype_tmp == gtype || gtype_tmp == FU_TYPE_FIRMWARE)
+				continue;
+			fu_engine_plugin_firmware_gtype(gtype_map, gtype_tmp);
+		}
+	}
 }
 
 static void
@@ -186,6 +219,7 @@ fu_engine_gtypes_func(void)
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GHashTable) gtype_map = g_hash_table_new(g_direct_hash, g_direct_equal);
 	g_autoptr(GArray) firmware_gtypes = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -343,7 +377,8 @@ fu_engine_gtypes_func(void)
 		GArray *device_gtypes = fu_plugin_get_device_gtypes(plugin);
 		for (guint j = 0; device_gtypes != NULL && j < device_gtypes->len; j++) {
 			GType gtype = g_array_index(device_gtypes, GType, j);
-			fu_engine_plugin_device_gtype(gtype);
+			fu_engine_plugin_device_gtype(ctx, gtype, TRUE);
+			fu_engine_plugin_device_gtype(ctx, gtype, FALSE);
 		}
 	}
 
@@ -351,7 +386,7 @@ fu_engine_gtypes_func(void)
 	firmware_gtypes = fu_context_get_firmware_gtypes(ctx);
 	for (guint j = 0; j < firmware_gtypes->len; j++) {
 		GType gtype = g_array_index(firmware_gtypes, GType, j);
-		fu_engine_plugin_firmware_gtype(gtype);
+		fu_engine_plugin_firmware_gtype(gtype_map, gtype);
 	}
 }
 

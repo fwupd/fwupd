@@ -150,8 +150,6 @@ fu_cabinet_success_func(void)
 	    "</component>",
 	    "firmware.dfu",
 	    "world",
-	    "firmware.dfu.asc",
-	    "signature",
 	    NULL);
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,

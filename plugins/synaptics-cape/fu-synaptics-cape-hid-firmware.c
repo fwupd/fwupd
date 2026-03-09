@@ -117,6 +117,7 @@ fu_synaptics_cape_hid_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_synaptics_cape_hid_firmware_init(FuSynapticsCapeHidFirmware *self)
 {
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void

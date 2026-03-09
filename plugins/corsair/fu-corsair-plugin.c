@@ -7,9 +7,9 @@
 
 #include "config.h"
 
-#include "fu-corsair-bp.h"
 #include "fu-corsair-device.h"
 #include "fu-corsair-plugin.h"
+#include "fu-corsair-subdevice.h"
 
 struct _FuCorsairPlugin {
 	FuPlugin parent_instance;
@@ -27,12 +27,10 @@ fu_corsair_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_context_add_quirk_key(ctx, "CorsairDeviceKind");
 	fu_context_add_quirk_key(ctx, "CorsairVendorInterfaceId");
-	fu_context_add_quirk_key(ctx, "CorsairSubdeviceId");
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_CORSAIR_DEVICE);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_CORSAIR_BP); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_CORSAIR_SUBDEVICE); /* coverage */
 }
 
 static void
