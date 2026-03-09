@@ -134,6 +134,8 @@ fu_lenovo_ldc_device_get_report(FuLenovoLdcDevice *self, gsize ifacesz, GError *
 		return NULL;
 
 	/* success */
+	if (ifacesz == FU_LENOVO_LDC_DEVICE_IFACE2_LEN)
+		g_byte_array_remove_index(buf, 0);
 	return g_steal_pointer(&buf);
 }
 
@@ -143,10 +145,15 @@ fu_lenovo_ldc_device_set_report(FuLenovoLdcDevice *self,
 				gsize ifacesz,
 				GError **error)
 {
-	fu_byte_array_set_size(buf, ifacesz, 0x0);
+	g_autoptr(GByteArray) buf2 = g_byte_array_new();
+
+	if (ifacesz == FU_LENOVO_LDC_DEVICE_IFACE2_LEN)
+		fu_byte_array_append_uint8(buf2, 0x10);
+	g_byte_array_append(buf2, buf->data, buf->len);
+	fu_byte_array_set_size(buf2, ifacesz, 0x0);
 	return fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
-					   buf->data,
-					   buf->len,
+					   buf2->data,
+					   buf2->len,
 					   FU_IO_CHANNEL_FLAG_NONE,
 					   error);
 }
