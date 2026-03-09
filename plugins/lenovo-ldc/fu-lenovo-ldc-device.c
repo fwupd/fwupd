@@ -23,7 +23,8 @@
 
 struct _FuLenovoLdcDevice {
 	FuHidrawDevice parent_instance;
-	guint16 start_addr;
+	FuStructLenovoLdcUsageInformation *st_usage;
+	GPtrArray *st_usage_items; /* element-type: FuStructLenovoLdcUsageInformationItem */
 };
 
 G_DEFINE_TYPE(FuLenovoLdcDevice, fu_lenovo_ldc_device, FU_TYPE_HIDRAW_DEVICE)
@@ -32,7 +33,18 @@ static void
 fu_lenovo_ldc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-	fwupd_codec_string_append_hex(str, idt, "StartAddr", self->start_addr);
+	if (self->st_usage != NULL) {
+		g_autofree gchar *tmp =
+		    fu_struct_lenovo_ldc_usage_information_to_string(self->st_usage);
+		fwupd_codec_string_append(str, idt, "Usage", tmp);
+	}
+	for (guint i = 0; i < self->st_usage_items->len; i++) {
+		FuStructLenovoLdcUsageInformationItem *st_usage_item =
+		    g_ptr_array_index(self->st_usage_items, i);
+		g_autofree gchar *tmp =
+		    fu_struct_lenovo_ldc_usage_information_item_to_string(st_usage_item);
+		fwupd_codec_string_append(str, idt, "UsageItem", tmp);
+	}
 }
 
 static gboolean
@@ -363,8 +375,12 @@ fu_lenovo_ldc_device_verify_usage_info(FuLenovoLdcDevice *self, gboolean *valid,
 {
 	guint32 crc_actual;
 	guint32 crc_caclulated;
+	guint8 usage_items;
+	gsize offset = 0;
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoLdcUsageInformation) st = NULL;
 
+	/* read the device metadata table */
 	buf = fu_lenovo_ldc_device_flash_read_memory(self,
 						     FU_LENOVO_LDC_DEVICE_USAGE_INFO_START,
 						     FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE,
@@ -384,9 +400,58 @@ fu_lenovo_ldc_device_verify_usage_info(FuLenovoLdcDevice *self, gboolean *valid,
 	crc_actual = fu_memread_uint32(buf->data - 4, G_LITTLE_ENDIAN);
 	g_debug("usage info CRC got 0x%4x, expected 0x%4x", crc_actual, crc_caclulated);
 
+	/* parse the usage metadata */
+	st = fu_struct_lenovo_ldc_usage_information_parse(buf->data, buf->len, offset, error);
+	if (st == NULL)
+		return FALSE;
+	usage_items = fu_struct_lenovo_ldc_usage_information_get_total_number(st);
+
+	/* are payloads signed */
+	if (fu_struct_lenovo_ldc_usage_information_get_dsa(st) == FU_LENOVO_LDC_SIGN_TYPE_UNSIGNED)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	else
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+
+	/* parse each usage metadata item */
+	offset += FU_STRUCT_LENOVO_LDC_USAGE_INFORMATION_SIZE;
+	for (guint i = 0; i < usage_items; i++) {
+		g_autoptr(FuStructLenovoLdcUsageInformationItem) st_item = NULL;
+		st_item = fu_struct_lenovo_ldc_usage_information_item_parse(buf->data,
+									    buf->len,
+									    offset,
+									    error);
+		if (st_item == NULL)
+			return FALSE;
+		g_ptr_array_add(self->st_usage_items,
+				fu_struct_lenovo_ldc_usage_information_item_ref(st_item));
+		offset += FU_STRUCT_LENOVO_LDC_USAGE_INFORMATION_ITEM_SIZE;
+	}
+
 	/* success */
 	if (valid != NULL)
 		*valid = crc_caclulated == crc_actual;
+	return TRUE;
+}
+
+static gboolean
+fu_lenovo_ldc_device_write_usage_information_table(FuLenovoLdcDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoLdcUsageInformationAttributeReq) st_req =
+	    fu_struct_lenovo_ldc_usage_information_attribute_req_new();
+	g_autoptr(FuStructLenovoLdcUsageInformationAttributeRes) st_res = NULL;
+
+	buf = fu_lenovo_ldc_device_txfer1(self, st_req->buf, error);
+	if (buf == NULL)
+		return FALSE;
+	st_res = fu_struct_lenovo_ldc_usage_information_attribute_res_parse(buf->data,
+									    buf->len,
+									    0x0,
+									    error);
+	if (st_res == NULL)
+		return FALSE;
+
+	/* success */
 	return TRUE;
 }
 
@@ -409,6 +474,7 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
+	/* FIXME: perhaps move some of this to ->prepare() or ->detach() */
 	if (!fu_lenovo_ldc_device_set_flash_memory_access(
 		self,
 		FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CTRL_REQUEST,
@@ -430,6 +496,9 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
+	/* TODO: check each usage item in the file against the device and set flags = DoUpdate on
+	 * each item if not the same */
+
 	/* Set Dock FW Update Ctrl */
 	if (!fu_lenovo_ldc_device_dfu_control(
 		self,
@@ -440,6 +509,12 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
+	/* write the new usage table */
+	if (!fu_lenovo_ldc_device_write_usage_information_table(self, error)) {
+		g_prefix_error_literal(error, "failed to write usage table: ");
+		return FALSE;
+	}
+
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
@@ -447,7 +522,7 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	chunks = fu_chunk_array_new_from_stream(stream,
-						self->start_addr,
+						0, // self->start_addr,
 						FU_CHUNK_PAGESZ_NONE,
 						64 /* block_size */,
 						error);
@@ -463,7 +538,7 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 	/* TODO: verify each block */
 	fu_progress_step_done(progress);
 
-	/* release */
+	/* release -- FIXME: move to ->cleanup() or ->attach() */
 	if (!fu_lenovo_ldc_device_set_flash_memory_access(
 		self,
 		FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CTRL_RELEASE,
@@ -490,14 +565,14 @@ fu_lenovo_ldc_device_set_quirk_kv(FuDevice *device,
 				  const gchar *value,
 				  GError **error)
 {
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
+	//	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
 
 	/* TODO: parse value from quirk file */
 	if (g_strcmp0(key, "LenovoLdcStartAddr") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->start_addr = tmp;
+		// self->start_addr = tmp;
 		return TRUE;
 	}
 
@@ -524,12 +599,12 @@ fu_lenovo_ldc_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_lenovo_ldc_device_init(FuLenovoLdcDevice *self)
 {
-	self->start_addr = 0x5000;
+	self->st_usage_items = g_ptr_array_new_with_free_func(
+	    (GDestroyNotify)fu_struct_lenovo_ldc_usage_information_item_unref);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.ldc");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), "icon-name");
 	fu_device_set_firmware_size(FU_DEVICE(self), 0xFFF000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_LDC_DEVICE_FLAG_EXAMPLE);
@@ -539,10 +614,9 @@ static void
 fu_lenovo_ldc_device_finalize(GObject *object)
 {
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(object);
-
-	/* TODO: free any allocated instance state here */
-	g_assert(self != NULL);
-
+	if (self->st_usage != NULL)
+		fu_struct_lenovo_ldc_usage_information_unref(self->st_usage);
+	g_ptr_array_unref(self->st_usage_items);
 	G_OBJECT_CLASS(fu_lenovo_ldc_device_parent_class)->finalize(object);
 }
 

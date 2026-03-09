@@ -14,6 +14,49 @@ enum FuLenovoLdcStatusXXXXXXXXXXXXXXXXXXx {
     Failed,
 }
 
+#[repr(u8)]
+enum FuLenovoLdcSignType {
+    Unsigned,
+    Rsa2048,
+    Rsa3072,
+    Ecc256,
+    Ecc384,
+}
+
+#[derive(Parse, Default, ToString)]
+#[repr(C, packed)]
+struct FuStructLenovoLdcUsageInformation {
+	total_number: u8,
+	major_version: u8,
+	minor_version: u8,
+	dsa: FuLenovoLdcSignType,
+	iot_update_flag: u8,
+	composite_fw_version: u32le,
+	dock_pid: u16le == 0x111E,
+	crc32: u32le,
+	// items: [FuStructLenovoLdcUsageInformationItem; total_number],
+};
+
+#[repr(u8)]
+enum FuStructLenovoLdcUsageInformationItemFlag {
+    None,
+    DoUpdate,
+}
+
+#[derive(Parse, Default, ToString)]
+#[repr(C, packed)]
+struct FuStructLenovoLdcUsageInformationItem {
+	physical_address: u32le,
+	max_size: u32le,
+	current_fw_version: u32le,
+	target_fw_version: u32le,
+	target_fw_file_size: u32le,
+	target_fw_file_crc32: u32le,
+	component_id: u8,
+	flag: FuStructLenovoLdcUsageInformationItemFlag,
+    reserved: [u8; 6],
+};
+
 #[derive(ToString)]
 #[repr(u8)]
 enum FuLenovoLdcTargetStatus {
@@ -115,14 +158,7 @@ enum FuLenovoLdcExternalDockCmd {
     GetDockFirmwareUpgradeCtrl = 0x8A,
 }
 
-enum FuLenovoLdcSignType {
-    Unsigned,
-    Rsa2048,
-    Rsa3072,
-    Ecc256,
-    Ecc384,
-}
-
+#[repr(u8)]
 enum FuLenovoLdcExternalFlashIdPurpose {
     Common,
     ApplicationData,
@@ -174,6 +210,30 @@ struct FuStructLenovoLdcSetFlashMemoryAccessRes {
     _reserved: u8,
 }
 
+#[derive(Default, New)]
+struct FuStructLenovoLdcUsageInformationAttributeReq {
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8 == 0x02,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashAttribute,
+    flash_id: u8 == 0xFF,
+    _reserved: u8,
+}
+
+#[derive(Default, Parse)]
+struct FuStructLenovoLdcUsageInformationAttributeRes {
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x00,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashAttribute,
+    flash_id: u8 == 0xFF,
+    _reserved: u8,
+    flash_id_again: u8 == 0xFF,
+    purpose: FuLenovoLdcExternalFlashIdPurpose,
+    storage_size: u32le,
+    erase_size: u16le,
+    program_size: u16le,
+}
 
 #[repr(u8)]
 enum FuLenovoLdcFlashMemorySelfVerifyType {

@@ -11,9 +11,7 @@
 
 #include "fu-lenovo-ldc-struct.h"
 
-static const gchar *Path_Of_Usage_Information_Table = "FW/ldc_u4_usage_information_table.bin";
-
-static const guint8 UsageTableFlashID = 0xff;
+#define CONST_UsageTableFlashID		      0xff
 #define FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE 0x1000
 
 guint8 CurrentFwVerForGUI[8][4];
@@ -135,8 +133,6 @@ arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 	}
 	return TRUE;
 }
-
-static const gchar *Path_Of_Composite_Image = "FW/ldc_u4_composite_image.bin";
 
 static guint8 *
 GetBytes(struct UsageInformation targetUsageInformationTable)
@@ -529,7 +525,7 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 	gint UsageInformationAttributeData =
 	    fu_lenovo_ldc_device_function1(FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
 					   FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
-					   UsageTableFlashID,
+					   CONST_UsageTableFlashID,
 					   0,
 					   0,
 					   output1);
@@ -562,7 +558,7 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 		errorHandle = fu_lenovo_ldc_device_function2(
 		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
 		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
-		    UsageTableFlashID,
+		    CONST_UsageTableFlashID,
 		    setUsageInformationMemoryErase,
 		    2 + CONST_AddressByteLength + CONST_EraseSizeByteLength,
 		    output2);
@@ -595,7 +591,7 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 		errorHandle = fu_lenovo_ldc_device_function2(
 		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
 		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
-		    UsageTableFlashID,
+		    CONST_UsageTableFlashID,
 		    write,
 		    (UsageInformationAttribute.ProgramSize + payloadLength),
 		    output2);
@@ -606,12 +602,11 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 	// Get Usage Information Page Self-Verify
 	guint8 writeSelfVerify[1];
 	writeSelfVerify[0] = FU_LENOVO_LDC_FLASH_MEMORY_SELF_VERIFY_TYPE_CRC;
-	for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE1_LEN; i++)
-		output1[i] = 0;
+	memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
 	gint pageSelfVerifyData = fu_lenovo_ldc_device_function1(
 	    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
 	    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
-	    UsageTableFlashID,
+	    CONST_UsageTableFlashID,
 	    writeSelfVerify,
 	    1,
 	    output1);
@@ -800,7 +795,10 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	char *compositeImageData = NULL;
 	gboolean r;
 
-	if (!g_file_get_contents(Path_Of_Composite_Image, &compositeImageData, NULL, NULL)) {
+	if (!g_file_get_contents("FW/ldc_u4_composite_image.bin",
+				 &compositeImageData,
+				 NULL,
+				 NULL)) {
 		// g_print("Read composite image error: %d\n",r);
 		return r;
 	}
@@ -825,12 +823,12 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	struct UsageInformation targetUsageInformationTable;
 	guint8 ds[FlashIdUsageLength];
 	FILE *fp;
-	if (stat(Path_Of_Usage_Information_Table, &fileInfo) == 0) {
+	if (stat("FW/ldc_u4_usage_information_table.bin", &fileInfo) == 0) {
 		if (fileInfo.st_size != FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE) {
 			return USAGE_INFORMATION_FILE_ERROR;
 		} else {
 			/*read the file actions*/
-			fp = fopen(Path_Of_Usage_Information_Table, "rb");
+			fp = fopen("FW/ldc_u4_usage_information_table.bin", "rb");
 			char buffer[FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE];
 			size_t bytesRead =
 			    fread(&buffer, sizeof(char), FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE, fp);
@@ -933,7 +931,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		gint tempBytes = fu_lenovo_ldc_device_function2(
 		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
 		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_ACCESS,
-		    UsageTableFlashID,
+		    CONST_UsageTableFlashID,
 		    setmcuUsageInformationTable,
 		    payload,
 		    output2);
