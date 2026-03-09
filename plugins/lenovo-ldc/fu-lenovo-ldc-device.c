@@ -23,8 +23,6 @@
 
 struct _FuLenovoLdcDevice {
 	FuHidrawDevice parent_instance;
-	guint32 usage_erase_size;
-	guint32 usage_program_size;
 	FuStructLenovoLdcUsageInformation *st_usage;
 	GPtrArray *st_usage_items; /* element-type: FuStructLenovoLdcUsageInformationItem */
 };
@@ -36,8 +34,6 @@ fu_lenovo_ldc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
 
-	fwupd_codec_string_append_hex(str, idt, "UsageEraseSize", self->usage_erase_size);
-	fwupd_codec_string_append_hex(str, idt, "UsageProgramSize", self->usage_program_size);
 	if (self->st_usage != NULL) {
 		g_autofree gchar *tmp =
 		    fu_struct_lenovo_ldc_usage_information_to_string(self->st_usage);
@@ -318,12 +314,13 @@ fu_lenovo_ldc_device_flash_read_memory(FuLenovoLdcDevice *self,
 
 static gboolean
 fu_lenovo_ldc_device_flash_erase_memory(FuLenovoLdcDevice *self,
+					FuLenovoLdcFlashId flash_id,
 					guint32 addr,
 					gsize datasz,
+					guint16 chunksz,
 					GError **error)
 {
-	g_autoptr(GPtrArray) chunks =
-	    fu_chunk_array_new(NULL, datasz, addr, 0x0, self->usage_erase_size);
+	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, datasz, addr, 0x0, chunksz);
 	for (gsize i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = NULL;
@@ -331,6 +328,7 @@ fu_lenovo_ldc_device_flash_erase_memory(FuLenovoLdcDevice *self,
 		    fu_struct_lenovo_ldc_dock_erase_with_address_req_new();
 		g_autoptr(FuStructLenovoLdcDockEraseWithAddressRes) st_res = NULL;
 
+		fu_struct_lenovo_ldc_dock_erase_with_address_req_set_flash_id(st_req, flash_id);
 		fu_struct_lenovo_ldc_dock_erase_with_address_req_set_size(
 		    st_req,
 		    fu_chunk_get_data_sz(chk));
@@ -354,13 +352,14 @@ fu_lenovo_ldc_device_flash_erase_memory(FuLenovoLdcDevice *self,
 
 static gboolean
 fu_lenovo_ldc_device_flash_write_memory(FuLenovoLdcDevice *self,
+					FuLenovoLdcFlashId flash_id,
 					guint32 addr,
 					const guint8 *data,
 					gsize datasz,
+					guint16 chunksz,
 					GError **error)
 {
-	g_autoptr(GPtrArray) chunks =
-	    fu_chunk_array_new(NULL, datasz, addr, 0x0, self->usage_erase_size);
+	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, datasz, addr, 0x0, chunksz);
 	for (gsize i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = NULL;
@@ -368,6 +367,7 @@ fu_lenovo_ldc_device_flash_write_memory(FuLenovoLdcDevice *self,
 		    fu_struct_lenovo_ldc_dock_program_with_address_req_new();
 		g_autoptr(FuStructLenovoLdcDockProgramWithAddressRes) st_res = NULL;
 
+		fu_struct_lenovo_ldc_dock_program_with_address_req_set_flash_id(st_req, flash_id);
 		fu_struct_lenovo_ldc_dock_program_with_address_req_set_bufsz(
 		    st_req,
 		    0x8 + fu_chunk_get_data_sz(chk));
@@ -388,6 +388,34 @@ fu_lenovo_ldc_device_flash_write_memory(FuLenovoLdcDevice *self,
 		if (st_res == NULL)
 			return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_lenovo_ldc_device_self_verify(FuLenovoLdcDevice *self,
+				 FuLenovoLdcFlashId flash_id,
+				 guint32 *crc,
+				 GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoLdcFlashMemorySelfVerifyReq) st_req =
+	    fu_struct_lenovo_ldc_flash_memory_self_verify_req_new();
+	g_autoptr(FuStructLenovoLdcFlashMemorySelfVerifyRes) st_res = NULL;
+
+	fu_struct_lenovo_ldc_flash_memory_self_verify_req_set_flash_id(st_req, flash_id);
+	buf = fu_lenovo_ldc_device_txfer1(self, st_req->buf, error);
+	if (buf == NULL)
+		return FALSE;
+	st_res = fu_struct_lenovo_ldc_flash_memory_self_verify_res_parse(buf->data,
+									 buf->len,
+									 0x0,
+									 error);
+	if (st_res == NULL)
+		return FALSE;
+	if (crc != NULL)
+		*crc = fu_struct_lenovo_ldc_flash_memory_self_verify_res_get_crc(st_res);
 
 	/* success */
 	return TRUE;
@@ -534,27 +562,34 @@ fu_lenovo_ldc_device_verify_usage_info(FuLenovoLdcDevice *self, gboolean *valid,
 }
 
 static gboolean
-fu_lenovo_ldc_device_ensure_usage_attrs(FuLenovoLdcDevice *self, GError **error)
+fu_lenovo_ldc_device_get_flash_id(FuLenovoLdcDevice *self,
+				  FuLenovoLdcFlashId flash_id,
+				  FuLenovoLdcExternalFlashIdPurpose *purpose,
+				  guint16 *erase_size,
+				  guint16 *program_size,
+				  GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructLenovoLdcUsageInformationAttributeReq) st_req =
-	    fu_struct_lenovo_ldc_usage_information_attribute_req_new();
-	g_autoptr(FuStructLenovoLdcUsageInformationAttributeRes) st_res = NULL;
+	g_autoptr(FuStructLenovoLdcGetFlashAttributeReq) st_req =
+	    fu_struct_lenovo_ldc_get_flash_attribute_req_new();
+	g_autoptr(FuStructLenovoLdcGetFlashAttributeRes) st_res = NULL;
 
+	fu_struct_lenovo_ldc_get_flash_attribute_req_set_flash_id(st_req, flash_id);
 	buf = fu_lenovo_ldc_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
-	st_res = fu_struct_lenovo_ldc_usage_information_attribute_res_parse(buf->data,
-									    buf->len,
-									    0x0,
-									    error);
+	st_res =
+	    fu_struct_lenovo_ldc_get_flash_attribute_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	// fu_struct_lenovo_ldc_usage_information_attribute_res_get_storage_size(st_res);
-	self->usage_erase_size =
-	    fu_struct_lenovo_ldc_usage_information_attribute_res_get_erase_size(st_res);
-	self->usage_program_size =
-	    fu_struct_lenovo_ldc_usage_information_attribute_res_get_program_size(st_res);
+	// fu_struct_lenovo_ldc_get_flash_attribute_res_get_storage_size(st_res);
+	if (erase_size != NULL)
+		*erase_size = fu_struct_lenovo_ldc_get_flash_attribute_res_get_erase_size(st_res);
+	if (program_size != NULL)
+		*program_size =
+		    fu_struct_lenovo_ldc_get_flash_attribute_res_get_program_size(st_res);
+	if (purpose != NULL)
+		*purpose = fu_struct_lenovo_ldc_get_flash_attribute_res_get_purpose(st_res);
 
 	/* success */
 	return TRUE;
@@ -563,10 +598,19 @@ fu_lenovo_ldc_device_ensure_usage_attrs(FuLenovoLdcDevice *self, GError **error)
 static gboolean
 fu_lenovo_ldc_device_write_usage_information_table(FuLenovoLdcDevice *self, GError **error)
 {
+	guint16 erase_size = 0;
+	guint16 program_size = 0;
+	guint32 crc_actual = 0;
+	guint32 crc_caclulated;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* get the usage chunk sizes */
-	if (!fu_lenovo_ldc_device_ensure_usage_attrs(self, error)) {
+	if (!fu_lenovo_ldc_device_get_flash_id(self,
+					       FU_LENOVO_LDC_FLASH_ID_USAGE,
+					       NULL,
+					       &erase_size,
+					       &program_size,
+					       error)) {
 		g_prefix_error(error, "failed to ensure usage attrs: ");
 		return FALSE;
 	}
@@ -580,16 +624,39 @@ fu_lenovo_ldc_device_write_usage_information_table(FuLenovoLdcDevice *self, GErr
 	}
 	fu_byte_array_set_size(buf, FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE, 0x0);
 	if (!fu_lenovo_ldc_device_flash_erase_memory(self,
+						     FU_LENOVO_LDC_FLASH_ID_USAGE,
 						     FU_LENOVO_LDC_DEVICE_USAGE_INFO_START,
 						     buf->len,
+						     erase_size,
 						     error))
 		return FALSE;
 	if (!fu_lenovo_ldc_device_flash_write_memory(self,
+						     FU_LENOVO_LDC_FLASH_ID_USAGE,
 						     FU_LENOVO_LDC_DEVICE_USAGE_INFO_START,
 						     buf->data,
 						     buf->len,
+						     program_size,
 						     error))
 		return FALSE;
+
+	/* verify on-device CRC */
+	if (!fu_lenovo_ldc_device_self_verify(self,
+					      FU_LENOVO_LDC_FLASH_ID_USAGE,
+					      &crc_actual,
+					      error)) {
+		g_prefix_error(error, "failed to self verify: ");
+		return FALSE;
+	}
+	crc_caclulated = fu_crc32(FU_CRC_KIND_B32_STANDARD, buf->data, buf->len - 4);
+	if (crc_actual != crc_caclulated) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to write usage, got 0x%04x and expected 0x%04x",
+			    crc_actual,
+			    crc_caclulated);
+		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -605,6 +672,7 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
 	gboolean usage_info_valid = FALSE;
 	guint8 flash_id_total = 0;
+	guint8 total_number;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -653,6 +721,36 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 	if (!fu_lenovo_ldc_device_write_usage_information_table(self, error)) {
 		g_prefix_error_literal(error, "failed to write usage table: ");
 		return FALSE;
+	}
+
+	/* write each flash ID */
+	total_number = fu_struct_lenovo_ldc_usage_information_get_total_number(self->st_usage);
+	for (guint i = 1; i < total_number; i++) {
+		guint16 erase_size = 0;
+		guint16 program_size = 0;
+		FuLenovoLdcExternalFlashIdPurpose purpose =
+		    FU_LENOVO_LDC_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE;
+
+		/* get the usage chunk sizes */
+		if (!fu_lenovo_ldc_device_get_flash_id(self,
+						       i,
+						       &purpose,
+						       &erase_size,
+						       &program_size,
+						       error)) {
+			g_prefix_error(error, "failed to ensure usage attrs: ");
+			return FALSE;
+		}
+		if (purpose != FU_LENOVO_LDC_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE)
+			continue;
+
+		/* TODO: is required? */
+
+		/* TODO: write blob */
+
+		/* TODO: write target fw version */
+
+		/* TODO: write usage table */
 	}
 
 	/* get default image */
