@@ -43,6 +43,8 @@ G_DEFINE_TYPE(FuParadeUsbhubDevice, fu_parade_usbhub_device, FU_TYPE_USB_DEVICE)
 #define FU_PARADE_USBHUB_DEVICE_SPI_RETRY_COUNT 100
 #define FU_PARADE_USBHUB_DEVICE_SPI_RETRY_DELAY 50 /* ms */
 
+#define FU_PARADE_USBHUB_DEVICE_FLAG_USE_GPIO_ENABLE "use-gpio-enable"
+
 static void
 fu_parade_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -1196,6 +1198,21 @@ fu_parade_usbhub_device_write_firmware(FuDevice *device,
 			    checksum);
 		return FALSE;
 	}
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_PARADE_USBHUB_DEVICE_FLAG_USE_GPIO_ENABLE)) {
+		if (!fu_parade_usbhub_device_mmio_write_u8(
+			self,
+			FU_PARADE_USBHUB_DEVICE_ADDR_SPI_MASTER_ACQUIRE,
+			0x40,
+			error))
+			return FALSE;
+		if (!fu_parade_usbhub_device_mmio_write_u8(
+			self,
+			FU_PARADE_USBHUB_DEVICE_ADDR_GPIO_CONTROL_ENABLE,
+			0x01,
+			error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success! */
@@ -1255,6 +1272,8 @@ fu_parade_usbhub_device_init(FuParadeUsbhubDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_PARADE_USBHUB_DEVICE_FLAG_USE_GPIO_ENABLE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 }
 

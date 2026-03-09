@@ -23,6 +23,7 @@ enum FuParadeUsbhubDeviceAddr {
     UfpDisconnect = 0x584B,
     SpiMasterAcquire = 0x5824,
     SpiMaster   = 0x5826,
+    GpioControlEnable = 0x582D,
     SramPage    = 0x5879,
     VersionA    = 0x5C0E,
     VersionB    = 0x5C0F,
