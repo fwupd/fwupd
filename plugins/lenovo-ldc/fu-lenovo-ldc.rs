@@ -353,3 +353,28 @@ struct FuStructLenovoLdcDockEraseWithAddressRes {
     flash_id: u8 == 0,
     _reserved: u8,
 }
+
+#[derive(Default, New)]
+struct FuStructLenovoLdcDockProgramWithAddressReq {
+    target_status: FuLenovoLdcTargetStatus == CommandDefault,
+    bufsz: u8,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == SetFlashMemoryAccess,
+    flash_id: u8 == 0xFF,
+    _reserved: u8,
+    memory_access_cmd: FuLenovoLdcFlashMemoryAccessCmd == DockProgramWithAddress,
+    _unknown: u8,
+    size: u16le,
+    addr: u32le,
+    // data: [u8; ProgramSize]
+}
+
+#[derive(Default, Parse)]
+struct FuStructLenovoLdcDockProgramWithAddressRes {
+    target_status: FuLenovoLdcTargetStatus == CommandSuccess,
+    bufsz: u8 == 0x0,
+    cmd_class: FuLenovoLdcClassId == ExternalFlash,
+	cmd_id: FuLenovoLdcExternalFlashCmd == SetFlashMemoryAccess,
+    flash_id: u8 == 0,
+    _reserved: u8,
+}
