@@ -440,30 +440,6 @@ fu_lenovo_ldc_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_lenovo_ldc_device_prepare(FuDevice *device,
-			     FuProgress *progress,
-			     FwupdInstallFlags flags,
-			     GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-	/* TODO: anything the device has to do before the update starts */
-	g_assert(self != NULL);
-	return TRUE;
-}
-
-static gboolean
-fu_lenovo_ldc_device_cleanup(FuDevice *device,
-			     FuProgress *progress,
-			     FwupdInstallFlags flags,
-			     GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-	/* TODO: anything the device has to do when the update has completed */
-	g_assert(self != NULL);
-	return TRUE;
-}
-
-static gboolean
 fu_lenovo_ldc_device_check_firmware(FuDevice *device,
 				    FuFirmware *firmware,
 				    FuFirmwareParseFlags flags,
@@ -887,8 +863,6 @@ fu_lenovo_ldc_device_class_init(FuLenovoLdcDeviceClass *klass)
 	object_class->finalize = fu_lenovo_ldc_device_finalize;
 	device_class->to_string = fu_lenovo_ldc_device_to_string;
 	device_class->setup = fu_lenovo_ldc_device_setup;
-	device_class->prepare = fu_lenovo_ldc_device_prepare;
-	device_class->cleanup = fu_lenovo_ldc_device_cleanup;
 	device_class->attach = fu_lenovo_ldc_device_attach;
 	device_class->detach = fu_lenovo_ldc_device_detach;
 	device_class->check_firmware = fu_lenovo_ldc_device_check_firmware;
