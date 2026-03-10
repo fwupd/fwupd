@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <fwupdplugin.h>
 
 #include <errno.h>
@@ -977,7 +979,6 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	struct FlashIdUsageInformation *FlashIdUpdateList;
 	struct UsageInformation changeTagetUsageInformationTable = targetUsageInformationTable;
 
-	// if (bcdVerUpdateReq) {
 	if (forceUpdate) {
 		for (gint i = 1; i <= targetUsageInformationTable.Totalnumber; i++) {
 			changeTagetUsageInformationTable.FlashIdList[i] =

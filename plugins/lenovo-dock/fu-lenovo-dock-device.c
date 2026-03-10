@@ -8,6 +8,7 @@
 
 #include "fu-lenovo-dock-device.h"
 #include "fu-lenovo-dock-firmware.h"
+#include "fu-lenovo-dock-image.h"
 #include "fu-lenovo-dock-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
@@ -533,7 +534,6 @@ fu_lenovo_dock_device_get_flash_id(FuLenovoDockDevice *self,
 	st_res = fu_struct_lenovo_dock_flash_get_attrs_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	// fu_struct_lenovo_dock_flash_get_attrs_res_get_storage_size(st_res);
 	if (erase_size != NULL)
 		*erase_size = fu_struct_lenovo_dock_flash_get_attrs_res_get_erase_size(st_res);
 	if (program_size != NULL)
@@ -561,7 +561,7 @@ fu_lenovo_dock_device_write_usage(FuLenovoDockDevice *self, GError **error)
 						&erase_size,
 						&program_size,
 						error)) {
-		g_prefix_error(error, "failed to ensure usage attrs: ");
+		g_prefix_error_literal(error, "failed to ensure usage attrs: ");
 		return FALSE;
 	}
 
@@ -720,7 +720,7 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 			continue;
 		}
 
-		/* TODO: write blob */
+		/* erase entire block and write blob */
 		if (!fu_lenovo_dock_device_flash_erase_memory(
 			self,
 			i,
@@ -745,7 +745,7 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 			return FALSE;
 		if (!fu_lenovo_dock_device_flash_verify_crc(self, i, &crc_calculated, error))
 			return FALSE;
-		// crc_provided = fu_firmware_get_crc32(img);
+		crc_provided = fu_lenovo_dock_image_get_crc(FU_LENOVO_DOCK_IMAGE(img));
 		if (crc_provided != crc_calculated) { /* FIXME */
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -764,8 +764,7 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		    fu_firmware_get_version_raw(img));
 		fu_struct_lenovo_dock_usage_item_set_target_size(st_usage_item,
 								 fu_firmware_get_size(img));
-		// FIXME: fu_struct_lenovo_dock_usage_item_set_target_crc32(st_usage_item,
-		// fu_firmware_get_crc32(img));
+		fu_struct_lenovo_dock_usage_item_set_target_crc32(st_usage_item, crc_provided);
 
 		/* write usage table */
 		if (!fu_lenovo_dock_device_write_usage(self, error))

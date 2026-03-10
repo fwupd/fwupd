@@ -8,6 +8,7 @@ plugin_builtins += static_library('fu_plugin_lenovo_dock',
   sources: [
     'fu-lenovo-dock-device.c',
     'fu-lenovo-dock-firmware.c',
+    'fu-lenovo-dock-image.c',
     'fu-lenovo-dock-plugin.c',
   ],
   include_directories: plugin_incdirs,

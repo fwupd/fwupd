@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-lenovo-dock-firmware.h"
+#include "fu-lenovo-dock-image.h"
 #include "fu-lenovo-dock-struct.h"
 
 struct _FuLenovoDockFirmware {
@@ -81,7 +82,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		FuLenovoDockFlashId flash_id;
 		g_autoptr(FuStructLenovoDockUsageItem) st_item = NULL;
 		g_autoptr(GInputStream) stream_partial = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = fu_lenovo_dock_image_new();
 
 		st_item =
 		    fu_struct_lenovo_dock_usage_item_parse_stream(stream_usage, offset, error);
@@ -128,14 +129,12 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 
 		/* check CRC */
 		if (target_size > 0) {
-			// guint32 crc_calculated = 0xFFFFFFFF;
 			guint32 crc_calculated = 0;
 			guint32 crc_provided =
 			    fu_struct_lenovo_dock_usage_item_get_target_crc32(st_item);
 			g_autoptr(GInputStream) stream_crc = NULL;
 
-			fu_firmware_add_flag(img, FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-			fu_firmware_add_flag(img, FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+			fu_lenovo_dock_image_set_crc(FU_LENOVO_DOCK_IMAGE(img), crc_provided);
 			stream_crc = fu_partial_input_stream_new(stream_composite,
 								 physical_addr,
 								 max_size,
@@ -202,7 +201,7 @@ fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT8);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LENOVO_DOCK_IMAGE);
 }
 
 static void
