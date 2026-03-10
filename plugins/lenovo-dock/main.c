@@ -379,7 +379,7 @@ fu_lenovo_dock_device_function1(FuLenovoDockClassId cmd_class,
 				return SUCCESS;
 			}
 
-		case FU_LENOVO_DOCK_STATUS_FALIURE:
+		case FU_LENOVO_DOCK_STATUS_FAILURE:
 			return COMMAND_FALIURE;
 		case FU_LENOVO_DOCK_STATUS_TIMEOUT:
 			return COMMAND_TIMEOUT;
@@ -500,7 +500,7 @@ fu_lenovo_dock_device_function2(guint8 cmd_class,
 				return SUCCESS;
 			}
 
-		case FU_LENOVO_DOCK_STATUS_FALIURE:
+		case FU_LENOVO_DOCK_STATUS_FAILURE:
 			return COMMAND_FALIURE;
 		case FU_LENOVO_DOCK_STATUS_TIMEOUT:
 			return COMMAND_TIMEOUT;
@@ -717,8 +717,7 @@ fu_lenovo_dock_device_write_flash_id_data(gint flashId,
 	// Get Flash Usage Information Memory Self-Verify
 	guint8 writeFlashUpdateCheckSignature[1];
 	writeFlashUpdateCheckSignature[0] = FU_LENOVO_DOCK_FLASH_MEMORY_SELF_VERIFY_TYPE_SIGNATURE;
-	for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE1_LEN; i++)
-		output1[i] = 0;
+	memset(output1, 0, FU_LENOVO_DOCK_DEVICE_IFACE1_LEN);
 	gint flashUpdateCheckSignatureData = fu_lenovo_dock_device_function1(
 	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
 	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
@@ -729,7 +728,8 @@ fu_lenovo_dock_device_write_flash_id_data(gint flashId,
 	if (flashUpdateCheckSignatureData != 0)
 		return flashUpdateCheckSignatureData;
 	guint8 *flashUpdateCheckSignatureBody = GetCommandBody1(output1);
-	if (flashUpdateCheckSignatureBody[1] != (guint8)FU_LENOVO_DOCK_FLASH_VERIFY_RESULT_PASS)
+	if (flashUpdateCheckSignatureBody[1] !=
+	    (guint8)FU_LENOVO_DOCK_FLASH_VERIFY_SIGNATURE_RESULT_PASS)
 		return UPDATE_DOCK_FAILED;
 
 	guint8 writeFlashUpdateCheckVerify[1];
@@ -1102,8 +1102,7 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		struct FlashIdAttribute flashIdAttribute =
 		    fu_lenovo_dock_device_get_flash_id_attr(flashIdAttributeBody);
 		// Check Component FW File
-		if (flashIdAttribute.Purpose !=
-		    FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE)
+		if (flashIdAttribute.Purpose != FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE)
 			continue;
 
 		// Check Update Necessary
@@ -1285,7 +1284,7 @@ fu_lenovo_dock_device_setup()
 		    0,
 		    output);
 		guint8 getPurpose = output[7];
-		if (getPurpose == FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE) {
+		if (getPurpose == FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE) {
 			for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE1_LEN; i++)
 				output[i] = 0;
 			guint8 getFlashIdUsageInformation = fu_lenovo_dock_device_function1(

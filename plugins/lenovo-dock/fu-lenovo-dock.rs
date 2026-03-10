@@ -3,7 +3,7 @@
 
 #[repr(u8)]
 enum FuLenovoDockSignType {
-    Unsigned = 0x00,
+    None = 0x00,
     Rsa2048 = 0x01,
     Rsa3072 = 0x02,
     Ecc256 = 0x10,
@@ -30,7 +30,7 @@ struct FuStructLenovoDockUsage {
 	total_number: u8,
 	major_version: u8 = 0x00,
 	minor_version: u8 = 0x01,
-	dsa: FuLenovoDockSignType = Unsigned,
+	dsa: FuLenovoDockSignType = None,
 	iot_flag: u8,
 	composite_version: u24be,
 	pid: u16be = 0x111E,
@@ -40,22 +40,22 @@ struct FuStructLenovoDockUsage {
 };
 
 #[repr(u8)]
-enum FuStructLenovoDockUsageItemFlag {
+enum FuLenovoDockUsageItemFlag {
     None,
     DoUpdate,
 }
 
-#[derive(Parse, ParseStream, Default, ToString)]
+#[derive(Parse, ParseStream, Default, ToString, New)]
 #[repr(C, packed)]
 struct FuStructLenovoDockUsageItem {
-	physical_address: u32le,
+	address: u32le,
 	max_size: u32le,
 	current_version: u32le,
 	target_version: u32le,
 	target_size: u32le,
 	target_crc32: u32le,
 	flash_id: FuLenovoDockFlashId,
-	flag: FuStructLenovoDockUsageItemFlag,
+	flag: FuLenovoDockUsageItemFlag,
     reserved: [u8; 6],
 };
 
@@ -165,7 +165,7 @@ enum FuLenovoDockExternalFlashIdPurpose {
     Common,
     ApplicationData,
     ImageData,
-    FirmwareFile,
+    Firmware,
 }
 
 #[repr(u8)]
@@ -242,7 +242,7 @@ enum FuLenovoDockFlashMemorySelfVerifyType {
 }
 
 #[repr(u8)]
-enum FuLenovoDockFlashVerifyResult {
+enum FuLenovoDockFlashVerifySignatureResult {
 	Fail,
     Pass,
 }
@@ -382,7 +382,7 @@ struct FuStructLenovoDockFlashProgramRes {
 }
 
 #[derive(Default, New)]
-struct FuStructLenovoDockFlashVerifyReq {
+struct FuStructLenovoDockFlashVerifyCrcReq {
     status: FuLenovoDockStatus == Default,
     bufsz: u8 = 0x01,
     cmd_class: FuLenovoDockClassId == ExternalFlash,
@@ -393,7 +393,7 @@ struct FuStructLenovoDockFlashVerifyReq {
 }
 
 #[derive(Default, Parse)]
-struct FuStructLenovoDockFlashVerifyRes {
+struct FuStructLenovoDockFlashVerifyCrcRes {
     status: FuLenovoDockStatus == Success,
     bufsz: u8 == 0x4,
     cmd_class: FuLenovoDockClassId == ExternalFlash,
@@ -401,4 +401,26 @@ struct FuStructLenovoDockFlashVerifyRes {
     flash_id: FuLenovoDockFlashId,
     _reserved: u8,
     crc: u32le,
+}
+
+#[derive(Default, New)]
+struct FuStructLenovoDockFlashVerifySignatureReq {
+    status: FuLenovoDockStatus == Default,
+    bufsz: u8 = 0x01,
+    cmd_class: FuLenovoDockClassId == ExternalFlash,
+	cmd_id: FuLenovoDockExternalFlashCmd == GetFlashMemorySelfVerify,
+    flash_id: FuLenovoDockFlashId,
+    _reserved: u8,
+    type: FuLenovoDockFlashMemorySelfVerifyType == Signature,
+}
+
+#[derive(Default, Parse)]
+struct FuStructLenovoDockFlashVerifySignatureRes {
+    status: FuLenovoDockStatus == Success,
+    bufsz: u8 == 0x4,
+    cmd_class: FuLenovoDockClassId == ExternalFlash,
+	cmd_id: FuLenovoDockExternalFlashCmd == GetFlashMemorySelfVerify,
+    flash_id: FuLenovoDockFlashId,
+    _reserved: u8,
+    result: FuLenovoDockFlashVerifySignatureResult == Pass,
 }

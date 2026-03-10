@@ -87,10 +87,24 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		    fu_struct_lenovo_dock_usage_item_parse_stream(stream_usage, offset, error);
 		if (st_item == NULL)
 			return FALSE;
+
+		/* sanity check */
 		flash_id = fu_struct_lenovo_dock_usage_item_get_flash_id(st_item);
-		physical_addr = fu_struct_lenovo_dock_usage_item_get_physical_address(st_item);
-		target_size = fu_struct_lenovo_dock_usage_item_get_target_size(st_item);
+		physical_addr = fu_struct_lenovo_dock_usage_item_get_address(st_item);
 		max_size = fu_struct_lenovo_dock_usage_item_get_max_size(st_item);
+		target_size = fu_struct_lenovo_dock_usage_item_get_target_size(st_item);
+		if (target_size == 0)
+			continue;
+		if (target_size > max_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "target size 0x%x > max size 0x%x",
+				    target_size,
+				    max_size);
+			return FALSE;
+		}
+
 		fu_firmware_set_idx(img, flash_id);
 		if (flash_id <= FU_LENOVO_DOCK_FLASH_ID_DBG)
 			fu_firmware_set_id(img, fu_lenovo_dock_flash_id_to_string(flash_id));
@@ -101,29 +115,12 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
-		/* sanity check */
-		if (target_size > max_size) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "target size 0x%x > max size 0x%x",
-				    target_size,
-				    max_size);
-			return FALSE;
-		}
-		if (0 && target_size < 4) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "target size too small for CRC");
-			return FALSE;
-		}
-
 		/* set image stream */
-		stream_partial = fu_partial_input_stream_new(stream_composite,
-							     physical_addr,
-							     target_size,
-							     error);
+		stream_partial =
+		    fu_partial_input_stream_new(stream_composite,
+						physical_addr,
+						target_size + FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE,
+						error);
 		if (stream_partial == NULL)
 			return FALSE;
 		if (!fu_firmware_set_stream(img, stream_partial, error))

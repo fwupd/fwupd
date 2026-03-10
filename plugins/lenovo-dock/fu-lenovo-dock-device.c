@@ -47,6 +47,25 @@ fu_lenovo_dock_device_to_string(FuDevice *device, guint idt, GString *str)
 	}
 }
 
+static FuStructLenovoDockUsageItem *
+fu_lenovo_dock_device_get_usage_item(FuLenovoDockDevice *self,
+				     FuLenovoDockFlashId flash_id,
+				     GError **error)
+{
+	for (guint i = 0; i < self->st_usage_items->len; i++) {
+		FuStructLenovoDockUsageItem *st_usage_item =
+		    g_ptr_array_index(self->st_usage_items, i);
+		if (fu_struct_lenovo_dock_usage_item_get_flash_id(st_usage_item) == flash_id)
+			return st_usage_item;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "cannot find flash ID 0x%x",
+		    flash_id);
+	return NULL;
+}
+
 static gboolean
 fu_lenovo_dock_device_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
@@ -338,25 +357,48 @@ fu_lenovo_dock_device_flash_write_memory(FuLenovoDockDevice *self,
 }
 
 static gboolean
-fu_lenovo_dock_device_self_verify(FuLenovoDockDevice *self,
-				  FuLenovoDockFlashId flash_id,
-				  guint32 *crc,
-				  GError **error)
+fu_lenovo_dock_device_flash_verify_signature(FuLenovoDockDevice *self,
+					     FuLenovoDockFlashId flash_id,
+					     GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructLenovoDockFlashVerifyReq) st_req =
-	    fu_struct_lenovo_dock_flash_verify_req_new();
-	g_autoptr(FuStructLenovoDockFlashVerifyRes) st_res = NULL;
+	g_autoptr(FuStructLenovoDockFlashVerifySignatureReq) st_req =
+	    fu_struct_lenovo_dock_flash_verify_signature_req_new();
+	g_autoptr(FuStructLenovoDockFlashVerifySignatureRes) st_res = NULL;
 
-	fu_struct_lenovo_dock_flash_verify_req_set_flash_id(st_req, flash_id);
+	fu_struct_lenovo_dock_flash_verify_signature_req_set_flash_id(st_req, flash_id);
 	buf = fu_lenovo_dock_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
-	st_res = fu_struct_lenovo_dock_flash_verify_res_parse(buf->data, buf->len, 0x0, error);
+	st_res =
+	    fu_struct_lenovo_dock_flash_verify_signature_res_parse(buf->data, buf->len, 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_lenovo_dock_device_flash_verify_crc(FuLenovoDockDevice *self,
+				       FuLenovoDockFlashId flash_id,
+				       guint32 *crc,
+				       GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoDockFlashVerifyCrcReq) st_req =
+	    fu_struct_lenovo_dock_flash_verify_crc_req_new();
+	g_autoptr(FuStructLenovoDockFlashVerifyCrcRes) st_res = NULL;
+
+	fu_struct_lenovo_dock_flash_verify_crc_req_set_flash_id(st_req, flash_id);
+	buf = fu_lenovo_dock_device_txfer1(self, st_req->buf, error);
+	if (buf == NULL)
+		return FALSE;
+	st_res = fu_struct_lenovo_dock_flash_verify_crc_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
 	if (crc != NULL)
-		*crc = fu_struct_lenovo_dock_flash_verify_res_get_crc(st_res);
+		*crc = fu_struct_lenovo_dock_flash_verify_crc_res_get_crc(st_res);
 
 	/* success */
 	return TRUE;
@@ -403,33 +445,6 @@ fu_lenovo_dock_device_check_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_lenovo_dock_device_write_blocks(FuLenovoDockDevice *self,
-				   FuChunkArray *chunks,
-				   FuProgress *progress,
-				   GError **error)
-{
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-
-		/* prepare chunk */
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-
-		/* TODO: send to hardware */
-
-		/* update progress */
-		fu_progress_step_done(progress);
-	}
-
-	/* success */
-	return TRUE;
-}
-
 // FIXME: _ensure_
 static gboolean
 fu_lenovo_dock_device_verify_usage_info(FuLenovoDockDevice *self, gboolean *valid, GError **error)
@@ -468,7 +483,7 @@ fu_lenovo_dock_device_verify_usage_info(FuLenovoDockDevice *self, gboolean *vali
 	usage_items = fu_struct_lenovo_dock_usage_get_total_number(st);
 
 	/* are payloads signed */
-	if (fu_struct_lenovo_dock_usage_get_dsa(st) == FU_LENOVO_DOCK_SIGN_TYPE_UNSIGNED)
+	if (fu_struct_lenovo_dock_usage_get_dsa(st) == FU_LENOVO_DOCK_SIGN_TYPE_NONE)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	else
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -531,7 +546,7 @@ fu_lenovo_dock_device_get_flash_id(FuLenovoDockDevice *self,
 }
 
 static gboolean
-fu_lenovo_dock_device_write_usage_information_table(FuLenovoDockDevice *self, GError **error)
+fu_lenovo_dock_device_write_usage(FuLenovoDockDevice *self, GError **error)
 {
 	guint16 erase_size = 0;
 	guint16 program_size = 0;
@@ -575,10 +590,10 @@ fu_lenovo_dock_device_write_usage_information_table(FuLenovoDockDevice *self, GE
 		return FALSE;
 
 	/* verify on-device CRC */
-	if (!fu_lenovo_dock_device_self_verify(self,
-					       FU_LENOVO_DOCK_FLASH_ID_USAGE,
-					       &crc_actual,
-					       error)) {
+	if (!fu_lenovo_dock_device_flash_verify_crc(self,
+						    FU_LENOVO_DOCK_FLASH_ID_USAGE,
+						    &crc_actual,
+						    error)) {
 		g_prefix_error_literal(error, "failed to self verify: ");
 		return FALSE;
 	}
@@ -608,12 +623,12 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	gboolean usage_info_valid = FALSE;
 	guint8 flash_id_total = 0;
 	guint8 total_number;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 44, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
@@ -632,12 +647,14 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	g_debug("flash ID total: 0x%x", flash_id_total);
+	fu_progress_step_done(progress);
 
 	/* verify existing CRC */
 	if (!fu_lenovo_dock_device_verify_usage_info(self, &usage_info_valid, error)) {
 		g_prefix_error_literal(error, "failed to validate usage info: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* TODO: check each usage item in the file against the device and set flags = DoUpdate on
 	 * each item if not the same */
@@ -651,20 +668,38 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to trigger phase2: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write the new usage table */
-	if (!fu_lenovo_dock_device_write_usage_information_table(self, error)) {
+	if (!fu_lenovo_dock_device_write_usage(self, error)) {
 		g_prefix_error_literal(error, "failed to write usage table: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write each flash ID */
 	total_number = fu_struct_lenovo_dock_usage_get_total_number(self->st_usage);
 	for (guint i = 1; i < total_number; i++) {
 		guint16 erase_size = 0;
 		guint16 program_size = 0;
+		guint32 crc_provided;
+		guint32 crc_calculated = 0;
 		FuLenovoDockExternalFlashIdPurpose purpose =
-		    FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE;
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE;
+		FuStructLenovoDockUsageItem *st_usage_item;
+		g_autoptr(FuFirmware) img = NULL;
+		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get image + item */
+		img = fu_firmware_get_image_by_idx(firmware, i, &error_local);
+		if (img == NULL) {
+			g_debug("ignoring: %s", error_local->message);
+			continue;
+		}
+		st_usage_item = fu_lenovo_dock_device_get_usage_item(self, i, error);
+		if (st_usage_item == NULL)
+			return FALSE;
 
 		/* get the usage chunk sizes */
 		if (!fu_lenovo_dock_device_get_flash_id(self,
@@ -676,42 +711,69 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 			g_prefix_error_literal(error, "failed to ensure usage attrs: ");
 			return FALSE;
 		}
-		if (purpose != FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE)
+		if (purpose != FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE)
 			continue;
 
-		/* TODO: is required? */
+		/* is the same version? */
+		if (fu_firmware_get_version_raw(img) ==
+		    fu_struct_lenovo_dock_usage_item_get_current_version(st_usage_item)) {
+			continue;
+		}
 
 		/* TODO: write blob */
+		if (!fu_lenovo_dock_device_flash_erase_memory(
+			self,
+			i,
+			fu_struct_lenovo_dock_usage_item_get_address(st_usage_item),
+			fu_struct_lenovo_dock_usage_item_get_max_size(st_usage_item),
+			erase_size,
+			error))
+			return FALSE;
+		blob = fu_firmware_get_bytes(img, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_lenovo_dock_device_flash_write_memory(
+			self,
+			i,
+			fu_struct_lenovo_dock_usage_item_get_address(st_usage_item),
+			g_bytes_get_data(blob, NULL),
+			g_bytes_get_size(blob),
+			program_size,
+			error))
+			return FALSE;
+		if (!fu_lenovo_dock_device_flash_verify_signature(self, i, error))
+			return FALSE;
+		if (!fu_lenovo_dock_device_flash_verify_crc(self, i, &crc_calculated, error))
+			return FALSE;
+		// crc_provided = fu_firmware_get_crc32(img);
+		if (crc_provided != crc_calculated) { /* FIXME */
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "usage item provided 0x%04x and calculated 0x%04x",
+				    crc_provided,
+				    crc_calculated);
+			return FALSE;
+		}
 
-		/* TODO: write target fw version */
+		/* write target fw version */
+		fu_struct_lenovo_dock_usage_item_set_flag(st_usage_item,
+							  FU_LENOVO_DOCK_USAGE_ITEM_FLAG_DO_UPDATE);
+		fu_struct_lenovo_dock_usage_item_set_target_version(
+		    st_usage_item,
+		    fu_firmware_get_version_raw(img));
+		fu_struct_lenovo_dock_usage_item_set_target_size(st_usage_item,
+								 fu_firmware_get_size(img));
+		// FIXME: fu_struct_lenovo_dock_usage_item_set_target_crc32(st_usage_item,
+		// fu_firmware_get_crc32(img));
 
-		/* TODO: write usage table */
+		/* write usage table */
+		if (!fu_lenovo_dock_device_write_usage(self, error))
+			return FALSE;
 	}
-
-	/* get default image */
-	stream = fu_firmware_get_stream(firmware, error);
-	if (stream == NULL)
-		return FALSE;
-
-	/* write each block */
-	chunks = fu_chunk_array_new_from_stream(stream,
-						0, // self->start_addr,
-						FU_CHUNK_PAGESZ_NONE,
-						64 /* block_size */,
-						error);
-	if (chunks == NULL)
-		return FALSE;
-	if (!fu_lenovo_dock_device_write_blocks(self,
-						chunks,
-						fu_progress_get_child(progress),
-						error))
-		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* TODO: verify each block */
-	fu_progress_step_done(progress);
-
-	/* release -- FIXME: move to ->cleanup() or ->attach() */
+	/* actually write firmware to the device */
 	if (!fu_lenovo_dock_device_set_flash_memory_access(
 		self,
 		FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CTRL_RELEASE,
@@ -719,8 +781,6 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to release flash memory access: ");
 		return FALSE;
 	}
-
-	/* actually write firmware to the device */
 	if (!fu_lenovo_dock_device_dfu_control(
 		self,
 		FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED,
@@ -730,6 +790,7 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;
@@ -757,6 +818,7 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.ldc");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_icon(FU_DEVICE(self), "icon-name");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LENOVO_DOCK_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_FLAG_EXAMPLE);
 }
 
