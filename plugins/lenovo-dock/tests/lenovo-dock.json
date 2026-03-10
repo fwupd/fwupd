@@ -1,28 +1,15 @@
 {
-  "name": "Lenovo Ldc",
+  "name": "Lenovo USB4 Dock",
   "interactive": false,
   "steps": [
     {
-      "url": "lenovo-dock-1.2.3.cab",
-      "emulation-file": "@enumeration_datadir@/lenovo-dock-setup.json",
-      "emulation-url": "lenovo-dock-1.2.3.zip",
+      "url": "lenovo-dock-1.0.12.cab",
+      "emulation-url": "lenovo-dock-1.0.12.zip",
       "components": [
         {
-          "version": "1.2.3",
+          "version": "1.0.12",
           "guids": [
-            "00000000-0000-0000-0000-000000000000"
-          ]
-        }
-      ]
-    },
-    {
-      "url": "lenovo-dock-1.2.4.cab",
-      "emulation-url": "lenovo-dock-1.2.4.zip",
-      "components": [
-        {
-          "version": "1.2.4",
-          "guids": [
-            "00000000-0000-0000-0000-000000000000"
+            "a521e90e-e595-57eb-bd17-dac7fa5e0ba1"
           ]
         }
       ]

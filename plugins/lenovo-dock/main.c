@@ -222,7 +222,7 @@ fu_lenovo_dock_device_verify(gint flashId,
 }
 
 struct FlashIdAttribute
-fu_lenovo_dock_device_get_flash_id_attr(guint8 *buf)
+_fu_lenovo_dock_device_get_flash_id_attr(guint8 *buf)
 {
 	struct FlashIdAttribute fa;
 	fa.FLashId = buf[0];
@@ -532,7 +532,7 @@ fu_lenovo_dock_device_write_usage_information_table(guint8 *UsageInformationData
 		return UsageInformationAttributeData;
 	guint8 *UsageInformationAttributeBody = GetCommandBody1(output1);
 	struct FlashIdAttribute UsageInformationAttribute =
-	    fu_lenovo_dock_device_get_flash_id_attr(UsageInformationAttributeBody);
+	    _fu_lenovo_dock_device_get_flash_id_attr(UsageInformationAttributeBody);
 
 	// Set Usage Information Memory Access (Erase)
 	for (gint readBytes = 0; readBytes < FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE;
@@ -1101,7 +1101,7 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			return flashIdAttributeData;
 		guint8 *flashIdAttributeBody = GetCommandBody1(output1);
 		struct FlashIdAttribute flashIdAttribute =
-		    fu_lenovo_dock_device_get_flash_id_attr(flashIdAttributeBody);
+		    _fu_lenovo_dock_device_get_flash_id_attr(flashIdAttributeBody);
 		// Check Component FW File
 		if (flashIdAttribute.Purpose != FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE)
 			continue;
@@ -1262,7 +1262,7 @@ usb_event_thread(void *arg)
 }
 
 struct FlashIdUsageInformation *
-fu_lenovo_dock_device_setup()
+_fu_lenovo_dock_device_setup()
 {
 	guint8 output[FU_LENOVO_DOCK_DEVICE_IFACE1_LEN] = {0};
 	gint getFlashIdList =
@@ -1377,7 +1377,7 @@ main(int argc, char *argv[])
 	for (gint i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "/c") == 0) {
 			g_print("Checking current FW version\n");
-			struct FlashIdUsageInformation *Info = fu_lenovo_dock_device_setup();
+			struct FlashIdUsageInformation *Info = _fu_lenovo_dock_device_setup();
 			char version[64]; // 準備一個足夠大的 buffer
 
 			gint ret = GetCompositeVersion(version, sizeof(version));

@@ -17,7 +17,5 @@ G_DECLARE_FINAL_TYPE(FuLenovoDockFirmware,
 
 #define FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE 256
 
-FuFirmware *
-fu_lenovo_dock_firmware_new(void);
 guint16
 fu_lenovo_dock_firmware_get_pid(FuLenovoDockFirmware *self);

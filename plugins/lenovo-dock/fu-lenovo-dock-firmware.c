@@ -27,21 +27,6 @@ fu_lenovo_dock_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 }
 
 static gboolean
-fu_lenovo_dock_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
-{
-	FuLenovoDockFirmware *self = FU_LENOVO_DOCK_FIRMWARE(firmware);
-	guint64 tmp;
-
-	/* load from .builder.xml */
-	tmp = xb_node_query_text_as_uint(n, "pid", NULL);
-	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
-		self->pid = tmp;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
 			      FuFirmwareParseFlags flags,
@@ -116,7 +101,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
-		/* set image stream */
+		/* set image stream, and include the signature too */
 		stream_partial =
 		    fu_partial_input_stream_new(stream_composite,
 						physical_addr,
@@ -146,12 +131,9 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 							   &crc_calculated,
 							   error))
 				return FALSE;
+#if 0
+			/* FIXME */
 			if (crc_provided != crc_calculated) {
-				g_warning("usage item provided 0x%04x and calculated 0x%04x",
-					  crc_provided,
-					  crc_calculated);
-			}
-			if (0 && crc_provided != crc_calculated) { /* FIXME */
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
@@ -160,25 +142,19 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 					    crc_calculated);
 				return FALSE;
 			}
+#else
+			if (crc_provided != crc_calculated) {
+				g_warning("usage item provided 0x%04x and calculated 0x%04x",
+					  crc_provided,
+					  crc_calculated);
+			}
+#endif
 		}
 		offset += FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE;
 	}
 
 	/* success */
 	return TRUE;
-}
-
-static GByteArray *
-fu_lenovo_dock_firmware_write(FuFirmware *firmware, GError **error)
-{
-	FuLenovoDockFirmware *self = FU_LENOVO_DOCK_FIRMWARE(firmware);
-	g_autoptr(FuStructLenovoDockUsage) st = fu_struct_lenovo_dock_usage_new();
-
-	/* header first */
-	fu_struct_lenovo_dock_usage_set_pid(st, self->pid);
-
-	/* success */
-	return g_byte_array_ref(st->buf);
 }
 
 guint16
@@ -191,7 +167,10 @@ fu_lenovo_dock_firmware_get_pid(FuLenovoDockFirmware *self)
 static gchar *
 fu_lenovo_dock_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
-	return fu_version_from_uint24(version_raw, fu_firmware_get_version_format(firmware));
+	return g_strdup_printf("%x.%x.%x",
+			       (guint)(version_raw >> 16) & 0xFF,
+			       (guint)(version_raw >> 8) & 0xFF,
+			       (guint)version_raw & 0xFF);
 }
 
 static void
@@ -205,27 +184,10 @@ fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 }
 
 static void
-fu_lenovo_dock_firmware_finalize(GObject *object)
-{
-	//	FuLenovoDockFirmware *self = FU_LENOVO_DOCK_FIRMWARE(object);
-	G_OBJECT_CLASS(fu_lenovo_dock_firmware_parent_class)->finalize(object);
-}
-
-static void
 fu_lenovo_dock_firmware_class_init(FuLenovoDockFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_lenovo_dock_firmware_finalize;
 	firmware_class->parse = fu_lenovo_dock_firmware_parse;
-	firmware_class->write = fu_lenovo_dock_firmware_write;
-	firmware_class->build = fu_lenovo_dock_firmware_build;
 	firmware_class->export = fu_lenovo_dock_firmware_export;
 	firmware_class->convert_version = fu_lenovo_dock_firmware_convert_version;
-}
-
-FuFirmware *
-fu_lenovo_dock_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_LENOVO_DOCK_FIRMWARE, NULL));
 }

@@ -24,7 +24,7 @@ enum FuLenovoDockFlashId {
     Usage = 0xFF,
 }
 
-#[derive(Parse, ParseStream, Default, ToString, New)]
+#[derive(Parse, ParseStream, Default, ToString, Setters)]
 #[repr(C, packed)]
 struct FuStructLenovoDockUsage {
 	total_number: u8,
@@ -45,7 +45,7 @@ enum FuLenovoDockUsageItemFlag {
     DoUpdate,
 }
 
-#[derive(Parse, ParseStream, Default, ToString, New)]
+#[derive(Parse, ParseStream, Default, ToString, Setters)]
 #[repr(C, packed)]
 struct FuStructLenovoDockUsageItem {
 	address: u32le,

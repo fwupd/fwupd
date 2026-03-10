@@ -29,7 +29,4 @@ executable(
   ],
 )
 
-#device_tests += files(
-#  'tests/lenovo-dock.json',
-#  'tests/lenovo-dock-setup.json',
-#)
+device_tests += files('tests/lenovo-dock.json')
