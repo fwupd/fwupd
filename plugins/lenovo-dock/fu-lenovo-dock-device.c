@@ -51,7 +51,7 @@ static gboolean
 fu_lenovo_dock_device_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLenovoDockDevice *self = FU_LENOVO_DOCK_DEVICE(device);
-	FuLenovoDockTargetStatus status;
+	FuLenovoDockStatus status;
 	GByteArray *buf = (GByteArray *)user_data;
 	g_autoptr(FuStructLenovoDockGenericRes) st = NULL;
 
@@ -68,17 +68,17 @@ fu_lenovo_dock_device_get_report_cb(FuDevice *device, gpointer user_data, GError
 	    error);
 	if (st == NULL)
 		return FALSE;
-	status = fu_struct_lenovo_dock_generic_res_get_target_status(st);
-	if (status == FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_BUSY) {
+	status = fu_struct_lenovo_dock_generic_res_get_status(st);
+	if (status == FU_LENOVO_DOCK_STATUS_BUSY) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "not ready");
 		return FALSE;
 	}
-	if (status != FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_SUCCESS) {
+	if (status != FU_LENOVO_DOCK_STATUS_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_TIMED_OUT,
 			    "status was %s",
-			    fu_lenovo_dock_target_status_to_string(status));
+			    fu_lenovo_dock_status_to_string(status));
 		return FALSE;
 	}
 
@@ -148,18 +148,15 @@ fu_lenovo_dock_device_set_flash_memory_access(FuLenovoDockDevice *self,
 					      GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructLenovoDockSetFlashMemoryAccessReq) st_req =
-	    fu_struct_lenovo_dock_set_flash_memory_access_req_new();
-	g_autoptr(FuStructLenovoDockSetFlashMemoryAccessRes) st_res = NULL;
+	g_autoptr(FuStructLenovoDockFlashSetAccessReq) st_req =
+	    fu_struct_lenovo_dock_flash_set_access_req_new();
+	g_autoptr(FuStructLenovoDockFlashSetAccessRes) st_res = NULL;
 
-	fu_struct_lenovo_dock_set_flash_memory_access_req_set_ctrl(st_req, ctrl);
+	fu_struct_lenovo_dock_flash_set_access_req_set_ctrl(st_req, ctrl);
 	buf = fu_lenovo_dock_device_txfer2(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
-	st_res = fu_struct_lenovo_dock_set_flash_memory_access_res_parse(buf->data,
-									 buf->len,
-									 0x0,
-									 error);
+	st_res = fu_struct_lenovo_dock_flash_set_access_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
 
@@ -169,7 +166,7 @@ fu_lenovo_dock_device_set_flash_memory_access(FuLenovoDockDevice *self,
 
 static gboolean
 fu_lenovo_dock_device_dfu_control(FuLenovoDockDevice *self,
-				  FuLenovoDockDockFwCtrlUpgradeStatus status,
+				  FuLenovoDockDockFwCtrlUpgradeStatus upgrade_status,
 				  FuLenovoDockDockFwCtrlUpgradePhaseCtrl ctrl,
 				  GError **error)
 {
@@ -178,7 +175,7 @@ fu_lenovo_dock_device_dfu_control(FuLenovoDockDevice *self,
 	    fu_struct_lenovo_dock_dfu_control_req_new();
 	g_autoptr(FuStructLenovoDockDfuControlRes) st_res = NULL;
 
-	fu_struct_lenovo_dock_dfu_control_req_set_status(st_req, status);
+	fu_struct_lenovo_dock_dfu_control_req_set_upgrade_status(st_req, upgrade_status);
 	fu_struct_lenovo_dock_dfu_control_req_set_ctrl(st_req, ctrl);
 	buf = fu_lenovo_dock_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
@@ -196,22 +193,20 @@ fu_lenovo_dock_device_ensure_version(FuLenovoDockDevice *self, GError **error)
 {
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructLenovoDockGetCompositeVersionReq) st_req =
-	    fu_struct_lenovo_dock_get_composite_version_req_new();
-	g_autoptr(FuStructLenovoDockGetCompositeVersionRes) st_res = NULL;
+	g_autoptr(FuStructLenovoDockGetVersionReq) st_req =
+	    fu_struct_lenovo_dock_get_version_req_new();
+	g_autoptr(FuStructLenovoDockGetVersionRes) st_res = NULL;
 
 	buf = fu_lenovo_dock_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
-	st_res =
-	    fu_struct_lenovo_dock_get_composite_version_res_parse(buf->data, buf->len, 0x0, error);
+	st_res = fu_struct_lenovo_dock_get_version_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	version = g_strdup_printf(
-	    "%X.%X.%02X",
-	    fu_struct_lenovo_dock_get_composite_version_res_get_version_major(st_res),
-	    fu_struct_lenovo_dock_get_composite_version_res_get_version_minor(st_res),
-	    fu_struct_lenovo_dock_get_composite_version_res_get_version_micro(st_res));
+	version = g_strdup_printf("%X.%X.%02X",
+				  fu_struct_lenovo_dock_get_version_res_get_version_major(st_res),
+				  fu_struct_lenovo_dock_get_version_res_get_version_minor(st_res),
+				  fu_struct_lenovo_dock_get_version_res_get_version_micro(st_res));
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* success */
@@ -253,22 +248,20 @@ fu_lenovo_dock_device_flash_read_memory(FuLenovoDockDevice *self,
 		const guint8 *datatmp;
 		gsize datatmpsz = 0;
 		g_autoptr(GByteArray) buf = NULL;
-		g_autoptr(FuStructLenovoDockReadWithAddressReq) st_req =
-		    fu_struct_lenovo_dock_read_with_address_req_new();
-		g_autoptr(FuStructLenovoDockReadWithAddressRes) st_res = NULL;
+		g_autoptr(FuStructLenovoDockFlashReadReq) st_req =
+		    fu_struct_lenovo_dock_flash_read_req_new();
+		g_autoptr(FuStructLenovoDockFlashReadRes) st_res = NULL;
 
-		fu_struct_lenovo_dock_read_with_address_req_set_size(st_req, 256);
-		fu_struct_lenovo_dock_read_with_address_req_set_addr(st_req, addr + i);
+		fu_struct_lenovo_dock_flash_read_req_set_size(st_req, 256);
+		fu_struct_lenovo_dock_flash_read_req_set_addr(st_req, addr + i);
 		buf = fu_lenovo_dock_device_txfer2(self, st_req->buf, error);
 		if (buf == NULL)
 			return NULL;
-		st_res = fu_struct_lenovo_dock_read_with_address_res_parse(buf->data,
-									   buf->len,
-									   0x0,
-									   error);
+		st_res =
+		    fu_struct_lenovo_dock_flash_read_res_parse(buf->data, buf->len, 0x0, error);
 		if (st_res == NULL)
 			return NULL;
-		datatmp = fu_struct_lenovo_dock_read_with_address_res_get_data(st_res, &datatmpsz);
+		datatmp = fu_struct_lenovo_dock_flash_read_res_get_data(st_res, &datatmpsz);
 		g_byte_array_append(data, datatmp, datatmpsz);
 	}
 
@@ -288,22 +281,18 @@ fu_lenovo_dock_device_flash_erase_memory(FuLenovoDockDevice *self,
 	for (gsize i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = NULL;
-		g_autoptr(FuStructLenovoDockEraseWithAddressReq) st_req =
-		    fu_struct_lenovo_dock_erase_with_address_req_new();
-		g_autoptr(FuStructLenovoDockEraseWithAddressRes) st_res = NULL;
+		g_autoptr(FuStructLenovoDockFlashEraseReq) st_req =
+		    fu_struct_lenovo_dock_flash_erase_req_new();
+		g_autoptr(FuStructLenovoDockFlashEraseRes) st_res = NULL;
 
-		fu_struct_lenovo_dock_erase_with_address_req_set_flash_id(st_req, flash_id);
-		fu_struct_lenovo_dock_erase_with_address_req_set_size(st_req,
-								      fu_chunk_get_data_sz(chk));
-		fu_struct_lenovo_dock_erase_with_address_req_set_addr(st_req,
-								      fu_chunk_get_address(chk));
+		fu_struct_lenovo_dock_flash_erase_req_set_flash_id(st_req, flash_id);
+		fu_struct_lenovo_dock_flash_erase_req_set_size(st_req, fu_chunk_get_data_sz(chk));
+		fu_struct_lenovo_dock_flash_erase_req_set_addr(st_req, fu_chunk_get_address(chk));
 		buf = fu_lenovo_dock_device_txfer2(self, st_req->buf, error);
 		if (buf == NULL)
 			return FALSE;
-		st_res = fu_struct_lenovo_dock_erase_with_address_res_parse(buf->data,
-									    buf->len,
-									    0x0,
-									    error);
+		st_res =
+		    fu_struct_lenovo_dock_flash_erase_res_parse(buf->data, buf->len, 0x0, error);
 		if (st_res == NULL)
 			return FALSE;
 	}
@@ -325,26 +314,21 @@ fu_lenovo_dock_device_flash_write_memory(FuLenovoDockDevice *self,
 	for (gsize i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) buf = NULL;
-		g_autoptr(FuStructLenovoDockProgramWithAddressReq) st_req =
-		    fu_struct_lenovo_dock_program_with_address_req_new();
-		g_autoptr(FuStructLenovoDockProgramWithAddressRes) st_res = NULL;
+		g_autoptr(FuStructLenovoDockFlashProgramReq) st_req =
+		    fu_struct_lenovo_dock_flash_program_req_new();
+		g_autoptr(FuStructLenovoDockFlashProgramRes) st_res = NULL;
 
-		fu_struct_lenovo_dock_program_with_address_req_set_flash_id(st_req, flash_id);
-		fu_struct_lenovo_dock_program_with_address_req_set_bufsz(
-		    st_req,
-		    0x8 + fu_chunk_get_data_sz(chk));
-		fu_struct_lenovo_dock_program_with_address_req_set_size(st_req,
-									fu_chunk_get_data_sz(chk));
-		fu_struct_lenovo_dock_program_with_address_req_set_addr(st_req,
-									fu_chunk_get_address(chk));
+		fu_struct_lenovo_dock_flash_program_req_set_flash_id(st_req, flash_id);
+		fu_struct_lenovo_dock_flash_program_req_set_bufsz(st_req,
+								  0x8 + fu_chunk_get_data_sz(chk));
+		fu_struct_lenovo_dock_flash_program_req_set_size(st_req, fu_chunk_get_data_sz(chk));
+		fu_struct_lenovo_dock_flash_program_req_set_addr(st_req, fu_chunk_get_address(chk));
 		g_byte_array_append(st_req->buf, data, datasz);
 		buf = fu_lenovo_dock_device_txfer2(self, st_req->buf, error);
 		if (buf == NULL)
 			return FALSE;
-		st_res = fu_struct_lenovo_dock_program_with_address_res_parse(buf->data,
-									      buf->len,
-									      0x0,
-									      error);
+		st_res =
+		    fu_struct_lenovo_dock_flash_program_res_parse(buf->data, buf->len, 0x0, error);
 		if (st_res == NULL)
 			return FALSE;
 	}
@@ -360,22 +344,19 @@ fu_lenovo_dock_device_self_verify(FuLenovoDockDevice *self,
 				  GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructLenovoDockFlashMemorySelfVerifyReq) st_req =
-	    fu_struct_lenovo_dock_flash_memory_self_verify_req_new();
-	g_autoptr(FuStructLenovoDockFlashMemorySelfVerifyRes) st_res = NULL;
+	g_autoptr(FuStructLenovoDockFlashVerifyReq) st_req =
+	    fu_struct_lenovo_dock_flash_verify_req_new();
+	g_autoptr(FuStructLenovoDockFlashVerifyRes) st_res = NULL;
 
-	fu_struct_lenovo_dock_flash_memory_self_verify_req_set_flash_id(st_req, flash_id);
+	fu_struct_lenovo_dock_flash_verify_req_set_flash_id(st_req, flash_id);
 	buf = fu_lenovo_dock_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
-	st_res = fu_struct_lenovo_dock_flash_memory_self_verify_res_parse(buf->data,
-									  buf->len,
-									  0x0,
-									  error);
+	st_res = fu_struct_lenovo_dock_flash_verify_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
 	if (crc != NULL)
-		*crc = fu_struct_lenovo_dock_flash_memory_self_verify_res_get_crc(st_res);
+		*crc = fu_struct_lenovo_dock_flash_verify_res_get_crc(st_res);
 
 	/* success */
 	return TRUE;
@@ -526,26 +507,24 @@ fu_lenovo_dock_device_get_flash_id(FuLenovoDockDevice *self,
 				   GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructLenovoDockGetFlashAttributeReq) st_req =
-	    fu_struct_lenovo_dock_get_flash_attribute_req_new();
-	g_autoptr(FuStructLenovoDockGetFlashAttributeRes) st_res = NULL;
+	g_autoptr(FuStructLenovoDockFlashGetAttrsReq) st_req =
+	    fu_struct_lenovo_dock_flash_get_attrs_req_new();
+	g_autoptr(FuStructLenovoDockFlashGetAttrsRes) st_res = NULL;
 
-	fu_struct_lenovo_dock_get_flash_attribute_req_set_flash_id(st_req, flash_id);
+	fu_struct_lenovo_dock_flash_get_attrs_req_set_flash_id(st_req, flash_id);
 	buf = fu_lenovo_dock_device_txfer1(self, st_req->buf, error);
 	if (buf == NULL)
 		return FALSE;
-	st_res =
-	    fu_struct_lenovo_dock_get_flash_attribute_res_parse(buf->data, buf->len, 0x0, error);
+	st_res = fu_struct_lenovo_dock_flash_get_attrs_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	// fu_struct_lenovo_dock_get_flash_attribute_res_get_storage_size(st_res);
+	// fu_struct_lenovo_dock_flash_get_attrs_res_get_storage_size(st_res);
 	if (erase_size != NULL)
-		*erase_size = fu_struct_lenovo_dock_get_flash_attribute_res_get_erase_size(st_res);
+		*erase_size = fu_struct_lenovo_dock_flash_get_attrs_res_get_erase_size(st_res);
 	if (program_size != NULL)
-		*program_size =
-		    fu_struct_lenovo_dock_get_flash_attribute_res_get_program_size(st_res);
+		*program_size = fu_struct_lenovo_dock_flash_get_attrs_res_get_program_size(st_res);
 	if (purpose != NULL)
-		*purpose = fu_struct_lenovo_dock_get_flash_attribute_res_get_purpose(st_res);
+		*purpose = fu_struct_lenovo_dock_flash_get_attrs_res_get_purpose(st_res);
 
 	/* success */
 	return TRUE;

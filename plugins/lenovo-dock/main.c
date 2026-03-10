@@ -329,7 +329,7 @@ fu_lenovo_dock_device_function1(FuLenovoDockClassId cmd_class,
 	cmd2[0] = 0x00;
 
 	// Header
-	cmd[0] = FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT;
+	cmd[0] = FU_LENOVO_DOCK_STATUS_DEFAULT;
 	cmd[1] = bufsz;
 	cmd[2] = cmd_class;
 	cmd[3] = cmd_id;
@@ -362,13 +362,13 @@ fu_lenovo_dock_device_function1(FuLenovoDockClassId cmd_class,
 			PacketSize);
 		g_print("\n");
 		switch (cmd2[0]) {
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT:
+		case FU_LENOVO_DOCK_STATUS_DEFAULT:
 			return REPORT_DATA_FAILED;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_BUSY:
+		case FU_LENOVO_DOCK_STATUS_BUSY:
 			count++;
 			g_usleep(FU_LENOVO_DOCK_DEVICE_DELAY);
 			break;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_SUCCESS:
+		case FU_LENOVO_DOCK_STATUS_SUCCESS:
 			if (cmd2[4] != flash_id) {
 				// g_print("Function error: %d",REPORT_DATA_FAILED);
 				return REPORT_DATA_FAILED;
@@ -379,11 +379,11 @@ fu_lenovo_dock_device_function1(FuLenovoDockClassId cmd_class,
 				return SUCCESS;
 			}
 
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_FALIURE:
+		case FU_LENOVO_DOCK_STATUS_FALIURE:
 			return COMMAND_FALIURE;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_TIMEOUT:
+		case FU_LENOVO_DOCK_STATUS_TIMEOUT:
 			return COMMAND_TIMEOUT;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_NOT_SUPPORT:
+		case FU_LENOVO_DOCK_STATUS_NOT_SUPPORT:
 			return AP_TOOL_FAILED;
 		}
 	} while (count < FU_LENOVO_DOCK_DEVICE_RETRIES);
@@ -451,7 +451,7 @@ fu_lenovo_dock_device_function2(guint8 cmd_class,
 	cmd2[0] = 0x10;
 
 	// Header
-	cmd[1] = FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT;
+	cmd[1] = FU_LENOVO_DOCK_STATUS_DEFAULT;
 	cmd[2] = bufsz;
 	cmd[3] = cmd_class;
 	cmd[4] = cmd_id;
@@ -484,13 +484,13 @@ fu_lenovo_dock_device_function2(guint8 cmd_class,
 			PacketSize);
 		g_print("\n");
 		switch (cmd2[0 + 1]) { /* report_id is [0]*/
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT:
+		case FU_LENOVO_DOCK_STATUS_DEFAULT:
 			return REPORT_DATA_FAILED;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_BUSY:
+		case FU_LENOVO_DOCK_STATUS_BUSY:
 			count++;
 			g_usleep(FU_LENOVO_DOCK_DEVICE_DELAY);
 			break;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_SUCCESS:
+		case FU_LENOVO_DOCK_STATUS_SUCCESS:
 			if (cmd2[4 + 1] != flash_id) { /* report_id is [0]*/
 				return REPORT_DATA_FAILED;
 			} else {
@@ -500,11 +500,11 @@ fu_lenovo_dock_device_function2(guint8 cmd_class,
 				return SUCCESS;
 			}
 
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_FALIURE:
+		case FU_LENOVO_DOCK_STATUS_FALIURE:
 			return COMMAND_FALIURE;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_TIMEOUT:
+		case FU_LENOVO_DOCK_STATUS_TIMEOUT:
 			return COMMAND_TIMEOUT;
-		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_NOT_SUPPORT:
+		case FU_LENOVO_DOCK_STATUS_NOT_SUPPORT:
 			return AP_TOOL_FAILED;
 		}
 	} while (count < FU_LENOVO_DOCK_DEVICE_RETRIES);
@@ -729,8 +729,7 @@ fu_lenovo_dock_device_write_flash_id_data(gint flashId,
 	if (flashUpdateCheckSignatureData != 0)
 		return flashUpdateCheckSignatureData;
 	guint8 *flashUpdateCheckSignatureBody = GetCommandBody1(output1);
-	if (flashUpdateCheckSignatureBody[1] !=
-	    (guint8)FU_LENOVO_DOCK_FLASH_MEMORY_SELF_VERIFY_RESULT_PASS)
+	if (flashUpdateCheckSignatureBody[1] != (guint8)FU_LENOVO_DOCK_FLASH_VERIFY_RESULT_PASS)
 		return UPDATE_DOCK_FAILED;
 
 	guint8 writeFlashUpdateCheckVerify[1];
@@ -1132,16 +1131,16 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	}
 
 	// Set Flash Memory Access (Release)
-	guint8 SetFlashMemoryAccessRelease[2];
-	SetFlashMemoryAccessRelease[0] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_ACCCESS_CTRL;
-	SetFlashMemoryAccessRelease[1] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CTRL_RELEASE;
+	guint8 FlashSetAccessRelease[2];
+	FlashSetAccessRelease[0] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_ACCCESS_CTRL;
+	FlashSetAccessRelease[1] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CTRL_RELEASE;
 	for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE2_LEN; i++)
 		output2[i] = 0;
 	r = fu_lenovo_dock_device_function2(
 	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
 	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
 	    0,
-	    SetFlashMemoryAccessRelease,
+	    FlashSetAccessRelease,
 	    2,
 	    output2);
 

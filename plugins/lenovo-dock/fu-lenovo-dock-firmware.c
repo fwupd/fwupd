@@ -78,7 +78,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		guint32 physical_addr;
 		guint32 target_size;
 		guint32 max_size;
-		FuLenovoDockFlashId component_id;
+		FuLenovoDockFlashId flash_id;
 		g_autoptr(FuStructLenovoDockUsageItem) st_item = NULL;
 		g_autoptr(GInputStream) stream_partial = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
@@ -87,13 +87,13 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		    fu_struct_lenovo_dock_usage_item_parse_stream(stream_usage, offset, error);
 		if (st_item == NULL)
 			return FALSE;
-		component_id = fu_struct_lenovo_dock_usage_item_get_component_id(st_item);
+		flash_id = fu_struct_lenovo_dock_usage_item_get_flash_id(st_item);
 		physical_addr = fu_struct_lenovo_dock_usage_item_get_physical_address(st_item);
 		target_size = fu_struct_lenovo_dock_usage_item_get_target_size(st_item);
 		max_size = fu_struct_lenovo_dock_usage_item_get_max_size(st_item);
-		fu_firmware_set_idx(img, component_id);
-		if (component_id <= FU_LENOVO_DOCK_FLASH_ID_DBG)
-			fu_firmware_set_id(img, fu_lenovo_dock_flash_id_to_string(component_id));
+		fu_firmware_set_idx(img, flash_id);
+		if (flash_id <= FU_LENOVO_DOCK_FLASH_ID_DBG)
+			fu_firmware_set_id(img, fu_lenovo_dock_flash_id_to_string(flash_id));
 		fu_firmware_set_version_raw(
 		    img,
 		    fu_struct_lenovo_dock_usage_item_get_target_version(st_item));
