@@ -11,9 +11,6 @@
 #include "fu-lenovo-dock-image.h"
 #include "fu-lenovo-dock-struct.h"
 
-/* this can be set using Flags=example in the quirk file  */
-#define FU_LENOVO_DOCK_DEVICE_FLAG_EXAMPLE "example"
-
 #define FU_LENOVO_DOCK_DEVICE_IFACE1_LEN 64
 #define FU_LENOVO_DOCK_DEVICE_IFACE2_LEN 272
 
@@ -627,10 +624,12 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 44, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
 	/* request access to the SPI */
 	if (!fu_lenovo_dock_device_set_flash_memory_access(
@@ -818,7 +817,6 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_icon(FU_DEVICE(self), "icon-name");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LENOVO_DOCK_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_FLAG_EXAMPLE);
 }
 
 static void
