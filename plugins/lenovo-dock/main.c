@@ -9,10 +9,10 @@
 #include <sys/stat.h>
 #include <threads.h>
 
-#include "fu-lenovo-ldc-struct.h"
+#include "fu-lenovo-dock-struct.h"
 
 #define CONST_UsageTableFlashID		      0xff
-#define FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE  0x1000
+#define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE 0x1000
 
 guint8 CurrentFwVerForGUI[8][4];
 
@@ -33,21 +33,21 @@ static const guint16 DockPid = 0x111e;
 
 struct FlashIdAttribute {
 	gint FLashId;
-	FuLenovoLdcExternalFlashIdPurpose Purpose;
+	FuLenovoDockExternalFlashIdPurpose Purpose;
 	gint StorageSize;
 	gint EraseSize;
 	gint ProgramSize;
 };
 
-#define FU_LENOVO_LDC_DEVICE_IFACE1_LEN 64
-#define FU_LENOVO_LDC_DEVICE_IFACE2_LEN 272
+#define FU_LENOVO_DOCK_DEVICE_IFACE1_LEN 64
+#define FU_LENOVO_DOCK_DEVICE_IFACE2_LEN 272
 
 // FlashSize
 #define CONST_UsageInfo			    4096
-#define FU_LENOVO_LDC_DEVICE_SIGNATURE_SIZE 256
+#define FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE 256
 
 // Flash Address
-#define FU_LENOVO_LDC_DEVICE_USAGE_INFO_START 0xFFF000
+#define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_START 0xFFF000
 
 libusb_context *ctx = NULL;
 volatile gint device_connected = 1; // 1表示设备连接，0表示设备已断开
@@ -69,8 +69,8 @@ static const gint XML_FILE_FORMAT_ERROR = 265;
 static const gint UPDATE_USAGE_INFORMATION_PAGE_FAILED = 1030;
 static const gint UPDATE_DOCK_FAILED = 0x400;
 
-#define FU_LENOVO_LDC_DEVICE_DELAY   25000 // ms
-#define FU_LENOVO_LDC_DEVICE_RETRIES 1600
+#define FU_LENOVO_DOCK_DEVICE_DELAY   25000 // ms
+#define FU_LENOVO_DOCK_DEVICE_RETRIES 1600
 
 /*Phase-1 Firmware Update Status RC*/
 typedef enum {
@@ -93,7 +93,7 @@ struct UsageInformation {
 	struct FlashIdUsageInformation *FlashIdList;
 };
 
-// G_STATIC_ASSERT(sizeof(FuLenovoLdcSignType) == 4);
+// G_STATIC_ASSERT(sizeof(FuLenovoDockSignType) == 4);
 
 static guint32
 _fu_memread_uintn(guint8 *buf, gint length)
@@ -134,7 +134,7 @@ arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 static guint8 *
 GetBytes(struct UsageInformation targetUsageInformationTable)
 {
-	guint8 *table = (guint8 *)g_malloc0(FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE);
+	guint8 *table = (guint8 *)g_malloc0(FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE);
 	// Header
 	table[0] = targetUsageInformationTable.Totalnumber;
 	table[1] = (targetUsageInformationTable.MajorVersion << 4) +
@@ -183,7 +183,7 @@ GetBytes(struct UsageInformation targetUsageInformationTable)
 }
 
 static guint8 *
-fu_lenovo_ldc_device_get_composite_data(gint addr, gint size, char *buf)
+fu_lenovo_dock_device_get_composite_data(gint addr, gint size, char *buf)
 {
 	guint8 *temp = (guint8 *)g_malloc0(size);
 	for (gint i = 0; i < size; i++) {
@@ -193,22 +193,22 @@ fu_lenovo_ldc_device_get_composite_data(gint addr, gint size, char *buf)
 }
 
 static gboolean
-fu_lenovo_ldc_device_verify(gint flashId,
-			    struct UsageInformation targetUsageInformationTable,
-			    char *compositeImageData)
+fu_lenovo_dock_device_verify(gint flashId,
+			     struct UsageInformation targetUsageInformationTable,
+			     char *compositeImageData)
 {
 	gint maxSize =
 	    _fu_memread_uintn(targetUsageInformationTable.FlashIdList[flashId].MaxSize, 4);
 	gint targetFwSize =
 	    _fu_memread_uintn(targetUsageInformationTable.FlashIdList[flashId].TargetFwFileSize, 4);
-	if (targetFwSize + FU_LENOVO_LDC_DEVICE_SIGNATURE_SIZE > maxSize)
+	if (targetFwSize + FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE > maxSize)
 		return FALSE;
 
 	gint startAddr =
 	    _fu_memread_uintn(targetUsageInformationTable.FlashIdList[flashId].PhysicalAddress, 4) +
-	    FU_LENOVO_LDC_DEVICE_SIGNATURE_SIZE;
+	    FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE;
 	guint8 *flashIdImageData =
-	    fu_lenovo_ldc_device_get_composite_data(startAddr, targetFwSize, compositeImageData);
+	    fu_lenovo_dock_device_get_composite_data(startAddr, targetFwSize, compositeImageData);
 	gint a =
 	    _fu_memread_uintn(targetUsageInformationTable.FlashIdList[flashId].TargetFwFileCrc32,
 			      4);
@@ -220,11 +220,11 @@ fu_lenovo_ldc_device_verify(gint flashId,
 }
 
 struct FlashIdAttribute
-fu_lenovo_ldc_device_get_flash_id_attr(guint8 *buf)
+fu_lenovo_dock_device_get_flash_id_attr(guint8 *buf)
 {
 	struct FlashIdAttribute fa;
 	fa.FLashId = buf[0];
-	fa.Purpose = (FuLenovoLdcExternalFlashIdPurpose)buf[1];
+	fa.Purpose = (FuLenovoDockExternalFlashIdPurpose)buf[1];
 
 	gint count = 2;
 	guint8 storageBuf[4];
@@ -257,7 +257,7 @@ _fu_hidraw_device_set_feature(guint8 *cmd, gint interface)
 					      0x0300 + cmd[0],
 					      interface,
 					      cmd,
-					      FU_LENOVO_LDC_DEVICE_IFACE1_LEN,
+					      FU_LENOVO_DOCK_DEVICE_IFACE1_LEN,
 					      0);
 		// g_print("set: %d\n",res);
 		break;
@@ -268,7 +268,7 @@ _fu_hidraw_device_set_feature(guint8 *cmd, gint interface)
 					      0x0300 + cmd[0],
 					      interface,
 					      cmd,
-					      FU_LENOVO_LDC_DEVICE_IFACE2_LEN,
+					      FU_LENOVO_DOCK_DEVICE_IFACE2_LEN,
 					      0);
 		// g_print("set: %d\n",res);
 		break;
@@ -292,7 +292,7 @@ _fu_hidraw_device_get_feature(guint8 *cmd, gint interface)
 					      0x0300 + cmd[0],
 					      interface,
 					      cmd,
-					      FU_LENOVO_LDC_DEVICE_IFACE1_LEN,
+					      FU_LENOVO_DOCK_DEVICE_IFACE1_LEN,
 					      0);
 		// g_print("get: %d\n",res);
 		break;
@@ -303,7 +303,7 @@ _fu_hidraw_device_get_feature(guint8 *cmd, gint interface)
 					      0x0300 + cmd[0],
 					      interface,
 					      cmd,
-					      FU_LENOVO_LDC_DEVICE_IFACE2_LEN,
+					      FU_LENOVO_DOCK_DEVICE_IFACE2_LEN,
 					      0);
 		// g_print("get: %d\n",res);
 		break;
@@ -313,15 +313,15 @@ _fu_hidraw_device_get_feature(guint8 *cmd, gint interface)
 }
 
 static gint
-fu_lenovo_ldc_device_function1(FuLenovoLdcClassId cmd_class,
-			       guint8 cmd_id,
-			       guint8 flash_id,
-			       guint8 *buf,
-			       gsize bufsz,
-			       guint8 *output)
+fu_lenovo_dock_device_function1(FuLenovoDockClassId cmd_class,
+				guint8 cmd_id,
+				guint8 flash_id,
+				guint8 *buf,
+				gsize bufsz,
+				guint8 *output)
 {
 	gint interface = 1;
-	gint PacketSize = FU_LENOVO_LDC_DEVICE_IFACE1_LEN;
+	gint PacketSize = FU_LENOVO_DOCK_DEVICE_IFACE1_LEN;
 
 	guint8 *cmd = (guint8 *)g_malloc0(PacketSize);
 	guint8 *cmd2 = (guint8 *)g_malloc0(PacketSize);
@@ -329,7 +329,7 @@ fu_lenovo_ldc_device_function1(FuLenovoLdcClassId cmd_class,
 	cmd2[0] = 0x00;
 
 	// Header
-	cmd[0] = FU_LENOVO_LDC_TARGET_STATUS_COMMAND_DEFAULT;
+	cmd[0] = FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT;
 	cmd[1] = bufsz;
 	cmd[2] = cmd_class;
 	cmd[3] = cmd_id;
@@ -362,13 +362,13 @@ fu_lenovo_ldc_device_function1(FuLenovoLdcClassId cmd_class,
 			PacketSize);
 		g_print("\n");
 		switch (cmd2[0]) {
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_DEFAULT:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT:
 			return REPORT_DATA_FAILED;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_BUSY:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_BUSY:
 			count++;
-			g_usleep(FU_LENOVO_LDC_DEVICE_DELAY);
+			g_usleep(FU_LENOVO_DOCK_DEVICE_DELAY);
 			break;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_SUCCESS:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_SUCCESS:
 			if (cmd2[4] != flash_id) {
 				// g_print("Function error: %d",REPORT_DATA_FAILED);
 				return REPORT_DATA_FAILED;
@@ -379,32 +379,32 @@ fu_lenovo_ldc_device_function1(FuLenovoLdcClassId cmd_class,
 				return SUCCESS;
 			}
 
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_FALIURE:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_FALIURE:
 			return COMMAND_FALIURE;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_TIMEOUT:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_TIMEOUT:
 			return COMMAND_TIMEOUT;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_NOT_SUPPORT:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_NOT_SUPPORT:
 			return AP_TOOL_FAILED;
 		}
-	} while (count < FU_LENOVO_LDC_DEVICE_RETRIES);
+	} while (count < FU_LENOVO_DOCK_DEVICE_RETRIES);
 
 	return COMMAND_OVER_RETRY_TIMES;
 }
 
 static void
-fu_lenovo_ldc_device_trigger_phase2(gboolean noUnplug)
+fu_lenovo_dock_device_trigger_phase2(gboolean noUnplug)
 {
 	guint8 DfuCtrl[2] = {0};
-	guint8 output1[FU_LENOVO_LDC_DEVICE_IFACE1_LEN] = {0};
-	DfuCtrl[0] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED;
+	guint8 output1[FU_LENOVO_DOCK_DEVICE_IFACE1_LEN] = {0};
+	DfuCtrl[0] = FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED;
 	if (noUnplug) {
-		DfuCtrl[1] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_NON_UNPLUG;
+		DfuCtrl[1] = FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_NON_UNPLUG;
 	} else {
-		DfuCtrl[1] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_UNPLUG;
+		DfuCtrl[1] = FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_UNPLUG;
 	}
-	gint r = fu_lenovo_ldc_device_function1(
-	    FU_LENOVO_LDC_CLASS_ID_DOCK,
-	    FU_LENOVO_LDC_EXTERNAL_DOCK_CMD_SET_DOCK_FIRMWARE_UPGRADE_CTRL,
+	gint r = fu_lenovo_dock_device_function1(
+	    FU_LENOVO_DOCK_CLASS_ID_DOCK,
+	    FU_LENOVO_DOCK_EXTERNAL_DOCK_CMD_SET_DOCK_FIRMWARE_UPGRADE_CTRL,
 	    0,
 	    DfuCtrl,
 	    2,
@@ -434,15 +434,15 @@ GetCommandBody2(guint8 *buf)
 }
 
 static gint
-fu_lenovo_ldc_device_function2(guint8 cmd_class,
-			       guint8 cmd_id,
-			       guint8 flash_id,
-			       guint8 *buf,
-			       gint bufsz,
-			       guint8 *output)
+fu_lenovo_dock_device_function2(guint8 cmd_class,
+				guint8 cmd_id,
+				guint8 flash_id,
+				guint8 *buf,
+				gint bufsz,
+				guint8 *output)
 {
 	gint interface = 2;
-	gint PacketSize = FU_LENOVO_LDC_DEVICE_IFACE2_LEN;
+	gint PacketSize = FU_LENOVO_DOCK_DEVICE_IFACE2_LEN;
 	guint8 *cmd = (guint8 *)g_malloc0(PacketSize);
 	guint8 *cmd2 = (guint8 *)g_malloc0(PacketSize);
 
@@ -451,7 +451,7 @@ fu_lenovo_ldc_device_function2(guint8 cmd_class,
 	cmd2[0] = 0x10;
 
 	// Header
-	cmd[1] = FU_LENOVO_LDC_TARGET_STATUS_COMMAND_DEFAULT;
+	cmd[1] = FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT;
 	cmd[2] = bufsz;
 	cmd[3] = cmd_class;
 	cmd[4] = cmd_id;
@@ -484,13 +484,13 @@ fu_lenovo_ldc_device_function2(guint8 cmd_class,
 			PacketSize);
 		g_print("\n");
 		switch (cmd2[0 + 1]) { /* report_id is [0]*/
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_DEFAULT:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_DEFAULT:
 			return REPORT_DATA_FAILED;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_BUSY:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_BUSY:
 			count++;
-			g_usleep(FU_LENOVO_LDC_DEVICE_DELAY);
+			g_usleep(FU_LENOVO_DOCK_DEVICE_DELAY);
 			break;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_SUCCESS:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_SUCCESS:
 			if (cmd2[4 + 1] != flash_id) { /* report_id is [0]*/
 				return REPORT_DATA_FAILED;
 			} else {
@@ -500,59 +500,59 @@ fu_lenovo_ldc_device_function2(guint8 cmd_class,
 				return SUCCESS;
 			}
 
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_FALIURE:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_FALIURE:
 			return COMMAND_FALIURE;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_TIMEOUT:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_TIMEOUT:
 			return COMMAND_TIMEOUT;
-		case FU_LENOVO_LDC_TARGET_STATUS_COMMAND_NOT_SUPPORT:
+		case FU_LENOVO_DOCK_TARGET_STATUS_COMMAND_NOT_SUPPORT:
 			return AP_TOOL_FAILED;
 		}
-	} while (count < FU_LENOVO_LDC_DEVICE_RETRIES);
+	} while (count < FU_LENOVO_DOCK_DEVICE_RETRIES);
 	return COMMAND_OVER_RETRY_TIMES;
 }
 
 static gint
-fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
+fu_lenovo_dock_device_write_usage_information_table(guint8 *UsageInformationData)
 {
 	gint errorHandle = 0;
 	// Get Usage Information Attribute
-	guint8 output1[FU_LENOVO_LDC_DEVICE_IFACE1_LEN] = {0};
-	guint8 output2[FU_LENOVO_LDC_DEVICE_IFACE2_LEN] = {0};
+	guint8 output1[FU_LENOVO_DOCK_DEVICE_IFACE1_LEN] = {0};
+	guint8 output2[FU_LENOVO_DOCK_DEVICE_IFACE2_LEN] = {0};
 
 	gint UsageInformationAttributeData =
-	    fu_lenovo_ldc_device_function1(FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-					   FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
-					   CONST_UsageTableFlashID,
-					   0,
-					   0,
-					   output1);
+	    fu_lenovo_dock_device_function1(FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+					    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
+					    CONST_UsageTableFlashID,
+					    0,
+					    0,
+					    output1);
 	if (UsageInformationAttributeData != 0)
 		return UsageInformationAttributeData;
 	guint8 *UsageInformationAttributeBody = GetCommandBody1(output1);
 	struct FlashIdAttribute UsageInformationAttribute =
-	    fu_lenovo_ldc_device_get_flash_id_attr(UsageInformationAttributeBody);
+	    fu_lenovo_dock_device_get_flash_id_attr(UsageInformationAttributeBody);
 
 	// Set Usage Information Memory Access (Erase)
-	for (gint readBytes = 0; readBytes < FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE;
+	for (gint readBytes = 0; readBytes < FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE;
 	     readBytes += UsageInformationAttribute.EraseSize) {
-		gint address = FU_LENOVO_LDC_DEVICE_USAGE_INFO_START + readBytes;
+		gint address = FU_LENOVO_DOCK_DEVICE_USAGE_INFO_START + readBytes;
 		guint8 *eraseUsageInformationAddress = _fu_memwrite_uint32(address);
 		guint8 setUsageInformationMemoryErase[2 + 4 + 2];
 		for (gint i = 0; i < 2 + 4 + 2; i++)
 			setUsageInformationMemoryErase[i] = 0;
 
 		setUsageInformationMemoryErase[0] =
-		    FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_DOCK_ERASE_WITH_ADDRESS;
+		    FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_DOCK_ERASE_WITH_ADDRESS;
 		setUsageInformationMemoryErase[1] = 0x00;
 		for (gint i = 0; i < 4; i++)
 			setUsageInformationMemoryErase[2 + 2 + i] = eraseUsageInformationAddress[i];
 		for (gint i = 0; i < 2; i++)
 			setUsageInformationMemoryErase[2 + i] =
 			    _fu_memwrite_uint32(UsageInformationAttribute.EraseSize)[i];
-		memset(output2, 0, FU_LENOVO_LDC_DEVICE_IFACE2_LEN);
-		errorHandle = fu_lenovo_ldc_device_function2(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
+		memset(output2, 0, FU_LENOVO_DOCK_DEVICE_IFACE2_LEN);
+		errorHandle = fu_lenovo_dock_device_function2(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
 		    CONST_UsageTableFlashID,
 		    setUsageInformationMemoryErase,
 		    2 + 4 + 2,
@@ -562,16 +562,16 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 	}
 
 	// Set Usage Information Memory Access (Program)
-	for (gint readBytes = 0; readBytes < FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE;
+	for (gint readBytes = 0; readBytes < FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE;
 	     readBytes += UsageInformationAttribute.ProgramSize) {
-		gint address = FU_LENOVO_LDC_DEVICE_USAGE_INFO_START + readBytes;
+		gint address = FU_LENOVO_DOCK_DEVICE_USAGE_INFO_START + readBytes;
 		guint8 *addrBytes = _fu_memwrite_uint32(address);
 
 		gint payloadLength = 2 + 4 + 2;
 		guint8 write[UsageInformationAttribute.ProgramSize + payloadLength];
 		for (gint i = 0; i < UsageInformationAttribute.ProgramSize + payloadLength; i++)
 			write[i] = 0;
-		write[0] = FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_DOCK_PROGRAM_WITH_ADDRESS;
+		write[0] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_DOCK_PROGRAM_WITH_ADDRESS;
 		write[1] = 0x00;
 		for (gint i = 0; i < 4; i++)
 			write[2 + 2 + i] = addrBytes[i];
@@ -581,11 +581,11 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 		for (gint i = 0; i < UsageInformationAttribute.ProgramSize; i++)
 			write[payloadLength + i] = UsageInformationData[readBytes + i];
 
-		for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE2_LEN; i++)
+		for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE2_LEN; i++)
 			output2[i] = 0;
-		errorHandle = fu_lenovo_ldc_device_function2(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
+		errorHandle = fu_lenovo_dock_device_function2(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
 		    CONST_UsageTableFlashID,
 		    write,
 		    (UsageInformationAttribute.ProgramSize + payloadLength),
@@ -596,11 +596,11 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 
 	// Get Usage Information Page Self-Verify
 	guint8 writeSelfVerify[1];
-	writeSelfVerify[0] = FU_LENOVO_LDC_FLASH_MEMORY_SELF_VERIFY_TYPE_CRC;
-	memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
-	gint pageSelfVerifyData = fu_lenovo_ldc_device_function1(
-	    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-	    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
+	writeSelfVerify[0] = FU_LENOVO_DOCK_FLASH_MEMORY_SELF_VERIFY_TYPE_CRC;
+	memset(output1, 0, FU_LENOVO_DOCK_DEVICE_IFACE1_LEN);
+	gint pageSelfVerifyData = fu_lenovo_dock_device_function1(
+	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
 	    CONST_UsageTableFlashID,
 	    writeSelfVerify,
 	    1,
@@ -626,18 +626,18 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 }
 
 static gint
-fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
-					 struct FlashIdAttribute flashIdAttribute,
-					 struct UsageInformation changeTagetUsageInformationTable,
-					 char *compositeImageData)
+fu_lenovo_dock_device_write_flash_id_data(gint flashId,
+					  struct FlashIdAttribute flashIdAttribute,
+					  struct UsageInformation changeTagetUsageInformationTable,
+					  char *compositeImageData)
 {
 	gint errorHandle = 0;
-	guint8 output1[FU_LENOVO_LDC_DEVICE_IFACE1_LEN];
-	guint8 output2[FU_LENOVO_LDC_DEVICE_IFACE2_LEN];
+	guint8 output1[FU_LENOVO_DOCK_DEVICE_IFACE1_LEN];
+	guint8 output2[FU_LENOVO_DOCK_DEVICE_IFACE2_LEN];
 	// Check FW Data In Host Self-Verify
-	if (!fu_lenovo_ldc_device_verify(flashId,
-					 changeTagetUsageInformationTable,
-					 compositeImageData))
+	if (!fu_lenovo_dock_device_verify(flashId,
+					  changeTagetUsageInformationTable,
+					  compositeImageData))
 		return UPDATE_USAGE_INFORMATION_PAGE_FAILED;
 
 	// Set Flash Memory Access (Erase)
@@ -654,7 +654,7 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
 		for (gint i = 0; i < 2 + 2 + 4; i++)
 			setFlashMemoryErase[i] = 0;
 		setFlashMemoryErase[0] =
-		    FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_DOCK_ERASE_WITH_ADDRESS;
+		    FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_DOCK_ERASE_WITH_ADDRESS;
 		setFlashMemoryErase[1] = 0x00;
 		gint eraseAddr = _fu_memread_uintn(eraseStartAddrBytes, 4) + eraseBytes;
 		for (gint i = 0; i < 2; i++)
@@ -663,11 +663,11 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
 		for (gint i = 0; i < 4; i++)
 			setFlashMemoryErase[2 + 2 + i] = _fu_memwrite_uint32(eraseAddr)[i];
 
-		for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE2_LEN; i++)
+		for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE2_LEN; i++)
 			output2[i] = 0;
-		errorHandle = fu_lenovo_ldc_device_function2(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
+		errorHandle = fu_lenovo_dock_device_function2(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
 		    flashId,
 		    setFlashMemoryErase,
 		    2 + 2 + 4,
@@ -682,17 +682,17 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
 			      4);
 	gint flashIdbufsz =
 	    _fu_memread_uintn(changeTagetUsageInformationTable.FlashIdList[flashId].MaxSize, 4);
-	guint8 *flashIdCompositeData = fu_lenovo_ldc_device_get_composite_data(flashIdStartAddr,
-									       flashIdbufsz,
-									       compositeImageData);
-	for (gint readBytes = 0; readBytes < targetFwSize + FU_LENOVO_LDC_DEVICE_SIGNATURE_SIZE;
+	guint8 *flashIdCompositeData = fu_lenovo_dock_device_get_composite_data(flashIdStartAddr,
+										flashIdbufsz,
+										compositeImageData);
+	for (gint readBytes = 0; readBytes < targetFwSize + FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE;
 	     readBytes += flashIdAttribute.ProgramSize) {
 		gint address = flashIdStartAddr + readBytes;
 		guint8 *addrBytes = _fu_memwrite_uint32(address);
 
 		gint payloadLength = 2 + 4 + 2;
 		guint8 write[flashIdAttribute.ProgramSize + payloadLength];
-		write[0] = FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_DOCK_PROGRAM_WITH_ADDRESS;
+		write[0] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_DOCK_PROGRAM_WITH_ADDRESS;
 		write[1] = 0x00;
 		for (gint i = 0; i < 4; i++)
 			write[2 + 2 + i] = addrBytes[i];
@@ -701,11 +701,11 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
 		for (gint i = 0; i < flashIdAttribute.ProgramSize; i++)
 			write[payloadLength + i] = flashIdCompositeData[readBytes + i];
 
-		for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE2_LEN; i++)
+		for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE2_LEN; i++)
 			output2[i] = 0;
-		errorHandle = fu_lenovo_ldc_device_function2(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
+		errorHandle = fu_lenovo_dock_device_function2(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
 		    flashId,
 		    write,
 		    flashIdAttribute.ProgramSize + payloadLength,
@@ -716,12 +716,12 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
 
 	// Get Flash Usage Information Memory Self-Verify
 	guint8 writeFlashUpdateCheckSignature[1];
-	writeFlashUpdateCheckSignature[0] = FU_LENOVO_LDC_FLASH_MEMORY_SELF_VERIFY_TYPE_SIGNATURE;
-	for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE1_LEN; i++)
+	writeFlashUpdateCheckSignature[0] = FU_LENOVO_DOCK_FLASH_MEMORY_SELF_VERIFY_TYPE_SIGNATURE;
+	for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE1_LEN; i++)
 		output1[i] = 0;
-	gint flashUpdateCheckSignatureData = fu_lenovo_ldc_device_function1(
-	    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-	    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
+	gint flashUpdateCheckSignatureData = fu_lenovo_dock_device_function1(
+	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
 	    flashId,
 	    writeFlashUpdateCheckSignature,
 	    1,
@@ -730,16 +730,16 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
 		return flashUpdateCheckSignatureData;
 	guint8 *flashUpdateCheckSignatureBody = GetCommandBody1(output1);
 	if (flashUpdateCheckSignatureBody[1] !=
-	    (guint8)FU_LENOVO_LDC_FLASH_MEMORY_SELF_VERIFY_RESULT_PASS)
+	    (guint8)FU_LENOVO_DOCK_FLASH_MEMORY_SELF_VERIFY_RESULT_PASS)
 		return UPDATE_DOCK_FAILED;
 
 	guint8 writeFlashUpdateCheckVerify[1];
-	writeFlashUpdateCheckVerify[0] = FU_LENOVO_LDC_FLASH_MEMORY_SELF_VERIFY_TYPE_CRC;
-	for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE1_LEN; i++)
+	writeFlashUpdateCheckVerify[0] = FU_LENOVO_DOCK_FLASH_MEMORY_SELF_VERIFY_TYPE_CRC;
+	for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE1_LEN; i++)
 		output1[i] = 0;
-	gint flashUpdateCheckVerifyData = fu_lenovo_ldc_device_function1(
-	    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-	    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
+	gint flashUpdateCheckVerifyData = fu_lenovo_dock_device_function1(
+	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_SELF_VERIFY,
 	    flashId,
 	    writeFlashUpdateCheckVerify,
 	    1,
@@ -782,7 +782,7 @@ fu_lenovo_ldc_device_write_flash_id_data(gint flashId,
  */
 
 static gint
-fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
+fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 {
 	// gboolean forceUpdate = FALSE;
 	// gboolean noUnplug = FALSE;
@@ -798,16 +798,17 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	}
 	// Set Flash Memory Access (Request)
 	guint8 setFlashMemoryRequest[2];
-	guint8 output1[FU_LENOVO_LDC_DEVICE_IFACE1_LEN] = {0};
-	guint8 output2[FU_LENOVO_LDC_DEVICE_IFACE2_LEN] = {0};
-	setFlashMemoryRequest[0] = FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_ACCCESS_CTRL;
-	setFlashMemoryRequest[1] = FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CTRL_REQUEST;
-	r = fu_lenovo_ldc_device_function2(FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-					   FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
-					   0,
-					   setFlashMemoryRequest,
-					   2,
-					   output2);
+	guint8 output1[FU_LENOVO_DOCK_DEVICE_IFACE1_LEN] = {0};
+	guint8 output2[FU_LENOVO_DOCK_DEVICE_IFACE2_LEN] = {0};
+	setFlashMemoryRequest[0] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_ACCCESS_CTRL;
+	setFlashMemoryRequest[1] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CTRL_REQUEST;
+	r = fu_lenovo_dock_device_function2(
+	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
+	    0,
+	    setFlashMemoryRequest,
+	    2,
+	    output2);
 	if (r != 0) {
 		g_print("Set Flash Memory Access (Request) error: %d\n", r);
 		return FWU_OTA_DEPLOYEEING;
@@ -818,25 +819,25 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	guint8 ds[FlashIdUsageLength];
 	FILE *fp;
 	if (stat("FW/ldc_u4_usage_information_table.bin", &fileInfo) == 0) {
-		if (fileInfo.st_size != FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE) {
+		if (fileInfo.st_size != FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE) {
 			return USAGE_INFORMATION_FILE_ERROR;
 		} else {
 			/*read the file actions*/
 			fp = fopen("FW/ldc_u4_usage_information_table.bin", "rb");
-			char buffer[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE];
+			char buffer[FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE];
 			size_t bytesRead =
-			    fread(&buffer, sizeof(char), FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE, fp);
+			    fread(&buffer, sizeof(char), FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE, fp);
 			targetUsageInformationTable.Totalnumber = (guint8)buffer[0];
 			targetUsageInformationTable.MajorVersion =
 			    (((guint8)buffer[1] >> 4) & 0x0f);
 			targetUsageInformationTable.MinorVersion = ((guint8)buffer[1] & 0x0f);
-			targetUsageInformationTable.Dsa = (FuLenovoLdcSignType)buffer[2];
+			targetUsageInformationTable.Dsa = (FuLenovoDockSignType)buffer[2];
 			targetUsageInformationTable.IoTUpdateFlag = (guint8)buffer[3];
 			for (gint i = 0; i < 4; i++) {
 				targetUsageInformationTable.CompositeFwVersion[i] =
 				    (guint8)buffer[4 + i];
 				targetUsageInformationTable.Crc32[i] =
-				    (guint8)buffer[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE - 4 + i];
+				    (guint8)buffer[FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE - 4 + i];
 			}
 			for (gint i = 0; i < 2; i++) {
 				targetUsageInformationTable.DockPid[i] = (guint8)buffer[8 + i];
@@ -871,7 +872,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			if (_fu_memread_uintn(targetUsageInformationTable.Crc32, 4) !=
 			    fu_crc32(FU_CRC_KIND_B32_STANDARD,
 				     buffer,
-				     FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE - 4))
+				     FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE - 4))
 				return USAGE_INFORMATION_CRC_FAILED;
 
 			guint16 targetPid =
@@ -882,14 +883,14 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		}
 	}
 	// Check Flash Id List Count
-	memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
+	memset(output1, 0, FU_LENOVO_DOCK_DEVICE_IFACE1_LEN);
 	gint getFlashIdListData =
-	    fu_lenovo_ldc_device_function1(FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-					   FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ID_LIST,
-					   0,
-					   0,
-					   0,
-					   output1);
+	    fu_lenovo_dock_device_function1(FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+					    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_ID_LIST,
+					    0,
+					    0,
+					    0,
+					    output1);
 	guint8 flashIdListTotal = output1[6];
 	guint8 flashIdList[flashIdListTotal - 1];
 	for (gint i = 0; i < flashIdListTotal - 1; i++) {
@@ -906,25 +907,25 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		gint payload = 8;
 		guint8 setmcuUsageInformationTable[payload];
 		setmcuUsageInformationTable[0] =
-		    FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_DOCK_READ_WITH_ADDRESS;
+		    FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_DOCK_READ_WITH_ADDRESS;
 		setmcuUsageInformationTable[1] = 0x00;
 
 		guint8 *size = _fu_memwrite_uint32(readCountByCycle);
 		setmcuUsageInformationTable[2] = size[0];
 		setmcuUsageInformationTable[3] = size[1];
 
-		guint8 *addr = _fu_memwrite_uint32(FU_LENOVO_LDC_DEVICE_USAGE_INFO_START +
+		guint8 *addr = _fu_memwrite_uint32(FU_LENOVO_DOCK_DEVICE_USAGE_INFO_START +
 						   mcuUsageInformationCount);
 		setmcuUsageInformationTable[4] = addr[0];
 		setmcuUsageInformationTable[5] = addr[1];
 		setmcuUsageInformationTable[6] = addr[2];
 		setmcuUsageInformationTable[7] = addr[3];
 
-		for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE2_LEN; i++)
+		for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE2_LEN; i++)
 			output2[i] = 0;
-		gint tempBytes = fu_lenovo_ldc_device_function2(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_ACCESS,
+		gint tempBytes = fu_lenovo_dock_device_function2(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_MEMORY_ACCESS,
 		    CONST_UsageTableFlashID,
 		    setmcuUsageInformationTable,
 		    payload,
@@ -940,7 +941,8 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	// Check & Transfer MCU Usage Information Table
 	guint8 mcuUIcrc[4];
 	for (gint i = 0; i < 4; i++) {
-		mcuUIcrc[i] = mcuUsageInformationData[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE - 4 + i];
+		mcuUIcrc[i] =
+		    mcuUsageInformationData[FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE - 4 + i];
 		// g_print("%02X\n",mcuUIcrc[i]);
 	}
 	guint32 t = fu_crc32(FU_CRC_KIND_B32_STANDARD, mcuUsageInformationData, 4092);
@@ -955,10 +957,10 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		bcdVerUpdateReq = TRUE;
 
 	if (!forceUpdate) {
-		memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
-		gint GetBcdData = fu_lenovo_ldc_device_function1(
-		    FU_LENOVO_LDC_CLASS_ID_DEVICE_INFORMATION,
-		    FU_LENOVO_LDC_DEVICE_INFORMATION_CMD_GET_FIRMWARE_VERSION,
+		memset(output1, 0, FU_LENOVO_DOCK_DEVICE_IFACE1_LEN);
+		gint GetBcdData = fu_lenovo_dock_device_function1(
+		    FU_LENOVO_DOCK_CLASS_ID_DEVICE_INFORMATION,
+		    FU_LENOVO_DOCK_DEVICE_INFORMATION_CMD_GET_FIRMWARE_VERSION,
 		    0,
 		    0,
 		    0,
@@ -995,13 +997,13 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			    ((mcuUsageInformationData[1] >> 4) & 0x0f);
 			mcuUsageInformationTable.MinorVersion = (mcuUsageInformationData[1] & 0x0f);
 			mcuUsageInformationTable.Dsa =
-			    (FuLenovoLdcSignType)mcuUsageInformationData[2];
+			    (FuLenovoDockSignType)mcuUsageInformationData[2];
 			mcuUsageInformationTable.IoTUpdateFlag = mcuUsageInformationData[3];
 			for (gint i = 0; i < 4; i++) {
 				mcuUsageInformationTable.CompositeFwVersion[i] =
 				    mcuUsageInformationData[4 + i];
 				mcuUsageInformationTable.Crc32[i] =
-				    mcuUsageInformationData[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE -
+				    mcuUsageInformationData[FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE -
 							    4 + i];
 			}
 			for (gint i = 0; i < 2; i++) {
@@ -1054,12 +1056,12 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	if (NeedWriteTable) {
 		// Set Dock FW Update Ctrl
 		guint8 mcuUpdateCtrl[2];
-		mcuUpdateCtrl[0] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_STATUS_NON_LOCK;
-		mcuUpdateCtrl[1] = FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_IN_PHASE1;
-		memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
-		r = fu_lenovo_ldc_device_function1(
-		    FU_LENOVO_LDC_CLASS_ID_DOCK,
-		    FU_LENOVO_LDC_EXTERNAL_DOCK_CMD_SET_DOCK_FIRMWARE_UPGRADE_CTRL,
+		mcuUpdateCtrl[0] = FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_STATUS_NON_LOCK;
+		mcuUpdateCtrl[1] = FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_IN_PHASE1;
+		memset(output1, 0, FU_LENOVO_DOCK_DEVICE_IFACE1_LEN);
+		r = fu_lenovo_dock_device_function1(
+		    FU_LENOVO_DOCK_CLASS_ID_DOCK,
+		    FU_LENOVO_DOCK_EXTERNAL_DOCK_CMD_SET_DOCK_FIRMWARE_UPGRADE_CTRL,
 		    0,
 		    mcuUpdateCtrl,
 		    2,
@@ -1075,7 +1077,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		// Write Usage Information Table
 		guint8 *changeTagetUsageInformationTableBytes =
 		    GetBytes(changeTagetUsageInformationTable);
-		r = fu_lenovo_ldc_device_write_usage_information_table(
+		r = fu_lenovo_dock_device_write_usage_information_table(
 		    changeTagetUsageInformationTableBytes);
 		if (r != 0)
 			return r;
@@ -1087,10 +1089,10 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		gint flashId = i;
 
 		// Get Flash ID Attribute
-		memset(output1, 0, FU_LENOVO_LDC_DEVICE_IFACE1_LEN);
-		gint flashIdAttributeData = fu_lenovo_ldc_device_function1(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
+		memset(output1, 0, FU_LENOVO_DOCK_DEVICE_IFACE1_LEN);
+		gint flashIdAttributeData = fu_lenovo_dock_device_function1(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
 		    flashId,
 		    0,
 		    0,
@@ -1099,10 +1101,10 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			return flashIdAttributeData;
 		guint8 *flashIdAttributeBody = GetCommandBody1(output1);
 		struct FlashIdAttribute flashIdAttribute =
-		    fu_lenovo_ldc_device_get_flash_id_attr(flashIdAttributeBody);
+		    fu_lenovo_dock_device_get_flash_id_attr(flashIdAttributeBody);
 		// Check Component FW File
 		if (flashIdAttribute.Purpose !=
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE)
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE)
 			continue;
 
 		// Check Update Necessary
@@ -1111,10 +1113,10 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			continue;
 
 		// Write Flash ID Data
-		r = fu_lenovo_ldc_device_write_flash_id_data(flashId,
-							     flashIdAttribute,
-							     changeTagetUsageInformationTable,
-							     compositeImageData);
+		r = fu_lenovo_dock_device_write_flash_id_data(flashId,
+							      flashIdAttribute,
+							      changeTagetUsageInformationTable,
+							      compositeImageData);
 		if (r != 0)
 			return r;
 
@@ -1123,7 +1125,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		    targetUsageInformationTable.FlashIdList[flashId];
 
 		// Write Usage Information Table
-		r = fu_lenovo_ldc_device_write_usage_information_table(
+		r = fu_lenovo_dock_device_write_usage_information_table(
 		    GetBytes(changeTagetUsageInformationTable));
 		if (r != 0)
 			return r;
@@ -1131,40 +1133,41 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 
 	// Set Flash Memory Access (Release)
 	guint8 SetFlashMemoryAccessRelease[2];
-	SetFlashMemoryAccessRelease[0] = FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CMD_ACCCESS_CTRL;
-	SetFlashMemoryAccessRelease[1] = FU_LENOVO_LDC_FLASH_MEMORY_ACCESS_CTRL_RELEASE;
-	for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE2_LEN; i++)
+	SetFlashMemoryAccessRelease[0] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CMD_ACCCESS_CTRL;
+	SetFlashMemoryAccessRelease[1] = FU_LENOVO_DOCK_FLASH_MEMORY_ACCESS_CTRL_RELEASE;
+	for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE2_LEN; i++)
 		output2[i] = 0;
-	r = fu_lenovo_ldc_device_function2(FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-					   FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
-					   0,
-					   SetFlashMemoryAccessRelease,
-					   2,
-					   output2);
+	r = fu_lenovo_dock_device_function2(
+	    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+	    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_SET_FLASH_MEMORY_ACCESS,
+	    0,
+	    SetFlashMemoryAccessRelease,
+	    2,
+	    output2);
 
 	// Set Dock FW Update Ctrl
 	if (bcdVerUpdateReq) {
-		fu_lenovo_ldc_device_trigger_phase2(noUnplug);
+		fu_lenovo_dock_device_trigger_phase2(noUnplug);
 	}
 
 	return 0;
 }
 
 static gboolean
-fu_lenovo_ldc_device_check_ready_for_phase2()
+fu_lenovo_dock_device_check_ready_for_phase2()
 {
 	gboolean rs = FALSE;
 
 	guint8 buffer[65];
-	rs = fu_lenovo_ldc_device_function1(
-	    FU_LENOVO_LDC_CLASS_ID_DOCK,
-	    FU_LENOVO_LDC_EXTERNAL_DOCK_CMD_GET_DOCK_FIRMWARE_UPGRADE_CTRL,
+	rs = fu_lenovo_dock_device_function1(
+	    FU_LENOVO_DOCK_CLASS_ID_DOCK,
+	    FU_LENOVO_DOCK_EXTERNAL_DOCK_CMD_GET_DOCK_FIRMWARE_UPGRADE_CTRL,
 	    0,
 	    0,
 	    0,
 	    buffer);
 	guint8 *DockFirmwareCtrlBody = GetCommandBody1(buffer);
-	if (DockFirmwareCtrlBody[0] == FU_LENOVO_LDC_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED &&
+	if (DockFirmwareCtrlBody[0] == FU_LENOVO_DOCK_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED &&
 	    DockFirmwareCtrlBody[1] == 2)
 		rs = TRUE;
 
@@ -1260,35 +1263,35 @@ usb_event_thread(void *arg)
 }
 
 struct FlashIdUsageInformation *
-fu_lenovo_ldc_device_setup()
+fu_lenovo_dock_device_setup()
 {
-	guint8 output[FU_LENOVO_LDC_DEVICE_IFACE1_LEN] = {0};
+	guint8 output[FU_LENOVO_DOCK_DEVICE_IFACE1_LEN] = {0};
 	gint getFlashIdList =
-	    fu_lenovo_ldc_device_function1(FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-					   FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ID_LIST,
-					   0,
-					   0,
-					   0,
-					   output);
+	    fu_lenovo_dock_device_function1(FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+					    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_ID_LIST,
+					    0,
+					    0,
+					    0,
+					    output);
 	// g_print("getFlashIdList return %d\n",getFlashIdList);
 	guint8 totalFlashId = output[6];
 	struct FlashIdUsageInformation *Info = g_new0(struct FlashIdUsageInformation, totalFlashId);
 
 	for (gint flashId = 1; flashId < totalFlashId; flashId++) {
-		gint getFlashIdAttribute = fu_lenovo_ldc_device_function1(
-		    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-		    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
+		gint getFlashIdAttribute = fu_lenovo_dock_device_function1(
+		    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+		    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_ATTRIBUTE,
 		    flashId,
 		    0,
 		    0,
 		    output);
 		guint8 getPurpose = output[7];
-		if (getPurpose == FU_LENOVO_LDC_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE) {
-			for (gint i = 0; i < FU_LENOVO_LDC_DEVICE_IFACE1_LEN; i++)
+		if (getPurpose == FU_LENOVO_DOCK_EXTERNAL_FLASH_ID_PURPOSE_FIRMWARE_FILE) {
+			for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE1_LEN; i++)
 				output[i] = 0;
-			guint8 getFlashIdUsageInformation = fu_lenovo_ldc_device_function1(
-			    FU_LENOVO_LDC_CLASS_ID_EXTERNAL_FLASH,
-			    FU_LENOVO_LDC_EXTERNAL_FLASH_CMD_GET_FLASH_ID_USAGE_INFORMATION,
+			guint8 getFlashIdUsageInformation = fu_lenovo_dock_device_function1(
+			    FU_LENOVO_DOCK_CLASS_ID_EXTERNAL_FLASH,
+			    FU_LENOVO_DOCK_EXTERNAL_FLASH_CMD_GET_FLASH_ID_USAGE_INFORMATION,
 			    flashId,
 			    0,
 			    0,
@@ -1315,9 +1318,9 @@ GetCompositeVersion(char *out, size_t outSize)
 		return -1;
 
 	guint8 buffer[65] = {0};
-	gint rc = fu_lenovo_ldc_device_function1(
-	    FU_LENOVO_LDC_CLASS_ID_DEVICE_INFORMATION,
-	    FU_LENOVO_LDC_DEVICE_INFORMATION_CMD_GET_FIRMWARE_VERSION,
+	gint rc = fu_lenovo_dock_device_function1(
+	    FU_LENOVO_DOCK_CLASS_ID_DEVICE_INFORMATION,
+	    FU_LENOVO_DOCK_DEVICE_INFORMATION_CMD_GET_FIRMWARE_VERSION,
 	    0,
 	    0,
 	    0,
@@ -1375,7 +1378,7 @@ main(int argc, char *argv[])
 	for (gint i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "/c") == 0) {
 			g_print("Checking current FW version\n");
-			struct FlashIdUsageInformation *Info = fu_lenovo_ldc_device_setup();
+			struct FlashIdUsageInformation *Info = fu_lenovo_dock_device_setup();
 			char version[64]; // 準備一個足夠大的 buffer
 
 			gint ret = GetCompositeVersion(version, sizeof(version));
@@ -1409,7 +1412,7 @@ main(int argc, char *argv[])
 
 			return 0;
 		} else if (strcmp(argv[i], "/u") == 0) {
-			gboolean rs = fu_lenovo_ldc_device_check_ready_for_phase2();
+			gboolean rs = fu_lenovo_dock_device_check_ready_for_phase2();
 			// g_print("%s\n", rs ? "TRUE" : "FALSE");
 			if (rs == TRUE) {
 				g_print("Phase-1 update is already done, by rc %d",
@@ -1420,7 +1423,7 @@ main(int argc, char *argv[])
 			g_print("Please DO NOT remove the dock and wait for a few minutes until "
 				"the white light stops blinking.\n");
 			g_print("Start updating........\n");
-			gint r = fu_lenovo_ldc_device_fw_update(TRUE, TRUE);
+			gint r = fu_lenovo_dock_device_fw_update(TRUE, TRUE);
 			if (r == 0) {
 				/*Notice : rc == 0 includes 2 condition of FW update result as below
 				   .

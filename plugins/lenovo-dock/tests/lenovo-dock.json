@@ -3,9 +3,9 @@
   "interactive": false,
   "steps": [
     {
-      "url": "lenovo-ldc-1.2.3.cab",
-      "emulation-file": "@enumeration_datadir@/lenovo-ldc-setup.json",
-      "emulation-url": "lenovo-ldc-1.2.3.zip",
+      "url": "lenovo-dock-1.2.3.cab",
+      "emulation-file": "@enumeration_datadir@/lenovo-dock-setup.json",
+      "emulation-url": "lenovo-dock-1.2.3.zip",
       "components": [
         {
           "version": "1.2.3",
@@ -16,8 +16,8 @@
       ]
     },
     {
-      "url": "lenovo-ldc-1.2.4.cab",
-      "emulation-url": "lenovo-ldc-1.2.4.zip",
+      "url": "lenovo-dock-1.2.4.cab",
+      "emulation-url": "lenovo-dock-1.2.4.zip",
       "components": [
         {
           "version": "1.2.4",

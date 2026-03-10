@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuLenovoLdcPlugin, fu_lenovo_ldc_plugin, FU, LENOVO_LDC_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuLenovoDockPlugin, fu_lenovo_dock_plugin, FU, LENOVO_DOCK_PLUGIN, FuPlugin)

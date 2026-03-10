@@ -1,3 +1,3 @@
 # Lenovo USB4 Dock
 [HIDRAW\VEN_17EF&DEV_111E]
-Plugin = lenovo_ldc
+Plugin = lenovo_dock

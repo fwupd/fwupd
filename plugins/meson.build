@@ -82,7 +82,7 @@ plugins = {
   'legion-hid': false,
   'legion-hid2': false,
   'lenovo-accessory': false,
-  'lenovo-ldc': false,
+  'lenovo-dock': false,
   'lenovo-thinklmi': false,
   'linux-display': false,
   'linux-lockdown': false,
