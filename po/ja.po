@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-08 05:09+0000\n"
+"PO-Revision-Date: 2026-03-10 18:02+0000\n"
 "Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
 "Language: ja\n"
@@ -1106,16 +1106,16 @@ msgstr "%s から読み込み中…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s は現在アップデートできません:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "完了"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "ユーザーの操作が必要なファームウェアアップデートがあるデバイス:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1131,7 +1131,7 @@ msgstr "リモートを正常に変更しました"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "リモートのクリーンアップに成功しました"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1139,7 +1139,7 @@ msgstr "リモートを正常に無効にしました"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "現在使用されていないリモートキャッシュファイルを削除しますか？"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1191,7 +1191,7 @@ msgstr "ファイルを書き込み中:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "メタデータはすでに最新の状態です"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
