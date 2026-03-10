@@ -48,42 +48,6 @@ fu_lenovo_ldc_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_lenovo_ldc_device_detach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-
-	/* sanity check */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("already in bootloader mode, skipping");
-		return TRUE;
-	}
-
-	/* TODO: switch the device into bootloader mode */
-	g_assert(self != NULL);
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-static gboolean
-fu_lenovo_ldc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-
-	/* sanity check */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug("already in runtime mode, skipping");
-		return TRUE;
-	}
-
-	/* TODO: switch the device into runtime mode */
-	g_assert(self != NULL);
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-static gboolean
 fu_lenovo_ldc_device_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
@@ -445,9 +409,7 @@ fu_lenovo_ldc_device_check_firmware(FuDevice *device,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
-	//	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-
-	/* TODO: you do not need to use this vfunc if not checking attributes */
+	/* PID matches? */
 	if (fu_device_get_pid(device) !=
 	    fu_lenovo_ldc_firmware_get_pid(FU_LENOVO_LDC_FIRMWARE(firmware))) {
 		g_set_error(error,
@@ -863,8 +825,6 @@ fu_lenovo_ldc_device_class_init(FuLenovoLdcDeviceClass *klass)
 	object_class->finalize = fu_lenovo_ldc_device_finalize;
 	device_class->to_string = fu_lenovo_ldc_device_to_string;
 	device_class->setup = fu_lenovo_ldc_device_setup;
-	device_class->attach = fu_lenovo_ldc_device_attach;
-	device_class->detach = fu_lenovo_ldc_device_detach;
 	device_class->check_firmware = fu_lenovo_ldc_device_check_firmware;
 	device_class->write_firmware = fu_lenovo_ldc_device_write_firmware;
 	device_class->set_quirk_kv = fu_lenovo_ldc_device_set_quirk_kv;
