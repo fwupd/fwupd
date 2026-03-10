@@ -3,50 +3,59 @@
 
 #[repr(u8)]
 enum FuLenovoLdcSignType {
-    Unsigned,
-    Rsa2048,
-    Rsa3072,
-    Ecc256,
-    Ecc384,
+    Unsigned = 0x00,
+    Rsa2048 = 0x01,
+    Rsa3072 = 0x02,
+    Ecc256 = 0x10,
+    Ecc384 = 0x11,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum FuLenovoLdcFlashId {
     None = 0x00,
+    Dmc = 0x01,
+    Dp = 0x02,
+    Pd = 0x03,
+    Usb3 = 0x04,
+    Usb4 = 0x05,
+    Osd = 0x06,
+    Dbg = 0x07,
     Usage = 0xFF,
 }
 
-#[derive(Parse, Default, ToString)]
+#[derive(Parse, ParseStream, Default, ToString, New)]
 #[repr(C, packed)]
-struct FuStructLenovoLdcUsageInformation {
+struct FuStructLenovoLdcUsage {
 	total_number: u8,
-	major_version: u8,
-	minor_version: u8,
-	dsa: FuLenovoLdcSignType,
-	iot_update_flag: u8,
-	composite_fw_version: u32le,
-	dock_pid: u16le == 0x111E,
+	major_version: u8 = 0x00,
+	minor_version: u8 = 0x01,
+	dsa: FuLenovoLdcSignType = Unsigned,
+	iot_flag: u8,
+	composite_version: u24be,
+	pid: u16be = 0x111E,
 	crc32: u32le,
-	// items: [FuStructLenovoLdcUsageInformationItem; total_number],
+    reserved: [u8; 18],
+	// items: [FuStructLenovoLdcUsageItem; total_number],
 };
 
 #[repr(u8)]
-enum FuStructLenovoLdcUsageInformationItemFlag {
+enum FuStructLenovoLdcUsageItemFlag {
     None,
     DoUpdate,
 }
 
-#[derive(Parse, Default, ToString)]
+#[derive(Parse, ParseStream, Default, ToString)]
 #[repr(C, packed)]
-struct FuStructLenovoLdcUsageInformationItem {
+struct FuStructLenovoLdcUsageItem {
 	physical_address: u32le,
 	max_size: u32le,
-	current_fw_version: u32le,
-	target_fw_version: u32le,
-	target_fw_file_size: u32le,
-	target_fw_file_crc32: u32le,
-	component_id: u8,
-	flag: FuStructLenovoLdcUsageInformationItemFlag,
+	current_version: u32le,
+	target_version: u32le,
+	target_size: u32le,
+	target_crc32: u32le,
+	component_id: FuLenovoLdcFlashId,
+	flag: FuStructLenovoLdcUsageItemFlag,
     reserved: [u8; 6],
 };
 
@@ -313,7 +322,7 @@ struct FuStructLenovoLdcDockReadWithAddressReq {
 #[derive(Default, Parse)]
 struct FuStructLenovoLdcDockReadWithAddressRes {
     target_status: FuLenovoLdcTargetStatus == CommandSuccess,
-    bufsz: u8 == 262,
+    bufsz: u8 == 0x06, // this should be 262, but that's more than u8::MAX...
     cmd_class: FuLenovoLdcClassId == ExternalFlash,
 	cmd_id: FuLenovoLdcExternalFlashCmd == GetFlashMemoryAccess,
     flash_id: FuLenovoLdcFlashId == None,

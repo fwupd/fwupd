@@ -12,7 +12,7 @@
 #include "fu-lenovo-ldc-struct.h"
 
 #define CONST_UsageTableFlashID		      0xff
-#define FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE 0x1000
+#define FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE  0x1000
 
 guint8 CurrentFwVerForGUI[8][4];
 
@@ -85,13 +85,15 @@ struct UsageInformation {
 	guint8 Totalnumber;
 	guint8 MajorVersion;
 	guint8 MinorVersion;
-	FuLenovoLdcSignType Dsa;
+	guint8 Dsa;
 	guint8 IoTUpdateFlag;
 	guint8 CompositeFwVersion[4];
-	guint8 DockPid[2];
+	guint8 DockPid[2]; // 0x08
 	guint8 Crc32[4];
 	struct FlashIdUsageInformation *FlashIdList;
 };
+
+// G_STATIC_ASSERT(sizeof(FuLenovoLdcSignType) == 4);
 
 static guint32
 _fu_memread_uintn(guint8 *buf, gint length)
@@ -132,7 +134,7 @@ arraysEqual(guint8 *array1, guint8 *array2, size_t length)
 static guint8 *
 GetBytes(struct UsageInformation targetUsageInformationTable)
 {
-	guint8 *table = (guint8 *)g_malloc0(FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE);
+	guint8 *table = (guint8 *)g_malloc0(FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE);
 	// Header
 	table[0] = targetUsageInformationTable.Totalnumber;
 	table[1] = (targetUsageInformationTable.MajorVersion << 4) +
@@ -531,7 +533,7 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 	    fu_lenovo_ldc_device_get_flash_id_attr(UsageInformationAttributeBody);
 
 	// Set Usage Information Memory Access (Erase)
-	for (gint readBytes = 0; readBytes < FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE;
+	for (gint readBytes = 0; readBytes < FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE;
 	     readBytes += UsageInformationAttribute.EraseSize) {
 		gint address = FU_LENOVO_LDC_DEVICE_USAGE_INFO_START + readBytes;
 		guint8 *eraseUsageInformationAddress = _fu_memwrite_uint32(address);
@@ -560,7 +562,7 @@ fu_lenovo_ldc_device_write_usage_information_table(guint8 *UsageInformationData)
 	}
 
 	// Set Usage Information Memory Access (Program)
-	for (gint readBytes = 0; readBytes < FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE;
+	for (gint readBytes = 0; readBytes < FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE;
 	     readBytes += UsageInformationAttribute.ProgramSize) {
 		gint address = FU_LENOVO_LDC_DEVICE_USAGE_INFO_START + readBytes;
 		guint8 *addrBytes = _fu_memwrite_uint32(address);
@@ -816,14 +818,14 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	guint8 ds[FlashIdUsageLength];
 	FILE *fp;
 	if (stat("FW/ldc_u4_usage_information_table.bin", &fileInfo) == 0) {
-		if (fileInfo.st_size != FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE) {
+		if (fileInfo.st_size != FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE) {
 			return USAGE_INFORMATION_FILE_ERROR;
 		} else {
 			/*read the file actions*/
 			fp = fopen("FW/ldc_u4_usage_information_table.bin", "rb");
-			char buffer[FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE];
+			char buffer[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE];
 			size_t bytesRead =
-			    fread(&buffer, sizeof(char), FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE, fp);
+			    fread(&buffer, sizeof(char), FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE, fp);
 			targetUsageInformationTable.Totalnumber = (guint8)buffer[0];
 			targetUsageInformationTable.MajorVersion =
 			    (((guint8)buffer[1] >> 4) & 0x0f);
@@ -834,7 +836,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 				targetUsageInformationTable.CompositeFwVersion[i] =
 				    (guint8)buffer[4 + i];
 				targetUsageInformationTable.Crc32[i] =
-				    (guint8)buffer[FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE - 4 + i];
+				    (guint8)buffer[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE - 4 + i];
 			}
 			for (gint i = 0; i < 2; i++) {
 				targetUsageInformationTable.DockPid[i] = (guint8)buffer[8 + i];
@@ -869,7 +871,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			if (_fu_memread_uintn(targetUsageInformationTable.Crc32, 4) !=
 			    fu_crc32(FU_CRC_KIND_B32_STANDARD,
 				     buffer,
-				     FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE - 4))
+				     FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE - 4))
 				return USAGE_INFORMATION_CRC_FAILED;
 
 			guint16 targetPid =
@@ -938,8 +940,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 	// Check & Transfer MCU Usage Information Table
 	guint8 mcuUIcrc[4];
 	for (gint i = 0; i < 4; i++) {
-		mcuUIcrc[i] =
-		    mcuUsageInformationData[FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE - 4 + i];
+		mcuUIcrc[i] = mcuUsageInformationData[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE - 4 + i];
 		// g_print("%02X\n",mcuUIcrc[i]);
 	}
 	guint32 t = fu_crc32(FU_CRC_KIND_B32_STANDARD, mcuUsageInformationData, 4092);
@@ -1000,7 +1001,7 @@ fu_lenovo_ldc_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 				mcuUsageInformationTable.CompositeFwVersion[i] =
 				    mcuUsageInformationData[4 + i];
 				mcuUsageInformationTable.Crc32[i] =
-				    mcuUsageInformationData[FU_LENOVO_LDC_DEVICE_USAGE_TABLE_SIZE -
+				    mcuUsageInformationData[FU_LENOVO_LDC_DEVICE_USAGE_INFO_SIZE -
 							    4 + i];
 			}
 			for (gint i = 0; i < 2; i++) {
