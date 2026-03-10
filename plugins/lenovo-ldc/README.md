@@ -33,16 +33,6 @@ The dock is then rebooted where the firmware is written, and then the dock re-ap
 
 The vendor ID is set from the TODO vendor, in this instance set to `USB:0x17EF`
 
-## Quirk Use
-
-This plugin uses the following plugin-specific quirks:
-
-### LenovoLdcStartAddr
-
-The bla bla bla.
-
-Since: 2.1.1
-
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/hidraw*`.

@@ -757,31 +757,6 @@ fu_lenovo_ldc_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_lenovo_ldc_device_set_quirk_kv(FuDevice *device,
-				  const gchar *key,
-				  const gchar *value,
-				  GError **error)
-{
-	//	FuLenovoLdcDevice *self = FU_LENOVO_LDC_DEVICE(device);
-
-	/* TODO: parse value from quirk file */
-	if (g_strcmp0(key, "LenovoLdcStartAddr") == 0) {
-		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
-			return FALSE;
-		// self->start_addr = tmp;
-		return TRUE;
-	}
-
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "quirk key not supported");
-	return FALSE;
-}
-
 static void
 fu_lenovo_ldc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
@@ -827,6 +802,5 @@ fu_lenovo_ldc_device_class_init(FuLenovoLdcDeviceClass *klass)
 	device_class->setup = fu_lenovo_ldc_device_setup;
 	device_class->check_firmware = fu_lenovo_ldc_device_check_firmware;
 	device_class->write_firmware = fu_lenovo_ldc_device_write_firmware;
-	device_class->set_quirk_kv = fu_lenovo_ldc_device_set_quirk_kv;
 	device_class->set_progress = fu_lenovo_ldc_device_set_progress;
 }
