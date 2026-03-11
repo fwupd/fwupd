@@ -35,7 +35,7 @@ static const guint16 DockPid = 0x111e;
 
 struct FlashIdAttribute {
 	gint FLashId;
-	FuLenovoDockFlashIdPurpose Purpose;
+	FuLenovoDockComponentPurpose Purpose;
 	gint StorageSize;
 	gint EraseSize;
 	gint ProgramSize;
@@ -95,7 +95,7 @@ struct UsageInformation {
 	struct FlashIdUsageInformation *FlashIdList;
 };
 
-// G_STATIC_ASSERT(sizeof(FuLenovoDockSignType) == 4);
+// G_STATIC_ASSERT(sizeof(FuLenovoDockDsaType) == 4);
 
 static guint32
 _fu_memread_uintn(guint8 *buf, gint length)
@@ -226,7 +226,7 @@ _fu_lenovo_dock_device_get_flash_id_attr(guint8 *buf)
 {
 	struct FlashIdAttribute fa;
 	fa.FLashId = buf[0];
-	fa.Purpose = (FuLenovoDockFlashIdPurpose)buf[1];
+	fa.Purpose = (FuLenovoDockComponentPurpose)buf[1];
 
 	gint count = 2;
 	guint8 storageBuf[4];
@@ -831,7 +831,7 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			targetUsageInformationTable.MajorVersion =
 			    (((guint8)buffer[1] >> 4) & 0x0f);
 			targetUsageInformationTable.MinorVersion = ((guint8)buffer[1] & 0x0f);
-			targetUsageInformationTable.Dsa = (FuLenovoDockSignType)buffer[2];
+			targetUsageInformationTable.Dsa = (FuLenovoDockDsaType)buffer[2];
 			targetUsageInformationTable.IoTUpdateFlag = (guint8)buffer[3];
 			for (gint i = 0; i < 4; i++) {
 				targetUsageInformationTable.CompositeFwVersion[i] =
@@ -996,7 +996,7 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 			    ((mcuUsageInformationData[1] >> 4) & 0x0f);
 			mcuUsageInformationTable.MinorVersion = (mcuUsageInformationData[1] & 0x0f);
 			mcuUsageInformationTable.Dsa =
-			    (FuLenovoDockSignType)mcuUsageInformationData[2];
+			    (FuLenovoDockDsaType)mcuUsageInformationData[2];
 			mcuUsageInformationTable.IoTUpdateFlag = mcuUsageInformationData[3];
 			for (gint i = 0; i < 4; i++) {
 				mcuUsageInformationTable.CompositeFwVersion[i] =
@@ -1102,7 +1102,7 @@ fu_lenovo_dock_device_fw_update(gboolean forceUpdate, gboolean noUnplug)
 		struct FlashIdAttribute flashIdAttribute =
 		    _fu_lenovo_dock_device_get_flash_id_attr(flashIdAttributeBody);
 		// Check Component FW File
-		if (flashIdAttribute.Purpose != FU_LENOVO_DOCK_FLASH_ID_PURPOSE_FIRMWARE)
+		if (flashIdAttribute.Purpose != FU_LENOVO_DOCK_COMPONENT_PURPOSE_FIRMWARE)
 			continue;
 
 		// Check Update Necessary
@@ -1283,7 +1283,7 @@ _fu_lenovo_dock_device_setup()
 						    0,
 						    output);
 		guint8 getPurpose = output[7];
-		if (getPurpose == FU_LENOVO_DOCK_FLASH_ID_PURPOSE_FIRMWARE) {
+		if (getPurpose == FU_LENOVO_DOCK_COMPONENT_PURPOSE_FIRMWARE) {
 			for (gint i = 0; i < FU_LENOVO_DOCK_DEVICE_IFACE1_LEN; i++)
 				output[i] = 0;
 			guint8 getFlashIdUsageInformation = fu_lenovo_dock_device_function1(

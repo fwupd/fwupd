@@ -16,7 +16,7 @@ In this zip file there must be two files:
 
 This plugin supports the following protocol ID:
 
-* `com.lenovo.ldc`
+* `com.lenovo.dock`
 
 ## GUID Generation
 
@@ -27,11 +27,11 @@ These devices use the standard HIDRAW DeviceInstanceId values, e.g.
 ## Update Behavior
 
 The device is unlocked and the firmware images are sent to the device if required.
-The dock is then rebooted where the firmware is written, and then the dock re-appears
+The dock is then rebooted where the firmware is written, and then the dock re-appears.
 
 ## Vendor ID Security
 
-The vendor ID is set from the TODO vendor, in this instance set to `USB:0x17EF`
+The vendor ID is set from the HID vendor, in this instance set to `USB:0x17EF`
 
 ## External Interface Access
 
@@ -39,4 +39,4 @@ This plugin requires read/write access to `/dev/hidraw*`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `2.1.1`.
+This plugin has been available since fwupd version `2.1.2`.

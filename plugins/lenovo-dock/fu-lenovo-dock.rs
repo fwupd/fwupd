@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[repr(u8)]
-enum FuLenovoDockSignType {
+enum FuLenovoDockDsaType {
     None = 0x00,
     Rsa2048 = 0x01,
     Rsa3072 = 0x02,
@@ -24,14 +24,20 @@ enum FuLenovoDockComponentId {
     Usage = 0xFF,
 }
 
+#[repr(u8)]
+enum FuLenovoDockIotFlag {
+    Native = 0x00,
+    Managed = 0x01,
+}
+
 #[derive(Parse, ParseStream, Default, ToString, Setters)]
 #[repr(C, packed)]
 struct FuStructLenovoDockUsage {
     total_number: u8,
     major_version: u8 = 0x00,
     minor_version: u8 = 0x01,
-    dsa: FuLenovoDockSignType = None,
-    iot_flag: u8,
+    dsa: FuLenovoDockDsaType = None,
+    iot_flag: FuLenovoDockIotFlag = Native,
     composite_version: u24be,
     pid: u16be = 0x111E,
     crc32: u32le,
@@ -161,7 +167,7 @@ enum FuLenovoDockExternalDockCmd {
 }
 
 #[repr(u8)]
-enum FuLenovoDockFlashIdPurpose {
+enum FuLenovoDockComponentPurpose {
     Common,
     ApplicationData,
     ImageData,
@@ -229,7 +235,7 @@ struct FuStructLenovoDockFlashGetAttrsRes {
     component_id: FuLenovoDockComponentId,
     _reserved: u8,
     component_id_again: u8 == 0xFF,
-    purpose: FuLenovoDockFlashIdPurpose,
+    purpose: FuLenovoDockComponentPurpose,
     storage_size: u32le,
     erase_size: u16le,
     program_size: u16le,
