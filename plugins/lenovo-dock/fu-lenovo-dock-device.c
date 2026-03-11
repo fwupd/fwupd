@@ -754,9 +754,6 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	/* TODO: check each usage item in the file against the device and set flags = DoUpdate on
-	 * each item if not the same */
-
 	/* Set Dock FW Update Ctrl */
 	if (!fu_lenovo_dock_device_dfu_control(
 		self,
@@ -768,7 +765,15 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	/* write the new usage table */
+	/* clear all the target versions and write the new usage table */
+	total_number = fu_struct_lenovo_dock_usage_get_total_number(self->st_usage);
+	for (guint component_id = 1; component_id < total_number; component_id++) {
+		FuStructLenovoDockUsageItem *st_usage_item =
+		    fu_lenovo_dock_device_get_usage_item(self, component_id, NULL);
+		if (st_usage_item == NULL)
+			continue;
+		fu_struct_lenovo_dock_usage_item_set_target_version(st_usage_item, 0);
+	}
 	if (!fu_lenovo_dock_device_write_usage(self, error)) {
 		g_prefix_error_literal(error, "failed to write usage table: ");
 		return FALSE;
