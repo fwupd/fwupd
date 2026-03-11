@@ -1095,10 +1095,13 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 			       FuDfuTargetTransferFlags flags,
 			       GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	FuDevice *proxy;
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
 	/* progress */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	if (flags & FU_DFU_TARGET_TRANSFER_FLAG_VERIFY &&
 	    fu_device_has_private_flag(proxy, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
 		fu_progress_set_id(progress, G_STRLOC);
