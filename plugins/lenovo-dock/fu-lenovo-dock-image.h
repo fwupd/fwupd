@@ -11,7 +11,7 @@
 #define FU_TYPE_LENOVO_DOCK_IMAGE (fu_lenovo_dock_image_get_type())
 G_DECLARE_FINAL_TYPE(FuLenovoDockImage, fu_lenovo_dock_image, FU, LENOVO_DOCK_IMAGE, FuFirmware)
 
-#define FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE 256
+#define FU_LENOVO_DOCK_FIRMWARE_SIGNATURE_SIZE 256
 
 FuFirmware *
 fu_lenovo_dock_image_new(void);

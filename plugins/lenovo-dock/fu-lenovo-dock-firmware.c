@@ -64,7 +64,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 		guint32 physical_addr;
 		guint32 target_size;
 		guint32 max_size;
-		FuLenovoDockFlashId flash_id;
+		FuLenovoDockComponentId component_id;
 		g_autoptr(FuStructLenovoDockUsageItem) st_item = NULL;
 		g_autoptr(GInputStream) stream_partial = NULL;
 		g_autoptr(FuFirmware) img = fu_lenovo_dock_image_new();
@@ -75,7 +75,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* sanity check */
-		flash_id = fu_struct_lenovo_dock_usage_item_get_flash_id(st_item);
+		component_id = fu_struct_lenovo_dock_usage_item_get_component_id(st_item);
 		physical_addr = fu_struct_lenovo_dock_usage_item_get_address(st_item);
 		max_size = fu_struct_lenovo_dock_usage_item_get_max_size(st_item);
 		target_size = fu_struct_lenovo_dock_usage_item_get_target_size(st_item);
@@ -91,9 +91,10 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 
-		fu_firmware_set_idx(img, flash_id);
-		if (flash_id <= FU_LENOVO_DOCK_FLASH_ID_DBG)
-			fu_firmware_set_id(img, fu_lenovo_dock_flash_id_to_string(flash_id));
+		fu_firmware_set_idx(img, component_id);
+		if (component_id <= FU_LENOVO_DOCK_COMPONENT_ID_DBG)
+			fu_firmware_set_id(img,
+					   fu_lenovo_dock_component_id_to_string(component_id));
 		fu_firmware_set_version_raw(
 		    img,
 		    fu_struct_lenovo_dock_usage_item_get_target_version(st_item));
@@ -102,11 +103,11 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* set image stream, and include the signature too */
-		stream_partial =
-		    fu_partial_input_stream_new(stream_composite,
-						physical_addr,
-						target_size + FU_LENOVO_DOCK_DEVICE_SIGNATURE_SIZE,
-						error);
+		stream_partial = fu_partial_input_stream_new(
+		    stream_composite,
+		    physical_addr,
+		    target_size + FU_LENOVO_DOCK_FIRMWARE_SIGNATURE_SIZE,
+		    error);
 		if (stream_partial == NULL)
 			return FALSE;
 		if (!fu_firmware_set_stream(img, stream_partial, error))
@@ -114,16 +115,16 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 
 		/* check CRC */
 		if (target_size > 0) {
-			guint32 crc_calculated = 0;
+			guint32 crc_calculated = G_MAXUINT32;
 			guint32 crc_provided =
 			    fu_struct_lenovo_dock_usage_item_get_target_crc32(st_item);
 			g_autoptr(GInputStream) stream_crc = NULL;
 
-			fu_lenovo_dock_image_set_crc(FU_LENOVO_DOCK_IMAGE(img), crc_provided);
-			stream_crc = fu_partial_input_stream_new(stream_composite,
-								 physical_addr,
-								 max_size,
-								 error);
+			stream_crc = fu_partial_input_stream_new(
+			    stream_composite,
+			    physical_addr + FU_LENOVO_DOCK_FIRMWARE_SIGNATURE_SIZE,
+			    target_size,
+			    error);
 			if (stream_crc == NULL)
 				return FALSE;
 			if (!fu_input_stream_compute_crc32(stream_crc,
@@ -131,8 +132,6 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 							   &crc_calculated,
 							   error))
 				return FALSE;
-#if 0
-			/* FIXME */
 			if (crc_provided != crc_calculated) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -142,13 +141,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 					    crc_calculated);
 				return FALSE;
 			}
-#else
-			if (crc_provided != crc_calculated) {
-				g_warning("usage item provided 0x%04x and calculated 0x%04x",
-					  crc_provided,
-					  crc_calculated);
-			}
-#endif
+			fu_lenovo_dock_image_set_crc(FU_LENOVO_DOCK_IMAGE(img), crc_provided);
 		}
 		offset += FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE;
 	}
