@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-02 08:05+0000\n"
-"PO-Revision-Date: 2026-03-03 17:09+0000\n"
+"PO-Revision-Date: 2026-03-11 18:10+0000\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/fwupd/fwupd/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -438,7 +438,7 @@ msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
 msgstr[0] "%u dispositivo foi atualizado e precisa de um reinício."
 msgstr[1] "%u dispositivos foram atualizados e precisam de um reinício."
-msgstr[2] ""
+msgstr[2] "%u dispositivos foram atualizados e precisam de um reinício."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
