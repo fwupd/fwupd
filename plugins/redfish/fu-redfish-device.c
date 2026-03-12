@@ -651,6 +651,16 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 		return TRUE;
 	}
 
+	if (g_pattern_match_simple("IDRAC.*.PR19", message_id) ||
+	    g_pattern_match_simple("IDRAC.*.RED001", message_id)) {
+		/* Some firmware can be immediately installed on Dell servers, but the inventory
+		   is only refreshed on reboot or it's the iDRAC needing a restart, but who still
+		   answered "OK"
+		*/
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		return TRUE;
+	}
+
 	/* set error code */
 	if (g_pattern_match_simple("Update.*.AwaitToActivate", message_id)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, message);
