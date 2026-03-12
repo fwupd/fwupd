@@ -360,6 +360,16 @@ if build_standalone
   if passim.found()
     conf.set('HAVE_PASSIM', '1')
   endif
+  libarchive = dependency(
+    'libarchive',
+    required: get_option('libarchive'),
+  )
+  if libarchive.found()
+    conf.set('HAVE_LIBARCHIVE', '1')
+    if cc.has_header_symbol('archive.h', 'archive_write_add_filter_zstd')
+      conf.set('HAVE_LIBARCHIVE_WRITE_ADD_FILTER_ZSTD', '1')
+    endif
+  endif
 endif
 libjcat = dependency(
   'jcat',
@@ -388,14 +398,19 @@ libdrm = dependency(
 if libdrm.found()
   conf.set('HAVE_LIBDRM' , '1')
 endif
-polkit = dependency('polkit-gobject-1', version: '>= 0.103',
-         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
+polkit = dependency(
+  'polkit-gobject-1',
+  version: '>= 0.114',
+  required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'),
+)
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
-  if polkit.version().version_compare('>= 0.114')
-    conf.set('HAVE_POLKIT_0_114', '1')
-  endif
-  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_variable(pkgconfig: 'actiondir'))
+  conf.set_quoted(
+    'POLKIT_ACTIONDIR',
+    polkit.get_variable(
+      pkgconfig: 'actiondir'
+    ),
+  )
 endif
 if build_daemon
   if not polkit.found()
@@ -724,15 +739,6 @@ else
   allow_flashrom = false
 endif
 
-logind = dependency(
-  'systemd', 'libelogind',
-  required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
-)
-
-if logind.found()
-  conf.set('HAVE_LOGIND', '1')
-endif
-
 if libsystemd.found()
   systemd = dependency(
     'systemd',
@@ -740,6 +746,7 @@ if libsystemd.found()
     required: get_option('systemd'),
   )
   conf.set('HAVE_SYSTEMD' , '1')
+  conf.set('HAVE_LOGIND' , '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
   if systemd_root_prefix == ''
     systemdunitdir = systemd.get_variable(
@@ -1005,7 +1012,6 @@ summary(
     'introspection': introspection.allowed(),
     'libblkid': libblkid,
     'libdrm': libdrm,
-    'logind': logind,
     'valgrind': valgrind,
     'polkit': polkit,
     'python3': python3,
@@ -1024,7 +1030,9 @@ if build_daemon
       'libusb': libusb,
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
+      'libarchive': libarchive.found(),
       'passim': passim,
+      'GPG support': supported_gpg,
       'PKCS7 support': supported_pkcs7,
     },
     section: 'daemon features',

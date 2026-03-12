@@ -15,3 +15,6 @@ G_DECLARE_FINAL_TYPE(FuMediatekScalerFirmware,
 		     FU,
 		     MEDIATEK_SCALER_FIRMWARE,
 		     FuFirmware)
+
+FuFirmware *
+fu_mediatek_scaler_firmware_new(void);

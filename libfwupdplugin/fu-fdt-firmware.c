@@ -279,11 +279,9 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		return FALSE;
 	}
 
-#ifndef HAVE_FUZZER
 	/* did not see FDT_END */
 	if (!has_end)
 		g_warning("did not see FDT_END, perhaps size_dt_struct is invalid?");
-#endif
 
 	/* success */
 	return TRUE;

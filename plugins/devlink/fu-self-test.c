@@ -88,6 +88,8 @@ fu_devlink_netdevsim_cleanup(FuDevlinkNetdevsim *ndsim)
 {
 	g_autoptr(GError) error_local = NULL;
 
+	if (ndsim->pstore != NULL)
+		g_object_unref(ndsim->pstore);
 	if (ndsim->device_id != 0) {
 		/* remove netdevsim device */
 		if (!fu_devlink_netdevsim_sysfs_write(ndsim->pstore,
@@ -99,8 +101,6 @@ fu_devlink_netdevsim_cleanup(FuDevlinkNetdevsim *ndsim)
 				error_local->message);
 		}
 	}
-	if (ndsim->pstore != NULL)
-		g_object_unref(ndsim->pstore);
 	g_free(ndsim);
 }
 

@@ -155,6 +155,10 @@ This alternative format may be needed for some early InsydeH2O firmwares.
 
 Do not use the additional UX capsule.
 
+### `Flags=use-shim-unique`
+
+Use a unique shim filename to work around a common BIOS bug.
+
 ### `Flags=use-legacy-bootmgr-desc`
 
 Use the legacy boot manager description to work around a Lenovo BIOS bug.

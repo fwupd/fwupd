@@ -21,6 +21,7 @@ depends=(
   gnutls
   gsettings-desktop-schemas
   hicolor-icon-theme
+  libarchive
   libcbor
   libusb
   libjcat
@@ -30,6 +31,7 @@ depends=(
   libxmlb
   passim
   polkit
+  python
   shared-mime-info
   sqlite
   systemd-libs
@@ -84,6 +86,7 @@ check() {
 
 package() {
   depends+=(
+    libarchive.so
     libcbor.so
     libcurl.so
     libmm-glib.so

@@ -46,16 +46,16 @@ fu_wacom_usb_module_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_wacom_usb_module_refresh(FuWacomUsbModule *self, GError **error)
 {
-	FuDevice *proxy;
+	FuWacomUsbDevice *parent;
 	FuWacomUsbModulePrivate *priv = GET_PRIVATE(self);
 	guint8 buf[] = {[0] = FU_WACOM_USB_REPORT_ID_MODULE,
 			[1 ... FU_WACOM_USB_PACKET_LEN - 1] = 0xff};
 
 	/* get from hardware */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
+	parent = FU_WACOM_USB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
 		return FALSE;
-	if (!fu_wacom_usb_device_get_feature_report(FU_WACOM_USB_DEVICE(proxy),
+	if (!fu_wacom_usb_device_get_feature_report(parent,
 						    buf,
 						    sizeof(buf),
 						    FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
@@ -131,7 +131,7 @@ fu_wacom_usb_module_set_feature(FuWacomUsbModule *self,
 				guint busy_timeout,  /* ms */
 				GError **error)
 {
-	FuDevice *proxy;
+	FuWacomUsbDevice *parent;
 	FuWacomUsbModulePrivate *priv = GET_PRIVATE(self);
 	const guint8 *data;
 	gsize len = 0;
@@ -147,10 +147,11 @@ fu_wacom_usb_module_set_feature(FuWacomUsbModule *self,
 	/* sanity check */
 	g_return_val_if_fail(FU_IS_WACOM_USB_MODULE(self), FALSE);
 
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
+	parent = FU_WACOM_USB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
 		return FALSE;
-	delay_ms = fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED) ? 10 : poll_interval;
+	delay_ms =
+	    fu_device_has_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : poll_interval;
 	busy_poll_loops = busy_timeout / delay_ms;
 
 	/* verify the size of the blob */
@@ -185,7 +186,7 @@ fu_wacom_usb_module_set_feature(FuWacomUsbModule *self,
 	}
 
 	/* send to hardware */
-	if (!fu_wacom_usb_device_set_feature_report(FU_WACOM_USB_DEVICE(proxy),
+	if (!fu_wacom_usb_device_set_feature_report(parent,
 						    buf,
 						    sizeof(buf),
 						    FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
@@ -229,17 +230,17 @@ fu_wacom_usb_module_cleanup(FuDevice *device,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
-	FuDevice *proxy;
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* sanity check */
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return FALSE;
-	locker = fu_device_locker_new(proxy, error);
+	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_cleanup(proxy, progress, flags, error);
+	return fu_device_cleanup(parent, progress, flags, error);
 }
 
 static gchar *

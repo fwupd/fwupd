@@ -75,7 +75,7 @@ typedef struct {
 } FuSynapticsCxaudioFirmwareBadblock;
 
 static void
-fu_synaptics_cxaudio_firmware_add_badblock(GPtrArray *badblocks,
+fu_synaptics_cxaudio_firmware_badblock_add(GPtrArray *badblocks,
 					   const gchar *str,
 					   guint32 addr,
 					   guint32 len)
@@ -307,14 +307,14 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GPtrArray) badblocks = g_ptr_array_new_with_free_func(g_free);
 
 		/* add standard ranges to ignore */
-		fu_synaptics_cxaudio_firmware_add_badblock(badblocks, "test mark", 0x00BC, 0x02);
-		fu_synaptics_cxaudio_firmware_add_badblock(
+		fu_synaptics_cxaudio_firmware_badblock_add(badblocks, "test mark", 0x00BC, 0x02);
+		fu_synaptics_cxaudio_firmware_badblock_add(
 		    badblocks,
 		    "application status",
 		    FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
 			FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_OFFSET_APPLICATION_STATUS,
 		    sizeof(guint8));
-		fu_synaptics_cxaudio_firmware_add_badblock(
+		fu_synaptics_cxaudio_firmware_badblock_add(
 		    badblocks,
 		    "boot bytes",
 		    FU_SYNAPTICS_CXAUDIO_EEPROM_VALIDITY_SIGNATURE_OFFSET,
@@ -328,7 +328,7 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 			addr_tmp =
 			    FU_SYNAPTICS_CXAUDIO_EEPROM_CUSTOM_INFO_OFFSET +
 			    FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_OFFSET_SERIAL_NUMBER_STRING_ADDRESS;
-			fu_synaptics_cxaudio_firmware_add_badblock(badblocks,
+			fu_synaptics_cxaudio_firmware_badblock_add(badblocks,
 								   "serial number",
 								   addr_tmp,
 								   sizeof(guint16));
@@ -339,7 +339,7 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 						    G_LITTLE_ENDIAN,
 						    error))
 				return FALSE;
-			fu_synaptics_cxaudio_firmware_add_badblock(badblocks,
+			fu_synaptics_cxaudio_firmware_badblock_add(badblocks,
 								   "serial number data",
 								   addr_str,
 								   shadow[addr_str]);
@@ -362,4 +362,10 @@ fu_synaptics_cxaudio_firmware_class_init(FuSynapticsCxaudioFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_synaptics_cxaudio_firmware_parse;
 	firmware_class->export = fu_synaptics_cxaudio_firmware_export;
+}
+
+FuFirmware *
+fu_synaptics_cxaudio_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_CXAUDIO_FIRMWARE, NULL));
 }

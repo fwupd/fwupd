@@ -43,7 +43,7 @@ fu_uefi_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 			fu_progress_step_done(progress);
 			continue;
 		}
-		uefi_device = fu_uefi_device_new(ctx, guid_names[i].guid, guid_names[i].name);
+		uefi_device = fu_uefi_device_new(guid_names[i].guid, guid_names[i].name);
 		fu_backend_device_added(backend, FU_DEVICE(uefi_device));
 		fu_progress_step_done(progress);
 	}

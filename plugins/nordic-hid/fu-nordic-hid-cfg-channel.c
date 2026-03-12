@@ -75,13 +75,14 @@ struct _FuNordicHidCfgChannel {
 	guint8 flash_area_id;
 	guint32 flashed_image_len;
 	guint8 peer_id;
+	FuUdevDevice *parent_udev;
 	GPtrArray *modules; /* of FuNordicCfgChannelModule */
 };
 
 G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_HIDRAW_DEVICE)
 
 static FuNordicHidCfgChannel *
-fu_nordic_hid_cfg_channel_new(FuDevice *proxy, guint8 id);
+fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent);
 
 static void
 fu_nordic_hid_cfg_channel_module_option_free(FuNordicCfgChannelModuleOption *opt)
@@ -111,8 +112,17 @@ fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **
 	if (self->peer_id == SELF_PEER_ID)
 		return FU_UDEV_DEVICE(self);
 
-	/* proxy */
-	return FU_UDEV_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	/* parent */
+	if (self->parent_udev == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent for peer 0x%02x",
+			    self->peer_id);
+		return NULL;
+	}
+
+	return self->parent_udev;
 }
 
 static gboolean
@@ -395,7 +405,7 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuNordicHidCfgChannel) peer = NULL;
 
-	peer = fu_nordic_hid_cfg_channel_new(FU_DEVICE(self), peer_id);
+	peer = fu_nordic_hid_cfg_channel_new(peer_id, self);
 
 	/* ensure that the general quirk content for Nordic HID devices is applied */
 	fu_device_add_instance_id_full(FU_DEVICE(peer),
@@ -417,8 +427,7 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 	/* prohibit to close parent's communication descriptor */
-	fu_device_add_private_flag(FU_DEVICE(peer), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_NORDIC_HID_CFG_CHANNEL);
+	fu_device_add_private_flag(FU_DEVICE(peer), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void
@@ -1694,11 +1703,16 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 }
 
 static FuNordicHidCfgChannel *
-fu_nordic_hid_cfg_channel_new(FuDevice *proxy, guint8 id)
+fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent)
 {
-	FuNordicHidCfgChannel *self =
-	    g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL, "proxy", proxy, NULL);
-	fu_device_incorporate(FU_DEVICE(self), proxy, FU_DEVICE_INCORPORATE_FLAG_BACKEND_ID);
+	FuNordicHidCfgChannel *self = g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL,
+						   "context",
+						   fu_device_get_context(FU_DEVICE(parent)),
+						   NULL);
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(parent),
+			      FU_DEVICE_INCORPORATE_FLAG_BACKEND_ID);
 	self->peer_id = id;
+	self->parent_udev = FU_UDEV_DEVICE(parent);
 	return self;
 }

@@ -221,3 +221,9 @@ fu_ilitek_its_firmware_class_init(FuIlitekItsFirmwareClass *klass)
 	firmware_class->parse = fu_ilitek_its_firmware_parse;
 	firmware_class->export = fu_ilitek_its_firmware_export;
 }
+
+FuFirmware *
+fu_ilitek_its_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_ILITEK_ITS_FIRMWARE, NULL));
+}

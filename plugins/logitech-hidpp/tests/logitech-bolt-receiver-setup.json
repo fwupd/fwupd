@@ -1,0 +1,401 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
+      "DeviceFile": "/dev/hidraw8",
+      "Subsystem": "hidraw",
+      "Vendor": 1133,
+      "Model": 50504,
+      "Created": "2025-02-10T14:37:09.457851Z",
+      "Events": [
+        {
+          "Id": "#d5a801ad",
+          "Data": "hidraw"
+        },
+        {
+          "Id": "#ad8c58d3"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=241\nMINOR=8\nDEVNAME=hidraw8"
+        },
+        {
+          "Id": "#d432c663",
+          "Data": "hidraw8"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#193a680c",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "hid"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "hid-generic"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=hid-generic\nHID_ID=0003:0000046D:0000C548\nHID_NAME=Logitech USB Receiver\nHID_PHYS=usb-0000:c5:00.3-1/input2\nHID_UNIQ=\nMODALIAS=hid:b0003g0001v0000046Dp0000C548"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#b8e66ef6",
+          "Data": "0003:0000046D:0000C548"
+        },
+        {
+          "Id": "#89cef97f",
+          "Data": "Logitech USB Receiver"
+        },
+        {
+          "Id": "#3e5408a4",
+          "Data": ""
+        },
+        {
+          "Id": "#00f97b18",
+          "Data": "usb-0000:c5:00.3-1/input2"
+        },
+        {
+          "Id": "#19c26604",
+          "GType": "FuUsbDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
+          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "usb"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "usb"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+        },
+        {
+          "Id": "#d432c663",
+          "Data": "bus/usb/001/046"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "#4693935e",
+          "Data": "001"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+        },
+        {
+          "Id": "#1ab3ae0a",
+          "Data": "046"
+        },
+        {
+          "Id": "#9a347f1f",
+          "Data": "EgEAAgAAAEBtBEjFAAUBAgABCQJUAAMBBKAxCQQAAAEDAQEACSERAQABIkMABwWBA0AAAQkEAQABAwECAAkhEQEAASKFAAcFggNAAAEJBAIAAQMAAAAJIREBAAEiNgAHBYMDQAAB"
+        },
+        {
+          "Id": "#624d3a4d"
+        },
+        {
+          "Id": "#193a680c",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
+          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "hid"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "hid-generic"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=hid-generic\nHID_ID=0003:0000046D:0000C548\nHID_NAME=Logitech USB Receiver\nHID_PHYS=usb-0000:c5:00.3-1/input2\nHID_UNIQ=\nMODALIAS=hid:b0003g0001v0000046Dp0000C548"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#b8e66ef6",
+          "Data": "0003:0000046D:0000C548"
+        },
+        {
+          "Id": "#3e5408a4",
+          "Data": ""
+        },
+        {
+          "Id": "#19c26604",
+          "GType": "FuUsbDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
+          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "usb"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "usb"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+        },
+        {
+          "Id": "#d432c663",
+          "Data": "bus/usb/001/046"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "#4693935e",
+          "Data": "001"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=189\nMINOR=45\nDEVNAME=bus/usb/001/046\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=046"
+        },
+        {
+          "Id": "#1ab3ae0a",
+          "Data": "046"
+        },
+        {
+          "Id": "#9a347f1f",
+          "Data": "EgEAAgAAAEBtBEjFAAUBAgABCQJUAAMBBKAxCQQAAAEDAQEACSERAQABIkMABwWBA0AAAQkEAQABAwECAAkhEQEAASKFAAcFggNAAAEJBAIAAQMAAAAJIREBAAEiNgAHBYMDQAAB"
+        },
+        {
+          "Id": "#624d3a4d"
+        },
+        {
+          "Id": "#d0550a1a",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-1/1-1:1.2/0003:046D:C548.004F/hidraw/hidraw8",
+          "PhysicalId": "usb-0000:c5:00.3-1/input2"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "usb"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "usbhid"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "usb_interface"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DEVTYPE=usb_interface\nDRIVER=usbhid\nPRODUCT=46d/c548/500\nTYPE=0/0/0\nINTERFACE=3/0/0\nMODALIAS=usb:v046DpC548d0500dc00dsc00dp00ic03isc00ip00in02"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "usb_interface"
+        },
+        {
+          "Id": "#44482569",
+          "Data": "3/0/0"
+        },
+        {
+          "Id": "#502ea0ea"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtQIFAAAIAbYQBgAAAAAAAAA="
+        },
+        {
+          "Id": "#dea3d98a"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+D9AEwAAAFslGYrgAAAAAAAAA="
+        },
+        {
+          "Id": "#c334b520"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+D9AAFAAAINbP2iwAAAAAAAAA="
+        },
+        {
+          "Id": "#47582770"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+D9AUFAAESAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "#e2a16343",
+          "Error": 19,
+          "ErrorMsg": "timeout"
+        },
+        {
+          "Id": "#182845d0"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "EP+AAAAAAA=="
+        },
+        {
+          "Id": "#27c22eeb"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtWEBDU1YIE1hc3RlciAzIEI="
+        },
+        {
+          "Id": "#ff7e60c1"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtVECKLDTI8oFAQACCgEAAAA="
+        },
+        {
+          "Id": "#6c9a3379"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtWIBCU1YIEtleXMgQgAAAAA="
+        },
+        {
+          "Id": "#98dfc13f"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtVJBY7MSIKuDAQABFAEAAAA="
+        },
+        {
+          "Id": "#e4075abf"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtWMBC1BvbGx1eCBBUFAxAAA="
+        },
+        {
+          "Id": "#dcaa5ab3"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "Ef+DtVNBTrOtHRBEAgABFAEAAAA="
+        },
+        {
+          "Id": "#49152771"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "EP+Pg7UIAA=="
+        },
+        {
+          "Id": "#f507d0bf"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "EP+Pg7UIAA=="
+        },
+        {
+          "Id": "#cdc373b0"
+        },
+        {
+          "Id": "#e2a16343",
+          "Data": "EP+Pg7UIAA=="
+        }
+      ]
+    }
+  ]
+}

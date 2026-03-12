@@ -674,12 +674,14 @@ fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_device_pd_setup(FuVliUsbhubDevice *self, GError **error)
 {
-	g_autoptr(FuVliUsbhubPdDevice) device_child = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	device_child = fu_vli_usbhub_pd_device_new(FU_DEVICE(self));
-	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
+	dev = fu_vli_usbhub_pd_device_new(self);
+	if (!fu_device_probe(dev, error))
+		return FALSE;
+	if (!fu_device_setup(dev, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -687,19 +689,21 @@ fu_vli_usbhub_device_pd_setup(FuVliUsbhubDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
+	fu_device_add_child(FU_DEVICE(self), dev);
 	return TRUE;
 }
 
 static gboolean
 fu_vli_usbhub_device_msp430_setup(FuVliUsbhubDevice *self, GError **error)
 {
-	g_autoptr(FuVliUsbhubMsp430Device) device_child = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	device_child = fu_vli_usbhub_msp430_device_new(FU_DEVICE(self));
-	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
+	dev = fu_vli_usbhub_msp430_device_new(self);
+	if (!fu_device_probe(dev, error))
+		return FALSE;
+	if (!fu_device_setup(dev, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -707,19 +711,21 @@ fu_vli_usbhub_device_msp430_setup(FuVliUsbhubDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
+	fu_device_add_child(FU_DEVICE(self), dev);
 	return TRUE;
 }
 
 static gboolean
 fu_vli_usbhub_device_rtd21xx_setup(FuVliUsbhubDevice *self, GError **error)
 {
-	g_autoptr(FuVliUsbhubRtd21xxDevice) device_child = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	device_child = fu_vli_usbhub_rtd21xx_device_new(FU_DEVICE(self));
-	if (!fu_device_setup(FU_DEVICE(device_child), &error_local)) {
+	dev = fu_vli_usbhub_rtd21xx_device_new(self);
+	if (!fu_device_probe(dev, error))
+		return FALSE;
+	if (!fu_device_setup(dev, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("%s", error_local->message);
 		} else {
@@ -727,7 +733,7 @@ fu_vli_usbhub_device_rtd21xx_setup(FuVliUsbhubDevice *self, GError **error)
 		}
 		return TRUE;
 	}
-	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
+	fu_device_add_child(FU_DEVICE(self), dev);
 	return TRUE;
 }
 
@@ -856,16 +862,20 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_vli_usbhub_device_check_firmware(FuDevice *device,
-				    FuFirmware *firmware,
-				    FuFirmwareParseFlags flags,
-				    GError **error)
+static FuFirmware *
+fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
+				      GInputStream *stream,
+				      FuProgress *progress,
+				      FuFirmwareParseFlags flags,
+				      GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
 	FuVliDeviceKind device_kind;
+	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_firmware_new();
 
 	/* check is compatible with firmware */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
 	device_kind = fu_vli_usbhub_firmware_get_device_kind(FU_VLI_USBHUB_FIRMWARE(firmware));
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) != device_kind) {
 		g_set_error(
@@ -875,7 +885,7 @@ fu_vli_usbhub_device_check_firmware(FuDevice *device,
 		    "firmware incompatible, got %s, expected %s",
 		    fu_vli_device_kind_to_string(device_kind),
 		    fu_vli_device_kind_to_string(fu_vli_device_get_kind(FU_VLI_DEVICE(self))));
-		return FALSE;
+		return NULL;
 	}
 	if (fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1) !=
 	    fu_vli_usbhub_firmware_get_device_id(FU_VLI_USBHUB_FIRMWARE(firmware))) {
@@ -885,11 +895,12 @@ fu_vli_usbhub_device_check_firmware(FuDevice *device,
 			    "firmware incompatible, got 0x%04x, expected 0x%04x",
 			    fu_vli_usbhub_firmware_get_device_id(FU_VLI_USBHUB_FIRMWARE(firmware)),
 			    (guint)fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1));
-		return FALSE;
+		return NULL;
 	}
 
-	/* success */
-	return TRUE;
+	/* we could check this against flags */
+	g_info("parsed version: %s", fu_firmware_get_version(firmware));
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -1410,7 +1421,6 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_VLI_USBHUB_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB2);
@@ -1446,7 +1456,7 @@ fu_vli_usbhub_device_class_init(FuVliUsbhubDeviceClass *klass)
 	device_class->probe = fu_vli_usbhub_device_probe;
 	device_class->dump_firmware = fu_vli_usbhub_device_dump_firmware;
 	device_class->write_firmware = fu_vli_usbhub_device_write_firmware;
-	device_class->check_firmware = fu_vli_usbhub_device_check_firmware;
+	device_class->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
 	device_class->attach = fu_vli_usbhub_device_attach;
 	device_class->to_string = fu_vli_usbhub_device_to_string;
 	device_class->ready = fu_vli_usbhub_device_ready;

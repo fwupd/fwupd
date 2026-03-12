@@ -8003,7 +8003,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 			if (plugin == NULL)
 				continue;
 			g_info("auto-removing backend device %s", id_display);
-			fu_plugin_remove_device(plugin, device_tmp);
+			fu_plugin_device_remove(plugin, device_tmp);
 		}
 	}
 }
@@ -9370,6 +9370,7 @@ fu_engine_constructed(GObject *obj)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
 #endif
 
 	/* add some runtime versions of things the daemon depends on */

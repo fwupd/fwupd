@@ -58,12 +58,6 @@ Device kind, e.g. `VL102`.
 
 Since: 1.3.7
 
-### VliPdOffset
-
-Device PD offset, e.g. `0x10000`.
-
-Since: 2.1.1
-
 ### VliSpiAutoDetect
 
 SPI autodetect (default 0x1).

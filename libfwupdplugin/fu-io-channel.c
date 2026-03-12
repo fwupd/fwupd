@@ -289,10 +289,9 @@ fu_io_channel_write_raw(FuIOChannel *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
 				    "failed to write: "
-				    "wrote %" G_GSSIZE_FORMAT " of %" G_GSIZE_FORMAT ": %s",
+				    "wrote %" G_GSSIZE_FORMAT " of %" G_GSIZE_FORMAT,
 				    wrote,
-				    datasz,
-				    fwupd_strerror(errno));
+				    datasz);
 			return FALSE;
 		}
 		return TRUE;

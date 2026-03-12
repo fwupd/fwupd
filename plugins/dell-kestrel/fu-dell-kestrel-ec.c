@@ -28,8 +28,6 @@ fu_dell_kestrel_ec_dev_entry(FuDellKestrelEc *self,
 	g_autoptr(FuStructDellKestrelDockInfoHeader) st = NULL;
 	guint num = 0;
 
-	if (self->dock_info == NULL)
-		return NULL;
 	st = fu_struct_dell_kestrel_dock_info_get_header(self->dock_info);
 	num = fu_struct_dell_kestrel_dock_info_header_get_total_devices(st);
 	if (num < 1) {
@@ -619,8 +617,6 @@ fu_dell_kestrel_ec_get_ec_version(FuDellKestrelEc *self)
 guint32
 fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 {
-	if (self->dock_data == NULL)
-		return 0;
 	return fu_struct_dell_kestrel_dock_data_get_dock_firmware_pkg_ver(self->dock_data);
 }
 

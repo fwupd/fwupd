@@ -292,7 +292,7 @@ fu_uefi_capsule_fake_esp_new(FuTemporaryDirectory *tmpdir)
 	fu_volume_set_partition_kind(esp, FU_VOLUME_KIND_ESP);
 	fu_volume_set_partition_uuid(esp, "00000000-0000-0000-0000-000000000000");
 
-	/* make fu_uefi_capsule_device_build_efi_path() distro-neutral */
+	/* make fu_uefi_get_esp_path_for_os() distro-neutral */
 	tmpdir_efi = g_build_filename(tmpdir_path, "EFI", EFI_OS_DIR, NULL);
 	g_assert_cmpint(g_mkdir_with_parents(tmpdir_efi, 0700), ==, 0);
 

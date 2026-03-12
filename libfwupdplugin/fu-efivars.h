@@ -79,12 +79,6 @@ fu_efivars_get_data(FuEfivars *self,
 		    gsize *data_sz,
 		    FuEfiVariableAttrs *attr,
 		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
-gboolean
-fu_efivars_get_attrs(FuEfivars *self,
-		     const gchar *guid,
-		     const gchar *name,
-		     FuEfiVariableAttrs *attrs,
-		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 GBytes *
 fu_efivars_get_data_bytes(FuEfivars *self,
 			  const gchar *guid,

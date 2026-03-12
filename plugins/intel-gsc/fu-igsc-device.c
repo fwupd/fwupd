@@ -428,17 +428,21 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 					   NULL);
 }
 
-static gboolean
-fu_igsc_device_check_firmware(FuDevice *device,
-			      FuFirmware *firmware,
-			      FuFirmwareParseFlags flags,
-			      GError **error)
+static FuFirmware *
+fu_igsc_device_prepare_firmware(FuDevice *device,
+				GInputStream *stream,
+				FuProgress *progress,
+				FuFirmwareParseFlags flags,
+				GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
 	guint fw_arb_svn;
 	guint fw_hw_sku;
+	g_autoptr(FuFirmware) firmware = fu_igsc_code_firmware_new();
 
 	/* check project code */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
 	if (g_strcmp0(self->project, fu_firmware_get_id(firmware)) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -446,7 +450,7 @@ fu_igsc_device_check_firmware(FuDevice *device,
 			    "firmware is for a different project, got %s, expected %s",
 			    fu_firmware_get_id(firmware),
 			    self->project);
-		return FALSE;
+		return NULL;
 	}
 
 	/* check SKU */
@@ -458,7 +462,7 @@ fu_igsc_device_check_firmware(FuDevice *device,
 			    "firmware is for a different SKU, got 0x%x, expected 0x%x",
 			    fw_hw_sku,
 			    self->hw_sku);
-		return FALSE;
+		return NULL;
 	}
 
 	/* check SVN */
@@ -470,21 +474,20 @@ fu_igsc_device_check_firmware(FuDevice *device,
 			    "firmware incompatible, ARB SVN was 0x%x, minimum required is 0x%x",
 			    fw_arb_svn,
 			    self->svn_min_allowed);
-		return FALSE;
+		return NULL;
 	}
-	if (fw_arb_svn < self->svn_executing &&
-	    (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
+	if (fw_arb_svn < self->svn_executing && (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "firmware incompatible, ARB SVN was 0x%x, hardware ARB SVN is 0x%x",
 			    fw_arb_svn,
 			    self->svn_executing);
-		return FALSE;
+		return NULL;
 	}
 
 	/* success */
-	return TRUE;
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -854,7 +857,6 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_GPU);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IGSC_CODE_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_IS_WEDGED);
@@ -881,6 +883,6 @@ fu_igsc_device_class_init(FuIgscDeviceClass *klass)
 	device_class->to_string = fu_igsc_device_to_string;
 	device_class->setup = fu_igsc_device_setup;
 	device_class->probe = fu_igsc_device_probe;
-	device_class->check_firmware = fu_igsc_device_check_firmware;
+	device_class->prepare_firmware = fu_igsc_device_prepare_firmware;
 	device_class->write_firmware = fu_igsc_device_write_firmware;
 }

@@ -20,7 +20,6 @@ struct _FuLogitechHidppRuntimeClass {
 };
 
 gboolean
-fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error)
-    G_GNUC_NON_NULL(1);
+fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error);
 guint8
-fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self) G_GNUC_NON_NULL(1);
+fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self);

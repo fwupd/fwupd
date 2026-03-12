@@ -32,15 +32,17 @@ fu_igsc_aux_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 {
-	FuDevice *proxy;
+	FuDevice *parent;
+
+	/* from the self tests */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 
 	/* add extra instance IDs */
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
-		return FALSE;
 	fu_device_add_instance_str(device,
 				   "PART",
-				   fu_device_has_private_flag(proxy, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
+				   fu_device_has_private_flag(parent, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
 				       ? "FWDATA_RECOVERY"
 				       : "FWDATA");
 	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
@@ -59,14 +61,14 @@ static gboolean
 fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscAuxDevice *self = FU_IGSC_AUX_DEVICE(device);
-	FuDevice *proxy;
+	FuIgscDevice *parent;
 	g_autofree gchar *version = NULL;
 
 	/* get version */
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
 		return FALSE;
-	if (!fu_igsc_device_get_aux_version(FU_IGSC_DEVICE(proxy),
+	if (!fu_igsc_device_get_aux_version(parent,
 					    &self->oem_version,
 					    &self->major_version,
 					    &self->major_vcn,
@@ -74,7 +76,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to get aux version: ");
 		return FALSE;
 	}
-	if (fu_device_has_private_flag(proxy, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
+	if (fu_device_has_private_flag(FU_DEVICE(parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
 		version = g_strdup_printf("%u.%u", self->major_version, self->oem_version);
@@ -93,7 +95,7 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuIgscAuxDevice *self = FU_IGSC_AUX_DEVICE(device);
-	FuDevice *proxy;
+	FuIgscDevice *parent;
 	g_autoptr(FuIgscAuxFirmware) firmware = FU_IGSC_AUX_FIRMWARE(fu_igsc_aux_firmware_new());
 
 	/* parse container */
@@ -101,14 +103,14 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* search the device list for a match */
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
 		return NULL;
 	if (!fu_igsc_aux_firmware_match_device(firmware,
-					       fu_device_get_vid(proxy),
-					       fu_device_get_pid(proxy),
-					       fu_igsc_device_get_ssvid(FU_IGSC_DEVICE(proxy)),
-					       fu_igsc_device_get_ssdid(FU_IGSC_DEVICE(proxy)),
+					       fu_device_get_vid(FU_DEVICE(parent)),
+					       fu_device_get_pid(FU_DEVICE(parent)),
+					       fu_igsc_device_get_ssvid(parent),
+					       fu_igsc_device_get_ssdid(parent),
 					       error))
 		return NULL;
 
@@ -143,7 +145,7 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	FuDevice *proxy;
+	FuIgscDevice *parent;
 	g_autoptr(GBytes) fw_info = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 
@@ -156,10 +158,10 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 	    fu_firmware_get_image_by_idx_stream(firmware, FU_IFWI_FPT_FIRMWARE_IDX_SDTA, error);
 	if (stream_payload == NULL)
 		return FALSE;
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
 		return FALSE;
-	return fu_igsc_device_write_blob(FU_IGSC_DEVICE(proxy),
+	return fu_igsc_device_write_blob(parent,
 					 FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA,
 					 fw_info,
 					 stream_payload,
@@ -187,7 +189,6 @@ fu_igsc_aux_device_init(FuIgscAuxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_IGSC_DEVICE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");

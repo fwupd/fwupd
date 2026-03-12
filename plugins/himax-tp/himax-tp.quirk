@@ -1,3 +1,0 @@
-# Himax Touch device
-[HIDRAW\VEN_3558&DEV_14FD]
-Plugin = himax_tp

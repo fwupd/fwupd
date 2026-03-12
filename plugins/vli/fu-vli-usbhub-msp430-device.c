@@ -31,20 +31,15 @@ G_DEFINE_TYPE(FuVliUsbhubMsp430Device, fu_vli_usbhub_msp430_device, FU_TYPE_DEVI
 #define I2C_W_VDR 0xb0 /* write vendor command */
 
 static gboolean
-fu_vli_usbhub_msp430_device_i2c_read(FuVliUsbhubMsp430Device *self,
+fu_vli_usbhub_msp430_device_i2c_read(FuVliUsbhubDevice *self,
 				     guint8 cmd,
 				     guint8 *buf,
 				     gsize bufsz,
 				     GError **error)
 {
-	FuDevice *proxy;
 	guint16 value = ((guint16)I2C_ADDR_WRITE << 8) | cmd;
 	guint16 index = (guint16)I2C_ADDR_READ << 8;
-
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
@@ -65,12 +60,11 @@ fu_vli_usbhub_msp430_device_i2c_read(FuVliUsbhubMsp430Device *self,
 }
 
 static gboolean
-fu_vli_usbhub_msp430_device_i2c_read_status(FuVliUsbhubMsp430Device *self,
+fu_vli_usbhub_msp430_device_i2c_read_status(FuVliUsbhubDevice *self,
 					    FuVliUsbhubI2cStatus *status,
 					    GError **error)
 {
 	guint8 buf[1] = {0xff};
-
 	if (!fu_vli_usbhub_msp430_device_i2c_read(self,
 						  I2C_CMD_READ_STATUS,
 						  buf,
@@ -83,14 +77,13 @@ fu_vli_usbhub_msp430_device_i2c_read_status(FuVliUsbhubMsp430Device *self,
 }
 
 static gboolean
-fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubMsp430Device *self,
+fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubDevice *self,
 					   guint8 disable_start_bit,
 					   guint8 disable_end_bit,
 					   const guint8 *buf,
 					   gsize bufsz,
 					   GError **error)
 {
-	FuDevice *proxy;
 	guint16 value = (((guint16)disable_start_bit) << 8) | disable_end_bit;
 	g_autofree guint8 *buf_mut = NULL;
 
@@ -98,10 +91,7 @@ fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubMsp430Device *self,
 	buf_mut = fu_memdup_safe(buf, bufsz, error);
 	if (buf_mut == NULL)
 		return FALSE;
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
@@ -123,12 +113,15 @@ fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubMsp430Device *self,
 static gboolean
 fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 {
-	FuVliUsbhubMsp430Device *self = FU_VLI_USBHUB_MSP430_DEVICE(device);
+	FuVliUsbhubDevice *parent;
 	guint8 buf[11] = {0x0};
 	g_autofree gchar *version = NULL;
 
 	/* get versions */
-	if (!fu_vli_usbhub_msp430_device_i2c_read(self,
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_vli_usbhub_msp430_device_i2c_read(parent,
 						  I2C_CMD_READ_VERSIONS,
 						  buf,
 						  sizeof(buf),
@@ -154,22 +147,29 @@ fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuVliUsbhubMsp430Device *self = FU_VLI_USBHUB_MSP430_DEVICE(device);
+	FuVliUsbhubDevice *parent;
 	FuVliUsbhubI2cStatus status = 0xff;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	const guint8 buf[] = {
 	    I2C_ADDR_WRITE,
 	    I2C_CMD_UPGRADE,
 	};
 
 	/* open device */
-	if (!fu_vli_usbhub_msp430_device_i2c_write_data(self, 0, 0, buf, sizeof(buf), error))
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent, 0, 0, buf, sizeof(buf), error))
 		return FALSE;
 
 	/* avoid power instability by waiting T1 */
 	fu_device_sleep_full(device, 1000, progress); /* ms */
 
 	/* check the device came back */
-	if (!fu_vli_usbhub_msp430_device_i2c_read_status(self, &status, error)) {
+	if (!fu_vli_usbhub_msp430_device_i2c_read_status(parent, &status, error)) {
 		g_prefix_error_literal(error, "device did not come back after detach: ");
 		return FALSE;
 	}
@@ -186,17 +186,16 @@ typedef struct {
 static gboolean
 fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuVliUsbhubMsp430Device *self = FU_VLI_USBHUB_MSP430_DEVICE(device);
 	FuVliUsbhubDeviceRequest *req = (FuVliUsbhubDeviceRequest *)user_data;
+	FuVliUsbhubDevice *parent;
 	FuVliUsbhubI2cStatus status = 0xff;
-	FuDevice *proxy;
 
 	fu_device_sleep(device, 5); /* ms */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
 		return FALSE;
-	if (fu_usb_device_get_spec(FU_USB_DEVICE(proxy)) >= 0x0300 || req->bufsz <= 32) {
-		if (!fu_vli_usbhub_msp430_device_i2c_write_data(self,
+	if (fu_usb_device_get_spec(FU_USB_DEVICE(parent)) >= 0x0300 || req->bufsz <= 32) {
+		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent,
 								0,
 								0,
 								req->buf,
@@ -205,9 +204,9 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 			return FALSE;
 	} else {
 		/* for U2, hub data buffer <= 32 bytes */
-		if (!fu_vli_usbhub_msp430_device_i2c_write_data(self, 0, 1, req->buf, 32, error))
+		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent, 0, 1, req->buf, 32, error))
 			return FALSE;
-		if (!fu_vli_usbhub_msp430_device_i2c_write_data(self,
+		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent,
 								1,
 								0,
 								req->buf + 32,
@@ -222,7 +221,7 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 
 	/* read data to check status */
 	fu_device_sleep(device, 5); /* ms */
-	if (!fu_vli_usbhub_msp430_device_i2c_read_status(self, &status, error))
+	if (!fu_vli_usbhub_msp430_device_i2c_read_status(parent, &status, error))
 		return FALSE;
 	return fu_vli_usbhub_i2c_check_status(status, error);
 }
@@ -234,12 +233,16 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
-	FuDevice *proxy;
+	FuVliUsbhubDevice *parent;
 	GPtrArray *records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* transfer by I²C write, and check status by I²C read */
@@ -310,13 +313,14 @@ static gboolean
 fu_vli_usbhub_msp430_device_probe(FuDevice *device, GError **error)
 {
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_MSP430;
-	FuDevice *proxy;
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, NULL));
 
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
-		return FALSE;
 	fu_device_set_name(device, fu_vli_device_kind_to_string(device_kind));
-	fu_device_incorporate(device, proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	if (parent != NULL) {
+		fu_device_incorporate(device,
+				      FU_DEVICE(parent),
+				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	}
 
 	/* add instance ID */
 	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(device_kind));
@@ -345,9 +349,6 @@ fu_vli_usbhub_msp430_device_init(FuVliUsbhubMsp430Device *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
 	fu_device_set_summary(FU_DEVICE(self), "I²C dock management device");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_VLI_USBHUB_DEVICE);
 
 	/* the MSP device reboot takes down the entire hub for ~60 seconds */
 	fu_device_set_remove_delay(FU_DEVICE(self), 120 * 1000);
@@ -364,8 +365,10 @@ fu_vli_usbhub_msp430_device_class_init(FuVliUsbhubMsp430DeviceClass *klass)
 	device_class->set_progress = fu_vli_usbhub_msp430_device_set_progress;
 }
 
-FuVliUsbhubMsp430Device *
-fu_vli_usbhub_msp430_device_new(FuDevice *proxy)
+FuDevice *
+fu_vli_usbhub_msp430_device_new(FuVliUsbhubDevice *parent)
 {
-	return g_object_new(FU_TYPE_VLI_USBHUB_MSP430_DEVICE, "proxy", proxy, NULL);
+	FuVliUsbhubMsp430Device *self =
+	    g_object_new(FU_TYPE_VLI_USBHUB_MSP430_DEVICE, "parent", parent, NULL);
+	return FU_DEVICE(self);
 }

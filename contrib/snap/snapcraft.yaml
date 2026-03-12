@@ -140,10 +140,12 @@ parts:
       - fwupd-unsigned-dev
       - hwdata
       - libcurl4-openssl-dev
+      - libarchive-dev
       - libcbor-dev
       - libcairo-dev
       - libglib2.0-dev
       - libgnutls28-dev
+      - libgpgme11-dev
       - libusb-1.0-0-dev
       - libjcat-dev
       - liblzma-dev
@@ -173,6 +175,7 @@ parts:
       - libnghttp2-14
       - libpsl5
       - librtmp1
+      - libarchive13
       - libcurl4
       - libcbor0.10
       - libassuan0
@@ -180,6 +183,7 @@ parts:
       - libjcat1
       - liblzma5
       - libusb-1.0-0
+      - libgpgme11
       - libpolkit-gobject-1-0
       - libreadline8t64
       - libtss2-esys-3.0.2-0
@@ -200,6 +204,10 @@ parts:
       - libmbim-glib4
       - libduktape207
     prime:
+      # we explicitly don't want /usr/bin/gpgconf
+      # this will cause gpgme to error finding it
+      # but that also avoids trying to use nonexistent
+      # /usr/bin/gpg2
       - -etc/dconf/db
       - -etc/grub.d
       - -etc/systemd/system
@@ -218,11 +226,14 @@ parts:
       - -usr/lib/dconf
       - -usr/lib/gcc
       - -usr/lib/glib-networking
+      - -usr/lib/gnupg
+      - -usr/lib/gnupg2
       - -usr/lib/sasl2
       - -usr/lib/systemd
       - -usr/lib/*/audit
       - -usr/share/bash-completion
       - -usr/share/dbus-1
+      - -usr/share/gnupg
       - -usr/share/glib-2.0/schemas
       - -usr/share/session-migration
       - -usr/share/upstart
@@ -236,6 +247,7 @@ parts:
       - -usr/share/polkit-1
       - -usr/share/vala
       - -usr/share/doc
+      - -usr/share/gnupg2
       - -usr/share/info
       - -usr/share/gir-1.0
       - -usr/share/upstart

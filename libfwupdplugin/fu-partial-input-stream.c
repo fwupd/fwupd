@@ -248,11 +248,8 @@ fu_partial_input_stream_read(GInputStream *stream,
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), -1);
 	g_return_val_if_fail(error == NULL || *error == NULL, -1);
 	if (self->size < (gsize)g_seekable_tell(G_SEEKABLE(stream))) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "base stream is outside seekable range");
-		return -1;
+		g_warning("base stream is outside seekable range");
+		return 0;
 	}
 	count = MIN(count, self->size - g_seekable_tell(G_SEEKABLE(stream)));
 	return g_input_stream_read(self->base_stream, buffer, count, cancellable, error);

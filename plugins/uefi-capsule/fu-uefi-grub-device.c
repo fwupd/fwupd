@@ -17,37 +17,21 @@ struct _FuUefiGrubDevice {
 G_DEFINE_TYPE(FuUefiGrubDevice, fu_uefi_grub_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
-fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self, const gchar *app_dst, GError **error)
+fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
+			     const gchar *esp_path,
+			     const gchar *target_app,
+			     GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
-	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
 	g_autofree gchar *fn_grub_cfg = NULL;
 	const gchar *argv_mkconfig[] = {"", "-o", "grub.cfg", NULL};
 	const gchar *argv_reboot[] = {"", "fwupd", NULL};
 	gboolean exists_mkconfig = FALSE;
-	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *grub_mkconfig = NULL;
 	g_autofree gchar *grub_reboot = NULL;
 	g_autofree gchar *grub_target = NULL;
 	g_autofree gchar *output = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
-
-	/* sanity check */
-	if (esp == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "could not find ESP volume");
-		return FALSE;
-	}
-	esp_path = fu_volume_get_mount_point(esp);
-	if (esp_path == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "could not determine ESP mount point");
-		return FALSE;
-	}
 
 	/* find grub.conf */
 	fn_grub_cfg = fu_context_build_filename(ctx,
@@ -108,7 +92,7 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self, const gchar *app_dst, GE
 	}
 
 	/* replace ESP info in conf with what we detected */
-	g_string_append_printf(str, "EFI_PATH=%s\n", app_dst);
+	g_string_append_printf(str, "EFI_PATH=%s\n", target_app);
 	g_string_replace(str, esp_path, "", 0);
 	g_string_append_printf(str, "ESP=%s\n", esp_path);
 	grub_target = fu_context_build_filename(ctx,
@@ -178,12 +162,15 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
+	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
 	const gchar *fw_class = fu_uefi_capsule_device_get_guid(self);
 	g_autofree gchar *basename = NULL;
+	g_autofree gchar *capsule_path = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *app_basename = NULL;
-	g_autofree gchar *app_src = NULL;
-	g_autofree gchar *app_dst = NULL;
+	g_autofree gchar *source_app = NULL;
+	g_autofree gchar *target_app = NULL;
 	g_autofree gchar *varname = fu_uefi_capsule_device_build_varname(self);
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -203,14 +190,10 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* save the blob to the ESP */
+	directory = fu_uefi_get_esp_path_for_os(esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", fw_class);
-	fn = fu_uefi_capsule_device_build_efi_path(FU_UEFI_CAPSULE_DEVICE(device),
-						   error,
-						   "fw",
-						   basename,
-						   NULL);
-	if (fn == NULL)
-		return FALSE;
+	capsule_path = g_build_filename(directory, "fw", basename, NULL);
+	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	fixed_fw = fu_uefi_capsule_device_fixup_firmware(self, fw, error);
@@ -233,31 +216,25 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	}
 
 	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_capsule_device_write_update_info(self, fn, varname, fw_class, error))
+	if (!fu_uefi_capsule_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	app_basename = fu_uefi_capsule_build_app_basename(pstore, "fwupd", error);
-	if (app_basename == NULL)
-		return FALSE;
-	app_src = fu_uefi_get_built_app_path(pstore, efivars, app_basename, error);
-	if (app_src == NULL)
-		return FALSE;
-	app_dst = fu_uefi_capsule_device_build_efi_path(FU_UEFI_CAPSULE_DEVICE(device),
-							error,
-							app_basename,
-							NULL);
-	if (app_dst == NULL)
+	source_app = fu_uefi_get_built_app_path(pstore, efivars, "fwupd", error);
+	if (source_app == NULL)
 		return FALSE;
 
 	/* test if correct asset in place */
-	if (!fu_uefi_esp_target_verify(app_src, app_dst)) {
-		if (!fu_uefi_esp_target_copy(app_src, app_dst, error))
+	target_app = fu_uefi_get_esp_app_path(pstore, esp_path, "fwupd", error);
+	if (target_app == NULL)
+		return FALSE;
+	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {
+		if (!fu_uefi_esp_target_copy(source_app, esp, target_app, error))
 			return FALSE;
 	}
 
 	/* we are using GRUB instead of NVRAM variables */
-	return fu_uefi_grub_device_mkconfig(self, app_dst, error);
+	return fu_uefi_grub_device_mkconfig(self, esp_path, target_app, error);
 }
 
 static void

@@ -30,21 +30,15 @@ G_DEFINE_TYPE(FuVliUsbhubRtd21xxDevice, fu_vli_usbhub_rtd21xx_device, FU_TYPE_DE
 #define ISP_PACKET_SIZE	   32
 
 static gboolean
-fu_vli_usbhub_rtd21xx_device_i2c_write(FuVliUsbhubRtd21xxDevice *self,
+fu_vli_usbhub_rtd21xx_device_i2c_write(FuVliUsbhubDevice *self,
 				       guint8 target_addr,
 				       guint8 sub_addr,
 				       guint8 *data,
 				       gsize datasz,
 				       GError **error)
 {
-	FuDevice *proxy;
 	gsize bufsz = datasz + 2;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
-
-	/* get proxy */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
 
 	buf[0] = target_addr;
 	buf[1] = sub_addr;
@@ -58,7 +52,7 @@ fu_vli_usbhub_rtd21xx_device_i2c_write(FuVliUsbhubRtd21xxDevice *self,
 			    error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, datasz + 2);
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
@@ -79,20 +73,14 @@ fu_vli_usbhub_rtd21xx_device_i2c_write(FuVliUsbhubRtd21xxDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_rtd21xx_device_i2c_read(FuVliUsbhubRtd21xxDevice *self,
+fu_vli_usbhub_rtd21xx_device_i2c_read(FuVliUsbhubDevice *self,
 				      guint8 target_addr,
 				      guint8 sub_addr,
 				      guint8 *data,
 				      gsize datasz,
 				      GError **error)
 {
-	FuDevice *proxy;
-
-	/* get proxy */
-	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
-	if (proxy == NULL)
-		return FALSE;
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(proxy),
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
 					    FU_USB_RECIPIENT_DEVICE,
@@ -117,9 +105,13 @@ fu_vli_usbhub_rtd21xx_device_read_status_raw(FuVliUsbhubRtd21xxDevice *self,
 					     guint8 *status,
 					     GError **error)
 {
+	FuVliUsbhubDevice *parent;
 	guint8 buf[] = {0x00};
 
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_read(self,
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_read(parent,
 						   UC_FOREGROUND_TARGET_ADDR,
 						   UC_FOREGROUND_STATUS,
 						   buf,
@@ -160,11 +152,15 @@ fu_vli_usbhub_rtd21xx_device_read_status(FuVliUsbhubRtd21xxDevice *self,
 static gboolean
 fu_vli_usbhub_rtd21xx_device_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *self, GError **error)
 {
+	FuVliUsbhubDevice *parent;
 	guint8 buf_rep[7] = {0x00};
 	guint8 buf_req[] = {FU_VLI_USBHUB_RTD21XX_ISP_CMD_GET_FW_INFO};
 	g_autofree gchar *version = NULL;
 
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    buf_req,
@@ -176,7 +172,7 @@ fu_vli_usbhub_rtd21xx_device_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *s
 
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300);
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_read(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_read(parent,
 						   UC_FOREGROUND_TARGET_ADDR,
 						   0x00,
 						   buf_rep,
@@ -215,9 +211,13 @@ fu_vli_usbhub_rtd21xx_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_rtd21xx_device_detach_raw(FuVliUsbhubRtd21xxDevice *self, GError **error)
 {
+	FuVliUsbhubDevice *parent;
 	guint8 buf[] = {0x03};
 
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self, 0x6A, 0x31, buf, sizeof(buf), error)) {
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent, 0x6A, 0x31, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to detach: ");
 		return FALSE;
 	}
@@ -247,6 +247,16 @@ fu_vli_usbhub_rtd21xx_device_detach_cb(FuDevice *device, gpointer user_data, GEr
 static gboolean
 fu_vli_usbhub_rtd21xx_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuDevice *parent;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* open device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(parent, error);
+	if (locker == NULL)
+		return FALSE;
 	if (!fu_device_retry(device, fu_vli_usbhub_rtd21xx_device_detach_cb, 100, NULL, error))
 		return FALSE;
 
@@ -258,10 +268,18 @@ fu_vli_usbhub_rtd21xx_device_detach(FuDevice *device, FuProgress *progress, GErr
 static gboolean
 fu_vli_usbhub_rtd21xx_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuVliUsbhubRtd21xxDevice *self = FU_VLI_USBHUB_RTD21XX_DEVICE(device);
+	FuVliUsbhubDevice *parent;
 	guint8 buf[] = {FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_RESET};
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	/* open device */
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    buf,
@@ -283,11 +301,13 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
+	FuVliUsbhubDevice *parent;
 	FuVliUsbhubRtd21xxDevice *self = FU_VLI_USBHUB_RTD21XX_DEVICE(device);
 	guint32 project_addr;
 	guint8 project_id_count;
 	guint8 read_buf[10] = {0};
 	guint8 write_buf[ISP_PACKET_SIZE] = {0};
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -298,6 +318,14 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
 
+	/* open device */
+	parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
+	if (locker == NULL)
+		return FALSE;
+
 	/* simple image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
@@ -306,7 +334,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* enable ISP high priority */
 	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_ENTER_FW_UPDATE;
 	write_buf[1] = 0x01;
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    write_buf,
@@ -320,7 +348,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 
 	/* get project ID address */
 	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_GET_PROJECT_ID_ADDR;
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    write_buf,
@@ -332,7 +360,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 
 	/* read back 6 bytes data */
 	fu_device_sleep(device, I2C_DELAY_AFTER_SEND * 40);
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_read(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_read(parent,
 						   UC_FOREGROUND_TARGET_ADDR,
 						   UC_FOREGROUND_STATUS,
 						   read_buf,
@@ -370,7 +398,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to write project ID from 0x%04x: ", project_addr);
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    write_buf,
@@ -385,7 +413,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* background FW update start command */
 	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_START;
 	fu_memwrite_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    write_buf,
@@ -413,7 +441,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 			return FALSE;
 		if (!fu_vli_usbhub_rtd21xx_device_read_status(self, NULL, error))
 			return FALSE;
-		if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+		if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 							    UC_FOREGROUND_TARGET_ADDR,
 							    UC_FOREGROUND_ISP_DATA_OPCODE,
 							    fu_chunk_get_data_out(chk),
@@ -436,7 +464,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	if (!fu_vli_usbhub_rtd21xx_device_read_status(self, NULL, error))
 		return FALSE;
 	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_ISP_DONE;
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    write_buf,
@@ -451,7 +479,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	if (!fu_vli_usbhub_rtd21xx_device_read_status(self, NULL, error))
 		return FALSE;
 	write_buf[0] = FU_VLI_USBHUB_RTD21XX_ISP_CMD_FW_UPDATE_EXIT;
-	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(self,
+	if (!fu_vli_usbhub_rtd21xx_device_i2c_write(parent,
 						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_OPCODE,
 						    write_buf,
@@ -473,11 +501,15 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 static gboolean
 fu_vli_usbhub_rtd21xx_device_reload(FuDevice *device, GError **error)
 {
-	FuDevice *proxy;
+	FuDevice *parent;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* open proxy device */
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
+	/* open parent device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(parent, error);
+	if (locker == NULL)
 		return FALSE;
 	return fu_vli_usbhub_rtd21xx_device_setup(device, error);
 }
@@ -486,13 +518,14 @@ static gboolean
 fu_vli_usbhub_rtd21xx_device_probe(FuDevice *device, GError **error)
 {
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_RTD21XX;
-	FuDevice *proxy;
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device, NULL));
 
-	proxy = fu_device_get_proxy(device, error);
-	if (proxy == NULL)
-		return FALSE;
 	fu_device_set_name(device, fu_vli_device_kind_to_string(device_kind));
-	fu_device_incorporate(device, proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	if (parent != NULL) {
+		fu_device_incorporate(device,
+				      FU_DEVICE(parent),
+				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	}
 
 	/* add instance ID */
 	fu_device_add_instance_str(device, "I2C", fu_vli_device_kind_to_string(device_kind));
@@ -521,9 +554,6 @@ fu_vli_usbhub_rtd21xx_device_init(FuVliUsbhubRtd21xxDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration(FU_DEVICE(self), 100); /* seconds */
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_VLI_USBHUB_DEVICE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_retry_set_delay(FU_DEVICE(self), 30); /* ms */
 }
 
@@ -540,8 +570,10 @@ fu_vli_usbhub_rtd21xx_device_class_init(FuVliUsbhubRtd21xxDeviceClass *klass)
 	device_class->set_progress = fu_vli_usbhub_rtd21xx_device_set_progress;
 }
 
-FuVliUsbhubRtd21xxDevice *
-fu_vli_usbhub_rtd21xx_device_new(FuDevice *proxy)
+FuDevice *
+fu_vli_usbhub_rtd21xx_device_new(FuVliUsbhubDevice *parent)
 {
-	return g_object_new(FU_TYPE_VLI_USBHUB_RTD21XX_DEVICE, "proxy", proxy, NULL);
+	FuVliUsbhubRtd21xxDevice *self =
+	    g_object_new(FU_TYPE_VLI_USBHUB_RTD21XX_DEVICE, "parent", parent, NULL);
+	return FU_DEVICE(self);
 }

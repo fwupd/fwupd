@@ -285,7 +285,9 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET,
 	    FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN,
 	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN,
+	    FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN,
 	    FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN,
+	    FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY,
 	    FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK,
 	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR,
@@ -322,7 +324,6 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT,
 	    FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED,
 	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_VERSION,
-	    FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -703,10 +704,6 @@ fu_device_retry_full(FuDevice *self,
 	g_return_val_if_fail(func != NULL, FALSE);
 	g_return_val_if_fail(count >= 1, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* fuzzing, so just do each action once */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
-		count = 1;
 
 	for (guint i = 0;; i++) {
 		g_autoptr(GError) error_local = NULL;
@@ -1692,14 +1689,6 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	/* unchanged */
 	if (proxy == priv->proxy)
 		return;
-
-	/* check is the correct type */
-	if (proxy != NULL && priv->proxy_gtype != G_TYPE_INVALID &&
-	    !g_type_is_a(G_OBJECT_TYPE(proxy), priv->proxy_gtype)) {
-		g_critical("wrong proxy GType, got %s and expected %s",
-			   G_OBJECT_TYPE_NAME(proxy),
-			   g_type_name(priv->proxy_gtype));
-	}
 
 	/* disconnect from old proxy */
 	if (priv->proxy != NULL && priv->notify_flags_proxy_id != 0) {
@@ -5055,6 +5044,14 @@ guint
 fu_device_get_battery_level(FuDevice *self)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
+
+	/* use the parent if the child is unset */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&
+	    fwupd_device_get_battery_level(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
+		FuDevice *parent = fu_device_get_parent_internal(self);
+		if (parent != NULL)
+			return fu_device_get_battery_level(parent);
+	}
 	return fwupd_device_get_battery_level(FWUPD_DEVICE(self));
 }
 
@@ -5097,6 +5094,14 @@ guint
 fu_device_get_battery_threshold(FuDevice *self)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
+
+	/* use the parent if the child is unset */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&
+	    fwupd_device_get_battery_threshold(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
+		FuDevice *parent = fu_device_get_parent_internal(self);
+		if (parent != NULL)
+			return fu_device_get_battery_threshold(parent);
+	}
 	return fwupd_device_get_battery_threshold(FWUPD_DEVICE(self));
 }
 
@@ -5740,12 +5745,6 @@ fu_device_prepare_firmware(FuDevice *self,
 			return NULL;
 	}
 
-	/* check firmware is compatible with the device */
-	if (device_class->check_firmware != NULL) {
-		if (!device_class->check_firmware(self, firmware, flags, error))
-			return NULL;
-	}
-
 	/* check size */
 	fw_size = fu_firmware_get_size(firmware);
 	if (fw_size != 0) {
@@ -6162,7 +6161,13 @@ fu_device_open(FuDevice *self, GError **error)
 		return fu_device_ensure_id(self, error);
 	}
 
-	/* use proxy */
+	/* use parent */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
+		FuDevice *parent = fu_device_get_parent(self, error);
+		if (parent == NULL)
+			return FALSE;
+		return fu_device_open_internal(parent, error);
+	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
 		FuDevice *proxy = fu_device_get_proxy(self, error);
 		if (proxy == NULL)
@@ -6235,7 +6240,13 @@ fu_device_close(FuDevice *self, GError **error)
 	if (!fu_device_close_internal(self, error))
 		return FALSE;
 
-	/* use proxy */
+	/* use parent */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
+		FuDevice *parent = fu_device_get_parent(self, error);
+		if (parent == NULL)
+			return FALSE;
+		return fu_device_close_internal(parent, error);
+	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
 		FuDevice *proxy = fu_device_get_proxy(self, error);
 		if (proxy == NULL)
@@ -6446,6 +6457,12 @@ fu_device_setup(FuDevice *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* skip */
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_IS_FAKE])) {
+		fu_device_convert_instance_ids(self);
+		return TRUE;
+	}
 
 	/* should have already been called */
 	if (!fu_device_probe(self, error))
@@ -7590,9 +7607,7 @@ fu_device_strsafe_instance_id(const gchar *str)
 		}
 	}
 
-	/* remove any leading or trailing replacements */
-	if (tmp->len > 0 && tmp->str[0] == '-')
-		g_string_erase(tmp, 0, 1);
+	/* remove any trailing replacements */
 	if (tmp->len > 0 && tmp->str[tmp->len - 1] == '-')
 		g_string_truncate(tmp, tmp->len - 1);
 
@@ -8043,7 +8058,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		return fu_device_load_event(priv->target, id, error);
 
 	/* sanity check */
-	if (priv->events == NULL || priv->events->len == 0) {
+	if (priv->events == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -8056,35 +8071,6 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE))
 		return g_ptr_array_index(priv->events, 0);
 
-	/* in strict ordering mode */
-	id_hash = fu_device_event_build_id(id);
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER)) {
-		FuDeviceEvent *event;
-		if (priv->event_idx >= priv->events->len) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no event with ID %s [%s]: no more events",
-				    id,
-				    id_hash);
-			return NULL;
-		}
-		event = g_ptr_array_index(priv->events, priv->event_idx);
-		if (g_strcmp0(fu_device_event_get_id(event), id_hash) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no event with ID %s [%s]: got %s instead",
-				    id,
-				    id_hash,
-				    fu_device_event_get_id(event));
-			return NULL;
-		}
-		priv->event_idx++;
-		g_debug("found event with ID %s [%s]", id, id_hash);
-		return event;
-	}
-
 	/* reset back to the beginning */
 	if (priv->event_idx >= priv->events->len) {
 		g_debug("resetting event index");
@@ -8092,6 +8078,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* look for the next event in the sequence */
+	id_hash = fu_device_event_build_id(id);
 	for (guint i = priv->event_idx; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
@@ -8190,19 +8177,12 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_set_object(&priv->target, target);
 }
 
-static void
-fu_device_add_json_internal(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
-{
-	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
-	if (device_class->add_json != NULL)
-		device_class->add_json(self, json_obj, flags);
-}
-
+/* private; used to save an emulated device */
 void
 fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	if (fu_device_get_created_usec(self) != 0) {
 #if GLIB_CHECK_VERSION(2, 80, 0)
@@ -8216,28 +8196,17 @@ fu_device_add_json(FuDevice *self, FwupdJsonObject *json_obj, FwupdCodecFlags fl
 		fwupd_json_object_add_string(json_obj, "Created", str);
 	}
 
-	/* optional proxy */
-	if (priv->proxy != NULL)
-		fu_device_add_json_internal(priv->proxy, json_obj, flags);
+	/* subclassed */
+	if (device_class->add_json != NULL) {
+		device_class->add_json(self, json_obj, flags);
+		return;
+	}
 
-	/* subclass can overwrite */
-	fu_device_add_json_internal(self, json_obj, flags);
-
-	/* events */
-	if (priv->proxy != NULL && fu_device_get_events(priv->proxy)->len > 0)
-		events = fu_device_get_events(priv->proxy);
-	if (events->len > 0) {
-		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-		for (guint i = 0; i < events->len; i++) {
-			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
-			fwupd_codec_to_json(FWUPD_CODEC(event),
-					    json_obj_tmp,
-					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
-							       : flags);
-			fwupd_json_array_add_object(json_arr, json_obj_tmp);
-		}
-		fwupd_json_object_add_array(json_obj, "Events", json_arr);
+	/* proxy */
+	if (priv->proxy != NULL) {
+		device_class = FU_DEVICE_GET_CLASS(priv->proxy);
+		if (device_class->add_json != NULL)
+			device_class->add_json(priv->proxy, json_obj, flags);
 	}
 }
 
@@ -8248,7 +8217,6 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 	const gchar *tmp;
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
 	tmp = fwupd_json_object_get_string(json_obj, "Created", NULL);
 	if (tmp != NULL) {
@@ -8261,24 +8229,6 @@ fu_device_from_json(FuDevice *self, FwupdJsonObject *json_obj, GError **error)
 			fu_device_set_created_usec(self, g_date_time_to_unix(dt) * G_USEC_PER_SEC);
 		}
 #endif
-	}
-
-	/* array of events */
-	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
-	if (json_array_events == NULL)
-		json_array_events = fwupd_json_object_get_array(json_obj, "UsbEvents", NULL);
-	if (json_array_events != NULL) {
-		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
-			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
-
-			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
-			if (json_obj_tmp == NULL)
-				return FALSE;
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
-				return FALSE;
-			fu_device_add_event(self, event);
-		}
 	}
 
 	/* subclassed */

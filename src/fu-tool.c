@@ -2507,19 +2507,15 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
-	/* parse file */
-	if (g_strv_length(values) > 1) {
-		fn = g_strdup(values[1]);
-	} else {
-		fn = fu_context_build_filename(self->ctx,
-					       error,
-					       FU_PATH_KIND_SYSFSDIR_SECURITY,
-					       "tpm0",
-					       "binary_bios_measurements",
-					       NULL);
-		if (fn == NULL)
-			return FALSE;
-	}
+	/* parse this */
+	fn = fu_context_build_filename(self->ctx,
+				       error,
+				       FU_PATH_KIND_SYSFSDIR_SECURITY,
+				       "tpm0",
+				       "binary_bios_measurements",
+				       NULL);
+	if (fn == NULL)
+		return FALSE;
 	blob = fu_bytes_get_contents(fn, error);
 	stream = g_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,
@@ -6015,7 +6011,7 @@ main(int argc, char *argv[])
 	    cmd_array,
 	    "get-bios-settings,get-bios-setting",
 	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-	    _("[SETTING1] [SETTING2]…"),
+	    _("[SETTING1] [SETTING2]..."),
 	    /* TRANSLATORS: command description */
 	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
 	    fu_util_get_bios_setting);
@@ -6223,10 +6219,6 @@ main(int argc, char *argv[])
 		self->no_reboot_check = TRUE;
 		self->no_safety_check = TRUE;
 		self->no_device_prompt = TRUE;
-		fu_engine_request_set_feature_flags(
-		    self->request,
-		    FWUPD_FEATURE_FLAG_SWITCH_BRANCH | FWUPD_FEATURE_FLAG_FDE_WARNING |
-			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT | FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
 	} else {
 		self->interactive = TRUE;
 		/* set our implemented feature set */

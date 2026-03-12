@@ -269,7 +269,7 @@ fu_engine_device_parent_guid_func(void)
 	/* add two together */
 	fu_engine_add_device(engine, device2);
 
-	/* this is normally done by fu_plugin_add_device() */
+	/* this is normally done by fu_plugin_device_add() */
 	fu_engine_add_device(engine, device3);
 
 	/* verify both children were adopted */
@@ -341,7 +341,7 @@ fu_engine_device_parent_id_func(void)
 	fu_device_add_parent_physical_id(device4, "parent-ID");
 	fu_engine_add_device(engine, device4);
 
-	/* this is normally done by fu_plugin_add_device() */
+	/* this is normally done by fu_plugin_device_add() */
 	fu_engine_add_device(engine, device4);
 
 	/* add child with the parent backend ID */
@@ -354,7 +354,7 @@ fu_engine_device_parent_id_func(void)
 	fu_device_add_parent_backend_id(device5, "/sys/devices/foo/bar/baz");
 	fu_engine_add_device(engine, device5);
 
-	/* this is normally done by fu_plugin_add_device() */
+	/* this is normally done by fu_plugin_device_add() */
 	fu_engine_add_device(engine, device5);
 
 	/* verify both children were adopted */
@@ -1136,109 +1136,6 @@ fu_engine_downgrade_func(void)
 }
 
 static void
-fu_engine_updatable_hidden_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *fn_stable = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
-	g_autoptr(FuDevice) device = fu_device_new(ctx);
-	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
-	g_autoptr(FuEngineRequest) request_show_problems = fu_engine_request_new(NULL);
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) releases_up = NULL;
-	g_autoptr(GPtrArray) releases_up2 = NULL;
-	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-
-	/* set up test harness */
-	tmpdir = fu_temporary_directory_new("self-tests", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(tmpdir);
-	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
-	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
-	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
-	fu_engine_save_remote_stable(tmpdir);
-
-	/* no metadata in daemon */
-	fu_engine_set_silo(engine, silo_empty);
-
-	/* write the main file with a single upgrade */
-	fn_stable = fu_temporary_directory_build(tmpdir, "stable.xml", NULL);
-	ret = g_file_set_contents(
-	    fn_stable,
-	    "<components>"
-	    "  <component type=\"firmware\">"
-	    "    <id>test</id>"
-	    "    <name>Test Device</name>"
-	    "    <provides>"
-	    "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
-	    "    </provides>"
-	    "    <releases>"
-	    "      <release version=\"1.2.4\" date=\"2017-09-15\">"
-	    "        <size type=\"installed\">123</size>"
-	    "        <size type=\"download\">456</size>"
-	    "        <location>https://test.org/foo.cab</location>"
-	    "        <checksum filename=\"foo.cab\" target=\"container\" "
-	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead4444</checksum>"
-	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
-	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
-	    "      </release>"
-	    "    </releases>"
-	    "  </component>"
-	    "</components>",
-	    -1,
-	    &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	ret = fu_engine_load(engine,
-			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
-			     progress,
-			     &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* add a device without inhibit first (so engine can set SUPPORTED flag) */
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_set_version(device, "1.2.3");
-	fu_device_set_id(device, "test_device");
-	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
-	fu_device_add_protocol(device, "com.acme");
-	fu_device_set_name(device, "Test Device");
-	fu_device_add_instance_id(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_engine_add_device(engine, device);
-
-	/* device should be UPDATABLE and SUPPORTED after engine processing */
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
-
-	/* now apply an inhibit (like the AC power check would do) */
-	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
-
-	/* device should now be UPDATABLE_HIDDEN with the AC power problem */
-	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
-
-	/* without SHOW_PROBLEMS, get_upgrades should fail for UPDATABLE_HIDDEN devices */
-	releases_up = fu_engine_get_upgrades(engine, request, fu_device_get_id(device), &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
-	g_assert_null(releases_up);
-	g_clear_error(&error);
-
-	/* with SHOW_PROBLEMS, get_upgrades should succeed and return the available upgrade */
-	fu_engine_request_set_feature_flags(request_show_problems, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
-	releases_up2 =
-	    fu_engine_get_upgrades(engine, request_show_problems, fu_device_get_id(device), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(releases_up2);
-	g_assert_cmpint(releases_up2->len, ==, 1);
-}
-
-static void
 fu_engine_md_verfmt_func(void)
 {
 	FwupdRemote *remote;
@@ -1939,6 +1836,11 @@ fu_engine_multiple_rels_func(void)
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
+#ifndef HAVE_LIBARCHIVE
+	g_test_skip("no libarchive support");
+	return;
+#endif
+
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
@@ -2556,7 +2458,7 @@ fu_engine_device_better_than_func(void)
 	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device1, "com.acme");
 	fu_device_set_remove_delay(device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_plugin_add_device(plugin1, device1);
+	fu_plugin_device_add(plugin1, device1);
 
 	/* should be ignored */
 	fu_device_set_id(device2, "87ea5dfc8b8e384d848979496e706390b497e547");
@@ -2564,7 +2466,7 @@ fu_engine_device_better_than_func(void)
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_instance_id(device2, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device2, "com.acme");
-	fu_plugin_add_device(plugin2, device2);
+	fu_plugin_device_add(plugin2, device2);
 
 	/* ensure we still have device1 */
 	device_best =
@@ -2575,7 +2477,7 @@ fu_engine_device_better_than_func(void)
 
 	/* should be replaced */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	fu_plugin_add_device(plugin2, device2);
+	fu_plugin_device_add(plugin2, device2);
 
 	/* ensure we now have device2 */
 	device_replug =
@@ -3391,7 +3293,6 @@ main(int argc, char **argv)
 			fu_engine_history_convert_version_func);
 	g_test_add_func("/fwupd/engine/partial-hash", fu_engine_partial_hash_func);
 	g_test_add_func("/fwupd/engine/downgrade", fu_engine_downgrade_func);
-	g_test_add_func("/fwupd/engine/updatable-hidden", fu_engine_updatable_hidden_func);
 	g_test_add_func("/fwupd/engine/md-verfmt", fu_engine_md_verfmt_func);
 	g_test_add_func("/fwupd/engine/device-auto-parent-id", fu_engine_device_parent_id_func);
 	g_test_add_func("/fwupd/engine/device-auto-parent-guid", fu_engine_device_parent_guid_func);

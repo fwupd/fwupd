@@ -18,6 +18,8 @@ G_DECLARE_FINAL_TYPE(FuVliUsbhubFirmware,
 		     VLI_USBHUB_FIRMWARE,
 		     FuFirmware)
 
+FuFirmware *
+fu_vli_usbhub_firmware_new(void);
 FuVliDeviceKind
 fu_vli_usbhub_firmware_get_device_kind(FuVliUsbhubFirmware *self);
 guint16

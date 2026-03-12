@@ -671,33 +671,6 @@ fu_ccgx_hpi_device_app_read_intr_reg(FuCcgxHpiDevice *self,
 	return TRUE;
 }
 
-typedef struct {
-	FuCcgxHpiRegSection section;
-	FuCcgxHpiEvent *event_array;
-} FuCcgxHpiDeviceEventHelper;
-
-static gboolean
-fu_ccgx_hpi_device_wait_for_event_cb(FuDevice *device, gpointer user_data, GError **error)
-{
-	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	FuCcgxHpiDeviceEventHelper *helper = (FuCcgxHpiDeviceEventHelper *)user_data;
-	guint8 event_count = 0;
-
-	if (!fu_ccgx_hpi_device_app_read_intr_reg(self,
-						  helper->section,
-						  helper->event_array,
-						  &event_count,
-						  error))
-		return FALSE;
-	if (event_count == 0) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "no event");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
 static gboolean
 fu_ccgx_hpi_device_wait_for_event(FuCcgxHpiDevice *self,
 				  FuCcgxHpiRegSection section,
@@ -705,23 +678,26 @@ fu_ccgx_hpi_device_wait_for_event(FuCcgxHpiDevice *self,
 				  guint32 timeout_ms,
 				  GError **error)
 {
-	FuCcgxHpiDeviceEventHelper helper = {
-	    .section = section,
-	    .event_array = event_array,
-	};
+	guint8 event_count = 0;
+	g_autoptr(GTimer) start_time = g_timer_new();
+	do {
+		if (!fu_ccgx_hpi_device_app_read_intr_reg(self,
+							  section,
+							  event_array,
+							  &event_count,
+							  error))
+			return FALSE;
+		if (event_count > 0)
+			return TRUE;
+	} while (g_timer_elapsed(start_time, NULL) * 1000.f <= timeout_ms);
 
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_ccgx_hpi_device_wait_for_event_cb,
-				  MAX(1, timeout_ms / 10),
-				  10, /* ms */
-				  &helper,
-				  error)) {
-		g_prefix_error_literal(error, "failed to get event: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	/* timed out */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_TIMED_OUT,
+		    "failed to wait for event in %ums",
+		    timeout_ms);
+	return FALSE;
 }
 
 static gboolean
@@ -1120,16 +1096,22 @@ fu_ccgx_hpi_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	return TRUE;
 }
 
-static gboolean
-fu_ccgx_hpi_device_check_firmware(FuDevice *device,
-				  FuFirmware *firmware,
-				  FuFirmwareParseFlags flags,
-				  GError **error)
+static FuFirmware *
+fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
+				    GInputStream *stream,
+				    FuProgress *progress,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxFwMode fw_mode;
 	guint16 fw_app_type;
 	guint16 fw_silicon_id;
+	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
+
+	/* parse all images */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
 
 	/* check the silicon ID */
 	fw_silicon_id = fu_ccgx_firmware_get_silicon_id(FU_CCGX_FIRMWARE(firmware));
@@ -1140,7 +1122,7 @@ fu_ccgx_hpi_device_check_firmware(FuDevice *device,
 			    "silicon id mismatch, expected 0x%x, got 0x%x",
 			    self->silicon_id,
 			    fw_silicon_id);
-		return FALSE;
+		return NULL;
 	}
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		fw_app_type = fu_ccgx_firmware_get_app_type(FU_CCGX_FIRMWARE(firmware));
@@ -1151,7 +1133,7 @@ fu_ccgx_hpi_device_check_firmware(FuDevice *device,
 				    "app type mismatch, expected 0x%x, got 0x%x",
 				    self->fw_app_type,
 				    fw_app_type);
-			return FALSE;
+			return NULL;
 		}
 	}
 	fw_mode = fu_ccgx_firmware_get_fw_mode(FU_CCGX_FIRMWARE(firmware));
@@ -1162,11 +1144,9 @@ fu_ccgx_hpi_device_check_firmware(FuDevice *device,
 			    "FuCcgxFwMode mismatch, expected %s, got %s",
 			    fu_ccgx_fw_mode_to_string(fu_ccgx_fw_mode_get_alternate(self->fw_mode)),
 			    fu_ccgx_fw_mode_to_string(fw_mode));
-		return FALSE;
+		return NULL;
 	}
-
-	/* success */
-	return TRUE;
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -1611,7 +1591,6 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx");
 	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CCGX_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
@@ -1643,7 +1622,7 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_ccgx_hpi_device_to_string;
 	device_class->write_firmware = fu_ccgx_hpi_device_write_firmware;
-	device_class->check_firmware = fu_ccgx_hpi_device_check_firmware;
+	device_class->prepare_firmware = fu_ccgx_hpi_device_prepare_firmware;
 	device_class->detach = fu_ccgx_hpi_device_detach;
 	device_class->attach = fu_ccgx_hpi_device_attach;
 	device_class->setup = fu_ccgx_hpi_device_setup;

@@ -56,12 +56,18 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
+	FuUefiBootmgrFlags bootmgr_flags = FU_UEFI_BOOTMGR_FLAG_NONE;
 	const gchar *bootmgr_desc = "Linux Firmware Updater";
 	const gchar *fw_class = fu_uefi_capsule_device_get_guid(self);
+	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
+	g_autofree gchar *capsule_path = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *varname = fu_uefi_capsule_device_build_varname(self);
 
@@ -80,14 +86,10 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* save the blob to the ESP */
+	directory = fu_uefi_get_esp_path_for_os(esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", fw_class);
-	fn = fu_uefi_capsule_device_build_efi_path(FU_UEFI_CAPSULE_DEVICE(device),
-						   error,
-						   "fw",
-						   basename,
-						   NULL);
-	if (fn == NULL)
-		return FALSE;
+	capsule_path = g_build_filename(directory, "fw", basename, NULL);
+	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	fixed_fw = fu_uefi_capsule_device_fixup_firmware(self, fw, error);
@@ -110,17 +112,25 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	}
 
 	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_capsule_device_write_update_info(self, fn, varname, fw_class, error))
+	if (!fu_uefi_capsule_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
 
 	/* if fwupd-efi is not in use, no need to change boot order or copy bootloader files */
 	if (!fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))
 		return TRUE;
 
+	/* update the firmware before the bootloader runs */
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB))
+		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_UNIQUE))
+		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER))
+		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER;
+
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
 		bootmgr_desc = "Linux-Firmware-Updater";
-	if (!fu_uefi_bootmgr_bootnext(self, bootmgr_desc, error))
+	if (!fu_uefi_bootmgr_bootnext(pstore, efivars, esp, bootmgr_desc, bootmgr_flags, error))
 		return FALSE;
 
 	/* success! */

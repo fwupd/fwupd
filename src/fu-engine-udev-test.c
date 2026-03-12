@@ -306,6 +306,122 @@ fu_test_engine_udev_serio(void)
 						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
+static void
+fu_test_engine_udev_tpm(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir_quirks = NULL;
+	g_autofree gchar *testdatadir_sysfs = NULL;
+	g_autofree gchar *testdatadir_sysfs_tpm = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir_quirks = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	testdatadir_sysfs = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
+	testdatadir_sysfs_tpm =
+	    g_test_build_filename(G_TEST_DIST, "tests", "sys", "class", "tpm", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir_quirks);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, testdatadir_sysfs);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, testdatadir_sysfs_tpm);
+
+	/* non-linux */
+	if (!fu_context_has_backend(ctx, "udev")) {
+		g_test_skip("no Udev backend");
+		return;
+	}
+
+	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
+		g_test_skip("Using software TPM, skipping fake TPM test");
+		return;
+	}
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "tpm");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* no tss2-esys */
+	if (fu_engine_get_plugin_by_name(engine, "tpm", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
+	/* tpm */
+	device = fu_engine_get_device(engine, "1d8d50a4dbc65618f5c399c2ae827b632b3ccc11", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "tpm");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/tpm0");
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x0);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "tpm");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "DEVNAME=tpm0");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+}
+
+static void
+fu_test_engine_udev_block(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir_quirks = NULL;
+	g_autofree gchar *testdatadir_sysfs = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* set up test harness */
+	testdatadir_quirks = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	testdatadir_sysfs = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir_quirks);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, testdatadir_sysfs);
+
+	/* non-linux */
+	if (!fu_context_has_backend(ctx, "udev")) {
+		g_test_skip("no Udev backend");
+		return;
+	}
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "scsi");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* no Udev */
+	if (fu_engine_get_plugin_by_name(engine, "scsi", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
+	/* block */
+	device = fu_engine_get_device(engine, "82063150bef0a76856b9ab79cbf88e4f6ef2f93d", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "block");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, "disk");
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/sde");
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "scsi");
+	g_assert_cmpstr(fu_device_get_vendor(device), ==, "IBM-ESXS");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -316,6 +432,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/udev/usb", fu_test_engine_udev_usb);
 	g_test_add_func("/fwupd/engine/udev/serio", fu_test_engine_udev_serio);
 	g_test_add_func("/fwupd/engine/udev/nvme", fu_test_engine_udev_nvme);
+	g_test_add_func("/fwupd/engine/udev/block", fu_test_engine_udev_block);
+	g_test_add_func("/fwupd/engine/udev/tpm", fu_test_engine_udev_tpm);
 	g_test_add_func("/fwupd/engine/udev/v4l", fu_test_engine_udev_v4l);
 	return g_test_run();
 }

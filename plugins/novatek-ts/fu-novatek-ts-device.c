@@ -1523,8 +1523,9 @@ fu_novatek_ts_device_init(FuNovatekTsDevice *self)
 static void
 fu_novatek_ts_device_constructed(GObject *object)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(object));
 	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(object);
-	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
+	self->cfi_device = fu_cfi_device_new(ctx, NULL);
 }
 
 static void

@@ -12,4 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuMtdIfdDevice, fu_mtd_ifd_device, FU, MTD_IFD_DEVICE, FuDevice)
 
 FuMtdIfdDevice *
-fu_mtd_ifd_device_new(FuDevice *proxy, FuIfdImage *img);
+fu_mtd_ifd_device_new(FuDevice *parent, FuIfdImage *img);

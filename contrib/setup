@@ -105,11 +105,8 @@ echo ""
 echo "To leave fwupd development environment run:"
 echo ""
 echo "# deactivate"
-
-if [ -n "\$BASH_VERSION" ]; then
-    . data/bash-completion/fwupdtool
-    . data/bash-completion/fwupdmgr
-fi
+. data/bash-completion/fwupdtool
+. data/bash-completion/fwupdmgr
 export MANPATH=./venv/dist/share/man:
 EOF
 }

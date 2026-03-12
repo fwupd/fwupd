@@ -15,6 +15,8 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubFirmware,
 		     GENESYS_USBHUB_FIRMWARE,
 		     FuFirmware)
 
+FuFirmware *
+fu_genesys_usbhub_firmware_new(void);
 gboolean
 fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error);
 gboolean

@@ -70,7 +70,8 @@ class FwupdVmCommon:
         os.umask(self.old_umask)
 
     def _jcat_verification(self, file_path, file_directory):
-        """Verifies SHA1+SHA256 checksums and PKCS#7 signature.
+        """Verifies sha1 and sha256 checksum, GPG signature,
+        and PKCS#7 signature.
 
         Keyword argument:
         file_path -- absolute path to jcat file

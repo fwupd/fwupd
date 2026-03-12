@@ -199,41 +199,6 @@ fu_efivars_get_data(FuEfivars *self,
 }
 
 /**
- * fu_efivars_get_attrs:
- * @self: a #FuEfivars
- * @guid: Globally unique identifier
- * @name: Variable name
- * @attrs: (nullable) (out): #FuEfiVariableAttrs, e.g. %FU_EFI_VARIABLE_ATTR_NON_VOLATILE
- * @error: (nullable): optional return location for an error
- *
- * Gets the attributes from a UEFI variable in NVRAM
- *
- * Returns: %TRUE on success
- *
- * Since: 2.1.1
- **/
-gboolean
-fu_efivars_get_attrs(FuEfivars *self,
-		     const gchar *guid,
-		     const gchar *name,
-		     FuEfiVariableAttrs *attrs,
-		     GError **error)
-{
-	FuEfivarsClass *efivars_class = FU_EFIVARS_GET_CLASS(self);
-
-	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
-	g_return_val_if_fail(guid != NULL, FALSE);
-	g_return_val_if_fail(name != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	if (efivars_class->get_data == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
-		return FALSE;
-	}
-	return efivars_class->get_data(self, guid, name, NULL, NULL, attrs, error);
-}
-
-/**
  * fu_efivars_get_data_bytes:
  * @self: a #FuEfivars
  * @guid: Globally unique identifier

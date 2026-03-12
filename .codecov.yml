@@ -15,6 +15,3 @@ coverage:
         informational: true
 ignore:
   - "**/*.h"
-  - "**/*-test.c"
-  - "**/*-struct.c"
-  - "**/*-resources.c"

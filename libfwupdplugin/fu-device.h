@@ -93,10 +93,6 @@ struct _FuDeviceClass {
 	gboolean (*from_json)(FuDevice *self,
 			      FwupdJsonObject *json_obj,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
-	gboolean (*check_firmware)(FuDevice *self,
-				   FuFirmware *firmware,
-				   FuFirmwareParseFlags flags,
-				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
 #endif
 };
 
@@ -164,7 +160,6 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_flashes_left(d, v)     fwupd_device_set_flashes_left(FWUPD_DEVICE(d), v)
 #define fu_device_set_install_duration(d, v) fwupd_device_set_install_duration(FWUPD_DEVICE(d), v)
 #define fu_device_get_checksums(d)	     fwupd_device_get_checksums(FWUPD_DEVICE(d))
-#define fu_device_get_created(d)	     fwupd_device_get_created(FWUPD_DEVICE(d))
 #define fu_device_get_flags(d)		     fwupd_device_get_flags(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)		     fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)	     fwupd_device_get_guid_default(FWUPD_DEVICE(d))
@@ -328,6 +323,22 @@ fu_device_new(FuContext *ctx);
  * Since: 1.6.2
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN "no-auto-remove-children"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN:
+ *
+ * Use parent to open and close the device.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN "use-parent-for-open"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY:
+ *
+ * Use parent for the battery level and threshold.
+ *
+ * Since: 1.6.3
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY "use-parent-for-battery"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK:
  *
@@ -694,19 +705,6 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.18
  */
 #define FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED "no-version-expected"
-
-/**
- * FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER:
- *
- * Do not allow out-of-order or skipped emulation events. This allows a developer to refactor a
- * plugin ensuring that the device behavior remains 100% unchanged.
- *
- * NOTE: This is probably only useful to set in `FuDevice->prepare()` or
- * `FuDevice->write_firmware()` as enumeration may be different when loading emulated devices.
- *
- * Since: 2.1.1
- */
-#define FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER "strict-emulation-order"
 
 /* standard icons */
 

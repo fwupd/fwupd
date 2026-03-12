@@ -1,12 +1,4 @@
 [HIDRAW\VEN_04F3]
-Flags = enforce-requires
-
-# i2c-hid
-[HIDRAW\VEN_04F3&DEV_0400]
-Plugin = elantp
-GType = FuElantpHidDevice
-
-[HIDRAW\VEN_04F3&DEV_3010]
 Plugin = elantp
 GType = FuElantpHidDevice
 
@@ -15,9 +7,6 @@ GType = FuElantpHidDevice
 Flags = elantp-recovery
 
 # Lenovo X1 Nano Gen1
-[HIDRAW\VEN_04F3&DEV_314F]
-Plugin = elantp
-GType = FuElantpHidDevice
 [4c20262a-aee0-5d6e-ba72-6d29b23fe350]
 Flags = elantp-recovery
 
