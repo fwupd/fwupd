@@ -38,6 +38,86 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.1" date="2026-03-11">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new fwupd security check for HP Sure Start</li>
+          <li>Add a new plugin to verify Intel CSME using SMBIOS data</li>
+          <li>Add a new tpm-eventlog command to explain the TPM eventlog output</li>
+          <li>Add CycloneDX and SPDX support to uSWID</li>
+          <li>Add support for AMD Platform Secure boot</li>
+          <li>Add support for changing AMD GPU UMA carveout size</li>
+          <li>Add support for emulation for bluetooth devices</li>
+          <li>Allow systems to use the udev event source without using systemd</li>
+          <li>Disable the UEFI plugins on 32bit x86</li>
+          <li>Drop support for GPG signing of metadata and firmware</li>
+          <li>No longer depend on json-glib, libarchive or protobuf-c</li>
+          <li>Remove the concept of blocked firmware</li>
+          <li>Show translated problems when a device cannot be installed</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a timeout to the fwupd-refresh systemd unit</li>
+          <li>Allow systemd service to access block-sr devices</li>
+          <li>Always show the correct new firmware version in 'fwupdmgr get-history'</li>
+          <li>Be more defensive with invalid Corsair device responses</li>
+          <li>Cache the payload verification result to speed up installing modem firmware</li>
+          <li>Check for integer overflow when constructing a partial stream</li>
+          <li>Clear the remaining qc-firehose power reset logs</li>
+          <li>Decompress a zip file in Aver HID rather than a bz2 archive</li>
+          <li>Do not allow efivar update without TIME_BASED_AUTHENTICATED_WRITE_ACCESS</li>
+          <li>Do not hang when parsing an invalid USB descriptor</li>
+          <li>Do not include EV_NO_ACTION when calculating the TPM PCRs</li>
+          <li>Do not return an error if the fastboot property is not provided</li>
+          <li>Do not show all IDs as GUIDs if adding quirks after device setup</li>
+          <li>Find shim when using systemd-boot and distro-specific locations</li>
+          <li>Fix activation of dell-kestrel NVM when composite updates are completed</li>
+          <li>Fix a dell-dock regression when enumerating the status component</li>
+          <li>Fix a fuzzer timeout when parsing a Synaptics RMI SBL container</li>
+          <li>Fix a missing error check when updating Genesys USB hubs</li>
+          <li>Fix a potential heap OOB read in AMD Kria SOM EEPROM parser</li>
+          <li>Fix a potential Logitech HID++ hang when parsing unexpected payload IDs</li>
+          <li>Fix a potential out-of-bounds read in Dell dock</li>
+          <li>Fix a regression causing MBIM QDU updates to fail</li>
+          <li>Fix a regression when installing on the HP G5 dock</li>
+          <li>Fix a small memory leak when removing a bluetooth device</li>
+          <li>Fix an integer underflow when parsing a malicious PE file</li>
+          <li>Fix get-updates --json silently skipping UPDATABLE_HIDDEN devices</li>
+          <li>Fix the snapd-uefi request when multiple updates are processed</li>
+          <li>Honor polkit auth for emulation tag modify device</li>
+          <li>Make Logitech HID++ devices using RDFU actually work</li>
+          <li>Only load the history database in the daemon when required</li>
+          <li>Refactor the Snap support out into a new plugin</li>
+          <li>Remove a warning when updating Intel GSC OPROMDATA</li>
+          <li>Remove the bcm57xx recovery device support</li>
+          <li>Require a CHID for generic ElanTP devices</li>
+          <li>Speed up calculating the cabinet checksum by ~20%</li>
+          <li>Support 8bitdo firmware with multiple packed images</li>
+          <li>Try to claim the DFU USB interface more than once</li>
+          <li>Use crc32() from zlib.h when computing the most common kind of CRC32</li>
+          <li>Verify the uncompressed size when decompressing CAB files</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Blestech Touchpads</li>
+          <li>ELAN Haptic MCU devices</li>
+          <li>FocalTouch devices</li>
+          <li>Himax Touchscreens</li>
+          <li>HP Engage One G2 Advanced Hub</li>
+          <li>KATAR PRO Wireless Gaming Dongle</li>
+          <li>Lenovo keyboard and mice accessories</li>
+          <li>Lenovo Sapphire Folio Keyboard</li>
+          <li>Lightware Taurus HC40 and HC60</li>
+          <li>Novatek touchscreens</li>
+          <li>PixArt Touchpads</li>
+          <li>Rolling RW101-CAT12 modems</li>
+          <li>Sunwinon HID devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.18" date="2025-12-01">
       <description>
         <p>

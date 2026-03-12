@@ -2,6 +2,12 @@
 // Copyright 2025 Micky Hsieh
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[repr(u8)]
+enum FuPixartTpResetMode {
+    Application,
+    Bootloader,
+}
+
 // bank ids
 #[repr(u8)]
 enum FuPixartTpSystemBank {
@@ -10,6 +16,7 @@ enum FuPixartTpSystemBank {
     Bank2 = 0x02,
     Bank4 = 0x04,
     Bank6 = 0x06,
+    Bank8 = 0x08,
 }
 
 #[repr(u8)]
@@ -19,24 +26,31 @@ enum FuPixartTpUserBank {
     Bank2 = 0x02,
 }
 
+// ------------------- Register Definition -----------------// 
+// system bank 0 (reset control registers)
+#[repr(u8)]
+enum FuPixartTpRegSys0 {
+    PartId  = 0x78,
+}
+
+// system bank 1 (reset control registers)
+#[repr(u8)]
+enum FuPixartTpRegSys1 {
+    ClocksPowerUp   = 0x0d,
+    ResetKey1       = 0x2c,
+    ResetKey2       = 0x2d,
+}
+
 // system bank 4 (flash engine registers)
 #[repr(u8)]
 enum FuPixartTpRegSys4 {
     FlashStatus   = 0x1c,
     SwapFlag      = 0x29,
     FlashInstCmd  = 0x2c,
-    FlashBufAddr0 = 0x2e,
-    FlashBufAddr1 = 0x2f,
-    FlashCcr0     = 0x40,
-    FlashCcr1     = 0x41,
-    FlashCcr2     = 0x42,
-    FlashCcr3     = 0x43,
-    FlashDataCnt0 = 0x44,
-    FlashDataCnt1 = 0x45,
-    FlashAddr0    = 0x48,
-    FlashAddr1    = 0x49,
-    FlashAddr2    = 0x4a,
-    FlashAddr3    = 0x4b,
+    FlashBufAddr  = 0x2e,
+    FlashCcr      = 0x40,
+    FlashDataCnt  = 0x44,
+    FlashAddr     = 0x48,
     FlashExecute  = 0x56,
 }
 
@@ -48,16 +62,7 @@ enum FuPixartTpRegSys6 {
     SramTrigger    = 0x0a,
     SramData       = 0x0b,
     SramChecksum   = 0x0c,
-    SramAddr0      = 0x10,
-    SramAddr1      = 0x11,
-}
-
-// system bank 1 (reset control registers)
-#[repr(u8)]
-enum FuPixartTpRegSys1 {
-    ClocksPowerUp   = 0x0d,
-    ResetKey1       = 0x2c,
-    ResetKey2       = 0x2d,
+    SramAddr       = 0x10,
 }
 
 // user bank 0 (part id + crc registers)
@@ -66,43 +71,99 @@ enum FuPixartTpRegUser0 {
     BootStaus  = 0x00,
     RunMode    = 0x16,
     ProxyMode  = 0x56,
-    PartId0    = 0x78,
-    PartId1    = 0x79,
     CrcCtrl    = 0x82,
-    CrcResult0 = 0x84,
-    CrcResult1 = 0x85,
-    CrcResult2 = 0x86,
-    CrcResult3 = 0x87,
+    CrcResult  = 0x84,
 }
-
+// ------------------- Register Definition (PLP239) -----------------// 
+// system bank 0 for PLP239
 #[repr(u8)]
-enum FuPixartTpBootStatus{
-    Rom = 0x8c,
+enum FuPixartTpRegSys0Plp239 {
+    ClockPu         = 0x00,
+    ClockPu2        = 0x02,
+    ClockPd         = 0x04,
+    VersionLow      = 0x16,
+    VersionHigh     = 0x18,
+    Bank0ProtectKey = 0x7c,
 }
 
+// system bank 1 for PLP239
 #[repr(u8)]
-enum FuPixartTpRunMode {
-    Auto     = 0x00,
-    ForceRun = 0x01,
+enum FuPixartTpRegSys1Plp239 {
+    ResetKey1       = 0x20,
+    ResetKey2       = 0x21,
 }
 
+// system bank 4 for PLP239
 #[repr(u8)]
-enum FuPixartTpResetMode {
-    Application,
-    Bootloader,
+enum FuPixartTpRegSys4Plp239 {
+    LowLevelProtection  = 0x18,
+    MaskCpuAccess       = 0x19,
+    FlashCommand        = 0x1a,
+    SramOffset          = 0x1c,
+    FlashDataCount      = 0x1e,
+    FlashAddress        = 0x20,
+    FlashWriteDataWord0 = 0x24,      
+    FlashInstruction    = 0x2c,
+    FlashQuad           = 0x2f,
+    DummyBy             = 0x30,
 }
 
+// system bank 6 for PLP239
+#[repr(u8)]
+enum FuPixartTpRegSys6Plp239 {
+    FirmwareCrc             = 0x08,
+    ParameterCrc            = 0x0c,
+    BootStatus              = 0x10,
+    ZeroLevelProtectKey     = 0x20,
+    ProgramBist             = 0x21,
+    OneLevelProtectKey      = 0x22,
+    FlashSectorAddress      = 0x23,
+    FlashSectorLength       = 0x24,
+    SfcCommand              = 0x25,
+    SramAccessData          = 0x26,
+    FlashControllerStatus   = 0x27,
+    HidDescriptorCrcCtrl    = 0x6b,
+    HidDescriptorCrc        = 0x6c,
+    WatchdogDisable         = 0x7d,
+}
+
+// system bank 8 for PLP239
+#[repr(u8)]
+enum FuPixartTpRegSys8Plp239 {
+    HidFirmwareReady    = 0x68,
+}
+
+// ------------------- System Bank 1 Key -----------------// 
+// 0x0d: ClocksPowerUp
+#[repr(u8)]
+enum FuPixartTpClocksPowerUp {
+    None    = 0,
+    Cpu     = 1 << 1,
+    Nyq     = 1 << 6,
+    NyqF    = 1 << 7,
+}
+
+// 0x2c: ResetKey1
 #[repr(u8)]
 enum FuPixartTpResetKey1 {
     Suspend = 0xaa,
 }
-
+// 0x2d: ResetKey2
 #[repr(u8)]
 enum FuPixartTpResetKey2 {
     Regular    = 0xbb,
     Bootloader = 0xcc,
 }
 
+// ------------------- System Bank 4 Key -----------------//
+// 0x1c: FlashStatus
+#[repr(u8)]
+enum FuPixartTpFlashWriteEnable {
+    Busy = 0x01,
+    Success = 0x02,
+}
+
+// 0x2c: FlashInstCmd
 #[repr(u8)]
 enum FuPixartTpFlashInst {
     None               = 0,
@@ -111,27 +172,7 @@ enum FuPixartTpFlashInst {
     InternalSramAccess = 1 << 7,
 }
 
-#[repr(u8)]
-enum FuPixartTpClocksPowerUp {
-    Cpu = 1 << 1,
-}
-
-#[repr(u8)]
-enum FuPixartTpFlashExecState {
-    Busy    = 0x01,
-    Success = 0x00,
-}
-
-#[repr(u8)]
-enum FuPixartTpFlashWriteEnable {
-    Success = 0x02,
-}
-
-#[repr(u8)]
-enum FuPixartTpFlashStatus {
-    Busy = 0x01,
-}
-
+// 0x40: FlashCcr
 #[repr(u32)]
 enum FuPixartTpFlashCcr {
     WriteEnable = 0x0000_0106,
@@ -140,20 +181,205 @@ enum FuPixartTpFlashCcr {
     ProgramPage = 0x0100_2502,
 }
 
+// 0x56: FlashExecute
+#[repr(u8)]
+enum FuPixartTpFlashExecState {
+    Busy    = 0x01,
+    Success = 0x00,
+}
+
+// ------------------- User Bank 0 Key -----------------// 
+// 0x00: BootStaus
+#[repr(u8)]
+enum FuPixartTpBootStatus{
+    Rom = 0x8c,
+}
+
+// 0x16: RunMode
+#[repr(u8)]
+enum FuPixartTpRunMode {
+    Auto     = 0x00,
+    ForceRun = 0x01,
+}
+
+// 0x78: PartId
 #[repr(u16)]
 enum FuPixartTpPartId {
+    Plp239 = 0x0239,
     Pjp274 = 0x0274,
 }
 
+// 0x82: CrcCtrl
 #[repr(u8)]
 enum FuPixartTpCrcCtrl {
-    FwBank0    = 0x02,
-    FwBank1    = 0x10,
-    ParamBank0 = 0x04,
-    ParamBank1 = 0x20,
-    Busy       = 0x01,
+    FwBank0         = 0x02,
+    FwBank1         = 0x10,
+    ParamBank0      = 0x04,
+    ParamBank1      = 0x20,
+    HidDescriptor   = 0x0a,
+    Busy            = 0x01,
 }
 
+// ------------------- System Bank 0 Key (PLP239) -----------------// 
+// 0x04: ClockPd
+#[repr(u8)]
+enum FuPixartTpClocksPowerDisablePlp239 {
+    None    = 0,
+    Cpu     = 1 << 1,
+}
+
+// ------------------- System Bank 4 Key (PLP239) -----------------// 
+// 0x18: LowLevelProtection
+#[repr(u8)]
+enum FuPixartTpLowLevelProtectionKeyPlp239 {
+    Lock    = 0x00,
+    Unlock  = 0xcc,
+}
+
+// 0x19: MaskCpuAccess
+#[repr(u8)]
+enum FuPixartTpCpuAccessMaskPlp239 {
+    Enable    = 0x00,
+    Disable   = 0x01,
+}
+
+// 0x1a: FlashCommand
+#[repr(u8)]
+enum FuPixartTpFlashCommandPlp239 {
+    // Generic Control
+    FlashCmdWrsr    = 0x01, // Write Status, EoN/Winbond
+    FlashCmdRdsr    = 0x05, // Read Status, EoN/Winbond
+    FlashCmdRdsr2Wb = 0x35, // Read Status Register 2, Winbond
+    FlashCmdWren    = 0x06, // Write Enable, EoN/Winbond
+    FlashCmdWrdi    = 0x04, // Write Disable, EoN/Winbond
+
+    // Program / Erase
+    FlashCmdPp       = 0x02, // Page Program, EoN/Winbond
+    FlashCmdQualPpWb = 0x32, // Quad Page Program, Winbond
+    FlashCmdSe       = 0x20, // Sector Erase (4K), EoN/Winbond
+    FlashCmdHbe      = 0x52, // Half Block Erase (32K), EoN/Winbond
+    FlashCmdBe       = 0xd8, // Block Erase (64K), EoN/Winbond
+    FlashCmdCe0      = 0x60, // Chip Erase Alt, EoN/Winbond
+    FlashCmdCe       = 0xc7, // Chip Erase, EoN/Winbond
+
+    // Identification & Reset
+    FlashCmdRdid      = 0x9f, // Read JEDEC ID, EoN/Winbond
+    FlashCmdRstenEon  = 0x66, // Reset Enable, EoN
+    FlashCmdRstEon    = 0x99, // Reset, EoN
+    FlashCmdEqpiEon   = 0x38, // Enable Quad Peripheral Interface, EoN
+    FlashCmdRstqioEon = 0xff, // Reset Quad I/O, EoN
+
+    // Read Operations
+    FlashCmdRead                 = 0x03, // Read Data
+    FlashCmdFastRead             = 0x0b, // Fast Read
+    FlashCmdFastReadDualOutput   = 0x3b, // Dual Output Fast Read
+    FlashCmdFastReadQualOutputWb = 0x6b, // Quad Output Fast Read, Winbond
+    FlashCmdDualIoFastRead       = 0xbb, // Dual I/O Fast Read
+    FlashCmdQuadIoFastRead       = 0xeb, // Quad I/O Fast Read
+
+    // Power Management
+    FlashCmdPowrDown         = 0xb9, // Power down
+    FlashCmdReleasePowerDown = 0xab, // Release power down
+}
+
+// 0x2c: FlashInstruction
+#[repr(u8)]
+enum FuPixartTpFlashInstPlp239 {
+    None                    = 0,
+    FlashWriteData          = 1 << 0,
+    FlashWriteInstruction   = 1 << 1,
+    FlashReadData           = 1 << 2,
+    FlashReadInstruction    = 1 << 3,
+    InternalSramAccess      = 1 << 7,
+}
+
+// 0x2f: FlashQuad
+#[repr(u8)]
+enum FuPixartTpFlashQuad {
+    None            = 0,
+    EqioEon         = 1 << 0,
+    Q4ppWinb        = 1 << 1,
+    Q4ppEon         = 1 << 2,
+    Q4ppMxic        = 1 << 3,
+    QuadEnperfMd    = 1 << 4,
+    QuadDualMd      = 1 << 5,
+    QuadMd          = 1 << 6,
+    FdualoutMd      = 1 << 7,
+}
+
+// ------------------- System Bank 6 Key (PLP239) -----------------// 
+// 0x10: BootStatus
+#[repr(u8)]
+enum FuPixartTpBootStatusPlp239{
+    None                = 0,
+    HwReady             = 1 << 0,
+    FwCodePass          = 1 << 1,
+    HidPass             = 1 << 2,
+    IfbCheckSumPass     = 1 << 3,
+    Wdog                = 1 << 4,
+    EhiReady            = 1 << 5,
+    Error               = 1 << 6,
+    NavReady            = 1 << 7,
+}
+
+// 0x20: ZeroLevelProtectKey
+#[repr(u8)]
+enum FuPixartTpZeroLevelProtectKeyPlp239 {
+    ProtectKey  = 0xcc,
+}
+
+// 0x22: OneLevelProtectKey
+#[repr(u8)]
+enum FuPixartTpOneLevelProtectKeyPlp239 {
+    ProtectKey  = 0xee,
+}
+
+// 0x24: FlashSectorLength
+#[repr(u8)]
+enum FuPixartTpFlashSectorLengthPlp239 {
+    KB_4  = 0x00, // 4 KB
+}
+
+// 0x25: SfcCommand
+#[repr(u8)]
+enum FuPixartTpSfcCommandPlp239 {
+    SramReadWrite   = 0x11,
+    Program         = 0x33,
+    Erase           = 0x44,
+    Read            = 0x77,
+    Finish          = 0xdd,
+}
+
+// 0x27: FlashControllerStatus
+#[repr(u8)]
+enum FuPixartTpFlashControllerStatusPlp239 {
+    Finish          = 1 << 0,
+    BufferOverFlow  = 1 << 1,
+    ProgramOverFlow = 1 << 2,
+    BistError       = 1 << 3,
+    ProtectError    = 1 << 4,
+    HighLevelEnable = 1 << 5,
+    Level1Enable    = 1 << 6,
+    CpuClockEnable  = 1 << 7,
+}
+
+// 0x7d: WatchdogDisable
+#[repr(u8)]
+enum FuPixartTpWatchDogKeyPlp239 {
+    Enable  = 0x00,
+    Disable = 0xad,
+}
+
+// ------------------- System Bank 8 Key (PLP239) -----------------// 
+// 0x68: HidFirmwareReady
+#[repr(u8)]
+enum FuPixartTpHidFirmwareReadyPlp239 {
+    None                = 0,
+    HidFirmwareReady    = 1 << 1,
+    FirmwareReady       = 1 << 2,
+}
+
+// ------------------- TF Haptic Command -----------------// 
 // host <-> tf pass-through proxy mode
 #[repr(u8)]
 enum FuPixartTpProxyMode {
@@ -285,11 +511,12 @@ struct FuStructPixartTpTfReplyHdr {
 #[derive(ToString, FromString)]
 #[repr(u8)]
 enum FuPixartTpUpdateType {
-    General    = 0,
-    FwSection  = 1,
-    Bootloader = 2,
-    Param      = 3,
-    TfForce    = 16,
+    General         = 0,
+    FwSection       = 1,
+    Bootloader      = 2,
+    Param           = 3,
+    HidDescriptor   = 4,
+    TfForce         = 16,
 }
 
 #[derive(ToString, FromString)]
