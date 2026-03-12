@@ -128,6 +128,9 @@ fu_pixart_tp_haptic_device_tf_read_rmi(FuPixartTpHapticDevice *self,
 {
 	FuDevice *proxy;
 	gsize datalen;
+	guint8 tail = 0;
+	guint8 crc_actual;
+	guint8 crc_device = 0;
 	guint8 io_buf[FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0};
 	g_autoptr(FuStructPixartTpTfReadCmd) st_read = fu_struct_pixart_tp_tf_read_cmd_new();
 	g_autoptr(FuStructPixartTpTfReplyHdr) st_hdr = NULL;
@@ -207,22 +210,28 @@ fu_pixart_tp_haptic_device_tf_read_rmi(FuPixartTpHapticDevice *self,
 		return NULL;
 	}
 
-	datalen = fu_struct_pixart_tp_tf_reply_hdr_get_datalen(st_hdr);
-	if (datalen > sizeof(io_buf) - FU_STRUCT_PIXART_TP_TF_REPLY_HDR_SIZE) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "frame exceeds feature report size");
-		return NULL;
-	}
-
 	/* validate crc + tail */
-	if (fu_crc8(FU_CRC_KIND_B8_STANDARD, io_buf + 2, datalen + 4) != io_buf[datalen + 6]) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "crc mismatch");
+	datalen = fu_struct_pixart_tp_tf_reply_hdr_get_datalen(st_hdr);
+	if (!fu_memread_uint8_safe(io_buf, sizeof(io_buf), datalen + 6, &crc_device, error))
+		return NULL;
+	crc_actual = fu_crc8(FU_CRC_KIND_B8_STANDARD, io_buf + 2, datalen + 4);
+	if (crc_actual != crc_device) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "crc mismatch, got 0x%02x and expected 0x%02x",
+			    crc_device,
+			    crc_actual);
 		return NULL;
 	}
-	if (io_buf[datalen + 7] != FU_PIXART_TP_TF_FRAME_CONST_TAIL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "tail mismatch");
+	if (!fu_memread_uint8_safe(io_buf, sizeof(io_buf), datalen + 7, &tail, error))
+		return NULL;
+	if (tail != FU_PIXART_TP_TF_FRAME_CONST_TAIL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "tail mismatch, got 0x%02x",
+			    tail);
 		return NULL;
 	}
 
