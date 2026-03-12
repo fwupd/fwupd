@@ -8,9 +8,13 @@
 
 #include "fu-genesys-hubhid-device.h"
 #include "fu-genesys-plugin.h"
+#include "fu-genesys-scaler-device.h"
 #include "fu-genesys-scaler-firmware.h"
+#include "fu-genesys-usbhub-codesign-firmware.h"
+#include "fu-genesys-usbhub-dev-firmware.h"
 #include "fu-genesys-usbhub-device.h"
 #include "fu-genesys-usbhub-firmware.h"
+#include "fu-genesys-usbhub-pd-firmware.h"
 
 struct _FuGenesysPlugin {
 	FuPlugin parent_instance;
@@ -54,8 +58,12 @@ fu_genesys_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_USBHUB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_HUBHID_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_GENESYS_SCALER_DEVICE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_SCALER_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_CODESIGN_FIRMWARE); /* cov */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE); /* coverage */
 }
 
 static FuDevice *
@@ -88,11 +96,11 @@ fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 	parent = fu_genesys_plugin_get_device_by_physical_id(self,
 							     fu_device_get_physical_id(usb_parent));
 	if (parent == NULL) {
-		g_warning("hubhid cannot find parent, platform_id(%s)",
+		g_warning("hubhid cannot find parent, physical_id(%s)",
 			  fu_device_get_physical_id(usb_parent));
-		fu_plugin_device_remove(self, device);
+		fu_plugin_remove_device(self, device);
 	} else {
-		fu_genesys_usbhub_device_set_hid_channel(FU_GENESYS_USBHUB_DEVICE(parent), device);
+		fu_genesys_usbhub_device_set_proxy(FU_GENESYS_USBHUB_DEVICE(parent), device);
 		fu_device_add_child(parent, device);
 	}
 }

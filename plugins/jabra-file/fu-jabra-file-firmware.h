@@ -15,7 +15,5 @@ G_DECLARE_FINAL_TYPE(FuJabraFileFirmware,
 		     JABRA_FILE_FIRMWARE,
 		     FuFirmware)
 
-FuFirmware *
-fu_jabra_file_firmware_new(void);
 guint16
 fu_jabra_file_firmware_get_dfu_pid(FuJabraFileFirmware *self);

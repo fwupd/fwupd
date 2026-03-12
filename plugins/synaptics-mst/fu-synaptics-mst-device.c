@@ -112,6 +112,7 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Multi-stream transport device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID);
 	fu_device_register_private_flag(FU_DEVICE(self),
@@ -1369,22 +1370,18 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
-					 GInputStream *stream,
-					 FuProgress *progress,
-					 FuFirmwareParseFlags flags,
-					 GError **error)
+static gboolean
+fu_synaptics_mst_device_check_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuFirmwareParseFlags flags,
+				       GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_synaptics_mst_firmware_new();
 
 	/* set chip family to use correct board ID offset */
 	fu_synaptics_mst_firmware_set_family(FU_SYNAPTICS_MST_FIRMWARE(firmware), self->family);
 
 	/* check firmware and board ID match */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0 &&
 	    !fu_device_has_private_flag(device, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID)) {
 		guint16 board_id =
@@ -1396,10 +1393,12 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 				    "board ID mismatch, got 0x%04x, expected 0x%04x",
 				    board_id,
 				    self->board_id);
-			return NULL;
+			return FALSE;
 		}
 	}
-	return g_steal_pointer(&firmware);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -1866,6 +1865,6 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	device_class->setup = fu_synaptics_mst_device_setup;
 	device_class->write_firmware = fu_synaptics_mst_device_write_firmware;
 	device_class->attach = fu_synaptics_mst_device_attach;
-	device_class->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
+	device_class->check_firmware = fu_synaptics_mst_device_check_firmware;
 	device_class->set_progress = fu_synaptics_mst_device_set_progress;
 }

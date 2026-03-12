@@ -12,8 +12,7 @@ Upon uploading, the LVFS signs the firmware and metadata XML contained in the ar
 a `.jcat` file also included in the image.
 The original firmware is never modified, which is why the [Jcat](https://github.com/hughsie/libjcat)
 file exists as both a detached checksum (SHA-1, SHA-256 and SHA-512) and a detached signature.
-The LVFS can add either GPG or PKCS#7 signatures in the Jcat file, and currently does *both* for
-maxmum compatibility with how client systems have been configured.
+The LVFS uses several PKCS#7 signatures in the Jcat file.
 
 The keys in `/etc/pki/fwupd` and `/etc/pki/fwupd-metadata` are used for per-system trust and are
 currently used for "did the firmware update *come from* somewhere I trust" rather than "verify the

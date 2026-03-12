@@ -120,6 +120,7 @@ fu_device_cfi_device_func(void)
 	guint8 cmd = 0;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuCfiDevice) cfi_device = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -131,7 +132,7 @@ fu_device_cfi_device_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	cfi_device = fu_cfi_device_new(ctx, "3730");
+	cfi_device = fu_cfi_device_new(device, "3730");
 	ret = fu_device_setup(FU_DEVICE(cfi_device), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -625,6 +626,7 @@ fu_device_flags_func(void)
 	g_assert_cmpint(fu_device_get_flags(device), ==, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* setting flags on the proxy should propagate to the device that *uses* the proxy */
+	fu_device_set_proxy(device, NULL);
 	fu_device_set_proxy(device, proxy);
 	fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));

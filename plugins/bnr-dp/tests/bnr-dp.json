@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "e4bf3652666625df2bbcfc851709090d5765ed37323f6becb1f05b4b45be1e2f-bnr-dp-0.13-test.cab",
-      "emulation-url": "2d65498250eab4800c250b9499c3595be165762154f41dbfa1118797f5004636-bnr-dp-0.13-dpaux-dpcd-check-minimal.zip",
+      "url": "b70ef8d2c226584f3f597d975f3f9805863470e327173e55501249a480220fc1-bnr-dp-0.13.cab",
+      "emulation-url": "0a932cdc0f67c41e22294e4b6dd43069849af8bffa90b8ce10f8fb9fe4ba96e4-bnr-dp-0.13.zip",
       "components": [
         {
           "version": "0.13",

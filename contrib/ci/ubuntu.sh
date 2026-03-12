@@ -67,4 +67,5 @@ mkdir -p ${root}/dist/share
 mv ${root}/target/share/doc ${root}/dist/share
 
 # generate coverage report
-./contrib/ci/coverage.sh
+ninja -C ${BUILD} coverage-xml
+cp ${BUILD}/meson-logs/coverage.xml .

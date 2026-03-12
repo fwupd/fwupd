@@ -39,9 +39,9 @@ struct _FuNovatekTsDevice {
 
 G_DEFINE_TYPE(FuNovatekTsDevice, fu_novatek_ts_device, FU_TYPE_HIDRAW_DEVICE)
 
-#define NVT_TS_REPORT_ID 0x0B
-#define NVT_TRANSFER_LEN 256
-#define FLASH_PAGE_SIZE	 256
+#define NVT_TS_REPORT_ID  0x0B
+#define NVT_TRANSFER_LEN  256
+#define FLASH_PAGE_SIZE	  256
 #define FLASH_SECTOR_SIZE (1024 * 4)
 
 #define FU_NOVATEK_TS_CODE_ENABLE  0x55FFAA
@@ -825,9 +825,7 @@ fu_novatek_ts_device_gcm_resume_pd(FuNovatekTsDevice *self, GError **error)
 }
 
 static gboolean
-fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self,
-				     guint32 bin_size,
-				     GError **error)
+fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self, guint32 bin_size, GError **error)
 {
 	guint8 status = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -1129,9 +1127,7 @@ fu_novatek_ts_device_update_firmware_reset(FuNovatekTsDevice *self,
 		g_prefix_error_literal(error, "read flash id failed: ");
 		return FALSE;
 	}
-	if (!fu_novatek_ts_device_gcm_erase_flash(self,
-						  g_bytes_get_size(blob),
-						  error)) {
+	if (!fu_novatek_ts_device_gcm_erase_flash(self, g_bytes_get_size(blob), error)) {
 		g_prefix_error_literal(error, "erase flash failed: ");
 		return FALSE;
 	}
@@ -1523,9 +1519,8 @@ fu_novatek_ts_device_init(FuNovatekTsDevice *self)
 static void
 fu_novatek_ts_device_constructed(GObject *object)
 {
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(object));
 	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(object);
-	self->cfi_device = fu_cfi_device_new(ctx, NULL);
+	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
 }
 
 static void

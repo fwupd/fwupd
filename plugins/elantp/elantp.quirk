@@ -1,4 +1,29 @@
 [HIDRAW\VEN_04F3]
+Flags = enforce-requires
+
+# i2c-hid
+[HIDRAW\VEN_04F3&DEV_0400]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+[HIDRAW\VEN_04F3&DEV_3010]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+[HIDRAW\VEN_04F3&DEV_323B]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+[HIDRAW\VEN_04F3&DEV_3377]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+# usb-hid-bridge
+[HIDRAW\VEN_04F3&DEV_044A]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+[HIDRAW\VEN_04F3&DEV_044F]
 Plugin = elantp
 GType = FuElantpHidDevice
 
@@ -7,6 +32,9 @@ GType = FuElantpHidDevice
 Flags = elantp-recovery
 
 # Lenovo X1 Nano Gen1
+[HIDRAW\VEN_04F3&DEV_314F]
+Plugin = elantp
+GType = FuElantpHidDevice
 [4c20262a-aee0-5d6e-ba72-6d29b23fe350]
 Flags = elantp-recovery
 
@@ -105,14 +133,22 @@ ElantpIapPassword = 0x1EA5
 ElantpIcPageCount = 0x500
 ElantpIapPassword = 0x1EA5
 
+[ELANTP\ICTYPE_12]
+ElantpIcPageCount = 0x800
+ElantpIapPassword = 0x1EA5
+Flags = can-query-haptic-function
+
 [ELANTP\ICTYPE_13]
 ElantpIcPageCount = 0x800
 ElantpIapPassword = 0x1EA5
+Flags = can-query-haptic-function
 
 [ELANTP\ICTYPE_14]
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
+Flags = can-query-haptic-function
 
 [ELANTP\ICTYPE_15]
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
+Flags = can-query-haptic-function

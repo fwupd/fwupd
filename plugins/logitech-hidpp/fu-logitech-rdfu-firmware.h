@@ -14,16 +14,3 @@ G_DECLARE_FINAL_TYPE(FuLogitechRdfuFirmware,
 		     FU,
 		     LOGITECH_RDFU_FIRMWARE,
 		     FuFirmware)
-
-struct _FuLogitechRdfuFirmwareClass {
-	FuFirmwareClass parent_class;
-};
-
-gchar *
-fu_logitech_rdfu_firmware_get_model_id(FuLogitechRdfuFirmware *self, GError **error);
-
-GByteArray *
-fu_logitech_rdfu_firmware_get_magic(FuLogitechRdfuFirmware *self, GError **error);
-
-GPtrArray *
-fu_logitech_rdfu_firmware_get_blocks(FuLogitechRdfuFirmware *self, GError **error);

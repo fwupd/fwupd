@@ -35,15 +35,6 @@ fu_pixart_rf_wireless_device_to_string(FuDevice *device, guint idt, GString *str
 	fwupd_codec_string_append_hex(str, idt, "ModelTarget", self->model.target);
 }
 
-static FuPixartRfReceiverDevice *
-fu_pixart_rf_wireless_device_get_parent(FuPixartRfWirelessDevice *self, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), error);
-	if (parent == NULL)
-		return NULL;
-	return FU_PIXART_RF_RECEIVER_DEVICE(parent);
-}
-
 static FuFirmware *
 fu_pixart_rf_wireless_device_prepare_firmware(FuDevice *device,
 					      GInputStream *stream,
@@ -52,17 +43,16 @@ fu_pixart_rf_wireless_device_prepare_firmware(FuDevice *device,
 					      GError **error)
 {
 	FuPixartRfWirelessDevice *self = FU_PIXART_RF_WIRELESS_DEVICE(device);
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	g_autoptr(FuFirmware) firmware = fu_pixart_rf_firmware_new();
-
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return NULL;
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	if (fu_device_has_private_flag(FU_DEVICE(parent), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return NULL;
+	if (fu_device_has_private_flag(proxy, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
 		g_autoptr(GInputStream) stream_new = NULL;
@@ -74,8 +64,7 @@ fu_pixart_rf_wireless_device_prepare_firmware(FuDevice *device,
 			return NULL;
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
-	} else if (fu_device_has_private_flag(FU_DEVICE(parent),
-					      FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) !=
+	} else if (fu_device_has_private_flag(proxy, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC) !=
 		   fu_pixart_rf_firmware_is_hpac(FU_PIXART_RF_FIRMWARE(firmware))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -93,12 +82,12 @@ fu_pixart_rf_wireless_device_get_cmd_response(FuPixartRfWirelessDevice *self,
 					      guint bufsz,
 					      GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	guint16 retry = 0;
 	guint8 status = 0x0;
 
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
 
 	while (1) {
@@ -108,7 +97,7 @@ fu_pixart_rf_wireless_device_get_cmd_response(FuPixartRfWirelessDevice *self,
 
 		fu_device_sleep(FU_DEVICE(self), FU_PIXART_RF_WIRELESS_DEV_DELAY_MS); /* ms */
 
-		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(parent),
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(proxy),
 						  buf,
 						  bufsz,
 						  FU_IOCTL_FLAG_NONE,
@@ -148,17 +137,12 @@ fu_pixart_rf_wireless_device_check_crc(FuPixartRfWirelessDevice *self,
 				       guint16 checksum,
 				       GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	guint8 buf[FU_PIXART_RF_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint16 checksum_device = 0x0;
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	/* ota check crc command */
 	fu_byte_array_append_uint8(ota_cmd, 0x3); /* ota command length */
@@ -176,7 +160,10 @@ fu_pixart_rf_wireless_device_check_crc(FuPixartRfWirelessDevice *self,
 						 ota_cmd,
 						 error))
 		return FALSE;
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -223,16 +210,11 @@ fu_pixart_rf_wireless_device_fw_object_create(FuPixartRfWirelessDevice *self,
 					      FuChunk *chk,
 					      GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	guint8 buf[FU_PIXART_RF_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	/* ota object create command */
 	fu_byte_array_append_uint8(ota_cmd, 0x9); /* ota command length */
@@ -253,7 +235,10 @@ fu_pixart_rf_wireless_device_fw_object_create(FuPixartRfWirelessDevice *self,
 						 error))
 		return FALSE;
 
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -286,14 +271,9 @@ fu_pixart_rf_wireless_device_write_payload(FuPixartRfWirelessDevice *self,
 					   FuChunk *chk,
 					   GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	/* ota write payload command */
 	fu_byte_array_append_uint8(ota_cmd, fu_chunk_get_data_sz(chk)); /* ota command length */
@@ -312,7 +292,10 @@ fu_pixart_rf_wireless_device_write_payload(FuPixartRfWirelessDevice *self,
 						 ota_cmd,
 						 error))
 		return FALSE;
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -378,14 +361,9 @@ fu_pixart_rf_wireless_device_write_chunk(FuPixartRfWirelessDevice *self,
 static gboolean
 fu_pixart_rf_wireless_device_fw_ota_preceding(FuPixartRfWirelessDevice *self, GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	fu_byte_array_append_uint8(ota_cmd, 0x01); /* ota preceding command length */
 	fu_byte_array_append_uint8(
@@ -402,7 +380,10 @@ fu_pixart_rf_wireless_device_fw_ota_preceding(FuPixartRfWirelessDevice *self, GE
 						 error))
 		return FALSE;
 
-	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					    receiver_cmd->data,
 					    receiver_cmd->len,
 					    FU_IOCTL_FLAG_NONE,
@@ -414,17 +395,12 @@ fu_pixart_rf_wireless_device_fw_ota_init_new(FuPixartRfWirelessDevice *self,
 					     gsize bufsz,
 					     GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	guint8 buf[FU_PIXART_RF_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 status = 0x0;
 	guint8 fw_version[10] = {0x0};
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	fu_byte_array_append_uint8(ota_cmd, 0X06); /* ota init new command length */
 	fu_byte_array_append_uint8(
@@ -444,7 +420,10 @@ fu_pixart_rf_wireless_device_fw_ota_init_new(FuPixartRfWirelessDevice *self,
 						 error))
 		return FALSE;
 
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -475,16 +454,11 @@ fu_pixart_rf_wireless_device_fw_ota_init_new(FuPixartRfWirelessDevice *self,
 static gboolean
 fu_pixart_rf_wireless_device_fw_ota_ini_new_check(FuPixartRfWirelessDevice *self, GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	guint8 buf[FU_PIXART_RF_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	/* ota command */
 	fu_byte_array_append_uint8(ota_cmd, 0x1); /* ota command length */
@@ -502,7 +476,10 @@ fu_pixart_rf_wireless_device_fw_ota_ini_new_check(FuPixartRfWirelessDevice *self
 						 ota_cmd,
 						 error))
 		return FALSE;
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -536,7 +513,7 @@ fu_pixart_rf_wireless_device_fw_upgrade(FuPixartRfWirelessDevice *self,
 					FuProgress *progress,
 					GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	guint8 buf[FU_PIXART_RF_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 status = 0x0;
 	const gchar *version;
@@ -549,11 +526,6 @@ fu_pixart_rf_wireless_device_fw_upgrade(FuPixartRfWirelessDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 5, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 95, NULL);
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
@@ -571,7 +543,10 @@ fu_pixart_rf_wireless_device_fw_upgrade(FuPixartRfWirelessDevice *self,
 				    fu_sum16_bytes(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command checksum */
 
-	if (!fu_device_has_private_flag(FU_DEVICE(parent), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_device_has_private_flag(FU_DEVICE(proxy), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
 		version = fu_firmware_get_version(firmware);
 		if (!fu_memcpy_safe(fw_version,
 				    sizeof(fw_version),
@@ -598,7 +573,7 @@ fu_pixart_rf_wireless_device_fw_upgrade(FuPixartRfWirelessDevice *self,
 	fu_progress_step_done(progress);
 
 	/* send ota fw upgrade command */
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -629,14 +604,9 @@ fu_pixart_rf_wireless_device_fw_upgrade(FuPixartRfWirelessDevice *self,
 static gboolean
 fu_pixart_rf_wireless_device_reset(FuPixartRfWirelessDevice *self, GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
+	FuDevice *proxy;
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
-
-	/* proxy */
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
-		return FALSE;
 
 	/* ota mcu reset command */
 	fu_byte_array_append_uint8(ota_cmd, 0x1); /* ota mcu reset command */
@@ -658,7 +628,10 @@ fu_pixart_rf_wireless_device_reset(FuPixartRfWirelessDevice *self, GError **erro
 		return FALSE;
 
 	/* send ota mcu reset command to device*/
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
 					  FU_IOCTL_FLAG_NONE,
@@ -676,7 +649,7 @@ fu_pixart_rf_wireless_device_reset(FuPixartRfWirelessDevice *self, GError **erro
 						 error))
 		return FALSE;
 
-	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(proxy),
 					    receiver_cmd->data,
 					    receiver_cmd->len,
 					    FU_IOCTL_FLAG_NONE,
@@ -690,8 +663,8 @@ fu_pixart_rf_wireless_device_write_firmware(FuDevice *device,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
-	FuPixartRfReceiverDevice *parent;
 	FuPixartRfWirelessDevice *self = FU_PIXART_RF_WIRELESS_DEVICE(device);
+	FuDevice *proxy;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -754,12 +727,11 @@ fu_pixart_rf_wireless_device_write_firmware(FuDevice *device,
 	if (!fu_pixart_rf_wireless_device_reset(self, error))
 		return FALSE;
 
-	parent = fu_pixart_rf_wireless_device_get_parent(self, error);
-	if (parent == NULL)
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-
 	fu_progress_step_done(progress);
-	fu_device_add_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -781,7 +753,9 @@ fu_pixart_rf_wireless_device_init(FuPixartRfWirelessDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_PIXART_RF_RECEIVER_DEVICE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
@@ -800,10 +774,10 @@ fu_pixart_rf_wireless_device_class_init(FuPixartRfWirelessDeviceClass *klass)
 }
 
 FuPixartRfWirelessDevice *
-fu_pixart_rf_wireless_device_new(FuContext *ctx, FuPixartRfOtaFwDevModel *model)
+fu_pixart_rf_wireless_device_new(FuDevice *proxy, FuPixartRfOtaFwDevModel *model)
 {
 	FuPixartRfWirelessDevice *self = NULL;
-	self = g_object_new(FU_TYPE_PIXART_RF_WIRELESS_DEVICE, "context", ctx, NULL);
+	self = g_object_new(FU_TYPE_PIXART_RF_WIRELESS_DEVICE, "proxy", proxy, NULL);
 
 	self->model.status = model->status;
 	for (guint idx = 0; idx < FU_PIXART_RF_DEVICE_MODEL_NAME_LEN; idx++)

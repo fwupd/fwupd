@@ -128,7 +128,7 @@ fu_qsi_dock_mcu_device_enumerate_children(FuQsiDockMcuDevice *self, GError **err
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuDevice) child = NULL;
 
-		child = fu_qsi_dock_child_device_new(fu_device_get_context(FU_DEVICE(self)));
+		child = fu_qsi_dock_child_device_new(FU_DEVICE(self));
 		if (g_strcmp0(components[i].name, "bcdVersion") == 0) {
 			if ((val[0] == 0x00 && val[1] == 0x00) ||
 			    (val[0] == 0xFF && val[1] == 0xFF)) {

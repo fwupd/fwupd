@@ -250,10 +250,9 @@ fu_mtd_ifd_device_class_init(FuMtdIfdDeviceClass *klass)
 }
 
 FuMtdIfdDevice *
-fu_mtd_ifd_device_new(FuDevice *parent, FuIfdImage *img)
+fu_mtd_ifd_device_new(FuDevice *proxy, FuIfdImage *img)
 {
-	FuMtdIfdDevice *self =
-	    g_object_new(FU_TYPE_MTD_IFD_DEVICE, "parent", parent, "proxy", parent, NULL);
+	FuMtdIfdDevice *self = g_object_new(FU_TYPE_MTD_IFD_DEVICE, "proxy", proxy, NULL);
 	self->img = g_object_ref(img);
 	return self;
 }

@@ -1672,7 +1672,7 @@ fwupd_client_update_metadata_cb(GObject *source, GAsyncResult *res, gpointer use
  * @self: a #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @metadata_fn: the XML metadata filename
- * @signature_fn: the GPG signature file
+ * @signature_fn: the Jcat signature file
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *

@@ -1,0 +1,17 @@
+{
+  "name": "Sandisk SCSI",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/scsi-sandisk-setup.json",
+      "components": [
+        {
+          "version": "1.00",
+          "guids": [
+            "b861e037-c38d-56ea-adaf-b2325ee6b96b"
+          ]
+        }
+      ]
+    }
+  ]
+}

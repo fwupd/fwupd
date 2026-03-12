@@ -9,7 +9,7 @@
 #include "fu-uefi-device.h"
 
 FuUefiDevice *
-fu_uefi_device_new(const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2);
+fu_uefi_device_new(FuContext *ctx, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2, 3);
 void
 fu_uefi_device_set_guid(FuUefiDevice *self, const gchar *guid) G_GNUC_NON_NULL(1);
 const gchar *

@@ -9,8 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-vli-common.h"
-
 #define FU_VLI_USBHUB_HEADER_STRAPPING1_SELFW1 (1 << 1)
 #define FU_VLI_USBHUB_HEADER_STRAPPING1_76PIN  (1 << 2)
 #define FU_VLI_USBHUB_HEADER_STRAPPING1_B3UP   (1 << 3)

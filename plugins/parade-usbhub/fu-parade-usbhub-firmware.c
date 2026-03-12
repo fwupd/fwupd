@@ -75,9 +75,3 @@ fu_parade_usbhub_firmware_class_init(FuParadeUsbhubFirmwareClass *klass)
 	firmware_class->validate = fu_parade_usbhub_firmware_validate;
 	firmware_class->parse = fu_parade_usbhub_firmware_parse;
 }
-
-FuFirmware *
-fu_parade_usbhub_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_PARADE_USBHUB_FIRMWARE, NULL));
-}

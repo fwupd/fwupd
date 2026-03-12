@@ -21,7 +21,7 @@ fu_cpu_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	g_autoptr(FuProcessorDevice) dev = fu_processor_device_new(ctx);
 	if (!fu_device_setup(FU_DEVICE(dev), error))
 		return FALSE;
-	fu_plugin_device_add(plugin, FU_DEVICE(dev));
+	fu_plugin_add_device(plugin, FU_DEVICE(dev));
 	return TRUE;
 }
 

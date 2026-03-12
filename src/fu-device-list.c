@@ -632,7 +632,7 @@ fu_device_list_remove_all(FuDeviceList *self)
 }
 
 static void
-fu_device_list_add_missing_guids(FuDevice *device_new, FuDevice *device_old)
+fu_device_list_add_missing_guids(FuDeviceList *self, FuDevice *device_new, FuDevice *device_old)
 {
 	GPtrArray *guids_old = fu_device_get_guids(device_old);
 	for (guint i = 0; i < guids_old->len; i++) {
@@ -742,7 +742,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	fu_device_replace(device, item->device);
 
 	/* copy over any GUIDs that used to exist */
-	fu_device_list_add_missing_guids(device, item->device);
+	fu_device_list_add_missing_guids(self, device, item->device);
 
 	/* incorporate properties from the old device */
 	fu_device_incorporate(device,

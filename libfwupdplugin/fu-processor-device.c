@@ -111,62 +111,6 @@ fu_processor_device_to_string(FuDevice *device, guint idt, GString *str)
 				      self->sinkclose_microcode_ver);
 }
 
-static const gchar *
-fu_processor_device_convert_vendor(const gchar *vendor)
-{
-	if (g_strcmp0(vendor, "GenuineIntel") == 0)
-		return "Intel";
-	if (g_strcmp0(vendor, "AuthenticAMD") == 0 || g_strcmp0(vendor, "AMDisbetter!") == 0)
-		return "AMD";
-	if (g_strcmp0(vendor, "CentaurHauls") == 0)
-		return "IDT";
-	if (g_strcmp0(vendor, "CyrixInstead") == 0)
-		return "Cyrix";
-	if (g_strcmp0(vendor, "TransmetaCPU") == 0 || g_strcmp0(vendor, "GenuineTMx86") == 0)
-		return "Transmeta";
-	if (g_strcmp0(vendor, "Geode by NSC") == 0)
-		return "National Semiconductor";
-	if (g_strcmp0(vendor, "NexGenDriven") == 0)
-		return "NexGen";
-	if (g_strcmp0(vendor, "RiseRiseRise") == 0)
-		return "Rise";
-	if (g_strcmp0(vendor, "SiS SiS SiS ") == 0)
-		return "SiS";
-	if (g_strcmp0(vendor, "UMC UMC UMC ") == 0)
-		return "UMC";
-	if (g_strcmp0(vendor, "VIA VIA VIA ") == 0)
-		return "VIA";
-	if (g_strcmp0(vendor, "Vortex86 SoC") == 0)
-		return "Vortex";
-	if (g_strcmp0(vendor, " Shanghai ") == 0)
-		return "Zhaoxin";
-	if (g_strcmp0(vendor, "HygonGenuine") == 0)
-		return "Hygon";
-	if (g_strcmp0(vendor, "E2K MACHINE") == 0)
-		return "MCST";
-	if (g_strcmp0(vendor, "bhyve bhyve ") == 0)
-		return "bhyve";
-	if (g_strcmp0(vendor, " KVMKVMKVM ") == 0)
-		return "KVM";
-	if (g_strcmp0(vendor, "TCGTCGTCGTCG") == 0)
-		return "QEMU";
-	if (g_strcmp0(vendor, "Microsoft Hv") == 0)
-		return "Microsoft";
-	if (g_strcmp0(vendor, " lrpepyh vr") == 0)
-		return "Parallels";
-	if (g_strcmp0(vendor, "VMwareVMware") == 0)
-		return "VMware";
-	if (g_strcmp0(vendor, "XenVMMXenVMM") == 0)
-		return "Xen";
-	if (g_strcmp0(vendor, "ACRNACRNACRN") == 0)
-		return "ACRN";
-	if (g_strcmp0(vendor, " QNXQVMBSQG ") == 0)
-		return "QNX";
-	if (g_strcmp0(vendor, "VirtualApple") == 0)
-		return "Apple";
-	return vendor;
-}
-
 static gboolean
 fu_processor_device_add_instance_ids(FuProcessorDevice *self, GError **error)
 {
@@ -256,8 +200,15 @@ fu_processor_device_probe_manufacturer_id(FuProcessorDevice *self, GError **erro
 			    sizeof(guint32),
 			    error))
 		return FALSE;
-	fu_device_set_vendor(FU_DEVICE(self), fu_processor_device_convert_vendor(str));
-	return TRUE;
+
+	/* convert to something sane and get the quirked vendor name */
+	fu_device_add_instance_strsafe(FU_DEVICE(self), "VEN", str);
+	return fu_device_build_instance_id_full(FU_DEVICE(self),
+						FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						error,
+						"CPUID",
+						"VEN",
+						NULL);
 }
 
 static gboolean

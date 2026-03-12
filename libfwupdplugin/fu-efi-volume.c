@@ -295,9 +295,11 @@ fu_efi_volume_parse(FuFirmware *firmware,
 				return FALSE;
 		}
 	} else {
+#ifndef HAVE_FUZZER
 		g_warning("no idea how to parse %s [%s] EFI volume",
 			  guid_str,
 			  fu_efi_guid_to_name(guid_str));
+#endif
 		if (!fu_firmware_set_stream(firmware, partial_stream, error))
 			return FALSE;
 	}
