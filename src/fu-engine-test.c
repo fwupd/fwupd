@@ -2274,6 +2274,78 @@ fu_engine_install_needs_reboot(void)
 	g_assert_true(g_file_test(reboot_file, G_FILE_TEST_EXISTS));
 }
 
+static void
+fu_engine_install_rejects_pending_reboot(void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin(engine, plugin);
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a device so we can try to install onto it */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.2");
+	fu_device_set_id(device, "test_device");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_name(device, "Test Device");
+	fu_device_set_plugin(device, "test");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+	devices = fu_engine_get_devices(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	stream = fu_input_stream_from_path(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(cabinet);
+
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	fu_release_set_device(release, device);
+	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_false(ret);
+	g_assert_cmpstr(error->message, ==, "A reboot is pending");
+}
+
 typedef struct {
 	guint request_cnt;
 	FwupdStatus last_status;
@@ -3386,6 +3458,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/report-metadata", fu_engine_report_metadata_func);
 	g_test_add_func("/fwupd/engine/require-hwid", fu_engine_require_hwid_func);
 	g_test_add_func("/fwupd/engine/requires-reboot", fu_engine_install_needs_reboot);
+	g_test_add_func("/fwupd/engine/rejects-pending-reboot",
+			fu_engine_install_rejects_pending_reboot);
 	g_test_add_func("/fwupd/engine/history-inherit", fu_engine_history_inherit);
 	g_test_add_func("/fwupd/engine/history-convert-version",
 			fu_engine_history_convert_version_func);
