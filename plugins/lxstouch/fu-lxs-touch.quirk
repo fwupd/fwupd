@@ -1,0 +1,35 @@
+# LXS Touch Device
+# App  : VID=0x1FD2, PID=0x5010
+# Boot : VID=0x1FD2, PID=0xB011 (case 1)
+#        VID=0x29BD, PID=0xB011 (case 2)
+
+[USB\VID_1FD2&PID_5010]
+Plugin = lxs_touch
+Vendor = LXS
+VendorId = USB:0x1FD2
+Name = LXS Touchscreen
+Summary = Touchscreen
+Icon = input-touchpad
+Flags = internal,updatable
+Protocol = com.lxsemicon.swip
+InstallDuration = 120
+CounterpartGuid = USB\VID_1FD2&PID_5357
+
+# Boot state - case 1 (VID=0x1FD2, PID=0xB011)
+[USB\VID_1FD2&PID_B011]
+Plugin = lxs_touch
+Flags = is-bootloader
+CounterpartGuid = USB\VID_1FD2&PID_5010
+
+# Boot state - case 2 (VID=0x29BD, PID=0xB011)
+[USB\VID_29BD&PID_B011]
+Plugin = lxs_touch
+Flags = is-bootloader
+CounterpartGuid = USB\VID_1FD2&PID_5010
+
+# Custom HID usage page for SWIP protocol
+[HIDRAW\VEN_1FD2&DEV_5010]
+Plugin = lxs_touch
+Vendor = LXS
+VendorId = HIDRAW:0x1FD2
+CounterpartGuid = USB\VID_1FD2&PID_5010
