@@ -76,6 +76,31 @@ fu_util_report_history(FuUtil *self, gchar **values, GError **error);
 static FwupdDevice *
 fu_util_get_device_by_id(FuUtil *self, const gchar *id, GError **error);
 
+static gchar *
+fu_util_release_get_version_display(FwupdDevice *device, FwupdRelease *release)
+{
+	const gchar *device_version = fwupd_device_get_version(device);
+	const gchar *version = fwupd_release_get_version(release);
+	FwupdVersionFormat fmt = fwupd_device_get_version_format(device);
+	guint64 version_raw = 0;
+	g_autofree gchar *version_fmt = NULL;
+
+	if (version == NULL)
+		return g_strdup(_("unknown"));
+	if (fmt == FWUPD_VERSION_FORMAT_HEX && device_version != NULL &&
+	    g_str_has_prefix(device_version, "0x") &&
+	    fu_strtoull(version, &version_raw, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, NULL)) {
+		gsize width = strlen(device_version) - 2;
+		return g_strdup_printf("0x%0*" G_GINT64_MODIFIER "x", (gint)width, version_raw);
+	}
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
+		return g_strdup(version);
+	version_fmt = fu_version_parse_from_format(version, fmt);
+	if (version_fmt == NULL)
+		return g_strdup(version);
+	return g_steal_pointer(&version_fmt);
+}
+
 static void
 fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtil *self)
 {
@@ -337,11 +362,13 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 			for (guint i = 0; i < devices_failed->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices_failed, i);
 				FwupdRelease *rel = fwupd_device_get_release_default(dev);
+				g_autofree gchar *version =
+				    fu_util_release_get_version_display(dev, rel);
 				fu_console_print(self->console,
 						 " • %s (%s → %s)",
 						 fwupd_device_get_name(dev),
 						 fwupd_device_get_version(dev),
-						 fwupd_release_get_version(rel));
+						 version);
 			}
 		}
 
@@ -353,11 +380,13 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 			for (guint i = 0; i < devices_success->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices_success, i);
 				FwupdRelease *rel = fwupd_device_get_release_default(dev);
+				g_autofree gchar *version =
+				    fu_util_release_get_version_display(dev, rel);
 				fu_console_print(self->console,
 						 " • %s (%s → %s)",
 						 fwupd_device_get_name(dev),
 						 fwupd_device_get_version(dev),
-						 fwupd_release_get_version(rel));
+						 version);
 			}
 		}
 
@@ -2523,7 +2552,10 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 }
 
 static FwupdRelease *
-fu_util_prompt_for_release(FuUtil *self, GPtrArray *rels_unfiltered, GError **error)
+fu_util_prompt_for_release(FuUtil *self,
+			   FwupdDevice *device,
+			   GPtrArray *rels_unfiltered,
+			   GError **error)
 {
 	FwupdRelease *rel;
 	guint idx;
@@ -2547,10 +2579,8 @@ fu_util_prompt_for_release(FuUtil *self, GPtrArray *rels_unfiltered, GError **er
 	fu_console_print(self->console, "0.\t%s", _("Cancel"));
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index(rels, i);
-		fu_console_print(self->console,
-				 "%u.\t%s",
-				 i + 1,
-				 fwupd_release_get_version(rel_tmp));
+		g_autofree gchar *version = fu_util_release_get_version_display(device, rel_tmp);
+		fu_console_print(self->console, "%u.\t%s", i + 1, version);
 	}
 	/* TRANSLATORS: get interactive prompt */
 	idx = fu_console_input_uint(self->console, rels->len, "%s", _("Choose release"));
@@ -2931,6 +2961,7 @@ fu_util_prompt_warning_bkc(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GE
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(self->client);
 	g_autofree gchar *cmd = g_strdup_printf("%s sync", g_get_prgname());
+	g_autofree gchar *version = NULL;
 	g_autoptr(FwupdRelease) rel_bkc = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2959,12 +2990,13 @@ fu_util_prompt_warning_bkc(FuUtil *self, FwupdDevice *dev, FwupdRelease *rel, GE
 	 * of firmware that works together */
 	g_string_append_printf(str, _("Your system is set up to the BKC of %s."), host_bkc);
 	g_string_append(str, "\n\n");
+	version = fu_util_release_get_version_display(dev, rel);
 	g_string_append_printf(
 	    str,
 	    /* TRANSLATORS: %1 is the current device version number, and %2 is the
 	       command name, e.g. `fwupdmgr sync` */
 	    _("This device will be reverted back to %s when the %s command is performed."),
-	    fwupd_release_get_version(rel),
+	    version,
 	    cmd);
 
 	fu_console_box(
@@ -3537,7 +3569,7 @@ fu_util_downgrade(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* get the chosen release */
-	rel = fu_util_prompt_for_release(self, rels, error);
+	rel = fu_util_prompt_for_release(self, dev, rels, error);
 	if (rel == NULL)
 		return FALSE;
 
@@ -3657,7 +3689,7 @@ fu_util_install(FuUtil *self, gchar **values, GError **error)
 						 error);
 		if (rels == NULL)
 			return FALSE;
-		rel = fu_util_prompt_for_release(self, rels, error);
+		rel = fu_util_prompt_for_release(self, dev, rels, error);
 		if (rel == NULL)
 			return FALSE;
 	}

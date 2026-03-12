@@ -22,6 +22,33 @@ static gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt);
 static gchar *
 fu_util_convert_description(const gchar *xml, GError **error);
+static gchar *
+fu_util_release_get_version_display(FwupdDevice *device, FwupdRelease *release);
+
+static gchar *
+fu_util_release_get_version_display(FwupdDevice *device, FwupdRelease *release)
+{
+	const gchar *device_version = fwupd_device_get_version(device);
+	const gchar *version = fwupd_release_get_version(release);
+	FwupdVersionFormat fmt = fwupd_device_get_version_format(device);
+	guint64 version_raw = 0;
+	g_autofree gchar *version_fmt = NULL;
+
+	if (version == NULL)
+		return g_strdup(_("unknown"));
+	if (fmt == FWUPD_VERSION_FORMAT_HEX && device_version != NULL &&
+	    g_str_has_prefix(device_version, "0x") &&
+	    fu_strtoull(version, &version_raw, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, NULL)) {
+		gsize width = strlen(device_version) - 2;
+		return g_strdup_printf("0x%0*" G_GINT64_MODIFIER "x", (gint)width, version_raw);
+	}
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
+		return g_strdup(version);
+	version_fmt = fu_version_parse_from_format(version, fmt);
+	if (version_fmt == NULL)
+		return g_strdup(version);
+	return g_steal_pointer(&version_fmt);
+}
 
 gchar *
 fu_console_color_format(const gchar *text, FuConsoleColor fg_color) /* nocheck:name */
@@ -295,6 +322,7 @@ fu_util_prompt_warning(FuConsole *console,
 	FwupdDeviceFlags flags;
 	gint vercmp;
 	g_autofree gchar *desc_fb = NULL;
+	g_autofree gchar *version = NULL;
 	g_autoptr(GString) title = g_string_new(NULL);
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -302,6 +330,7 @@ fu_util_prompt_warning(FuConsole *console,
 	vercmp = fu_version_compare(fwupd_release_get_version(release),
 				    fu_device_get_version(device),
 				    fwupd_device_get_version_format(device));
+	version = fu_util_release_get_version_display(device, release);
 	if (vercmp < 0) {
 		g_string_append_printf(
 		    title,
@@ -310,7 +339,7 @@ fu_util_prompt_warning(FuConsole *console,
 		    _("Downgrade %s from %s to %s?"),
 		    fwupd_device_get_name(device),
 		    fwupd_device_get_version(device),
-		    fwupd_release_get_version(release));
+		    version);
 	} else if (vercmp > 0) {
 		g_string_append_printf(
 		    title,
@@ -319,7 +348,7 @@ fu_util_prompt_warning(FuConsole *console,
 		    _("Upgrade %s from %s to %s?"),
 		    fwupd_device_get_name(device),
 		    fwupd_device_get_version(device),
-		    fwupd_release_get_version(release));
+		    version);
 	} else {
 		g_string_append_printf(
 		    title,
@@ -327,7 +356,7 @@ fu_util_prompt_warning(FuConsole *console,
 		     * %1 is the device name and %2 is a version string */
 		    _("Reinstall %s to %s?"),
 		    fwupd_device_get_name(device),
-		    fwupd_release_get_version(release));
+		    version);
 	}
 
 	/* description is optional */
