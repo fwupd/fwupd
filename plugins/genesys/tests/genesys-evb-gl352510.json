@@ -1,5 +1,5 @@
 {
-  "name": "EVB",
+  "name": "Genesys EVB GL352510",
   "interactive": false,
   "steps": [
     {
@@ -7,7 +7,6 @@
       "emulation-url": "38954ace3092f0dff12163e6daf0940dc67ddd3b27d6cd98c8fca6ed4e4d5c7e-TestEVB_GL3525_M.zip",
       "components": [
         {
-          "name": "GL352510",
           "version": "89.6",
           "guids": [
             "9aaeccaf-ac29-5104-8e63-5ebb8e2ce039"
