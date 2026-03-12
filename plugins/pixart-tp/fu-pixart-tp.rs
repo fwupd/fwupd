@@ -63,6 +63,7 @@ enum FuPixartTpRegSys6 {
     SramData       = 0x0b,
     SramChecksum   = 0x0c,
     SramAddr       = 0x10,
+    AppReady       = 0x70,
 }
 
 // user bank 0 (part id + crc registers)

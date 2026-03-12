@@ -24,6 +24,9 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW
 
 #define GET_PRIVATE(o) (fu_pixart_tp_device_get_instance_private(o))
 
+static gboolean
+fu_pixart_tp_device_app_ready_wait_cb(FuDevice *device, gpointer user_data, GError **error);
+
 #define FU_PIXART_TP_DEVICE_SECTOR_SIZE 4096
 #define FU_PIXART_TP_DEVICE_PAGE_SIZE	256
 
@@ -420,8 +423,46 @@ fu_pixart_tp_device_reset(FuPixartTpDevice *self, FuPixartTpResetMode mode, GErr
 						    : FU_PIXART_TP_RESET_KEY2_BOOTLOADER,
 						error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), mode == FU_PIXART_TP_RESET_MODE_APPLICATION ? 500 : 10);
+	if (mode == FU_PIXART_TP_RESET_MODE_APPLICATION) {
+		guint8 app_ready = 0;
+		fu_device_sleep(FU_DEVICE(self), 500);
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_pixart_tp_device_app_ready_wait_cb,
+					  50,
+					  10,
+					  &app_ready,
+					  error)) {
+			g_prefix_error_literal(error, "application ready wait failure: ");
+			return FALSE;
+		}
+	} else {
+		fu_device_sleep(FU_DEVICE(self), 10);
+	}
 	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_pixart_tp_device_app_ready_wait_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
+	guint8 *out_val = user_data;
+
+	if (!fu_pixart_tp_device_register_read(self,
+					       FU_PIXART_TP_SYSTEM_BANK_BANK6,
+					       FU_PIXART_TP_REG_SYS6_APP_READY,
+					       out_val,
+					       error))
+		return FALSE;
+
+	if ((*out_val & 0x01) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "application mode still not ready");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -779,13 +820,14 @@ fu_pixart_tp_device_firmware_clear(FuPixartTpDevice *self,
 		return FALSE;
 	start_address = fu_pixart_tp_section_get_target_flash_start(section);
 	g_debug("clear firmware at start address 0x%08x", start_address);
-
-	if (!fu_pixart_tp_device_flash_erase_sector(
-		self,
-		(guint8)(start_address / FU_PIXART_TP_DEVICE_SECTOR_SIZE),
-		error)) {
-		g_prefix_error_literal(error, "clear firmware failure: ");
-		return FALSE;
+	for (guint32 offset = 0; offset < fu_firmware_get_size(FU_FIRMWARE(section));
+	     offset += FU_PIXART_TP_DEVICE_SECTOR_SIZE) {
+		guint8 sector =
+		    (guint8)((start_address + offset) / FU_PIXART_TP_DEVICE_SECTOR_SIZE);
+		if (!fu_pixart_tp_device_flash_erase_sector(self, sector, error)) {
+			g_prefix_error(error, "clear firmware failure at sector 0x%x: ", sector);
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -1179,8 +1221,8 @@ fu_pixart_tp_device_verify_crc(FuPixartTpDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 92, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 8, NULL);
 
-	/* reset to bootloader before CRC check */
-	if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_BOOTLOADER, error))
+	/* CRCs are only stable after the controller has returned to application mode. */
+	if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_APPLICATION, error))
 		return FALSE;
 
 	/* firmware CRC */
@@ -1192,15 +1234,10 @@ fu_pixart_tp_device_verify_crc(FuPixartTpDevice *self,
 	if (section == NULL)
 		return FALSE;
 	if (crc_value != fu_pixart_tp_section_get_crc(section)) {
-		g_autoptr(GError) error_local = NULL;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "firmware CRC compare failed");
-		if (!fu_pixart_tp_device_firmware_clear(self, firmware, &error_local)) {
-			g_warning("failed to clear firmware after CRC error: %s",
-				  error_local->message);
-		}
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1218,7 +1255,6 @@ fu_pixart_tp_device_verify_crc(FuPixartTpDevice *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "parameter CRC compare failed");
-		(void)fu_pixart_tp_device_firmware_clear(self, firmware, error);
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1307,6 +1343,10 @@ fu_pixart_tp_device_write_firmware(FuDevice *device,
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
 	guint64 total_update_bytes = 0;
+	g_autoptr(GPtrArray) fw_sections =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) param_sections =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(GPtrArray) sections = NULL;
 
 	/* progress */
@@ -1341,6 +1381,10 @@ fu_pixart_tp_device_write_firmware(FuDevice *device,
 		update_type = fu_pixart_tp_section_get_update_type(section);
 		if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE)
 			continue;
+		if (update_type == FU_PIXART_TP_UPDATE_TYPE_PARAM)
+			g_ptr_array_add(param_sections, g_object_ref(section));
+		else
+			g_ptr_array_add(fw_sections, g_object_ref(section));
 
 		section_length = fu_firmware_get_size(FU_FIRMWARE(section));
 		if (section_length > 0)
@@ -1361,12 +1405,33 @@ fu_pixart_tp_device_write_firmware(FuDevice *device,
 	if (!fu_pixart_tp_device_firmware_clear(self, FU_PIXART_TP_FIRMWARE(firmware), error))
 		return FALSE;
 
-	/* program all TP sections (TF_FORCE handled by child device) */
-	if (!fu_pixart_tp_device_write_sections(self,
-						sections,
-						fu_progress_get_child(progress),
-						error))
-		return FALSE;
+	/* The vendor updater commits firmware and parameter in separate sessions:
+	 * firmware -> app reset/ready -> short delay -> parameter -> app reset/ready. */
+	if (fw_sections->len > 0) {
+		if (!fu_pixart_tp_device_write_sections(self,
+							fw_sections,
+							fu_progress_get_child(progress),
+							error))
+			return FALSE;
+		if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_APPLICATION, error))
+			return FALSE;
+		fu_device_sleep(device, 100);
+		if (param_sections->len > 0) {
+			if (!fu_pixart_tp_device_reset(self,
+						       FU_PIXART_TP_RESET_MODE_BOOTLOADER,
+						       error))
+				return FALSE;
+		}
+	}
+	if (param_sections->len > 0) {
+		if (!fu_pixart_tp_device_write_sections(self,
+							param_sections,
+							fu_progress_get_child(progress),
+							error))
+			return FALSE;
+		if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_APPLICATION, error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* verify CRC (firmware + parameter) */

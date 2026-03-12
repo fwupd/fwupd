@@ -23,6 +23,15 @@ The firmware is parsed by `FuPixartTpFirmware` and validated using:
 Each updateable **internal** section defines a flash start address and a file offset/length.
 The plugin programs flash in **4 KiB sectors** with **256-byte pages** via a small SRAM window.
 
+For `PIXARTTP\PARTID_0274`, vendors can ship update images using a 15-sector layout:
+
+- total flash image size `0xF000`
+- application firmware from `0x0000`
+- parameter section at `0xE000`
+
+When building `FWHD` payloads for this silicon, the section metadata has to match the
+actual on-device flash map rather than an updater filename or marketing family name.
+
 ## GUID Generation
 
 These devices use the standard HID DeviceInstanceId values, e.g.

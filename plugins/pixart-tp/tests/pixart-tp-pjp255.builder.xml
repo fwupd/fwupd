@@ -1,0 +1,25 @@
+<firmware gtype="FuPixartTpFirmware">
+  <version_raw>0x2004</version_raw>
+  <header_ver>0x103</header_ver>
+  <ic_part_id>0x274</ic_part_id>
+  <flash_sectors>0x0f</flash_sectors>
+  <firmware gtype="FuPixartTpSection">
+    <id>parameter</id>
+    <data>cGl4YXJ0LXRwLXBqcDI1NS1wYXJhbQ==</data> <!-- base64 -->
+    <filename>parameter.bin</filename>
+    <update_type>param</update_type>
+    <flags>valid</flags>
+    <target_flash_start>0xe000</target_flash_start>
+    <section_crc>0xc1c5ec96</section_crc>
+    <reserved>000000000000000000000000</reserved>
+  </firmware>
+  <firmware gtype="FuPixartTpSection">
+    <id>payload</id>
+    <data>cGl4YXJ0LXRwLXBqcDI1NS1maXJtd2FyZQ==</data> <!-- base64 -->
+    <filename>payload.bin</filename>
+    <update_type>fw-section</update_type>
+    <flags>valid</flags>
+    <section_crc>0x0001fe04</section_crc>
+    <reserved>000000000000000000000000</reserved>
+  </firmware>
+</firmware>
