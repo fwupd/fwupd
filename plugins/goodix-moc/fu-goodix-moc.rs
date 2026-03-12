@@ -60,5 +60,5 @@ struct FuStructGoodixMocPkgVersionRsp {
     interface: [u8; 8],
     protocol: [u8; 8],
     flash_version: [u8; 8],
-    reserved: [u8; 62],
+    reserved: [u8; 54],
 }
