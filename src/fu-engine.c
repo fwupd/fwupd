@@ -2763,6 +2763,16 @@ fu_engine_install_release(FuEngine *self,
 		return FALSE;
 	}
 
+	/* do not allow installing another release while the previous update is still staged */
+	if (fu_device_get_update_state(device_orig) == FWUPD_UPDATE_STATE_PENDING ||
+	    fu_device_get_update_state(device_orig) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "A reboot is pending");
+		return FALSE;
+	}
+
 	/* optional for tests */
 	if (request != NULL)
 		feature_flags = fu_engine_request_get_feature_flags(request);
