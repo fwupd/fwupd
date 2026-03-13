@@ -31,17 +31,39 @@ plugs:
 apps:
   fwupdtool:
     command: fwupdtool.wrapper
-    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, home, opengl, raw-usb]
+    plugs:
+      [
+        bluez,
+        udisks2,
+        modem-manager,
+        upower-observe,
+        network,
+        hardware-observe,
+        home,
+        opengl,
+        raw-usb,
+      ]
     slots: [fwupd]
-    completer:
-      share/bash-completion/completions/fwupdtool
+    completer: share/bash-completion/completions/fwupdtool
     environment:
       FWUPD_HOSTDIR: /var/lib/snapd/hostfs
   fwupd:
     command: fwupd.wrapper
     daemon: dbus
     slots: [fwupd]
-    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe, home, opengl, raw-usb]
+    plugs:
+      [
+        bluez,
+        udisks2,
+        modem-manager,
+        upower-observe,
+        polkit,
+        network,
+        hardware-observe,
+        home,
+        opengl,
+        raw-usb,
+      ]
     daemon-scope: system
     activates-on:
       - fwupd-dbus
@@ -50,8 +72,7 @@ apps:
   fwupdmgr:
     command: fwupdmgr.wrapper
     plugs: [fwupdmgr, home, network, polkit, shutdown]
-    completer:
-      share/bash-completion/completions/fwupdmgr
+    completer: share/bash-completion/completions/fwupdmgr
   refresh:
     command: fwupdmgr.wrapper refresh
     daemon: oneshot
@@ -82,21 +103,24 @@ parts:
 
   fwupd:
     plugin: meson
-    meson-parameters: [--prefix=/,
-                       -Defi_binary=false,
-                       -Ddocs=disabled,
-                       -Dbuild=all,
-                       -Dintrospection=disabled,
-                       -Dman=false,
-                       -Dpython=/usr/bin/python3,
-                       -Dplugin_flashrom=disabled,
-                       -Defi_os_dir=fwupd,
-                       "-Dlibxmlb:gtkdoc=false",
-                       "-Dlibxmlb:introspection=false",
-                       "-Dlibjcat:man=false",
-                       "-Dlibjcat:gtkdoc=false",
-                       "-Dlibjcat:introspection=false",
-                       "-Dlibjcat:tests=false"]
+    meson-parameters:
+      [
+        --prefix=/,
+        -Defi_binary=false,
+        -Ddocs=disabled,
+        -Dbuild=all,
+        -Dintrospection=disabled,
+        -Dman=false,
+        -Dpython=/usr/bin/python3,
+        -Dplugin_flashrom=disabled,
+        -Defi_os_dir=fwupd,
+        "-Dlibxmlb:gtkdoc=false",
+        "-Dlibxmlb:introspection=false",
+        "-Dlibjcat:man=false",
+        "-Dlibjcat:gtkdoc=false",
+        "-Dlibjcat:introspection=false",
+        "-Dlibjcat:tests=false",
+      ]
     source: .
     source-type: git
     override-build: |
@@ -276,10 +300,10 @@ parts:
     plugin: dump
     source: contrib/snap
     stage:
-    - fwupd-command
-    - fwupdtool.wrapper
-    - fwupd.wrapper
-    - fwupdmgr.wrapper
+      - fwupd-command
+      - fwupdtool.wrapper
+      - fwupd.wrapper
+      - fwupdmgr.wrapper
 
   policy:
     plugin: nil
