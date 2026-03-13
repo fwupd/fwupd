@@ -4114,6 +4114,7 @@ fu_device_set_logical_id(FuDevice *self, const gchar *logical_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(logical_id == NULL || logical_id[0] != '\0');
 
 	/* not changed */
 	if (g_strcmp0(priv->logical_id, logical_id) == 0)
@@ -4173,6 +4174,7 @@ fu_device_set_backend_id(FuDevice *self, const gchar *backend_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(backend_id == NULL || backend_id[0] != '\0');
 
 	/* not changed */
 	if (g_strcmp0(priv->backend_id, backend_id) == 0)
@@ -4649,6 +4651,7 @@ fu_device_set_physical_id(FuDevice *self, const gchar *physical_id)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(physical_id != NULL);
+	g_return_if_fail(physical_id[0] != '\0');
 
 	/* not changed */
 	if (g_strcmp0(priv->physical_id, physical_id) == 0)
