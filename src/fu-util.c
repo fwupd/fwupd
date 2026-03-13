@@ -2846,6 +2846,7 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(remotes, "Remotes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
 	}
 
 	if (remotes->len == 0) {
