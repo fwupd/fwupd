@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [fedora, centos, debian-x86_64, arch, debian-i386, ubuntu-x86_64]
+        os: [fedora, centos, debian-x86_64, debian-aarch64, arch, debian-i386, ubuntu-x86_64]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Docker login
