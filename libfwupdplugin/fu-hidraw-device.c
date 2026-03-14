@@ -257,15 +257,26 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	if (fu_device_get_physical_id(FU_DEVICE(self)) == NULL) {
 		g_autofree gchar *physical_id = NULL;
 		physical_id =
-		    fu_udev_device_read_property(FU_UDEV_DEVICE(hid_device), "HID_PHYS", error);
-		if (physical_id == NULL)
-			return FALSE;
-		fu_device_set_physical_id(FU_DEVICE(self), physical_id);
+		    fu_udev_device_read_property(FU_UDEV_DEVICE(hid_device), "HID_PHYS", NULL);
+		if (physical_id != NULL && physical_id[0] != '\0') {
+			fu_device_set_physical_id(FU_DEVICE(self), physical_id);
 
-		/* this is from a USB device, so try to use the DS-20 descriptor */
-		if (g_str_has_prefix(physical_id, "usb")) {
-			if (!fu_hidraw_device_probe_usb(self, error))
+			/* this is from a USB device, so try to use the DS-20 descriptor */
+			if (g_str_has_prefix(physical_id, "usb")) {
+				if (!fu_hidraw_device_probe_usb(self, error))
+					return FALSE;
+			}
+		} else {
+			const gchar *sysfs_path =
+			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(hid_device));
+			if (sysfs_path == NULL) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "no HID_PHYS or sysfs path");
 				return FALSE;
+			}
+			fu_device_set_physical_id(FU_DEVICE(self), sysfs_path);
 		}
 	}
 
