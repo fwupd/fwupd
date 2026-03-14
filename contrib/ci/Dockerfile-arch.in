@@ -1,5 +1,5 @@
+# -*- mode: dockerfile -*-
 FROM archlinux:latest
-%%%OS%%%
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV CI_NETWORK=true
@@ -8,6 +8,7 @@ RUN sed "s,#en_US.UTF-8,en_US.UTF-8," /etc/locale.gen -i
 RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
 RUN locale-gen
 RUN pacman -Syu --noconfirm archlinux-keyring
-%%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN pacman -Syu --noconfirm --needed \
+%%%DEPENDENCIES%%%
 WORKDIR /github/workspace
 CMD ["./contrib/ci/arch.sh"]
