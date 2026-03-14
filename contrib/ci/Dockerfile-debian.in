@@ -9,6 +9,8 @@ RUN set -euxo pipefail; \
     dpkg --add-architecture s390x; \
     apt-get update; \
     apt-get install --yes --no-install-recommends \
+    build-essential \
+    dpkg-dev \
     python3-apt \
 %%%DEPENDENCIES%%%; \
     apt-get clean; \

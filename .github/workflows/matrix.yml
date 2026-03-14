@@ -9,12 +9,24 @@ jobs:
   build:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     needs: library
     strategy:
       fail-fast: false
       matrix:
-        os: [fedora, centos, debian-x86_64, arch, debian-i386, ubuntu-x86_64]
+        distro: [arch, centos, debian, fedora, ubuntu]
+        cross: [null]
+        runner: [ubuntu-latest]
+        include:
+          - distro: debian
+            cross: null
+            runner: ubuntu-24.04-arm
+          - distro: debian
+            cross: i386
+            runner: ubuntu-latest
+          - distro: debian
+            cross: s390x
+            runner: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Docker login
@@ -22,7 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Download tarball
-        if: matrix.os == 'fedora' || matrix.os == 'centos'
+        if: matrix.distro == 'fedora' || matrix.distro == 'centos'
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         id: download
         with:
@@ -31,42 +43,49 @@ jobs:
         env:
           CI_NETWORK: true
           CI: true
+          MATRIX_CROSS: ${{ matrix.cross }}
           VERSION: ${{ needs.library.outputs.version }}
         run: |
-          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t \
+          docker run --privileged -t \
+              -e "CI_NETWORK=$CI_NETWORK" \
+              -e "CI=$CI" \
+              -e "MATRIX_CROSS=$MATRIX_CROSS" \
+              -e "VERSION=$VERSION" \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              ghcr.io/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+              ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest
       - name: Save any applicable artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ matrix.os }}
+          name: ${{ matrix.distro }}-${{ case(matrix.cross != null, matrix.cross, runner.arch == 'ARM64', 'arm64', 'amd64') }}
           path: ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
         run: |
-          if [ -f contrib/ci/${{matrix.os}}-test.sh ]; then
+          if [ -f contrib/ci/${{matrix.distro}}-test.sh ]; then
             echo "supported=true" >> $GITHUB_OUTPUT
           else
             echo "supported=false" >> $GITHUB_OUTPUT
           fi
       - name: Test in container
-        if: steps.supported.outputs.supported == 'true'
+        if: steps.supported.outputs.supported == 'true' && matrix.cross == null
         env:
           CI_NETWORK: true
           CI: true
         run: |
-          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -t \
+          docker run --privileged -t \
+              -e "CI_NETWORK=$CI_NETWORK" \
+              -e "CI=$CI" \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              ghcr.io/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
-              contrib/ci/${{matrix.os}}-test.sh
+              ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest \
+              contrib/ci/${{matrix.distro}}-test.sh
       - name: Save any coverage data
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: coverage-${{ join(matrix.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386' || matrix.os == 'arch'
+        if: matrix.distro == 'debian' || matrix.distro == 'arch'
         uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
