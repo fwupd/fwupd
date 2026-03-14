@@ -11,18 +11,24 @@ jobs:
   push_to_registry:
     permissions:
       packages: write # for docker/build-push-action
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        os: [precommit, fedora, debian-x86_64, arch, debian-i386, ubuntu-x86_64, centos]
-
+        runner: [ubuntu-latest]
+        distro: [arch, centos, debian, fedora, ubuntu]
+        include:
+          - runner: ubuntu-24.04-arm
+            distro: debian
+          - runner: ubuntu-24.04-arm
+            distro: precommit
     steps:
       - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: "Generate Dockerfile"
         env:
-          OS: ${{ matrix.os }}
+          TARGET_DISTRO: ${{ matrix.distro }}
+          RUNNER_ARCH: ${{ runner.arch }}
         run: ./contrib/ci/generate_docker.py
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
@@ -37,4 +43,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+          tags: ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}:latest
