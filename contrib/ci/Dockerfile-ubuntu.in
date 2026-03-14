@@ -5,8 +5,6 @@ ENV CC=clang
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
     export DEBIAN_FRONTEND=noninteractive; \
-    dpkg --add-architecture i386; \
-    dpkg --add-architecture s390x; \
     apt-get update; \
     apt-get install --yes --no-install-recommends \
     python3-apt \
