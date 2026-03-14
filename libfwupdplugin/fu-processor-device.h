@@ -22,3 +22,5 @@ fu_processor_device_needs_mitigation(FuProcessorDevice *self,
 				     FuProcessorMitigationFlags mitigation_flag) G_GNUC_NON_NULL(1);
 guint32
 fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1);
+const gchar *
+fu_processor_device_get_entrysign_psp_ver(FuProcessorDevice *self) G_GNUC_NON_NULL(1);

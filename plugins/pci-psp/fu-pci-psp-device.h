@@ -15,3 +15,7 @@
 
 #define FU_TYPE_PCI_PSP_DEVICE (fu_pci_psp_device_get_type())
 G_DECLARE_FINAL_TYPE(FuPciPspDevice, fu_pci_psp_device, FU, PCI_PSP_DEVICE, FuUdevDevice)
+
+void
+fu_pci_psp_device_set_cpu(FuPciPspDevice *self, FuProcessorDevice *cpu_device)
+    G_GNUC_NON_NULL(1, 2);

@@ -241,6 +241,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: HP SureStart is a firmware security feature */
 		return g_strdup(_("HP SureStart"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN) == 0) {
+		/* TRANSLATORS: Title: can a user load malicious CPU microcode patches */
+		return g_strdup(_("AMD microcode signature"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -441,6 +445,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HP_SURESTART) == 0) {
 		/* TRANSLATORS: Title: HP SureStart is a firmware security feature */
 		return _("HP SureStart");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN) == 0) {
+		/* TRANSLATORS: Title: can a user load malicious CPU microcode patches */
+		return _("AMD Microcode Signature");
 	}
 	return NULL;
 }
@@ -654,6 +662,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("HP SureStart is a firmware security feature that protects the BIOS from "
 			 "tampering.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("AMD Microcode Signature verification ensures that CPU microcode "
+			 "is authentic and has not been tampered with.");
 	}
 	return NULL;
 }

@@ -19,10 +19,19 @@
 
 struct _FuPciPspDevice {
 	FuUdevDevice parent_instance;
+	FuProcessorDevice *cpu_device;
 	gboolean supported;
 };
 
 G_DEFINE_TYPE(FuPciPspDevice, fu_pci_psp_device, FU_TYPE_UDEV_DEVICE)
+
+void
+fu_pci_psp_device_set_cpu(FuPciPspDevice *self, FuProcessorDevice *cpu_device)
+{
+	g_return_if_fail(FU_IS_PCI_PSP_DEVICE(self));
+	g_return_if_fail(FU_IS_PROCESSOR_DEVICE(cpu_device));
+	g_set_object(&self->cpu_device, cpu_device);
+}
 
 static gboolean
 fu_pci_psp_device_ensure_agesa_version(FuPciPspDevice *self, GError **error)
@@ -147,6 +156,49 @@ fu_pci_psp_device_get_security_attr(FuPciPspDevice *self,
 		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 	}
 	return g_steal_pointer(&attr);
+}
+
+static void
+fu_pci_psp_device_add_security_attrs_entry_sign(FuPciPspDevice *self, FuSecurityAttrs *attrs)
+{
+	const char *fixed_version;
+	gint vercmp;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* sanity check */
+	if (fu_device_get_version(FU_DEVICE(self)) == NULL)
+		return;
+
+	/* only affects certain families */
+	if (self->cpu_device == NULL)
+		return;
+	fixed_version = fu_processor_device_get_entrysign_psp_ver(self->cpu_device);
+	if (fixed_version == NULL)
+		return;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr);
+
+	/* the firmware is new enough to be fixed */
+	vercmp = fu_version_compare(fu_device_get_version(FU_DEVICE(self)),
+				    fixed_version,
+				    FWUPD_VERSION_FORMAT_UNKNOWN);
+	if (vercmp == G_MAXINT) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	if (vercmp >= 0) {
+		g_debug("%s >= %s, so good enough",
+			fu_device_get_version(FU_DEVICE(self)),
+			fixed_version);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
+
+	/* firmware is older than fixed version */
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 }
 
 static void
@@ -447,6 +499,7 @@ fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	fu_pci_psp_device_add_security_attrs_platform_secure_boot(self, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_rpmc(self, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_rom_armor(self, sysfs_path, attrs);
+	fu_pci_psp_device_add_security_attrs_entry_sign(self, attrs);
 }
 
 static void
@@ -462,9 +515,20 @@ fu_pci_psp_device_init(FuPciPspDevice *self)
 }
 
 static void
+fu_pci_psp_device_finalize(GObject *object)
+{
+	FuPciPspDevice *self = FU_PCI_PSP_DEVICE(object);
+	if (self->cpu_device != NULL)
+		g_object_unref(self->cpu_device);
+	G_OBJECT_CLASS(fu_pci_psp_device_parent_class)->finalize(object);
+}
+
+static void
 fu_pci_psp_device_class_init(FuPciPspDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_pci_psp_device_finalize;
 	device_class->probe = fu_pci_psp_device_probe;
 	device_class->add_security_attrs = fu_pci_psp_device_add_security_attrs;
 }
