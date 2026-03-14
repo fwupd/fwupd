@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
+
 import os
 import shutil
 import subprocess
@@ -23,7 +24,7 @@ RUNNER_ARCH_DEPS_MAP = {
 
 def cross_deps(cross: str) -> list[str]:
     deps = [f"crossbuild-essential-{cross}"]
-    deps += [f"{i}:{cross}" for i in parse_dependencies(TARGET_DISTRO, cross, False)]
+    deps += parse_dependencies(TARGET_DISTRO, cross, False)
     return deps
 
 
@@ -62,6 +63,7 @@ deps = parse_dependencies(TARGET_DISTRO, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], Fals
 if TARGET_DISTRO == "debian" and RUNNER_ARCH == "X64":
     deps += cross_deps("i386")
     deps += cross_deps("s390x")
+deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
 
