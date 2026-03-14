@@ -522,6 +522,7 @@ if get_option('tests')
     'fdt-firmware',
     'firmware',
     'hid-descriptor',
+    'hidraw-device',
     'hwids',
     'ihex-firmware',
     'input-stream',
