@@ -1,9 +1,13 @@
-#!/bin/bash -e
+#!/bin/bash
+set -euo pipefail
 
 # Set up fatal-criticals systemd override
 SYSTEMD_OVERRIDE="/etc/systemd/system/fwupd.service.d"
-mkdir -p ${SYSTEMD_OVERRIDE}
-cp contrib/fwupd-systemd-fatal-criticals.conf ${SYSTEMD_OVERRIDE}/override.conf
+mkdir -p "$SYSTEMD_OVERRIDE"
+cat >"$SYSTEMD_OVERRIDE/override.conf" <<EOF
+[Service]
+Environment="G_DEBUG=fatal-criticals"
+EOF
 
 # install
 apt update
