@@ -43,4 +43,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}:latest
+          tags: ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ runner.arch }}:latest
