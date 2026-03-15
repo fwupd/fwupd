@@ -35,7 +35,7 @@ if [ -x /usr/lib/fwupd/fwupd ]; then
     export DEB_BUILD_OPTIONS=nocheck
 fi
 
-if [ ! -z "$MATRIX_CROSS" ]; then
+if [ ! -z "${MATRIX_CROSS:-}" ]; then
     export DEB_BUILD_OPTIONS=nocheck
 fi
 
