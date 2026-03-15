@@ -77,7 +77,12 @@ def find_uefi_device(client, deviceid):
         if item.get_plugin() == "uefi" or item.get_plugin() == "uefi_capsule":
             print(f"Installing to {item.get_name()}")
             version_format = Fwupd.version_format_to_string(item.get_version_format())
-            return item.get_guid_default(), item.get_id(), item.get_version(), version_format
+            return (
+                item.get_guid_default(),
+                item.get_id(),
+                item.get_version(),
+                version_format,
+            )
     print("Couldn't find any UEFI devices")
     sys.exit(1)
 
@@ -118,7 +123,9 @@ if __name__ == "__main__":
     try:
         is_restore_required = set_conf_only_trusted(CLIENT, False)
         directory = tempfile.mkdtemp()
-        guid, deviceid, version, version_format = find_uefi_device(CLIENT, ARGS.deviceid)
+        guid, deviceid, version, version_format = find_uefi_device(
+            CLIENT, ARGS.deviceid
+        )
         cab = generate_cab(ARGS.exe, directory, guid, version, version_format)
         install(CLIENT, cab, deviceid, True, True)
     except Exception as e:
