@@ -18,7 +18,7 @@ jobs:
         run: |
           docker run --privileged -t \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              ghcr.io/fwupd/fwupd/fwupd-precommit-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest
+              "ghcr.io/fwupd/fwupd/fwupd-precommit-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest"
 
   snap:
     needs: pre-commit
