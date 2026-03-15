@@ -166,11 +166,21 @@ static gboolean
 fu_uf2_device_volume_mount(FuUf2Device *self, GError **error)
 {
 	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
+	g_autoptr(FuVolume) volume = NULL;
 
 	/* mount volume if required */
-	self->volume = fu_volume_new_by_device(devfile, error);
-	if (self->volume == NULL)
+	volume = fu_volume_new_by_device(devfile, error);
+	if (volume == NULL)
 		return FALSE;
+
+	/* already mounted by user session, nothing to do */
+	if (fu_volume_is_mounted(volume)) {
+		g_warning("volume %s is already mounted, skipping mount", devfile);
+		return TRUE;
+	}
+
+	/* mount it ourselves -- close() will unmount */
+	self->volume = g_steal_pointer(&volume);
 	return fu_volume_mount(self->volume, error);
 }
 
@@ -226,8 +236,9 @@ fu_uf2_device_open(FuDevice *device, GError **error)
 				  50, /* ms */
 				  NULL,
 				  &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			/* maybe no session running? */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			/* maybe no session running, or UDisks2 was slow to discover the volume */
 			if (!fu_uf2_device_volume_mount(self, error))
 				return FALSE;
 		} else {
