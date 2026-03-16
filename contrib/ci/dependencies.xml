@@ -70,6 +70,10 @@
         <inclusive>armhf</inclusive>
         <inclusive>i386</inclusive>
       </control>
+      <package variant="aarch64" />
+      <package variant="i386" />
+      <package variant="x86_64" />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency type="build" id="noto-fonts-cjk">
@@ -556,6 +560,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -772,7 +777,7 @@
   <dependency id="libgirepository1.0-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -882,9 +887,10 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="locales:native">
+  <dependency id="locales">
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -951,6 +957,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1166,6 +1173,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1491,6 +1499,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1514,6 +1523,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
