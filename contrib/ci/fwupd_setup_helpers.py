@@ -114,7 +114,7 @@ def test_meson(debug):
         pip_install_package(debug, "meson")
 
 
-def parse_dependencies(OS, variant, add_control):
+def parse_dependencies(OS, variant, add_control, cross: str = ""):
     import xml.etree.ElementTree as etree
 
     deps = []
@@ -147,6 +147,12 @@ def parse_dependencies(OS, variant, add_control):
                     if exclusive:
                         exclusive = f"!{exclusive}"
                     control = f" [{inclusive}{exclusive}]"
+
+            arch_suffix = f":{cross}" if cross and distro.findall("multi-arch") else ""
+            if len(distro.findall("package")) == 0:
+                dep = child.attrib["id"]
+                if dep:
+                    deps.append(f"{dep}{arch_suffix}{control}")
             for package in distro.findall("package"):
                 if variant and "variant" in package.attrib:
                     if package.attrib["variant"] != variant:
@@ -155,9 +161,8 @@ def parse_dependencies(OS, variant, add_control):
                     dep = package.text
                 else:
                     dep = child.attrib["id"]
-                dep += control
                 if dep:
-                    deps.append(dep)
+                    deps.append(f"{dep}{arch_suffix}{control}")
     return deps
 
 

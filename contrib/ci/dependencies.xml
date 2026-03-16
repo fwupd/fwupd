@@ -10,8 +10,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="centos">
       <package variant="x86_64" />
@@ -46,8 +44,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="centos">
       <package variant="x86_64">bash-completion</package>
@@ -74,18 +70,11 @@
         <inclusive>armhf</inclusive>
         <inclusive>i386</inclusive>
       </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="noto-fonts-cjk">
     <distro id="arch">
       <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency id="binutils-multiarch">
-    <distro id="debian">
-      <package variant="s390x" />
     </distro>
   </dependency>
   <dependency id="ca-certificates">
@@ -97,10 +86,7 @@
       <package variant="mingw64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
@@ -119,9 +105,7 @@
     <distro id="fedora">
       <package variant="x86_64">clang-tools-extra</package>
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
@@ -144,8 +128,6 @@
   </dependency>
   <dependency id="gcovr">
     <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -161,9 +143,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcairo-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -181,9 +161,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcairo-gobject2:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -204,7 +182,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -225,8 +203,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -249,8 +226,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -274,8 +250,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -287,10 +261,7 @@
     </distro>
   </dependency>
   <dependency id="devscripts">
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -301,8 +272,6 @@
       <control>
         <version>(>= 12)</version>
       </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -320,10 +289,7 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -341,8 +307,6 @@
   <dependency id="dh-strip-nondeterminism">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -350,16 +314,8 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="intltool">
-    <distro id="debian">
-      <package variant="s390x" />
-    </distro>
-  </dependency>
   <dependency id="fakeroot">
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -375,9 +331,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libfreetype-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -396,8 +350,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -415,8 +368,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -434,8 +385,7 @@
       <control>
         <exclusive>ia64</exclusive>
       </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -460,8 +410,7 @@
       <control>
         <exclusive>ia64</exclusive>
       </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -486,9 +435,6 @@
       <control>
         <version>(>= 0.19.8.1)</version>
       </control>
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -519,8 +465,11 @@
         <inclusive>armhf</inclusive>
         <inclusive>i386</inclusive>
       </control>
-      <package variant="x86_64">gnu-efi</package>
+      <multi-arch />
+      <package variant="aarch64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
+      <package variant="s390x">gnu-efi</package>
+      <package variant="x86_64">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
       <control>
@@ -546,11 +495,7 @@
       <package variant="aarch64" />
       <package variant="mingw64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -574,9 +519,7 @@
       <control>
         <version>(>= 2.45.8)</version>
       </control>
-      <package variant="x86_64" />
-      <package variant="s390x">libglib2.0-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -614,8 +557,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -630,10 +571,7 @@
     <distro id="fedora">
       <package variant="x86_64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -653,9 +591,11 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libgnutls28-dev:s390x</package>
+      <multi-arch />
+      <package variant="aarch64">libgnutls28-dev</package>
       <package variant="i386">libgnutls28-dev</package>
+      <package variant="s390x">libgnutls28-dev</package>
+      <package variant="x86_64">libgnutls28-dev</package>
     </distro>
     <distro id="ubuntu">
       <control />
@@ -676,9 +616,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -695,9 +632,7 @@
       <package variant="aarch64" />
       <package variant="mingw64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
@@ -726,9 +661,7 @@
       <control>
         <version>(>= 0.1.13)</version>
       </control>
-      <package variant="x86_64" />
-      <package variant="s390x">libxmlb-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -754,9 +687,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -780,9 +711,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -800,9 +729,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -816,9 +743,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libzstd-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency id="libcbor-dev">
@@ -834,9 +759,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcbor-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -850,9 +773,7 @@
   <dependency id="libgirepository1.0-dev">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -879,9 +800,7 @@
       <control>
         <version>(>= 1.0.9)</version>
       </control>
-      <package variant="x86_64" />
-      <package variant="s390x">libusb-1.0-0-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -893,14 +812,12 @@
   </dependency>
   <dependency id="libicu-dev">
     <distro id="debian">
-      <package variant="s390x">libicu-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency id="libidn2-0-dev">
     <distro id="debian">
-      <package variant="s390x">libidn2-0-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency id="libcurl4-gnutls-dev">
@@ -920,9 +837,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcurl4-gnutls-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -943,17 +858,11 @@
   <dependency id="libumockdev-dev">
     <control />
     <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-  </dependency>
-  <dependency id="libxml2-dev:s390x">
-    <distro id="debian">
-      <package variant="s390x" />
     </distro>
   </dependency>
   <dependency id="linux-headers">
@@ -968,19 +877,15 @@
     </distro>
   </dependency>
   <dependency id="lintian">
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="locales">
+  <dependency id="locales:native">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1002,9 +907,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1029,8 +931,6 @@
         <inclusive>armhf</inclusive>
         <inclusive>i386</inclusive>
       </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -1052,8 +952,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1067,8 +965,6 @@
   <dependency id="pkg-config">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1096,11 +992,7 @@
       <package variant="x86_64">polkit</package>
       <package variant="aarch64">polkit</package>
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1122,9 +1014,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libmm-glib-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1145,8 +1035,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1164,9 +1053,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libqmi-glib-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1184,9 +1071,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libmbim-glib-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1197,9 +1082,7 @@
   <dependency id="libqrtr-glib-dev">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libqrtr-glib-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency id="libpolkit-gobject-1-dev">
@@ -1215,9 +1098,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libpolkit-gobject-1-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1234,9 +1115,7 @@
     </distro>
   </dependency>
   <dependency id="python3-virtualenv">
-    <distro id="debian">
-      <package variant="x86_64" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1253,10 +1132,7 @@
     </distro>
   </dependency>
   <dependency id="python3-dbusmock">
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="arch">
       <package variant="x86_64">python-dbusmock</package>
     </distro>
@@ -1291,9 +1167,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1313,9 +1186,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1355,10 +1225,7 @@
     <distro id="darwin">
       <package variant="x86_64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1378,8 +1245,6 @@
   <dependency id="python3-typogrify">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1415,8 +1280,6 @@
   <dependency id="python3-jinja2">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="centos">
       <package variant="x86_64" />
@@ -1455,8 +1318,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1477,18 +1338,11 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-  </dependency>
-  <dependency id="python3-requests">
-    <distro id="debian">
-      <package variant="s390x">qemu-user</package>
     </distro>
   </dependency>
   <dependency id="rpm-build">
@@ -1523,9 +1377,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libsqlite3-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1561,9 +1413,10 @@
       <control>
         <version>(>= 249)</version>
       </control>
-      <package variant="x86_64">systemd-dev</package>
-      <package variant="s390x">systemd-dev</package>
+      <package variant="aarch64">systemd-dev</package>
       <package variant="i386">systemd-dev</package>
+      <package variant="s390x">systemd-dev</package>
+      <package variant="x86_64">systemd-dev</package>
     </distro>
     <distro id="ubuntu">
       <control>
@@ -1583,9 +1436,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libsystemd-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1606,9 +1457,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1618,8 +1466,6 @@
   </dependency>
   <dependency id="texlive-fonts-recommended">
     <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
@@ -1629,9 +1475,6 @@
   <dependency id="udev">
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1649,8 +1492,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1674,9 +1515,6 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1696,8 +1534,10 @@
       <package variant="aarch64">valgrind-devel</package>
     </distro>
     <distro id="debian">
-      <package variant="x86_64">valgrind-if-available</package>
+      <package variant="aarch64">valgrind-if-available</package>
       <package variant="i386">valgrind-if-available</package>
+      <package variant="s390x">valgrind-if-available</package>
+      <package variant="x86_64">valgrind-if-available</package>
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64">valgrind-if-available</package>
@@ -1735,9 +1575,7 @@
     </distro>
     <distro id="debian">
       <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libtss2-dev:s390x</package>
-      <package variant="i386" />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
@@ -1772,27 +1610,13 @@
     <distro id="fedora">
       <package variant="x86_64" />
     </distro>
-    <distro id="debian">
-      <package variant="x86_64" />
-    </distro>
+    <distro id="debian" />
     <distro id="ubuntu">
       <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency id="sudo">
-    <distro id="debian">
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="python3-venv">
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
+    <distro id="debian"/>
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />

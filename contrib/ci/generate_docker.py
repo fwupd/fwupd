@@ -24,7 +24,7 @@ RUNNER_ARCH_DEPS_MAP = {
 
 def cross_deps(cross: str) -> list[str]:
     deps = [f"crossbuild-essential-{cross}"]
-    deps += parse_dependencies(TARGET_DISTRO, cross, False)
+    deps += parse_dependencies(TARGET_DISTRO, cross, False, cross)
     return deps
 
 
