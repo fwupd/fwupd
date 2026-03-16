@@ -468,7 +468,6 @@
       <multi-arch />
       <package variant="aarch64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
-      <package variant="s390x">gnu-efi</package>
       <package variant="x86_64">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
