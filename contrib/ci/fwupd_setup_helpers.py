@@ -150,6 +150,8 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
 
             if cross and distro.findall("multi-arch"):
                 arch_suffix = f":{variant}"
+            elif distro.findall("native"):
+                arch_suffix = ":native"
             else:
                 arch_suffix = ""
             if len(distro.findall("package")) == 0:
