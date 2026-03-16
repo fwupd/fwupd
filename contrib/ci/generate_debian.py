@@ -11,7 +11,10 @@ from fwupd_setup_helpers import parse_dependencies
 
 def parse_control_dependencies():
     QUBES = os.getenv("QUBES")
-    return parse_dependencies("debian", "x86_64", True), QUBES
+    variant = os.getenv("MATRIX_CROSS")
+    if not variant:
+        variant = "x86_64"
+    return parse_dependencies("debian", variant, True), QUBES
 
 
 def update_debian_control(target):

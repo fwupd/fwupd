@@ -22,12 +22,6 @@ RUNNER_ARCH_DEPS_MAP = {
 }
 
 
-def cross_deps(cross: str) -> list[str]:
-    deps = [f"crossbuild-essential-{cross}"]
-    deps += parse_dependencies(TARGET_DISTRO, cross, False, cross)
-    return deps
-
-
 def getenv_unwrap(name: str) -> str:
     val = os.getenv(name)
     if val is None:
@@ -47,6 +41,7 @@ def get_container_cmd():
 
 
 directory = os.path.dirname(sys.argv[0])
+MATRIX_CROSS = getenv_unwrap("MATRIX_CROSS")
 RUNNER_ARCH = getenv_unwrap("RUNNER_ARCH")
 TARGET_DISTRO = getenv_unwrap("TARGET_DISTRO")
 
@@ -58,11 +53,11 @@ if not os.path.exists(template_file):
 with open(template_file) as file:
     template = file.read()
 
-deps = parse_dependencies(TARGET_DISTRO, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
-
-if TARGET_DISTRO == "debian" and RUNNER_ARCH == "X64":
-    deps += cross_deps("i386")
-    deps += cross_deps("s390x")
+if MATRIX_CROSS:
+    deps = parse_dependencies(TARGET_DISTRO, MATRIX_CROSS, False, cross=True)
+    deps += [f"crossbuild-essential-{MATRIX_CROSS}"]
+else:
+    deps = parse_dependencies(TARGET_DISTRO, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
