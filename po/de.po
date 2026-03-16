@@ -5,7 +5,7 @@
 # Translators:
 # Alexander Barton, 2024
 # Christian <Christian.Kirbach@googlemail.com>, 2023
-# Ettore Atalan <atalanttore@googlemail.com>, 2018,2021-2025
+# Ettore Atalan <atalanttore@googlemail.com>, 2018,2021-2025, 2026.
 # F Bausch, 2024
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2025
@@ -19,15 +19,15 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-02 14:07+0000\n"
-"Last-Translator: Poolitzer <weblate@poolitzer.eu>\n"
+"PO-Revision-Date: 2026-03-16 07:09+0000\n"
+"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.16.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-Hersteller-Firmwaredienst (stabile Firmware)"
@@ -437,8 +437,8 @@ msgstr "Defektlokalisierungsoptionen anzeigen"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] "Ein Gerät wurde aktualisiert und muss neu gestartet werden."
-msgstr[1] "%u Geräte wurden aktualisiert und müssen neu gestartet werden."
+msgstr[0] "%u Gerät wurde aktualisiert und benötigt einen Neustart."
+msgstr[1] "%u Geräte wurden aktualisiert und benötigen einen Neustart."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -1818,7 +1818,7 @@ msgstr "Berechnet eine CRC Prüfsumme für eine Datei"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr "CRC-PRÜFSUMME DATEINAME"
+msgstr "CRC DATEINAME"
 
 #. TRANSLATORS: command description
 msgid "Finds a algorithm that matches the file CRC"
@@ -1826,7 +1826,7 @@ msgstr "Findet einen Algorithmus, der zur CRC der Datei passt"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr "[PRC]"
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
