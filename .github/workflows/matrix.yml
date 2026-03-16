@@ -53,7 +53,7 @@ jobs:
               -e "MATRIX_CROSS=$MATRIX_CROSS" \
               -e "VERSION=$VERSION" \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest"
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
       - name: Save any applicable artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -78,7 +78,7 @@ jobs:
               -e "CI_NETWORK=$CI_NETWORK" \
               -e "CI=$CI" \
               -v $GITHUB_WORKSPACE:/github/workspace \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest" \
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest" \
               contrib/ci/${{matrix.distro}}-test.sh
       - name: Save any coverage data
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
