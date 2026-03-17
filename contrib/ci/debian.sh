@@ -44,7 +44,7 @@ fi
 
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v "$VERSION" "CI Build"
-debuild --no-lintian -e CI -e CC -e QUBES_OPTION ${MATRIX_CROSS:+--host-arch $MATRIX_CROSS}
+debuild --no-lintian -e CI -e CC -e QUBES_OPTION ${MATRIX_CROSS:+-a$MATRIX_CROSS}
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way
