@@ -304,6 +304,47 @@ fwupd_device_set_summary(FwupdDevice *self, const gchar *summary)
 }
 
 /**
+ * fwupd_device_get_homepage:
+ * @self: a #FwupdDevice
+ *
+ * Gets the device homepage.
+ *
+ * Returns: the device homepage, or %NULL if unset
+ *
+ * Since: 2.1.2
+ **/
+const gchar *
+fwupd_device_get_homepage(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
+	return priv->homepage;
+}
+
+/**
+ * fwupd_device_set_homepage:
+ * @self: a #FwupdDevice
+ * @homepage: (nullable): the device homepage
+ *
+ * Sets the device homepage.
+ *
+ * Since: 2.1.2
+ **/
+void
+fwupd_device_set_homepage(FwupdDevice *self, const gchar *homepage)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->homepage, homepage) == 0)
+		return;
+
+	g_free(priv->homepage);
+	priv->homepage = g_strdup(homepage);
+}
+
+/**
  * fwupd_device_get_branch:
  * @self: a #FwupdDevice
  *
@@ -2015,6 +2056,8 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_serial(self, priv_donor->serial);
 	if (priv->summary == NULL)
 		fwupd_device_set_summary(self, priv_donor->summary);
+	if (priv->homepage == NULL)
+		fwupd_device_set_homepage(self, priv_donor->homepage);
 	if (priv->branch == NULL)
 		fwupd_device_set_branch(self, priv_donor->branch);
 	if (priv->vendor == NULL)
@@ -2186,6 +2229,12 @@ fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SUMMARY,
 				      g_variant_new_string(priv->summary));
+	}
+	if (priv->homepage != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_HOMEPAGE,
+				      g_variant_new_string(priv->homepage));
 	}
 	if (priv->branch != NULL) {
 		g_variant_builder_add(builder,
@@ -2447,6 +2496,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
 		fwupd_device_set_summary(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
+		fwupd_device_set_homepage(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BRANCH) == 0) {
@@ -2977,6 +3030,8 @@ fwupd_device_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	if (priv->summary != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	if (priv->homepage != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	if (priv->branch != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	if (priv->plugin != NULL)
@@ -3182,6 +3237,9 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, NULL);
 	if (tmp != NULL)
 		fwupd_device_set_summary(self, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_HOMEPAGE, NULL);
+	if (tmp != NULL)
+		fwupd_device_set_homepage(self, tmp);
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BRANCH, NULL);
 	if (tmp != NULL)
 		fwupd_device_set_branch(self, tmp);
@@ -3474,6 +3532,7 @@ fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	if (priv->protocols != NULL) {
@@ -3952,6 +4011,7 @@ fwupd_device_finalize(GObject *object)
 	g_free(priv->name);
 	g_free(priv->serial);
 	g_free(priv->summary);
+	g_free(priv->homepage);
 	g_free(priv->branch);
 	g_free(priv->vendor);
 	g_free(priv->plugin);

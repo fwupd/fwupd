@@ -1122,3 +1122,10 @@ LIBFWUPD_2.1.1 {
     fwupd_json_parser_set_max_quoted;
   local: *;
 } LIBFWUPD_2.0.17;
+
+LIBFWUPD_2.1.2 {
+  global:
+    fwupd_device_get_homepage;
+    fwupd_device_set_homepage;
+  local: *;
+} LIBFWUPD_2.1.1;

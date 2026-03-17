@@ -73,6 +73,7 @@ fwupd_device_func(void)
 	fwupd_device_set_modified(dev, 60 * 60 * 24);
 	fwupd_device_set_name(dev, "ColorHug2");
 	fwupd_device_set_branch(dev, "community");
+	fwupd_device_set_homepage(dev, "https://example.com/device");
 	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_guid(dev, "00000000-0000-0000-0000-000000000000");
 	fwupd_device_add_instance_id(dev, "USB\\VID_1234&PID_0001");
@@ -118,6 +119,7 @@ fwupd_device_func(void)
 	    "← USB\\VID_1234&PID_0001 ⚠\n"
 	    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 	    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
+	    "  Homepage:             https://example.com/device\n"
 	    "  Branch:               community\n"
 	    "  Flags:                updatable|require-ac\n"
 	    "  Checksum:             SHA1(beefdead)\n"
@@ -158,6 +160,7 @@ fwupd_device_func(void)
 				  "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
 				  "    \"00000000-0000-0000-0000-000000000000\"\n"
 				  "  ],\n"
+				  "  \"Homepage\": \"https://example.com/device\",\n"
 				  "  \"Branch\": \"community\",\n"
 				  "  \"Flags\": [\n"
 				  "    \"updatable\",\n"
@@ -209,6 +212,7 @@ fwupd_device_func(void)
 	g_assert_true(fwupd_device_has_vendor_id(dev_new, "USB:0x1234"));
 	g_assert_true(fwupd_device_has_vendor_id(dev_new, "PCI:0x5678"));
 	g_assert_true(fwupd_device_has_instance_id(dev_new, "USB\\VID_1234&PID_0001"));
+	g_assert_cmpstr(fwupd_device_get_homepage(dev_new), ==, "https://example.com/device");
 
 	/* from JSON */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(dev2), data, &error);
@@ -218,6 +222,7 @@ fwupd_device_func(void)
 	}
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_device_get_homepage(dev2), ==, "https://example.com/device");
 	g_assert_true(fwupd_device_has_vendor_id(dev2, "USB:0x1234"));
 	g_assert_true(fwupd_device_has_instance_id(dev2, "USB\\VID_1234&PID_0001"));
 	g_assert_true(fwupd_device_has_flag(dev2, FWUPD_DEVICE_FLAG_UPDATABLE));
