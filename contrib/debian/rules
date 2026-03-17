@@ -18,6 +18,10 @@ else
 	CONFARGS += -Dsupported_build=enabled
 endif
 
+ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
+	CONFARGS += -Dtests=false
+endif
+
 ifneq ($(DEB_HOST_ARCH_CPU),ia64)
 	CONFARGS += -Dplugin_flashrom=enabled
 else
@@ -56,6 +60,15 @@ override_dh_install:
 
 	#install docs (maybe)
 	[ ! -d debian/tmp/usr/share/doc ] || dh_install -pfwupd-doc usr/share/doc
+
+	#install tests (unless -Dtests=false)
+	#The install-tests dir is in a generic looking directory because
+	#that is where gnome-desktop-testing expects to
+	#find them. for more information see:
+	#https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
+	[ ! -d debian/tmp/usr/share/installed-tests ] || dh_install -pfwupd-tests "usr/share/installed-tests/*"
+	[ ! -d debian/tmp/usr/libexec/installed-tests/fwupd ] || dh_install -pfwupd-tests "usr/libexec/installed-tests/fwupd/*-test"
+	[ ! -f debian/tmp/usr/share/fwupd/remotes.d/fwupd-tests.conf ] || dh_install -pfwupd-tests usr/share/fwupd/remotes.d/fwupd-tests.conf
 
 	#install devices-tests (maybe)
 	[ ! -d debian/tmp/usr/share/fwupd/device-tests/ ] || dh_install -pfwupd-tests usr/share/fwupd/device-tests
