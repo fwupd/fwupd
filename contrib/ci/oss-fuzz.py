@@ -331,14 +331,6 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
-    # CBOR
-    src = bld.checkout_source(
-        "libcbor",
-        url="https://github.com/PJK/libcbor.git",
-        commit="b223daaaa34dcb83f9c25576f05e4f1646f44bf9",
-    )
-    bld.build_cmake_project(src, argv=["-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"])
-    bld.add_build_ldflag("lib/libcbor.a")
 
     # libusb
     src = bld.checkout_source(
@@ -401,8 +393,6 @@ def _build(bld: Builder) -> None:
             "FWUPD_SYSCONFDIR": "/tmp",
             "FWUPD_LIBEXECDIR": "/tmp",
             "HAVE_FUZZER": None,
-            "HAVE_CBOR": None,
-            "HAVE_CBOR_SET_ALLOCS": None,
             "HAVE_LIBUSB_GET_PARENT": None,
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
@@ -441,6 +431,7 @@ def _build(bld: Builder) -> None:
     for fzr in [
         Fuzzer("csv"),
         Fuzzer("cab"),
+        Fuzzer("coswid"),
         Fuzzer("dfuse"),
         Fuzzer("edid", pattern="edid"),
         Fuzzer("elf"),
@@ -586,7 +577,6 @@ if __name__ == "__main__":
                 "-y",
                 "liblzma-dev",
                 "libzstd-dev",
-                "libcbor-dev",
                 "autoconf",
                 "automake",
                 "libtool",

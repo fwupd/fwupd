@@ -453,17 +453,6 @@ if gnutls.found()
 endif
 
 lzma = dependency('liblzma')
-cbor = dependency(
-  'libcbor',
-  version: '>= 0.7.0',
-  required: get_option('cbor'),
-)
-if cbor.found()
-  conf.set('HAVE_CBOR', '1')
-  if cc.has_header_symbol('cbor.h', 'cbor_set_allocs')
-    conf.set('HAVE_CBOR_SET_ALLOCS', '1')
-  endif
-endif
 
 platform_deps = []
 if get_option('default_library') != 'static'
@@ -934,7 +923,6 @@ summary(
 
 summary(
   {
-    'cbor': cbor,
     'dbus_socket_address': get_option('dbus_socket_address'),
     'vendor_ids_dir': vendor_ids_dir,
     'docs': build_docs,
