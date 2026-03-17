@@ -49,7 +49,6 @@ plugins = {
   'emmc': false,
   'ep963x': false,
   'fastboot': false,
-  'flashrom': false,
   'focal-fp': false,
   'focal-touch': false,
   'fpc': false,
