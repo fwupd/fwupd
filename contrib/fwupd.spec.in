@@ -73,7 +73,6 @@ BuildRequires: python3-jinja2
 BuildRequires: sqlite-devel
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel
-BuildRequires: libcbor-devel
 BuildRequires: libblkid-devel
 BuildRequires: readline-devel
 BuildRequires: libmnl-devel
@@ -257,7 +256,6 @@ cd fwupd-1.9.%{libfwupd_19x_version}
 %meson \
     -Dbuild=library \
     -Ddocs=disabled \
-    -Dcbor=disabled \
     -Dpolkit=disabled \
     -Dtests=false \
     -Dbash_completion=false \

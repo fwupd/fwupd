@@ -21,7 +21,6 @@ LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libgnutls.so:security/gnutls \
 		libusb.so:devel/libusb \
 		libjcat.so:textproc/libjcat \
-		libcbor.so:devel/libcbor \
 		libxmlb.so:textproc/libxmlb \
 		libefiboot.so:devel/gnu-efi
 

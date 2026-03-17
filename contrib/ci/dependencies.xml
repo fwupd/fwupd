@@ -750,30 +750,6 @@
       <multi-arch />
     </distro>
   </dependency>
-  <dependency id="libcbor-dev">
-    <distro id="arch">
-      <package variant="x86_64">libcbor</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libcbor-devel</package>
-      <package variant="aarch64">libcbor-devel</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">libcbor-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <multi-arch />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="freebsd">
-      <package>libcbor</package>
-    </distro>
-  </dependency>
   <dependency id="libgirepository1.0-dev">
     <distro id="debian">
       <control />
