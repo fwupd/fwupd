@@ -1604,6 +1604,7 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(array, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
 	}
 
 	fu_util_build_device_tree(self, root, array, NULL);
@@ -1989,6 +1990,7 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(devices, "Devices", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
 	}
 
 	/* show each device */
@@ -2399,6 +2401,7 @@ fu_util_get_results(FuUtil *self, gchar **values, GError **error)
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
 	}
 	tmp = fu_util_device_to_string(self->client, rel, 0);
 	fu_console_print_literal(self->console, tmp);
@@ -2846,6 +2849,7 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(remotes, "Remotes", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
 		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
 	}
 
 	if (remotes->len == 0) {

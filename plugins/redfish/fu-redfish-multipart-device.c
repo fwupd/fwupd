@@ -125,6 +125,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 			       CURLOPT_HEADERFUNCTION,
 			       fu_redfish_multipart_device_location_headers_callback);
 	(void)curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_HEADERDATA, &location);
+	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)360);
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_redfish_request_perform(request,
