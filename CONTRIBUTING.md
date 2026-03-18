@@ -38,6 +38,11 @@ run:
 deactivate
 ```
 
+## Documentation
+
+Developer documentation including API documentation and a plugin tutorial is
+available on <https://fwupd.github.io/>.
+
 ## Coding Style
 
 The coding style to respect in this project is very similar to most
