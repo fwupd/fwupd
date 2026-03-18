@@ -200,7 +200,7 @@ def _get_installer_cmd(profile: str, yes: bool):
     if profile == "darwin":
         return ["brew", "install"]
     if profile in ["debian", "ubuntu"]:
-        installer = ["apt", "install"]
+        installer = ["apt-get", "install", "-q"]
     elif profile in ["fedora", "centos"]:
         installer = ["dnf", "install"]
     elif profile == "arch":
