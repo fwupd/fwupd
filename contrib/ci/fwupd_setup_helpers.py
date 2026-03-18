@@ -227,7 +227,12 @@ def install_packages(profile: str, variant: str, yes: bool, debugging: bool, pac
     installer += packages
     if debugging:
         print(installer)
-    subprocess.check_call(installer)
+    try:
+        subprocess.check_output(installer, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print("ERROR: Failed to install packages:")
+        print(e.output.decode("utf-8"))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
