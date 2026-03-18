@@ -1,0 +1,17 @@
+[HIDRAW\VEN_1FD2]
+Flags = enforce-requires
+
+# LXS Touch - App Mode (normal operation, SWIP)
+# SWIP->DFUP mode switch does NOT cause replug (same hidraw node, I2C HID)
+[HIDRAW\VEN_1FD2&DEV_5010]
+Plugin = lxs_touch
+Name = Touch (SW42101)
+FirmwareSizeMin = 0x1C000
+FirmwareSizeMax = 0x20000
+
+# LXS Touch - Boot Mode (App firmware missing or corrupt, already in DFUP)
+[HIDRAW\VEN_1FD2&DEV_B011]
+Plugin = lxs_touch
+Name = Touch (SW42101 Boot)
+FirmwareSizeMin = 0x1C000
+FirmwareSizeMax = 0x20000

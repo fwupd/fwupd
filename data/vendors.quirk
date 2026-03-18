@@ -22,6 +22,8 @@ Vendor = USI
 Vendor = Sunplus
 [USB\VID_1C7A]
 Vendor = Egistec
+[USB\VID_1FD2]
+Vendor = LG
 [USB\VID_222A]
 Vendor = Ilitek
 [USB\VID_2386]

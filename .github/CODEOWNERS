@@ -49,6 +49,7 @@ plugins/logitech-bulkcontroller/ @vcdmp
 plugins/logitech-rallysystem/ @vcdmp
 plugins/logitech-scribe/ @vcdmp
 plugins/logitech-tap/ @vcdmp
+plugins/lxs-touch/ @lxs-parkjs2
 plugins/mediatek-scaler/ @CragW @GregLo007
 plugins/modem-manager/ @aleksander0m
 plugins/nordic-hid/ @MarekPieta

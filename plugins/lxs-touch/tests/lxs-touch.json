@@ -1,0 +1,18 @@
+{
+  "name": "LXS Touch SW42101",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/cf7a082092ab3bd42b0830a45703977a0d7d870252b236395b492937e2ac41c2-lxs-touch-0A.02.cab",
+      "emulation-url": "https://fwupd.org/downloads/9561cedd41469670778858e8234394aabfb666b572848146a85ca13d932cbac3-lxs-touch-emulation.zip",
+      "components": [
+        {
+          "version": "0305.0000.0002.0A02",
+          "guids": [
+            "caa39ae6-7e34-5216-8d6b-6071d32f468e"
+          ]
+        }
+      ]
+    }
+  ]
+}
