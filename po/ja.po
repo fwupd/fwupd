@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-16 07:09+0000\n"
+"PO-Revision-Date: 2026-03-18 00:09+0000\n"
 "Last-Translator: Takeru Mikenu <mikenu-jp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
 "Language: ja\n"
@@ -1824,7 +1824,7 @@ msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "システム PCR イベントログを解析します"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2024,7 +2024,7 @@ msgstr "利用可能なリリースがありません"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No matching releases for search token"
-msgstr ""
+msgstr "検索条件に一致するリリースがありません"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
@@ -2976,11 +2976,11 @@ msgstr "デバイスの優先度が同等のデバイスよりも低いです"
 
 #. TRANSLATORS: firmware is signed with insecure key
 msgid "System has been signed with an insecure key"
-msgstr ""
+msgstr "システムは安全でないキーで署名されています"
 
 #. TRANSLATORS: firmware is locked from the BIOS
 msgid "Device firmware has been locked"
-msgstr ""
+msgstr "デバイスのファームウェアはロックされています"
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
@@ -3530,7 +3530,7 @@ msgstr "UEFI 証明書ストアが最新になりました"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
-msgstr ""
+msgstr "HP SureStart が有効です"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
