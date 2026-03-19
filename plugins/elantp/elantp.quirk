@@ -152,3 +152,8 @@ Flags = can-query-haptic-function
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
 Flags = can-query-haptic-function
+
+[ELANTP\ICTYPE_19]
+ElantpIcPageCount = 0x7F0
+ElantpIapPassword = 0x1EA5
+Flags = can-query-haptic-function
