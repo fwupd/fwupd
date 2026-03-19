@@ -423,6 +423,12 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_ob
 	/* it does not seem that Dell allows targeting a device when updating */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
 
+	/* on Dell systems the @odata.id URI contains the firmware version, which changes after an
+	 * update and causes the device hash to change -- use the DellSoftwareInventory Id instead
+	 * as it is version-independent */
+	if (tmp != NULL)
+		fu_device_set_logical_id(FU_DEVICE(self), tmp);
+
 	/* SYSTEMID is set by the backend */
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -430,6 +436,14 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_ob
 					      "REDFISH",
 					      "VENDOR",
 					      "SYSTEMID",
+					      NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "REDFISH",
+					      "VENDOR",
+					      "SOFTWAREID",
 					      NULL))
 		return FALSE;
 	return fu_device_build_instance_id(FU_DEVICE(self),
@@ -651,11 +665,9 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 		return TRUE;
 	}
 
-	if (g_pattern_match_simple("IDRAC.*.PR19", message_id) ||
-	    g_pattern_match_simple("IDRAC.*.RED001", message_id)) {
+	if (g_pattern_match_simple("IDRAC.*.PR19", message_id)) {
 		/* Some firmware can be immediately installed on Dell servers, but the inventory
-		   is only refreshed on reboot or it's the iDRAC needing a restart, but who still
-		   answered "OK"
+		   is only refreshed on reboot
 		*/
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;
