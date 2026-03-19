@@ -104,7 +104,8 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
 
 	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c-dev") != 0) {
+	if ((g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c-dev") != 0) &&
+	    (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") != 0)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -218,7 +219,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 22, &pid, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_device_build_vendor_id_u16(device, "HIDRAW", vid);
+	fu_device_build_vendor_id_u16(device, "I2CRAW", vid);
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_u16(device, "VID", vid);
@@ -299,7 +300,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "VEN", vid);
 	fu_device_add_instance_u16(device, "DEV", pid);
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MOD", NULL))
+	if (!fu_device_build_instance_id(device, error, "I2CRAW", "VEN", "DEV", "MOD", NULL))
 		return FALSE;
 
 	/* get OSM version */
@@ -344,6 +345,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					 "ICTYPE",
 					 "MOD",
 					 NULL);
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
 	if (fu_device_has_private_flag(device, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
 		fu_device_add_instance_str(device, "DRIVER", "ELAN_I2C");
 	} else {
@@ -358,6 +360,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					 "MOD",
 					 "DRIVER",
 					 NULL);
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", "DRIVER", NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {
