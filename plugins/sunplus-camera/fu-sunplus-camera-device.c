@@ -268,8 +268,8 @@ fu_sunplus_camera_device_ensure_version(FuSunplusCameraDevice *self, GError **er
 static gboolean
 fu_sunplus_camera_device_probe(FuDevice *device, GError **error)
 {
-	guint64 version_raw = 0;
-	g_autofree gchar *id_revision = NULL;
+	if (!FU_DEVICE_CLASS(fu_sunplus_camera_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	if (fu_v4l_device_get_index(FU_V4L_DEVICE(device)) != 0) {
 		g_set_error_literal(error,
@@ -277,11 +277,6 @@ fu_sunplus_camera_device_probe(FuDevice *device, GError **error)
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "only the primary video4linux node is supported");
 		return FALSE;
-	}
-	id_revision = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_REVISION", NULL);
-	if (id_revision != NULL &&
-	    fu_strtoull(id_revision, &version_raw, 0, G_MAXUINT16, FU_INTEGER_BASE_16, NULL)) {
-		fu_device_set_version_raw(device, version_raw);
 	}
 	return TRUE;
 }
