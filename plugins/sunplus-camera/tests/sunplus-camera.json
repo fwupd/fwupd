@@ -1,0 +1,18 @@
+{
+  "name": "Sunplus Camera",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "4d995de8c66d5c42fc1dcfd67db881d5b3a6ca5634f7e0ab451a33ac9871039b-sunplus-camera-9.7.cab",
+      "emulation-url": "212b4c285f6bacc82ccdec6d98c0f965ed6f48974f7472332e7e0ff9f4915169-sunplus-camera-9.7-emulation.zip",
+      "components": [
+        {
+          "version": "9.7",
+          "guids": [
+            "35f56151-156a-5cfa-bca6-68ab6e1260a8"
+          ]
+        }
+      ]
+    }
+  ]
+}
