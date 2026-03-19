@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Sean
+ * Copyright 2026 Sean Rhodes <sean@starlabs.systems>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -11,20 +11,10 @@
 #include <linux/uvcvideo.h>
 
 #include "fu-sunplus-camera-device.h"
+#include "fu-sunplus-camera-struct.h"
 
-#define FU_SUNPLUS_CAMERA_IOCTL_TIMEOUT	  5000
-#define FU_SUNPLUS_CAMERA_USB_VID	  0x1bcf
-#define FU_SUNPLUS_CAMERA_USB_PID_RUNTIME 0x2ced
-#define FU_SUNPLUS_CAMERA_UNIT_ID	  4
-#define FU_SUNPLUS_CAMERA_READ_SIZE	  64
-#define FU_SUNPLUS_CAMERA_SEL_ENABLE	  9
-#define FU_SUNPLUS_CAMERA_SEL_ACCESS	  10
-#define FU_SUNPLUS_CAMERA_SEL_CHECKSUM	  11
-#define FU_SUNPLUS_CAMERA_SEL_FINISH	  12
-#define FU_SUNPLUS_CAMERA_SEL_REG16_CMD	  2
-#define FU_SUNPLUS_CAMERA_SEL_REG8_DATA	  3
-#define FU_SUNPLUS_CAMERA_SEL_READ_ADDR	  14
-#define FU_SUNPLUS_CAMERA_SEL_READ_CHUNK  22
+#define FU_SUNPLUS_CAMERA_IOCTL_TIMEOUT 5000
+#define FU_SUNPLUS_CAMERA_READ_SIZE	64
 
 struct _FuSunplusCameraDevice {
 	FuV4lDevice parent_instance;
@@ -54,7 +44,7 @@ fu_sunplus_camera_device_xu_query(FuSunplusCameraDevice *self,
 				  GError **error)
 {
 	struct uvc_xu_control_query query = {
-	    .unit = FU_SUNPLUS_CAMERA_UNIT_ID,
+	    .unit = FU_SUNPLUS_CAMERA_XU_UNIT_ID,
 	    .selector = selector,
 	    .query = query_code,
 	};
@@ -130,12 +120,12 @@ fu_sunplus_camera_device_set_enabled(FuSunplusCameraDevice *self, guint8 value, 
 {
 	guint8 buf[1] = {value};
 	if (!fu_sunplus_camera_device_xu_set_cur(self,
-						 FU_SUNPLUS_CAMERA_SEL_ENABLE,
+						 FU_SUNPLUS_CAMERA_SELECTOR_ENABLE,
 						 buf,
 						 sizeof(buf),
 						 error))
 		return FALSE;
-	g_usleep(200 * 1000);
+	fu_device_sleep(FU_DEVICE(self), 200);
 	return TRUE;
 }
 
@@ -149,7 +139,7 @@ fu_sunplus_camera_device_set_read_addr(FuSunplusCameraDevice *self, guint32 addr
 	    (guint8)((addr >> 24) & 0xff),
 	};
 	return fu_sunplus_camera_device_xu_set_cur(self,
-						   FU_SUNPLUS_CAMERA_SEL_READ_ADDR,
+						   FU_SUNPLUS_CAMERA_SELECTOR_READ_ADDR,
 						   buf,
 						   sizeof(buf),
 						   error);
@@ -167,13 +157,13 @@ fu_sunplus_camera_device_set_asic_register(FuSunplusCameraDevice *self,
 	};
 
 	if (!fu_sunplus_camera_device_xu_set_cur(self,
-						 FU_SUNPLUS_CAMERA_SEL_REG16_CMD,
+						 FU_SUNPLUS_CAMERA_SELECTOR_REG16_CMD,
 						 cmd,
 						 sizeof(cmd),
 						 error))
 		return FALSE;
 	if (!fu_sunplus_camera_device_xu_set_cur(self,
-						 FU_SUNPLUS_CAMERA_SEL_REG8_DATA,
+						 FU_SUNPLUS_CAMERA_SELECTOR_REG8_DATA,
 						 &value,
 						 sizeof(value),
 						 error))
@@ -229,7 +219,7 @@ fu_sunplus_camera_device_read_chunk(FuSunplusCameraDevice *self,
 	if (!fu_sunplus_camera_device_set_read_addr(self, addr, error))
 		return FALSE;
 	if (!fu_sunplus_camera_device_xu_get_cur(self,
-						 FU_SUNPLUS_CAMERA_SEL_READ_CHUNK,
+						 FU_SUNPLUS_CAMERA_SELECTOR_READ_CHUNK,
 						 buf,
 						 (guint16)bufsz,
 						 error))
@@ -241,11 +231,7 @@ static gboolean
 fu_sunplus_camera_device_ensure_version(FuSunplusCameraDevice *self, GError **error)
 {
 	guint64 version_raw = 0;
-	g_autofree gchar *bcd_device = NULL;
-	g_autofree gchar *bcd_device_fn = NULL;
 	g_autofree gchar *id_revision = NULL;
-	g_autofree gchar *sysfs_path_parent = NULL;
-	g_autofree gchar *sysfs_path_usbif = NULL;
 	g_autoptr(FuDevice) usb_device =
 	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb:usb_device", NULL);
 
@@ -272,21 +258,11 @@ fu_sunplus_camera_device_ensure_version(FuSunplusCameraDevice *self, GError **er
 		return TRUE;
 	}
 
-	sysfs_path_parent = g_path_get_dirname(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)));
-	sysfs_path_usbif = g_path_get_dirname(sysfs_path_parent);
-	g_clear_pointer(&sysfs_path_parent, g_free);
-	sysfs_path_parent = g_path_get_dirname(sysfs_path_usbif);
-	bcd_device_fn = g_build_filename(sysfs_path_parent, "bcdDevice", NULL);
-	if (!g_file_get_contents(bcd_device_fn, &bcd_device, NULL, error))
-		return FALSE;
-	if (bcd_device == NULL)
-		return FALSE;
-	if (!fu_strtoull(bcd_device, &version_raw, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error)) {
-		g_prefix_error_literal(error, "failed to parse bcdDevice: ");
-		return FALSE;
-	}
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-	return TRUE;
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to determine device version from usb_device or ID_REVISION");
+	return FALSE;
 }
 
 static gboolean
@@ -300,18 +276,6 @@ fu_sunplus_camera_device_probe(FuDevice *device, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "only the primary video4linux node is supported");
-		return FALSE;
-	}
-	if (fu_device_get_vid(device) != FU_SUNPLUS_CAMERA_USB_VID ||
-	    fu_device_get_pid(device) != FU_SUNPLUS_CAMERA_USB_PID_RUNTIME) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "expected %04x:%04x, got %04x:%04x",
-			    (guint)FU_SUNPLUS_CAMERA_USB_VID,
-			    (guint)FU_SUNPLUS_CAMERA_USB_PID_RUNTIME,
-			    (guint)fu_device_get_vid(device),
-			    (guint)fu_device_get_pid(device));
 		return FALSE;
 	}
 	id_revision = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_REVISION", NULL);
@@ -344,35 +308,47 @@ fu_sunplus_camera_device_setup(FuDevice *device, GError **error)
 
 static gboolean
 fu_sunplus_camera_device_verify(FuSunplusCameraDevice *self,
-				const guint8 *data,
-				gsize data_sz,
+				FuChunkArray *chunks,
 				FuProgress *progress,
 				GError **error)
 {
 	guint8 buf[FU_SUNPLUS_CAMERA_READ_SIZE] = {0};
-	gsize offset = 0;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	while (offset < data_sz) {
-		gsize chunk_sz = MIN(data_sz - offset, (gsize)FU_SUNPLUS_CAMERA_READ_SIZE);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_sunplus_camera_device_read_chunk(self,
-							 (guint32)offset,
+							 (guint32)fu_chunk_get_address(chk),
 							 buf,
 							 sizeof(buf),
 							 error))
 			return FALSE;
-		if (memcmp(buf, data + offset, chunk_sz) != 0) {
+		if (memcmp(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk)) != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "verify mismatch at 0x%04x",
-				    (guint)offset);
+				    (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
-		offset += chunk_sz;
-		fu_progress_set_percentage_full(progress, offset, data_sz);
+		fu_progress_set_percentage_full(progress, i + 1, fu_chunk_array_length(chunks));
 	}
 	return TRUE;
+}
+
+static gboolean
+fu_sunplus_camera_device_disable_after_failure(FuSunplusCameraDevice *self, gboolean enabled)
+{
+	if (enabled) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
+		    error_local != NULL) {
+			g_debug("disable after failure did not succeed: %s", error_local->message);
+		}
+	}
+	return FALSE;
 }
 
 static gboolean
@@ -384,25 +360,19 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 {
 	FuSunplusCameraDevice *self = FU_SUNPLUS_CAMERA_DEVICE(device);
 	gsize payload_sz = 0;
-	gsize offset = 0;
 	guint16 chunk_len = 0;
 	guint8 checksum = 0;
 	guint8 checksum_dev = 0;
 	guint8 finish = 0x01;
 	gboolean enabled = FALSE;
-	g_autoptr(GBytes) payload = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GError) error_local = NULL;
-	const guint8 *data = NULL;
 	g_autofree guint8 *buf = NULL;
 
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	payload = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
-	if (payload == NULL)
-		return FALSE;
-	data = g_bytes_get_data(payload, &payload_sz);
+	payload_sz = fu_firmware_get_size(firmware);
 	if (payload_sz == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -412,7 +382,7 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 	}
 
 	if (!fu_sunplus_camera_device_xu_get_len(self,
-						 FU_SUNPLUS_CAMERA_SEL_ACCESS,
+						 FU_SUNPLUS_CAMERA_SELECTOR_ACCESS,
 						 &chunk_len,
 						 error))
 		return FALSE;
@@ -423,6 +393,13 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 				    "selector 10 reported zero length");
 		return FALSE;
 	}
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						chunk_len,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 	buf = g_malloc(chunk_len);
 
 	fu_progress_set_id(progress, G_STRLOC);
@@ -436,98 +413,64 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 	enabled = TRUE;
 	fu_progress_step_done(progress);
 
-	while (offset < payload_sz) {
-		gsize to_copy = MIN(payload_sz - offset, (gsize)chunk_len);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		gsize chunk_sz = 0;
+		if (chk == NULL)
+			return fu_sunplus_camera_device_disable_after_failure(self, enabled);
+		chunk_sz = fu_chunk_get_data_sz(chk);
 
 		memset(buf, 0xff, chunk_len);
 		if (!fu_memcpy_safe(buf,
 				    chunk_len,
 				    0x0,
-				    data,
-				    payload_sz,
-				    offset,
-				    to_copy,
-				    error)) {
-			if (enabled &&
-			    !fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
-			    error_local != NULL) {
-				g_debug("disable after failure did not succeed: %s",
-					error_local->message);
-			}
-			return FALSE;
-		}
-		for (guint16 i = 0; i < chunk_len; i++)
-			checksum ^= buf[i];
+				    fu_chunk_get_data(chk),
+				    chunk_sz,
+				    0x0,
+				    chunk_sz,
+				    error))
+			return fu_sunplus_camera_device_disable_after_failure(self, enabled);
+		for (guint16 j = 0; j < chunk_len; j++)
+			checksum ^= buf[j];
 		if (!fu_sunplus_camera_device_xu_set_cur(self,
-							 FU_SUNPLUS_CAMERA_SEL_ACCESS,
+							 FU_SUNPLUS_CAMERA_SELECTOR_ACCESS,
 							 buf,
 							 chunk_len,
-							 error)) {
-			if (enabled &&
-			    !fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
-			    error_local != NULL) {
-				g_debug("disable after failure did not succeed: %s",
-					error_local->message);
-			}
-			return FALSE;
-		}
-		offset += to_copy;
+							 error))
+			return fu_sunplus_camera_device_disable_after_failure(self, enabled);
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						offset,
+						fu_chunk_get_address(chk) + chunk_sz,
 						payload_sz);
-		g_usleep(10 * 1000);
+		fu_device_sleep(device, 10);
 	}
 	fu_progress_step_done(progress);
 
-	g_usleep(1000 * 1000);
+	fu_device_sleep(device, 1000);
 	if (!fu_sunplus_camera_device_xu_get_cur(self,
-						 FU_SUNPLUS_CAMERA_SEL_CHECKSUM,
+						 FU_SUNPLUS_CAMERA_SELECTOR_CHECKSUM,
 						 &checksum_dev,
 						 sizeof(checksum_dev),
-						 error)) {
-		if (enabled && !fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
-		    error_local != NULL) {
-			g_debug("disable after failure did not succeed: %s", error_local->message);
-		}
-		return FALSE;
-	}
+						 error))
+		return fu_sunplus_camera_device_disable_after_failure(self, enabled);
 	if (checksum_dev != checksum) {
-		g_set_error(error,
+		g_set_error(error, /* nocheck:error-false-return */
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "device checksum mismatch 0x%02x != 0x%02x",
 			    checksum_dev,
 			    checksum);
-		if (enabled && !fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
-		    error_local != NULL) {
-			g_debug("disable after failure did not succeed: %s", error_local->message);
-		}
-		return FALSE;
+		return fu_sunplus_camera_device_disable_after_failure(self, enabled);
 	}
 	if (!fu_sunplus_camera_device_xu_set_cur(self,
-						 FU_SUNPLUS_CAMERA_SEL_FINISH,
+						 FU_SUNPLUS_CAMERA_SELECTOR_FINISH,
 						 &finish,
 						 sizeof(finish),
-						 error)) {
-		if (enabled && !fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
-		    error_local != NULL) {
-			g_debug("disable after failure did not succeed: %s", error_local->message);
-		}
-		return FALSE;
-	}
+						 error))
+		return fu_sunplus_camera_device_disable_after_failure(self, enabled);
 	fu_progress_step_done(progress);
 
-	if (!fu_sunplus_camera_device_verify(self,
-					     data,
-					     payload_sz,
-					     fu_progress_get_child(progress),
-					     error)) {
-		if (enabled && !fu_sunplus_camera_device_set_enabled(self, 0x00, &error_local) &&
-		    error_local != NULL) {
-			g_debug("disable after failure did not succeed: %s", error_local->message);
-		}
-		return FALSE;
-	}
+	if (!fu_sunplus_camera_device_verify(self, chunks, fu_progress_get_child(progress), error))
+		return fu_sunplus_camera_device_disable_after_failure(self, enabled);
 	fu_progress_step_done(progress);
 	return TRUE;
 }

@@ -1,0 +1,17 @@
+{
+  "name": "Sunplus Camera",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/sunplus-camera-setup.json",
+      "components": [
+        {
+          "version": "9.7",
+          "guids": [
+            "35f56151-156a-5cfa-bca6-68ab6e1260a8"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "FwupdVersion": "2.1.2",
+  "UsbDevices": [
+    {
+      "Created": "2026-03-19T11:32:53.853830Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5/3-5:1.0/video4linux/video0",
+      "DeviceFile": "/dev/video0",
+      "Subsystem": "video4linux",
+      "Vendor": 7119,
+      "Model": 11501,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "video4linux"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=81\nMINOR=0\nDEVNAME=video0"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "video0"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=name",
+          "Data": "Hy-UXGA(9240)-Camera: Hy-UXGA(9"
+        },
+        {
+          "Id": "ReadAttr:Attr=index",
+          "Data": "0"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=usb:usb_device",
+          "GType": "FuUsbDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5",
+          "PhysicalId": "3-5"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=259\nDEVNAME=bus/usb/003/004\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1bcf/2ced/907\nTYPE=239/2/1\nBUSNUM=003\nDEVNUM=004"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/003/004"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "003"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=259\nDEVNAME=bus/usb/003/004\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1bcf/2ced/907\nTYPE=239/2/1\nBUSNUM=003\nDEVNUM=004"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "004"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEAAu8CAUDPG+0sBwkBAgABCQLqAQIBAID6CAsAAg4DAAQJBAAAAQ4BAAQNJAEAAW0AAGzcAgEBEiQCAQECAAAAAAAAAAADCgAACyQFAgEAQAJ/FwAdJAYDcDPwKBFjLkq6LGiQ6zNAFgQBAgQPAAAAAB0kBgSCBmFjcFCrSbjMs4VejSIdAAEDBP//cQAACSQDBQEBAAQABwWHAxAACAUlAwUECQQBAAAOAgAADyQBAh4BgQAFAgEAAQQACyQGAQMBAQAAAAAeJAcBAIAHOAQAgFM7AIBTOwBIPwAVFgUAARUWBQAeJAcCAIAC4AEAAMoIAADKCABgCQAVFgUAARUWBQAeJAcDAAAF0AIAAF4aAABeGgAgHAAVFgUAARUWBQAWJAMAA4AHOASAAuABAAXQAgQBBQoUBiQNAQEEGyQEAgNZVVkyAAAQAIAAAKoAOJtxEAEAAAAAHiQFAQCABzgEAEDjCQBA4wkASD8AgIQeAAGAhB4AHiQFAgCAAuABAADKCAAAyggAYAkAFRYFAAEVFgUAHiQFAwAABdACAADKCAAAyggAIBwAQEIPAAFAQg8AEyQDAAOABzgEgALgAQAF0AIBAQYkDQEBBAkEAQEBDgIAAAcFgQX8AwEJBAECAQ4CAAAHBYEF/AsBCQQBAwEOAgAABwWBBfwTAQ=="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors"
+        },
+        {
+          "Id": "ReadProp:Key=ID_REVISION"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=81\nMINOR=0\nDEVNAME=video0"
+        },
+        {
+          "Id": "Ioctl:Request=0x80685600,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x68",
+          "DataOut": "dXZjdmlkZW8AAAAAAAAAAEh5LVVYR0EoOTI0MCktQ2FtZXJhOiBIeS1VWEdBKDkAdXNiLTAwMDA6MDA6MTQuMC01AAAAAAAAAAAAAAAAAAANEQYAAQCghAEAIAQAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=usb:usb_device",
+          "GType": "FuUsbDevice",
+          "DeviceId": null,
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-5",
+          "PhysicalId": "3-5"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=259\nDEVNAME=bus/usb/003/004\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1bcf/2ced/907\nTYPE=239/2/1\nBUSNUM=003\nDEVNUM=004"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/003/004"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "003"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=259\nDEVNAME=bus/usb/003/004\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1bcf/2ced/907\nTYPE=239/2/1\nBUSNUM=003\nDEVNUM=004"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "004"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEAAu8CAUDPG+0sBwkBAgABCQLqAQIBAID6CAsAAg4DAAQJBAAAAQ4BAAQNJAEAAW0AAGzcAgEBEiQCAQECAAAAAAAAAAADCgAACyQFAgEAQAJ/FwAdJAYDcDPwKBFjLkq6LGiQ6zNAFgQBAgQPAAAAAB0kBgSCBmFjcFCrSbjMs4VejSIdAAEDBP//cQAACSQDBQEBAAQABwWHAxAACAUlAwUECQQBAAAOAgAADyQBAh4BgQAFAgEAAQQACyQGAQMBAQAAAAAeJAcBAIAHOAQAgFM7AIBTOwBIPwAVFgUAARUWBQAeJAcCAIAC4AEAAMoIAADKCABgCQAVFgUAARUWBQAeJAcDAAAF0AIAAF4aAABeGgAgHAAVFgUAARUWBQAWJAMAA4AHOASAAuABAAXQAgQBBQoUBiQNAQEEGyQEAgNZVVkyAAAQAIAAAKoAOJtxEAEAAAAAHiQFAQCABzgEAEDjCQBA4wkASD8AgIQeAAGAhB4AHiQFAgCAAuABAADKCAAAyggAYAkAFRYFAAEVFgUAHiQFAwAABdACAADKCAAAyggAIBwAQEIPAAFAQg8AEyQDAAOABzgEgALgAQAF0AIBAQYkDQEBBAkEAQEBDgIAAAcFgQX8AwEJBAECAQ4CAAAHBYEF/AsBCQQBAwEOAgAABwWBBfwTAQ=="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors"
+        }
+      ]
+    }
+  ]
+}
