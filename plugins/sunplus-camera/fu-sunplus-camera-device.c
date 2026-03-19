@@ -324,12 +324,17 @@ fu_sunplus_camera_device_verify(FuSunplusCameraDevice *self,
 							 sizeof(buf),
 							 error))
 			return FALSE;
-		if (memcmp(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk)) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "verify mismatch at 0x%04x",
-				    (guint)fu_chunk_get_address(chk));
+		if (!fu_memcmp_safe(buf,
+				    sizeof(buf),
+				    0x0,
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk),
+				    0x0,
+				    fu_chunk_get_data_sz(chk),
+				    error)) {
+			g_prefix_error(error,
+				       "verify mismatch at 0x%04x: ",
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_set_percentage_full(progress, i + 1, fu_chunk_array_length(chunks));
@@ -392,6 +397,14 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 				    "selector 10 reported zero length");
 		return FALSE;
 	}
+	if (chunk_len != FU_SUNPLUS_CAMERA_READ_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "selector 10 reported unexpected chunk length 0x%04x",
+			    chunk_len);
+		return FALSE;
+	}
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
@@ -444,6 +457,7 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
+	/* device needs time to finalize transfer before checksum is readable */
 	fu_device_sleep(device, 1000);
 	if (!fu_sunplus_camera_device_xu_get_cur(self,
 						 FU_SUNPLUS_CAMERA_SELECTOR_CHECKSUM,
