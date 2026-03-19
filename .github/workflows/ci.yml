@@ -1,7 +1,7 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   snap:
@@ -26,22 +26,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-    - name: Build Fuzzers
-      id: build
-      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
-      with:
-        oss-fuzz-project-name: 'fwupd'
-        dry-run: false
-    - name: Run Fuzzers
-      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
-      with:
-        oss-fuzz-project-name: 'fwupd'
-        fuzz-seconds: 150
-        dry-run: false
-    - name: Upload Crash
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      if: failure() && steps.build.outcome == 'success'
-      with:
-        name: artifacts
-        path: ./out/artifacts
-
+      - name: Build Fuzzers
+        id: build
+        uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
+        with:
+          oss-fuzz-project-name: "fwupd"
+          dry-run: false
+      - name: Run Fuzzers
+        uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
+        with:
+          oss-fuzz-project-name: "fwupd"
+          fuzz-seconds: 150
+          dry-run: false
+      - name: Upload Crash
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: failure() && steps.build.outcome == 'success'
+        with:
+          name: artifacts
+          path: ./out/artifacts

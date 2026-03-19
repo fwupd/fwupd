@@ -2,9 +2,9 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -21,30 +21,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'python' ]
+        language: ["cpp", "python"]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@0d579ffd059c29b07949a3cce3983f0780820c98 # v3.29.5
-      with:
-        languages: ${{ matrix.language }}
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v3.29.5
+        with:
+          languages: ${{ matrix.language }}
 
-    - name: Install dependencies
-      run: |
-        sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-        sudo apt-get update
-        sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
-        python3 -m pip install --user "meson >= 0.62.0"
+      - name: Install dependencies
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
+          python3 -m pip install --user "meson >= 0.62.0"
 
-    - name: Build
-      run: |
-        mkdir -p $GITHUB_WORKSPACE/build
-        cd $GITHUB_WORKSPACE/build
-        meson setup .. -Dman=false --prefix=$GITHUB_WORKSPACE/dist -Dlibxmlb:gtkdoc=false
-        ninja
+      - name: Build
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/build
+          cd $GITHUB_WORKSPACE/build
+          meson setup .. -Dman=false --prefix=$GITHUB_WORKSPACE/dist -Dlibxmlb:gtkdoc=false
+          ninja
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@0d579ffd059c29b07949a3cce3983f0780820c98 # v3.29.5
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v3.29.5

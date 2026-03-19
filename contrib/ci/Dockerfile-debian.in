@@ -1,9 +1,19 @@
-FROM %%%ARCH_PREFIX%%%debian:testing
-%%%OS%%%
+# -*- mode: dockerfile -*-
+FROM debian:testing
 ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
-%%%ARCH_SPECIFIC_COMMAND%%%
-%%%INSTALL_DEPENDENCIES_COMMAND%%%
-RUN apt install -yq --no-install-recommends python3-apt
+RUN set -euxo pipefail; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \
+    dpkg --add-architecture i386; \
+    dpkg --add-architecture s390x; \
+    apt-get update; \
+    apt-get install --yes --no-install-recommends \
+    build-essential \
+    dpkg-dev \
+    python3-apt \
+%%%DEPENDENCIES%%%; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /github/workspace
 CMD ["./contrib/ci/debian.sh"]

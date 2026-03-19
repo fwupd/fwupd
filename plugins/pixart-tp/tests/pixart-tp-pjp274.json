@@ -1,0 +1,18 @@
+{
+  "name": "PixArt POCO 3348QC Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "df0bae2833853aedfc79064cce447553426d34d9dfc1a61a83be63e7c14fdf47-firmware.cab",
+      "emulation-url": "04c3700cdf7a6e8408be615f446fa5b7cf94d20b641f572efd89412f4488a5fa-pxi-tp-update.zip",
+      "components": [
+        {
+          "version": "0x3c02",
+          "guids": [
+            "2a62ed27-652b-5223-8a24-53e40176e152"
+          ]
+        }
+      ]
+    }
+  ]
+}

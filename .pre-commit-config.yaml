@@ -1,129 +1,129 @@
 default_stages: [pre-commit]
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-    -   id: no-commit-to-branch
+      - id: no-commit-to-branch
         args: [--branch, main, --pattern, 1_.*_X]
-    -   id: check-added-large-files
-    -   id: check-executables-have-shebangs
-    -   id: forbid-new-submodules
-    -   id: check-illegal-windows-names
-    -   id: check-yaml
-        exclude: '.clang-format'
-    -   id: check-json
-    -   id: pretty-format-json
-        args: ['--no-sort-keys', '--autofix']
-    -   id: check-symlinks
-    -   id: check-xml
-    -   id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+      - id: forbid-new-submodules
+      - id: check-illegal-windows-names
+      - id: check-yaml
+        exclude: ".clang-format"
+      - id: check-json
+      - id: pretty-format-json
+        args: ["--no-sort-keys", "--autofix"]
+      - id: check-symlinks
+      - id: check-xml
+      - id: end-of-file-fixer
         types_or: [c, shell, python, proto]
-    -   id: trailing-whitespace
+      - id: trailing-whitespace
         types_or: [c, shell, python, xml]
-    -   id: check-docstring-first
-    -   id: check-merge-conflict
-    -   id: mixed-line-ending
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: mixed-line-ending
         args: [--fix=lf]
--   repo: https://github.com/codespell-project/codespell
+  - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
-    -   id: codespell
-        args: ['--config', './contrib/codespell.cfg', --write-changes]
--   repo: https://github.com/ambv/black
+      - id: codespell
+        args: ["--config", "./contrib/codespell.cfg", --write-changes]
+  - repo: https://github.com/ambv/black
     rev: 25.12.0
     hooks:
-    - id: black
--   repo: local
+      - id: black
+  - repo: local
     hooks:
-    - id: no-binaries
-      name: prevent committing binaries to tree
-      language: script
-      entry: /usr/bin/false
-      types: [binary]
-      exclude: |
-            (?x)^(
-              contrib/qubes/doc/img/\w+\.(png|jpg)|
-              data/fwupd\.ico|
-              data/icons/(128x128|64x64)/org\.freedesktop.fwupd\.png|
-              docs/device-emulation-(gnome-firmware-record|assets)\.png|
-              docs/debug_(attached|tool_selector|breakpoint|task)\.png|
-              docs/test_task\.png|
-              docs/win32-(start-menu|run-anyway|term1|term2|uac|uac2)\.png|
-              data/org\.freedesktop\.fwupd\.png|
-              data/tests/fakedevice\d{3}\.(bin|jcat)|
-              libfwupdplugin/tests/efi/efivars/(Boot\d{4}-8be4df61-93ca-11d2-aa0d-00e098032b8c|
-                  BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c|
-                  OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
-                  fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416)|
-              plugins/wch-ch341a/wch-ch341a-vmod\.png|
-              plugins/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
-                  OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c)|
-              plugins/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
-              plugins/pci-bcr/config|
-              plugins/redfish/tests/efi/efivars/(RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70|
-                  RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70)|
-              plugins/uefi-capsule/tests/test\.bmp|
-              src/tests/auth/firmware\.xml\.gz|
-              src/tests/history_v[12]\.db|
-              src/tests/sys/devices/pci0000_00/0000_00_14\.0/usb1/1-1/descriptors
-            )$
-    - id: check-potfiles
-      name: check for missing translated files from potfiles
-      language: script
-      entry: ./contrib/ci/check-potfiles.py
-    - id: check-headers
-      name: check for superfluous includes
-      language: script
-      entry: ./contrib/ci/check-headers.py
-    - id: check-source
-      name: check source code for common issues
-      language: script
-      entry: ./contrib/ci/check-source.py
-    - id: check-quirks
-      name: check quirk style
-      language: script
-      entry: ./contrib/ci/check-quirks.py
-    - id: shellcheck
-      name: check shellscript style
-      language: system
-      entry: shellcheck --severity=warning -e SC2068
-      types: [shell]
-      exclude: ^contrib/PKGBUILD$
-    - id: shfmt
-      name: format shell scripts with shfmt
-      language: system
-      entry: shfmt --write --indent 4
-      types: [shell]
-      exclude: ^contrib/PKGBUILD$
-    - id: run-tests
-      name: run tests before pushing
-      language: system
-      entry: "test-fwupd"
-      stages: [pre-push]
-    - id: clang-format
-      name: clang-format
-      language: script
-      entry: ./contrib/reformat-code.py
-      types: [c]
-    - id: check-cli-actions
-      name: check cli actions
-      language: script
-      entry: ./contrib/ci/check-cli-actions.py
-    - id: check-license
-      name: Check license header
-      types_or: [shell, c, python]
-      language: script
-      entry: ./contrib/ci/check-license.py
-    - id: check-meson-install-tags
-      name: Check meson install tags
-      language: script
-      entry: ./contrib/ci/check-meson-install-tags.py
--   repo: https://github.com/igorshubovych/markdownlint-cli
+      - id: no-binaries
+        name: prevent committing binaries to tree
+        language: script
+        entry: /usr/bin/false
+        types: [binary]
+        exclude: |
+          (?x)^(
+            contrib/qubes/doc/img/\w+\.(png|jpg)|
+            data/fwupd\.ico|
+            data/icons/(128x128|64x64)/org\.freedesktop.fwupd\.png|
+            docs/device-emulation-(gnome-firmware-record|assets)\.png|
+            docs/debug_(attached|tool_selector|breakpoint|task)\.png|
+            docs/test_task\.png|
+            docs/win32-(start-menu|run-anyway|term1|term2|uac|uac2)\.png|
+            data/org\.freedesktop\.fwupd\.png|
+            data/tests/fakedevice\d{3}\.(bin|jcat)|
+            libfwupdplugin/tests/efi/efivars/(Boot\d{4}-8be4df61-93ca-11d2-aa0d-00e098032b8c|
+                BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c|
+                OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
+                fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416)|
+            plugins/wch-ch341a/wch-ch341a-vmod\.png|
+            plugins/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
+                OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c)|
+            plugins/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
+            plugins/pci-bcr/config|
+            plugins/redfish/tests/efi/efivars/(RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70|
+                RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70)|
+            plugins/uefi-capsule/tests/test\.bmp|
+            src/tests/auth/firmware\.xml\.gz|
+            src/tests/history_v[12]\.db|
+            src/tests/sys/devices/pci0000_00/0000_00_14\.0/usb1/1-1/descriptors
+          )$
+      - id: check-potfiles
+        name: check for missing translated files from potfiles
+        language: script
+        entry: ./contrib/ci/check-potfiles.py
+      - id: check-headers
+        name: check for superfluous includes
+        language: script
+        entry: ./contrib/ci/check-headers.py
+      - id: check-source
+        name: check source code for common issues
+        language: script
+        entry: ./contrib/ci/check-source.py
+      - id: check-quirks
+        name: check quirk style
+        language: script
+        entry: ./contrib/ci/check-quirks.py
+      - id: shellcheck
+        name: check shellscript style
+        language: system
+        entry: shellcheck --severity=warning -e SC2068
+        types: [shell]
+        exclude: ^contrib/PKGBUILD$
+      - id: shfmt
+        name: format shell scripts with shfmt
+        language: system
+        entry: shfmt --write --indent 4
+        types: [shell]
+        exclude: ^contrib/PKGBUILD$
+      - id: run-tests
+        name: run tests before pushing
+        language: system
+        entry: "test-fwupd"
+        stages: [pre-push]
+      - id: clang-format
+        name: clang-format
+        language: script
+        entry: ./contrib/reformat-code.py
+        types: [c]
+      - id: check-cli-actions
+        name: check cli actions
+        language: script
+        entry: ./contrib/ci/check-cli-actions.py
+      - id: check-license
+        name: Check license header
+        types_or: [shell, c, python]
+        language: script
+        entry: ./contrib/ci/check-license.py
+      - id: check-meson-install-tags
+        name: Check meson install tags
+        language: script
+        entry: ./contrib/ci/check-meson-install-tags.py
+  - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0
     hooks:
-    - id: markdownlint
-      args: ['--fix', '--ignore', '.github']
--   repo: https://github.com/gitleaks/gitleaks
+      - id: markdownlint
+        args: ["--fix", "--ignore", ".github"]
+  - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
     hooks:
-    -   id: gitleaks
+      - id: gitleaks

@@ -22,7 +22,7 @@ from firmware_packager import make_firmware_metainfo, create_firmware_cab
 
 
 class Variables:
-    def __init__(self, device_guid, version):
+    def __init__(self, device_guid, version, version_format):
         self.device_guid = device_guid
         self.developer_name = "Dell Inc"
         self.firmware_name = "New firmware"
@@ -33,7 +33,7 @@ class Variables:
         self.release_version = version
         self.release_description = "Unknown"
         self.update_protocol = "org.uefi.capsule"
-        self.version_format = "dell-bios"
+        self.version_format = version_format
 
 
 def parse_args():
@@ -47,12 +47,12 @@ def parse_args():
     return args
 
 
-def generate_cab(infile, directory, guid, version):
+def generate_cab(infile, directory, guid, version, version_format):
     output = os.path.join(directory, "firmware.bin")
     ret = add_header(infile, output, guid)
     if ret:
         sys.exit(ret)
-    variables = Variables(guid, version)
+    variables = Variables(guid, version, version_format)
     make_firmware_metainfo(variables, directory)
     create_firmware_cab(variables, directory)
     cab = os.path.join(directory, "firmware.cab")
@@ -76,7 +76,13 @@ def find_uefi_device(client, deviceid):
         # return the first hit for UEFI plugin
         if item.get_plugin() == "uefi" or item.get_plugin() == "uefi_capsule":
             print(f"Installing to {item.get_name()}")
-            return item.get_guid_default(), item.get_id(), item.get_version()
+            version_format = Fwupd.version_format_to_string(item.get_version_format())
+            return (
+                item.get_guid_default(),
+                item.get_id(),
+                item.get_version(),
+                version_format,
+            )
     print("Couldn't find any UEFI devices")
     sys.exit(1)
 
@@ -117,8 +123,10 @@ if __name__ == "__main__":
     try:
         is_restore_required = set_conf_only_trusted(CLIENT, False)
         directory = tempfile.mkdtemp()
-        guid, deviceid, version = find_uefi_device(CLIENT, ARGS.deviceid)
-        cab = generate_cab(ARGS.exe, directory, guid, version)
+        guid, deviceid, version, version_format = find_uefi_device(
+            CLIENT, ARGS.deviceid
+        )
+        cab = generate_cab(ARGS.exe, directory, guid, version, version_format)
         install(CLIENT, cab, deviceid, True, True)
     except Exception as e:
         print(e)

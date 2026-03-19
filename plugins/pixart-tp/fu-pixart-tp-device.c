@@ -12,15 +12,17 @@
 #include "fu-pixart-tp-haptic-device.h"
 #include "fu-pixart-tp-section.h"
 
-struct _FuPixartTpDevice {
-	FuHidrawDevice parent_instance;
+typedef struct {
 	guint8 sram_select;
 	guint8 ver_bank;
 	guint16 ver_addr;
+	guint16 part_id;
 	gboolean has_tf_child;
-};
+} FuPixartTpDevicePrivate;
 
-G_DEFINE_TYPE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuPixartTpDevice, fu_pixart_tp_device, FU_TYPE_HIDRAW_DEVICE)
+
+#define GET_PRIVATE(o) (fu_pixart_tp_device_get_instance_private(o))
 
 #define FU_PIXART_TP_DEVICE_SECTOR_SIZE 4096
 #define FU_PIXART_TP_DEVICE_PAGE_SIZE	256
@@ -29,10 +31,12 @@ static void
 fu_pixart_tp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
-	fwupd_codec_string_append_hex(str, idt, "SramSelect", self->sram_select);
-	fwupd_codec_string_append_hex(str, idt, "VerBank", self->ver_bank);
-	fwupd_codec_string_append_hex(str, idt, "VerAddr", self->ver_addr);
-	fwupd_codec_string_append_bool(str, idt, "HasTfChild", self->has_tf_child);
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
+
+	fwupd_codec_string_append_hex(str, idt, "SramSelect", priv->sram_select);
+	fwupd_codec_string_append_hex(str, idt, "VerBank", priv->ver_bank);
+	fwupd_codec_string_append_hex(str, idt, "VerAddr", priv->ver_addr);
+	fwupd_codec_string_append_bool(str, idt, "HasTfChild", priv->has_tf_child);
 }
 
 #define REPORT_ID_SINGLE 0x42
@@ -41,7 +45,7 @@ fu_pixart_tp_device_to_string(FuDevice *device, guint idt, GString *str)
 
 #define OP_READ 0x10
 
-static gboolean
+gboolean
 fu_pixart_tp_device_register_write(FuPixartTpDevice *self,
 				   FuPixartTpSystemBank bank,
 				   guint8 addr,
@@ -67,7 +71,79 @@ fu_pixart_tp_device_register_write(FuPixartTpDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
+fu_pixart_tp_device_register_write_uint16(FuPixartTpDevice *self,
+					  FuPixartTpSystemBank bank,
+					  guint8 addr,
+					  guint16 val,
+					  GError **error)
+{
+	guint8 buf[2] = {0};
+
+	/* prepare little-endian buffer */
+	fu_memwrite_uint16(buf, val, G_LITTLE_ENDIAN);
+
+	for (guint i = 0; i < sizeof(buf); i++) {
+		if (!fu_pixart_tp_device_register_write(self,
+							bank,
+							(guint8)(addr + i),
+							buf[i],
+							error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean
+fu_pixart_tp_device_register_write_uint24(FuPixartTpDevice *self,
+					  FuPixartTpSystemBank bank,
+					  guint8 addr,
+					  guint32 val,
+					  GError **error)
+{
+	guint8 buf[3] = {0};
+
+	/* prepare little-endian buffer */
+	fu_memwrite_uint24(buf, val, G_LITTLE_ENDIAN);
+
+	for (guint i = 0; i < sizeof(buf); i++) {
+		if (!fu_pixart_tp_device_register_write(self,
+							bank,
+							(guint8)(addr + i),
+							buf[i],
+							error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean
+fu_pixart_tp_device_register_write_uint32(FuPixartTpDevice *self,
+					  FuPixartTpSystemBank bank,
+					  guint8 addr,
+					  guint32 val,
+					  GError **error)
+{
+	guint8 buf[4] = {0};
+
+	/* prepare little-endian buffer */
+	fu_memwrite_uint32(buf, val, G_LITTLE_ENDIAN);
+
+	for (guint i = 0; i < sizeof(buf); i++) {
+		if (!fu_pixart_tp_device_register_write(self,
+							bank,
+							(guint8)(addr + i),
+							buf[i],
+							error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean
 fu_pixart_tp_device_register_read(FuPixartTpDevice *self,
 				  FuPixartTpSystemBank bank,
 				  guint8 addr,
@@ -89,6 +165,8 @@ fu_pixart_tp_device_register_read(FuPixartTpDevice *self,
 		return FALSE;
 	}
 
+	fu_device_sleep(FU_DEVICE(self), 10);
+
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  resp,
 					  sizeof(resp),
@@ -104,6 +182,31 @@ fu_pixart_tp_device_register_read(FuPixartTpDevice *self,
 	/* success */
 	*out_val = resp[3];
 	return TRUE;
+}
+
+GByteArray *
+fu_pixart_tp_device_register_read_array(FuPixartTpDevice *self,
+					FuPixartTpSystemBank bank,
+					guint8 addr,
+					gsize len,
+					GError **error)
+{
+	g_autoptr(GByteArray) array = g_byte_array_sized_new(len);
+
+	for (gsize i = 0; i < len; i++) {
+		guint8 val = 0;
+		if (!fu_pixart_tp_device_register_read(self,
+						       bank,
+						       (guint8)(addr + i),
+						       &val,
+						       error)) {
+			g_prefix_error(error, "failed to read array at index %u: ", (guint)i);
+			return NULL;
+		}
+		g_byte_array_append(array, &val, 1);
+	}
+
+	return g_steal_pointer(&array);
 }
 
 gboolean
@@ -153,6 +256,9 @@ fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
 			       addr);
 		return FALSE;
 	}
+
+	fu_device_sleep(FU_DEVICE(self), 10);
+
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  resp,
 					  sizeof(resp),
@@ -170,32 +276,125 @@ fu_pixart_tp_device_register_user_read(FuPixartTpDevice *self,
 	return TRUE;
 }
 
-static gboolean
+static GByteArray *
+fu_pixart_tp_device_register_user_read_array(FuPixartTpDevice *self,
+					     FuPixartTpUserBank bank,
+					     guint8 addr,
+					     gsize len,
+					     GError **error)
+{
+	g_autoptr(GByteArray) array = g_byte_array_sized_new(len);
+
+	for (gsize i = 0; i < len; i++) {
+		guint8 val = 0;
+		/* assume the device supports address auto-increment or sequential reading */
+		if (!fu_pixart_tp_device_register_user_read(self,
+							    bank,
+							    (guint8)(addr + i),
+							    &val,
+							    error)) {
+			g_prefix_error(error, "failed to read user array at index %u: ", (guint)i);
+			return NULL;
+		}
+		g_byte_array_append(array, &val, 1);
+	}
+
+	return g_steal_pointer(&array);
+}
+
+gboolean
 fu_pixart_tp_device_register_burst_write(FuPixartTpDevice *self,
 					 const guint8 *buf,
 					 gsize bufsz,
 					 GError **error)
 {
-	guint8 payload[257] = {REPORT_ID_BURST};
+	g_autoptr(GPtrArray) chunks = NULL;
 
-	if (!fu_memcpy_safe(payload,
-			    sizeof(payload),
-			    1, /* dst offset: payload[1..] */
-			    buf,
-			    bufsz,
-			    0, /* src offset: buf[0..] */
-			    bufsz,
-			    error)) {
-		g_prefix_error_literal(error, "burst write memcpy failed: ");
+	/* split the data, max 256 bytes per chunk */
+	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, 256);
+	if (chunks == NULL)
 		return FALSE;
+
+	/* send each chunk sequentially */
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		gsize chunk_sz = 0;
+		const guint8 *chunk_data = g_bytes_get_data(fu_chunk_get_bytes(chk), &chunk_sz);
+
+		/* initialize payload with zeros */
+		guint8 payload[257] = {0};
+		payload[0] = REPORT_ID_BURST;
+
+		/* safely copy chunk data to payload */
+		if (!fu_memcpy_safe(payload,
+				    sizeof(payload),
+				    1, /* dst offset: start from payload[1] */
+				    chunk_data,
+				    chunk_sz,
+				    0, /* src offset */
+				    chunk_sz,
+				    error)) {
+			g_prefix_error_literal(error, "burst write memcpy failed: ");
+			return FALSE;
+		}
+
+		/* send this 257 bytes feature report */
+		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+						  payload,
+						  sizeof(payload),
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
+			g_prefix_error_literal(error, "burst write feature report failed: ");
+			return FALSE;
+		}
 	}
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  payload,
-					  sizeof(payload),
-					  FU_IOCTL_FLAG_NONE,
-					  error)) {
-		g_prefix_error_literal(error, "burst write feature report failed: ");
-		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_pixart_tp_device_register_burst_read(FuPixartTpDevice *self,
+					guint8 *buf,
+					gsize bufsz,
+					GError **error)
+{
+	gsize offset = 0;
+
+	/* loop until all requested data is read into buf */
+	while (offset < bufsz) {
+		/* calculate chunk size, maximum 256 bytes per payload */
+		gsize chunk_sz = MIN(bufsz - offset, 256);
+
+		/* init payload buffer with report id for get_feature */
+		guint8 payload[257] = {0};
+		payload[0] = REPORT_ID_BURST;
+
+		/* request this 257 bytes feature report */
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+						  payload,
+						  sizeof(payload),
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
+			g_prefix_error_literal(error, "burst read feature report failed: ");
+			return FALSE;
+		}
+
+		/* copy read data from payload to the target buffer */
+		if (!fu_memcpy_safe(buf,
+				    bufsz,
+				    offset, /* dst offset: advance with loop */
+				    payload,
+				    sizeof(payload),
+				    1, /* src offset: skip report id at payload[0] */
+				    chunk_sz,
+				    error)) {
+			g_prefix_error_literal(error, "burst read memcpy failed: ");
+			return FALSE;
+		}
+
+		/* advance offset for the next chunk */
+		offset += chunk_sz;
 	}
 
 	/* success */
@@ -222,7 +421,6 @@ fu_pixart_tp_device_reset(FuPixartTpDevice *self, FuPixartTpResetMode mode, GErr
 						error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), mode == FU_PIXART_TP_RESET_MODE_APPLICATION ? 500 : 10);
-
 	/* success */
 	return TRUE;
 }
@@ -262,50 +460,31 @@ fu_pixart_tp_device_flash_execute(FuPixartTpDevice *self,
 {
 	guint8 out_val = 0;
 
+	/* set instruction command */
 	if (!fu_pixart_tp_device_register_write(self,
 						FU_PIXART_TP_SYSTEM_BANK_BANK4,
 						FU_PIXART_TP_REG_SYS4_FLASH_INST_CMD,
 						inst_cmd,
 						error))
 		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_CCR0,
-						(guint8)((ccr_cmd >> 0) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_CCR1,
-						(guint8)((ccr_cmd >> 8) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_CCR2,
-						(guint8)((ccr_cmd >> 16) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_CCR3,
-						(guint8)((ccr_cmd >> 24) & 0xff),
-						error))
+
+	/* set ccr command */
+	if (!fu_pixart_tp_device_register_write_uint32(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_FLASH_CCR,
+						       ccr_cmd,
+						       error))
 		return FALSE;
 
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_DATA_CNT0,
-						(guint8)((data_cnt >> 0) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_DATA_CNT1,
-						(guint8)((data_cnt >> 8) & 0xff),
-						error))
+	/* set data count */
+	if (!fu_pixart_tp_device_register_write_uint16(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_FLASH_DATA_CNT,
+						       data_cnt,
+						       error))
 		return FALSE;
 
+	/* start flash execution */
 	if (!fu_pixart_tp_device_register_write(self,
 						FU_PIXART_TP_SYSTEM_BANK_BANK4,
 						FU_PIXART_TP_REG_SYS4_FLASH_EXECUTE,
@@ -313,6 +492,7 @@ fu_pixart_tp_device_flash_execute(FuPixartTpDevice *self,
 						error))
 		return FALSE;
 
+	/* wait for execution to complete */
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_pixart_tp_device_flash_execute_wait_cb,
 				  10,
@@ -420,7 +600,7 @@ fu_pixart_tp_device_flash_wait_busy_cb(FuDevice *device, gpointer user_data, GEr
 		return FALSE;
 
 	/* busy bit cleared? */
-	if ((*out_val & FU_PIXART_TP_FLASH_STATUS_BUSY) != 0) {
+	if ((*out_val & FU_PIXART_TP_FLASH_WRITE_ENABLE_BUSY) != 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "flash still busy");
 		return FALSE;
 	}
@@ -453,37 +633,23 @@ fu_pixart_tp_device_flash_erase_sector(FuPixartTpDevice *self, guint8 sector, GE
 {
 	guint32 flash_address = (guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE;
 
+	/* wait for flash ready and enable write */
 	if (!fu_pixart_tp_device_flash_wait_busy(self, error))
 		return FALSE;
 	if (!fu_pixart_tp_device_flash_write_enable(self, error))
 		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR0,
-						(guint8)((flash_address >> 0) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR1,
-						(guint8)((flash_address >> 8) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR2,
-						(guint8)((flash_address >> 16) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR3,
-						(guint8)((flash_address >> 24) & 0xff),
-						error))
+
+	/* set flash address */
+	if (!fu_pixart_tp_device_register_write_uint32(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_FLASH_ADDR,
+						       flash_address,
+						       error))
 		return FALSE;
 
 	g_debug("erase sector %u (addr=0x%08x)", (guint)sector, flash_address);
 
+	/* execute erase command */
 	if (!fu_pixart_tp_device_flash_execute(self,
 					       FU_PIXART_TP_FLASH_INST_NONE,
 					       FU_PIXART_TP_FLASH_CCR_ERASE_SECTOR,
@@ -504,48 +670,29 @@ fu_pixart_tp_device_flash_program_256b_to_flash(FuPixartTpDevice *self,
 	guint32 flash_address = (guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE +
 				(guint32)page * FU_PIXART_TP_DEVICE_PAGE_SIZE;
 
+	/* wait for flash ready and enable write */
 	if (!fu_pixart_tp_device_flash_wait_busy(self, error))
 		return FALSE;
 	if (!fu_pixart_tp_device_flash_write_enable(self, error))
 		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_BUF_ADDR0,
-						0x00,
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_BUF_ADDR1,
-						0x00,
-						error))
+
+	/* set internal sram buffer address (usually 0x0000) */
+	if (!fu_pixart_tp_device_register_write_uint16(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_FLASH_BUF_ADDR,
+						       0x0000,
+						       error))
 		return FALSE;
 
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR0,
-						(guint8)((flash_address >> 0) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR1,
-						(guint8)((flash_address >> 8) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR2,
-						(guint8)((flash_address >> 16) & 0xff),
-						error))
-		return FALSE;
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK4,
-						FU_PIXART_TP_REG_SYS4_FLASH_ADDR3,
-						(guint8)((flash_address >> 24) & 0xff),
-						error))
+	/* set target flash address */
+	if (!fu_pixart_tp_device_register_write_uint32(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_FLASH_ADDR,
+						       flash_address,
+						       error))
 		return FALSE;
 
+	/* execute page program from sram to flash */
 	if (!fu_pixart_tp_device_flash_execute(self,
 					       FU_PIXART_TP_FLASH_INST_PROGRAM |
 						   FU_PIXART_TP_FLASH_INST_INTERNAL_SRAM_ACCESS,
@@ -563,6 +710,7 @@ fu_pixart_tp_device_flash_program_256b_to_flash(FuPixartTpDevice *self,
 static gboolean
 fu_pixart_tp_device_write_sram_256b(FuPixartTpDevice *self, const guint8 *data, GError **error)
 {
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
 	enum {
 		/*
 		 * SRAM_TRIGGER (bank6)
@@ -573,24 +721,18 @@ fu_pixart_tp_device_write_sram_256b(FuPixartTpDevice *self, const guint8 *data, 
 		PIXART_TP_SRAM_TRIGGER_NCS_DISABLE = 0x01,
 	};
 
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK6,
-						FU_PIXART_TP_REG_SYS6_SRAM_ADDR0,
-						0x00,
-						error))
-		return FALSE;
-
-	if (!fu_pixart_tp_device_register_write(self,
-						FU_PIXART_TP_SYSTEM_BANK_BANK6,
-						FU_PIXART_TP_REG_SYS6_SRAM_ADDR1,
-						0x00,
-						error))
+	/* set sram address (usually 0x0000) */
+	if (!fu_pixart_tp_device_register_write_uint16(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK6,
+						       FU_PIXART_TP_REG_SYS6_SRAM_ADDR,
+						       0x0000,
+						       error))
 		return FALSE;
 
 	if (!fu_pixart_tp_device_register_write(self,
 						FU_PIXART_TP_SYSTEM_BANK_BANK6,
 						FU_PIXART_TP_REG_SYS6_SRAM_SELECT,
-						self->sram_select,
+						priv->sram_select,
 						error))
 		return FALSE;
 
@@ -637,6 +779,7 @@ fu_pixart_tp_device_firmware_clear(FuPixartTpDevice *self,
 		return FALSE;
 	start_address = fu_pixart_tp_section_get_target_flash_start(section);
 	g_debug("clear firmware at start address 0x%08x", start_address);
+
 	if (!fu_pixart_tp_device_flash_erase_sector(
 		self,
 		(guint8)(start_address / FU_PIXART_TP_DEVICE_SECTOR_SIZE),
@@ -678,75 +821,35 @@ fu_pixart_tp_device_crc_firmware_wait_cb(FuDevice *device, gpointer user_data, G
 static gboolean
 fu_pixart_tp_device_crc_firmware(FuPixartTpDevice *self, guint32 *crc, GError **error)
 {
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 out_val = 0;
-	guint8 swap_flag = 0;
-	guint16 part_id = 0;
-	guint32 return_value = 0;
-
-	g_return_val_if_fail(crc != NULL, FALSE);
+	guint8 crc_ctrl = FU_PIXART_TP_CRC_CTRL_FW_BANK0;
+	g_autoptr(GByteArray) buf = NULL;
 	*crc = 0;
 
-	/* read swap_flag from system bank4 */
-	if (!fu_pixart_tp_device_register_read(self,
-					       FU_PIXART_TP_SYSTEM_BANK_BANK4,
-					       FU_PIXART_TP_REG_SYS4_SWAP_FLAG,
-					       &out_val,
-					       error))
-		return FALSE;
-	swap_flag = out_val;
-
-	/* read part_id from user bank0 (little-endian) */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_PART_ID0,
-						    &out_val,
-						    error))
-		return FALSE;
-	part_id = out_val;
-
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_PART_ID1,
-						    &out_val,
-						    error))
-		return FALSE;
-	part_id |= (guint16)out_val << 8;
-
-	switch (part_id) {
-	case FU_PIXART_TP_PART_ID_PJP274:
-		if (swap_flag != 0) {
-			/* PJP274 + swap enabled → firmware on bank1 */
-			if (!fu_pixart_tp_device_register_user_write(
-				self,
-				FU_PIXART_TP_USER_BANK_BANK0,
-				FU_PIXART_TP_REG_USER0_CRC_CTRL,
-				FU_PIXART_TP_CRC_CTRL_FW_BANK1,
-				error))
-				return FALSE;
-		} else {
-			/* PJP274 normal boot → firmware on bank0 */
-			if (!fu_pixart_tp_device_register_user_write(
-				self,
-				FU_PIXART_TP_USER_BANK_BANK0,
-				FU_PIXART_TP_REG_USER0_CRC_CTRL,
-				FU_PIXART_TP_CRC_CTRL_FW_BANK0,
-				error))
-				return FALSE;
-		}
-		break;
-
-	default:
-		/* other part_id: always use bank0 firmware CRC */
-		if (!fu_pixart_tp_device_register_user_write(self,
-							     FU_PIXART_TP_USER_BANK_BANK0,
-							     FU_PIXART_TP_REG_USER0_CRC_CTRL,
-							     FU_PIXART_TP_CRC_CTRL_FW_BANK0,
-							     error))
+	/* handle pjp274 swap_flag */
+	if (priv->part_id == FU_PIXART_TP_PART_ID_PJP274) {
+		guint8 swap_flag = 0;
+		/* read swap_flag from system bank4 */
+		if (!fu_pixart_tp_device_register_read(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_SWAP_FLAG,
+						       &swap_flag,
+						       error))
 			return FALSE;
-		break;
+		if (swap_flag != 0)
+			crc_ctrl = FU_PIXART_TP_CRC_CTRL_FW_BANK1;
 	}
 
-	/* wait CRC calculation completed */
+	/* write crc trigger */
+	if (!fu_pixart_tp_device_register_user_write(self,
+						     FU_PIXART_TP_USER_BANK_BANK0,
+						     FU_PIXART_TP_REG_USER0_CRC_CTRL,
+						     crc_ctrl,
+						     error))
+		return FALSE;
+
+	/* wait crc calculation completed */
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_pixart_tp_device_crc_firmware_wait_cb,
 				  1000,
@@ -757,43 +860,21 @@ fu_pixart_tp_device_crc_firmware(FuPixartTpDevice *self, guint32 *crc, GError **
 		return FALSE;
 	}
 
-	/* read CRC result (32-bit, little-endian) */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT0,
-						    &out_val,
-						    error))
+	/* read crc result (32-bit LE) */
+	buf = fu_pixart_tp_device_register_user_read_array(self,
+							   FU_PIXART_TP_USER_BANK_BANK0,
+							   FU_PIXART_TP_REG_USER0_CRC_RESULT,
+							   4,
+							   error);
+	if (buf == NULL)
 		return FALSE;
-	return_value |= (guint32)out_val;
 
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT1,
-						    &out_val,
-						    error))
+	/* safely read 32-bit CRC with bounds checking (using buf instead of res) */
+	if (!fu_memread_uint32_safe(buf->data, buf->len, 0x0, crc, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	return_value |= (guint32)out_val << 8;
 
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT2,
-						    &out_val,
-						    error))
-		return FALSE;
-	return_value |= (guint32)out_val << 16;
+	g_debug("firmware CRC: 0x%08x", *crc);
 
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT3,
-						    &out_val,
-						    error))
-		return FALSE;
-	return_value |= (guint32)out_val << 24;
-
-	*crc = return_value;
-	g_debug("firmware CRC: 0x%08x", (guint)*crc);
-
-	/* success */
 	return TRUE;
 }
 
@@ -826,73 +907,35 @@ fu_pixart_tp_device_crc_parameter_wait_cb(FuDevice *device, gpointer user_data, 
 static gboolean
 fu_pixart_tp_device_crc_parameter(FuPixartTpDevice *self, guint32 *crc, GError **error)
 {
-	guint16 part_id = 0;
-	guint32 result = 0;
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 out_val = 0;
-	guint8 swap_flag;
-
-	g_return_val_if_fail(crc != NULL, FALSE);
+	guint8 crc_ctrl = FU_PIXART_TP_CRC_CTRL_PARAM_BANK0;
+	g_autoptr(GByteArray) buf = NULL;
 	*crc = 0;
 
-	/* read swap_flag from system bank4 */
-	if (!fu_pixart_tp_device_register_read(self,
-					       FU_PIXART_TP_SYSTEM_BANK_BANK4,
-					       FU_PIXART_TP_REG_SYS4_SWAP_FLAG,
-					       &out_val,
-					       error))
-		return FALSE;
-	swap_flag = out_val;
-
-	/* read part_id from user bank0 (little-endian) */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_PART_ID0,
-						    &out_val,
-						    error))
-		return FALSE;
-	part_id = out_val;
-
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_PART_ID1,
-						    &out_val,
-						    error))
-		return FALSE;
-	part_id |= (guint16)out_val << 8;
-
-	/* select CRC source */
-	switch (part_id) {
-	case FU_PIXART_TP_PART_ID_PJP274:
-		if (swap_flag != 0) {
-			if (!fu_pixart_tp_device_register_user_write(
-				self,
-				FU_PIXART_TP_USER_BANK_BANK0,
-				FU_PIXART_TP_REG_USER0_CRC_CTRL,
-				FU_PIXART_TP_CRC_CTRL_PARAM_BANK1,
-				error))
-				return FALSE;
-		} else {
-			if (!fu_pixart_tp_device_register_user_write(
-				self,
-				FU_PIXART_TP_USER_BANK_BANK0,
-				FU_PIXART_TP_REG_USER0_CRC_CTRL,
-				FU_PIXART_TP_CRC_CTRL_PARAM_BANK0,
-				error))
-				return FALSE;
-		}
-		break;
-
-	default:
-		if (!fu_pixart_tp_device_register_user_write(self,
-							     FU_PIXART_TP_USER_BANK_BANK0,
-							     FU_PIXART_TP_REG_USER0_CRC_CTRL,
-							     FU_PIXART_TP_CRC_CTRL_PARAM_BANK0,
-							     error))
+	/* handle pjp274 swap_flag */
+	if (priv->part_id == FU_PIXART_TP_PART_ID_PJP274) {
+		guint8 swap_flag = 0;
+		/* read swap_flag from system bank4 */
+		if (!fu_pixart_tp_device_register_read(self,
+						       FU_PIXART_TP_SYSTEM_BANK_BANK4,
+						       FU_PIXART_TP_REG_SYS4_SWAP_FLAG,
+						       &swap_flag,
+						       error))
 			return FALSE;
-		break;
+		if (swap_flag != 0)
+			crc_ctrl = FU_PIXART_TP_CRC_CTRL_PARAM_BANK1;
 	}
 
-	/* wait CRC calculation completed */
+	/* write crc trigger */
+	if (!fu_pixart_tp_device_register_user_write(self,
+						     FU_PIXART_TP_USER_BANK_BANK0,
+						     FU_PIXART_TP_REG_USER0_CRC_CTRL,
+						     crc_ctrl,
+						     error))
+		return FALSE;
+
+	/* wait crc calculation completed */
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_pixart_tp_device_crc_parameter_wait_cb,
 				  1000,
@@ -903,43 +946,21 @@ fu_pixart_tp_device_crc_parameter(FuPixartTpDevice *self, guint32 *crc, GError *
 		return FALSE;
 	}
 
-	/* read CRC result (32-bit LE) */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT0,
-						    &out_val,
-						    error))
+	/* read crc result (32-bit LE) */
+	buf = fu_pixart_tp_device_register_user_read_array(self,
+							   FU_PIXART_TP_USER_BANK_BANK0,
+							   FU_PIXART_TP_REG_USER0_CRC_RESULT,
+							   4,
+							   error);
+	if (buf == NULL)
 		return FALSE;
-	result |= (guint32)out_val;
 
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT1,
-						    &out_val,
-						    error))
+	/* safely read 32-bit CRC with bounds checking */
+	if (!fu_memread_uint32_safe(buf->data, buf->len, 0x0, crc, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	result |= (guint32)out_val << 8;
 
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT2,
-						    &out_val,
-						    error))
-		return FALSE;
-	result |= (guint32)out_val << 16;
+	g_debug("parameter CRC: 0x%08x", *crc);
 
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    FU_PIXART_TP_USER_BANK_BANK0,
-						    FU_PIXART_TP_REG_USER0_CRC_RESULT3,
-						    &out_val,
-						    error))
-		return FALSE;
-	result |= (guint32)out_val << 24;
-
-	*crc = result;
-	g_debug("parameter CRC: 0x%08x", result);
-
-	/* success */
 	return TRUE;
 }
 
@@ -1119,8 +1140,8 @@ fu_pixart_tp_device_write_sections(FuPixartTpDevice *self,
 		}
 
 		/* skip TF_FORCE sections:
-		 *   - handled by TF/haptic child device using its own image
-		 *   - parent TP only handles TP firmware/parameter sections */
+		 * - handled by TF/haptic child device using its own image
+		 * - parent TP only handles TP firmware/parameter sections */
 		if (update_type == FU_PIXART_TP_UPDATE_TYPE_TF_FORCE) {
 			g_debug("skip TF_FORCE section %u for TP parent device", i);
 			fu_progress_step_done(progress);
@@ -1131,6 +1152,7 @@ fu_pixart_tp_device_write_sections(FuPixartTpDevice *self,
 			fu_progress_step_done(progress);
 			continue;
 		}
+
 		if (!fu_pixart_tp_device_write_section(self,
 						       section,
 						       fu_progress_get_child(progress),
@@ -1209,40 +1231,70 @@ static gboolean
 fu_pixart_tp_device_setup(FuDevice *device, GError **error)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
-	guint8 buf[2] = {0};
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
+	guint8 val = 0;
+	guint16 version_raw = 0;
+	g_autoptr(GByteArray) buf = NULL;
 
-	/* read TP boot status*/
+	/* read tp part id */
+	buf = fu_pixart_tp_device_register_read_array(self,
+						      FU_PIXART_TP_SYSTEM_BANK_BANK0,
+						      FU_PIXART_TP_REG_SYS0_PART_ID,
+						      2,
+						      error);
+	if (buf == NULL)
+		return FALSE;
+
+	/* safely read 16-bit part_id with bounds checking */
+	if (!fu_memread_uint16_safe(buf->data,
+				    buf->len,
+				    0x0,
+				    &priv->part_id,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
+
+	/* define the extra instance IDs for quirks (e.g., PIXARTTP\PARTID_0274) */
+	fu_device_add_instance_u16(device, "PARTID", priv->part_id);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "PIXARTTP",
+					 "PARTID",
+					 NULL);
+
+	/* read tp boot status */
 	if (!fu_pixart_tp_device_register_user_read(self,
 						    FU_PIXART_TP_USER_BANK_BANK0,
 						    FU_PIXART_TP_REG_USER0_BOOT_STAUS,
-						    &buf[0],
+						    &val,
 						    error))
 		return FALSE;
 
-	/* avoid tp stuck in bootloader */
-	if (buf[0] == FU_PIXART_TP_BOOT_STATUS_ROM) {
-		if (!fu_pixart_tp_device_reset(self, FU_PIXART_TP_RESET_MODE_APPLICATION, error))
-			return FALSE;
+	/* sync bootloader flag from hardware state */
+	if (val == FU_PIXART_TP_BOOT_STATUS_ROM) {
+		g_debug("device is in bootloader mode");
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
 
-	/* read low byte */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    self->ver_bank,
-						    (guint8)(self->ver_addr + 0),
-						    &buf[0],
-						    error))
+	/* read firmware version */
+	g_clear_pointer(&buf, g_byte_array_unref);
+	buf = fu_pixart_tp_device_register_user_read_array(self,
+							   priv->ver_bank,
+							   priv->ver_addr,
+							   2,
+							   error);
+	if (buf == NULL)
 		return FALSE;
 
-	/* read high byte */
-	if (!fu_pixart_tp_device_register_user_read(self,
-						    self->ver_bank,
-						    (guint8)(self->ver_addr + 1),
-						    &buf[1],
-						    error))
+	/* safely read 16-bit firmware version with bounds checking */
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x0, &version_raw, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* success */
-	fu_device_set_version_raw(device, fu_memread_uint16(buf, G_LITTLE_ENDIAN));
+	fu_device_set_version_raw(device, version_raw);
 	return TRUE;
 }
 
@@ -1274,8 +1326,8 @@ fu_pixart_tp_device_write_firmware(FuDevice *device,
 
 	/* calculate total bytes for valid internal TP sections
 	 * NOTE:
-	 *   - TF_FORCE sections are skipped here; they are handled by the
-	 *     TF/haptic child-device using its own firmware image.
+	 * - TF_FORCE sections are skipped here; they are handled by the
+	 * TF/haptic child-device using its own firmware image.
 	 */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPixartTpSection *section = g_ptr_array_index(sections, i);
@@ -1336,28 +1388,29 @@ fu_pixart_tp_device_set_quirk_kv(FuDevice *device,
 				 GError **error)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "PixartTpHidVersionBank") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->ver_bank = (guint8)tmp;
+		priv->ver_bank = (guint8)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "PixartTpHidVersionAddr") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, 0xffff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->ver_addr = (guint16)tmp;
+		priv->ver_addr = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "PixartTpSramSelect") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, 0xff, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		self->sram_select = (guint8)tmp;
+		priv->sram_select = (guint8)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "PixartTpHasHaptic") == 0)
-		return fu_strtobool(value, &self->has_tf_child, error);
+		return fu_strtobool(value, &priv->has_tf_child, error);
 
 	/* unknown quirk */
 	g_set_error(error,
@@ -1449,8 +1502,9 @@ static gboolean
 fu_pixart_tp_device_probe(FuDevice *device, GError **error)
 {
 	FuPixartTpDevice *self = FU_PIXART_TP_DEVICE(device);
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (self->has_tf_child) {
+	if (priv->has_tf_child) {
 		g_autoptr(FuPixartTpHapticDevice) child = fu_pixart_tp_haptic_device_new(device);
 		fu_device_add_child(device, FU_DEVICE(child));
 	}
@@ -1468,6 +1522,8 @@ fu_pixart_tp_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_pixart_tp_device_init(FuPixartTpDevice *self)
 {
+	FuPixartTpDevicePrivate *priv = GET_PRIVATE(self);
+
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.tp");
@@ -1475,10 +1531,12 @@ fu_pixart_tp_device_init(FuPixartTpDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PIXART_TP_FIRMWARE);
-	self->sram_select = 0x0F;
-	self->ver_bank = 0x00;
-	self->ver_addr = 0xB2;
+
+	priv->sram_select = 0x0F;
+	priv->ver_bank = 0x00;
+	priv->ver_addr = 0xB2;
 }
 
 static void

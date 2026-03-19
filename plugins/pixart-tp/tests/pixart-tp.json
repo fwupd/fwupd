@@ -3,11 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "url": "f4cfe7e15d7a33e66e8357c9fb924633bc85ef411ff9d4c789fb67478461d3b9-firmware.cab",
-      "emulation-url": "b8c9243c0a5dc14f36a56874564c57d0515168bb9da59dab7b1e957db36b606f-pxi-tp-update.zip",
+      "url": "1593b66fe80d0a60dbb2c007df6a799f29ece453904a3d42e75514a40c02baeb-firmware.cab",
+      "emulation-url": "5ba798f709655376f64d07c9ae65b4a5257f0efaf33c17d390dd760d15bc790f-pxi-tp-update.zip",
       "components": [
         {
-          "version": "0xff02",
+          "version": "0x0205",
           "guids": [
             "86407e75-7d7f-5d09-97db-700776490493"
           ]

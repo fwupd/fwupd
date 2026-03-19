@@ -29,6 +29,10 @@ These devices use the standard HID DeviceInstanceId values, e.g.
 
 - `HIDRAW\VEN_093A&DEV_0343`
 
+Additionally, the plugin reads the internal Part ID from the device to generate a custom, quirk-specific instance ID. This allows for targeting quirks to specific silicon regardless of the USB/HID PID:
+
+- `PIXARTTP\PARTID_0274`
+
 > Note: If the same silicon enumerates as a USB interface on some systems,
 > an additional USB GUID like `USB\VID_093A&PID_0343` may also be provided
 > in the firmware metadata. GUIDs derived from hardware IDs are **stable

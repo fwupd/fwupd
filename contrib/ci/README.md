@@ -72,8 +72,8 @@ For every commit or pull request 6 builds are performed:
 
 ## Adding a new target
 
-Dockerfiles are generated dynamically by the python script ```generate_dockerfile.py```.
-The python script will recognize the environment variable `OS` to determine what target to generate a Dockerfile for.
+Dockerfiles are generated dynamically by the python script `generate_dockerfile.py`.
+The python script will recognize the environment variable `TARGET_DISTRO` to determine what target to generate a Dockerfile for.
 
 ### dependencies.xml
 

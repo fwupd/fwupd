@@ -1,0 +1,18 @@
+{
+  "name": "PixArt POCO 2642QC Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "94a2c86c548eb6261db02cad2aa02e8ae2917c81ac82d222d3cdf7e585322e9e-firmware.cab",
+      "emulation-url": "b1bbe92aec1779c9596992330dcfced8e7b4acd4fc910cdad2b69741f5aaa2d3-pxi-tp-update.zip",
+      "components": [
+        {
+          "version": "0x8002",
+          "guids": [
+            "5c30256d-d711-51ca-b3e4-665910007369"
+          ]
+        }
+      ]
+    }
+  ]
+}
