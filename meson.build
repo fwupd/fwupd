@@ -635,6 +635,7 @@ if host_machine.system() == 'darwin'
       'launchd_agent_dir': get_option('launchd_agent_dir'),
     },
     section: 'Darwin options',
+    bool_yn: true,
   )
 endif
 
@@ -918,6 +919,7 @@ if libsystemd.found()
       'systemd sysusers dir': systemd_sysusers_dir,
     },
     section: 'systemd options',
+    bool_yn: true,
   )
 endif
 
@@ -927,6 +929,7 @@ summary(
     'fwupd (daemon)': build_daemon,
   },
   section: 'build targets',
+  bool_yn: true,
 )
 
 summary(
@@ -949,6 +952,7 @@ summary(
     'umockdev_tests': umockdev_integration_tests.allowed(),
   },
   section: 'project features',
+  bool_yn: true,
 )
 
 if build_daemon
@@ -962,6 +966,7 @@ if build_daemon
       'PKCS7 support': supported_pkcs7,
     },
     section: 'daemon features',
+    bool_yn: true,
   )
   en = []
   dis = []
@@ -978,5 +983,6 @@ if build_daemon
       'disabled': ', '.join(dis),
     },
     section: 'plugins',
+    bool_yn: true,
   )
 endif

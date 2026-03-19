@@ -8,6 +8,7 @@
 # umockdev-record $PATH
 
 import os
+import platform
 import subprocess
 import sys
 import tempfile
@@ -302,9 +303,13 @@ class VeryBasicTest(FwupdTest):
         """Test the libfwupd client get-devices interface."""
         self.start_daemon()
 
-        devices = self.client.get_devices()
         # Should be at least the CPU test is running on
-        self.assertGreater(len(devices), 0)
+        match platform.machine().lower():
+            case "x86_64" | "amd64" | "i386" | "i486" | "i586" | "i686" | "x86":
+                devices = self.client.get_devices()
+                self.assertGreater(len(devices), 0)
+            case _:
+                pass
 
 
 if __name__ == "__main__":

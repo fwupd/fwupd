@@ -151,4 +151,4 @@ summary({
   'efi_os_dir': efi_os_dir,
   'efi binary': get_option('efi_binary'),
   'capsule splash': get_option('plugin_uefi_capsule_splash'),
-}, section:'uefi capsule options')
+}, section:'uefi capsule options', bool_yn: true)
