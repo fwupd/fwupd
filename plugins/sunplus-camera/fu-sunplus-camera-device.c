@@ -236,6 +236,10 @@ fu_sunplus_camera_device_ensure_version(FuSunplusCameraDevice *self, GError **er
 	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb:usb_device", NULL);
 
 	if (usb_device != NULL) {
+		if (!fu_device_probe(usb_device, error)) {
+			g_prefix_error_literal(error, "failed to probe usb_device: ");
+			return FALSE;
+		}
 		version_raw = fu_usb_device_get_release(FU_USB_DEVICE(usb_device));
 		if (version_raw != 0) {
 			fu_device_set_version_raw(FU_DEVICE(self), version_raw);
