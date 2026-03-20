@@ -14,7 +14,7 @@
 #include "fu-sunwinon-hid-firmware.h"
 #include "fu-sunwinon-hid-struct.h"
 
-#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME 10000 /* ms */
+#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME 30000 /* ms */
 #define FU_SUNWINON_HID_DEVICE_REPLUG_WAIT_TIME 30000 /* ms */
 #define FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT 50
 
