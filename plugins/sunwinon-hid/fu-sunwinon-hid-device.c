@@ -14,7 +14,9 @@
 #include "fu-sunwinon-hid-firmware.h"
 #include "fu-sunwinon-hid-struct.h"
 
-#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME 2000 /* ms */
+#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME 8000  /* ms */
+#define FU_SUNWINON_HID_DEVICE_REPLUG_WAIT_TIME 30000 /* ms */
+#define FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT 50
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -131,18 +133,40 @@ fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 	g_autoptr(GByteArray) bufout = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
-	/* may not get a full length report here */
-	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
-					 buf,
-					 sizeof(buf),
-					 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-					 &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+	/* retry receiving until we get a report with the correct OTA report ID */
+	for (gsize i = 0; i < FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT; i++) {
+		memset(buf, 0, sizeof(buf));
+		/* may not get a full length report here */
+		if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
+						 buf,
+						 sizeof(buf),
+						 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						 &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return NULL;
+			}
+			g_clear_error(&error_local);
+		}
+		fu_dump_raw(G_LOG_DOMAIN, "raw input report", buf, sizeof(buf));
+
+		/* discard reports not matching the OTA report ID */
+		if (buf[FU_STRUCT_SUNWINON_HID_IN_OFFSET_REPORT_ID] ==
+		    FU_SUNWINON_HID_REPORT_CHANNEL_ID)
+			break;
+		g_debug("discarding report with non-OTA report ID 0x%02x, retry %u/%u",
+			buf[FU_STRUCT_SUNWINON_HID_IN_OFFSET_REPORT_ID],
+			(guint)(i + 1),
+			(guint)FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT);
+		if (i >= FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT - 1) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "did not receive OTA report after %u retries",
+				    (guint)FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT);
 			return NULL;
 		}
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "raw input report", buf, sizeof(buf));
 
 	/* check command */
 	st = fu_struct_sunwinon_hid_in_parse(buf, sizeof(buf), 0, error);
@@ -617,7 +641,7 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SUNWINON_HID_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_SUNWINON_HID_DEVICE_REPLUG_WAIT_TIME);
 }
 
 static void
