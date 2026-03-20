@@ -5781,10 +5781,10 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* only show devices that can be updated */
 	if (!fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS) &&
-	    !fu_device_is_updatable(device)) {
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR_NOTHING_TO_DO,
 				    "is not updatable");
 		return NULL;
 	}
