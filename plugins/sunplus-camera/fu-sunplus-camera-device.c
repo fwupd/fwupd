@@ -91,7 +91,7 @@ fu_sunplus_camera_device_xu_get_len(FuSunplusCameraDevice *self,
 					       sizeof(buf),
 					       error))
 		return FALSE;
-	*len = (guint16)(buf[0] | ((guint16)buf[1] << 8));
+	*len = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	return TRUE;
 }
 
@@ -132,12 +132,9 @@ fu_sunplus_camera_device_set_enabled(FuSunplusCameraDevice *self, guint8 value, 
 static gboolean
 fu_sunplus_camera_device_set_read_addr(FuSunplusCameraDevice *self, guint32 addr, GError **error)
 {
-	guint8 buf[4] = {
-	    (guint8)(addr & 0xff),
-	    (guint8)((addr >> 8) & 0xff),
-	    (guint8)((addr >> 16) & 0xff),
-	    (guint8)((addr >> 24) & 0xff),
-	};
+	guint8 buf[4] = {0x0};
+
+	fu_memwrite_uint32(buf, addr, G_LITTLE_ENDIAN);
 	return fu_sunplus_camera_device_xu_set_cur(self,
 						   FU_SUNPLUS_CAMERA_SELECTOR_READ_ADDR,
 						   buf,
@@ -151,10 +148,9 @@ fu_sunplus_camera_device_set_asic_register(FuSunplusCameraDevice *self,
 					   guint8 value,
 					   GError **error)
 {
-	guint8 cmd[2] = {
-	    (guint8)(reg & 0xff),
-	    (guint8)((reg >> 8) & 0xff),
-	};
+	guint8 cmd[2] = {0x0};
+
+	fu_memwrite_uint16(cmd, reg, G_LITTLE_ENDIAN);
 
 	if (!fu_sunplus_camera_device_xu_set_cur(self,
 						 FU_SUNPLUS_CAMERA_SELECTOR_REG16_CMD,
@@ -311,33 +307,49 @@ fu_sunplus_camera_device_verify(FuSunplusCameraDevice *self,
 				FuProgress *progress,
 				GError **error)
 {
+	gsize total_sz = 0;
+	gsize done_sz = 0;
 	guint8 buf[FU_SUNPLUS_CAMERA_READ_SIZE] = {0};
 
-	fu_progress_set_id(progress, G_STRLOC);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_sunplus_camera_device_read_chunk(self,
-							 (guint32)fu_chunk_get_address(chk),
-							 buf,
-							 sizeof(buf),
-							 error))
+		total_sz += fu_chunk_get_data_sz(chk);
+	}
+
+	fu_progress_set_id(progress, G_STRLOC);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		gsize chunk_sz = 0;
+		if (chk == NULL)
 			return FALSE;
-		if (!fu_memcmp_safe(buf,
-				    sizeof(buf),
-				    0x0,
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
-				    0x0,
-				    fu_chunk_get_data_sz(chk),
-				    error)) {
-			g_prefix_error(error,
-				       "verify mismatch at 0x%04x: ",
-				       (guint)fu_chunk_get_address(chk));
-			return FALSE;
+		chunk_sz = fu_chunk_get_data_sz(chk);
+		for (gsize off = 0; off < chunk_sz; off += FU_SUNPLUS_CAMERA_READ_SIZE) {
+			gsize cmp_sz = MIN((gsize)FU_SUNPLUS_CAMERA_READ_SIZE, chunk_sz - off);
+			if (!fu_sunplus_camera_device_read_chunk(
+				self,
+				(guint32)fu_chunk_get_address(chk) + (guint32)off,
+				buf,
+				sizeof(buf),
+				error))
+				return FALSE;
+			if (!fu_memcmp_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    fu_chunk_get_data(chk),
+					    chunk_sz,
+					    off,
+					    cmp_sz,
+					    error)) {
+				g_prefix_error(error,
+					       "verify mismatch at 0x%04x: ",
+					       (guint)(fu_chunk_get_address(chk) + off));
+				return FALSE;
+			}
+			done_sz += cmp_sz;
+			fu_progress_set_percentage_full(progress, done_sz, total_sz);
 		}
-		fu_progress_set_percentage_full(progress, i + 1, fu_chunk_array_length(chunks));
 	}
 	return TRUE;
 }
@@ -395,14 +407,6 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "selector 10 reported zero length");
-		return FALSE;
-	}
-	if (chunk_len != FU_SUNPLUS_CAMERA_READ_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "selector 10 reported unexpected chunk length 0x%04x",
-			    chunk_len);
 		return FALSE;
 	}
 	chunks = fu_chunk_array_new_from_stream(stream,

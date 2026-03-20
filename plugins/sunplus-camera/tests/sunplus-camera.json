@@ -3,7 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/sunplus-camera-setup.json",
+      "url": "96bbdb57e7d144e662a649999fe2b51ffe40be8eca3a07ada1ca69612f25d0e1-HYGD-HyUXGA9240Camera-9.7.cab",
+      "emulation-url": "212b4c285f6bacc82ccdec6d98c0f965ed6f48974f7472332e7e0ff9f4915169-sunplus-camera-9.7-emulation.zip",
       "components": [
         {
           "version": "9.7",
