@@ -1236,6 +1236,15 @@ fu_engine_updatable_hidden_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(releases_up2);
 	g_assert_cmpint(releases_up2->len, ==, 1);
+
+	/* direct installs should still be blocked for UPDATABLE_HIDDEN devices */
+	ret = fu_engine_install_release(engine,
+					g_ptr_array_index(releases_up2, 0),
+					progress,
+					FWUPD_INSTALL_FLAG_NONE,
+					&error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
 }
 
 static void

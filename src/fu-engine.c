@@ -2788,6 +2788,20 @@ fu_engine_install_release(FuEngine *self,
 
 	/* not in bootloader mode */
 	device = g_object_ref(fu_release_get_device(release));
+
+	/* do not allow installs when the device is hidden by an active problem */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_autoptr(GString) str = g_string_new(NULL);
+		g_string_append_printf(str,
+				       "Device %s does not currently allow updates",
+				       id_display);
+		if (fu_device_get_update_error(device) != NULL)
+			g_string_append_printf(str, ": %s", fu_device_get_update_error(device));
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, str->str);
+		return FALSE;
+	}
+
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		/* both optional; the plugin can specify a fallback */
 		tmp = fwupd_release_get_detach_caption(FWUPD_RELEASE(release));
