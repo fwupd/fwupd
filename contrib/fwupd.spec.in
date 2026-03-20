@@ -256,6 +256,7 @@ cd fwupd-1.9.%{libfwupd_19x_version}
 %meson \
     -Dbuild=library \
     -Ddocs=disabled \
+    -Dcbor=disabled \
     -Dpolkit=disabled \
     -Dtests=false \
     -Dbash_completion=false \
