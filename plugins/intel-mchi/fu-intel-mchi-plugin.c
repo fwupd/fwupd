@@ -26,6 +26,9 @@ fu_intel_mchi_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "mei");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_MCHI_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_intel_mchi_plugin_parent_class)->constructed(obj);
 }
 
 static void

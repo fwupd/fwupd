@@ -46,6 +46,9 @@ fu_mtd_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_udev_subsystem(plugin, "mtd");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_MTD_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MTD_IFD_DEVICE); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_mtd_plugin_parent_class)->constructed(obj);
 }
 
 static void

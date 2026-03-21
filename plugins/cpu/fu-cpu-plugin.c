@@ -40,6 +40,9 @@ fu_cpu_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "ProcessorEntrysignPspVersion");
 	fu_context_add_quirk_key(ctx, "ProcessorKind");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_BEFORE, "msr");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_cpu_plugin_parent_class)->constructed(obj);
 }
 
 static void

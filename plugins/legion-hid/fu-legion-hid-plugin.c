@@ -30,6 +30,9 @@ fu_legion_hid_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_LEGION_HID_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LEGION_HID_CHILD);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_LEGION_HID_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_legion_hid_plugin_parent_class)->constructed(obj);
 }
 
 static void

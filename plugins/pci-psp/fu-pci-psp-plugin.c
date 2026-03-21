@@ -32,6 +32,9 @@ fu_pci_psp_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PCI_PSP_DEVICE);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "cpu");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_pci_psp_plugin_parent_class)->constructed(obj);
 }
 
 static void

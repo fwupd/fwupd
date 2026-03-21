@@ -37,6 +37,9 @@ fu_rts54hub_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HUB_RTD21XX_BACKGROUND);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HUB_RTD21XX_FOREGROUND);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_RTS54HUB_RTD21XX_MERGEINFO);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_rts54hub_plugin_parent_class)->constructed(obj);
 }
 
 static void

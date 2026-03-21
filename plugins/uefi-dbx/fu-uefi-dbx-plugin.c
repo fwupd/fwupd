@@ -56,6 +56,9 @@ fu_uefi_dbx_plugin_constructed(GObject *obj)
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 	}
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_uefi_dbx_plugin_parent_class)->constructed(obj);
 }
 
 static void

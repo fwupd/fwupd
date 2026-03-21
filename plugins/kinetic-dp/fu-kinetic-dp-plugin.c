@@ -126,6 +126,9 @@ fu_kinetic_dp_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_KINETIC_DP_SECURE_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_KINETIC_DP_PUMA_DEVICE);   /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_KINETIC_DP_SECURE_DEVICE); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_kinetic_dp_plugin_parent_class)->constructed(obj);
 }
 
 static void

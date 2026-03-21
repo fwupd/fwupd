@@ -756,6 +756,9 @@ fu_msr_plugin_constructed(GObject *obj)
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_plugin_set_config_default(plugin, "MinimumSmeKernelVersion", "5.18.0");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_msr_plugin_parent_class)->constructed(obj);
 }
 
 static void

@@ -388,6 +388,8 @@ fu_flashrom_plugin_constructed(GObject *obj)
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FLASHROM_DEVICE); /* coverage */
+
+	/* nocheck:finalize */
 }
 
 static void

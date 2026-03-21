@@ -31,6 +31,9 @@ fu_asus_hid_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "AsusHidNumMcu");
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ASUS_HID_FIRMWARE);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_asus_hid_plugin_parent_class)->constructed(obj);
 }
 
 static void

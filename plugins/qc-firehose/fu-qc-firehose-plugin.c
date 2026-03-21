@@ -28,6 +28,9 @@ fu_qc_firehose_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_FIREHOSE_USB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_FIREHOSE_RAW_DEVICE);
 	fu_plugin_add_udev_subsystem(plugin, "wwan");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_qc_firehose_plugin_parent_class)->constructed(obj);
 }
 
 static void

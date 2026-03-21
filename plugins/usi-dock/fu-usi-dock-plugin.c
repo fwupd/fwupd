@@ -112,6 +112,9 @@ fu_usi_dock_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_USI_DOCK_MCU_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_USI_DOCK_DMC_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_USI_DOCK_CHILD_DEVICE); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_usi_dock_plugin_parent_class)->constructed(obj);
 }
 
 static void
