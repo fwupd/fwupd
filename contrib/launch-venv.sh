@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bash -e
-gcc=$(gcc -dumpmachine)
+cc=$(cc -dumpmachine)
 DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
 COMMAND="$1"
@@ -8,7 +8,7 @@ DBUSPOLICY="/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf"
 PKPOLICY="/usr/share/polkit-1/actions/org.freedesktop.fwupd.policy"
 export FWUPD_LOCALSTATEDIR=${DIST}
 export FWUPD_SYSCONFDIR=${DIST}/etc
-export LD_LIBRARY_PATH=${DIST}/lib/${gcc}:${DIST}/lib64:${DIST}/lib
+export LD_LIBRARY_PATH=${DIST}/lib/${cc}:${DIST}/lib64:${DIST}/lib
 if [ -n "${DEBUG}" ]; then
     if ! which gdbserver 1>/dev/null 2>&1; then
         echo "install gdbserver to enable debugging"
