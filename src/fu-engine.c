@@ -9423,6 +9423,9 @@ fu_engine_constructed(GObject *obj)
 					       "io.snapcraft.fwupd",
 					       g_getenv("SNAP_REVISION"));
 	}
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_engine_parent_class)->constructed(obj);
 }
 
 static void

@@ -68,6 +68,9 @@ fu_logitech_bulkcontroller_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_LOGITECH_BULKCONTROLLER_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_BULKCONTROLLER_CHILD); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_logitech_bulkcontroller_plugin_parent_class)->constructed(obj);
 }
 
 static void

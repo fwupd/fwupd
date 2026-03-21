@@ -468,6 +468,9 @@ fu_vbe_simple_device_constructed(GObject *obj)
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(obj);
 	fu_device_add_instance_id(FU_DEVICE(self), "bb3b05a8-ebef-11ec-be98-d3a15278be95");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_vbe_simple_device_parent_class)->constructed(obj);
 }
 
 static void

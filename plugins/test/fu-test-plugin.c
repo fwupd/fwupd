@@ -404,6 +404,9 @@ fu_test_plugin_constructed(GObject *obj)
 	fu_plugin_set_config_default(plugin, "VerifyDelay", "0");
 	fu_plugin_set_config_default(plugin, "WriteDelay", "0");
 	fu_plugin_set_config_default(plugin, "WriteSupported", "true");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_test_plugin_parent_class)->constructed(obj);
 }
 
 static void

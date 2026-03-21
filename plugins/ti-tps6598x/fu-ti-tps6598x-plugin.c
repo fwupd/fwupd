@@ -31,6 +31,9 @@ fu_ti_tps6598x_plugin_constructed(GObject *obj)
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_TI_TPS6598X_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TI_TPS6598X_PD_DEVICE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_TI_TPS6598X_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_ti_tps6598x_plugin_parent_class)->constructed(obj);
 }
 
 static void

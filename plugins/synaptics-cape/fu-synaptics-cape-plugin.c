@@ -31,6 +31,9 @@ fu_synaptics_cape_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SYNAPTICS_CAPE_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_SYNAPTICS_CAPE_HID_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_SYNAPTICS_CAPE_SNGL_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_synaptics_cape_plugin_parent_class)->constructed(obj);
 }
 
 static void

@@ -1350,6 +1350,9 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	/* add a requirement on the fwupd-efi version -- which can change  */
 	if (!fu_uefi_capsule_plugin_fwupd_efi_probe(self, &error_local))
 		g_debug("failed to get fwupd-efi runtime version: %s", error_local->message);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_uefi_capsule_plugin_parent_class)->constructed(obj);
 }
 
 static void

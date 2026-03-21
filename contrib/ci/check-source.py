@@ -815,6 +815,20 @@ class Checker:
                     "did not have parent ->finalize()", linecnt=token.linecnt
                 )
 
+    def _test_gobject_constructed(self, node: Node) -> None:
+
+        if node.tokens_pre.endswith_fuzzy(
+            ["void", "~*_constructed", "(", "GObject", "*", "~*", ")"]
+        ):
+            token = node.tokens_pre[-1]
+            idx = node.tokens.find_fuzzy(
+                ["G_OBJECT_CLASS", "(", "~*_parent_class", ")", "-", ">", "constructed"]
+            )
+            if idx == -1:
+                self.add_failure(
+                    "did not have parent ->constructed()", linecnt=token.linecnt
+                )
+
     def _test_blocked_funcs(self, node: Node) -> None:
 
         for token, msg in {
@@ -1438,6 +1452,7 @@ class Checker:
             self._current_nocheck = "nocheck:finalize"
             if self._should_process_node(node):
                 self._test_gobject_finalize(node)
+                self._test_gobject_constructed(node)
 
             # test for blocked functions
             self._current_nocheck = "nocheck:blocked"
