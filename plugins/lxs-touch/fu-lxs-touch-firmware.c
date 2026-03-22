@@ -1,28 +1,28 @@
 /*
- * Copyright 2026 Richard Hughes <richard@hughsie.com>
+ * Copyright 2026 JS Park <mameforever2@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
 
-#include "fu-lxstouch-common.h"
-#include "fu-lxstouch-firmware.h"
+#include "fu-lxs-touch-firmware.h"
+#include "fu-lxs-touch-struct.h"
 
-struct _FuLxstouchFirmware {
+struct _FuLxsTouchFirmware {
 	FuFirmware parent_instance;
 	guint32 fw_offset;
 };
 
-G_DEFINE_TYPE(FuLxstouchFirmware, fu_lxstouch_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuLxsTouchFirmware, fu_lxs_touch_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_lxstouch_firmware_parse(FuFirmware *firmware,
+fu_lxs_touch_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
-	FuLxstouchFirmware *self = FU_LXSTOUCH_FIRMWARE(firmware);
+	FuLxsTouchFirmware *self = FU_LXS_TOUCH_FIRMWARE(firmware);
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -56,28 +56,28 @@ fu_lxstouch_firmware_parse(FuFirmware *firmware,
 }
 
 guint32
-fu_lxstouch_firmware_get_offset(FuLxstouchFirmware *self)
+fu_lxs_touch_firmware_get_offset(FuLxsTouchFirmware *self)
 {
-	g_return_val_if_fail(FU_IS_LXSTOUCH_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_IS_LXS_TOUCH_FIRMWARE(self), 0);
 	return self->fw_offset;
 }
 
 static void
-fu_lxstouch_firmware_init(FuLxstouchFirmware *self)
+fu_lxs_touch_firmware_init(FuLxsTouchFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2048);
 	self->fw_offset = 0;
 }
 
 static void
-fu_lxstouch_firmware_class_init(FuLxstouchFirmwareClass *klass)
+fu_lxs_touch_firmware_class_init(FuLxsTouchFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->parse = fu_lxstouch_firmware_parse;
+	firmware_class->parse = fu_lxs_touch_firmware_parse;
 }
 
 FuFirmware *
-fu_lxstouch_firmware_new(void)
+fu_lxs_touch_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_LXSTOUCH_FIRMWARE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_LXS_TOUCH_FIRMWARE, NULL));
 }

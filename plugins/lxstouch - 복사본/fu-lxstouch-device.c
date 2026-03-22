@@ -8,7 +8,6 @@
 
 #include <string.h>
 
-#include "fu-lxstouch-common.h"
 #include "fu-lxstouch-device.h"
 #include "fu-lxstouch-firmware.h"
 #include "fu-lxstouch-struct.h"
