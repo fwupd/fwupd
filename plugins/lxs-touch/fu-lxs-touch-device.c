@@ -60,7 +60,7 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 								 const guint8 *data,
 								 GError **error)
 {
-	FuStructLxsTouchPacket *packet = fu_struct_lxs_touch_packet_new();
+	g_autoptr(FuStructLxsTouchPacket) packet = fu_struct_lxs_touch_packet_new();
 	guint8 buf[FU_LXSTOUCH_BUFFER_SIZE] = {0};
 	guint16 adjusted_length = length;
 
@@ -74,10 +74,10 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 	fu_struct_lxs_touch_packet_set_command_hi(packet, (guint8)((command & 0xFF00) >> 8));
 	fu_struct_lxs_touch_packet_set_command_lo(packet, (guint8)(command & 0x00FF));
 
-	memcpy(buf, packet, sizeof(FuStructLxsTouchPacket));
+	memcpy(buf, packet->buf->data, packet->buf->len);
 
 	if (flag == FU_LXSTOUCH_FLAG_WRITE && data != NULL && length > 0) {
-		if (length > FU_LXSTOUCH_BUFFER_SIZE - sizeof(FuStructLxsTouchPacket)) {
+		if (length > FU_LXSTOUCH_BUFFER_SIZE - FU_STRUCT_LXS_TOUCH_PACKET_SIZE) {
 			g_set_error(error,
 						FWUPD_ERROR,
 						FWUPD_ERROR_INTERNAL,
@@ -85,7 +85,7 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 						length);
 			return FALSE;
 		}
-		memcpy(&buf[sizeof(FuStructLxsTouchPacket)], data, length);
+		memcpy(&buf[FU_STRUCT_LXS_TOUCH_PACKET_SIZE], data, length);
 	}
 
 	return fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
