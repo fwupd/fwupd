@@ -12,6 +12,9 @@
 #include "fu-lxs-touch-firmware.h"
 #include "fu-lxs-touch-struct.h"
 
+#define FU_LXSTOUCH_PROTOCOL_NAME_DFUP "DFUP"
+#define FU_LXSTOUCH_PROTOCOL_NAME_SWIP "SWIP"
+
 struct _FuLxsTouchDevice {
 	FuHidrawDevice parent_instance;
 	gboolean is_dfup_mode;
@@ -57,24 +60,24 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 								 const guint8 *data,
 								 GError **error)
 {
-	FuStructLxstouchPacket *packet = fu_struct_lxstouch_packet_new();
+	FuStructLxsTouchPacket *packet = fu_struct_lxs_touch_packet_new();
 	guint8 buf[FU_LXSTOUCH_BUFFER_SIZE] = {0};
 	guint16 adjusted_length = length;
 
 	if (flag == FU_LXSTOUCH_FLAG_WRITE)
 		adjusted_length += 2;
 
-	fu_struct_lxstouch_packet_set_report_id(packet, FU_LXSTOUCH_REPORT_ID);
-	fu_struct_lxstouch_packet_set_flag(packet, flag);
-	fu_struct_lxstouch_packet_set_length_lo(packet, (guint8)(adjusted_length & 0x00FF));
-	fu_struct_lxstouch_packet_set_length_hi(packet, (guint8)((adjusted_length & 0xFF00) >> 8));
-	fu_struct_lxstouch_packet_set_command_hi(packet, (guint8)((command & 0xFF00) >> 8));
-	fu_struct_lxstouch_packet_set_command_lo(packet, (guint8)(command & 0x00FF));
+	fu_struct_lxs_touch_packet_set_report_id(packet, FU_LXSTOUCH_REPORT_ID);
+	fu_struct_lxs_touch_packet_set_flag(packet, flag);
+	fu_struct_lxs_touch_packet_set_length_lo(packet, (guint8)(adjusted_length & 0x00FF));
+	fu_struct_lxs_touch_packet_set_length_hi(packet, (guint8)((adjusted_length & 0xFF00) >> 8));
+	fu_struct_lxs_touch_packet_set_command_hi(packet, (guint8)((command & 0xFF00) >> 8));
+	fu_struct_lxs_touch_packet_set_command_lo(packet, (guint8)(command & 0x00FF));
 
-	memcpy(buf, packet, sizeof(FuStructLxstouchPacket));
+	memcpy(buf, packet, sizeof(FuStructLxsTouchPacket));
 
 	if (flag == FU_LXSTOUCH_FLAG_WRITE && data != NULL && length > 0) {
-		if (length > FU_LXSTOUCH_BUFFER_SIZE - sizeof(FuStructLxstouchPacket)) {
+		if (length > FU_LXSTOUCH_BUFFER_SIZE - sizeof(FuStructLxsTouchPacket)) {
 			g_set_error(error,
 						FWUPD_ERROR,
 						FWUPD_ERROR_INTERNAL,
@@ -82,7 +85,7 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 						length);
 			return FALSE;
 		}
-		memcpy(&buf[sizeof(FuStructLxstouchPacket)], data, length);
+		memcpy(&buf[sizeof(FuStructLxsTouchPacket)], data, length);
 	}
 
 	return fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
@@ -101,7 +104,7 @@ fu_lxs_touch_device_read_data(FuLxsTouchDevice *self,
 {
 	guint8 buf[FU_LXSTOUCH_BUFFER_SIZE] = {0};
 
-	//0x68
+	/* 0x68 */
 	if (!fu_lxs_touch_device_write_command(self,
 					      FU_LXSTOUCH_FLAG_WRITE,
 					      command,
@@ -110,7 +113,7 @@ fu_lxs_touch_device_read_data(FuLxsTouchDevice *self,
 					      error))
 		return FALSE;
 
-	0x69
+	/* 0x69 */
 	if (!fu_lxs_touch_device_write_command(self,
 					      FU_LXSTOUCH_FLAG_READ,
 					      command,
@@ -145,7 +148,7 @@ static gboolean
 fu_lxs_touch_device_wait_ready_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
-	g_autoptr(FuStructLxstouchGetter) st_getter = NULL;
+	g_autoptr(FuStructLxsTouchGetter) st_getter = NULL;
 	guint8 buf[8] = {0};
 
 	if (!fu_lxs_touch_device_read_data(self,
@@ -276,7 +279,7 @@ fu_lxs_touch_device_check_4k_mode(FuLxsTouchDevice *self, GError **error)
 	if (!fu_lxs_touch_device_write_command(self,
 					      FU_LXSTOUCH_FLAG_WRITE,
 					      FU_LXSTOUCH_REG_FLASH_IAP_CTRL_CMD,
-					      FU_STRUCT_LXSTOUCH_FLASH_IAP_CMD_SIZE,
+					      FU_STRUCT_LXS_TOUCH_FLASH_IAP_CMD_SIZE,
 					      st_cmd->buf->data,
 					      error))
 		return FALSE;
@@ -305,7 +308,7 @@ static gboolean
 fu_lxs_touch_device_set_mode(FuLxsTouchDevice *self, guint8 mode, GError **error)
 {
 	g_autoptr(FuStructLxsTouchSetter) st_setter = NULL;
-	guint8 buf[FU_STRUCT_LXSTOUCH_SETTER_SIZE] = {0};
+	guint8 buf[FU_STRUCT_LXS_TOUCH_SETTER_SIZE] = {0};
 
 	if (!fu_lxs_touch_device_read_data(self,
 					  FU_LXSTOUCH_REG_CTRL_SETTER,
@@ -325,7 +328,7 @@ fu_lxs_touch_device_set_mode(FuLxsTouchDevice *self, guint8 mode, GError **error
 	if (!fu_lxs_touch_device_write_command(self,
 					      FU_LXSTOUCH_FLAG_WRITE,
 					      FU_LXSTOUCH_REG_CTRL_SETTER,
-					      FU_STRUCT_LXSTOUCH_SETTER_SIZE,
+					      FU_STRUCT_LXS_TOUCH_SETTER_SIZE,
 					      st_setter->buf->data,
 					      error))
 		return FALSE;
@@ -344,7 +347,7 @@ fu_lxs_touch_device_set_mode(FuLxsTouchDevice *self, guint8 mode, GError **error
 static gboolean
 fu_lxs_touch_device_setup(FuDevice *device, GError **error)
 {
-	FuLxsTouchDevice *self = FU_LXSTOUCH_DEVICE(device);
+	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
 	g_autofree gchar *version = NULL;
 
 	if (!fu_lxs_touch_device_check_mode(self, error))
@@ -372,7 +375,7 @@ fu_lxs_touch_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_lxs_touch_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLxsTouchDevice *self = FU_LXSTOUCH_DEVICE(device);
+	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
 
 	if (self->is_dfup_mode)
 		return TRUE;
@@ -431,7 +434,7 @@ fu_lxs_touch_device_write_normal_mode(FuLxsTouchDevice *self,
 		if (!fu_lxs_touch_device_write_command(self,
 						      FU_LXSTOUCH_FLAG_WRITE,
 						      FU_LXSTOUCH_REG_FLASH_IAP_CTRL_CMD,
-						      FU_STRUCT_LXSTOUCH_FLASH_IAP_CMD_SIZE,
+						      FU_STRUCT_LXS_TOUCH_FLASH_IAP_CMD_SIZE,
 						      st_cmd->buf->data,
 						      error))
 			return FALSE;
@@ -507,7 +510,7 @@ fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
 		if (!fu_lxs_touch_device_write_command(self,
 						      FU_LXSTOUCH_FLAG_WRITE,
 						      FU_LXSTOUCH_REG_FLASH_IAP_CTRL_CMD,
-						      FU_STRUCT_LXSTOUCH_FLASH_IAP_CMD_SIZE,
+						      FU_STRUCT_LXS_TOUCH_FLASH_IAP_CMD_SIZE,
 						      st_cmd->buf->data,
 						      error))
 			return FALSE;
@@ -537,7 +540,7 @@ fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
 		if (!fu_lxs_touch_device_write_command(self,
 						      FU_LXSTOUCH_FLAG_WRITE,
 						      FU_LXSTOUCH_REG_FLASH_IAP_CTRL_CMD,
-						      FU_STRUCT_LXSTOUCH_FLASH_IAP_CMD_SIZE,
+						      FU_STRUCT_LXS_TOUCH_FLASH_IAP_CMD_SIZE,
 						      st_cmd->buf->data,
 						      error))
 			return FALSE;
@@ -586,8 +589,8 @@ fu_lxs_touch_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	FuLxsTouchDevice *self = FU_LXSTOUCH_DEVICE(device);
-	FuLxsTouchFirmware *fw = FU_LXSTOUCH_FIRMWARE(firmware);
+	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
+	FuLxsTouchFirmware *fw = FU_LXS_TOUCH_FIRMWARE(firmware);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuStructLxsTouchInterface) st_iface = NULL;
@@ -654,7 +657,7 @@ fu_lxs_touch_device_write_firmware(FuDevice *device,
 	if (!fu_lxs_touch_device_write_command(self,
 					      FU_LXSTOUCH_FLAG_WRITE,
 					      FU_LXSTOUCH_REG_CTRL_SETTER,
-					      FU_STRUCT_LXSTOUCH_SETTER_SIZE,
+					      FU_STRUCT_LXS_TOUCH_SETTER_SIZE,
 					      st_setter->buf->data,
 					      NULL)) {
 		g_debug("watchdog reset command failed (expected)");
@@ -690,7 +693,7 @@ fu_lxs_touch_device_init(FuLxsTouchDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration(FU_DEVICE(self), 60);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LXSTOUCH_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LXS_TOUCH_FIRMWARE);
 	self->is_dfup_mode = FALSE;
 	self->use_4k_mode = FALSE;
 }

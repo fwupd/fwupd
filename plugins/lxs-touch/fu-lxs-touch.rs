@@ -63,7 +63,7 @@ const FU_LXSTOUCH_VERSION_FAST_MAX_MS: u32 = 40;
 
 #[derive(New, Parse, Getters, Setters)]
 #[repr(C, packed)]
-struct FuStructLxstouchPacket {
+struct FuStructLxsTouchPacket {
     report_id: u8,
     flag: u8,
     length_lo: u8,
@@ -75,13 +75,13 @@ struct FuStructLxstouchPacket {
 
 #[derive(New, Parse, Getters)]
 #[repr(C, packed)]
-struct FuStructLxstouchInterface {
+struct FuStructLxsTouchInterface {
     protocol_name: [char; 8],
 }
 
 #[derive(New, Parse, Getters, Setters)]
 #[repr(C, packed)]
-struct FuStructLxstouchPanel {
+struct FuStructLxsTouchPanel {
     x_resolution: u16le,
     y_resolution: u16le,
     x_node: u8,
@@ -90,7 +90,7 @@ struct FuStructLxstouchPanel {
 
 #[derive(New, Parse, Getters, Setters)]
 #[repr(C, packed)]
-struct FuStructLxstouchVersion {
+struct FuStructLxsTouchVersion {
     boot_ver: u16le,
     core_ver: u16le,
     app_ver: u16le,
@@ -99,28 +99,28 @@ struct FuStructLxstouchVersion {
 
 #[derive(New, Parse, Getters, Setters)]
 #[repr(C, packed)]
-struct FuStructLxstouchCrc {
+struct FuStructLxsTouchCrc {
     boot_crc: u32le,
     app_crc: u32le,
 }
 
 #[derive(New, Parse, Getters, Setters)]
 #[repr(C, packed)]
-struct FuStructLxstouchSetter {
+struct FuStructLxsTouchSetter {
     mode: u8,
     event_trigger_type: u8,
 }
 
 #[derive(New, Parse, Getters)]
 #[repr(C, packed)]
-struct FuStructLxstouchGetter {
+struct FuStructLxsTouchGetter {
     ready_status: u8,
     event_ready: u8,
 }
 
 #[derive(New, Parse, Getters, Setters)]
 #[repr(C, packed)]
-struct FuStructLxstouchFlashIapCmd {
+struct FuStructLxsTouchFlashIapCmd {
     addr: u32le,
     size: u16le,
     status: u8,
