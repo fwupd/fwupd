@@ -92,6 +92,9 @@ fu_igsc_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_IGSC_CODE_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_IGSC_AUX_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_IGSC_OPROM_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_igsc_plugin_parent_class)->constructed(obj);
 }
 
 static void

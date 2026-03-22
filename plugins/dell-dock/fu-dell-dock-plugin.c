@@ -354,6 +354,9 @@ fu_dell_dock_plugin_constructed(GObject *obj)
 	/* currently slower performance, but more reliable in corner cases */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_BETTER_THAN, "synaptics_mst");
 #endif
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_dell_dock_plugin_parent_class)->constructed(obj);
 }
 
 static void

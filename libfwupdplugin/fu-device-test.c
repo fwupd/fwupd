@@ -540,6 +540,14 @@ fu_device_inhibit_func(void)
 	fu_device_set_battery_level(device, 95);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+
+	/* waiting for a reboot */
+	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
 
 static void

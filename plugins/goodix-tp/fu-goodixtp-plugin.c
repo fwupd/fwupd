@@ -37,6 +37,9 @@ fu_goodixtp_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_GTX8_FIRMWARE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_BRLB_FIRMWARE); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_goodixtp_plugin_parent_class)->constructed(obj);
 }
 
 static FuGoodixtpIcType

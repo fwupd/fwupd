@@ -6,6 +6,13 @@ exec 2>&1
 run_device_tests() {
     if [ -n "$CI_NETWORK" ] && [ -d @devicetestdir@ ]; then
         for f in $(grep --files-with-matches -r emulation- @devicetestdir@); do
+            if {
+                [ "${f##*/}" = bnr-mtd.json ] || [ "${f##*/}" = mtdram.json ]
+            } && [ ! -d /sys/module/mtdram ]; then
+                echo " ● Skipping $f"
+                continue
+            fi
+
             echo " ● Emulating for $f"
             fwupdmgr device-emulate \
                 --download-retries=5 \

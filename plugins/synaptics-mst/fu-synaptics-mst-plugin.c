@@ -51,6 +51,9 @@ fu_synaptics_mst_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "drm_dp_aux_dev");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SYNAPTICS_MST_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_synaptics_mst_plugin_parent_class)->constructed(obj);
 }
 
 static void

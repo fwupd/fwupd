@@ -29,6 +29,9 @@ fu_scsi_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "ScsiWriteBufferSize");
 	fu_plugin_add_device_udev_subsystem(plugin, "block:disk");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SCSI_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_scsi_plugin_parent_class)->constructed(obj);
 }
 
 static void

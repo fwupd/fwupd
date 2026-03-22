@@ -24,7 +24,8 @@ plugin_builtins += static_library('fu_plugin_genesys',
 )
 
 device_tests += files(
-  'tests/genesys-evb.json',
+  'tests/genesys-evb-gl352510.json',
+  'tests/genesys-evb-gl352530.json',
 #  'tests/genesys-evb-failure.json', # cannot emulate two devices(usb hub + child hid).
   'tests/genesys-servo-dock.json',
   'tests/genesys-zdn-chromebook.json',

@@ -223,6 +223,9 @@ fu_amd_kria_device_constructed(GObject *obj)
 	priv->esp = fu_context_get_default_esp(ctx, &error_esp);
 	if (priv->esp == NULL)
 		fu_device_inhibit(FU_DEVICE(obj), "no-esp", error_esp->message);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_amd_kria_device_parent_class)->constructed(obj);
 }
 
 static void

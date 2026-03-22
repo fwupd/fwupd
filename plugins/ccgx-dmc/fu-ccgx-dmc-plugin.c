@@ -33,6 +33,9 @@ fu_ccgx_dmc_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_CCGX_DMC_FIRMWARE);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_CCGX_DMC_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_CCGX_DMC_DEVX_DEVICE); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_ccgx_dmc_plugin_parent_class)->constructed(obj);
 }
 
 static void

@@ -30,3 +30,7 @@ Flags = wildcard-targets,ipmi-create-user
 [REDFISH\VENDOR_Advantech&ID_BMC]
 Flags = manager-reset,no-manager-reset-request
 RedfishResetPreDelay = 100000
+
+[REDFISH\VENDOR_Dell&SOFTWAREID_25227]
+Flags = manager-reset,no-manager-reset-request
+RedfishResetPreDelay = 120000

@@ -117,6 +117,7 @@ plugins = {
   'rp-pico': false,
   'rts54hub': false,
   'steelseries': false,
+  'sunplus-camera': false,
   'scsi': false,
   'snapd-uefi': false,
   'sunwinon-hid': false,

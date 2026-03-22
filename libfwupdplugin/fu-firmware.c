@@ -2645,6 +2645,9 @@ fu_firmware_constructed(GObject *obj)
 	if (G_TYPE_FROM_CLASS(klass) != FU_TYPE_FIRMWARE && klass->parse_full == NULL &&
 	    klass->parse == NULL)
 		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_IS_ABSTRACT);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_firmware_parent_class)->constructed(obj);
 }
 
 static void

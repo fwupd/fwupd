@@ -26,6 +26,9 @@ fu_wch_ch341a_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WCH_CH341A_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_wch_ch341a_plugin_parent_class)->constructed(obj);
 }
 
 static void

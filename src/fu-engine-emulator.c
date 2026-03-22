@@ -46,6 +46,7 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gboolean got_json = FALSE;
 	gpointer key;
 	gpointer value;
+	g_autofree gchar *fn_setup = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
 
@@ -54,6 +55,16 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
+	fn_setup = fu_engine_emulator_phase_to_filename(0,
+							FU_ENGINE_EMULATOR_PHASE_SETUP,
+							FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT);
+	if (!g_hash_table_contains(self->phase_blobs, fn_setup)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no enumeration data, perhaps the device was not replugged?");
+		return FALSE;
+	}
 	g_hash_table_iter_init(&iter, self->phase_blobs);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		g_autoptr(FuFirmware) img = fu_zip_file_new();

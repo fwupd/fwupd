@@ -932,13 +932,11 @@ fu_firmware_builder_round_trip_func(void)
 		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
-#ifdef HAVE_CBOR
 	    {
 		"fmap.builder.xml",
-		"0db91efb987353ffb779d259b130d63d1b8bcbec",
+		"0c251eec3890fcf368b89ae8bb6aa2db70a41ade",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
-#endif
 	    {
 		"efi-load-option.builder.xml",
 		"7ef696d22902ae97ef5f73ad9c85a28095ad56f1",
@@ -1074,10 +1072,9 @@ fu_firmware_builder_round_trip_func(void)
 		"0b965076bd38f737aaadbaff464199ba104f719a",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
-#ifdef HAVE_CBOR
 	    {
 		"uswid.builder.xml",
-		"b473fbdbe00f860c4da43f9499569394bac81f14",
+		"a6ad8ca91c0f2d18dc419ecd45fc09336d1089bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -1085,7 +1082,6 @@ fu_firmware_builder_round_trip_func(void)
 		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
-#endif
 	    {
 		"zip.builder.xml",
 		"aefdd7b205927e383981b03ded1ad22878d03263",

@@ -23,9 +23,12 @@ sed -i 's/quilt/native/' debian/source/format
 #generate control file
 ./contrib/ci/generate_debian.py
 
-#check if we have all deps available
-apt update -qq && apt install python3-apt -y
-./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
+# check if we have all deps available; except on cross builds where this will remove cross lib
+# packages we installed in the Dockerfile that are not multi-arch parallel installable
+if [ -z "${MATRIX_CROSS:-}" ]; then
+    apt update -qq && apt install python3-apt -y
+    ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
+fi
 dpkg --print-architecture
 dpkg --print-foreign-architectures
 dpkg-checkbuilddeps ${MATRIX_CROSS:+-a $MATRIX_CROSS}
@@ -41,7 +44,7 @@ fi
 
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v "$VERSION" "CI Build"
-debuild --no-lintian -e CI -e CC -e QUBES_OPTION ${MATRIX_CROSS:+--host-arch $MATRIX_CROSS}
+debuild --no-lintian -e CI -e CC -e QUBES_OPTION ${MATRIX_CROSS:+-a$MATRIX_CROSS}
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way

@@ -29,6 +29,9 @@ fu_nvme_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "NvmeSerialSuffixChars");
 	fu_plugin_add_device_udev_subsystem(plugin, "nvme");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_NVME_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_nvme_plugin_parent_class)->constructed(obj);
 }
 
 static void

@@ -42,6 +42,9 @@ fu_logitech_hidpp_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_RUNTIME_BOLT);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_LOGITECH_RDFU_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_logitech_hidpp_plugin_parent_class)->constructed(obj);
 }
 
 static void
