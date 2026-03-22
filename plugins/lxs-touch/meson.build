@@ -3,7 +3,7 @@ host_machine.system() == 'linux' or subdir_done()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLxstouch"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-plugin_quirks += files('lxstouch.quirk')
+plugin_quirks += files('lxs-touch.quirk')
 plugin_builtins += static_library('fu_plugin_lxs-touch',
   rustgen.process('fu-lxs-touch.rs'),
   sources: [

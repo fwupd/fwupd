@@ -91,7 +91,7 @@ HID Feature Report(Report ID `0x09`, 버퍼 64바이트)를 사용합니다.
 | `fu-lxs-touch-device.c` | 디바이스 동작 로직 (setup, detach, write, attach) |
 | `fu-lxs-touch-firmware.c` | 펌웨어 파일 파싱 및 크기/오프셋 결정 |
 | `fu-lxs-touch.rs` | 프로토콜 상수 및 패킷 구조체 정의 (Rust struct-generator) |
-| `lxstouch.quirk` | 지원 디바이스 VID/PID 및 메타데이터 quirk 설정 |
+| `lxs-touch.quirk` | 지원 디바이스 VID/PID 및 메타데이터 quirk 설정 |
 | `meson.build` | 빌드 설정 |
 
 ## 빌드
