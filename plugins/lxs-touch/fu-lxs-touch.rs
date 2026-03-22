@@ -70,7 +70,6 @@ struct FuStructLxsTouchPacket {
     length_hi: u8,
     command_hi: u8,
     command_lo: u8,
-    // data: [u8; N], // 실제 데이터는 C에서 memcpy로 처리
 }
 
 #[derive(New, Parse, Getters)]

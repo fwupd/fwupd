@@ -273,6 +273,7 @@ static gboolean
 fu_lxs_touch_device_check_4k_mode(FuLxsTouchDevice *self, GError **error)
 {
 	g_autoptr(FuStructLxsTouchFlashIapCmd) st_cmd = fu_struct_lxs_touch_flash_iap_cmd_new();
+	g_autoptr(FuStructLxsTouchFlashIapCmd) st_cmd_res = NULL;
 	guint8 buf[8] = {0};
 
 	fu_struct_lxs_touch_flash_iap_cmd_set_cmd(st_cmd, FU_LXSTOUCH_CMD_FLASH_4KB_UPDATE_MODE);
@@ -294,11 +295,11 @@ fu_lxs_touch_device_check_4k_mode(FuLxsTouchDevice *self, GError **error)
 					  error))
 		return FALSE;
 
-	st_cmd = fu_struct_lxs_touch_flash_iap_cmd_parse(buf, sizeof(buf), 0x0, error);
-	if (st_cmd == NULL)
+	st_cmd_res = fu_struct_lxs_touch_flash_iap_cmd_parse(buf, sizeof(buf), 0x0, error);
+	if (st_cmd_res == NULL)
 		return FALSE;
 
-	self->use_4k_mode = fu_struct_lxs_touch_flash_iap_cmd_get_status(st_cmd) != 0;
+	self->use_4k_mode = fu_struct_lxs_touch_flash_iap_cmd_get_status(st_cmd_res) != 0;
 	g_debug("4K mode: %s", self->use_4k_mode ? "enabled" : "disabled");
 
 	return TRUE;
@@ -462,8 +463,8 @@ fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(FuStructLxsTouchFlashIapCmd) st_cmd =
-		    fu_struct_lxs_touch_flash_iap_cmd_new();
+		g_autoptr(FuStructLxsTouchFlashIapCmd) st_cmd = NULL;
+		g_autoptr(FuStructLxsTouchFlashIapCmd) st_cmd_verify = NULL;
 		guint32 flash_addr;
 		guint32 normal_size;
 		guint32 last_unit_size;
@@ -472,6 +473,9 @@ fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
 		guint retry_count = 0;
 
 	retry_write:
+		g_clear_object(&chk);
+		g_clear_object(&st_cmd);
+		st_cmd = fu_struct_lxs_touch_flash_iap_cmd_new();
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
@@ -556,14 +560,14 @@ fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
 						  error))
 			return FALSE;
 
-		st_cmd = fu_struct_lxs_touch_flash_iap_cmd_parse(verify_buf,
-								 sizeof(verify_buf),
-								 0x0,
-								 error);
-		if (st_cmd == NULL)
+		st_cmd_verify = fu_struct_lxs_touch_flash_iap_cmd_parse(verify_buf,
+									 sizeof(verify_buf),
+									 0x0,
+									 error);
+		if (st_cmd_verify == NULL)
 			return FALSE;
 
-		if (fu_struct_lxs_touch_flash_iap_cmd_get_status(st_cmd) == 0) {
+		if (fu_struct_lxs_touch_flash_iap_cmd_get_status(st_cmd_verify) == 0) {
 			retry_count++;
 			if (retry_count >= 5) {
 				g_set_error_literal(error,
@@ -599,6 +603,8 @@ fu_lxs_touch_device_write_firmware(FuDevice *device,
 	guint32 fw_offset;
 	guint32 chunk_size;
 	guint8 buf[8] = {0};
+
+	(void)flags;
 
 	if (!fu_lxs_touch_device_read_data(self,
 					  FU_LXSTOUCH_REG_INFO_INTERFACE,
