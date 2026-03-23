@@ -83,7 +83,7 @@ fu_sunwinon_hid_device_dfu_send_frame(FuSunwinonHidDevice *self,
 				      GError **error)
 {
 	gsize total_len = (3 * 2) + bufsz + 2; /* +2 for checksum */
-	guint16 checksum;
+	guint16 checksum = 0;
 	g_autoptr(FuStructSunwinonHidOut) st = fu_struct_sunwinon_hid_out_new();
 
 	/* sanity check */
@@ -104,8 +104,13 @@ fu_sunwinon_hid_device_dfu_send_frame(FuSunwinonHidDevice *self,
 	}
 
 	/* write checksum at the very end of the whole data package */
-	checksum =
-	    fu_sum16(st->buf->data + FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DFU_CMD_TYPE, bufsz + 4);
+	if (!fu_sum16_safe(st->buf->data,
+			   st->buf->len,
+			   FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DFU_CMD_TYPE,
+			   bufsz + 4,
+			   &checksum,
+			   error))
+		return FALSE;
 	if (!fu_memwrite_uint16_safe(st->buf->data,
 				     st->buf->len,
 				     FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DATA + bufsz,
@@ -169,7 +174,7 @@ fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 {
 	FuSunwinonDfuCmd cmd_actual;
 	guint16 checksum_actual = 0;
-	guint16 checksum_calc;
+	guint16 checksum_calc = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(FuStructSunwinonHidIn) st = NULL;
 	g_autoptr(GByteArray) bufout = g_byte_array_new();
@@ -213,8 +218,13 @@ fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return NULL;
-	checksum_calc =
-	    fu_sum16(buf->data + FU_STRUCT_SUNWINON_HID_IN_OFFSET_DFU_CMD_TYPE, 4 + bufout->len);
+	if (!fu_sum16_safe(buf->data,
+			   buf->len,
+			   FU_STRUCT_SUNWINON_HID_IN_OFFSET_DFU_CMD_TYPE,
+			   bufout->len + 4,
+			   &checksum_calc,
+			   error))
+		return FALSE;
 	if (checksum_calc != checksum_actual) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
