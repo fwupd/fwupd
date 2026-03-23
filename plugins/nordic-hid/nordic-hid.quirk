@@ -13,3 +13,4 @@ Flags = no-generic-guids
 GType = FuNordicHidCfgChannel
 NordicHidBootloader = B0
 NordicHidGeneration = default
+AcquiesceDelay = 60000
