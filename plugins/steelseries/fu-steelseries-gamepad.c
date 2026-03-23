@@ -128,7 +128,7 @@ fu_steelseries_gamepad_write_firmware_chunk(FuSteelseriesGamepad *self,
 					    guint32 *checksum,
 					    GError **error)
 {
-	guint16 chunk_checksum;
+	guint16 chunk_checksum = 0;
 	g_autoptr(FuStructSteelseriesGamepadWriteChunkReq) st_req =
 	    fu_struct_steelseries_gamepad_write_chunk_req_new();
 
@@ -139,9 +139,13 @@ fu_steelseries_gamepad_write_firmware_chunk(FuSteelseriesGamepad *self,
 								    fu_chunk_get_data_sz(chunk),
 								    error))
 		return FALSE;
-	chunk_checksum =
-	    fu_sum16(st_req->buf->data + FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_OFFSET_DATA,
-		     FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_SIZE_DATA);
+	if (!fu_sum16_safe(st_req->buf->data,
+			   st_req->buf->len,
+			   FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_OFFSET_DATA,
+			   FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_SIZE_DATA,
+			   &chunk_checksum,
+			   error))
+		return FALSE;
 	fu_struct_steelseries_gamepad_write_chunk_req_set_checksum(st_req, chunk_checksum);
 	*checksum += (guint32)chunk_checksum;
 
