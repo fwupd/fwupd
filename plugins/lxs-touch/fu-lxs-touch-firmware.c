@@ -66,6 +66,7 @@ static void
 fu_lxs_touch_firmware_init(FuLxsTouchFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2048);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	self->fw_offset = 0;
 }
 
