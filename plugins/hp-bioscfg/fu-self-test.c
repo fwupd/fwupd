@@ -122,6 +122,7 @@ fu_plugin_hp_bioscfg_surestart_enabled_legacy(gconstpointer user_data)
 }
 
 static void
+fu_plugin_hp_bioscfg_surestart_disabled(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
