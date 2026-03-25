@@ -10,7 +10,7 @@ enum FuLogitechBulkcontrollerFnumUsbMsg {
 }
 
 enum FuLogitechBulkcontrollerFnumHeader {
-    Id = 1, // str, used in the ack message msgId field
+    Id = 1,        // str, used in the ack message msgId field
     Timestamp = 2, // str, number of ms since the epoch
 }
 
@@ -69,18 +69,18 @@ enum FuLogitechBulkcontrollerFnumResponse {
 }
 
 enum FuLogitechBulkcontrollerFnumSetDeviceTimeRequest {
-    Ts = 1, // u64 utc
+    Ts = 1,       // u64 utc
     Timezone = 2, // str
 }
 
 enum FuLogitechBulkcontrollerFnumAcknowledge {
-    MsgId = 1, // str, the same as UsbMsg.Header.id
+    MsgId = 1,   // str, the same as UsbMsg.Header.id
     Success = 2, // bool
 }
 
 enum FuLogitechBulkcontrollerFnumTransitionToDeviceModeResponse {
     Success = 1, // bool, if Kong is not provisioned, should just respond with true value
-    Error = 2, // int
+    Error = 2,   // int
     ErrorDescription = 3, //str
 }
 

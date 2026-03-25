@@ -242,7 +242,7 @@ struct FuStructLogitechHidppMsg {
     device_id: FuLogitechHidppDeviceIdx,
     sub_id: FuLogitechHidppSubid,
     function_id: u8, // funcId:software_id
-    data: [u8; 47], // maximum supported by Windows XP SP2
+    data: [u8; 47],  // maximum supported by Windows XP SP2
 }
 
 enum FuLogitechHidppBoltRegister {

@@ -9,8 +9,8 @@ enum FuLenovoAccessoryCommandClass {
 
 #[repr(u8)]
 enum FuLenovoAccessoryInfoId {
-   FirmwareVersion = 0x01,
-   DeviceMode = 0x04,
+    FirmwareVersion = 0x01,
+    DeviceMode = 0x04,
 }
 
 #[repr(u8)]
@@ -40,26 +40,26 @@ enum FuLenovoStatus {
 }
 
 #[repr(u8)]
-enum FuLenovoDeviceMode{
+enum FuLenovoDeviceMode {
     NormalMode = 0x00,
     DriverMode = 0x01,
     DfuMode = 0x02,
 }
 
 #[repr(u8)]
-enum FuLenovoDfuFileType{
+enum FuLenovoDfuFileType {
     HexFile = 0x00,
     BinFile = 0x01,
 }
 
 #[repr(u8)]
-enum FuLenovoDfuExitCode{
+enum FuLenovoDfuExitCode {
     DfuSuccess = 0x00,
     Abort = 0x01,
 }
 
-#[derive(New,Parse,Default)]
-#[repr(C,packed)]
+#[derive(New, Parse, Default)]
+#[repr(C, packed)]
 struct FuStructLenovoAccessoryCmd {
     target_status: u8,
     data_size: u8,
@@ -70,7 +70,7 @@ struct FuStructLenovoAccessoryCmd {
 }
 
 #[derive(New)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDfuFwReq {
     cmd: FuStructLenovoAccessoryCmd,
     file_type: FuLenovoDfuFileType,
@@ -79,14 +79,14 @@ struct FuStructLenovoDfuFwReq {
 }
 
 #[derive(New)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDfuExitReq {
     cmd: FuStructLenovoAccessoryCmd,
     exit_code: FuLenovoDfuExitCode,
 }
 
 #[derive(Parse)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDfuAttributeRsp {
     major_ver: u8,
     minor_ver: u8,
@@ -97,13 +97,13 @@ struct FuStructLenovoDfuAttributeRsp {
 }
 
 #[derive(Parse)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDfuCrcRsp {
     crc32: u32be,
 }
 
 #[derive(New)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDfuPrepareReq {
     cmd: FuStructLenovoAccessoryCmd,
     file_type: FuLenovoDfuFileType,
@@ -113,20 +113,20 @@ struct FuStructLenovoDfuPrepareReq {
 }
 
 #[derive(New)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDevicemodeReq {
     cmd: FuStructLenovoAccessoryCmd,
     mode: FuLenovoDeviceMode,
 }
 
 //#[derive(Parse)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoDevicemodeRsp {
     mode: FuLenovoDeviceMode,
 }
 
 #[derive(Parse)]
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct FuStructLenovoFwVersionRsp {
     major: u8,
     minor: u8,

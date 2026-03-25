@@ -102,7 +102,7 @@ enum FuVliDeviceKind {
     Vl822q5 = 0x0822, // guessed
     Vl822q7 = 0xa822, // guessed
     Vl822q8 = 0xb822, // guessed
-    Vl822t = 0xc822, // guessed
+    Vl822t = 0xc822,  // guessed
     Vl822c0 = 0xd822,
     Vl830 = 0x0830,
     Vl832 = 0x0832,

@@ -63,7 +63,7 @@ enum FuWistronDockCmdIcp {
     Readblock = 0x85,
     Writeblock = 0x86,
     Mcuid = 0x87,
-    Bbinfo = 0x88, // bb code information
+    Bbinfo = 0x88,   // bb code information
     Userinfo = 0x89, // user code information
     Done = 0x5A,
     Error = 0xFF,
