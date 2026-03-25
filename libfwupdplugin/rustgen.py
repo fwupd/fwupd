@@ -327,6 +327,7 @@ class StructObj:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ToString")
                 elif item.enum_obj and item.enabled:
+                    item.add_private_export("Getters")
                     item.enum_obj.add_private_export("ToString")
                 elif item.enabled:
                     item.add_private_export("Getters")
