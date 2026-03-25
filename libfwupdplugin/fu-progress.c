@@ -650,7 +650,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
  * fu_progress_add_step:
  * @self: A #FuProgress
  * @status: status value to use for this phase
- * @value: A step weighting variable argument array
+ * @value: A step weighting
  * @name: (nullable): Human readable name to identify the step
  *
  * This sets the step weighting, which you will want to do if one action
