@@ -38,17 +38,25 @@ mod device;
 pub mod device_subclass;
 mod firmware;
 mod log;
+pub mod firmware_subclass;
+pub mod hid_device;
 // Internal implementation bits
 #[doc(hidden)]
 pub mod plugin;
 mod progress;
+pub mod udev_device;
+pub mod usb_device;
 
 pub use context::Context;
 pub use device::Device;
 pub use device_subclass::DeviceImpl;
 pub use firmware::Firmware;
+pub use firmware_subclass::FirmwareImpl;
+pub use hid_device::HidDevice;
 pub use plugin::{Plugin, PluginImpl};
 pub use progress::Progress;
+pub use udev_device::UdevDevice;
+pub use usb_device::UsbDevice;
 
 /// Commonly used traits and types, intended for glob import.
 pub mod prelude {
@@ -56,7 +64,11 @@ pub mod prelude {
     pub use super::device::{Device, DeviceExt};
     pub use super::device_subclass::{DeviceImpl, DeviceImplExt};
     pub use super::firmware::Firmware;
+    pub use super::firmware_subclass::{FirmwareImpl, FirmwareImplExt};
+    pub use super::hid_device::{HidDevice, HidDeviceImpl};
     pub use super::plugin::{Plugin, PluginExt, PluginImpl};
     pub use super::progress::Progress;
+    pub use super::udev_device::{UdevDevice, UdevDeviceImpl};
+    pub use super::usb_device::{UsbDevice, UsbDeviceImpl};
     pub use glib;
 }
