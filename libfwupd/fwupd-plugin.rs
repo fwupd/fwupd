@@ -64,7 +64,7 @@ enum FwupdPluginFlags {
     // The plugin is ready for use and all devices have been coldplugged.
     // Since: 1.9.6
     Ready = 1 << 17,
-    // The plugin is used for virtual devices that exercising daemon flows.
+    // The plugin is used for virtual devices that exercise daemon flows.
     // Since: 2.0.0
     TestOnly = 1 << 18,
     // Some devices supported by the plugin may cause a device to momentarily

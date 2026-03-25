@@ -15,8 +15,8 @@ enum FuLogitechHidppRdfuReportId {
 enum FuLogitechHidppRdfuState {
     NotStarted,
     Transfer,
-    Wait, // waiting the event from the device
-    ResumeDfu, // for soft recover
+    Wait, // waiting for the event from the device
+    ResumeDfu, // for soft recovery
     Apply,
 }
 

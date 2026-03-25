@@ -24,7 +24,7 @@ enum FuEbitdoPktCmd {
     FwUpdateHeader     = 0x01, // update firmware header
     FwUpdateOk         = 0x02, // mark update as successful
     FwUpdateError      = 0x03, // update firmware error
-    FwGetVersion       = 0x04, // get cur firmware vision
+    FwGetVersion       = 0x04, // get cur firmware version
     FwSetVersion       = 0x05, // set firmware version
     FwSetEncodeId      = 0x06, // set app firmware encode ID
     Ack                = 0x14, // acknowledge

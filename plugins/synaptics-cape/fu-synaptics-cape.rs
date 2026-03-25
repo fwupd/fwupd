@@ -48,7 +48,7 @@ enum FuSynapticsCapeModuleId {
 #[repr(C, packed)]
 struct FuSynapticsCapeMsg {
     data_len: u16le,            // data length in DWORDs
-    cmd_id: FuSynapticsCapeCmd, // bit 15 set when the host want a reply from device
+    cmd_id: FuSynapticsCapeCmd, // bit 15 set when the host wants a reply from device
     module_id: FuSynapticsCapeModuleId = AppCtrl,
     data: [u32le; 13],
 }

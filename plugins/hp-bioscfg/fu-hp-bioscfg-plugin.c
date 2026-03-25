@@ -16,6 +16,7 @@ G_DEFINE_TYPE(FuHpBiosCfgPlugin, fu_hp_bioscfg_plugin, FU_TYPE_PLUGIN)
 
 #define BIOS_SETTING_SURESTART                                                                     \
 	"com.hp-bioscfg.Enhanced_HP_Firmware_Runtime_Intrusion_Prevention_and_Detection"
+#define BIOS_SETTING_SURESTART_LEGACY "com.hp-bioscfg.HP_Firmware_Runtime_Intrusion_Detection"
 
 static gboolean
 fu_hp_bioscfg_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
@@ -60,6 +61,8 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* hp-bioscfg found but didn't find SureStart, should be a failure */
 	bios_attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SURESTART);
+	if (bios_attr == NULL)
+		bios_attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SURESTART_LEGACY);
 	if (bios_attr == NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;

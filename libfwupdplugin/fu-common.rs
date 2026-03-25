@@ -33,7 +33,7 @@ enum FuLidState {
     Closed,
 }
 
-// The device lid state.
+// The device display state.
 // Since: 1.9.6
 #[derive(ToString, FromString)]
 enum FuDisplayState {

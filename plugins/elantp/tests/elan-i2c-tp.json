@@ -1,0 +1,18 @@
+{
+  "name": "Elan I2C Touchpad",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "5abe9c290c90906ed74b7bf0a12bb8c17924ce89872c6d72eeff251d5ad8706d-test-elantp-fw02.cab",
+      "emulation-url": "a65419052a5b5ddaf86ae4060daa99f1bbbfe23150c91cb19657a4c0c9bda881-1.zip",
+      "components": [
+        {
+          "version": "0x0002",
+          "guids": [
+            "75133185-9fde-586b-906c-b86bff8bddbc"
+          ]
+        }
+      ]
+    }
+  ]
+}
