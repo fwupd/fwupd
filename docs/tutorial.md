@@ -278,11 +278,11 @@ In some cases the user to do something manually, for instance re-inserting the
 hardware with a secret button pressed.
 
 Before the device update is performed the fwupd daemon runs an optional
-`update_detach()` vfunc which switches the device to bootloader mode.
+`detach()` vfunc which switches the device to bootloader mode.
 
 After the update (or if the update fails) an the daemon runs an optional
-`update_attach()` vfunc which should switch the hardware back to runtime mode.
-Finally an optional `update_reload()` vfunc is run to get the new firmware
+`attach()` vfunc which should switch the hardware back to runtime mode.
+Finally an optional `reload()` vfunc is run to get the new firmware
 version from the hardware.
 
 The optional vfuncs are **only** run on the plugin currently registered to
