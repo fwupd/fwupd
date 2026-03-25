@@ -2790,7 +2790,8 @@ fu_engine_install_release(FuEngine *self,
 	device = g_object_ref(fu_release_get_device(release));
 
 	/* do not allow installs when the device is hidden by an active problem */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 		g_autofree gchar *id_display = fu_device_get_id_display(device);
 		g_autoptr(GString) str = g_string_new(NULL);
 		g_string_append_printf(str,
