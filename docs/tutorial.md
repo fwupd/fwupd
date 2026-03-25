@@ -243,7 +243,7 @@ GPIO is asserted when specific types of hardware are updated.
     static gboolean
     fu_foo_plugin_prepare(FuPlugin *plugin, FuDevice *device, GError **error)
     {
-        if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC && !on_ac_power()) {
+        if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) && !on_ac_power()) {
                 g_set_error_literal(error,
                                     FWUPD_ERROR,
                                     FWUPD_ERROR_AC_POWER_REQUIRED,
