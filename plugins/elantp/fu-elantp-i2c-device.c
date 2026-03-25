@@ -109,7 +109,7 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected i2c-dev",
+			    "is not correct subsystem=%s, expected i2c-dev or i2c",
 			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
 		return FALSE;
 	}
@@ -219,12 +219,12 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 22, &pid, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_device_build_vendor_id_u16(device, "I2CRAW", vid);
+	fu_device_build_vendor_id_u16(device, "I2C", vid);
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_u16(device, "VID", vid);
 	fu_device_add_instance_u16(device, "PID", pid);
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VID", "PID", NULL))
+	if (!fu_device_build_instance_id(device, error, "I2C", "VID", "PID", NULL))
 		return FALSE;
 
 	/* get pattern */
@@ -300,7 +300,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "VEN", vid);
 	fu_device_add_instance_u16(device, "DEV", pid);
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
-	if (!fu_device_build_instance_id(device, error, "I2CRAW", "VEN", "DEV", "MOD", NULL))
+	if (!fu_device_build_instance_id(device, error, "I2C", "VEN", "DEV", "MOD", NULL))
 		return FALSE;
 
 	/* get OSM version */
