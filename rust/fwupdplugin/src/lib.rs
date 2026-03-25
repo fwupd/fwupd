@@ -35,6 +35,7 @@ pub use fwupdplugin_sys as ffi;
 
 mod context;
 mod device;
+pub mod device_subclass;
 mod firmware;
 mod log;
 // Internal implementation bits
@@ -44,6 +45,7 @@ mod progress;
 
 pub use context::Context;
 pub use device::Device;
+pub use device_subclass::DeviceImpl;
 pub use firmware::Firmware;
 pub use plugin::{Plugin, PluginImpl};
 pub use progress::Progress;
@@ -52,6 +54,7 @@ pub use progress::Progress;
 pub mod prelude {
     pub use super::context::Context;
     pub use super::device::{Device, DeviceExt};
+    pub use super::device_subclass::{DeviceImpl, DeviceImplExt};
     pub use super::firmware::Firmware;
     pub use super::plugin::{Plugin, PluginExt, PluginImpl};
     pub use super::progress::Progress;
