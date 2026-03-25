@@ -267,7 +267,7 @@ fu_debug_pre_parse_hook(GOptionContext *context, GOptionGroup *group, gpointer d
 	    {NULL}};
 
 	/* set from FuConfig */
-	if (g_strcmp0(g_getenv("FWUPD_VERBOSE"), "*") == 0)
+	if (g_strcmp0(g_getenv("FWUPD_LOG_DOMAINS"), "*") == 0)
 		self->log_level = G_LOG_LEVEL_DEBUG;
 
 	g_option_group_add_entries(group, entries);
@@ -283,8 +283,13 @@ fu_debug_post_parse_hook(GOptionContext *context,
 	FuDebug *self = (FuDebug *)data;
 
 	/* for compat */
-	if (self->log_level == G_LOG_LEVEL_DEBUG)
-		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
+	if (self->log_level == G_LOG_LEVEL_DEBUG) {
+#if GLIB_CHECK_VERSION(2, 72, 0)
+		g_log_set_debug_enabled(TRUE);
+#else
+		(void)g_setenv("FWUPD_VERBOSE", "1", TRUE);
+#endif
+	}
 
 	/* redirect all domains */
 	g_log_set_default_handler(fu_debug_handler_cb, self);

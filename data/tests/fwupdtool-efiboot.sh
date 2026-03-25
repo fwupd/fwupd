@@ -7,7 +7,6 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf -- "$TMPDIR"' EXIT
 
 export NO_COLOR=1
-export FWUPD_VERBOSE=1
 export FWUPD_SYSFSFWDIR=${TMPDIR}
 export FWUPD_UEFI_ESP_PATH=${TMPDIR}/mnt
 

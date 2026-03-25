@@ -58,7 +58,7 @@ fu_util_traverse_tree(FuUtilNode *n, gpointer data)
 	}
 
 	/* root node */
-	if (n->parent == NULL && g_getenv("FWUPD_VERBOSE") == NULL) {
+	if (n->parent == NULL && !g_log_get_debug_enabled()) {
 		g_autofree gchar *str =
 		    g_strdup_printf("%s %s",
 				    fwupd_client_get_host_vendor(helper->client),
@@ -1343,7 +1343,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* some fields are intentionally not included and are only shown in --verbose */
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *debug_str = fwupd_codec_to_string(FWUPD_CODEC(dev));
 		g_info("%s", debug_str);
 		return NULL;
@@ -2533,7 +2533,7 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* debugging */
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		for (guint i = 0; i < events->len; i++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
 			g_autofree gchar *tmp = fwupd_codec_to_string(FWUPD_CODEC(attr));

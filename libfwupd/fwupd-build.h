@@ -23,6 +23,9 @@
 #define g_spawn_check_wait_status g_spawn_check_exit_status
 #define g_source_set_static_name(n1, n2)
 #endif
+#if !GLIB_CHECK_VERSION(2, 72, 0)
+#define g_log_get_debug_enabled() (g_getenv("FWUPD_VERBOSE") != NULL)
+#endif
 
 #if !GLIB_CHECK_VERSION(2, 80, 0)
 #define g_task_return_new_error_literal g_task_return_new_error
