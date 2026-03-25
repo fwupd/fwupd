@@ -36,7 +36,7 @@ enum FuDellKestrelEcLocation {
 }
 
 #[repr(u8)]
-enum FuDellKestrelEcDevType{
+enum FuDellKestrelEcDevType {
     MainEc = 0x00,
     Pd,
     Usbhub,

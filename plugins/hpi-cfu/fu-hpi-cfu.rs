@@ -75,7 +75,6 @@ enum FuHpiCfuFirmwareUpdateStatus {
     ErrorInvalid = 0x0B,
 }
 
-
 #[derive(New, Getters)]
 #[repr(C, packed)]
 struct FuStructHpiCfuOfferCmd {

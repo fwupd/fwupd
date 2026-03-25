@@ -8,7 +8,7 @@
 #[repr(u8)]
 enum FuDdcOpcode {
     GetVcp = 0x01, // standard get vcp feature
-    Req = 0xCC, // vendor specific opcode
+    Req = 0xCC,    // vendor specific opcode
 }
 
 #[repr(u8)]
@@ -35,7 +35,7 @@ struct FuStructDdcCmd {
 }
 
 #[repr(u8)]
-enum FuDdcI2cAddr{
+enum FuDdcI2cAddr {
     DisplayDevice = 0x6E,
     HostDevice = 0x51,
     Checksum = 0x50,
@@ -43,7 +43,7 @@ enum FuDdcI2cAddr{
 
 #[derive(ToString)]
 #[repr(u8)]
-enum FuDdcciPriority{
+enum FuDdcciPriority {
     Normal,
     Up,
 }
