@@ -585,51 +585,26 @@ fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *at
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
-static gboolean
-fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
-{
-	g_autofree gchar *min = fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion");
-	return fu_kernel_check_version(min, error);
-}
-
-static gboolean
-fu_msr_plugin_kernel_enabled_sme(FuMsrPlugin *self, GError **error)
-{
-	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
-	FuPathStore *pstore = fu_context_get_path_store(ctx);
-	const gchar *flags;
-	g_autoptr(GHashTable) cpu_attrs = NULL;
-
-	cpu_attrs = fu_cpu_get_attrs(pstore, error);
-	if (cpu_attrs == NULL)
-		return FALSE;
-	flags = g_hash_table_lookup(cpu_attrs, "flags");
-	if (flags != NULL) {
-		g_auto(GStrv) tokens = g_strsplit(flags, " ", -1);
-		for (guint i = 0; tokens[i] != NULL; i++) {
-			if (g_strcmp0(tokens[i], "sme") == 0)
-				return TRUE;
-		}
-	}
-
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "sme support not enabled by kernel");
-	return FALSE;
-}
-
 static void
 fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_existing = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
 		return;
+
+	/* if pci_psp has already verified TSME is active, skip our check */
+	attr_existing =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM, NULL);
+	if (attr_existing != NULL &&
+	    fwupd_security_attr_has_flag(attr_existing, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring: TSME already verified by pci_psp");
+		return;
+	}
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
@@ -651,20 +626,7 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 		return;
 	}
 
-	if (!fu_msr_plugin_safe_kernel_for_sme(plugin, &error_local)) {
-		g_debug("unable to properly detect SME: %s", error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
-		return;
-	}
-
-	if (!(fu_msr_plugin_kernel_enabled_sme(self, &error_local))) {
-		g_debug("%s", error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
-		return;
-	}
-
-	/* success */
+	/* success: the SME hardware encryption is enabled in the SYSCFG MSR */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_obsolete(attr, "pci_psp");
 }
@@ -728,21 +690,6 @@ fu_msr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_msr_plugin_add_security_attr_amd_hwcr(plugin, attrs);
 }
 
-static gboolean
-fu_msr_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *value, GError **error)
-{
-	const gchar *keys[] = {"MinimumSmeKernelVersion", NULL};
-	if (!g_strv_contains(keys, key)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "config key %s not supported",
-			    key);
-		return FALSE;
-	}
-	return fu_plugin_set_config_value(plugin, key, value, error);
-}
-
 static void
 fu_msr_plugin_init(FuMsrPlugin *self)
 {
@@ -753,9 +700,6 @@ fu_msr_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_udev_subsystem(plugin, "msr");
-
-	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_plugin_set_config_default(plugin, "MinimumSmeKernelVersion", "5.18.0");
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_msr_plugin_parent_class)->constructed(obj);
@@ -771,5 +715,4 @@ fu_msr_plugin_class_init(FuMsrPluginClass *klass)
 	plugin_class->backend_device_added = fu_msr_plugin_backend_device_added;
 	plugin_class->add_security_attrs = fu_msr_plugin_add_security_attrs;
 	plugin_class->device_registered = fu_msr_plugin_device_registered;
-	plugin_class->modify_config = fu_msr_plugin_modify_config;
 }

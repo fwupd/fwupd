@@ -194,7 +194,6 @@ fu_config_migrate_keyfile(FuConfig *self)
 			  {"fwupd", "DisabledPlugins", "test;test_ble"},
 			  {"redfish", "IpmiDisableCreateUser", NULL},
 			  {"redfish", "ManagerResetTimeout", NULL},
-			  {"msr", "MinimumSmeKernelVersion", NULL},
 			  {"thunderbolt", "MinimumKernelVersion", NULL},
 			  {"thunderbolt", "DelayedActivation", NULL},
 			  {NULL, NULL, NULL}};

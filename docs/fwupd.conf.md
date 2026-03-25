@@ -279,20 +279,6 @@ The `[uefi_capsule]` section can contain the following parameters:
 
 {% endif %}
 
-{% if plugin_msr %}
-
-## MSR PARAMETERS
-
-The `[msr]` section can contain the following parameter:
-
-**MinimumSmeKernelVersion={{msr_MinimumSmeKernelVersion}}**
-
-  Minimum kernel version to allow probing for sme flag.
-
-  This only needs to be modified by enterprise kernels that have cherry picked the feature into a
-  kernel with an old version number.
-{% endif %}
-
 {% if plugin_redfish %}
 
 ## REDFISH PARAMETERS
