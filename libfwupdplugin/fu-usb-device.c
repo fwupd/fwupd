@@ -150,6 +150,13 @@ fu_usb_device_libusb_status_to_gerror(gint status, GError **error)
 
 /**
  * fu_usb_device_get_dev: (skip):
+ * @self: a #FuUsbDevice
+ *
+ * Gets the low-level platform device.
+ *
+ * Returns: (type gpointer): a libusb_device
+ *
+ * Since: 2.0.0
  **/
 libusb_device *
 fu_usb_device_get_dev(FuUsbDevice *self)
@@ -3063,7 +3070,7 @@ fu_usb_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFl
 /**
  * fu_usb_device_new: (skip):
  * @ctx: (nullable): a #FuContext
- * @usb_device: a #libusb_device
+ * @usb_device: (type gpointer): a #libusb_device
  *
  * Creates a new #FuUsbDevice.
  *
