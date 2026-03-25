@@ -18,7 +18,7 @@ enum FwupdSecurityAttrFlags {
     RuntimeAttestation = 1 << 9,
     // Suffix `!`.
     RuntimeIssue = 1 << 10,
-    // Contact the firmware vendor for a update.
+    // Contact the firmware vendor for an update.
     ActionContactOem = 1 << 11,
     // Failure may be fixed by changing FW config.
     ActionConfigFw = 1 << 12,

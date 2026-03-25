@@ -1,7 +1,7 @@
 // Copyright 2024 Mario Limonciello <superm1@gmail.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-// Commands sent ove rXInput, DInput
+// Commands sent over XInput, DInput
 #[repr(u32)]
 enum FuLegionHid2Command {
     GetVersion = 0x01,

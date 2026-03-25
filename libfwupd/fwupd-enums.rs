@@ -174,7 +174,7 @@ enum FwupdVersionFormat {
     Bcd,
     // Intel ME-style bitshifted notation.
     IntelMe,
-    // Intel ME-style A.B.CC.DDDD notation notation, with offset 11.
+    // Intel ME-style A.B.CC.DDDD notation, with offset 11.
     IntelMe2,
     // Legacy Microsoft Surface 10b.12b.10b.
     // Since: 1.3.4
