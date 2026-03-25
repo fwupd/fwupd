@@ -4,6 +4,8 @@
 Vendor = HP
 [USB\VID_045E]
 Vendor = Microsoft
+[USB\VID_0461]
+Vendor = Primax
 [USB\VID_046D]
 Vendor = Logitech
 [USB\VID_04F2]
