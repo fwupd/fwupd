@@ -63,7 +63,7 @@ pub trait DeviceImpl: ObjectImpl + ObjectSubclass<Type: IsA<Device>> {
         &self,
         firmware: &Firmware,
         progress: &Progress,
-        flags: fwupd_sys::FwupdInstallFlags,
+        flags: crate::fwupd_sys::FwupdInstallFlags,
     ) -> Result<(), glib::Error> {
         self.parent_write_firmware(firmware, progress, flags)
     }
@@ -168,7 +168,7 @@ pub trait DeviceImplExt: DeviceImpl {
         &self,
         firmware: &Firmware,
         progress: &Progress,
-        flags: fwupd_sys::FwupdInstallFlags,
+        flags: crate::fwupd_sys::FwupdInstallFlags,
     ) -> Result<(), glib::Error> {
         unsafe {
             let klass = &*(self.obj().class().as_ref() as *const _ as *const ffi::FuDeviceClass);
@@ -377,7 +377,7 @@ unsafe extern "C" fn write_firmware_trampoline<T: DeviceImpl>(
     device: *mut ffi::FuDevice,
     firmware: *mut ffi::FuFirmware,
     progress: *mut ffi::FuProgress,
-    flags: fwupd_sys::FwupdInstallFlags,
+    flags: crate::fwupd_sys::FwupdInstallFlags,
     error: *mut *mut glib::ffi::GError,
 ) -> glib::ffi::gboolean {
     let instance = &*(device as *mut T::Instance);

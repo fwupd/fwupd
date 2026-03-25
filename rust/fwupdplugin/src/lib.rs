@@ -30,8 +30,11 @@
 //! fwupdplugin::export_plugin!(MyPlugin);
 //! ```
 
-/// Re-export the sys crate for advanced usage.
+/// Re-export the fwupdplugin sys crate for advanced usage.
 pub use fwupdplugin_sys as ffi;
+
+/// Re-export the fwupd sys crate for flag/enum types.
+pub use fwupd_sys;
 
 mod context;
 mod device;

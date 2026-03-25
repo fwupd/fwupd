@@ -1,0 +1,16 @@
+[package]
+name = "fu-plugin-example"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-2.1-or-later"
+description = "Example fwupd plugin written in Rust"
+
+[lib]
+crate-type = ["cdylib"]
+# Cargo produces lib<name>.so, so this yields libfu_plugin_example.so
+# which matches the fwupd naming convention: libfu_plugin_<name>.so
+name = "fu_plugin_example"
+
+[dependencies]
+fwupdplugin = { path = "../../fwupdplugin" }
+glib = "0.20"

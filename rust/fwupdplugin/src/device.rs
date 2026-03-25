@@ -57,7 +57,7 @@ pub trait DeviceExt: IsA<Device> + 'static {
 
     /// Sets the version format (e.g. triplet, quad, etc.).
     #[doc(alias = "fu_device_set_version_format")]
-    fn set_version_format(&self, fmt: fwupd_sys::FwupdVersionFormat) {
+    fn set_version_format(&self, fmt: crate::fwupd_sys::FwupdVersionFormat) {
         unsafe {
             ffi::fu_device_set_version_format(self.as_ref().to_glib_none().0, fmt);
         }
@@ -65,7 +65,7 @@ pub trait DeviceExt: IsA<Device> + 'static {
 
     /// Adds a device flag (e.g. updatable, needs-reboot).
     #[doc(alias = "fu_device_add_flag")]
-    fn add_flag(&self, flag: fwupd_sys::FwupdDeviceFlags) {
+    fn add_flag(&self, flag: crate::fwupd_sys::FwupdDeviceFlags) {
         unsafe {
             ffi::fu_device_add_flag(self.as_ref().to_glib_none().0, flag);
         }
@@ -73,7 +73,7 @@ pub trait DeviceExt: IsA<Device> + 'static {
 
     /// Removes a device flag.
     #[doc(alias = "fu_device_remove_flag")]
-    fn remove_flag(&self, flag: fwupd_sys::FwupdDeviceFlags) {
+    fn remove_flag(&self, flag: crate::fwupd_sys::FwupdDeviceFlags) {
         unsafe {
             ffi::fu_device_remove_flag(self.as_ref().to_glib_none().0, flag);
         }
@@ -264,7 +264,7 @@ pub trait DeviceExt: IsA<Device> + 'static {
         &self,
         firmware: &Firmware,
         progress: &Progress,
-        flags: fwupd_sys::FwupdInstallFlags,
+        flags: crate::fwupd_sys::FwupdInstallFlags,
     ) -> Result<(), glib::Error> {
         unsafe {
             let mut error = std::ptr::null_mut();
