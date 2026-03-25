@@ -1,0 +1,18 @@
+{
+  "name": "Genesys EVB GL352530",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "0c7784dbab3c1218de3caf8cdfc700c7daa112c6746b92e851b18547ab0b3963-GenesysLogic_TestEVB_GL352530_89.8.cab",
+      "emulation-url": "d2c973ab3a70ca712b024104775ac8b7160c5c07a6ec3a1987c23dea13740b6f-GenesysLogic_TestEVB_GL352530_89.8.zip",
+      "components": [
+        {
+          "version": "89.8",
+          "guids": [
+            "fd6e5d61-b0f4-56a6-b50e-8904c2bd300a"
+          ]
+        }
+      ]
+    }
+  ]
+}

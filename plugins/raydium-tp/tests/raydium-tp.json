@@ -1,0 +1,18 @@
+{
+  "name": "Raydium TP",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "d421b6adb9586b24ad6d51c3374668d4e870b480668a0a2aaf5af4ce32b04d4c-raydiumtp-v1.6a2.cab",
+      "emulation-url": "b538fba5afd0fb3420668924f8fd27f4c767f22128610d71f0efad57898ea48c-raydium-tp-test.zip",
+      "components": [
+        {
+          "version": "0x01000006",
+          "guids": [
+            "d1c21578-5c6b-5394-bb97-1cf829b43685"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -61,6 +61,9 @@ fu_uefi_recovery_plugin_constructed(GObject *obj)
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_uefi_recovery_plugin_parent_class)->constructed(obj);
 }
 
 static void

@@ -26,6 +26,9 @@ fu_framework_qmk_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FRAMEWORK_QMK_DEVICE);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_framework_qmk_plugin_parent_class)->constructed(obj);
 }
 
 static void

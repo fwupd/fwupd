@@ -8,6 +8,7 @@ RUN set -euxo pipefail; \
     apt-get update; \
     apt-get install --yes --no-install-recommends \
     python3-apt \
+    sudo \
 %%%DEPENDENCIES%%%; \
     apt-get clean
 WORKDIR /github/workspace

@@ -666,6 +666,9 @@ fu_vli_device_constructed(GObject *obj)
 	FuVliDevice *self = FU_VLI_DEVICE(obj);
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
 	priv->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_vli_device_parent_class)->constructed(obj);
 }
 
 static void

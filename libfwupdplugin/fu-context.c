@@ -2676,6 +2676,9 @@ fu_context_constructed(GObject *obj)
 	priv->efivars = (priv->flags & FU_CONTEXT_FLAG_DUMMY_EFIVARS) > 0
 			    ? fu_dummy_efivars_new()
 			    : fu_efivars_new(priv->pstore);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_context_parent_class)->constructed(obj);
 }
 
 static void

@@ -23,6 +23,7 @@ struct _FuProcessorDevice {
 	FuProcessorFeatureFlags feature_flags;
 	FuProcessorMitigationFlags mitigation_flags;
 	guint32 sinkclose_microcode_ver;
+	gchar *entrysign_psp_ver;
 };
 
 G_DEFINE_TYPE(FuProcessorDevice, fu_processor_device, FU_TYPE_DEVICE)
@@ -86,6 +87,23 @@ fu_processor_device_get_sinkclose_microcode_ver(FuProcessorDevice *self)
 	return self->sinkclose_microcode_ver;
 }
 
+/**
+ * fu_processor_device_get_entrysign_psp_ver:
+ * @self: a #FuProcessorDevice
+ *
+ * Returns the AMD PSP version required to mitigate EntrySign.
+ *
+ * Returns: version, or %NULL if invalid
+ *
+ * Since: 2.1.2
+ **/
+const gchar *
+fu_processor_device_get_entrysign_psp_ver(FuProcessorDevice *self)
+{
+	g_return_val_if_fail(FU_IS_PROCESSOR_DEVICE(self), NULL);
+	return self->entrysign_psp_ver;
+}
+
 static void
 fu_processor_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -109,6 +127,7 @@ fu_processor_device_to_string(FuDevice *device, guint idt, GString *str)
 				      idt,
 				      "SinkcloseMicrocodeVer",
 				      self->sinkclose_microcode_ver);
+	fwupd_codec_string_append(str, idt, "EntrysignPspVer", self->entrysign_psp_ver);
 }
 
 static gboolean
@@ -332,6 +351,11 @@ fu_processor_device_set_quirk_kv(FuDevice *device,
 		self->sinkclose_microcode_ver = (guint32)tmp;
 		return TRUE;
 	}
+	if (g_strcmp0(key, "ProcessorEntrysignPspVersion") == 0) {
+		g_free(self->entrysign_psp_ver);
+		self->entrysign_psp_ver = g_strdup(value);
+		return TRUE;
+	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no supported");
 	return FALSE;
 }
@@ -502,9 +526,19 @@ fu_processor_device_init(FuProcessorDevice *self)
 }
 
 static void
+fu_processor_device_finalize(GObject *object)
+{
+	FuProcessorDevice *self = FU_PROCESSOR_DEVICE(object);
+	g_free(self->entrysign_psp_ver);
+	G_OBJECT_CLASS(fu_processor_device_parent_class)->finalize(object);
+}
+
+static void
 fu_processor_device_class_init(FuProcessorDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_processor_device_finalize;
 	device_class->to_string = fu_processor_device_to_string;
 	device_class->probe = fu_processor_device_probe;
 	device_class->set_quirk_kv = fu_processor_device_set_quirk_kv;

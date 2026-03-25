@@ -28,6 +28,9 @@ fu_focal_fp_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_FOCAL_FP_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FOCAL_FP_HID_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_focal_fp_plugin_parent_class)->constructed(obj);
 }
 
 static void

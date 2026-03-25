@@ -17,16 +17,26 @@ jobs:
       matrix:
         distro: [arch, centos, debian, fedora, ubuntu]
         runner: [ubuntu-latest]
+        cross: [null]
         include:
           - distro: debian
+            runner: ubuntu-latest
+            cross: i386
+          - distro: debian
             runner: ubuntu-24.04-arm
+            cross: null
+          - distro: debian
+            runner: ubuntu-24.04-arm
+            cross: s390x
           - distro: precommit
             runner: ubuntu-24.04-arm
+            cross: null
     steps:
       - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: "Generate Dockerfile"
         env:
+          MATRIX_CROSS: ${{ matrix.cross || '' }}
           TARGET_DISTRO: ${{ matrix.distro }}
           RUNNER_ARCH: ${{ runner.arch }}
         run: ./contrib/ci/generate_docker.py
@@ -43,4 +53,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}:latest"
+          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"

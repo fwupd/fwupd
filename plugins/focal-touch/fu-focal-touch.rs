@@ -79,7 +79,8 @@ struct FuStructFocalTouchBinLengthRes {
     report_id: u8 == 0x06,
     _pad: [u8; 2],
     len: u8 == $struct_size,
-    cmd: FuFocalTouchCmd == Ack,
+    cmd: FuFocalTouchCmd == WriteRegister,
+    reg: FuFocalTouchCmd == BinLength,
 }
 
 #[derive(New, Default)]

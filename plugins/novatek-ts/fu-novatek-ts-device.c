@@ -1517,10 +1517,13 @@ fu_novatek_ts_device_init(FuNovatekTsDevice *self)
 }
 
 static void
-fu_novatek_ts_device_constructed(GObject *object)
+fu_novatek_ts_device_constructed(GObject *obj)
 {
-	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(object);
+	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(obj);
 	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_novatek_ts_device_parent_class)->constructed(obj);
 }
 
 static void

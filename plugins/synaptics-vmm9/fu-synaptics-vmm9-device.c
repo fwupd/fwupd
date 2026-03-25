@@ -125,6 +125,7 @@ fu_synaptics_vmm9_device_command(FuSynapticsVmm9Device *self,
 				 GError **error)
 {
 	FuSynapticsVmm9DeviceCommandHelper helper = {.buf = dst_buf, .bufsz = dst_bufsz};
+	guint8 checksum_tmp = 0;
 	guint8 checksum;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuStructHidPayload) st_payload = fu_struct_hid_payload_new();
@@ -144,7 +145,9 @@ fu_synaptics_vmm9_device_command(FuSynapticsVmm9Device *self,
 	fu_struct_hid_set_command_set_size(st, FU_STRUCT_HID_PAYLOAD_OFFSET_FIFO + src_bufsz);
 	if (!fu_struct_hid_set_command_set_payload(st, st_payload, error))
 		return FALSE;
-	checksum = 0x100 - fu_sum8(st->buf->data + 1, st->buf->len - 1);
+	if (!fu_sum8_safe(st->buf->data, st->buf->len, 0x1, st->buf->len - 1, &checksum_tmp, error))
+		return FALSE;
+	checksum = 0x100 - checksum_tmp;
 	if (flags & FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER) {
 		fu_struct_hid_set_command_set_checksum(st, checksum);
 	} else {

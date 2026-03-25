@@ -70,6 +70,10 @@
         <inclusive>armhf</inclusive>
         <inclusive>i386</inclusive>
       </control>
+      <package variant="aarch64" />
+      <package variant="i386" />
+      <package variant="x86_64" />
+      <multi-arch />
     </distro>
   </dependency>
   <dependency type="build" id="noto-fonts-cjk">
@@ -468,7 +472,6 @@
       <multi-arch />
       <package variant="aarch64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
-      <package variant="s390x">gnu-efi</package>
       <package variant="x86_64">gnu-efi</package>
     </distro>
     <distro id="ubuntu">
@@ -557,6 +560,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -746,34 +750,10 @@
       <multi-arch />
     </distro>
   </dependency>
-  <dependency id="libcbor-dev">
-    <distro id="arch">
-      <package variant="x86_64">libcbor</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libcbor-devel</package>
-      <package variant="aarch64">libcbor-devel</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">libcbor-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <multi-arch />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="freebsd">
-      <package>libcbor</package>
-    </distro>
-  </dependency>
   <dependency id="libgirepository1.0-dev">
     <distro id="debian">
       <control />
-      <multi-arch />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -883,9 +863,10 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="locales:native">
+  <dependency id="locales">
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -952,6 +933,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1167,6 +1149,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1492,6 +1475,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1515,6 +1499,7 @@
     </distro>
     <distro id="debian">
       <control />
+      <native />
     </distro>
     <distro id="ubuntu">
       <control />

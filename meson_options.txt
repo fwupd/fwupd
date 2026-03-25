@@ -22,11 +22,6 @@ option(
   description: 'build type',
 )
 option(
-  'cbor',
-  type: 'feature',
-  description: 'CBOR support for coSWID and uSWID',
-)
-option(
   'dbus_socket_address',
   type: 'string',
   value: '',

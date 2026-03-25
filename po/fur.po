@@ -5,20 +5,21 @@
 # Translators:
 # Fabio Tomat <f.t.public@gmail.com>, 2017-2018,2020,2023-2024
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# Lino M <qmarty@inbox.ru>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2025-10-24 10:08+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-24 14:09+0000\n"
+"Last-Translator: Lino M <qmarty@inbox.ru>\n"
 "Language-Team: Friulian <https://hosted.weblate.org/projects/fwupd/fwupd/fur/>\n"
 "Language: fur\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Servizi Firmware dal vendidôr di Linux (firmware stabil)"
@@ -53,11 +54,11 @@ msgid "Enabled"
 msgstr "Abilitât"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "Ferme il servisi fwupd"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "Tu âs di autenticati per fermà il servisi di agjornament dal firmware"
 
 msgid "Install signed system firmware"
 msgstr "Instale firmware di sisteme firmât"
@@ -136,11 +137,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "La autenticazion e je necessarie par modificâ une sorzint esterne configurade, doprade pai inzornaments dal firmware"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Nete un cjosul già configurât"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Tu âs di autenticati par tirà vie i metadatos dal cjosul"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -172,7 +173,7 @@ msgid "Authentication is required to modify BIOS settings"
 msgstr "La autenticazion e je necessarie par modificâ lis impostazions dal BIOS"
 
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "Par rompi di pui las bales cul HSI"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
@@ -184,26 +185,26 @@ msgstr "E covente la autenticazion par disfâ il justament par un probleme di si
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
-msgstr ""
+msgstr "Cjame i datos di emulasion dal tramai"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
-msgstr ""
+msgstr "Tu âs di sei autenticât per cjarià i datos di emulasion"
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
-msgstr ""
+msgstr "Salve i datos di emulasion dal tramai"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
-msgstr ""
+msgstr "Tu âs di sei autenticât par salvà i datos dal'emulasion dal tramai"
 
 msgid "Enable emulation data collection"
-msgstr ""
+msgstr "Lascimi tegnì in bande i datos di emulasion"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
-msgstr ""
+msgstr "Tu âs di sei autenticât par tegni cont dai datos di emulasion"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -322,13 +323,13 @@ msgstr "Nissune azion specificade!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Dimi un numar di 0 a %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Alore pandolo, o %s o %s deciditi:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -428,13 +429,13 @@ msgstr "Mostre opzions di debug"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u al'è agjornât e bisugne tornà a pialu."
+msgstr[1] "%u a son agjornâs e bisugne tornà a piaiu."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Torne pie par finì l'agjornament."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -447,7 +448,7 @@ msgstr[1] "%u dispositîfs no son la miôr configurazion cognossude."
 #. * command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "Run `%s` to complete this action."
-msgstr ""
+msgstr "Dopre `%s` par la indevant."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -460,7 +461,7 @@ msgstr[1] "%u dispositîfs a àn un inzornament firmware disponibil."
 #. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
 msgid "Run `%s` for more information."
-msgstr ""
+msgstr "Dopre `%s` par savent di pui."
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -663,11 +664,11 @@ msgstr "Protezion di ripristinament dal processôr"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Aviament sigûr dala plataforme"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
-msgstr ""
+msgstr "Protesion dala rispueste SPI"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "SPI write protection"
@@ -675,7 +676,7 @@ msgstr "Protezion de scriture SPI"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
-msgstr ""
+msgstr "Plataforme disfate"
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
@@ -683,31 +684,31 @@ msgstr "Host emulât"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
-msgstr ""
+msgstr "Protesion par no fati tornà indavour cun la version dal BIOS"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS mitigation"
-msgstr ""
+msgstr "Mitigasion dal Intel GDS"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS firmware updates"
-msgstr ""
+msgstr "Agjornament dal BIOS"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "SMM locked down"
-msgstr ""
+msgstr "Diomadone SMM blocât"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
-msgstr ""
+msgstr "Protesione dala memorie UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
-msgstr ""
+msgstr "Banc di datos dal UEFI"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "InisiSigûr di HP"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -746,15 +747,15 @@ msgstr "Politiche sui erôrs di Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
-msgstr ""
+msgstr "Fusibil GuardieDiAviament Intel"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
 msgid "Control-flow Enforcement Technology"
-msgstr ""
+msgstr "Tecnologje di rinfuarç dal control dal flus"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Supervisor Mode Access Prevention"
-msgstr ""
+msgstr "Prevension dal môt di aces Supervisôr"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -791,7 +792,7 @@ msgstr "Inviament sigûr di UEFI"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI Bootservice Variables"
-msgstr ""
+msgstr "Variabiles dal servisi di aviament UEFI"
 
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
 msgid "TPM Platform Configuration"
@@ -814,7 +815,7 @@ msgstr "Intel Management Engine Override"
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
 #. * to the private/public key used to secure loading of firmware
 msgid "MEI Key Manifest"
-msgstr ""
+msgstr "Manifest dala clâf MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
@@ -842,15 +843,15 @@ msgstr "Controi di sigurece dal processôr"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
-msgstr ""
+msgstr "Protesion par no fati meti versions vecjes di AMD"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "Aviament sigûr AMD"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
-msgstr ""
+msgstr "Protesion cuntre la rispueste dal firmware AMD"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
@@ -858,27 +859,27 @@ msgstr "Protezion de scriture dal firmware AMD"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
-msgstr ""
+msgstr "Plataforme disfate"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
-msgstr ""
+msgstr "Protesion par no meti versions vecjes tal BIOS"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS Mitigation"
-msgstr ""
+msgstr "Mitigasion GDS Intel"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS Firmware Updates"
-msgstr ""
+msgstr "Agjornamens BIOS"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "System Management Mode"
-msgstr ""
+msgstr "Môt di gestion dal sistema"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
-msgstr ""
+msgstr "Protesion dala memorie UEFI"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -905,11 +906,11 @@ msgstr "La Politiche sui erôrs di Intel BootGuard e garantìs che il dispositî
 
 #. TRANSLATORS: longer description
 msgid "Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
-msgstr ""
+msgstr "L'aplicasion dala tecnologie sul control di flus a cjate e preven cregnes prime di sei aviades dai programas."
 
 #. TRANSLATORS: longer description
 msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
-msgstr ""
+msgstr "Il control di aces dal môt Sueprvisôr al protêc la memorie dal tramai cuntre acess mancul sigûr dai programas."
 
 msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
 msgstr "La RAM cifrade e fâs in mût che al sedi impussibil lei lis informazions archiviadis te memorie dal dispositîf, se il banc di memorie al ven gjavât e doprât."
@@ -942,39 +943,39 @@ msgstr "La clâf de plateforme UEFI e ven doprade par determinâ se il software 
 
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
-msgstr ""
+msgstr "La Segurece dal'Aviament dal UEFI a preven l'esecusion di cragne cuant ca si pie il tramai."
 
 #. TRANSLATORS: longer description
 msgid "UEFI boot service variables should not be readable from runtime mode."
-msgstr ""
+msgstr "Las variabile dal servisi di aviamenti UEFI no si varesin di podè lei dai programas in corse."
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
-msgstr ""
+msgstr "La configurazion dal TPM a serf par controlà che no vevin mateât tal aviament dal tramai."
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
-msgstr ""
+msgstr "La Ricostrusion TPM a controle che no vevin mateât tal proces di aviament dal tramai."
 
 #. TRANSLATORS: longer description
 msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
-msgstr ""
+msgstr "Il TPM al'è un procesôr ca si necuarç se a an mateât tai componens fisics."
 
 #. TRANSLATORS: longer description
 msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
-msgstr ""
+msgstr "Il Môt di Fabriche si dopre cuant che il tramai al'è fat e nol'è sigûr nancje pal caj."
 
 #. TRANSLATORS: longer description
 msgid "Intel Management Engine Override disables checks for device software tampering."
-msgstr ""
+msgstr "Il sistema di gestion dal motôr cal strafâs al evitê i controlos su modifiches al software."
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
-msgstr ""
+msgstr "Il manifest dala clâf dal motôr di gjestion Intel al'à di sei valit par che la CPU a podi crodi al firmware."
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
-msgstr ""
+msgstr "Il motôt di gjestion Intel oltre a spiati al'à di sei ancje agjornât."
 
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
@@ -1323,7 +1324,7 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Do not search the firmware when parsing"
-msgstr ""
+msgstr "Sta fêr taconele, lascimi fa"
 
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
@@ -1335,7 +1336,7 @@ msgstr "No sta domandâ dispositîfs"
 
 #. TRANSLATORS: command line option
 msgid "Show all results"
-msgstr ""
+msgstr "Mostre su dut"
 
 #. TRANSLATORS: command line option
 msgid "Show devices that are not updatable"
@@ -1343,7 +1344,7 @@ msgstr "Mostre i dispositîfs che no si puedin inzornâ"
 
 #. TRANSLATORS: command line option
 msgid "Manually enable specific plugins"
-msgstr ""
+msgstr "Met tu a man i pulgin dato che tu sês tant bravo"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"

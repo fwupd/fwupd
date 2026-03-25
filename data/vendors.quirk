@@ -20,6 +20,8 @@ Vendor = USI
 Vendor = Egistec
 [USB\VID_222A]
 Vendor = Ilitek
+[USB\VID_2386]
+Vendor = Raydium
 [USB\VID_273F]
 Vendor = Hughski
 [USB\VID_276F]
