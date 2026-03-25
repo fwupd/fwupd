@@ -295,7 +295,6 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
     ],
-    c_args: ['-D__ANDROID_VENDOR__'],
     dependencies: [
       valgrind,
       libsystemd,
@@ -324,7 +323,6 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
     ],
-    c_args: ['-D__ANDROID_VENDOR__'],
     dependencies: [
       libfwupd_deps,
       client_dep,
