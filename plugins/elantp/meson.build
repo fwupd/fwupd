@@ -31,6 +31,7 @@ enumeration_data += files('tests/lenovo-nano-g1-setup.json')
 device_tests += files(
   'tests/lenovo-nano-g1.json',
   'tests/elan-haptic-mcu.json',
+  'elan-i2c-tp.json',
 )
 
 if get_option('tests')
