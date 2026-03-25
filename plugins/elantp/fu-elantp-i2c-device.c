@@ -89,6 +89,10 @@ fu_elantp_i2c_device_rebind_driver(FuElantpI2cDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* TODO: this should probably use fu_udev_device_write_sysfs() somehow */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	if (!fu_elantp_i2c_device_writeln(self, unbind_fn, self->bind_id, error))
 		return FALSE;
 	if (!fu_elantp_i2c_device_writeln(self, bind_fn, self->bind_id, error))
