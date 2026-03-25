@@ -438,6 +438,30 @@ fwupdplugin = library(
   install: true,
 )
 
+pkgg_requires = [
+  'gio-2.0',
+  'gmodule-2.0',
+  'gobject-2.0',
+  'libusb-1.0',
+  'fwupd',
+  'xmlb',
+]
+
+pkgg = import('pkgconfig')
+pkgg.generate(
+  fwupdplugin,
+  requires: pkgg_requires,
+  subdirs: [join_paths(base_dir, 'libfwupdplugin')],
+  version: meson.project_version(),
+  name: 'fwupdplugin',
+  filebase: 'fwupdplugin',
+  description: 'Internal fwupd plugin library for plugins',
+  variables: [
+    'libdir_pkg=@0@'.format(libdir_pkg),
+  ],
+  install_dir: '',  # Treated as false in meson → no installed file
+)
+
 # see https://mesonbuild.com/FAQ.html#how-do-i-tell-meson-that-my-sources-use-generated-headers
 fwupdplugin_rs_headers = []
 foreach fwupdplugin_rs_target : fwupdplugin_rs_targets
