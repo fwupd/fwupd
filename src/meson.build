@@ -12,7 +12,6 @@ engine_dep = [
   libusb,
   polkit,
   sqlite,
-  cbor,
   fwupdplugin_rs_dep,
 ]
 

@@ -237,6 +237,9 @@ fu_dell_plugin_constructed(GObject *obj)
 
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_dell_plugin_parent_class)->constructed(obj);
 }
 
 static void

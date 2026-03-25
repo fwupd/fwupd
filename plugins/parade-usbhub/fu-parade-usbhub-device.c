@@ -1278,11 +1278,14 @@ fu_parade_usbhub_device_init(FuParadeUsbhubDevice *self)
 }
 
 static void
-fu_parade_usbhub_device_constructed(GObject *object)
+fu_parade_usbhub_device_constructed(GObject *obj)
 {
-	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(object);
+	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(obj);
 	self->chip = FU_PARADE_USBHUB_CHIP_PS5512;
 	self->cfi_device = fu_cfi_device_new(FU_DEVICE(self), NULL);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_parade_usbhub_device_parent_class)->constructed(obj);
 }
 
 static void

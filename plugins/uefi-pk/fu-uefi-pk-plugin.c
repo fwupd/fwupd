@@ -25,6 +25,9 @@ fu_uefi_pk_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_UEFI_PK_DEVICE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_uefi_pk_plugin_parent_class)->constructed(obj);
 }
 
 static gboolean

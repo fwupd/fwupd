@@ -64,6 +64,9 @@ fu_genesys_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_CODESIGN_FIRMWARE); /* cov */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE); /* coverage */
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_genesys_plugin_parent_class)->constructed(obj);
 }
 
 static FuDevice *

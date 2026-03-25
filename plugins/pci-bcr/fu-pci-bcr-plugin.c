@@ -231,6 +231,9 @@ fu_pci_bcr_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "PciBcrAddr");
 	fu_plugin_add_udev_subsystem(plugin, "pci");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_pci_bcr_plugin_parent_class)->constructed(obj);
 }
 
 static void

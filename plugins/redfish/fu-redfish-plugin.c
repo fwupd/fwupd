@@ -730,6 +730,9 @@ fu_redfish_plugin_constructed(GObject *obj)
 	fu_plugin_set_config_default(plugin, "Uri", NULL);
 	fu_plugin_set_config_default(plugin, "Username", NULL);
 	fu_plugin_set_config_default(plugin, "UserUri", NULL);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_redfish_plugin_parent_class)->constructed(obj);
 }
 
 static void

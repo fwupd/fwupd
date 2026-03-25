@@ -29,6 +29,9 @@ fu_synaptics_vmm9_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_SYNAPTICS_VMM9_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_SYNAPTICS_VMM9_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_synaptics_vmm9_plugin_parent_class)->constructed(obj);
 }
 
 static void

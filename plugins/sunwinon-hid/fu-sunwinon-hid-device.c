@@ -14,7 +14,9 @@
 #include "fu-sunwinon-hid-firmware.h"
 #include "fu-sunwinon-hid-struct.h"
 
-#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME 2000 /* ms */
+#define FU_SUNWINON_HID_DEVICE_REBOOT_WAIT_TIME 30000 /* ms */
+#define FU_SUNWINON_HID_DEVICE_REPLUG_WAIT_TIME 30000 /* ms */
+#define FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT 50
 
 struct _FuSunwinonHidDevice {
 	FuHidrawDevice parent_instance;
@@ -81,7 +83,7 @@ fu_sunwinon_hid_device_dfu_send_frame(FuSunwinonHidDevice *self,
 				      GError **error)
 {
 	gsize total_len = (3 * 2) + bufsz + 2; /* +2 for checksum */
-	guint16 checksum;
+	guint16 checksum = 0;
 	g_autoptr(FuStructSunwinonHidOut) st = fu_struct_sunwinon_hid_out_new();
 
 	/* sanity check */
@@ -102,8 +104,13 @@ fu_sunwinon_hid_device_dfu_send_frame(FuSunwinonHidDevice *self,
 	}
 
 	/* write checksum at the very end of the whole data package */
-	checksum =
-	    fu_sum16(st->buf->data + FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DFU_CMD_TYPE, bufsz + 4);
+	if (!fu_sum16_safe(st->buf->data,
+			   st->buf->len,
+			   FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DFU_CMD_TYPE,
+			   bufsz + 4,
+			   &checksum,
+			   error))
+		return FALSE;
 	if (!fu_memwrite_uint16_safe(st->buf->data,
 				     st->buf->len,
 				     FU_STRUCT_SUNWINON_HID_OUT_OFFSET_DATA + bufsz,
@@ -118,6 +125,48 @@ fu_sunwinon_hid_device_dfu_send_frame(FuSunwinonHidDevice *self,
 					   error);
 }
 
+static gboolean
+fu_sunwinon_hid_device_dfu_recv_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuSunwinonHidDevice *self = FU_SUNWINON_HID_DEVICE(device);
+	GByteArray *buf = (GByteArray *)user_data;
+	guint8 report_id = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	/* may not get a full length report here */
+	memset(buf->data, 0, buf->len);
+	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
+					 buf->data,
+					 buf->len,
+					 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					 &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
+	fu_dump_raw(G_LOG_DOMAIN, "input-report", buf->data, buf->len);
+
+	/* discard reports not matching the OTA report ID */
+	if (!fu_memread_uint8_safe(buf->data,
+				   buf->len,
+				   FU_STRUCT_SUNWINON_HID_IN_OFFSET_REPORT_ID,
+				   &report_id,
+				   error))
+		return FALSE;
+	if (report_id != FU_SUNWINON_HID_REPORT_CHANNEL_ID) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "discarding report with non-OTA report ID 0x%02x",
+			    report_id);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static GByteArray *
 fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 				      FuSunwinonDfuCmd cmd_expected,
@@ -125,27 +174,22 @@ fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 {
 	FuSunwinonDfuCmd cmd_actual;
 	guint16 checksum_actual = 0;
-	guint16 checksum_calc;
-	guint8 buf[FU_STRUCT_SUNWINON_HID_IN_SIZE] = {0};
+	guint16 checksum_calc = 0;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(FuStructSunwinonHidIn) st = NULL;
 	g_autoptr(GByteArray) bufout = g_byte_array_new();
-	g_autoptr(GError) error_local = NULL;
 
-	/* may not get a full length report here */
-	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
-					 buf,
-					 sizeof(buf),
-					 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-					 &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return NULL;
-		}
-	}
-	fu_dump_raw(G_LOG_DOMAIN, "raw input report", buf, sizeof(buf));
+	/* retry receiving until we get a report with the correct OTA report ID */
+	fu_byte_array_set_size(buf, FU_STRUCT_SUNWINON_HID_IN_SIZE, 0x0);
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_sunwinon_hid_device_dfu_recv_cb,
+			     FU_SUNWINON_HID_DEVICE_RECV_RETRY_COUNT,
+			     buf,
+			     error))
+		return NULL;
 
 	/* check command */
-	st = fu_struct_sunwinon_hid_in_parse(buf, sizeof(buf), 0, error);
+	st = fu_struct_sunwinon_hid_in_parse(buf->data, buf->len, 0, error);
 	if (st == NULL)
 		return NULL;
 	cmd_actual = fu_struct_sunwinon_hid_in_get_dfu_cmd_type(st);
@@ -174,8 +218,13 @@ fu_sunwinon_hid_device_dfu_recv_frame(FuSunwinonHidDevice *self,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return NULL;
-	checksum_calc =
-	    fu_sum16(buf + FU_STRUCT_SUNWINON_HID_IN_OFFSET_DFU_CMD_TYPE, 4 + bufout->len);
+	if (!fu_sum16_safe(buf->data,
+			   buf->len,
+			   FU_STRUCT_SUNWINON_HID_IN_OFFSET_DFU_CMD_TYPE,
+			   bufout->len + 4,
+			   &checksum_calc,
+			   error))
+		return FALSE;
 	if (checksum_calc != checksum_actual) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -617,7 +666,8 @@ fu_sunwinon_hid_device_init(FuSunwinonHidDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SUNWINON_HID_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_SUNWINON_HID_DEVICE_REPLUG_WAIT_TIME);
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, NULL);
 }
 
 static void

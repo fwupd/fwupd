@@ -67,6 +67,8 @@ fu_mm_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QCDM_DEVICE);	/* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QDU_MBIM_DEVICE); /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_QMI_DEVICE);	/* coverage */
+
+	/* nocheck:finalize */
 }
 
 void

@@ -964,6 +964,9 @@ fu_cfi_device_constructed(GObject *obj)
 {
 	FuCfiDevice *self = FU_CFI_DEVICE(obj);
 	fu_device_add_instance_id(FU_DEVICE(self), "SPI");
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_cfi_device_parent_class)->constructed(obj);
 }
 
 static void

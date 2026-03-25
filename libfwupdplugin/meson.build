@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-cbor.rs', # fuzzing
   'fu-crc.rs', # fuzzing
   'fu-progress.rs', # fuzzing
   'fu-common.rs', # fuzzing
@@ -85,6 +86,8 @@ fwupdplugin_src = [
   'fu-bytes.c', # fuzzing
   'fu-cab-firmware.c', # fuzzing
   'fu-cab-image.c', # fuzzing
+  'fu-cbor-item.c', # fuzzing
+  'fu-cbor-common.c', # fuzzing
   'fu-cfi-device.c',
   'fu-cfu-offer.c', # fuzzing
   'fu-cfu-payload.c', # fuzzing
@@ -252,6 +255,7 @@ fwupdplugin_headers = [
   'fu-bytes.h',
   'fu-cab-firmware.h',
   'fu-cab-image.h',
+  'fu-cbor-item.h',
   'fu-cfi-device.h',
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',
@@ -415,7 +419,6 @@ library_deps = [
   valgrind,
   lzma,
   libusb,
-  cbor,
   sqlite,
   libblkid,
   libdrm,
@@ -509,6 +512,7 @@ if get_option('tests')
     'byte-array',
     'bytes',
     'cab-firmware',
+    'cbor',
     'chunk-array',
     'common',
     'composite-input-stream',

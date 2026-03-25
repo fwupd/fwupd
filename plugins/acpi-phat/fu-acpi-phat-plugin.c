@@ -57,6 +57,9 @@ fu_acpi_phat_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_ACPI_PHAT);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_acpi_phat_plugin_parent_class)->constructed(obj);
 }
 
 static void

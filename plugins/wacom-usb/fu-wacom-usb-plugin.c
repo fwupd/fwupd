@@ -117,6 +117,9 @@ fu_wacom_usb_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_USB_MODULE_TOUCH);	    /* coverage */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_USB_MODULE_TOUCH_ID7);	    /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_WACOM_USB_FIRMWARE);
+
+	/* chain up to parent */
+	G_OBJECT_CLASS(fu_wacom_usb_plugin_parent_class)->constructed(obj);
 }
 
 static void
