@@ -50,6 +50,8 @@ The following actions can be used to view details about the enumerated devices o
 
 **get-updates**: Show all the available updates for a specific device.
 
+**get-upgrades**: Alias to get-updates.
+
 **get-releases**: Show all the installable versions (older, the same, or newer) for a specific device.
 
 **get-details**: View details about a specific .cab archive, even if the target device has not been found on this system.
