@@ -514,7 +514,7 @@ fu_novatek_ts_device_get_fw_ver_cb(FuDevice *device, gpointer user_data, GError 
 		return FALSE;
 	if ((guint8)(ctx->buf[0] + ctx->buf[1]) == 0xFF)
 		return TRUE;
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "fw info not ready");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "fw info not ready");
 	return FALSE;
 }
 
@@ -1226,17 +1226,25 @@ static gboolean
 fu_novatek_ts_device_ensure_fw_ver(FuNovatekTsDevice *self, GError **error)
 {
 	FuNovatekTsFwVerCtx ctx = {0};
+	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_novatek_ts_device_get_fw_ver_cb,
 			     10,
 			     &ctx,
-			     error)) {
-		g_prefix_error(error,
-			       "fw info is broken, fw_ver=0x%02x, ~fw_ver=0x%02x: ",
-			       ctx.buf[0],
-			       ctx.buf[1]);
-		return FALSE;
+			     &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
+			g_propagate_prefixed_error(
+			    error,
+			    g_steal_pointer(&error_local),
+			    "fw info is broken, fw_ver=0x%02x, ~fw_ver=0x%02x: ",
+			    ctx.buf[0],
+			    ctx.buf[1]);
+			return FALSE;
+		}
+		g_warning("firmware version unavailable: %s", error_local->message);
+		fu_device_set_version_raw(FU_DEVICE(self), 0);
+		return TRUE;
 	}
 
 	/* success */
