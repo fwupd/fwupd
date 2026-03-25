@@ -381,6 +381,7 @@ fwupdplugin_headers = [
   'fu-usb-bos-descriptor-private.h',
   'fu-usb-config-descriptor.h',
   'fu-usb-config-descriptor-private.h',
+  'fu-usb-descriptor.h',
   'fu-usb-device.h',
   'fu-usb-endpoint.h',
   'fu-usb-endpoint-private.h',
