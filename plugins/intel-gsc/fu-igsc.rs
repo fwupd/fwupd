@@ -109,7 +109,7 @@ enum FuIgscOpromIdx {
 #[repr(u8)]
 enum FuIgscFwuHeciCommandId {
     Invalid,
-    Start,                  // start firmware updated flow
+    Start,                  // start firmware update flow
     Data,                   // send firmware data to device
     End,                    // last command in update
     GetVersion,             // retrieve version of a firmware

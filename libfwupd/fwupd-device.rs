@@ -22,7 +22,7 @@ enum FwupdDeviceFlags {
     // The device is found in metadata loaded into the daemon.
     // Since: 0.7.1
     Supported = 1 << 5,
-    // The device requires entering a bootloader mode to be manually.
+    // The device requires entering a bootloader mode to be updated.
     // Since: 0.7.3
     NeedsBootloader = 1 << 6,
     // The device requires a system reboot to apply firmware or to reload hardware.
@@ -37,7 +37,7 @@ enum FwupdDeviceFlags {
     // The device is currently in a read-only bootloader mode and not running application code.
     // Since: 1.0.8
     IsBootloader = 1 << 13,
-    // The device is in the middle of and update and the hardware is waiting to be probed or
+    // The device is in the middle of an update and the hardware is waiting to be probed or
     // replugged.
     // Since: 1.1.2
     WaitForReplug = 1 << 14,
@@ -118,10 +118,10 @@ enum FwupdDeviceFlags {
     // Since: 1.7.1
     AffectsFde = 1 << 45,
     // The device is no longer supported by the original hardware vendor as it is considered
-    // end-of-life. It it unlikely to receive firmware updates, even for security issues.
+    // end-of-life. It is unlikely to receive firmware updates, even for security issues.
     // Since: 1.7.5
     EndOfLife = 1 << 46,
-    // The firmware payload is verified on-device the payload using strong cryptography such
+    // The firmware payload is verified on-device using strong cryptography such
     // as RSA, AES or ECC.
     // It is usually not possible to modify or flash custom firmware not provided by the vendor.
     // Since: 1.7.6
