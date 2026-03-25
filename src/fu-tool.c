@@ -427,7 +427,7 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 static void
 fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtil *self)
 {
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *tmp = fu_device_to_string(device);
 		/* nocheck:print */
 		g_debug("ADDED:\n%s", tmp);
@@ -437,7 +437,7 @@ fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtil *self)
 static void
 fu_util_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtil *self)
 {
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *tmp = fu_device_to_string(device);
 		/* nocheck:print */
 		g_debug("REMOVED:\n%s", tmp);
@@ -6262,7 +6262,7 @@ main(int argc, char *argv[])
 				 error->message);
 		return EXIT_FAILURE;
 	}
-	fu_progress_set_profile(self->progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_set_profile(self->progress, g_log_get_debug_enabled());
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (self->disable_ssl_strict) {

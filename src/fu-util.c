@@ -2438,7 +2438,7 @@ fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console, _("No releases available"));
 		return TRUE;
 	}
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		for (guint i = 0; i < rels->len; i++) {
 			FwupdRelease *rel = g_ptr_array_index(rels, i);
 			g_autofree gchar *tmp = NULL;
@@ -2498,7 +2498,7 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 				    _("No matching releases for search token"));
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		for (guint i = 0; i < rels->len; i++) {
 			FwupdRelease *rel = g_ptr_array_index(rels, i);
 			g_autofree gchar *tmp = NULL;
@@ -5808,8 +5808,11 @@ main(int argc, char *argv[])
 
 	/* set verbose? */
 	if (verbose) {
-		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
+#if GLIB_CHECK_VERSION(2, 72, 0)
+		g_log_set_debug_enabled(TRUE);
+#else
+		(void)g_setenv("FWUPD_VERBOSE", "1", TRUE);
+#endif
 	} else {
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}

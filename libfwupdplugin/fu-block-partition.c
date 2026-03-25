@@ -319,7 +319,7 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 			    rc);
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		gint nvals = blkid_probe_numof_values(pr);
 		for (gint i = 0; i < nvals; i++) {
 			const gchar *name = NULL;

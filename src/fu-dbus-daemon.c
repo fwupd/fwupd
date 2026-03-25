@@ -575,7 +575,7 @@ fu_dbus_daemon_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointe
 	}
 
 	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_set_profile(progress, g_log_get_debug_enabled());
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_percentage_changed_cb),
@@ -610,7 +610,7 @@ fu_dbus_daemon_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gp
 	}
 
 	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_set_profile(progress, g_log_get_debug_enabled());
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_percentage_changed_cb),
@@ -737,7 +737,7 @@ fu_dbus_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	}
 
 	/* all authenticated, so install all the things */
-	fu_progress_set_profile(helper->progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_set_profile(helper->progress, g_log_get_debug_enabled());
 	g_signal_connect(FU_PROGRESS(helper->progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_percentage_changed_cb),
@@ -2082,7 +2082,7 @@ fu_dbus_daemon_method_verify(FuDbusDaemon *self,
 	g_variant_get(parameters, "(&s)", &device_id);
 
 	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_set_profile(progress, g_log_get_debug_enabled());
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_percentage_changed_cb),
@@ -2838,7 +2838,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	fu_progress_set_profile(progress, g_log_get_debug_enabled());
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "load-engine");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-introspection");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-authority");

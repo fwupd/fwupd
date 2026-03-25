@@ -12,7 +12,7 @@ with a non-standard filesystem layout.
   downloading files work when using some antisocial corporate firewalls.
 * `FWUPD_CURL_VERBOSE` shows more information when downloading files
 * `FWUPD_SUPPORTED` overrides the `-Dsupported_build` meson option at runtime
-* `FWUPD_VERBOSE` is set when running `--verbose`
+* `FWUPD_LOG_DOMAINS` is set when using custom logging specified by `VerboseDomains` in `fwupd.conf`
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
 * `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
