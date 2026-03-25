@@ -762,12 +762,12 @@ libdrm_amdgpu = dependency(
 root_incdir = include_directories('.')
 
 fwupd_gir = []
-gir_dep = dependency(
+gobject_introspection_dep = dependency(
   'gobject-introspection-1.0',
   required: get_option('introspection'),
 )
 introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(
-  not gir_dep.found()
+  not gobject_introspection_dep.found()
 )
 
 gidocgen_dep = dependency(
