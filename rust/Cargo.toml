@@ -1,4 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["fwupd"
+members = [
+    "fwupd",
+    "fwupd-ffi",
+    "fwupd-sys",
+    "fwupdplugin-sys",
 ]

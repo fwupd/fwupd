@@ -1,0 +1,48 @@
+[options]
+library = "FwupdPlugin"
+version = "1.0"
+min_cfg_version = "1.0"
+target_path = "."
+girs_directories = []
+work_mode = "sys"
+single_version_file = true
+
+external_libraries = [
+    "GLib",
+    "GObject",
+    "Gio",
+    "Xmlb",
+]
+
+[external_libraries]
+fwupd = "Fwupd"
+
+# Ignore constructors and methods that take libusb types
+# (libusb_device, libusb_endpoint_descriptor, libusb_interface_descriptor).
+# These are external C types from libusb with no GIR representation --
+# the gir tool generates references to them in function signatures but
+# cannot define them. These functions are private API anyway (declared
+# in fu-usb-*-private.h).
+[[object]]
+name = "FwupdPlugin.UsbDevice"
+status = "generate"
+    [[object.function]]
+    name = "new"
+    ignore = true
+    [[object.function]]
+    name = "get_dev"
+    ignore = true
+
+[[object]]
+name = "FwupdPlugin.UsbEndpoint"
+status = "generate"
+    [[object.function]]
+    name = "new"
+    ignore = true
+
+[[object]]
+name = "FwupdPlugin.UsbInterface"
+status = "generate"
+    [[object.function]]
+    name = "new"
+    ignore = true

@@ -1,0 +1,14 @@
+[options]
+library = "Fwupd"
+version = "2.0"
+min_cfg_version = "2.0"
+target_path = "."
+girs_directories = []
+work_mode = "sys"
+single_version_file = true
+
+external_libraries = [
+    "GLib",
+    "GObject",
+    "Gio",
+]
