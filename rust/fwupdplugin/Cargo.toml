@@ -1,0 +1,13 @@
+[package]
+name = "fwupdplugin"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-2.1-or-later"
+description = "Safe Rust bindings for libfwupdplugin"
+
+[dependencies]
+fwupdplugin-sys = { path = "../fwupdplugin-sys", features = ["v2_1_1"] }
+fwupd-sys = { path = "../fwupd-sys", features = ["v2_1_1"] }
+glib = "0.20"
+gio = "0.20"
+libc = "0.2"

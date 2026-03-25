@@ -73,4 +73,13 @@ if enable_rust_plugins
     timeout: 120,
     suite: 'rust',
   )
+  test(
+    'fwupdplugin',
+    cargo_wrapper,
+    args: ['-p', 'fwupdplugin', 'test'],
+    env: cargo_env,
+    depends: [fwupdplugin],
+    timeout: 120,
+    suite: 'rust',
+  )
 endif
