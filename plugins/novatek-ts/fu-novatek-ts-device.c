@@ -1363,8 +1363,11 @@ fu_novatek_ts_device_setup(FuDevice *device, GError **error)
 		&error_local)) {
 		g_warning("firmware is not normal running: %s", error_local->message);
 	}
-	if (!fu_novatek_ts_device_ensure_fw_ver(self, error))
-		return FALSE;
+	g_clear_error(&error_local);
+	if (!fu_novatek_ts_device_ensure_fw_ver(self, &error_local)) {
+		g_warning("failed to read firmware version: %s", error_local->message);
+		fu_device_set_version_raw(FU_DEVICE(self), 0);
+	}
 
 	if (!fu_novatek_ts_device_bootloader_reset(self, error))
 		return FALSE;
