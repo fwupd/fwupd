@@ -34,6 +34,8 @@ is taken automatically from the GType.
 
     G_DECLARE_FINAL_TYPE(FuFooPlugin, fu_foo_plugin, FU, FOO_PLUGIN, FuPlugin)
 
+And the corresponding source file:
+
     /* fu-foo-plugin.c
      *
      * Copyright Richard Hughes <richard@hughsie.com>
@@ -274,8 +276,8 @@ GPIO is asserted when specific types of hardware are updated.
 
 Some hardware can only be updated in a special bootloader mode, which for most
 devices can be switched to automatically.
-In some cases the user to do something manually, for instance re-inserting the
-hardware with a secret button pressed.
+In some cases the user is required to do something manually, for instance
+re-inserting the hardware with a secret button pressed.
 
 Before the device update is performed the fwupd daemon runs an optional
 `detach()` vfunc which switches the device to bootloader mode.
