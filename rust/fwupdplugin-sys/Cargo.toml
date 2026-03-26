@@ -1,0 +1,423 @@
+[package]
+name = "fwupdplugin-sys"
+version = "0.0.1"
+edition = "2021"
+build = "build.rs"
+
+[package.metadata.system-deps.fwupdplugin]
+name = "fwupdplugin"
+version = "1"
+
+[package.metadata.system-deps.fwupdplugin.v1_0_1]
+version = "1.0.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_0_2]
+version = "1.0.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_0_4]
+version = "1.0.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_0_6]
+version = "1.0.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_0_8]
+version = "1.0.8"
+
+[package.metadata.system-deps.fwupdplugin.v1_0_9]
+version = "1.0.9"
+
+[package.metadata.system-deps.fwupdplugin.v1_1]
+version = "1.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_1_1]
+version = "1.1.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_1_2]
+version = "1.1.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_2_2]
+version = "1.2.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_2_4]
+version = "1.2.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_2_5]
+version = "1.2.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_2_6]
+version = "1.2.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_2_9]
+version = "1.2.9"
+
+[package.metadata.system-deps.fwupdplugin.v1_3_1]
+version = "1.3.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_3_2]
+version = "1.3.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_3_3]
+version = "1.3.3"
+
+[package.metadata.system-deps.fwupdplugin.v1_3_4]
+version = "1.3.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_3_5]
+version = "1.3.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_3_7]
+version = "1.3.7"
+
+[package.metadata.system-deps.fwupdplugin.v1_4]
+version = "1.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_4_1]
+version = "1.4.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_4_5]
+version = "1.4.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_4_6]
+version = "1.4.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_5]
+version = "1.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_1]
+version = "1.5.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_2]
+version = "1.5.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_3]
+version = "1.5.3"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_5]
+version = "1.5.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_6]
+version = "1.5.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_7]
+version = "1.5.7"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_8]
+version = "1.5.8"
+
+[package.metadata.system-deps.fwupdplugin.v1_5_9]
+version = "1.5.9"
+
+[package.metadata.system-deps.fwupdplugin.v1_6]
+version = "1.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_6_1]
+version = "1.6.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_6_2]
+version = "1.6.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_6_4]
+version = "1.6.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_7]
+version = "1.7"
+
+[package.metadata.system-deps.fwupdplugin.v1_7_1]
+version = "1.7.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_7_2]
+version = "1.7.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_7_3]
+version = "1.7.3"
+
+[package.metadata.system-deps.fwupdplugin.v1_7_4]
+version = "1.7.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_7_6]
+version = "1.7.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_7_7]
+version = "1.7.7"
+
+[package.metadata.system-deps.fwupdplugin.v1_8]
+version = "1.8"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_1]
+version = "1.8.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_2]
+version = "1.8.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_3]
+version = "1.8.3"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_4]
+version = "1.8.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_5]
+version = "1.8.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_6]
+version = "1.8.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_7]
+version = "1.8.7"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_9]
+version = "1.8.9"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_10]
+version = "1.8.10"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_11]
+version = "1.8.11"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_12]
+version = "1.8.12"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_13]
+version = "1.8.13"
+
+[package.metadata.system-deps.fwupdplugin.v1_8_15]
+version = "1.8.15"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_1]
+version = "1.9.1"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_2]
+version = "1.9.2"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_3]
+version = "1.9.3"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_4]
+version = "1.9.4"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_5]
+version = "1.9.5"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_6]
+version = "1.9.6"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_7]
+version = "1.9.7"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_8]
+version = "1.9.8"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_10]
+version = "1.9.10"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_11]
+version = "1.9.11"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_13]
+version = "1.9.13"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_14]
+version = "1.9.14"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_15]
+version = "1.9.15"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_16]
+version = "1.9.16"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_17]
+version = "1.9.17"
+
+[package.metadata.system-deps.fwupdplugin.v1_9_21]
+version = "1.9.21"
+
+[package.metadata.system-deps.fwupdplugin.v2]
+version = "2"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_1]
+version = "2.0.1"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_2]
+version = "2.0.2"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_3]
+version = "2.0.3"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_4]
+version = "2.0.4"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_5]
+version = "2.0.5"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_6]
+version = "2.0.6"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_7]
+version = "2.0.7"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_8]
+version = "2.0.8"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_9]
+version = "2.0.9"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_10]
+version = "2.0.10"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_11]
+version = "2.0.11"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_12]
+version = "2.0.12"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_13]
+version = "2.0.13"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_14]
+version = "2.0.14"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_15]
+version = "2.0.15"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_17]
+version = "2.0.17"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_18]
+version = "2.0.18"
+
+[package.metadata.system-deps.fwupdplugin.v2_0_19]
+version = "2.0.19"
+
+[package.metadata.system-deps.fwupdplugin.v2_1_1]
+version = "2.1.1"
+
+[package.metadata.system-deps.fwupdplugin.v2_1_2]
+version = "2.1.2"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
+all-features = true
+
+[lib]
+name = "fwupdplugin_sys"
+
+[dependencies]
+libc = "0.2"
+
+[dependencies.glib-sys]
+version = "0.20"
+
+[dependencies.gobject-sys]
+version = "0.20"
+
+[dependencies.gio-sys]
+version = "0.20"
+
+[dependencies.libxmlb-sys]
+version = "0.4"
+
+[dependencies.fwupd-sys]
+path = "../fwupd-sys"
+
+[build-dependencies]
+system-deps = "7"
+
+[dev-dependencies]
+shell-words = "1.0.0"
+tempfile = "3"
+
+[features]
+v1_0_1 = []
+v1_0_2 = ["v1_0_1"]
+v1_0_4 = ["v1_0_2"]
+v1_0_6 = ["v1_0_4"]
+v1_0_8 = ["v1_0_6"]
+v1_0_9 = ["v1_0_8"]
+v1_1 = ["v1_0_9"]
+v1_1_1 = ["v1_1"]
+v1_1_2 = ["v1_1_1"]
+v1_2_2 = ["v1_1_2"]
+v1_2_4 = ["v1_2_2"]
+v1_2_5 = ["v1_2_4"]
+v1_2_6 = ["v1_2_5"]
+v1_2_9 = ["v1_2_6"]
+v1_3_1 = ["v1_2_9"]
+v1_3_2 = ["v1_3_1"]
+v1_3_3 = ["v1_3_2"]
+v1_3_4 = ["v1_3_3"]
+v1_3_5 = ["v1_3_4"]
+v1_3_7 = ["v1_3_5"]
+v1_4 = ["v1_3_7"]
+v1_4_1 = ["v1_4"]
+v1_4_5 = ["v1_4_1"]
+v1_4_6 = ["v1_4_5"]
+v1_5 = ["v1_4_6"]
+v1_5_1 = ["v1_5"]
+v1_5_2 = ["v1_5_1"]
+v1_5_3 = ["v1_5_2"]
+v1_5_5 = ["v1_5_3"]
+v1_5_6 = ["v1_5_5"]
+v1_5_7 = ["v1_5_6"]
+v1_5_8 = ["v1_5_7"]
+v1_5_9 = ["v1_5_8"]
+v1_6 = ["v1_5_9"]
+v1_6_1 = ["v1_6"]
+v1_6_2 = ["v1_6_1"]
+v1_6_4 = ["v1_6_2"]
+v1_7 = ["v1_6_4"]
+v1_7_1 = ["v1_7"]
+v1_7_2 = ["v1_7_1"]
+v1_7_3 = ["v1_7_2"]
+v1_7_4 = ["v1_7_3"]
+v1_7_6 = ["v1_7_4"]
+v1_7_7 = ["v1_7_6"]
+v1_8 = ["v1_7_7"]
+v1_8_1 = ["v1_8"]
+v1_8_2 = ["v1_8_1"]
+v1_8_3 = ["v1_8_2"]
+v1_8_4 = ["v1_8_3"]
+v1_8_5 = ["v1_8_4"]
+v1_8_6 = ["v1_8_5"]
+v1_8_7 = ["v1_8_6"]
+v1_8_9 = ["v1_8_7"]
+v1_8_10 = ["v1_8_9"]
+v1_8_11 = ["v1_8_10"]
+v1_8_12 = ["v1_8_11"]
+v1_8_13 = ["v1_8_12"]
+v1_8_15 = ["v1_8_13"]
+v1_9_1 = ["v1_8_15"]
+v1_9_2 = ["v1_9_1"]
+v1_9_3 = ["v1_9_2"]
+v1_9_4 = ["v1_9_3"]
+v1_9_5 = ["v1_9_4"]
+v1_9_6 = ["v1_9_5"]
+v1_9_7 = ["v1_9_6"]
+v1_9_8 = ["v1_9_7"]
+v1_9_10 = ["v1_9_8"]
+v1_9_11 = ["v1_9_10"]
+v1_9_13 = ["v1_9_11"]
+v1_9_14 = ["v1_9_13"]
+v1_9_15 = ["v1_9_14"]
+v1_9_16 = ["v1_9_15"]
+v1_9_17 = ["v1_9_16"]
+v1_9_21 = ["v1_9_17"]
+v2 = ["v1_9_21"]
+v2_0_1 = ["v2"]
+v2_0_2 = ["v2_0_1"]
+v2_0_3 = ["v2_0_2"]
+v2_0_4 = ["v2_0_3"]
+v2_0_5 = ["v2_0_4"]
+v2_0_6 = ["v2_0_5"]
+v2_0_7 = ["v2_0_6"]
+v2_0_8 = ["v2_0_7"]
+v2_0_9 = ["v2_0_8"]
+v2_0_10 = ["v2_0_9"]
+v2_0_11 = ["v2_0_10"]
+v2_0_12 = ["v2_0_11"]
+v2_0_13 = ["v2_0_12"]
+v2_0_14 = ["v2_0_13"]
+v2_0_15 = ["v2_0_14"]
+v2_0_17 = ["v2_0_15"]
+v2_0_18 = ["v2_0_17"]
+v2_0_19 = ["v2_0_18"]
+v2_1_1 = ["v2_0_19"]
+v2_1_2 = ["v2_1_1"]

@@ -1,0 +1,73 @@
+[package]
+name = "fwupd-sys"
+version = "0.0.1"
+edition = "2021"
+build = "build.rs"
+
+[package.metadata.system-deps.fwupd]
+name = "fwupd"
+version = "2"
+
+[package.metadata.system-deps.fwupd.v2_0_1]
+version = "2.0.1"
+
+[package.metadata.system-deps.fwupd.v2_0_2]
+version = "2.0.2"
+
+[package.metadata.system-deps.fwupd.v2_0_4]
+version = "2.0.4"
+
+[package.metadata.system-deps.fwupd.v2_0_7]
+version = "2.0.7"
+
+[package.metadata.system-deps.fwupd.v2_0_10]
+version = "2.0.10"
+
+[package.metadata.system-deps.fwupd.v2_0_11]
+version = "2.0.11"
+
+[package.metadata.system-deps.fwupd.v2_0_16]
+version = "2.0.16"
+
+[package.metadata.system-deps.fwupd.v2_0_17]
+version = "2.0.17"
+
+[package.metadata.system-deps.fwupd.v2_1_1]
+version = "2.1.1"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
+all-features = true
+
+[lib]
+name = "fwupd_sys"
+
+[dependencies]
+libc = "0.2"
+
+[dependencies.glib-sys]
+version = "0.20"
+
+[dependencies.gobject-sys]
+version = "0.20"
+
+[dependencies.gio-sys]
+version = "0.20"
+
+[build-dependencies]
+system-deps = "7"
+
+[dev-dependencies]
+shell-words = "1.0.0"
+tempfile = "3"
+
+[features]
+v2_0_1 = []
+v2_0_2 = ["v2_0_1"]
+v2_0_4 = ["v2_0_2"]
+v2_0_7 = ["v2_0_4"]
+v2_0_10 = ["v2_0_7"]
+v2_0_11 = ["v2_0_10"]
+v2_0_16 = ["v2_0_11"]
+v2_0_17 = ["v2_0_16"]
+v2_1_1 = ["v2_0_17"]
