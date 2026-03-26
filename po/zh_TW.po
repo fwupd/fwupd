@@ -501,7 +501,7 @@ msgstr "SPI BIOS 敘述文字"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
-msgstr "預先開機 DMA 保護"
+msgstr "預先開機 DMA 防護"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
@@ -708,11 +708,11 @@ msgstr ""
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
-msgstr "韌體寫入保護"
+msgstr "韌體寫入防護"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection Lock"
-msgstr "韌體寫入保護鎖"
+msgstr "韌體寫入防護鎖"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "Firmware BIOS Region"
@@ -724,7 +724,7 @@ msgstr "韌體 BIOS 描述元"
 
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
-msgstr "預先開機 DMA 保護"
+msgstr "預先開機 DMA 防護"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
@@ -734,7 +734,7 @@ msgstr "Intel BootGuard 驗證開機"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM Protected"
-msgstr "Intel BootGuard ACM 保護"
+msgstr "Intel BootGuard ACM 防護"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
@@ -847,11 +847,11 @@ msgstr ""
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
-msgstr "AMD 韌體重放保護"
+msgstr "AMD 韌體重放防護"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
-msgstr "AMD 韌體寫入保護"
+msgstr "AMD 韌體寫入防護"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -891,7 +891,7 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr "「預先開機 DMA 保護」防止裝置在連接到電腦上之後存取系統記憶體。"
+msgstr "「預先開機 DMA 防護」防止裝置在連接到電腦上之後存取系統記憶體。"
 
 #. TRANSLATORS: longer description
 msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
@@ -923,7 +923,7 @@ msgid "Linux Kernel Verification makes sure that critical system software has no
 msgstr ""
 
 msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
-msgstr "Linux 核心交換機制會在您進行作業時將一些資訊暫時儲存到磁碟上。如果這些資訊沒有保護，別人只要拿到磁碟就能夠存取它。"
+msgstr "Linux 核心交換機制會在您進行作業時將一些資訊暫時儲存到磁碟上。如果這些資訊沒有防護，別人只要拿到磁碟就能夠存取它。"
 
 #. TRANSLATORS: longer description
 msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
@@ -3468,11 +3468,11 @@ msgstr "核心鎖定已啟用"
 
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is disabled"
-msgstr "預先開機 DMA 保護已停用"
+msgstr "預先開機 DMA 防護已停用"
 
 #. TRANSLATORS: HSI event title
 msgid "Pre-boot DMA protection is enabled"
-msgstr "預先開機 DMA 保護已啟用"
+msgstr "預先開機 DMA 防護已啟用"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"
