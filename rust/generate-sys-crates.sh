@@ -97,17 +97,6 @@ LIB_RS="${SCRIPT_DIR}/${MODULE}/src/lib.rs"
 # Post-generation fixups for limitations of the gir tool.
 
 if [ "$MODULE" = "fwupd-sys" ]; then
-    # The C headers use G_GNUC_FLAG_ENUM to force guint64 storage for
-    # several flag enums, even when all member values fit in 32 bits.
-    # The GIR format doesn't convey the storage size, and the gir tool
-    # only promotes to u64 when member values exceed u32::MAX. Fix the
-    # remaining types that are guint64 in C but c_uint in the bindings.
-    for type in FwupdDeviceProblem FwupdFeatureFlags \
-        FwupdInstallFlags FwupdPluginFlags FwupdReleaseFlags \
-        FwupdReportFlags FwupdRequestFlags FwupdSelfSignFlags; do
-        sed -i "s/pub type ${type} = c_uint;/pub type ${type} = u64;/" "$LIB_RS"
-    done
-
     # The GI scanner sees fwupd_guid_t as guint8* (a pointer) because
     # fwupd-common.h uses #ifdef __GI_SCANNER__ to hide the fixed-size
     # array typedef. The real C type is guint8[16].
