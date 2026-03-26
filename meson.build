@@ -864,6 +864,13 @@ endif
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
+cargo = find_program('cargo')
+cargo_env = environment()
+cargo_env.set('MESON_BUILDTYPE', get_option('buildtype'))
+cargo_env.set('MESON_BUILD_ROOT', meson.project_build_root())
+# MESON_SOURCE_DIR is set where the env will be used (after copying)
+cargo_wrapper = find_program(join_paths('generate-build', 'meson-cargo.sh'))
+
 subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
@@ -873,6 +880,7 @@ if build_standalone
   man_md = []
   md_targets = []
   plugin_quirks = []
+  subdir('rust')
   subdir('libfwupdplugin')
   subdir('po')
   subdir('contrib')

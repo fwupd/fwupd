@@ -127,3 +127,17 @@ repos:
     rev: v8.28.0
     hooks:
       - id: gitleaks
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --manifest-path=rust/Cargo.toml -- --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --manifest-path=rust/Cargo.toml -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
