@@ -419,7 +419,7 @@ fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
 	*send_size = ready_send_size;
 	if (ready_send_size % max_size == 0) {
 		FuLegionHidRetryHelper helper = {0};
-		guint32 recieved_size = 0;
+		guint32 received_size = 0;
 		g_autoptr(GByteArray) res = NULL;
 
 		helper.main_id = fu_struct_legion_hid_upgrade_cmd_get_main_id(st_cmd);
@@ -432,16 +432,16 @@ fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
 		if (!fu_memread_uint32_safe(res->data,
 					    res->len,
 					    FU_STRUCT_LEGION_HID_UPGRADE_RSP_SIZE,
-					    &recieved_size,
+					    &received_size,
 					    G_BIG_ENDIAN,
 					    error))
 			return FALSE;
-		if (recieved_size != *send_size) {
+		if (received_size != *send_size) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "device report received size %u mismatch send size %u",
-				    recieved_size,
+				    received_size,
 				    *send_size);
 			return FALSE;
 		}
