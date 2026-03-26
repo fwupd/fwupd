@@ -396,6 +396,7 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 	g_autoptr(FuNordicHidCfgChannel) peer = NULL;
 
 	peer = fu_nordic_hid_cfg_channel_new(FU_DEVICE(self), peer_id);
+	fu_device_set_proxy_gtype(FU_DEVICE(peer), FU_TYPE_NORDIC_HID_CFG_CHANNEL);
 
 	/* ensure that the general quirk content for Nordic HID devices is applied */
 	fu_device_add_instance_id_full(FU_DEVICE(peer),
@@ -418,7 +419,6 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 	/* prohibit to close parent's communication descriptor */
 	fu_device_add_private_flag(FU_DEVICE(peer), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
-	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_NORDIC_HID_CFG_CHANNEL);
 }
 
 static void
