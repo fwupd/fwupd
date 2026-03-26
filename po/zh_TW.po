@@ -5,20 +5,21 @@
 # Translators:
 # Cheng-Chia Tseng <pswo10680@gmail.com>, 2017-2018,2024
 # Richard Hughes <hughsient@gmail.com>, 2025.
+# EESF-2 <eesf-2@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2025-10-24 10:42+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2026-03-26 00:03+0000\n"
+"Last-Translator: EESF-2 <eesf-2@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hant/>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 5.17-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 廠商韌體服務（穩定版韌體）"
@@ -31,7 +32,7 @@ msgid "Enabling this functionality is done at your own risk, which means you hav
 msgstr "啟用此功能必須自負風險。這代表若您遭遇到這些更新導致的任何問題，您必須向原始設備供應商聯絡並反應。只有在您遇到更新過程本身的問題時，才是向 $OS_RELEASE:BUG_REPORT_URL$ 回報。"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Linux 廠商韌體服務（測試中韌體）"
+msgstr "Linux 廠商韌體服務（測試版韌體）"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "這個遠端站點包含未列入禁運，但仍處於硬體廠商測試階段的韌體。您應該確保自己在韌體更新失敗時有方法能夠手動降級韌體。"
@@ -172,7 +173,7 @@ msgid "Authentication is required to modify BIOS settings"
 msgstr "必須先通過身份核對才能修改 BIOS 設定"
 
 msgid "Security hardening for HSI"
-msgstr ""
+msgstr "HSI 安全硬化"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
@@ -223,15 +224,15 @@ msgstr "列出 dbx 中的條目"
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
-msgstr ""
+msgstr "套用更新檔案"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
-msgstr ""
+msgstr "指定 dbx 資料庫檔案"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
-msgstr ""
+msgstr "檔名"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -239,7 +240,7 @@ msgstr "凌駕預設 ESP 路徑"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
-msgstr ""
+msgstr "路徑"
 
 #. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
@@ -255,7 +256,7 @@ msgstr ""
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr "無法剖析引數"
+msgstr "無法解析引數"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -280,15 +281,15 @@ msgstr ""
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
-msgstr "正在剖析系統 dbx…"
+msgstr "正在解析系統 dbx…"
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr "正在剖析 dbx 更新…"
+msgstr "正在解析 dbx 更新…"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
-msgstr "無法剖析本機 dbx"
+msgstr "無法解析本機 dbx"
 
 #. TRANSLATORS: same or newer update already applied
 msgid "Cannot apply as dbx update has already been applied."
@@ -387,7 +388,7 @@ msgstr "未知"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
-msgstr "剩不到一分鐘"
+msgstr "剩下不到一分鐘"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -529,12 +530,12 @@ msgstr ""
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "CET Platform"
-msgstr ""
+msgstr "CET 平臺"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * Utilized by OS means the distribution enabled it
 msgid "CET OS Support"
-msgstr ""
+msgstr "CET OS 支援"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"
@@ -547,7 +548,7 @@ msgstr ""
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
-msgstr ""
+msgstr "IOMMU"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux kernel lockdown"
@@ -559,7 +560,7 @@ msgstr "Linux 核心"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
-msgstr ""
+msgstr "Linux swap"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
@@ -623,15 +624,15 @@ msgstr ""
 #.
 #, c-format
 msgid "%s v%s"
-msgstr ""
+msgstr "%s v%s"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s version"
-msgstr ""
+msgstr "%s 版本"
 
 msgid "MEI version"
-msgstr ""
+msgstr "MEI 版本"
 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
@@ -755,7 +756,7 @@ msgstr ""
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU Protection"
-msgstr "IOMMU 保護"
+msgstr "IOMMU 防護"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux Kernel Lockdown"
@@ -805,7 +806,7 @@ msgstr "Intel 管理引擎出廠模式"
 #. * with a jumper -- luckily it is probably not accessible to end users on consumer
 #. * boards
 msgid "Intel Management Engine Override"
-msgstr "Intel 管理引擎凌駕"
+msgstr "Intel 管理引擎覆寫"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
 #. * to the private/public key used to secure loading of firmware
