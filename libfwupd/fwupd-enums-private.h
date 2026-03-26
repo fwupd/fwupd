@@ -11,7 +11,7 @@
 G_BEGIN_DECLS
 
 /**
- * FWUPD_RESULT_KEY_APPSTREAM_ID:
+ * FWUPD_RESULT_KEY_APPSTREAM_ID: (skip)
  *
  * Result key to represent AppstreamId
  *
@@ -19,7 +19,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_APPSTREAM_ID "AppstreamId"
 /**
- * FWUPD_RESULT_KEY_RELEASE_ID:
+ * FWUPD_RESULT_KEY_RELEASE_ID: (skip)
  *
  * Result key to represent the release ID.
  *
@@ -27,7 +27,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_RELEASE_ID "ReleaseId"
 /**
- * FWUPD_RESULT_KEY_CHECKSUM:
+ * FWUPD_RESULT_KEY_CHECKSUM: (skip)
  *
  * Result key to represent Checksum
  *
@@ -35,7 +35,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_CHECKSUM "Checksum"
 /**
- * FWUPD_RESULT_KEY_TAGS:
+ * FWUPD_RESULT_KEY_TAGS: (skip)
  *
  * Result key to represent release tags
  *
@@ -43,7 +43,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_TAGS "Tags"
 /**
- * FWUPD_RESULT_KEY_CREATED:
+ * FWUPD_RESULT_KEY_CREATED: (skip)
  *
  * Result key to represent Created
  *
@@ -51,7 +51,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_CREATED "Created"
 /**
- * FWUPD_RESULT_KEY_DESCRIPTION:
+ * FWUPD_RESULT_KEY_DESCRIPTION: (skip)
  *
  * Result key to represent Description
  *
@@ -59,7 +59,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DESCRIPTION "Description"
 /**
- * FWUPD_RESULT_KEY_DETACH_CAPTION:
+ * FWUPD_RESULT_KEY_DETACH_CAPTION: (skip)
  *
  * Result key to represent DetachCaption
  *
@@ -67,7 +67,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DETACH_CAPTION "DetachCaption"
 /**
- * FWUPD_RESULT_KEY_DETACH_IMAGE:
+ * FWUPD_RESULT_KEY_DETACH_IMAGE: (skip)
  *
  * Result key to represent DetachImage
  *
@@ -75,7 +75,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DETACH_IMAGE "DetachImage"
 /**
- * FWUPD_RESULT_KEY_DEVICE_ID:
+ * FWUPD_RESULT_KEY_DEVICE_ID: (skip)
  *
  * Result key to represent DeviceId
  *
@@ -83,7 +83,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DEVICE_ID "DeviceId"
 /**
- * FWUPD_RESULT_KEY_PARENT_DEVICE_ID:
+ * FWUPD_RESULT_KEY_PARENT_DEVICE_ID: (skip)
  *
  * Result key to represent ParentDeviceId
  *
@@ -91,7 +91,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_PARENT_DEVICE_ID "ParentDeviceId"
 /**
- * FWUPD_RESULT_KEY_COMPOSITE_ID:
+ * FWUPD_RESULT_KEY_COMPOSITE_ID: (skip)
  *
  * Result key to represent CompositeId
  *
@@ -99,7 +99,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_COMPOSITE_ID "CompositeId"
 /**
- * FWUPD_RESULT_KEY_FILENAME:
+ * FWUPD_RESULT_KEY_FILENAME: (skip)
  *
  * Result key to represent Filename
  *
@@ -107,7 +107,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_FILENAME "Filename"
 /**
- * FWUPD_RESULT_KEY_PROTOCOL:
+ * FWUPD_RESULT_KEY_PROTOCOL: (skip)
  *
  * Result key to represent Protocol
  *
@@ -115,7 +115,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_PROTOCOL "Protocol"
 /**
- * FWUPD_RESULT_KEY_CATEGORIES:
+ * FWUPD_RESULT_KEY_CATEGORIES: (skip)
  *
  * Result key to represent Categories
  *
@@ -123,7 +123,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_CATEGORIES "Categories"
 /**
- * FWUPD_RESULT_KEY_ISSUES:
+ * FWUPD_RESULT_KEY_ISSUES: (skip)
  *
  * Result key to represent Issues
  *
@@ -131,7 +131,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_ISSUES "Issues"
 /**
- * FWUPD_RESULT_KEY_FLAGS:
+ * FWUPD_RESULT_KEY_FLAGS: (skip)
  *
  * Result key to represent Flags
  *
@@ -139,7 +139,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_FLAGS "Flags"
 /**
- * FWUPD_RESULT_KEY_REQUEST_FLAGS:
+ * FWUPD_RESULT_KEY_REQUEST_FLAGS: (skip)
  *
  * Result key to represent RequestFlags
  *
@@ -147,7 +147,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_REQUEST_FLAGS "RequestFlags"
 /**
- * FWUPD_RESULT_KEY_FLASHES_LEFT:
+ * FWUPD_RESULT_KEY_FLASHES_LEFT: (skip)
  *
  * Result key to represent FlashesLeft
  *
@@ -155,7 +155,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_FLASHES_LEFT "FlashesLeft"
 /**
- * FWUPD_RESULT_KEY_URGENCY:
+ * FWUPD_RESULT_KEY_URGENCY: (skip)
  *
  * Result key to represent Urgency
  *
@@ -163,7 +163,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_URGENCY "Urgency"
 /**
- * FWUPD_RESULT_KEY_REQUEST_KIND:
+ * FWUPD_RESULT_KEY_REQUEST_KIND: (skip)
  *
  * Result key to represent RequestKind
  *
@@ -171,7 +171,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_REQUEST_KIND "RequestKind"
 /**
- * FWUPD_RESULT_KEY_HSI_LEVEL:
+ * FWUPD_RESULT_KEY_HSI_LEVEL: (skip)
  *
  * Result key to represent HsiLevel
  *
@@ -179,7 +179,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_HSI_LEVEL "HsiLevel"
 /**
- * FWUPD_RESULT_KEY_HSI_RESULT:
+ * FWUPD_RESULT_KEY_HSI_RESULT: (skip)
  *
  * Result key to represent HsiResult
  *
@@ -187,7 +187,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_HSI_RESULT "HsiResult"
 /**
- * FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK:
+ * FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK: (skip)
  *
  * Result key to represent the fallback HsiResult
  *
@@ -195,7 +195,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK "HsiResultFallback"
 /**
- * FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS:
+ * FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS: (skip)
  *
  * Result key to represent the desired HsiResult
  *
@@ -203,7 +203,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS "HsiResultSuccess"
 /**
- * FWUPD_RESULT_KEY_INSTALL_DURATION:
+ * FWUPD_RESULT_KEY_INSTALL_DURATION: (skip)
  *
  * Result key to represent InstallDuration
  *
@@ -211,7 +211,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_INSTALL_DURATION "InstallDuration"
 /**
- * FWUPD_RESULT_KEY_GUID:
+ * FWUPD_RESULT_KEY_GUID: (skip)
  *
  * Result key to represent Guid
  *
@@ -219,7 +219,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_GUID "Guid"
 /**
- * FWUPD_RESULT_KEY_INSTANCE_IDS:
+ * FWUPD_RESULT_KEY_INSTANCE_IDS: (skip)
  *
  * Result key to represent InstanceIds
  *
@@ -227,7 +227,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_INSTANCE_IDS "InstanceIds"
 /**
- * FWUPD_RESULT_KEY_HOMEPAGE:
+ * FWUPD_RESULT_KEY_HOMEPAGE: (skip)
  *
  * Result key to represent Homepage
  *
@@ -235,7 +235,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_HOMEPAGE "Homepage"
 /**
- * FWUPD_RESULT_KEY_DETAILS_URL:
+ * FWUPD_RESULT_KEY_DETAILS_URL: (skip)
  *
  * Result key to represent DetailsUrl
  *
@@ -243,7 +243,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DETAILS_URL "DetailsUrl"
 /**
- * FWUPD_RESULT_KEY_SOURCE_URL:
+ * FWUPD_RESULT_KEY_SOURCE_URL: (skip)
  *
  * Result key to represent SourceUrl
  *
@@ -251,7 +251,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_SOURCE_URL "SourceUrl"
 /**
- * FWUPD_RESULT_KEY_SBOM_URL:
+ * FWUPD_RESULT_KEY_SBOM_URL: (skip)
  *
  * Result key to represent SourceUrl
  *
@@ -259,7 +259,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_SBOM_URL "SbomUrl"
 /**
- * FWUPD_RESULT_KEY_ICON:
+ * FWUPD_RESULT_KEY_ICON: (skip)
  *
  * Result key to represent Icon
  *
@@ -267,7 +267,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_ICON "Icon"
 /**
- * FWUPD_RESULT_KEY_LICENSE:
+ * FWUPD_RESULT_KEY_LICENSE: (skip)
  *
  * Result key to represent License
  *
@@ -275,7 +275,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_LICENSE "License"
 /**
- * FWUPD_RESULT_KEY_MODIFIED:
+ * FWUPD_RESULT_KEY_MODIFIED: (skip)
  *
  * Result key to represent Modified
  *
@@ -283,7 +283,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_MODIFIED "Modified"
 /**
- * FWUPD_RESULT_KEY_VERSION_BUILD_DATE:
+ * FWUPD_RESULT_KEY_VERSION_BUILD_DATE: (skip)
  *
  * Result key to represent VersionBuildDate
  *
@@ -291,7 +291,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_BUILD_DATE "VersionBuildDate"
 /**
- * FWUPD_RESULT_KEY_METADATA:
+ * FWUPD_RESULT_KEY_METADATA: (skip)
  *
  * Result key to represent Metadata
  *
@@ -299,7 +299,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_METADATA "Metadata"
 /**
- * FWUPD_RESULT_KEY_NAME:
+ * FWUPD_RESULT_KEY_NAME: (skip)
  *
  * Result key to represent Name
  *
@@ -307,7 +307,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_NAME "Name"
 /**
- * FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX:
+ * FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX: (skip)
  *
  * Result key to represent NameVariantSuffix
  *
@@ -315,7 +315,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX "NameVariantSuffix"
 /**
- * FWUPD_RESULT_KEY_PLUGIN:
+ * FWUPD_RESULT_KEY_PLUGIN: (skip)
  *
  * Result key to represent Plugin
  *
@@ -323,7 +323,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_PLUGIN "Plugin"
 /**
- * FWUPD_RESULT_KEY_RELEASE:
+ * FWUPD_RESULT_KEY_RELEASE: (skip)
  *
  * Result key to represent Release
  *
@@ -331,7 +331,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_RELEASE "Release"
 /**
- * FWUPD_RESULT_KEY_REMOTE_ID:
+ * FWUPD_RESULT_KEY_REMOTE_ID: (skip)
  *
  * Result key to represent RemoteId
  *
@@ -339,7 +339,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_REMOTE_ID "RemoteId"
 /**
- * FWUPD_RESULT_KEY_SERIAL:
+ * FWUPD_RESULT_KEY_SERIAL: (skip)
  *
  * Result key to represent Serial
  *
@@ -347,7 +347,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_SERIAL "Serial"
 /**
- * FWUPD_RESULT_KEY_SIZE:
+ * FWUPD_RESULT_KEY_SIZE: (skip)
  *
  * Result key to represent Size
  *
@@ -355,7 +355,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_SIZE "Size"
 /**
- * FWUPD_RESULT_KEY_STATUS:
+ * FWUPD_RESULT_KEY_STATUS: (skip)
  *
  * Result key to represent Status
  *
@@ -363,7 +363,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_STATUS "Status"
 /**
- * FWUPD_RESULT_KEY_PERCENTAGE:
+ * FWUPD_RESULT_KEY_PERCENTAGE: (skip)
  *
  * Result key to represent progress percentage, typically installation or verification
  *
@@ -371,7 +371,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_PERCENTAGE "Percentage"
 /**
- * FWUPD_RESULT_KEY_SUMMARY:
+ * FWUPD_RESULT_KEY_SUMMARY: (skip)
  *
  * Result key to represent Summary
  *
@@ -379,7 +379,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_SUMMARY "Summary"
 /**
- * FWUPD_RESULT_KEY_BRANCH:
+ * FWUPD_RESULT_KEY_BRANCH: (skip)
  *
  * Result key to represent Branch
  *
@@ -387,7 +387,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BRANCH "Branch"
 /**
- * FWUPD_RESULT_KEY_TRUST_FLAGS:
+ * FWUPD_RESULT_KEY_TRUST_FLAGS: (skip)
  *
  * Result key to represent TrustFlags
  *
@@ -395,7 +395,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_TRUST_FLAGS "TrustFlags"
 /**
- * FWUPD_RESULT_KEY_PROBLEMS:
+ * FWUPD_RESULT_KEY_PROBLEMS: (skip)
  *
  * Result key to represent problems
  *
@@ -403,7 +403,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_PROBLEMS "Problems"
 /**
- * FWUPD_RESULT_KEY_UPDATE_MESSAGE:
+ * FWUPD_RESULT_KEY_UPDATE_MESSAGE: (skip)
  *
  * Result key to represent UpdateMessage
  *
@@ -411,7 +411,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_UPDATE_MESSAGE "UpdateMessage"
 /**
- * FWUPD_RESULT_KEY_UPDATE_IMAGE:
+ * FWUPD_RESULT_KEY_UPDATE_IMAGE: (skip)
  *
  * Result key to represent UpdateImage
  *
@@ -419,7 +419,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_UPDATE_IMAGE "UpdateImage"
 /**
- * FWUPD_RESULT_KEY_UPDATE_ERROR:
+ * FWUPD_RESULT_KEY_UPDATE_ERROR: (skip)
  *
  * Result key to represent UpdateError
  *
@@ -427,7 +427,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_UPDATE_ERROR "UpdateError"
 /**
- * FWUPD_RESULT_KEY_UPDATE_STATE:
+ * FWUPD_RESULT_KEY_UPDATE_STATE: (skip)
  *
  * Result key to represent UpdateState
  *
@@ -435,7 +435,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_UPDATE_STATE "UpdateState"
 /**
- * FWUPD_RESULT_KEY_URI:
+ * FWUPD_RESULT_KEY_URI: (skip)
  *
  * Result key to represent Uri
  *
@@ -443,7 +443,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_URI "Uri"
 /**
- * FWUPD_RESULT_KEY_LOCATIONS:
+ * FWUPD_RESULT_KEY_LOCATIONS: (skip)
  *
  * Result key to represent Locations
  *
@@ -451,7 +451,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_LOCATIONS "Locations"
 /**
- * FWUPD_RESULT_KEY_VENDOR_ID:
+ * FWUPD_RESULT_KEY_VENDOR_ID: (skip)
  *
  * Result key to represent VendorId
  *
@@ -459,7 +459,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VENDOR_ID "VendorId"
 /**
- * FWUPD_RESULT_KEY_VENDOR:
+ * FWUPD_RESULT_KEY_VENDOR: (skip)
  *
  * Result key to represent Vendor
  *
@@ -467,7 +467,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VENDOR "Vendor"
 /**
- * FWUPD_RESULT_KEY_VERSION_BOOTLOADER:
+ * FWUPD_RESULT_KEY_VERSION_BOOTLOADER: (skip)
  *
  * Result key to represent VersionBootloader
  *
@@ -475,7 +475,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER "VersionBootloader"
 /**
- * FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW:
+ * FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW: (skip)
  *
  * Result key to represent VersionBootloaderRaw
  *
@@ -483,7 +483,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW "VersionBootloaderRaw"
 /**
- * FWUPD_RESULT_KEY_VERSION_FORMAT:
+ * FWUPD_RESULT_KEY_VERSION_FORMAT: (skip)
  *
  * Result key to represent VersionFormat
  *
@@ -491,7 +491,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_FORMAT "VersionFormat"
 /**
- * FWUPD_RESULT_KEY_VERSION_RAW:
+ * FWUPD_RESULT_KEY_VERSION_RAW: (skip)
  *
  * Result key to represent VersionRaw
  *
@@ -499,7 +499,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_RAW "VersionRaw"
 /**
- * FWUPD_RESULT_KEY_VERSION_LOWEST:
+ * FWUPD_RESULT_KEY_VERSION_LOWEST: (skip)
  *
  * Result key to represent VersionLowest
  *
@@ -507,7 +507,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_LOWEST "VersionLowest"
 /**
- * FWUPD_RESULT_KEY_VERSION_LOWEST_RAW:
+ * FWUPD_RESULT_KEY_VERSION_LOWEST_RAW: (skip)
  *
  * Result key to represent VersionLowestRaw
  *
@@ -515,7 +515,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_LOWEST_RAW "VersionLowestRaw"
 /**
- * FWUPD_RESULT_KEY_VERSION:
+ * FWUPD_RESULT_KEY_VERSION: (skip)
  *
  * Result key to represent Version
  *
@@ -523,7 +523,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION "Version"
 /**
- * FWUPD_RESULT_KEY_VERSION_OLD:
+ * FWUPD_RESULT_KEY_VERSION_OLD: (skip)
  *
  * Result key to represent the old version string.
  *
@@ -531,7 +531,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_OLD "VersionOld"
 /**
- * FWUPD_RESULT_KEY_BATTERY_LEVEL:
+ * FWUPD_RESULT_KEY_BATTERY_LEVEL: (skip)
  *
  * Result key to represent the current battery level in percent.
  * Expressed from 0-100%, or 101 for invalid or unset.
@@ -540,7 +540,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BATTERY_LEVEL "BatteryLevel"
 /**
- * FWUPD_RESULT_KEY_BATTERY_THRESHOLD:
+ * FWUPD_RESULT_KEY_BATTERY_THRESHOLD: (skip)
  *
  * Result key to represent the minimum battery level required to perform an update.
  * Expressed from 0-100%, or 101 for invalid or unset.
@@ -549,7 +549,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BATTERY_THRESHOLD "BatteryThreshold"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_ID:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_ID: (skip)
  *
  * Result key to represent the unique identifier of the BIOS setting.
  *
@@ -557,7 +557,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_ID "BiosSettingId"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE: (skip)
  *
  * Result key to represent the value that would enable this attribute.
  *
@@ -565,7 +565,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE "BiosSettingTargetValue"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE: (skip)
  *
  * Result key to represent the current value of BIOS setting.
  *
@@ -573,7 +573,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE "BiosSettingCurrentValue"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_TYPE:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_TYPE: (skip)
  *
  * Result key to represent the type of BIOS setting.
  * 0 is invalid, 1+ represent an attribute type
@@ -582,7 +582,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_TYPE "BiosSettingType"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES: (skip)
  *
  * Result key to represent possible values
  *
@@ -590,7 +590,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES "BiosSettingPossibleValues"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND: (skip)
  *
  * Result key to represent the upper bound for an integer BIOS setting.
  * or minimum length for string BIOS setting.
@@ -598,7 +598,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND "BiosSettingLowerBound"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND: (skip)
  *
  * Result key to represent the lower bound for an integer BIOS setting
  * or maximum length for string BIOS setting.
@@ -607,7 +607,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND "BiosSettingUpperBound"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT: (skip)
  *
  * Result key to represent the scalar increment for an integer BIOS setting.
  *
@@ -615,7 +615,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT "BiosSettingScalarIncrement"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY: (skip)
  *
  * Result key to represent whether BIOS setting is read only
  *
@@ -623,7 +623,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY "BiosSettingReadOnly"
 /**
- * FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE:
+ * FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE: (skip)
  *
  * Result key to represent the current kernel setting.
  *
@@ -631,7 +631,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE "KernelCurrentValue"
 /**
- * FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME:
+ * FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME: (skip)
  *
  * Result key to represent the filename within @path for BIOS setting value operations.
  *
@@ -639,7 +639,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME "BiosSettingFilename"
 /**
- * FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE:
+ * FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE: (skip)
  *
  * Result key to represent the target kernel setting.
  *
@@ -647,7 +647,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE "KernelTargetValue"
 /**
- * FWUPD_RESULT_KEY_DISTRO_ID:
+ * FWUPD_RESULT_KEY_DISTRO_ID: (skip)
  *
  * Result key to represent the distribution ID.
  *
@@ -655,7 +655,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DISTRO_ID "DistroId"
 /**
- * FWUPD_RESULT_KEY_DISTRO_VARIANT:
+ * FWUPD_RESULT_KEY_DISTRO_VARIANT: (skip)
  *
  * Result key to represent the distribution variant.
  *
@@ -663,7 +663,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DISTRO_VARIANT "DistroVariant"
 /**
- * FWUPD_RESULT_KEY_DISTRO_VERSION:
+ * FWUPD_RESULT_KEY_DISTRO_VERSION: (skip)
  *
  * Result key to represent the distribution version.
  *
@@ -671,7 +671,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_DISTRO_VERSION "DistroVersion"
 /**
- * FWUPD_RESULT_KEY_REPORTS:
+ * FWUPD_RESULT_KEY_REPORTS: (skip)
  *
  * Result key to represent an array of reports.
  *
@@ -679,7 +679,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_REPORTS "Reports"
 /**
- * FWUPD_RESULT_KEY_DEVICE_NAME:
+ * FWUPD_RESULT_KEY_DEVICE_NAME: (skip)
  *
  * Result key to represent the device name.
  *
