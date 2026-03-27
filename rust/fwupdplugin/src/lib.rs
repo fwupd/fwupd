@@ -72,6 +72,6 @@ pub mod prelude {
     pub use super::plugin::{Plugin, PluginExt, PluginImpl};
     pub use super::progress::Progress;
     pub use super::udev_device::{UdevDevice, UdevDeviceImpl};
-    pub use super::usb_device::{UsbDevice, UsbDeviceImpl};
+    pub use super::usb_device::{UsbDevice, UsbDeviceExt, UsbDeviceImpl};
     pub use glib;
 }
