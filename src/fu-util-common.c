@@ -1391,6 +1391,11 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 				  fwupd_device_get_version_lowest(dev));
 	fwupd_codec_string_append(str,
 				  idt + 1,
+				  /* TRANSLATORS: largest version number installable on device */
+				  _("Maximum Version"),
+				  fwupd_device_get_version_highest(dev));
+	fwupd_codec_string_append(str,
+				  idt + 1,
 				  /* TRANSLATORS: firmware version of bootloader */
 				  _("Bootloader Version"),
 				  fwupd_device_get_version_bootloader(dev));
