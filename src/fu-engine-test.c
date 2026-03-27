@@ -932,6 +932,124 @@ fu_engine_get_details_missing_func(void)
 }
 
 static void
+fu_engine_version_highest_func(void)
+{
+	FwupdRelease *rel;
+	gboolean ret;
+	g_autofree gchar *fn_stable = NULL;
+	g_autofree gchar *testdatadir_quirks = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NONE);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("self-tests", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_DATADIR_PKG, tmpdir);
+	testdatadir_quirks = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir_quirks);
+	fu_engine_save_remote_broken(tmpdir);
+	fu_engine_save_remote_stable(tmpdir);
+	fu_engine_save_remote_testing(tmpdir);
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* write the main file */
+	fn_stable = fu_temporary_directory_build(tmpdir, "stable.xml", NULL);
+	ret = g_file_set_contents(
+	    fn_stable,
+	    "<components>"
+	    "  <component type=\"firmware\">"
+	    "    <id>test</id>"
+	    "    <name>Test Device</name>"
+	    "    <provides>"
+	    "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+	    "    </provides>"
+	    "    <releases>"
+	    "      <release version=\"1.2.4\" date=\"2017-09-15\">"
+	    "        <size type=\"installed\">123</size>"
+	    "        <size type=\"download\">456</size>"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead1111</checksum>"
+	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "      </release>"
+	    "      <release version=\"1.2.3\" date=\"2017-09-15\">"
+	    "        <size type=\"installed\">123</size>"
+	    "        <size type=\"download\">456</size>"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead1111</checksum>"
+	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "      </release>"
+	    "      <release version=\"1.2.2\" date=\"2017-09-15\">"
+	    "        <size type=\"installed\">123</size>"
+	    "        <size type=\"download\">456</size>"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead1111</checksum>"
+	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "      </release>"
+	    "    </releases>"
+	    "  </component>"
+	    "</components>",
+	    -1,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_test_assert_expected_messages();
+
+	/* add a device so we can block it */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.3");
+	fu_device_set_id(device, "test_device");
+	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_name(device, "Test Device");
+	fu_device_add_instance_id(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device);
+	devices = fu_engine_get_devices(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
+	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "1.2.3");
+	g_assert_cmpstr(fu_device_get_version_highest(device), ==, "1.2.3");
+
+	/* only one release can be used with the device */
+	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(releases);
+	g_assert_cmpint(releases->len, ==, 1);
+	rel = FWUPD_RELEASE(g_ptr_array_index(releases, 0));
+	g_assert_cmpstr(fwupd_release_get_version(rel), ==, "1.2.3");
+}
+
+static void
 fu_engine_downgrade_func(void)
 {
 	FwupdRelease *rel;
@@ -3390,6 +3508,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/history-convert-version",
 			fu_engine_history_convert_version_func);
 	g_test_add_func("/fwupd/engine/partial-hash", fu_engine_partial_hash_func);
+	g_test_add_func("/fwupd/engine/version-highest", fu_engine_version_highest_func);
 	g_test_add_func("/fwupd/engine/downgrade", fu_engine_downgrade_func);
 	g_test_add_func("/fwupd/engine/updatable-hidden", fu_engine_updatable_hidden_func);
 	g_test_add_func("/fwupd/engine/md-verfmt", fu_engine_md_verfmt_func);

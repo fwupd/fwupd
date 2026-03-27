@@ -515,6 +515,22 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_VERSION_LOWEST_RAW "VersionLowestRaw"
 /**
+ * FWUPD_RESULT_KEY_VERSION_HIGHEST:
+ *
+ * Result key to represent VersionHighest
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_VERSION_HIGHEST "VersionHighest"
+/**
+ * FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW:
+ *
+ * Result key to represent VersionHighestRaw
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW "VersionHighestRaw"
+/**
  * FWUPD_RESULT_KEY_VERSION:
  *
  * Result key to represent Version

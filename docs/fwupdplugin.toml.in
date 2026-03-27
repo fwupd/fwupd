@@ -47,6 +47,7 @@ content_files = [
   "hsi.md",
   "uefi-db.md",
   "device-emulation.md",
+  "device-version-blocklist.md",
   "ds20.md",
   "hwids.md",
   "bios-settings.md",
