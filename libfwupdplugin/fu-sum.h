@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "fwupd.h"
+
 #include "fu-endian.h"
 
 guint8
