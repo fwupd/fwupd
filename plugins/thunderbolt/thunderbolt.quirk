@@ -6,6 +6,10 @@ GType = FuThunderboltController
 Plugin = thunderbolt
 GType = FuThunderboltRetimer
 
+# Lenovo ThinkPad USB4 5000 Dock; updated via lenovo-dock instead
+[THUNDERBOLT\VEN_17EF&DEV_1118]
+Flags = no-probe
+
 # Google Redrix
 [​af1d04d1-fbe9-5197-973d-fdc9310a33bd]
 Flags = retimer-offline-mode
