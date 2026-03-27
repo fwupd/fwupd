@@ -5,6 +5,7 @@
  */
 
 use crate::ffi;
+use crate::fwupd_sys;
 use glib::prelude::*;
 use glib::translate::*;
 
@@ -280,6 +281,68 @@ pub trait DeviceExt: IsA<Device> + 'static {
             } else {
                 Err(from_glib_full(error))
             }
+        }
+    }
+    /// Returns whether the device has the given flag.
+    #[doc(alias = "fwupd_device_has_flag")]
+    fn has_flag(&self, flag: u64) -> bool {
+        unsafe {
+            let device_ptr: *mut ffi::FuDevice = self.as_ref().to_glib_none().0;
+            from_glib(fwupd_sys::fwupd_device_has_flag(
+                device_ptr as *mut fwupd_sys::FwupdDevice,
+                flag,
+            ))
+        }
+    }
+
+    /// Adds a protocol identifier (e.g. "com.hughski.colorhug").
+    #[doc(alias = "fwupd_device_add_protocol")]
+    fn add_protocol(&self, protocol: &str) {
+        unsafe {
+            let device_ptr: *mut ffi::FuDevice = self.as_ref().to_glib_none().0;
+            fwupd_sys::fwupd_device_add_protocol(
+                device_ptr as *mut fwupd_sys::FwupdDevice,
+                protocol.to_glib_none().0,
+            );
+        }
+    }
+
+    /// Gets the version format.
+    #[doc(alias = "fwupd_device_get_version_format")]
+    fn version_format(&self) -> fwupd_sys::FwupdVersionFormat {
+        unsafe {
+            let device_ptr: *mut ffi::FuDevice = self.as_ref().to_glib_none().0;
+            fwupd_sys::fwupd_device_get_version_format(device_ptr as *mut fwupd_sys::FwupdDevice)
+        }
+    }
+
+    /// Returns whether the device has the given private flag (by name).
+    #[doc(alias = "fu_device_has_private_flag")]
+    fn has_private_flag(&self, flag: &str) -> bool {
+        unsafe {
+            from_glib(ffi::fu_device_has_private_flag(
+                self.as_ref().to_glib_none().0,
+                flag.to_glib_none().0,
+            ))
+        }
+    }
+
+    /// Adds a private flag (by name).
+    #[doc(alias = "fu_device_add_private_flag")]
+    fn add_private_flag(&self, flag: &str) {
+        unsafe {
+            ffi::fu_device_add_private_flag(self.as_ref().to_glib_none().0, flag.to_glib_none().0);
+        }
+    }
+
+    /// Registers a private flag name for use in quirk files.
+    #[doc(alias = "fu_device_register_private_flag")]
+    fn register_private_flag(&self, flag: &str) {
+        unsafe {
+            ffi::fu_device_register_private_flag(
+                self.as_ref().to_glib_none().0,
+                flag.to_glib_none().0,
+            );
         }
     }
 }
