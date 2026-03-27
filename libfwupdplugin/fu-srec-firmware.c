@@ -15,6 +15,7 @@
 #include "fu-firmware-common.h"
 #include "fu-srec-firmware.h"
 #include "fu-string.h"
+#include "fu-sum.h"
 
 /**
  * FuSrecFirmware:
@@ -568,10 +569,8 @@ fu_srec_firmware_write_line(GString *str,
 
 	/* bytecount + address + data */
 	csum = buf_addr->len + bufsz + 1;
-	for (guint i = 0; i < buf_addr->len; i++)
-		csum += buf_addr->data[i];
-	for (guint i = 0; i < bufsz; i++)
-		csum += buf[i];
+	csum += fu_sum8(buf_addr->data, buf_addr->len);
+	csum += fu_sum8(buf, bufsz);
 	csum ^= 0xff;
 
 	/* output record */

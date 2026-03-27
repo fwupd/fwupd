@@ -15,6 +15,7 @@
 #include "fu-ihex-firmware.h"
 #include "fu-mem.h"
 #include "fu-string.h"
+#include "fu-sum.h"
 
 /**
  * FuIhexFirmware:
@@ -447,8 +448,7 @@ fu_ihex_firmware_emit_chunk(GString *str,
 	checksum += (guint8)((address & 0xff00) >> 8);
 	checksum += (guint8)(address & 0xff);
 	checksum += record_type;
-	for (gsize j = 0; j < sz; j++)
-		checksum += data[j];
+	checksum += fu_sum8(data, sz);
 	g_string_append_printf(str, "%02X\n", (guint)(((~checksum) + 0x01) & 0xff));
 }
 

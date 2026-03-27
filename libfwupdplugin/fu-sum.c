@@ -26,7 +26,7 @@ guint8
 fu_sum8(const guint8 *buf, gsize bufsz)
 {
 	guint8 checksum = 0;
-	g_return_val_if_fail(buf != NULL, G_MAXUINT8);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, G_MAXUINT8);
 	for (gsize i = 0; i < bufsz; i++)
 		checksum += buf[i];
 	return checksum;
@@ -54,7 +54,7 @@ fu_sum8(const guint8 *buf, gsize bufsz)
 gboolean
 fu_sum8_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint8 *value, GError **error)
 {
-	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (!fu_memchk_read(bufsz, offset, n, error))
@@ -98,7 +98,7 @@ guint16
 fu_sum16(const guint8 *buf, gsize bufsz)
 {
 	guint16 checksum = 0;
-	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, G_MAXUINT16);
 	for (gsize i = 0; i < bufsz; i++)
 		checksum += buf[i];
 	return checksum;
@@ -126,7 +126,7 @@ fu_sum16(const guint8 *buf, gsize bufsz)
 gboolean
 fu_sum16_safe(const guint8 *buf, gsize bufsz, gsize offset, gsize n, guint16 *value, GError **error)
 {
-	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (!fu_memchk_read(bufsz, offset, n, error))
@@ -170,7 +170,7 @@ guint16
 fu_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian)
 {
 	guint16 checksum = 0;
-	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, G_MAXUINT16);
 	g_return_val_if_fail(bufsz % 2 == 0, G_MAXUINT16);
 	for (gsize i = 0; i < bufsz; i += 2)
 		checksum += fu_memread_uint16(&buf[i], endian);
@@ -211,7 +211,7 @@ guint32
 fu_sum32(const guint8 *buf, gsize bufsz)
 {
 	guint32 checksum = 0;
-	g_return_val_if_fail(buf != NULL, G_MAXUINT32);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, G_MAXUINT32);
 	for (gsize i = 0; i < bufsz; i++)
 		checksum += buf[i];
 	return checksum;
@@ -251,7 +251,7 @@ guint32
 fu_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian)
 {
 	guint32 checksum = 0;
-	g_return_val_if_fail(buf != NULL, G_MAXUINT32);
+	g_return_val_if_fail(buf != NULL || bufsz == 0, G_MAXUINT32);
 	g_return_val_if_fail(bufsz % 4 == 0, G_MAXUINT32);
 	for (gsize i = 0; i < bufsz; i += 4)
 		checksum += fu_memread_uint32(&buf[i], endian);

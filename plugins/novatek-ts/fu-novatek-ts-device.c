@@ -626,8 +626,7 @@ fu_novatek_ts_device_page_program_gcm(FuNovatekTsDevice *self,
 	checksum += ((flash_addr >> 16) & 0xFF);
 	checksum += ((bufsz + 3) & 0xFF);
 	checksum += (((bufsz + 3) >> 8) & 0xFF);
-	for (guint i = 0; i < bufsz; i++)
-		checksum += buf[i];
+	checksum += fu_sum16(buf, bufsz);
 	checksum = ~checksum + 1;
 
 	/* prepare gcm command transfer */
