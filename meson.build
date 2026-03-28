@@ -229,6 +229,8 @@ libdir = join_paths(prefix, get_option('libdir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))
 #this ends up in compiled code, ignore prefix
 if host_machine.system() == 'windows'
+  # require Windows 8+ for GetFirmwareType() and other modern APIs
+  add_project_arguments('-D_WIN32_WINNT=0x0602', language: 'c')
   sysconfdir = get_option('sysconfdir')
   localstatedir = get_option('localstatedir')
   datadir = get_option('datadir')
