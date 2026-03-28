@@ -36,6 +36,7 @@ pub use fwupdplugin_sys as ffi;
 /// Re-export the fwupd sys crate for flag/enum types.
 pub use fwupd_sys;
 
+pub mod chunk;
 mod context;
 mod device;
 pub mod device_subclass;
@@ -50,6 +51,7 @@ mod progress;
 pub mod udev_device;
 pub mod usb_device;
 
+pub use chunk::{Chunk, ChunkArray};
 pub use context::Context;
 pub use device::Device;
 pub use device_subclass::DeviceImpl;
@@ -63,6 +65,7 @@ pub use usb_device::UsbDevice;
 
 /// Commonly used traits and types, intended for glob import.
 pub mod prelude {
+    pub use super::chunk::{Chunk, ChunkArray};
     pub use super::context::Context;
     pub use super::device::{Device, DeviceExt};
     pub use super::device_subclass::{DeviceImpl, DeviceImplExt};

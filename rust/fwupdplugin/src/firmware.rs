@@ -94,6 +94,20 @@ impl Firmware {
             ffi::fu_firmware_set_version(self.to_glib_none().0, version.to_glib_none().0);
         }
     }
+
+    /// Gets the firmware stream for reading raw data.
+    #[doc(alias = "fu_firmware_get_stream")]
+    pub fn stream(&self) -> Result<gio::InputStream, glib::Error> {
+        unsafe {
+            let mut error = std::ptr::null_mut();
+            let ret = ffi::fu_firmware_get_stream(self.to_glib_none().0, &mut error);
+            if error.is_null() {
+                Ok(from_glib_full(ret))
+            } else {
+                Err(from_glib_full(error))
+            }
+        }
+    }
 }
 
 impl Default for Firmware {
