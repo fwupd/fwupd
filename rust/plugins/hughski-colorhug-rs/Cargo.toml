@@ -1,0 +1,15 @@
+[package]
+name = "fu-plugin-hughski-colorhug-rs"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-2.1-or-later"
+description = "fwupd plugin for Hughski ColorHug devices (Rust port)"
+
+[lib]
+crate-type = ["cdylib"]
+name = "fu_plugin_hughski_colorhug_rs"
+
+[dependencies]
+fwupdplugin = { path = "../../fwupdplugin" }
+glib = "0.20"
+gio = "0.20"

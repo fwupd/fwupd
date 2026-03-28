@@ -67,6 +67,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fu-plugin-hughski-colorhug-rs"
+version = "0.1.0"
+dependencies = [
+ "fwupdplugin",
+ "gio",
+ "glib",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"

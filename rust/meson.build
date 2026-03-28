@@ -131,4 +131,30 @@ if enable_rust_plugins
     install: false,
     build_by_default: true,
   )
+
+  # Build the hughski-colorhug-rs plugin.
+  rust_colorhug_plugin = custom_target(
+    'rust-plugin-hughski-colorhug-rs',
+    output: 'libfu_plugin_hughski_colorhug_rs.so',
+    command: [
+      cargo_wrapper,
+      '-p', 'fu-plugin-hughski-colorhug-rs',
+      '--copy', join_paths('plugins', 'hughski-colorhug-rs'),
+      'build',
+      '@OUTPUT@',
+    ],
+    env: cargo_env,
+    depends: [fwupdplugin],
+    depend_files: [
+      files(
+        'Cargo.toml',
+        'Cargo.lock',
+        'plugins/hughski-colorhug-rs/Cargo.toml',
+        'plugins/hughski-colorhug-rs/src/lib.rs',
+      ),
+    ],
+    console: true,
+    install: false,
+    build_by_default: true,
+  )
 endif
