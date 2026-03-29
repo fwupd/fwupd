@@ -1363,8 +1363,18 @@ fu_novatek_ts_device_setup(FuDevice *device, GError **error)
 		&error_local)) {
 		g_warning("firmware is not normal running: %s", error_local->message);
 	}
-	if (!fu_novatek_ts_device_ensure_fw_ver(self, error))
-		return FALSE;
+	g_clear_error(&error_local);
+	if (!fu_novatek_ts_device_ensure_fw_ver(self, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BUSY) &&
+		    g_strrstr(error_local->message, "fw info not ready") != NULL) {
+			g_warning("firmware version unavailable: %s", error_local->message);
+			fu_device_set_version_raw(FU_DEVICE(self), 0);
+			g_clear_error(&error_local);
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
 
 	if (!fu_novatek_ts_device_bootloader_reset(self, error))
 		return FALSE;
