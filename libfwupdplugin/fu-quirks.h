@@ -320,6 +320,15 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_ISSUE "Issue"
 /**
+ * FU_QUIRKS_HOMEPAGE:
+ *
+ * The quirk key for the device-specific product page, e.g.
+ * `https://www.lenovo.com/us/en/p/laptops/thinkpad/thinkpadp/thinkpad-p50/22tp2wpwp50`.
+ *
+ * Since: 2.1.2
+ **/
+#define FU_QUIRKS_HOMEPAGE "Homepage"
+/**
  * FU_QUIRKS_CFI_DEVICE_CMD_READ_ID
  *
  * The quirk key to set the CFI read ID command, e.g. `0xF8`.

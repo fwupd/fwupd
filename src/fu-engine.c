@@ -4995,6 +4995,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    XbNode *component,
 				    GError **error)
 {
+	const gchar *tmp;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error_local = NULL;
@@ -5050,6 +5051,11 @@ fu_engine_get_result_from_component(FuEngine *self,
 			fu_release_add_tag(release, xb_node_get_text(tag));
 		}
 	}
+
+	/* add homepage */
+	tmp = xb_node_query_text(component, "url[@type='homepage']", NULL);
+	if (tmp != NULL)
+		fu_device_set_homepage(dev, tmp);
 
 	/* add EOL flag */
 	if (xb_node_get_attr(component, "date_eol") != NULL)
@@ -6852,6 +6858,13 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 				}
 			}
 		}
+	}
+
+	/* add device homepage */
+	if (component != NULL) {
+		const gchar *tmp = xb_node_query_text(component, "url[@type='homepage']", NULL);
+		if (tmp != NULL)
+			fu_device_set_homepage(device, tmp);
 	}
 
 	/* check if the device needs emulation-tag */
