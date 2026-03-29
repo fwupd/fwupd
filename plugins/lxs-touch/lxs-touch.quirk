@@ -1,0 +1,32 @@
+# LXS Touch - SWIP Mode (Normal Operation)
+# VID 0x1FD2 / PID 0xB011
+[HIDRAW\VEN_1FD2&DEV_B011]
+Plugin = lxs_touch
+Name = LXS Touch (SW42101)
+Vendor = LX Semicon
+Flags = updatable,enforce-requires
+Icon = input-touchpad
+InstallDuration = 60
+CounterpartGuid = HIDRAW\VEN_1FD2&DEV_B011&MODE_DFUP
+FirmwareSizeMin = 0x1C000
+FirmwareSizeMax = 0x20000
+
+# LXS Touch - DFUP Mode (Bootloader/Update Mode)
+# VID 0x29BD / PID 0x5357 or VID 0x1FD2 / PID 0x5357
+[HIDRAW\VEN_29BD&DEV_5357]
+Plugin = lxs_touch
+Name = LXS Touch (DFUP Mode)
+Vendor = LX Semicon
+Flags = is-bootloader,enforce-requires
+Icon = input-touchpad
+FirmwareSizeMin = 0x1C000
+FirmwareSizeMax = 0x20000
+
+[HIDRAW\VEN_1FD2&DEV_5357]
+Plugin = lxs_touch
+Name = LXS Touch (DFUP Mode Alt)
+Vendor = LX Semicon
+Flags = is-bootloader,enforce-requires
+Icon = input-touchpad
+FirmwareSizeMin = 0x1C000
+FirmwareSizeMax = 0x20000
