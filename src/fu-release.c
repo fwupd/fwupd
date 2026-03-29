@@ -760,6 +760,7 @@ fu_release_check_version(FuRelease *self,
 {
 	const gchar *version;
 	const gchar *version_lowest;
+	const gchar *version_highest;
 	gint vercmp;
 
 	g_return_val_if_fail(FU_IS_RELEASE(self), FALSE);
@@ -812,7 +813,7 @@ fu_release_check_version(FuRelease *self,
 		}
 	}
 
-	/* compare to the lowest supported version, if it exists */
+	/* compare to the supported versions, if it exists */
 	version_lowest = fu_device_get_version_lowest(self->device);
 	if (version_lowest != NULL &&
 	    fu_version_compare(version_lowest,
@@ -826,6 +827,21 @@ fu_release_check_version(FuRelease *self,
 			    "required version '%s < %s'",
 			    fu_release_get_version(self),
 			    version_lowest);
+		return FALSE;
+	}
+	version_highest = fu_device_get_version_highest(self->device);
+	if (version_highest != NULL &&
+	    fu_version_compare(version_highest,
+			       fu_release_get_version(self),
+			       fu_device_get_version_format(self->device)) < 0 &&
+	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Specified firmware is newer than the maximum "
+			    "allowed version '%s > %s'",
+			    fu_release_get_version(self),
+			    version_highest);
 		return FALSE;
 	}
 

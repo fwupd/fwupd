@@ -19,3 +19,7 @@ GType = FuIntelMeAmtDevice
 
 [ACME]
 BatteryThreshold=99
+
+[aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee]
+VersionLowest = 1.2.3
+VersionHighest = 1.2.3
