@@ -2480,6 +2480,10 @@ fu_device_set_quirk_kv(FuDevice *self,
 		fu_device_set_update_image(self, value);
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_DETAILS_URL) == 0) {
+		fu_device_set_details_url(self, value);
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_ICON) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
 		if (fu_device_get_icons(self)->len > 0 &&
