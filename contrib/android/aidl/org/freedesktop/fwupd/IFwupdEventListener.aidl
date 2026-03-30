@@ -1,6 +1,5 @@
 package org.freedesktop.fwupd;
 
-@VintfStability
 interface IFwupdEventListener {
     oneway void onChanged();
     oneway void onDeviceAdded(in PersistableBundle device);

@@ -31,6 +31,9 @@
 #define EXIT_NOTHING_TO_DO 2
 #define EXIT_NOT_FOUND	   3
 
+/* Private addition to binder_flag_t for vendor-to-vendor stability */
+#define FLAG_PRIVATE_VENDOR 0x10000000
+
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
@@ -192,7 +195,7 @@ fu_util_setup_event_listener(FuUtil *self,
 				    FWUPD_BINDER_CALL_ADD_EVENT_LISTENER,
 				    &in,
 				    &out,
-				    0);
+				    FLAG_PRIVATE_VENDOR);
 
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);
@@ -248,7 +251,7 @@ fu_util_transact(FuUtil *self,
 			return FALSE;
 
 	in = g_steal_pointer(&pending_in);
-	nstatus = AIBinder_transact(self->fwupd_binder, code, &in, out, flags);
+	nstatus = AIBinder_transact(self->fwupd_binder, code, &in, out, flags | FLAG_PRIVATE_VENDOR);
 
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);

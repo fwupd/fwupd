@@ -41,7 +41,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void AIBinder_markVintfStability(AIBinder* binder);
+void AIBinder_markVendorStability(AIBinder* binder);
 #ifdef __cplusplus
 }
 #endif
@@ -1256,7 +1256,7 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	self->binder = AIBinder_new(self->binder_class, self);
 
 #if __ANDROID_API__ >= 31
-	AIBinder_markVintfStability(self->binder);
+	AIBinder_markVendorStability(self->binder);
 #endif
 
 	nstatus = AServiceManager_addService(self->binder, BINDER_SERVICE_NAME);
