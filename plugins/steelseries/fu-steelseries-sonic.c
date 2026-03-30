@@ -809,7 +809,7 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
-	guint32 checksum_tmp;
+	guint32 checksum_tmp = 0;
 	guint32 checksum;
 	g_autoptr(GBytes) blob = NULL;
 
@@ -824,9 +824,14 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	checksum_tmp = fu_crc32(FU_CRC_KIND_B32_STANDARD,
-				g_bytes_get_data(blob, NULL),
-				g_bytes_get_size(blob) - sizeof(checksum_tmp));
+	if (!fu_crc32_safe(FU_CRC_KIND_B32_STANDARD,
+			   g_bytes_get_data(blob, NULL),
+			   g_bytes_get_size(blob),
+			   0x0,
+			   g_bytes_get_size(blob) - sizeof(checksum_tmp),
+			   &checksum_tmp,
+			   error))
+		return FALSE;
 	checksum_tmp = ~checksum_tmp;
 	if (checksum_tmp != checksum) {
 		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
