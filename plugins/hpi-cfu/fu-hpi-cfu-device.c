@@ -1526,7 +1526,9 @@ fu_hpi_cfu_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	self->state = FU_HPI_CFU_STATE_START_ENTIRE_TRANSACTION;
-	blob_payload = fu_firmware_get_bytes(fw_payload, NULL);
+	blob_payload = fu_firmware_get_bytes(fw_payload, error);
+	if (blob_payload == NULL)
+		return FALSE;
 	g_bytes_get_data(blob_payload, &payload_file_size);
 	self->payload_file_size = payload_file_size;
 	handler_options.fw_offer = fw_offer;
