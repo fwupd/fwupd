@@ -21,6 +21,7 @@ typedef struct {
 	gboolean snapd_fde_detected;
 	gboolean snapd_supported;
 	const gchar *mock_snapd_scenario;
+	const gchar *expected_error_message;
 } FuTestCase;
 
 typedef struct {
@@ -400,8 +401,11 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 						       /* skip verification of ESP binaries*/
 						       FWUPD_INSTALL_FLAG_FORCE,
 						       &error);
-	if (g_str_equal(tc->mock_snapd_scenario, "failed-prepare")) {
+	if (g_str_equal(tc->mock_snapd_scenario, "failed-prepare") ||
+	    g_str_equal(tc->mock_snapd_scenario, "failed-prepare-invalid-json")) {
 		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+		g_assert_nonnull(tc->expected_error_message);
+		g_assert_cmpstr(error->message, ==, tc->expected_error_message);
 		g_clear_error(&error);
 	} else {
 		g_assert_no_error(error);
@@ -412,6 +416,8 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	ret = fu_device_cleanup(FU_DEVICE(uefi_device), progress, 0, &error);
 	if (g_str_equal(tc->mock_snapd_scenario, "failed-cleanup")) {
 		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+		g_assert_nonnull(tc->expected_error_message);
+		g_assert_cmpstr(error->message, ==, tc->expected_error_message);
 	} else {
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -508,8 +514,7 @@ fu_uefi_dbx_test_plugin_startup(FuTestFixture *fixture, gconstpointer user_data)
 int
 main(int argc, char **argv)
 {
-	FuTestCase simple = {
-	};
+	FuTestCase simple = {};
 	/* test variants with snapd, see tests/snapd.py for what a specific scenario
 	 * supports */
 	FuTestCase running_in_snap = {
@@ -556,20 +561,39 @@ main(int argc, char **argv)
 	FuTestCase running_in_snap_update_failed_prepare = {
 	    .snapd_supported = TRUE,
 	    .mock_snapd_scenario = "failed-prepare",
+	    .expected_error_message =
+		"failed to notify snapd of prepare: snapd request failed with status 400: "
+		"cannot reseal keys in prepare",
 	};
 	FuTestCase snapd_fde_detected_update_failed_prepare = {
 	    .snapd_fde_detected = TRUE,
 	    .snapd_supported = TRUE,
 	    .mock_snapd_scenario = "failed-prepare",
+	    .expected_error_message =
+		"failed to notify snapd of prepare: snapd request failed with status 400: "
+		"cannot reseal keys in prepare",
+	};
+	FuTestCase snapd_fde_detected_update_failed_prepare_invalid_json = {
+	    .snapd_fde_detected = TRUE,
+	    .snapd_supported = TRUE,
+	    .mock_snapd_scenario = "failed-prepare-invalid-json",
+	    .expected_error_message =
+		"failed to notify snapd of prepare: snapd request failed with status 400",
 	};
 	FuTestCase running_in_snap_update_failed_cleanup = {
 	    .snapd_supported = TRUE,
 	    .mock_snapd_scenario = "failed-cleanup",
+	    .expected_error_message =
+		"failed to notify snapd of cleanup: snapd request failed with status 500: "
+		"cannot reseal keys in cleanup",
 	};
 	FuTestCase snapd_fde_detected_update_failed_cleanup = {
 	    .snapd_fde_detected = TRUE,
 	    .snapd_supported = TRUE,
 	    .mock_snapd_scenario = "failed-cleanup",
+	    .expected_error_message =
+		"failed to notify snapd of cleanup: snapd request failed with status 500: "
+		"cannot reseal keys in cleanup",
 	};
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
@@ -698,6 +722,13 @@ main(int argc, char **argv)
 	g_test_add("/uefi-dbx/update/snapd/fde-detected/failed-prepare",
 		   FuTestFixture,
 		   &snapd_fde_detected_update_failed_prepare,
+		   fu_self_test_set_up,
+		   fu_uefi_dbx_test_plugin_failed_update,
+		   fu_self_test_tear_down);
+
+	g_test_add("/uefi-dbx/update/snapd/fde-detected/failed-prepare-invalid-json",
+		   FuTestFixture,
+		   &snapd_fde_detected_update_failed_prepare_invalid_json,
 		   fu_self_test_set_up,
 		   fu_uefi_dbx_test_plugin_failed_update,
 		   fu_self_test_tear_down);
