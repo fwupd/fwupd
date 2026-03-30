@@ -588,6 +588,15 @@ fu_ccgx_hpi_device_read_event_reg(FuCcgxHpiDevice *self,
 		/* byte 1 is reserved and should read as zero */
 		buf[1] = 0;
 		memcpy((guint8 *)event, buf, sizeof(buf)); /* nocheck:blocked */
+		if (event->event_length > sizeof(event->event_data)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "event length %u exceeds buffer size %u",
+				    event->event_length,
+				    (guint)sizeof(event->event_data));
+			return FALSE;
+		}
 		if (event->event_length != 0) {
 			reg_addr = fu_ccgx_hpi_device_reg_addr_gen(section,
 								   FU_CCGX_HPI_REG_PART_PDDATA_READ,
@@ -613,6 +622,15 @@ fu_ccgx_hpi_device_read_event_reg(FuCcgxHpiDevice *self,
 		}
 		event->event_code = buf[0];
 		event->event_length = buf[1];
+		if (event->event_length > sizeof(event->event_data)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "event length %u exceeds buffer size %u",
+				    event->event_length,
+				    (guint)sizeof(event->event_data));
+			return FALSE;
+		}
 		if (event->event_length != 0) {
 			/* read the data memory */
 			if (!fu_ccgx_hpi_device_reg_read(self,
