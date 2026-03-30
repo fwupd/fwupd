@@ -8097,7 +8097,7 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 			} else {
 				g_warning("failed to add device %s: %s",
 					  fu_device_get_backend_id(device),
-					  error_local->message);
+					  error_local ? error_local->message : "No error given");
 			}
 			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
 			fu_progress_step_done(progress);
