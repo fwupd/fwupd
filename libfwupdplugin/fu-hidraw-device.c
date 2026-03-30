@@ -563,7 +563,7 @@ fu_hidraw_device_get_report(FuHidrawDevice *self,
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "GetReport[req]", buf, bufsz);
 	if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
 				 buf,
 				 bufsz,
@@ -577,6 +577,7 @@ fu_hidraw_device_get_report(FuHidrawDevice *self,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "invalid response");
 		return FALSE;
 	}
+	fu_dump_raw(G_LOG_DOMAIN, "GetReport[res]", buf, bufsz);
 	return TRUE;
 }
 

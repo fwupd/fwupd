@@ -8120,7 +8120,7 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 50, "query-possible-plugins");
 
 	/* super useful for plugin development */
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
 		g_debug("%s added %s", fu_device_get_backend_id(device), str);
 	}
@@ -8147,7 +8147,7 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 	fu_engine_ensure_device_emulation_tag(self, device);
 
 	/* super useful for plugin development */
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
 		g_debug("%s added %s", fu_device_get_backend_id(device), str);
 	}
@@ -9010,7 +9010,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* dump plugin information to the console */
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		g_autoptr(GString) str = g_string_new(NULL);
 		for (guint i = 0; i < backends->len; i++) {
 			FuBackend *backend = g_ptr_array_index(backends, i);

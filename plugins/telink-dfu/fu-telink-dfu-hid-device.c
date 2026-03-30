@@ -382,7 +382,6 @@ fu_telink_dfu_hid_device_set_quirk_kv(FuDevice *device,
 static void
 fu_telink_dfu_hid_device_init(FuTelinkDfuHidDevice *self)
 {
-	fu_device_set_vendor(FU_DEVICE(self), "Telink");
 	/* read the ReleaseNumber field of USB descriptor */
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000); /* ms */

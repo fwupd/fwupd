@@ -213,7 +213,8 @@ fu_engine_gtypes_func(void)
 {
 	GPtrArray *plugins;
 	gboolean ret;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuContext) ctx =
+	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 	g_autoptr(FuDrmDevice) drm_device = g_object_new(FU_TYPE_DRM_DEVICE, NULL);
 	g_autoptr(FuEdid) edid = fu_edid_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);

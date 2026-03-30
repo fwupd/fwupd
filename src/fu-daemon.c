@@ -211,7 +211,7 @@ fu_daemon_start(FuDaemon *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* super useful for debugging */
-	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+	if (g_log_get_debug_enabled()) {
 		GHashTableIter iter;
 		const gchar *key;
 		const gchar *value;

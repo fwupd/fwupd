@@ -327,7 +327,7 @@ fu_usb_backend_setup(FuBackend *backend,
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	gint log_level = g_getenv("FWUPD_VERBOSE") != NULL ? 3 : 0;
+	gint log_level = g_log_get_debug_enabled() ? 3 : 0;
 	gint rc;
 
 #if defined(HAVE_LIBUSB_INIT_CONTEXT) && defined(HAVE_UDEV)
