@@ -27,15 +27,22 @@ fu_telink_dfu_ble_device_create_packet(guint16 preamble,
 				       gsize bufsz,
 				       GError **error)
 {
+	guint16 crc = 0;
 	g_autoptr(FuStructTelinkDfuBlePkt) st_pkt = fu_struct_telink_dfu_ble_pkt_new();
 	fu_struct_telink_dfu_ble_pkt_set_preamble(st_pkt, preamble);
 	if (buf != NULL) {
 		if (!fu_struct_telink_dfu_ble_pkt_set_payload(st_pkt, buf, bufsz, error))
 			return NULL;
 	}
-	fu_struct_telink_dfu_ble_pkt_set_crc(
-	    st_pkt,
-	    ~fu_crc16(FU_CRC_KIND_B16_USB, st_pkt->buf->data, st_pkt->buf->len - 2));
+	if (!fu_crc16_safe(FU_CRC_KIND_B16_USB,
+			   st_pkt->buf->data,
+			   st_pkt->buf->len,
+			   0x0,
+			   st_pkt->buf->len - 2,
+			   &crc,
+			   error))
+		return NULL;
+	fu_struct_telink_dfu_ble_pkt_set_crc(st_pkt, ~crc);
 	return g_steal_pointer(&st_pkt);
 }
 
