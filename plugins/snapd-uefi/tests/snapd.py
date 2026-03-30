@@ -98,7 +98,19 @@ def not_supported(req: dict[str, Any]) -> Response:
 
 def failed_startup(req: dict[str, Any]) -> Response:
     assert_startup_req(req)
-    return Response(None, status=400)
+    return Response(
+        json.dumps(
+            {
+                "type": "error",
+                "status-code": 400,
+                "status": "Bad Request",
+                "result": {
+                    "message": "cannot notify of manager startup",
+                },
+            }
+        ),
+        status=400,
+    )
 
 
 def happy_prepare(req: dict[str, Any]) -> Response:
@@ -115,14 +127,31 @@ def failed_prepare(req: dict[str, Any]) -> Response:
         return Response(
             json.dumps(
                 {
-                    "status": "500",
-                    "error": {
-                        "kind": "internal-error",
+                    "type": "error",
+                    "status-code": 400,
+                    "status": "Bad Request",
+                    "result": {
                         "message": "cannot reseal keys in prepare",
                     },
                 }
             ),
-            status=500,
+            status=400,
+        )
+    if action == "efi-secureboot-update-startup":
+        return happy_startup(req)
+
+    raise AssertionError(f"unexpected action {action}")
+
+
+def failed_prepare_invalid_json(req: dict[str, Any]) -> Response:
+    action = req.get("action")
+    if action == "efi-secureboot-update-db-cleanup":
+        return happy_cleanup(req)
+    if action == "efi-secureboot-update-db-prepare":
+        assert_prepare_req(req)
+        return Response(
+            "this is not valid json",
+            status=400,
         )
     if action == "efi-secureboot-update-startup":
         return happy_startup(req)
@@ -137,9 +166,10 @@ def failed_cleanup(req: dict[str, Any]) -> Response:
         return Response(
             json.dumps(
                 {
-                    "status": "500",
-                    "error": {
-                        "kind": "internal-error",
+                    "type": "error",
+                    "status-code": 500,
+                    "status": "Internal Server Error",
+                    "result": {
                         "message": "cannot reseal keys in cleanup",
                     },
                 }
@@ -180,6 +210,8 @@ playbook: dict[str, Scenario] = {
     "not-supported": Scenario(handler=not_supported),
     # prepare step fails
     "failed-prepare": Scenario(handler=failed_prepare),
+    # prepare step fails, response is not valid JSON
+    "failed-prepare-invalid-json": Scenario(handler=failed_prepare_invalid_json),
     # prepare is successful, but cleanup fails
     "failed-cleanup": Scenario(handler=failed_cleanup),
     # successful update cycle
