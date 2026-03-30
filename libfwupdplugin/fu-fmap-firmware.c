@@ -211,6 +211,8 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
+		if (fw == NULL)
+			continue;
 		total_sz += g_bytes_get_size(fw);
 	}
 
@@ -227,6 +229,8 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
 		g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
+		if (fw == NULL)
+			continue;
 		fu_struct_fmap_area_set_offset(st_area, priv->signature_offset + offset);
 		fu_struct_fmap_area_set_size(st_area, g_bytes_get_size(fw));
 		if (fu_firmware_get_id(img) != NULL) {
