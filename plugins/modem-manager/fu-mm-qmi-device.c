@@ -829,15 +829,20 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename = fu_firmware_get_id(img);
+		GBytes *bytes;
 		FuMmQmiDeviceFileInfo *file_info;
 
 		/* filenames should be named as 'mcfg.*.mbn', e.g.: mcfg.A2.018.mbn */
 		if (!g_str_has_prefix(filename, "mcfg.") || !g_str_has_suffix(filename, ".mbn"))
 			continue;
 
+		bytes = fu_firmware_get_bytes(img, NULL);
+		if (bytes == NULL)
+			continue;
+
 		file_info = g_new0(FuMmQmiDeviceFileInfo, 1);
 		file_info->filename = g_strdup(filename);
-		file_info->bytes = fu_firmware_get_bytes(img, NULL);
+		file_info->bytes = bytes;
 		file_info->active =
 		    fu_mm_qmi_device_should_be_active(fu_device_get_version(FU_DEVICE(self)),
 						      filename);
