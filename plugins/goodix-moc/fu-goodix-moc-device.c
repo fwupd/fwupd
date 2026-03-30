@@ -141,7 +141,14 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self,
 					    error))
 			return FALSE;
 		offset = sizeof(FuGoodixMocPkgHeader) + header_len - GX_SIZE_CRC32;
-		crc_actual = fu_crc32(FU_CRC_KIND_B32_STANDARD, reply->data, offset);
+		if (!fu_crc32_safe(FU_CRC_KIND_B32_STANDARD,
+				   reply->data,
+				   reply->len,
+				   0x0,
+				   offset,
+				   &crc_actual,
+				   error))
+			return FALSE;
 		if (!fu_memread_uint32_safe(reply->data,
 					    reply->len,
 					    offset,

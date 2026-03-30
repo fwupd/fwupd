@@ -241,7 +241,15 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 
 	/* verify the checksum */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint32 crc_new = fu_crc32(FU_CRC_KIND_B32_JAMCRC, buf, bufsz - 4);
+		guint32 crc_new = 0;
+		if (!fu_crc32_safe(FU_CRC_KIND_B32_JAMCRC,
+				   buf,
+				   bufsz,
+				   0x0,
+				   bufsz - 4,
+				   &crc_new,
+				   error))
+			return FALSE;
 		if (fu_struct_dfu_ftr_get_crc(st) != crc_new) {
 			g_set_error(error,
 				    FWUPD_ERROR,

@@ -12,7 +12,7 @@
 
 #include "fu-common.h"
 #include "fu-crc-private.h"
-#include "fu-mem.h"
+#include "fu-mem-private.h"
 
 const struct {
 	FuCrcKind kind;
@@ -392,6 +392,47 @@ fu_crc32(FuCrcKind kind, const guint8 *buf, gsize bufsz)
 		return crc32_z(0, buf, bufsz);
 
 	return fu_crc32_done(kind, fu_crc32_step(kind, buf, bufsz, crc_map[kind].init));
+}
+
+/**
+ * fu_crc32_safe:
+ * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B32_STANDARD
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf where CRC should start
+ * @n: number of bytes to CRC from @buf
+ * @value: (out) (nullable): the result
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only use it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Returns: %TRUE on success, %FALSE otherwise
+ *
+ * Since: 2.1.2
+ **/
+gboolean
+fu_crc32_safe(FuCrcKind kind,
+	      const guint8 *buf,
+	      gsize bufsz,
+	      gsize offset,
+	      gsize n,
+	      guint32 *value,
+	      GError **error)
+{
+	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, FALSE);
+	g_return_val_if_fail(crc_map[kind].bitwidth == 32, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_memchk_read(bufsz, offset, n, error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_crc32(kind, buf + offset, n);
+	return TRUE;
 }
 
 /**
