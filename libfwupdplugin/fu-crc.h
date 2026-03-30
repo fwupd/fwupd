@@ -39,6 +39,14 @@ guint16
 fu_crc16_bytes(FuCrcKind kind, GBytes *blob);
 guint8
 fu_crc8(FuCrcKind kind, const guint8 *buf, gsize bufsz);
+gboolean
+fu_crc8_safe(FuCrcKind kind,
+	     const guint8 *buf,
+	     gsize bufsz,
+	     gsize offset,
+	     gsize n,
+	     guint8 *value,
+	     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(2);
 guint8
 fu_crc8_bytes(FuCrcKind kind, GBytes *blob);
 
