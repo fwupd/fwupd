@@ -38,12 +38,21 @@ unsafe extern "C" {
         code: i32,
         message: *const core::ffi::c_char,
     );
+    pub(crate) fn g_memdup2(mem: *const u8, byte_size: usize) -> *mut u8;
+    pub(crate) fn fu_strsafe(str: *const core::ffi::c_char, maxsz: usize)
+        -> *mut core::ffi::c_char;
 }
 
 // FWUPD error codes matching the FwupdError enum.
 #[allow(dead_code)]
 pub(crate) const FWUPD_ERROR_READ: i32 = 5;
+#[allow(dead_code)]
+pub(crate) const FWUPD_ERROR_WRITE: i32 = 6;
 pub(crate) const FWUPD_ERROR_NOT_FOUND: i32 = 8;
+#[allow(dead_code)]
+pub(crate) const FWUPD_ERROR_NOT_SUPPORTED: i32 = 10;
+#[allow(dead_code)]
+pub(crate) const FWUPD_ERROR_INVALID_DATA: i32 = 18;
 
 /// Convert a raw pointer + length to a byte slice.
 ///
@@ -55,6 +64,15 @@ pub(crate) unsafe fn buf_to_slice(buf: *const u8, bufsz: usize) -> &'static [u8]
         &[]
     } else {
         unsafe { slice::from_raw_parts(buf, bufsz) }
+    }
+}
+
+/// Convert a raw pointer + length to a mutable byte slice.
+pub(crate) unsafe fn buf_to_slice_mut(buf: *mut u8, bufsz: usize) -> &'static mut [u8] {
+    if buf.is_null() || bufsz == 0 {
+        &mut []
+    } else {
+        unsafe { slice::from_raw_parts_mut(buf, bufsz) }
     }
 }
 

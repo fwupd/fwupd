@@ -175,7 +175,7 @@ fwupdplugin_src = [
   'fu-linear-firmware.c', # fuzzing
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
-  'fu-mem.c', # fuzzing
+  # fu-mem.c replaced by rust/fu-mem static library
   'fu-heci-device.c',
   'fu-msgpack.c',
   'fu-msgpack-item.c',
