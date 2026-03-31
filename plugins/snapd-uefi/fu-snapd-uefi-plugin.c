@@ -34,6 +34,7 @@ static const gchar *
 fu_snapd_uefi_plugin_device_to_key_database(FuSnapPlugin *self, FuDevice *device)
 {
 	const gchar *plugin = fu_device_get_plugin(device);
+	const char *db_override = NULL;
 	if (g_strcmp0(plugin, "uefi_dbx") == 0)
 		return "DBX";
 	if (g_strcmp0(plugin, "uefi_db") == 0)
@@ -42,6 +43,13 @@ fu_snapd_uefi_plugin_device_to_key_database(FuSnapPlugin *self, FuDevice *device
 		return "KEK";
 	if (g_strcmp0(plugin, "uefi_pk") == 0)
 		return "PK";
+
+	db_override = fu_plugin_get_config_value(FU_PLUGIN(self), "KeyDBOverride");
+	if (db_override != NULL) {
+		g_debug("test key DB override: %s", db_override);
+		return db_override;
+	}
+
 	return NULL;
 }
 
@@ -376,6 +384,24 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 	return TRUE;
 }
 
+static gboolean
+fu_snapd_uefi_plugin_modify_config(FuPlugin *plugin,
+				   const gchar *key,
+				   const gchar *value,
+				   GError **error)
+{
+	const gchar *keys[] = {"KeyDBOverride", NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
+}
+
 static void
 fu_snapd_uefi_plugin_init(FuSnapPlugin *self)
 {
@@ -404,6 +430,7 @@ fu_snapd_uefi_plugin_class_init(FuSnapPluginClass *klass)
 	plugin_class->device_registered = fu_snapd_uefi_plugin_device_registered;
 	plugin_class->composite_cleanup = fu_snapd_uefi_plugin_composite_cleanup;
 	plugin_class->composite_peek_firmware = fu_snapd_uefi_plugin_composite_peek_firmware;
+	plugin_class->modify_config = fu_snapd_uefi_plugin_modify_config;
 
 	object_class->finalize = fu_snapd_uefi_plugin_finalize;
 }
