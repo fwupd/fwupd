@@ -15,9 +15,15 @@
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURL, curl_easy_cleanup);
 
+typedef enum {
+	FU_SNAPD_API_UNAVAILABLE, /* not available at all */
+	FU_SNAPD_API_FAILED,	  /* available but non-functional */
+	FU_SNAPD_API_OK,	  /* all working - i.e. startup succeeded */
+} FuSnapdIntegrationStatusEnum;
+
 struct _FuSnapPlugin {
 	FuPlugin parent_instance;
-	gboolean snapd_integration_supported;
+	FuSnapdIntegrationStatusEnum integration_status;
 	CURL *curl_template;
 	struct curl_slist *req_hdrs;
 };
@@ -48,8 +54,10 @@ fu_snapd_uefi_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (fu_snapd_uefi_plugin_device_to_key_database(self, device) == NULL)
 		return;
 
-	/* if snapd integration is supported, but we are unable to use snapd, inhibit updates */
-	if (!self->snapd_integration_supported) {
+	/* the plugin is only added if snapd FDE is used or when fwupd is running in
+       a snap */
+	if (self->integration_status == FU_SNAPD_API_FAILED) {
+		/* APIs are present, but failing */
 		fu_device_inhibit(FU_DEVICE(device),
 				  "no-snapd",
 				  "snapd integration for UEFI update is not available");
@@ -249,12 +257,17 @@ fu_snapd_uefi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 					     &error_local)) {
 		/* unless we got specific error indicating lack of relevant APIs, snapd integration
 		 * is considered to be supported, even if snapd itself cannot be reached */
-		self->snapd_integration_supported =
-		    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			/* relevant API is not supported */
+			self->integration_status = FU_SNAPD_API_UNAVAILABLE;
+		else
+			/* API present, but requests fail */
+			self->integration_status = FU_SNAPD_API_FAILED;
+
 		g_info("snapd integration non-functional: %s", error_local->message);
 	} else {
 		g_info("snapd integration enabled");
-		self->snapd_integration_supported = TRUE;
+		self->integration_status = FU_SNAPD_API_OK;
 	}
 	return TRUE;
 }
@@ -288,6 +301,9 @@ fu_snapd_uefi_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GEr
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
 
+	if (self->integration_status == FU_SNAPD_API_UNAVAILABLE)
+		return TRUE;
+
 	/* only for UEFI updates */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
@@ -312,6 +328,9 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GString) msg = NULL;
 	g_autoptr(GPtrArray) images = NULL;
+
+	if (self->integration_status == FU_SNAPD_API_UNAVAILABLE)
+		return TRUE;
 
 	/* not interesting */
 	key_database = fu_snapd_uefi_plugin_device_to_key_database(self, device);
