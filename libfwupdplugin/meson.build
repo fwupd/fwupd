@@ -94,7 +94,7 @@ fwupdplugin_src = [
   'fu-chunk.c', # fuzzing
   'fu-chunk-array.c', # fuzzing
   'fu-common.c', # fuzzing
-  'fu-common-guid.c',
+  # fu-common-guid.c replaced by rust/fu-common-guid static library
   'fu-composite-input-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing

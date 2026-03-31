@@ -15,3 +15,4 @@ mod crc;
 mod xor;
 mod sum;
 mod mem;
+mod common_guid;

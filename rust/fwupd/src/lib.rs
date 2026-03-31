@@ -6,6 +6,7 @@
 
 //! Core components of fwupd
 
+pub mod common_guid;
 pub mod crc;
 pub mod mem;
 pub mod sum;
