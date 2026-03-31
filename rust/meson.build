@@ -6,6 +6,7 @@ fwupd_rs_files = files(
   'Cargo.lock',
   'fwupd/Cargo.toml',
   'fwupd/src/lib.rs',
+  'fwupd/src/crc.rs',
 )
 
 # Force a build so we pick up any issues during compile
