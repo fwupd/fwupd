@@ -16,6 +16,7 @@
 //! `libfwupdplugin.so` to replace the C implementations.
 
 pub mod common;
+pub mod common_guid;
 pub mod crc;
 pub mod mem;
 pub mod sum;
