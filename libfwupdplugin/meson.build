@@ -101,7 +101,7 @@ fwupdplugin_src = [
   'fu-context-helper.c',
   'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
-  'fu-crc.c', # fuzzing
+  # fu-crc.c replaced by rust/fu-crc static library
   'fu-csv-entry.c', # fuzzing
   'fu-csv-firmware.c', # fuzzing
   'fu-device.c', # fuzzing
@@ -427,13 +427,16 @@ library_deps = [
   platform_deps,
 ]
 
+libm = cc.find_library('m', required: false)
+
 fwupdplugin = library(
   'fwupdplugin',
   fwupdplugin_rs_targets,
   sources: [fwupdplugin_src, fwupdplugin_headers],
   include_directories: [root_incdir, fwupd_incdir],
-  dependencies: [library_deps],
+  dependencies: [library_deps, libm],
   link_with: [fwupd],
+  link_whole: [fwupd_rs_lib],
   install_dir: libdir_pkg,
   install: true,
 )
