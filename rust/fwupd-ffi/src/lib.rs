@@ -18,4 +18,5 @@
 pub mod common;
 pub mod crc;
 pub mod mem;
+pub mod sum;
 pub mod xor;

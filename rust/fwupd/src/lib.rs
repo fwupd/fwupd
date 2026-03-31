@@ -9,4 +9,5 @@
 pub mod crc;
 pub mod firmware;
 pub mod mem;
+pub mod sum;
 pub mod xor;

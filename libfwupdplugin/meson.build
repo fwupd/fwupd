@@ -200,7 +200,7 @@ fwupdplugin_src = [
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
-  'fu-sum.c', # fuzzing
+  # fu-sum.c replaced by rust/fu-sum static library
   'fu-temporary-directory.c', # fuzzing
   'fu-tpm-eventlog-item.c', # fuzzing
   'fu-tpm-eventlog.c', # fuzzing
