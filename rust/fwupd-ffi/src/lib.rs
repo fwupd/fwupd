@@ -13,3 +13,4 @@
 mod common;
 mod crc;
 mod xor;
+mod sum;
