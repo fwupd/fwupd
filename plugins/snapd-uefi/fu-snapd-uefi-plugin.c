@@ -319,7 +319,7 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 		return TRUE;
 
 	images = fu_firmware_get_images(firmware);
-	if (images->len == 1) {
+	if (images->len == 0) {
 		/* get default image */
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes(firmware, error);
 		if (fw == NULL)
