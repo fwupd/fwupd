@@ -346,11 +346,7 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 		return;
 	}
 
-	if (!fu_test_mock_dbx_efivars(fixture, efivars, &error) &&
-	    g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-		g_test_skip("test assets unavailable");
-		return;
-	}
+	fu_test_mock_dbx_efivars(fixture, efivars, &error);
 	g_assert_no_error(error);
 
 	ret = fu_plugin_runner_startup(plugin, fu_progress_get_child(progress), &error);
@@ -427,11 +423,7 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 		return;
 	}
 
-	if (!fu_test_mock_dbx_efivars(fixture, efivars, &error) &&
-	    g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-		g_test_skip("test assets unavailable");
-		return;
-	}
+	fu_test_mock_dbx_efivars(fixture, efivars, &error);
 	g_assert_no_error(error);
 
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
@@ -501,11 +493,7 @@ fu_uefi_dbx_test_plugin_coldplug_probed_device(FuTestFixture *fixture, gconstpoi
 		return;
 	}
 
-	if (!fu_test_mock_dbx_efivars(fixture, efivars, &error) &&
-	    g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-		g_test_skip("test assets unavailable");
-		return;
-	}
+	fu_test_mock_dbx_efivars(fixture, efivars, &error);
 	g_assert_no_error(error);
 
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
