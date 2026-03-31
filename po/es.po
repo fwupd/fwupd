@@ -12,15 +12,15 @@
 # Giovanni Alfredo Garciliano Diaz <giobeatle10@gmail.com>, 2024
 # Santiago FN, 2024
 # Richard Hughes <hughsient@gmail.com>, 2025.
-# Francisco Serrador <fserrador@gmail.com>, 2025.
+# Francisco Serrador <fserrador@gmail.com>, 2025, 2026.
 # David Marzal <utk73gr6l@mozmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-03 17:09+0000\n"
-"Last-Translator: David Marzal <utk73gr6l@mozmail.com>\n"
+"PO-Revision-Date: 2026-03-31 16:10+0000\n"
+"Last-Translator: Francisco Serrador <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/fwupd/fwupd/es/>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
@@ -145,7 +145,7 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Se requiere autenticación para modificar un remoto configurado utilizado para actualizaciones de firmware"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Limpiar un remoto configurado"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
@@ -676,7 +676,7 @@ msgstr "Procesador retira protección"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr ""
+msgstr "Arranque seguro de plataforma"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -859,7 +859,7 @@ msgstr "Protección de Reversión del Procesador AMD Seguro"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "AMD Platform Secure Boot"
-msgstr ""
+msgstr "Arranque Seguro en Plataforma AMD"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -1014,7 +1014,7 @@ msgstr "Retroceder Protección previene software de dispositivo sea degradado a 
 
 #. TRANSLATORS: longer description
 msgid "Platform Secure Boot prevents unsigned software from being loaded when the device starts."
-msgstr ""
+msgstr "Arranque Seguro de plataforma previene software sin firma mientras está siendo cargado cuando arranque el dispositivo."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1141,7 +1141,7 @@ msgstr "Remoto modificado correctamente"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Limpieza remota lograda"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
@@ -1774,7 +1774,7 @@ msgstr "ID-REMOTO"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Limpia un remoto dado"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -1810,7 +1810,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Finds firmware releases from the metadata"
-msgstr ""
+msgstr "Buscar la versión del firmware desde los metadatos"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
