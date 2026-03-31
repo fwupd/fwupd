@@ -224,7 +224,7 @@ fwupdplugin_src = [
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
   'fu-x509-certificate.c', # fuzzing
-  'fu-xor.c', # fuzzing
+  # fu-xor.c replaced by rust/fu-xor static library
   'fu-zip-firmware.c', # fuzzing
   'fu-zip-file.c', # fuzzing
 ]

@@ -7,6 +7,7 @@ fwupd_rs_files = files(
   'fwupd/Cargo.toml',
   'fwupd/src/lib.rs',
   'fwupd/src/crc.rs',
+  'fwupd/src/xor.rs',
 )
 
 fwupd_ffi_rs_files = files(
@@ -15,6 +16,7 @@ fwupd_ffi_rs_files = files(
   'fwupd-ffi/Cargo.toml',
   'fwupd-ffi/src/lib.rs',
   'fwupd-ffi/src/crc.rs',
+  'fwupd-ffi/src/xor.rs',
 )
 
 # Force a build so we pick up any issues during compile

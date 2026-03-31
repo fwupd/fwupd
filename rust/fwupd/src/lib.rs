@@ -7,3 +7,4 @@
 //! Core components of fwupd
 
 pub mod crc;
+pub mod xor;

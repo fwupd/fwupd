@@ -12,3 +12,4 @@
 
 mod common;
 mod crc;
+mod xor;
