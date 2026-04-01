@@ -7,7 +7,7 @@ pacman -U --noconfirm dist/*.pkg.*
 plugins/redfish/tests/redfish.py &
 
 # run custom snapd simulator
-plugins/uefi-dbx/tests/snapd.py --datadir /usr/share/installed-tests/fwupd/tests &
+plugins/snapd-uefi/tests/snapd.py --datadir /usr/share/installed-tests/fwupd/tests &
 
 # run TPM simulator
 export TPM2TOOLS_TCTI=swtpm:host=127.0.0.1,port=2321
