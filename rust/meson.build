@@ -14,6 +14,7 @@ fwupd_ffi_rs_files = files(
   'Cargo.lock',
   'fwupd-ffi/Cargo.toml',
   'fwupd-ffi/src/lib.rs',
+  'fwupd-ffi/src/crc.rs',
 )
 
 # Force a build so we pick up any issues during compile

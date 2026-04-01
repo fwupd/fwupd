@@ -165,11 +165,13 @@ impl CrcWidth for u32 {
     }
 }
 
-pub(crate) struct CrcParams {
-    pub(crate) poly: u32,
-    pub(crate) init: u32,
-    pub(crate) reflected: bool,
-    pub(crate) xorout: u32,
+#[doc(hidden)]
+#[derive(Clone, Copy)]
+pub struct CrcParams {
+    pub poly: u32,
+    pub init: u32,
+    pub reflected: bool,
+    pub xorout: u32,
 }
 
 /// Accumulate a CRC over a buffer, one byte at a time.
@@ -178,7 +180,8 @@ pub(crate) struct CrcParams {
 /// accumulator. For CRC-16/32, the byte is shifted to the MSB end of the accumulator
 /// before XORing (the shift amount `T::BITWIDTH - 8` is zero for `u8`, making this
 /// a unified implementation).
-pub(crate) fn crc_step<T: CrcWidth>(c: &CrcParams, buf: &[u8], crc: T) -> T {
+#[doc(hidden)]
+pub fn crc_step<T: CrcWidth>(c: &CrcParams, buf: &[u8], crc: T) -> T {
     let poly = T::from_u32(c.poly);
     let high_bit = T::one() << (T::BITWIDTH - 1);
 
@@ -204,7 +207,8 @@ pub(crate) fn crc_step<T: CrcWidth>(c: &CrcParams, buf: &[u8], crc: T) -> T {
 }
 
 /// Finalize the CRC value by optionally reflecting and XORing with `xorout`.
-pub(crate) fn crc_done<T: CrcWidth>(c: &CrcParams, crc: T) -> T {
+#[doc(hidden)]
+pub fn crc_done<T: CrcWidth>(c: &CrcParams, crc: T) -> T {
     let crc = if c.reflected { crc.reverse_bits() } else { crc };
     crc ^ T::from_u32(c.xorout)
 }
@@ -319,6 +323,12 @@ macro_rules! declare_crc {
                         xorout: $xorout,
                     },
                 }
+            }
+
+            /// Access the CRC parameters.
+            #[doc(hidden)]
+            pub fn params(&self) -> CrcParams {
+                self.params
             }
         }
     };
