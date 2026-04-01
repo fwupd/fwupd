@@ -219,7 +219,8 @@ fu_snapd_uefi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	const gchar *snapd_snap_socket_override = g_getenv("FWUPD_SNAPD_SNAP_SOCKET");
+	const gchar *snapd_snap_socket_override =
+	    fu_plugin_get_config_value(plugin, "SnapdSocketPathOverride");
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) msg = NULL;
@@ -390,7 +391,7 @@ fu_snapd_uefi_plugin_modify_config(FuPlugin *plugin,
 				   const gchar *value,
 				   GError **error)
 {
-	const gchar *keys[] = {"KeyDBOverride", NULL};
+	const gchar *keys[] = {"SnapdSocketPathOverride", "KeyDBOverride", NULL};
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
