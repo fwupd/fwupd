@@ -166,6 +166,11 @@ option(
   description: 'readline support',
 )
 option(
+  'rust-plugins',
+  type: 'feature',
+  description: 'Rust plugin support via cargo',
+)
+option(
   'static_analysis',
   type: 'boolean',
   value: false,

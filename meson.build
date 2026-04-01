@@ -871,6 +871,8 @@ cargo_env.set('MESON_BUILD_ROOT', meson.project_build_root())
 # MESON_SOURCE_DIR is set where the env will be used (after copying)
 cargo_wrapper = find_program(join_paths('generate-build', 'meson-cargo.sh'))
 
+enable_rust_plugins = get_option('rust-plugins').allowed()
+
 subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
@@ -942,6 +944,7 @@ summary(
     'valgrind': valgrind,
     'polkit': polkit,
     'python3': python3,
+    'rust-plugins': enable_rust_plugins,
     'supported_build': supported_build,
     'static_analysis': static_analysis,
     'tests': get_option('tests'),
