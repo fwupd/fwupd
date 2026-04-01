@@ -206,7 +206,10 @@ def main(args) -> int:
 
                 # convert to BMP and add to archive
                 filename = f"fwupd-{lang}-{width}-{height}.bmp"
-                myzip.writestr(filename, data=_cairo_surface_write_to_bmp(img))
+                zi = zipfile.ZipInfo(filename)
+                zi.date_time = (1980, 1, 1, 0, 0, 0)
+                zi.compress_type = zipfile.ZIP_DEFLATED
+                myzip.writestr(zi, data=_cairo_surface_write_to_bmp(img))
 
     # success
     return 0
