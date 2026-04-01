@@ -205,9 +205,8 @@ def main(args) -> int:
                 img.flush()
 
                 # convert to BMP and add to archive
-                with io.BytesIO() as io_bmp:
-                    filename = f"fwupd-{lang}-{width}-{height}.bmp"
-                    myzip.writestr(filename, data=_cairo_surface_write_to_bmp(img))
+                filename = f"fwupd-{lang}-{width}-{height}.bmp"
+                myzip.writestr(filename, data=_cairo_surface_write_to_bmp(img))
 
     # success
     return 0
