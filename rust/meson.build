@@ -9,6 +9,13 @@ fwupd_rs_files = files(
   'fwupd/src/crc.rs',
 )
 
+fwupd_ffi_rs_files = files(
+  'Cargo.toml',
+  'Cargo.lock',
+  'fwupd-ffi/Cargo.toml',
+  'fwupd-ffi/src/lib.rs',
+)
+
 # Force a build so we pick up any issues during compile
 fwupd_rust = custom_target(
   'fwupd-rust',
@@ -22,6 +29,25 @@ fwupd_rust = custom_target(
   ],
   env: core_cargo_env,
   depend_files: fwupd_rs_files,
+  console: true,
+  install: false,
+  build_by_default: true,
+)
+
+fwupd_rs_lib = custom_target(
+  'fwupd-ffi.a',
+  output: 'libfwupd_ffi.a',
+  command: [
+    cargo_wrapper,
+    '-p', 'fwupd-ffi',
+    'build',
+    '@OUTPUT@',
+  ],
+  env: core_cargo_env,
+  depend_files: [
+    fwupd_rs_files,
+    fwupd_ffi_rs_files,
+  ],
   console: true,
   install: false,
   build_by_default: true,
@@ -45,6 +71,7 @@ if build_docs
     env: core_cargo_env,
     depend_files: [
       fwupd_rs_files,
+      fwupd_ffi_rs_files,
     ],
     console: true,
     install: false,
