@@ -7,7 +7,17 @@ pacman -U --noconfirm dist/*.pkg.*
 plugins/redfish/tests/redfish.py &
 
 # run custom snapd simulator
+rm -f /tmp/mock-snapd-test.sock
 plugins/snapd-uefi/tests/snapd.py --datadir /usr/share/installed-tests/fwupd/tests &
+# wait for the socket to show up
+for _ in $(seq 10); do
+    [ -S /tmp/mock-snapd-test.sock ] && break
+    sleep 1
+done
+if [ ! -S /tmp/mock-snapd-test.sock ]; then
+    echo "error: mock snapd socket /tmp/mock-snapd-test.sock not found"
+    exit 1
+fi
 
 # run TPM simulator
 export TPM2TOOLS_TCTI=swtpm:host=127.0.0.1,port=2321
