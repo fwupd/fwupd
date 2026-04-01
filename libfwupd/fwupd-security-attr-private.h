@@ -411,7 +411,7 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_DB "org.fwupd.hsi.Uefi.Db"
 /**
- * FWUPD_SECURITY_ATTR_HP_SURESTART:
+ * FWUPD_SECURITY_ATTR_ID_HP_SURESTART:
  *
  * Host Security ID attribute for HP Surestart
  *
