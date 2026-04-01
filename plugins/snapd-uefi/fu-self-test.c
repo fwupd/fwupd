@@ -34,6 +34,7 @@ typedef struct {
 
 	CURL *mock_snapd_curl;
 	struct curl_slist *mock_curl_hdrs;
+	gchar *socket_path;
 } FuTestFixture;
 
 static gboolean
@@ -149,12 +150,11 @@ fu_self_test_mock_snapd_init(FuTestFixture *fixture)
 {
 	CURL *curl = curl_easy_init();
 	struct curl_slist *req_hdrs = NULL;
-	const char *mock_snapd_snap_socket = g_getenv("FWUPD_SNAPD_SNAP_SOCKET");
 
-	g_assert_nonnull(mock_snapd_snap_socket);
+	g_assert_nonnull(fixture->socket_path);
 
 	/* use snap dedicated socket when running inside a snap */
-	(void)curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, mock_snapd_snap_socket);
+	(void)curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, fixture->socket_path);
 	(void)curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 	req_hdrs = curl_slist_append(req_hdrs, "Content-Type: application/json");
 	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req_hdrs);
@@ -172,8 +172,11 @@ fu_self_test_set_up(FuTestFixture *fixture, gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *testfwdir = NULL;
+	const gchar *socket_override = g_getenv("FWUPD_SNAPD_SNAP_SOCKET");
 
 	fixture->ctx = fu_context_new();
+	fixture->socket_path =
+	    g_strdup(socket_override != NULL ? socket_override : "/tmp/mock-snapd-test.sock");
 
 	fixture->tmpdir = fu_temporary_directory_new("snapd-uefi-test", &error);
 	g_assert_no_error(error);
@@ -233,6 +236,7 @@ fu_self_test_tear_down(FuTestFixture *fixture, gconstpointer user_data)
 
 	g_object_unref(fixture->ctx);
 	g_object_unref(fixture->tmpdir);
+	g_free(fixture->socket_path);
 }
 
 static gboolean
@@ -294,10 +298,15 @@ fu_test_mock_dbx_efivars(FuTestFixture *fixture, FuEfivars *efivars, GError **er
 }
 
 static FuPlugin *
-fu_self_test_snapd_uefi_plugin_new_with_test_defaults(FuContext *ctx)
+fu_self_test_snapd_uefi_plugin_new_with_test_defaults(FuContext *ctx,
+						      const gchar *socket_path_override)
 {
 	FuPlugin *plugin = fu_plugin_new_from_gtype(FU_TYPE_SNAPD_UEFI_PLUGIN, ctx);
 	fu_plugin_set_config_default(plugin, "KeyDBOverride", "DBX");
+	if (socket_path_override != NULL)
+		fu_plugin_set_config_default(plugin,
+					     "SnapdSocketPathOverride",
+					     socket_path_override);
 	return plugin;
 }
 
@@ -331,7 +340,8 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuPlugin) plugin = fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx);
+	g_autoptr(FuPlugin) plugin =
+	    fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx, fixture->socket_path);
 	g_autoptr(FuUefiDevice) uefi_device = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -409,7 +419,8 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuProgress) progress_write = fu_progress_new(G_STRLOC);
-	g_autoptr(FuPlugin) plugin = fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx);
+	g_autoptr(FuPlugin) plugin =
+	    fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx, fixture->socket_path);
 	g_autoptr(FuUefiDevice) uefi_device = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -485,7 +496,8 @@ fu_uefi_dbx_test_plugin_coldplug_probed_device(FuTestFixture *fixture, gconstpoi
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FuPlugin) plugin = fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx);
+	g_autoptr(FuPlugin) plugin =
+	    fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx, fixture->socket_path);
 	g_autoptr(FuUefiDevice) uefi_device = NULL;
 
 	if (!fixture->mock_snapd_available) {
@@ -526,7 +538,8 @@ fu_uefi_dbx_test_plugin_startup(FuTestFixture *fixture, gconstpointer user_data)
 	FuContext *ctx = fixture->ctx;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuPlugin) plugin = fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx);
+	g_autoptr(FuPlugin) plugin =
+	    fu_self_test_snapd_uefi_plugin_new_with_test_defaults(ctx, fixture->socket_path);
 
 	if (!fixture->mock_snapd_available) {
 		g_test_skip("mock snapd not available");
@@ -654,7 +667,6 @@ main(int argc, char **argv)
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
-	(void)g_setenv("FWUPD_SNAPD_SNAP_SOCKET", "/tmp/mock-snapd-test.sock", TRUE);
 
 	g_test_add("/uefi-dbx/startup",
 		   FuTestFixture,
