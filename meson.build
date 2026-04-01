@@ -880,8 +880,8 @@ if build_standalone
   man_md = []
   md_targets = []
   plugin_quirks = []
-  subdir('rust')
   subdir('libfwupdplugin')
+  subdir('rust')
   subdir('po')
   subdir('contrib')
 
