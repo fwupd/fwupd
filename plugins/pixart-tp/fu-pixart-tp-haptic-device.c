@@ -56,7 +56,7 @@ fu_pixart_tp_haptic_device_tf_write_rmi_cmd(FuPixartTpHapticDevice *self,
 {
 	FuDevice *proxy;
 	gsize crc_off = 2;
-	guint8 crc;
+	guint8 crc = 0;
 	g_autoptr(FuStructPixartTpTfWriteSimpleCmd) st =
 	    fu_struct_pixart_tp_tf_write_simple_cmd_new();
 
@@ -64,7 +64,14 @@ fu_pixart_tp_haptic_device_tf_write_rmi_cmd(FuPixartTpHapticDevice *self,
 	fu_struct_pixart_tp_tf_write_simple_cmd_set_len(st, sizeof(cmd));
 	fu_byte_array_append_uint8(st->buf, cmd);
 
-	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, st->buf->data + crc_off, st->buf->len - crc_off);
+	if (!fu_crc8_safe(FU_CRC_KIND_B8_STANDARD,
+			  st->buf->data,
+			  st->buf->len,
+			  crc_off,
+			  st->buf->len - crc_off,
+			  &crc,
+			  error))
+		return FALSE;
 	g_byte_array_append(st->buf, &crc, 1);
 	fu_byte_array_append_uint8(st->buf, FU_PIXART_TP_TF_FRAME_CONST_TAIL);
 	fu_byte_array_set_size(st->buf, FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN, 0x00);
@@ -89,7 +96,7 @@ fu_pixart_tp_haptic_device_tf_write_rmi_with_packet(FuPixartTpHapticDevice *self
 {
 	FuDevice *proxy;
 	gsize crc_off = 2;
-	guint8 crc;
+	guint8 crc = 0;
 	g_autoptr(FuStructPixartTpTfWritePacketCmd) st =
 	    fu_struct_pixart_tp_tf_write_packet_cmd_new();
 
@@ -104,7 +111,14 @@ fu_pixart_tp_haptic_device_tf_write_rmi_with_packet(FuPixartTpHapticDevice *self
 	if (in_bufsz > 0 && in_buf != NULL)
 		g_byte_array_append(st->buf, in_buf, (guint)in_bufsz);
 
-	crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, st->buf->data + crc_off, st->buf->len - crc_off);
+	if (!fu_crc8_safe(FU_CRC_KIND_B8_STANDARD,
+			  st->buf->data,
+			  st->buf->len,
+			  crc_off,
+			  st->buf->len - crc_off,
+			  &crc,
+			  error))
+		return FALSE;
 	g_byte_array_append(st->buf, &crc, 1);
 	fu_byte_array_append_uint8(st->buf, FU_PIXART_TP_TF_FRAME_CONST_TAIL);
 	fu_byte_array_set_size(st->buf, FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN, 0x00);
@@ -129,7 +143,8 @@ fu_pixart_tp_haptic_device_tf_read_rmi(FuPixartTpHapticDevice *self,
 	FuDevice *proxy;
 	gsize datalen;
 	guint8 tail = 0;
-	guint8 crc_actual;
+	guint8 crc_tmp = 0;
+	guint8 crc_actual = 0;
 	guint8 crc_device = 0;
 	guint8 io_buf[FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN] = {0};
 	g_autoptr(FuStructPixartTpTfReadCmd) st_read = fu_struct_pixart_tp_tf_read_cmd_new();
@@ -146,9 +161,15 @@ fu_pixart_tp_haptic_device_tf_read_rmi(FuPixartTpHapticDevice *self,
 		g_byte_array_append(st_read->buf, in_buf, in_bufsz);
 
 	/* append crc + tail */
-	fu_byte_array_append_uint8(
-	    st_read->buf,
-	    fu_crc8(FU_CRC_KIND_B8_STANDARD, st_read->buf->data + 2, st_read->buf->len - 2));
+	if (!fu_crc8_safe(FU_CRC_KIND_B8_STANDARD,
+			  st_read->buf->data,
+			  st_read->buf->len,
+			  0x2,
+			  st_read->buf->len - 2,
+			  &crc_tmp,
+			  error))
+		return NULL;
+	fu_byte_array_append_uint8(st_read->buf, crc_tmp);
 	fu_byte_array_append_uint8(st_read->buf, FU_PIXART_TP_TF_FRAME_CONST_TAIL);
 	fu_byte_array_set_size(st_read->buf, FU_PIXART_TP_TF_FRAME_SIZE_FEATURE_REPORT_LEN, 0x00);
 
@@ -214,7 +235,14 @@ fu_pixart_tp_haptic_device_tf_read_rmi(FuPixartTpHapticDevice *self,
 	datalen = fu_struct_pixart_tp_tf_reply_hdr_get_datalen(st_hdr);
 	if (!fu_memread_uint8_safe(io_buf, sizeof(io_buf), datalen + 6, &crc_device, error))
 		return NULL;
-	crc_actual = fu_crc8(FU_CRC_KIND_B8_STANDARD, io_buf + 2, datalen + 4);
+	if (!fu_crc8_safe(FU_CRC_KIND_B8_STANDARD,
+			  io_buf,
+			  sizeof(io_buf),
+			  0x2,
+			  datalen + 4,
+			  &crc_actual,
+			  error))
+		return NULL;
 	if (crc_actual != crc_device) {
 		g_set_error(error,
 			    FWUPD_ERROR,

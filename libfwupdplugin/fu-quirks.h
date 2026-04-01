@@ -167,6 +167,22 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_VERSION "Version"
 /**
+ * FU_QUIRKS_VERSION_LOWEST:
+ *
+ * The quirk key for the lowest allowed version, e.g. `1.2.3`.
+ *
+ * Since: 2.1.2
+ **/
+#define FU_QUIRKS_VERSION_LOWEST "VersionLowest"
+/**
+ * FU_QUIRKS_VERSION_HIGHEST:
+ *
+ * The quirk key for the highest allowed version, e.g. `1.2.3`.
+ *
+ * Since: 2.1.2
+ **/
+#define FU_QUIRKS_VERSION_HIGHEST "VersionHighest"
+/**
  * FU_QUIRKS_VENDOR:
  *
  * The quirk key for the vendor name, e.g. `Hughski Limited`.

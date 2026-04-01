@@ -52,11 +52,13 @@ typedef struct {
 	gchar *plugin;
 	gchar *version;
 	gchar *version_lowest;
+	gchar *version_highest;
 	gchar *version_bootloader;
 	FwupdVersionFormat version_format;
 	guint64 version_raw;
 	guint64 version_build_date;
 	guint64 version_lowest_raw;
+	guint64 version_highest_raw;
 	guint64 version_bootloader_raw;
 	GPtrArray *checksums; /* (nullable) (element-type utf-8) */
 	GPtrArray *children;  /* (nullable) (element-type FuDevice) */
@@ -1230,6 +1232,82 @@ fwupd_device_set_version_lowest_raw(FwupdDevice *self, guint64 version_lowest_ra
 }
 
 /**
+ * fwupd_device_get_version_highest:
+ * @self: a #FwupdDevice
+ *
+ * Gets the highest version of firmware the device will accept.
+ *
+ * Returns: the device version_highest, or %NULL if unset
+ *
+ * Since: 2.1.2
+ **/
+const gchar *
+fwupd_device_get_version_highest(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
+	return priv->version_highest;
+}
+
+/**
+ * fwupd_device_set_version_highest:
+ * @self: a #FwupdDevice
+ * @version_highest: (nullable): the version
+ *
+ * Sets the highest version of firmware the device will accept.
+ *
+ * Since: 2.1.2
+ **/
+void
+fwupd_device_set_version_highest(FwupdDevice *self, const gchar *version_highest)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->version_highest, version_highest) == 0)
+		return;
+
+	g_free(priv->version_highest);
+	priv->version_highest = g_strdup(version_highest);
+}
+
+/**
+ * fwupd_device_get_version_highest_raw:
+ * @self: a #FwupdDevice
+ *
+ * Gets the highest version of firmware the device will accept in raw format.
+ *
+ * Returns: integer version number, or %0 if unset
+ *
+ * Since: 2.1.2
+ **/
+guint64
+fwupd_device_get_version_highest_raw(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), 0);
+	return priv->version_highest_raw;
+}
+
+/**
+ * fwupd_device_set_version_highest_raw:
+ * @self: a #FwupdDevice
+ * @version_highest_raw: the raw highest version
+ *
+ * Sets the raw highest version number from the hardware before being converted to a string.
+ *
+ * Since: 2.1.2
+ **/
+void
+fwupd_device_set_version_highest_raw(FwupdDevice *self, guint64 version_highest_raw)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	priv->version_highest_raw = version_highest_raw;
+}
+
+/**
  * fwupd_device_get_version_bootloader:
  * @self: a #FwupdDevice
  *
@@ -2039,6 +2117,8 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_version(self, priv_donor->version);
 	if (priv->version_lowest == NULL)
 		fwupd_device_set_version_lowest(self, priv_donor->version_lowest);
+	if (priv->version_highest == NULL)
+		fwupd_device_set_version_highest(self, priv_donor->version_highest);
 	if (priv->version_bootloader == NULL)
 		fwupd_device_set_version_bootloader(self, priv_donor->version_bootloader);
 	if (priv->version_format == FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -2047,6 +2127,8 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_version_raw(self, priv_donor->version_raw);
 	if (priv->version_lowest_raw == 0)
 		fwupd_device_set_version_lowest_raw(self, priv_donor->version_lowest_raw);
+	if (priv->version_highest_raw == 0)
+		fwupd_device_set_version_highest_raw(self, priv_donor->version_highest_raw);
 	if (priv->version_bootloader_raw == 0)
 		fwupd_device_set_version_bootloader_raw(self, priv_donor->version_bootloader_raw);
 	if (priv_donor->guids != NULL) {
@@ -2246,6 +2328,12 @@ fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      FWUPD_RESULT_KEY_VERSION_LOWEST,
 				      g_variant_new_string(priv->version_lowest));
 	}
+	if (priv->version_highest != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_VERSION_HIGHEST,
+				      g_variant_new_string(priv->version_highest));
+	}
 	if (priv->version_bootloader != NULL) {
 		g_variant_builder_add(builder,
 				      "{sv}",
@@ -2263,6 +2351,12 @@ fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
 				      g_variant_new_uint64(priv->version_lowest_raw));
+	}
+	if (priv->version_highest_raw > 0) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW,
+				      g_variant_new_uint64(priv->version_highest_raw));
 	}
 	if (priv->version_bootloader_raw > 0) {
 		g_variant_builder_add(builder,
@@ -2487,6 +2581,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		fwupd_device_set_version_lowest(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_HIGHEST) == 0) {
+		fwupd_device_set_version_highest(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER) == 0) {
 		fwupd_device_set_version_bootloader(self, g_variant_get_string(value, NULL));
 		return;
@@ -2533,6 +2631,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW) == 0) {
 		fwupd_device_set_version_lowest_raw(self, fwupd_variant_get_uint64(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW) == 0) {
+		fwupd_device_set_version_highest_raw(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW) == 0) {
@@ -3055,6 +3157,11 @@ fwupd_device_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 					     FWUPD_RESULT_KEY_VERSION_LOWEST,
 					     priv->version_lowest);
 	}
+	if (priv->version_highest != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_VERSION_HIGHEST,
+					     priv->version_highest);
+	}
 	if (priv->version_bootloader != NULL) {
 		fwupd_json_object_add_string(json_obj,
 					     FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
@@ -3089,6 +3196,10 @@ fwupd_device_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_integer(json_obj,
 					      FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
 					      priv->version_lowest_raw);
+	if (priv->version_highest_raw > 0)
+		fwupd_json_object_add_integer(json_obj,
+					      FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW,
+					      priv->version_highest_raw);
 	if (priv->version_bootloader_raw > 0)
 		fwupd_json_object_add_integer(json_obj,
 					      FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
@@ -3203,6 +3314,9 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_LOWEST, NULL);
 	if (tmp != NULL)
 		fwupd_device_set_version_lowest(self, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_HIGHEST, NULL);
+	if (tmp != NULL)
+		fwupd_device_set_version_highest(self, tmp);
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, NULL);
 	if (tmp != NULL)
 		fwupd_device_set_version_bootloader(self, tmp);
@@ -3244,6 +3358,13 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 							error))
 		return FALSE;
 	fwupd_device_set_version_lowest_raw(self, tmp64);
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW,
+							&tmp64,
+							0,
+							error))
+		return FALSE;
+	fwupd_device_set_version_highest_raw(self, tmp64);
 	if (!fwupd_json_object_get_integer_with_default(json_obj,
 							FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
 							&tmp64,
@@ -3523,6 +3644,10 @@ fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
 	fwupd_codec_string_append(str,
 				  idt,
+				  FWUPD_RESULT_KEY_VERSION_HIGHEST,
+				  priv->version_highest);
+	fwupd_codec_string_append(str,
+				  idt,
 				  FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
 				  priv->version_bootloader);
 	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -3556,6 +3681,10 @@ fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 	if (priv->version_lowest_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_lowest_raw);
 		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, tmp);
+	}
+	if (priv->version_highest_raw > 0) {
+		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_highest_raw);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_HIGHEST_RAW, tmp);
 	}
 	fwupd_codec_string_append_time(str,
 				       idt,
@@ -3958,6 +4087,7 @@ fwupd_device_finalize(GObject *object)
 	g_free(priv->update_error);
 	g_free(priv->version);
 	g_free(priv->version_lowest);
+	g_free(priv->version_highest);
 	g_free(priv->version_bootloader);
 	if (priv->guids != NULL)
 		g_ptr_array_unref(priv->guids);

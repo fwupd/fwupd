@@ -25,6 +25,7 @@
 #include "fu-smbios-private.h"
 #include "fu-smbios-struct.h"
 #include "fu-string.h"
+#include "fu-sum.h"
 
 /**
  * FuSmbios:
@@ -199,8 +200,7 @@ fu_smbios_parse_ep32(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 	st_ep32 = fu_struct_smbios_ep32_parse(buf, bufsz, 0x0, error);
 	if (st_ep32 == NULL)
 		return FALSE;
-	for (guint i = 0; i < bufsz; i++)
-		csum += buf[i];
+	csum = fu_sum8(buf, bufsz);
 	if (csum != 0x00) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -219,8 +219,7 @@ fu_smbios_parse_ep32(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 			    intermediate_anchor_str);
 		return FALSE;
 	}
-	for (guint i = 10; i < bufsz; i++)
-		csum += buf[i];
+	csum = fu_sum8(buf + 10, bufsz - 10);
 	if (csum != 0x00) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -251,8 +250,7 @@ fu_smbios_parse_ep64(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 	st_ep64 = fu_struct_smbios_ep64_parse(buf, bufsz, 0x0, error);
 	if (st_ep64 == NULL)
 		return FALSE;
-	for (guint i = 0; i < bufsz; i++)
-		csum += buf[i];
+	csum = fu_sum8(buf, bufsz);
 	if (csum != 0x00) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

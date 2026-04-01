@@ -173,6 +173,7 @@ fu_pixart_tp_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuPixartTpFirmware *self = FU_PIXART_TP_FIRMWARE(firmware);
 	gsize offset = FU_STRUCT_PIXART_TP_FIRMWARE_HDR_DEFAULT_HEADER_LEN;
+	guint32 checksum = 0;
 	g_autoptr(FuStructPixartTpFirmwareHdr) st = fu_struct_pixart_tp_firmware_hdr_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
@@ -197,13 +198,20 @@ fu_pixart_tp_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_set_size(st->buf, FU_STRUCT_PIXART_TP_FIRMWARE_HDR_DEFAULT_HEADER_LEN, 0x0);
 
 	/* set header CRC */
-	if (!fu_memwrite_uint32_safe(
-		st->buf->data,
-		st->buf->len,
-		st->buf->len - 4,
-		fu_crc32(FU_CRC_KIND_B32_STANDARD, st->buf->data, st->buf->len - 4),
-		G_LITTLE_ENDIAN,
-		error))
+	if (!fu_crc32_safe(FU_CRC_KIND_B32_STANDARD,
+			   st->buf->data,
+			   st->buf->len,
+			   0x0,
+			   st->buf->len - 4,
+			   &checksum,
+			   error))
+		return NULL;
+	if (!fu_memwrite_uint32_safe(st->buf->data,
+				     st->buf->len,
+				     st->buf->len - 4,
+				     checksum,
+				     G_LITTLE_ENDIAN,
+				     error))
 		return NULL;
 
 	/* add section data */

@@ -86,6 +86,16 @@ void
 fwupd_device_set_version_lowest_raw(FwupdDevice *self, guint64 version_lowest_raw)
     G_GNUC_NON_NULL(1);
 const gchar *
+fwupd_device_get_version_highest(FwupdDevice *self) G_GNUC_NON_NULL(1);
+void
+fwupd_device_set_version_highest(FwupdDevice *self, const gchar *version_highest)
+    G_GNUC_NON_NULL(1);
+guint64
+fwupd_device_get_version_highest_raw(FwupdDevice *self) G_GNUC_NON_NULL(1);
+void
+fwupd_device_set_version_highest_raw(FwupdDevice *self, guint64 version_highest_raw)
+    G_GNUC_NON_NULL(1);
+const gchar *
 fwupd_device_get_version_bootloader(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_version_bootloader(FwupdDevice *self, const gchar *version_bootloader)

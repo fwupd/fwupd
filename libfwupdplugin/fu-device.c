@@ -2464,6 +2464,14 @@ fu_device_set_quirk_kv(FuDevice *self,
 		fu_device_set_version(self, value);
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_VERSION_LOWEST) == 0) {
+		fu_device_set_version_lowest(self, value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, FU_QUIRKS_VERSION_HIGHEST) == 0) {
+		fu_device_set_version_highest(self, value);
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_UPDATE_MESSAGE) == 0) {
 		fu_device_set_update_message(self, value);
 		return TRUE;
@@ -3534,6 +3542,12 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 							  fu_device_get_version_lowest_raw(self));
 			fu_device_set_version_lowest(self, version);
 		}
+		if (fu_device_get_version_highest_raw(self) != 0) {
+			g_autofree gchar *version =
+			    device_class->convert_version(self,
+							  fu_device_get_version_highest_raw(self));
+			fu_device_set_version_highest(self, version);
+		}
 	}
 }
 
@@ -3634,6 +3648,54 @@ fu_device_set_version_lowest(FuDevice *self, const gchar *version)
 }
 
 /**
+ * fu_device_set_version_highest:
+ * @self: a #FuDevice
+ * @version: (nullable): a string, e.g. `1.2.3`
+ *
+ * Sets the highest allowed device version, sanitizing the string if required.
+ *
+ * Since: 2.1.2
+ **/
+void
+fu_device_set_version_highest(FuDevice *self, const gchar *version)
+{
+	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* sanitize if required */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER)) {
+		version_safe =
+		    fu_version_ensure_semver(version, fu_device_get_version_format(self));
+		if (g_strcmp0(version, version_safe) != 0)
+			g_debug("converted '%s' to '%s'", version, version_safe);
+	} else {
+		version_safe = g_strdup(version);
+	}
+
+	/* print a console warning for an invalid version, if semver */
+	if (version_safe != NULL &&
+	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
+#ifdef SUPPORTED_BUILD
+		g_warning("%s", error->message);
+#else
+		g_critical("%s", error->message);
+#endif
+
+	/* if different */
+	if (g_strcmp0(fu_device_get_version_highest(self), version_safe) != 0) {
+		if (fu_device_get_version_highest(self) != NULL) {
+			g_debug("changing version highest for %s: %s->%s",
+				fu_device_get_id(self),
+				fu_device_get_version_highest(self),
+				version_safe);
+		}
+		fwupd_device_set_version_highest(FWUPD_DEVICE(self), version_safe);
+	}
+}
+
+/**
  * fu_device_set_version_bootloader:
  * @self: a #FuDevice
  * @version: (nullable): a string, e.g. `1.2.3`
@@ -3702,6 +3764,29 @@ fu_device_set_version_lowest_raw(FuDevice *self, guint64 version_raw)
 		g_autofree gchar *version = device_class->convert_version(self, version_raw);
 		if (version != NULL)
 			fu_device_set_version_lowest(self, version);
+	}
+}
+
+/**
+ * fu_device_set_version_highest_raw:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ *
+ * Sets the raw highest device version from an integer value and the device version format.
+ *
+ * Since: 2.1.2
+ **/
+void
+fu_device_set_version_highest_raw(FuDevice *self, guint64 version_raw)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	fwupd_device_set_version_highest_raw(FWUPD_DEVICE(self), version_raw);
+	if (device_class->convert_version != NULL) {
+		g_autofree gchar *version = device_class->convert_version(self, version_raw);
+		if (version != NULL)
+			fu_device_set_version_highest(self, version);
 	}
 }
 
@@ -7301,6 +7386,12 @@ fu_device_ensure_from_component_verfmt(FuDevice *self, XbNode *component)
 			version =
 			    fu_version_from_uint32(fu_device_get_version_lowest_raw(self), verfmt);
 			fu_device_set_version_lowest(self, version);
+		}
+		if (fu_device_get_version_highest_raw(self) != 0x0) {
+			g_autofree gchar *version = NULL;
+			version =
+			    fu_version_from_uint32(fu_device_get_version_highest_raw(self), verfmt);
+			fu_device_set_version_highest(self, version);
 		}
 		if (fu_device_get_version_bootloader_raw(self) != 0x0) {
 			g_autofree gchar *version = NULL;

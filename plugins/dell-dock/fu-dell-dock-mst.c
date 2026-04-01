@@ -460,10 +460,18 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 	}
 
 	/* checksum the file */
-	if (attribs->checksum_cmd == FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM)
-		payload_sum =
-		    fu_crc16(FU_CRC_KIND_B16_UMTS, data, attribs->length + attribs->start);
-	else {
+	if (attribs->checksum_cmd == FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM) {
+		guint16 crc_tmp = 0;
+		if (!fu_crc16_safe(FU_CRC_KIND_B16_UMTS,
+				   data,
+				   length,
+				   0x0,
+				   attribs->length + attribs->start,
+				   &crc_tmp,
+				   error))
+			return FALSE;
+		payload_sum = crc_tmp;
+	} else {
 		for (guint i = attribs->start; i < attribs->length + attribs->start; i++) {
 			payload_sum += data[i];
 		}

@@ -520,7 +520,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	const guint8 *sbuf = NULL;
 	gsize bufsz = 0;
 	gsize sbufsz = 0;
-	guint16 crc_actual;
+	guint16 crc_actual = 0;
 	guint16 crc_file = 0x0;
 	guint32 sec_addr = 0x28000;
 	g_autoptr(GBytes) spi_fw = NULL;
@@ -554,7 +554,8 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 		g_prefix_error_literal(error, "failed to read file CRC: ");
 		return FALSE;
 	}
-	crc_actual = fu_crc16(FU_CRC_KIND_B16_USB, sbuf, sbufsz - 2);
+	if (!fu_crc16_safe(FU_CRC_KIND_B16_USB, sbuf, sbufsz, 0x0, sbufsz - 2, &crc_actual, error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* update fw2 first if fw1 correct */

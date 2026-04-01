@@ -34,14 +34,17 @@ fu_device_version_format_raw_func(void)
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_raw(device, 256);
 	fu_device_set_version_lowest_raw(device, 257);
+	fu_device_set_version_highest_raw(device, 258);
 
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.0");
 	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "1.1");
+	g_assert_cmpstr(fu_device_get_version_highest(device), ==, "1.2");
 
 	/* ensure both are changed */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 	g_assert_cmpstr(fu_device_get_version(device), ==, "256");
 	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "257");
+	g_assert_cmpstr(fu_device_get_version_highest(device), ==, "258");
 }
 
 static void

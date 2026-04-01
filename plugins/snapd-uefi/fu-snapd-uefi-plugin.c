@@ -66,6 +66,44 @@ fu_snapd_uefi_plugin_rsp_cb(char *ptr, size_t size, size_t nmemb, void *userdata
 	return sz;
 }
 
+/*
+ * Extract the error message from the snapd JSON error response.
+ * The response format is:
+ *   {"type": "error", "status-code": <N>, "result": {"message": "<error description>"}}
+ *
+ * Returns: (transfer full) (nullable): the error message string, or NULL
+ */
+static gchar *
+fu_snapd_uefi_plugin_extract_error_message(const guint8 *data, gsize len)
+{
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_rsp = NULL;
+	g_autoptr(FwupdJsonObject) json_result = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new(data, len);
+	GRefString *msg;
+
+	/* set appropriate limits for a small error response */
+	fwupd_json_parser_set_max_depth(json_parser, 5);
+	fwupd_json_parser_set_max_items(json_parser, 10);
+	fwupd_json_parser_set_max_quoted(json_parser, 1000);
+
+	json_node =
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, NULL);
+	if (json_node == NULL)
+		return NULL;
+	json_rsp = fwupd_json_node_get_object(json_node, NULL);
+	if (json_rsp == NULL)
+		return NULL;
+	json_result = fwupd_json_object_get_object(json_rsp, "result", NULL);
+	if (json_result == NULL)
+		return NULL;
+	msg = fwupd_json_object_get_string(json_result, "message", NULL);
+	if (msg == NULL)
+		return NULL;
+	return g_strdup(msg);
+}
+
 static gboolean
 fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 				const gchar *endpoint,
@@ -101,7 +139,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 
 	res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
-		/* TODO inspect the error */
+		/* TODO inspect curl specific error */
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -120,16 +158,29 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 	}
 
 	if (status_code != 200) {
+		g_autofree gchar *snapd_msg = NULL;
 		g_autofree gchar *rsp = NULL;
+
 		if (rsp_buf->len > 0) {
+			snapd_msg =
+			    fu_snapd_uefi_plugin_extract_error_message(rsp_buf->data, rsp_buf->len);
 			/* make sure the response is printable */
 			rsp = fu_strsafe((const char *)rsp_buf->data, rsp_buf->len);
 		}
 
-		/* TODO check whether the response is even printable? */
 		g_info("snapd request failed with status %ld, response: %s",
 		       (glong)status_code,
 		       rsp != NULL ? rsp : "<none>");
+
+		if (snapd_msg != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "snapd request failed with status %ld: %s",
+				    (glong)status_code,
+				    snapd_msg);
+			return FALSE;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
