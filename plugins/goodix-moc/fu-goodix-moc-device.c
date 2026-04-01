@@ -226,7 +226,7 @@ fu_goodix_moc_device_cmd_xfer(FuGoodixMocDevice *device,
 }
 
 static gboolean
-fu_goodix_moc_device_setup_version(FuGoodixMocDevice *self, GError **error)
+fu_goodix_moc_device_ensure_version(FuGoodixMocDevice *self, GError **error)
 {
 	FuGoodixMocCmdResp rsp = {0};
 	g_autofree gchar *version = NULL;
@@ -242,8 +242,15 @@ fu_goodix_moc_device_setup_version(FuGoodixMocDevice *self, GError **error)
 					   TRUE,
 					   error))
 		return FALSE;
-	version = g_strndup((const gchar *)rsp.version_info.fwversion,
-			    sizeof(rsp.version_info.fwversion));
+	version = fu_strsafe((const gchar *)rsp.version_info.fwversion,
+			     sizeof(rsp.version_info.fwversion));
+	if (version == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no valid version string");
+		return FALSE;
+	}
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
@@ -322,7 +329,7 @@ fu_goodix_moc_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* ensure version */
-	if (!fu_goodix_moc_device_setup_version(self, error)) {
+	if (!fu_goodix_moc_device_ensure_version(self, error)) {
 		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return FALSE;
 	}

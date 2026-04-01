@@ -3,9 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/framework-laptop-goodix-moc.json",
+      "url": "cad6f67ed8ba0e05f87bd15d3f1a236c44c0f88d07cdb934590574438aaa16c9-goodix-moc-609c-v01000334.cab",
+      "emulation-url": "f66d89e8222428a32d8b2e71eebda5ca4a329f842189f5c858586081549faaf5-goodix-moc-609c-v01000334.zip",
       "components": [
         {
+          "version": "01000334",
           "guids": [
             "1e8c8470-a49c-571a-82fd-19c9fa32b8c3"
           ]
