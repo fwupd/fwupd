@@ -1701,7 +1701,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	fu_device_incorporate(dev, FU_DEVICE(device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 
 	/* any proxy device to create too? */
-	if (proxy_gtype != G_TYPE_INVALID) {
+	if (fu_device_get_proxy_internal(dev) == NULL && proxy_gtype != G_TYPE_INVALID) {
 		g_autoptr(FuDevice) proxy_tmp =
 		    g_object_new(proxy_gtype, "context", priv->ctx, NULL);
 		fu_device_incorporate(proxy_tmp, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
