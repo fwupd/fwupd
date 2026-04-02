@@ -911,6 +911,7 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_MEDIATEK_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_I2C_DEVICE);
 	fu_device_register_private_flag(FU_DEVICE(self), FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY);
+	fu_device_set_priority(FU_DEVICE(self), 1); /* better than linux_display */
 }
 
 static void
