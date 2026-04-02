@@ -1688,6 +1688,8 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(proxy == NULL || FU_IS_DEVICE(proxy));
+	g_return_if_fail(self != proxy);
 
 	/* unchanged */
 	if (proxy == priv->proxy)
