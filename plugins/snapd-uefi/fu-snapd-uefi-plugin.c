@@ -391,7 +391,11 @@ fu_snapd_uefi_plugin_modify_config(FuPlugin *plugin,
 				   const gchar *value,
 				   GError **error)
 {
-	const gchar *keys[] = {"SnapdSocketPathOverride", "KeyDBOverride", NULL};
+	const gchar *keys[] = {
+	    "SnapdSocketPathOverride", /* override for snapd socket path, used in tests */
+	    "KeyDBOverride",	       /* override for the DB path, used in tests */
+	    NULL,
+	};
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
