@@ -8270,7 +8270,7 @@ fu_device_clear_events(FuDevice *self)
 /**
  * fu_device_set_target:
  * @self: a #FuDevice
- * @target: a #FuDevice
+ * @target: (nullable): a #FuDevice
  *
  * Sets the target device where #FuDeviceEvent objects added to @self should actually be added.
  *
@@ -8284,9 +8284,11 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(FU_IS_DEVICE(target));
+	g_return_if_fail(target == NULL || FU_IS_DEVICE(target));
+	g_return_if_fail(self != target);
 
-	fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
+	if (target != NULL)
+		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
 	g_set_object(&priv->target, target);
 }
 
