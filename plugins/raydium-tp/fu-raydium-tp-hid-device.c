@@ -39,7 +39,7 @@ fu_raydium_tp_hid_device_get_report(FuRaydiumTpHidDevice *self, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_append_uint8(buf, FU_RAYDIUM_TP_CMD2_RID);
-	fu_byte_array_set_size(buf, RAYDIUM_I2C_BUF_SIZE + 1, 0x0);
+	fu_byte_array_set_size(buf, RAYDIUM_I2C_BUF_SIZE, 0x0);
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf->data,
 					  buf->len,
