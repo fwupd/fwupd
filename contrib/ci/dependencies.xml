@@ -520,13 +520,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 2.68.0)</version>
+        <version>(>= 2.88.0)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 2.68.0)</version>
+        <version>(>= 2.88.0)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -595,7 +595,7 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 3.6.0)</version>
+        <version>(>= 3.8.12)</version>
       </control>
       <multi-arch />
       <package variant="aarch64">libgnutls28-dev</package>
@@ -605,7 +605,7 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 3.6.0)</version>
+        <version>(>= 3.8.12)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -667,13 +667,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.3.19)</version>
+        <version>(>= 0.3.26)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.3.19)</version>
+        <version>(>= 0.3.26)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -695,13 +695,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.1.6)</version>
+        <version>(>= 0.2.5)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.6)</version>
+        <version>(>= 0.2.5)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -825,13 +825,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 7.62.0)</version>
+        <version>(>= 8.19.0)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 7.62.0)</version>
+        <version>(>= 8.19.0)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1096,13 +1096,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.103)</version>
+        <version>(>= 127)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.103)</version>
+        <version>(>= 127)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1230,12 +1230,12 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 2021.1)</version>
+        <version>(>= 2026.1)</version>
       </control>
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 2021.1)</version>
+        <version>(>= 2026.1)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1421,7 +1421,7 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 249)</version>
+        <version>(>= 260)</version>
       </control>
       <package variant="aarch64">systemd-dev</package>
       <package variant="i386">systemd-dev</package>
@@ -1430,7 +1430,7 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 249)</version>
+        <version>(>= 260)</version>
       </control>
       <package variant="x86_64">systemd-dev</package>
       <package variant="aarch64">systemd-dev</package>
