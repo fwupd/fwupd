@@ -131,6 +131,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
             if distro.attrib["id"] != OS:
                 continue
             control = ""
+            version = ""
             if add_control:
                 inclusive = []
                 exclusive = []
@@ -141,6 +142,9 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                         inclusive.append(obj.text)
                     for obj in control_parent.findall("exclusive"):
                         exclusive.append(obj.text)
+                    for obj in control_parent.findall("version"):
+                        if obj.text:
+                            version = f" {obj.text}"
                 if inclusive or exclusive:
                     inclusive = " ".join(inclusive).strip()
                     exclusive = " !".join(exclusive).strip()
@@ -157,7 +161,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
             if len(distro.findall("package")) == 0:
                 dep = child.attrib["id"]
                 if dep:
-                    deps.append(f"{dep}{arch_suffix}{control}")
+                    deps.append(f"{dep}{arch_suffix}{version}{control}")
             for package in distro.findall("package"):
                 if variant and "variant" in package.attrib:
                     if package.attrib["variant"] != variant:
@@ -167,7 +171,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                 else:
                     dep = child.attrib["id"]
                 if dep:
-                    deps.append(f"{dep}{arch_suffix}{control}")
+                    deps.append(f"{dep}{arch_suffix}{version}{control}")
     return deps
 
 
