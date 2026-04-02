@@ -48,6 +48,8 @@ fu_device_ensure_id(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_
 void
 fu_device_incorporate_from_component(FuDevice *self, XbNode *component) G_GNUC_NON_NULL(1, 2);
 void
+fu_device_incorporate_from_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1, 2);
+void
 fu_device_replace(FuDevice *self, FuDevice *donor) G_GNUC_NON_NULL(1);
 void
 fu_device_ensure_from_component(FuDevice *self, XbNode *component) G_GNUC_NON_NULL(1, 2);

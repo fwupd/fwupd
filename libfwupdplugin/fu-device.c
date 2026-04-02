@@ -6879,6 +6879,28 @@ fu_device_incorporate_instance_ids(FuDevice *self, FuDevice *donor)
 }
 
 /**
+ * fu_device_incorporate_from_proxy:
+ * @self: a #FuDevice
+ * @proxy: Another #FuDevice
+ *
+ * Copy some properties from the proxy object if they have not already been set.
+ *
+ * Since: 2.1.2
+ **/
+void
+fu_device_incorporate_from_proxy(FuDevice *self, FuDevice *proxy)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_DEVICE(proxy));
+
+	/* optional subclass */
+	if (device_class->incorporate_from_proxy != NULL)
+		device_class->incorporate_from_proxy(self, proxy);
+}
+
+/**
  * fu_device_incorporate:
  * @self: a #FuDevice
  * @donor: Another #FuDevice

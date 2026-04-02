@@ -97,6 +97,7 @@ struct _FuDeviceClass {
 				   FuFirmware *firmware,
 				   FuFirmwareParseFlags flags,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	void (*incorporate_from_proxy)(FuDevice *self, FuDevice *donor);
 #endif
 };
 
