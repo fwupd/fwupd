@@ -19,7 +19,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-31 16:10+0000\n"
+"PO-Revision-Date: 2026-04-02 13:09+0000\n"
 "Last-Translator: Francisco Serrador <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/fwupd/fwupd/es/>\n"
 "Language: es\n"
@@ -1833,8 +1833,9 @@ msgid "[PCR]"
 msgstr ""
 
 #. TRANSLATORS: command description
+#, fuzzy
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Interpreta el PCR del sistema en enentlog"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2041,8 +2042,9 @@ msgid "No releases available"
 msgstr "Ninguna liberación disponible"
 
 #. TRANSLATORS: no repositories to download from
+#, fuzzy
 msgid "No matching releases for search token"
-msgstr ""
+msgstr "No coincide versiones para vale de búsqueda"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
@@ -3175,8 +3177,9 @@ msgid "Plugin is only for testing"
 msgstr "El complemento es solo para pruebas"
 
 #. TRANSLATORS: The plugin enumeration might change the device current mode
+#, fuzzy
 msgid "Plugin enumeration may change device state"
-msgstr ""
+msgstr "La enumeración del complemento puede cambiar el estado del dispositivo"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
