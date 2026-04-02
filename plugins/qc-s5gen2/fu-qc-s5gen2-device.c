@@ -754,6 +754,12 @@ fu_qc_s5gen2_device_init(FuQcS5gen2Device *self)
 }
 
 static void
+fu_qc_s5gen2_device_incorporate_from_proxy(FuDevice *device, FuDevice *donor)
+{
+	fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_BASECLASS);
+}
+
+static void
 fu_qc_s5gen2_device_class_init(FuQcS5gen2DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
@@ -765,4 +771,5 @@ fu_qc_s5gen2_device_class_init(FuQcS5gen2DeviceClass *klass)
 	device_class->write_firmware = fu_qc_s5gen2_device_write_firmware;
 	device_class->set_progress = fu_qc_s5gen2_device_set_progress;
 	device_class->replace = fu_qc_s5gen2_device_replace;
+	device_class->incorporate_from_proxy = fu_qc_s5gen2_device_incorporate_from_proxy;
 }
