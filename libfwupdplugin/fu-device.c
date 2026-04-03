@@ -1688,6 +1688,8 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(proxy == NULL || FU_IS_DEVICE(proxy));
+	g_return_if_fail(self != proxy);
 
 	/* unchanged */
 	if (proxy == priv->proxy)
@@ -6983,6 +6985,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		}
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_EVENTS) {
+		if (priv->fwupd_version == NULL && priv_donor->fwupd_version != NULL)
+			fu_device_set_fwupd_version(self, priv_donor->fwupd_version);
 		if (priv_donor->events != NULL && donor != priv->proxy) {
 			for (guint i = 0; i < priv_donor->events->len; i++) {
 				FuDeviceEvent *event = g_ptr_array_index(priv_donor->events, i);
@@ -7051,14 +7055,19 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			}
 		}
 	}
-
-	/* everything else */
-	if (flag == FU_DEVICE_INCORPORATE_FLAG_ALL) {
-		GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
-		GPtrArray *parent_physical_ids = fu_device_get_parent_physical_ids(donor);
-		GPtrArray *parent_backend_ids = fu_device_get_parent_backend_ids(donor);
-
-		/* copy from donor FuDevice if has not already been set */
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_PROXY) {
+		if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY]) &&
+		    fu_device_has_private_flag_quark(donor, quarks[QUARK_REFCOUNTED_PROXY])) {
+			if (priv->proxy == NULL && priv_donor->proxy != NULL)
+				fu_device_set_proxy(self, priv_donor->proxy);
+		}
+		if (priv->proxy_gtype == G_TYPE_INVALID &&
+		    priv_donor->proxy_gtype != G_TYPE_INVALID)
+			fu_device_set_proxy_gtype(self, priv_donor->proxy_gtype);
+		if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
+			fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_PRIVATE_FLAGS) {
 		if (priv_donor->private_flags != NULL) {
 			fu_device_register_private_flags(self);
 			for (guint i = 0; i < priv_donor->private_flags->len; i++) {
@@ -7070,30 +7079,33 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 				}
 			}
 		}
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_CREATED_MODIFIED) {
 		if (priv->created_usec == 0 && priv_donor->created_usec != 0)
 			fu_device_set_created_usec(self, priv_donor->created_usec);
 		if (priv->modified_usec == 0 && priv_donor->modified_usec != 0)
 			fu_device_set_modified_usec(self, priv_donor->modified_usec);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_EQUIVALENT_ID) {
 		if (priv->equivalent_id == NULL && fu_device_get_equivalent_id(donor) != NULL)
 			fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
-		if (priv->fwupd_version == NULL && priv_donor->fwupd_version != NULL)
-			fu_device_set_fwupd_version(self, priv_donor->fwupd_version);
-		if (priv_donor->required_free > 0)
+	}
+
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_REQUIRED_FREE) {
+		if (priv->required_free == 0 && priv_donor->required_free > 0)
 			fu_device_set_required_free(self, priv_donor->required_free);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_UPDATE_REQUEST_ID) {
 		if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
 			fu_device_set_update_request_id(self, priv_donor->update_request_id);
-		if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY]) &&
-		    fu_device_has_private_flag_quark(donor, quarks[QUARK_REFCOUNTED_PROXY])) {
-			if (priv->proxy == NULL && priv_donor->proxy != NULL)
-				fu_device_set_proxy(self, priv_donor->proxy);
-		}
-		if (priv->proxy_gtype == G_TYPE_INVALID &&
-		    priv_donor->proxy_gtype != G_TYPE_INVALID)
-			fu_device_set_proxy_gtype(self, priv_donor->proxy_gtype);
-		if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
-			fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_CUSTOM_FLAGS) {
 		if (priv->custom_flags == NULL && priv_donor->custom_flags != NULL)
 			fu_device_set_custom_flags(self, priv_donor->custom_flags);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_PARENT_IDS) {
+		GPtrArray *parent_physical_ids = fu_device_get_parent_physical_ids(donor);
+		GPtrArray *parent_backend_ids = fu_device_get_parent_backend_ids(donor);
 		if (priv_donor->parent_guids != NULL) {
 			for (guint i = 0; i < priv_donor->parent_guids->len; i++) {
 				const gchar *guid = g_ptr_array_index(priv_donor->parent_guids, i);
@@ -7112,6 +7124,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 				fu_device_add_parent_backend_id(self, tmp);
 			}
 		}
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_METADATA) {
 		if (priv_donor->metadata != NULL) {
 			GHashTableIter iter;
 			gpointer key, value;
@@ -7121,8 +7135,9 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 					fu_device_set_metadata(self, key, value);
 			}
 		}
-
-		/* call the set_quirk_kv() vfunc for the superclassed object */
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_SET_QUIRK_KV) {
+		GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
 		for (guint i = 0; i < instance_ids->len; i++) {
 			const gchar *instance_id = g_ptr_array_index(instance_ids, i);
 			g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
@@ -8290,7 +8305,7 @@ fu_device_clear_events(FuDevice *self)
 /**
  * fu_device_set_target:
  * @self: a #FuDevice
- * @target: a #FuDevice
+ * @target: (nullable): a #FuDevice
  *
  * Sets the target device where #FuDeviceEvent objects added to @self should actually be added.
  *
@@ -8304,9 +8319,11 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(FU_IS_DEVICE(target));
+	g_return_if_fail(target == NULL || FU_IS_DEVICE(target));
+	g_return_if_fail(self != target);
 
-	fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
+	if (target != NULL)
+		fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
 	g_set_object(&priv->target, target);
 }
 
