@@ -73,6 +73,21 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 		return FALSE;
 	buffer = g_bytes_get_data(fw, &image_size);
 
+	if (image_size < sizeof(guint32)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware image too small for header");
+		return FALSE;
+	}
+	if (self->blob_major_offset >= image_size || self->blob_minor_offset >= image_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "version offset out of bounds");
+		return FALSE;
+	}
+
 	dynamic_version = g_strdup_printf("%02x.%02x",
 					  buffer[self->blob_major_offset],
 					  buffer[self->blob_minor_offset]);

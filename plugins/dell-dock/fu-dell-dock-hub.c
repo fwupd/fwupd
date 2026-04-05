@@ -83,6 +83,17 @@ fu_dell_dock_hub_write_fw(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data(fw, &fw_size);
+	if (self->blob_major_offset >= fw_size || self->blob_minor_offset >= fw_size) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "version offset out of bounds (major=0x%x, minor=0x%x, size=0x%x)",
+			    (guint)self->blob_major_offset,
+			    (guint)self->blob_minor_offset,
+			    (guint)fw_size);
+		return FALSE;
+	}
+
 	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
 
 	dynamic_version = g_strdup_printf("%02x.%02x",

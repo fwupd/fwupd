@@ -970,6 +970,7 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	FuDellDockMstType type;
+	gsize fw_size;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
@@ -989,7 +990,16 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	data = g_bytes_get_data(fw, NULL);
+
+	data = g_bytes_get_data(fw, &fw_size);
+	if (self->blob_major_offset >= fw_size || self->blob_minor_offset >= fw_size ||
+	    self->blob_build_offset >= fw_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "version offset out of bounds");
+		return FALSE;
+	}
 
 	dynamic_version = g_strdup_printf("%02x.%02x.%02x",
 					  data[self->blob_major_offset],
