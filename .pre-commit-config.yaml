@@ -118,6 +118,12 @@ repos:
         name: Check meson install tags
         language: script
         entry: ./contrib/ci/check-meson-install-tags.py
+      - id: check-dep-versions
+        name: Check dependency versions match meson
+        language: script
+        entry: ./contrib/ci/check-dep-versions.py
+        files: ^(meson\.build|contrib/ci/dependencies\.xml)$
+        pass_filenames: false
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0
     hooks:
