@@ -18,3 +18,5 @@ plugin_builtins += static_library('fu_plugin_lxs-touch',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
+
+device_tests += files('tests/lxs-touch.json')

@@ -104,3 +104,70 @@ This plugin is Linux-only (`host_machine.system() == 'linux'`) and is automatica
 # Test with only this plugin loaded
 fwupdtool --plugins lxs_touch get-devices --verbose
 ```
+
+## Recording Emulation
+
+Emulation data allows CI to replay a full firmware update without physical hardware.
+See [device-emulation.md](../../docs/device-emulation.md) for full background.
+
+### Step 1 — Tag the device for recording
+
+The lxs-touch is a persistent (non-hotpluggable) HID device, so the daemon must be
+restarted after tagging to capture the setup events.
+
+```bash
+# Find the device ID
+fwupdmgr get-devices | grep -A5 "LXS Touch"
+
+# Tag by device ID
+fwupdmgr emulation-tag <device-id>
+# or by the SWIP-mode GUID
+fwupdmgr emulation-tag 1aaafe55-608a-574e-ac7a-a36c155856a2
+
+# Restart the daemon so the setup sequence is re-captured
+fwupdmgr quit
+# (in the dev venv, restart manually: fwupd --verbose)
+
+# Confirm the device is tagged
+fwupdmgr get-devices --filter emulation-tag
+```
+
+### Step 2 — Install the firmware
+
+Run the update as normal.  The daemon will record all HID transfers automatically.
+
+```bash
+fwupdmgr install <firmware>.cab --allow-reinstall
+```
+
+The device will detach to DFUP mode (VID `0x29BD` / `0x1FD2`, PID `0x5357`), write
+firmware, then replug back in SWIP mode.
+
+### Step 3 — Save the emulation archive
+
+```bash
+fwupdmgr emulation-save lxs-touch-emulation.zip
+```
+
+### Step 4 — Verify playback
+
+Remove or unplug the device and load the recording:
+
+```bash
+fwupdmgr emulation-load lxs-touch-emulation.zip
+fwupdmgr get-devices --filter emulated
+fwupdmgr install <firmware>.cab --allow-reinstall
+```
+
+### Step 5 — Wire up the device test
+
+1. Upload the recording to the LVFS `Assets` tab of the firmware release.
+2. Note the resulting SHA-256 URL and update `tests/lxs-touch.json`:
+   - Set `url` to the SHA-256-prefixed `.cab` filename.
+   - Set `emulation-url` to the SHA-256-prefixed emulation `.zip` filename.
+   - Set `version` to the firmware version string installed by that `.cab`.
+
+```bash
+# Validate locally
+fwupdmgr device-emulate tests/lxs-touch.json
+```

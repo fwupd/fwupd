@@ -15,11 +15,6 @@
 #define FU_LXSTOUCH_PROTOCOL_NAME_DFUP "DFUP"
 #define FU_LXSTOUCH_PROTOCOL_NAME_SWIP "SWIP"
 
-#define FU_LXSTOUCH_VID_NORMAL      0x1FD2
-#define FU_LXSTOUCH_PID_NORMAL_B011 0xB011
-#define FU_LXSTOUCH_VID_DFUP        0x29BD
-#define FU_LXSTOUCH_PID_DFUP        0x5357
-
 #define FU_LXSTOUCH_BUFFER_SIZE 64
 #define FU_LXSTOUCH_REPORT_ID   0x09
 
@@ -406,8 +401,6 @@ fu_lxs_touch_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 		g_prefix_error_literal(error, "failed to enter DFUP mode: ");
 		return FALSE;
 	}
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	return TRUE;
 }
