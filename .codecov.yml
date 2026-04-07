@@ -7,12 +7,12 @@ coverage:
       default:
         target: auto
         threshold: 1%
-        informational: true
+        informational: false
     patch:
       default:
         target: auto
         threshold: 1%
-        informational: true
+        informational: false
 ignore:
   - "**/*.h"
   - "**/*-test.c"
