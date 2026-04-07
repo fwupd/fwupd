@@ -94,6 +94,7 @@ fu_efi_variable_authentication2_validate(FuFirmware *firmware,
 static gboolean
 fu_efi_variable_authentication2_add_content_info_prefix(GByteArray *buf, GError **error)
 {
+	guint16 oid = 0;
 	guint16 sz = 0;
 	const guint8 buf_algorithm[] = {0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02};
 	g_autoptr(GByteArray) buf_prefix = g_byte_array_new();
@@ -111,6 +112,12 @@ fu_efi_variable_authentication2_add_content_info_prefix(GByteArray *buf, GError 
 			    sz);
 		return FALSE;
 	}
+
+	/* this is wrapped in ContentInfo already? */
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x4, &oid, G_BIG_ENDIAN, error))
+		return FALSE;
+	if (oid == 0x0609)
+		return TRUE;
 
 	/* get size of SignedData */
 	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x2, &sz, G_BIG_ENDIAN, error))
