@@ -332,7 +332,7 @@ if get_option('tests')
       'fu-polkit-test',
       sources: ['fu-polkit-test.c', 'fu-polkit-agent.c'],
       include_directories: [root_incdir, fwupd_incdir],
-      dependencies: [libfwupd_deps],
+      dependencies: [libfwupd_deps, fwupd_rs_dep],
       link_with: [fwupd],
     )
     test(
