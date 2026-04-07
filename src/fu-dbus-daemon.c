@@ -1080,11 +1080,9 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
-	if (stream == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+	if (stream == NULL)
 		return NULL;
-	}
 	return g_steal_pointer(&stream);
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");

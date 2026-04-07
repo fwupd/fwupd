@@ -219,3 +219,7 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_plugin_device_add()`: Use `fu_plugin_add_device()` instead.
 * `fu_plugin_device_remove()`: Use `fu_plugin_remove_device()` instead.
 * `fu_cfi_device_new()`: Use a proxy rather than a context.
+
+## 2.1.2
+
+* `fu_unix_seekable_input_stream_new()`: Add `GError`

@@ -4928,8 +4928,12 @@ fu_engine_update_metadata(FuEngine *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ensures the fd's are closed on error */
-	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE);
-	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE);
+	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+	if (stream_fd == NULL)
+		return FALSE;
+	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE, error);
+	if (stream_sig == NULL)
+		return FALSE;
 
 	/* read the entire file into memory */
 	bytes_raw =
