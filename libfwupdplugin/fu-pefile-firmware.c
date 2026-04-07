@@ -333,6 +333,27 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	if (regions->len > 0) {
 		FuPefileFirmwareRegion *r = g_ptr_array_index(regions, regions->len - 1);
 		gsize offset_end = r->offset + r->size;
+
+		/* sanity check */
+		if (offset_end > streamsz) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "section extends beyond file boundary: 0x%x > 0x%x",
+				    (guint)offset_end,
+				    (guint)streamsz);
+			return FALSE;
+		}
+		if (offset_end + cert_table_sz > streamsz) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "certificate table extends beyond file: 0x%x + 0x%x > 0x%x",
+				    (guint)offset_end,
+				    cert_table_sz,
+				    (guint)streamsz);
+			return FALSE;
+		}
 		fu_pefile_firmware_add_region(regions,
 					      "tabledata->cert-table",
 					      offset_end,
