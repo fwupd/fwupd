@@ -2903,7 +2903,11 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 		g_autoptr(GDBusServer) server = NULL;
 
 		server = g_dbus_server_new_sync(socket_address,
+#ifdef _WIN32
 						G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS,
+#else
+						G_DBUS_SERVER_FLAGS_AUTHENTICATION_REQUIRE_SAME_USER,
+#endif
 						guid,
 						NULL,
 						NULL,
