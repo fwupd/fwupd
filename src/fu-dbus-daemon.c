@@ -203,7 +203,18 @@ fu_dbus_daemon_create_request(FuDbusDaemon *self, const gchar *sender, GError **
 
 	/* if using FWUPD_DBUS_SOCKET... */
 	if (sender == NULL) {
-		fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
+#ifdef HAVE_GIO_UNIX
+		GCredentials *credentials =
+		    g_dbus_connection_get_peer_credentials(self->connection);
+		if (credentials != NULL) {
+			calling_uid = g_credentials_get_unix_user(credentials, error);
+			if (calling_uid == (guint)-1)
+				return NULL;
+			if (fu_engine_is_uid_trusted(engine, calling_uid))
+				converter_flags |= FWUPD_CODEC_FLAG_TRUSTED;
+		}
+#endif
+		fu_engine_request_set_converter_flags(request, converter_flags);
 		return g_object_ref(request);
 	}
 
