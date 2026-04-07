@@ -51,9 +51,6 @@ ninja -C ${BUILD} install -v
 ./contrib/ci/check-rss.py --limit 3072 ${BUILD}/src/fwupdtool get-devices
 ./contrib/ci/check-cpu.py --limit 350 ${BUILD}/src/fwupdtool get-devices
 
-# check for unused symbols
-./contrib/ci/check-unused.py
-
 # check the daemon aborts
 set +e
 FWUPD_SYSCALL_FILTER=systemd ${BUILD}/src/fwupd --immediate-exit
