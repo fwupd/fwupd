@@ -19,6 +19,7 @@
 G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
 
 #define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX 0x4000
+#define FU_ZIP_FIRMWARE_EXTRA_MAX	0x100000 /* 1 MB */
 
 static gboolean
 fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size, GError **error)
@@ -29,6 +30,15 @@ fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size
 		if (st_ehdr == NULL)
 			return FALSE;
 		i += fu_struct_zip_extra_hdr_get_datasz(st_ehdr);
+		if (i > FU_ZIP_FIRMWARE_EXTRA_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "too much ZipExtraHdr data: 0x%x > 0x%x",
+				    (guint)i,
+				    (guint)FU_ZIP_FIRMWARE_EXTRA_MAX);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
