@@ -20,6 +20,7 @@
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-partial-input-stream.h"
+#include "fu-path.h"
 #include "fu-string.h"
 
 typedef struct {
@@ -465,6 +466,10 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 			value = '/';
 		g_string_append_c(filename, (gchar)value);
 	}
+
+	/* sanity check */
+	if (!fu_path_verify_safe(filename->str, error))
+		return FALSE;
 
 	/* add image */
 	if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME) {

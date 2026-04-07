@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-partial-input-stream.h"
+#include "fu-path.h"
 #include "fu-string.h"
 #include "fu-zip-file.h"
 #include "fu-zip-firmware.h"
@@ -68,6 +69,10 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		return NULL;
 	}
 	offset += fu_struct_zip_lfh_get_filename_size(st_lfh);
+
+	/* sanity check */
+	if (!fu_path_verify_safe(filename, error))
+		return NULL;
 
 	/* parse the extra data blob just because we can */
 	if (!fu_zip_firmware_parse_extra(stream,

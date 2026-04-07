@@ -529,6 +529,7 @@ if get_option('tests')
     'mem',
     'msgpack',
     'partial-input-stream',
+    'path',
     'path-store',
     'plugin',
     'progress',

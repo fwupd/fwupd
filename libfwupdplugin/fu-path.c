@@ -345,3 +345,84 @@ fu_path_get_symlink_target(const gchar *filename, GError **error)
 	/* success */
 	return g_strdup(target);
 }
+
+/**
+ * fu_path_verify_safe:
+ * @filename: an optional local path and basename
+ * @error: (nullable): optional return location for an error
+ *
+ * Verifies the path is safe to use from an archive.
+ *
+ * This will reject:
+ * - an empty string
+ * - absolute paths, e.g. `/etc/fstab`
+ * - paths with relative locations, e.g. `../../etc/fstab`)
+ * - paths with MS-DOS path separators, e.g. `foo\bar`
+ * - non-ASCII filenames
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.1.2
+ **/
+gboolean
+fu_path_verify_safe(const gchar *filename, GError **error)
+{
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not ASCII */
+	if (!g_str_is_ascii(filename)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "non-ASCII filenames not allowed");
+		return FALSE;
+	}
+
+	/* not a basename */
+	if (g_strcmp0(filename, "") == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "empty string not valid");
+		return FALSE;
+	}
+	if (g_strcmp0(filename, ".") == 0 || g_strcmp0(filename, "..") == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "special paths not allowed");
+		return FALSE;
+	}
+
+	/* absolute */
+	if (g_path_is_absolute(filename)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "absolute paths not allowed");
+		return FALSE;
+	}
+
+	/* relative */
+	if (g_str_has_prefix(filename, "../") || g_strstr_len(filename, -1, "/../") != NULL ||
+	    g_str_has_suffix(filename, "/..")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "path traversal detected");
+		return FALSE;
+	}
+
+	/* MS-DOS */
+	if (g_strstr_len(filename, -1, "\\") != NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "MS-DOS path detected");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
