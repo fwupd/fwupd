@@ -41,6 +41,7 @@ enum FuFirmwareFlags {
     IsLastImage = 1 << 9, // use for FuLinearFirmware when padding is present
     AllowLinear = 1 << 10, // parse as an array of firmwares
     IsAbstract = 1 << 11, // cannot parse a blob directly
+    FilenameForId = 1 << 12, // use the filename as the child ID
 }
 
 enum FuFirmwareAlignment {

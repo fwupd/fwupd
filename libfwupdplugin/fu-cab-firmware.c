@@ -460,9 +460,6 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 				    value);
 			return FALSE;
 		}
-		/* convert to UNIX path */
-		if (value == '\\')
-			value = '/';
 		g_string_append_c(filename, (gchar)value);
 	}
 
@@ -471,7 +468,8 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 		g_autofree gchar *id = g_path_get_basename(filename->str);
 		fu_firmware_set_id(FU_FIRMWARE(img), id);
 	} else {
-		fu_firmware_set_id(FU_FIRMWARE(img), filename->str);
+		if (!fu_firmware_set_filename(FU_FIRMWARE(img), filename->str, error))
+			return FALSE;
 	}
 	stream = fu_partial_input_stream_new(folder_data,
 					     fu_struct_cab_file_get_uoffset(st),

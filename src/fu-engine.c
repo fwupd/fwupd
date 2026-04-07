@@ -3752,7 +3752,8 @@ fu_engine_install_loop(FuEngine *self,
 			fu_firmware_set_version(firmware, fu_release_get_version(release));
 		if (fu_firmware_get_filename(firmware) == NULL) {
 			fu_firmware_set_filename(firmware,
-						 fu_release_get_firmware_basename(release));
+						 fu_release_get_firmware_basename(release),
+						 NULL);
 		}
 		fu_progress_step_done(progress);
 
@@ -3780,8 +3781,10 @@ fu_engine_install_loop(FuEngine *self,
 		if (fu_firmware_get_version(firmware) == NULL)
 			fu_firmware_set_version(firmware, fu_release_get_version(release));
 		if (fu_firmware_get_filename(firmware) == NULL) {
-			fu_firmware_set_filename(firmware,
-						 fu_release_get_firmware_basename(release));
+			if (!fu_firmware_set_filename(firmware,
+						      fu_release_get_firmware_basename(release),
+						      error))
+				return FALSE;
 		}
 		fu_progress_step_done(progress);
 

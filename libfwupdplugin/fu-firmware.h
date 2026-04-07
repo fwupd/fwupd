@@ -122,8 +122,9 @@ fu_firmware_has_flag(FuFirmware *self, FuFirmwareFlags flag) G_GNUC_WARN_UNUSED_
     G_GNUC_NON_NULL(1);
 const gchar *
 fu_firmware_get_filename(FuFirmware *self) G_GNUC_NON_NULL(1);
-void
-fu_firmware_set_filename(FuFirmware *self, const gchar *filename) G_GNUC_NON_NULL(1);
+gboolean
+fu_firmware_set_filename(FuFirmware *self, const gchar *filename, GError **error)
+    G_GNUC_NON_NULL(1);
 const gchar *
 fu_firmware_get_id(FuFirmware *self) G_GNUC_NON_NULL(1);
 void

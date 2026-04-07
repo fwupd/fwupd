@@ -185,7 +185,8 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		g_autofree gchar *filename_basename = g_path_get_basename(filename);
 		fu_firmware_set_id(zip_file, filename_basename);
 	} else {
-		fu_firmware_set_id(zip_file, filename);
+		if (!fu_firmware_set_filename(zip_file, filename, error))
+			return NULL;
 	}
 
 	/* success */

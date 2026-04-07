@@ -689,7 +689,9 @@ fu_firmware_func(void)
 	fu_firmware_set_addr(img1, 0x200);
 	fu_firmware_set_idx(img1, 13);
 	fu_firmware_set_id(img1, "primary");
-	fu_firmware_set_filename(img1, "BIOS.bin");
+	ret = fu_firmware_set_filename(img1, "BIOS.bin", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_firmware_add_image(firmware, img1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

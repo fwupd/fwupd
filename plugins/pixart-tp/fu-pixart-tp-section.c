@@ -166,8 +166,10 @@ fu_pixart_tp_section_parse(FuFirmware *firmware,
 
 	/* extname */
 	extname = fu_struct_pixart_tp_firmware_section_hdr_get_extname(st);
-	if (extname != NULL)
-		fu_firmware_set_filename(FU_FIRMWARE(self), extname);
+	if (extname != NULL) {
+		if (!fu_firmware_set_filename(FU_FIRMWARE(self), extname, error))
+			return FALSE;
+	}
 
 	/* data */
 	if (section_length != 0) {

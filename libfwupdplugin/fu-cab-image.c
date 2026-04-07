@@ -164,6 +164,7 @@ fu_cab_image_class_init(FuCabImageClass *klass)
 static void
 fu_cab_image_init(FuCabImage *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_FILENAME_FOR_ID);
 }
 
 /**

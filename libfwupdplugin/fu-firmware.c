@@ -276,23 +276,74 @@ fu_firmware_get_filename(FuFirmware *self)
  * fu_firmware_set_filename:
  * @self: a #FuFirmware
  * @filename: (nullable): a string filename
+ * @error: (nullable): optional return location for an error
  *
  * Sets an optional filename that represents the image source or destination.
  *
- * Since: 1.6.0
+ * Returns: %TRUE on success
+ *
+ * Since: 2.1.2
  **/
-void
-fu_firmware_set_filename(FuFirmware *self, const gchar *filename)
+gboolean
+fu_firmware_set_filename(FuFirmware *self, const gchar *filename, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_autofree gchar *filename_unix = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not changed */
 	if (g_strcmp0(priv->filename, filename) == 0)
-		return;
+		return TRUE;
 
+	/* sanity check */
+	if (g_strcmp0(filename, ".") == 0 || g_strcmp0(filename, "..") == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "special paths not allowed");
+		return FALSE;
+	}
+
+	/* convert to UNIX path */
+	filename_unix = g_strdup(filename);
+	if (filename_unix != NULL)
+		g_strdelimit(filename_unix, "\\", '/');
+
+	/* use the filename as the child identifier */
+	if (fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_FILENAME_FOR_ID)) {
+		if (filename_unix == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "filename required for FILENAME_FOR_ID");
+			return FALSE;
+		}
+		if (g_path_is_absolute(filename_unix)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "absolute paths not allowed");
+			return FALSE;
+		}
+		if (g_str_has_prefix(filename_unix, "../") ||
+		    g_strstr_len(filename_unix, -1, "/../") != NULL ||
+		    g_str_has_suffix(filename_unix, "/..")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "path traversal detected");
+			return FALSE;
+		}
+		fu_firmware_set_id(self, filename_unix);
+		return TRUE;
+	}
+
+	/* success */
 	g_free(priv->filename);
-	priv->filename = g_strdup(filename);
+	priv->filename = g_steal_pointer(&filename_unix);
+	return TRUE;
 }
 
 /**
@@ -1385,7 +1436,8 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 				return FALSE;
 			fu_firmware_set_bytes(self, blob);
 		}
-		fu_firmware_set_filename(self, tmp);
+		if (!fu_firmware_set_filename(self, tmp, error))
+			return FALSE;
 	}
 
 	/* optional chunks */
