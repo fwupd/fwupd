@@ -1493,12 +1493,13 @@ static XbNode *
 fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **error)
 {
 	const gchar *localstatedir;
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *xpath = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbNode) release = NULL;
+	g_autoptr(XbQuery) query = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
 	localstatedir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, error);
@@ -1521,9 +1522,19 @@ fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **
 		fwupd_error_convert(error);
 		return NULL;
 	}
-	xpath = g_strdup_printf("component/releases/release[@version='%s']",
-				fu_device_get_version(device));
-	release = xb_silo_query_first(silo, xpath, error);
+	query = xb_query_new_full(silo,
+				  "component/releases/release[@version=?]",
+				  XB_QUERY_FLAG_NONE,
+				  error);
+	if (query == NULL) {
+		g_prefix_error_literal(error, "failed to prepare query: ");
+		return NULL;
+	}
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context),
+				   0,
+				   fu_device_get_version(device),
+				   NULL);
+	release = xb_silo_query_first_with_context(silo, query, &context, error);
 	if (release == NULL)
 		return NULL;
 

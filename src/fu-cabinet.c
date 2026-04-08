@@ -1101,15 +1101,24 @@ fu_cabinet_get_components(FuCabinet *self, GError **error)
 XbNode *
 fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error)
 {
-	g_autofree gchar *xpath = NULL;
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	g_autoptr(XbNode) xn = NULL;
+	g_autoptr(XbQuery) query = NULL;
 
 	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	xpath = g_strdup_printf("components/component/id[text()='%s']/..", id);
-	xn = xb_silo_query_first(self->silo, xpath, error);
+	query = xb_query_new_full(self->silo,
+				  "components/component/id[text()=?]/..",
+				  XB_QUERY_FLAG_NONE,
+				  error);
+	if (query == NULL) {
+		g_prefix_error_literal(error, "failed to prepare query: ");
+		return NULL;
+	}
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, id, NULL);
+	xn = xb_silo_query_first_with_context(self->silo, query, &context, error);
 	if (xn == NULL) {
 		fwupd_error_convert(error);
 		return NULL;
