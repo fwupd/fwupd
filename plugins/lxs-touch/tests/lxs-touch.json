@@ -3,13 +3,13 @@
   "interactive": false,
   "steps": [
     {
-      "url": "TODO-sha256-lxs-touch-firmware.cab",
-      "emulation-url": "TODO-sha256-lxs-touch-emulation.zip",
+      "url": "lxs-touch-0A.02.cab",
+      "emulation-file": "lxs-touch-emulation.zip",
       "components": [
         {
-          "version": "TODO.TODO.TODO.TODO",
+          "version": "0305.0000.0002.0A02",
           "guids": [
-            "1aaafe55-608a-574e-ac7a-a36c155856a2"
+            "caa39ae6-7e34-5216-8d6b-6071d32f468e"
           ]
         }
       ]

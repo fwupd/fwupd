@@ -11,25 +11,7 @@
 #include "fu-lxs-touch-device.h"
 #include "fu-lxs-touch-firmware.h"
 #include "fu-lxs-touch-struct.h"
-
-#define FU_LXSTOUCH_PROTOCOL_NAME_DFUP "DFUP"
-#define FU_LXSTOUCH_PROTOCOL_NAME_SWIP "SWIP"
-
-#define FU_LXSTOUCH_BUFFER_SIZE 64
-#define FU_LXSTOUCH_REPORT_ID   0x09
-
-#define FU_LXSTOUCH_TIMEOUT_READY_MS    5000
-#define FU_LXSTOUCH_TIMEOUT_RECONNECT_MS 5000
-#define FU_LXSTOUCH_VERSION_FAST_MAX_MS  40
-
-#define FU_LXSTOUCH_DOWNLOAD_CHUNK_SIZE_NORMAL 128
-#define FU_LXSTOUCH_DOWNLOAD_CHUNK_SIZE_4K     4096
-#define FU_LXSTOUCH_TRANSMIT_UNIT_NORMAL       16
-#define FU_LXSTOUCH_TRANSMIT_UNIT_4K           48
-
-#define FU_LXSTOUCH_FW_SIZE_APP_ONLY  (112 * 1024) /* 0x1C000 */
-#define FU_LXSTOUCH_FW_SIZE_BOOT_APP  (128 * 1024) /* 0x20000 */
-#define FU_LXSTOUCH_FW_OFFSET_APP_ONLY 0x4000
+#include "fu-lxstouch-common.h"
 
 struct _FuLxsTouchDevice {
 	FuHidrawDevice parent_instance;
@@ -139,11 +121,16 @@ fu_lxs_touch_device_read_data(FuLxsTouchDevice *self,
 		return FALSE;
 
 	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
-					 buf,
-					 FU_LXSTOUCH_BUFFER_SIZE,
-					 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-					 error))
+				 buf,
+				 FU_LXSTOUCH_BUFFER_SIZE,
+				 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+				 error))
 		return FALSE;
+
+	g_debug("read_data cmd=0x%04x: buf[0..7]=%02x %02x %02x %02x | %02x %02x %02x %02x",
+		(guint)command,
+		buf[0], buf[1], buf[2], buf[3],
+		buf[4], buf[5], buf[6], buf[7]);
 
 	if (data != NULL && length > 0) {
 		if (4 + length > FU_LXSTOUCH_BUFFER_SIZE) {
@@ -182,6 +169,9 @@ fu_lxs_touch_device_wait_ready_cb(FuDevice *device, gpointer user_data, GError *
 	    FU_LXSTOUCH_READY_STATUS_READY)
 		return TRUE;
 
+	g_debug("device not ready: ready_status=0x%02x, event_ready=0x%02x",
+		(guint)fu_struct_lxs_touch_getter_get_ready_status(st_getter),
+		(guint)fu_struct_lxs_touch_getter_get_event_ready(st_getter));
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "device not ready");
 	return FALSE;
 }
@@ -215,7 +205,7 @@ fu_lxs_touch_device_read_version(FuLxsTouchDevice *self, GError **error)
 		return NULL;
 
 	return g_strdup_printf(
-	    "%u.%u.%u.%u",
+	    "%04X.%04X.%04X.%04X",
 	    fu_struct_lxs_touch_version_get_boot_ver(st_ver),
 	    fu_struct_lxs_touch_version_get_core_ver(st_ver),
 	    fu_struct_lxs_touch_version_get_app_ver(st_ver),
@@ -316,7 +306,7 @@ fu_lxs_touch_device_check_4k_mode(FuLxsTouchDevice *self, GError **error)
 		return FALSE;
 
 	self->use_4k_mode = fu_struct_lxs_touch_flash_iap_cmd_get_status(st_cmd_res) != 0;
-	g_debug("4K mode: %s", self->use_4k_mode ? "enabled" : "disabled");
+	g_debug("4K mode: %s (device reports)", self->use_4k_mode ? "enabled" : "disabled");
 
 	return TRUE;
 }
@@ -350,6 +340,9 @@ fu_lxs_touch_device_set_mode(FuLxsTouchDevice *self, guint8 mode, GError **error
 					      error))
 		return FALSE;
 
+	if (mode == FU_LXSTOUCH_MODE_DFUP)
+		fu_device_sleep(FU_DEVICE(self), 500);
+
 	if (!fu_lxs_touch_device_wait_ready(self, error))
 		return FALSE;
 
@@ -380,9 +373,6 @@ fu_lxs_touch_device_setup(FuDevice *device, GError **error)
 		fu_device_set_version(device, version);
 
 		if (!fu_lxs_touch_device_read_panel_info(self, error))
-			return FALSE;
-
-		if (!fu_lxs_touch_device_set_mode(self, FU_LXSTOUCH_MODE_NORMAL, error))
 			return FALSE;
 	}
 
@@ -481,8 +471,6 @@ fu_lxs_touch_device_write_4k_chunk_cb(FuDevice *device, gpointer user_data, GErr
 	guint32 flash_addr = helper->fw_offset + fu_chunk_get_address(chk);
 	guint32 last_unit_size = fu_chunk_get_data_sz(chk) % FU_LXSTOUCH_TRANSMIT_UNIT_4K;
 	guint32 normal_size = fu_chunk_get_data_sz(chk) - last_unit_size;
-	guint32 crc;
-	guint8 verify_buf[8] = {0};
 
 	for (guint j = 0; j < normal_size; j += FU_LXSTOUCH_TRANSMIT_UNIT_4K) {
 		if (!fu_lxs_touch_device_write_command(self,
@@ -519,53 +507,6 @@ fu_lxs_touch_device_write_4k_chunk_cb(FuDevice *device, gpointer user_data, GErr
 
 	if (!fu_lxs_touch_device_wait_ready(self, error)) {
 		g_prefix_error_literal(error, "flash write failed in 4K mode: ");
-		return FALSE;
-	}
-
-	/* CRC verification for 4K mode writes */
-	crc = 0xFFFFFFFF;
-	for (guint j = 0; j < fu_chunk_get_data_sz(chk); j++)
-		crc += fu_chunk_get_data(chk)[j];
-	crc ^= 0xFFFFFFFF;
-
-	if (!fu_lxs_touch_device_write_command(self,
-					      FU_LXSTOUCH_FLAG_WRITE,
-					      FU_LXSTOUCH_REG_PARAMETER_BUFFER,
-					      4,
-					      (guint8 *)&crc,
-					      error))
-		return FALSE;
-
-	fu_struct_lxs_touch_flash_iap_cmd_set_cmd(st_cmd, FU_LXSTOUCH_CMD_FLASH_GET_VERIFY);
-	if (!fu_lxs_touch_device_write_command(self,
-					      FU_LXSTOUCH_FLAG_WRITE,
-					      FU_LXSTOUCH_REG_FLASH_IAP_CTRL_CMD,
-					      FU_STRUCT_LXS_TOUCH_FLASH_IAP_CMD_SIZE,
-					      st_cmd->buf->data,
-					      error))
-		return FALSE;
-
-	if (!fu_lxs_touch_device_wait_ready(self, error))
-		return FALSE;
-
-	memset(verify_buf, 0, sizeof(verify_buf));
-	if (!fu_lxs_touch_device_read_data(self,
-					  FU_LXSTOUCH_REG_FLASH_IAP_CTRL_CMD,
-					  sizeof(verify_buf),
-					  verify_buf,
-					  error))
-		return FALSE;
-
-	st_cmd_verify =
-	    fu_struct_lxs_touch_flash_iap_cmd_parse(verify_buf, sizeof(verify_buf), 0x0, error);
-	if (st_cmd_verify == NULL)
-		return FALSE;
-
-	if (fu_struct_lxs_touch_flash_iap_cmd_get_status(st_cmd_verify) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "flash verification failed");
 		return FALSE;
 	}
 
@@ -689,7 +630,9 @@ fu_lxs_touch_device_write_firmware(FuDevice *device,
 		g_debug("watchdog reset command failed (expected)");
 	}
 
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/* I2C HID devices do not disconnect/reconnect after watchdog reset;
+	 * the same /dev/hidrawN node remains. Wait for the device to settle. */
+	fu_device_sleep(device, 3000);
 
 	return TRUE;
 }
@@ -697,7 +640,6 @@ fu_lxs_touch_device_write_firmware(FuDevice *device,
 static gboolean
 fu_lxs_touch_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -705,6 +647,7 @@ static void
 fu_lxs_touch_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-firmware");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, "attach");
@@ -714,10 +657,15 @@ fu_lxs_touch_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_lxs_touch_device_init(FuLxsTouchDevice *self)
 {
-	fu_device_add_protocol(FU_DEVICE(self), "com.lginnotek.lxstouch");
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_protocol(FU_DEVICE(self), "com.lxs.sw42101");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_install_duration(FU_DEVICE(self), 60);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LXS_TOUCH_FIRMWARE);
 	self->is_dfup_mode = FALSE;
@@ -730,6 +678,7 @@ fu_lxs_touch_device_class_init(FuLxsTouchDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_lxs_touch_device_probe;
 	device_class->setup = fu_lxs_touch_device_setup;
+	device_class->reload = fu_lxs_touch_device_setup;
 	device_class->detach = fu_lxs_touch_device_detach;
 	device_class->attach = fu_lxs_touch_device_attach;
 	device_class->write_firmware = fu_lxs_touch_device_write_firmware;

@@ -8,6 +8,7 @@
 
 #include "fu-lxs-touch-firmware.h"
 #include "fu-lxs-touch-struct.h"
+#include "fu-lxstouch-common.h"
 
 struct _FuLxsTouchFirmware {
 	FuFirmware parent_instance;
