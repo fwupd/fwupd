@@ -151,7 +151,10 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	g_debug("added %s: %s", self->vendor_guid, name);
 
 	/* read data */
-	offset += fu_struct_efi_vss_auth_variable_header_get_name_size(st);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_efi_vss_auth_variable_header_get_name_size(st),
+				 error))
+		return FALSE;
 
 	/* if this is a well known key then parse it as a child type */
 	img_gtype = fu_efi_vss_auth_variable_lookup_image_gtype(self);
@@ -183,7 +186,10 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	}
 
 	/* next header */
-	offset += fu_struct_efi_vss_auth_variable_header_get_data_size(st);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_efi_vss_auth_variable_header_get_data_size(st),
+				 error))
+		return FALSE;
 
 	/* success */
 	fu_firmware_set_size(firmware, offset);

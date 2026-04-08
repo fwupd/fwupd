@@ -78,8 +78,7 @@ fu_acpi_phat_record_parse(FuAcpiPhat *self,
 			return FALSE;
 	}
 
-	*offset += record_length;
-	return TRUE;
+	return fu_size_checked_inc(offset, record_length, error);
 }
 
 static void

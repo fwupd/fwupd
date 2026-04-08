@@ -147,7 +147,8 @@ fu_synaptics_prometheus_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* next item */
-		offset += hdrsz;
+		if (!fu_size_checked_inc(&offset, hdrsz, error))
+			return FALSE;
 	}
 	return TRUE;
 }

@@ -523,7 +523,8 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 		}
 
 		/* there is a block terminator of 0xFF */
-		offset += payload_len + sizeof(guint8);
+		if (!fu_size_checked_inc(&offset, payload_len + sizeof(guint8), error))
+			return FALSE;
 		fu_progress_step_done(progress);
 	}
 

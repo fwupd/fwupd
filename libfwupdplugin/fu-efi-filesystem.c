@@ -70,12 +70,20 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse EFI file at 0x%x: ", (guint)offset);
 			return FALSE;
 		}
+		if (fu_firmware_get_size(img) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "EFI file has invalid size of 0");
+			return FALSE;
+		}
 		fu_firmware_set_offset(firmware, offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* next! */
-		offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(img), error))
+			return FALSE;
 	}
 
 	/* success */

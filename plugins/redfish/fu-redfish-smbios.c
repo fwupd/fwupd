@@ -309,7 +309,10 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 		if (!fu_redfish_smbios_parse_interface_data(self, stream, offset, error))
 			return FALSE;
 	}
-	offset += fu_struct_redfish_smbios_type42_get_data_length(st);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_redfish_smbios_type42_get_data_length(st),
+				 error))
+		return FALSE;
 
 	/* parse protocol records */
 	self->interface_type = fu_struct_redfish_smbios_type42_get_interface_type(st);
@@ -335,7 +338,8 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 			} else {
 				g_debug("ignoring protocol ID 0x%02x", protocol_id);
 			}
-			offset += protocol_sz + 1;
+			if (!fu_size_checked_inc(&offset, protocol_sz + 1, error))
+				return FALSE;
 		}
 	}
 

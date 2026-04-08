@@ -75,7 +75,10 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 		}
 
 		/* next! */
-		offset += fu_common_align_up(sz, FU_FIRMWARE_ALIGNMENT_4);
+		if (!fu_size_checked_inc(&offset,
+					 fu_common_align_up(sz, FU_FIRMWARE_ALIGNMENT_4),
+					 error))
+			return FALSE;
 	}
 
 	/* success */

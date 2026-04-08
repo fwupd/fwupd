@@ -87,7 +87,8 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 			if (!fu_firmware_add_image(firmware, img, error))
 				return FALSE;
 		}
-		offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(img), error))
+			return FALSE;
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
 	}
 

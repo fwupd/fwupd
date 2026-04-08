@@ -49,7 +49,8 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 		return NULL;
 	chk = fu_chunk_bytes_new(blob);
 	fu_chunk_set_address(chk, fu_struct_dfuse_element_get_address(st_ele));
-	*offset += fu_chunk_get_data_sz(chk);
+	if (!fu_size_checked_inc(offset, fu_chunk_get_data_sz(chk), error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&chk);

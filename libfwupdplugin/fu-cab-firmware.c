@@ -171,6 +171,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	gsize blob_comp;
 	gsize blob_uncomp;
 	gsize hdr_sz;
+	gsize payload_offset = *offset;
 	gsize size_max = fu_firmware_get_size_max(FU_FIRMWARE(self));
 	g_autoptr(FuStructCabData) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
@@ -206,8 +207,10 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	hdr_sz = st->buf->len + helper->rsvd_block;
 
 	/* verify checksum */
+	if (!fu_size_checked_inc(&payload_offset, hdr_sz, error))
+		return FALSE;
 	partial_stream =
-	    fu_partial_input_stream_new(helper->stream, *offset + hdr_sz, blob_comp, error);
+	    fu_partial_input_stream_new(helper->stream, payload_offset, blob_comp, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to cut cabinet checksum: ");
 		return FALSE;
@@ -253,7 +256,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 
 		/* check compressed header */
 		bytes_comp = fu_input_stream_read_bytes(helper->stream,
-							*offset + hdr_sz,
+							payload_offset,
 							blob_comp,
 							NULL,
 							error);
@@ -349,8 +352,9 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	}
 
 	/* success */
-	*offset += blob_comp + hdr_sz;
-	return TRUE;
+	if (!fu_size_checked_inc(offset, blob_comp, error))
+		return FALSE;
+	return fu_size_checked_inc(offset, hdr_sz, error);
 }
 
 static gboolean
@@ -446,7 +450,8 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	folder_data = g_ptr_array_index(helper->folder_data, index);
 
 	/* parse filename */
-	*offset += FU_STRUCT_CAB_FILE_SIZE;
+	if (!fu_size_checked_inc(offset, FU_STRUCT_CAB_FILE_SIZE, error))
+		return FALSE;
 	for (guint i = 0; i < 255; i++) {
 		guint8 value = 0;
 		if (!fu_input_stream_read_u8(helper->stream, *offset + i, &value, error))
@@ -504,8 +509,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	fu_cab_image_set_created(img, created);
 
 	/* offset to next entry */
-	*offset += filename->len + 1;
-	return TRUE;
+	return fu_size_checked_inc(offset, filename->len + 1, error);
 }
 
 static gboolean
@@ -631,7 +635,10 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		if (st2 == NULL)
 			return FALSE;
 		offset += st2->buf->len;
-		offset += fu_struct_cab_header_reserve_get_rsvd_hdr(st2);
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_cab_header_reserve_get_rsvd_hdr(st2),
+					 error))
+			return FALSE;
 		helper->rsvd_block = fu_struct_cab_header_reserve_get_rsvd_block(st2);
 		helper->rsvd_folder = fu_struct_cab_header_reserve_get_rsvd_folder(st2);
 	}
@@ -651,7 +658,10 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		g_ptr_array_add(helper->folder_data, g_steal_pointer(&folder_data));
-		offset += FU_STRUCT_CAB_FOLDER_SIZE + helper->rsvd_folder;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FOLDER_SIZE, error))
+			return FALSE;
+		if (!fu_size_checked_inc(&offset, helper->rsvd_folder, error))
+			return FALSE;
 	}
 
 	/* parse CFFILEs */

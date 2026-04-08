@@ -201,7 +201,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			str = fu_fdt_firmware_string_new_safe(buf, bufsz, offset, error);
 			if (str == NULL)
 				return FALSE;
-			offset += str->len + 1;
+			if (!fu_size_checked_inc(&offset, str->len + 1, error))
+				return FALSE;
 			image = fu_fdt_image_new();
 			if (str->len > 0)
 				fu_firmware_set_id(image, str->str);
@@ -265,7 +266,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			if (blob == NULL)
 				return FALSE;
 			fu_fdt_image_set_attr(FU_FDT_IMAGE(firmware_current), str->str, blob);
-			offset += prop_len;
+			if (!fu_size_checked_inc(&offset, prop_len, error))
+				return FALSE;
 			continue;
 		}
 

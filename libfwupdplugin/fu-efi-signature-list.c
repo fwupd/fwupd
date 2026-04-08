@@ -147,7 +147,11 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	}
 
 	/* header is typically unused */
-	offset_tmp = *offset + 0x1c + header_size;
+	offset_tmp = *offset;
+	if (!fu_size_checked_inc(&offset_tmp, 0x1c, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_tmp, header_size, error))
+		return FALSE;
 	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
 		g_autoptr(FuEfiSignature) sig = NULL;
 
@@ -161,10 +165,10 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			return FALSE;
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
-		offset_tmp += size;
+		if (!fu_size_checked_inc(&offset_tmp, size, error))
+			return FALSE;
 	}
-	*offset += list_size;
-	return TRUE;
+	return fu_size_checked_inc(offset, list_size, error);
 }
 
 static gboolean

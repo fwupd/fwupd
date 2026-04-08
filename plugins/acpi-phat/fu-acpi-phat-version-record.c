@@ -49,7 +49,8 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 			return FALSE;
 		if (!fu_firmware_add_image(firmware, firmware_tmp, error))
 			return FALSE;
-		offset += fu_firmware_get_size(firmware_tmp);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(firmware_tmp), error))
+			return FALSE;
 	}
 	return TRUE;
 }

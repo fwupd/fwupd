@@ -67,7 +67,8 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* next! */
-		offset += fu_firmware_get_size(firmware_tmp);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(firmware_tmp), error))
+			return FALSE;
 		img_cnt++;
 	}
 

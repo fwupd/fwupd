@@ -33,6 +33,36 @@ fu_common_checked_add_func(void)
 }
 
 static void
+fu_common_checked_inc_func(void)
+{
+	gsize value = 0;
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_size_checked_inc(&value, 0, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, 0);
+
+	ret = fu_size_checked_inc(&value, 42, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, 42);
+
+	value = G_MAXSIZE / 2;
+	ret = fu_size_checked_inc(&value, G_MAXSIZE / 2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, G_MAXSIZE - 1);
+
+	value = G_MAXSIZE;
+	ret = fu_size_checked_inc(&value, 1, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_assert_cmpint(value, ==, G_MAXSIZE);
+}
+
+static void
 fu_common_error_map_func(void)
 {
 	const FuErrorMapEntry entries[] = {
@@ -167,6 +197,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/common/checked-add", fu_common_checked_add_func);
+	g_test_add_func("/fwupd/common/checked-inc", fu_common_checked_inc_func);
 	g_test_add_func("/fwupd/common/error-map", fu_common_error_map_func);
 	g_test_add_func("/fwupd/common/align-up", fu_common_align_up_func);
 	g_test_add_func("/fwupd/common/bitwise", fu_common_bitwise_func);

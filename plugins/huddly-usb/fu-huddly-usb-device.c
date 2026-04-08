@@ -98,7 +98,8 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 error)) {
 			return FALSE;
 		}
-		offset += transmitted;
+		if (!fu_size_checked_inc(&offset, transmitted, error))
+			return FALSE;
 		if (progress != NULL)
 			fu_progress_set_percentage_full(progress, offset, src->len);
 	} while (offset < src->len);

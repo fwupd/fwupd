@@ -68,7 +68,8 @@ fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufs
 			return FALSE;
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 			return FALSE;
-		offset += fu_firmware_get_size(FU_FIRMWARE(img));
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(FU_FIRMWARE(img)), error))
+			return FALSE;
 	}
 	return TRUE;
 }

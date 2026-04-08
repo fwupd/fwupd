@@ -214,7 +214,8 @@ fu_parade_lspcon_device_flash_read(FuParadeLspconDevice *self,
 				    error))
 			return FALSE;
 		base_address += page_data_take;
-		offset += page_data_take;
+		if (!fu_size_checked_inc(&offset, page_data_take, error))
+			return FALSE;
 
 		fu_progress_set_percentage_full(progress, offset, len);
 	}

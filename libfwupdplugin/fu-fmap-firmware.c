@@ -238,7 +238,8 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 				return NULL;
 		}
 		fu_byte_array_append_array(buf, st_area->buf);
-		offset += g_bytes_get_size(fw);
+		if (!fu_size_checked_inc(&offset, g_bytes_get_size(fw), error))
+			return NULL;
 	}
 
 	/* add the images */

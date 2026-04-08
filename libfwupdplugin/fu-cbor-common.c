@@ -10,6 +10,7 @@
 
 #include "fu-cbor-common.h"
 #include "fu-cbor-item-private.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 
 typedef struct {
@@ -210,7 +211,8 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 		str = fu_input_stream_read_string(helper->stream, helper->offset, len, error);
 		if (str == NULL)
 			return NULL;
-		helper->offset += len;
+		if (!fu_size_checked_inc(&helper->offset, len, error))
+			return NULL;
 		return fu_cbor_item_new_string_steal(g_steal_pointer(&str));
 	}
 	if (tag == FU_CBOR_TAG_BYTES) {
@@ -227,7 +229,8 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 		blob = fu_input_stream_read_bytes(helper->stream, helper->offset, len, NULL, error);
 		if (blob == NULL)
 			return NULL;
-		helper->offset += len;
+		if (!fu_size_checked_inc(&helper->offset, len, error))
+			return NULL;
 		return fu_cbor_item_new_bytes(blob);
 	}
 	if (tag == FU_CBOR_TAG_SPECIAL) {

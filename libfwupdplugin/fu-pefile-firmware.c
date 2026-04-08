@@ -237,7 +237,8 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to read DOS header: ");
 		return FALSE;
 	}
-	offset += fu_struct_pe_dos_header_get_lfanew(st_doshdr);
+	if (!fu_size_checked_inc(&offset, fu_struct_pe_dos_header_get_lfanew(st_doshdr), error))
+		return FALSE;
 	st_coff = fu_struct_pe_coff_file_header_parse_stream(stream, offset, error);
 	if (st_coff == NULL) {
 		g_prefix_error_literal(error, "failed to read COFF header: ");
@@ -294,7 +295,11 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		cert_table_sz =
 		    fu_struct_pe_coff_optional_header64_get_size_of_certificate_table(st_opt);
 
-		offset += fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff);
+		if (!fu_size_checked_inc(
+			&offset,
+			fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff),
+			error))
+			return FALSE;
 	}
 
 	/* read number of sections */
@@ -423,7 +428,8 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* calculate the offset for each of the sections */
 	offset += st->buf->len + st_hdr->buf->len + st_opt->buf->len;
-	offset += FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len, error))
+		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		g_autoptr(FuPefileSection) section = g_new0(FuPefileSection, 1);
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -438,7 +444,8 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		}
 		section->id = g_strdup(fu_firmware_get_id(img));
 		section->blobsz_aligned = fu_common_align_up(g_bytes_get_size(section->blob), 4);
-		offset += section->blobsz_aligned;
+		if (!fu_size_checked_inc(&offset, section->blobsz_aligned, error))
+			return NULL;
 		g_ptr_array_add(sections, g_steal_pointer(&section));
 	}
 

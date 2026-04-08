@@ -134,7 +134,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 		fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += extension_length;
+		if (!fu_size_checked_inc(&offset, extension_length, error))
+			return FALSE;
 	}
 
 	/* success */

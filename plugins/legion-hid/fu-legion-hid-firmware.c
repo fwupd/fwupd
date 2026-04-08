@@ -21,7 +21,7 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
-	guint offset = FU_STRUCT_LEGION_HID_BIN_HEADER_SIZE;
+	gsize offset = FU_STRUCT_LEGION_HID_BIN_HEADER_SIZE;
 	g_autoptr(FuFirmware) img_left = fu_firmware_new();
 	g_autoptr(FuFirmware) img_mcu = fu_firmware_new();
 	g_autoptr(FuFirmware) img_right = fu_firmware_new();
@@ -51,7 +51,10 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 				    fu_struct_legion_hid_bin_header_get_mcu_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_mcu, error))
 		return FALSE;
-	offset += fu_struct_legion_hid_bin_header_get_mcu_size(st_header);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_legion_hid_bin_header_get_mcu_size(st_header),
+				 error))
+		return FALSE;
 
 	/* left */
 	stream_left =
@@ -70,7 +73,10 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 				    fu_struct_legion_hid_bin_header_get_left_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_left, error))
 		return FALSE;
-	offset += fu_struct_legion_hid_bin_header_get_left_size(st_header);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_legion_hid_bin_header_get_left_size(st_header),
+				 error))
+		return FALSE;
 
 	/* right */
 	stream_right =

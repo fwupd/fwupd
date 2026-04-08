@@ -66,7 +66,8 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		fu_firmware_add_chunk(firmware, chk);
 
 		/* next! */
-		offset += chunk_size;
+		if (!fu_size_checked_inc(&offset, chunk_size, error))
+			return FALSE;
 	}
 
 	/* success */

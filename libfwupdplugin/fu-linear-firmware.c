@@ -128,7 +128,8 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* next! */
-		offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(img), error))
+			return FALSE;
 
 		/* skip any padding */
 		if (fu_firmware_has_flag(img, FU_FIRMWARE_FLAG_IS_LAST_IMAGE))

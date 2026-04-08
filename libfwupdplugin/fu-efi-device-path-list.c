@@ -102,9 +102,17 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(FU_FIRMWARE(efi_dp), offset);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(efi_dp), stream, offset, flags, error))
 			return FALSE;
+		if (fu_firmware_get_size(FU_FIRMWARE(efi_dp)) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "DP section had zero size");
+			return FALSE;
+		}
 		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(efi_dp), error))
 			return FALSE;
-		offset += fu_firmware_get_size(FU_FIRMWARE(efi_dp));
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(FU_FIRMWARE(efi_dp)), error))
+			return FALSE;
 	}
 
 	/* success */

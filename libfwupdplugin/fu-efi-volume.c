@@ -114,7 +114,8 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 		fu_firmware_set_offset(img, offset);
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 			return FALSE;
-		offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(img), error))
+			return FALSE;
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4K);
 		found_cnt += 1;
 

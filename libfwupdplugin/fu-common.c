@@ -38,6 +38,44 @@ fu_size_checked_add(gsize a, gsize b)
 }
 
 /**
+ * fu_size_checked_inc:
+ * @value: (inout): the starting and ending value
+ * @len: the value to add
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a checked increment of @value and @len, ensuring the result does not overflow.
+ *
+ * NOTE: If the operation does overflow then @value is *not* modified.
+ *
+ * Returns: boolean success
+ *
+ * Since: 2.1.2
+ **/
+gboolean
+fu_size_checked_inc(gsize *value, gsize len, GError **error)
+{
+	gsize value_new;
+
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	value_new = *value;
+	if (!g_size_checked_add(&value_new, *value, len)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "0x%" G_GSIZE_MODIFIER "x + 0x%" G_GSIZE_MODIFIER "x would overflow",
+			    *value,
+			    len);
+		return FALSE;
+	}
+
+	/* success */
+	*value = value_new;
+	return TRUE;
+}
+
+/**
  * fu_error_map_entry_to_gerror:
  * @value: the value to look up
  * @entries: the #FuErrorMapEntry map

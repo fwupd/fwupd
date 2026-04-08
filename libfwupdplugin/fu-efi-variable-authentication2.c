@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-struct.h"
 #include "fu-efi-variable-authentication2.h"
 #include "fu-mem.h"
@@ -204,7 +205,10 @@ fu_efi_variable_authentication2_parse(FuFirmware *firmware,
 			return FALSE;
 	}
 
-	offset += fu_struct_efi_win_certificate_get_length(st_wincert);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_efi_win_certificate_get_length(st_wincert),
+				 error))
+		return FALSE;
 	partial_stream = fu_partial_input_stream_new(stream, offset, G_MAXSIZE, error);
 	if (partial_stream == NULL)
 		return FALSE;

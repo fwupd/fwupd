@@ -11,6 +11,7 @@
 #include <fwupd.h>
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-msgpack-item-private.h"
@@ -666,7 +667,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_string = fu_memstrsafe(buf->data, buf->len, *offset, n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += n;
+		if (!fu_size_checked_inc(offset, n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 	if (cmd == FU_MSGPACK_CMD_STR8) {
@@ -676,7 +678,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 	if (cmd == FU_MSGPACK_CMD_STR16) {
@@ -686,7 +689,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 	if (cmd == FU_MSGPACK_CMD_STR32) {
@@ -696,7 +700,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 
@@ -708,7 +713,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_binary = fu_msgpack_item_read_binary(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_binary == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_binary(tmp_binary);
 	}
 	if (cmd == FU_MSGPACK_CMD_BIN16) {
@@ -718,7 +724,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_binary = fu_msgpack_item_read_binary(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_binary == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_binary(tmp_binary);
 	}
 	if (cmd == FU_MSGPACK_CMD_BIN32) {
@@ -728,7 +735,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_binary = fu_msgpack_item_read_binary(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_binary == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_binary(tmp_binary);
 	}
 

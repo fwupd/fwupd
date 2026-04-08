@@ -20,6 +20,8 @@ struct _FuQcS5gen2Firmware {
 
 G_DEFINE_TYPE(FuQcS5gen2Firmware, fu_qc_s5gen2_firmware, FU_TYPE_FIRMWARE)
 
+#define FU_QC_S5GEN2_START_OFFSET 26
+
 guint8
 fu_qc_s5gen2_firmware_get_protocol_version(FuQcS5gen2Firmware *self)
 {
@@ -59,7 +61,7 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 {
 	FuQcS5gen2Firmware *self = FU_QC_S5GEN2_FIRMWARE(firmware);
 	const guint8 *device_variant;
-	gsize config_offset = 26;
+	gsize offset = FU_QC_S5GEN2_START_OFFSET;
 	guint16 config_ver;
 	g_autofree gchar *ver_str = NULL;
 	g_autoptr(FuStructQcFwUpdateHdr) st = NULL;
@@ -74,8 +76,9 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 	device_variant = fu_struct_qc_fw_update_hdr_get_dev_variant(st, NULL);
 	self->device_variant = fu_strsafe((const gchar *)device_variant, 8);
 
-	config_offset += fu_struct_qc_fw_update_hdr_get_upgrades(st) * 4;
-	if (!fu_input_stream_read_u16(stream, config_offset, &config_ver, G_BIG_ENDIAN, error))
+	if (!fu_size_checked_inc(&offset, fu_struct_qc_fw_update_hdr_get_upgrades(st) * 4, error))
+		return FALSE;
+	if (!fu_input_stream_read_u16(stream, offset, &config_ver, G_BIG_ENDIAN, error))
 		return FALSE;
 
 	ver_str = g_strdup_printf("%u.%u.%u",

@@ -174,7 +174,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 			    fu_struct_shim_hive_get_header_version(st));
 		return FALSE;
 	}
-	offset += fu_struct_shim_hive_get_items_offset(st);
+	if (!fu_size_checked_inc(&offset, fu_struct_shim_hive_get_items_offset(st), error))
+		return FALSE;
 
 	/* items */
 	items_count = fu_struct_shim_hive_get_items_count(st);
@@ -188,7 +189,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 		st_item = fu_struct_shim_hive_item_parse_stream(stream, offset, error);
 		if (st_item == NULL)
 			return FALSE;
-		offset += st_item->buf->len;
+		if (!fu_size_checked_inc(&offset, st_item->buf->len, error))
+			return FALSE;
 
 		/* key */
 		keysz = fu_struct_shim_hive_item_get_key_length(st_item);
@@ -202,7 +204,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 		key = fu_input_stream_read_string(stream, offset, keysz, error);
 		if (key == NULL)
 			return FALSE;
-		offset += keysz;
+		if (!fu_size_checked_inc(&offset, keysz, error))
+			return FALSE;
 
 		/* value */
 		valuesz = fu_struct_shim_hive_item_get_value_length(st_item);
@@ -210,7 +213,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 			value = fu_input_stream_read_string(stream, offset, valuesz, error);
 			if (value == NULL)
 				return FALSE;
-			offset += valuesz;
+			if (!fu_size_checked_inc(&offset, valuesz, error))
+				return FALSE;
 		}
 		fu_efi_load_option_set_metadata(self, key, value != NULL ? value : "");
 	}

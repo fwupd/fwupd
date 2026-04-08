@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-fuzzer.h"
 #include "fu-mem-private.h"
 #include "fu-protobuf-struct.h"
@@ -464,7 +465,8 @@ fu_protobuf_get_string_len_cb(FuProtobuf *self, gpointer data, gsize *offset, GE
 	*value = fu_memstrsafe(self->buf->data, self->buf->len, *offset, lensz, error);
 	if (*value == NULL)
 		return FALSE;
-	*offset += lensz;
+	if (!fu_size_checked_inc(offset, lensz, error))
+		return FALSE;
 	return TRUE;
 }
 
@@ -506,7 +508,8 @@ fu_protobuf_get_embedded_len_cb(FuProtobuf *self, gpointer data, gsize *offset, 
 	if (!fu_memchk_read(self->buf->len, *offset, lensz, error))
 		return FALSE;
 	g_byte_array_append(pbuf->buf, self->buf->data + *offset, lensz);
-	*offset += lensz;
+	if (!fu_size_checked_inc(offset, lensz, error))
+		return FALSE;
 	return TRUE;
 }
 

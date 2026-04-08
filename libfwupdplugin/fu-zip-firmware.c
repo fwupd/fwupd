@@ -67,7 +67,8 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 	st_lfh = fu_struct_zip_lfh_parse_stream(stream, offset, error);
 	if (st_lfh == NULL)
 		return NULL;
-	offset += FU_STRUCT_ZIP_LFH_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_ZIP_LFH_SIZE, error))
+		return NULL;
 
 	/* read filename */
 	filename = fu_input_stream_read_string(stream,
@@ -78,7 +79,8 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		g_prefix_error_literal(error, "failed to read filename: ");
 		return NULL;
 	}
-	offset += fu_struct_zip_lfh_get_filename_size(st_lfh);
+	if (!fu_size_checked_inc(&offset, fu_struct_zip_lfh_get_filename_size(st_lfh), error))
+		return NULL;
 
 	/* sanity check */
 	if (!fu_path_verify_safe(filename, error))
@@ -89,9 +91,9 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 					 offset,
 					 fu_struct_zip_lfh_get_extra_size(st_lfh),
 					 error))
-		return FALSE;
-
-	offset += fu_struct_zip_lfh_get_extra_size(st_lfh);
+		return NULL;
+	if (!fu_size_checked_inc(&offset, fu_struct_zip_lfh_get_extra_size(st_lfh), error))
+		return NULL;
 
 	/* read crc */
 	uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
@@ -278,8 +280,12 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 		if (zip_file == NULL)
 			return FALSE;
 
-		offset += FU_STRUCT_ZIP_CDFH_SIZE;
-		offset += fu_struct_zip_cdfh_get_filename_size(st_cdfh);
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_ZIP_CDFH_SIZE, error))
+			return FALSE;
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_zip_cdfh_get_filename_size(st_cdfh),
+					 error))
+			return FALSE;
 
 		/* parse the extra data blob just because we can */
 		if (!fu_zip_firmware_parse_extra(stream,
@@ -287,10 +293,16 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 						 fu_struct_zip_cdfh_get_extra_size(st_cdfh),
 						 error))
 			return FALSE;
-		offset += fu_struct_zip_cdfh_get_extra_size(st_cdfh);
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_zip_cdfh_get_extra_size(st_cdfh),
+					 error))
+			return FALSE;
 
 		/* ignore the comment */
-		offset += fu_struct_zip_cdfh_get_comment_size(st_cdfh);
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_zip_cdfh_get_comment_size(st_cdfh),
+					 error))
+			return FALSE;
 
 		/* add image */
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), zip_file, error))

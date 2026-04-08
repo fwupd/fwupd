@@ -394,7 +394,8 @@ fu_pixart_tp_device_register_burst_read(FuPixartTpDevice *self,
 		}
 
 		/* advance offset for the next chunk */
-		offset += chunk_sz;
+		if (!fu_size_checked_inc(&offset, chunk_sz, error))
+			return FALSE;
 	}
 
 	/* success */
