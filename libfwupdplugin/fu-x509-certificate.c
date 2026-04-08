@@ -201,7 +201,13 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 	subject = (gnutls_datum_t *)gnutls_malloc(sizeof(gnutls_datum_t));
 	if (gnutls_x509_crt_get_subject(crt, &dn) == GNUTLS_E_SUCCESS) {
 		g_autofree gchar *str = NULL;
-		gnutls_x509_dn_get_str(dn, subject);
+		if (gnutls_x509_dn_get_str(dn, subject) != GNUTLS_E_SUCCESS) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "failed to get subject string");
+			return FALSE;
+		}
 		str = fu_strsafe((const gchar *)subject->data, subject->size);
 		fu_x509_certificate_set_subject(self, str);
 	}
