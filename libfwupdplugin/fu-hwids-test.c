@@ -89,6 +89,7 @@ fu_hwids_func(void)
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	return g_test_run();
