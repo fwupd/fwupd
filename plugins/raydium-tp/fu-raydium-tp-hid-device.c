@@ -1044,6 +1044,7 @@ static gboolean
 fu_raydium_tp_hid_device_ensure_version_bldr_fallback(FuRaydiumTpHidDevice *self, GError **error)
 {
 	guint8 buf[RAYDIUM_I2C_BUF_SIZE] = {0};
+	guint16 vid;
 	guint8 major_ver;
 	guint8 minor_ver;
 	g_autoptr(FuStructRaydiumTpFtRecordInfo) st_info = NULL;
@@ -1054,6 +1055,16 @@ fu_raydium_tp_hid_device_ensure_version_bldr_fallback(FuRaydiumTpHidDevice *self
 	st_info = fu_struct_raydium_tp_ft_record_info_parse(buf, sizeof(buf), 0x0, error);
 	if (st_info == NULL)
 		return FALSE;
+
+	vid = fu_struct_raydium_tp_ft_record_info_get_vid(st_info);
+	if (vid != RAYDIUM_VENDOR_ID) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unexpected vendor id 0x%04x",
+			    vid);
+		return FALSE;
+	}
 	major_ver = fu_struct_raydium_tp_ft_record_info_get_version_major(st_info);
 	minor_ver = fu_struct_raydium_tp_ft_record_info_get_version_minor(st_info);
 
@@ -1072,6 +1083,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 	guint8 minor_ver;
 	g_autoptr(FuStructRaydiumTpDescRecordInfo) st_info = NULL;
 
+	/* check main area */
 	fu_memwrite_uint32(wbuf + 6, FU_RAYDIUM_TP_FLASH_DESC_RECORD_ADDR, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(wbuf + 10, RAYDIUM_HIDI2C_WRITE_SIZE, G_LITTLE_ENDIAN);
 	if (!fu_raydium_tp_hid_device_bl_write(self,
@@ -1090,29 +1102,22 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 		return FALSE;
 	vid = fu_struct_raydium_tp_desc_record_info_get_vid(st_info);
 	if (vid != RAYDIUM_VENDOR_ID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unexpected vendor id 0x%04x",
-			    vid);
-		return FALSE;
+		/* check backup area*/
+		fu_memwrite_uint32(wbuf + 6, FU_RAYDIUM_TP_FLASH_FT_RECORD_ADDR, G_LITTLE_ENDIAN);
+		fu_memwrite_uint16(wbuf + 10, 16, G_LITTLE_ENDIAN); /* length */
+		if (!fu_raydium_tp_hid_device_bl_write(self,
+						       FU_RAYDIUM_TP_BL_CMD_READ_FLASH_ADDR,
+						       wbuf,
+						       sizeof(wbuf),
+						       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
+						       error))
+			return FALSE;
+
+		/* try harder */
+		return fu_raydium_tp_hid_device_ensure_version_bldr_fallback(self, error);
 	}
 	major_ver = fu_struct_raydium_tp_desc_record_info_get_rev(st_info) >> 8;
 	minor_ver = fu_struct_raydium_tp_desc_record_info_get_rev(st_info) & 0xFF;
-
-	fu_memwrite_uint32(wbuf + 6, FU_RAYDIUM_TP_FLASH_FT_RECORD_ADDR, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(wbuf + 10, 16, G_LITTLE_ENDIAN); /* length */
-	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_BL_CMD_READ_FLASH_ADDR,
-					       wbuf,
-					       sizeof(wbuf),
-					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
-					       error))
-		return FALSE;
-
-	/* try harder */
-	if (fu_struct_raydium_tp_desc_record_info_get_pid(st_info) == 0xFFFF)
-		return fu_raydium_tp_hid_device_ensure_version_bldr_fallback(self, error);
 
 	/* success */
 	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
@@ -1662,6 +1667,7 @@ fu_raydium_tp_hid_device_init(FuRaydiumTpHidDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.raydium.raydiumtp");
 	fu_device_set_name(FU_DEVICE(self), "Touch Controller Sensor");
