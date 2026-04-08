@@ -149,7 +149,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		    fu_struct_elf_section_header64le_get_type(st_shdr) ==
 			FU_ELF_SECTION_HEADER_TYPE_STRTAB)
 			continue;
-		if (sh_name > shstrndx_buf->len) {
+		if (sh_name >= shstrndx_buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
