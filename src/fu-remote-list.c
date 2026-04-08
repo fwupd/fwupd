@@ -38,6 +38,7 @@ struct _FuRemoteList {
 	gboolean testing_remote;
 	gboolean fix_metadata_uri;
 	XbSilo *silo;
+	XbQuery *query;
 	gchar *lvfs_metadata_format;
 };
 
@@ -343,7 +344,6 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 	/* try to find a custom agreement, falling back to a generic warning */
 	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
 		g_autofree gchar *component_id = _fwupd_remote_build_component_id(remote);
-		g_autofree gchar *xpath = NULL;
 		g_autoptr(GString) agreement_markup = NULL;
 		g_autoptr(XbNode) component = NULL;
 		struct {
@@ -363,8 +363,17 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 		    },
 		};
 
-		xpath = g_strdup_printf("component/id[text()='%s']/..", component_id);
-		component = xb_silo_query_first(self->silo, xpath, NULL);
+		if (self->query != NULL) {
+			g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+			xb_value_bindings_bind_str(xb_query_context_get_bindings(&context),
+						   0,
+						   component_id,
+						   NULL);
+			component = xb_silo_query_first_with_context(self->silo,
+								     self->query,
+								     &context,
+								     NULL);
+		}
 		if (component != NULL) {
 			agreement_markup =
 			    _fwupd_remote_get_agreement_for_app(remote, component, error);
@@ -683,6 +692,7 @@ gboolean
 fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names();
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) xmlb = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	XbBuilderCompileFlags compile_flags =
@@ -725,6 +735,14 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 	self->silo = xb_builder_ensure(builder, xmlb, compile_flags, NULL, error);
 	if (self->silo == NULL)
 		return FALSE;
+
+	/* if the silo is empty the query will fail to be created */
+	self->query = xb_query_new_full(self->silo,
+					"component/id[text()=?]/..",
+					XB_QUERY_FLAG_OPTIMIZE,
+					&error_local);
+	if (self->query == NULL)
+		g_debug("failed to prepare query: %s", error_local->message);
 
 	/* load remote_list */
 	return fu_remote_list_reload(self, error);
@@ -812,6 +830,8 @@ fu_remote_list_finalize(GObject *obj)
 	FuRemoteList *self = FU_REMOTE_LIST(obj);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
+	if (self->query != NULL)
+		g_object_unref(self->query);
 	g_ptr_array_unref(self->array);
 	g_ptr_array_unref(self->monitors);
 	g_free(self->lvfs_metadata_format);
