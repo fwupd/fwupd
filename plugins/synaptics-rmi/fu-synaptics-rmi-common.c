@@ -117,7 +117,7 @@ fu_synaptics_rmi_verify_sha256_signature(GBytes *payload,
 	g_autoptr(gnutls_data_t) hash_data = NULL;
 
 	/* hash firmware data */
-	hash_data = gnutls_malloc(hash_length);
+	hash_data = gnutls_calloc(1, hash_length);
 	gnutls_hash_init(&sha2, GNUTLS_DIG_SHA256);
 	gnutls_hash(sha2, g_bytes_get_data(payload, NULL), g_bytes_get_size(payload));
 	gnutls_hash_deinit(sha2, hash_data);

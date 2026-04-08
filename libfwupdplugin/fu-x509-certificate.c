@@ -198,7 +198,7 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 	}
 
 	/* subject */
-	subject = (gnutls_datum_t *)gnutls_malloc(sizeof(gnutls_datum_t));
+	subject = (gnutls_datum_t *)gnutls_calloc(1, sizeof(gnutls_datum_t));
 	if (gnutls_x509_crt_get_subject(crt, &dn) == GNUTLS_E_SUCCESS) {
 		g_autofree gchar *str = NULL;
 		if (gnutls_x509_dn_get_str(dn, subject) != GNUTLS_E_SUCCESS) {
