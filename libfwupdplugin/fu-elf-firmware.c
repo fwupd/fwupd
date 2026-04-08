@@ -12,6 +12,7 @@
 #include "fu-elf-firmware.h"
 #include "fu-elf-struct.h"
 #include "fu-input-stream.h"
+#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -160,8 +161,13 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		img = fu_firmware_get_image_by_idx(firmware, i, error);
 		if (img == NULL)
 			return FALSE;
-		name = g_strndup((const gchar *)shstrndx_buf->data + sh_name,
-				 shstrndx_buf->len - sh_name);
+		name = fu_memstrsafe(shstrndx_buf->data,
+				     shstrndx_buf->len,
+				     sh_name,
+				     shstrndx_buf->len - sh_name,
+				     error);
+		if (name == NULL)
+			return FALSE;
 		if (name != NULL && name[0] != '\0')
 			fu_firmware_set_id(img, name);
 	}

@@ -798,7 +798,10 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 		return FALSE;
 	data = g_bytes_get_data(fw, &fw_size);
 	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
-	dynamic_version = g_strndup((gchar *)data + self->blob_version_offset, 11);
+	dynamic_version = fu_memstrsafe(data, fw_size, self->blob_version_offset, 11, error);
+	if (dynamic_version == NULL)
+		return FALSE;
+
 	g_info("writing EC firmware version %s", dynamic_version);
 
 	/* meet the minimum EC version */

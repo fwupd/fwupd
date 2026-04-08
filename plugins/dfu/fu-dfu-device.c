@@ -886,7 +886,9 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		fu_dfu_device_set_chip_id(self, chip_id);
 
 		/* serial number follows */
-		serial_str = g_strndup((const gchar *)buf + 2, bufsz - 2);
+		serial_str = fu_memstrsafe(buf, bufsz, 0x2, bufsz - 2, error);
+		if (serial_str == NULL)
+			return FALSE;
 		fu_device_set_serial(FU_DEVICE(device), serial_str);
 	}
 
