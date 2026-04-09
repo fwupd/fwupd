@@ -15,7 +15,7 @@
 
 #define FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP "no-zlp"
 
-#define FU_QC_FIREHOSE_USB_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
+#define FU_QC_FIREHOSE_USB_DEVICE_RAW_BUFFER_SIZE FU_KiB(4)
 
 struct _FuQcFirehoseUsbDevice {
 	FuUsbDevice parent_instance;

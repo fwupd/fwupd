@@ -60,6 +60,36 @@
  **/
 #define FU_BIT_IS_CLEAR(val, pos) (!FU_BIT_IS_SET(val, (pos)))
 
+/**
+ * FU_KiB:
+ * @val: integer value
+ *
+ * Converts KiB to bytes (val KiB → val * 1024 bytes)
+ *
+ * Since: 2.1.2
+ **/
+#define FU_KiB(val) ((val) * 1024)
+
+/**
+ * FU_MiB:
+ * @val: integer value
+ *
+ * Converts MiB to bytes (val MiB → val * 1024² bytes)
+ *
+ * Since: 2.1.2
+ **/
+#define FU_MiB(val) FU_KiB((val) * 1024)
+
+/**
+ * FU_GiB:
+ * @val: integer value
+ *
+ * Converts GiB to bytes (val GiB → val * 1024³ bytes)
+ *
+ * Since: 2.1.2
+ **/
+#define FU_GiB(val) FU_MiB((val) * 1024)
+
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;

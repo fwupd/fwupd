@@ -11,7 +11,7 @@
 #include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-struct.h"
 
-#define FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE (256 * 1024)
+#define FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE FU_KiB(256)
 
 struct _FuIlitekItsFirmware {
 	FuIhexFirmware parent_instance;

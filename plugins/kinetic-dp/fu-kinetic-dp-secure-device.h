@@ -17,21 +17,21 @@ G_DECLARE_FINAL_TYPE(FuKineticDpSecureDevice,
 		     FuKineticDpDevice)
 
 /* Flash Memory Map */
-#define STD_FW_PAYLOAD_SIZE (1024 * 1024)
+#define STD_FW_PAYLOAD_SIZE FU_MiB(1)
 #define CUSTOMER_PROJ_ID_OFFSET                                                                    \
 	(STD_FW_PAYLOAD_SIZE - FU_STRUCT_KINETIC_DP_JAGUAR_FOOTER_SIZE + 15) /* 0xFFFEF */
 #define CUSTOMER_FW_VER_OFFSET                                                                     \
 	(STD_FW_PAYLOAD_SIZE - FU_STRUCT_KINETIC_DP_JAGUAR_FOOTER_SIZE + 16) /* 0xFFFF0 */
 #define CUSTOMER_FW_VER_SIZE 2
 
-#define FW_CERTIFICATE_SIZE	    (1 * 1024)
+#define FW_CERTIFICATE_SIZE	    FU_KiB(1)
 #define FW_RSA_SIGNATURE_SIZE	    256
-#define FW_RSA_SIGNATURE_BLOCK_SIZE (1 * 1024)
-#define ESM_PAYLOAD_BLOCK_SIZE	    (256 * 1024)
-#define APP_CODE_NORMAL_BLOCK_SIZE  (384 * 1024)
-#define APP_CODE_EXTEND_BLOCK_SIZE  (640 * 1024)
-#define APP_INIT_DATA_BLOCK_SIZE    (24 * 1024)
-#define CMDB_BLOCK_SIZE		    (4 * 1024)
+#define FW_RSA_SIGNATURE_BLOCK_SIZE FU_KiB(1)
+#define ESM_PAYLOAD_BLOCK_SIZE	    FU_KiB(256)
+#define APP_CODE_NORMAL_BLOCK_SIZE  FU_KiB(384)
+#define APP_CODE_EXTEND_BLOCK_SIZE  FU_KiB(640)
+#define APP_INIT_DATA_BLOCK_SIZE    FU_KiB(24)
+#define CMDB_BLOCK_SIZE		    FU_KiB(4)
 
 #define SPI_ESM_CERTIFICATE_START   0
 #define SPI_APP_CERTIFICATE_START   (SPI_ESM_CERTIFICATE_START + FW_CERTIFICATE_SIZE) /*0x00400*/

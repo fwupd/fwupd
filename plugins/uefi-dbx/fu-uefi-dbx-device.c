@@ -15,8 +15,6 @@ struct _FuUefiDbxDevice {
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_UEFI_DEVICE)
 
-#define FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE (30 * 1024) /* bytes */
-
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
@@ -268,7 +266,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 1);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
-	fu_device_set_required_free(FU_DEVICE(self), FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE);
+	fu_device_set_required_free(FU_DEVICE(self), FU_KiB(30));
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
