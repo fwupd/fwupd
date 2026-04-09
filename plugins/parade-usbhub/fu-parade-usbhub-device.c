@@ -743,7 +743,7 @@ fu_parade_usbhub_device_sram_page_write(FuParadeUsbhubDevice *self,
 	chunks = fu_chunk_array_mutable_new(buf,
 					    bufsz,
 					    sram_address,
-					    0x1000,
+					    4 * FU_KB,
 					    FU_PARADE_USBHUB_DEVICE_MMIO_BURST_WRITE_MAX);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

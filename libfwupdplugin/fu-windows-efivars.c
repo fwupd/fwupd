@@ -82,7 +82,7 @@ fu_windows_efivars_get_data(FuEfivars *efivars,
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autofree gchar *guid_win32 = g_strdup_printf("{%s}", guid);
-	fu_byte_array_set_size(buf, 0x1000, 0xFF);
+	fu_byte_array_set_size(buf, 4 * FU_KB, 0xFF);
 
 	/* unimplemented function KERNEL32.dll.GetFirmwareEnvironmentVariableExA on wine */
 	if (fu_windows_efivars_is_running_under_wine()) {

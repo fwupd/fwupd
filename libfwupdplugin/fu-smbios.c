@@ -398,7 +398,7 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 			    (guint)GetLastError());
 		return FALSE;
 	}
-	if (rc < FU_SMBIOS_FT_RAW_OFFSET || rc > 0x1000000) {
+	if (rc < FU_SMBIOS_FT_RAW_OFFSET || rc > 10 * FU_MB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,

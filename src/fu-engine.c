@@ -89,8 +89,8 @@
 
 #define FU_ENGINE_UPDATE_MOTD_DELAY 5 /* s */
 
-#define FU_ENGINE_MAX_METADATA_SIZE  0x2000000 /* 32MB */
-#define FU_ENGINE_MAX_SIGNATURE_SIZE 0x100000  /* 1MB */
+#define FU_ENGINE_MAX_METADATA_SIZE  (32 * FU_MB)
+#define FU_ENGINE_MAX_SIGNATURE_SIZE (1 * FU_MB)
 
 static void
 fu_engine_constructed(GObject *obj);

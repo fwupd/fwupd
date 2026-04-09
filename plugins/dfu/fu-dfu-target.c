@@ -155,10 +155,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	case ' ': /* byte, ST reference bootloader :/ */
 		break;
 	case 'K': /* kilo */
-		sector_size *= 0x400;
+		sector_size *= FU_KB;
 		break;
 	case 'M': /* mega */
-		sector_size *= 0x100000;
+		sector_size *= FU_MB;
 		break;
 	default:
 		g_set_error(error,

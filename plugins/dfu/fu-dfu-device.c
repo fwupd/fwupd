@@ -202,7 +202,7 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 	/* ST-specific */
 	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
 	    attributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
-		priv->transfer_size = 0x1000;
+		priv->transfer_size = 4 * FU_KB;
 
 	/* get attributes about the DFU operation */
 	if (attributes & FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD)

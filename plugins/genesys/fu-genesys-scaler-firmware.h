@@ -14,5 +14,3 @@ G_DECLARE_FINAL_TYPE(FuGenesysScalerFirmware,
 		     FU,
 		     GENESYS_SCALER_FIRMWARE,
 		     FuFirmware)
-
-#define GENESYS_SCALER_BANK_SIZE 0x200000U

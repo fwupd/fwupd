@@ -3164,9 +3164,9 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->vcs.req_write = GENESYS_USBHUB_GL_HUB_WRITE;
 	self->flash_erase_delay = 8000;	  /* 8s */
 	self->flash_write_delay = 500;	  /* 500ms */
-	self->flash_block_size = 0x10000; /* 64KB */
-	self->flash_sector_size = 0x1000; /* 4KB */
-	self->flash_rw_size = 0x40;	  /* 64B */
+	self->flash_block_size = 64 * FU_KB;
+	self->flash_sector_size = 4 * FU_KB;
+	self->flash_rw_size = 64;
 	self->is_gl352350 = FALSE;
 	self->has_codesign = FALSE;
 	self->has_hw_codesign = FALSE;

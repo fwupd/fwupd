@@ -24,7 +24,7 @@
 G_DEFINE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU_TYPE_FIRMWARE)
 
 #define FU_EFI_FILESYSTEM_FILES_MAX 10000
-#define FU_EFI_FILESYSTEM_SIZE_MAX  0x10000000 /* 256 MB */
+#define FU_EFI_FILESYSTEM_SIZE_MAX  (256 * FU_MB)
 
 static gboolean
 fu_efi_filesystem_parse(FuFirmware *firmware,

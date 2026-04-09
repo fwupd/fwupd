@@ -297,7 +297,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 
 			/* any holes in the hex record */
 			len_hole = addr - addr_last;
-			if (addr_last > 0 && len_hole > 0x100000) {
+			if (addr_last > 0 && len_hole > 1 * FU_MB) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,

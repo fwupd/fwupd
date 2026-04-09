@@ -497,7 +497,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	guint64 block_size = self->write_block_size > 0 ? self->write_block_size : 0x1000;
+	guint64 block_size = self->write_block_size > 0 ? self->write_block_size : 4 * FU_KB;
 	guint8 commit_action = FU_NVME_COMMIT_ACTION_CA1;
 
 	/* progress */

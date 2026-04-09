@@ -87,7 +87,7 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 					(guint)offset,
 					error_local->message);
 			}
-			offset += 0x1000;
+			offset += 4 * FU_KB;
 			continue;
 		}
 
@@ -415,9 +415,9 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	chunks = fu_chunk_array_new_virtual(fv_length,
 					    FU_CHUNK_ADDR_OFFSET_NONE,
 					    FU_CHUNK_PAGESZ_NONE,
-					    0x1000);
+					    4 * FU_KB);
 	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, fu_chunk_array_length(chunks));
-	fu_struct_efi_volume_block_map_set_length(st_blk, 0x1000);
+	fu_struct_efi_volume_block_map_set_length(st_blk, 4 * FU_KB);
 	fu_byte_array_append_array(st_vol->buf, st_blk->buf);
 	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, 0x0);
 	fu_struct_efi_volume_block_map_set_length(st_blk, 0x0);
@@ -442,10 +442,10 @@ fu_efi_volume_init(FuEfiVolume *self)
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
 #ifdef HAVE_FUZZER
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x100000); /* 1MB */
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 #else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x10000000); /* 256MB */
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1000);
 #endif
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);

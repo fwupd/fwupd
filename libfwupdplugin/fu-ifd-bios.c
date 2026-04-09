@@ -50,7 +50,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 				(guint)offset,
 				(guint)streamsz,
 				error_local->message);
-			offset += 0x1000;
+			offset += 4 * FU_KB;
 			continue;
 		}
 		if (fu_firmware_get_size(firmware_tmp) < 0x800) {

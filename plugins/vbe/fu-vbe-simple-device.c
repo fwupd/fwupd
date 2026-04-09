@@ -418,7 +418,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 	}
 
 	/* process in chunks */
-	chunks = fu_chunk_array_new(NULL, self->area_size - self->area_start, 0x0, 0x0, 0x100000);
+	chunks = fu_chunk_array_new(NULL, self->area_size - self->area_start, 0x0, 0x0, 1 * FU_MB);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

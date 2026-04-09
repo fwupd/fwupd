@@ -2015,7 +2015,7 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 			if (!fu_context_is_esp_linux(esp, &error_local)) {
 				g_debug("not a Linux ESP: %s", error_local->message);
 			} else {
-				score += 0x10000;
+				score += 64 * FU_KB;
 			}
 			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
 		}

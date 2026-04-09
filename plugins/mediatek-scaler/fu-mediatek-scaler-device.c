@@ -40,7 +40,7 @@
 #define FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY 100
 
 /* firmware payload size */
-#define FU_MEDIATEK_SCALER_FW_SIZE_MAX 0x100000
+#define FU_MEDIATEK_SCALER_FW_SIZE_MAX (1 * FU_MB)
 
 /* device private flag */
 #define FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY "bank2-only"

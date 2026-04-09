@@ -16,7 +16,7 @@
  * nocheck:magic-inlines=119
  */
 
-#define GENESYS_SCALER_BANK_SIZE 0x200000U
+#define GENESYS_SCALER_BANK_SIZE (2 * FU_MB)
 
 #define GENESYS_SCALER_MSTAR_READ     0x7a
 #define GENESYS_SCALER_MSTAR_WRITE    0x7b
@@ -1970,9 +1970,9 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_DEVICE);
 
-	self->sector_size = 0x1000;						/* 4KB */
-	self->page_size = 0x100;						/* 256B */
-	self->transfer_size = 0x40;						/* 64B */
+	self->sector_size = 4 * FU_KB;
+	self->page_size = 256;
+	self->transfer_size = 64;
 	fu_device_set_firmware_size(FU_DEVICE(self), GENESYS_SCALER_BANK_SIZE); /* 2MB */
 }
 

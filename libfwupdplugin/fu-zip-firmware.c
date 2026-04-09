@@ -19,8 +19,8 @@
 
 G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX 0x4000
-#define FU_ZIP_FIRMWARE_EXTRA_MAX	0x100000 /* 1 MB */
+#define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX (16 * FU_KB)
+#define FU_ZIP_FIRMWARE_EXTRA_MAX	(1 * FU_MB)
 
 static gboolean
 fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size, GError **error)

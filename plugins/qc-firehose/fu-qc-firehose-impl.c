@@ -912,7 +912,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 	FuQcFirehoseImplHelper helper = {
 	    .no_zlp = no_zlp,
 	    .rawmode = FALSE,
-	    .max_payload_size = 0x100000,
+	    .max_payload_size = 1 * FU_MB,
 	    .firmware = firmware,
 	};
 
