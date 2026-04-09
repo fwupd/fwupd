@@ -232,7 +232,7 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 			    rc);
 		return FALSE;
 	}
-	for (guint i = 0; i < key_idsz; i++)
+	for (guint i = 0; i < MIN(sizeof(key_id), key_idsz); i++)
 		g_string_append_printf(key_idstr, "%02x", key_id[i]);
 	fu_firmware_set_id(firmware, key_idstr->str);
 
