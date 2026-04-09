@@ -60,6 +60,33 @@
  **/
 #define FU_BIT_IS_CLEAR(val, pos) (!FU_BIT_IS_SET(val, (pos)))
 
+/**
+ * FU_1KB:
+ *
+ * The number of bytes in 1KiB.
+ *
+ * Since: 2.1.2
+ **/
+#define FU_1KB 0x400
+
+/**
+ * FU_1MB:
+ *
+ * The number of bytes in 1MiB.
+ *
+ * Since: 2.1.2
+ **/
+#define FU_1MB 0x100000
+
+/**
+ * FU_1GB:
+ *
+ * The number of bytes in 1GiB.
+ *
+ * Since: 2.1.2
+ **/
+#define FU_1GB 0x40000000
+
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
