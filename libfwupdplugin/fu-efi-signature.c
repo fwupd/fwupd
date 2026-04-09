@@ -276,4 +276,5 @@ fu_efi_signature_init(FuEfiSignature *self)
 {
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
 	priv->kind = FU_EFI_SIGNATURE_KIND_SHA256;
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 10 * FU_KB);
 }

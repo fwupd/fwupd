@@ -523,6 +523,7 @@ fu_ifd_firmware_init(FuIfdFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_BIOS);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void

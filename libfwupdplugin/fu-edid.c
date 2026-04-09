@@ -471,6 +471,7 @@ fu_edid_class_init(FuEdidClass *klass)
 static void
 fu_edid_init(FuEdid *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

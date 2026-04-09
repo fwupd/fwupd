@@ -157,6 +157,7 @@ fu_bcm57xx_dict_image_init(FuBcm57xxDictImage *self)
 {
 	self->target = 0xff;
 	self->kind = 0xff;
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

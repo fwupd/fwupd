@@ -118,6 +118,7 @@ static void
 fu_synaptics_cape_hid_firmware_init(FuSynapticsCapeHidFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

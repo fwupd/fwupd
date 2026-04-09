@@ -68,6 +68,7 @@ fu_focal_touch_firmware_parse(FuFirmware *firmware,
 static void
 fu_focal_touch_firmware_init(FuFocalTouchFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

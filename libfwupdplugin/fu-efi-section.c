@@ -473,8 +473,10 @@ fu_efi_section_init(FuEfiSection *self)
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);

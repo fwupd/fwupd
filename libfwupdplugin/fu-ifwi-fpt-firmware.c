@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-ifwi-fpt-firmware.h"
 #include "fu-ifwi-struct.h"
 #include "fu-partial-input-stream.h"
@@ -178,6 +179,7 @@ fu_ifwi_fpt_firmware_init(FuIfwiFptFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_FPT_MAX_ENTRIES);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void

@@ -451,6 +451,7 @@ fu_usb_interface_init(FuUsbInterface *self)
 {
 	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USB_DESCRIPTOR);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

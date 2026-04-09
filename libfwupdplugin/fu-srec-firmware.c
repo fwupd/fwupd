@@ -12,6 +12,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-chunk-array.h"
+#include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-srec-firmware.h"
 #include "fu-string.h"
@@ -665,6 +666,7 @@ fu_srec_firmware_init(FuSrecFirmware *self)
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_srec_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void

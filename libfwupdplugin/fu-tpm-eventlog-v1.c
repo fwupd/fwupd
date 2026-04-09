@@ -129,6 +129,7 @@ static void
 fu_tpm_eventlog_v1_init(FuTpmEventlogV1 *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_TPM_EVENTLOG_ITEM);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

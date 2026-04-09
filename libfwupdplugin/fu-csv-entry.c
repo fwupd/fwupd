@@ -236,6 +236,7 @@ fu_csv_entry_init(FuCsvEntry *self)
 {
 	FuCsvEntryPrivate *priv = GET_PRIVATE(self);
 	priv->values = g_ptr_array_new_with_free_func(g_free);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

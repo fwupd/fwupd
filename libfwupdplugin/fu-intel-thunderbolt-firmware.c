@@ -12,6 +12,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-firmware.h"
 #include "fu-partial-input-stream.h"
@@ -112,6 +113,7 @@ fu_intel_thunderbolt_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_intel_thunderbolt_firmware_init(FuIntelThunderboltFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void

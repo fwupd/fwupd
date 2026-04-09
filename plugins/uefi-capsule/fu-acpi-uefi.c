@@ -120,6 +120,7 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 static void
 fu_acpi_uefi_init(FuAcpiUefi *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_KB);
 }
 
 static void

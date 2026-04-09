@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-file.h"
 #include "fu-efi-filesystem.h"
 #include "fu-input-stream.h"
@@ -131,8 +132,10 @@ fu_efi_filesystem_init(FuEfiFilesystem *self)
 	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
 	 * when printing the FuEfiFilesystem XML output */
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 50);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_FILESYSTEM_FILES_MAX);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);

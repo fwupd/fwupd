@@ -47,6 +47,7 @@ fu_amd_kria_persistent_firmware_booted_image_a(FuAmdKriaPersistentFirmware *self
 static void
 fu_amd_kria_persistent_firmware_init(FuAmdKriaPersistentFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

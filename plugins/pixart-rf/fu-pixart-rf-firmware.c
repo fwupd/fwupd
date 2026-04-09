@@ -287,6 +287,7 @@ fu_pixart_rf_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_pixart_rf_firmware_init(FuPixartRfFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

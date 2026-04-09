@@ -139,6 +139,7 @@ fu_nordic_hid_firmware_mcuboot_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_firmware_mcuboot_init(FuNordicHidFirmwareMcuboot *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

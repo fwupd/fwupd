@@ -566,6 +566,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 static void
 fu_bnr_dp_firmware_init(FuBnrDpFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

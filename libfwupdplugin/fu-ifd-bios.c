@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-input-stream.h"
@@ -90,8 +91,10 @@ fu_ifd_bios_init(FuIfdBios *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 }
 

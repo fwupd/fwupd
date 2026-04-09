@@ -210,6 +210,7 @@ static void
 fu_amd_gpu_psp_firmware_init(FuAmdGpuPspFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void

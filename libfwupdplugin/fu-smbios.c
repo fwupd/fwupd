@@ -734,6 +734,7 @@ static void
 fu_smbios_init(FuSmbios *self)
 {
 	self->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_smbios_item_free);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 /**
