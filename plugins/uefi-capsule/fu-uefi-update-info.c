@@ -250,6 +250,7 @@ fu_uefi_update_info_class_init(FuUefiUpdateInfoClass *klass)
 static void
 fu_uefi_update_info_init(FuUefiUpdateInfo *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), FU_1MB);
 }
 
 FuUefiUpdateInfo *

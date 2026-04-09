@@ -912,6 +912,7 @@ fu_cab_firmware_init(FuCabFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT16);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_1GB);
 }
 
 /**

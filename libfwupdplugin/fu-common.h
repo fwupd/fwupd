@@ -67,7 +67,7 @@
  *
  * Since: 2.1.2
  **/
-#define FU_1KB 0x400
+#define FU_1KB 0x400u
 
 /**
  * FU_1MB:
@@ -76,7 +76,7 @@
  *
  * Since: 2.1.2
  **/
-#define FU_1MB 0x100000
+#define FU_1MB 0x100000ul
 
 /**
  * FU_1GB:
@@ -85,7 +85,7 @@
  *
  * Since: 2.1.2
  **/
-#define FU_1GB 0x40000000
+#define FU_1GB 0x40000000ull
 
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)

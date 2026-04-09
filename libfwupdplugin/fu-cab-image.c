@@ -164,6 +164,7 @@ fu_cab_image_class_init(FuCabImageClass *klass)
 static void
 fu_cab_image_init(FuCabImage *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4ull * FU_1GB);
 }
 
 /**
