@@ -55,7 +55,7 @@ Flags = elantp-recovery
 Flags = elantp-recovery
 
 # Google Moonstone
-[57512d88-e1c1-51b7-bccc-20546e403490]
+[fdd092fe-d711-53ab-850b-a504f101e32a]
 Flags = elantp-absolute
 
 # absolute report device on ACPI
