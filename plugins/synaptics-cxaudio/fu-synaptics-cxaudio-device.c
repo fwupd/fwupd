@@ -143,7 +143,7 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		outbuf[0] = FU_SYNAPTICS_CXAUDIO_MEM_WRITEID;
 
 		/* set memory address and payload length (if relevant) */
-		if (fu_chunk_get_address(chk) >= 64 * 1024)
+		if (fu_chunk_get_address(chk) >= 64 * FU_KB)
 			FU_BIT_SET(outbuf[1], 4);
 		outbuf[2] = fu_chunk_get_data_sz(chk);
 		fu_memwrite_uint16(outbuf + 3, fu_chunk_get_address(chk), G_BIG_ENDIAN);

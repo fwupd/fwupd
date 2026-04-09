@@ -13,6 +13,7 @@
 #include "fwupd-error.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-windows-efivars.h"
 
 struct _FuWindowsEfivars {

@@ -14,7 +14,7 @@ struct _FuUefiKekDevice {
 
 G_DEFINE_TYPE(FuUefiKekDevice, fu_uefi_kek_device, FU_TYPE_UEFI_DEVICE)
 
-#define FU_UEFI_KEK_DEVICE_DEFAULT_REQUIRED_FREE (4 * 1024) /* bytes */
+#define FU_UEFI_KEK_DEVICE_DEFAULT_REQUIRED_FREE (4 * FU_KB) /* bytes */
 
 static gboolean
 fu_uefi_kek_device_probe(FuDevice *device, GError **error)

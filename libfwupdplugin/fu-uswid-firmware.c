@@ -165,7 +165,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		payload_tmp = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (payload_tmp == NULL)
 			return FALSE;
-		payload = fu_lzma_decompress_bytes(payload_tmp, 16 * 1024 * 1024, error);
+		payload = fu_lzma_decompress_bytes(payload_tmp, 16 * FU_MB, error);
 		if (payload == NULL)
 			return FALSE;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {

@@ -76,7 +76,7 @@ struct _FuFirmwareClass {
  **/
 #define FU_FIRMWARE_ID_HEADER "header"
 
-#define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (64 * 1024)
+#define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (64 * FU_KB)
 
 FuFirmware *
 fu_firmware_new(void);

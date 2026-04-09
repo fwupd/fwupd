@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-hid-descriptor.h"
 #include "fu-hid-report-item.h"
 #include "fu-hid-struct.h"
@@ -289,7 +290,7 @@ static void
 fu_hid_descriptor_init(FuHidDescriptor *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * FU_KB);
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 #else

@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-tpm-eventlog-common.h"
 #include "fu-tpm-eventlog-item.h"
 #include "fu-tpm-eventlog-v2.h"
@@ -104,7 +105,7 @@ fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
 	/* read data block */
 	if (!fu_input_stream_read_u32(stream, *idx, &datasz, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (datasz > 1024 * 1024) {
+	if (datasz > FU_MB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

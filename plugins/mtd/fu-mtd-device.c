@@ -824,7 +824,7 @@ fu_mtd_device_write_verify(FuMtdDevice *self,
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	chunks =
-	    fu_chunk_array_new_from_stream(stream, offset, FU_CHUNK_PAGESZ_NONE, 10 * 1024, error);
+	    fu_chunk_array_new_from_stream(stream, offset, FU_CHUNK_PAGESZ_NONE, 10 * FU_KB, error);
 	if (chunks == NULL)
 		return FALSE;
 
@@ -861,7 +861,7 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	/* read each chunk */
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, 10 * 1024);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, 10 * FU_KB);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

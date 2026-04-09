@@ -2004,7 +2004,7 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 			}
 
 			/* big partitions are better than small partitions */
-			score += fu_volume_get_size(esp) / (1024 * 1024);
+			score += fu_volume_get_size(esp) / FU_MB;
 
 			/* prefer partitions with the ESP flag set over msftdata */
 			kind = fu_volume_get_partition_kind(esp);

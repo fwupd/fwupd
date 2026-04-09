@@ -11,6 +11,7 @@
 #include <fwupd.h>
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
@@ -118,7 +119,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		sig_kind = FU_EFI_SIGNATURE_KIND_X509;
 	}
 	list_size = fu_struct_efi_signature_list_get_list_size(st);
-	if (list_size < 0x1c || list_size > 1024 * 1024) {
+	if (list_size < 0x1c || list_size > FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -127,7 +128,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		return FALSE;
 	}
 	header_size = fu_struct_efi_signature_list_get_header_size(st);
-	if (header_size > 1024 * 1024) {
+	if (header_size > FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -136,7 +137,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		return FALSE;
 	}
 	size = fu_struct_efi_signature_list_get_size(st);
-	if (size < sizeof(fwupd_guid_t) || size > 1024 * 1024) {
+	if (size < sizeof(fwupd_guid_t) || size > FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,

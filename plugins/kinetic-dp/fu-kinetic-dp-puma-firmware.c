@@ -31,7 +31,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuKineticDpPumaFirmware, fu_kinetic_dp_puma_firmware,
 #define FU_KINETIC_DP_PUMA_REQUEST_FW_HEADER_SIZE 50
 #define FU_KINETIC_DP_PUMA_REQUEST_FW_HASH_SIZE	  32
 #define PUMA_STS_FW_PAYLOAD_SIZE                                                                   \
-	((512 * 1024) + FU_KINETIC_DP_PUMA_REQUEST_FW_HEADER_SIZE +                                \
+	((512 * FU_KB) + FU_KINETIC_DP_PUMA_REQUEST_FW_HEADER_SIZE +                               \
 	 (FU_KINETIC_DP_PUMA_REQUEST_FW_HASH_SIZE * 2))
 
 /* Puma STD F/W SPI mapping */
@@ -114,7 +114,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz < 512 * 1024) {
+	if (streamsz < 512 * FU_KB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -138,7 +138,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 			     FU_STRUCT_KINETIC_DP_PUMA_HEADER_INFO_SIZE;
 		offset += st_obj->buf->len;
 	}
-	if (code_size < (512 * 1024) + offset) {
+	if (code_size < (512 * FU_KB) + offset) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,

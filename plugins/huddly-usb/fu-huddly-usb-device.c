@@ -79,7 +79,7 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 				GError **error)
 {
 	gsize offset = 0;
-	const gsize max_chunk_size = 16 * 1024;
+	const gsize max_chunk_size = 16 * FU_KB;
 
 	if (progress != NULL)
 		fu_progress_set_id(progress, G_STRLOC);

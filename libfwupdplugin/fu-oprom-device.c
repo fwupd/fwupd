@@ -108,7 +108,7 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 	/* ensure we got enough data to fill the buffer */
 	while (TRUE) {
 		gssize sz;
-		guint8 tmp[32 * 1024] = {0x0};
+		guint8 tmp[32 * FU_KB] = {0x0};
 		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
 		if (sz == 0)
 			break;

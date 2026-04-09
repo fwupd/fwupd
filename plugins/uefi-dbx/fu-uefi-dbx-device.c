@@ -15,7 +15,7 @@ struct _FuUefiDbxDevice {
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_UEFI_DEVICE)
 
-#define FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE (30 * 1024) /* bytes */
+#define FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE (30 * FU_KB) /* bytes */
 
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,

@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-tpm-eventlog-item.h"
 #include "fu-tpm-eventlog-v1.h"
@@ -45,7 +46,7 @@ fu_tpm_eventlog_v1_parse(FuFirmware *firmware,
 		pcr = fu_struct_tpm_event_log1_item_get_pcr(st);
 		event_type = fu_struct_tpm_event_log1_item_get_type(st);
 		datasz = fu_struct_tpm_event_log1_item_get_datasz(st);
-		if (datasz > 1024 * 1024) {
+		if (datasz > FU_MB) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,

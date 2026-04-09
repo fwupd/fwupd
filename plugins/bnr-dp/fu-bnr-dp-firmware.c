@@ -223,13 +223,12 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 		return FALSE;
 	}
 	if (streamsz != FU_BNR_DP_FIRMWARE_SIZE) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_FILE,
-		    "unexpected firmware payload length (must be: %d, actual: %" G_GSIZE_FORMAT ")",
-		    FU_BNR_DP_FIRMWARE_SIZE,
-		    streamsz);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "unexpected payload (must be: 0x%x, actual: %" G_GSIZE_FORMAT ")",
+			    (guint)FU_BNR_DP_FIRMWARE_SIZE,
+			    streamsz);
 		return FALSE;
 	}
 

@@ -86,7 +86,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
-	blob_uncomp = fu_lzma_decompress_bytes(blob, 128 * 1024 * 1024, error);
+	blob_uncomp = fu_lzma_decompress_bytes(blob, 128 * FU_MB, error);
 	if (blob_uncomp == NULL) {
 		g_prefix_error_literal(error, "failed to decompress: ");
 		return FALSE;

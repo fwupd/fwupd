@@ -28,12 +28,12 @@ fu_uefi_update_esp_valid_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) volume_esp = fu_volume_new_from_mount_path("/tmp");
 	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
-	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * 1024 * 1024, 0xFF);
+	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * FU_MB, 0xFF);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob_padded);
 
 	/* enough to fit the firmware */
-	fu_volume_set_filesystem_free(volume_esp, 10 * 1024 * 1024);
+	fu_volume_set_filesystem_free(volume_esp, 10 * FU_MB);
 
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
 	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
@@ -55,12 +55,12 @@ fu_uefi_update_esp_invalid_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) volume_esp = fu_volume_new_from_mount_path("/tmp");
 	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
-	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * 1024 * 1024, 0xFF);
+	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * FU_MB, 0xFF);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob_padded);
 
 	/* enough to fit the firmware */
-	fu_volume_set_filesystem_free(volume_esp, 1024 * 1024);
+	fu_volume_set_filesystem_free(volume_esp, FU_MB);
 
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
 	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
@@ -82,12 +82,12 @@ fu_uefi_update_esp_no_backup_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) volume_esp = fu_volume_new_from_mount_path("/tmp");
 	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
-	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * 1024 * 1024, 0xFF);
+	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * FU_MB, 0xFF);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob_padded);
 
 	/* enough to fit the firmware */
-	fu_volume_set_filesystem_free(volume_esp, 6 * 1024 * 1024);
+	fu_volume_set_filesystem_free(volume_esp, 6 * FU_MB);
 
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
 	fu_device_add_private_flag(device, "no-esp-backup");
@@ -288,7 +288,7 @@ fu_uefi_capsule_fake_esp_new(FuTemporaryDirectory *tmpdir)
 	g_autoptr(FuVolume) esp = fu_volume_new_from_mount_path(tmpdir_path);
 
 	/* enough to fit the firmware */
-	fu_volume_set_filesystem_free(esp, 10 * 1024 * 1024);
+	fu_volume_set_filesystem_free(esp, 10 * FU_MB);
 	fu_volume_set_partition_kind(esp, FU_VOLUME_KIND_ESP);
 	fu_volume_set_partition_uuid(esp, "00000000-0000-0000-0000-000000000000");
 

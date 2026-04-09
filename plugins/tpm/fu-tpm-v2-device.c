@@ -537,7 +537,7 @@ fu_tpm_v2_device_init(FuTpmV2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
-	fu_device_set_firmware_size_max(FU_DEVICE(self), 32 * 1024 * 1024);
+	fu_device_set_firmware_size_max(FU_DEVICE(self), 32 * FU_MB);
 }
 
 static void
