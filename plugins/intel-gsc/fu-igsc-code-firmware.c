@@ -19,7 +19,6 @@ struct _FuIgscCodeFirmware {
 G_DEFINE_TYPE(FuIgscCodeFirmware, fu_igsc_code_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
 
 #define GSC_FWU_IUP_NUM		  2
-#define FU_IGSC_FIRMWARE_MAX_SIZE (8 * FU_MB) /* 8M */
 
 static void
 fu_igsc_code_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -63,25 +62,12 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 			    GError **error)
 {
 	FuIgscCodeFirmware *self = FU_IGSC_CODE_FIRMWARE(firmware);
-	gsize streamsz = 0;
 	g_autofree gchar *project = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructIgscFwuFwImageData) st_imgdata = NULL;
 	g_autoptr(FuStructIgscFwuImageMetadataV1) st_md1 = NULL;
 	g_autoptr(GInputStream) stream_imgi = NULL;
 	g_autoptr(GInputStream) stream_info = NULL;
-
-	/* sanity check */
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-	if (streamsz > FU_IGSC_FIRMWARE_MAX_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "image size too big: 0x%x",
-			    (guint)streamsz);
-		return FALSE;
-	}
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
@@ -136,6 +122,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 static void
 fu_igsc_code_firmware_init(FuIgscCodeFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 8 * FU_MB);
 }
 
 static void
