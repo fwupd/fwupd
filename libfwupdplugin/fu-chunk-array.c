@@ -151,6 +151,13 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
 		gsize chunksz = 0;
 		fu_chunk_array_calculate_chunk_for_offset(self, offset, NULL, NULL, &chunksz);
 		g_array_append_val(self->offsets, offset);
+		if (chunksz > G_MAXSIZE - offset) {
+			g_critical("offset overflow at offset %" G_GSIZE_FORMAT
+				   " with chunk size %" G_GSIZE_FORMAT,
+				   offset,
+				   chunksz);
+			return;
+		}
 		offset += chunksz;
 	}
 }
