@@ -58,6 +58,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 {
 	gsize streamsz = 0;
 	guint32 size;
+	gsize header_length;
 	gsize offset = 0;
 	guint64 version_raw = 0;
 	g_autoptr(FuStructIfwiCpdManifest) st_mhd = NULL;
@@ -89,7 +90,19 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 	}
 
 	/* parse extensions */
-	offset += fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd) * 4;
+	header_length = fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd);
+	if (header_length > G_MAXSIZE / 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "manifest header length 0x%" G_GSIZE_MODIFIER "x would overflow",
+			    header_length);
+		return FALSE;
+	}
+	if (!fu_size_checked_inc(&offset, header_length * 4, error)) {
+		g_prefix_error_literal(error, "manifest offset overflow: ");
+		return FALSE;
+	}
 	while (offset < streamsz) {
 		guint32 extension_type = 0;
 		guint32 extension_length = 0;
