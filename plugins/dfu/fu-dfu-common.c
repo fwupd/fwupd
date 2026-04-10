@@ -25,10 +25,16 @@ fu_dfu_utils_bytes_join_array(GPtrArray *chunks)
 	guint32 offset = 0;
 	guint8 *buffer;
 
-	/* get the size of all the chunks */
+	/* get the size of all the chunks with overflow checking */
 	for (guint i = 0; i < chunks->len; i++) {
 		GBytes *chunk_tmp = g_ptr_array_index(chunks, i);
-		total_size += g_bytes_get_size(chunk_tmp);
+		gsize chunk_size = g_bytes_get_size(chunk_tmp);
+
+		if (chunk_size > G_MAXSIZE - total_size) {
+			g_critical("DFU chunk array total size overflow at chunk %u", i);
+			return NULL;
+		}
+		total_size += chunk_size;
 	}
 
 	/* copy them into a buffer */
@@ -40,6 +46,14 @@ fu_dfu_utils_bytes_join_array(GPtrArray *chunks)
 		chunk_data = g_bytes_get_data(chunk_tmp, &chunk_size);
 		if (chunk_size == 0)
 			continue;
+
+		/* check offset doesn't overflow */
+		if (chunk_size > G_MAXUINT32 - offset) {
+			g_critical("DFU chunk array offset overflow at chunk %u", i);
+			g_free(buffer);
+			return NULL;
+		}
+
 		memcpy(buffer + offset, chunk_data, chunk_size); /* nocheck:blocked */
 		offset += chunk_size;
 	}
