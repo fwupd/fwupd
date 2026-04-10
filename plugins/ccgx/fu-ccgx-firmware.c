@@ -218,9 +218,21 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FuFirmwareParseFlags flags
 		return FALSE;
 	}
 	for (guint i = 0; i < self->records->len - 1; i++) {
+		gsize rcd_size;
 		rcd = g_ptr_array_index(self->records, i);
 		checksum_calc += fu_sum8_bytes(rcd->data);
-		fw_size += g_bytes_get_size(rcd->data);
+
+		/* sanity check */
+		rcd_size = g_bytes_get_size(rcd->data);
+		if (rcd_size > G_MAXUINT32 - fw_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware size overflow at record %u",
+				    i);
+			return FALSE;
+		}
+		fw_size += rcd_size;
 	}
 	if (fw_size != fu_struct_ccgx_metadata_hdr_get_fw_size(st_metadata)) {
 		g_set_error(error,
