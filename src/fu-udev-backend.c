@@ -625,12 +625,34 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 	FuUdevBackend *self = FU_UDEV_BACKEND(user_data);
 	gssize len;
 	guint8 buf[10240] = {0x0};
+	struct sockaddr_nl sender_addr = {0};
+	socklen_t sender_len = sizeof(sender_addr);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	len = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+	/* receive message with sender information */
+	len = recvfrom(fd,
+		       buf,
+		       sizeof(buf),
+		       MSG_DONTWAIT,
+		       (struct sockaddr *)&sender_addr,
+		       &sender_len);
 	if (len < 0)
 		return TRUE;
+
+	/* only accept messages from kernel (pid 0) to prevent spoofing attacks */
+	if (sender_addr.nl_pid != 0) {
+		g_warning("rejecting netlink message from non-kernel sender (pid %u)",
+			  sender_addr.nl_pid);
+		return TRUE;
+	}
+
+	/* verify address family is correct */
+	if (sender_addr.nl_family != AF_NETLINK) {
+		g_warning("rejecting non-netlink message");
+		return TRUE;
+	}
+
 	blob = g_bytes_new(buf, len);
 	if (!fu_udev_backend_netlink_parse_blob(self, blob, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
