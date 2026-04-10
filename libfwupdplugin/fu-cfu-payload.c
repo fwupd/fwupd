@@ -49,7 +49,13 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		st = fu_struct_cfu_payload_parse_stream(stream, offset, error);
 		if (st == NULL)
 			return FALSE;
-		offset += st->buf->len;
+
+		/* add payload structure size */
+		if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+			g_prefix_error_literal(error, "payload offset overflow: ");
+			return FALSE;
+		}
+
 		chunk_size = fu_struct_cfu_payload_get_size(st);
 		if (chunk_size == 0) {
 			g_set_error_literal(error,
