@@ -88,7 +88,9 @@ fu_himax_tp_hid_device_set_feature(FuHimaxTpHidDevice *self,
 	/* send in chunks */
 	if (!fu_himax_tp_hid_device_size_lookup(self, report_id, &unit_sz, error))
 		return FALSE;
-	chunks = fu_chunk_array_new(buf, bufsz, 0, 0, unit_sz);
+	chunks = fu_chunk_array_new(buf, bufsz, 0, 0, unit_sz, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	if (progress != NULL) {

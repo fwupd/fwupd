@@ -562,8 +562,9 @@ fu_genesys_gl32xx_device_dump_bytes(FuGenesysGl32xxDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autofree guint8 *buf = g_malloc0(fwsz);
 
-	chunks = fu_chunk_array_mutable_new(buf, fwsz, 0x0, 0x0, self->packetsz);
-
+	chunks = fu_chunk_array_mutable_new(buf, fwsz, 0x0, 0x0, self->packetsz, error);
+	if (chunks == NULL)
+		return NULL;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {

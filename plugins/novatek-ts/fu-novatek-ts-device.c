@@ -354,7 +354,10 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 					       xfer->tx_len,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       NVT_TRANSFER_LEN);
+					       NVT_TRANSFER_LEN,
+					       error);
+		if (chunks_tx == NULL)
+			return FALSE;
 		for (guint i = 0; i < chunks_tx->len; i++) {
 			FuChunk *chk = g_ptr_array_index(chunks_tx, i);
 			if (!fu_novatek_ts_device_gcm_xfer_tx_chunk(self,
@@ -403,7 +406,10 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 					       xfer->rx_len,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       NVT_TRANSFER_LEN);
+					       NVT_TRANSFER_LEN,
+					       error);
+		if (chunks_rx == NULL)
+			return FALSE;
 		for (guint i = 0; i < chunks_rx->len; i++) {
 			FuChunk *chk = g_ptr_array_index(chunks_rx, i);
 			if (!fu_novatek_ts_device_gcm_xfer_rx_chunk(self,
@@ -866,7 +872,10 @@ fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self,
 				    bin_size,
 				    self->flash_start_addr,
 				    FU_CHUNK_PAGESZ_NONE,
-				    FLASH_SECTOR_SIZE);
+				    FLASH_SECTOR_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint32 i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint32 flash_address = (guint32)fu_chunk_get_address(chk);

@@ -216,7 +216,9 @@ fu_vli_device_spi_read(FuVliDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get data from hardware */
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE, error);
+	if (chunks == NULL)
+		return NULL;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -294,7 +296,13 @@ fu_vli_device_spi_write(FuVliDevice *self,
 
 	/* write SPI data, then CRC bytes last */
 	g_debug("writing 0x%x bytes @0x%x", (guint)bufsz, address);
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, FU_VLI_DEVICE_TXSIZE);
+	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, FU_VLI_DEVICE_TXSIZE, error);
+	if (chunks == NULL)
+		return FALSE;
+	if (chunks->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no chunks");
+		return FALSE;
+	}
 	if (chunks->len > 1) {
 		FuProgress *progress_local = fu_progress_get_child(progress);
 		fu_progress_set_id(progress_local, G_STRLOC);
@@ -383,7 +391,11 @@ fu_vli_device_spi_erase(FuVliDevice *self,
 			FuProgress *progress,
 			GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, sz, addr, 0x0, 0x1000);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(NULL, sz, addr, 0x0, 0x1000, error);
+	if (chunks == NULL)
+		return FALSE;
 	g_debug("erasing 0x%x bytes @0x%x", (guint)sz, addr);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);

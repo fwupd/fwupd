@@ -311,7 +311,7 @@ fu_pixart_tp_device_register_burst_write(FuPixartTpDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* split the data, max 256 bytes per chunk */
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, 256);
+	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, 256, error);
 	if (chunks == NULL)
 		return FALSE;
 

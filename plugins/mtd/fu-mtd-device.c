@@ -861,7 +861,9 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	/* read each chunk */
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, 10 * FU_KB);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, 10 * FU_KB, error);
+	if (chunks == NULL)
+		return NULL;
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

@@ -371,27 +371,30 @@ fu_chunk_array_to_string(GPtrArray *chunks)
  * @addr_offset: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
  * @packet_sz: the transfer size, or 0
+ * @error: (nullable): optional return location for an error
  *
  * Chunks a mutable blob of memory into packets, ensuring each packet does not
  * cross a package boundary and is less that a specific transfer size.
  *
  * Returns: (transfer container) (element-type FuChunk): array of packets
  *
- * Since: 1.5.6
+ * Since: 2.1.2
  **/
 GPtrArray *
 fu_chunk_array_mutable_new(guint8 *data,
 			   gsize data_sz,
 			   gsize addr_offset,
 			   gsize page_sz,
-			   gsize packet_sz)
+			   gsize packet_sz,
+			   GError **error)
 {
 	GPtrArray *chunks;
 
 	g_return_val_if_fail(data != NULL, NULL);
 	g_return_val_if_fail(data_sz > 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	chunks = fu_chunk_array_new(data, data_sz, addr_offset, page_sz, packet_sz);
+	chunks = fu_chunk_array_new(data, data_sz, addr_offset, page_sz, packet_sz, error);
 	if (chunks == NULL)
 		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
@@ -408,40 +411,55 @@ fu_chunk_array_mutable_new(guint8 *data,
  * @addr_offset: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
  * @packet_sz: the transfer size, or 0
+ * @error: (nullable): optional return location for an error
  *
  * Chunks a linear blob of memory into packets, ensuring each packet does not
  * cross a package boundary and is less that a specific transfer size.
  *
- * Returns: (transfer container) (element-type FuChunk): array of packets
+ * Returns: (transfer container) (element-type FuChunk): array of packets, or %NULL
  *
- * Since: 1.1.2
+ * Since: 2.1.2
  **/
 GPtrArray *
 fu_chunk_array_new(const guint8 *data,
 		   gsize data_sz,
 		   gsize addr_offset,
 		   gsize page_sz,
-		   gsize packet_sz)
+		   gsize packet_sz,
+		   GError **error)
 {
-	GPtrArray *chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	gsize offset = 0;
+	g_autoptr(GPtrArray) chunks =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	while (offset < data_sz) {
 		gsize chunksz = MIN(packet_sz, data_sz - offset);
 		gsize page = 0;
-		gsize address_offset = addr_offset + offset;
+		gsize address_offset = addr_offset;
 
 		/* if page_sz is not specified then all the pages are 0 */
+		if (!fu_size_checked_inc(&address_offset, offset, error))
+			return NULL;
 		if (page_sz > 0) {
+			gsize offset_next = offset;
+
 			address_offset %= page_sz;
-			page = (offset + addr_offset) / page_sz;
+			if (!fu_size_checked_inc(&offset_next, addr_offset, error))
+				return NULL;
+			page = offset_next / page_sz;
 		}
 
 		/* cut the packet so it does not straddle multiple blocks */
 		if (page_sz != packet_sz && page_sz > 0) {
-			gsize chunksz_tmp = MIN(chunksz, (offset + packet_sz) % page_sz);
+			gsize chunksz_tmp;
+			gsize offset_next = offset;
+
+			if (!fu_size_checked_inc(&offset_next, packet_sz, error))
+				return NULL;
+			chunksz_tmp = MIN(chunksz, offset_next % page_sz);
 			if (chunksz_tmp != 0)
 				chunksz = chunksz_tmp;
 		}
@@ -451,7 +469,8 @@ fu_chunk_array_new(const guint8 *data,
 					     address_offset,
 					     data != NULL ? data + offset : NULL,
 					     chunksz));
-		offset += chunksz;
+		if (!fu_size_checked_inc(&offset, chunksz, error))
+			return NULL;
 	}
 
 #ifndef SUPPORTED_BUILD
@@ -462,7 +481,7 @@ fu_chunk_array_new(const guint8 *data,
 			  chunks->len);
 	}
 #endif
-	return chunks;
+	return g_steal_pointer(&chunks);
 }
 
 /* private */

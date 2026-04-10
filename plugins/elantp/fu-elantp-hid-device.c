@@ -690,7 +690,10 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 					    bufsz - iap_addr,
 					    0x0,
 					    0x0,
-					    self->fw_page_size);
+					    self->fw_page_size,
+					    error);
+		if (chunks == NULL)
+			return FALSE;
 		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
 		if (total_pages > chunks->len) {
 			g_set_error(error,
@@ -705,7 +708,10 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 					    bufsz - iap_addr,
 					    0x0,
 					    0x0,
-					    self->fw_page_size);
+					    self->fw_page_size,
+					    error);
+		if (chunks == NULL)
+			return FALSE;
 		total_pages = chunks->len;
 	}
 	for (guint i = 0; i < total_pages; i++) {

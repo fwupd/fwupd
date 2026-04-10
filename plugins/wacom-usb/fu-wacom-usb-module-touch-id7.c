@@ -191,8 +191,11 @@ fu_wacom_usb_module_touch_id7_write_block(FuWacomUsbModule *self,
 	chunks = fu_chunk_array_new(info->buf + info->offset,
 				    fu_struct_wta_block_header_get_block_size(st_blk),
 				    fu_struct_wta_block_header_get_block_start(st_blk),
-				    0x0,			     /* page_sz */
-				    FU_WACOM_USB_MODULE_CHUNK_SIZE); /* packet_sz */
+				    0x0,			    /* page_sz */
+				    FU_WACOM_USB_MODULE_CHUNK_SIZE, /* packet_sz */
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* write data */
 	for (guint i = 0; i < chunks->len; i++) {

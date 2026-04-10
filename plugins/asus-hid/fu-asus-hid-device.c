@@ -278,7 +278,10 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 					    fw->len,
 					    0x0,
 					    4 * FU_KB,
-					    FU_STRUCT_ASUS_READ_FLASH_COMMAND_SIZE_DATA);
+					    FU_STRUCT_ASUS_READ_FLASH_COMMAND_SIZE_DATA,
+					    error);
+	if (blocks == NULL)
+		return NULL;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, blocks->len);
 	for (guint i = 0, offset = 0; i < blocks->len; i++) {

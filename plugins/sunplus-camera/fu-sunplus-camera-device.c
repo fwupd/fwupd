@@ -366,7 +366,10 @@ fu_sunplus_camera_device_verify_chunk(FuSunplusCameraDevice *self,
 				    fu_chunk_get_data_sz(chk_parent),
 				    fu_chunk_get_address(chk_parent),
 				    0x0,
-				    FU_SUNPLUS_CAMERA_READ_SIZE);
+				    FU_SUNPLUS_CAMERA_READ_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {

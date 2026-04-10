@@ -494,7 +494,10 @@ fu_synaptics_vmm9_device_read_firmware(FuDevice *device, FuProgress *progress, G
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0, 0x0, FU_STRUCT_HID_PAYLOAD_SIZE_FIFO);
+	chunks =
+	    fu_chunk_array_mutable_new(buf, bufsz, 0, 0x0, FU_STRUCT_HID_PAYLOAD_SIZE_FIFO, error);
+	if (chunks == NULL)
+		return NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

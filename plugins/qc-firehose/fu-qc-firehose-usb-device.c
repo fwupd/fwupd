@@ -111,7 +111,14 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 
 	/* copy const data to mutable GByteArray */
 	g_byte_array_append(bufmut, buf, sz);
-	chunks = fu_chunk_array_mutable_new(bufmut->data, bufmut->len, 0, 0, self->maxpktsize_out);
+	chunks = fu_chunk_array_mutable_new(bufmut->data,
+					    bufmut->len,
+					    0,
+					    0,
+					    self->maxpktsize_out,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	if (chunks->len > 1)
 		g_debug("split into %u chunks", chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {

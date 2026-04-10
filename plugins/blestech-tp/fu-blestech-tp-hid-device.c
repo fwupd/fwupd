@@ -210,7 +210,10 @@ fu_blestech_tp_hid_device_program_page_cb(FuDevice *device, gpointer user_data, 
 				   fu_chunk_get_data_sz(chk),
 				   0x0,
 				   0x0,
-				   FU_BLESTECH_TP_PROGRAM_PAGE_REQ_N_ELEMENTS_DATA);
+				   FU_BLESTECH_TP_PROGRAM_PAGE_REQ_N_ELEMENTS_DATA,
+				   error);
+	if (pages == NULL)
+		return FALSE;
 	for (guint i = 0; i < pages->len; i++) {
 		FuChunk *chk_page = g_ptr_array_index(pages, i);
 		if (!fu_blestech_tp_hid_device_program_page(self, chk_page, error)) {

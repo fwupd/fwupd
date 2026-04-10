@@ -276,6 +276,7 @@ fu_wch_ch341a_cfi_device_read_firmware(FuWchCh341aCfiDevice *self,
 				       GError **error)
 {
 	FuWchCh341aDevice *proxy;
+	gsize payload_sz = bufsz;
 	guint8 buf[WCH_CH341A_PAYLOAD_SIZE] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(GByteArray) blob = g_byte_array_new();
@@ -287,7 +288,11 @@ fu_wch_ch341a_cfi_device_read_firmware(FuWchCh341aCfiDevice *self,
 		return NULL;
 
 	/* read each block */
-	chunks = fu_chunk_array_new(NULL, bufsz + 0x4, 0x0, 0x0, WCH_CH341A_PAYLOAD_SIZE);
+	if (!fu_size_checked_inc(&payload_sz, 0x4, error))
+		return NULL;
+	chunks = fu_chunk_array_new(NULL, payload_sz, 0x0, 0x0, WCH_CH341A_PAYLOAD_SIZE, error);
+	if (chunks == NULL)
+		return NULL;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);

@@ -454,7 +454,11 @@ fu_lenovo_dock_device_flash_erase_memory(FuLenovoDockDevice *self,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, datasz, addr, 0x0, chunksz);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(NULL, datasz, addr, 0x0, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (gsize i = 0; i < chunks->len; i++) {
@@ -511,7 +515,11 @@ fu_lenovo_dock_device_flash_write_memory(FuLenovoDockDevice *self,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(data, datasz, addr, 0x0, chunksz);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(data, datasz, addr, 0x0, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (gsize i = 0; i < chunks->len; i++) {

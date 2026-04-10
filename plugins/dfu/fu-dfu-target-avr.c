@@ -705,7 +705,10 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				    g_bytes_get_size(blob) - address_offset,
 				    fu_dfu_sector_get_address(sector),
 				    ATMEL_64KB_PAGE,
-				    ATMEL_MAX_TRANSFER_SIZE);
+				    ATMEL_MAX_TRANSFER_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_dfu_target_avr_download_element_chunks(target,
 						       chunks,
 						       &page_last,
@@ -903,7 +906,10 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 				    maximum_size,
 				    address,
 				    ATMEL_64KB_PAGE,
-				    ATMEL_MAX_TRANSFER_SIZE);
+				    ATMEL_MAX_TRANSFER_SIZE,
+				    error);
+	if (chunks == NULL)
+		return NULL;
 	chk2 = fu_dfu_target_avr_upload_element_chunks(target,
 						       address,
 						       expected_size,

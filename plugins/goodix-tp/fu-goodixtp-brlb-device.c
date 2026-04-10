@@ -61,8 +61,11 @@ fu_goodixtp_brlb_device_hid_read(FuGoodixtpBrlbDevice *self,
 				 gsize bufsz,
 				 GError **error)
 {
-	g_autoptr(GPtrArray) chunks =
-	    fu_chunk_array_mutable_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_goodixtp_brlb_device_read_pkg(self,
@@ -82,7 +85,11 @@ fu_goodixtp_brlb_device_hid_write(FuGoodixtpBrlbDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 hidbuf[PACKAGE_LEN] = {0};

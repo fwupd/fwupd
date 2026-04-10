@@ -377,7 +377,10 @@ fu_parade_usbhub_device_spi_data_read(FuParadeUsbhubDevice *self,
 					    bufsz,
 					    spi_address,
 					    0x0,
-					    FU_PARADE_USBHUB_DEVICE_SPI_BURST_DBI_MAX);
+					    FU_PARADE_USBHUB_DEVICE_SPI_BURST_DBI_MAX,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_parade_usbhub_device_spi_read_dma_dbi(self,
@@ -421,7 +424,10 @@ fu_parade_usbhub_device_spi_data_write(FuParadeUsbhubDevice *self,
 					    bufsz,
 					    spi_address,
 					    0x0,
-					    FU_PARADE_USBHUB_DEVICE_SPI_BURST_DBI_MAX);
+					    FU_PARADE_USBHUB_DEVICE_SPI_BURST_DBI_MAX,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_parade_usbhub_device_spi_write_dma_dbi(self,
@@ -695,7 +701,10 @@ fu_parade_usbhub_device_spi_rom_erase(FuParadeUsbhubDevice *self,
 				    bufsz,
 				    self->spi_address,
 				    0,
-				    FU_PARADE_USBHUB_SPI_ROM_ERASE_SIZE);
+				    FU_PARADE_USBHUB_SPI_ROM_ERASE_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -744,7 +753,10 @@ fu_parade_usbhub_device_sram_page_write(FuParadeUsbhubDevice *self,
 					    bufsz,
 					    sram_address,
 					    4 * FU_KB,
-					    FU_PARADE_USBHUB_DEVICE_MMIO_BURST_WRITE_MAX);
+					    FU_PARADE_USBHUB_DEVICE_MMIO_BURST_WRITE_MAX,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
@@ -818,7 +830,10 @@ fu_parade_usbhub_device_spi_rom_write(FuParadeUsbhubDevice *self,
 					    blob->len,
 					    self->spi_address,
 					    0, /* page */
-					    FU_PARADE_USBHUB_DMA_SRAM_SIZE);
+					    FU_PARADE_USBHUB_DMA_SRAM_SIZE,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -970,7 +985,10 @@ fu_parade_usbhub_device_spi_rom_checksum(FuParadeUsbhubDevice *self,
 				    size,
 				    self->spi_address,
 				    0x0,
-				    FU_PARADE_USBHUB_SPI_ROM_CHECKSUM_BUFFER_SIZE);
+				    FU_PARADE_USBHUB_SPI_ROM_CHECKSUM_BUFFER_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_parade_usbhub_device_calculate_checksum(self,

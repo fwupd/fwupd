@@ -264,7 +264,11 @@ fu_synaptics_mst_device_rc_set_command(FuSynapticsMstDevice *self,
 				       gsize bufsz,
 				       GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, offset, 0x0, UNIT_SIZE);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(buf, bufsz, offset, 0x0, UNIT_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* just sent command */
 	if (chunks->len == 0) {
@@ -338,8 +342,11 @@ fu_synaptics_mst_device_rc_get_command(FuSynapticsMstDevice *self,
 				       gsize bufsz,
 				       GError **error)
 {
-	g_autoptr(GPtrArray) chunks =
-	    fu_chunk_array_mutable_new(buf, bufsz, offset, 0x0, UNIT_SIZE);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, offset, 0x0, UNIT_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* just sent command */
 	if (chunks->len == 0) {

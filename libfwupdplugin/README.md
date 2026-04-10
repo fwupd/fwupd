@@ -223,3 +223,5 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 ## 2.1.2
 
 * `fu_unix_seekable_input_stream_new()`: Add `GError`
+* `fu_chunk_array_new()`: Add `GError`
+* `fu_chunk_array_mutable_new()`: Add `GError`

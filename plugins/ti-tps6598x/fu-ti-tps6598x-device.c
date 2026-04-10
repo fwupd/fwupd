@@ -121,8 +121,14 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 	g_autofree gchar *title = g_strdup_printf("write@0x%x", addr);
 
 	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
-	chunks =
-	    fu_chunk_array_mutable_new(buf->data, buf->len, 0x0, 0x0, TI_TPS6598X_USB_BUFFER_SIZE);
+	chunks = fu_chunk_array_mutable_new(buf->data,
+					    buf->len,
+					    0x0,
+					    0x0,
+					    TI_TPS6598X_USB_BUFFER_SIZE,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint16 idx = 0;
