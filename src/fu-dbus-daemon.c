@@ -48,6 +48,9 @@ struct _FuDbusDaemon {
 
 G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 
+#define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_TOTAL	     100
+#define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_PER_SENDER 10
+
 static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
 {
@@ -2153,17 +2156,44 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 {
 	FuDbusDaemonSystemInhibit *inhibit;
 	const gchar *reason = NULL;
+	const gchar *sender = fu_engine_request_get_sender(request);
+	guint sender_count = 0;
 
 	g_variant_get(parameters, "(&s)", &reason);
 
+	/* limit total system inhibits */
+	if (self->system_inhibits->len >= FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_TOTAL) {
+		g_dbus_method_invocation_return_error_literal(
+		    invocation,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "maximum system inhibit limit reached");
+		return;
+	}
+
+	/* limit per-user inhibits */
+	for (guint i = 0; i < self->system_inhibits->len; i++) {
+		FuDbusDaemonSystemInhibit *existing = g_ptr_array_index(self->system_inhibits, i);
+		if (g_strcmp0(existing->sender, sender) == 0)
+			sender_count++;
+	}
+	if (sender_count >= FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_PER_SENDER) {
+		g_dbus_method_invocation_return_error_literal(
+		    invocation,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "maximum inhibit limit per user reached");
+		return;
+	}
+
 	/* watch */
 	inhibit = g_new0(FuDbusDaemonSystemInhibit, 1);
-	inhibit->sender = g_strdup(fu_engine_request_get_sender(request));
+	inhibit->sender = g_strdup(sender);
 	inhibit->id =
 	    g_strdup_printf("dbus-%i", g_random_int_range(1, G_MAXINT - 1)); /* nocheck:blocked */
 	inhibit->watcher_id =
 	    g_bus_watch_name_on_connection(self->connection,
-					   fu_engine_request_get_sender(request),
+					   sender,
 					   G_BUS_NAME_WATCHER_FLAGS_NONE,
 					   NULL,
 					   fu_dbus_daemon_inhibit_name_vanished_cb,
