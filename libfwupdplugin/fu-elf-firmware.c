@@ -336,7 +336,12 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* calculate the offset of each section */
-	section_offset = st_filehdr->buf->len + st_proghdr->buf->len + shstrtab->len;
+	if (!fu_size_checked_inc(&section_offset, st_filehdr->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&section_offset, st_proghdr->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&section_offset, shstrtab->len, error))
+		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		fu_firmware_set_offset(img, section_offset);
