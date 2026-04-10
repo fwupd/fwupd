@@ -121,6 +121,7 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 	} else if (sect_id_tmp[0] == '/') {
 		guint64 str_idx = 0x0;
 		guint8 buf[FU_PEFILE_SECTION_ID_STRTAB_SIZE] = {0};
+		gsize read_offset;
 
 		if (!fu_strtoull(sect_id_tmp + 1,
 				 &str_idx,
@@ -131,11 +132,18 @@ fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 			g_prefix_error(error, "failed to parse section ID '%s': ", sect_id_tmp + 1);
 			return FALSE;
 		}
+
+		/* calculate string table offset with overflow checking */
+		read_offset = strtab_offset;
+		if (!fu_size_checked_inc(&read_offset, str_idx, error)) {
+			g_prefix_error(error, "string table offset overflow for section %u: ", idx);
+			return FALSE;
+		}
 		if (!fu_input_stream_read_safe(stream,
 					       buf,
 					       sizeof(buf),
 					       0x0,
-					       strtab_offset + str_idx, /* seek */
+					       read_offset, /* seek */
 					       sizeof(buf),
 					       error))
 			return FALSE;
