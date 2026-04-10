@@ -87,7 +87,10 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 					(guint)offset,
 					error_local->message);
 			}
-			offset += 4 * FU_KB;
+			if (!fu_size_checked_inc(&offset, 4 * FU_KB, error)) {
+				g_prefix_error_literal(error, "NVRAM scan offset overflow: ");
+				return FALSE;
+			}
 			continue;
 		}
 
@@ -313,7 +316,10 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	}
 
 	/* skip the blockmap */
-	offset += st_hdr->buf->len;
+	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
+		g_prefix_error_literal(error, "block map offset overflow: ");
+		return FALSE;
+	}
 	while (offset < streamsz) {
 		guint32 num_blocks;
 		guint32 length;
@@ -323,7 +329,10 @@ fu_efi_volume_parse(FuFirmware *firmware,
 			return FALSE;
 		num_blocks = fu_struct_efi_volume_block_map_get_num_blocks(st_blk);
 		length = fu_struct_efi_volume_block_map_get_length(st_blk);
-		offset += st_blk->buf->len;
+		if (!fu_size_checked_inc(&offset, st_blk->buf->len, error)) {
+			g_prefix_error_literal(error, "block map entry offset overflow: ");
+			return FALSE;
+		}
 		if (num_blocks == 0x0 && length == 0x0)
 			break;
 		blockmap_sz += (gsize)num_blocks * (gsize)length;
