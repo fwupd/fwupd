@@ -66,8 +66,11 @@ fu_chunk_array_calculate_chunk_for_offset(FuChunkArray *self,
 	}
 
 	/* cut the packet so it does not straddle multiple blocks */
-	if (self->page_sz != self->packet_sz && self->page_sz > 0)
-		chunksz_tmp = MIN(chunksz_tmp, (offset + self->packet_sz) % self->page_sz);
+	if (self->page_sz != self->packet_sz && self->page_sz > 0) {
+		gsize remainder = (offset + self->addr_offset) % self->page_sz;
+		if (remainder != 0)
+			chunksz_tmp = MIN(chunksz_tmp, self->page_sz - remainder);
+	}
 
 	/* all optional */
 	if (address != NULL)
