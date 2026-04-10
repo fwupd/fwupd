@@ -554,6 +554,15 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	guint64 sector_size = xb_node_get_attr_as_uint(xn, "SECTOR_SIZE_IN_BYTES");
 	guint64 num_sectors = xb_node_get_attr_as_uint(xn, "num_partition_sectors");
 	const gchar *filename = xb_node_get_attr(xn, "filename");
+
+	/* validate sector size to prevent division by zero */
+	if (sector_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "Firehose program command has invalid or missing sector size");
+		return FALSE;
+	}
 	g_autofree gchar *filename_basename = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) blob = NULL;
