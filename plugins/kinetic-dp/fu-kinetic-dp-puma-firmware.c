@@ -127,16 +127,51 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	st = fu_struct_kinetic_dp_puma_header_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return FALSE;
+	}
+	if (FU_STRUCT_KINETIC_DP_PUMA_HEADER_SIZE > G_MAXUINT32 - code_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "code size overflow");
+		return FALSE;
+	}
 	code_size += FU_STRUCT_KINETIC_DP_PUMA_HEADER_SIZE;
+
 	for (guint i = 0; i < FU_STRUCT_KINETIC_DP_PUMA_HEADER_DEFAULT_OBJECT_COUNT; i++) {
+		guint32 obj_length;
+		guint32 obj_total;
 		g_autoptr(FuStructKineticDpPumaHeaderInfo) st_obj =
 		    fu_struct_kinetic_dp_puma_header_info_parse_stream(stream, offset, error);
 		if (st_obj == NULL)
 			return FALSE;
-		code_size += fu_struct_kinetic_dp_puma_header_info_get_length(st_obj) +
-			     FU_STRUCT_KINETIC_DP_PUMA_HEADER_INFO_SIZE;
-		offset += st_obj->buf->len;
+
+		/* add object length and header size with overflow checking */
+		obj_length = fu_struct_kinetic_dp_puma_header_info_get_length(st_obj);
+		if (FU_STRUCT_KINETIC_DP_PUMA_HEADER_INFO_SIZE > G_MAXUINT32 - obj_length) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "object %u length overflow",
+				    i);
+			return FALSE;
+		}
+		obj_total = obj_length + FU_STRUCT_KINETIC_DP_PUMA_HEADER_INFO_SIZE;
+		if (obj_total > G_MAXUINT32 - code_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "code size overflow at object %u",
+				    i);
+			return FALSE;
+		}
+		code_size += obj_total;
+		if (!fu_size_checked_inc(&offset, st_obj->buf->len, error)) {
+			g_prefix_error(error, "object %u offset overflow: ", i);
+			return FALSE;
+		}
 	}
 	if (code_size < (512 * FU_KB) + offset) {
 		g_set_error(error,
