@@ -219,9 +219,13 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	FuPefileFirmwarePrivate *priv = GET_PRIVATE(self);
 	guint32 cert_table_sz = 0;
 	gsize offset = 0;
+	gsize region_end;
 	gsize streamsz = 0;
 	gsize strtab_offset;
+	gsize subsystem_offset;
+	gsize symbols_sz_safe = 0;
 	guint32 nr_sections;
+	guint64 symbols_sz;
 	g_autoptr(FuStructPeCoffFileHeader) st_coff = NULL;
 	g_autoptr(FuStructPeDosHeader) st_doshdr = NULL;
 	g_autoptr(GPtrArray) regions = NULL;
@@ -249,26 +253,31 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	regions = g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_region_free);
 
 	/* 1st Authenticode region */
-	fu_pefile_firmware_add_region(regions,
-				      "pre-cksum",
-				      0x0,
-				      offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_CHECKSUM);
-
-	if (!fu_input_stream_read_safe(
-		stream,
-		(guint8 *)&priv->subsystem_id,
-		sizeof(priv->subsystem_id),
-		0x0,
-		offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM, /* seek */
-		sizeof(priv->subsystem_id),
-		error))
+	region_end = offset;
+	if (!fu_size_checked_inc(&region_end,
+				 FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_CHECKSUM,
+				 error))
 		return FALSE;
+	fu_pefile_firmware_add_region(regions, "pre-cksum", 0x0, region_end);
 
 	/* 2nd Authenticode region */
+	subsystem_offset = offset;
+	if (!fu_size_checked_inc(&subsystem_offset,
+				 FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM,
+				 error))
+		return FALSE;
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)&priv->subsystem_id,
+				       sizeof(priv->subsystem_id),
+				       0x0,
+				       subsystem_offset, /* seek */
+				       sizeof(priv->subsystem_id),
+				       error))
+		return FALSE;
 	fu_pefile_firmware_add_region(
 	    regions,
 	    "chksum->cert-table",
-	    offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM,
+	    subsystem_offset,
 	    FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_CERTIFICATE_TABLE -
 		FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM); /* end */
 
@@ -283,12 +292,30 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 
 		/* 3rd Authenticode region */
 		if (fu_struct_pe_coff_optional_header64_get_size_of_headers(st_opt) > 0) {
-			fu_pefile_firmware_add_region(
-			    regions,
-			    "cert-table->end-of-headers",
-			    offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_DEBUG_TABLE,
-			    fu_struct_pe_coff_optional_header64_get_size_of_headers(st_opt) -
-				(offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_DEBUG_TABLE));
+			gsize debug_table_offset = offset;
+			gsize size_of_headers =
+			    fu_struct_pe_coff_optional_header64_get_size_of_headers(st_opt);
+
+			if (!fu_size_checked_inc(
+				&debug_table_offset,
+				FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_DEBUG_TABLE,
+				error))
+				return FALSE;
+
+			if (size_of_headers < debug_table_offset) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "header size too small: 0x%x < 0x%x",
+					    (guint)size_of_headers,
+					    (guint)debug_table_offset);
+				return FALSE;
+			}
+
+			fu_pefile_firmware_add_region(regions,
+						      "cert-table->end-of-headers",
+						      debug_table_offset,
+						      size_of_headers - debug_table_offset);
 		}
 
 		/* 4th Authenticode region */
@@ -312,11 +339,11 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	strtab_offset = fu_struct_pe_coff_file_header_get_pointer_to_symbol_table(st_coff);
-	if (!fu_size_checked_inc(
-		&strtab_offset,
-		(gsize)fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff) *
-		    FU_STRUCT_PE_COFF_SYMBOL_SIZE,
-		error))
+	symbols_sz = (guint64)fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff) *
+		     FU_STRUCT_PE_COFF_SYMBOL_SIZE;
+	if (!fu_size_from_uint64(symbols_sz, &symbols_sz_safe, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&strtab_offset, symbols_sz_safe, error))
 		return FALSE;
 
 	/* read out each section */
@@ -341,7 +368,12 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	/* for the data at the end of the image */
 	if (regions->len > 0) {
 		FuPefileFirmwareRegion *r = g_ptr_array_index(regions, regions->len - 1);
-		gsize offset_end = r->offset + r->size;
+		gsize offset_end = r->offset;
+		gsize end_with_cert;
+
+		/* check for overflow when calculating region end */
+		if (!fu_size_checked_inc(&offset_end, r->size, error))
+			return FALSE;
 
 		/* sanity check */
 		if (offset_end > streamsz) {
@@ -353,7 +385,13 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 				    (guint)streamsz);
 			return FALSE;
 		}
-		if (offset_end + cert_table_sz > streamsz) {
+
+		/* check for overflow when adding certificate table size */
+		end_with_cert = offset_end;
+		if (!fu_size_checked_inc(&end_with_cert, cert_table_sz, error))
+			return FALSE;
+
+		if (end_with_cert > streamsz) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -366,7 +404,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		fu_pefile_firmware_add_region(regions,
 					      "tabledata->cert-table",
 					      offset_end,
-					      streamsz - (offset_end + cert_table_sz));
+					      streamsz - end_with_cert);
 	}
 
 	/* calculate the checksum we would find in the dbx */
@@ -431,8 +469,13 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_section_free);
 
 	/* calculate the offset for each of the sections */
-	offset += st->buf->len + st_hdr->buf->len + st_opt->buf->len;
-	if (!fu_size_checked_inc(&offset, FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len, error))
+	if (!fu_size_checked_inc(&offset, st->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&offset, st_opt->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&offset, (gsize)FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len, error))
 		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		g_autoptr(FuPefileSection) section = g_new0(FuPefileSection, 1);
