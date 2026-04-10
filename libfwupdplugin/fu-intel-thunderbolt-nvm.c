@@ -323,13 +323,24 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 
 		for (guint8 i = 1; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM; i <<= 1) {
 			if (available_sections & i) {
+				gsize offset_tmp;
+
 				if (!fu_intel_thunderbolt_nvm_read_ucode_section_len(self,
 										     stream,
 										     offset,
 										     &ucode_offset,
 										     error))
 					return FALSE;
-				offset += ucode_offset;
+
+				/* add section offset with overflow checking */
+				offset_tmp = offset;
+				if (!fu_size_checked_inc(&offset_tmp, ucode_offset, error)) {
+					g_prefix_error_literal(
+					    error,
+					    "Thunderbolt NVM section offset overflow: ");
+					return FALSE;
+				}
+				offset = offset_tmp;
 			}
 		}
 		priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DRAM_UCODE] =
