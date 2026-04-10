@@ -225,19 +225,22 @@ static gboolean
 fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
 						GInputStream *stream,
 						guint32 offset,
-						guint16 *value,
+						gsize *value,
 						GError **error)
 {
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
+	guint16 value_tmp = 0;
+
 	if (!fu_input_stream_read_u16(stream,
 				      priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
 					  offset,
-				      value,
+				      &value_tmp,
 				      G_LITTLE_ENDIAN,
 				      error)) {
 		g_prefix_error_literal(error, "failed to read ucode section len: ");
 		return FALSE;
 	}
+	*value = value_tmp;
 	*value *= sizeof(guint32);
 	*value += sizeof(guint16);
 	return TRUE;
@@ -249,31 +252,31 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 				       GInputStream *stream,
 				       GError **error)
 {
-	guint32 offset;
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
 
 	if (priv->gen >= 3 || priv->gen == 0) {
+		guint32 offset32 = 0;
 		if (!fu_input_stream_read_u32(
 			stream,
 			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
 			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DROM,
-			&offset,
+			&offset32,
 			G_LITTLE_ENDIAN,
 			error))
 			return FALSE;
 		priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM] =
-		    offset + priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL];
+		    offset32 + priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL];
 
 		if (!fu_input_stream_read_u32(
 			stream,
 			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
 			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_ARC_PARAMS,
-			&offset,
+			&offset32,
 			G_LITTLE_ENDIAN,
 			error))
 			return FALSE;
 		priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS] =
-		    offset + priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL];
+		    offset32 + priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL];
 	}
 
 	if (priv->is_host && priv->gen > 2) {
@@ -290,7 +293,8 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 		 * offset to find the start of the next section. Otherwise, we
 		 * already have the next section offset...
 		 */
-		guint16 ucode_offset;
+		gsize offset;
+		guint16 offset16 = 0;
 		guint8 available_sections = 0;
 
 		if (!fu_input_stream_read_u8(
@@ -306,13 +310,13 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 			stream,
 			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
 			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_UCODE,
-			&ucode_offset,
+			&offset16,
 			G_LITTLE_ENDIAN,
 			error)) {
 			g_prefix_error_literal(error, "failed to read ucode offset: ");
 			return FALSE;
 		}
-		offset = ucode_offset;
+		offset = offset16;
 		if ((available_sections & FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -323,13 +327,20 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 
 		for (guint8 i = 1; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM; i <<= 1) {
 			if (available_sections & i) {
+				gsize section_len = 0;
+
 				if (!fu_intel_thunderbolt_nvm_read_ucode_section_len(self,
 										     stream,
 										     offset,
-										     &ucode_offset,
+										     &section_len,
 										     error))
 					return FALSE;
-				offset += ucode_offset;
+
+				/* add section offset */
+				if (!fu_size_checked_inc(&offset, section_len, error)) {
+					g_prefix_error_literal(error, "section offset overflow: ");
+					return FALSE;
+				}
 			}
 		}
 		priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DRAM_UCODE] =
