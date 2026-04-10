@@ -21,6 +21,7 @@ G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
 
 #define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX (16 * FU_KB)
 #define FU_ZIP_FIRMWARE_EXTRA_MAX	(1 * FU_MB)
+#define FU_ZIP_MAX_DECOMPRESSION_RATIO	1000
 
 static gboolean
 fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size, GError **error)
@@ -119,6 +120,18 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "zip64 not supported");
+		return NULL;
+	}
+
+	/* check decompression ratio to prevent bombs */
+	if (compressed_size > 0 &&
+	    (uncompressed_size / compressed_size) > FU_ZIP_MAX_DECOMPRESSION_RATIO) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "decompression ratio %u:1 exceeds maximum of %u:1",
+			    uncompressed_size / compressed_size,
+			    (guint)FU_ZIP_MAX_DECOMPRESSION_RATIO);
 		return NULL;
 	}
 	stream_compressed = fu_partial_input_stream_new(stream, offset, compressed_size, error);
