@@ -355,6 +355,14 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 				container_id);
 			break;
 		}
+		if (offset > G_MAXUINT32 - 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "offset overflow at container %u",
+				    i);
+			return FALSE;
+		}
 		offset += 4;
 	}
 	if (product_id[0] != '\0') {
