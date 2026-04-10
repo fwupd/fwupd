@@ -189,7 +189,8 @@ fu_dfuse_firmware_write_image(FuDfuseFirmware *self, FuFirmware *image, GError *
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		GBytes *bytes = fu_dfuse_firmware_chunk_write(self, chk);
 		g_ptr_array_add(blobs, bytes);
-		totalsz += g_bytes_get_size(bytes);
+		if (!fu_size_checked_inc(&totalsz, g_bytes_get_size(bytes), error))
+			return NULL;
 	}
 
 	/* add prefix */
@@ -231,7 +232,8 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 		blob = fu_dfuse_firmware_write_image(self, img, error);
 		if (blob == NULL)
 			return NULL;
-		totalsz += g_bytes_get_size(blob);
+		if (!fu_size_checked_inc(&totalsz, g_bytes_get_size(blob), error))
+			return NULL;
 		g_ptr_array_add(blobs, g_steal_pointer(&blob));
 	}
 
