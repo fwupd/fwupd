@@ -304,6 +304,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 
 	/* name */
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
+		gsize offset_delta;
 		g_autofree gchar *guid_str = NULL;
 		g_autoptr(FuStructEfiSectionGuidDefined) st_def = NULL;
 		st_def = fu_struct_efi_section_guid_defined_parse_stream(stream, stlen, error);
@@ -320,11 +321,18 @@ fu_efi_section_parse(FuFirmware *firmware,
 				    (guint)fu_struct_efi_section_guid_defined_get_offset(st_def));
 			return FALSE;
 		}
-		offset += fu_struct_efi_section_guid_defined_get_offset(st_def) - stlen;
+		offset_delta = fu_struct_efi_section_guid_defined_get_offset(st_def) - stlen;
+		if (!fu_size_checked_inc(&offset, offset_delta, error)) {
+			g_prefix_error_literal(error, "section offset overflow: ");
+			return FALSE;
+		}
 	}
 
 	/* create blob */
-	offset += stlen;
+	if (!fu_size_checked_inc(&offset, stlen, error)) {
+		g_prefix_error_literal(error, "section offset overflow: ");
+		return FALSE;
+	}
 	partial_stream = fu_partial_input_stream_new(stream, offset, size - offset, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to cut data: ");
