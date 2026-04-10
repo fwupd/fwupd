@@ -135,7 +135,11 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	self->timestamp = fu_struct_efi_vss_auth_variable_header_get_timestamp(st);
 
 	/* read name */
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "VSS auth variable header offset overflow: ");
+		return FALSE;
+	}
+
 	buf_name = fu_input_stream_read_byte_array(
 	    stream,
 	    offset,
