@@ -124,7 +124,12 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 
 	if (!fu_input_stream_read_u8(helper->stream, helper->offset, &value8, error))
 		return NULL;
-	helper->offset += 1;
+
+	if (!fu_size_checked_inc(&helper->offset, 1, error)) {
+		g_prefix_error_literal(error, "CBOR tag offset overflow: ");
+		return NULL;
+	}
+
 	tag = (value8 & 0b11100000) >> 5;
 	g_debug("tag: %u [%s] @0x%x", tag, fu_cbor_tag_to_string(tag), (guint)helper->offset);
 
@@ -137,7 +142,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 		if (!fu_input_stream_read_u8(helper->stream, helper->offset, &value8, error))
 			return NULL;
 		len = value8;
-		helper->offset += 1;
+
+		if (!fu_size_checked_inc(&helper->offset, 1, error)) {
+			g_prefix_error_literal(error, "CBOR length8 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_EXT16) {
 		guint16 value16 = 0;
 		if (!fu_input_stream_read_u16(helper->stream,
@@ -147,7 +156,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 					      error))
 			return NULL;
 		len = value16;
-		helper->offset += 2;
+
+		if (!fu_size_checked_inc(&helper->offset, 2, error)) {
+			g_prefix_error_literal(error, "CBOR length16 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_EXT32) {
 		guint32 value32 = 0;
 		if (!fu_input_stream_read_u32(helper->stream,
@@ -157,7 +170,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 					      error))
 			return NULL;
 		len = value32;
-		helper->offset += 4;
+
+		if (!fu_size_checked_inc(&helper->offset, 4, error)) {
+			g_prefix_error_literal(error, "CBOR length32 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_EXT64) {
 		guint64 value64 = 0;
 		if (!fu_input_stream_read_u64(helper->stream,
@@ -174,7 +191,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 			return NULL;
 		}
 		len = value64;
-		helper->offset += 8;
+
+		if (!fu_size_checked_inc(&helper->offset, 8, error)) {
+			g_prefix_error_literal(error, "CBOR length64 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_INDEFINITE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
