@@ -40,6 +40,13 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	if (st == NULL)
 		return FALSE;
 	firmware_size = fu_struct_goodix_brlb_hdr_get_firmware_size(st);
+	if (firmware_size > G_MAXUINT32 - 8) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware size overflow");
+		return FALSE;
+	}
 	firmware_size += 8;
 
 	/* convert to blob */
