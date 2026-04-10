@@ -64,7 +64,11 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 	}
 
 	/* parse each attr */
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "VSS2 header offset overflow: ");
+		return FALSE;
+	}
+
 	while (offset < fu_struct_efi_vss2_variable_store_header_get_size(st)) {
 		g_autoptr(FuFirmware) img = fu_efi_vss_auth_variable_new();
 
