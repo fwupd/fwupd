@@ -164,7 +164,10 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		}
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &token, G_BIG_ENDIAN, error))
 			return FALSE;
-		offset += sizeof(guint32);
+		if (!fu_size_checked_inc(&offset, sizeof(guint32), error)) {
+			g_prefix_error_literal(error, "FDT token offset overflow: ");
+			return FALSE;
+		}
 
 		/* nothing to do */
 		if (token == FU_FDT_TOKEN_NOP)
@@ -251,7 +254,12 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 				return FALSE;
 			prop_len = fu_struct_fdt_prop_get_len(st_prp);
 			prop_nameoff = fu_struct_fdt_prop_get_nameoff(st_prp);
-			offset += st_prp->buf->len;
+
+			/* add property structure size */
+			if (!fu_size_checked_inc(&offset, st_prp->buf->len, error)) {
+				g_prefix_error_literal(error, "property offset overflow: ");
+				return FALSE;
+			}
 
 			/* add property */
 			str = fu_fdt_firmware_string_new_safe(strtab->data,
@@ -302,10 +310,12 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 	/* parse */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	for (; offset < streamsz; offset += FU_STRUCT_FDT_RESERVE_ENTRY_SIZE) {
+
+	while (offset < streamsz) {
 		guint64 address = 0;
 		guint64 size = 0;
 		g_autoptr(FuStructFdtReserveEntry) st_res = NULL;
+
 		st_res = fu_struct_fdt_reserve_entry_parse_stream(stream, offset, error);
 		if (st_res == NULL)
 			return FALSE;
@@ -314,6 +324,12 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 		g_debug("mem_rsvmap: 0x%x, 0x%x", (guint)address, (guint)size);
 		if (address == 0x0 && size == 0x0)
 			break;
+
+		/* add reserve entry size */
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_FDT_RESERVE_ENTRY_SIZE, error)) {
+			g_prefix_error_literal(error, "reserve entry offset overflow: ");
+			return FALSE;
+		}
 	}
 
 	/* success */
