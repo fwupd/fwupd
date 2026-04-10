@@ -241,13 +241,34 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 	for (guint k = 0; k < priv->records->len; k++) {
 		FuIhexFirmwareRecord *rcd = g_ptr_array_index(priv->records, k);
 		guint16 addr16 = 0;
-		guint32 addr = rcd->addr + seg_addr + abs_addr;
+		gsize addr;
 		guint32 len_hole;
+
+		/* calculate address with overflow checking */
+		addr = rcd->addr;
+		if (!fu_size_checked_inc(&addr, seg_addr, error)) {
+			g_prefix_error(error, "address overflow on line %u: ", rcd->ln);
+			return FALSE;
+		}
+		if (!fu_size_checked_inc(&addr, abs_addr, error)) {
+			g_prefix_error(error, "address overflow on line %u: ", rcd->ln);
+			return FALSE;
+		}
+		if (addr > G_MAXUINT32) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "address 0x%" G_GSIZE_MODIFIER
+				    "x exceeds 32-bit limit on line %u",
+				    addr,
+				    rcd->ln);
+			return FALSE;
+		}
 
 		/* debug */
 		g_debug("%s:", fu_ihex_firmware_record_type_to_string(rcd->record_type));
 		g_debug("length:\t0x%02x", rcd->data->len);
-		g_debug("addr:\t0x%08x", addr);
+		g_debug("addr:\t0x%08x", (guint)addr);
 
 		/* sanity check */
 		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF && rcd->data->len == 0) {
