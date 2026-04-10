@@ -309,7 +309,12 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 	self->attrs = fu_struct_efi_load_option_get_attrs(st);
-	offset += st->buf->len;
+
+	/* add header size */
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "load option header offset overflow: ");
+		return FALSE;
+	}
 
 	/* parse UTF-16 description */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -334,14 +339,22 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	if (id == NULL)
 		return FALSE;
 	fu_firmware_set_id(firmware, id);
-	offset += 2;
+
+	/* add null terminator size */
+	if (!fu_size_checked_inc(&offset, 2, error))
+		return FALSE;
 
 	/* parse dp blob */
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(device_path_list), stream, offset, flags, error))
 		return FALSE;
 	if (!fu_firmware_add_image(firmware, FU_FIRMWARE(device_path_list), error))
 		return FALSE;
-	offset += fu_struct_efi_load_option_get_dp_size(st);
+
+	/* add device path size */
+	if (!fu_size_checked_inc(&offset, fu_struct_efi_load_option_get_dp_size(st), error)) {
+		g_prefix_error_literal(error, "load option device path offset overflow: ");
+		return FALSE;
+	}
 
 	/* optional data */
 	if (offset < streamsz) {
