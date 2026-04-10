@@ -451,6 +451,13 @@ fu_chunk_array_new(const guint8 *data,
 					     address_offset,
 					     data != NULL ? data + offset : NULL,
 					     chunksz));
+		if (chunksz > G_MAXSIZE - offset) {
+			g_critical("legacy chunk array offset overflow at offset %" G_GSIZE_FORMAT
+				   " with chunk size %" G_GSIZE_FORMAT,
+				   offset,
+				   chunksz);
+			break;
+		}
 		offset += chunksz;
 	}
 
