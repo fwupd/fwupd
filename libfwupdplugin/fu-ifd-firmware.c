@@ -118,7 +118,8 @@ fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
 						  stream,
 						  error))
 		return NULL;
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(stream2), blob);
+	if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(stream2), blob, error))
+		return NULL;
 	return g_steal_pointer(&stream2);
 }
 

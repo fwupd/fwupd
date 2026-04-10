@@ -344,12 +344,16 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		}
 		bytes_uncomp =
 		    g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
-		fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
-						    bytes_uncomp);
+		if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
+							 bytes_uncomp,
+							 error))
+			return FALSE;
 	} else {
-		fu_composite_input_stream_add_partial_stream(
-		    FU_COMPOSITE_INPUT_STREAM(folder_data),
-		    FU_PARTIAL_INPUT_STREAM(partial_stream));
+		if (!fu_composite_input_stream_add_partial_stream(
+			FU_COMPOSITE_INPUT_STREAM(folder_data),
+			FU_PARTIAL_INPUT_STREAM(partial_stream),
+			error))
+			return FALSE;
 	}
 
 	/* success */

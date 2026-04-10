@@ -438,9 +438,11 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 			g_prefix_error_literal(error, "failed to cut Authenticode region: ");
 			return FALSE;
 		}
-		fu_composite_input_stream_add_partial_stream(
-		    FU_COMPOSITE_INPUT_STREAM(composite_stream),
-		    FU_PARTIAL_INPUT_STREAM(partial_stream));
+		if (!fu_composite_input_stream_add_partial_stream(
+			FU_COMPOSITE_INPUT_STREAM(composite_stream),
+			FU_PARTIAL_INPUT_STREAM(partial_stream),
+			error))
+			return FALSE;
 	}
 	priv->authenticode_hash =
 	    fu_input_stream_compute_checksum(composite_stream, G_CHECKSUM_SHA256, error);

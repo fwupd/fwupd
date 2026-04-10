@@ -31,14 +31,22 @@ fu_composite_input_stream_func(void)
 	g_assert_cmpint(streamsz, ==, 0);
 
 	/* add bytes */
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream), blob1);
+	ret = fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream),
+						  blob1,
+						  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_input_stream_size(composite_stream, &streamsz, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(streamsz, ==, 2);
 
 	/* add bytes */
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream), blob2);
+	ret = fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream),
+						  blob2,
+						  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_input_stream_size(composite_stream, &streamsz, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -48,8 +56,12 @@ fu_composite_input_stream_func(void)
 	stream4 = fu_partial_input_stream_new(stream3, 0x3, 2, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream4);
-	fu_composite_input_stream_add_partial_stream(FU_COMPOSITE_INPUT_STREAM(composite_stream),
-						     FU_PARTIAL_INPUT_STREAM(stream4));
+	ret = fu_composite_input_stream_add_partial_stream(
+	    FU_COMPOSITE_INPUT_STREAM(composite_stream),
+	    FU_PARTIAL_INPUT_STREAM(stream4),
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_input_stream_size(composite_stream, &streamsz, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
