@@ -57,7 +57,10 @@ fu_wacom_usb_module_touch_id7_read_file_header(FuWacomUsbWtaFileHeader *header,
 					       FuWacomUsbWtaInfo *info,
 					       GError **error)
 {
-	info->offset += 4;
+	if (!fu_size_checked_inc(&info->offset, 4, error)) {
+		g_prefix_error_literal(error, "magic offset overflow: ");
+		return FALSE;
+	}
 
 	if (!fu_memread_uint32_safe(info->buf,
 				    info->bufsz,
@@ -66,7 +69,17 @@ fu_wacom_usb_module_touch_id7_read_file_header(FuWacomUsbWtaFileHeader *header,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	info->offset += header->header_size - 8;
+	if (header->header_size < 8) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "header size too small");
+		return FALSE;
+	}
+	if (!fu_size_checked_inc(&info->offset, header->header_size - 8, error)) {
+		g_prefix_error_literal(error, "size offset overflow: ");
+		return FALSE;
+	}
 
 	if (!fu_memread_uint16_safe(info->buf,
 				    info->bufsz,
@@ -75,7 +88,10 @@ fu_wacom_usb_module_touch_id7_read_file_header(FuWacomUsbWtaFileHeader *header,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	info->offset += 16;
+	if (!fu_size_checked_inc(&info->offset, 16, error)) {
+		g_prefix_error_literal(error, "padding offset overflow: ");
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -112,7 +128,10 @@ fu_wacom_usb_module_touch_id7_read_record_header(FuWacomUsbWtaRecordHeader *head
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	info->offset += header->file_name_length + 8;
+	if (!fu_size_checked_inc(&info->offset, header->file_name_length + 8, error)) {
+		g_prefix_error_literal(error, "filename offset overflow: ");
+		return FALSE;
+	}
 
 	if (!fu_memread_uint32_safe(info->buf,
 				    info->bufsz,
