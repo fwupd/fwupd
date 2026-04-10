@@ -76,6 +76,14 @@ fu_usb_backend_create_device_impl(FuBackend *backend, const gchar *backend_id, G
 
 	/* back from bus:addr */
 	bus_addr = g_strsplit(backend_id, ":", 2);
+	if (g_strv_length(bus_addr) != 2) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid backend_id format: %s",
+			    backend_id);
+		return NULL;
+	}
 	if (!fu_strtoull(bus_addr[0], &usb_bus, 0x0, G_MAXUINT8, FU_INTEGER_BASE_16, error)) {
 		g_prefix_error(error, "failed to parse bus from %s: ", backend_id);
 		return NULL;
