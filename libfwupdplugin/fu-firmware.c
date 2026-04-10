@@ -1705,6 +1705,12 @@ fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max,
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* check bytes are set */
+	if (priv->bytes == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
+		return NULL;
+	}
+
 	/* check address requested is larger than base address */
 	if (address < priv->addr) {
 		g_set_error(error,
