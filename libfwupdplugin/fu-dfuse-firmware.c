@@ -39,7 +39,11 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 	st_ele = fu_struct_dfuse_element_parse_stream(stream, *offset, error);
 	if (st_ele == NULL)
 		return NULL;
-	*offset += st_ele->buf->len;
+	if (!fu_size_checked_inc(offset, st_ele->buf->len, error)) {
+		g_prefix_error_literal(error, "DfuSe element offset overflow: ");
+		return NULL;
+	}
+
 	blob = fu_input_stream_read_bytes(stream,
 					  *offset,
 					  fu_struct_dfuse_element_get_size(st_ele),
@@ -89,7 +93,11 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 	}
 
 	/* parse chunks */
-	*offset += st_img->buf->len;
+	if (!fu_size_checked_inc(offset, st_img->buf->len, error)) {
+		g_prefix_error_literal(error, "DfuSe image offset overflow: ");
+		return NULL;
+	}
+
 	for (guint j = 0; j < chunks; j++) {
 		g_autoptr(FuChunk) chk = NULL;
 		chk = fu_dfuse_firmware_image_chunk_parse(self, stream, offset, error);
@@ -147,7 +155,11 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 
 	/* parse the image targets */
 	targets = fu_struct_dfuse_hdr_get_targets(st_hdr);
-	offset += st_hdr->buf->len;
+	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
+		g_prefix_error_literal(error, "DfuSe header offset overflow: ");
+		return FALSE;
+	}
+
 	for (guint i = 0; i < targets; i++) {
 		g_autoptr(FuFirmware) image = NULL;
 		image = fu_dfuse_firmware_image_parse_stream(FU_DFUSE_FIRMWARE(firmware),
