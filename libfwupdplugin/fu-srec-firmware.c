@@ -488,7 +488,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 				    (guint)rcd->addr,
 				    priv->addr_min,
 				    rcd->ln);
-			} else if (priv->addr_max > 0 && rcd->addr < priv->addr_max) {
+			} else if (priv->addr_max > 0 && rcd->addr > priv->addr_max) {
 				g_debug(
 				    "ignoring data at 0x%x as after end address 0x%x at line %u",
 				    (guint)rcd->addr,
