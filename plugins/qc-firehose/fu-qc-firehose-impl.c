@@ -584,6 +584,13 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 				    "program is not supported");
 		return FALSE;
 	}
+	if (sector_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid or missing sector size");
+		return FALSE;
+	}
 
 	/* skip any empty filenames */
 	filename_basename = fu_qc_firehose_impl_convert_to_image_id(filename, error);
