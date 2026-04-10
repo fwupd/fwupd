@@ -458,7 +458,7 @@ fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, FuProgress *progress, 
 		g_ptr_array_add(chunks, g_steal_pointer(&buf));
 		fu_progress_step_done(progress);
 	}
-	return fu_dfu_utils_bytes_join_array(chunks);
+	return fu_dfu_utils_bytes_join_array(chunks, error);
 }
 
 static gboolean
@@ -839,7 +839,9 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 	}
 
 	/* create element of required size */
-	contents = fu_dfu_utils_bytes_join_array(blobs);
+	contents = fu_dfu_utils_bytes_join_array(blobs, error);
+	if (contents == NULL)
+		return NULL;
 	if (expected_size > 0 && g_bytes_get_size(contents) > expected_size) {
 		contents_truncated = g_bytes_new_from_bytes(contents, 0x0, expected_size);
 	} else {

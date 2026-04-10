@@ -206,7 +206,9 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 	}
 
 	/* create new image */
-	contents = fu_dfu_utils_bytes_join_array(chunks);
+	contents = fu_dfu_utils_bytes_join_array(chunks, error);
+	if (contents == NULL)
+		return NULL;
 	if (expected_size > 0) {
 		contents_truncated = fu_bytes_new_offset(contents, 0, expected_size, error);
 		if (contents_truncated == NULL)

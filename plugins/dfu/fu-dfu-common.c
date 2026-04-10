@@ -6,29 +6,39 @@
 
 #include "config.h"
 
-#include <string.h>
+#include <fwupdplugin.h>
 
 #include "fu-dfu-common.h"
 
 /**
  * fu_dfu_utils_bytes_join_array:
  * @chunks: (element-type GBytes): bytes
+ * @error: (nullable): optional return location for an error
  *
  * Creates a monolithic block of memory from an array of #GBytes.
  *
- * Returns: (transfer full): a new GBytes
+ * Returns: (transfer full): a new GBytes, or %NULL on error
  **/
 GBytes *
-fu_dfu_utils_bytes_join_array(GPtrArray *chunks)
+fu_dfu_utils_bytes_join_array(GPtrArray *chunks, GError **error)
 {
 	gsize total_size = 0;
-	guint32 offset = 0;
-	guint8 *buffer;
+	gsize offset = 0;
+	g_autofree guint8 *buffer = NULL;
 
 	/* get the size of all the chunks */
 	for (guint i = 0; i < chunks->len; i++) {
 		GBytes *chunk_tmp = g_ptr_array_index(chunks, i);
-		total_size += g_bytes_get_size(chunk_tmp);
+		gsize chunk_size = g_bytes_get_size(chunk_tmp);
+		if (chunk_size > G_MAXSIZE - total_size) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "buffer too large");
+			return NULL;
+		}
+		if (!fu_size_checked_inc(&total_size, chunk_size, error))
+			return NULL;
 	}
 
 	/* copy them into a buffer */
@@ -40,8 +50,17 @@ fu_dfu_utils_bytes_join_array(GPtrArray *chunks)
 		chunk_data = g_bytes_get_data(chunk_tmp, &chunk_size);
 		if (chunk_size == 0)
 			continue;
-		memcpy(buffer + offset, chunk_data, chunk_size); /* nocheck:blocked */
-		offset += chunk_size;
+		if (!fu_memcpy_safe(buffer,
+				    total_size,
+				    offset,
+				    chunk_data,
+				    chunk_size,
+				    0x0,
+				    chunk_size,
+				    error))
+			return NULL;
+		if (!fu_size_checked_inc(&offset, chunk_size, error))
+			return NULL;
 	}
-	return g_bytes_new_take(buffer, total_size);
+	return g_bytes_new_take(g_steal_pointer(&buffer), total_size);
 }

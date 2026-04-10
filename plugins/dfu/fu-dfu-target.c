@@ -899,7 +899,9 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 	fu_progress_set_percentage(progress, 100);
 
 	/* create new image */
-	contents = fu_dfu_utils_bytes_join_array(chunks);
+	contents = fu_dfu_utils_bytes_join_array(chunks, error);
+	if (contents == NULL)
+		return NULL;
 	return fu_chunk_bytes_new(contents);
 }
 
