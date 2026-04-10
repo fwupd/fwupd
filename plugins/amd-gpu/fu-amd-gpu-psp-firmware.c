@@ -71,13 +71,20 @@ fu_amd_gpu_psp_firmware_parse_l2(FuAmdGpuPspFirmware *self,
 	st_dir = fu_struct_psp_dir_parse_stream(stream, offset, error);
 	if (st_dir == NULL)
 		return FALSE;
-	offset += st_dir->buf->len;
+	if (!fu_size_checked_inc(&offset, st_dir->buf->len, error)) {
+		g_prefix_error_literal(error, "directory offset overflow: ");
+		return FALSE;
+	}
+
 	for (guint i = 0; i < fu_struct_psp_dir_get_total_entries(st_dir); i++) {
 		g_autoptr(FuStructPspDirTable) st_entry = NULL;
 		st_entry = fu_struct_psp_dir_table_parse_stream(stream, offset, error);
 		if (st_entry == NULL)
 			return FALSE;
-		offset += st_entry->buf->len;
+		if (!fu_size_checked_inc(&offset, st_entry->buf->len, error)) {
+			g_prefix_error(error, "entry %u offset overflow: ", i);
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -93,11 +100,15 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 {
 	g_autoptr(FuStructPspDir) st_dir = NULL;
 
-	/* parse the L1 entries */
+	/* parse the L1 entries  */
 	st_dir = fu_struct_psp_dir_parse_stream(stream, offset, error);
 	if (st_dir == NULL)
 		return FALSE;
-	offset += st_dir->buf->len;
+	if (!fu_size_checked_inc(&offset, st_dir->buf->len, error)) {
+		g_prefix_error_literal(error, "directory offset overflow: ");
+		return FALSE;
+	}
+
 	for (guint i = 0; i < fu_struct_psp_dir_get_total_entries(st_dir); i++) {
 		guint loc;
 		guint sz;
@@ -183,7 +194,10 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 			return FALSE;
 
 		/* next entry */
-		offset += st_entry->buf->len;
+		if (!fu_size_checked_inc(&offset, st_entry->buf->len, error)) {
+			g_prefix_error(error, "entry %u offset overflow: ", i);
+			return FALSE;
+		}
 	}
 
 	return TRUE;
