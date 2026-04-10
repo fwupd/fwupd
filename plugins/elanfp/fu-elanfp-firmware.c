@@ -64,8 +64,9 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 				      error))
 		return FALSE;
 
-	/* read indexes */
-	offset += 0x10;
+	/* read indexes with overflow checking */
+	if (!fu_size_checked_inc(&offset, 0x10, error))
+		return FALSE;
 	while (1) {
 		guint32 start_addr = 0;
 		guint32 length = 0;
@@ -143,7 +144,10 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
-		offset += 0x10;
+		if (!fu_size_checked_inc(&offset, 0x10, error)) {
+			g_prefix_error_literal(error, "ELAN firmware index offset overflow: ");
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -155,6 +159,7 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
 	gsize offset = 0;
+	gsize index_count = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
@@ -164,8 +169,26 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* ICID, assumed */
 	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
 
-	/* S2F_INDEX */
-	offset += 0x10 + ((imgs->len + 1) * 0x10);
+	/* S2F_INDEX with overflow checking: calculate (imgs->len + 1) * 0x10 */
+	if (!g_size_checked_add(&index_count, imgs->len, 1)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "ELAN firmware image count overflow");
+		return NULL;
+	}
+	/* multiply by 0x10 using repeated additions */
+	for (guint i = 0; i < 0x10; i++) {
+		if (!fu_size_checked_inc(&offset, index_count, error)) {
+			g_prefix_error_literal(error, "ELAN firmware index size overflow: ");
+			return NULL;
+		}
+	}
+	if (!fu_size_checked_inc(&offset, 0x10, error)) {
+		g_prefix_error_literal(error, "ELAN firmware header offset overflow: ");
+		return NULL;
+	}
+
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		g_autoptr(GBytes) blob = fu_firmware_write(img, error);
@@ -175,7 +198,11 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
 		fu_byte_array_append_uint32(buf, offset, G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint32(buf, g_bytes_get_size(blob), G_LITTLE_ENDIAN);
-		offset += g_bytes_get_size(blob);
+
+		if (!fu_size_checked_inc(&offset, g_bytes_get_size(blob), error)) {
+			g_prefix_error(error, "ELAN firmware image %u offset overflow: ", i);
+			return NULL;
+		}
 	}
 
 	/* end of index */
