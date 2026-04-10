@@ -8215,6 +8215,13 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 				    fu_device_event_get_id(event));
 			return NULL;
 		}
+		if (priv->event_idx == G_MAXUINT) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "event index overflow");
+			return NULL;
+		}
 		priv->event_idx++;
 		g_debug("found event with ID %s [%s]", id, id_hash);
 		return event;
