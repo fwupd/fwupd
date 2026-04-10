@@ -136,6 +136,16 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    header_size);
 		return FALSE;
 	}
+	/* validate header fits within list */
+	if (header_size + 0x1c > list_size) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "SignatureHeaderSize 0x%x + 0x1c exceeds list size 0x%x",
+			    header_size,
+			    list_size);
+		return FALSE;
+	}
 	size = fu_struct_efi_signature_list_get_size(st);
 	if (size < sizeof(fwupd_guid_t) || size > FU_MB) {
 		g_set_error(error,
@@ -144,6 +154,26 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    "SignatureSize invalid: 0x%x",
 			    size);
 		return FALSE;
+	}
+	if (header_size >= size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid as header_size >= size");
+		return FALSE;
+	}
+	/* validate signatures fit exactly */
+	if (size > 0) {
+		gsize data_size = list_size - 0x1c - header_size;
+		if (data_size % size != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "data size 0x%x not evenly divisible by signature size 0x%x",
+				    (guint)data_size,
+				    size);
+			return FALSE;
+		}
 	}
 
 	/* header is typically unused */
