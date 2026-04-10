@@ -375,6 +375,7 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 				      NULL,
 				      (GDestroyNotify)g_bytes_unref);
 	for (guint i = 0; i < priv->num_regions; i++) {
+		gsize image_end;
 		g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(firmware, i, NULL);
 		g_autoptr(GBytes) blob = NULL;
 
@@ -395,8 +396,15 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 		}
 		g_hash_table_insert(blobs, GUINT_TO_POINTER(i), g_bytes_ref(blob));
 
-		/* check total size */
-		bufsz_max = MAX(fu_firmware_get_addr(img) + g_bytes_get_size(blob), bufsz_max);
+		/* check total size with overflow checking */
+		image_end = fu_firmware_get_addr(img);
+		if (!fu_size_checked_inc(&image_end, g_bytes_get_size(blob), error)) {
+			g_prefix_error(error,
+				       "size overflow for image %s: ",
+				       fu_firmware_get_id(img));
+			return NULL;
+		}
+		bufsz_max = MAX(image_end, bufsz_max);
 	}
 	fu_byte_array_set_size(buf, bufsz_max, 0x00);
 
