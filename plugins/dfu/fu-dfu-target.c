@@ -205,6 +205,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	/* add all the sectors */
 	for (guint i = 0; i < nr_sectors; i++) {
 		FuDfuSector *sector;
+		gsize sector_size_val;
 		sector = fu_dfu_sector_new(*addr + addr_offset,
 					   (guint32)sector_size,
 					   (guint32)((nr_sectors * sector_size) - addr_offset),
@@ -212,7 +213,17 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 					   number,
 					   cap);
 		g_ptr_array_add(priv->sectors, sector);
-		addr_offset += fu_dfu_sector_get_size(sector);
+
+		sector_size_val = fu_dfu_sector_get_size(sector);
+		if (sector_size_val > G_MAXSIZE - addr_offset) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "DFU sector offset overflow at sector %u",
+				    i);
+			return FALSE;
+		}
+		addr_offset += sector_size_val;
 	}
 
 	/* update for next sector */
@@ -862,8 +873,16 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 		if (chunk_tmp == NULL)
 			return NULL;
 
-		/* keep a sum of all the chunks */
+		/* keep a sum of all the chunks with overflow checking */
 		chunk_size = (guint32)g_bytes_get_size(chunk_tmp);
+		if (chunk_size > G_MAXSIZE - total_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "DFU upload total size overflow at chunk #%04x",
+				    idx);
+			return NULL;
+		}
 		total_size += chunk_size;
 		if (total_size > maximum_size)
 			break;
@@ -933,9 +952,16 @@ fu_dfu_target_get_size_of_zone(FuDfuTarget *self, guint16 zone)
 	guint32 len = 0;
 	for (guint i = 0; i < priv->sectors->len; i++) {
 		FuDfuSector *sector = g_ptr_array_index(priv->sectors, i);
+		guint32 sector_size;
 		if (fu_dfu_sector_get_zone(sector) != zone)
 			continue;
-		len += fu_dfu_sector_get_size(sector);
+
+		sector_size = fu_dfu_sector_get_size(sector);
+		if (sector_size > G_MAXUINT32 - len) {
+			g_warning("DFU zone %u size overflow, returning partial size", zone);
+			return G_MAXUINT32;
+		}
+		len += sector_size;
 	}
 	return len;
 }
