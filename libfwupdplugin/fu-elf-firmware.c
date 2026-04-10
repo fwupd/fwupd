@@ -340,7 +340,10 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		fu_firmware_set_offset(img, section_offset);
-		section_offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&section_offset, fu_firmware_get_size(img), error)) {
+			g_prefix_error(error, "section %u offset overflow: ", i);
+			return NULL;
+		}
 	}
 
 	/* build the section header:
