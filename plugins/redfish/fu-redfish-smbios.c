@@ -304,7 +304,10 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	}
 
 	/* check length */
-	offset += FU_STRUCT_REDFISH_SMBIOS_TYPE42_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_REDFISH_SMBIOS_TYPE42_SIZE, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return FALSE;
+	}
 	if (fu_struct_redfish_smbios_type42_get_data_length(st) > 0) {
 		if (!fu_redfish_smbios_parse_interface_data(self, stream, offset, error))
 			return FALSE;
@@ -320,7 +323,10 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 		guint8 protocol_rcds = 0;
 		if (!fu_input_stream_read_u8(stream, offset, &protocol_rcds, error))
 			return FALSE;
-		offset += 1;
+		if (!fu_size_checked_inc(&offset, 1, error)) {
+			g_prefix_error_literal(error, "protocol records offset overflow: ");
+			return FALSE;
+		}
 		g_debug("protocol_rcds: %u", protocol_rcds);
 		for (guint i = 0; i < protocol_rcds; i++) {
 			guint8 protocol_id = 0;
