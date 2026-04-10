@@ -2259,14 +2259,24 @@ fu_dbus_daemon_method_uninhibit(FuDbusDaemon *self,
 				GDBusMethodInvocation *invocation)
 {
 	const gchar *inhibit_id = NULL;
+	const gchar *sender = fu_engine_request_get_sender(request);
 	gboolean found = FALSE;
 
 	g_variant_get(parameters, "(&s)", &inhibit_id);
 
-	/* find by id, then uninhibit device */
+	/* find by id, then verify ownership before uninhibiting */
 	for (guint i = 0; i < self->system_inhibits->len; i++) {
 		FuDbusDaemonSystemInhibit *inhibit = g_ptr_array_index(self->system_inhibits, i);
 		if (g_strcmp0(inhibit->id, inhibit_id) == 0) {
+			/* verify caller is the owner of this inhibit */
+			if (g_strcmp0(inhibit->sender, sender) != 0) {
+				g_dbus_method_invocation_return_error_literal(
+				    invocation,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_PERMISSION_DENIED,
+				    "cannot uninhibit: not the owner");
+				return;
+			}
 			g_ptr_array_remove_index(self->system_inhibits, i);
 			fu_dbus_daemon_ensure_system_inhibit(self);
 			found = TRUE;
