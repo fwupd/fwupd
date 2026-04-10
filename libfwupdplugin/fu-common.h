@@ -111,6 +111,9 @@ fu_size_checked_add(gsize a, gsize b);
 gboolean
 fu_size_checked_inc(gsize *value, gsize len, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+gboolean
+fu_size_from_uint64(guint64 value, gsize *out, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(2);
 
 typedef struct {
 	guint value;

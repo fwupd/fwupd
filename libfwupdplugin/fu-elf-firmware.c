@@ -43,6 +43,8 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 {
 	gsize offset_secthdr = 0;
 	gsize offset_proghdr = 0;
+	gsize phoff_safe = 0;
+	gsize shoff_safe = 0;
 	guint16 phentsize;
 	guint16 phnum;
 	guint16 shnum;
@@ -57,7 +59,12 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse each program header, unused here */
-	offset_proghdr += fu_struct_elf_file_header64le_get_phoff(st_fhdr);
+	if (!fu_size_from_uint64(fu_struct_elf_file_header64le_get_phoff(st_fhdr),
+				 &phoff_safe,
+				 error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_proghdr, phoff_safe, error))
+		return FALSE;
 	phentsize = fu_struct_elf_file_header64le_get_phentsize(st_fhdr);
 	phnum = fu_struct_elf_file_header64le_get_phnum(st_fhdr);
 	for (guint i = 0; i < phnum; i++) {
@@ -65,11 +72,17 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		    fu_struct_elf_program_header64le_parse_stream(stream, offset_proghdr, error);
 		if (st_phdr == NULL)
 			return FALSE;
-		offset_proghdr += phentsize;
+		if (!fu_size_checked_inc(&offset_proghdr, phentsize, error))
+			return FALSE;
 	}
 
 	/* parse all the sections ahead of time */
-	offset_secthdr += fu_struct_elf_file_header64le_get_shoff(st_fhdr);
+	if (!fu_size_from_uint64(fu_struct_elf_file_header64le_get_shoff(st_fhdr),
+				 &shoff_safe,
+				 error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_secthdr, shoff_safe, error))
+		return FALSE;
 	shnum = fu_struct_elf_file_header64le_get_shnum(st_fhdr);
 	for (guint i = 0; i < shnum; i++) {
 		g_autoptr(FuStructElfSectionHeader64le) st_shdr =
@@ -77,7 +90,10 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		if (st_shdr == NULL)
 			return FALSE;
 		g_ptr_array_add(sections, g_steal_pointer(&st_shdr));
-		offset_secthdr += fu_struct_elf_file_header64le_get_shentsize(st_fhdr);
+		if (!fu_size_checked_inc(&offset_secthdr,
+					 fu_struct_elf_file_header64le_get_shentsize(st_fhdr),
+					 error))
+			return FALSE;
 	}
 
 	/* add sections as images */
@@ -85,7 +101,15 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		FuStructElfSectionHeader64le *st_shdr = g_ptr_array_index(sections, i);
 		guint64 sect_offset = fu_struct_elf_section_header64le_get_offset(st_shdr);
 		guint64 sect_size = fu_struct_elf_section_header64le_get_size(st_shdr);
+		gsize sect_offset_safe = 0;
+		gsize sect_size_safe = 0;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
+
+		/* validate values fit in gsize to prevent truncation on 32-bit platforms */
+		if (!fu_size_from_uint64(sect_offset, &sect_offset_safe, error))
+			return FALSE;
+		if (!fu_size_from_uint64(sect_size, &sect_size_safe, error))
+			return FALSE;
 
 		/* catch the strtab */
 		if (i == fu_struct_elf_file_header64le_get_shstrndx(st_fhdr)) {
@@ -101,8 +125,8 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 			}
 			shstrndx_buf = fu_input_stream_read_byte_array(stream,
-								       sect_offset,
-								       sect_size,
+								       sect_offset_safe,
+								       sect_size_safe,
 								       NULL,
 								       error);
 			if (shstrndx_buf == NULL)
@@ -115,11 +139,14 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		    fu_struct_elf_section_header64le_get_type(st_shdr) ==
 			FU_ELF_SECTION_HEADER_TYPE_STRTAB)
 			continue;
-		if (sect_size > 0) {
+		if (sect_size_safe > 0) {
 			g_autoptr(GInputStream) img_stream =
-			    fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
+			    fu_partial_input_stream_new(stream,
+							sect_offset_safe,
+							sect_size_safe,
+							error);
 			if (img_stream == NULL) {
-				g_prefix_error_literal(error, "failed to cut EFI image: ");
+				g_prefix_error_literal(error, "failed to cut ELF image: ");
 				return FALSE;
 			}
 			if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
