@@ -28,7 +28,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	gsize offset_hdr;
 	gsize offset_payload = FW_HEADER_SIZE;
 	guint32 checksum = 0;
-	guint32 firmware_size;
+	gsize firmware_size;
 	guint8 subsys_num;
 	guint8 cfg_ver = 0;
 	gsize bufsz = 0;

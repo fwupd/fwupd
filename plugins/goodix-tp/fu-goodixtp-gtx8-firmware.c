@@ -165,6 +165,16 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 					cfg_ver);
 				break;
 			}
+
+			/* sanity check */
+			if (sub_cfg_len > G_MAXUINT - cfg_offset) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "overflow at sub-config %u",
+					    i);
+				return FALSE;
+			}
 			cfg_offset += sub_cfg_len;
 			sub_cfg_info_pos += 3;
 		}
