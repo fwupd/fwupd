@@ -225,14 +225,16 @@ fu_cpu_get_attrs(FuPathStore *pstore, GError **error)
 		g_auto(GStrv) lines = fu_strsplit(buf, bufsz, "\n", -1);
 		for (guint i = 0; lines[i] != NULL; i++) {
 			g_auto(GStrv) tokens = NULL;
+			g_autofree gchar *key = NULL;
 			if (lines[i][0] == '\0')
 				break;
 			tokens = g_strsplit(lines[i], ": ", 2);
-			for (guint j = 0; tokens[j] != NULL; j++) {
-				g_hash_table_insert(hash,
-						    fu_strstrip(tokens[0]),
-						    g_strdup(tokens[1]));
-			}
+			if (g_strv_length(tokens) != 2)
+				continue;
+			key = fu_strstrip(tokens[0]);
+			if (key == NULL)
+				continue;
+			g_hash_table_insert(hash, g_steal_pointer(&key), g_strdup(tokens[1]));
 		}
 	}
 
