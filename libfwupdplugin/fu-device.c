@@ -7645,9 +7645,19 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no progress");
 		return FALSE;
 	}
+	if (fwupd_request_get_kind(request) < FWUPD_REQUEST_KIND_LAST) {
+		FwupdRequestKind kind = fwupd_request_get_kind(request);
+		if (priv->request_cnts[kind] == G_MAXUINT) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "request counter overflow for kind %u",
+				    kind);
+			return FALSE;
+		}
+		priv->request_cnts[kind]++;
+	}
 	g_signal_emit(self, signals[SIGNAL_REQUEST], 0, request);
-	if (fwupd_request_get_kind(request) < FWUPD_REQUEST_KIND_LAST)
-		priv->request_cnts[fwupd_request_get_kind(request)]++;
 	return TRUE;
 }
 
