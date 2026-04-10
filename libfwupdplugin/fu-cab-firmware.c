@@ -629,13 +629,21 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		helper->ndatabsz = streamsz;
 
 	/* reserved sizes */
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return FALSE;
+	}
+
 	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
 		g_autoptr(FuStructCabHeaderReserve) st2 = NULL;
 		st2 = fu_struct_cab_header_reserve_parse_stream(stream, offset, error);
 		if (st2 == NULL)
 			return FALSE;
-		offset += st2->buf->len;
+		if (!fu_size_checked_inc(&offset, st2->buf->len, error)) {
+			g_prefix_error_literal(error, "header reserve offset overflow: ");
+			return FALSE;
+		}
+
 		if (!fu_size_checked_inc(&offset,
 					 fu_struct_cab_header_reserve_get_rsvd_hdr(st2),
 					 error))
