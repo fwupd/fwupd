@@ -20,6 +20,9 @@
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
 
+#define FU_ENGINE_BKC_MAX_TAGS	   100
+#define FU_ENGINE_BKC_MAX_RELEASES 1000
+
 void
 fu_engine_add_firmware_gtypes(FuEngine *self)
 {
@@ -36,12 +39,33 @@ fu_engine_get_release_with_tag(FuEngine *self,
 			       GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
-	g_auto(GStrv) host_bkcs = g_strsplit(host_bkc, ",", -1);
+	g_auto(GStrv) host_bkcs = NULL;
 
 	/* find the newest release that matches */
 	rels = fu_engine_get_releases(self, request, fwupd_device_get_id(dev), error);
 	if (rels == NULL)
 		return NULL;
+
+	/* sanity check: reject unreasonable release counts */
+	if (rels->len > FU_ENGINE_BKC_MAX_RELEASES) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "device has unreasonable release count: %u (max %u)",
+			    rels->len,
+			    (guint)FU_ENGINE_BKC_MAX_RELEASES);
+		return NULL;
+	}
+
+	host_bkcs = g_strsplit(host_bkc, ",", FU_ENGINE_BKC_MAX_TAGS);
+	if (g_strv_length(host_bkcs) == FU_ENGINE_BKC_MAX_TAGS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "host has unreasonable BKC count: %u",
+			    (guint)FU_ENGINE_BKC_MAX_TAGS);
+		return NULL;
+	}
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index(rels, i);
 		for (guint j = 0; host_bkcs[j] != NULL; j++) {
