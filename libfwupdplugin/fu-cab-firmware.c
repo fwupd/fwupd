@@ -191,7 +191,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    "mismatched compressed data");
 		return FALSE;
 	}
-	helper->size_total += blob_uncomp;
+	if (!fu_size_checked_inc(&helper->size_total, blob_uncomp, error))
+		return FALSE;
 	if (size_max > 0 && helper->size_total > size_max) {
 		g_autofree gchar *sz_val = g_format_size(helper->size_total);
 		g_autofree gchar *sz_max = g_format_size(size_max);
