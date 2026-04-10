@@ -205,7 +205,10 @@ fu_protobuf_get_varint_raw(FuProtobuf *self, guint64 *value, gsize *offset, GErr
 		guint8 tmp = 0;
 		if (!fu_memread_uint8_safe(self->buf->data, self->buf->len, *offset, &tmp, error))
 			return FALSE;
-		*offset += 1;
+		if (!fu_size_checked_inc(offset, 1, error)) {
+			g_prefix_error_literal(error, "protobuf varint offset overflow: ");
+			return FALSE;
+		}
 		value_tmp += (guint64)(tmp & 0b01111111) << i * 7;
 		if ((tmp & 0b10000000) == 0)
 			break;
@@ -230,7 +233,12 @@ fu_protobuf_get_tag(FuProtobuf *self,
 		return FALSE;
 	*wire_type = tag & 0b111;
 	*fnum = tag >> 3;
-	*offset += 1;
+	if (!fu_size_checked_inc(offset, 1, error)) {
+		g_prefix_error_literal(error, "protobuf tag offset overflow: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -291,7 +299,11 @@ fu_protobuf_process(FuProtobuf *self,
 				}
 				return callbacks->int64(self, data, &offset, error);
 			}
-			offset += sizeof(guint64);
+			if (!fu_size_checked_inc(&offset, sizeof(guint64), error)) {
+				g_prefix_error_literal(error,
+						       "protobuf int64 skip offset overflow: ");
+				return FALSE;
+			}
 		} else if (wire_type == FU_PROTOBUF_WIRE_TYPE_LEN) {
 			guint64 lensz = 0;
 			if (fnum == field_number_tmp) {
@@ -327,7 +339,11 @@ fu_protobuf_process(FuProtobuf *self,
 				}
 				return callbacks->int32(self, data, &offset, error);
 			}
-			offset += sizeof(guint32);
+			if (!fu_size_checked_inc(&offset, sizeof(guint32), error)) {
+				g_prefix_error_literal(error,
+						       "protobuf int32 skip offset overflow: ");
+				return FALSE;
+			}
 		} else {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -366,7 +382,12 @@ fu_protobuf_get_uint64_int64_cb(FuProtobuf *self, gpointer data, gsize *offset, 
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	*offset += sizeof(guint64);
+	if (!fu_size_checked_inc(offset, sizeof(guint64), error)) {
+		g_prefix_error_literal(error, "protobuf int64 read offset overflow: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -383,7 +404,12 @@ fu_protobuf_get_uint64_int32_cb(FuProtobuf *self, gpointer data, gsize *offset, 
 				    error))
 		return FALSE;
 	*value = value_tmp;
-	*offset += sizeof(guint32);
+	if (!fu_size_checked_inc(offset, sizeof(guint32), error)) {
+		g_prefix_error_literal(error, "protobuf int32 read offset overflow: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
