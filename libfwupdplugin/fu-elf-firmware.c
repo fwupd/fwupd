@@ -217,32 +217,42 @@ fu_elf_firmware_strtab_entry_free(FuElfFirmwareStrtabEntry *entry)
 	g_free(entry);
 }
 
-static void
-fu_elf_firmware_strtab_insert(GPtrArray *strtab, const gchar *name)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuElfFirmwareStrtabEntry, fu_elf_firmware_strtab_entry_free)
+
+static gboolean
+fu_elf_firmware_strtab_insert(GPtrArray *strtab, const gchar *name, GError **error)
 {
-	FuElfFirmwareStrtabEntry *entry = g_new0(FuElfFirmwareStrtabEntry, 1);
+	g_autoptr(FuElfFirmwareStrtabEntry) entry = g_new0(FuElfFirmwareStrtabEntry, 1);
 	gsize offset = 0;
 
-	g_return_if_fail(name != NULL);
+	g_return_val_if_fail(name != NULL, FALSE);
 
 	/* get the previous entry */
 	if (strtab->len > 0) {
 		FuElfFirmwareStrtabEntry *entry_old = g_ptr_array_index(strtab, strtab->len - 1);
-		offset += entry_old->offset + entry_old->namesz;
+		gsize offset_tmp = entry_old->offset;
+		if (!fu_size_checked_inc(&offset_tmp, entry_old->namesz, error)) {
+			g_prefix_error_literal(error, "string table offset overflow: ");
+			return FALSE;
+		}
+		offset = offset_tmp;
 	}
 	entry->namesz = strlen(name) + 1; /* with NUL */
 	entry->name = g_strdup(name);
 	entry->offset = offset;
-	g_ptr_array_add(strtab, entry);
+	g_ptr_array_add(strtab, g_steal_pointer(&entry));
+	return TRUE;
 }
 
 static GPtrArray *
-fu_elf_firmware_strtab_new(void)
+fu_elf_firmware_strtab_new(GError **error)
 {
 	g_autoptr(GPtrArray) strtab =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_elf_firmware_strtab_entry_free);
-	fu_elf_firmware_strtab_insert(strtab, "");
-	fu_elf_firmware_strtab_insert(strtab, ".shstrtab");
+	if (!fu_elf_firmware_strtab_insert(strtab, "", error))
+		return NULL;
+	if (!fu_elf_firmware_strtab_insert(strtab, ".shstrtab", error))
+		return NULL;
 	return g_steal_pointer(&strtab);
 }
 
@@ -280,7 +290,7 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) section_hdr = g_byte_array_new();
 	g_autoptr(GByteArray) shstrtab = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
-	g_autoptr(GPtrArray) strtab = fu_elf_firmware_strtab_new();
+	g_autoptr(GPtrArray) strtab = NULL;
 
 	/* build the string table:
 	 *
@@ -288,6 +298,9 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	 *    .text\0
 	 *    .rodata\0
 	 */
+	strtab = fu_elf_firmware_strtab_new(error);
+	if (strtab == NULL)
+		return NULL;
 	imgs = fu_firmware_get_images(firmware);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -299,7 +312,8 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 				    (guint)fu_firmware_get_idx(img));
 			return NULL;
 		}
-		fu_elf_firmware_strtab_insert(strtab, fu_firmware_get_id(img));
+		if (!fu_elf_firmware_strtab_insert(strtab, fu_firmware_get_id(img), error))
+			return NULL;
 	}
 	shstrtab = fu_elf_firmware_strtab_write(strtab);
 
