@@ -27,11 +27,16 @@ static gboolean
 fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size, GError **error)
 {
 	for (gsize i = 0; i < extra_size; i += FU_STRUCT_ZIP_EXTRA_HDR_SIZE) {
+		guint32 datasz;
 		g_autoptr(FuStructZipExtraHdr) st_ehdr = NULL;
 		st_ehdr = fu_struct_zip_extra_hdr_parse_stream(stream, offset + i, error);
 		if (st_ehdr == NULL)
 			return FALSE;
-		i += fu_struct_zip_extra_hdr_get_datasz(st_ehdr);
+		datasz = fu_struct_zip_extra_hdr_get_datasz(st_ehdr);
+		if (!fu_size_checked_inc(&i, datasz, error)) {
+			g_prefix_error_literal(error, "extra field size overflow: ");
+			return FALSE;
+		}
 		if (i > FU_ZIP_FIRMWARE_EXTRA_MAX) {
 			g_set_error(error,
 				    FWUPD_ERROR,
