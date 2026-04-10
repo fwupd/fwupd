@@ -311,9 +311,13 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 				    "invalid number of sections");
 		return FALSE;
 	}
-	strtab_offset = fu_struct_pe_coff_file_header_get_pointer_to_symbol_table(st_coff) +
-			fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff) *
-			    FU_STRUCT_PE_COFF_SYMBOL_SIZE;
+	strtab_offset = fu_struct_pe_coff_file_header_get_pointer_to_symbol_table(st_coff);
+	if (!fu_size_checked_inc(
+		&strtab_offset,
+		(gsize)fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff) *
+		    FU_STRUCT_PE_COFF_SYMBOL_SIZE,
+		error))
+		return FALSE;
 
 	/* read out each section */
 	for (guint idx = 0; idx < nr_sections; idx++) {
