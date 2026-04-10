@@ -132,9 +132,14 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 	if (self->items->len > 0) {
 		FuCompositeInputStreamItem *item_last =
 		    g_ptr_array_index(self->items, self->items->len - 1);
-		global_offset = item_last->global_offset +
-				fu_partial_input_stream_get_size(
-				    FU_PARTIAL_INPUT_STREAM(item_last->partial_stream));
+		gsize last_size = fu_partial_input_stream_get_size(
+		    FU_PARTIAL_INPUT_STREAM(item_last->partial_stream));
+
+		/* calculate global offset with overflow checking */
+		if (!g_size_checked_add(&global_offset, item_last->global_offset, last_size)) {
+			g_critical("composite stream global offset overflow");
+			return;
+		}
 	}
 
 	/* add a new item */
@@ -143,7 +148,17 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 	item->global_offset = global_offset;
 
 	g_debug("adding partial stream global_offset:0x%x", (guint)item->global_offset);
-	self->total_size += fu_partial_input_stream_get_size(item->partial_stream);
+
+	/* increment total size with overflow checking */
+	if (!g_size_checked_add(&self->total_size,
+				self->total_size,
+				fu_partial_input_stream_get_size(item->partial_stream))) {
+		g_critical("composite stream total size overflow");
+		g_object_unref(item->partial_stream);
+		g_free(item);
+		return;
+	}
+
 	g_ptr_array_add(self->items, item);
 }
 
