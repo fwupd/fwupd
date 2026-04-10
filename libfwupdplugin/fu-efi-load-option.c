@@ -319,7 +319,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	/* parse UTF-16 description */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	for (; offset < streamsz; offset += 2) {
+	while (offset < streamsz) {
 		guint16 tmp = 0;
 		if (buf_utf16->len > FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX) {
 			g_set_error(error,
@@ -334,6 +334,12 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 		if (tmp == 0)
 			break;
 		fu_byte_array_append_uint16(buf_utf16, tmp, G_LITTLE_ENDIAN);
+
+		/* next */
+		if (!fu_size_checked_inc(&offset, 2, error)) {
+			g_prefix_error_literal(error, "description offset overflow: ");
+			return FALSE;
+		}
 	}
 	id = fu_utf16_to_utf8_byte_array(buf_utf16, G_LITTLE_ENDIAN, error);
 	if (id == NULL)
