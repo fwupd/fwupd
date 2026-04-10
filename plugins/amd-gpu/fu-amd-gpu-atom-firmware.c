@@ -104,7 +104,10 @@ fu_amd_gpu_atom_firmware_parse_vbios_version(FuAmdGpuAtomFirmware *self,
 	}
 
 	/* skip anchor */
-	offset += sizeof(BIOS_VERSION_PREFIX) - 1;
+	if (!fu_size_checked_inc(&offset, sizeof(BIOS_VERSION_PREFIX) - 1, error)) {
+		g_prefix_error_literal(error, "version offset overflow: ");
+		return FALSE;
+	}
 
 	version = fu_memstrsafe(buf, bufsz, offset, BIOS_STRING_LENGTH, error);
 	if (version == NULL)
