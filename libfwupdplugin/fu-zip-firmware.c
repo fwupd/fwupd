@@ -276,6 +276,19 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
+	/* check file count before parsing to prevent DoS */
+	if (fu_firmware_get_images_max(FU_FIRMWARE(self)) > 0 &&
+	    fu_struct_zip_eocd_get_cd_number(st_eocd) >
+		fu_firmware_get_images_max(FU_FIRMWARE(self))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "too many files in ZIP: %u exceeds maximum of %u",
+			    fu_struct_zip_eocd_get_cd_number(st_eocd),
+			    fu_firmware_get_images_max(FU_FIRMWARE(self)));
+		return FALSE;
+	}
+
 	/* parse central directory file header */
 	offset = fu_struct_zip_eocd_get_cd_offset(st_eocd);
 	for (guint i = 0; i < fu_struct_zip_eocd_get_cd_number(st_eocd); i++) {
