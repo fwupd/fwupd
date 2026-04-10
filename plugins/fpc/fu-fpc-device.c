@@ -447,7 +447,10 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 	if (stream == NULL)
 		return FALSE;
 	blocks_num = fu_fpc_ff2_firmware_get_blocks_num(firmware);
-	offset += FU_STRUCT_FPC_FF2_HDR_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_FPC_FF2_HDR_SIZE, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return FALSE;
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -463,13 +466,24 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 		if (st_blkhdr == NULL)
 			return FALSE;
 		direction = fu_struct_fpc_ff2_block_hdr_get_dir(st_blkhdr);
-		offset += st_blkhdr->buf->len;
+		if (!fu_size_checked_inc(&offset, st_blkhdr->buf->len, error)) {
+			g_prefix_error(error, "block %u header offset overflow: ", i);
+			return FALSE;
+		}
 
 		/* validate dfu_sec_link_t and include the size in payload */
 		st_blksec = fu_struct_fpc_ff2_block_sec_parse_stream(stream, offset, error);
 		if (st_blksec == NULL)
 			return FALSE;
 		payload_len = fu_struct_fpc_ff2_block_sec_get_payload_len(st_blksec);
+		if (st_blksec->buf->len > (guint)G_MAXUINT16 - payload_len) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "block %u payload length overflow",
+				    i);
+			return FALSE;
+		}
 		payload_len += st_blksec->buf->len;
 
 		if (direction == FU_FPC_FF2_BLOCK_DIR_OUT) {
