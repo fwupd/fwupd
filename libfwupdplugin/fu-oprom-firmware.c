@@ -199,11 +199,15 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob_cpd = NULL;
 
 	/* the smallest each image (and header) can be is 512 bytes */
-	image_size += fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_512);
+	image_size = fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_512);
 	blob_cpd = fu_firmware_get_image_by_id_bytes(firmware, "cpd", NULL);
 	if (blob_cpd != NULL) {
-		image_size +=
+		gsize cpd_size =
 		    fu_common_align_up(g_bytes_get_size(blob_cpd), FU_FIRMWARE_ALIGNMENT_512);
+		if (!fu_size_checked_inc(&image_size, cpd_size, error)) {
+			g_prefix_error_literal(error, "overflow calculating OptionROM size: ");
+			return NULL;
+		}
 	}
 
 	/* write the header */
