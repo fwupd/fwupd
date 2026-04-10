@@ -50,7 +50,10 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 				(guint)offset,
 				(guint)streamsz,
 				error_local->message);
-			offset += 4 * FU_KB;
+			if (!fu_size_checked_inc(&offset, 4 * FU_KB, error)) {
+				g_prefix_error_literal(error, "BIOS volume scan offset overflow: ");
+				return FALSE;
+			}
 			continue;
 		}
 		if (fu_firmware_get_size(firmware_tmp) < 0x800) {
