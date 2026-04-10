@@ -54,6 +54,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 {
 	FuZipCompression compression;
 	gsize offset = fu_struct_zip_cdfh_get_offset_lfh(st_cdfh);
+	guint16 lfh_flags;
 	guint32 actual_crc = 0xFFFFFFFF;
 	guint32 compressed_size;
 	guint32 uncompressed_size;
@@ -97,9 +98,12 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		return NULL;
 
 	/* read crc */
-	uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
-	if (uncompressed_crc == 0x0)
+	lfh_flags = fu_struct_zip_lfh_get_flags(st_lfh);
+	if (lfh_flags & FU_ZIP_FLAG_DATA_DESCRIPTOR) {
 		uncompressed_crc = fu_struct_zip_cdfh_get_uncompressed_crc(st_cdfh);
+	} else {
+		uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
+	}
 
 	/* read data */
 	compressed_size = fu_struct_zip_lfh_get_compressed_size(st_lfh);
