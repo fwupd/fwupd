@@ -125,7 +125,13 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 				    "number of areas invalid");
 		return FALSE;
 	}
-	offset += st_hdr->buf->len;
+
+	/* add header size with overflow checking */
+	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
+		g_prefix_error_literal(error, "FMAP header offset overflow: ");
+		return FALSE;
+	}
+
 	for (gsize i = 0; i < nareas; i++) {
 		guint32 area_offset;
 		guint32 area_size;
@@ -173,7 +179,12 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_addr(img, area_offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += st_area->buf->len;
+
+		/* add area size with overflow checking */
+		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
+			g_prefix_error(error, "FMAP area %zu offset overflow: ", i);
+			return FALSE;
+		}
 	}
 
 	/* success */
