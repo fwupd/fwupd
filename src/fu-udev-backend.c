@@ -485,6 +485,10 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		if (kvstr == NULL)
 			return FALSE;
 		kv = g_strsplit(kvstr, "=", 2);
+		if (g_strv_length(kv) != 2) {
+			i += strlen(kvstr);
+			continue;
+		}
 		if (g_strcmp0(kv[0], "ACTION") == 0) {
 			action = fu_udev_action_from_string(kv[1]);
 			if (action == FU_UDEV_ACTION_UNKNOWN) {
@@ -579,6 +583,13 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 #else
 	g_auto(GStrv) split = fu_strsplit_bytes(blob, "@", 2);
 
+	if (g_strv_length(split) != 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid uevent format");
+		return FALSE;
+	}
 	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
 	if (sysfsdir == NULL)
 		return FALSE;
