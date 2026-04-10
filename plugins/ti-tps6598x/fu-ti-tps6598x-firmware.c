@@ -45,7 +45,10 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GInputStream) stream_sig = NULL;
 
 	/* skip magic */
-	offset += 0x4;
+	if (!fu_size_checked_inc(&offset, 0x4, error)) {
+		g_prefix_error_literal(error, "magic offset overflow: ");
+		return FALSE;
+	}
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 
@@ -59,7 +62,10 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_id(img_pubkey, "pubkey");
 	if (!fu_firmware_add_image(firmware, img_pubkey, error))
 		return FALSE;
-	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE, error)) {
+		g_prefix_error_literal(error, "public key offset overflow: ");
+		return FALSE;
+	}
 
 	/* RSA signature */
 	stream_sig =
@@ -71,7 +77,10 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
 	if (!fu_firmware_add_image(firmware, img_sig, error))
 		return FALSE;
-	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE, error)) {
+		g_prefix_error_literal(error, "TI TPS6598x signature offset overflow: ");
+		return FALSE;
+	}
 
 	/* payload */
 	stream_payload = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
