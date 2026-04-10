@@ -166,7 +166,20 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 			offset,
 			chunk_size);
 		g_ptr_array_add(chunks, chunk_tmp);
-		total_size += chunk_size;
+		if (!fu_size_checked_inc(&total_size, chunk_size, error)) {
+			g_prefix_error(error, "size overflow at chunk #%04x: ", idx);
+			return NULL;
+		}
+
+		/* sanity check */
+		if (chunk_size > G_MAXUINT32 - offset) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "offset overflow at chunk #%04x",
+				    idx);
+			return NULL;
+		}
 		offset += chunk_size;
 
 		/* update UI */
