@@ -207,21 +207,27 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* add header */
-	total_sz = offset = st_hdr->buf->len + (FU_STRUCT_FMAP_AREA_SIZE * images->len);
+	total_sz = st_hdr->buf->len;
+	if (!fu_size_checked_inc(&total_sz, FU_STRUCT_FMAP_AREA_SIZE * images->len, error))
+		return NULL;
+	offset = total_sz;
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
 		if (fw == NULL)
 			continue;
-		total_sz += g_bytes_get_size(fw);
+		if (!fu_size_checked_inc(&total_sz, g_bytes_get_size(fw), error))
+			return NULL;
 	}
 
 	/* header */
+	if (!fu_size_checked_inc(&total_sz, priv->signature_offset, error))
+		return NULL;
 	fu_struct_fmap_set_ver_major(st_hdr, priv->ver_major);
 	fu_struct_fmap_set_ver_minor(st_hdr, priv->ver_minor);
 	fu_struct_fmap_set_base(st_hdr, fu_firmware_get_addr(firmware));
 	fu_struct_fmap_set_nareas(st_hdr, images->len);
-	fu_struct_fmap_set_size(st_hdr, priv->signature_offset + total_sz);
+	fu_struct_fmap_set_size(st_hdr, total_sz);
 	fu_byte_array_append_array(buf, st_hdr->buf);
 
 	/* add each area */
