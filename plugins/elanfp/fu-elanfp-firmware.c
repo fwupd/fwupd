@@ -65,7 +65,8 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* read indexes */
-	offset += 0x10;
+	if (!fu_size_checked_inc(&offset, 0x10, error))
+		return FALSE;
 	while (1) {
 		guint32 start_addr = 0;
 		guint32 length = 0;
@@ -143,7 +144,10 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
-		offset += 0x10;
+		if (!fu_size_checked_inc(&offset, 0x10, error)) {
+			g_prefix_error_literal(error, "index offset overflow: ");
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -165,7 +169,15 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
 
 	/* S2F_INDEX */
-	offset += 0x10 + ((imgs->len + 1) * 0x10);
+	if (!fu_size_checked_inc(&offset, (imgs->len + 1) * 0x10, error)) {
+		g_prefix_error_literal(error, "index size overflow: ");
+		return NULL;
+	}
+	if (!fu_size_checked_inc(&offset, 0x10, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return NULL;
+	}
+
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		g_autoptr(GBytes) blob = fu_firmware_write(img, error);
@@ -175,7 +187,10 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
 		fu_byte_array_append_uint32(buf, offset, G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint32(buf, g_bytes_get_size(blob), G_LITTLE_ENDIAN);
-		offset += g_bytes_get_size(blob);
+		if (!fu_size_checked_inc(&offset, g_bytes_get_size(blob), error)) {
+			g_prefix_error(error, "image %u offset overflow: ", i);
+			return NULL;
+		}
 	}
 
 	/* end of index */
