@@ -150,8 +150,8 @@ fu_fit_firmware_verify_checksum(FuFitFirmware *self,
 		return FALSE;
 	}
 	g_checksum_update(checksum,
-			  (const guchar *)g_bytes_get_data(value, NULL),
-			  g_bytes_get_size(value));
+			  (const guchar *)g_bytes_get_data(blob, NULL),
+			  g_bytes_get_size(blob));
 	g_checksum_get_digest(checksum, buf, &digest_len);
 	value_calc = g_bytes_new(buf, digest_len);
 	if (!fu_bytes_compare(value, value_calc, error))
