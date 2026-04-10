@@ -256,7 +256,10 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to read COFF header: ");
 		return FALSE;
 	}
-	offset += st_coff->buf->len;
+	if (!fu_size_checked_inc(&offset, st_coff->buf->len, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return FALSE;
+	}
 
 	regions = g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_region_free);
 
@@ -367,7 +370,10 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to read section 0x%x: ", idx);
 			return FALSE;
 		}
-		offset += FU_STRUCT_PE_COFF_SECTION_SIZE;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_PE_COFF_SECTION_SIZE, error)) {
+			g_prefix_error(error, "section %u offset overflow: ", idx);
+			return FALSE;
+		}
 	}
 
 	/* make sure ordered by address */
