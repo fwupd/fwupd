@@ -182,7 +182,8 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			    (guint)FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 		return FALSE;
 	}
-	offset += fu_struct_ifwi_cpd_get_header_length(st_hdr);
+	if (!fu_size_checked_inc(&offset, fu_struct_ifwi_cpd_get_header_length(st_hdr), error))
+		return FALSE;
 	for (guint32 i = 0; i < num_of_entries; i++) {
 		guint32 img_offset = 0;
 		g_autofree gchar *id = NULL;
@@ -234,7 +235,8 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		/* success */
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += st_ent->buf->len;
+		if (!fu_size_checked_inc(&offset, st_ent->buf->len, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -259,8 +261,10 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_ifwi_cpd_set_crc32(st, 0x0);
 
 	/* fixup the image offsets */
-	offset += st->buf->len;
-	offset += FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&offset, (gsize)FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len, error))
+		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		g_autoptr(GBytes) blob = NULL;
@@ -271,7 +275,10 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		}
 		fu_firmware_set_offset(img, offset);
-		offset += g_bytes_get_size(blob);
+		if (!fu_size_checked_inc(&offset, g_bytes_get_size(blob), error)) {
+			g_prefix_error(error, "offset overflow for entry %u: ", i);
+			return NULL;
+		}
 	}
 
 	/* add entry headers */
