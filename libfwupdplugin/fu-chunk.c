@@ -433,6 +433,7 @@ fu_chunk_array_new(const guint8 *data,
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
+	g_return_val_if_fail(packet_sz > 0, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	while (offset < data_sz) {
