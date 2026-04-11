@@ -1036,17 +1036,21 @@ fu_dbus_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
 					gpointer user_data)
 {
 	FuDbusDaemon *self = FU_DBUS_DAEMON(user_data);
+	g_autoptr(GPtrArray) inhibits = g_ptr_array_new();
+
 	for (guint i = 0; i < self->system_inhibits->len; i++) {
 		FuDbusDaemonSystemInhibit *inhibit = g_ptr_array_index(self->system_inhibits, i);
-		if (g_strcmp0(inhibit->sender, name) == 0) {
-			g_debug("removing %s as %s vanished without calling Uninhibit",
-				inhibit->id,
-				name);
-			g_ptr_array_remove_index(self->system_inhibits, i);
-			fu_dbus_daemon_ensure_system_inhibit(self);
-			break;
-		}
+		if (g_strcmp0(inhibit->sender, name) == 0)
+			g_ptr_array_add(inhibits, inhibit);
 	}
+	if (inhibits->len == 0)
+		return;
+	for (guint i = 0; i < inhibits->len; i++) {
+		FuDbusDaemonSystemInhibit *inhibit = g_ptr_array_index(inhibits, i);
+		g_debug("removing %s as %s vanished without calling Uninhibit", inhibit->id, name);
+		g_ptr_array_remove(self->system_inhibits, inhibit);
+	}
+	fu_dbus_daemon_ensure_system_inhibit(self);
 }
 
 #ifdef HAVE_GIO_UNIX
