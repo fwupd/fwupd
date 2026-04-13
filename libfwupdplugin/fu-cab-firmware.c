@@ -30,8 +30,9 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_cab_firmware_get_instance_private(o))
 
-#define FU_CAB_FIRMWARE_MAX_FILES   1024
-#define FU_CAB_FIRMWARE_MAX_FOLDERS 64
+#define FU_CAB_FIRMWARE_MAX_FILES    1024
+#define FU_CAB_FIRMWARE_MAX_FOLDERS  64
+#define FU_CAB_FIRMWARE_MAX_FILENAME 1000
 
 #define FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ 0x4000 /* bytes */
 
@@ -462,8 +463,15 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	/* parse filename */
 	if (!fu_size_checked_inc(offset, FU_STRUCT_CAB_FILE_SIZE, error))
 		return FALSE;
-	for (guint i = 0; i < 255; i++) {
+	for (guint i = 0;; i++) {
 		guint8 value = 0;
+		if (i >= FU_CAB_FIRMWARE_MAX_FILENAME) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "filename exceeds maximum length");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_u8(helper->stream, *offset + i, &value, error))
 			return FALSE;
 		if (value == 0)
