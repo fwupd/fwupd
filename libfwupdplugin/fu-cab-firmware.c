@@ -717,7 +717,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize archive_size;
 	gsize offset;
-	guint32 index_into = 0;
+	gsize index_into = 0;
 	g_autoptr(FuStructCabHeader) st_hdr = fu_struct_cab_header_new();
 	g_autoptr(FuStructCabFolder) st_folder = fu_struct_cab_folder_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
@@ -872,7 +872,18 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 			fattr |= FU_CAB_FILE_ATTRIBUTE_NAME_UTF8;
 		fu_struct_cab_file_set_fattr(st_file, fattr);
 		fu_struct_cab_file_set_usize(st_file, g_bytes_get_size(img_blob));
-		fu_struct_cab_file_set_uoffset(st_file, index_into);
+
+		/* validate offset fits */
+		if (index_into > G_MAXUINT32) {
+			g_autofree gchar *sz_val = g_format_size(index_into);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "file offset %s exceeds CAB format limit",
+				    sz_val);
+			return NULL;
+		}
+		fu_struct_cab_file_set_uoffset(st_file, (guint32)index_into);
 		if (created != NULL) {
 			fu_struct_cab_file_set_date(st_file,
 						    ((g_date_time_get_year(created) - 1980) << 9) +
@@ -889,7 +900,11 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 				    (const guint8 *)filename_win32,
 				    strlen(filename_win32));
 		fu_byte_array_append_uint8(st_hdr->buf, 0x0);
-		index_into += g_bytes_get_size(img_blob);
+
+		if (!fu_size_checked_inc(&index_into, g_bytes_get_size(img_blob), error)) {
+			g_prefix_error_literal(error, "file offset overflow: ");
+			return NULL;
+		}
 	}
 
 	/* create each CFDATA */
