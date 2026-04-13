@@ -29,20 +29,23 @@ struct FuStructRaydiumTpDescRecordInfo {
 
 #[derive(ToString)]
 #[repr(u8)]
-enum FuRaydiumTpCmd {
-    BlCmdEraseFlash = 0x02,
-    BlCmdWriteFlash = 0x03,
-    BlCmdSelectFlash = 0x06,
-    BlCmdWriteRegister = 0x08,
-    BlCmdReadAddressMemory = 0x09,
-    BlCmdWatchdogFunctionSet = 0x0A,
-    BlCmdWriteRamFlash = 0x0B,
-    BlCmdWriteHidI2cFlash = 0x0C,
-    BlCmdReadFlashAddr = 0x0D,
-    BlCmdTriggerWriteFlash = 0xA3,
-    BlCmdSoftwareReset = 0xA4,
-    BlCmdIdle = 0xFF,
+enum FuRaydiumTpBlCmd {
+    EraseFlash = 0x02,
+    WriteFlash = 0x03,
+    SelectFlash = 0x06,
+    WriteRegister = 0x08,
+    ReadAddressMemory = 0x09,
+    WatchdogFunctionSet = 0x0A,
+    WriteRamFlash = 0x0B,
+    WriteHidI2cFlash = 0x0C,
+    ReadFlashAddr = 0x0D,
+    TriggerWriteFlash = 0xA3,
+    SoftwareReset = 0xA4,
+    Idle = 0xFF,
+}
 
+#[repr(u8)]
+enum FuRaydiumTpCmd {
     BlApAddr = 0x00,
     BlWatchdogEnable = 0x33,
     BlEraseFlashMode1 = 0xA1,
