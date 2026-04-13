@@ -17,8 +17,8 @@ struct _FuCorsairDeviceClass {
 	FuUsbDeviceClass parent_class;
 };
 
-#define FU_CORSAIR_DEVICE_FLAG_IS_RECEIVER		"is-receiver"
-#define FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH		"legacy-attach"
+#define FU_CORSAIR_DEVICE_FLAG_IS_RECEIVER   "is-receiver"
+#define FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH "legacy-attach"
 
 gboolean
 fu_corsair_device_legacy_attach(FuCorsairDevice *self,

@@ -25,10 +25,10 @@ typedef struct {
 	FuCborItem *val;
 } FuCborPair;
 
-#define FU_CBOR_ITEM_TO_ARRAY(self)  ((GPtrArray *)self->value)
-#define FU_CBOR_ITEM_TO_BYTES(self)  ((GBytes *)self->value)
-#define FU_CBOR_ITEM_TO_STRING(self) ((gchar *)self->value)
-#define FU_CBOR_ITEM_TO_INT64(self)  (*((gint64 *)self->value))
+#define FU_CBOR_ITEM_TO_ARRAY(self)   ((GPtrArray *)self->value)
+#define FU_CBOR_ITEM_TO_BYTES(self)   ((GBytes *)self->value)
+#define FU_CBOR_ITEM_TO_STRING(self)  ((gchar *)self->value)
+#define FU_CBOR_ITEM_TO_INT64(self)   (*((gint64 *)self->value))
 #define FU_CBOR_ITEM_TO_BOOLEAN(self) (GPOINTER_TO_UINT(self->value))
 
 /**

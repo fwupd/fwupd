@@ -2127,8 +2127,6 @@ fu_logitech_hidpp_device_attach_cached(FuDevice *device, FuProgress *progress, G
 
 	/* success */
 	return TRUE;
-
-
 }
 
 static gboolean
@@ -2296,8 +2294,5 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 FuLogitechHidppDevice *
 fu_logitech_hidpp_device_new(FuUdevDevice *proxy)
 {
-	return g_object_new(FU_TYPE_LOGITECH_HIDPP_DEVICE,
-			    "proxy",
-			    proxy,
-			    NULL);
+	return g_object_new(FU_TYPE_LOGITECH_HIDPP_DEVICE, "proxy", proxy, NULL);
 }

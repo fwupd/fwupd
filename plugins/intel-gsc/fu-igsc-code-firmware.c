@@ -18,7 +18,7 @@ struct _FuIgscCodeFirmware {
 
 G_DEFINE_TYPE(FuIgscCodeFirmware, fu_igsc_code_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
 
-#define GSC_FWU_IUP_NUM		  2
+#define GSC_FWU_IUP_NUM 2
 
 static void
 fu_igsc_code_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)

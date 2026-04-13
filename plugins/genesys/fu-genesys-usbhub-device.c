@@ -3183,8 +3183,8 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->vcs.req_switch = GENESYS_USBHUB_GL_HUB_SWITCH;
 	self->vcs.req_read = GENESYS_USBHUB_GL_HUB_READ;
 	self->vcs.req_write = GENESYS_USBHUB_GL_HUB_WRITE;
-	self->flash_erase_delay = 8000;	  /* 8s */
-	self->flash_write_delay = 500;	  /* 500ms */
+	self->flash_erase_delay = 8000; /* 8s */
+	self->flash_write_delay = 500;	/* 500ms */
 	self->flash_block_size = 64 * FU_KB;
 	self->flash_sector_size = 4 * FU_KB;
 	self->flash_rw_size = 64;

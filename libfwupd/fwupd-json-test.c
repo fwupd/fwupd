@@ -437,7 +437,7 @@ fwupd_json_bytes_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
-        g_autoptr(GBytes) bytes = g_bytes_new("bob", 3);
+	g_autoptr(GBytes) bytes = g_bytes_new("bob", 3);
 
 	fwupd_json_array_add_bytes(json_arr, bytes);
 	g_assert_cmpint(fwupd_json_array_get_size(json_arr), ==, 1);

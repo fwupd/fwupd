@@ -8,6 +8,7 @@
 #pragma once
 
 #include <fwupdplugin.h>
+
 #include "fu-pixart-tp-struct.h"
 
 #define FU_TYPE_PIXART_TP_DEVICE (fu_pixart_tp_device_get_type())

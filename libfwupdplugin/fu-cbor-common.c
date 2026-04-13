@@ -22,15 +22,10 @@ typedef struct {
 } FuCborParseHelper;
 
 static FuCborItem *
-fu_cbor_parse_item(FuCborParseHelper *helper,
-		   guint current_depth,
-		   GError **error);
+fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **error);
 
 static FuCborItem *
-fu_cbor_parse_map(FuCborParseHelper *helper,
-		  guint64 len,
-		  guint current_depth,
-		  GError **error)
+fu_cbor_parse_map(FuCborParseHelper *helper, guint64 len, guint current_depth, GError **error)
 {
 	g_autoptr(FuCborItem) item = fu_cbor_item_new_map();
 
@@ -72,10 +67,7 @@ fu_cbor_parse_map(FuCborParseHelper *helper,
 }
 
 static FuCborItem *
-fu_cbor_parse_array(FuCborParseHelper *helper,
-		    guint64 len,
-		    guint current_depth,
-		    GError **error)
+fu_cbor_parse_array(FuCborParseHelper *helper, guint64 len, guint current_depth, GError **error)
 {
 	g_autoptr(FuCborItem) item = fu_cbor_item_new_array();
 
@@ -113,9 +105,7 @@ fu_cbor_parse_array(FuCborParseHelper *helper,
 }
 
 static FuCborItem *
-fu_cbor_parse_item(FuCborParseHelper *helper,
-		   guint current_depth,
-		   GError **error)
+fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **error)
 {
 	FuCborTag tag;
 	guint64 len = 0;
