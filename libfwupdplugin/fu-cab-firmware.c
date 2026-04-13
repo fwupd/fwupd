@@ -205,7 +205,12 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		return FALSE;
 	}
 
-	hdr_sz = st->buf->len + helper->rsvd_block;
+	/* header size calculation */
+	hdr_sz = st->buf->len;
+	if (!fu_size_checked_inc(&hdr_sz, helper->rsvd_block, error)) {
+		g_prefix_error_literal(error, "CFDATA header size overflow: ");
+		return FALSE;
+	}
 
 	/* verify checksum */
 	if (!fu_size_checked_inc(&payload_offset, hdr_sz, error))
@@ -654,6 +659,24 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		helper->rsvd_block = fu_struct_cab_header_reserve_get_rsvd_block(st2);
 		helper->rsvd_folder = fu_struct_cab_header_reserve_get_rsvd_folder(st2);
+
+		/* sanity check */
+		if (helper->rsvd_block > 1 * FU_MB) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "reserved block size unreasonably large: 0x%x",
+				    (guint)helper->rsvd_block);
+			return FALSE;
+		}
+		if (helper->rsvd_folder > 1 * FU_MB) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "reserved folder size unreasonably large: 0x%x",
+				    (guint)helper->rsvd_folder);
+			return FALSE;
+		}
 	}
 
 	/* parse CFFOLDER */
