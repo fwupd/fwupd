@@ -1043,7 +1043,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr_fallback(FuRaydiumTpHidDevice *self
 	minor_ver = fu_struct_raydium_tp_ft_record_info_get_version_minor(st_info);
 
 	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
 	return TRUE;
 }
 
@@ -1100,7 +1100,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 		return fu_raydium_tp_hid_device_ensure_version_bldr_fallback(self, error);
 
 	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
 	return TRUE;
 }
 
@@ -1139,7 +1139,7 @@ fu_raydium_tp_hid_device_ensure_version_main(FuRaydiumTpHidDevice *self, GError 
 	}
 	major_ver = rbuf[5];
 	minor_ver = rbuf[6];
-	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
 
 	/* success */
 	return TRUE;
