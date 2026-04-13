@@ -820,14 +820,18 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		gsize file_entry_size = FU_STRUCT_CAB_FILE_SIZE + strlen(filename_win32) + 1;
-		if (!fu_size_checked_inc(&archive_size, file_entry_size, error))
+		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_FILE_SIZE, error))
+			return NULL;
+		if (!fu_size_checked_inc(&archive_size, strlen(filename_win32), error))
+			return NULL;
+		if (!fu_size_checked_inc(&archive_size, 1, error))
 			return NULL;
 	}
 	for (guint i = 0; i < chunks_zlib->len; i++) {
 		GByteArray *chunk = g_ptr_array_index(chunks_zlib, i);
-		gsize chunk_entry_size = FU_STRUCT_CAB_DATA_SIZE + chunk->len;
-		if (!fu_size_checked_inc(&archive_size, chunk_entry_size, error))
+		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_DATA_SIZE, error))
+			return NULL;
+		if (!fu_size_checked_inc(&archive_size, chunk->len, error))
 			return NULL;
 	}
 	offset = FU_STRUCT_CAB_HEADER_SIZE;
@@ -841,8 +845,11 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		gsize file_size = FU_STRUCT_CAB_FILE_SIZE + strlen(filename_win32) + 1;
-		if (!fu_size_checked_inc(&offset, file_size, error))
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FILE_SIZE, error))
+			return NULL;
+		if (!fu_size_checked_inc(&offset, strlen(filename_win32), error))
+			return NULL;
+		if (!fu_size_checked_inc(&offset, 1, error))
 			return NULL;
 	}
 	fu_struct_cab_folder_set_offset(st_folder, offset);
