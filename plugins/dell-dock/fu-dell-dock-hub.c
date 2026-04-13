@@ -66,6 +66,8 @@ fu_dell_dock_hub_write_fw(FuDevice *device,
 	gsize nwritten = 0;
 	guint32 address = 0;
 	gboolean result = FALSE;
+	guint8 major_version = 0;
+	guint8 minor_version = 0;
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -85,9 +87,11 @@ fu_dell_dock_hub_write_fw(FuDevice *device,
 	data = g_bytes_get_data(fw, &fw_size);
 	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
 
-	dynamic_version = g_strdup_printf("%02x.%02x",
-					  data[self->blob_major_offset],
-					  data[self->blob_minor_offset]);
+	if (!fu_memread_uint8_safe(data, fw_size, self->blob_major_offset, &major_version, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(data, fw_size, self->blob_minor_offset, &minor_version, error))
+		return FALSE;
+	dynamic_version = g_strdup_printf("%02x.%02x", major_version, minor_version);
 	g_info("writing hub firmware version %s", dynamic_version);
 
 	if (!fu_dell_dock_set_power(device, self->unlock_target, TRUE, error))
