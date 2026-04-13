@@ -43,21 +43,23 @@ enum FuRaydiumTpCmd {
     BlCmdSoftwareReset = 0xA4,
     BlCmdIdle = 0xFF,
 
-    AddrJumpToBootloader = 0x52,
-    AddrMemAddressSet = 0x65,
-    AddrMemRead = 0x66,
-    AddrMemWrite = 0x67,
-    AddrSystemInfoModeWrite = 0x80,
-    AddrSystemInfoModeRead = 0x81,
-    AddrSystemStatusWrite = 0x90,
-    AddrSystemStatusRead = 0x91,
-
     BlApAddr = 0x00,
     BlWatchdogEnable = 0x33,
     BlEraseFlashMode1 = 0xA1,
     BlEraseFlashMode4 = 0xA4,
     BlFlashCrc = 0xA5,
     BlWatchdogDisable = 0xAA,
+}
+
+enum FuRaydiumTpAddr {
+    JumpToBootloader = 0x52,
+    MemAddressSet = 0x65,
+    MemRead = 0x66,
+    MemWrite = 0x67,
+    SystemInfoModeWrite = 0x80,
+    SystemInfoModeRead = 0x81,
+    SystemStatusWrite = 0x90,
+    SystemStatusRead = 0x91,
 }
 
 #[repr(u8)]

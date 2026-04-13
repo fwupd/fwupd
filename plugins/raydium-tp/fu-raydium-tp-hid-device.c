@@ -323,7 +323,7 @@ fu_raydium_tp_hid_device_jump_to_boot(FuRaydiumTpHidDevice *self, GError **error
 	guint8 buf[RAYDIUM_I2C_BUF_SIZE] = {0};
 
 	return fu_raydium_tp_hid_device_tp_write(self,
-						 FU_RAYDIUM_TP_CMD_ADDR_JUMP_TO_BOOTLOADER,
+						 FU_RAYDIUM_TP_ADDR_JUMP_TO_BOOTLOADER,
 						 buf,
 						 sizeof(buf),
 						 1,
@@ -853,7 +853,7 @@ fu_raydium_tp_hid_device_set_mem_addr(FuRaydiumTpHidDevice *self,
 	buf[4] = type;
 
 	return fu_raydium_tp_hid_device_tp_write(self,
-						 FU_RAYDIUM_TP_CMD_ADDR_MEM_ADDRESS_SET,
+						 FU_RAYDIUM_TP_ADDR_MEM_ADDRESS_SET,
 						 buf,
 						 sizeof(buf),
 						 5,
@@ -867,7 +867,7 @@ fu_raydium_tp_hid_device_set_mem_write(FuRaydiumTpHidDevice *self, guint32 value
 
 	fu_memwrite_uint32(buf, value, G_LITTLE_ENDIAN);
 	return fu_raydium_tp_hid_device_tp_write(self,
-						 FU_RAYDIUM_TP_CMD_ADDR_MEM_WRITE,
+						 FU_RAYDIUM_TP_ADDR_MEM_WRITE,
 						 buf,
 						 sizeof(buf),
 						 4,
@@ -883,7 +883,7 @@ fu_raydium_tp_hid_device_get_mem_read(FuRaydiumTpHidDevice *self,
 	guint8 rbuf[RAYDIUM_I2C_BUF_SIZE] = {0};
 
 	if (!fu_raydium_tp_hid_device_tp_read(self,
-					      FU_RAYDIUM_TP_CMD_ADDR_MEM_READ,
+					      FU_RAYDIUM_TP_ADDR_MEM_READ,
 					      rbuf,
 					      sizeof(rbuf),
 					      error))
@@ -1115,7 +1115,7 @@ fu_raydium_tp_hid_device_ensure_version_main(FuRaydiumTpHidDevice *self, GError 
 
 	wbuf[0] = RAYDIUM_GET_SYS_FW_VERSION_NUM;
 	if (!fu_raydium_tp_hid_device_tp_write(self,
-					       FU_RAYDIUM_TP_CMD_ADDR_SYSTEM_INFO_MODE_WRITE,
+					       FU_RAYDIUM_TP_ADDR_SYSTEM_INFO_MODE_WRITE,
 					       wbuf,
 					       sizeof(wbuf),
 					       1,
@@ -1123,7 +1123,7 @@ fu_raydium_tp_hid_device_ensure_version_main(FuRaydiumTpHidDevice *self, GError 
 		return FALSE;
 
 	if (!fu_raydium_tp_hid_device_tp_read(self,
-					      FU_RAYDIUM_TP_CMD_ADDR_SYSTEM_INFO_MODE_READ,
+					      FU_RAYDIUM_TP_ADDR_SYSTEM_INFO_MODE_READ,
 					      rbuf,
 					      sizeof(rbuf),
 					      error))
