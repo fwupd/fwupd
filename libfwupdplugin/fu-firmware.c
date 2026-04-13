@@ -1015,6 +1015,13 @@ fu_firmware_validate_for_offset(FuFirmware *self,
 						 offset,
 						 &offset_tmp,
 						 NULL)) {
+				/* ensure magic found at or after expected offset */
+				if (offset_tmp < patch->offset) {
+					g_debug("magic at 0x%x but expected >= 0x%x",
+						(guint)offset_tmp,
+						(guint)patch->offset);
+					continue;
+				}
 				offset_tmp -= patch->offset;
 				g_debug("found magic @0x%x", (guint)offset_tmp);
 				if (offset_found != NULL)
@@ -1113,6 +1120,17 @@ fu_firmware_parse_stream(FuFirmware *self,
 	if (!fu_firmware_validate_for_offset(self, seekable_stream, offset, &offset, flags, error))
 		return FALSE;
 	fu_firmware_set_offset(self, offset);
+
+	/* validate offset hasn't been corrupted */
+	if (offset >= streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "offset 0x%x exceeds stream size 0x%x",
+			    (guint)offset,
+			    (guint)streamsz);
+		return FALSE;
+	}
 
 	/* save stream size */
 	priv->streamsz = streamsz - offset;
