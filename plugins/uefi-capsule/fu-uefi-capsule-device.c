@@ -428,6 +428,13 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	priv->missing_header = TRUE;
 	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
 	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
+	if (bufsz > G_MAXUINT32 - hdrsize) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "payload too large");
+		return NULL;
+	}
 	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
 	if (priv->fw_class == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set");
