@@ -202,7 +202,7 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 	/* ST-specific */
 	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
 	    attributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
-		priv->transfer_size = 0x1000;
+		priv->transfer_size = 4 * FU_KB;
 
 	/* get attributes about the DFU operation */
 	if (attributes & FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD)
@@ -886,7 +886,9 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		fu_dfu_device_set_chip_id(self, chip_id);
 
 		/* serial number follows */
-		serial_str = g_strndup((const gchar *)buf + 2, bufsz - 2);
+		serial_str = fu_memstrsafe(buf, bufsz, 0x2, bufsz - 2, error);
+		if (serial_str == NULL)
+			return FALSE;
 		fu_device_set_serial(FU_DEVICE(device), serial_str);
 	}
 

@@ -66,8 +66,11 @@ fu_chunk_array_calculate_chunk_for_offset(FuChunkArray *self,
 	}
 
 	/* cut the packet so it does not straddle multiple blocks */
-	if (self->page_sz != self->packet_sz && self->page_sz > 0)
-		chunksz_tmp = MIN(chunksz_tmp, (offset + self->packet_sz) % self->page_sz);
+	if (self->page_sz != self->packet_sz && self->page_sz > 0) {
+		gsize remainder = (offset + self->addr_offset) % self->page_sz;
+		if (remainder != 0)
+			chunksz_tmp = MIN(chunksz_tmp, self->page_sz - remainder);
+	}
 
 	/* all optional */
 	if (address != NULL)
@@ -148,6 +151,13 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
 		gsize chunksz = 0;
 		fu_chunk_array_calculate_chunk_for_offset(self, offset, NULL, NULL, &chunksz);
 		g_array_append_val(self->offsets, offset);
+		if (chunksz > G_MAXSIZE - offset) {
+			g_critical("offset overflow at offset %" G_GSIZE_FORMAT
+				   " with chunk size %" G_GSIZE_FORMAT,
+				   offset,
+				   chunksz);
+			return;
+		}
 		offset += chunksz;
 	}
 }

@@ -17,4 +17,4 @@ G_DECLARE_FINAL_TYPE(FuUnixSeekableInputStream,
 		     GUnixInputStream)
 
 GInputStream *
-fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd);
+fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error);

@@ -19,7 +19,11 @@ fu_partial_input_stream_composite_func(void)
 	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
 	g_autoptr(GInputStream) partial_stream = NULL;
 
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream), blob);
+	ret = fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream),
+						  blob,
+						  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* limit to '34' */
 	partial_stream = fu_partial_input_stream_new(composite_stream, 2, 2, &error);

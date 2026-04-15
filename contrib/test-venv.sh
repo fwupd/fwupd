@@ -17,6 +17,7 @@ ninja -C ${BUILD} test
 echo "Testing mtd-self-test"
 ${SUDO} modprobe mtdram
 ENV="G_TEST_BUILDDIR=${G_TEST_BUILDDIR} \
+     LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
      G_TEST_SRCDIR=${G_TEST_SRCDIR}"
 ${SUDO} ${ENV} ${VENV}/dist/libexec/installed-tests/fwupd/mtd-self-test
 

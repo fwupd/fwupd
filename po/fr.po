@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
 "PO-Revision-Date: 2026-03-04 18:09+0000\n"
 "Last-Translator: Corentin Noël <tintou@noel.tf>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/fwupd/fwupd/fr/>\n"
@@ -721,6 +721,10 @@ msgstr "db UEFI"
 msgid "HP SureStart"
 msgstr ""
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr ""
@@ -892,6 +896,10 @@ msgstr ""
 msgid "UEFI Memory Protection"
 msgstr "Protection de la mémoire UEFI"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr ""
@@ -1037,6 +1045,10 @@ msgstr "La db UEFI contient la liste des certificats valides pouvant être utili
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
@@ -1824,7 +1836,7 @@ msgid "CRC FILENAME"
 msgstr ""
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
+msgid "Finds an algorithm that matches the file CRC"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
@@ -3035,6 +3047,10 @@ msgstr "Version actuelle"
 msgid "Minimum Version"
 msgstr "Version minimum"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Version du chargeur d’amorçage"
@@ -3042,6 +3058,10 @@ msgstr "Version du chargeur d’amorçage"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Fournisseur"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3565,6 +3585,10 @@ msgstr "Le magasin de certificats UEFI est maintenant à jour"
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
 msgstr ""
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".

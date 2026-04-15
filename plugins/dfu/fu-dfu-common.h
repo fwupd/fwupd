@@ -34,4 +34,4 @@
 #define FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH	  "index-force-detach"
 
 GBytes *
-fu_dfu_utils_bytes_join_array(GPtrArray *chunks);
+fu_dfu_utils_bytes_join_array(GPtrArray *chunks, GError **error);

@@ -541,7 +541,10 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 				    fu_chunk_get_data_sz(helper->block),
 				    0x00,
 				    0x00,
-				    priv->chunk_len);
+				    priv->chunk_len,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(helper->progress, G_STRLOC);
 	fu_progress_set_steps(helper->progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -637,8 +640,14 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 	g_debug("sending 0x%x bytes to 0x%x", (guint)data_len, section->offset);
 
 	/* send in chunks of PDU size */
-	blocks =
-	    fu_chunk_array_new(data_ptr, data_len, section->offset, 0x0, priv->maximum_pdu_size);
+	blocks = fu_chunk_array_new(data_ptr,
+				    data_len,
+				    section->offset,
+				    0x0,
+				    priv->maximum_pdu_size,
+				    error);
+	if (blocks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, blocks->len);
 	for (guint i = 0; i < blocks->len; i++) {

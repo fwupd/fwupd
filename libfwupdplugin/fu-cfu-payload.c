@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-payload.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 
 /**
@@ -48,7 +49,13 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		st = fu_struct_cfu_payload_parse_stream(stream, offset, error);
 		if (st == NULL)
 			return FALSE;
-		offset += st->buf->len;
+
+		/* add payload structure size */
+		if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+			g_prefix_error_literal(error, "payload offset overflow: ");
+			return FALSE;
+		}
+
 		chunk_size = fu_struct_cfu_payload_get_size(st);
 		if (chunk_size == 0) {
 			g_set_error_literal(error,
@@ -65,7 +72,8 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		fu_firmware_add_chunk(firmware, chk);
 
 		/* next! */
-		offset += chunk_size;
+		if (!fu_size_checked_inc(&offset, chunk_size, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -96,6 +104,7 @@ static void
 fu_cfu_payload_init(FuCfuPayload *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void

@@ -91,14 +91,16 @@ fu_smbios_get_item_for_type_length(FuSmbios *self, guint8 type, guint8 length)
 static gboolean
 fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **error)
 {
+	gsize offset = 0;
+
 	/* go through each structure */
-	for (gsize i = 0; i < bufsz; i++) {
-		FuSmbiosItem *item;
+	while (offset < bufsz) {
 		guint8 length;
+		g_autoptr(FuSmbiosItem) item = NULL;
 		g_autoptr(FuStructSmbiosStructure) st_str = NULL;
 
 		/* sanity check */
-		st_str = fu_struct_smbios_structure_parse(buf, bufsz, i, error);
+		st_str = fu_struct_smbios_structure_parse(buf, bufsz, offset, error);
 		if (st_str == NULL)
 			return FALSE;
 		length = fu_struct_smbios_structure_get_length(st_str);
@@ -107,15 +109,7 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "structure smaller than allowed @0x%x",
-				    (guint)i);
-			return FALSE;
-		}
-		if (i + length >= bufsz) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "structure larger than available data @0x%x",
-				    (guint)i);
+				    (guint)offset);
 			return FALSE;
 		}
 
@@ -124,25 +118,39 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 		item->type = fu_struct_smbios_structure_get_type(st_str);
 		item->handle = fu_struct_smbios_structure_get_handle(st_str);
 		item->buf = g_byte_array_sized_new(length);
-		g_byte_array_append(item->buf, buf + i, length);
-		g_ptr_array_add(self->items, item);
+		if (!fu_byte_array_append_safe(item->buf, buf, bufsz, offset, length, error))
+			return FALSE;
 
 		/* jump to the end of the formatted area of the struct */
-		i += length;
+		if (!fu_size_checked_inc(&offset, length, error)) {
+			g_prefix_error_literal(error, "structure offset overflow: ");
+			return FALSE;
+		}
 
 		/* add strings from table */
-		while (i < bufsz) {
-			GString *str;
+		while (offset < bufsz) {
+			g_autoptr(GString) str = NULL;
 
 			/* end of string section */
-			if (item->strings->len > 0 && buf[i] == 0x0)
+			if (item->strings->len > 0 && buf[offset] == 0x0)
 				break;
 
 			/* copy into string table */
-			str = fu_strdup((const gchar *)buf, bufsz, i);
-			i += str->len + 1;
-			g_ptr_array_add(item->strings, g_string_free(str, FALSE));
+			str = fu_strdup((const gchar *)buf, bufsz, offset);
+			if (!fu_size_checked_inc(&offset, str->len + 1, error)) {
+				g_prefix_error_literal(error, "string offset overflow: ");
+				return FALSE;
+			}
+			g_ptr_array_add(item->strings, g_string_free(g_steal_pointer(&str), FALSE));
 		}
+
+		if (!fu_size_checked_inc(&offset, 1, error)) {
+			g_prefix_error_literal(error, "SMBIOS terminator offset overflow: ");
+			return FALSE;
+		}
+
+		/* success */
+		g_ptr_array_add(self->items, g_steal_pointer(&item));
 	}
 
 	/* this has to exist */
@@ -399,7 +407,7 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 			    (guint)GetLastError());
 		return FALSE;
 	}
-	if (rc < FU_SMBIOS_FT_RAW_OFFSET || rc > 0x1000000) {
+	if (rc < FU_SMBIOS_FT_RAW_OFFSET || rc > 10 * FU_MB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -735,6 +743,7 @@ static void
 fu_smbios_init(FuSmbios *self)
 {
 	self->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_smbios_item_free);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 /**

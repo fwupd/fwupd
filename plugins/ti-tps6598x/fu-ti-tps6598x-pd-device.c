@@ -215,10 +215,8 @@ fu_ti_tps6598x_pd_device_class_init(FuTiTps6598xPdDeviceClass *klass)
 FuDevice *
 fu_ti_tps6598x_pd_device_new(FuDevice *proxy, guint8 target)
 {
-	FuTiTps6598xPdDevice *self = g_object_new(FU_TYPE_TI_TPS6598X_PD_DEVICE,
-						  "proxy",
-						  proxy,
-						  NULL);
+	FuTiTps6598xPdDevice *self =
+	    g_object_new(FU_TYPE_TI_TPS6598X_PD_DEVICE, "proxy", proxy, NULL);
 	self->target = target;
 	return FU_DEVICE(self);
 }

@@ -458,7 +458,7 @@ fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, FuProgress *progress, 
 		g_ptr_array_add(chunks, g_steal_pointer(&buf));
 		fu_progress_step_done(progress);
 	}
-	return fu_dfu_utils_bytes_join_array(chunks);
+	return fu_dfu_utils_bytes_join_array(chunks, error);
 }
 
 static gboolean
@@ -705,7 +705,10 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				    g_bytes_get_size(blob) - address_offset,
 				    fu_dfu_sector_get_address(sector),
 				    ATMEL_64KB_PAGE,
-				    ATMEL_MAX_TRANSFER_SIZE);
+				    ATMEL_MAX_TRANSFER_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_dfu_target_avr_download_element_chunks(target,
 						       chunks,
 						       &page_last,
@@ -839,7 +842,9 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 	}
 
 	/* create element of required size */
-	contents = fu_dfu_utils_bytes_join_array(blobs);
+	contents = fu_dfu_utils_bytes_join_array(blobs, error);
+	if (contents == NULL)
+		return NULL;
 	if (expected_size > 0 && g_bytes_get_size(contents) > expected_size) {
 		contents_truncated = g_bytes_new_from_bytes(contents, 0x0, expected_size);
 	} else {
@@ -901,7 +906,10 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 				    maximum_size,
 				    address,
 				    ATMEL_64KB_PAGE,
-				    ATMEL_MAX_TRANSFER_SIZE);
+				    ATMEL_MAX_TRANSFER_SIZE,
+				    error);
+	if (chunks == NULL)
+		return NULL;
 	chk2 = fu_dfu_target_avr_upload_element_chunks(target,
 						       address,
 						       expected_size,

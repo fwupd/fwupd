@@ -42,7 +42,7 @@
 #define REG_GPIO88_VALUE  0xFE3F
 
 /* flash chip properties */
-#define FLASH_SIZE	  0x100000
+#define FLASH_SIZE	  (1 * FU_MB)
 #define FLASH_SECTOR_SIZE 4096
 #define FLASH_BLOCK_SIZE  65536
 

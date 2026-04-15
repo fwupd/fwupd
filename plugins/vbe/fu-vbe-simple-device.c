@@ -391,6 +391,15 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* sanity check */
+	if (self->area_start >= self->area_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "area start >= area size");
+		return NULL;
+	}
+
 	/* notify UI */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
@@ -418,7 +427,14 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 	}
 
 	/* process in chunks */
-	chunks = fu_chunk_array_new(NULL, self->area_size - self->area_start, 0x0, 0x0, 0x100000);
+	chunks = fu_chunk_array_new(NULL,
+				    self->area_size - self->area_start,
+				    0x0,
+				    0x0,
+				    1 * FU_MB,
+				    error);
+	if (chunks == NULL)
+		return NULL;
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);

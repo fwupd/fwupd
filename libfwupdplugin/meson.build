@@ -404,15 +404,6 @@ fwupdplugin_headers = [
 
 introspection_deps = [libxmlb, giounix, libusb]
 
-pkgg_requires = [
-  'gio-2.0',
-  'gmodule-2.0',
-  'gobject-2.0',
-  'fwupd',
-  'xmlb',
-  'libusb',
-]
-
 library_deps = [
   introspection_deps,
   gmodule,
@@ -538,6 +529,7 @@ if get_option('tests')
     'mem',
     'msgpack',
     'partial-input-stream',
+    'path',
     'path-store',
     'plugin',
     'progress',

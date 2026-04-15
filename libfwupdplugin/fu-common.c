@@ -38,6 +38,80 @@ fu_size_checked_add(gsize a, gsize b)
 }
 
 /**
+ * fu_size_checked_inc:
+ * @value: (inout): the starting and ending value
+ * @len: the value to add
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a checked increment of @value and @len, ensuring the result does not overflow.
+ *
+ * NOTE: If the operation does overflow then @value is *not* modified.
+ *
+ * Returns: boolean success
+ *
+ * Since: 2.1.2
+ **/
+gboolean
+fu_size_checked_inc(gsize *value, gsize len, GError **error)
+{
+	gsize value_new;
+
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	value_new = *value;
+	if (!g_size_checked_add(&value_new, *value, len)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "0x%" G_GSIZE_MODIFIER "x + 0x%" G_GSIZE_MODIFIER "x would overflow",
+			    *value,
+			    len);
+		return FALSE;
+	}
+
+	/* success */
+	*value = value_new;
+	return TRUE;
+}
+
+/**
+ * fu_size_from_uint64:
+ * @value: a 64-bit unsigned integer
+ * @out: (out): output location for the converted value
+ * @error: (nullable): optional return location for an error
+ *
+ * Safely converts a 64-bit unsigned integer to a #gsize value, ensuring the value
+ * fits within the platform's #gsize range. On 32-bit platforms where #gsize is 32 bits,
+ * this prevents silent truncation that could lead to security vulnerabilities.
+ *
+ * Returns: %TRUE if the conversion was successful, %FALSE if the value exceeds #G_MAXSIZE
+ *
+ * Since: 2.1.2
+ **/
+gboolean
+fu_size_from_uint64(guint64 value, gsize *out, GError **error) /* nocheck:name */
+{
+	g_return_val_if_fail(out != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (value > G_MAXSIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "value 0x%" G_GINT64_MODIFIER
+			    "x exceeds gsize range 0x%" G_GSIZE_MODIFIER "x",
+			    value,
+			    (gsize)G_MAXSIZE);
+		return FALSE;
+	}
+
+	/* success */
+	*out = (gsize)value;
+	return TRUE;
+}
+
+/**
  * fu_error_map_entry_to_gerror:
  * @value: the value to look up
  * @entries: the #FuErrorMapEntry map
@@ -151,14 +225,16 @@ fu_cpu_get_attrs(FuPathStore *pstore, GError **error)
 		g_auto(GStrv) lines = fu_strsplit(buf, bufsz, "\n", -1);
 		for (guint i = 0; lines[i] != NULL; i++) {
 			g_auto(GStrv) tokens = NULL;
+			g_autofree gchar *key = NULL;
 			if (lines[i][0] == '\0')
 				break;
 			tokens = g_strsplit(lines[i], ": ", 2);
-			for (guint j = 0; tokens[j] != NULL; j++) {
-				g_hash_table_insert(hash,
-						    fu_strstrip(tokens[0]),
-						    g_strdup(tokens[1]));
-			}
+			if (g_strv_length(tokens) != 2)
+				continue;
+			key = fu_strstrip(tokens[0]);
+			if (key == NULL)
+				continue;
+			g_hash_table_insert(hash, g_steal_pointer(&key), g_strdup(tokens[1]));
 		}
 	}
 

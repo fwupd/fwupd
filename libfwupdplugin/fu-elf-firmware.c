@@ -9,9 +9,11 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-elf-firmware.h"
 #include "fu-elf-struct.h"
 #include "fu-input-stream.h"
+#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -41,6 +43,8 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 {
 	gsize offset_secthdr = 0;
 	gsize offset_proghdr = 0;
+	gsize phoff_safe = 0;
+	gsize shoff_safe = 0;
 	guint16 phentsize;
 	guint16 phnum;
 	guint16 shnum;
@@ -55,7 +59,12 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse each program header, unused here */
-	offset_proghdr += fu_struct_elf_file_header64le_get_phoff(st_fhdr);
+	if (!fu_size_from_uint64(fu_struct_elf_file_header64le_get_phoff(st_fhdr),
+				 &phoff_safe,
+				 error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_proghdr, phoff_safe, error))
+		return FALSE;
 	phentsize = fu_struct_elf_file_header64le_get_phentsize(st_fhdr);
 	phnum = fu_struct_elf_file_header64le_get_phnum(st_fhdr);
 	for (guint i = 0; i < phnum; i++) {
@@ -63,11 +72,17 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		    fu_struct_elf_program_header64le_parse_stream(stream, offset_proghdr, error);
 		if (st_phdr == NULL)
 			return FALSE;
-		offset_proghdr += phentsize;
+		if (!fu_size_checked_inc(&offset_proghdr, phentsize, error))
+			return FALSE;
 	}
 
 	/* parse all the sections ahead of time */
-	offset_secthdr += fu_struct_elf_file_header64le_get_shoff(st_fhdr);
+	if (!fu_size_from_uint64(fu_struct_elf_file_header64le_get_shoff(st_fhdr),
+				 &shoff_safe,
+				 error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_secthdr, shoff_safe, error))
+		return FALSE;
 	shnum = fu_struct_elf_file_header64le_get_shnum(st_fhdr);
 	for (guint i = 0; i < shnum; i++) {
 		g_autoptr(FuStructElfSectionHeader64le) st_shdr =
@@ -75,7 +90,10 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		if (st_shdr == NULL)
 			return FALSE;
 		g_ptr_array_add(sections, g_steal_pointer(&st_shdr));
-		offset_secthdr += fu_struct_elf_file_header64le_get_shentsize(st_fhdr);
+		if (!fu_size_checked_inc(&offset_secthdr,
+					 fu_struct_elf_file_header64le_get_shentsize(st_fhdr),
+					 error))
+			return FALSE;
 	}
 
 	/* add sections as images */
@@ -83,7 +101,15 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		FuStructElfSectionHeader64le *st_shdr = g_ptr_array_index(sections, i);
 		guint64 sect_offset = fu_struct_elf_section_header64le_get_offset(st_shdr);
 		guint64 sect_size = fu_struct_elf_section_header64le_get_size(st_shdr);
+		gsize sect_offset_safe = 0;
+		gsize sect_size_safe = 0;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
+
+		/* validate values fit in gsize to prevent truncation on 32-bit platforms */
+		if (!fu_size_from_uint64(sect_offset, &sect_offset_safe, error))
+			return FALSE;
+		if (!fu_size_from_uint64(sect_size, &sect_size_safe, error))
+			return FALSE;
 
 		/* catch the strtab */
 		if (i == fu_struct_elf_file_header64le_get_shstrndx(st_fhdr)) {
@@ -99,8 +125,8 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 			}
 			shstrndx_buf = fu_input_stream_read_byte_array(stream,
-								       sect_offset,
-								       sect_size,
+								       sect_offset_safe,
+								       sect_size_safe,
 								       NULL,
 								       error);
 			if (shstrndx_buf == NULL)
@@ -113,11 +139,14 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		    fu_struct_elf_section_header64le_get_type(st_shdr) ==
 			FU_ELF_SECTION_HEADER_TYPE_STRTAB)
 			continue;
-		if (sect_size > 0) {
+		if (sect_size_safe > 0) {
 			g_autoptr(GInputStream) img_stream =
-			    fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
+			    fu_partial_input_stream_new(stream,
+							sect_offset_safe,
+							sect_size_safe,
+							error);
 			if (img_stream == NULL) {
-				g_prefix_error_literal(error, "failed to cut EFI image: ");
+				g_prefix_error_literal(error, "failed to cut ELF image: ");
 				return FALSE;
 			}
 			if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
@@ -149,7 +178,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		    fu_struct_elf_section_header64le_get_type(st_shdr) ==
 			FU_ELF_SECTION_HEADER_TYPE_STRTAB)
 			continue;
-		if (sh_name > shstrndx_buf->len) {
+		if (sh_name >= shstrndx_buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -160,8 +189,13 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		img = fu_firmware_get_image_by_idx(firmware, i, error);
 		if (img == NULL)
 			return FALSE;
-		name = g_strndup((const gchar *)shstrndx_buf->data + sh_name,
-				 shstrndx_buf->len - sh_name);
+		name = fu_memstrsafe(shstrndx_buf->data,
+				     shstrndx_buf->len,
+				     sh_name,
+				     shstrndx_buf->len - sh_name,
+				     error);
+		if (name == NULL)
+			return FALSE;
 		if (name != NULL && name[0] != '\0')
 			fu_firmware_set_id(img, name);
 	}
@@ -183,32 +217,42 @@ fu_elf_firmware_strtab_entry_free(FuElfFirmwareStrtabEntry *entry)
 	g_free(entry);
 }
 
-static void
-fu_elf_firmware_strtab_insert(GPtrArray *strtab, const gchar *name)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuElfFirmwareStrtabEntry, fu_elf_firmware_strtab_entry_free)
+
+static gboolean
+fu_elf_firmware_strtab_insert(GPtrArray *strtab, const gchar *name, GError **error)
 {
-	FuElfFirmwareStrtabEntry *entry = g_new0(FuElfFirmwareStrtabEntry, 1);
+	g_autoptr(FuElfFirmwareStrtabEntry) entry = g_new0(FuElfFirmwareStrtabEntry, 1);
 	gsize offset = 0;
 
-	g_return_if_fail(name != NULL);
+	g_return_val_if_fail(name != NULL, FALSE);
 
 	/* get the previous entry */
 	if (strtab->len > 0) {
 		FuElfFirmwareStrtabEntry *entry_old = g_ptr_array_index(strtab, strtab->len - 1);
-		offset += entry_old->offset + entry_old->namesz;
+		gsize offset_tmp = entry_old->offset;
+		if (!fu_size_checked_inc(&offset_tmp, entry_old->namesz, error)) {
+			g_prefix_error_literal(error, "string table offset overflow: ");
+			return FALSE;
+		}
+		offset = offset_tmp;
 	}
 	entry->namesz = strlen(name) + 1; /* with NUL */
 	entry->name = g_strdup(name);
 	entry->offset = offset;
-	g_ptr_array_add(strtab, entry);
+	g_ptr_array_add(strtab, g_steal_pointer(&entry));
+	return TRUE;
 }
 
 static GPtrArray *
-fu_elf_firmware_strtab_new(void)
+fu_elf_firmware_strtab_new(GError **error)
 {
 	g_autoptr(GPtrArray) strtab =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_elf_firmware_strtab_entry_free);
-	fu_elf_firmware_strtab_insert(strtab, "");
-	fu_elf_firmware_strtab_insert(strtab, ".shstrtab");
+	if (!fu_elf_firmware_strtab_insert(strtab, "", error))
+		return NULL;
+	if (!fu_elf_firmware_strtab_insert(strtab, ".shstrtab", error))
+		return NULL;
 	return g_steal_pointer(&strtab);
 }
 
@@ -246,7 +290,7 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) section_hdr = g_byte_array_new();
 	g_autoptr(GByteArray) shstrtab = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
-	g_autoptr(GPtrArray) strtab = fu_elf_firmware_strtab_new();
+	g_autoptr(GPtrArray) strtab = NULL;
 
 	/* build the string table:
 	 *
@@ -254,6 +298,9 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	 *    .text\0
 	 *    .rodata\0
 	 */
+	strtab = fu_elf_firmware_strtab_new(error);
+	if (strtab == NULL)
+		return NULL;
 	imgs = fu_firmware_get_images(firmware);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -265,7 +312,8 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 				    (guint)fu_firmware_get_idx(img));
 			return NULL;
 		}
-		fu_elf_firmware_strtab_insert(strtab, fu_firmware_get_id(img));
+		if (!fu_elf_firmware_strtab_insert(strtab, fu_firmware_get_id(img), error))
+			return NULL;
 	}
 	shstrtab = fu_elf_firmware_strtab_write(strtab);
 
@@ -288,11 +336,19 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* calculate the offset of each section */
-	section_offset = st_filehdr->buf->len + st_proghdr->buf->len + shstrtab->len;
+	if (!fu_size_checked_inc(&section_offset, st_filehdr->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&section_offset, st_proghdr->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc(&section_offset, shstrtab->len, error))
+		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		fu_firmware_set_offset(img, section_offset);
-		section_offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&section_offset, fu_firmware_get_size(img), error)) {
+			g_prefix_error(error, "section %u offset overflow: ", i);
+			return NULL;
+		}
 	}
 
 	/* build the section header:
@@ -373,6 +429,7 @@ fu_elf_firmware_init(FuElfFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void

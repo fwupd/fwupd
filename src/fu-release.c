@@ -1224,7 +1224,16 @@ fu_release_load(FuRelease *self,
 	if (cabinet != NULL && blob_basename != NULL) {
 		g_autoptr(FuFirmware) img = NULL;
 
-		self->firmware_basename = fu_strsafe_bytes(blob_basename, G_MAXSIZE);
+		/* firmware basenames should be short */
+		self->firmware_basename = fu_strsafe_bytes(blob_basename, 1 * FU_KB);
+		if (self->firmware_basename == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "firmware basename too large or invalid");
+			return FALSE;
+		}
+
 		img = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet),
 						  self->firmware_basename,
 						  error);

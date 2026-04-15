@@ -226,7 +226,10 @@ fu_genesys_usbhub_device_read_flash(FuGenesysUsbhubDevice *self,
 					    bufsz,
 					    start_addr,
 					    self->flash_block_size,
-					    self->flash_rw_size);
+					    self->flash_rw_size,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	if (progress != NULL) {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_set_steps(progress, chunks->len);
@@ -296,7 +299,10 @@ fu_genesys_usbhub_device_compare_flash_blank(FuGenesysUsbhubDevice *self,
 				    read_size,
 				    read_addr,
 				    self->flash_block_size,
-				    self->flash_rw_size);
+				    self->flash_rw_size,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -355,8 +361,14 @@ fu_genesys_usbhub_device_compare_flash_data(FuGenesysUsbhubDevice *self,
 
 	fu_byte_array_set_size(read_buf, self->flash_rw_size, 0xFF);
 
-	chunks =
-	    fu_chunk_array_new(buf, bufsz, start_addr, self->flash_block_size, self->flash_rw_size);
+	chunks = fu_chunk_array_new(buf,
+				    bufsz,
+				    start_addr,
+				    self->flash_block_size,
+				    self->flash_rw_size,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -2179,7 +2191,10 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 				    len,
 				    start_addr,
 				    self->flash_block_size,
-				    self->flash_sector_size);
+				    self->flash_sector_size,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -2236,8 +2251,14 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
 	FuGenesysWaitFlashRegisterHelper helper = {.reg = 5, .expected_val = 0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks =
-	    fu_chunk_array_new(buf, bufsz, start_addr, self->flash_block_size, self->flash_rw_size);
+	chunks = fu_chunk_array_new(buf,
+				    bufsz,
+				    start_addr,
+				    self->flash_block_size,
+				    self->flash_rw_size,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -3162,11 +3183,11 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	self->vcs.req_switch = GENESYS_USBHUB_GL_HUB_SWITCH;
 	self->vcs.req_read = GENESYS_USBHUB_GL_HUB_READ;
 	self->vcs.req_write = GENESYS_USBHUB_GL_HUB_WRITE;
-	self->flash_erase_delay = 8000;	  /* 8s */
-	self->flash_write_delay = 500;	  /* 500ms */
-	self->flash_block_size = 0x10000; /* 64KB */
-	self->flash_sector_size = 0x1000; /* 4KB */
-	self->flash_rw_size = 0x40;	  /* 64B */
+	self->flash_erase_delay = 8000; /* 8s */
+	self->flash_write_delay = 500;	/* 500ms */
+	self->flash_block_size = 64 * FU_KB;
+	self->flash_sector_size = 4 * FU_KB;
+	self->flash_rw_size = 64;
 	self->is_gl352350 = FALSE;
 	self->has_codesign = FALSE;
 	self->has_hw_codesign = FALSE;

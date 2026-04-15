@@ -126,7 +126,11 @@ fu_efi_parse_sections(FuFirmware *firmware,
 			return FALSE;
 
 		/* next! */
-		offset += fu_common_align_up(fu_firmware_get_size(img), FU_FIRMWARE_ALIGNMENT_4);
+		if (!fu_size_checked_inc(
+			&offset,
+			fu_common_align_up(fu_firmware_get_size(img), FU_FIRMWARE_ALIGNMENT_4),
+			error))
+			return FALSE;
 	}
 
 	/* success */

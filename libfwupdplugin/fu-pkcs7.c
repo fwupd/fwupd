@@ -12,6 +12,7 @@
 #include <gnutls/pkcs7.h>
 #endif
 
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-pkcs7.h"
 #include "fu-x509-certificate.h"
@@ -132,6 +133,7 @@ static void
 fu_pkcs7_init(FuPkcs7 *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_X509_CERTIFICATE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

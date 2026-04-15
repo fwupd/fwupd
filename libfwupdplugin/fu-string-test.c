@@ -81,7 +81,7 @@ static void
 fu_strsplit_func(void)
 {
 	const gchar *str = "123foo123bar123";
-	const guint bigsz = 1024 * 1024;
+	const guint bigsz = FU_MB;
 	gboolean ret;
 	guint cnt = 0;
 	g_autoptr(GError) error = NULL;

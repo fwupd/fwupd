@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-partial-input-stream.h"
+#include "fu-path.h"
 #include "fu-string.h"
 #include "fu-zip-file.h"
 #include "fu-zip-firmware.h"
@@ -18,17 +19,33 @@
 
 G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX 0x4000
+#define FU_ZIP_FIRMWARE_EOCD_OFFSET_MAX (16 * FU_KB)
+#define FU_ZIP_FIRMWARE_EXTRA_MAX	(1 * FU_MB)
+#define FU_ZIP_MAX_DECOMPRESSION_RATIO	1000
 
 static gboolean
 fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size, GError **error)
 {
 	for (gsize i = 0; i < extra_size; i += FU_STRUCT_ZIP_EXTRA_HDR_SIZE) {
+		guint32 datasz;
 		g_autoptr(FuStructZipExtraHdr) st_ehdr = NULL;
 		st_ehdr = fu_struct_zip_extra_hdr_parse_stream(stream, offset + i, error);
 		if (st_ehdr == NULL)
 			return FALSE;
-		i += fu_struct_zip_extra_hdr_get_datasz(st_ehdr);
+		datasz = fu_struct_zip_extra_hdr_get_datasz(st_ehdr);
+		if (!fu_size_checked_inc(&i, datasz, error)) {
+			g_prefix_error_literal(error, "extra field size overflow: ");
+			return FALSE;
+		}
+		if (i > FU_ZIP_FIRMWARE_EXTRA_MAX) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "too much ZipExtraHdr data: 0x%x > 0x%x",
+				    (guint)i,
+				    (guint)FU_ZIP_FIRMWARE_EXTRA_MAX);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
@@ -42,6 +59,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 {
 	FuZipCompression compression;
 	gsize offset = fu_struct_zip_cdfh_get_offset_lfh(st_cdfh);
+	guint16 lfh_flags;
 	guint32 actual_crc = 0xFFFFFFFF;
 	guint32 compressed_size;
 	guint32 uncompressed_size;
@@ -56,7 +74,8 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 	st_lfh = fu_struct_zip_lfh_parse_stream(stream, offset, error);
 	if (st_lfh == NULL)
 		return NULL;
-	offset += FU_STRUCT_ZIP_LFH_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_ZIP_LFH_SIZE, error))
+		return NULL;
 
 	/* read filename */
 	filename = fu_input_stream_read_string(stream,
@@ -67,21 +86,29 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		g_prefix_error_literal(error, "failed to read filename: ");
 		return NULL;
 	}
-	offset += fu_struct_zip_lfh_get_filename_size(st_lfh);
+	if (!fu_size_checked_inc(&offset, fu_struct_zip_lfh_get_filename_size(st_lfh), error))
+		return NULL;
+
+	/* sanity check */
+	if (!fu_path_verify_safe(filename, error))
+		return NULL;
 
 	/* parse the extra data blob just because we can */
 	if (!fu_zip_firmware_parse_extra(stream,
 					 offset,
 					 fu_struct_zip_lfh_get_extra_size(st_lfh),
 					 error))
-		return FALSE;
-
-	offset += fu_struct_zip_lfh_get_extra_size(st_lfh);
+		return NULL;
+	if (!fu_size_checked_inc(&offset, fu_struct_zip_lfh_get_extra_size(st_lfh), error))
+		return NULL;
 
 	/* read crc */
-	uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
-	if (uncompressed_crc == 0x0)
+	lfh_flags = fu_struct_zip_lfh_get_flags(st_lfh);
+	if (lfh_flags & FU_ZIP_FLAG_DATA_DESCRIPTOR) {
 		uncompressed_crc = fu_struct_zip_cdfh_get_uncompressed_crc(st_cdfh);
+	} else {
+		uncompressed_crc = fu_struct_zip_lfh_get_uncompressed_crc(st_lfh);
+	}
 
 	/* read data */
 	compressed_size = fu_struct_zip_lfh_get_compressed_size(st_lfh);
@@ -102,6 +129,18 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "zip64 not supported");
+		return NULL;
+	}
+
+	/* check decompression ratio to prevent bombs */
+	if (compressed_size > 0 &&
+	    (uncompressed_size / compressed_size) > FU_ZIP_MAX_DECOMPRESSION_RATIO) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "decompression ratio %u:1 exceeds maximum of %u:1",
+			    uncompressed_size / compressed_size,
+			    (guint)FU_ZIP_MAX_DECOMPRESSION_RATIO);
 		return NULL;
 	}
 	stream_compressed = fu_partial_input_stream_new(stream, offset, compressed_size, error);
@@ -242,6 +281,19 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
+	/* check file count before parsing to prevent DoS */
+	if (fu_firmware_get_images_max(FU_FIRMWARE(self)) > 0 &&
+	    fu_struct_zip_eocd_get_cd_number(st_eocd) >
+		fu_firmware_get_images_max(FU_FIRMWARE(self))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "too many files in ZIP: %u exceeds maximum of %u",
+			    fu_struct_zip_eocd_get_cd_number(st_eocd),
+			    fu_firmware_get_images_max(FU_FIRMWARE(self)));
+		return FALSE;
+	}
+
 	/* parse central directory file header */
 	offset = fu_struct_zip_eocd_get_cd_offset(st_eocd);
 	for (guint i = 0; i < fu_struct_zip_eocd_get_cd_number(st_eocd); i++) {
@@ -263,8 +315,12 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 		if (zip_file == NULL)
 			return FALSE;
 
-		offset += FU_STRUCT_ZIP_CDFH_SIZE;
-		offset += fu_struct_zip_cdfh_get_filename_size(st_cdfh);
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_ZIP_CDFH_SIZE, error))
+			return FALSE;
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_zip_cdfh_get_filename_size(st_cdfh),
+					 error))
+			return FALSE;
 
 		/* parse the extra data blob just because we can */
 		if (!fu_zip_firmware_parse_extra(stream,
@@ -272,10 +328,16 @@ fu_zip_firmware_parse(FuFirmware *firmware,
 						 fu_struct_zip_cdfh_get_extra_size(st_cdfh),
 						 error))
 			return FALSE;
-		offset += fu_struct_zip_cdfh_get_extra_size(st_cdfh);
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_zip_cdfh_get_extra_size(st_cdfh),
+					 error))
+			return FALSE;
 
 		/* ignore the comment */
-		offset += fu_struct_zip_cdfh_get_comment_size(st_cdfh);
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_zip_cdfh_get_comment_size(st_cdfh),
+					 error))
+			return FALSE;
 
 		/* add image */
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), zip_file, error))
@@ -423,7 +485,8 @@ fu_zip_firmware_init(FuZipFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ZIP_FILE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT16);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 /**

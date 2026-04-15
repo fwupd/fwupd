@@ -60,6 +60,8 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	gsize image_size = 0;
 	const guint8 *buffer;
 	guint16 target_system = 0;
+	guint8 major_version = 0;
+	guint8 minor_version = 0;
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -72,10 +74,19 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	buffer = g_bytes_get_data(fw, &image_size);
-
-	dynamic_version = g_strdup_printf("%02x.%02x",
-					  buffer[self->blob_major_offset],
-					  buffer[self->blob_minor_offset]);
+	if (!fu_memread_uint8_safe(buffer,
+				   image_size,
+				   self->blob_major_offset,
+				   &major_version,
+				   error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(buffer,
+				   image_size,
+				   self->blob_minor_offset,
+				   &minor_version,
+				   error))
+		return FALSE;
+	dynamic_version = g_strdup_printf("%02x.%02x", major_version, minor_version);
 	g_info("writing Thunderbolt firmware version %s", dynamic_version);
 	g_debug("total image size: %" G_GSIZE_FORMAT, image_size);
 

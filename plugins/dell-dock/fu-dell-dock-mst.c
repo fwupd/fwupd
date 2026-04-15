@@ -970,6 +970,10 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	FuDellDockMstType type;
+	gsize datasz;
+	guint8 major_version = 0;
+	guint8 minor_version = 0;
+	guint8 build_version = 0;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
@@ -989,12 +993,15 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	data = g_bytes_get_data(fw, NULL);
-
-	dynamic_version = g_strdup_printf("%02x.%02x.%02x",
-					  data[self->blob_major_offset],
-					  data[self->blob_minor_offset],
-					  data[self->blob_build_offset]);
+	data = g_bytes_get_data(fw, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, self->blob_major_offset, &major_version, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(data, datasz, self->blob_minor_offset, &minor_version, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(data, datasz, self->blob_build_offset, &build_version, error))
+		return FALSE;
+	dynamic_version =
+	    g_strdup_printf("%02x.%02x.%02x", major_version, minor_version, build_version);
 	g_info("writing MST firmware version %s", dynamic_version);
 
 	/* enable remote control */

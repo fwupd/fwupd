@@ -358,6 +358,7 @@ static void
 fu_vli_usbhub_firmware_init(FuVliUsbhubFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_BCD);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

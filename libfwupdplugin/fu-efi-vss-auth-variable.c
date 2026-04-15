@@ -135,7 +135,11 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	self->timestamp = fu_struct_efi_vss_auth_variable_header_get_timestamp(st);
 
 	/* read name */
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "VSS auth variable header offset overflow: ");
+		return FALSE;
+	}
+
 	buf_name = fu_input_stream_read_byte_array(
 	    stream,
 	    offset,
@@ -151,7 +155,10 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	g_debug("added %s: %s", self->vendor_guid, name);
 
 	/* read data */
-	offset += fu_struct_efi_vss_auth_variable_header_get_name_size(st);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_efi_vss_auth_variable_header_get_name_size(st),
+				 error))
+		return FALSE;
 
 	/* if this is a well known key then parse it as a child type */
 	img_gtype = fu_efi_vss_auth_variable_lookup_image_gtype(self);
@@ -183,7 +190,10 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	}
 
 	/* next header */
-	offset += fu_struct_efi_vss_auth_variable_header_get_data_size(st);
+	if (!fu_size_checked_inc(&offset,
+				 fu_struct_efi_vss_auth_variable_header_get_data_size(st),
+				 error))
+		return FALSE;
 
 	/* success */
 	fu_firmware_set_size(firmware, offset);
@@ -287,6 +297,7 @@ fu_efi_vss_auth_variable_init(FuEfiVssAuthVariable *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE_LIST);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

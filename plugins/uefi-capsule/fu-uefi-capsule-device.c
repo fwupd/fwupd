@@ -36,7 +36,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUefiCapsuleDevice, fu_uefi_capsule_device, FU_TYPE_
 #define FU_EFI_FMP_CAPSULE_GUID "6dcbd5ed-e82d-4c44-bda1-7194199ad92a"
 
 /* the size of the fwupd*.efi binary plus any logs the firmware updater might generate */
-#define FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED (1024 * 1024) /* bytes */
+#define FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED FU_MB
 
 enum {
 	PROP_0,
@@ -428,6 +428,13 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	priv->missing_header = TRUE;
 	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
 	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
+	if (bufsz > G_MAXUINT32 - hdrsize) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "payload too large");
+		return NULL;
+	}
 	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
 	if (priv->fw_class == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set");
@@ -813,14 +820,14 @@ fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
 		if (fu_device_has_private_flag(FU_DEVICE(self),
 					       FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP)) {
 			g_info("minimal additional ESP free space required, using %uMB + %uMB",
-			       (guint)fu_firmware_get_size(firmware) / (1024 * 1024),
-			       (guint)FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / ((1024 * 1024)));
+			       (guint)(fu_firmware_get_size(firmware) / FU_MB),
+			       (guint)(FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / FU_MB));
 			sz_reqd =
 			    fu_firmware_get_size(firmware) + FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED;
 		} else {
 			g_info("required ESP free space is not configured, using (2 x %uMB) + %uMB",
-			       (guint)fu_firmware_get_size(firmware) / (1024 * 1024),
-			       (guint)FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / ((1024 * 1024)));
+			       (guint)(fu_firmware_get_size(firmware) / FU_MB),
+			       (guint)(FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / FU_MB));
 			sz_reqd = fu_firmware_get_size(firmware) * 2 +
 				  FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED;
 		}

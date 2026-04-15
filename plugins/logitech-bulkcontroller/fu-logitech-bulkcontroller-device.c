@@ -1555,7 +1555,7 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 	    BULK_TRANSFER_TIMEOUT,
 	    &error_local);
 	if (buf != NULL) {
-		self->transfer_bufsz = 16 * 1024;
+		self->transfer_bufsz = 16 * FU_KB;
 	} else {
 		g_debug("sticking to 8k buffersize: %s", error_local->message);
 	}
@@ -1635,7 +1635,7 @@ fu_logitech_bulkcontroller_device_set_progress(FuDevice *device, FuProgress *pro
 static void
 fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 {
-	self->transfer_bufsz = 8 * 1024;
+	self->transfer_bufsz = 8 * FU_KB;
 	self->device_info_response_json = g_string_new(NULL);
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.vc.proto");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);

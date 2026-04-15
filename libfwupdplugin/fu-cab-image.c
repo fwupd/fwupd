@@ -10,6 +10,7 @@
 
 #include "fu-cab-image.h"
 #include "fu-common.h"
+#include "fu-path.h"
 
 struct _FuCabImage {
 	FuFirmware parent_instance;
@@ -110,8 +111,13 @@ fu_cab_image_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 	/* simple properties */
 	tmp = xb_node_query_text(n, "win32_filename", NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
+		g_autoptr(GString) filename = g_string_new(tmp);
+		g_string_replace(filename, "\\", "/", 0);
+		if (!fu_path_verify_safe(filename->str, error))
+			return FALSE;
 		fu_cab_image_set_win32_filename(self, tmp);
+	}
 	tmp = xb_node_query_text(n, "created", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) created = g_date_time_new_from_iso8601(tmp, NULL);
@@ -164,6 +170,11 @@ fu_cab_image_class_init(FuCabImageClass *klass)
 static void
 fu_cab_image_init(FuCabImage *self)
 {
+#ifdef __x86_64__
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_GB);
+#else
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
+#endif
 }
 
 /**

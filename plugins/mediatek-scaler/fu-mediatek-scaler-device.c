@@ -40,7 +40,7 @@
 #define FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY 100
 
 /* firmware payload size */
-#define FU_MEDIATEK_SCALER_FW_SIZE_MAX 0x100000
+#define FU_MEDIATEK_SCALER_FW_SIZE_MAX (1 * FU_MB)
 
 /* device private flag */
 #define FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY "bank2-only"
@@ -903,6 +903,7 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_set_vendor(FU_DEVICE(self), "Mediatek");
 	fu_device_add_protocol(FU_DEVICE(self), "com.mediatek.scaler");
 	fu_device_set_name(FU_DEVICE(self), "Display Controller");
@@ -911,6 +912,7 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_MEDIATEK_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_I2C_DEVICE);
 	fu_device_register_private_flag(FU_DEVICE(self), FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY);
+	fu_device_set_priority(FU_DEVICE(self), 1); /* better than linux_display */
 }
 
 static void

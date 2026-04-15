@@ -18,8 +18,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-31 16:10+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
+"PO-Revision-Date: 2026-04-02 13:09+0000\n"
 "Last-Translator: Francisco Serrador <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/fwupd/fwupd/es/>\n"
 "Language: es\n"
@@ -722,6 +722,10 @@ msgstr "BdD UEFI"
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "Protección de Escritura del Firmware"
@@ -893,6 +897,10 @@ msgstr "Modo de Gestión del Sistema"
 msgid "UEFI Memory Protection"
 msgstr "Protección de Memoria UEFI"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "Protección de Escritura del Firmware del de la memoria del firmware del dispositivo con el que es condonado."
@@ -1039,6 +1047,10 @@ msgstr "La BdD UEFI contiene el listado de certificados válidos que pueden ser 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart es una característica de seguridad del firmware, que protege la BIOS de ser manipulada."
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1825,16 +1837,17 @@ msgid "CRC FILENAME"
 msgstr ""
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "Encuentra un algoritmo que coincide con el CRC del fichero"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
 msgstr ""
 
 #. TRANSLATORS: command description
+#, fuzzy
 msgid "Parse the system PCR eventlog"
-msgstr ""
+msgstr "Interpreta el PCR del sistema en enentlog"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2041,8 +2054,9 @@ msgid "No releases available"
 msgstr "Ninguna liberación disponible"
 
 #. TRANSLATORS: no repositories to download from
+#, fuzzy
 msgid "No matching releases for search token"
-msgstr ""
+msgstr "No coincide versiones para vale de búsqueda"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
@@ -3036,6 +3050,10 @@ msgstr "Versión actual"
 msgid "Minimum Version"
 msgstr "Versión Mínima"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Versión del Arranque"
@@ -3043,6 +3061,10 @@ msgstr "Versión del Arranque"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Proveedor"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3175,8 +3197,9 @@ msgid "Plugin is only for testing"
 msgstr "El complemento es solo para pruebas"
 
 #. TRANSLATORS: The plugin enumeration might change the device current mode
+#, fuzzy
 msgid "Plugin enumeration may change device state"
-msgstr ""
+msgstr "La enumeración del complemento puede cambiar el estado del dispositivo"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -3568,6 +3591,10 @@ msgstr "El almacenaje de certificado UEFI está ahora actualizado"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart está habilitado"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr ""
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3659,6 +3686,9 @@ msgstr "¿Habilitar remoto nuevo?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "¿Acuerda y habilita el remoto?"
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "Encuentra un algoritmo que coincide con el CRC del fichero"
 
 #~ msgid "[SETTING1] [SETTING2]..."
 #~ msgstr "[OPCIÓN1] [OPCIÓN2]…"

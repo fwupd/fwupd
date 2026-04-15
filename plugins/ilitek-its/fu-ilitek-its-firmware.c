@@ -11,7 +11,7 @@
 #include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-struct.h"
 
-#define FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE (256 * 1024)
+#define FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE (256 * FU_KB)
 
 struct _FuIlitekItsFirmware {
 	FuIhexFirmware parent_instance;
@@ -200,6 +200,7 @@ fu_ilitek_its_firmware_init(FuIlitekItsFirmware *self)
 	fu_ihex_firmware_set_padding_value(FU_IHEX_FIRMWARE(self), 0xFF);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ILITEK_ITS_BLOCK);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 

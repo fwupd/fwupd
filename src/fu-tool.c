@@ -6197,7 +6197,7 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("CRC FILENAME"),
 			      /* TRANSLATORS: command description */
-			      _("Finds a algorithm that matches the file CRC"),
+			      _("Finds an algorithm that matches the file CRC"),
 			      fu_util_crc_find);
 	fu_util_cmd_array_add(cmd_array,
 			      "tpm-eventlog",

@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <glib/gstdio.h>
+
 #include "fwupd-error.h"
 
 #include "fu-unix-seekable-input-stream.h"
@@ -117,22 +119,46 @@ fu_unix_seekable_input_stream_seekable_iface_init(GSeekableIface *iface)
  * fu_unix_seekable_input_stream_new:
  * @fd: a UNIX file descriptor
  * @close_fd: %TRUE to close the file descriptor when done
+ * @error: (nullable): optional return location for an error
  *
- * Creates a new seekable GUnixInputStream for the given fd.
+ * Creates a new seekable GUnixInputStream for the given file descriptor.
+ *
+ * NOTE: @fd has to point to a regular file on disk
  *
  * Returns: (transfer full): a #GInputStream
  *
- * Since: 2.0.0
+ * Since: 2.1.2
  **/
 GInputStream *
-fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd)
+fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 {
-	return g_object_new(FU_TYPE_UNIX_SEEKABLE_INPUT_STREAM,
-			    "fd",
-			    fd,
-			    "close-fd",
-			    close_fd,
-			    NULL);
+	GStatBuf st = {0};
+	g_autoptr(GInputStream) stream = NULL;
+
+	/* create wrapper */
+	stream =
+	    g_object_new(FU_TYPE_UNIX_SEEKABLE_INPUT_STREAM, "fd", fd, "close-fd", close_fd, NULL);
+
+	/* check for a regular file */
+	if (fstat(fd, &st) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to stat fd: %s",
+			    strerror(errno));
+		return NULL;
+	}
+	if (!S_ISREG(st.st_mode)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "fd must be a regular file, got mode 0%o",
+			    st.st_mode);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&stream);
 }
 
 static void

@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-device-path-list.h"
 #include "fu-efi-file-path-device-path.h"
 #include "fu-efi-hard-drive-device-path.h"
@@ -101,9 +102,17 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(FU_FIRMWARE(efi_dp), offset);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(efi_dp), stream, offset, flags, error))
 			return FALSE;
+		if (fu_firmware_get_size(FU_FIRMWARE(efi_dp)) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "DP section had zero size");
+			return FALSE;
+		}
 		if (!fu_firmware_add_image(firmware, FU_FIRMWARE(efi_dp), error))
 			return FALSE;
-		offset += fu_firmware_get_size(FU_FIRMWARE(efi_dp));
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(FU_FIRMWARE(efi_dp)), error))
+			return FALSE;
 	}
 
 	/* success */
@@ -157,6 +166,7 @@ fu_efi_device_path_list_init(FuEfiDevicePathList *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILE_PATH_DEVICE_PATH);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_HARD_DRIVE_DEVICE_PATH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_DEVICE_PATH_LIST_IMAGES_MAX);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

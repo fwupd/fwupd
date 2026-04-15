@@ -48,6 +48,9 @@ struct _FuDbusDaemon {
 
 G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 
+#define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_TOTAL	     100
+#define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_PER_SENDER 10
+
 static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
 {
@@ -203,7 +206,18 @@ fu_dbus_daemon_create_request(FuDbusDaemon *self, const gchar *sender, GError **
 
 	/* if using FWUPD_DBUS_SOCKET... */
 	if (sender == NULL) {
-		fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
+#ifdef HAVE_GIO_UNIX
+		GCredentials *credentials =
+		    g_dbus_connection_get_peer_credentials(self->connection);
+		if (credentials != NULL) {
+			calling_uid = g_credentials_get_unix_user(credentials, error);
+			if (calling_uid == (guint)-1)
+				return NULL;
+			if (fu_engine_is_uid_trusted(engine, calling_uid))
+				converter_flags |= FWUPD_CODEC_FLAG_TRUSTED;
+		}
+#endif
+		fu_engine_request_set_converter_flags(request, converter_flags);
 		return g_object_ref(request);
 	}
 
@@ -1022,17 +1036,21 @@ fu_dbus_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
 					gpointer user_data)
 {
 	FuDbusDaemon *self = FU_DBUS_DAEMON(user_data);
+	g_autoptr(GPtrArray) inhibits = g_ptr_array_new();
+
 	for (guint i = 0; i < self->system_inhibits->len; i++) {
 		FuDbusDaemonSystemInhibit *inhibit = g_ptr_array_index(self->system_inhibits, i);
-		if (g_strcmp0(inhibit->sender, name) == 0) {
-			g_debug("removing %s as %s vanished without calling Uninhibit",
-				inhibit->id,
-				name);
-			g_ptr_array_remove_index(self->system_inhibits, i);
-			fu_dbus_daemon_ensure_system_inhibit(self);
-			break;
-		}
+		if (g_strcmp0(inhibit->sender, name) == 0)
+			g_ptr_array_add(inhibits, inhibit);
 	}
+	if (inhibits->len == 0)
+		return;
+	for (guint i = 0; i < inhibits->len; i++) {
+		FuDbusDaemonSystemInhibit *inhibit = g_ptr_array_index(inhibits, i);
+		g_debug("removing %s as %s vanished without calling Uninhibit", inhibit->id, name);
+		g_ptr_array_remove(self->system_inhibits, inhibit);
+	}
+	fu_dbus_daemon_ensure_system_inhibit(self);
 }
 
 #ifdef HAVE_GIO_UNIX
@@ -1080,11 +1098,9 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
-	if (stream == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+	if (stream == NULL)
 		return NULL;
-	}
 	return g_steal_pointer(&stream);
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
@@ -2144,17 +2160,44 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 {
 	FuDbusDaemonSystemInhibit *inhibit;
 	const gchar *reason = NULL;
+	const gchar *sender = fu_engine_request_get_sender(request);
+	guint sender_count = 0;
 
 	g_variant_get(parameters, "(&s)", &reason);
 
+	/* limit total system inhibits */
+	if (self->system_inhibits->len >= FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_TOTAL) {
+		g_dbus_method_invocation_return_error_literal(
+		    invocation,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "maximum system inhibit limit reached");
+		return;
+	}
+
+	/* limit per-user inhibits */
+	for (guint i = 0; i < self->system_inhibits->len; i++) {
+		FuDbusDaemonSystemInhibit *existing = g_ptr_array_index(self->system_inhibits, i);
+		if (g_strcmp0(existing->sender, sender) == 0)
+			sender_count++;
+	}
+	if (sender_count >= FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_PER_SENDER) {
+		g_dbus_method_invocation_return_error_literal(
+		    invocation,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "maximum inhibit limit per user reached");
+		return;
+	}
+
 	/* watch */
 	inhibit = g_new0(FuDbusDaemonSystemInhibit, 1);
-	inhibit->sender = g_strdup(fu_engine_request_get_sender(request));
+	inhibit->sender = g_strdup(sender);
 	inhibit->id =
 	    g_strdup_printf("dbus-%i", g_random_int_range(1, G_MAXINT - 1)); /* nocheck:blocked */
 	inhibit->watcher_id =
 	    g_bus_watch_name_on_connection(self->connection,
-					   fu_engine_request_get_sender(request),
+					   sender,
 					   G_BUS_NAME_WATCHER_FLAGS_NONE,
 					   NULL,
 					   fu_dbus_daemon_inhibit_name_vanished_cb,
@@ -2250,14 +2293,24 @@ fu_dbus_daemon_method_uninhibit(FuDbusDaemon *self,
 				GDBusMethodInvocation *invocation)
 {
 	const gchar *inhibit_id = NULL;
+	const gchar *sender = fu_engine_request_get_sender(request);
 	gboolean found = FALSE;
 
 	g_variant_get(parameters, "(&s)", &inhibit_id);
 
-	/* find by id, then uninhibit device */
+	/* find by id, then verify ownership before uninhibiting */
 	for (guint i = 0; i < self->system_inhibits->len; i++) {
 		FuDbusDaemonSystemInhibit *inhibit = g_ptr_array_index(self->system_inhibits, i);
 		if (g_strcmp0(inhibit->id, inhibit_id) == 0) {
+			/* verify caller is the owner of this inhibit */
+			if (g_strcmp0(inhibit->sender, sender) != 0) {
+				g_dbus_method_invocation_return_error_literal(
+				    invocation,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_PERMISSION_DENIED,
+				    "cannot uninhibit: not the owner");
+				return;
+			}
 			g_ptr_array_remove_index(self->system_inhibits, i);
 			fu_dbus_daemon_ensure_system_inhibit(self);
 			found = TRUE;
@@ -2903,7 +2956,11 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 		g_autoptr(GDBusServer) server = NULL;
 
 		server = g_dbus_server_new_sync(socket_address,
+#ifdef _WIN32
 						G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS,
+#else
+						G_DBUS_SERVER_FLAGS_AUTHENTICATION_REQUIRE_SAME_USER,
+#endif
 						guid,
 						NULL,
 						NULL,

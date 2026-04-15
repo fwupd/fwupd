@@ -88,7 +88,9 @@ fu_himax_tp_hid_device_set_feature(FuHimaxTpHidDevice *self,
 	/* send in chunks */
 	if (!fu_himax_tp_hid_device_size_lookup(self, report_id, &unit_sz, error))
 		return FALSE;
-	chunks = fu_chunk_array_new(buf, bufsz, 0, 0, unit_sz);
+	chunks = fu_chunk_array_new(buf, bufsz, 0, 0, unit_sz, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	if (progress != NULL) {
@@ -606,8 +608,8 @@ fu_himax_tp_hid_device_write_unit(FuHimaxTpHidDevice *self,
 		buf_slice,
 		buf,
 		bufsz,
-		fu_struct_himax_tp_hid_fw_unit_get_bin_start_offset(st_unit) * 1024,
-		fu_struct_himax_tp_hid_fw_unit_get_bin_size(st_unit) * 1024,
+		fu_struct_himax_tp_hid_fw_unit_get_bin_start_offset(st_unit) * FU_KB,
+		fu_struct_himax_tp_hid_fw_unit_get_bin_size(st_unit) * FU_KB,
 		error))
 		return FALSE;
 	if (!fu_himax_tp_hid_device_set_feature(self,

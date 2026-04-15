@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
 "PO-Revision-Date: 2025-10-24 10:13+0000\n"
 "Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Croatian <https://hosted.weblate.org/projects/fwupd/fwupd/hr/>\n"
@@ -718,6 +718,10 @@ msgstr "UEFI db"
 msgid "HP SureStart"
 msgstr ""
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "Firmver zaštita zapisivanja"
@@ -889,6 +893,10 @@ msgstr "Način upravljanja sustavom"
 msgid "UEFI Memory Protection"
 msgstr "UEFI zaštita memorije"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "Firmver zaštita zapisivanja štiti memoriju firmvera uređaja od nevlaštenog mijenjanja."
@@ -1034,6 +1042,10 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
 msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
@@ -1821,7 +1833,7 @@ msgid "CRC FILENAME"
 msgstr ""
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
+msgid "Finds an algorithm that matches the file CRC"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
@@ -3032,6 +3044,10 @@ msgstr "Trenutna inačica"
 msgid "Minimum Version"
 msgstr "Najmanja inačica"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Inačica učitača pokretanja"
@@ -3039,6 +3055,10 @@ msgstr "Inačica učitača pokretanja"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Proizvođač"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3562,6 +3582,10 @@ msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "HP SureStart is enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
 msgstr ""
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".

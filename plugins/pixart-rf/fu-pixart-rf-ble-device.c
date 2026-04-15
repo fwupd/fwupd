@@ -780,7 +780,9 @@ fu_pixart_rf_ble_device_fw_get_info(FuPixartRfBleDevice *self, GError **error)
 	}
 	/* set current version */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC)) {
-		version_str = g_strndup((gchar *)res + 0x6, 5);
+		version_str = fu_memstrsafe(res, sizeof(res), 0x6, 5, error);
+		if (version_str == NULL)
+			return FALSE;
 	} else {
 		if (!fu_memread_uint16_safe(res,
 					    FU_PIXART_RF_BLE_DEVICE_OTA_BUF_SZ,

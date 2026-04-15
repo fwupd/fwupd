@@ -16,7 +16,7 @@ struct _FuUefiPkDevice {
 
 G_DEFINE_TYPE(FuUefiPkDevice, fu_uefi_pk_device, FU_TYPE_UEFI_DEVICE)
 
-#define FU_UEFI_PK_DEVICE_DEFAULT_REQUIRED_FREE (8 * 1024) /* bytes */
+#define FU_UEFI_PK_DEVICE_DEFAULT_REQUIRED_FREE (8 * FU_KB) /* bytes */
 
 static void
 fu_uefi_pk_device_to_string(FuDevice *device, guint idt, GString *str)

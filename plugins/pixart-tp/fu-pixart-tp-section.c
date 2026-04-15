@@ -67,6 +67,7 @@ fu_pixart_tp_section_init(FuPixartTpSection *self)
 {
 	self->reserved =
 	    g_byte_array_sized_new(FU_STRUCT_PIXART_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

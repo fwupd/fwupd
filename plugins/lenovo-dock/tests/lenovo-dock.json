@@ -1,0 +1,30 @@
+{
+  "name": "Lenovo USB4 Dock",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "f5d68118c069eda0e41f2d5ef22b79b10b773d5b51c5e975f1cc9c4dd63be5a6-ldc_u4.cab",
+      "emulation-url": "7af0cfb9819f4e19ff4ce35076bba624012561347e119fd52d29aee7459b5115-emulation.zip",
+      "components": [
+        {
+          "version": "1.0.12",
+          "guids": [
+            "7a461812-e8b0-57ff-b313-dec92a243f32"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "b4c1a4afe2e4baee4e1e1cf0d17db36c0cad99749776129b588b490499ff8a29-ldc_u4.cab",
+      "emulation-url": "4ff46e8bea7c228a6ac54173d67a2c1f2f5227788d1162ea5b3e23195b1cf224-emulation2.zip",
+      "components": [
+        {
+          "version": "1.2.04",
+          "guids": [
+            "7a461812-e8b0-57ff-b313-dec92a243f32"
+          ]
+        }
+      ]
+    }
+  ]
+}

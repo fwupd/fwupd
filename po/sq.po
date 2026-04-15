@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
 "PO-Revision-Date: 2026-03-11 18:10+0000\n"
 "Last-Translator: Besnik Bleta <besnik@programeshqip.org>\n"
 "Language-Team: Albanian <https://hosted.weblate.org/projects/fwupd/fwupd/sq/>\n"
@@ -706,6 +706,10 @@ msgstr "BD UEFI"
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "Mbrojtje Firmware-i Nga Shkrimi"
@@ -877,6 +881,10 @@ msgstr "Mënyrë Administrimi Sistemi"
 msgid "UEFI Memory Protection"
 msgstr "Mbrojtje Kujtese UEFI"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "Mbrojtje Firmware-i Nga Shkrim mbron kujtesë firmware-i pajisjeje nga futje hundësh në të."
@@ -1023,6 +1031,10 @@ msgstr "Baza e të dhënave UEFI përmban listën e dëshmive të vlefshme që m
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart është një veçori sigurie firmware-i që mbron BIOS-in nga futje hundësh."
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1809,8 +1821,8 @@ msgid "CRC FILENAME"
 msgstr "EMËRKARTELE CRC"
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "Gjen një algoritëm që përkon me CRC-në e kartelës"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3010,6 +3022,10 @@ msgstr "Versioni i tanishëm"
 msgid "Minimum Version"
 msgstr "Version Minimum"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Version ngarkuesi nisjesh"
@@ -3017,6 +3033,10 @@ msgstr "Version ngarkuesi nisjesh"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Tregtues"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3539,6 +3559,10 @@ msgstr "Depoja e dëshmive UEFI tani është e përditësuar"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart është e aktivizuar"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr ""
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3630,3 +3654,6 @@ msgstr ""
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr ""
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "Gjen një algoritëm që përkon me CRC-në e kartelës"

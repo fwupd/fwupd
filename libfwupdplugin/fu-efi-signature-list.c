@@ -11,6 +11,7 @@
 #include <fwupd.h>
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
@@ -118,7 +119,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		sig_kind = FU_EFI_SIGNATURE_KIND_X509;
 	}
 	list_size = fu_struct_efi_signature_list_get_list_size(st);
-	if (list_size < 0x1c || list_size > 1024 * 1024) {
+	if (list_size < 0x1c || list_size > FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -127,7 +128,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		return FALSE;
 	}
 	header_size = fu_struct_efi_signature_list_get_header_size(st);
-	if (header_size > 1024 * 1024) {
+	if (header_size > FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -135,8 +136,18 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    header_size);
 		return FALSE;
 	}
+	/* validate header fits within list */
+	if (header_size + 0x1c > list_size) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "SignatureHeaderSize 0x%x + 0x1c exceeds list size 0x%x",
+			    header_size,
+			    list_size);
+		return FALSE;
+	}
 	size = fu_struct_efi_signature_list_get_size(st);
-	if (size < sizeof(fwupd_guid_t) || size > 1024 * 1024) {
+	if (size < sizeof(fwupd_guid_t) || size > FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -144,9 +155,33 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			    size);
 		return FALSE;
 	}
+	if (header_size >= size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid as header_size >= size");
+		return FALSE;
+	}
+	/* validate signatures fit exactly */
+	if (size > 0) {
+		gsize data_size = list_size - 0x1c - header_size;
+		if (data_size % size != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "data size 0x%x not evenly divisible by signature size 0x%x",
+				    (guint)data_size,
+				    size);
+			return FALSE;
+		}
+	}
 
 	/* header is typically unused */
-	offset_tmp = *offset + 0x1c + header_size;
+	offset_tmp = *offset;
+	if (!fu_size_checked_inc(&offset_tmp, 0x1c, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_tmp, header_size, error))
+		return FALSE;
 	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
 		g_autoptr(FuEfiSignature) sig = NULL;
 
@@ -160,10 +195,10 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			return FALSE;
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
-		offset_tmp += size;
+		if (!fu_size_checked_inc(&offset_tmp, size, error))
+			return FALSE;
 	}
-	*offset += list_size;
-	return TRUE;
+	return fu_size_checked_inc(offset, list_size, error);
 }
 
 static gboolean
@@ -371,6 +406,7 @@ fu_efi_signature_list_init(FuEfiSignatureList *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_X509_SIGNATURE);
 }

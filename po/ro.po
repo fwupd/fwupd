@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
 "PO-Revision-Date: 2026-03-03 17:09+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
@@ -713,6 +713,10 @@ msgstr "Baza de date UEFI (UEFI db)"
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "Protecție la scriere a firmware-ului"
@@ -884,6 +888,10 @@ msgstr "Modul de gestionare a sistemului"
 msgid "UEFI Memory Protection"
 msgstr "Protecție a memoriei UEFI"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "Protecția la scriere a firmware-ului protejează memoria firmware a dispozitivului împotriva modificărilor."
@@ -1030,6 +1038,10 @@ msgstr "Baza de date UEFI (UEFI db) conține lista certificatelor valide care po
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart este o caracteristică de securitate a firmware-ului care protejează BIOS-ul de falsificare/manipulare."
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1816,8 +1828,8 @@ msgid "CRC FILENAME"
 msgstr "CRC NUME_FIȘIER"
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "Găsește un algoritm care se potrivește cu codul CRC al fișierului"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3027,6 +3039,10 @@ msgstr "Versiunea curentă"
 msgid "Minimum Version"
 msgstr "Versiunea minimă"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Versiunea încărcătorului de pornire"
@@ -3034,6 +3050,10 @@ msgstr "Versiunea încărcătorului de pornire"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Producător"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3559,6 +3579,10 @@ msgstr "Stocul de certificate UEFI este acum actualizat"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart este activat"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr ""
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3650,6 +3674,9 @@ msgstr "Activați noul depozit ca sursă de software?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Acceptați și activați depozitul ca sursă de software?"
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "Găsește un algoritm care se potrivește cu codul CRC al fișierului"
 
 #~ msgid "[SETTING1] [SETTING2]..."
 #~ msgstr "[PARAMETRU1] [ PARAMETRU2]..."

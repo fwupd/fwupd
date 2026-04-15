@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
 "PO-Revision-Date: 2026-03-03 17:09+0000\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
@@ -717,6 +717,10 @@ msgstr "UEFI-db"
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "Skrivskydd för fast programvara"
@@ -888,6 +892,10 @@ msgstr "Systemhanteringsläge"
 msgid "UEFI Memory Protection"
 msgstr "UEFI-minnesskydd"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "Skrivskydd för fast programvara skyddar enhetens minne för fast programvara från att mixtras med."
@@ -1034,6 +1042,10 @@ msgstr "UEFI-databasen innehåller listan med giltiga certifikat som kan använd
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart är en säkerhetsfunktion för fast programvara som skyddar BIOS från att mixtras med."
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1820,8 +1832,8 @@ msgid "CRC FILENAME"
 msgstr "CRC FILNAMN"
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "Hittar en algoritm som matchar filens CRC"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3021,6 +3033,10 @@ msgstr "Aktuell version"
 msgid "Minimum Version"
 msgstr "Minimiversion"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Starthanterarversion"
@@ -3028,6 +3044,10 @@ msgstr "Starthanterarversion"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Tillverkare"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3550,6 +3570,10 @@ msgstr "UEFI-certifikatlagringen är nu uppdaterad"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart är aktiverat"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr ""
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3641,6 +3665,9 @@ msgstr "Aktivera ny fjärrkälla?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Samtyck och aktivera fjärrkällan?"
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "Hittar en algoritm som matchar filens CRC"
 
 #~ msgid "[SETTING1] [SETTING2]..."
 #~ msgstr "[INSTÄLLNING1] [INSTÄLLNING2]…"

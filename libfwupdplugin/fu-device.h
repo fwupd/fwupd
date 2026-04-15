@@ -97,6 +97,7 @@ struct _FuDeviceClass {
 				   FuFirmware *firmware,
 				   FuFirmwareParseFlags flags,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	void (*incorporate_from_proxy)(FuDevice *self, FuDevice *donor);
 #endif
 };
 
@@ -153,6 +154,7 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_plugin(d, v)	 fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
 #define fu_device_set_serial(d, v)	 fwupd_device_set_serial(FWUPD_DEVICE(d), v)
 #define fu_device_set_summary(d, v)	 fwupd_device_set_summary(FWUPD_DEVICE(d), v)
+#define fu_device_set_details_url(d, v)	 fwupd_device_set_details_url(FWUPD_DEVICE(d), v)
 #define fu_device_set_branch(d, v)	 fwupd_device_set_branch(FWUPD_DEVICE(d), v)
 #define fu_device_set_update_error(d, v) fwupd_device_set_update_error(FWUPD_DEVICE(d), v)
 #define fu_device_add_vendor_id(d, v)	 fwupd_device_add_vendor_id(FWUPD_DEVICE(d), v)
@@ -174,6 +176,7 @@ fu_device_new(FuContext *ctx);
 #define fu_device_get_name(d)		     fwupd_device_get_name(FWUPD_DEVICE(d))
 #define fu_device_get_serial(d)		     fwupd_device_get_serial(FWUPD_DEVICE(d))
 #define fu_device_get_summary(d)	     fwupd_device_get_summary(FWUPD_DEVICE(d))
+#define fu_device_get_details_url(d)	     fwupd_device_get_details_url(FWUPD_DEVICE(d))
 #define fu_device_get_branch(d)		     fwupd_device_get_branch(FWUPD_DEVICE(d))
 #define fu_device_get_id(d)		     fwupd_device_get_id(FWUPD_DEVICE(d))
 #define fu_device_get_composite_id(d)	     fwupd_device_get_composite_id(FWUPD_DEVICE(d))

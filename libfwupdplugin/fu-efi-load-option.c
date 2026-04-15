@@ -174,7 +174,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 			    fu_struct_shim_hive_get_header_version(st));
 		return FALSE;
 	}
-	offset += fu_struct_shim_hive_get_items_offset(st);
+	if (!fu_size_checked_inc(&offset, fu_struct_shim_hive_get_items_offset(st), error))
+		return FALSE;
 
 	/* items */
 	items_count = fu_struct_shim_hive_get_items_count(st);
@@ -188,7 +189,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 		st_item = fu_struct_shim_hive_item_parse_stream(stream, offset, error);
 		if (st_item == NULL)
 			return FALSE;
-		offset += st_item->buf->len;
+		if (!fu_size_checked_inc(&offset, st_item->buf->len, error))
+			return FALSE;
 
 		/* key */
 		keysz = fu_struct_shim_hive_item_get_key_length(st_item);
@@ -202,7 +204,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 		key = fu_input_stream_read_string(stream, offset, keysz, error);
 		if (key == NULL)
 			return FALSE;
-		offset += keysz;
+		if (!fu_size_checked_inc(&offset, keysz, error))
+			return FALSE;
 
 		/* value */
 		valuesz = fu_struct_shim_hive_item_get_value_length(st_item);
@@ -210,7 +213,8 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 			value = fu_input_stream_read_string(stream, offset, valuesz, error);
 			if (value == NULL)
 				return FALSE;
-			offset += valuesz;
+			if (!fu_size_checked_inc(&offset, valuesz, error))
+				return FALSE;
 		}
 		fu_efi_load_option_set_metadata(self, key, value != NULL ? value : "");
 	}
@@ -305,12 +309,17 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 	self->attrs = fu_struct_efi_load_option_get_attrs(st);
-	offset += st->buf->len;
+
+	/* add header size */
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "load option header offset overflow: ");
+		return FALSE;
+	}
 
 	/* parse UTF-16 description */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	for (; offset < streamsz; offset += 2) {
+	while (offset < streamsz) {
 		guint16 tmp = 0;
 		if (buf_utf16->len > FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX) {
 			g_set_error(error,
@@ -325,19 +334,33 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 		if (tmp == 0)
 			break;
 		fu_byte_array_append_uint16(buf_utf16, tmp, G_LITTLE_ENDIAN);
+
+		/* next */
+		if (!fu_size_checked_inc(&offset, 2, error)) {
+			g_prefix_error_literal(error, "description offset overflow: ");
+			return FALSE;
+		}
 	}
 	id = fu_utf16_to_utf8_byte_array(buf_utf16, G_LITTLE_ENDIAN, error);
 	if (id == NULL)
 		return FALSE;
 	fu_firmware_set_id(firmware, id);
-	offset += 2;
+
+	/* add null terminator size */
+	if (!fu_size_checked_inc(&offset, 2, error))
+		return FALSE;
 
 	/* parse dp blob */
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(device_path_list), stream, offset, flags, error))
 		return FALSE;
 	if (!fu_firmware_add_image(firmware, FU_FIRMWARE(device_path_list), error))
 		return FALSE;
-	offset += fu_struct_efi_load_option_get_dp_size(st);
+
+	/* add device path size */
+	if (!fu_size_checked_inc(&offset, fu_struct_efi_load_option_get_dp_size(st), error)) {
+		g_prefix_error_literal(error, "load option device path offset overflow: ");
+		return FALSE;
+	}
 
 	/* optional data */
 	if (offset < streamsz) {
@@ -614,6 +637,7 @@ fu_efi_load_option_init(FuEfiLoadOption *self)
 	self->attrs = FU_EFI_LOAD_OPTION_ATTR_ACTIVE;
 	self->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH_LIST);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 /**

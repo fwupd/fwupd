@@ -10,7 +10,7 @@
 #include "fu-qc-firehose-raw-device.h"
 #include "fu-qc-firehose-struct.h"
 
-#define FU_QC_FIREHOSE_RAW_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
+#define FU_QC_FIREHOSE_RAW_DEVICE_RAW_BUFFER_SIZE (4 * FU_KB)
 
 struct _FuQcFirehoseRawDevice {
 	FuUdevDevice parent_instance;

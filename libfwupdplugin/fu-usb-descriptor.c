@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-usb-descriptor.h"
 
 G_DEFINE_TYPE(FuUsbDescriptor, fu_usb_descriptor, FU_TYPE_FIRMWARE)
@@ -39,4 +40,5 @@ fu_usb_descriptor_class_init(FuUsbDescriptorClass *klass)
 static void
 fu_usb_descriptor_init(FuUsbDescriptor *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }

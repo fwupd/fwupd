@@ -41,7 +41,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void AIBinder_markVendorStability(AIBinder* binder);
+void
+AIBinder_markVendorStability(AIBinder *binder);
 #ifdef __cplusplus
 }
 #endif
@@ -734,8 +735,8 @@ fu_binder_daemon_method_get_hwids(FuBinderDaemon *self,
 	}
 
 	return fu_binder_daemon_method_invocation_return_variant(out,
-								g_variant_builder_end(&builder),
-								error);
+								 g_variant_builder_end(&builder),
+								 error);
 }
 
 static binder_status_t
@@ -863,7 +864,7 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 	}
 
 	// TODO: Helper
-	helper->stream = fu_unix_seekable_input_stream_new(fd_handle, TRUE);
+	helper->stream = fu_unix_seekable_input_stream_new(fd_handle, TRUE, error);
 	if (helper->stream == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
 		fu_binder_daemon_method_invocation_return_error(out, *error);
@@ -1175,10 +1176,8 @@ log_handler(const gchar *log_domain,
 	/* rotate if > 5MB */
 	if (g_stat(log_path, &st) == 0 && st.st_size > 5 * 1024 * 1024) {
 		for (guint i = 2; i > 0; i--) {
-			g_autofree gchar *path_old =
-			    g_strdup_printf("%s.%u", log_path, i);
-			g_autofree gchar *path_new =
-			    g_strdup_printf("%s.%u", log_path, i + 1);
+			g_autofree gchar *path_old = g_strdup_printf("%s.%u", log_path, i);
+			g_autofree gchar *path_new = g_strdup_printf("%s.%u", log_path, i + 1);
 			(void)g_rename(path_old, path_new);
 		}
 		g_autofree gchar *log_path_1 = g_strdup_printf("%s.1", log_path);

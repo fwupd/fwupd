@@ -12,6 +12,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-chunk-array.h"
+#include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-srec-firmware.h"
 #include "fu-string.h"
@@ -487,7 +488,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 				    (guint)rcd->addr,
 				    priv->addr_min,
 				    rcd->ln);
-			} else if (priv->addr_max > 0 && rcd->addr < priv->addr_max) {
+			} else if (priv->addr_max > 0 && rcd->addr > priv->addr_max) {
 				g_debug(
 				    "ignoring data at 0x%x as after end address 0x%x at line %u",
 				    (guint)rcd->addr,
@@ -497,7 +498,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 				guint32 len_hole = rcd->addr - addr32_last;
 
 				/* fill any holes, but only up to 1Mb to avoid a DoS */
-				if (addr32_last > 0 && len_hole > 0x100000) {
+				if (addr32_last > 0 && len_hole > 1 * FU_MB) {
 					g_set_error(
 					    error,
 					    FWUPD_ERROR,
@@ -665,6 +666,7 @@ fu_srec_firmware_init(FuSrecFirmware *self)
 	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_srec_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void

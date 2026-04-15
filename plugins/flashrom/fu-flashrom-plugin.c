@@ -147,11 +147,11 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 						    G_LITTLE_ENDIAN,
 						    error))
 				return FALSE;
-			firmware_size = (bios_sz_ext & 0x3ff) * (1024 * 1024);
+			firmware_size = (bios_sz_ext & 0x3ff) * FU_MB;
 			if (bios_sz_ext & 0xc000)
 				firmware_size *= 1024;
 		} else {
-			firmware_size = (bios_sz + 1) * 64 * 1024;
+			firmware_size = (bios_sz + 1) * 64 * FU_KB;
 		}
 		fu_device_set_firmware_size_max(device, firmware_size);
 	}

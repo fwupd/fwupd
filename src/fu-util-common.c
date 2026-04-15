@@ -1416,6 +1416,9 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		fwupd_codec_string_append(str, idt + 1, _("Vendor"), strv);
 	}
 
+	/* TRANSLATORS: webpage for the specific device */
+	fwupd_codec_string_append(str, idt + 1, _("URL"), fwupd_device_get_details_url(dev));
+
 	/* branch */
 	fwupd_codec_string_append(str,
 				  idt + 1,

@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
+"POT-Creation-Date: 2026-04-14 13:50+0100\n"
 "PO-Revision-Date: 2026-03-05 08:14+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
@@ -713,6 +713,10 @@ msgstr "UEFI 数据库"
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr ""
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "固件写保护"
@@ -884,6 +888,10 @@ msgstr "系统管理模式"
 msgid "UEFI Memory Protection"
 msgstr "UEFI 内存保护"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr ""
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "固件写入保护技术保护设备固件内存免于篡改。"
@@ -1030,6 +1038,10 @@ msgstr "UEFI 数据库包含有效证书的列表，可用于授权允许运行�
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart 是保护 BIOS 免遭篡改的固件安全特性。"
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr ""
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1816,8 +1828,8 @@ msgid "CRC FILENAME"
 msgstr "CRC FILENAME"
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "寻找匹配文件 CRC 的算法"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3007,6 +3019,10 @@ msgstr "当前版本"
 msgid "Minimum Version"
 msgstr "最小版本"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr ""
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "引导程序版本"
@@ -3014,6 +3030,10 @@ msgstr "引导程序版本"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "供应商"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr ""
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3533,6 +3553,10 @@ msgstr "UEFI 证书存储现已是最新"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart 已启用"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr ""
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3624,6 +3648,9 @@ msgstr "启用新的远程库？"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "同意并启用此远程源吗？"
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "寻找匹配文件 CRC 的算法"
 
 #~ msgid "Blocked firmware files:"
 #~ msgstr "受阻的固件文件："

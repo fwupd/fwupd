@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-file.h"
 #include "fu-efi-filesystem.h"
 #include "fu-input-stream.h"
@@ -23,7 +24,7 @@
 G_DEFINE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU_TYPE_FIRMWARE)
 
 #define FU_EFI_FILESYSTEM_FILES_MAX 10000
-#define FU_EFI_FILESYSTEM_SIZE_MAX  0x10000000 /* 256 MB */
+#define FU_EFI_FILESYSTEM_SIZE_MAX  (256 * FU_MB)
 
 static gboolean
 fu_efi_filesystem_parse(FuFirmware *firmware,
@@ -69,12 +70,20 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse EFI file at 0x%x: ", (guint)offset);
 			return FALSE;
 		}
+		if (fu_firmware_get_size(img) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "EFI file has invalid size of 0");
+			return FALSE;
+		}
 		fu_firmware_set_offset(firmware, offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* next! */
-		offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(img), error))
+			return FALSE;
 	}
 
 	/* success */
@@ -131,8 +140,10 @@ fu_efi_filesystem_init(FuEfiFilesystem *self)
 	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
 	 * when printing the FuEfiFilesystem XML output */
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 50);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_FILESYSTEM_FILES_MAX);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);

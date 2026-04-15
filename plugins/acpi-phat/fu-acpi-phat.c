@@ -78,8 +78,7 @@ fu_acpi_phat_record_parse(FuAcpiPhat *self,
 			return FALSE;
 	}
 
-	*offset += record_length;
-	return TRUE;
+	return fu_size_checked_inc(offset, record_length, error);
 }
 
 static void
@@ -309,6 +308,7 @@ static void
 fu_acpi_phat_init(FuAcpiPhat *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_VERSION_RECORD);

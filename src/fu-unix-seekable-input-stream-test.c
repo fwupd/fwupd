@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <glib/gstdio.h>
 
+#include "fwupd-error.h"
+
 #include "fu-unix-seekable-input-stream.h"
 
 static void
@@ -27,7 +29,8 @@ fu_unix_seekable_input_stream_func(void)
 	fd = g_open(fn, O_RDONLY, 0);
 	g_assert_cmpint(fd, >=, 0);
 
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE, &error);
+	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 
 	/* first chuck */
@@ -55,10 +58,32 @@ fu_unix_seekable_input_stream_func(void)
 #endif
 }
 
+static void
+fu_unix_seekable_input_stream_non_regular_func(void)
+{
+#ifdef HAVE_GIO_UNIX
+	gint fd;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	fd = g_open("/dev/zero", O_RDONLY, 0);
+	g_assert_cmpint(fd, >=, 0);
+
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(stream);
+#else
+	g_test_skip("No gio-unix-2.0 support, skipping");
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
+	g_test_add_func("/fwupd/unix-seekable-input-stream/non-regular",
+			fu_unix_seekable_input_stream_non_regular_func);
 	return g_test_run();
 }

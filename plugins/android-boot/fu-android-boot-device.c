@@ -215,7 +215,7 @@ fu_android_boot_device_erase(FuAndroidBootDevice *self, FuProgress *progress, GE
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       10 * 1024);
+					       10 * FU_KB);
 	return fu_android_boot_device_write(self, chunks, progress, error);
 }
 
@@ -283,7 +283,7 @@ fu_android_boot_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
-						10 * 1024,
+						10 * FU_KB,
 						error);
 	if (chunks == NULL)
 		return FALSE;

@@ -54,7 +54,7 @@ jobs:
               -v $GITHUB_WORKSPACE:/github/workspace \
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
       - name: Save any applicable artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.distro }}-${{ case(matrix.cross != null, matrix.cross, runner.arch == 'ARM64', 'arm64', 'amd64') }}
           path: ${{ github.workspace }}/dist/*
@@ -80,7 +80,7 @@ jobs:
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest" \
               contrib/ci/${{matrix.distro}}-test.sh
       - name: Save any coverage data
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-${{ join(matrix.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
@@ -139,7 +139,7 @@ jobs:
         run: |
           echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
       - name: Save tarball
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tarball
           path: ${{ github.workspace }}/build/meson-dist/*xz
@@ -171,7 +171,7 @@ jobs:
       - name: configure
         run: ./contrib/ci/build_windows.sh
       - name: upload-artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows
           path: |

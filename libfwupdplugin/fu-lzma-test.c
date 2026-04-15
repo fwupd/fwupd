@@ -34,7 +34,7 @@ fu_lzma_func(void)
 	g_assert_cmpint(g_bytes_get_size(blob_out), <, 500);
 
 	/* decompress */
-	blob_orig = fu_lzma_decompress_bytes(blob_out, 128 * 1024 * 1024, &error);
+	blob_orig = fu_lzma_decompress_bytes(blob_out, 128 * FU_MB, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_orig);
 	ret = fu_bytes_compare(blob_in, blob_orig, &error);

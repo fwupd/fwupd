@@ -48,7 +48,7 @@ typedef struct {
 	gchar *summary;
 	gchar *branch;
 	gchar *vendor;
-	gchar *homepage;
+	gchar *details_url;
 	gchar *plugin;
 	gchar *version;
 	gchar *version_lowest;
@@ -303,6 +303,47 @@ fwupd_device_set_summary(FwupdDevice *self, const gchar *summary)
 
 	g_free(priv->summary);
 	priv->summary = g_strdup(summary);
+}
+
+/**
+ * fwupd_device_get_details_url:
+ * @self: a #FwupdDevice
+ *
+ * Gets the device URL.
+ *
+ * Returns: a URL, or %NULL if unset
+ *
+ * Since: 2.1.2
+ **/
+const gchar *
+fwupd_device_get_details_url(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
+	return priv->details_url;
+}
+
+/**
+ * fwupd_device_set_details_url:
+ * @self: a #FwupdDevice
+ * @details_url: (nullable): a URL, or %NULL
+ *
+ * Sets the device URL.
+ *
+ * Since: 2.1.2
+ **/
+void
+fwupd_device_set_details_url(FwupdDevice *self, const gchar *details_url)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->details_url, details_url) == 0)
+		return;
+
+	g_free(priv->details_url);
+	priv->details_url = g_strdup(details_url);
 }
 
 /**
@@ -2093,6 +2134,8 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_serial(self, priv_donor->serial);
 	if (priv->summary == NULL)
 		fwupd_device_set_summary(self, priv_donor->summary);
+	if (priv->details_url == NULL)
+		fwupd_device_set_details_url(self, priv_donor->details_url);
 	if (priv->branch == NULL)
 		fwupd_device_set_branch(self, priv_donor->branch);
 	if (priv->vendor == NULL)
@@ -2268,6 +2311,12 @@ fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SUMMARY,
 				      g_variant_new_string(priv->summary));
+	}
+	if (priv->details_url != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_DETAILS_URL,
+				      g_variant_new_string(priv->details_url));
 	}
 	if (priv->branch != NULL) {
 		g_variant_builder_add(builder,
@@ -2541,6 +2590,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
 		fwupd_device_set_summary(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETAILS_URL) == 0) {
+		fwupd_device_set_details_url(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BRANCH) == 0) {
@@ -3079,6 +3132,10 @@ fwupd_device_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	if (priv->summary != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	if (priv->details_url != NULL)
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DETAILS_URL,
+					     priv->details_url);
 	if (priv->branch != NULL)
 		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	if (priv->plugin != NULL)
@@ -3293,6 +3350,9 @@ fwupd_device_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **er
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_SUMMARY, NULL);
 	if (tmp != NULL)
 		fwupd_device_set_summary(self, tmp);
+	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_DETAILS_URL, NULL);
+	if (tmp != NULL)
+		fwupd_device_set_details_url(self, tmp);
 	tmp = fwupd_json_object_get_string(json_obj, FWUPD_RESULT_KEY_BRANCH, NULL);
 	if (tmp != NULL)
 		fwupd_device_set_branch(self, tmp);
@@ -3595,6 +3655,7 @@ fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	if (priv->protocols != NULL) {
@@ -4081,6 +4142,7 @@ fwupd_device_finalize(GObject *object)
 	g_free(priv->name);
 	g_free(priv->serial);
 	g_free(priv->summary);
+	g_free(priv->details_url);
 	g_free(priv->branch);
 	g_free(priv->vendor);
 	g_free(priv->plugin);

@@ -1,0 +1,34 @@
+# Lenovo USB4 Dock [IoT]
+[USB\VID_17EF&PID_111E]
+Plugin = lenovo_dock
+
+## these are all updated using the DMC
+[USB\VID_17EF&PID_111A]
+Flags = no-probe
+[USB\VID_17EF&PID_111B]
+Flags = no-probe
+[USB\VID_17EF&PID_111C]
+Flags = no-probe
+[USB\VID_17EF&PID_111D]
+Flags = no-probe
+[USB\VID_17EF&PID_111F]
+Flags = no-probe
+[USB\VID_17EF&PID_1119]
+Flags = no-probe
+
+# Lenovo USB4 Dock [non-IoT]
+[USB\VID_17EF&PID_1193]
+Plugin = lenovo_dock
+LenovoDockImagePid = 0x111E
+
+## these are all updated using the DMC
+[USB\VID_17EF&PID_118E]
+Flags = no-probe
+[USB\VID_17EF&PID_118F]
+Flags = no-probe
+[USB\VID_17EF&PID_1190]
+Flags = no-probe
+[USB\VID_17EF&PID_1191]
+Flags = no-probe
+[USB\VID_17EF&PID_1192]
+Flags = no-probe

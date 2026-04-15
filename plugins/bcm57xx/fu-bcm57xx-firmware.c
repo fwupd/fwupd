@@ -637,6 +637,7 @@ fu_bcm57xx_firmware_init(FuBcm57xxFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE1_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE2_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_DICT_IMAGE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

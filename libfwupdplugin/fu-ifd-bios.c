@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-input-stream.h"
@@ -49,7 +50,10 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 				(guint)offset,
 				(guint)streamsz,
 				error_local->message);
-			offset += 0x1000;
+			if (!fu_size_checked_inc(&offset, 4 * FU_KB, error)) {
+				g_prefix_error_literal(error, "BIOS volume scan offset overflow: ");
+				return FALSE;
+			}
 			continue;
 		}
 		if (fu_firmware_get_size(firmware_tmp) < 0x800) {
@@ -66,7 +70,8 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* next! */
-		offset += fu_firmware_get_size(firmware_tmp);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(firmware_tmp), error))
+			return FALSE;
 		img_cnt++;
 	}
 
@@ -90,8 +95,10 @@ fu_ifd_bios_init(FuIfdBios *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 }
 

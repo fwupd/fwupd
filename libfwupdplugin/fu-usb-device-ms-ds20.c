@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-usb-device-ds20-struct.h"
 #include "fu-usb-device-ms-ds20.h"
@@ -45,7 +46,8 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 			desc_type,
 			fu_usb_device_ms_ds20_desc_to_string(desc_type),
 			desc_sz);
-		offset += desc_sz;
+		if (!fu_size_checked_inc(&offset, desc_sz, error))
+			return FALSE;
 	}
 
 	/* success */

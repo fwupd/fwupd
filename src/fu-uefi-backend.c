@@ -58,6 +58,15 @@ fu_uefi_backend_create_device(FuBackend *backend, const gchar *backend_id, GErro
 	g_auto(GStrv) split = g_strsplit(backend_id, "-", 2);
 	g_autoptr(FuUefiDevice) uefi_device = NULL;
 
+	/* validate split array has exactly 2 elements */
+	if (g_strv_length(split) != 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid backend-id");
+		return NULL;
+	}
+
 	uefi_device =
 	    g_object_new(FU_TYPE_UEFI_DEVICE, "backend", backend, "backend-id", backend_id, NULL);
 	fu_uefi_device_set_guid(uefi_device, split[0]);

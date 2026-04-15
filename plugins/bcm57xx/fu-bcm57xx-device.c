@@ -277,7 +277,9 @@ fu_bcm57xx_device_dump_firmware(FuDevice *device, FuProgress *progress, GError *
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ, error);
+	if (chunks == NULL)
+		return NULL;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, chunks->len);
