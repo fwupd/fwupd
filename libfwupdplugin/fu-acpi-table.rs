@@ -14,3 +14,17 @@ struct FuStructAcpiTable {
     _asl_compiler_id: [char; 4],
     _asl_compiler_revision: u32le,
 }
+
+// ACPI Fixed ACPI Description Table (FADT) Preferred_PM_Profile values.
+#[repr(u8)]
+enum FuAcpiFadtPmProfile {
+    Unspecified,
+    Desktop,
+    Mobile,
+    Workstation,
+    EnterpriseServer,
+    SohoServer,
+    AppliancePc,
+    PerformanceServer,
+    Tablet,
+}

@@ -54,9 +54,12 @@ fu_acpi_facp_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.SleepState", "windows");
 
 	if (!fu_acpi_facp_get_s2i(facp)) {
-		/* on server platforms, S0ix (Suspend-to-Idle) is not supported and
+		/* on server PM profiles, S0ix (Suspend-to-Idle) is not supported and
 		 * should not be considered a security issue */
-		if (fu_acpi_facp_is_server(facp)) {
+		FuAcpiFadtPmProfile pm_profile = fu_acpi_facp_get_pm_profile(facp);
+		if (pm_profile == FU_ACPI_FADT_PM_PROFILE_ENTERPRISE_SERVER ||
+		    pm_profile == FU_ACPI_FADT_PM_PROFILE_SOHO_SERVER ||
+		    pm_profile == FU_ACPI_FADT_PM_PROFILE_PERFORMANCE_SERVER) {
 			fwupd_security_attr_set_result(attr,
 						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);

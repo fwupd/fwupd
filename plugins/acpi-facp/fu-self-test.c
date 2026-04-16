@@ -30,8 +30,7 @@ fu_acpi_facp_s2i_disabled_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(facp);
 	g_assert_false(fu_acpi_facp_get_s2i(facp));
-	g_assert_cmpuint(fu_acpi_facp_get_pm_profile(facp), ==, FU_ACPI_FACP_PM_PROFILE_DESKTOP);
-	g_assert_false(fu_acpi_facp_is_server(facp));
+	g_assert_cmpuint(fu_acpi_facp_get_pm_profile(facp), ==, FU_ACPI_FADT_PM_PROFILE_DESKTOP);
 }
 
 static void
@@ -54,8 +53,7 @@ fu_acpi_facp_s2i_enabled_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(facp);
 	g_assert_true(fu_acpi_facp_get_s2i(facp));
-	g_assert_cmpuint(fu_acpi_facp_get_pm_profile(facp), ==, FU_ACPI_FACP_PM_PROFILE_DESKTOP);
-	g_assert_false(fu_acpi_facp_is_server(facp));
+	g_assert_cmpuint(fu_acpi_facp_get_pm_profile(facp), ==, FU_ACPI_FADT_PM_PROFILE_DESKTOP);
 }
 
 static void
@@ -80,8 +78,7 @@ fu_acpi_facp_server_func(void)
 	g_assert_false(fu_acpi_facp_get_s2i(facp));
 	g_assert_cmpuint(fu_acpi_facp_get_pm_profile(facp),
 			 ==,
-			 FU_ACPI_FACP_PM_PROFILE_ENTERPRISE_SERVER);
-	g_assert_true(fu_acpi_facp_is_server(facp));
+			 FU_ACPI_FADT_PM_PROFILE_ENTERPRISE_SERVER);
 }
 
 int

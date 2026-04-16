@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include "fu-acpi-table-struct.h"
 #include "fu-bios-settings-private.h"
+#include "fu-bytes.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-helper.h"
@@ -19,6 +21,7 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
+#include "fu-mem.h"
 #include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-pefile-firmware.h"
@@ -533,6 +536,39 @@ fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	priv->chassis_kind = chassis_kind;
+}
+
+/**
+ * fu_context_get_acpi_fadt_pm_profile:
+ * @self: a #FuContext
+ *
+ * Gets the preferred power management profile from the ACPI FADT table.
+ *
+ * Returns: a #FuAcpiFadtPmProfile, e.g. %FU_ACPI_FADT_PM_PROFILE_ENTERPRISE_SERVER
+ *
+ * Since: 2.0.4
+ **/
+FuAcpiFadtPmProfile
+fu_context_get_acpi_fadt_pm_profile(FuContext *self)
+{
+	guint8 pm_profile = 0;
+	gsize bufsz = 0;
+	const guint8 *buf;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED);
+
+	fn = fu_context_build_filename(self, NULL, FU_PATH_KIND_ACPI_TABLES, "FACP", NULL);
+	if (fn == NULL)
+		return FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
+	blob = fu_bytes_get_contents(fn, NULL);
+	if (blob == NULL)
+		return FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
+	buf = g_bytes_get_data(blob, &bufsz);
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x2D, &pm_profile, NULL))
+		return FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
+	return (FuAcpiFadtPmProfile)pm_profile;
 }
 
 /**
