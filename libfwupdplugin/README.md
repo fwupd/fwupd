@@ -227,3 +227,5 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_chunk_array_mutable_new()`: Add `GError`
 * `fu_composite_input_stream_add_bytes()`: Add `GError`
 * `fu_composite_input_stream_add_partial_stream()`: Add `GError`
+* `fu_progress_get_percentage()`: Convert `guint` to `gdouble`
+* `fu_progress_set_percentage()`: Convert `guint` to `gdouble`

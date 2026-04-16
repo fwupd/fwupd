@@ -176,6 +176,7 @@ fwupd_client_api(void)
 	g_value_set_int(&value_int, 50);
 	g_object_set_property(G_OBJECT(client), "percentage", &value_int);
 	g_assert_cmpint(fwupd_client_get_percentage(client), ==, 50);
+	g_assert_cmpfloat_with_epsilon(fwupd_client_get_percentage_full(client), 50, 0.01f);
 	g_object_set_property(G_OBJECT(client), "percentage", &value_int);
 
 	/* set all properties */

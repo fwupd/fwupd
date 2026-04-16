@@ -23,7 +23,9 @@ struct _FuDeviceProgress {
 G_DEFINE_TYPE(FuDeviceProgress, fu_device_progress, G_TYPE_OBJECT)
 
 static void
-fu_device_progress_percentage_changed_cb(FuProgress *progress, guint percentage, gpointer user_data)
+fu_device_progress_percentage_changed_cb(FuProgress *progress,
+					 gdouble percentage,
+					 gpointer user_data)
 {
 	FuDeviceProgress *self = FU_DEVICE_PROGRESS(user_data);
 	fu_device_set_percentage(self->device, percentage);

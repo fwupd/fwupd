@@ -31,7 +31,7 @@ struct _FuConsole {
 	guint spinner_idx;	   /* width in visible chars */
 	guint length_percentage;   /* width in visible chars */
 	guint length_status;	   /* width in visible chars */
-	guint percentage;
+	gdouble percentage;
 	GSource *timer_source;
 	gint64 last_animated; /* monotonic */
 	GTimer *time_elapsed;
@@ -445,13 +445,13 @@ _fu_status_is_predictable(FwupdStatus status)
 }
 
 static gboolean
-fu_console_estimate_ready(FuConsole *self, guint percentage)
+fu_console_estimate_ready(FuConsole *self, gdouble percentage)
 {
 	gdouble old;
 	gdouble elapsed;
 
 	/* now invalid */
-	if (percentage == 0 || percentage == 100) {
+	if (!fwupd_percentage_is_valid(percentage)) {
 		g_timer_start(self->time_elapsed);
 		self->last_estimate = 0;
 		return FALSE;
@@ -463,7 +463,7 @@ fu_console_estimate_ready(FuConsole *self, guint percentage)
 
 	old = self->last_estimate;
 	elapsed = g_timer_elapsed(self->time_elapsed, NULL);
-	self->last_estimate = elapsed / percentage * (100 - percentage);
+	self->last_estimate = elapsed / percentage * (100.0 - percentage);
 
 	/* estimate is ready if we have decreased */
 	return old > self->last_estimate;
@@ -521,12 +521,11 @@ fu_console_refresh(FuConsole *self)
 
 	/* add console */
 	g_string_append(str, "▕");
-	if (self->percentage == 100) {
+	if (self->percentage >= 100.0) {
 		for (i = 0; i < self->length_percentage - 1; i++)
 			g_string_append(str, "⣿");
-	} else if (self->percentage > 0) {
-		gdouble midpoint =
-		    (self->length_percentage - 1) * (gdouble)self->percentage / 100.f;
+	} else if (fwupd_percentage_is_valid(self->percentage)) {
+		gdouble midpoint = (self->length_percentage - 1) * self->percentage / 100.0;
 		guint midpoint_floor = (guint)midpoint;
 		for (i = 0; i < midpoint_floor; i++)
 			g_string_append(str, "⣿");
@@ -710,7 +709,7 @@ static void
 fu_console_spin_start(FuConsole *self)
 {
 	if (self->timer_source != NULL)
-		g_source_destroy(self->timer_source);
+		return;
 	self->timer_source = g_timeout_source_new(40);
 	g_source_set_callback(self->timer_source, fu_console_spin_cb, self, NULL);
 	g_source_attach(self->timer_source, self->main_ctx);
@@ -720,21 +719,17 @@ fu_console_spin_start(FuConsole *self)
  * fu_console_set_progress:
  * @self: A #FuConsole
  * @status: A #FwupdStatus
- * @percentage: unsigned integer
+ * @percentage: value
  *
  * Refreshes the progress bar with the new percentage and status.
  **/
 void
-fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
+fu_console_set_progress(FuConsole *self, FwupdStatus status, gdouble percentage)
 {
 	g_return_if_fail(FU_IS_CONSOLE(self));
 
 	/* not useful */
 	if (status == FWUPD_STATUS_UNKNOWN)
-		return;
-
-	/* ignore duplicates */
-	if (self->status == status && self->percentage == percentage)
 		return;
 
 	/* cache */
@@ -743,13 +738,17 @@ fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
 
 	/* dumb */
 	if (!self->interactive) {
-		g_printerr("%s: %u%%\n", fu_console_status_to_string(status), percentage);
+		if (fwupd_percentage_is_valid(percentage)) {
+			g_printerr("%s: %.1f%%\n", fu_console_status_to_string(status), percentage);
+		} else {
+			g_printerr("%s\n", fu_console_status_to_string(status));
+		}
 		return;
 	}
 
 	/* if the main loop isn't spinning and we've not had a chance to
 	 * execute the callback just do the refresh now manually */
-	if (percentage == 0 && status != FWUPD_STATUS_IDLE &&
+	if (percentage <= 0.0 && status != FWUPD_STATUS_IDLE &&
 	    self->status != FWUPD_STATUS_UNKNOWN) {
 		if ((g_get_monotonic_time() - self->last_animated) / 1000 > 40) {
 			fu_console_spin_inc(self);
@@ -758,7 +757,7 @@ fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
 	}
 
 	/* enable or disable the spinner timeout */
-	if (percentage > 0) {
+	if (fwupd_percentage_is_valid(percentage)) {
 		fu_console_spin_end(self);
 	} else {
 		fu_console_spin_start(self);

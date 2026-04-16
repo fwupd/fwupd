@@ -123,6 +123,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='PercentageFull' type='d' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The job percentage completion, or 0.0 for unknown.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='BatteryLevel' type='u' access='read'>
       <doc:doc>
         <doc:description>

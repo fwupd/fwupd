@@ -83,7 +83,7 @@ fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtil *self)
 		return;
 	fu_console_set_progress(self->console,
 				fwupd_client_get_status(self->client),
-				fwupd_client_get_percentage(self->client));
+				fwupd_client_get_percentage_full(self->client));
 }
 
 static void

@@ -63,7 +63,7 @@ void
 fu_console_beep(FuConsole *self, guint count) G_GNUC_NON_NULL(1);
 
 void
-fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage) G_GNUC_NON_NULL(1);
+fu_console_set_progress(FuConsole *self, FwupdStatus status, gdouble percentage) G_GNUC_NON_NULL(1);
 void
 fu_console_set_status_length(FuConsole *self, guint len) G_GNUC_NON_NULL(1);
 void

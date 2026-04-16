@@ -111,4 +111,19 @@ fwupd_guid_hash_string(const gchar *str);
 gchar *
 fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags) G_GNUC_NON_NULL(1);
 
+/**
+ * FWUPD_PERCENTAGE_UNKNOWN:
+ *
+ * The percentage value when the daemon does not know the current progress value. This usually
+ * results in a "bouncing" progressbar.
+ *
+ * Since: 2.1.3
+ */
+#define FWUPD_PERCENTAGE_UNKNOWN (-1.0)
+
+gboolean
+fwupd_percentage_is_valid(gdouble value);
+gboolean
+fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new);
+
 G_END_DECLS

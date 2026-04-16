@@ -59,7 +59,7 @@ typedef struct {
 	FwupdStatus status;
 	gboolean tainted;
 	gboolean interactive;
-	guint percentage;
+	gdouble percentage;
 	guint32 battery_level;
 	guint32 battery_threshold;
 	guint download_retries;
@@ -107,6 +107,7 @@ enum {
 	PROP_0,
 	PROP_STATUS,
 	PROP_PERCENTAGE,
+	PROP_PERCENTAGE_FULL,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
 	PROP_HOST_PRODUCT,
@@ -530,13 +531,15 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 }
 
 static void
-fwupd_client_set_percentage(FwupdClient *self, guint percentage)
+fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	if (priv->percentage == percentage)
-		return;
+	gboolean notify = fwupd_percentage_delta_notify(priv->percentage, percentage);
 	priv->percentage = percentage;
-	fwupd_client_object_notify(self, "percentage");
+	if (notify) {
+		fwupd_client_object_notify(self, "percentage");
+		fwupd_client_object_notify(self, "percentage-full");
+	}
 }
 
 static void
@@ -592,7 +595,12 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 			fwupd_client_object_notify(self, "interactive");
 		}
 	}
-	if (g_variant_dict_contains(dict, "Percentage")) {
+	if (g_variant_dict_contains(dict, "PercentageFull")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, "PercentageFull");
+		if (val != NULL)
+			fwupd_client_set_percentage(self, g_variant_get_double(val));
+	} else if (g_variant_dict_contains(dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
 		if (val != NULL)
@@ -853,14 +861,14 @@ fwupd_client_progress_callback_cb(void *clientp,
 
 	/* calculate percentage */
 	if (dltotal > 0 && dlnow >= 0 && dlnow <= dltotal) {
-		guint percentage = (guint)((100 * dlnow) / dltotal);
-		if (priv->percentage != percentage)
-			g_info("download progress: %u%%", percentage);
+		gdouble percentage = ((100.0 * (gdouble)dlnow) / (gdouble)dltotal);
+		if (fwupd_percentage_delta_notify(priv->percentage, percentage))
+			g_info("download progress: %.1f%%", percentage);
 		fwupd_client_set_percentage(self, percentage);
 	} else if (ultotal > 0 && ulnow >= 0 && ulnow <= ultotal) {
-		guint percentage = (guint)((100 * ulnow) / ultotal);
-		if (priv->percentage != percentage)
-			g_info("upload progress: %u%%", percentage);
+		gdouble percentage = ((100.0 * (gdouble)ulnow) / (gdouble)ultotal);
+		if (fwupd_percentage_delta_notify(priv->percentage, percentage))
+			g_info("upload progress: %.1f%%", percentage);
 		fwupd_client_set_percentage(self, percentage);
 	}
 
@@ -4119,6 +4127,24 @@ fwupd_client_get_percentage(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), 0);
+	return (guint)priv->percentage;
+}
+
+/**
+ * fwupd_client_get_percentage_full:
+ * @self: a #FwupdClient
+ *
+ * Gets the last returned percentage value.
+ *
+ * Returns: a percentage, or %FWUPD_PERCENTAGE_UNKNOWN for unknown.
+ *
+ * Since: 2.1.3
+ **/
+gdouble
+fwupd_client_get_percentage_full(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_PERCENTAGE_UNKNOWN);
 	return priv->percentage;
 }
 
@@ -5780,7 +5806,7 @@ fwupd_client_download_ipfs(FwupdClient *self,
 
 	/* we get no detailed progress details */
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
-	fwupd_client_set_percentage(self, 0);
+	fwupd_client_set_percentage(self, 0.0);
 
 	/* convert from URI to path */
 	if (g_str_has_prefix(url, "ipfs://")) {
@@ -5797,7 +5823,6 @@ fwupd_client_download_ipfs(FwupdClient *self,
 		return NULL;
 	if (!g_subprocess_communicate(subprocess, NULL, cancellable, &bstdout, &bstderr, error))
 		return NULL;
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	if (g_subprocess_get_exit_status(subprocess) != 0) {
 		gsize msgsz = 0;
 		const gchar *msgdata = g_bytes_get_data(bstderr, &msgsz);
@@ -5837,8 +5862,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 			       fwupd_client_download_write_callback_cb);
 	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
-	fwupd_client_set_percentage(self, 100);
+	fwupd_client_set_percentage(self, 100.0);
 	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -6028,8 +6052,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 			g_task_return_error(task, g_steal_pointer(&error));
 			return;
 		}
-		fwupd_client_set_percentage(self, 0);
-		fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+		fwupd_client_set_percentage(self, 0.0);
 		g_info("failed to download %s: %s, trying next URI…", url, error->message);
 	}
 	g_task_return_pointer(task, g_steal_pointer(&blob), (GDestroyNotify)g_bytes_unref);
@@ -6152,7 +6175,7 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 			       fwupd_client_download_write_callback_cb);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(helper->curl);
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+	fwupd_client_set_percentage(self, 100.0);
 	if (res != CURLE_OK) {
 		glong status_code = 0;
 		curl_easy_getinfo(helper->curl, CURLINFO_RESPONSE_CODE, &status_code);
@@ -6261,7 +6284,6 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	g_info("uploading to %s", url);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_URL, url);
 	g_task_set_task_data(task,
@@ -7409,6 +7431,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_PERCENTAGE:
 		g_value_set_uint(value, priv->percentage);
 		break;
+	case PROP_PERCENTAGE_FULL:
+		g_value_set_double(value, priv->percentage);
+		break;
 	case PROP_DAEMON_VERSION:
 		g_value_set_string(value, priv->daemon_version);
 		break;
@@ -7457,6 +7482,9 @@ fwupd_client_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_PERCENTAGE:
 		priv->percentage = g_value_get_uint(value);
+		break;
+	case PROP_PERCENTAGE_FULL:
+		priv->percentage = g_value_get_double(value);
 		break;
 	case PROP_BATTERY_LEVEL:
 		fwupd_client_set_battery_level(self, g_value_get_uint(value));
@@ -7683,6 +7711,22 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	g_object_class_install_property(object_class, PROP_PERCENTAGE, pspec);
 
 	/**
+	 * FwupdClient:percentage-full:
+	 *
+	 * The last-reported percentage of the daemon.
+	 *
+	 * Since: 2.1.3
+	 */
+	pspec = g_param_spec_double("percentage-full",
+				    NULL,
+				    NULL,
+				    -1.0,
+				    100.0,
+				    -1.0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PERCENTAGE_FULL, pspec);
+
+	/**
 	 * FwupdClient:daemon-version:
 	 *
 	 * The daemon version number.
@@ -7817,6 +7861,7 @@ static void
 fwupd_client_init(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	priv->percentage = FWUPD_PERCENTAGE_UNKNOWN;
 	g_mutex_init(&priv->proxy_mutex);
 	g_mutex_init(&priv->idle_mutex);
 	priv->idle_sources =
