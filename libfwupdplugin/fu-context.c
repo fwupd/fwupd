@@ -59,6 +59,8 @@ typedef struct {
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
+	FuAcpiFadtPmProfile acpi_fadt_pm_profile;
+	gboolean acpi_fadt_pm_profile_set;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
@@ -546,11 +548,12 @@ fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind)
  *
  * Returns: a #FuAcpiFadtPmProfile, e.g. %FU_ACPI_FADT_PM_PROFILE_ENTERPRISE_SERVER
  *
- * Since: 2.0.4
+ * Since: 2.1.2
  **/
 FuAcpiFadtPmProfile
 fu_context_get_acpi_fadt_pm_profile(FuContext *self)
 {
+	FuContextPrivate *priv = GET_PRIVATE(self);
 	guint8 pm_profile = 0;
 	gsize bufsz = 0;
 	const guint8 *buf;
@@ -559,16 +562,27 @@ fu_context_get_acpi_fadt_pm_profile(FuContext *self)
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED);
 
+	if (priv->acpi_fadt_pm_profile_set)
+		return priv->acpi_fadt_pm_profile;
+
 	fn = fu_context_build_filename(self, NULL, FU_PATH_KIND_ACPI_TABLES, "FACP", NULL);
-	if (fn == NULL)
+	if (fn == NULL) {
+		priv->acpi_fadt_pm_profile_set = TRUE;
 		return FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
+	}
 	blob = fu_bytes_get_contents(fn, NULL);
-	if (blob == NULL)
+	if (blob == NULL) {
+		priv->acpi_fadt_pm_profile_set = TRUE;
 		return FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
+	}
 	buf = g_bytes_get_data(blob, &bufsz);
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x2D, &pm_profile, NULL))
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x2D, &pm_profile, NULL)) {
+		priv->acpi_fadt_pm_profile_set = TRUE;
 		return FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
-	return (FuAcpiFadtPmProfile)pm_profile;
+	}
+	priv->acpi_fadt_pm_profile = (FuAcpiFadtPmProfile)pm_profile;
+	priv->acpi_fadt_pm_profile_set = TRUE;
+	return priv->acpi_fadt_pm_profile;
 }
 
 /**
