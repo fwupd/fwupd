@@ -14,7 +14,9 @@ struct _FuLinuxSleepPlugin {
 
 G_DEFINE_TYPE(FuLinuxSleepPlugin, fu_linux_sleep_plugin, FU_TYPE_PLUGIN)
 
-/* ACPI FADT Preferred_PM_Profile values (offset 0x2D) */
+/* ACPI FADT Preferred_PM_Profile values (offset 0x2D)
+ * NOTE: These intentionally duplicate the values from fu-acpi-facp.h since
+ * plugins should not include headers from other plugins. */
 #define FU_LINUX_SLEEP_PM_PROFILE_ENTERPRISE_SERVER  4
 #define FU_LINUX_SLEEP_PM_PROFILE_SOHO_SERVER	     5
 #define FU_LINUX_SLEEP_PM_PROFILE_PERFORMANCE_SERVER 7
