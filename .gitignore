@@ -25,7 +25,10 @@
 /venv
 __pycache__
 plugins/acpi-dmar/tests/
-plugins/acpi-facp/tests/
+plugins/acpi-facp/tests/*
+!plugins/acpi-facp/tests/FACP
+!plugins/acpi-facp/tests/FACP-S2I
+!plugins/acpi-facp/tests/FACP-SERVER
 plugins/nvme/tests/
 plugins/synaptics-prometheus/tests/
 plugins/tpm-eventlog/tests/
