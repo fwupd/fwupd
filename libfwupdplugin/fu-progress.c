@@ -76,6 +76,7 @@ struct _FuProgress {
 	guint step_done;
 	guint step_scaling;
 	FuProgress *parent; /* no-ref */
+	guint sleep_timeout_id;
 };
 
 enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_STATUS_CHANGED, SIGNAL_LAST };
@@ -231,6 +232,15 @@ fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
 	self->flags &= ~flag;
 }
 
+static void
+fu_progress_sleep_idle_stop(FuProgress *self)
+{
+	if (self->sleep_timeout_id == 0)
+		return;
+	g_source_remove(self->sleep_timeout_id);
+	self->sleep_timeout_id = 0;
+}
+
 /**
  * fu_progress_has_flag:
  * @self: a #FuProgress
@@ -354,6 +364,9 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 	if (percentage == self->percentage)
 		return;
 
+	/* stop idle action */
+	fu_progress_sleep_idle_stop(self);
+
 	/* is it less */
 	if (self->percentage != G_MAXUINT && percentage < self->percentage) {
 		if (self->profile) {
@@ -448,6 +461,9 @@ void
 fu_progress_reset(FuProgress *self)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
+
+	/* in case of idle */
+	fu_progress_sleep_idle_stop(self);
 
 	/* reset values */
 	self->step_now = 0;
@@ -720,6 +736,9 @@ fu_progress_finished(FuProgress *self)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 
+	/* in case of idle */
+	fu_progress_sleep_idle_stop(self);
+
 	/* is already at 100%? */
 	if (self->step_now == self->children->len)
 		return;
@@ -843,6 +862,12 @@ fu_progress_step_done(FuProgress *self)
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(self->id != NULL);
 
+	/* no longer valid */
+	for (guint i = 0; i < self->children->len; i++) {
+		FuProgress *child_tmp = g_ptr_array_index(self->children, i);
+		fu_progress_sleep_idle_stop(child_tmp);
+	}
+
 	/* ignore steps */
 	if (self->step_scaling > 1) {
 		if (self->step_now >= self->children->len ||
@@ -953,6 +978,48 @@ fu_progress_sleep(FuProgress *self, guint delay_ms)
 		g_usleep(delay_us_pc);
 		fu_progress_set_percentage(self, i + 1);
 	}
+}
+
+static gboolean
+fu_progress_sleep_idle_cb(gpointer user_data)
+{
+	FuProgress *self = FU_PROGRESS(user_data);
+
+	/* emit directly to avoid canceling the idle timer */
+	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, ++self->percentage);
+	g_debug("progress on idle @%u%%", self->percentage);
+
+	/* we're done here */
+	if (self->percentage >= 100) {
+		fu_progress_sleep_idle_stop(self);
+		return G_SOURCE_REMOVE;
+	}
+
+	/* success */
+	return G_SOURCE_CONTINUE;
+}
+
+/**
+ * fu_progress_sleep_idle:
+ * @self: a #FuProgress
+ * @delay_ms: delay in milliseconds
+ *
+ * Sleeps, setting the device progress from 0..100% as time continues. If the parent progress
+ * percentage is changed or finalized then the idle action will be cancelled.
+ *
+ * Since: 2.1.2
+ **/
+void
+fu_progress_sleep_idle(FuProgress *self, guint delay_ms)
+{
+	g_return_if_fail(FU_IS_PROGRESS(self));
+	g_return_if_fail(delay_ms > 0);
+
+	fu_progress_sleep_idle_stop(self);
+	fu_progress_set_percentage(self, 0);
+	fu_progress_set_duration(self, (gdouble)delay_ms / 1000.f);
+	self->sleep_timeout_id =
+	    g_timeout_add(MAX(delay_ms / 100, 1), fu_progress_sleep_idle_cb, self);
 }
 
 static void
@@ -1078,6 +1145,8 @@ fu_progress_finalize(GObject *object)
 	g_ptr_array_unref(self->children);
 	g_timer_destroy(self->timer);
 	g_timer_destroy(self->timer_child);
+	if (self->sleep_timeout_id != 0)
+		g_source_remove(self->sleep_timeout_id);
 
 	G_OBJECT_CLASS(fu_progress_parent_class)->finalize(object);
 }
