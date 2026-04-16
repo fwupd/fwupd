@@ -14,6 +14,36 @@ struct _FuLinuxSleepPlugin {
 
 G_DEFINE_TYPE(FuLinuxSleepPlugin, fu_linux_sleep_plugin, FU_TYPE_PLUGIN)
 
+/* ACPI FADT Preferred_PM_Profile values (offset 0x2D) */
+#define FU_LINUX_SLEEP_PM_PROFILE_ENTERPRISE_SERVER  4
+#define FU_LINUX_SLEEP_PM_PROFILE_SOHO_SERVER	     5
+#define FU_LINUX_SLEEP_PM_PROFILE_PERFORMANCE_SERVER 7
+
+static gboolean
+fu_linux_sleep_plugin_is_server(FuPlugin *plugin)
+{
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	guint8 pm_profile = 0;
+	gsize bufsz = 0;
+	const guint8 *buf;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	fn = fu_context_build_filename(ctx, &error_local, FU_PATH_KIND_ACPI_TABLES, "FACP", NULL);
+	if (fn == NULL)
+		return FALSE;
+	blob = fu_bytes_get_contents(fn, &error_local);
+	if (blob == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(blob, &bufsz);
+	if (!fu_memread_uint8_safe(buf, bufsz, 0x2D, &pm_profile, NULL))
+		return FALSE;
+	return pm_profile == FU_LINUX_SLEEP_PM_PROFILE_ENTERPRISE_SERVER ||
+	       pm_profile == FU_LINUX_SLEEP_PM_PROFILE_SOHO_SERVER ||
+	       pm_profile == FU_LINUX_SLEEP_PM_PROFILE_PERFORMANCE_SERVER;
+}
+
 static void
 fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
@@ -48,6 +78,14 @@ fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
+
+	/* on server platforms, S3 (Suspend-to-RAM) is often not supported */
+	if (g_strstr_len(buf, bufsz, "deep") == NULL && fu_linux_sleep_plugin_is_server(plugin)) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
+
 	if (g_strstr_len(buf, bufsz, "[deep]") != NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);

@@ -40,4 +40,11 @@ if get_option('tests')
     ],
   )
   test('acpi-facp-self-test', e, env: env)  # added to installed-tests
+  install_data(
+    'tests/FACP',
+    'tests/FACP-S2I',
+    'tests/FACP-SERVER',
+    install_dir: join_paths(installed_test_datadir, 'acpi-facp', 'tests'),
+    install_tag: 'tests',
+  )
 endif

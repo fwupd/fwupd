@@ -14,7 +14,8 @@
     "not-valid": "could not determine the default"
   },
   "success-results": {
-    "not-enabled": "suspend-to-ram being used"
+    "not-enabled": "suspend-to-ram being used",
+    "not-supported": "not required for server platform"
   },
   "hsi-level": 3,
   "resolution": "Enable this setting in the UEFI setup screen, if supported.",
