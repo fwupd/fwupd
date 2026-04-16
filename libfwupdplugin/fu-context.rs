@@ -19,6 +19,7 @@ enum FuContextFlags {
     SmbiosUefiEnabled       = 1 << 12,
     NoQuirks                = 1 << 13,
     DummyEfivars            = 1 << 14,
+    IsServer                = 1 << 15,
 }
 
 enum FuContextHwidFlags {
