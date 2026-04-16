@@ -120,7 +120,8 @@ fu_console_reset_line(FuConsole *self)
 {
 	if (self->contents_to_clear) {
 		fu_console_erase_line(self);
-		g_print("\n");
+		/* re-enable cursor */
+		g_print("\033[?25h\n");
 		self->contents_to_clear = FALSE;
 	}
 }
@@ -487,6 +488,17 @@ fu_console_time_remaining_str(FuConsole *self)
 	    self->last_estimate / 60);
 }
 
+static const gchar *
+fu_console_get_progress_part(gdouble frac)
+{
+	static const gchar *data[] = {"⣀", "⣄", "⣤", "⣦", "⣶", "⣷"};
+	if (frac <= 0)
+		return " ";
+	if (frac >= 1.0)
+		return "⣿";
+	return data[(guint)(frac * G_N_ELEMENTS(data))];
+}
+
 static void
 fu_console_refresh(FuConsole *self)
 {
@@ -508,11 +520,18 @@ fu_console_refresh(FuConsole *self)
 		g_string_append_c(str, ' ');
 
 	/* add console */
-	g_string_append(str, "[");
-	if (self->percentage > 0) {
-		for (i = 0; i < (self->length_percentage - 1) * self->percentage / 100; i++)
-			g_string_append_c(str, '*');
-		for (i = i + 1; i < self->length_percentage; i++)
+	g_string_append(str, "▕");
+	if (self->percentage == 100) {
+		for (i = 0; i < self->length_percentage - 1; i++)
+			g_string_append(str, "⣿");
+	} else if (self->percentage > 0) {
+		gdouble midpoint =
+		    (self->length_percentage - 1) * (gdouble)self->percentage / 100.f;
+		guint midpoint_floor = (guint)midpoint;
+		for (i = 0; i < midpoint_floor; i++)
+			g_string_append(str, "⣿");
+		g_string_append(str, fu_console_get_progress_part(midpoint - midpoint_floor));
+		for (i = midpoint_floor + 1; i < self->length_percentage - 1; i++)
 			g_string_append_c(str, ' ');
 	} else {
 		const gchar chars[] = {
@@ -527,7 +546,7 @@ fu_console_refresh(FuConsole *self)
 		for (i = i + 1; i < self->length_percentage - 1; i++)
 			g_string_append_c(str, ' ');
 	}
-	g_string_append_c(str, ']');
+	g_string_append(str, "▏");
 
 	/* once we have good data show an estimate of time remaining */
 	if (fu_console_estimate_ready(self, self->percentage)) {
@@ -536,8 +555,8 @@ fu_console_refresh(FuConsole *self)
 			g_string_append_printf(str, " %s…", remaining);
 	}
 
-	/* dump to screen */
-	g_print("%s", str->str);
+	/* dump to screen, disabling the cursor */
+	g_print("%s\033[?25l", str->str);
 	self->contents_to_clear = TRUE;
 }
 
