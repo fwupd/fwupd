@@ -22,6 +22,8 @@
 #define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE  (4 * FU_KB)
 #define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_START 0xFFF000
 
+#define FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION "can-provision"
+
 struct _FuLenovoDockDevice {
 	FuHidDevice parent_instance;
 	guint16 image_pid;
@@ -602,14 +604,16 @@ fu_lenovo_dock_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_lenovo_dock_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* get version and edition */
+	/* get version and edition (if IoT) */
 	if (!fu_lenovo_dock_device_ensure_version(self, error)) {
 		g_prefix_error_literal(error, "failed to ensure version: ");
 		return FALSE;
 	}
-	if (!fu_lenovo_dock_device_ensure_edition_state(self, error)) {
-		g_prefix_error_literal(error, "failed to ensure edition state: ");
-		return FALSE;
+	if (fu_device_has_private_flag(device, FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION)) {
+		if (!fu_lenovo_dock_device_ensure_edition_state(self, error)) {
+			g_prefix_error_literal(error, "failed to ensure edition state: ");
+			return FALSE;
+		}
 	}
 
 	/* quirk file did not override */
@@ -1235,6 +1239,7 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK_USB);
 	fu_device_set_install_duration(FU_DEVICE(self), 330);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LENOVO_DOCK_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
