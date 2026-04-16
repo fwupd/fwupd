@@ -2884,6 +2884,7 @@ fu_context_init(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	priv->chassis_kind = FU_SMBIOS_CHASSIS_KIND_UNKNOWN;
+	priv->acpi_fadt_pm_profile = FU_ACPI_FADT_PM_PROFILE_UNSPECIFIED;
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->pstore = fu_path_store_new();
