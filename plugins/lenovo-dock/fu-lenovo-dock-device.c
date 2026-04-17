@@ -1245,6 +1245,7 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 1);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 2);
+	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
 }
 
 static void
