@@ -338,6 +338,19 @@ fu_udev_device_ensure_devtype_from_modalias(FuUdevDevice *self, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_udev_device_build_devfs_path(FuUdevDevice *self, const gchar *devname)
+{
+#ifdef __ANDROID__
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* ueventd is weird */
+	if (g_strcmp0(priv->subsystem, "block") == 0)
+		return g_strdup_printf("/dev/block/%s", devname);
+#endif
+	return g_strdup_printf("/dev/%s", devname);
+}
+
 static gboolean
 fu_udev_device_probe(FuDevice *device, GError **error)
 {
@@ -370,7 +383,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		g_autofree gchar *prop_devname =
 		    fu_udev_device_read_property(self, "DEVNAME", NULL);
 		if (prop_devname != NULL) {
-			g_autofree gchar *device_file = g_strdup_printf("/dev/%s", prop_devname);
+			g_autofree gchar *device_file =
+			    fu_udev_device_build_devfs_path(self, prop_devname);
 			fu_udev_device_set_device_file(self, device_file);
 		}
 	}
@@ -863,6 +877,10 @@ fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
 			    subsystem_dir);
 		return NULL;
 	}
+#ifdef __ANDROID__
+	if (g_strcmp0(subsystem, "block") == 0)
+		return g_strdup_printf("/dev/block/%s", fn);
+#endif
 	return g_strdup_printf("/dev/%s", fn);
 }
 
