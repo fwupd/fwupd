@@ -168,6 +168,7 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 	guint8 chksum;
 	guint32 patch_vid_raw;
 	g_autofree gchar *patch_pid = NULL;
+	guint32 version_raw;
 
 	if (!fu_goodixtp_gtx8_device_hid_read(self, 0x60DC, &cfg_ver, 1, error)) {
 		g_prefix_error_literal(error, "failed to read cfg version: ");
@@ -200,9 +201,11 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 
 	fu_goodixtp_hid_device_set_sensor_id(FU_GOODIXTP_HID_DEVICE(self), fw_info[21] & 0x0F);
 	fu_goodixtp_hid_device_set_config_ver(FU_GOODIXTP_HID_DEVICE(self), cfg_ver);
+
 	vice_ver = fw_info[19];
 	inter_ver = fw_info[20];
-	fu_device_set_version_raw(FU_DEVICE(self), (vice_ver << 16) | (inter_ver << 8) | cfg_ver);
+	version_raw = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	return TRUE;
 }
 
@@ -441,11 +444,25 @@ static gboolean
 fu_goodixtp_gtx8_device_setup(FuDevice *device, GError **error)
 {
 	FuGoodixtpGtx8Device *self = FU_GOODIXTP_GTX8_DEVICE(device);
+	const gchar *patch_pid = NULL;
 	if (!fu_goodixtp_gtx8_device_ensure_version(self, error)) {
 		g_prefix_error_literal(error, "gtx8 read version failed: ");
 		return FALSE;
 	}
-	return TRUE;
+
+	patch_pid = fu_goodixtp_hid_device_get_patch_pid(FU_GOODIXTP_HID_DEVICE(self));
+	if (patch_pid == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "missing patch PID in firmware info");
+		return FALSE;
+	}
+
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+	fu_device_add_instance_strsafe(device, "PID", patch_pid);
+	return fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "PID", NULL);
 }
 
 static FuFirmware *
@@ -532,6 +549,7 @@ fu_goodixtp_gtx8_device_write_firmware(FuDevice *device,
 {
 	FuGoodixtpGtx8Device *self = FU_GOODIXTP_GTX8_DEVICE(device);
 	guint32 fw_ver = fu_firmware_get_version_raw(firmware);
+	guint32 dev_ver;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* progress */
@@ -558,15 +576,19 @@ fu_goodixtp_gtx8_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (fu_device_get_version_raw(device) != fw_ver) {
+	/* sanity check */
+	dev_ver = fu_device_get_version_raw(device);
+	if (fw_ver != dev_ver) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "update failed chip_ver:%x != bin_ver:%x",
-			    (guint)fu_device_get_version_raw(device),
-			    (guint)fw_ver);
+			    "update failed chip_ver:%s != bin_ver:%s",
+			    fu_device_get_version(device),
+			    fu_firmware_get_version(firmware));
 		return FALSE;
 	}
+
+	/* success */
 	return TRUE;
 }
 

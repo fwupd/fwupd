@@ -28,7 +28,6 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	gsize bufsz = 0;
 	guint16 checksum = 0;
 	guint32 firmware_size = 0;
-	guint32 version;
 	guint8 cfg_ver = 0;
 	guint8 subsys_num;
 	guint sub_cfg_info_pos;
@@ -37,6 +36,9 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	const guint8 *buf;
 	g_autoptr(FuStructGoodixGtx8Hdr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
+	guint8 vice_ver;
+	guint8 inter_ver;
+	guint32 version_raw;
 
 	st = fu_struct_goodix_gtx8_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -214,8 +216,10 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 		offset_payload += img_size;
 	}
 
-	version = (fu_struct_goodix_gtx8_hdr_get_vid(st) << 8) | cfg_ver;
-	fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
+	vice_ver = (fu_struct_goodix_gtx8_hdr_get_vid(st) >> 8) & 0xFF;
+	inter_ver = fu_struct_goodix_gtx8_hdr_get_vid(st) & 0xFF;
+	version_raw = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
 	return TRUE;
 }
 

@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-03-09 10:09+0000\n"
+"PO-Revision-Date: 2026-04-15 14:10+0000\n"
 "Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
 "Language-Team: Hebrew <https://hosted.weblate.org/projects/fwupd/fwupd/he/>\n"
 "Language: he\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n == 2) ? 1 : 2);\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 5.17.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "שירות קושחת יצרנים ללינוקס (קושחה יציבה)"
@@ -3611,7 +3611,7 @@ msgstr ""
 
 #. TRANSLATORS: now list devices with unfixed high-priority issues
 msgid "There are devices with issues:"
-msgstr ""
+msgstr "יש התקנים עם בעיות:"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"

@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-03-11 18:10+0000\n"
+"PO-Revision-Date: 2026-04-15 14:10+0000\n"
 "Last-Translator: Besnik Bleta <besnik@programeshqip.org>\n"
 "Language-Team: Albanian <https://hosted.weblate.org/projects/fwupd/fwupd/sq/>\n"
 "Language: sq\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 5.17.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Shërbim Firmware-i Tregtuesi Linux (firmware i qëndrueshëm)"
@@ -1173,7 +1173,7 @@ msgstr "U hoq pajisje:"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr "U ndryshua pajisje:"
+msgstr "Pajisje e ndryshuar:"
 
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
@@ -1822,7 +1822,7 @@ msgstr "EMËRKARTELE CRC"
 
 #. TRANSLATORS: command description
 msgid "Finds an algorithm that matches the file CRC"
-msgstr ""
+msgstr "Gjen një algoritëm që përkon me CRC kartele"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
