@@ -491,7 +491,7 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	if (!fu_size_checked_inc(&offset, st_opt->buf->len, error))
 		return NULL;
-	if (!fu_size_checked_inc(&offset, (gsize)FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len, error))
+	if (!fu_size_checked_inc_product(&offset, FU_STRUCT_PE_COFF_SECTION_SIZE, imgs->len, error))
 		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		g_autoptr(FuPefileSection) section = g_new0(FuPefileSection, 1);

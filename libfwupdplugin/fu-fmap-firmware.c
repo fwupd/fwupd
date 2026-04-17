@@ -215,7 +215,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* add header */
 	total_sz = st_hdr->buf->len;
-	if (!fu_size_checked_inc(&total_sz, FU_STRUCT_FMAP_AREA_SIZE * images->len, error))
+	if (!fu_size_checked_inc_product(&total_sz, FU_STRUCT_FMAP_AREA_SIZE, images->len, error))
 		return NULL;
 	offset = total_sz;
 	for (guint i = 0; i < images->len; i++) {

@@ -169,7 +169,7 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
 
 	/* S2F_INDEX */
-	if (!fu_size_checked_inc(&offset, (imgs->len + 1) * 0x10, error)) {
+	if (!fu_size_checked_inc_product(&offset, (imgs->len + 1), 0x10, error)) {
 		g_prefix_error_literal(error, "index size overflow: ");
 		return NULL;
 	}

@@ -76,6 +76,43 @@ fu_size_checked_inc(gsize *value, gsize len, GError **error)
 }
 
 /**
+ * fu_size_checked_inc_product:
+ * @value: (inout): the starting and ending value
+ * @a: the LHS product value
+ * @b: the RHS product value
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a checked increment of @value and @a x @b, ensuring the result does not overflow.
+ *
+ * NOTE: If the operation does overflow then @value is *not* modified.
+ *
+ * Returns: boolean success
+ *
+ * Since: 2.1.2
+ **/
+gboolean
+fu_size_checked_inc_product(gsize *value, gsize a, gsize b, GError **error)
+{
+	gsize value_tmp = 0;
+
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_size_checked_mul(&value_tmp, a, b)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "0x%" G_GSIZE_MODIFIER "x * 0x%" G_GSIZE_MODIFIER "x would overflow",
+			    a,
+			    b);
+		return FALSE;
+	}
+
+	/* success */
+	return fu_size_checked_inc(value, value_tmp, error);
+}
+
+/**
  * fu_size_from_uint64:
  * @value: a 64-bit unsigned integer
  * @out: (out): output location for the converted value
