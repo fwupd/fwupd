@@ -185,6 +185,16 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	/* sanity check */
 	blob_comp = fu_struct_cab_data_get_comp(st);
 	blob_uncomp = fu_struct_cab_data_get_uncomp(st);
+
+	/* validate blob sizes are reasonable */
+	if (blob_comp == 0 || blob_uncomp == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "compressed or uncompressed size is zero");
+		return FALSE;
+	}
+
 	if (helper->compression == FU_CAB_COMPRESSION_NONE && blob_comp != blob_uncomp) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
