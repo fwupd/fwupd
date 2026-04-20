@@ -349,6 +349,17 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
+
+		/* sanity check to zlib dictionary maximum */
+		if (buf->len > 32 * FU_KB) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "dictionary size 0x%x exceeds zlib maximum",
+				    (guint)buf->len);
+			return FALSE;
+		}
+
 		zret = inflateSetDictionary(&helper->zstrm, buf->data, buf->len);
 		if (zret != Z_OK) {
 			g_set_error(error,
