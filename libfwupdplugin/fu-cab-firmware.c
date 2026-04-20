@@ -585,13 +585,13 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* sanity checks */
-	if (fu_struct_cab_header_get_size(st) < streamsz) {
+	if (fu_struct_cab_header_get_size(st) > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "buffer size 0x%x is less than stream size 0x%x",
-			    (guint)streamsz,
-			    fu_struct_cab_header_get_size(st));
+			    "archive size 0x%x exceeds stream size 0x%x",
+			    fu_struct_cab_header_get_size(st),
+			    (guint)streamsz);
 		return FALSE;
 	}
 	if (fu_struct_cab_header_get_idx_cabinet(st) != 0) {
