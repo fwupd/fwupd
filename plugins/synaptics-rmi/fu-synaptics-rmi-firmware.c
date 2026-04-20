@@ -390,7 +390,17 @@ fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 	if (img_sz > 0) {
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
-			guint32 sig_offset = img_sz - self->sig_size;
+			guint32 sig_offset;
+			if (self->sig_size > img_sz) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "signature size 0x%x exceeds image size 0x%x",
+					    self->sig_size,
+					    img_sz);
+				return FALSE;
+			}
+			sig_offset = img_sz - self->sig_size;
 			if (!fu_synaptics_rmi_firmware_add_image(self,
 								 "sig",
 								 stream,
