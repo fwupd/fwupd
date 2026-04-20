@@ -12,12 +12,9 @@
 import os
 import re
 import sys
-import json
-import shutil
-import subprocess
 import argparse
 import xml.etree.ElementTree as etree
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 # Maps the dependency id in dependencies.xml to the meson dependency() name.
 # Only includes packages that have versioned control entries in the XML.
@@ -35,69 +32,45 @@ MESON_ID_MAP: Dict[str, str] = {
 }
 
 
-def _candidate_build_dirs(repo_dir: str, build_dir: Optional[str]) -> List[str]:
-    candidates: List[str] = []
-    if build_dir:
-        candidates.append(build_dir)
-    env_build_dir = os.environ.get("MESON_BUILD_DIR", "").strip()
-    if env_build_dir and env_build_dir not in candidates:
-        candidates.append(env_build_dir)
-    for default_dir in ("venv/build", "build"):
-        if default_dir not in candidates:
-            candidates.append(default_dir)
+def _extract_dep_calls(content: str) -> List[str]:
+    """Extract the argument text from each dependency() call in meson.build."""
+    results = []
+    pattern = re.compile(r"dependency\s*\(")
+    for m in pattern.finditer(content):
+        start = m.end()
+        depth = 1
+        pos = start
+        while pos < len(content) and depth > 0:
+            if content[pos] == "(":
+                depth += 1
+            elif content[pos] == ")":
+                depth -= 1
+            pos += 1
+        if depth == 0:
+            results.append(content[start : pos - 1])
+    return results
 
-    resolved: List[str] = []
-    for candidate in candidates:
-        if os.path.isabs(candidate):
-            resolved.append(candidate)
-        else:
-            resolved.append(os.path.join(repo_dir, candidate))
-    return resolved
 
+def get_meson_versions(meson_build_file: str) -> Dict[str, str]:
+    """Parse meson.build to extract minimum version requirements."""
+    with open(meson_build_file, encoding="utf-8") as f:
+        content = f.read()
 
-def get_meson_versions_from_introspection(
-    repo_dir: str, build_dir: Optional[str] = None
-) -> Tuple[Dict[str, str], str]:
-    """Return dependency versions from `meson introspect --dependencies`."""
-    meson_cmd = shutil.which("meson")
-    if meson_cmd is None:
-        local_meson = os.path.join(repo_dir, "venv", "bin", "meson")
-        if os.path.isfile(local_meson) and os.access(local_meson, os.X_OK):
-            meson_cmd = local_meson
-        else:
-            raise RuntimeError("`meson` not found in PATH or at venv/bin/meson")
+    versions: Dict[str, str] = {}
 
-    errors: List[str] = []
-    for candidate in _candidate_build_dirs(repo_dir, build_dir):
-        if not os.path.isdir(candidate):
-            continue
-        cmd = [meson_cmd, "introspect", candidate, "--dependencies"]
-        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        if proc.returncode != 0:
-            stderr = proc.stderr.strip() or proc.stdout.strip() or "unknown error"
-            errors.append(f"{candidate}: {stderr}")
-            continue
-        try:
-            data = json.loads(proc.stdout)
-        except json.JSONDecodeError as exc:
-            errors.append(f"{candidate}: invalid JSON output ({exc})")
-            continue
+    name_re = re.compile(r"""^\s*['"]([^'"]+)['"]""")
+    ver_re = re.compile(r"""version\s*:\s*['"]>=\s*([^'"]+)['"]""")
 
-        versions: Dict[str, str] = {}
-        for dep in data:
-            name = dep.get("name")
-            version = dep.get("version")
-            if not name or version is None:
-                continue
-            versions[str(name)] = str(version).strip()
-        return versions, candidate
+    for call_body in _extract_dep_calls(content):
+        name_m = name_re.search(call_body)
+        ver_m = ver_re.search(call_body)
+        if name_m and ver_m:
+            name = name_m.group(1)
+            ver = ver_m.group(1).strip()
+            if name not in versions:
+                versions[name] = ver
 
-    details = "; ".join(errors) if errors else "no usable build directory found"
-    raise RuntimeError(
-        "Unable to run `meson introspect --dependencies`. "
-        "Pass --builddir or set MESON_BUILD_DIR. "
-        f"Details: {details}"
-    )
+    return versions
 
 
 def get_xml_versions(xml_file: str) -> Dict[str, str]:
@@ -243,31 +216,25 @@ def sync_xml_versions(xml_file: str, meson_versions: Dict[str, str]) -> List[str
     return updated_ids
 
 
-def check_versions(fix: bool = False, build_dir: Optional[str] = None) -> int:
+def check_versions(fix: bool = False) -> int:
     rc = 0
 
     script_dir = os.path.dirname(os.path.realpath(__file__))
     repo_dir = os.path.normpath(os.path.join(script_dir, "..", ".."))
 
     xml_file = os.path.join(script_dir, "dependencies.xml")
-    try:
-        meson_versions, used_build_dir = get_meson_versions_from_introspection(
-            repo_dir, build_dir
-        )
-    except RuntimeError as exc:
-        print(f"ERROR: {exc}")
-        return 1
+    meson_build_file = os.path.join(repo_dir, "meson.build")
+    meson_versions = get_meson_versions(meson_build_file)
 
     if fix:
         updated = sync_xml_versions(xml_file, meson_versions)
         if updated:
             print("Updated dependency versions: " + ", ".join(sorted(updated)))
         else:
-            print(f"No XML updates required (build dir: {used_build_dir})")
+            print("No XML updates required")
 
     xml_versions = get_xml_versions(xml_file)
 
-    # Check mapped dependencies from meson introspection output
     for xml_id, meson_id in MESON_ID_MAP.items():
         if xml_id not in xml_versions:
             continue
@@ -278,7 +245,7 @@ def check_versions(fix: bool = False, build_dir: Optional[str] = None) -> int:
         if xml_ver != meson_ver:
             print(
                 f"ERROR: {xml_id} version mismatch: "
-                f"meson introspect reports '{meson_ver}' (as '{meson_id}') "
+                f"meson.build requires '>= {meson_ver}' (as '{meson_id}') "
                 f"but dependencies.xml has '>= {xml_ver}'"
             )
             rc = 1
@@ -288,16 +255,12 @@ def check_versions(fix: bool = False, build_dir: Optional[str] = None) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Verify or sync dependency versions between meson introspection and dependencies.xml"
+        description="Verify or sync dependency versions between meson.build and dependencies.xml"
     )
     parser.add_argument(
         "--fix",
         action="store_true",
-        help="Update Debian/Ubuntu <control><version> in dependencies.xml from meson introspection versions",
-    )
-    parser.add_argument(
-        "--builddir",
-        help="Meson build directory (default: MESON_BUILD_DIR, then venv/build, then build)",
+        help="Update Debian/Ubuntu <control><version> in dependencies.xml from meson.build minimum versions",
     )
     args = parser.parse_args()
-    sys.exit(check_versions(fix=args.fix, build_dir=args.builddir))
+    sys.exit(check_versions(fix=args.fix))
