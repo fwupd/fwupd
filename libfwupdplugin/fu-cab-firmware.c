@@ -294,8 +294,19 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    kind);
 			return FALSE;
 		}
-		if (helper->decompress_buf == NULL)
+		if (helper->decompress_buf == NULL) {
+			/* sanity check decompress buffer size */
+			if (helper->decompress_bufsz == 0 ||
+			    helper->decompress_bufsz > 32 * FU_MB) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid decompress buffer size: 0x%x",
+					    (guint)helper->decompress_bufsz);
+				return FALSE;
+			}
 			helper->decompress_buf = g_malloc0(helper->decompress_bufsz);
+		}
 		helper->zstrm.avail_in = g_bytes_get_size(bytes_comp) - 2;
 		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(bytes_comp, NULL) + 2;
 		while (1) {
