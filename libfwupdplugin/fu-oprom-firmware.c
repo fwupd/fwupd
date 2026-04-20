@@ -121,6 +121,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	guint16 expansion_header_offset = 0;
 	guint16 pci_header_offset;
 	guint16 image_length = 0;
+	gsize image_size = 0;
 	g_autoptr(FuStructOprom) st_hdr = NULL;
 	g_autoptr(FuStructOpromPci) st_pci = NULL;
 
@@ -155,7 +156,14 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid image");
 		return FALSE;
 	}
-	fu_firmware_set_size(firmware, image_length * FU_OPROM_FIRMWARE_ALIGN_LEN);
+	if (!fu_size_checked_inc_product(&image_size,
+					 image_length,
+					 FU_OPROM_FIRMWARE_ALIGN_LEN,
+					 error)) {
+		g_prefix_error_literal(error, "image size overflow: ");
+		return FALSE;
+	}
+	fu_firmware_set_size(firmware, image_size);
 	fu_firmware_set_idx(firmware, fu_struct_oprom_pci_get_code_type(st_pci));
 
 	/* is last image */
