@@ -29,6 +29,8 @@
 
 G_DEFINE_TYPE(FuElfFirmware, fu_elf_firmware, FU_TYPE_FIRMWARE)
 
+#define FU_ELF_FIRMWARE_MAX_SECTIONS 10000
+
 static gboolean
 fu_elf_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
@@ -84,6 +86,14 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	if (!fu_size_checked_inc(&offset_secthdr, shoff_safe, error))
 		return FALSE;
 	shnum = fu_struct_elf_file_header64le_get_shnum(st_fhdr);
+	if (shnum > FU_ELF_FIRMWARE_MAX_SECTIONS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive section count: %u",
+			    shnum);
+		return FALSE;
+	}
 	for (guint i = 0; i < shnum; i++) {
 		g_autoptr(FuStructElfSectionHeader64le) st_shdr =
 		    fu_struct_elf_section_header64le_parse_stream(stream, offset_secthdr, error);
