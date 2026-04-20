@@ -71,6 +71,13 @@ fu_pixart_rf_firmware_validate(FuFirmware *firmware,
 	if (magic != PIXART_RF_FW_HEADER_MAGIC) {
 		/* if the magic number is not found, then start from the 821st byte from the end for
 		 * HPAC header */
+		if (streamsz < PIXART_RF_FW_HEADER_HPAC_POS_FROM_END) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "stream too small for HPAC header");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_u64(stream,
 					      streamsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END +
 						  PIXART_RF_FW_HEADER_TAG_OFFSET,
