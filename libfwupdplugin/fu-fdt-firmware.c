@@ -43,6 +43,18 @@ static GString *
 fu_fdt_firmware_string_new_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* validate offset is within buffer bounds */
+	if (offset >= bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "string offset 0x%x exceeds buffer size 0x%x",
+			    (guint)offset,
+			    (guint)bufsz);
+		return NULL;
+	}
+
 	for (gsize i = offset; i < bufsz; i++) {
 		if (buf[i] == '\0')
 			return g_steal_pointer(&str);
