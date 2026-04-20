@@ -143,6 +143,21 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 			    (guint)FU_ZIP_MAX_DECOMPRESSION_RATIO);
 		return NULL;
 	}
+
+	/* prevent excessive memory allocation */
+	if (fu_firmware_get_size_max(FU_FIRMWARE(self)) > 0 &&
+	    uncompressed_size > fu_firmware_get_size_max(FU_FIRMWARE(self))) {
+		g_autofree gchar *sz_val = g_format_size(uncompressed_size);
+		g_autofree gchar *sz_max =
+		    g_format_size(fu_firmware_get_size_max(FU_FIRMWARE(self)));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "uncompressed file size %s exceeds maximum %s",
+			    sz_val,
+			    sz_max);
+		return NULL;
+	}
 	stream_compressed = fu_partial_input_stream_new(stream, offset, compressed_size, error);
 	if (stream_compressed == NULL)
 		return NULL;
