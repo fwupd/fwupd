@@ -164,7 +164,7 @@ foreach plugin, enabled : plugins
   subdir(plugin)
 endforeach
 
-if umockdev_integration_tests.allowed()
+if umockdev.found()
   envs = environment()
   envs.set('CACHE_DIRECTORY', join_paths(meson.project_build_root(), 'cache'))
   envs.set('DAEMON_BUILDDIR', join_paths(meson.project_build_root(), 'src'))

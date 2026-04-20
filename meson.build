@@ -848,20 +848,16 @@ dbusmock = run_command(
   [python3, '-c', 'import dbusmock; print(dbusmock.__version__)'],
   check: false,
 )
-
-umockdev_integration_tests = get_option('umockdev_tests') \
-  .disable_auto_if(not get_option('tests')) \
-  .disable_auto_if(not introspection.allowed()) \
-  .disable_auto_if(not run_sanitize_unsafe_tests) \
-  .disable_auto_if(dbusmock.returncode() != 0)
-dependency(
+umockdev = dependency(
   'umockdev-1.0',
-  required: get_option('umockdev_tests'),
+  required: get_option('umockdev_tests').require(dbusmock.returncode() == 0).require(
+    get_option('tests')
+  ).disable_auto_if(
+    not introspection.allowed()
+  ).disable_auto_if(
+    not run_sanitize_unsafe_tests
+  ),
 )
-
-if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
-  warning('python dbusmock not found, umockdev tests will be disabled')
-endif
 
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
@@ -939,7 +935,7 @@ summary(
     'supported_build': supported_build,
     'static_analysis': static_analysis,
     'tests': get_option('tests'),
-    'umockdev_tests': umockdev_integration_tests.allowed(),
+    'umockdev_tests': umockdev.found(),
   },
   section: 'project features',
   bool_yn: true,
