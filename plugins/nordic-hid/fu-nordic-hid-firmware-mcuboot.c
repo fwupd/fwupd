@@ -67,6 +67,7 @@ fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
 	guint32 magic;
 	guint16 hdr_size;
 	guint32 img_size;
+	gsize offset_tlv;
 	guint8 ver_major;
 	guint8 ver_minor;
 	guint16 ver_rev;
@@ -93,11 +94,12 @@ fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
 	/* ignore TLVs themselves
 	 * https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/mcuboot/design.html#protected-tlvs
 	 * check the magic values only */
-	if (!fu_input_stream_read_u16(stream,
-				      hdr_size + img_size,
-				      &magic_tlv,
-				      G_LITTLE_ENDIAN,
-				      error))
+	offset_tlv = 0;
+	if (!fu_size_checked_inc_product(&offset_tlv, hdr_size, 1, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&offset_tlv, img_size, error))
+		return FALSE;
+	if (!fu_input_stream_read_u16(stream, offset_tlv, &magic_tlv, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (magic_tlv != IMAGE_TLV_INFO_MAGIC && magic_tlv != IMAGE_TLV_PROT_INFO_MAGIC) {
 		g_set_error_literal(error,
