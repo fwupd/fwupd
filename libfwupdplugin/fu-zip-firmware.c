@@ -132,6 +132,15 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		return NULL;
 	}
 
+	/* reject zero-size compressed data if uncompressed is non-zero */
+	if (compressed_size == 0 && uncompressed_size > 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "compressed size is zero but uncompressed size is non-zero");
+		return NULL;
+	}
+
 	/* check decompression ratio to prevent bombs */
 	if (compressed_size > 0 &&
 	    (uncompressed_size / compressed_size) > FU_ZIP_MAX_DECOMPRESSION_RATIO) {
