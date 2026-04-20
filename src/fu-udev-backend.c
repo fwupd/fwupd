@@ -499,10 +499,6 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 					    kv[1]);
 				return FALSE;
 			}
-
-			/* we do not care about these */
-			if (action == FU_UDEV_ACTION_BIND || action == FU_UDEV_ACTION_UNBIND)
-				return TRUE;
 		} else if (g_strcmp0(kv[0], "DEVPATH") == 0) {
 			g_autofree gchar *sysfspath = g_build_filename(sysfsdir, kv[1], NULL);
 
@@ -520,13 +516,13 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 			}
 
 			/* something got removed */
-			if (action == FU_UDEV_ACTION_REMOVE) {
+			if (action == FU_UDEV_ACTION_REMOVE || action == FU_UDEV_ACTION_UNBIND) {
 				fu_udev_backend_remove_device(self, sysfspath);
 				return TRUE;
 			}
 
 			/* something got added */
-			if (action == FU_UDEV_ACTION_ADD) {
+			if (action == FU_UDEV_ACTION_ADD || action == FU_UDEV_ACTION_BIND) {
 				if (device_donor != NULL) {
 					g_set_error_literal(error,
 							    FWUPD_ERROR,
@@ -561,7 +557,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 	}
 
 	/* now create the actual device from the donor */
-	if (action == FU_UDEV_ACTION_ADD) {
+	if (action == FU_UDEV_ACTION_ADD || action == FU_UDEV_ACTION_BIND) {
 		g_autoptr(FuUdevDevice) device_actual = NULL;
 		if (device_donor == NULL) {
 			g_set_error_literal(error,
@@ -595,7 +591,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		return FALSE;
 
 	action = fu_udev_action_from_string(split[0]);
-	if (action == FU_UDEV_ACTION_ADD) {
+	if (action == FU_UDEV_ACTION_ADD || action == FU_UDEV_ACTION_BIND) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
 		g_autoptr(FuUdevDevice) device =
 		    fu_udev_backend_create_device(self, sysfspath, error);
@@ -609,7 +605,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 					  error))
 			return FALSE;
 		fu_udev_backend_device_add_from_device(self, device);
-	} else if (action == FU_UDEV_ACTION_REMOVE) {
+	} else if (action == FU_UDEV_ACTION_REMOVE || action == FU_UDEV_ACTION_UNBIND) {
 		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
 		fu_udev_backend_remove_device(self, sysfspath);
 	} else if (action == FU_UDEV_ACTION_CHANGE) {
