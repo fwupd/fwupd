@@ -84,10 +84,15 @@ install_pip() {
 
 setup_virtualenv() {
     echo "Setting up virtualenv"
-    if ! which virtualenv >/dev/null 2>&1; then
-        install_pip virtualenv
+    if [ "$OS" = "nixos" ]; then
+        python3 -m venv venv --prompt fwupd
+        touch venv/.nixos
+    else
+        if ! command -v virtualenv >/dev/null 2>&1; then
+            install_pip virtualenv
+        fi
+        virtualenv --system-site-packages venv --prompt fwupd
     fi
-    virtualenv --system-site-packages venv --prompt fwupd
     source venv/bin/activate
     cat >>venv/bin/activate <<EOF
 echo "To build or rebuild fwupd within development environment run:"
@@ -208,6 +213,9 @@ if [ -t 2 ]; then
     case $OS in
     debian | ubuntu | arch | fedora | darwin | freebsd)
         setup_deps
+        ;;
+    nixos)
+        echo "NixOS detected, using nix-shell for build dependencies"
         ;;
     esac
     rename_branch

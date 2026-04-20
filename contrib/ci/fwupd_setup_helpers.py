@@ -18,7 +18,16 @@ MINIMUM_MARKDOWN = (3, 2, 0)
 
 
 def get_possible_profiles():
-    return ["fedora", "centos", "debian", "ubuntu", "arch", "darwin", "freebsd"]
+    return [
+        "fedora",
+        "centos",
+        "debian",
+        "ubuntu",
+        "arch",
+        "darwin",
+        "freebsd",
+        "nixos",
+    ]
 
 
 def detect_profile():
@@ -225,6 +234,8 @@ def _get_installer_cmd(profile: str, yes: bool):
 def install_packages(profile: str, variant: str, yes: bool, debugging: bool, packages):
     import subprocess
 
+    if profile == "nixos":
+        return
     if packages == "build-dependencies":
         packages = get_build_dependencies(profile, variant)
     installer = _get_installer_cmd(profile, yes)
