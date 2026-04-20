@@ -25,6 +25,8 @@
 
 G_DEFINE_TYPE(FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
 
+#define FU_DFUSE_FIRMWARE_CHUNKS_MAX 10000
+
 static FuChunk *
 fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 				    GInputStream *stream,
@@ -89,6 +91,14 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "DfuSe image has no chunks");
+		return NULL;
+	}
+	if (chunks > FU_DFUSE_FIRMWARE_CHUNKS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive chunk count: %u",
+			    chunks);
 		return NULL;
 	}
 
