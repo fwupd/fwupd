@@ -828,6 +828,16 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
+
+		/* validate filename exists */
+		if (filename_win32 == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "image filename not set");
+			return NULL;
+		}
+
 		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_FILE_SIZE, error))
 			return NULL;
 		if (!fu_size_checked_inc(&archive_size, strlen(filename_win32), error))
