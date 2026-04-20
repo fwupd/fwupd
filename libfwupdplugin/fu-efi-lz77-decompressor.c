@@ -571,6 +571,16 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 			bytes_remaining = (guint16)(char_c - (0x00000100U - THRESHOLD));
 			if (!fu_efi_lz77_decompressor_decode_p(helper, &tmp, error))
 				return FALSE;
+			/* validate tmp to prevent underflow in offset calculation */
+			if (tmp >= dst_offset) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "dictionary offset 0x%x too large for position 0x%x",
+					    tmp,
+					    (guint)dst_offset);
+				return FALSE;
+			}
 			data_offset = dst_offset - tmp - 1;
 
 			/* write bytes_remaining of bytes into dst_buf */
