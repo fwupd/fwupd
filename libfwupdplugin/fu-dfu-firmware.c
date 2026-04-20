@@ -229,6 +229,17 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
 
+	/* validate buffer is large enough for footer */
+	if (bufsz < FU_STRUCT_DFU_FTR_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "file too small for DFU footer: 0x%x < 0x%x",
+			    (guint)bufsz,
+			    (guint)FU_STRUCT_DFU_FTR_SIZE);
+		return FALSE;
+	}
+
 	/* parse */
 	st = fu_struct_dfu_ftr_parse_stream(stream, bufsz - FU_STRUCT_DFU_FTR_SIZE, error);
 	if (st == NULL)
