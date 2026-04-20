@@ -276,8 +276,8 @@ if build_standalone
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(
-    host_cpu != 'x86' and host_cpu != 'x86_64'
+  hsi = get_option('hsi').require(host_machine.system() == 'linux').require(
+    host_cpu in ['x86', 'x86_64']
   ).allowed()
   if hsi
     conf.set('HAVE_HSI', '1')
