@@ -112,8 +112,22 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 
 	/* read data */
 	compressed_size = fu_struct_zip_lfh_get_compressed_size(st_lfh);
-	if (compressed_size == 0x0)
+	if (compressed_size == 0x0) {
 		compressed_size = fu_struct_zip_cdfh_get_compressed_size(st_cdfh);
+	} else {
+		/* validate LFH and CDFH agree when both are non-zero */
+		guint32 cdfh_compressed = fu_struct_zip_cdfh_get_compressed_size(st_cdfh);
+		if (cdfh_compressed != 0x0 && cdfh_compressed != 0xFFFFFFFF &&
+		    compressed_size != cdfh_compressed) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "LFH compressed size 0x%x differs from CDFH 0x%x",
+				    compressed_size,
+				    cdfh_compressed);
+			return NULL;
+		}
+	}
 	if (compressed_size == 0xFFFFFFFF) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -122,8 +136,22 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 		return NULL;
 	}
 	uncompressed_size = fu_struct_zip_lfh_get_uncompressed_size(st_lfh);
-	if (uncompressed_size == 0x0)
+	if (uncompressed_size == 0x0) {
 		uncompressed_size = fu_struct_zip_cdfh_get_uncompressed_size(st_cdfh);
+	} else {
+		/* validate LFH and CDFH agree when both are non-zero */
+		guint32 cdfh_uncompressed = fu_struct_zip_cdfh_get_uncompressed_size(st_cdfh);
+		if (cdfh_uncompressed != 0x0 && cdfh_uncompressed != 0xFFFFFFFF &&
+		    uncompressed_size != cdfh_uncompressed) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "LFH uncompressed size 0x%x differs from CDFH 0x%x",
+				    uncompressed_size,
+				    cdfh_uncompressed);
+			return NULL;
+		}
+	}
 	if (uncompressed_size == 0xFFFFFFFF) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
