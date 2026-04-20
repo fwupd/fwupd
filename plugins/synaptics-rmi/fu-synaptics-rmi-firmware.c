@@ -193,6 +193,14 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 		guint32 length;
 		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
 
+		if (offset > G_MAXUINT32 - 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "offset overflow at container %u",
+				    i);
+			return FALSE;
+		}
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		g_debug("parsing RmiContainerDescriptor at 0x%x", addr);
@@ -354,14 +362,6 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 				fu_rmi_container_id_to_string(container_id),
 				container_id);
 			break;
-		}
-		if (offset > G_MAXUINT32 - 4) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "offset overflow at container %u",
-				    i);
-			return FALSE;
 		}
 		offset += 4;
 	}
