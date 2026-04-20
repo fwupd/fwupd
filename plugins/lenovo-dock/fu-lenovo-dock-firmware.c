@@ -159,7 +159,8 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 	self->pid = fu_struct_lenovo_dock_usage_get_pid(st);
 	fu_firmware_set_version_raw(firmware,
 				    fu_struct_lenovo_dock_usage_get_composite_version(st));
-	offset += FU_STRUCT_LENOVO_DOCK_USAGE_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_LENOVO_DOCK_USAGE_SIZE, error))
+		return FALSE;
 	usage_items = fu_struct_lenovo_dock_usage_get_total_number(st);
 	for (guint i = 0; i < usage_items; i++) {
 		if (!fu_lenovo_dock_firmware_parse_image(self,
@@ -171,7 +172,8 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* next! */
-		offset += FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE, error))
+			return FALSE;
 	}
 
 	/* success */
