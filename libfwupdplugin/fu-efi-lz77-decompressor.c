@@ -305,8 +305,9 @@ fu_efi_lz77_decompressor_read_pt_len(FuEfiLz77DecompressHelper *helper,
 	if (!fu_efi_lz77_decompressor_get_bits(helper, number_of_bits, &number, error))
 		return FALSE;
 
-	/* fail if number or number_of_symbols is greater than size of pt_len */
-	if ((number > sizeof(helper->pt_len)) || (number_of_symbols > sizeof(helper->pt_len))) {
+	/* fail if number or number_of_symbols is greater than array element count */
+	if ((number > G_N_ELEMENTS(helper->pt_len)) ||
+	    (number_of_symbols > G_N_ELEMENTS(helper->pt_len))) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad table");
 		return FALSE;
 	}
