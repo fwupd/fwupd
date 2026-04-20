@@ -140,6 +140,15 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 	/* check image size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (fu_dfu_firmware_get_footer_len(dfu_firmware) > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "footer length 0x%x exceeds stream size 0x%x",
+			    (guint)fu_dfu_firmware_get_footer_len(dfu_firmware),
+			    (guint)streamsz);
+		return FALSE;
+	}
 	if (fu_struct_dfuse_hdr_get_image_size(st_hdr) !=
 	    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
 		g_set_error(error,
