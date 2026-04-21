@@ -343,12 +343,21 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 			    FuProgress *progress,
 			    GError **error)
 {
-	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-	const guint16 end = (offset + bufsz) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	gsize offset_end = offset;
+	guint16 start;
+	guint16 end;
 	g_autoptr(FuStructBnrDpAuxRequest) st_request = NULL;
 
 	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
 	g_return_val_if_fail(bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
+
+	/* validate offset addition */
+	if (!fu_size_checked_inc(&offset_end, bufsz, error))
+		return FALSE;
+
+	start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	end = offset_end / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+
 	g_return_val_if_fail(start < end, FALSE);
 
 	st_request = fu_bnr_dp_device_build_request(opcode,
