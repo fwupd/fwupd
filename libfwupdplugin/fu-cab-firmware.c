@@ -313,11 +313,11 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 			helper->zstrm.avail_out = helper->decompress_bufsz;
 			helper->zstrm.next_out = helper->decompress_buf;
 			zret = inflate(&helper->zstrm, Z_BLOCK);
-			if (zret == Z_STREAM_END)
-				break;
 			g_byte_array_append(buf,
 					    helper->decompress_buf,
 					    helper->decompress_bufsz - helper->zstrm.avail_out);
+			if (zret == Z_STREAM_END)
+				break;
 			if (zret != Z_OK) {
 				g_set_error(error,
 					    FWUPD_ERROR,
