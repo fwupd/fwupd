@@ -716,11 +716,12 @@ fu_wac_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **erro
 	}
 
 	/* verify the number of submodules is possible */
-	if (buf[3] > (512 - 4) / 4) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "number of submodules is impossible");
+	if (buf[3] > (sizeof(buf) - 4) / 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "number of submodules %u exceeds buffer capacity",
+			    buf[3]);
 		return FALSE;
 	}
 
