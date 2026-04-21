@@ -113,6 +113,8 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraFileDevice *self = FU_JABRA_FILE_DEVICE(device);
 	FuJabraFilePacket *cmd_rsp = (FuJabraFilePacket *)user_data;
+	guint8 address = 0;
+	guint8 cmd = 0;
 
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      self->epin,
@@ -125,13 +127,14 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
-	if (cmd_rsp->buf->data[2] == self->address &&
-	    (cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_IDENTITY &&
-	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_FILE &&
-	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_DFU &&
-	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_VIDEO &&
-	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_ACK &&
-	     cmd_rsp->buf->data[5] != FU_JABRA_FILE_PACKET_CMD_NACK)) {
+	if (!fu_memread_uint8_safe(cmd_rsp->buf->data, cmd_rsp->buf->len, 0x2, &address, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(cmd_rsp->buf->data, cmd_rsp->buf->len, 0x5, &cmd, error))
+		return FALSE;
+	if (address == self->address &&
+	    (cmd != FU_JABRA_FILE_PACKET_CMD_IDENTITY && cmd != FU_JABRA_FILE_PACKET_CMD_FILE &&
+	     cmd != FU_JABRA_FILE_PACKET_CMD_DFU && cmd != FU_JABRA_FILE_PACKET_CMD_VIDEO &&
+	     cmd != FU_JABRA_FILE_PACKET_CMD_ACK && cmd != FU_JABRA_FILE_PACKET_CMD_NACK)) {
 		/* unrelated report, ignore and rx again */
 		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 						      0x82,
@@ -343,6 +346,8 @@ fu_jabra_file_device_file_checksum(FuJabraFileDevice *self,
 static gboolean
 fu_jabra_file_device_write_delete_file(FuJabraFileDevice *self, GError **error)
 {
+	guint8 cmd = 0;
+	guint8 status = 0;
 	guint8 data[] = {
 	    FU_JABRA_FILE_FIRST_BLOCK << 6 | 11,
 	    'u',
@@ -373,9 +378,15 @@ fu_jabra_file_device_write_delete_file(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (cmd_rsp->buf->data[5] == FU_JABRA_FILE_PACKET_CMD_NACK && cmd_rsp->buf->data[6] == 0xF7)
+
+	if (!fu_memread_uint8_safe(cmd_rsp->buf->data, cmd_rsp->buf->len, 0x5, &cmd, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(cmd_rsp->buf->data, cmd_rsp->buf->len, 0x6, &status, error))
+		return FALSE;
+
+	if (cmd == FU_JABRA_FILE_PACKET_CMD_NACK && status == 0xF7)
 		return TRUE;
-	if (cmd_rsp->buf->data[5] == FU_JABRA_FILE_PACKET_CMD_ACK)
+	if (cmd == FU_JABRA_FILE_PACKET_CMD_ACK)
 		return TRUE;
 
 	g_set_error(error,
@@ -513,6 +524,7 @@ fu_jabra_file_device_write_blocks(FuJabraFileDevice *self,
 static gboolean
 fu_jabra_file_device_check_device_busy(FuJabraFileDevice *self, GError **error)
 {
+	guint8 status = 0;
 	g_autoptr(FuJabraFilePacket) cmd_req = fu_jabra_file_packet_new();
 	g_autoptr(FuJabraFilePacket) cmd_rsp = NULL;
 
@@ -527,7 +539,9 @@ fu_jabra_file_device_check_device_busy(FuJabraFileDevice *self, GError **error)
 	cmd_rsp = fu_jabra_file_device_rx_with_sequence(self, error);
 	if (cmd_rsp == NULL)
 		return FALSE;
-	if (cmd_rsp->buf->data[7] != 0x00) {
+	if (!fu_memread_uint8_safe(cmd_rsp->buf->data, cmd_rsp->buf->len, 0x7, &status, error))
+		return FALSE;
+	if (status != 0x00) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED, "is busy");
 		return FALSE;
 	}
