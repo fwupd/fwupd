@@ -867,8 +867,11 @@ fu_cabinet_sign_enumerate_metainfo(FuCabinet *self, GPtrArray *files, GError **e
 	} else {
 		for (guint i = 0; i < nodes->len; i++) {
 			XbNode *n = g_ptr_array_index(nodes, i);
-			g_debug("adding: %s", xb_node_get_text(n));
-			g_ptr_array_add(files, g_strdup(xb_node_get_text(n)));
+			const gchar *text = xb_node_get_text(n);
+			if (text == NULL)
+				continue;
+			g_debug("adding: %s", text);
+			g_ptr_array_add(files, g_strdup(text));
 		}
 	}
 
