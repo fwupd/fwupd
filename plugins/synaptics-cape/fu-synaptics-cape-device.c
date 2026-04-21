@@ -483,6 +483,14 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 	}
 
 	/* 32 bit align */
+	if (bufsz % sizeof(guint32) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware size 0x%x not aligned to 32-bit boundary",
+			    (guint)bufsz);
+		return FALSE;
+	}
 	buf32 = g_new0(guint32, bufsz / sizeof(guint32));
 	if (!fu_memcpy_safe((guint8 *)buf32,
 			    bufsz,
@@ -534,6 +542,14 @@ fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
 
 		/* 32 bit align */
 		bufsz = fu_chunk_get_data_sz(chk);
+		if (bufsz % sizeof(guint32) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "chunk size 0x%x not aligned to 32-bit boundary",
+				    (guint)bufsz);
+			return FALSE;
+		}
 		buf32 = g_new0(guint32, bufsz / sizeof(guint32));
 		if (!fu_memcpy_safe((guint8 *)buf32,
 				    bufsz,
