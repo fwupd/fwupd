@@ -396,6 +396,16 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 	sector_size = self->write_block_size ?: self->sect_size;
 
+	/* validate sector size */
+	if (sector_size == 0 || sector_size % 512 != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid sector size: 0x%x",
+			    sector_size);
+		return FALSE;
+	}
+
 	/*  mode operation codes are supported */
 	check_sect_done = (ext_csd[EXT_CSD_FFU_FEATURES] & 1) > 0;
 
