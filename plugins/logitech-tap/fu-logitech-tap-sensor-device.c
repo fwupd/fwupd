@@ -270,6 +270,14 @@ fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GEr
 							       st_res->buf->len,
 							       error))
 			return FALSE;
+		if (st_res->buf->len < 5) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "serial number response too small: 0x%x",
+				    st_res->buf->len);
+			return FALSE;
+		}
 		g_string_append_printf(serial_number,
 				       "%c%c%c%c",
 				       st_res->buf->data[1],
