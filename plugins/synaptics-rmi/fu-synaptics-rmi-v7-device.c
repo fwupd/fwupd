@@ -1040,6 +1040,20 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 			 0x0001;
 
 	/* sanity check */
+	if (flash->block_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash block size not set");
+		return FALSE;
+	}
+	if (flash->payload_length == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "payload length not set");
+		return FALSE;
+	}
 	if ((guint32)flash->block_size * (guint32)flash->config_length > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,
