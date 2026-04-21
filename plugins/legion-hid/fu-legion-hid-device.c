@@ -40,7 +40,7 @@ fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *device,
 	FuLegionHidRetryHelper *helper = (FuLegionHidRetryHelper *)user_data;
 	GByteArray *res = helper->res;
 
-	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
+	fu_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH, 0x0);
 	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
 				 res->data,
 				 res->len,
@@ -49,6 +49,14 @@ fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *device,
 				 FU_IO_CHANNEL_FLAG_NONE,
 				 error))
 		return FALSE;
+	if (res->len < 5) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "response too small: 0x%x",
+			    res->len);
+		return FALSE;
+	}
 	if (res->data[2] != helper->main_id || res->data[3] != helper->sub_id ||
 	    res->data[4] != helper->dev_id) {
 		g_set_error(error,
@@ -107,7 +115,7 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 	GByteArray *res = helper->res;
 	g_autoptr(FuStructLegionHidUpgradeRsp) st_rsp = NULL;
 
-	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
+	fu_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH, 0x0);
 	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
 				 res->data,
 				 res->len,
@@ -190,7 +198,7 @@ fu_legion_hid_device_read_upgrade_query_size_response_retry_cb(FuDevice *device,
 	GByteArray *res = helper->res;
 	g_autoptr(FuStructLegionHidUpgradeQuerySizeRsp) st_rsp = NULL;
 
-	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
+	fu_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH, 0x0);
 	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
 				 res->data,
 				 res->len,
