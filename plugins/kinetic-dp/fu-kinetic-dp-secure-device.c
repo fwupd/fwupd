@@ -168,6 +168,15 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd(FuKineticDpSecureDevice *self,
 					     guint8 *status,
 					     GError **error)
 {
+	/* validate poll interval */
+	if (poll_interval_ms == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "poll interval cannot be zero");
+		return FALSE;
+	}
+
 	if (!fu_kinetic_dp_secure_device_write_kt_prop_cmd(self, cmd_id, error))
 		return FALSE;
 
@@ -498,6 +507,15 @@ fu_kinetic_dp_secure_device_wait_dpcd_cmd_cleared(FuKineticDpSecureDevice *self,
 						  guint16 poll_interval_ms,
 						  GError **error)
 {
+	/* validate poll interval */
+	if (poll_interval_ms == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "poll interval cannot be zero");
+		return FALSE;
+	}
+
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_kinetic_dp_secure_device_wait_dpcd_cmd_cleared_cb,
 				  wait_time_ms / poll_interval_ms,
