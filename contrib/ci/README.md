@@ -1,78 +1,115 @@
 # Continuous Integration
 
 By using CI, builds are exercised across a variety of environments attempting to maximize code coverage.
-For every commit or pull request 6 builds are performed:
+The following builds are performed for every commit or pull request:
+
+## Library build (x86_64)
+
+* A minimal library-only build used to generate a source tarball for RPM-based distributions
+* Compiled under gcc on Ubuntu
+* Produces a versioned `.tar.xz` source archive passed to downstream container builds
 
 ## Fedora (x86_64)
 
 * A fully packaged RPM build with all plugins enabled
-* Compiled under gcc with AddressSanitizer
+* Compiled under gcc with AddressSanitizer and UndefinedBehaviorSanitizer
 * Tests with -Werror enabled
-* Tests with the built in local test suite for all plugins.
+* Tests with the built in local test suite for all plugins
 * All packages are installed
-* An installed testing run with the "test" plugin and pulling from LVFS.
-* With modem manager disabled
+* An installed testing run with the "test" plugin and pulling from LVFS
+* With modem manager enabled
+
+## CentOS Stream 9 (x86_64)
+
+* A fully packaged RPM build
+* Compiled under gcc
+* All packages are installed
+* An installed testing run to check the daemon can start
 
 ## Debian testing (x86_64)
 
 * A fully packaged DEB build with all plugins enabled
 * Compiled under gcc
 * Tests with -Werror enabled
-* Tests with the built in local test suite for all plugins.
+* Tests with the built in local test suite for all plugins
 * All packages are installed
-* An installed testing run with the "test" plugin and pulling from LVFS.
+* An installed testing run with the "test" plugin and pulling from LVFS
 * All packages are removed
 
-## Debian testing (i386)
+## Debian testing (ARM64)
 
 * A fully packaged DEB build with all plugins enabled
-* Compiled under gcc
-* Tests with -Werror enabled
-* Tests with the built in local test suite for all plugins.
+* Compiled under gcc on a native ARM64 runner
+* Tests with the built in local test suite for all plugins
 * All packages are installed
-* An installed testing run with the "test" plugin and pulling from LVFS.
+* An installed testing run with the "test" plugin and pulling from LVFS
 * All packages are removed
 
-## Ubuntu devel release (x86_64)
+## Debian testing (cross compile i386)
 
-* A fully packaged DEB build with all plugins enabled
-* Compiled under clang
-* Tests without -Werror enabled
-* Tests with the built in local test suite for all plugins.
-* All packages are installed
-* An installed testing run with the "test" plugin and pulling from LVFS.
-* All packages are removed
+* A cross-compiled DEB build targeting i386
+* Compiled under gcc on an x86_64 runner with cross-compilation toolchain
+* No unit tests (disabled for cross builds)
+* All packages are built and installed
 
 ## Debian testing (cross compile s390x)
 
-* Not packaged
-* Tests for missing translation files
-* No redfish support
-* Compiled under gcc
-* Tests with -Werror enabled
-* Runs local test suite using qemu-user
-* Modem manager disabled
+* A cross-compiled DEB build targeting s390x
+* Compiled under gcc on an ARM64 runner with cross-compilation toolchain
+* No unit tests (disabled for cross builds)
+* All packages are built and installed
+
+## Ubuntu rolling (x86_64)
+
+* Not packaged — built directly with meson
+* Compiled under clang
+* Tests with the built in local test suite for all plugins
+* Coverage report generated
+* Documentation built and published
+* RSS memory and CPU usage checks
 
 ## Arch Linux (x86_64)
 
 * A fully packaged pkg build with all plugins enabled
 * Compiled under gcc
 * Tests with -Werror enabled
-* Compile with the deprecated USB plugin enabled
-* Tests with the built in local test suite for all plugins.
+* Tests with the built in local test suite for all plugins
 * All packages are installed
+* Qt5 threading test compiled and run
+* TPM simulator tests using swtpm
 
-## Flatpak
+## macOS (x86_64)
 
-* A flatpak bundle with all plugins enabled
-* Compiled under gcc with the org.gnome.Sdk/x86_64/3.28 runtime
-* Builds without the daemon, so only fwupdtool is available
-* No PKCS-7, GObjectIntrospection, systemd or ConsoleKit support
+* Built with meson using Homebrew dependencies
 * No tests
+* Only fwupdtool is available (no systemd)
+
+## Windows (x86_64)
+
+* Cross-compiled using MinGW64 on a Fedora container
+* Produces a `.msi` installer package
+* Installer is smoke-tested with Wine
+
+## FreeBSD
+
+* Built using the venv-based build wrapper
+* Compiled under gcc
+* No installed tests
+
+## Snap
+
+* A Snap package build
+* Tested with installed-tests suite
+* Deployed to the Snap Store edge or candidate channel on release
+
+## OpenBMC
+
+* A minimal meson build targeting the OpenBMC environment
+* Compiled on Ubuntu
 
 ## Adding a new target
 
-Dockerfiles are generated dynamically by the python script `generate_dockerfile.py`.
+Dockerfiles are generated dynamically by the python script `generate_docker.py`.
 The python script will recognize the environment variable `TARGET_DISTRO` to determine what target to generate a Dockerfile for.
 
 ### dependencies.xml
@@ -99,7 +136,7 @@ Each distribution will have `package` elements and `control` elements.
 * `inclusive` elements represent an inclusive list of architectures to be installed on
 * `exclusive` elements represent an exclusive list of architectures to not be installed on
 
-For convenience there is also a helper script `./contrib/ci/fwupd_setup_helpers.p install-dependencies` that parses `dependencies.xml`.
+For convenience there is also a helper script `./contrib/ci/fwupd_setup_helpers.py install-dependencies` that parses `dependencies.xml`.
 
 ### Dockerfile.in
 
