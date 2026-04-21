@@ -480,14 +480,18 @@ fu_ccgx_hpi_device_reg_write_cb(FuDevice *device, gpointer user_data, GError **e
 {
 	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *)user_data;
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	g_autofree guint8 *bufhw = g_malloc0(helper->bufsz + self->hpi_addrsz);
+	gsize bufhw_sz = helper->bufsz;
+	g_autofree guint8 *bufhw = NULL;
 
+	if (!fu_size_checked_inc(&bufhw_sz, self->hpi_addrsz, error))
+		return FALSE;
+	bufhw = g_malloc0(bufhw_sz);
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
 		bufhw[i] = (guint8)(helper->addr >> (8 * i));
 	memcpy(&bufhw[self->hpi_addrsz], helper->buf, helper->bufsz); /* nocheck:blocked */
 	if (!fu_ccgx_hpi_device_i2c_write(self,
 					  bufhw,
-					  helper->bufsz + self->hpi_addrsz,
+					  bufhw_sz,
 					  FU_CCGX_I2C_DATA_CONFIG_STOP |
 					      FU_CCGX_I2C_DATA_CONFIG_NAK,
 					  error)) {
@@ -525,13 +529,18 @@ fu_ccgx_hpi_device_reg_write_no_resp(FuCcgxHpiDevice *self,
 				     guint16 bufsz,
 				     GError **error)
 {
-	g_autofree guint8 *bufhw = g_malloc0(bufsz + self->hpi_addrsz);
+	gsize bufhw_sz = bufsz;
+	g_autofree guint8 *bufhw = NULL;
+
+	if (!fu_size_checked_inc(&bufhw_sz, self->hpi_addrsz, error))
+		return FALSE;
+	bufhw = g_malloc0(bufhw_sz);
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
 		bufhw[i] = (guint8)(addr >> (8 * i));
 	memcpy(&bufhw[self->hpi_addrsz], buf, bufsz); /* nocheck:blocked */
 	if (!fu_ccgx_hpi_device_i2c_write_no_resp(self,
 						  bufhw,
-						  bufsz + self->hpi_addrsz,
+						  bufhw_sz,
 						  FU_CCGX_I2C_DATA_CONFIG_STOP |
 						      FU_CCGX_I2C_DATA_CONFIG_NAK,
 						  error)) {
