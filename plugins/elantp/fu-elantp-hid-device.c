@@ -660,6 +660,15 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	buf = g_bytes_get_data(fw, &bufsz);
 	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
 
+	/* sanity check */
+	if (self->fw_page_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "firmware page size not set");
+		return FALSE;
+	}
+
 	if (self->force_table_support &&
 	    self->force_table_addr >=
 		fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware))) {
