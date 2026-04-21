@@ -161,12 +161,18 @@ fu_wacom_usb_device_set_feature_report(FuWacomUsbDevice *self,
 static gboolean
 fu_wacom_usb_device_ensure_flash_descriptors(FuWacomUsbDevice *self, GError **error)
 {
-	gsize sz = (self->nr_flash_blocks * 10) + 1;
+	gsize sz = 0;
 	g_autofree guint8 *buf = NULL;
 
 	/* already done */
 	if (self->flash_descriptors->len > 0)
 		return TRUE;
+
+	/* calculate buffer size */
+	if (!fu_size_checked_inc_product(&sz, self->nr_flash_blocks, 10, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&sz, 1, error))
+		return FALSE;
 
 	/* hit hardware */
 	buf = g_malloc(sz);
@@ -239,11 +245,18 @@ fu_wacom_usb_device_ensure_status(FuWacomUsbDevice *self, GError **error)
 static gboolean
 fu_wacom_usb_device_ensure_checksums(FuWacomUsbDevice *self, GError **error)
 {
-	gsize sz = (self->nr_flash_blocks * 4) + 5;
+	gsize sz = 0;
 	guint32 updater_version;
-	g_autofree guint8 *buf = g_malloc(sz);
+	g_autofree guint8 *buf = NULL;
+
+	/* calculate buffer size */
+	if (!fu_size_checked_inc_product(&sz, self->nr_flash_blocks, 4, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&sz, 5, error))
+		return FALSE;
 
 	/* hit hardware */
+	buf = g_malloc(sz);
 	memset(buf, 0xff, sz);
 	buf[0] = FU_WACOM_USB_REPORT_ID_GET_CHECKSUMS;
 	if (!fu_wacom_usb_device_get_feature_report(self, buf, sz, FU_HID_DEVICE_FLAG_NONE, error))
