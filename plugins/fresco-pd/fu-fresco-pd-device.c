@@ -262,6 +262,16 @@ fu_fresco_pd_device_write_firmware(FuDevice *device,
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
 
+	/* validate firmware size for required offsets */
+	if (bufsz < 0x4231) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware size 0x%x too small, expected at least 0x4231",
+			    (guint)bufsz);
+		return FALSE;
+	}
+
 	/* get start symbols, and be slightly paranoid */
 	if (!fu_memcpy_safe(start_symbols,
 			    sizeof(start_symbols),
