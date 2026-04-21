@@ -1206,7 +1206,6 @@ fu_ccgx_hpi_device_get_metadata_offset(FuCcgxHpiDevice *self,
 	}
 
 	/* get the row offset for the flash size */
-	addr_max = self->flash_size / self->flash_row_size;
 	if (self->flash_row_size == 128) {
 		*offset = HPI_META_DATA_OFFSET_ROW_128;
 	} else if (self->flash_row_size == 256) {
@@ -1219,6 +1218,7 @@ fu_ccgx_hpi_device_get_metadata_offset(FuCcgxHpiDevice *self,
 			    self->flash_row_size);
 		return FALSE;
 	}
+	addr_max = self->flash_size / self->flash_row_size;
 
 	/* get the row offset in the flash */
 	switch (fw_mode) {
