@@ -2187,6 +2187,15 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 	FuGenesysWaitFlashRegisterHelper helper = {.reg = 5, .expected_val = 0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* validate sector size */
+	if (self->flash_sector_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash sector size not set");
+		return FALSE;
+	}
+
 	chunks = fu_chunk_array_new(NULL,
 				    len,
 				    start_addr,
