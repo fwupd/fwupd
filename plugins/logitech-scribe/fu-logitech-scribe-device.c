@@ -585,8 +585,20 @@ fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **
 						       &data_len,
 						       error))
 		return FALSE;
+	if (data_len < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "version packet too small at 0x%x bytes, expected at least 4",
+			    data_len);
+		return FALSE;
+	}
 	if (data_len > FU_LOGITECH_SCRIBE_VERSION_SIZE) {
-		g_prefix_error(error, "version packet was too large at 0x%x bytes: ", data_len);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "version packet too large at 0x%x bytes",
+			    data_len);
 		return FALSE;
 	}
 	query_data = g_malloc0(data_len);
