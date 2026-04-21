@@ -904,8 +904,11 @@ fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **e
 	} else {
 		for (guint i = 0; i < nodes->len; i++) {
 			XbNode *n = g_ptr_array_index(nodes, i);
-			g_debug("adding: %s", xb_node_get_attr(n, "filename"));
-			g_ptr_array_add(files, g_strdup(xb_node_get_attr(n, "filename")));
+			const gchar *fn = xb_node_get_attr(n, "filename");
+			if (fn == NULL)
+				fn = "firmware.bin";
+			g_debug("adding: %s", fn);
+			g_ptr_array_add(files, g_strdup(fn));
 		}
 	}
 
