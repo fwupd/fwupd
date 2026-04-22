@@ -5766,7 +5766,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	} else {
 		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
@@ -6196,7 +6196,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	} else {
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 1L);
-		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 1L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
