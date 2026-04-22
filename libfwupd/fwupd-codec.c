@@ -605,6 +605,8 @@ fwupd_codec_string_append_time(GString *str, guint idt, const gchar *key, guint6
 		return;
 
 	date = g_date_time_new_from_unix_utc((gint64)value);
+	if (date == NULL)
+		return;
 	tmp = g_date_time_format(date, "%F %T");
 	fwupd_codec_string_append(str, idt, key, tmp);
 }
