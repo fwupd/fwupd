@@ -973,10 +973,7 @@ fu_hpi_cfu_device_handler_send_payload_chunk(FuHpiCfuDevice *self,
 							  payload_buf,
 							  read_index,
 							  error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "to get payload header");
+			g_prefix_error_literal(error, "failed to get payload header: ");
 			return FALSE;
 		}
 
@@ -992,10 +989,7 @@ fu_hpi_cfu_device_handler_send_payload_chunk(FuHpiCfuDevice *self,
 							payload_header_length,
 							read_index,
 							error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "to get payload data");
+			g_prefix_error_literal(error, "failed to get payload data: ");
 			return FALSE;
 		}
 
@@ -1037,10 +1031,9 @@ fu_hpi_cfu_device_handler_send_payload_chunk(FuHpiCfuDevice *self,
 									  payload_header_length,
 									  fill_from_position,
 									  error)) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_DATA,
-							    "to set untransmitted_data");
+					g_prefix_error_literal(
+					    error,
+					    "failed to set untransmitted data: ");
 					return FALSE;
 				}
 			} else {
