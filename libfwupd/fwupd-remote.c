@@ -607,7 +607,11 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 
 	/* generate the signature URI too */
 	g_free(priv->metadata_uri_sig);
-	priv->metadata_uri_sig = g_strconcat(metadata_uri, ".jcat", NULL);
+	priv->metadata_uri_sig = NULL;
+
+	/* optional */
+	if (metadata_uri != NULL)
+		priv->metadata_uri_sig = g_strconcat(metadata_uri, ".jcat", NULL);
 }
 
 /**
