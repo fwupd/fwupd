@@ -508,7 +508,14 @@ fwupd_remote_build_uri(FwupdRemote *self,
 				    url_noauth);
 			return NULL;
 		}
-		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
+		if (curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0) != CURLUE_OK) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to get path from '%s'",
+				    url_noauth);
+			return NULL;
+		}
 		basename = g_path_get_basename(path);
 		path_new = g_build_path("/", priv->firmware_base_uri, basename, path_suffix, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
@@ -527,7 +534,14 @@ fwupd_remote_build_uri(FwupdRemote *self,
 				    priv->metadata_uri);
 			return NULL;
 		}
-		(void)curl_url_get(uri, CURLUPART_PATH, &path, 0);
+		if (curl_url_get(uri, CURLUPART_PATH, &path, 0) != CURLUE_OK) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to get path from '%s'",
+				    priv->metadata_uri);
+			return NULL;
+		}
 		basename = g_path_get_dirname(path);
 		path_new = g_build_path("/", basename, url_noauth, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
@@ -555,7 +569,13 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		g_autofree gchar *pass_escaped = g_uri_escape_string(priv->password, NULL, FALSE);
 		(void)curl_url_set(uri, CURLUPART_PASSWORD, pass_escaped, 0);
 	}
-	(void)curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
+	if (curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0) != CURLUE_OK) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to get constructed URL");
+		return NULL;
+	}
 	return g_strdup(tmp_uri);
 }
 
