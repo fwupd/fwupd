@@ -1069,8 +1069,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	fw_size += 0x410;
-	if (fw_size > PANAMERA_FIRMWARE_SIZE) {
+	if (fw_size > PANAMERA_FIRMWARE_SIZE - 0x410) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -1078,6 +1077,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			    fw_size);
 		return FALSE;
 	}
+	fw_size += 0x410;
 
 	/* current max firmware size is 104K */
 	if (fw_size < g_bytes_get_size(fw))
