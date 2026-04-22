@@ -915,7 +915,7 @@ fu_util_maybe_expand_basename(FuUtil *self, const gchar *maybe_basename, GError 
 	remote = fwupd_client_get_remote_by_id(self->client, "lvfs", self->cancellable, error);
 	if (remote == NULL)
 		return NULL;
-	if (fwupd_remote_get_firmware_base_uri(remote)) {
+	if (fwupd_remote_get_firmware_base_uri(remote) == NULL) {
 		g_debug("no FirmwareBaseURI set in lvfs.conf, using default");
 		return g_strdup_printf("https://fwupd.org/downloads/%s", maybe_basename);
 	}
