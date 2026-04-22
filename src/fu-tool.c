@@ -2521,6 +2521,8 @@ fu_util_tpm_eventlog(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 	blob = fu_bytes_get_contents(fn, error);
+	if (blob == NULL)
+		return FALSE;
 	stream = g_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,
 					       0x0,
