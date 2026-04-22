@@ -1402,7 +1402,8 @@ fu_release_compare(FuRelease *release1, FuRelease *release2)
 	/* FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES has to be from oldest to newest */
 	return fu_version_compare(fu_release_get_version(release1),
 				  fu_release_get_version(release2),
-				  fu_device_get_version_format(device1));
+				  device1 != NULL ? fu_device_get_version_format(device1)
+						  : FWUPD_VERSION_FORMAT_UNKNOWN);
 }
 
 static void
