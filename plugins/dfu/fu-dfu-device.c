@@ -1206,6 +1206,14 @@ fu_dfu_device_download(FuDfuDevice *self,
 		guint8 alt;
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
 
+		if (fu_firmware_get_idx(image) > G_MAXUINT8) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "alt setting too large: 0x%x",
+				    (guint)fu_firmware_get_idx(image));
+			return FALSE;
+		}
 		alt = fu_firmware_get_idx(image);
 		target_tmp = fu_dfu_device_get_target_by_alt_setting(self, alt, error);
 		if (target_tmp == NULL)
