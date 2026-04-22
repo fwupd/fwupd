@@ -617,6 +617,8 @@ fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
 		} else {
 			guint8 idx = peer_id - 1;
 
+			if (idx >= PEERS_CACHE_LEN)
+				continue;
 			if (self->peers_cache[idx] != peers_cache[idx] &&
 			    fu_nordic_hid_cfg_channel_is_cached_peer_connected(peers_cache[idx])) {
 				fu_nordic_hid_cfg_channel_remove_peer(self, peer_id);
