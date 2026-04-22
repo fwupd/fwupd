@@ -5739,7 +5739,9 @@ fwupd_client_download_ipfs(FwupdClient *self,
 		return NULL;
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	if (g_subprocess_get_exit_status(subprocess) != 0) {
-		const gchar *msg = g_bytes_get_data(bstderr, NULL);
+		gsize msgsz = 0;
+		const gchar *msgdata = g_bytes_get_data(bstderr, &msgsz);
+		g_autofree gchar *msg = g_strndup(msgdata, msgsz);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
