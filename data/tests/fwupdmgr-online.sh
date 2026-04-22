@@ -47,7 +47,7 @@ expect_rc 0
 
 # ---
 echo " ● Downloading random file…"
-fwupdmgr download https://cdn.fwupd.org/static/img/user-solid.svg --force
+fwupdmgr download https://cdn.fwupd.org/static/img/user-solid.svg --force --download-retries=3
 expect_rc 0
 
 # ---
