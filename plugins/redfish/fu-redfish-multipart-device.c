@@ -86,7 +86,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	FuRedfishBackend *backend;
 	CURL *curl;
 	curl_mimepart *part;
-	const gchar *location;
+	const gchar *location = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
