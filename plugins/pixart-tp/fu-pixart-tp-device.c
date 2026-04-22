@@ -1215,11 +1215,15 @@ fu_pixart_tp_device_verify_crc(FuPixartTpDevice *self,
 	if (section == NULL)
 		return FALSE;
 	if (crc_value != fu_pixart_tp_section_get_crc(section)) {
+		g_autoptr(GError) error_local = NULL;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "parameter CRC compare failed");
-		(void)fu_pixart_tp_device_firmware_clear(self, firmware, error);
+		if (!fu_pixart_tp_device_firmware_clear(self, firmware, &error_local)) {
+			g_warning("failed to clear firmware after CRC error: %s",
+				  error_local->message);
+		}
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
