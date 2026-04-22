@@ -220,6 +220,15 @@ fu_raydium_tp_hid_device_tp_write(FuRaydiumTpHidDevice *self,
 	g_autoptr(FuStructRaydiumTpHidPacket) st1 = fu_struct_raydium_tp_hid_packet_new();
 	g_autoptr(FuStructRaydiumTpHidPacket) st2 = fu_struct_raydium_tp_hid_packet_new();
 
+	/* sanity check */
+	if (length > G_MAXUINT8 - 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "write length too large for packet");
+		return FALSE;
+	}
+
 	fu_struct_raydium_tp_hid_packet_set_header3(st1, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
 	fu_struct_raydium_tp_hid_packet_set_header4(st1, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
 	fu_struct_raydium_tp_hid_packet_set_data0(st1, FU_RAYDIUM_TP_CMD2_WRT);
