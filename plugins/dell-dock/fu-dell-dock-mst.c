@@ -629,7 +629,15 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(quad_bytes, &length);
-	memcpy(data_out, data, length); /* nocheck:blocked */
+	if (!fu_memcpy_safe(data_out,
+			    sizeof(data_out),
+			    0x0, /* dst */
+			    data,
+			    length,
+			    0x0, /* src */
+			    length,
+			    error))
+		return FALSE;
 	data_out[0] = 0x00;
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
@@ -656,7 +664,15 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(hdcp_bytes, &length);
-	memcpy(data_out, data, length); /* nocheck:blocked */
+	if (!fu_memcpy_safe(data_out,
+			    sizeof(data_out),
+			    0x0, /* dst */
+			    data,
+			    length,
+			    0x0, /* src */
+			    length,
+			    error))
+		return FALSE;
 	data_out[0] = data[0] & (1 << 2);
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
