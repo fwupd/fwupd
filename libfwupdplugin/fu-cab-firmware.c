@@ -316,6 +316,15 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 			g_byte_array_append(buf,
 					    helper->decompress_buf,
 					    helper->decompress_bufsz - helper->zstrm.avail_out);
+			if (buf->len > blob_uncomp) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "decompressed size mismatch (0x%x, specified 0x%x)",
+					    (guint)buf->len,
+					    (guint)blob_uncomp);
+				return FALSE;
+			}
 			if (zret == Z_STREAM_END)
 				break;
 			if (zret != Z_OK) {
