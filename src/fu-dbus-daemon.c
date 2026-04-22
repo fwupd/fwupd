@@ -867,7 +867,7 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 			return FALSE;
 		rels = xb_node_query_full(component, query, NULL);
 		/* add all but the first entry */
-		for (guint i = 1; i < rels->len; i++) {
+		for (guint i = 1; rels != NULL && i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index(rels, i);
 			g_autoptr(FuRelease) release2 = fu_release_new();
 			g_autoptr(GError) error_loop = NULL;
