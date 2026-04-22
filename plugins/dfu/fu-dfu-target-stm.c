@@ -321,6 +321,13 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 					fu_dfu_sector_get_address(sector) +
 					    fu_dfu_sector_get_size(sector));
 			}
+			if (fu_dfu_sector_get_size(sector) == 0) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "sector has zero size");
+				return FALSE;
+			}
 			offset_dev += fu_dfu_sector_get_size(sector);
 		}
 	}
