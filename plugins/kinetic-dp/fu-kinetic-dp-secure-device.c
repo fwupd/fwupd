@@ -570,6 +570,8 @@ fu_kinetic_dp_secure_device_execute_isp_drv(FuKineticDpSecureDevice *self, GErro
 		return FALSE;
 	}
 	st = fu_struct_kinetic_dp_flash_info_parse(reply_data, sizeof(reply_data), 0x0, error);
+	if (st == NULL)
+		return FALSE;
 	self->flash_id = fu_struct_kinetic_dp_flash_info_get_id(st);
 	self->flash_size = fu_struct_kinetic_dp_flash_info_get_size(st);
 	self->read_flash_prog_time = fu_struct_kinetic_dp_flash_info_get_erase_time(st);
