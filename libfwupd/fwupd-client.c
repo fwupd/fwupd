@@ -3171,7 +3171,7 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 	}
 
 	/* success */
-	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_object_unref);
 }
 
 /**
