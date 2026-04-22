@@ -339,6 +339,14 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 						    G_LITTLE_ENDIAN,
 						    error))
 				return FALSE;
+			if (addr_str >= sizeof(shadow)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "serial number string address 0x%x out of range",
+					    addr_str);
+				return FALSE;
+			}
 			fu_synaptics_cxaudio_firmware_add_badblock(badblocks,
 								   "serial number data",
 								   addr_str,
