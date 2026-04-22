@@ -1090,7 +1090,7 @@ fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 
 	/* erase phase */
 	start_sector = (guint8)(target_flash_start / FU_PIXART_TP_DEVICE_SECTOR_SIZE);
-	for (guint8 i = 0; i < fu_chunk_array_length(chunks); i++) {
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		if (!fu_pixart_tp_device_flash_erase_sector(self,
 							    (guint8)(start_sector + i),
 							    error)) {
