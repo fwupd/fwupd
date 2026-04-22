@@ -157,8 +157,8 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	case 0x0d12: {
 		guint16 binver1 = 0x0;
 		guint16 binver2 = 0x0;
-		guint16 usb2_fw_addr = fu_struct_vli_usbhub_hdr_get_usb2_fw_addr(st) + 0x1ff1;
-		guint16 usb3_fw_addr = fu_struct_vli_usbhub_hdr_get_usb3_fw_addr(st) + 0x1ffa;
+		gsize usb2_fw_addr = fu_struct_vli_usbhub_hdr_get_usb2_fw_addr(st) + 0x1ff1;
+		gsize usb3_fw_addr = fu_struct_vli_usbhub_hdr_get_usb3_fw_addr(st) + 0x1ffa;
 		if (!fu_input_stream_read_u16(stream,
 					      usb2_fw_addr,
 					      &binver1,
