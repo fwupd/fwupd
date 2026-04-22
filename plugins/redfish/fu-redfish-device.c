@@ -412,7 +412,7 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, FwupdJsonObject *json_ob
 	if (g_strcmp0(tmp, "AvailableForInstallation") == 0)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
 	tmp = fwupd_json_object_get_string(software_info, "Id", NULL);
-	if (tmp != NULL && g_ascii_strncasecmp(tmp, "DCIM:INSTALLED", 12) != 0) {
+	if (tmp != NULL && g_ascii_strncasecmp(tmp, "DCIM:INSTALLED", 14) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
