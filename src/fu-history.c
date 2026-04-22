@@ -651,6 +651,7 @@ fu_history_load(FuHistory *self, GError **error)
 				  filename,
 				  error_migrate->message);
 			sqlite3_close(self->db);
+			self->db = NULL;
 			if (g_unlink(filename) != 0) {
 				g_set_error(error,
 					    FWUPD_ERROR,
