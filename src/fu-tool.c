@@ -4891,7 +4891,7 @@ fu_util_reboot_cleanup(FuUtil *self, gchar **values, GError **error)
 
 	/* both arguments are optional */
 	if (g_strv_length(values) >= 1) {
-		device = fu_engine_get_device(self->engine, values[1], error);
+		device = fu_engine_get_device(self->engine, values[0], error);
 		if (device == NULL)
 			return FALSE;
 	} else {
