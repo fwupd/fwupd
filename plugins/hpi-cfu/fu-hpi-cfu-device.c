@@ -683,7 +683,7 @@ fu_hpi_cfu_device_get_payload_header(GByteArray *payload_header,
 static gboolean
 fu_hpi_cfu_device_get_payload_data(GByteArray *payload_data,
 				   GByteArray *payload_buf,
-				   gint8 payload_header_length,
+				   guint8 payload_header_length,
 				   gint32 read_index,
 				   GError **error)
 {
