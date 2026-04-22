@@ -1873,8 +1873,14 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	fwupd_security_attr_set_level(new, priv->level);
 	fwupd_security_attr_set_flags(new, priv->flags);
 	fwupd_security_attr_set_result(new, priv->result);
+	fwupd_security_attr_set_result_fallback(new, priv->result_fallback);
+	fwupd_security_attr_set_result_success(new, priv->result_success);
 	fwupd_security_attr_set_created(new, priv->created);
 	fwupd_security_attr_set_bios_setting_id(new, priv->bios_setting_id);
+	fwupd_security_attr_set_bios_setting_target_value(new, priv->bios_setting_target_value);
+	fwupd_security_attr_set_bios_setting_current_value(new, priv->bios_setting_current_value);
+	fwupd_security_attr_set_kernel_current_value(new, priv->kernel_current_value);
+	fwupd_security_attr_set_kernel_target_value(new, priv->kernel_target_value);
 
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(priv->guids, i);
