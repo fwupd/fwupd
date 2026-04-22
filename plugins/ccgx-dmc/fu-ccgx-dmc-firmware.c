@@ -311,6 +311,14 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	self->row_data_offset_start = hdr_size + DMC_CUSTOM_META_LENGTH_FIELD_SIZE + mdbufsz;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < self->row_data_offset_start) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "file too small for row data at offset 0x%x",
+			    (guint)self->row_data_offset_start);
+		return FALSE;
+	}
 	self->fw_data_size = streamsz - self->row_data_offset_start;
 
 	/* parse image */
