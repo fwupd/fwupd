@@ -1193,6 +1193,14 @@ fu_raydium_tp_hid_device_write_fwimage(FuRaydiumTpHidDevice *self,
 	gsize img_length = fu_firmware_get_size(img);
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 
+	if (img_length < RAYDIUM_CRC_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware image too small");
+		return FALSE;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -1237,6 +1245,14 @@ fu_raydium_tp_hid_device_write_descimage(FuRaydiumTpHidDevice *self,
 	gsize img_length = fu_firmware_get_size(img);
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 	guint8 sector = (guint8)(img_length / RAYDIUM_FLASH_SECTOR_SIZE);
+
+	if (img_length < RAYDIUM_CRC_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware image too small");
+		return FALSE;
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
