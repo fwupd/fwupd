@@ -3049,7 +3049,7 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 			if ((self->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0 && vercmp == 0)
 				continue;
 			title = g_strdup_printf("%s %s",
-						fwupd_client_get_host_product(self->client),
+						fwupd_client_get_host_vendor(self->client),
 						fwupd_client_get_host_product(self->client));
 			if (!fu_util_prompt_warning(self->console, dev_tmp, rel_tmp, title, error))
 				return FALSE;
