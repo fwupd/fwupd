@@ -328,7 +328,7 @@ fu_redfish_device_set_name(FuRedfishDevice *self, const gchar *name)
 	/* heuristics */
 	if (g_strcmp0(name, "BMC") == 0)
 		fu_device_set_summary(FU_DEVICE(self), "Redfish baseboard management controller");
-	if (g_str_has_suffix(name, "HBA") == 0)
+	if (g_str_has_suffix(name, "HBA"))
 		fu_device_set_summary(FU_DEVICE(self), "Redfish host bus adapter");
 
 	/* success */
