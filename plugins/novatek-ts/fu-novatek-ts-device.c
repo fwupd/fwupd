@@ -339,7 +339,7 @@ fu_novatek_ts_device_retry_busy_cb(FuDevice *device, gpointer user_data, GError 
 static gboolean
 fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer, GError **error)
 {
-	gint32 write_len = 0;
+	guint32 write_len = 0;
 	g_autoptr(FuStructNovatekTsGcmCmd) st_cmd = fu_struct_novatek_ts_gcm_cmd_new();
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	FuNovatekTsCmdIssueCtx cmd_issue_ctx = {.addr = self->flash_cmd_issue_addr,
@@ -377,6 +377,14 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	else
 		fu_struct_novatek_ts_gcm_cmd_set_flash_addr(st_cmd, 0);
 	write_len = xfer->flash_addr_len + xfer->pem_byte_len + xfer->dummy_byte_len + xfer->tx_len;
+	if (write_len > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "GCM write length too large: 0x%x",
+			    write_len);
+		return FALSE;
+	}
 	fu_struct_novatek_ts_gcm_cmd_set_write_len(st_cmd, (guint16)write_len);
 	fu_struct_novatek_ts_gcm_cmd_set_read_len(st_cmd, (guint16)xfer->rx_len);
 	fu_struct_novatek_ts_gcm_cmd_set_flash_checksum(st_cmd, xfer->flash_checksum);
