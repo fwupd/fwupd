@@ -107,7 +107,7 @@ struct _FuGenesysUsbhubDevice {
 	guint32 flash_sector_size;
 	guint32 flash_rw_size;
 
-	guint16 fw_bank_code_sizes[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
+	guint32 fw_bank_code_sizes[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	guint16 fw_bank_vers[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	FuGenesysFwBank update_fw_banks[FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 
