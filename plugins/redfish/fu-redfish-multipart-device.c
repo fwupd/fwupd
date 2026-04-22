@@ -86,7 +86,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	FuRedfishBackend *backend;
 	CURL *curl;
 	curl_mimepart *part;
-	const gchar *location = NULL;
+	g_autofree gchar *location = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
@@ -145,6 +145,8 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 
 	/* prefer the header, otherwise fall back to the response */
 	if (location == NULL || g_utf8_strlen(location, 1) == 0) {
+		const gchar *location_tmp;
+
 		json_obj = fu_redfish_request_get_json_object(request);
 		if (fwupd_json_object_has_node(json_obj, "TaskMonitor")) {
 			const gchar *tmp =
@@ -161,9 +163,11 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 				    fu_redfish_backend_get_push_uri_path(backend));
 			return FALSE;
 		}
-		location = fwupd_json_object_get_string(json_obj, "@odata.id", error);
-		if (location == NULL)
+		location_tmp = fwupd_json_object_get_string(json_obj, "@odata.id", error);
+		if (location_tmp == NULL)
 			return FALSE;
+		g_free(location);
+		location = g_strdup(location_tmp);
 	}
 	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
