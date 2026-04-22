@@ -1550,6 +1550,14 @@ fu_hpi_cfu_device_write_firmware(FuDevice *device,
 	/* cfu state machine framework */
 	while (!self->exit_state_machine_framework) {
 		g_debug("hpi-cfu-state: %s", fu_hpi_cfu_state_to_string(self->state));
+		if (self->state >= G_N_ELEMENTS(hpi_cfu_states)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "invalid state 0x%x",
+				    self->state);
+			return FALSE;
+		}
 		if (!hpi_cfu_states[self->state].handler(self,
 							 progress,
 							 hpi_cfu_states[self->state].options,
