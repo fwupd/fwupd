@@ -621,9 +621,9 @@ fu_util_get_plugins(FuUtil *self, gchar **values, GError **error)
 
 	/* get results from daemon */
 	plugins = fwupd_client_get_plugins(self->client, self->cancellable, error);
-	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (plugins == NULL)
 		return FALSE;
+	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (self->as_json) {
 		g_autoptr(JsonBuilder) builder = json_builder_new();
 		json_builder_begin_object(builder);
