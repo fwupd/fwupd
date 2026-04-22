@@ -1353,6 +1353,14 @@ fu_ccgx_hpi_device_write_firmware(FuDevice *device,
 		FuCcgxFirmwareRecord *rcd = g_ptr_array_index(records, i);
 
 		/* write chunk */
+		if (g_bytes_get_size(rcd->data) > G_MAXUINT16) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "record data too large: 0x%x",
+				    (guint)g_bytes_get_size(rcd->data));
+			return FALSE;
+		}
 		if (!fu_ccgx_hpi_device_write_flash(self,
 						    rcd->row_number,
 						    g_bytes_get_data(rcd->data, NULL),
