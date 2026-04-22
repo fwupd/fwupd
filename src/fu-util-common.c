@@ -1369,8 +1369,10 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		if (fwupd_device_get_version_build_date(dev) != 0) {
 			guint64 value = fwupd_device_get_version_build_date(dev);
 			g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc((gint64)value);
-			g_autofree gchar *datestr = g_date_time_format(date, "%F");
-			g_string_append_printf(verstr, " [%s]", datestr);
+			if (date != NULL) {
+				g_autofree gchar *datestr = g_date_time_format(date, "%F");
+				g_string_append_printf(verstr, " [%s]", datestr);
+			}
 		}
 		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
 			fwupd_codec_string_append(
