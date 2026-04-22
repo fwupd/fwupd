@@ -507,7 +507,7 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 			    FWUPD_ERROR_READ,
 			    "checksum fail, got 0x%04x, expected 0x%04x",
 			    checksum_device,
-			    checksum);
+			    self->fwstate.checksum);
 		return FALSE;
 	}
 
