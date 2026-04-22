@@ -357,7 +357,7 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	gint buffer_len = (data == NULL) ? 12 : length + 16;
+	gsize buffer_len = (data == NULL) ? 12 : (gsize)length + 16;
 	g_autofree guint8 *buffer = g_malloc0(buffer_len);
 	guint32 tmp;
 
