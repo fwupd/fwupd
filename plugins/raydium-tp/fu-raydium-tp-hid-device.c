@@ -1246,11 +1246,12 @@ fu_raydium_tp_hid_device_write_descimage(FuRaydiumTpHidDevice *self,
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 	guint8 sector = (guint8)(img_length / RAYDIUM_FLASH_SECTOR_SIZE);
 
-	if (img_length < RAYDIUM_CRC_LEN) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware image too small");
+	if (img_length < RAYDIUM_CRC_LEN || img_length > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware image size invalid: 0x%x",
+			    (guint)img_length);
 		return FALSE;
 	}
 
