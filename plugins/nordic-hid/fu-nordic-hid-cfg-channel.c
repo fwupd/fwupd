@@ -270,17 +270,17 @@ fu_nordic_hid_cfg_channel_cmd_send_by_id(FuNordicHidCfgChannel *self,
 	msg->data_len = 0;
 
 	if (data != NULL) {
-		if (data_len > REPORT_DATA_MAX_LEN) {
+		if (data_len > sizeof(msg->data)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "requested to send %d bytes, while maximum is %d",
+				    "requested to send %d bytes, while maximum is %u",
 				    data_len,
-				    REPORT_DATA_MAX_LEN);
+				    (guint)sizeof(msg->data));
 			return FALSE;
 		}
 		if (!fu_memcpy_safe(msg->data,
-				    REPORT_DATA_MAX_LEN,
+				    sizeof(msg->data),
 				    0,
 				    data,
 				    data_len,
@@ -823,14 +823,14 @@ fu_nordic_hid_cfg_channel_get_devinfo(FuNordicHidCfgChannel *self, GError **erro
 			return FALSE;
 
 		if (!fu_memread_uint16_safe(res->data,
-					    REPORT_SIZE,
+					    sizeof(res->data),
 					    0x00,
 					    &self->vid,
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
 		if (!fu_memread_uint16_safe(res->data,
-					    REPORT_SIZE,
+					    sizeof(res->data),
 					    0x02,
 					    &self->pid,
 					    G_LITTLE_ENDIAN,
@@ -891,7 +891,7 @@ fu_nordic_hid_cfg_channel_get_hwid(FuNordicHidCfgChannel *self, GError **error)
 						   error))
 		return FALSE;
 
-	if (!fu_memcpy_safe(hw_id, HWID_LEN, 0, res->data, REPORT_DATA_MAX_LEN, 0, HWID_LEN, error))
+	if (!fu_memcpy_safe(hw_id, HWID_LEN, 0, res->data, sizeof(res->data), 0, HWID_LEN, error))
 		return FALSE;
 
 	/* allows to detect the single device connected via several interfaces */
@@ -1033,7 +1033,7 @@ fu_nordic_hid_cfg_channel_dfu_fwinfo(FuNordicHidCfgChannel *self, GError **error
 		return FALSE;
 
 	/* parsing fwinfo answer */
-	st = fu_struct_nordic_hid_dfu_fwinfo_parse(res->data, REPORT_SIZE, 0x0, error);
+	st = fu_struct_nordic_hid_dfu_fwinfo_parse(res->data, sizeof(res->data), 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	self->flashed_image_len = fu_struct_nordic_hid_dfu_fwinfo_get_flashed_image_len(st);
@@ -1176,28 +1176,28 @@ fu_nordic_hid_cfg_channel_dfu_sync(FuNordicHidCfgChannel *self,
 	}
 	dfu_info->dfu_state = res->data[0];
 	if (!fu_memread_uint32_safe(res->data,
-				    REPORT_SIZE,
+				    sizeof(res->data),
 				    0x01,
 				    &dfu_info->img_length,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
 	if (!fu_memread_uint32_safe(res->data,
-				    REPORT_SIZE,
+				    sizeof(res->data),
 				    0x05,
 				    &dfu_info->img_csum,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
 	if (!fu_memread_uint32_safe(res->data,
-				    REPORT_SIZE,
+				    sizeof(res->data),
 				    0x09,
 				    &dfu_info->offset,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
 	if (!fu_memread_uint16_safe(res->data,
-				    REPORT_SIZE,
+				    sizeof(res->data),
 				    0x0D,
 				    &dfu_info->sync_buffer_size,
 				    G_LITTLE_ENDIAN,
@@ -1227,25 +1227,15 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 	}
 
 	if (!fu_memwrite_uint32_safe(data,
-				     REPORT_DATA_MAX_LEN,
+				     sizeof(data),
 				     0x00,
 				     (guint32)img_length,
 				     G_LITTLE_ENDIAN,
 				     error))
 		return FALSE;
-	if (!fu_memwrite_uint32_safe(data,
-				     REPORT_DATA_MAX_LEN,
-				     0x04,
-				     img_crc,
-				     G_LITTLE_ENDIAN,
-				     error))
+	if (!fu_memwrite_uint32_safe(data, sizeof(data), 0x04, img_crc, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_memwrite_uint32_safe(data,
-				     REPORT_DATA_MAX_LEN,
-				     0x08,
-				     offset,
-				     G_LITTLE_ENDIAN,
-				     error))
+	if (!fu_memwrite_uint32_safe(data, sizeof(data), 0x08, offset, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	if (!fu_nordic_hid_cfg_channel_cmd_send(self,
@@ -1463,12 +1453,11 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 		guint8 data[REPORT_DATA_MAX_LEN] = {0};
 		g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
 
-		data_len = ((offset + REPORT_DATA_MAX_LEN) < chunk_len)
-			       ? REPORT_DATA_MAX_LEN
-			       : (guint8)(chunk_len - offset);
+		data_len = ((offset + sizeof(data)) < chunk_len) ? sizeof(data)
+								 : (guint8)(chunk_len - offset);
 
 		if (!fu_memcpy_safe(data,
-				    REPORT_DATA_MAX_LEN,
+				    sizeof(data),
 				    0,
 				    fu_chunk_get_data(chk),
 				    chunk_len,
