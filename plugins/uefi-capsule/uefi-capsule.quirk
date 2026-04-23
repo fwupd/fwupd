@@ -68,6 +68,10 @@ Flags = no-capsule-on-disk
 [518479dc-8767-510b-a103-8baaa51a81e1]
 Flags = no-capsule-on-disk
 
+# Lenovo ThinkCentre M60e Tiny
+[a6a32e68-eae0-571e-9290-33dc73bc5fe6]
+Flags = no-capsule-on-disk
+
 # Intel CSME reference value
 [23192307-d667-4bdf-af1a-6059db171246]
 Flags = ~md-set-vendor
