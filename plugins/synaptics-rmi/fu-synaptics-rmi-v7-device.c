@@ -462,6 +462,15 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GByteArray) pubkey = g_byte_array_new();
 
+	/* validate flash block size */
+	if (flash->block_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash block size not set");
+		return NULL;
+	}
+
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
 	if (f34 == NULL)
