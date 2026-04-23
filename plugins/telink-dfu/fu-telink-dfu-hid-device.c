@@ -370,6 +370,14 @@ fu_telink_dfu_hid_device_set_quirk_kv(FuDevice *device,
 	self->windows_hid_tool_ver = 0;
 	if (g_strcmp0(key, "TelinkHidToolVer") == 0) {
 		ver_split = g_strsplit(value, ".", 2);
+		if (g_strv_length(ver_split) < 2) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid version, expected major.minor: %s",
+				    value);
+			return FALSE;
+		}
 		if (!fu_strtoull(ver_split[0], &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->windows_hid_tool_ver += (guint16)tmp * 100;
