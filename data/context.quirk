@@ -1,0 +1,5 @@
+# use this file when we want to set (or unset) specific context flags by a DMI match
+
+# Manufacturer="Red Hat", BiosVendor="EDK II"
+[c714d9bb-922c-57c2-94e7-3a383887c95b]
+Flags = ignore-efivars-free-space

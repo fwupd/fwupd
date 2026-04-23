@@ -22,6 +22,7 @@ install_data(
     'cfu-offer.builder.xml',
     'cfu-payload.builder.xml',
     'chassis_type',
+    'context.quirk',
     'csv.builder.xml',
     'dfu.builder.xml',
     'dfuse.builder.xml',

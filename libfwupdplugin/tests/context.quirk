@@ -1,0 +1,2 @@
+[6fdfc346-23d8-57ee-b0de-72b13a540906]
+Flags = ignore-efivars-free-space,dummy-efivars,insecure-uefi,~insecure-uefi

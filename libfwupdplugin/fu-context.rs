@@ -1,7 +1,7 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(Bitfield)]
+#[derive(Bitfield, FromString(enum))]
 enum FuContextFlags {
     None                    = 0,
     SaveEvents              = 1 << 0, // so that they can be replayed to emulate devices

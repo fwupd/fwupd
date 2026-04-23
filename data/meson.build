@@ -32,7 +32,13 @@ if build_standalone
     install_dir: join_paths(sysconfdir, 'fwupd'),
     install_mode: 'rw-r-----',
   )
-  plugin_quirks += files('cfi.quirk', 'ds20.quirk', 'power.quirk', 'vendors.quirk')
+  plugin_quirks += files(
+    'cfi.quirk',
+    'ds20.quirk',
+    'power.quirk',
+    'vendors.quirk',
+    'context.quirk',
+  )
 endif
 
 if get_option('metainfo')
