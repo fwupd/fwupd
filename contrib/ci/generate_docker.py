@@ -53,11 +53,18 @@ if not os.path.exists(template_file):
 with open(template_file) as file:
     template = file.read()
 
+
+# special case for i386-based debian container
+if TARGET_DISTRO == "debian-i386":
+    template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
+
+
+distro = TARGET_DISTRO.split("-")[0]
 if MATRIX_CROSS:
-    deps = parse_dependencies(TARGET_DISTRO, MATRIX_CROSS, False, cross=True)
+    deps = parse_dependencies(distro, MATRIX_CROSS, False, cross=True)
     deps += [f"crossbuild-essential-{MATRIX_CROSS}"]
 else:
-    deps = parse_dependencies(TARGET_DISTRO, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
+    deps = parse_dependencies(distro, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)

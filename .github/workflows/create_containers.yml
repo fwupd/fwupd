@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [arch, centos, debian, fedora, ubuntu]
+        distro: [arch, centos, debian, debian-i386, fedora, ubuntu]
         runner: [ubuntu-latest]
         cross: [null]
         include:
