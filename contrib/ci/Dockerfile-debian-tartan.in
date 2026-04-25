@@ -1,0 +1,27 @@
+# -*- mode: dockerfile -*-
+FROM debian:testing
+ENV CI_NETWORK=true
+RUN echo fubar > /etc/machine-id
+RUN set -euxo pipefail; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get install --yes --no-install-recommends \
+    build-essential \
+    clang-18 \
+    clang-tools-18 \
+    dpkg-dev \
+    python3-apt \
+%%%DEPENDENCIES%%%; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+RUN set -euxo pipefail; \
+    tmpclone=$(mktemp -d); \
+    git clone https://gitlab.freedesktop.org/tartan/tartan.git "$tmpclone"; \
+    cd "$tmpclone"; \
+    meson setup --prefix /usr build; \
+    ninja -vC build install; \
+    tartan-build --help
+WORKDIR /github/workspace
+ENV CC=clang-18
+ENV SCANBUILD=./contrib/tartan.sh
+CMD sh -euxc 'meson setup build && meson compile -C build scan-build'
