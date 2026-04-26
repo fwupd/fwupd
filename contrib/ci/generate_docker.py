@@ -55,8 +55,11 @@ with open(template_file) as file:
 
 
 # special case for i386-based debian container
-if TARGET_DISTRO == "debian-i386":
-    template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
+match TARGET_DISTRO:
+    case "debian-i386":
+        template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
+    case "debian-tartan":
+        template = template.replace("FROM debian:testing", "FROM debian:unstable")
 
 
 distro = TARGET_DISTRO.split("-")[0]
