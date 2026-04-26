@@ -53,4 +53,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(contains(matrix.distro, '-'), '', runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
+          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}${{ case(contains(matrix.distro, '-'), '', runner.arch == 'ARM64', '-arm64', '-amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
