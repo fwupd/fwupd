@@ -10,10 +10,19 @@ RUN set -euxo pipefail; \
     clang-18 \
     clang-tools-18 \
     dpkg-dev \
+    libclang-18-dev \
+    libgirepository-2.0-dev \
+    llvm-18-dev \
     python3-apt \
 %%%DEPENDENCIES%%%; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
+RUN set -euxo pipefail; \
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100; \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100; \
+    update-alternatives --install /usr/bin/scan-build scan-build /usr/bin/scan-build-18 100
+ENV CC=clang
+ENV CXX=clang++
 RUN set -euxo pipefail; \
     tmpclone=$(mktemp -d); \
     git clone https://gitlab.freedesktop.org/tartan/tartan.git "$tmpclone"; \
@@ -22,6 +31,5 @@ RUN set -euxo pipefail; \
     ninja -vC build install; \
     tartan-build --help
 WORKDIR /github/workspace
-ENV CC=clang-18
 ENV SCANBUILD=./contrib/tartan.sh
 CMD sh -euxc 'meson setup build && meson compile -C build scan-build'
