@@ -1,0 +1,18 @@
+{
+  "name": "ELAN Touchscreen",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "802d6e648f81ad3455cbd46a21f70492f4226fab0a8ecb2a5670a433baacf395-elan-ts_2f6e_61430000.cab",
+      "emulation-url": "220815b6699e4c92db57ba4d2bb078a09ba0191f4a8e3c686a21ea3da5e8ea43-elan-ts_2f6e_emulation_20260604.zip",
+      "components": [
+        {
+          "version": "6143.0",
+          "guids": [
+            "19b5188d-8c7a-5b14-8449-3fa908d5f649"
+          ]
+        }
+      ]
+    }
+  ]
+}
