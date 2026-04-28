@@ -411,6 +411,8 @@ fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
 		guint32 diff_size;
 		force_table_addr =
 		    fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware));
+		if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
+			self->force_table_addr = force_table_addr;
 		if (self->force_table_addr < force_table_addr) {
 			g_set_error(error,
 				    FWUPD_ERROR,
