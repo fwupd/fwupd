@@ -7,12 +7,13 @@
 #include "config.h"
 
 #include <curl/curl.h>
-#include <jcat.h>
 
 #include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-jcat-blob.h"
+#include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
 
 /**
@@ -1411,74 +1412,36 @@ fwupd_remote_get_metadata_uri(FwupdRemote *self)
 	return priv->metadata_uri;
 }
 
-/**
- * fwupd_remote_jcat_item_get_id_safe:
- * @jcat_item: a #JcatItem
- * @error: (nullable): optional return location for an error
- *
- * Returns the item ID, if safe to use as a path.
- *
- * Returns: string
- **/
-static const gchar *
-fwupd_remote_jcat_item_get_id_safe(JcatItem *jcat_item, GError **error)
-{
-	const gchar *id;
-	g_autofree gchar *id_basename = NULL;
-
-	g_return_val_if_fail(JCAT_IS_ITEM(jcat_item), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* sanity check */
-	id = jcat_item_get_id(jcat_item);
-	if (id == NULL || id[0] == '\0') {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "ID not set");
-		return NULL;
-	}
-
-	/* verify there is no path component */
-	id_basename = g_path_get_basename(id);
-	if (g_strcmp0(id, id_basename) != 0 || g_strcmp0(id_basename, G_DIR_SEPARATOR_S) == 0 ||
-	    g_strcmp0(id_basename, "..") == 0 || g_strcmp0(id_basename, ".") == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "ID cannot contain path components");
-		return NULL;
-	}
-
-	/* success */
-	return id;
-}
-
 static gboolean
-fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError **error)
+fwupd_remote_load_signature_jcat(FwupdRemote *self, FwupdJcatFile *jcat_file, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	const gchar *id;
+	g_autofree gchar *id_basename = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *baseuri = NULL;
 	g_autofree gchar *metadata_uri = NULL;
 	g_autoptr(GPtrArray) jcat_blobs = NULL;
-	g_autoptr(JcatItem) jcat_item = NULL;
+	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 
 	/* this seems pointless to get the item by ID then just read the ID,
 	 * but _get_item_by_id() uses the AliasIds as a fallback */
 	basename = g_path_get_basename(priv->metadata_uri);
-	jcat_item = jcat_file_get_item_by_id(jcat_file, basename, NULL);
+	jcat_item = fwupd_jcat_file_get_item_by_id(jcat_file, basename, NULL);
 	if (jcat_item == NULL) {
 		/* if we're using libjcat 0.1.0 just get the default item */
-		jcat_item = jcat_file_get_item_default(jcat_file, error);
+		jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 		if (jcat_item == NULL)
 			return FALSE;
 	}
-	id = fwupd_remote_jcat_item_get_id_safe(jcat_item, error);
+	id = fwupd_jcat_item_get_id_safe(jcat_item, error);
 	if (id == NULL)
 		return FALSE;
 
 	/* replace the URI if required */
 	baseuri = g_path_get_dirname(priv->metadata_uri);
-	metadata_uri = g_build_path("/", baseuri, id, NULL);
+	id_basename = g_path_get_basename(id);
+	metadata_uri = g_build_path("/", baseuri, id_basename, NULL);
 	if (g_strcmp0(metadata_uri, priv->metadata_uri) != 0) {
 		g_info("changing metadata URI from %s to %s", priv->metadata_uri, metadata_uri);
 		g_free(priv->metadata_uri);
@@ -1486,10 +1449,10 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 	}
 
 	/* look for the metadata hash */
-	jcat_blobs = jcat_item_get_blobs_by_kind(jcat_item, JCAT_BLOB_KIND_SHA256);
+	jcat_blobs = fwupd_jcat_item_get_blobs_by_kind(jcat_item, FWUPD_JCAT_BLOB_KIND_SHA256);
 	if (jcat_blobs->len >= 1) {
-		JcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
-		g_autofree gchar *hash = jcat_blob_get_data_as_string(blob);
+		FwupdJcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
+		g_autofree gchar *hash = fwupd_jcat_blob_get_data_as_string(blob);
 		fwupd_remote_set_checksum_sig_metadata(self, hash);
 	}
 
@@ -1512,15 +1475,13 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self, GBytes *bytes, GError **error)
 {
-	g_autoptr(GInputStream) istr = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	istr = g_memory_input_stream_new_from_bytes(bytes);
-	if (!jcat_file_import_stream(jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))
+	if (!fwupd_jcat_file_import_bytes(jcat_file, bytes, error))
 		return FALSE;
 	return fwupd_remote_load_signature_jcat(self, jcat_file, error);
 }
@@ -1541,7 +1502,8 @@ gboolean
 fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **error)
 {
 	g_autoptr(GFile) gfile = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
@@ -1549,10 +1511,11 @@ fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **e
 
 	/* load JCat file */
 	gfile = g_file_new_for_path(filename);
-	if (!jcat_file_import_file(jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
-		fwupd_error_convert(error);
+	istream = G_INPUT_STREAM(g_file_read(gfile, NULL, error));
+	if (istream == NULL)
 		return FALSE;
-	}
+	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+		return FALSE;
 	return fwupd_remote_load_signature_jcat(self, jcat_file, error);
 }
 
