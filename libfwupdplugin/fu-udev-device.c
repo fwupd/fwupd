@@ -1262,6 +1262,13 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 					    "permission denied");
 			return FALSE;
 		}
+		if (errno == ENODEV) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "no such device");
+			return FALSE;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
