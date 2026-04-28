@@ -32,4 +32,4 @@ RUN set -euxo pipefail; \
     tartan-build --help
 WORKDIR /github/workspace
 ENV SCANBUILD=./contrib/tartan.sh
-CMD sh -euxc 'meson setup build && meson compile -C build scan-build'
+CMD sh -euxc 'meson setup build && ninja -C build scan-build'
