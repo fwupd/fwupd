@@ -395,6 +395,8 @@ fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
+	if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
+		self->force_table_support = force_table_support;
 	if (self->force_table_support != force_table_support) {
 		g_set_error(error,
 			    FWUPD_ERROR,
