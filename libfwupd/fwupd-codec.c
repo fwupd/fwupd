@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <inttypes.h>
+
 #include "fwupd-codec.h"
 #include "fwupd-error.h"
 
@@ -560,7 +562,7 @@ fwupd_codec_string_append_hex(GString *str, guint idt, const gchar *key, guint64
 	/* ignore */
 	if (value == 0)
 		return;
-	tmp = g_strdup_printf("0x%" G_GUINT64_FORMAT "x", value);
+	tmp = g_strdup_printf("0x%" PRIx64, value);
 	fwupd_codec_string_append(str, idt, key, tmp);
 }
 
