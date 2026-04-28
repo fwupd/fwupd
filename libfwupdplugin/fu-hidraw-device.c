@@ -131,10 +131,14 @@ fu_hidraw_device_probe_usb(FuHidrawDevice *self, GError **error)
 	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb:usb_device", error);
 	if (usb_device == NULL)
 		return FALSE;
-	fu_device_incorporate(FU_DEVICE(self),
-			      FU_DEVICE(usb_device),
-			      FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS |
-				  FU_DEVICE_INCORPORATE_FLAG_GTYPE);
+	if (fu_device_has_private_flag(usb_device, FU_DEVICE_PRIVATE_FLAG_HAS_DS20)) {
+		fu_device_incorporate(FU_DEVICE(self),
+				      FU_DEVICE(usb_device),
+				      FU_DEVICE_INCORPORATE_FLAG_ICONS |
+					  FU_DEVICE_INCORPORATE_FLAG_PRIVATE_FLAGS |
+					  FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS |
+					  FU_DEVICE_INCORPORATE_FLAG_GTYPE);
+	}
 
 	/* success */
 	return TRUE;

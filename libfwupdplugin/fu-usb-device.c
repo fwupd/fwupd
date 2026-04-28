@@ -277,6 +277,7 @@ fu_usb_device_init(FuUsbDevice *self)
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
@@ -898,6 +899,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 		g_prefix_error_literal(error, "failed to apply DS20 data: ");
 		return FALSE;
 	}
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 
 	/* success */
 	return TRUE;
