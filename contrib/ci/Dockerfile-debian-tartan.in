@@ -31,5 +31,5 @@ RUN set -euxo pipefail; \
     ninja -vC build install; \
     tartan-build --help
 WORKDIR /github/workspace
-ENV SCANBUILD=./contrib/tartan.sh
+ENV SCANBUILD=/github/workspace/contrib/tartan.sh
 CMD sh -euxc 'meson setup build && ninja -C build scan-build'
