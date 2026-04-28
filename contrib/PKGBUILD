@@ -22,7 +22,6 @@ depends=(
   gsettings-desktop-schemas
   hicolor-icon-theme
   libusb
-  libjcat
   libmbim
   libmm-glib
   libqmi

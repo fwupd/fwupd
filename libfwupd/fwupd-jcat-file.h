@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <gio/gio.h>
+
+#include "fwupd-codec.h"
 #include "fwupd-jcat-item.h"
 
 G_BEGIN_DECLS

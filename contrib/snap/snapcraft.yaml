@@ -116,10 +116,6 @@ parts:
         -Defi_os_dir=fwupd,
         "-Dlibxmlb:gtkdoc=false",
         "-Dlibxmlb:introspection=false",
-        "-Dlibjcat:man=false",
-        "-Dlibjcat:gtkdoc=false",
-        "-Dlibjcat:introspection=false",
-        "-Dlibjcat:tests=false",
       ]
     source: .
     source-type: git
@@ -168,7 +164,6 @@ parts:
       - libglib2.0-dev
       - libgnutls28-dev
       - libusb-1.0-0-dev
-      - libjcat-dev
       - liblzma-dev
       - libpango1.0-dev
       - libpolkit-gobject-1-dev
@@ -199,7 +194,6 @@ parts:
       - libcurl4
       - libassuan0
       - libffi8
-      - libjcat1
       - liblzma5
       - libusb-1.0-0
       - libpolkit-gobject-1-0

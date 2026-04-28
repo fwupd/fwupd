@@ -33,6 +33,7 @@
 #include <fwupdplugin.h>
 
 #include "fwupd-enums-private.h"
+#include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
@@ -71,14 +72,6 @@
 #endif
 #ifdef HAVE_BLUEZ
 #include "fu-bluez-backend.h"
-#endif
-
-/* only needed until we hard depend on jcat 0.1.3 */
-#include <libjcat/jcat-version.h>
-
-/* fixed in 0.1.14 */
-#ifndef JCAT_CHECK_VERSION
-#define JCAT_CHECK_VERSION LIBJCAT_CHECK_VERSION
 #endif
 
 #ifdef HAVE_SYSTEMD
@@ -125,7 +118,7 @@ struct _FuEngine {
 	FuEngineEmulator *emulation;
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
-	JcatContext *jcat_context;
+	FuJcatContext *jcat_context;
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
@@ -4636,16 +4629,16 @@ fu_engine_remote_list_added_cb(FuRemoteList *remote_list, FwupdRemote *remote, F
 static gint
 fu_engine_sort_jcat_results_timestamp_cb(gconstpointer a, gconstpointer b)
 {
-	JcatResult *ra = *((JcatResult **)a);
-	JcatResult *rb = *((JcatResult **)b);
-	if (jcat_result_get_timestamp(ra) < jcat_result_get_timestamp(rb))
+	FuJcatResult *ra = *((FuJcatResult **)a);
+	FuJcatResult *rb = *((FuJcatResult **)b);
+	if (fu_jcat_result_get_timestamp(ra) < fu_jcat_result_get_timestamp(rb))
 		return 1;
-	if (jcat_result_get_timestamp(ra) > jcat_result_get_timestamp(rb))
+	if (fu_jcat_result_get_timestamp(ra) > fu_jcat_result_get_timestamp(rb))
 		return -1;
 	return 0;
 }
 
-static JcatResult *
+static FuJcatResult *
 fu_engine_get_newest_signature_jcat_result(GPtrArray *results, GError **error)
 {
 	/* sort by timestamp, newest first */
@@ -4653,12 +4646,12 @@ fu_engine_get_newest_signature_jcat_result(GPtrArray *results, GError **error)
 
 	/* get the first signature, ignoring the checksums */
 	for (guint i = 0; i < results->len; i++) {
-		JcatResult *result = g_ptr_array_index(results, i);
-		if (jcat_result_get_method(result) == JCAT_BLOB_METHOD_SIGNATURE)
+		FuJcatResult *result = g_ptr_array_index(results, i);
+		if (fu_jcat_result_get_method(result) == FWUPD_JCAT_BLOB_METHOD_SIGNATURE)
 			return g_object_ref(result);
 	}
 
-	/* should never happen due to %JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE */
+	/* should never happen due to %FU_JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE */
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -4666,17 +4659,17 @@ fu_engine_get_newest_signature_jcat_result(GPtrArray *results, GError **error)
 	return NULL;
 }
 
-static JcatResult *
+static FuJcatResult *
 fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(JcatItem) jcat_item = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new();
-	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
-				     JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-				     JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+	g_autoptr(FwupdJcatItem) jcat_item = NULL;
+	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
+	FuJcatVerifyFlags jcat_flags = FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+				       FU_JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+				       FU_JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
 
 	blob = fu_bytes_get_contents(fwupd_remote_get_filename_cache(remote), error);
 	if (blob == NULL)
@@ -4684,29 +4677,17 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
-		fwupd_error_convert(error);
+	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
 		return NULL;
-	}
-	jcat_item = jcat_file_get_item_default(jcat_file, error);
-	if (jcat_item == NULL) {
-		fwupd_error_convert(error);
+	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
+	if (jcat_item == NULL)
 		return NULL;
-	}
 
 	/* distrusting RSA? */
-	if (fu_engine_config_get_only_trust_pq_signatures(self->config)) {
-#if JCAT_CHECK_VERSION(0, 2, 4)
-		jcat_flags |= JCAT_VERIFY_FLAG_ONLY_PQ;
-#else
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only trusting PQ signatures requires libjcat >= 0.2.4");
-		return NULL;
-#endif
-	}
-	results = jcat_context_verify_item(self->jcat_context, blob, jcat_item, jcat_flags, error);
+	if (fu_engine_config_get_only_trust_pq_signatures(self->config))
+		jcat_flags |= FU_JCAT_VERIFY_FLAG_ONLY_PQ;
+	results =
+	    fu_jcat_context_verify_item(self->jcat_context, blob, jcat_item, jcat_flags, error);
 	if (results == NULL) {
 		fwupd_error_convert(error);
 		return NULL;
@@ -4717,25 +4698,32 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 }
 
 static gboolean
-fu_engine_validate_result_timestamp(JcatResult *jcat_result,
-				    JcatResult *jcat_result_old,
+fu_engine_validate_result_timestamp(FuJcatResult *jcat_result,
+				    FuJcatResult *jcat_result_old,
 				    GError **error)
 {
 	gint64 delta = 0;
 
-	g_return_val_if_fail(JCAT_IS_RESULT(jcat_result), FALSE);
-	g_return_val_if_fail(JCAT_IS_RESULT(jcat_result_old), FALSE);
+	g_return_val_if_fail(FU_IS_JCAT_RESULT(jcat_result), FALSE);
+	g_return_val_if_fail(FU_IS_JCAT_RESULT(jcat_result_old), FALSE);
 
-	if (jcat_result_get_timestamp(jcat_result) == 0) {
+	if (fu_jcat_result_get_timestamp(jcat_result) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "no signing timestamp");
 		return FALSE;
 	}
-	if (jcat_result_get_timestamp(jcat_result_old) > 0) {
-		delta = jcat_result_get_timestamp(jcat_result) -
-			jcat_result_get_timestamp(jcat_result_old);
+	if (fu_jcat_result_get_timestamp(jcat_result_old) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no old signing timestamp");
+		return FALSE;
+	}
+	if (fu_jcat_result_get_timestamp(jcat_result_old) > 0) {
+		delta = fu_jcat_result_get_timestamp(jcat_result) -
+			fu_jcat_result_get_timestamp(jcat_result_old);
 	}
 	if (delta == 0) {
 		g_set_error_literal(error,
@@ -4780,12 +4768,12 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new();
-	g_autoptr(JcatItem) jcat_item = NULL;
-	g_autoptr(JcatResult) jcat_result = NULL;
-	g_autoptr(JcatResult) jcat_result_old = NULL;
-	JcatVerifyFlags jcat_flags =
-	    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM | JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
+	g_autoptr(FwupdJcatItem) jcat_item = NULL;
+	g_autoptr(FuJcatResult) jcat_result = NULL;
+	g_autoptr(FuJcatResult) jcat_result_old = NULL;
+	FuJcatVerifyFlags jcat_flags =
+	    FU_JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM | FU_JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
@@ -4808,28 +4796,22 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 
 	/* verify JCatFile, or create a dummy one from legacy data */
 	istream = g_memory_input_stream_new_from_bytes(bytes_sig);
-	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error))
+	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
 		return FALSE;
 
 	/* distrusting RSA? */
-	if (fu_engine_config_get_only_trust_pq_signatures(self->config)) {
-#if JCAT_CHECK_VERSION(0, 2, 4)
-		jcat_flags |= JCAT_VERIFY_FLAG_ONLY_PQ;
-#else
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only trusting PQ signatures requires libjcat >= 0.2.4");
-		return FALSE;
-#endif
-	}
+	if (fu_engine_config_get_only_trust_pq_signatures(self->config))
+		jcat_flags |= FU_JCAT_VERIFY_FLAG_ONLY_PQ;
 
 	/* this should only be signing one thing */
-	jcat_item = jcat_file_get_item_default(jcat_file, error);
+	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
 		return FALSE;
-	results =
-	    jcat_context_verify_item(self->jcat_context, bytes_raw, jcat_item, jcat_flags, error);
+	results = fu_jcat_context_verify_item(self->jcat_context,
+					      bytes_raw,
+					      jcat_item,
+					      jcat_flags,
+					      error);
 	if (results == NULL)
 		return FALSE;
 
@@ -6171,29 +6153,30 @@ fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum)
 }
 
 gchar *
-fu_engine_self_sign(FuEngine *self, const gchar *value, JcatSignFlags flags, GError **error)
+fu_engine_self_sign(FuEngine *self, const gchar *value, FuJcatSignFlags flags, GError **error)
 {
-	g_autoptr(JcatBlob) jcat_signature = NULL;
-	g_autoptr(JcatEngine) jcat_engine = NULL;
-	g_autoptr(JcatResult) jcat_result = NULL;
+	g_autoptr(FwupdJcatBlob) jcat_signature = NULL;
+	g_autoptr(FuJcatEngine) jcat_engine = NULL;
+	g_autoptr(FuJcatResult) jcat_result = NULL;
 	g_autoptr(GBytes) payload = NULL;
 
 	/* create detached signature and verify */
-	jcat_engine = jcat_context_get_engine(self->jcat_context, JCAT_BLOB_KIND_PKCS7, error);
+	jcat_engine =
+	    fu_jcat_context_get_engine(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7, error);
 	if (jcat_engine == NULL)
 		return NULL;
 	payload = g_bytes_new(value, strlen(value));
-	jcat_signature = jcat_engine_self_sign(jcat_engine, payload, flags, error);
+	jcat_signature = fu_jcat_engine_self_sign(jcat_engine, payload, flags, error);
 	if (jcat_signature == NULL)
 		return NULL;
-	jcat_result = jcat_engine_self_verify(jcat_engine,
-					      payload,
-					      jcat_blob_get_data(jcat_signature),
-					      JCAT_VERIFY_FLAG_NONE,
-					      error);
+	jcat_result = fu_jcat_engine_self_verify(jcat_engine,
+						 payload,
+						 fwupd_jcat_blob_get_data(jcat_signature),
+						 FU_JCAT_VERIFY_FLAG_NONE,
+						 error);
 	if (jcat_result == NULL)
 		return NULL;
-	return jcat_blob_get_data_as_string(jcat_signature);
+	return fwupd_jcat_blob_get_data_as_string(jcat_signature);
 }
 
 /**
@@ -8454,19 +8437,21 @@ fu_engine_ensure_client_certificate(FuEngine *self)
 {
 	g_autoptr(GBytes) blob = g_bytes_new_static(NULL, 0);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(JcatBlob) jcat_sig = NULL;
-	g_autoptr(JcatEngine) jcat_engine = NULL;
+	g_autoptr(FwupdJcatBlob) jcat_sig = NULL;
+	g_autoptr(FuJcatEngine) jcat_engine = NULL;
 
 	/* create keyring and sign dummy data to ensure certificate exists */
-	jcat_engine =
-	    jcat_context_get_engine(self->jcat_context, JCAT_BLOB_KIND_PKCS7, &error_local);
+	jcat_engine = fu_jcat_context_get_engine(self->jcat_context,
+						 FWUPD_JCAT_BLOB_KIND_PKCS7,
+						 &error_local);
 	if (jcat_engine == NULL) {
 		g_message("failed to create keyring: %s", error_local->message);
 		return;
 	}
-	jcat_sig = jcat_engine_self_sign(jcat_engine, blob, JCAT_SIGN_FLAG_NONE, &error_local);
+	jcat_sig =
+	    fu_jcat_engine_self_sign(jcat_engine, blob, FU_JCAT_SIGN_FLAG_NONE, &error_local);
 	if (jcat_sig == NULL) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_info("client certificate now exists: %s", error_local->message);
 			return;
 		}
@@ -8761,7 +8746,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* load JCat */
 	keyring_path = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
 	if (keyring_path != NULL)
-		jcat_context_set_keyring_path(self->jcat_context, keyring_path);
+		fu_jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	pkidir_fw = fu_context_build_filename(self->ctx,
 					      NULL,
 					      FU_PATH_KIND_SYSCONFDIR,
@@ -8769,7 +8754,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					      "fwupd",
 					      NULL);
 	if (pkidir_fw != NULL)
-		jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
+		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
 	pkidir_md = fu_context_build_filename(self->ctx,
 					      NULL,
 					      FU_PATH_KIND_SYSCONFDIR,
@@ -8777,7 +8762,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					      "fwupd-metadata",
 					      NULL);
 	if (pkidir_md != NULL)
-		jcat_context_add_public_keys(self->jcat_context, pkidir_md);
+		fu_jcat_context_add_public_keys(self->jcat_context, pkidir_md);
 
 	/* cache machine ID so we can use it from a sandboxed app */
 #ifdef _WIN32
@@ -9407,18 +9392,13 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	/* setup Jcat context */
-	self->jcat_context = jcat_context_new();
-#if JCAT_CHECK_VERSION(0, 1, 13)
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
-#endif
+	self->jcat_context = fu_jcat_context_new();
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
-#if JCAT_CHECK_VERSION(0, 1, 11)
-	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
-#endif
 	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
 
 	/* optional kernel version */
@@ -9444,13 +9424,6 @@ fu_engine_constructed(GObject *obj)
 		fu_context_add_compile_version(self->ctx, "org.freedesktop.Passim", version);
 	}
 #endif
-	{
-		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
-							    JCAT_MAJOR_VERSION,
-							    JCAT_MINOR_VERSION,
-							    JCAT_MICRO_VERSION);
-		fu_context_add_compile_version(self->ctx, "com.hughsie.libjcat", version);
-	}
 	{
 		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
 							    XMLB_MAJOR_VERSION,

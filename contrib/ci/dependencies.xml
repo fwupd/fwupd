@@ -136,6 +136,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="fedora">
+      <package variant="x86_64">gcovr</package>
+    </distro>
   </dependency>
   <dependency id="libcairo-dev">
     <distro id="centos">
@@ -680,34 +683,6 @@
     </distro>
     <distro id="freebsd">
       <package>libxmlb</package>
-    </distro>
-  </dependency>
-  <dependency id="libjcat-dev">
-    <distro id="arch">
-      <package variant="x86_64">libjcat</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">libjcat-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libjcat-devel</package>
-      <package variant="aarch64">libjcat-devel</package>
-    </distro>
-    <distro id="debian">
-      <control>
-        <version>(>= 0.1.6)</version>
-      </control>
-      <multi-arch />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <version>(>= 0.1.6)</version>
-      </control>
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="freebsd">
-      <package>libjcat</package>
     </distro>
   </dependency>
   <dependency id="libblkid-dev">

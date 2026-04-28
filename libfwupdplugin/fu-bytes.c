@@ -8,6 +8,13 @@
 
 #include "config.h"
 
+#include <glib.h>
+
+#if !GLIB_CHECK_VERSION(2, 66, 0)
+#include <errno.h>
+#include <glib/gstdio.h>
+#endif
+
 #include "fwupd-error.h"
 
 #include "fu-byte-array.h"
@@ -48,6 +55,62 @@ fu_bytes_set_contents(const gchar *filename, GBytes *bytes, GError **error)
 	data = g_bytes_get_data(bytes, &size);
 	g_debug("writing %s with 0x%x bytes", filename, (guint)size);
 	return g_file_set_contents(filename, data, size, error);
+}
+
+/**
+ * fu_bytes_set_contents_full:
+ * @filename: a filename
+ * @bytes: data to write
+ * @mode: file permission, e.g. `0644`
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes a blob of data to a filename with specific permissions, creating the parent directories
+ * as required.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.3
+ **/
+gboolean
+fu_bytes_set_contents_full(const gchar *filename, GBytes *bytes, gint mode, GError **error)
+{
+	const gchar *data;
+	gsize size;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFile) file_parent = NULL;
+
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(bytes != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	file = g_file_new_for_path(filename);
+	file_parent = g_file_get_parent(file);
+	if (!g_file_query_exists(file_parent, NULL)) {
+		if (!g_file_make_directory_with_parents(file_parent, NULL, error))
+			return FALSE;
+	}
+	data = g_bytes_get_data(bytes, &size);
+	g_debug("writing %s with %" G_GSIZE_FORMAT " bytes", filename, size);
+#if GLIB_CHECK_VERSION(2, 66, 0)
+	return g_file_set_contents_full(filename,
+					data,
+					size,
+					G_FILE_SET_CONTENTS_CONSISTENT,
+					mode,
+					error);
+#else
+	if (!g_file_set_contents(filename, data, size, error))
+		return FALSE;
+	if (g_chmod(filename, mode) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "failed to set file mode: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	return TRUE;
+#endif
 }
 
 /**

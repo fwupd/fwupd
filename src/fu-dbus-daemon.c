@@ -14,7 +14,6 @@
 #include <gio/gunixoutputstream.h>
 #endif
 #include <glib/gstdio.h>
-#include <jcat.h>
 
 #include "fwupd-enums-private.h"
 
@@ -1403,10 +1402,10 @@ fu_dbus_daemon_method_self_sign(FuDbusDaemon *self,
 		g_debug("got option %s", prop_key);
 		if (g_strcmp0(prop_key, "add-timestamp") == 0 &&
 		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= JCAT_SIGN_FLAG_ADD_TIMESTAMP;
+			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
 		if (g_strcmp0(prop_key, "add-cert") == 0 &&
 		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= JCAT_SIGN_FLAG_ADD_CERT;
+			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
 		g_variant_unref(prop_value);
 	}
 

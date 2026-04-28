@@ -26,16 +26,11 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
-    -Djson-glib:introspection=disabled \
     -Dlibxmlb:introspection=false \
-    -Dlibxmlb:gtkdoc=false \
-    -Dlibjcat:man=false \
-    -Dlibjcat:gpg=false \
-    -Dlibjcat:tests=false \
-    -Dlibjcat:introspection=false
+    -Dlibxmlb:gtkdoc=false
 
 # run tests
-export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/libjcat/libjcat/"
+export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/"
 ninja -C "$build" install
 ninja -C "$build" test
 

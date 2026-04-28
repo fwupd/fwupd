@@ -427,3 +427,62 @@ run crc-find 0xaf083b2d ${TMPDIR}/crc.txt
 expect_rc 0
 run crc-find 0x12345678 ${TMPDIR}/crc.txt
 expect_rc 3
+
+# ---
+echo " ● Self sign JCat"
+echo "hello world" >${TMPDIR}/firmware.bin
+run jcat-self-sign ${TMPDIR}/firmware.jcat ${TMPDIR}/firmware.bin
+expect_rc 0
+run jcat-self-sign ${TMPDIR}/firmware.jcat ${TMPDIR}/firmware.bin sha256
+expect_rc 0
+run jcat-info ${TMPDIR}/firmware.jcat
+expect_rc 0
+run jcat-self-sign ${TMPDIR}/firmware.jcat ${TMPDIR}/firmware.bin pkcs7:pq sha256
+# only expect_rc=0 when we depend on a new enough GnuTLS
+echo " ● Show JCat"
+run jcat-info ${TMPDIR}/firmware.jcat
+expect_rc 0
+
+# ---
+echo " ● Add JCat alias"
+run jcat-add-alias ${TMPDIR}/firmware.jcat firmware.bin firmware-00001.bin
+expect_rc 0
+echo " ● Remove JCat alias"
+run jcat-remove-alias ${TMPDIR}/firmware.jcat firmware.bin firmware-00001.bin
+expect_rc 0
+
+# ---
+echo " ● Export JCat PKCS#7"
+run jcat-export --destdir=${TMPDIR} ${TMPDIR}/firmware.jcat pkcs7
+expect_rc 0
+echo " ● Import JCat PKCS#7"
+run jcat-import ${TMPDIR}/firmware.jcat firmware.bin ${TMPDIR}/firmware.bin.p7b
+expect_rc 0
+echo " ● Show JCat"
+run jcat-info ${TMPDIR}/firmware.jcat
+expect_rc 0
+
+if [ -x /usr/bin/certtool ]; then
+    # ---
+    echo " ● Sign JCat"
+    run jcat-sign ${TMPDIR}/firmware2.jcat ${TMPDIR}/firmware.bin ${TMPDIR}/testuser.pem ${TMPDIR}/testuser.key pkcs7
+    expect_rc 0
+    echo " ● Show JCat"
+    run jcat-info ${TMPDIR}/firmware2.jcat
+    expect_rc 0
+    echo " ● Verify JCat (no item)"
+    run jcat-verify --destdir=${TMPDIR} ${TMPDIR}/firmware2.jcat
+    expect_rc 1
+    echo " ● Verify JCat (failed)"
+    run jcat-verify --destdir=${TMPDIR} ${TMPDIR}/firmware2.jcat firmware.bin
+    expect_rc 1
+    echo " ● Verify JCat (failed)"
+    run jcat-verify --destdir=${TMPDIR} ${TMPDIR}/firmware2.jcat notfound.bin
+    expect_rc 1
+    echo " ● Verify JCat"
+    run jcat-verify --destdir=${TMPDIR} ${TMPDIR}/firmware2.jcat firmware.bin --public-keys ${TMPDIR}
+    expect_rc 0
+    echo " ● Verify JCat (PKCS#7)"
+    run jcat-verify --destdir=${TMPDIR} ${TMPDIR}/firmware2.jcat firmware.bin pkcs7 --public-keys ${TMPDIR}
+    expect_rc 0
+fi

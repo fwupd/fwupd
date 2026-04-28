@@ -5,7 +5,6 @@ endif
 client_src = []
 systemd_src = []
 engine_dep = [
-  libjcat,
   libxmlb,
   giounix,
   gmodule,
@@ -19,7 +18,7 @@ if get_option('passim').allowed()
   engine_dep += passim
 endif
 
-client_dep = [libcurl, libjcat, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
+client_dep = [libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif
@@ -50,7 +49,18 @@ fwupd_engine_src = [
   'fu-usb-backend.c',
   'fu-client.c',
   'fu-client-list.c',
+  'fu-jcat-context.c',
+  'fu-jcat-engine.c',
+  'fu-jcat-sha256-engine.c',
+  'fu-jcat-sha512-engine.c',
+  'fu-jcat-result.c',
 ] + systemd_src
+
+if jcat_crypto == 'gnutls'
+  fwupd_engine_src += 'fu-jcat-gnutls-common.c'
+  fwupd_engine_src += 'fu-jcat-gnutls-pkcs7-engine.c'
+  engine_dep += gnutls
+endif
 
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
@@ -303,6 +313,9 @@ if get_option('tests')
     'usb-backend',
     'util',
   ]
+  if jcat_crypto in ['gnutls', 'libcrypto']
+    test_names += 'jcat'
+  endif
   if giounix.found()
     test_names += 'unix-seekable-input-stream'
   endif

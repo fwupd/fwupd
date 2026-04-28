@@ -16,12 +16,12 @@
 #include <glib-unix.h>
 #endif
 #include <fcntl.h>
-#include <jcat.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "fwupd-enums-private.h"
+#include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
 
 #include "fu-bios-settings-private.h"
@@ -34,6 +34,7 @@
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
+#include "fu-jcat-context.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
@@ -75,6 +76,7 @@ struct FuUtil {
 	gboolean cleanup_blob;
 	gboolean enable_json_state;
 	gboolean interactive;
+	gchar *destdir;
 	FwupdInstallFlags flags;
 	FuFirmwareParseFlags parse_flags;
 	gboolean show_all;
@@ -89,6 +91,7 @@ struct FuUtil {
 	FwupdDeviceFlags filter_device_exclude;
 	FwupdReleaseFlags filter_release_include;
 	FwupdReleaseFlags filter_release_exclude;
+	FuJcatContext *jcat_context;
 };
 
 static void
@@ -361,6 +364,7 @@ fu_util_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuUtil *self)
 static void
 fu_util_private_free(FuUtil *self)
 {
+	g_free(self->destdir);
 	if (self->current_device != NULL)
 		g_object_unref(self->current_device);
 	if (self->ctx != NULL)
@@ -383,6 +387,8 @@ fu_util_private_free(FuUtil *self)
 		g_object_unref(self->progress);
 	if (self->context != NULL)
 		g_option_context_free(self->context);
+	if (self->jcat_context != NULL)
+		g_object_unref(self->jcat_context);
 	if (self->source_sigint != NULL)
 		g_source_destroy(self->source_sigint);
 	if (self->lock_fd >= 0)
@@ -3051,7 +3057,7 @@ fu_util_self_sign(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	sig = fu_engine_self_sign(self->engine,
 				  values[0],
-				  JCAT_SIGN_FLAG_ADD_TIMESTAMP | JCAT_SIGN_FLAG_ADD_CERT,
+				  FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP | FU_JCAT_SIGN_FLAG_ADD_CERT,
 				  error);
 	if (sig == NULL)
 		return FALSE;
@@ -5469,6 +5475,662 @@ fu_util_clear_history(FuUtil *self, gchar **values, GError **error)
 	return fu_history_remove_all(history, error);
 }
 
+static FwupdJcatFile *
+fu_util_jcat_load_filename(FuUtil *self, const gchar *filename, GError **error)
+{
+	g_autoptr(FwupdJcatFile) file = fwupd_jcat_file_new();
+	g_autoptr(GFile) gfile = g_file_new_for_path(filename);
+
+	if (g_file_query_exists(gfile, self->cancellable)) {
+		g_autoptr(GInputStream) istream = NULL;
+		istream = G_INPUT_STREAM(g_file_read(gfile, self->cancellable, error));
+		if (istream == NULL)
+			return NULL;
+		if (!fwupd_jcat_file_import_stream(file, istream, error))
+			return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&file);
+}
+
+static gboolean
+fu_util_jcat_save_filename(FuUtil *self, FwupdJcatFile *file, const gchar *filename, GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+
+	blob = fwupd_jcat_file_export_bytes(file, error);
+	if (blob == NULL)
+		return FALSE;
+	return fu_bytes_set_contents(filename, blob, error);
+}
+
+static gboolean
+fu_util_jcat_info(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* import file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* output to console */
+	str = fwupd_codec_to_string(FWUPD_CODEC(file));
+	fu_console_print_literal(self->console, str);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_jcat_add_alias(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(FwupdJcatItem) item = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME ID ALIAS_ID");
+		return FALSE;
+	}
+
+	/* import file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* add alias */
+	item = fwupd_jcat_file_get_item_by_id(file, values[1], error);
+	if (item == NULL)
+		return FALSE;
+	fwupd_jcat_item_add_alias_id(item, values[2]);
+
+	/* export new file */
+	return fu_util_jcat_save_filename(self, file, values[0], error);
+}
+
+static gboolean
+fu_util_jcat_remove_alias(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(FwupdJcatItem) item = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME ID ALIAS_ID");
+		return FALSE;
+	}
+
+	/* import file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* remove alias */
+	item = fwupd_jcat_file_get_item_by_id(file, values[1], error);
+	if (item == NULL)
+		return FALSE;
+	fwupd_jcat_item_remove_alias_id(item, values[2]);
+
+	/* export new file */
+	return fu_util_jcat_save_filename(self, file, values[0], error);
+}
+
+typedef enum {
+	FU_UTIL_JCAT_BLOB_VARIANT_NONE = 0,
+	FU_UTIL_JCAT_BLOB_VARIANT_PQ = 1 << 0,
+} FuUtilJcatBlobVariant;
+
+static gboolean
+fu_util_jcat_blob_kind_from_string(const gchar *kind_str,
+				   FwupdJcatBlobKind *kind,
+				   FuUtilJcatBlobVariant *variant,
+				   GError **error)
+{
+	g_auto(GStrv) split = g_strsplit(kind_str, ":", -1);
+
+	*kind = fwupd_jcat_blob_kind_from_string(split[0]);
+	if (*kind == FWUPD_JCAT_BLOB_KIND_UNKNOWN) {
+		g_autoptr(GString) tmp = g_string_new(NULL);
+		for (guint i = 1; i < FWUPD_JCAT_BLOB_KIND_LAST; i++)
+			g_string_append_printf(tmp, "%s,", fwupd_jcat_blob_kind_to_string(i));
+		if (tmp->len > 0)
+			g_string_truncate(tmp, tmp->len - 1);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "failed to parse '%s', expected %s",
+			    split[0],
+			    tmp->str);
+		return FALSE;
+	}
+
+	/* variants */
+	for (guint i = 1; split[i] != NULL; i++) {
+		if (g_strcmp0(split[i], "pq") == 0) {
+			if (variant != NULL)
+				*variant |= FU_UTIL_JCAT_BLOB_VARIANT_PQ;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static const gchar *
+fu_util_jcat_blob_kind_to_ext(FwupdJcatBlobKind kind)
+{
+	if (kind == FWUPD_JCAT_BLOB_KIND_GPG)
+		return "asc";
+	if (kind == FWUPD_JCAT_BLOB_KIND_PKCS7)
+		return "p7b";
+	if (kind == FWUPD_JCAT_BLOB_KIND_SHA256)
+		return "sha256";
+	if (kind == FWUPD_JCAT_BLOB_KIND_SHA1)
+		return "sha1";
+	if (kind == FWUPD_JCAT_BLOB_KIND_ED25519)
+		return "ed25519";
+	if (kind == FWUPD_JCAT_BLOB_KIND_SHA512)
+		return "sha512";
+	return NULL;
+}
+
+static gboolean
+fu_util_jcat_export(FuUtil *self, gchar **values, GError **error)
+{
+	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+	if (g_strv_length(values) > 1) {
+		if (!fu_util_jcat_blob_kind_from_string(values[1], &kind, NULL, error))
+			return FALSE;
+	}
+
+	/* import existing file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* extract each file */
+	items = fwupd_jcat_file_get_items(file);
+	for (guint i = 0; i < items->len; i++) {
+		FwupdJcatItem *item = g_ptr_array_index(items, i);
+		g_autoptr(GPtrArray) blobs = fwupd_jcat_item_get_blobs(item);
+		for (guint j = 0; j < blobs->len; j++) {
+			FwupdJcatBlob *blob = g_ptr_array_index(blobs, j);
+			g_autofree gchar *fn = NULL;
+			g_autoptr(GString) str = NULL;
+
+			/* skip */
+			if (kind != FWUPD_JCAT_BLOB_KIND_UNKNOWN &&
+			    kind != fwupd_jcat_blob_get_kind(blob))
+				continue;
+
+			/* export */
+			str = g_string_new(fwupd_jcat_item_get_id(item));
+			g_string_append_printf(
+			    str,
+			    ".%s",
+			    fu_util_jcat_blob_kind_to_ext(fwupd_jcat_blob_get_kind(blob)));
+			fn = g_build_filename(self->destdir, str->str, NULL);
+			if (!fu_bytes_set_contents_full(fn,
+							fwupd_jcat_blob_get_data(blob),
+							0666,
+							error))
+				return FALSE;
+			fu_console_print(self->console, "Wrote %s", fn);
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_jcat_import(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(FwupdJcatBlob) blob = NULL;
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(FwupdJcatItem) item = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME DATA DETACHED_KEY");
+		return FALSE;
+	}
+
+	/* import existing file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* load source */
+	data_sig = fu_bytes_get_contents(values[2], error);
+	if (data_sig == NULL)
+		return FALSE;
+
+	/* guess format */
+	if (g_str_has_suffix(values[2], ".asc")) {
+		blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_GPG,
+					   data_sig,
+					   FWUPD_JCAT_BLOB_FLAG_IS_UTF8);
+	} else if (g_str_has_suffix(values[2], ".p7b") || g_str_has_suffix(values[2], ".p7c") ||
+		   g_str_has_suffix(values[2], ".pem")) {
+		blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_PKCS7,
+					   data_sig,
+					   FWUPD_JCAT_BLOB_FLAG_IS_UTF8);
+	} else if (g_str_has_suffix(values[2], ".der")) {
+		blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_PKCS7,
+					   data_sig,
+					   FWUPD_JCAT_BLOB_FLAG_NONE);
+	} else if (g_str_has_suffix(values[2], ".ed25519")) {
+		blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_ED25519,
+					   data_sig,
+					   FWUPD_JCAT_BLOB_FLAG_NONE);
+	} else if (g_str_has_suffix(values[2], ".sha256") ||
+		   g_str_has_suffix(values[2], ".SHA256")) {
+		blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_SHA256,
+					   data_sig,
+					   FWUPD_JCAT_BLOB_FLAG_IS_UTF8);
+	} else if (g_str_has_suffix(values[2], ".sha512") ||
+		   g_str_has_suffix(values[2], ".SHA512")) {
+		blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_SHA512,
+					   data_sig,
+					   FWUPD_JCAT_BLOB_FLAG_IS_UTF8);
+	} else {
+		g_autoptr(GString) tmp = g_string_new(NULL);
+		for (guint i = 1; i < FWUPD_JCAT_BLOB_KIND_LAST; i++)
+			g_string_append_printf(tmp, "%s,", fu_util_jcat_blob_kind_to_ext(i));
+		if (tmp->len > 0)
+			g_string_truncate(tmp, tmp->len - 1);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "Cannot detect blob kind from extension, expected %s",
+			    tmp->str);
+		return FALSE;
+	}
+
+	/* get item */
+	item = fwupd_jcat_file_get_item_by_id(file, values[1], NULL);
+	if (item == NULL) {
+		g_autofree gchar *basename = g_path_get_basename(values[1]);
+		item = fwupd_jcat_item_new(basename);
+		fwupd_jcat_file_add_item(file, item);
+	}
+
+	/* just import existing key */
+	fwupd_jcat_item_add_blob(item, blob);
+
+	/* export new file */
+	return fu_util_jcat_save_filename(self, file, values[0], error);
+}
+
+static gboolean
+fu_util_jcat_self_sign(FuUtil *self, gchar **values, GError **error)
+{
+	FuJcatSignFlags flags = FU_JCAT_SIGN_FLAG_NONE;
+	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
+	FwupdJcatBlobKind target = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
+	FuUtilJcatBlobVariant variant = FU_UTIL_JCAT_BLOB_VARIANT_NONE;
+	g_autofree gchar *basename = NULL;
+	g_autoptr(GBytes) source = NULL;
+	g_autoptr(FwupdJcatBlob) blob = NULL;
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(FwupdJcatItem) item = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME SOURCE");
+		return FALSE;
+	}
+	if (g_strv_length(values) >= 3) {
+		if (!fu_util_jcat_blob_kind_from_string(values[2], &kind, &variant, error))
+			return FALSE;
+	}
+	if (g_strv_length(values) >= 4) {
+		if (!fu_util_jcat_blob_kind_from_string(values[3], &target, NULL, error))
+			return FALSE;
+	}
+
+	/* import existing file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* create item if required */
+	basename = g_path_get_basename(values[1]);
+	item = fwupd_jcat_file_get_item_by_id(file, basename, NULL);
+	if (item == NULL) {
+		item = fwupd_jcat_item_new(basename);
+		fwupd_jcat_file_add_item(file, item);
+	}
+
+	/* load source */
+	if (target == FWUPD_JCAT_BLOB_KIND_UNKNOWN) {
+		source = fu_bytes_get_contents(values[1], error);
+		if (source == NULL)
+			return FALSE;
+	} else {
+		g_autoptr(FwupdJcatBlob) blob_target = NULL;
+		blob_target = fwupd_jcat_item_get_blob_by_kind(item, target, error);
+		if (blob_target == NULL)
+			return FALSE;
+		source = g_bytes_ref(fwupd_jcat_blob_get_data(blob_target));
+	}
+
+	/* sign with this kind */
+	if (kind == FWUPD_JCAT_BLOB_KIND_UNKNOWN)
+		kind = FWUPD_JCAT_BLOB_KIND_PKCS7;
+	if (variant & FU_UTIL_JCAT_BLOB_VARIANT_PQ)
+		flags |= FU_JCAT_SIGN_FLAG_USE_PQ;
+	engine = fu_jcat_context_get_engine(self->jcat_context, kind, error);
+	if (engine == NULL)
+		return FALSE;
+	blob = fu_jcat_engine_self_sign(engine, source, flags, error);
+	if (blob == NULL)
+		return FALSE;
+	if (target != FWUPD_JCAT_BLOB_KIND_UNKNOWN)
+		fwupd_jcat_blob_set_target(blob, target);
+	fwupd_jcat_item_add_blob(item, blob);
+
+	/* export new file */
+	return fu_util_jcat_save_filename(self, file, values[0], error);
+}
+
+static gboolean
+fu_util_jcat_sign(FuUtil *self, gchar **values, GError **error)
+{
+	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
+	FwupdJcatBlobKind target = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
+	g_autoptr(GBytes) cert = NULL;
+	g_autoptr(GBytes) privkey = NULL;
+	g_autoptr(GBytes) source = NULL;
+	g_autoptr(FwupdJcatBlob) blob = NULL;
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(FwupdJcatItem) item = NULL;
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autofree gchar *id_safe = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME "
+				    "SOURCE CERT PRIVKEY");
+		return FALSE;
+	}
+	if (g_strv_length(values) >= 5) {
+		if (!fu_util_jcat_blob_kind_from_string(values[4], &kind, NULL, error))
+			return FALSE;
+	}
+	if (g_strv_length(values) >= 6) {
+		if (!fu_util_jcat_blob_kind_from_string(values[5], &target, NULL, error))
+			return FALSE;
+	}
+
+	/* import existing file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* create item if required */
+	item = fwupd_jcat_file_get_item_by_id(file, values[1], NULL);
+	if (item == NULL) {
+		g_autofree gchar *basename = g_path_get_basename(values[1]);
+		item = fwupd_jcat_item_new(basename);
+		fwupd_jcat_file_add_item(file, item);
+	}
+
+	/* load source */
+	if (target == FWUPD_JCAT_BLOB_KIND_UNKNOWN) {
+		source = fu_bytes_get_contents(values[1], error);
+		if (source == NULL)
+			return FALSE;
+	} else {
+		g_autoptr(FwupdJcatBlob) blob_target = NULL;
+		blob_target = fwupd_jcat_item_get_blob_by_kind(item, target, error);
+		if (blob_target == NULL)
+			return FALSE;
+		source = g_bytes_ref(fwupd_jcat_blob_get_data(blob_target));
+	}
+
+	/* certificate and privatekey */
+	cert = fu_bytes_get_contents(values[2], error);
+	if (cert == NULL)
+		return FALSE;
+	privkey = fu_bytes_get_contents(values[3], error);
+	if (privkey == NULL)
+		return FALSE;
+
+	/* sign with this kind */
+	if (kind == FWUPD_JCAT_BLOB_KIND_UNKNOWN)
+		kind = FWUPD_JCAT_BLOB_KIND_PKCS7;
+	engine = fu_jcat_context_get_engine(self->jcat_context, kind, error);
+	if (engine == NULL)
+		return FALSE;
+	blob =
+	    fu_jcat_engine_pubkey_sign(engine,
+				       source,
+				       cert,
+				       privkey,
+				       FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP | FU_JCAT_SIGN_FLAG_ADD_CERT,
+				       error);
+	if (blob == NULL)
+		return FALSE;
+	if (target != FWUPD_JCAT_BLOB_KIND_UNKNOWN)
+		fwupd_jcat_blob_set_target(blob, target);
+	fwupd_jcat_item_add_blob(item, blob);
+
+	/* export new file */
+	return fu_util_jcat_save_filename(self, file, values[0], error);
+}
+
+static gboolean
+fu_util_jcat_verify_item(FuUtil *self,
+			 FwupdJcatItem *item,
+			 FwupdJcatBlobKind kind,
+			 FuUtilJcatBlobVariant variant,
+			 GError **error)
+{
+	gboolean ret = TRUE;
+	g_autoptr(GBytes) source = NULL;
+	g_autoptr(GPtrArray) alias_ids = fwupd_jcat_item_get_alias_ids(item);
+	g_autoptr(GPtrArray) blobs = fwupd_jcat_item_get_blobs(item);
+	g_autoptr(GPtrArray) fns_possible = g_ptr_array_new_with_free_func(g_free);
+	g_autofree gchar *fn_safe = NULL;
+
+	/* load source */
+	fu_console_print(self->console, "%s:", fwupd_jcat_item_get_id(item));
+
+	/* find the source */
+	g_ptr_array_add(fns_possible,
+			g_build_filename(self->destdir, fwupd_jcat_item_get_id(item), NULL));
+	for (guint i = 0; i < alias_ids->len; i++) {
+		const gchar *alias_id = g_ptr_array_index(alias_ids, i);
+		g_ptr_array_add(fns_possible, g_build_filename(self->destdir, alias_id, NULL));
+	}
+	for (guint i = 0; i < fns_possible->len; i++) {
+		const gchar *fn = g_ptr_array_index(fns_possible, i);
+		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
+			fn_safe = g_strdup(fn);
+			break;
+		}
+	}
+	if (fn_safe == NULL) {
+		g_autofree gchar *str = NULL;
+		g_autofree gchar **strv = g_new0(gchar *, fns_possible->len + 1);
+		for (guint i = 0; i < fns_possible->len; i++)
+			strv[i] = g_ptr_array_index(fns_possible, i);
+		str = g_strjoinv(" or ", strv);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "Could not find %s", str);
+		return FALSE;
+	}
+
+	/* load source */
+	source = fu_bytes_get_contents(fn_safe, error);
+	if (source == NULL)
+		return FALSE;
+
+	/* verify blob */
+	for (guint j = 0; j < blobs->len; j++) {
+		FwupdJcatBlob *blob = g_ptr_array_index(blobs, j);
+		FwupdJcatBlobKind target = fwupd_jcat_blob_get_target(blob);
+		FuJcatVerifyFlags flags = FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS;
+		const gchar *authority;
+		g_autoptr(GError) error_verify = NULL;
+		g_autoptr(FuJcatResult) result = NULL;
+		g_autoptr(GBytes) blob_source = NULL;
+		g_autoptr(GString) kind_str = g_string_new(NULL);
+
+		/* skip */
+		if (kind != FWUPD_JCAT_BLOB_KIND_UNKNOWN && kind != fwupd_jcat_blob_get_kind(blob))
+			continue;
+
+		/* get correct source */
+		if (target == FWUPD_JCAT_BLOB_KIND_UNKNOWN) {
+			blob_source = g_bytes_ref(source);
+		} else {
+			g_autoptr(FwupdJcatBlob) blob_target = NULL;
+			blob_target = fwupd_jcat_item_get_blob_by_kind(item, target, error);
+			if (blob_target == NULL)
+				return FALSE;
+			blob_source = g_bytes_ref(fwupd_jcat_blob_get_data(blob_target));
+		}
+
+		g_string_append(kind_str,
+				fwupd_jcat_blob_kind_to_string(fwupd_jcat_blob_get_kind(blob)));
+		if (fwupd_jcat_blob_get_target(blob) != FWUPD_JCAT_BLOB_KIND_UNKNOWN) {
+			g_string_append_printf(
+			    kind_str,
+			    "-of-%s",
+			    fwupd_jcat_blob_kind_to_string(fwupd_jcat_blob_get_target(blob)));
+		}
+		if (variant & FU_UTIL_JCAT_BLOB_VARIANT_PQ)
+			flags |= FU_JCAT_VERIFY_FLAG_ONLY_PQ;
+		result = fu_jcat_context_verify_blob(self->jcat_context,
+						     blob_source,
+						     blob,
+						     flags,
+						     &error_verify);
+		if (result == NULL) {
+			if (g_error_matches(error_verify, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				fu_console_print(self->console,
+						 "    SKIPPED %s: %s",
+						 kind_str->str,
+						 error_verify->message);
+				continue;
+			}
+			fu_console_print(self->console,
+					 "    FAILED %s: %s",
+					 kind_str->str,
+					 error_verify->message);
+			ret = FALSE;
+			continue;
+		}
+		authority = fu_jcat_result_get_authority(result);
+		fu_console_print(self->console,
+				 "    PASSED %s: %s",
+				 kind_str->str,
+				 authority != NULL ? authority : "OK");
+	}
+	if (!ret) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "validation failed");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_jcat_verify(FuUtil *self, gchar **values, GError **error)
+{
+	FuUtilJcatBlobVariant variant = FU_UTIL_JCAT_BLOB_VARIANT_NONE;
+	FwupdJcatBlobKind kind = FWUPD_JCAT_BLOB_KIND_UNKNOWN;
+	gboolean ret = TRUE;
+	g_autoptr(FwupdJcatFile) file = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid arguments, expected FILENAME [SOURCE]");
+		return FALSE;
+	}
+	if (g_strv_length(values) >= 3) {
+		if (!fu_util_jcat_blob_kind_from_string(values[2], &kind, &variant, error))
+			return FALSE;
+	}
+
+	/* import existing file */
+	file = fu_util_jcat_load_filename(self, values[0], error);
+	if (file == NULL)
+		return FALSE;
+
+	/* verify each file */
+	items = fwupd_jcat_file_get_items(file);
+	for (guint i = 0; i < items->len; i++) {
+		FwupdJcatItem *item = g_ptr_array_index(items, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_util_jcat_verify_item(self, item, kind, variant, &error_local)) {
+			fu_console_print(self->console, "    FAILED: %s", error_local->message);
+			ret = FALSE;
+			continue;
+		}
+	}
+	if (!ret) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Validation failed");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_util_setup_interactive(FuUtil *self, GError **error)
 {
@@ -5503,11 +6165,13 @@ main(int argc, char *argv[])
 	gboolean ignore_requirements = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
+	g_auto(GStrv) public_keys = NULL;
 	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
+	g_autofree gchar *destdir = NULL;
 	g_autofree gchar *filter_device = NULL;
 	g_autofree gchar *filter_release = NULL;
 	const GOptionEntry options[] = {
@@ -5639,6 +6303,13 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Manually enable specific plugins"),
 	     NULL},
+	    {"public-keys",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_STRING_ARRAY,
+	     &public_keys,
+	     _("Location of public key directories used for JCat verification"),
+	     NULL},
 	    {"prepare",
 	     '\0',
 	     0,
@@ -5696,6 +6367,13 @@ main(int argc, char *argv[])
 	     &self->as_json,
 	     /* TRANSLATORS: command line option */
 	     N_("Output in JSON format (disables all interactive prompts)"),
+	     NULL},
+	    {"destdir",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_STRING,
+	     &destdir,
+	     _("Prefix for import and output files"),
 	     NULL},
 	    {NULL}};
 
@@ -6260,6 +6938,62 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Parse the system PCR eventlog"),
 			      fu_util_tpm_eventlog);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-info",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Show information about a JCat file"),
+			      fu_util_jcat_info);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-add-alias",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME ID ALIAS_ID"),
+			      /* TRANSLATORS: command description */
+			      _("Add an alias for a specific JCat item"),
+			      fu_util_jcat_add_alias);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-remove-alias",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME ID ALIAS_ID"),
+			      /* TRANSLATORS: command description */
+			      _("Remove an alias for a specific JCat item"),
+			      fu_util_jcat_remove_alias);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-export",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME [KIND]"),
+			      /* TRANSLATORS: command description */
+			      _("Exports all embedded signatures to files"),
+			      fu_util_jcat_export);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-import",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME DATA DETACHED_KEY"),
+			      /* TRANSLATORS: command description */
+			      _("Import an existing signature to a JCat file"),
+			      fu_util_jcat_import);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-self-sign",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"),
+			      /* TRANSLATORS: command description */
+			      _("Add a self-signed signature to a JCat file"),
+			      fu_util_jcat_self_sign);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-sign",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"),
+			      /* TRANSLATORS: command description */
+			      _("Add a signature to a JCat file"),
+			      fu_util_jcat_sign);
+	fu_util_cmd_array_add(cmd_array,
+			      "jcat-verify",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME [SOURCE]"),
+			      /* TRANSLATORS: command description */
+			      _("Verify a signature from a JCat file"),
+			      fu_util_jcat_verify);
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();
@@ -6376,6 +7110,7 @@ main(int argc, char *argv[])
 		self->parse_flags |= FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID;
 	if (ignore_requirements)
 		self->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+	self->destdir = g_strdup(destdir != NULL ? destdir : ".");
 
 	/* load engine */
 	self->ctx = fu_context_new();
@@ -6402,6 +7137,16 @@ main(int argc, char *argv[])
 			 "status-changed",
 			 G_CALLBACK(fu_util_engine_status_changed_cb),
 			 self);
+
+	/* jcat */
+	self->jcat_context = fu_jcat_context_new();
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
+	if (public_keys != NULL) {
+		for (guint i = 0; public_keys[i] != NULL; i++)
+			fu_jcat_context_add_public_keys(self->jcat_context, public_keys[i]);
+	}
 
 	/* just show versions and exit */
 	if (version) {
