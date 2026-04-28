@@ -9,6 +9,5 @@ meson setup .. \
     -Dbuild=all \
     -Ddbus_socket_address="unix:path=/var/run/fwupd.socket" \
     -Dman=false \
-    -Dlibjcat:gpg=false \
     -Dlibxmlb:gtkdoc=false \
     $@

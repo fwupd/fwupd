@@ -12,6 +12,9 @@ gboolean
 fu_bytes_set_contents(const gchar *filename,
 		      GBytes *bytes,
 		      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_bytes_set_contents_full(const gchar *filename, GBytes *bytes, gint mode, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_bytes_get_contents(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);

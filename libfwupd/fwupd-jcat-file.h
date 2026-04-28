@@ -17,7 +17,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(FwupdJcatFile, fwupd_jcat_file, FWUPD, JCAT_FILE, GObject)
 
 FwupdJcatFile *
-fwupd_jcat_file_new(void);
+fwupd_jcat_file_new(void) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fwupd_jcat_file_import_stream(FwupdJcatFile *self,
 			      GInputStream *istream,

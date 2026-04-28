@@ -102,3 +102,18 @@ enum FuUdevAction {
     Bind,
     Unbind,
 }
+
+enum FuJcatVerifyFlags {
+    None = 0,
+    DisableTimeChecks = 1 << 2,
+    RequireChecksum = 1 << 3,
+    RequireSignature = 1 << 4,
+    OnlyPq = 1 << 5,
+}
+
+enum FuJcatSignFlags {
+    None = 0,
+    AddTimestamp = 1 << 0,
+    AddCert = 1 << 1,
+    UsePq = 1 << 2,
+}

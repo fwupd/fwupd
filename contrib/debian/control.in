@@ -112,7 +112,6 @@ Depends: libfwupd3 (= ${binary:Version}),
          gir1.2-fwupd-2.0 (= ${binary:Version}),
          libcurl4-gnutls-dev,
          libglib2.0-dev (>= 2.45.8),
-         libjcat-dev,
          ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)

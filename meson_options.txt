@@ -61,6 +61,11 @@ option(
   description: 'GnuTLS support',
 )
 option(
+  'openssl',
+  type: 'feature',
+  description: 'OpenSSL support',
+)
+option(
   'hsi',
   type: 'feature',
   description: 'Host Security Information',

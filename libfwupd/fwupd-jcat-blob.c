@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <inttypes.h>
+
 #include "fwupd-codec.h"
 #include "fwupd-error.h"
 #include "fwupd-jcat-blob.h"
@@ -56,7 +58,7 @@ fwupd_jcat_blob_add_string(FwupdCodec *codec, guint idt, GString *str)
 	if (self->data != NULL) {
 		g_autofree gchar *tmp = fwupd_jcat_blob_get_data_as_string(self);
 		g_autofree gchar *size =
-		    g_strdup_printf("0x%x", (guint)g_bytes_get_size(self->data));
+		    g_strdup_printf("0x%" PRIx64, g_bytes_get_size(self->data));
 		fwupd_codec_string_append(str, idt, "Size", size);
 		fwupd_codec_string_append(str, idt, "Data", tmp);
 	}
@@ -324,7 +326,7 @@ fwupd_jcat_blob_init(FwupdJcatBlob *self)
  *
  * Creates a new blob.
  *
- * Returns: a #FwupdJcatBlob
+ * Returns: (transfer full): a #FwupdJcatBlob
  *
  * Since: 2.1.3
  **/
@@ -348,7 +350,7 @@ fwupd_jcat_blob_new(FwupdJcatBlobKind kind, GBytes *data, FwupdJcatBlobFlags fla
  *
  * Creates a new ASCII blob.
  *
- * Returns: a #FwupdJcatBlob
+ * Returns: (transfer full): a #FwupdJcatBlob
  *
  * Since: 2.1.3
  **/
