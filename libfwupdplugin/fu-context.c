@@ -1193,6 +1193,17 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 	}
 }
 
+static gboolean
+fu_context_flag_is_quirk_controlled(FuContextFlags flag)
+{
+	return (flag & (FU_CONTEXT_FLAG_SYSTEM_INHIBIT | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT |
+			FU_CONTEXT_FLAG_FDE_BITLOCKER | FU_CONTEXT_FLAG_FDE_SNAPD |
+			FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE | FU_CONTEXT_FLAG_INSECURE_UEFI |
+			FU_CONTEXT_FLAG_IS_HYPERVISOR | FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED |
+			FU_CONTEXT_FLAG_IS_CONTAINER | FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED |
+			FU_CONTEXT_FLAG_IS_SERVER)) > 0;
+}
+
 static void
 fu_context_hwid_quirk_cb(FuContext *self,
 			 const gchar *key,
@@ -1205,9 +1216,20 @@ fu_context_hwid_quirk_cb(FuContext *self,
 		g_auto(GStrv) values = g_strsplit(value, ",", -1);
 		for (guint i = 0; values[i] != NULL; i++) {
 			const gchar *value_tmp = values[i];
-			if (g_str_has_prefix(value, "~")) {
+			if (g_str_has_prefix(value_tmp, "~")) {
+				if (g_strcmp0(key, FU_QUIRKS_FLAGS) == 0) {
+					FuContextFlags flag =
+					    fu_context_flag_from_string(value_tmp + 1);
+					if (fu_context_flag_is_quirk_controlled(flag))
+						fu_context_remove_flag(self, flag);
+				}
 				g_hash_table_remove(priv->hwid_flags, value_tmp + 1);
 				continue;
+			}
+			if (g_strcmp0(key, FU_QUIRKS_FLAGS) == 0) {
+				FuContextFlags flag = fu_context_flag_from_string(value_tmp);
+				if (fu_context_flag_is_quirk_controlled(flag))
+					fu_context_add_flag(self, flag);
 			}
 			g_hash_table_add(priv->hwid_flags, g_strdup(value_tmp));
 		}
@@ -2004,7 +2026,7 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 			}
 
 			/* big partitions are better than small partitions */
-			score += fu_volume_get_size(esp) / (1024 * 1024);
+			score += fu_volume_get_size(esp) / FU_MB;
 
 			/* prefer partitions with the ESP flag set over msftdata */
 			kind = fu_volume_get_partition_kind(esp);
@@ -2015,7 +2037,7 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 			if (!fu_context_is_esp_linux(esp, &error_local)) {
 				g_debug("not a Linux ESP: %s", error_local->message);
 			} else {
-				score += 0x10000;
+				score += 64 * FU_KB;
 			}
 			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
 		}

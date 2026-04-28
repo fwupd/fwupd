@@ -30,8 +30,9 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_cab_firmware_get_instance_private(o))
 
-#define FU_CAB_FIRMWARE_MAX_FILES   1024
-#define FU_CAB_FIRMWARE_MAX_FOLDERS 64
+#define FU_CAB_FIRMWARE_MAX_FILES    1024
+#define FU_CAB_FIRMWARE_MAX_FOLDERS  64
+#define FU_CAB_FIRMWARE_MAX_FILENAME 1000
 
 #define FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ 0x4000 /* bytes */
 
@@ -171,6 +172,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	gsize blob_comp;
 	gsize blob_uncomp;
 	gsize hdr_sz;
+	gsize payload_offset = *offset;
 	gsize size_max = fu_firmware_get_size_max(FU_FIRMWARE(self));
 	g_autoptr(FuStructCabData) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
@@ -183,6 +185,16 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	/* sanity check */
 	blob_comp = fu_struct_cab_data_get_comp(st);
 	blob_uncomp = fu_struct_cab_data_get_uncomp(st);
+
+	/* validate blob sizes are reasonable */
+	if (blob_comp == 0 || blob_uncomp == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "compressed or uncompressed size is zero");
+		return FALSE;
+	}
+
 	if (helper->compression == FU_CAB_COMPRESSION_NONE && blob_comp != blob_uncomp) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -190,7 +202,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    "mismatched compressed data");
 		return FALSE;
 	}
-	helper->size_total += blob_uncomp;
+	if (!fu_size_checked_inc(&helper->size_total, blob_uncomp, error))
+		return FALSE;
 	if (size_max > 0 && helper->size_total > size_max) {
 		g_autofree gchar *sz_val = g_format_size(helper->size_total);
 		g_autofree gchar *sz_max = g_format_size(size_max);
@@ -203,11 +216,18 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		return FALSE;
 	}
 
-	hdr_sz = st->buf->len + helper->rsvd_block;
+	/* header size calculation */
+	hdr_sz = st->buf->len;
+	if (!fu_size_checked_inc(&hdr_sz, helper->rsvd_block, error)) {
+		g_prefix_error_literal(error, "CFDATA header size overflow: ");
+		return FALSE;
+	}
 
 	/* verify checksum */
+	if (!fu_size_checked_inc(&payload_offset, hdr_sz, error))
+		return FALSE;
 	partial_stream =
-	    fu_partial_input_stream_new(helper->stream, *offset + hdr_sz, blob_comp, error);
+	    fu_partial_input_stream_new(helper->stream, payload_offset, blob_comp, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to cut cabinet checksum: ");
 		return FALSE;
@@ -253,7 +273,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 
 		/* check compressed header */
 		bytes_comp = fu_input_stream_read_bytes(helper->stream,
-							*offset + hdr_sz,
+							payload_offset,
 							blob_comp,
 							NULL,
 							error);
@@ -274,19 +294,39 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    kind);
 			return FALSE;
 		}
-		if (helper->decompress_buf == NULL)
+		if (helper->decompress_buf == NULL) {
+			/* sanity check decompress buffer size */
+			if (helper->decompress_bufsz == 0 ||
+			    helper->decompress_bufsz > 32 * FU_MB) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid decompress buffer size: 0x%x",
+					    (guint)helper->decompress_bufsz);
+				return FALSE;
+			}
 			helper->decompress_buf = g_malloc0(helper->decompress_bufsz);
+		}
 		helper->zstrm.avail_in = g_bytes_get_size(bytes_comp) - 2;
 		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(bytes_comp, NULL) + 2;
 		while (1) {
 			helper->zstrm.avail_out = helper->decompress_bufsz;
 			helper->zstrm.next_out = helper->decompress_buf;
 			zret = inflate(&helper->zstrm, Z_BLOCK);
-			if (zret == Z_STREAM_END)
-				break;
 			g_byte_array_append(buf,
 					    helper->decompress_buf,
 					    helper->decompress_bufsz - helper->zstrm.avail_out);
+			if (buf->len > blob_uncomp) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "decompressed size mismatch (0x%x, specified 0x%x)",
+					    (guint)buf->len,
+					    (guint)blob_uncomp);
+				return FALSE;
+			}
+			if (zret == Z_STREAM_END)
+				break;
 			if (zret != Z_OK) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -329,6 +369,17 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
+
+		/* sanity check to zlib dictionary maximum */
+		if (buf->len > 32 * FU_KB) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "dictionary size 0x%x exceeds zlib maximum",
+				    (guint)buf->len);
+			return FALSE;
+		}
+
 		zret = inflateSetDictionary(&helper->zstrm, buf->data, buf->len);
 		if (zret != Z_OK) {
 			g_set_error(error,
@@ -340,17 +391,22 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		}
 		bytes_uncomp =
 		    g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
-		fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
-						    bytes_uncomp);
+		if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
+							 bytes_uncomp,
+							 error))
+			return FALSE;
 	} else {
-		fu_composite_input_stream_add_partial_stream(
-		    FU_COMPOSITE_INPUT_STREAM(folder_data),
-		    FU_PARTIAL_INPUT_STREAM(partial_stream));
+		if (!fu_composite_input_stream_add_partial_stream(
+			FU_COMPOSITE_INPUT_STREAM(folder_data),
+			FU_PARTIAL_INPUT_STREAM(partial_stream),
+			error))
+			return FALSE;
 	}
 
 	/* success */
-	*offset += blob_comp + hdr_sz;
-	return TRUE;
+	if (!fu_size_checked_inc(offset, blob_comp, error))
+		return FALSE;
+	return fu_size_checked_inc(offset, hdr_sz, error);
 }
 
 static gboolean
@@ -446,9 +502,17 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	folder_data = g_ptr_array_index(helper->folder_data, index);
 
 	/* parse filename */
-	*offset += FU_STRUCT_CAB_FILE_SIZE;
-	for (guint i = 0; i < 255; i++) {
+	if (!fu_size_checked_inc(offset, FU_STRUCT_CAB_FILE_SIZE, error))
+		return FALSE;
+	for (guint i = 0;; i++) {
 		guint8 value = 0;
+		if (i >= FU_CAB_FIRMWARE_MAX_FILENAME) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "filename exceeds maximum length");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_u8(helper->stream, *offset + i, &value, error))
 			return FALSE;
 		if (value == 0)
@@ -504,8 +568,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	fu_cab_image_set_created(img, created);
 
 	/* offset to next entry */
-	*offset += filename->len + 1;
-	return TRUE;
+	return fu_size_checked_inc(offset, filename->len + 1, error);
 }
 
 static gboolean
@@ -563,13 +626,13 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* sanity checks */
-	if (fu_struct_cab_header_get_size(st) < streamsz) {
+	if (fu_struct_cab_header_get_size(st) > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "buffer size 0x%x is less than stream size 0x%x",
-			    (guint)streamsz,
-			    fu_struct_cab_header_get_size(st));
+			    "archive size 0x%x exceeds stream size 0x%x",
+			    fu_struct_cab_header_get_size(st),
+			    (guint)streamsz);
 		return FALSE;
 	}
 	if (fu_struct_cab_header_get_idx_cabinet(st) != 0) {
@@ -624,16 +687,45 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		helper->ndatabsz = streamsz;
 
 	/* reserved sizes */
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "header offset overflow: ");
+		return FALSE;
+	}
+
 	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
 		g_autoptr(FuStructCabHeaderReserve) st2 = NULL;
 		st2 = fu_struct_cab_header_reserve_parse_stream(stream, offset, error);
 		if (st2 == NULL)
 			return FALSE;
-		offset += st2->buf->len;
-		offset += fu_struct_cab_header_reserve_get_rsvd_hdr(st2);
+		if (!fu_size_checked_inc(&offset, st2->buf->len, error)) {
+			g_prefix_error_literal(error, "header reserve offset overflow: ");
+			return FALSE;
+		}
+
+		if (!fu_size_checked_inc(&offset,
+					 fu_struct_cab_header_reserve_get_rsvd_hdr(st2),
+					 error))
+			return FALSE;
 		helper->rsvd_block = fu_struct_cab_header_reserve_get_rsvd_block(st2);
 		helper->rsvd_folder = fu_struct_cab_header_reserve_get_rsvd_folder(st2);
+
+		/* sanity check */
+		if (helper->rsvd_block > 1 * FU_MB) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "reserved block size unreasonably large: 0x%x",
+				    (guint)helper->rsvd_block);
+			return FALSE;
+		}
+		if (helper->rsvd_folder > 1 * FU_MB) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "reserved folder size unreasonably large: 0x%x",
+				    (guint)helper->rsvd_folder);
+			return FALSE;
+		}
 	}
 
 	/* parse CFFOLDER */
@@ -651,7 +743,10 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		g_ptr_array_add(helper->folder_data, g_steal_pointer(&folder_data));
-		offset += FU_STRUCT_CAB_FOLDER_SIZE + helper->rsvd_folder;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FOLDER_SIZE, error))
+			return FALSE;
+		if (!fu_size_checked_inc(&offset, helper->rsvd_folder, error))
+			return FALSE;
 	}
 
 	/* parse CFFILEs */
@@ -671,7 +766,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize archive_size;
 	gsize offset;
-	guint32 index_into = 0;
+	gsize index_into = 0;
 	g_autoptr(FuStructCabHeader) st_hdr = fu_struct_cab_header_new();
 	g_autoptr(FuStructCabFolder) st_folder = fu_struct_cab_folder_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
@@ -697,6 +792,15 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		img_blob = fu_firmware_get_bytes(img, error);
 		if (img_blob == NULL)
 			return NULL;
+		if (g_bytes_get_size(img_blob) > G_MAXUINT32) {
+			g_autofree gchar *sz_val = g_format_size(g_bytes_get_size(img_blob));
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "file size %s exceeds CAB format limit",
+				    sz_val);
+			return NULL;
+		}
 		fu_byte_array_append_bytes(cfdata_linear, img_blob);
 	}
 
@@ -714,6 +818,14 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
 					       0x8000);
+	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "too many data blocks: %u",
+			    fu_chunk_array_length(chunks));
+		return NULL;
+	}
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) chunk_zlib = g_byte_array_new();
@@ -769,19 +881,48 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* create header */
 	archive_size = FU_STRUCT_CAB_HEADER_SIZE;
-	archive_size += FU_STRUCT_CAB_FOLDER_SIZE;
+	if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_FOLDER_SIZE, error))
+		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		archive_size += FU_STRUCT_CAB_FILE_SIZE + strlen(filename_win32) + 1;
+
+		/* validate filename exists */
+		if (filename_win32 == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "image filename not set");
+			return NULL;
+		}
+
+		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_FILE_SIZE, error))
+			return NULL;
+		if (!fu_size_checked_inc(&archive_size, strlen(filename_win32), error))
+			return NULL;
+		if (!fu_size_checked_inc(&archive_size, 1, error))
+			return NULL;
 	}
 	for (guint i = 0; i < chunks_zlib->len; i++) {
 		GByteArray *chunk = g_ptr_array_index(chunks_zlib, i);
-		archive_size += FU_STRUCT_CAB_DATA_SIZE + chunk->len;
+		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_DATA_SIZE, error))
+			return NULL;
+		if (!fu_size_checked_inc(&archive_size, chunk->len, error))
+			return NULL;
 	}
 	offset = FU_STRUCT_CAB_HEADER_SIZE;
-	offset += FU_STRUCT_CAB_FOLDER_SIZE;
-	fu_struct_cab_header_set_size(st_hdr, archive_size);
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FOLDER_SIZE, error))
+		return NULL;
+	if (archive_size > G_MAXUINT32) {
+		g_autofree gchar *sz_val = g_format_size(archive_size);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "archive size %s exceeds CAB format limit",
+			    sz_val);
+		return NULL;
+	}
+	fu_struct_cab_header_set_size(st_hdr, (guint32)archive_size);
 	fu_struct_cab_header_set_off_cffile(st_hdr, offset);
 	fu_struct_cab_header_set_nr_files(st_hdr, imgs->len);
 
@@ -789,11 +930,15 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		offset += FU_STRUCT_CAB_FILE_SIZE;
-		offset += strlen(filename_win32) + 1;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FILE_SIZE, error))
+			return NULL;
+		if (!fu_size_checked_inc(&offset, strlen(filename_win32), error))
+			return NULL;
+		if (!fu_size_checked_inc(&offset, 1, error))
+			return NULL;
 	}
 	fu_struct_cab_folder_set_offset(st_folder, offset);
-	fu_struct_cab_folder_set_ndatab(st_folder, fu_chunk_array_length(chunks));
+	fu_struct_cab_folder_set_ndatab(st_folder, (guint16)fu_chunk_array_length(chunks));
 	fu_struct_cab_folder_set_compression(st_folder,
 					     priv->compressed ? FU_CAB_COMPRESSION_MSZIP
 							      : FU_CAB_COMPRESSION_NONE);
@@ -811,8 +956,19 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		if (!g_str_is_ascii(filename_win32))
 			fattr |= FU_CAB_FILE_ATTRIBUTE_NAME_UTF8;
 		fu_struct_cab_file_set_fattr(st_file, fattr);
-		fu_struct_cab_file_set_usize(st_file, g_bytes_get_size(img_blob));
-		fu_struct_cab_file_set_uoffset(st_file, index_into);
+		fu_struct_cab_file_set_usize(st_file, (guint32)g_bytes_get_size(img_blob));
+
+		/* validate offset fits */
+		if (index_into > G_MAXUINT32) {
+			g_autofree gchar *sz_val = g_format_size(index_into);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "file offset %s exceeds CAB format limit",
+				    sz_val);
+			return NULL;
+		}
+		fu_struct_cab_file_set_uoffset(st_file, (guint32)index_into);
 		if (created != NULL) {
 			fu_struct_cab_file_set_date(st_file,
 						    ((g_date_time_get_year(created) - 1980) << 9) +
@@ -829,7 +985,11 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 				    (const guint8 *)filename_win32,
 				    strlen(filename_win32));
 		fu_byte_array_append_uint8(st_hdr->buf, 0x0);
-		index_into += g_bytes_get_size(img_blob);
+
+		if (!fu_size_checked_inc(&index_into, g_bytes_get_size(img_blob), error)) {
+			g_prefix_error_literal(error, "file offset overflow: ");
+			return NULL;
+		}
 	}
 
 	/* create each CFDATA */
@@ -912,6 +1072,11 @@ fu_cab_firmware_init(FuCabFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT16);
+#ifdef __x86_64__
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_GB);
+#else
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
+#endif
 }
 
 /**

@@ -15,6 +15,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-usb-config-descriptor-private.h"
 
 struct _FuUsbConfigDescriptor {
@@ -147,6 +148,7 @@ fu_usb_config_descriptor_class_init(FuUsbConfigDescriptorClass *klass)
 static void
 fu_usb_config_descriptor_init(FuUsbConfigDescriptor *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

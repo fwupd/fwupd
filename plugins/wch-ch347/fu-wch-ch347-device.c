@@ -191,9 +191,17 @@ fu_wch_ch347_device_send_command(FuWchCh347Device *self,
 
 	/* read */
 	if (rbufsz > 0) {
-		g_autoptr(GPtrArray) chunks =
-		    fu_chunk_array_mutable_new(rbuf, rbufsz, 0x0, 0x0, FU_WCH_CH347_PAYLOAD_SIZE);
+		g_autoptr(GPtrArray) chunks = NULL;
 		g_autoptr(GByteArray) cmdbuf = g_byte_array_new();
+
+		chunks = fu_chunk_array_mutable_new(rbuf,
+						    rbufsz,
+						    0x0,
+						    0x0,
+						    FU_WCH_CH347_PAYLOAD_SIZE,
+						    error);
+		if (chunks == NULL)
+			return FALSE;
 		fu_byte_array_append_uint32(cmdbuf, rbufsz, G_LITTLE_ENDIAN);
 		if (!fu_wch_ch347_device_write(self,
 					       FU_WCH_CH347_CMD_SPI_IN,

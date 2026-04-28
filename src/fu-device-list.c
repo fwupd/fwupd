@@ -855,7 +855,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			fu_device_incorporate(item->device,
 					      device,
 					      FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR |
-						  FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR);
+						  FU_DEVICE_INCORPORATE_FLAG_UPDATE_STATE);
 			g_set_object(&item->device_old, item->device);
 			fu_device_list_item_set_device(item, device);
 			fu_device_list_clear_wait_for_replug(self, item);

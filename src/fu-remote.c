@@ -254,6 +254,8 @@ fu_remote_clean(FwupdRemote *self, GError **error)
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	if (fwupd_remote_get_filename_cache(self) == NULL)
+		return TRUE;
 	dirname = g_path_get_dirname(fwupd_remote_get_filename_cache(self));
 	files = fu_path_get_files(dirname, &error_local);
 	if (files == NULL) {

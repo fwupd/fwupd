@@ -67,8 +67,8 @@ typedef struct {
 #define RMI_F34_BLOCK_DATA_OFFSET    2
 #define RMI_F34_BLOCK_DATA_V1_OFFSET 1
 
-#define RMI_F34_ENABLE_WAIT_MS 300 /* ms */
-#define RMI_F34_IDLE_WAIT_MS   500 /* ms */
+#define RMI_F34_ENABLE_WAIT_MS	   300 /* ms */
+#define RMI_F34_IDLE_WAIT_MS	   500 /* ms */
 #define RMI_F34_ENABLE_SBL_WAIT_MS 3000 /* ms */
 
 #define RMI_DEVICE_PAGE_SELECT_REGISTER 0xff

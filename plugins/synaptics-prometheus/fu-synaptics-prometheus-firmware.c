@@ -113,7 +113,10 @@ fu_synaptics_prometheus_firmware_parse(FuFirmware *firmware,
 				    tag);
 			return FALSE;
 		}
-		offset += st_hdr->buf->len;
+		if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
+			g_prefix_error(error, "overflow at tag 0x%04x: ", tag);
+			return FALSE;
+		}
 		partial_stream = fu_partial_input_stream_new(stream, offset, hdrsz, error);
 		if (partial_stream == NULL)
 			return FALSE;
@@ -147,7 +150,8 @@ fu_synaptics_prometheus_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* next item */
-		offset += hdrsz;
+		if (!fu_size_checked_inc(&offset, hdrsz, error))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -209,6 +213,7 @@ fu_synaptics_prometheus_firmware_init(FuSynapticsPrometheusFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_SYNAPTICS_PROMETHEUS_FIRMWARE_COUNT_MAX);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 	self->signature_size = FU_SYNAPTICS_PROMETHEUS_FIRMWARE_PROMETHEUS_SIGSIZE;
 }
 

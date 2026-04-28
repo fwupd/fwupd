@@ -311,6 +311,14 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	self->row_data_offset_start = hdr_size + DMC_CUSTOM_META_LENGTH_FIELD_SIZE + mdbufsz;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < self->row_data_offset_start) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "file too small for row data at offset 0x%x",
+			    (guint)self->row_data_offset_start);
+		return FALSE;
+	}
 	self->fw_data_size = streamsz - self->row_data_offset_start;
 
 	/* parse image */
@@ -445,6 +453,7 @@ fu_ccgx_dmc_firmware_init(FuCcgxDmcFirmware *self)
 	    g_ptr_array_new_with_free_func((GFreeFunc)fu_ccgx_dmc_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void

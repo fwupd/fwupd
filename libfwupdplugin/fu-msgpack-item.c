@@ -11,6 +11,7 @@
 #include <fwupd.h>
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-msgpack-item-private.h"
@@ -589,24 +590,6 @@ fu_msgpack_item_read_binary(GByteArray *buf, gsize offset, gsize n, GError **err
 	return g_steal_pointer(&tmp);
 }
 
-static gchar *
-fu_msgpack_item_read_string(GByteArray *buf, gsize offset, gsize n, GError **error)
-{
-	g_autofree gchar *tmp = NULL;
-
-	if (!fu_memchk_read(buf->len, offset, n, error))
-		return NULL;
-	tmp = g_strndup((const gchar *)buf->data + offset, n);
-	if (!g_utf8_validate_len(tmp, n, NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid UTF-8 string");
-		return NULL;
-	}
-	return g_steal_pointer(&tmp);
-}
-
 FuMsgpackItem *
 fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 {
@@ -620,7 +603,10 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 	/* first byte, normally a command */
 	if (!fu_memread_uint8_safe(buf->data, buf->len, *offset, &cmd, error))
 		return NULL;
-	*offset += 1;
+	if (!fu_size_checked_inc(offset, 1, error)) {
+		g_prefix_error_literal(error, "command offset overflow: ");
+		return NULL;
+	}
 
 	/* nil */
 	if (cmd == FU_MSGPACK_CMD_NIL)
@@ -639,28 +625,40 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		guint8 v = 0;
 		if (!fu_memread_uint8_safe(buf->data, buf->len, *offset, &v, error))
 			return NULL;
-		*offset += sizeof(v);
+		if (!fu_size_checked_inc(offset, sizeof(v), error)) {
+			g_prefix_error_literal(error, "uint8 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_integer(v);
 	}
 	if (cmd == FU_MSGPACK_CMD_UINT16) {
 		guint16 v = 0;
 		if (!fu_memread_uint16_safe(buf->data, buf->len, *offset, &v, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(v);
+		if (!fu_size_checked_inc(offset, sizeof(v), error)) {
+			g_prefix_error_literal(error, "uint16 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_integer(v);
 	}
 	if (cmd == FU_MSGPACK_CMD_UINT32) {
 		guint32 v = 0;
 		if (!fu_memread_uint32_safe(buf->data, buf->len, *offset, &v, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(v);
+		if (!fu_size_checked_inc(offset, sizeof(v), error)) {
+			g_prefix_error_literal(error, "uint32 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_integer(v);
 	}
 	if (cmd == FU_MSGPACK_CMD_UINT64) {
 		guint64 v = 0;
 		if (!fu_memread_uint64_safe(buf->data, buf->len, *offset, &v, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(v);
+		if (!fu_size_checked_inc(offset, sizeof(v), error)) {
+			g_prefix_error_literal(error, "uint64 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_integer(v);
 	}
 
@@ -674,47 +672,54 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 					    G_BIG_ENDIAN,
 					    error))
 			return NULL;
-		*offset += sizeof(v);
+		if (!fu_size_checked_inc(offset, sizeof(v), error)) {
+			g_prefix_error_literal(error, "float64 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_float(v);
 	}
 
 	/* string */
 	if (cmd >= FU_MSGPACK_CMD_FIXSTR && cmd <= FU_MSGPACK_CMD_FIXSTR_END) {
 		gsize n = cmd & 0b00011111;
-		tmp_string = fu_msgpack_item_read_string(buf, *offset, n, error);
+		tmp_string = fu_memstrsafe(buf->data, buf->len, *offset, n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += n;
+		if (!fu_size_checked_inc(offset, n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 	if (cmd == FU_MSGPACK_CMD_STR8) {
 		guint8 n = 0;
 		if (!fu_memread_uint8_safe(buf->data, buf->len, *offset, &n, error))
 			return NULL;
-		tmp_string = fu_msgpack_item_read_string(buf, (*offset) + sizeof(n), n, error);
+		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 	if (cmd == FU_MSGPACK_CMD_STR16) {
 		guint16 n = 0;
 		if (!fu_memread_uint16_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		tmp_string = fu_msgpack_item_read_string(buf, (*offset) + sizeof(n), n, error);
+		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 	if (cmd == FU_MSGPACK_CMD_STR32) {
 		guint32 n = 0;
 		if (!fu_memread_uint32_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		tmp_string = fu_msgpack_item_read_string(buf, (*offset) + sizeof(n), n, error);
+		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_string(tmp_string);
 	}
 
@@ -726,7 +731,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_binary = fu_msgpack_item_read_binary(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_binary == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_binary(tmp_binary);
 	}
 	if (cmd == FU_MSGPACK_CMD_BIN16) {
@@ -736,7 +742,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_binary = fu_msgpack_item_read_binary(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_binary == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_binary(tmp_binary);
 	}
 	if (cmd == FU_MSGPACK_CMD_BIN32) {
@@ -746,7 +753,8 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		tmp_binary = fu_msgpack_item_read_binary(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_binary == NULL)
 			return NULL;
-		*offset += sizeof(n) + n;
+		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
+			return NULL;
 		return fu_msgpack_item_new_binary(tmp_binary);
 	}
 
@@ -757,14 +765,20 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		guint16 n = 0;
 		if (!fu_memread_uint16_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(n);
+		if (!fu_size_checked_inc(offset, sizeof(n), error)) {
+			g_prefix_error_literal(error, "array16 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_array(n);
 	}
 	if (cmd == FU_MSGPACK_CMD_ARRAY32) {
 		guint32 n = 0;
 		if (!fu_memread_uint32_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(n);
+		if (!fu_size_checked_inc(offset, sizeof(n), error)) {
+			g_prefix_error_literal(error, "array32 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_array(n);
 	}
 
@@ -775,14 +789,20 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		guint16 n = 0;
 		if (!fu_memread_uint16_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(n);
+		if (!fu_size_checked_inc(offset, sizeof(n), error)) {
+			g_prefix_error_literal(error, "map16 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_map(n);
 	}
 	if (cmd == FU_MSGPACK_CMD_MAP32) {
 		guint32 n = 0;
 		if (!fu_memread_uint32_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		*offset += sizeof(n);
+		if (!fu_size_checked_inc(offset, sizeof(n), error)) {
+			g_prefix_error_literal(error, "map32 offset overflow: ");
+			return NULL;
+		}
 		return fu_msgpack_item_new_map(n);
 	}
 

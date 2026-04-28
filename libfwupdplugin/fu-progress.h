@@ -65,5 +65,7 @@ FuProgress *
 fu_progress_get_child(FuProgress *self) G_GNUC_NON_NULL(1);
 void
 fu_progress_sleep(FuProgress *self, guint delay_ms) G_GNUC_NON_NULL(1);
+void
+fu_progress_sleep_idle(FuProgress *self, guint delay_ms) G_GNUC_NON_NULL(1);
 gchar *
 fu_progress_traceback(FuProgress *self) G_GNUC_NON_NULL(1);

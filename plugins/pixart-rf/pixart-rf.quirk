@@ -272,3 +272,9 @@ GType = FuPixartRfBleDevice
 [HIDRAW\VEN_03F0&DEV_9F4A]
 Plugin = pixart_rf
 GType = FuPixartRfReceiverDevice
+
+# HP 400/405
+[HIDRAW\VEN_03F0&DEV_B14A]
+Plugin = pixart_rf
+GType = FuPixartRfBleDevice
+Flags = is-hpac

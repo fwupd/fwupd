@@ -234,7 +234,15 @@ fwupd_error_convert(GError **perror)
 	if (error->domain == FWUPD_ERROR)
 		return;
 
-	/* correct some company names */
+	/* special case: G_IO_ERROR_FAILED with "No medium found" from removable devices */
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_FAILED) &&
+	    g_strstr_len(error->message, -1, "No medium found") != NULL) {
+		error->domain = FWUPD_ERROR;
+		error->code = FWUPD_ERROR_NOT_FOUND;
+		return;
+	}
+
+	/* convert GError to FwupdError */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		if (g_error_matches(error, map[i].domain, map[i].code)) {
 			error->domain = FWUPD_ERROR;

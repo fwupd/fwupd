@@ -68,7 +68,8 @@ fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufs
 			return FALSE;
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 			return FALSE;
-		offset += fu_firmware_get_size(FU_FIRMWARE(img));
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(FU_FIRMWARE(img)), error))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -451,6 +452,7 @@ fu_usb_interface_init(FuUsbInterface *self)
 {
 	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USB_DESCRIPTOR);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

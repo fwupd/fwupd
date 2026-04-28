@@ -24,8 +24,8 @@ struct _FuSynapticsPrometheusConfig {
 #define FU_SYNAPTICS_PROMETHEUS_CMD_IOTA_FIND_FLAGS_ALLIOTAS 0x0001 /* itype ignored*/
 #define FU_SYNAPTICS_PROMETHEUS_CMD_IOTA_FIND_FLAGS_READMAX  0x0002 /* nbytes ignored */
 #define FU_SYNAPTICS_PROMETHEUS_MAX_IOTA_READ_SIZE                                                 \
-	(64 * 1024) /* max size of iota data returned                                              \
-		     */
+	(64 * FU_KB) /* max size of iota data returned                                             \
+		      */
 
 #define FU_SYNAPTICS_PROMETHEUS_IOTA_ITYPE_CONFIG_VERSION                                          \
 	0x0009 /* Configuration id and version                                                     \

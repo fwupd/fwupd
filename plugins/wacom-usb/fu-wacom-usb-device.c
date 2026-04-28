@@ -161,12 +161,18 @@ fu_wacom_usb_device_set_feature_report(FuWacomUsbDevice *self,
 static gboolean
 fu_wacom_usb_device_ensure_flash_descriptors(FuWacomUsbDevice *self, GError **error)
 {
-	gsize sz = (self->nr_flash_blocks * 10) + 1;
+	gsize sz = 0;
 	g_autofree guint8 *buf = NULL;
 
 	/* already done */
 	if (self->flash_descriptors->len > 0)
 		return TRUE;
+
+	/* calculate buffer size */
+	if (!fu_size_checked_inc_product(&sz, self->nr_flash_blocks, 10, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&sz, 1, error))
+		return FALSE;
 
 	/* hit hardware */
 	buf = g_malloc(sz);
@@ -239,11 +245,18 @@ fu_wacom_usb_device_ensure_status(FuWacomUsbDevice *self, GError **error)
 static gboolean
 fu_wacom_usb_device_ensure_checksums(FuWacomUsbDevice *self, GError **error)
 {
-	gsize sz = (self->nr_flash_blocks * 4) + 5;
+	gsize sz = 0;
 	guint32 updater_version;
-	g_autofree guint8 *buf = g_malloc(sz);
+	g_autofree guint8 *buf = NULL;
+
+	/* calculate buffer size */
+	if (!fu_size_checked_inc_product(&sz, self->nr_flash_blocks, 4, error))
+		return FALSE;
+	if (!fu_size_checked_inc(&sz, 5, error))
+		return FALSE;
 
 	/* hit hardware */
+	buf = g_malloc(sz);
 	memset(buf, 0xff, sz);
 	buf[0] = FU_WACOM_USB_REPORT_ID_GET_CHECKSUMS;
 	if (!fu_wacom_usb_device_get_feature_report(self, buf, sz, FU_HID_DEVICE_FLAG_NONE, error))
@@ -726,11 +739,12 @@ fu_wacom_usb_device_add_modules_cb(FuDevice *device, gpointer user_data, GError 
 	}
 
 	/* verify the number of submodules is possible */
-	if (buf[3] > (512 - 4) / 4) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "number of submodules is impossible");
+	if (buf[3] > (sizeof(buf) - 4) / 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "number of submodules %u exceeds buffer capacity",
+			    buf[3]);
 		return FALSE;
 	}
 
@@ -802,7 +816,10 @@ fu_wacom_usb_device_add_modules(FuWacomUsbDevice *self, GError **error)
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 
 	/* no padding */
-	offset += FU_STRUCT_WACOM_USB_MODULE_DESC_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_WACOM_USB_MODULE_DESC_SIZE, error)) {
+		g_prefix_error_literal(error, "descriptor offset overflow: ");
+		return FALSE;
+	}
 
 	/* get versions of each module */
 	number_modules = fu_struct_wacom_usb_module_desc_get_number_modules(st_desc);
@@ -883,7 +900,10 @@ fu_wacom_usb_device_add_modules(FuWacomUsbDevice *self, GError **error)
 			g_warning("unknown submodule type 0x%0x", fw_type);
 			break;
 		}
-		offset += FU_STRUCT_WACOM_USB_MODULE_ITEM_SIZE;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_WACOM_USB_MODULE_ITEM_SIZE, error)) {
+			g_prefix_error(error, "item %u offset overflow: ", i);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }

@@ -60,6 +60,8 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	gsize image_size = 0;
 	const guint8 *buffer;
 	guint16 target_system = 0;
+	guint8 major_version = 0;
+	guint8 minor_version = 0;
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -72,14 +74,23 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	buffer = g_bytes_get_data(fw, &image_size);
-
-	dynamic_version = g_strdup_printf("%02x.%02x",
-					  buffer[self->blob_major_offset],
-					  buffer[self->blob_minor_offset]);
+	if (!fu_memread_uint8_safe(buffer,
+				   image_size,
+				   self->blob_major_offset,
+				   &major_version,
+				   error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(buffer,
+				   image_size,
+				   self->blob_minor_offset,
+				   &minor_version,
+				   error))
+		return FALSE;
+	dynamic_version = g_strdup_printf("%02x.%02x", major_version, minor_version);
 	g_info("writing Thunderbolt firmware version %s", dynamic_version);
 	g_debug("total image size: %" G_GSIZE_FORMAT, image_size);
-
-	memcpy(&start_offset, buffer, sizeof(guint32)); /* nocheck:blocked */
+	if (!fu_memread_uint32_safe(buffer, image_size, 0x0, &start_offset, G_LITTLE_ENDIAN, error))
+		return FALSE;
 	g_debug("header size 0x%x", start_offset);
 	if (start_offset > image_size) {
 		g_set_error(error,
@@ -90,9 +101,13 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 		return FALSE;
 	}
 
-	memcpy(&target_system, /* nocheck:blocked */
-	       buffer + start_offset + PID_OFFSET,
-	       sizeof(guint16));
+	if (!fu_memread_uint16_safe(buffer,
+				    image_size,
+				    start_offset + PID_OFFSET,
+				    &target_system,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return FALSE;
 	if (target_system != INTEL_PID) {
 		g_set_error(error,
 			    FWUPD_ERROR,

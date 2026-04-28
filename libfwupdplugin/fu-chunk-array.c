@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-bytes.h"
 #include "fu-chunk-array.h"
 #include "fu-chunk-private.h"
 #include "fu-input-stream.h"
@@ -66,8 +67,11 @@ fu_chunk_array_calculate_chunk_for_offset(FuChunkArray *self,
 	}
 
 	/* cut the packet so it does not straddle multiple blocks */
-	if (self->page_sz != self->packet_sz && self->page_sz > 0)
-		chunksz_tmp = MIN(chunksz_tmp, (offset + self->packet_sz) % self->page_sz);
+	if (self->page_sz != self->packet_sz && self->page_sz > 0) {
+		gsize remainder = (offset + self->addr_offset) % self->page_sz;
+		if (remainder != 0)
+			chunksz_tmp = MIN(chunksz_tmp, self->page_sz - remainder);
+	}
 
 	/* all optional */
 	if (address != NULL)
@@ -117,7 +121,11 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 
 	/* create new chunk */
 	if (self->blob != NULL) {
-		g_autoptr(GBytes) blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
+		g_autoptr(GBytes) blob_chk = NULL;
+
+		blob_chk = fu_bytes_new_offset(self->blob, offset, chunksz, error);
+		if (blob_chk == NULL)
+			return NULL;
 		chk = fu_chunk_bytes_new(blob_chk);
 	} else if (self->stream != NULL) {
 		g_autoptr(GBytes) blob_chk =
@@ -148,6 +156,13 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
 		gsize chunksz = 0;
 		fu_chunk_array_calculate_chunk_for_offset(self, offset, NULL, NULL, &chunksz);
 		g_array_append_val(self->offsets, offset);
+		if (chunksz > G_MAXSIZE - offset) {
+			g_critical("offset overflow at offset %" G_GSIZE_FORMAT
+				   " with chunk size %" G_GSIZE_FORMAT,
+				   offset,
+				   chunksz);
+			return;
+		}
 		offset += chunksz;
 	}
 }

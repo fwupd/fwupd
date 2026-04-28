@@ -39,9 +39,9 @@ struct _FuNovatekTsDevice {
 
 G_DEFINE_TYPE(FuNovatekTsDevice, fu_novatek_ts_device, FU_TYPE_HIDRAW_DEVICE)
 
-#define NVT_TS_REPORT_ID 0x0B
-#define NVT_TRANSFER_LEN 256
-#define FLASH_PAGE_SIZE	 256
+#define NVT_TS_REPORT_ID  0x0B
+#define NVT_TRANSFER_LEN  256
+#define FLASH_PAGE_SIZE	  256
 #define FLASH_SECTOR_SIZE (1024 * 4)
 
 #define FU_NOVATEK_TS_CODE_ENABLE  0x55FFAA
@@ -339,7 +339,7 @@ fu_novatek_ts_device_retry_busy_cb(FuDevice *device, gpointer user_data, GError 
 static gboolean
 fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer, GError **error)
 {
-	gint32 write_len = 0;
+	guint32 write_len = 0;
 	g_autoptr(FuStructNovatekTsGcmCmd) st_cmd = fu_struct_novatek_ts_gcm_cmd_new();
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	FuNovatekTsCmdIssueCtx cmd_issue_ctx = {.addr = self->flash_cmd_issue_addr,
@@ -354,7 +354,10 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 					       xfer->tx_len,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       NVT_TRANSFER_LEN);
+					       NVT_TRANSFER_LEN,
+					       error);
+		if (chunks_tx == NULL)
+			return FALSE;
 		for (guint i = 0; i < chunks_tx->len; i++) {
 			FuChunk *chk = g_ptr_array_index(chunks_tx, i);
 			if (!fu_novatek_ts_device_gcm_xfer_tx_chunk(self,
@@ -374,6 +377,14 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	else
 		fu_struct_novatek_ts_gcm_cmd_set_flash_addr(st_cmd, 0);
 	write_len = xfer->flash_addr_len + xfer->pem_byte_len + xfer->dummy_byte_len + xfer->tx_len;
+	if (write_len > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "GCM write length too large: 0x%x",
+			    write_len);
+		return FALSE;
+	}
 	fu_struct_novatek_ts_gcm_cmd_set_write_len(st_cmd, (guint16)write_len);
 	fu_struct_novatek_ts_gcm_cmd_set_read_len(st_cmd, (guint16)xfer->rx_len);
 	fu_struct_novatek_ts_gcm_cmd_set_flash_checksum(st_cmd, xfer->flash_checksum);
@@ -403,7 +414,10 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 					       xfer->rx_len,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       NVT_TRANSFER_LEN);
+					       NVT_TRANSFER_LEN,
+					       error);
+		if (chunks_rx == NULL)
+			return FALSE;
 		for (guint i = 0; i < chunks_rx->len; i++) {
 			FuChunk *chk = g_ptr_array_index(chunks_rx, i);
 			if (!fu_novatek_ts_device_gcm_xfer_rx_chunk(self,
@@ -824,9 +838,7 @@ fu_novatek_ts_device_gcm_resume_pd(FuNovatekTsDevice *self, GError **error)
 }
 
 static gboolean
-fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self,
-				     guint32 bin_size,
-				     GError **error)
+fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self, guint32 bin_size, GError **error)
 {
 	guint8 status = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -866,7 +878,10 @@ fu_novatek_ts_device_gcm_erase_flash(FuNovatekTsDevice *self,
 				    bin_size,
 				    self->flash_start_addr,
 				    FU_CHUNK_PAGESZ_NONE,
-				    FLASH_SECTOR_SIZE);
+				    FLASH_SECTOR_SIZE,
+				    error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint32 i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint32 flash_address = (guint32)fu_chunk_get_address(chk);
@@ -1128,9 +1143,7 @@ fu_novatek_ts_device_update_firmware_reset(FuNovatekTsDevice *self,
 		g_prefix_error_literal(error, "read flash id failed: ");
 		return FALSE;
 	}
-	if (!fu_novatek_ts_device_gcm_erase_flash(self,
-						  g_bytes_get_size(blob),
-						  error)) {
+	if (!fu_novatek_ts_device_gcm_erase_flash(self, g_bytes_get_size(blob), error)) {
 		g_prefix_error_literal(error, "erase flash failed: ");
 		return FALSE;
 	}

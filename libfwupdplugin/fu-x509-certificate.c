@@ -178,8 +178,6 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 			    rc);
 		return FALSE;
 	}
-	if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM)
-		gnutls_x509_crt_set_flags(crt, GNUTLS_X509_CRT_FLAG_IGNORE_SANITY);
 	rc = gnutls_x509_crt_import(crt, &d, GNUTLS_X509_FMT_DER);
 	if (rc < 0) {
 		g_set_error(error,
@@ -198,10 +196,16 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 	}
 
 	/* subject */
-	subject = (gnutls_datum_t *)gnutls_malloc(sizeof(gnutls_datum_t));
+	subject = (gnutls_datum_t *)gnutls_calloc(1, sizeof(gnutls_datum_t));
 	if (gnutls_x509_crt_get_subject(crt, &dn) == GNUTLS_E_SUCCESS) {
 		g_autofree gchar *str = NULL;
-		gnutls_x509_dn_get_str(dn, subject);
+		if (gnutls_x509_dn_get_str(dn, subject) != GNUTLS_E_SUCCESS) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "failed to get subject string");
+			return FALSE;
+		}
 		str = fu_strsafe((const gchar *)subject->data, subject->size);
 		fu_x509_certificate_set_subject(self, str);
 	}
@@ -228,7 +232,7 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 			    rc);
 		return FALSE;
 	}
-	for (guint i = 0; i < key_idsz; i++)
+	for (guint i = 0; i < MIN(sizeof(key_id), key_idsz); i++)
 		g_string_append_printf(key_idstr, "%02x", key_id[i]);
 	fu_firmware_set_id(firmware, key_idstr->str);
 
@@ -243,6 +247,7 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 static void
 fu_x509_certificate_init(FuX509Certificate *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void

@@ -67,10 +67,12 @@ fu_chunk_array_new(const guint8 *data,
 		   gsize data_sz,
 		   gsize addr_offset,
 		   gsize page_sz,
-		   gsize packet_sz);
+		   gsize packet_sz,
+		   GError **error);
 GPtrArray *
 fu_chunk_array_mutable_new(guint8 *data,
 			   gsize data_sz,
 			   gsize addr_offset,
 			   gsize page_sz,
-			   gsize packet_sz) G_GNUC_NON_NULL(1);
+			   gsize packet_sz,
+			   GError **error) G_GNUC_NON_NULL(1);

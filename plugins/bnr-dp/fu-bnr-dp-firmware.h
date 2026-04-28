@@ -17,8 +17,8 @@ FuFirmware *
 fu_bnr_dp_firmware_new(void);
 
 /* payload is 3MiB, XML header is variable size but really shouldn't be very large */
-#define FU_BNR_DP_FIRMWARE_SIZE	    (3 * 1024 * 1024)
-#define FU_BNR_DP_FIRMWARE_SIZE_MAX (FU_BNR_DP_FIRMWARE_SIZE + (4 * 1024))
+#define FU_BNR_DP_FIRMWARE_SIZE	    (3 * FU_MB)
+#define FU_BNR_DP_FIRMWARE_SIZE_MAX (FU_BNR_DP_FIRMWARE_SIZE + (4 * FU_KB))
 
 /* location of the payload header in firmware images */
 #define FU_BNR_DP_FIRMWARE_HEADER_OFFSET 0x10

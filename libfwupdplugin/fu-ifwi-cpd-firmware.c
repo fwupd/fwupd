@@ -58,6 +58,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 {
 	gsize streamsz = 0;
 	guint32 size;
+	gsize header_length;
 	gsize offset = 0;
 	guint64 version_raw = 0;
 	g_autoptr(FuStructIfwiCpdManifest) st_mhd = NULL;
@@ -89,7 +90,11 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 	}
 
 	/* parse extensions */
-	offset += fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd) * 4;
+	header_length = fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd);
+	if (!fu_size_checked_inc_product(&offset, header_length, 4, error)) {
+		g_prefix_error_literal(error, "manifest offset overflow: ");
+		return FALSE;
+	}
 	while (offset < streamsz) {
 		guint32 extension_type = 0;
 		guint32 extension_length = 0;
@@ -134,7 +139,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 		fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += extension_length;
+		if (!fu_size_checked_inc(&offset, extension_length, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -181,7 +187,8 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			    (guint)FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 		return FALSE;
 	}
-	offset += fu_struct_ifwi_cpd_get_header_length(st_hdr);
+	if (!fu_size_checked_inc(&offset, fu_struct_ifwi_cpd_get_header_length(st_hdr), error))
+		return FALSE;
 	for (guint32 i = 0; i < num_of_entries; i++) {
 		guint32 img_offset = 0;
 		g_autofree gchar *id = NULL;
@@ -233,7 +240,8 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		/* success */
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += st_ent->buf->len;
+		if (!fu_size_checked_inc(&offset, st_ent->buf->len, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -258,8 +266,10 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_ifwi_cpd_set_crc32(st, 0x0);
 
 	/* fixup the image offsets */
-	offset += st->buf->len;
-	offset += FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error))
+		return NULL;
+	if (!fu_size_checked_inc_product(&offset, FU_STRUCT_IFWI_CPD_ENTRY_SIZE, imgs->len, error))
+		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		g_autoptr(GBytes) blob = NULL;
@@ -270,7 +280,10 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		}
 		fu_firmware_set_offset(img, offset);
-		offset += g_bytes_get_size(blob);
+		if (!fu_size_checked_inc(&offset, g_bytes_get_size(blob), error)) {
+			g_prefix_error(error, "offset overflow for entry %u: ", i);
+			return NULL;
+		}
 	}
 
 	/* add entry headers */
@@ -347,6 +360,7 @@ fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void

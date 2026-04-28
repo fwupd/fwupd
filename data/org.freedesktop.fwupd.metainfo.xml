@@ -38,6 +38,76 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.2" date="2026-04-24">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add an HSI check for AMD SB-7033 aka EntrySign</li>
+          <li>Add native CBOR parsing and drop libcbor2 as a dep</li>
+          <li>Add server platform detection to suspend HSI checks</li>
+          <li>Allow setting a maximum version number for a device</li>
+          <li>Allow setting context flags from HWID matches</li>
+          <li>Increment the progressbar when waiting for replug</li>
+          <li>Require Windows 8+ for the MSI build artifact</li>
+          <li>Support loading EFI authenticated variables with ContentInfo headers</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add daemon support for modems that export ttyUSB devices</li>
+          <li>Add decompression ratio limit to prevent parsing emulation ZIP bombs</li>
+          <li>Add device activation flag for Dell servers after firmware upgrade</li>
+          <li>Allow using a custom Telink HidToolVer quirk</li>
+          <li>Check the UEFI capsule payload is less than 4GiB in size</li>
+          <li>Cleanup all the user inhibits when required</li>
+          <li>Do not allow using non-regular files like devnull as metadata</li>
+          <li>Do not use capsule-on-disk on Lenovo ThinkCentre M60e Tiny</li>
+          <li>Fix a buffer overread when parsing a malicious PE file</li>
+          <li>Fix a CRC validation mistake in ZIP firmware parser</li>
+          <li>Fix a maybe-impossible NULL pointer dereference when parsing netlink data</li>
+          <li>Fix a small memory leak when writing Redfish firmware</li>
+          <li>Fix accessing Nordic devices connected through a dongle</li>
+          <li>Fix handling snapd payloads with only a default image</li>
+          <li>Fix potential NULL pointer dereference in QMI firmware write</li>
+          <li>Fix the auto-generated Redfish HBA device name</li>
+          <li>Fix the displayed Thunderbolt version number by ignoring reserved bits</li>
+          <li>Fix UF2 race with UDisks2 volume discovery during replug</li>
+          <li>Fix warning when probing removable USB devices with no medium</li>
+          <li>Guard HSI feature with platforms requirements</li>
+          <li>Hardcode the modification timestamp in generated zip archive</li>
+          <li>Increase the resolution of the progress bar updates</li>
+          <li>Limit the maximum number of files that can be parsed from ZIP archives</li>
+          <li>Prevent users from asking for unlimited system inhibits</li>
+          <li>Properly handle Dell iDRAC when using Redfish</li>
+          <li>Reject DFU sectors with zero size to prevent a possible infinite loop</li>
+          <li>Restore the VID check in Algoltek USBCR probe function</li>
+          <li>Set sensible parsing limits in each FuFirmware subclass</li>
+          <li>Show a suitable version when the Novatek update is interrupted</li>
+          <li>Support CAB image filenames longer than 255 chars</li>
+          <li>Update the Focal touch firmware format to the latest release</li>
+          <li>Use overflow-checked arithmetic for all offset calculations</li>
+          <li>Use prepared queries when querying silos</li>
+          <li>Validate CCGX record data size before flash write</li>
+          <li>Validate Nordic HID peer index before accessing peers cache array</li>
+          <li>Validate Synaptics cxaudio EEPROM size before trusting it</li>
+          <li>Wait for mock snapd API socket to appear when running tests</li>
+          <li>Wait for the new version when updating the Nordic TK059 Keyboard</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Elan TP IC type 0x19</li>
+          <li>Google Moonstone</li>
+          <li>HP 400 and 405 Mouse</li>
+          <li>Lenovo USB-4 dock</li>
+          <li>LX Semicon SW42101 touch controller</li>
+          <li>Parade USB hubs with GPIO control</li>
+          <li>Pixart PLP239 devices</li>
+          <li>Raydium TP devices</li>
+          <li>Sunplus cameras</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.1" date="2026-03-11">
       <description>
         <p>

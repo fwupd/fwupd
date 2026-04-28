@@ -300,7 +300,9 @@ fu_intel_usb4_device_nvm_read(FuIntelUsb4Device *self,
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, nvm_addr, 0x0, 64);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, nvm_addr, 0x0, 64, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(FuStructIntelUsb4MetadataNvmRead) st =

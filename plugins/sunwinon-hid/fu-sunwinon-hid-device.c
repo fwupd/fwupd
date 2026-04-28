@@ -600,9 +600,7 @@ fu_sunwinon_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* done */
-	if (!fu_sunwinon_hid_device_dfu_program_end_cmd_normal(self,
-							       file_checksum,
-							       error))
+	if (!fu_sunwinon_hid_device_dfu_program_end_cmd_normal(self, file_checksum, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

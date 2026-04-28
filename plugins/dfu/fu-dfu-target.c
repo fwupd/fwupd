@@ -155,10 +155,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	case ' ': /* byte, ST reference bootloader :/ */
 		break;
 	case 'K': /* kilo */
-		sector_size *= 0x400;
+		sector_size *= FU_KB;
 		break;
 	case 'M': /* mega */
-		sector_size *= 0x100000;
+		sector_size *= FU_MB;
 		break;
 	default:
 		g_set_error(error,
@@ -205,6 +205,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	/* add all the sectors */
 	for (guint i = 0; i < nr_sectors; i++) {
 		FuDfuSector *sector;
+		gsize sector_size_val;
 		sector = fu_dfu_sector_new(*addr + addr_offset,
 					   (guint32)sector_size,
 					   (guint32)((nr_sectors * sector_size) - addr_offset),
@@ -212,7 +213,18 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 					   number,
 					   cap);
 		g_ptr_array_add(priv->sectors, sector);
-		addr_offset += fu_dfu_sector_get_size(sector);
+
+		/* sanity check */
+		sector_size_val = fu_dfu_sector_get_size(sector);
+		if (sector_size_val > G_MAXUINT32 - addr_offset) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "overflow at sector %u",
+				    i);
+			return FALSE;
+		}
+		addr_offset += sector_size_val;
 	}
 
 	/* update for next sector */
@@ -407,7 +419,7 @@ fu_dfu_target_status_to_error_msg(FuDfuStatus status)
 		return "Something unexpected went wrong";
 	if (status == FU_DFU_STATUS_ERR_STALLDPKT)
 		return "Device stalled an unexpected request";
-	return NULL;
+	return "Unknown error";
 }
 
 static gboolean
@@ -864,6 +876,14 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 
 		/* keep a sum of all the chunks */
 		chunk_size = (guint32)g_bytes_get_size(chunk_tmp);
+		if (chunk_size > G_MAXSIZE - total_size) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "overflow at chunk #%04x",
+				    idx);
+			return NULL;
+		}
 		total_size += chunk_size;
 		if (total_size > maximum_size)
 			break;
@@ -899,7 +919,9 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 	fu_progress_set_percentage(progress, 100);
 
 	/* create new image */
-	contents = fu_dfu_utils_bytes_join_array(chunks);
+	contents = fu_dfu_utils_bytes_join_array(chunks, error);
+	if (contents == NULL)
+		return NULL;
 	return fu_chunk_bytes_new(contents);
 }
 
@@ -933,9 +955,17 @@ fu_dfu_target_get_size_of_zone(FuDfuTarget *self, guint16 zone)
 	guint32 len = 0;
 	for (guint i = 0; i < priv->sectors->len; i++) {
 		FuDfuSector *sector = g_ptr_array_index(priv->sectors, i);
+		guint32 sector_size;
 		if (fu_dfu_sector_get_zone(sector) != zone)
 			continue;
-		len += fu_dfu_sector_get_size(sector);
+
+		/* sanity check */
+		sector_size = fu_dfu_sector_get_size(sector);
+		if (sector_size > G_MAXUINT32 - len) {
+			g_warning("DFU zone %u size overflow, returning partial size", zone);
+			return G_MAXUINT32;
+		}
+		len += sector_size;
 	}
 	return len;
 }

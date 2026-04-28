@@ -63,13 +63,16 @@ fu_chunk_func(void)
 	g_autofree gchar *chunked3_str = NULL;
 	g_autofree gchar *chunked4_str = NULL;
 	g_autofree gchar *chunked5_str = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) chunked1 = NULL;
 	g_autoptr(GPtrArray) chunked2 = NULL;
 	g_autoptr(GPtrArray) chunked3 = NULL;
 	g_autoptr(GPtrArray) chunked4 = NULL;
 	g_autoptr(GPtrArray) chunked5 = NULL;
 
-	chunked3 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x0, 3, 3);
+	chunked3 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x0, 3, 3, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked3);
 	chunked3_str = fu_chunk_array_to_string(chunked3);
 	g_assert_cmpstr(chunked3_str,
 			==,
@@ -84,7 +87,9 @@ fu_chunk_func(void)
 			"  </chunk>\n"
 			"</chunks>\n");
 
-	chunked4 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x4, 4, 4);
+	chunked4 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x4, 4, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked4);
 	chunked4_str = fu_chunk_array_to_string(chunked4);
 	g_assert_cmpstr(chunked4_str,
 			==,
@@ -99,7 +104,9 @@ fu_chunk_func(void)
 			"    <data size=\"0x2\">56</data>\n"
 			"  </chunk>\n"
 			"</chunks>\n");
-	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4);
+	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked5);
 	g_assert_cmpint(chunked5->len, ==, 0);
 	chunked5_str = fu_chunk_array_to_string(chunked5);
 	if (fu_version_compare(xb_version_string(), "0.3.22", FWUPD_VERSION_FORMAT_TRIPLET) >= 0) {
@@ -108,7 +115,9 @@ fu_chunk_func(void)
 		g_assert_cmpstr(chunked5_str, ==, "<chunks>\n</chunks>\n");
 	}
 
-	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4);
+	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked1);
 	chunked1_str = fu_chunk_array_to_string(chunked1);
 	g_assert_cmpstr(chunked1_str,
 			==,
@@ -138,7 +147,9 @@ fu_chunk_func(void)
 			"    <data size=\"0x2\">ef</data>\n"
 			"  </chunk>\n"
 			"</chunks>\n");
-	chunked2 = fu_chunk_array_new((const guint8 *)"XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
+	chunked2 = fu_chunk_array_new((const guint8 *)"XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked2);
 	chunked2_str = fu_chunk_array_to_string(chunked2);
 	g_debug("%s", chunked2_str);
 	g_assert_cmpstr(chunked2_str,
@@ -182,10 +193,13 @@ fu_chunk_array_null_func(void)
 {
 	g_autofree gchar *chunked1_str = NULL;
 	g_autofree gchar *chunked2_str = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) chunked1 = NULL;
 	g_autoptr(GPtrArray) chunked2 = NULL;
 
-	chunked1 = fu_chunk_array_new(NULL, 0x100, 0, 0x100, 0x80);
+	chunked1 = fu_chunk_array_new(NULL, 0x100, 0, 0x100, 0x80, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked1);
 	g_assert_cmpint(chunked1->len, ==, 2);
 	chunked1_str = fu_chunk_array_to_string(chunked1);
 	g_assert_cmpstr(chunked1_str,
@@ -201,7 +215,9 @@ fu_chunk_array_null_func(void)
 			"  </chunk>\n"
 			"</chunks>\n");
 
-	chunked2 = fu_chunk_array_new(NULL, 0x200, 0, 0x100, 0x80);
+	chunked2 = fu_chunk_array_new(NULL, 0x200, 0, 0x100, 0x80, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(chunked2);
 	g_assert_cmpint(chunked2->len, ==, 4);
 	chunked2_str = fu_chunk_array_to_string(chunked2);
 	g_assert_cmpstr(chunked2_str,

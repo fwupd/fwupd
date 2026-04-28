@@ -228,7 +228,9 @@ fu_mm_fdl_device_write_firmware(FuDevice *device,
 		guint16 chunk_size = 0;
 
 		helper->size_bytes =
-		    g_bytes_new_from_bytes(fw, offset, FU_CINTERION_FDL_SIZE_BYTES);
+		    fu_bytes_new_offset(fw, offset, FU_CINTERION_FDL_SIZE_BYTES, error);
+		if (helper->size_bytes == NULL)
+			return FALSE;
 		if (!fu_memread_uint16_safe(g_bytes_get_data(helper->size_bytes, NULL),
 					    g_bytes_get_size(helper->size_bytes),
 					    0x0,
@@ -237,10 +239,14 @@ fu_mm_fdl_device_write_firmware(FuDevice *device,
 					    error))
 			return FALSE;
 
-		offset += FU_CINTERION_FDL_SIZE_BYTES;
+		if (!fu_size_checked_inc(&offset, FU_CINTERION_FDL_SIZE_BYTES, error))
+			return FALSE;
 
-		helper->chunk_bytes = g_bytes_new_from_bytes(fw, offset, chunk_size);
-		offset += chunk_size;
+		helper->chunk_bytes = fu_bytes_new_offset(fw, offset, chunk_size, error);
+		if (helper->chunk_bytes == NULL)
+			return FALSE;
+		if (!fu_size_checked_inc(&offset, chunk_size, error))
+			return FALSE;
 
 		if (!fu_device_retry_full(FU_DEVICE(self),
 					  fu_mm_fdl_device_write_chunk_cb,

@@ -225,7 +225,7 @@ fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurit
 	fu_security_attrs_append(attrs, attr);
 
 	/* SB not available or disabled */
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, NULL))
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error))
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 	if (!secureboot_enabled) {
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -421,6 +421,14 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 				    error))
 		return FALSE;
 	fu_struct_efi_capsule_header_set_guid(st_cap, &guid);
+	if (g_bytes_get_size(blob) > G_MAXUINT32 - FU_STRUCT_EFI_CAPSULE_HEADER_SIZE -
+					 FU_STRUCT_EFI_UX_CAPSULE_HEADER_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "UX capsule payload too large");
+		return FALSE;
+	}
 	fu_struct_efi_capsule_header_set_image_size(st_cap,
 						    g_bytes_get_size(blob) +
 							FU_STRUCT_EFI_CAPSULE_HEADER_SIZE +

@@ -297,7 +297,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 
 	/* CX3 fw file size should be less than 256KB */
 	cx3_fw_buf = g_bytes_get_data(cx3_fw, &cx3_fw_size);
-	if (cx3_fw_size > 256 * 1024) {
+	if (cx3_fw_size > 256 * FU_KB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -310,7 +310,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 
 	/* M12 fw file size should be less than 3MB */
 	m12_fw_buf = g_bytes_get_data(m12_fw, &m12_fw_size);
-	if (m12_fw_size > 3 * 1024 * 1024) {
+	if (m12_fw_size > 3 * FU_MB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,

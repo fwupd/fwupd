@@ -159,7 +159,8 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 	self->pid = fu_struct_lenovo_dock_usage_get_pid(st);
 	fu_firmware_set_version_raw(firmware,
 				    fu_struct_lenovo_dock_usage_get_composite_version(st));
-	offset += FU_STRUCT_LENOVO_DOCK_USAGE_SIZE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_LENOVO_DOCK_USAGE_SIZE, error))
+		return FALSE;
 	usage_items = fu_struct_lenovo_dock_usage_get_total_number(st);
 	for (guint i = 0; i < usage_items; i++) {
 		if (!fu_lenovo_dock_firmware_parse_image(self,
@@ -171,7 +172,8 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* next! */
-		offset += FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -202,6 +204,7 @@ fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT8);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LENOVO_DOCK_IMAGE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

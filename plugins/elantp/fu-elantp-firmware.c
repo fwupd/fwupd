@@ -265,6 +265,7 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elantp_firmware_init(FuElantpFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

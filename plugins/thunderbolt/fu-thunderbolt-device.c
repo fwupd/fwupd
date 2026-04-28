@@ -148,7 +148,9 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 		return FALSE;
 	if (!fu_strtoull(split[1], &version_minor, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
 		return FALSE;
-	version = g_strdup_printf("%02x.%02x", (guint)version_major, (guint)version_minor);
+	version = g_strdup_printf("%02x.%02x",
+				  (guint)(version_major & 0b00111111),
+				  (guint)(version_minor & 0b00111111));
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }

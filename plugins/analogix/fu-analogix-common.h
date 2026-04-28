@@ -16,7 +16,7 @@
 #define OCM_FLASH_SIZE		   0x18000
 #define SECURE_OCM_TX_SIZE	   0x3000
 #define SECURE_OCM_RX_SIZE	   0x3000
-#define CUSTOM_FLASH_SIZE	   0x1000
+#define CUSTOM_FLASH_SIZE	   (4 * FU_KB)
 
 #define FLASH_OCM_ADDR	    0x1000
 #define FLASH_TXFW_ADDR	    0x31000

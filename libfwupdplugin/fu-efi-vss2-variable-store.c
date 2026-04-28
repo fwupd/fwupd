@@ -64,7 +64,11 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 	}
 
 	/* parse each attr */
-	offset += st->buf->len;
+	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
+		g_prefix_error_literal(error, "VSS2 header offset overflow: ");
+		return FALSE;
+	}
+
 	while (offset < fu_struct_efi_vss2_variable_store_header_get_size(st)) {
 		g_autoptr(FuFirmware) img = fu_efi_vss_auth_variable_new();
 
@@ -87,7 +91,8 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 			if (!fu_firmware_add_image(firmware, img, error))
 				return FALSE;
 		}
-		offset += fu_firmware_get_size(img);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(img), error))
+			return FALSE;
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
 	}
 
@@ -151,10 +156,10 @@ fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000); /* 4KB */
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_KB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000000); /* 16MB */
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 #endif
 }
 

@@ -357,7 +357,7 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	gint buffer_len = (data == NULL) ? 12 : length + 16;
+	gsize buffer_len = (data == NULL) ? 12 : (gsize)length + 16;
 	g_autofree guint8 *buffer = g_malloc0(buffer_len);
 	guint32 tmp;
 
@@ -629,7 +629,15 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(quad_bytes, &length);
-	memcpy(data_out, data, length); /* nocheck:blocked */
+	if (!fu_memcpy_safe(data_out,
+			    sizeof(data_out),
+			    0x0, /* dst */
+			    data,
+			    length,
+			    0x0, /* src */
+			    length,
+			    error))
+		return FALSE;
 	data_out[0] = 0x00;
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
@@ -656,7 +664,15 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(hdcp_bytes, &length);
-	memcpy(data_out, data, length); /* nocheck:blocked */
+	if (!fu_memcpy_safe(data_out,
+			    sizeof(data_out),
+			    0x0, /* dst */
+			    data,
+			    length,
+			    0x0, /* src */
+			    length,
+			    error))
+		return FALSE;
 	data_out[0] = data[0] & (1 << 2);
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
@@ -970,6 +986,10 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	FuDellDockMstType type;
+	gsize datasz;
+	guint8 major_version = 0;
+	guint8 minor_version = 0;
+	guint8 build_version = 0;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
@@ -989,12 +1009,15 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	data = g_bytes_get_data(fw, NULL);
-
-	dynamic_version = g_strdup_printf("%02x.%02x.%02x",
-					  data[self->blob_major_offset],
-					  data[self->blob_minor_offset],
-					  data[self->blob_build_offset]);
+	data = g_bytes_get_data(fw, &datasz);
+	if (!fu_memread_uint8_safe(data, datasz, self->blob_major_offset, &major_version, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(data, datasz, self->blob_minor_offset, &minor_version, error))
+		return FALSE;
+	if (!fu_memread_uint8_safe(data, datasz, self->blob_build_offset, &build_version, error))
+		return FALSE;
+	dynamic_version =
+	    g_strdup_printf("%02x.%02x.%02x", major_version, minor_version, build_version);
 	g_info("writing MST firmware version %s", dynamic_version);
 
 	/* enable remote control */

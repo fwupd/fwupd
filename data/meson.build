@@ -32,7 +32,13 @@ if build_standalone
     install_dir: join_paths(sysconfdir, 'fwupd'),
     install_mode: 'rw-r-----',
   )
-  plugin_quirks += files('cfi.quirk', 'ds20.quirk', 'power.quirk', 'vendors.quirk')
+  plugin_quirks += files(
+    'cfi.quirk',
+    'ds20.quirk',
+    'power.quirk',
+    'vendors.quirk',
+    'context.quirk',
+  )
 endif
 
 if get_option('metainfo')
@@ -121,6 +127,7 @@ if build_daemon
     endif
     if get_option('plugin_modem_manager').allowed()
       device_allows += ['char-wwan_port']
+      device_allows += ['char-ttyUSB']
     endif
     foreach device_allow : device_allows
       dynamic_options += ['DeviceAllow=' + device_allow + ' rw']

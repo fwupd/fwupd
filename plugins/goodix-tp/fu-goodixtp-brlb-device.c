@@ -61,8 +61,11 @@ fu_goodixtp_brlb_device_hid_read(FuGoodixtpBrlbDevice *self,
 				 gsize bufsz,
 				 GError **error)
 {
-	g_autoptr(GPtrArray) chunks =
-	    fu_chunk_array_mutable_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_goodixtp_brlb_device_read_pkg(self,
@@ -82,7 +85,11 @@ fu_goodixtp_brlb_device_hid_write(FuGoodixtpBrlbDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 hidbuf[PACKAGE_LEN] = {0};
@@ -155,11 +162,13 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 	guint8 cfg_ver;
 	guint32 patch_vid_raw;
 	g_autofree gchar *patch_pid = NULL;
+	guint32 version_raw;
 
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x1001E, hidbuf, sizeof(hidbuf), error)) {
 		g_prefix_error_literal(error, "failed read PID/VID: ");
 		return FALSE;
 	}
+
 	vice_ver = hidbuf[10];
 	inter_ver = hidbuf[11];
 
@@ -181,7 +190,8 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 
 	cfg_ver = hidbuf[4];
 	fu_goodixtp_hid_device_set_config_ver(FU_GOODIXTP_HID_DEVICE(self), cfg_ver);
-	fu_device_set_version_raw(FU_DEVICE(self), (vice_ver << 16) | (inter_ver << 8) | cfg_ver);
+	version_raw = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	return TRUE;
 }
 
@@ -383,11 +393,25 @@ static gboolean
 fu_goodixtp_brlb_device_setup(FuDevice *device, GError **error)
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);
+	const gchar *patch_pid = NULL;
 	if (!fu_goodixtp_brlb_device_ensure_version(self, error)) {
 		g_prefix_error_literal(error, "brlb read version failed: ");
 		return FALSE;
 	}
-	return TRUE;
+
+	patch_pid = fu_goodixtp_hid_device_get_patch_pid(FU_GOODIXTP_HID_DEVICE(self));
+	if (patch_pid == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "missing patch PID in firmware info");
+		return FALSE;
+	}
+
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+	fu_device_add_instance_strsafe(device, "PID", patch_pid);
+	return fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "PID", NULL);
 }
 
 static FuFirmware *
@@ -474,6 +498,7 @@ fu_goodixtp_brlb_device_write_firmware(FuDevice *device,
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);
 	guint32 fw_ver = fu_firmware_get_version_raw(firmware);
+	guint32 dev_ver;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* progress */
@@ -498,21 +523,26 @@ fu_goodixtp_brlb_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (fu_device_get_version_raw(device) != fw_ver) {
+	/* sanity check */
+	dev_ver = fu_device_get_version_raw(device);
+	if (fw_ver != dev_ver) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "update failed chip_ver:%x != bin_ver:%x",
-			    (guint)fu_device_get_version_raw(device),
-			    (guint)fw_ver);
+			    "update failed chip_ver:%s != bin_ver:%s",
+			    fu_device_get_version(device),
+			    fu_firmware_get_version(firmware));
 		return FALSE;
 	}
+
+	/* success */
 	return TRUE;
 }
 
 static void
 fu_goodixtp_brlb_device_init(FuGoodixtpBrlbDevice *self)
 {
+	fu_device_set_summary(FU_DEVICE(self), "TouchScreen");
 }
 
 static void

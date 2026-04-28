@@ -92,6 +92,7 @@ fu_focal_fp_firmware_parse(FuFirmware *firmware,
 static void
 fu_focal_fp_firmware_init(FuFocalFpFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

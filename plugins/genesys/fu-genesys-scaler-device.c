@@ -16,7 +16,7 @@
  * nocheck:magic-inlines=119
  */
 
-#define GENESYS_SCALER_BANK_SIZE 0x200000U
+#define GENESYS_SCALER_BANK_SIZE (2 * FU_MB)
 
 #define GENESYS_SCALER_MSTAR_READ     0x7a
 #define GENESYS_SCALER_MSTAR_WRITE    0x7b
@@ -848,7 +848,9 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0, 0, data_size);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0, 0, data_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
@@ -940,7 +942,9 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 		return FALSE;
 	}
 
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, addr, 0, self->transfer_size);
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, addr, 0, self->transfer_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -1268,7 +1272,9 @@ fu_genesys_scaler_device_erase_flash(FuGenesysScalerDevice *self,
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new(NULL, bufsz, addr, 0, self->sector_size);
+	chunks = fu_chunk_array_new(NULL, bufsz, addr, 0, self->sector_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -1347,8 +1353,14 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 	if (proxy == NULL)
 		return FALSE;
 
-	chunks =
-	    fu_chunk_array_mutable_new(data, datasz, addr + sizeof(data1), 0, self->transfer_size);
+	chunks = fu_chunk_array_mutable_new(data,
+					    datasz,
+					    addr + sizeof(data1),
+					    0,
+					    self->transfer_size,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -1405,7 +1417,9 @@ fu_genesys_scaler_device_write_sector(FuGenesysScalerDevice *self,
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, self->page_size);
+	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, self->page_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -1436,7 +1450,9 @@ fu_genesys_scaler_device_write_flash(FuGenesysScalerDevice *self,
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, self->sector_size);
+	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, self->sector_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -1928,7 +1944,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioValue") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->gpio_val = tmp;
 
@@ -1970,9 +1986,9 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_DEVICE);
 
-	self->sector_size = 0x1000;						/* 4KB */
-	self->page_size = 0x100;						/* 256B */
-	self->transfer_size = 0x40;						/* 64B */
+	self->sector_size = 4 * FU_KB;
+	self->page_size = 256;
+	self->transfer_size = 64;
 	fu_device_set_firmware_size(FU_DEVICE(self), GENESYS_SCALER_BANK_SIZE); /* 2MB */
 }
 

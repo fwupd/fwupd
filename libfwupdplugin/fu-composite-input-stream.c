@@ -10,6 +10,7 @@
 
 #include "fwupd-codec.h"
 
+#include "fu-common.h"
 #include "fu-composite-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
@@ -85,56 +86,79 @@ fu_composite_input_stream_item_free(FuCompositeInputStreamItem *item)
 	g_free(item);
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCompositeInputStreamItem, fu_composite_input_stream_item_free)
+
 /**
  * fu_composite_input_stream_add_bytes:
  * @self: a #FuCompositeInputStream
  * @bytes: a #GBytes
+ * @error: (nullable): optional return location for an error
  *
  * Adds a bytes object.
  *
- * Since: 2.0.0
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.2
  **/
-void
-fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes)
+gboolean
+fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes, GError **error)
 {
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 
-	g_return_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self));
-	g_return_if_fail(bytes != NULL);
+	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
+	g_return_val_if_fail(bytes != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	stream = g_memory_input_stream_new_from_bytes(bytes);
-	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), NULL);
-	fu_composite_input_stream_add_partial_stream(self, FU_PARTIAL_INPUT_STREAM(partial_stream));
+	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), error);
+	if (partial_stream == NULL)
+		return FALSE;
+	return fu_composite_input_stream_add_partial_stream(self,
+							    FU_PARTIAL_INPUT_STREAM(partial_stream),
+							    error);
 }
 
 /**
  * fu_composite_input_stream_add_partial_stream:
  * @self: a #FuCompositeInputStream
  * @partial_stream: a #FuPartialInputStream
+ * @error: (nullable): optional return location for an error
  *
  * Adds a partial stream object.
  *
- * Since: 2.0.0
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.2
  **/
-void
+gboolean
 fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
-					     FuPartialInputStream *partial_stream)
+					     FuPartialInputStream *partial_stream,
+					     GError **error)
 {
-	FuCompositeInputStreamItem *item;
+	g_autoptr(FuCompositeInputStreamItem) item = NULL;
 	gsize global_offset = 0;
 
-	g_return_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self));
-	g_return_if_fail(FU_IS_PARTIAL_INPUT_STREAM(partial_stream));
-	g_return_if_fail(G_INPUT_STREAM(self) != G_INPUT_STREAM(partial_stream));
+	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
+	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(partial_stream), FALSE);
+	g_return_val_if_fail(G_INPUT_STREAM(self) != G_INPUT_STREAM(partial_stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* get the last-added item */
 	if (self->items->len > 0) {
 		FuCompositeInputStreamItem *item_last =
 		    g_ptr_array_index(self->items, self->items->len - 1);
-		global_offset = item_last->global_offset +
-				fu_partial_input_stream_get_size(
-				    FU_PARTIAL_INPUT_STREAM(item_last->partial_stream));
+		gsize last_size = fu_partial_input_stream_get_size(
+		    FU_PARTIAL_INPUT_STREAM(item_last->partial_stream));
+
+		/* calculate global offset with overflow checking */
+		if (!g_size_checked_add(&global_offset, item_last->global_offset, last_size)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "composite stream global offset overflow");
+			return FALSE;
+		}
 	}
 
 	/* add a new item */
@@ -143,8 +167,18 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 	item->global_offset = global_offset;
 
 	g_debug("adding partial stream global_offset:0x%x", (guint)item->global_offset);
-	self->total_size += fu_partial_input_stream_get_size(item->partial_stream);
-	g_ptr_array_add(self->items, item);
+
+	/* increment total size  */
+	if (!fu_size_checked_inc(&self->total_size,
+				 fu_partial_input_stream_get_size(item->partial_stream),
+				 error)) {
+		g_prefix_error_literal(error, "total size overflow: ");
+		return FALSE;
+	}
+
+	/* success */
+	g_ptr_array_add(self->items, g_steal_pointer(&item));
+	return TRUE;
 }
 
 /**
@@ -177,10 +211,11 @@ fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
 		g_prefix_error_literal(error, "failed to add input stream: ");
 		return FALSE;
 	}
-	fu_composite_input_stream_add_partial_stream(self, FU_PARTIAL_INPUT_STREAM(partial_stream));
 
 	/* success */
-	return TRUE;
+	return fu_composite_input_stream_add_partial_stream(self,
+							    FU_PARTIAL_INPUT_STREAM(partial_stream),
+							    error);
 }
 
 static goffset

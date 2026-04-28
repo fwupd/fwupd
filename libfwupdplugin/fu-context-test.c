@@ -142,14 +142,19 @@ fu_context_hwids_dmi_func(void)
 {
 	g_autofree gchar *dump = NULL;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, testdatadir);
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_DMI, &error);
 	g_assert_no_error(error);
@@ -159,6 +164,13 @@ fu_context_hwids_dmi_func(void)
 
 	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER), ==, "FwupdTest");
 	g_assert_cmpuint(fu_context_get_chassis_kind(ctx), ==, 16);
+
+	/* check quirked flags were set */
+	g_assert_true(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE));
+	g_assert_false(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_INSECURE_UEFI));
+
+	/* not allowed to be set from a quirk */
+	g_assert_false(fu_context_has_flag(ctx, FU_CONTEXT_FLAG_DUMMY_EFIVARS));
 }
 
 static void

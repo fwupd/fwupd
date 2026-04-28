@@ -229,6 +229,17 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
 
+	/* validate buffer is large enough for footer */
+	if (bufsz < FU_STRUCT_DFU_FTR_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "file too small for DFU footer: 0x%x < 0x%x",
+			    (guint)bufsz,
+			    (guint)FU_STRUCT_DFU_FTR_SIZE);
+		return FALSE;
+	}
+
 	/* parse */
 	st = fu_struct_dfu_ftr_parse_stream(stream, bufsz - FU_STRUCT_DFU_FTR_SIZE, error);
 	if (st == NULL)
@@ -269,6 +280,17 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			    "reported footer size 0x%04x larger than file 0x%04x",
 			    (guint)priv->footer_len,
 			    (guint)bufsz);
+		return FALSE;
+	}
+
+	/* validate footer length matches the actual footer size */
+	if (priv->footer_len != FU_STRUCT_DFU_FTR_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "reported footer size 0x%02x does not match expected size 0x%02x",
+			    (guint)priv->footer_len,
+			    (guint)FU_STRUCT_DFU_FTR_SIZE);
 		return FALSE;
 	}
 
@@ -379,6 +401,7 @@ fu_dfu_firmware_init(FuDfuFirmware *self)
 	priv->dfu_version = FU_DFU_FIRMARE_VERSION_DFU_1_0;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void

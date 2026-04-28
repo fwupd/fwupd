@@ -311,7 +311,7 @@ fu_pixart_tp_device_register_burst_write(FuPixartTpDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* split the data, max 256 bytes per chunk */
-	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, 256);
+	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, 256, error);
 	if (chunks == NULL)
 		return FALSE;
 
@@ -394,7 +394,8 @@ fu_pixart_tp_device_register_burst_read(FuPixartTpDevice *self,
 		}
 
 		/* advance offset for the next chunk */
-		offset += chunk_sz;
+		if (!fu_size_checked_inc(&offset, chunk_sz, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -629,9 +630,19 @@ fu_pixart_tp_device_flash_wait_busy(FuPixartTpDevice *self, GError **error)
 }
 
 static gboolean
-fu_pixart_tp_device_flash_erase_sector(FuPixartTpDevice *self, guint8 sector, GError **error)
+fu_pixart_tp_device_flash_erase_sector(FuPixartTpDevice *self, guint sector, GError **error)
 {
 	guint32 flash_address = (guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE;
+
+	/* sanity check */
+	if (sector > G_MAXUINT8) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "sector 0x%x exceeds maximum",
+			    sector);
+		return FALSE;
+	}
 
 	/* wait for flash ready and enable write */
 	if (!fu_pixart_tp_device_flash_wait_busy(self, error))
@@ -780,10 +791,9 @@ fu_pixart_tp_device_firmware_clear(FuPixartTpDevice *self,
 	start_address = fu_pixart_tp_section_get_target_flash_start(section);
 	g_debug("clear firmware at start address 0x%08x", start_address);
 
-	if (!fu_pixart_tp_device_flash_erase_sector(
-		self,
-		(guint8)(start_address / FU_PIXART_TP_DEVICE_SECTOR_SIZE),
-		error)) {
+	if (!fu_pixart_tp_device_flash_erase_sector(self,
+						    start_address / FU_PIXART_TP_DEVICE_SECTOR_SIZE,
+						    error)) {
 		g_prefix_error_literal(error, "clear firmware failure: ");
 		return FALSE;
 	}
@@ -1038,7 +1048,7 @@ fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 {
 	FuPixartTpUpdateType update_type = FU_PIXART_TP_UPDATE_TYPE_GENERAL;
 	guint32 target_flash_start = fu_pixart_tp_section_get_target_flash_start(section);
-	guint8 start_sector;
+	guint start_sector;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -1088,11 +1098,9 @@ fu_pixart_tp_device_write_section(FuPixartTpDevice *self,
 		return FALSE;
 
 	/* erase phase */
-	start_sector = (guint8)(target_flash_start / FU_PIXART_TP_DEVICE_SECTOR_SIZE);
-	for (guint8 i = 0; i < fu_chunk_array_length(chunks); i++) {
-		if (!fu_pixart_tp_device_flash_erase_sector(self,
-							    (guint8)(start_sector + i),
-							    error)) {
+	start_sector = target_flash_start / FU_PIXART_TP_DEVICE_SECTOR_SIZE;
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		if (!fu_pixart_tp_device_flash_erase_sector(self, start_sector + i, error)) {
 			g_prefix_error(error, "failed to erase sector 0x%x: ", i);
 			return FALSE;
 		}
@@ -1214,11 +1222,15 @@ fu_pixart_tp_device_verify_crc(FuPixartTpDevice *self,
 	if (section == NULL)
 		return FALSE;
 	if (crc_value != fu_pixart_tp_section_get_crc(section)) {
+		g_autoptr(GError) error_local = NULL;
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "parameter CRC compare failed");
-		(void)fu_pixart_tp_device_firmware_clear(self, firmware, error);
+		if (!fu_pixart_tp_device_firmware_clear(self, firmware, &error_local)) {
+			g_warning("failed to clear firmware after CRC error: %s",
+				  error_local->message);
+		}
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

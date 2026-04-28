@@ -87,7 +87,9 @@ fu_genesys_hubhid_device_command_read(FuGenesysHubhidDevice *self,
 	}
 
 	/* receive report */
-	chunks = fu_chunk_array_mutable_new(data, setup->length, 0, 0x0, buf_report->len);
+	chunks = fu_chunk_array_mutable_new(data, setup->length, 0, 0x0, buf_report->len, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (progress != NULL) {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_set_steps(progress, chunks->len);
@@ -201,8 +203,11 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 
 	/* send report */
 	if (setup->length > 0) {
-		g_autoptr(GPtrArray) chunks =
-		    fu_chunk_array_new(data, setup->length, 0, 0, buf_report->len);
+		g_autoptr(GPtrArray) chunks = NULL;
+
+		chunks = fu_chunk_array_new(data, setup->length, 0, 0, buf_report->len, error);
+		if (chunks == NULL)
+			return FALSE;
 		if (progress != NULL) {
 			fu_progress_set_id(progress, G_STRLOC);
 			fu_progress_set_steps(progress, chunks->len);

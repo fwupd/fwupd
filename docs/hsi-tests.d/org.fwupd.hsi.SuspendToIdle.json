@@ -12,7 +12,8 @@
     "not-valid": "could not determine the default"
   },
   "success-results": {
-    "enabled": "suspend-to-idle being used"
+    "enabled": "suspend-to-idle being used",
+    "not-supported": "not applicable for this platform"
   },
   "hsi-level": 3,
   "resolution": "Change this setting in the UEFI setup screen, if supported.",

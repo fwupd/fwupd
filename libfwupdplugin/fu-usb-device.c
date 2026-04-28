@@ -11,6 +11,7 @@
 #include "config.h"
 
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-context-private.h"
 #include "fu-device-event-private.h"
 #include "fu-device-locker.h"
@@ -1902,7 +1903,10 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 							   FU_FIRMWARE(img),
 							   error))
 					return FALSE;
-				offset += fu_firmware_get_size(FU_FIRMWARE(img));
+				if (!fu_size_checked_inc(&offset,
+							 fu_firmware_get_size(FU_FIRMWARE(img)),
+							 error))
+					return FALSE;
 			}
 
 			g_set_object(&iface_last, iface);
@@ -1944,7 +1948,8 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 				descriptor_kind,
 				str != NULL ? str : "unknown");
 		}
-		offset += fu_usb_base_hdr_get_length(st_base);
+		if (!fu_size_checked_inc(&offset, fu_usb_base_hdr_get_length(st_base), error))
+			return FALSE;
 	}
 
 	/* success */

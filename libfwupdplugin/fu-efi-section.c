@@ -86,7 +86,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
-	blob_uncomp = fu_lzma_decompress_bytes(blob, 128 * 1024 * 1024, error);
+	blob_uncomp = fu_lzma_decompress_bytes(blob, 128 * FU_MB, error);
 	if (blob_uncomp == NULL) {
 		g_prefix_error_literal(error, "failed to decompress: ");
 		return FALSE;
@@ -304,6 +304,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 
 	/* name */
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
+		gsize offset_delta;
 		g_autofree gchar *guid_str = NULL;
 		g_autoptr(FuStructEfiSectionGuidDefined) st_def = NULL;
 		st_def = fu_struct_efi_section_guid_defined_parse_stream(stream, stlen, error);
@@ -320,11 +321,18 @@ fu_efi_section_parse(FuFirmware *firmware,
 				    (guint)fu_struct_efi_section_guid_defined_get_offset(st_def));
 			return FALSE;
 		}
-		offset += fu_struct_efi_section_guid_defined_get_offset(st_def) - stlen;
+		offset_delta = fu_struct_efi_section_guid_defined_get_offset(st_def) - stlen;
+		if (!fu_size_checked_inc(&offset, offset_delta, error)) {
+			g_prefix_error_literal(error, "section offset overflow: ");
+			return FALSE;
+		}
 	}
 
 	/* create blob */
-	offset += stlen;
+	if (!fu_size_checked_inc(&offset, stlen, error)) {
+		g_prefix_error_literal(error, "section offset overflow: ");
+		return FALSE;
+	}
 	partial_stream = fu_partial_input_stream_new(stream, offset, size - offset, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to cut data: ");
@@ -473,8 +481,10 @@ fu_efi_section_init(FuEfiSection *self)
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);

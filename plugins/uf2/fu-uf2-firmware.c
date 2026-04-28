@@ -75,7 +75,10 @@ fu_uf2_firmware_parse_extensions(FuUf2Firmware *self,
 		}
 
 		/* next! */
-		offset += fu_common_align_up(sz, FU_FIRMWARE_ALIGNMENT_4);
+		if (!fu_size_checked_inc(&offset,
+					 fu_common_align_up(sz, FU_FIRMWARE_ALIGNMENT_4),
+					 error))
+			return FALSE;
 	}
 
 	/* success */
@@ -326,6 +329,7 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_uf2_firmware_init(FuUf2Firmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void

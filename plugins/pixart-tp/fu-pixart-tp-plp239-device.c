@@ -1011,9 +1011,19 @@ fu_pixart_tp_plp239_device_reset(FuPixartTpPlp239Device *self,
 
 static gboolean
 fu_pixart_tp_plp239_device_flash_erase_sector(FuPixartTpPlp239Device *self,
-					      guint8 erase_sector,
+					      guint erase_sector,
 					      GError **error)
 {
+	/* sanity check */
+	if (erase_sector > G_MAXUINT8) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "sector 0x%x exceeds maximum",
+			    erase_sector);
+		return FALSE;
+	}
+
 	if (!fu_pixart_tp_plp239_device_unlock_level_zero_protection(self, error))
 		return FALSE;
 	if (!fu_pixart_tp_plp239_device_unlock_level_one_protection(self, error))
@@ -1115,7 +1125,7 @@ fu_pixart_tp_plp239_device_write_section(FuPixartTpPlp239Device *self,
 	const guint8 extend_flash_sector = 9;
 	FuPixartTpUpdateType update_type = FU_PIXART_TP_UPDATE_TYPE_GENERAL;
 	guint32 target_flash_start = fu_pixart_tp_section_get_target_flash_start(section);
-	guint8 start_sector;
+	guint start_sector;
 	guint sector_count;
 	guint first_idx;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -1158,19 +1168,15 @@ fu_pixart_tp_plp239_device_write_section(FuPixartTpPlp239Device *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, sector_count * 2);
 
-	start_sector = (guint8)(target_flash_start / FU_PIXART_TP_DEVICE_SECTOR_SIZE);
+	start_sector = target_flash_start / FU_PIXART_TP_DEVICE_SECTOR_SIZE;
 
 	/* keep sector 0 valid until the end */
 	first_idx = (start_sector == 0) ? 1 : 0;
 
 	/* erase phase: erase remaining sectors first in physical order */
 	for (guint i = first_idx; i < sector_count; i++) {
-		if (!fu_pixart_tp_plp239_device_flash_erase_sector(self,
-								   (guint8)(start_sector + i),
-								   error)) {
-			g_prefix_error(error,
-				       "failed to erase sector 0x%x: ",
-				       (guint8)(start_sector + i));
+		if (!fu_pixart_tp_plp239_device_flash_erase_sector(self, start_sector + i, error)) {
+			g_prefix_error(error, "failed to erase sector 0x%x: ", start_sector + i);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -1474,7 +1480,7 @@ fu_pixart_tp_plp239_device_write_firmware(FuDevice *device,
 		guint32 start_address = fu_pixart_tp_section_get_target_flash_start(fw_section);
 		if (!fu_pixart_tp_plp239_device_flash_erase_sector(
 			self,
-			(guint8)(start_address / FU_PIXART_TP_DEVICE_SECTOR_SIZE),
+			start_address / FU_PIXART_TP_DEVICE_SECTOR_SIZE,
 			error))
 			return FALSE;
 	}

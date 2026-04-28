@@ -147,6 +147,7 @@ static void
 fu_logitech_rdfu_firmware_init(FuLogitechRdfuFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LOGITECH_RDFU_ENTITY);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void

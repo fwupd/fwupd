@@ -10,6 +10,7 @@
 
 #include "fu-cbor-common.h"
 #include "fu-cbor-item-private.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 
 typedef struct {
@@ -21,15 +22,10 @@ typedef struct {
 } FuCborParseHelper;
 
 static FuCborItem *
-fu_cbor_parse_item(FuCborParseHelper *helper,
-		   guint current_depth,
-		   GError **error);
+fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **error);
 
 static FuCborItem *
-fu_cbor_parse_map(FuCborParseHelper *helper,
-		  guint64 len,
-		  guint current_depth,
-		  GError **error)
+fu_cbor_parse_map(FuCborParseHelper *helper, guint64 len, guint current_depth, GError **error)
 {
 	g_autoptr(FuCborItem) item = fu_cbor_item_new_map();
 
@@ -71,10 +67,7 @@ fu_cbor_parse_map(FuCborParseHelper *helper,
 }
 
 static FuCborItem *
-fu_cbor_parse_array(FuCborParseHelper *helper,
-		    guint64 len,
-		    guint current_depth,
-		    GError **error)
+fu_cbor_parse_array(FuCborParseHelper *helper, guint64 len, guint current_depth, GError **error)
 {
 	g_autoptr(FuCborItem) item = fu_cbor_item_new_array();
 
@@ -112,9 +105,7 @@ fu_cbor_parse_array(FuCborParseHelper *helper,
 }
 
 static FuCborItem *
-fu_cbor_parse_item(FuCborParseHelper *helper,
-		   guint current_depth,
-		   GError **error)
+fu_cbor_parse_item(FuCborParseHelper *helper, guint current_depth, GError **error)
 {
 	FuCborTag tag;
 	guint64 len = 0;
@@ -123,7 +114,12 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 
 	if (!fu_input_stream_read_u8(helper->stream, helper->offset, &value8, error))
 		return NULL;
-	helper->offset += 1;
+
+	if (!fu_size_checked_inc(&helper->offset, 1, error)) {
+		g_prefix_error_literal(error, "CBOR tag offset overflow: ");
+		return NULL;
+	}
+
 	tag = (value8 & 0b11100000) >> 5;
 	g_debug("tag: %u [%s] @0x%x", tag, fu_cbor_tag_to_string(tag), (guint)helper->offset);
 
@@ -136,7 +132,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 		if (!fu_input_stream_read_u8(helper->stream, helper->offset, &value8, error))
 			return NULL;
 		len = value8;
-		helper->offset += 1;
+
+		if (!fu_size_checked_inc(&helper->offset, 1, error)) {
+			g_prefix_error_literal(error, "CBOR length8 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_EXT16) {
 		guint16 value16 = 0;
 		if (!fu_input_stream_read_u16(helper->stream,
@@ -146,7 +146,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 					      error))
 			return NULL;
 		len = value16;
-		helper->offset += 2;
+
+		if (!fu_size_checked_inc(&helper->offset, 2, error)) {
+			g_prefix_error_literal(error, "CBOR length16 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_EXT32) {
 		guint32 value32 = 0;
 		if (!fu_input_stream_read_u32(helper->stream,
@@ -156,7 +160,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 					      error))
 			return NULL;
 		len = value32;
-		helper->offset += 4;
+
+		if (!fu_size_checked_inc(&helper->offset, 4, error)) {
+			g_prefix_error_literal(error, "CBOR length32 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_EXT64) {
 		guint64 value64 = 0;
 		if (!fu_input_stream_read_u64(helper->stream,
@@ -173,7 +181,11 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 			return NULL;
 		}
 		len = value64;
-		helper->offset += 8;
+
+		if (!fu_size_checked_inc(&helper->offset, 8, error)) {
+			g_prefix_error_literal(error, "CBOR length64 offset overflow: ");
+			return NULL;
+		}
 	} else if (len_short == FU_CBOR_LEN_INDEFINITE) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -210,7 +222,8 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 		str = fu_input_stream_read_string(helper->stream, helper->offset, len, error);
 		if (str == NULL)
 			return NULL;
-		helper->offset += len;
+		if (!fu_size_checked_inc(&helper->offset, len, error))
+			return NULL;
 		return fu_cbor_item_new_string_steal(g_steal_pointer(&str));
 	}
 	if (tag == FU_CBOR_TAG_BYTES) {
@@ -227,7 +240,8 @@ fu_cbor_parse_item(FuCborParseHelper *helper,
 		blob = fu_input_stream_read_bytes(helper->stream, helper->offset, len, NULL, error);
 		if (blob == NULL)
 			return NULL;
-		helper->offset += len;
+		if (!fu_size_checked_inc(&helper->offset, len, error))
+			return NULL;
 		return fu_cbor_item_new_bytes(blob);
 	}
 	if (tag == FU_CBOR_TAG_SPECIAL) {

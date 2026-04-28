@@ -288,11 +288,17 @@ fu_edid_parse(FuFirmware *firmware,
 	}
 
 	/* parse 4x18 byte sections */
-	offset += FU_STRUCT_EDID_OFFSET_DATA_BLOCKS;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_EDID_OFFSET_DATA_BLOCKS, error)) {
+		g_prefix_error_literal(error, "data blocks offset overflow: ");
+		return FALSE;
+	}
 	for (guint i = 0; i < 4; i++) {
 		if (!fu_edid_parse_descriptor(self, stream, offset, error))
 			return FALSE;
-		offset += FU_STRUCT_EDID_DESCRIPTOR_SIZE;
+		if (!fu_size_checked_inc(&offset, FU_STRUCT_EDID_DESCRIPTOR_SIZE, error)) {
+			g_prefix_error_literal(error, "descriptor offset overflow: ");
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -471,6 +477,7 @@ fu_edid_class_init(FuEdidClass *klass)
 static void
 fu_edid_init(FuEdid *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

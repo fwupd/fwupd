@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
@@ -152,6 +153,7 @@ fu_sbatlevel_section_init(FuSbatlevelSection *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 10 * FU_KB);
 }
 
 static void

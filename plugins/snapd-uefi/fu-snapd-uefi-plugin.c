@@ -26,6 +26,7 @@ struct _FuSnapPlugin {
 	FuSnapdIntegrationStatusEnum integration_status;
 	CURL *curl_template;
 	struct curl_slist *req_hdrs;
+	gchar *db_override;
 };
 
 G_DEFINE_TYPE(FuSnapPlugin, fu_snapd_uefi_plugin, FU_TYPE_PLUGIN)
@@ -34,7 +35,7 @@ static const gchar *
 fu_snapd_uefi_plugin_device_to_key_database(FuSnapPlugin *self, FuDevice *device)
 {
 	const gchar *plugin = fu_device_get_plugin(device);
-	const char *db_override = NULL;
+
 	if (g_strcmp0(plugin, "uefi_dbx") == 0)
 		return "DBX";
 	if (g_strcmp0(plugin, "uefi_db") == 0)
@@ -43,11 +44,9 @@ fu_snapd_uefi_plugin_device_to_key_database(FuSnapPlugin *self, FuDevice *device
 		return "KEK";
 	if (g_strcmp0(plugin, "uefi_pk") == 0)
 		return "PK";
-
-	db_override = fu_plugin_get_config_value(FU_PLUGIN(self), "KeyDBOverride");
-	if (db_override != NULL) {
-		g_debug("test key DB override: %s", db_override);
-		return db_override;
+	if (self->db_override != NULL) {
+		g_debug("test key DB override: %s", self->db_override);
+		return self->db_override;
 	}
 
 	return NULL;
@@ -219,11 +218,14 @@ fu_snapd_uefi_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	const gchar *snapd_snap_socket_override =
+	g_autofree gchar *snapd_snap_socket_override =
 	    fu_plugin_get_config_value(plugin, "SnapdSocketPathOverride");
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) msg = NULL;
+
+	/* used in the self test */
+	self->db_override = fu_plugin_get_config_value(plugin, "KeyDBOverride");
 
 	/* only enable snapd integration if either running inside a snap or we detect that this is a
 	snapd FDE setup. either of these cases makes snapd integration mandatory */
@@ -417,6 +419,7 @@ fu_snapd_uefi_plugin_finalize(GObject *object)
 {
 	FuSnapPlugin *self = FU_SNAPD_UEFI_PLUGIN(object);
 
+	g_free(self->db_override);
 	if (self->req_hdrs != NULL)
 		curl_slist_free_all(self->req_hdrs);
 	if (self->curl_template != NULL)

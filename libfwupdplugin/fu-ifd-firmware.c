@@ -50,7 +50,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuIfdFirmware, fu_ifd_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_firmware_get_instance_private(o))
 
-#define FU_IFD_SIZE 0x1000
+#define FU_IFD_SIZE (4 * FU_KB)
 
 #define FU_IFD_FDBAR_FLASH_UPPER_MAP1 0x0EFC
 #define FU_IFD_FDBAR_OEM_SECTION      0x0F00
@@ -118,7 +118,8 @@ fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
 						  stream,
 						  error))
 		return NULL;
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(stream2), blob);
+	if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(stream2), blob, error))
+		return NULL;
 	return g_steal_pointer(&stream2);
 }
 
@@ -266,13 +267,14 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		const gchar *freg_str = fu_ifd_region_to_string(i);
 		guint32 freg_base = FU_IFD_FREG_BASE(priv->flash_descriptor_regs[i]);
 		guint32 freg_limt = FU_IFD_FREG_LIMIT(priv->flash_descriptor_regs[i]);
-		guint32 freg_size = (freg_limt - freg_base) + 1;
+		guint32 freg_size;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
-		/* invalid */
+		/* invalid - check before subtraction */
 		if (freg_base > freg_limt)
 			continue;
+		freg_size = (freg_limt - freg_base) + 1;
 
 		/* create image */
 		g_debug("freg %s 0x%04x -> 0x%04x", freg_str, freg_base, freg_limt);
@@ -375,6 +377,7 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 				      NULL,
 				      (GDestroyNotify)g_bytes_unref);
 	for (guint i = 0; i < priv->num_regions; i++) {
+		gsize image_end;
 		g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(firmware, i, NULL);
 		g_autoptr(GBytes) blob = NULL;
 
@@ -395,8 +398,15 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 		}
 		g_hash_table_insert(blobs, GUINT_TO_POINTER(i), g_bytes_ref(blob));
 
-		/* check total size */
-		bufsz_max = MAX(fu_firmware_get_addr(img) + g_bytes_get_size(blob), bufsz_max);
+		/* check total size with overflow checking */
+		image_end = fu_firmware_get_addr(img);
+		if (!fu_size_checked_inc(&image_end, g_bytes_get_size(blob), error)) {
+			g_prefix_error(error,
+				       "size overflow for image %s: ",
+				       fu_firmware_get_id(img));
+			return NULL;
+		}
+		bufsz_max = MAX(image_end, bufsz_max);
 	}
 	fu_byte_array_set_size(buf, bufsz_max, 0x00);
 
@@ -523,6 +533,7 @@ fu_ifd_firmware_init(FuIfdFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_BIOS);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void

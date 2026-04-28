@@ -348,8 +348,17 @@ fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **e
 	const gchar *tmp;
 
 	tmp = fwupd_json_object_get_string(json_obj, "Guid", NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
+		if (!fwupd_guid_is_valid(tmp)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid GUID format in JSON: %s",
+				    tmp);
+			return FALSE;
+		}
 		fu_uefi_device_set_guid(self, tmp);
+	}
 	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
 	if (tmp != NULL)
 		fu_uefi_device_set_name(self, tmp);

@@ -1348,7 +1348,8 @@ fu_engine_updatable_hidden_func(void)
 	g_clear_error(&error);
 
 	/* with SHOW_PROBLEMS, get_upgrades should succeed and return the available upgrade */
-	fu_engine_request_set_feature_flags(request_show_problems, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
+	fu_engine_request_set_feature_flags(request_show_problems,
+					    FWUPD_FEATURE_FLAG_SHOW_PROBLEMS);
 	releases_up2 =
 	    fu_engine_get_upgrades(engine, request_show_problems, fu_device_get_id(device), &error);
 	g_assert_no_error(error);

@@ -193,6 +193,14 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 		guint32 length;
 		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
 
+		if (offset > G_MAXUINT32 - 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "offset overflow at container %u",
+				    i);
+			return FALSE;
+		}
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		g_debug("parsing RmiContainerDescriptor at 0x%x", addr);
@@ -382,7 +390,17 @@ fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 	if (img_sz > 0) {
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
-			guint32 sig_offset = img_sz - self->sig_size;
+			guint32 sig_offset;
+			if (self->sig_size > img_sz) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "signature size 0x%x exceeds image size 0x%x",
+					    self->sig_size,
+					    img_sz);
+				return FALSE;
+			}
+			sig_offset = img_sz - self->sig_size;
 			if (!fu_synaptics_rmi_firmware_add_image(self,
 								 "sig",
 								 stream,
@@ -710,6 +728,7 @@ fu_synaptics_rmi_firmware_init(FuSynapticsRmiFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), RMI_IMG_MAX_CONTAINERS);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

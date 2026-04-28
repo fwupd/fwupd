@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-goodixtp-brlb-config.h"
 #include "fu-goodixtp-brlb-device.h"
 #include "fu-goodixtp-brlb-firmware.h"
 #include "fu-goodixtp-common.h"
@@ -37,6 +38,7 @@ fu_goodixtp_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_GTX8_FIRMWARE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_BRLB_FIRMWARE); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_GOODIXTP_BRLB_CONFIG);   /* coverage */
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_goodixtp_plugin_parent_class)->constructed(obj);
@@ -45,10 +47,11 @@ fu_goodixtp_plugin_constructed(GObject *obj)
 static FuGoodixtpIcType
 fu_goodixtp_plugin_ic_type_from_pid(guint16 pid)
 {
-	if ((pid >= 0x01E0 && pid <= 0x01E7) || (pid >= 0x0D00 && pid <= 0x0D7F))
+	if ((pid >= 0x01E0 && pid <= 0x01E7) || (pid >= 0x0D00 && pid <= 0x0D7F) || pid == 0x0DA3)
 		return FU_GOODIXTP_IC_TYPE_NORMANDYL;
 	if ((pid >= 0x0EB0 && pid <= 0x0EBF) || (pid >= 0x0EC0 && pid <= 0x0ECF) ||
-	    (pid >= 0x0EA5 && pid <= 0x0EAA) || (pid >= 0x0C00 && pid <= 0x0CFF))
+	    (pid >= 0x0EA5 && pid <= 0x0EAA) || (pid >= 0x0C00 && pid <= 0x0CFF) ||
+	    (pid >= 0x012B && pid <= 0x0132))
 		return FU_GOODIXTP_IC_TYPE_BERLINB;
 
 	return FU_GOODIXTP_IC_TYPE_NONE;

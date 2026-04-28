@@ -24,7 +24,15 @@ void
 fu_goodixtp_hid_device_set_patch_pid(FuGoodixtpHidDevice *self, const gchar *patch_pid)
 {
 	FuGoodixtpHidDevicePrivate *priv = GET_PRIVATE(self);
-	priv->patch_pid = g_strdup_printf("GT%s", patch_pid);
+	g_clear_pointer(&priv->patch_pid, g_free);
+	priv->patch_pid = patch_pid != NULL ? g_strdup_printf("GT%s", patch_pid) : NULL;
+}
+
+const gchar *
+fu_goodixtp_hid_device_get_patch_pid(FuGoodixtpHidDevice *self)
+{
+	FuGoodixtpHidDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->patch_pid;
 }
 
 void
@@ -129,7 +137,7 @@ fu_goodixtp_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 static gchar *
 fu_goodixtp_hid_device_convert_version(FuDevice *device, guint64 version_raw)
 {
-	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+	return fu_version_from_uint64(version_raw, fu_device_get_version_format(device));
 }
 
 static void
@@ -143,7 +151,7 @@ fu_goodixtp_hid_device_init(FuGoodixtpHidDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.goodix.goodixtp");
 	fu_device_set_name(FU_DEVICE(self), "Touch Controller Sensor");
 	fu_device_set_vendor(FU_DEVICE(self), "Goodix");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);

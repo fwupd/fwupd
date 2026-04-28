@@ -269,8 +269,14 @@ fu_steelseries_fizz_read_fs(FuSteelseriesFizz *self,
 	if (tunnel)
 		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
-	chunks =
-	    fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, FU_STEELSERIES_BUFFER_TRANSFER_SIZE);
+	chunks = fu_chunk_array_mutable_new(buf,
+					    bufsz,
+					    0x0,
+					    0x0,
+					    FU_STEELSERIES_BUFFER_TRANSFER_SIZE,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, chunks->len);

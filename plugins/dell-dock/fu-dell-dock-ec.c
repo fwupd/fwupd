@@ -398,6 +398,16 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 				    "No bridge devices detected, dock may be booting up");
 		return FALSE;
 	}
+	if (sizeof(FuDellDockDockInfoHeader) +
+		(gsize)header->total_devices * sizeof(FuDellDockEcQueryEntry) >
+	    EXPECTED_DOCK_INFO_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "too many devices %u for buffer",
+			    header->total_devices);
+		return FALSE;
+	}
 	g_info("%u devices [%u->%u]",
 	       header->total_devices,
 	       header->first_index,
@@ -798,7 +808,10 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 		return FALSE;
 	data = g_bytes_get_data(fw, &fw_size);
 	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
-	dynamic_version = g_strndup((gchar *)data + self->blob_version_offset, 11);
+	dynamic_version = fu_memstrsafe(data, fw_size, self->blob_version_offset, 11, error);
+	if (dynamic_version == NULL)
+		return FALSE;
+
 	g_info("writing EC firmware version %s", dynamic_version);
 
 	/* meet the minimum EC version */

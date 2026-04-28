@@ -238,11 +238,18 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 				    "CX20562 is not supported");
 		return FALSE;
 	}
+	if (records->len < 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not enough records");
+		return FALSE;
+	}
 	for (guint i = records->len - 3; i < records->len; i++) {
 		FuSrecFirmwareRecord *rcd = g_ptr_array_index(records, i);
 		if (rcd->kind == FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16)
 			continue;
-		if (rcd->buf->len < 2)
+		if (rcd->buf->len < 3)
 			continue;
 		if (memcmp(rcd->buf->data, "CX", 2) == 0) {
 			dev_kind_candidate = rcd->buf->data[2];
@@ -339,6 +346,14 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 						    G_LITTLE_ENDIAN,
 						    error))
 				return FALSE;
+			if (addr_str >= sizeof(shadow)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "serial number string address 0x%x out of range",
+					    addr_str);
+				return FALSE;
+			}
 			fu_synaptics_cxaudio_firmware_add_badblock(badblocks,
 								   "serial number data",
 								   addr_str,

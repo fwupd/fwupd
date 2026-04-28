@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-dfu-firmware-private.h"
 #include "fu-dfu-firmware-struct.h"
 #include "fu-dfuse-firmware.h"
@@ -24,6 +25,8 @@
 
 G_DEFINE_TYPE(FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
 
+#define FU_DFUSE_FIRMWARE_CHUNKS_MAX 10000
+
 static FuChunk *
 fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 				    GInputStream *stream,
@@ -38,7 +41,11 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 	st_ele = fu_struct_dfuse_element_parse_stream(stream, *offset, error);
 	if (st_ele == NULL)
 		return NULL;
-	*offset += st_ele->buf->len;
+	if (!fu_size_checked_inc(offset, st_ele->buf->len, error)) {
+		g_prefix_error_literal(error, "DfuSe element offset overflow: ");
+		return NULL;
+	}
+
 	blob = fu_input_stream_read_bytes(stream,
 					  *offset,
 					  fu_struct_dfuse_element_get_size(st_ele),
@@ -48,7 +55,8 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 		return NULL;
 	chk = fu_chunk_bytes_new(blob);
 	fu_chunk_set_address(chk, fu_struct_dfuse_element_get_address(st_ele));
-	*offset += fu_chunk_get_data_sz(chk);
+	if (!fu_size_checked_inc(offset, fu_chunk_get_data_sz(chk), error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&chk);
@@ -85,9 +93,21 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 				    "DfuSe image has no chunks");
 		return NULL;
 	}
+	if (chunks > FU_DFUSE_FIRMWARE_CHUNKS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive chunk count: %u",
+			    chunks);
+		return NULL;
+	}
 
 	/* parse chunks */
-	*offset += st_img->buf->len;
+	if (!fu_size_checked_inc(offset, st_img->buf->len, error)) {
+		g_prefix_error_literal(error, "DfuSe image offset overflow: ");
+		return NULL;
+	}
+
 	for (guint j = 0; j < chunks; j++) {
 		g_autoptr(FuChunk) chk = NULL;
 		chk = fu_dfuse_firmware_image_chunk_parse(self, stream, offset, error);
@@ -130,6 +150,15 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 	/* check image size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (fu_dfu_firmware_get_footer_len(dfu_firmware) > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "footer length 0x%x exceeds stream size 0x%x",
+			    (guint)fu_dfu_firmware_get_footer_len(dfu_firmware),
+			    (guint)streamsz);
+		return FALSE;
+	}
 	if (fu_struct_dfuse_hdr_get_image_size(st_hdr) !=
 	    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
 		g_set_error(error,
@@ -145,7 +174,11 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 
 	/* parse the image targets */
 	targets = fu_struct_dfuse_hdr_get_targets(st_hdr);
-	offset += st_hdr->buf->len;
+	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
+		g_prefix_error_literal(error, "DfuSe header offset overflow: ");
+		return FALSE;
+	}
+
 	for (guint i = 0; i < targets; i++) {
 		g_autoptr(FuFirmware) image = NULL;
 		image = fu_dfuse_firmware_image_parse_stream(FU_DFUSE_FIRMWARE(firmware),
@@ -187,7 +220,8 @@ fu_dfuse_firmware_write_image(FuDfuseFirmware *self, FuFirmware *image, GError *
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		GBytes *bytes = fu_dfuse_firmware_chunk_write(self, chk);
 		g_ptr_array_add(blobs, bytes);
-		totalsz += g_bytes_get_size(bytes);
+		if (!fu_size_checked_inc(&totalsz, g_bytes_get_size(bytes), error))
+			return NULL;
 	}
 
 	/* add prefix */
@@ -229,7 +263,8 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 		blob = fu_dfuse_firmware_write_image(self, img, error);
 		if (blob == NULL)
 			return NULL;
-		totalsz += g_bytes_get_size(blob);
+		if (!fu_size_checked_inc(&totalsz, g_bytes_get_size(blob), error))
+			return NULL;
 		g_ptr_array_add(blobs, g_steal_pointer(&blob));
 	}
 
@@ -262,6 +297,7 @@ fu_dfuse_firmware_init(FuDfuseFirmware *self)
 	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMARE_VERSION_DFUSE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 255);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void

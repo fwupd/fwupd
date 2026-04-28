@@ -127,6 +127,7 @@ static void
 fu_ifd_image_init(FuIfdImage *self)
 {
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_4K);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void

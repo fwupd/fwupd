@@ -17,8 +17,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-05 08:14+0000\n"
+"POT-Creation-Date: 2026-04-23 08:04+0100\n"
+"PO-Revision-Date: 2026-04-15 14:09+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 5.17.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -537,7 +537,7 @@ msgstr "Intel BootGuard OTP 保险丝"
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "CET Platform"
-msgstr "CET platform"
+msgstr "CET Platform"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * Utilized by OS means the distribution enabled it
@@ -579,7 +579,7 @@ msgstr "挂起到空闲"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
-msgstr "UEFI platform密钥"
+msgstr "UEFI Platform密钥"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -655,7 +655,7 @@ msgstr "fwupd 插件"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
-msgstr "platform调试"
+msgstr "Platform调试"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Supported CPU"
@@ -667,7 +667,7 @@ msgstr "处理器回滚保护"
 
 #. TRANSLATORS: Title: APU is root of trust
 msgid "Platform secure boot"
-msgstr "platform安全启动"
+msgstr "Platform安全启动"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -712,6 +712,10 @@ msgstr "UEFI 数据库"
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
 msgstr "HP SureStart"
+
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr "AMD 微代码签名"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -884,6 +888,10 @@ msgstr "系统管理模式"
 msgid "UEFI Memory Protection"
 msgstr "UEFI 内存保护"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr "AMD 微代码签名"
+
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
 msgstr "固件写入保护技术保护设备固件内存免于篡改。"
@@ -1030,6 +1038,10 @@ msgstr "UEFI 数据库包含有效证书的列表，可用于授权允许运行�
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart 是保护 BIOS 免遭篡改的固件安全特性。"
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr "AMD 微代码签名验证确保 CPU 微代码可信未遭篡改。"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1816,8 +1828,8 @@ msgid "CRC FILENAME"
 msgstr "CRC FILENAME"
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "寻找匹配文件 CRC 的算法"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr "需按照匹配文件 CRC 的算法"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3007,6 +3019,10 @@ msgstr "当前版本"
 msgid "Minimum Version"
 msgstr "最小版本"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr "最高版本"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "引导程序版本"
@@ -3014,6 +3030,10 @@ msgstr "引导程序版本"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "供应商"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3533,6 +3553,10 @@ msgstr "UEFI 证书存储现已是最新"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart 已启用"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr "修复了 AMD 微代码签名漏洞"
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3597,7 +3621,7 @@ msgstr "你清楚更改固件分支的后果吗？"
 
 #. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
 msgid "Some of the platform secrets may be invalidated when updating this firmware."
-msgstr "更新此固件时一些 platform secret 可能失效了。"
+msgstr "更新此固件时一些 Platform secret 可能失效了。"
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
@@ -3624,6 +3648,9 @@ msgstr "启用新的远程库？"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "同意并启用此远程源吗？"
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "寻找匹配文件 CRC 的算法"
 
 #~ msgid "Blocked firmware files:"
 #~ msgstr "受阻的固件文件："

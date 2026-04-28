@@ -33,6 +33,8 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 				  GError **error);
 void
 fu_goodixtp_hid_device_set_patch_pid(FuGoodixtpHidDevice *self, const gchar *patch_pid);
+const gchar *
+fu_goodixtp_hid_device_get_patch_pid(FuGoodixtpHidDevice *self);
 void
 fu_goodixtp_hid_device_set_patch_vid(FuGoodixtpHidDevice *self, const gchar *patch_vid);
 void

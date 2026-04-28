@@ -121,6 +121,14 @@ fu_engine_requirements_require_vercmp(XbNode *req,
 	const gchar *version_req = xb_node_get_attr(req, "version");
 	g_auto(GStrv) split = NULL;
 
+	if (version_req == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no version attribute supplied");
+		return FALSE;
+	}
+
 	/* parse globbed version, e.g. `1.9.*=1.9.7|1.8.*=1.8.23|2.0.15`, or just `2.0.5` */
 	split = g_strsplit(version_req, "|", 0);
 	for (guint i = 0; split[i] != NULL; i++) {

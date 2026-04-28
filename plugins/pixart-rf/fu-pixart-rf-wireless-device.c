@@ -147,8 +147,8 @@ fu_pixart_rf_wireless_device_check_crc(FuPixartRfWirelessDevice *self,
 	/* ota check crc command */
 	fu_byte_array_append_uint8(ota_cmd, 0x3); /* ota command length */
 	fu_byte_array_append_uint8(ota_cmd,
-				   FU_PIXART_RF_DEVICE_CMD_FW_OTA_CHECK_CRC);	 /* ota command */
-	fu_byte_array_append_uint16(ota_cmd, checksum, G_LITTLE_ENDIAN);	 /* checksum */
+				   FU_PIXART_RF_DEVICE_CMD_FW_OTA_CHECK_CRC); /* ota command */
+	fu_byte_array_append_uint16(ota_cmd, checksum, G_LITTLE_ENDIAN);      /* checksum */
 
 	/* increase the serial number */
 	self->sn++;
@@ -405,10 +405,10 @@ fu_pixart_rf_wireless_device_fw_ota_init_new(FuPixartRfWirelessDevice *self,
 	fu_byte_array_append_uint8(ota_cmd, 0X06); /* ota init new command length */
 	fu_byte_array_append_uint8(
 	    ota_cmd,
-	    FU_PIXART_RF_DEVICE_CMD_FW_OTA_INIT_NEW);		       /* ota init new op code */
-	fu_byte_array_append_uint32(ota_cmd, bufsz, G_LITTLE_ENDIAN);  /* fw size */
-	fu_byte_array_append_uint8(ota_cmd, 0x0);		       /* ota setting */
-	g_byte_array_append(ota_cmd, fw_version, sizeof(fw_version));  /* ota version */
+	    FU_PIXART_RF_DEVICE_CMD_FW_OTA_INIT_NEW);		      /* ota init new op code */
+	fu_byte_array_append_uint32(ota_cmd, bufsz, G_LITTLE_ENDIAN); /* fw size */
+	fu_byte_array_append_uint8(ota_cmd, 0x0);		      /* ota setting */
+	g_byte_array_append(ota_cmd, fw_version, sizeof(fw_version)); /* ota version */
 
 	/* increase the serial number */
 	self->sn++;

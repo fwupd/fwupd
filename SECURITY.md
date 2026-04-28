@@ -5,8 +5,11 @@ If you have any concerns please [let us know](https://github.com/fwupd/fwupd/sec
 
 ## Supported Versions
 
-The `main`, and `1.9.x`, branches are fully supported by the upstream authors.
-Additionally, the `1.8.x` branch is supported just for security fixes.
+The `main` and `2_0_X` branches are fully supported by the upstream authors and releases are
+tagged approximately monthly.
+
+Additionally, the `1_9_X` branch is supported just for security fixes, although no further releases
+will be tagged.
 
 | Version | Supported          | EOL        |
 | ------- | ------------------ | ---------- |

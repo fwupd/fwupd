@@ -165,7 +165,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		payload_tmp = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (payload_tmp == NULL)
 			return FALSE;
-		payload = fu_lzma_decompress_bytes(payload_tmp, 16 * 1024 * 1024, error);
+		payload = fu_lzma_decompress_bytes(payload_tmp, 16 * FU_MB, error);
 		if (payload == NULL)
 			return FALSE;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
@@ -350,6 +350,7 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_COSWID_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }

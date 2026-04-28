@@ -13,8 +13,7 @@
 #include "fu-udev-device-private.h"
 
 static FuHidrawDevice *
-fu_hidraw_device_test_new(FuBackend *backend,
-			  const gchar *hid_phys)
+fu_hidraw_device_test_new(FuBackend *backend, const gchar *hid_phys)
 {
 	FuHidrawDevice *device;
 	FuContext *ctx = fu_backend_get_context(backend);
@@ -26,14 +25,17 @@ fu_hidraw_device_test_new(FuBackend *backend,
 	fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_EMULATED);
 	fu_device_set_fwupd_version(FU_DEVICE(device), PACKAGE_VERSION);
 	fu_device_set_backend(FU_DEVICE(device), backend);
-	fu_device_set_backend_id(FU_DEVICE(device), "/sys/devices/pci/foo1/0003:093A:0274.0001/hidraw/hidraw0");
+	fu_device_set_backend_id(FU_DEVICE(device),
+				 "/sys/devices/pci/foo1/0003:093A:0274.0001/hidraw/hidraw0");
 	fu_udev_device_set_subsystem(FU_UDEV_DEVICE(device), "hidraw");
 	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), "/dev/hidraw0");
 
 	/* GetBackendParent:Subsystem=hid */
 	ev_parent = fu_device_event_new("GetBackendParent:Subsystem=hid");
 	fu_device_event_set_str(ev_parent, "GType", "FuUdevDevice");
-	fu_device_event_set_str(ev_parent, "BackendId", "/sys/devices/pci/foo1/0003:093A:0274.0001");
+	fu_device_event_set_str(ev_parent,
+				"BackendId",
+				"/sys/devices/pci/foo1/0003:093A:0274.0001");
 	fu_device_add_event(FU_DEVICE(device), ev_parent);
 
 	/* ReadProp:Key=HID_ID */
@@ -81,9 +83,7 @@ fu_hidraw_device_probe_hid_phys_func(void)
 	g_assert_true(ret);
 
 	/* physical ID should be the HID_PHYS value */
-	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(device)),
-			==,
-			"i2c-HXTP0001:00");
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(device)), ==, "i2c-HXTP0001:00");
 }
 
 /*

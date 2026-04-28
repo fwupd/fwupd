@@ -14,7 +14,7 @@ struct _FuUefiDbDevice {
 
 G_DEFINE_TYPE(FuUefiDbDevice, fu_uefi_db_device, FU_TYPE_UEFI_DEVICE)
 
-#define FU_UEFI_DB_DEVICE_DEFAULT_REQUIRED_FREE (16 * 1024) /* bytes */
+#define FU_UEFI_DB_DEVICE_DEFAULT_REQUIRED_FREE (16 * FU_KB) /* bytes */
 
 static gboolean
 fu_uefi_db_device_probe(FuDevice *device, GError **error)

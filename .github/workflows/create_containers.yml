@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [arch, centos, debian, fedora, ubuntu]
+        distro: [arch, centos, debian, debian-i386, debian-tartan, fedora, ubuntu]
         runner: [ubuntu-latest]
         cross: [null]
         include:
@@ -49,8 +49,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push to GitHub Packages
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
+          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}${{ case(contains(matrix.distro, '-'), '', runner.arch == 'ARM64', '-arm64', '-amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"

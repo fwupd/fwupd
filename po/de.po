@@ -10,7 +10,7 @@
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2025
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
-# Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>, 2025.
+# Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>, 2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Poolitzer <weblate@poolitzer.eu>, 2026.
 # DerDilla <derdilla06@gmail.com>, 2026.
@@ -18,32 +18,32 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 10:36+0000\n"
-"PO-Revision-Date: 2026-03-22 23:09+0000\n"
-"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
+"POT-Creation-Date: 2026-04-23 08:04+0100\n"
+"PO-Revision-Date: 2026-04-20 23:09+0000\n"
+"Last-Translator: Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 5.17.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-Hersteller-Firmwaredienst (stabile Firmware)"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "Der LVFS ist ein kostenloser Dienst, der als unabhängige juristische Person arbeitet und keine Verbindung zu $OS_RELEASE:NAME$ hat. Ihr Distributor hat möglicherweise keine der Firmware-Aktualisierungen auf Kompatibilität mit Ihrem System oder den angeschlossenen Geräten verifiziert. Die gesamte Firmware wird nur vom Originalhersteller zur Verfügung gestellt."
+msgstr "Der LVFS ist ein kostenloser Dienst, der als unabhängige juristische Person arbeitet und keine Verbindung zu $OS_RELEASE:NAME$ hat. Ihr Distributor hat möglicherweise keine der Firmware-Aktualisierungen auf Kompatibilität mit Ihrem System oder den angeschlossenen Geräten verifiziert. Die gesamte Firmware wird direkt vom Originalhersteller zur Verfügung gestellt."
 
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
-msgstr "Die Aktivierung dieser Funktionalität erfolgt auf eigene Gefahr, d.h. Sie müssen sich bei Problemen, die durch diese Aktualisierungen verursacht werden, an Ihren Erstausrüster wenden. Nur Probleme mit dem Aktualisierungsprozess selbst sollten unter $OS_RELEASE:BUG_REPORT_URL$ eingereicht werden."
+msgstr "Die Aktivierung dieser Funktionalität erfolgt auf eigene Gefahr. Bei Problemen die durch diese Aktualisierungen verursacht werden, müssen Sie sich an Ihren Gerätehersteller wenden. Nur Probleme mit dem Aktualisierungsprozess selbst sollten unter $OS_RELEASE:BUG_REPORT_URL$ eingereicht werden."
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux-Hersteller-Firmwaredienst (Test-Firmware)"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr "Diese Gegenstelle enthält Firmware, die nicht unter Embargo steht, sondern vom Hardwareanbieter noch getestet wird. Sie sollten sicherstellen, dass Sie eine Möglichkeit haben, die Firmware manuell zurückzustufen, falls die Firmware-Aktualisierung fehlschlägt."
+msgstr "Diese Gegenstelle enthält Firmware, die nicht unter Embargo steht, aber vom Hardwareanbieter noch getestet wird. Sie sollten sicherstellen, dass Sie eine Möglichkeit haben, die Firmware manuell zurückzustufen, falls die Firmware-Aktualisierung fehlschlägt."
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
@@ -62,11 +62,11 @@ msgid "Enabled"
 msgstr "Aktiviert"
 
 msgid "Stop the fwupd service"
-msgstr "Dienst fwupd stoppen"
+msgstr "Dienst fwupd beenden"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr "Zum Stoppen des Firmware-Aktualisierungsdienstes ist eine Authentifizierung erforderlich"
+msgstr "Zum Beenden des Firmware-Aktualisierungsdienstes ist eine Authentifizierung erforderlich"
 
 msgid "Install signed system firmware"
 msgstr "Signierte System-Firmware installieren"
@@ -505,7 +505,7 @@ msgstr "SPI sperren"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
-msgstr "SPI BIOS-Region"
+msgstr "SPI-BIOS-Region"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -718,6 +718,10 @@ msgstr "UEFI-DB"
 msgid "HP SureStart"
 msgstr "HP SureStart"
 
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD microcode signature"
+msgstr "AMD Mikrocode-Signatur"
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
 msgstr "Firmware-Schreibschutz"
@@ -759,7 +763,7 @@ msgstr "Intel BootGuard-Sicherung"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
 msgid "Control-flow Enforcement Technology"
-msgstr "Kontrollfluss-Durchsetzungstechnologie"
+msgstr "Kontrollfluss-Durchsetzungstechnologie (CET)"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Supervisor Mode Access Prevention"
@@ -888,6 +892,10 @@ msgstr "Systemverwaltungsmodus"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "UEFI-Speicherschutz"
+
+#. TRANSLATORS: Title: can a user load malicious CPU microcode patches
+msgid "AMD Microcode Signature"
+msgstr "AMD Mikrocode-Signatur"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -1035,6 +1043,10 @@ msgstr "Die UEFI-DB enthält die Liste der gültigen Zertifikate, die zur Autori
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
 msgstr "HP SureStart ist ein Firmware-Sicherheitsfeature, welche das BIOS vor Manipulation schützt."
+
+#. TRANSLATORS: longer description
+msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
+msgstr "Die Signatur des AMD Mikrocodes stellt sicher, dass der CPU-Mikrocode nicht manipuliert wurde."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1821,8 +1833,8 @@ msgid "CRC FILENAME"
 msgstr "CRC DATEINAME"
 
 #. TRANSLATORS: command description
-msgid "Finds a algorithm that matches the file CRC"
-msgstr "Findet einen Algorithmus, der zur CRC der Datei passt"
+msgid "Finds an algorithm that matches the file CRC"
+msgstr "Zur Datei passenden CRC-Algorithmus suchen"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3022,6 +3034,10 @@ msgstr "Aktuelle Version"
 msgid "Minimum Version"
 msgstr "Minimale Version"
 
+#. TRANSLATORS: largest version number installable on device
+msgid "Maximum Version"
+msgstr "Maximale Version"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Bootloader-Version"
@@ -3029,6 +3045,10 @@ msgstr "Bootloader-Version"
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
 msgstr "Anbieter"
+
+#. TRANSLATORS: webpage for the specific device
+msgid "URL"
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3551,6 +3571,10 @@ msgstr "Der UEFI-Zertifikatspeicher ist jetzt auf dem neuesten Stand"
 msgid "HP SureStart is enabled"
 msgstr "HP SureStart ist aktiviert"
 
+#. TRANSLATORS: HSI event title
+msgid "AMD microcode signature vulnerability fixed"
+msgstr "Schwachstelle in AMD Mikrocode-Signatur korrigiert"
+
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
@@ -3642,6 +3666,9 @@ msgstr "Neue Gegenstelle aktivieren?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Zustimmen und die Gegenstelle aktivieren?"
+
+#~ msgid "Finds a algorithm that matches the file CRC"
+#~ msgstr "Findet einen Algorithmus, der zur CRC der Datei passt"
 
 #~ msgid "[SETTING1] [SETTING2]..."
 #~ msgstr "[EINSTELLUNG1] [EINSTELLUNG2]..."

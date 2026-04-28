@@ -29,35 +29,40 @@ struct FuStructRaydiumTpDescRecordInfo {
 
 #[derive(ToString)]
 #[repr(u8)]
+enum FuRaydiumTpBlCmd {
+    EraseFlash = 0x02,
+    WriteFlash = 0x03,
+    SelectFlash = 0x06,
+    WriteRegister = 0x08,
+    ReadAddressMemory = 0x09,
+    WatchdogFunctionSet = 0x0A,
+    WriteRamFlash = 0x0B,
+    WriteHidI2cFlash = 0x0C,
+    ReadFlashAddr = 0x0D,
+    TriggerWriteFlash = 0xA3,
+    SoftwareReset = 0xA4,
+    Idle = 0xFF,
+}
+
+#[repr(u8)]
 enum FuRaydiumTpCmd {
-    BlCmdEraseFlash = 0x02,
-    BlCmdWriteFlash = 0x03,
-    BlCmdSelectFlash = 0x06,
-    BlCmdWriteRegister = 0x08,
-    BlCmdReadAddressMemory = 0x09,
-    BlCmdWatchdogFunctionSet = 0x0A,
-    BlCmdWriteRamFlash = 0x0B,
-    BlCmdWriteHidI2cFlash = 0x0C,
-    BlCmdReadFlashAddr = 0x0D,
-    BlCmdTriggerWriteFlash = 0xA3,
-    BlCmdSoftwareReset = 0xA4,
-    BlCmdIdle = 0xFF,
-
-    AddrJumpToBootloader = 0x52,
-    AddrMemAddressSet = 0x65,
-    AddrMemRead = 0x66,
-    AddrMemWrite = 0x67,
-    AddrSystemInfoModeWrite = 0x80,
-    AddrSystemInfoModeRead = 0x81,
-    AddrSystemStatusWrite = 0x90,
-    AddrSystemStatusRead = 0x91,
-
     BlApAddr = 0x00,
     BlWatchdogEnable = 0x33,
     BlEraseFlashMode1 = 0xA1,
     BlEraseFlashMode4 = 0xA4,
     BlFlashCrc = 0xA5,
     BlWatchdogDisable = 0xAA,
+}
+
+enum FuRaydiumTpAddr {
+    JumpToBootloader = 0x52,
+    MemAddressSet = 0x65,
+    MemRead = 0x66,
+    MemWrite = 0x67,
+    SystemInfoModeWrite = 0x80,
+    SystemInfoModeRead = 0x81,
+    SystemStatusWrite = 0x90,
+    SystemStatusRead = 0x91,
 }
 
 #[repr(u8)]

@@ -14,13 +14,15 @@
 #define FU_LENOVO_DOCK_DEVICE_IFACE1_LEN 64
 #define FU_LENOVO_DOCK_DEVICE_IFACE2_LEN 272
 
-#define FU_LENOVO_DOCK_DEVICE_DELAY   25 /* ms */
+#define FU_LENOVO_DOCK_DEVICE_DELAY	 25   /* ms */
 #define FU_LENOVO_DOCK_DEVICE_DELAY_LONG 2500 /* ms */
-#define FU_LENOVO_DOCK_DEVICE_RETRIES 10
+#define FU_LENOVO_DOCK_DEVICE_RETRIES	 10
 #define FU_LENOVO_DOCK_DEVICE_TIMEOUT	 250 /* ms */
 
-#define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE  0x1000
+#define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE  (4 * FU_KB)
 #define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_START 0xFFF000
+
+#define FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION "can-provision"
 
 struct _FuLenovoDockDevice {
 	FuHidDevice parent_instance;
@@ -454,7 +456,11 @@ fu_lenovo_dock_device_flash_erase_memory(FuLenovoDockDevice *self,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, datasz, addr, 0x0, chunksz);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(NULL, datasz, addr, 0x0, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (gsize i = 0; i < chunks->len; i++) {
@@ -511,7 +517,11 @@ fu_lenovo_dock_device_flash_write_memory(FuLenovoDockDevice *self,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(data, datasz, addr, 0x0, chunksz);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new(data, datasz, addr, 0x0, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (gsize i = 0; i < chunks->len; i++) {
@@ -594,14 +604,16 @@ fu_lenovo_dock_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_lenovo_dock_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* get version and edition */
+	/* get version and edition (if IoT) */
 	if (!fu_lenovo_dock_device_ensure_version(self, error)) {
 		g_prefix_error_literal(error, "failed to ensure version: ");
 		return FALSE;
 	}
-	if (!fu_lenovo_dock_device_ensure_edition_state(self, error)) {
-		g_prefix_error_literal(error, "failed to ensure edition state: ");
-		return FALSE;
+	if (fu_device_has_private_flag(device, FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION)) {
+		if (!fu_lenovo_dock_device_ensure_edition_state(self, error)) {
+			g_prefix_error_literal(error, "failed to ensure edition state: ");
+			return FALSE;
+		}
 	}
 
 	/* quirk file did not override */
@@ -1227,11 +1239,13 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK_USB);
 	fu_device_set_install_duration(FU_DEVICE(self), 330);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LENOVO_DOCK_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 1);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 2);
+	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
 }
 
 static void

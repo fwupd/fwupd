@@ -32,7 +32,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFile, fu_efi_file, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_file_get_instance_private(o))
 
-#define FU_EFI_FILE_SIZE_MAX 0x1000000 /* 16 MB */
+#define FU_EFI_FILE_SIZE_MAX (16 * FU_MB)
 
 static void
 fu_efi_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -292,6 +292,7 @@ fu_efi_file_init(FuEfiFile *self)
 	priv->attrib = FU_EFI_FILE_ATTRIB_NONE;
 	priv->type = FU_EFI_FILE_TYPE_RAW;
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SECTION);
 }
 

@@ -133,12 +133,14 @@ fu_steelseries_sonic_read_from_ram(FuSteelseriesSonic *self,
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	chunks =
-	    fu_chunk_array_mutable_new(buf,
-				       bufsz,
-				       0x0,
-				       0x0,
-				       FU_STRUCT_STEELSERIES_SONIC_READ_FROM_RAM_RES_SIZE_DATA);
+	chunks = fu_chunk_array_mutable_new(buf,
+					    bufsz,
+					    0x0,
+					    0x0,
+					    FU_STRUCT_STEELSERIES_SONIC_READ_FROM_RAM_RES_SIZE_DATA,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -200,7 +202,10 @@ fu_steelseries_sonic_read_from_flash(FuSteelseriesSonic *self,
 					    bufsz,
 					    address,
 					    0x0,
-					    FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
+					    FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE,
+					    error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {

@@ -37,6 +37,7 @@ fu_blestech_tp_hid_device_write(FuBlestechTpHidDevice *self,
 	/* SetReport */
 	g_autoptr(FuBlestechTpSetHdr) st_hdr = fu_blestech_tp_set_hdr_new();
 	guint8 checksum = 0;
+	guint8 pack_len = 0;
 
 	fu_blestech_tp_set_hdr_set_report_id(st_hdr, FU_BLESTECH_TP_DEVICE_REPORT_ID);
 	fu_blestech_tp_set_hdr_set_pack_len(st_hdr,
@@ -47,10 +48,16 @@ fu_blestech_tp_hid_device_write(FuBlestechTpHidDevice *self,
 		return FALSE;
 
 	/* checksum */
+	if (!fu_memread_uint8_safe(st_hdr->buf->data,
+				   st_hdr->buf->len,
+				   FU_BLESTECH_TP_SET_HDR_OFFSET_PACK_LEN,
+				   &pack_len,
+				   error))
+		return FALSE;
 	if (!fu_xor8_safe(st_hdr->buf->data,
 			  st_hdr->buf->len,
 			  FU_BLESTECH_TP_SET_HDR_OFFSET_FRAME_FLAG,
-			  st_hdr->buf->data[FU_BLESTECH_TP_SET_HDR_OFFSET_PACK_LEN] - 1,
+			  pack_len - 1,
 			  &checksum,
 			  error))
 		return FALSE;
@@ -210,7 +217,10 @@ fu_blestech_tp_hid_device_program_page_cb(FuDevice *device, gpointer user_data, 
 				   fu_chunk_get_data_sz(chk),
 				   0x0,
 				   0x0,
-				   FU_BLESTECH_TP_PROGRAM_PAGE_REQ_N_ELEMENTS_DATA);
+				   FU_BLESTECH_TP_PROGRAM_PAGE_REQ_N_ELEMENTS_DATA,
+				   error);
+	if (pages == NULL)
+		return FALSE;
 	for (guint i = 0; i < pages->len; i++) {
 		FuChunk *chk_page = g_ptr_array_index(pages, i);
 		if (!fu_blestech_tp_hid_device_program_page(self, chk_page, error)) {

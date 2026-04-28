@@ -44,7 +44,10 @@ fu_wacom_usb_module_bluetooth_id9_calculate_crc32(GByteArray *buf,
 {
 	g_autoptr(GBytes) blob = g_bytes_new(buf->data, buf->len);
 	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream), blob);
+	if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream),
+						 blob,
+						 error))
+		return FALSE;
 	if (!fu_composite_input_stream_add_stream(FU_COMPOSITE_INPUT_STREAM(composite_stream),
 						  stream,
 						  error))

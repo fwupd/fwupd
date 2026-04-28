@@ -485,6 +485,10 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		if (kvstr == NULL)
 			return FALSE;
 		kv = g_strsplit(kvstr, "=", 2);
+		if (g_strv_length(kv) != 2) {
+			i += strlen(kvstr);
+			continue;
+		}
 		if (g_strcmp0(kv[0], "ACTION") == 0) {
 			action = fu_udev_action_from_string(kv[1]);
 			if (action == FU_UDEV_ACTION_UNKNOWN) {
@@ -579,6 +583,13 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 #else
 	g_auto(GStrv) split = fu_strsplit_bytes(blob, "@", 2);
 
+	if (g_strv_length(split) != 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid uevent format");
+		return FALSE;
+	}
 	sysfsdir = fu_context_get_path(ctx, FU_PATH_KIND_SYSFSDIR, error);
 	if (sysfsdir == NULL)
 		return FALSE;
@@ -625,12 +636,35 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 	FuUdevBackend *self = FU_UDEV_BACKEND(user_data);
 	gssize len;
 	guint8 buf[10240] = {0x0};
+	struct sockaddr_nl sender_addr = {0};
+	socklen_t sender_len = sizeof(sender_addr);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	len = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+	/* receive message with sender information */
+	len = recvfrom(fd,
+		       buf,
+		       sizeof(buf),
+		       MSG_DONTWAIT,
+		       (struct sockaddr *)&sender_addr,
+		       &sender_len);
 	if (len < 0)
 		return TRUE;
+
+	/* only accept messages from kernel (pid 0) to prevent spoofing attacks */
+	if (sender_addr.nl_groups == FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL &&
+	    sender_addr.nl_pid != 0) {
+		g_warning("rejecting netlink message from non-kernel sender (pid %u)",
+			  sender_addr.nl_pid);
+		return TRUE;
+	}
+
+	/* verify address family is correct */
+	if (sender_addr.nl_family != AF_NETLINK) {
+		g_warning("rejecting non-netlink message");
+		return TRUE;
+	}
+
 	blob = g_bytes_new(buf, len);
 	if (!fu_udev_backend_netlink_parse_blob(self, blob, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||

@@ -35,6 +35,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fmap_firmware_get_instance_private(o))
 
+#define FU_FMAP_FIRMWARE_AREAS_MAX 1024
+
 static void
 fu_fmap_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -125,7 +127,19 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 				    "number of areas invalid");
 		return FALSE;
 	}
-	offset += st_hdr->buf->len;
+	if (nareas > FU_FMAP_FIRMWARE_AREAS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive number of areas: %u",
+			    (guint)nareas);
+		return FALSE;
+	}
+	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
+		g_prefix_error_literal(error, "FMAP header offset overflow: ");
+		return FALSE;
+	}
+
 	for (gsize i = 0; i < nareas; i++) {
 		guint32 area_offset;
 		guint32 area_size;
@@ -173,7 +187,10 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_addr(img, area_offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += st_area->buf->len;
+		if (!fu_size_checked_inc(&offset, st_area->buf->len, error)) {
+			g_prefix_error(error, "FMAP area 0x%x offset overflow: ", (guint)i);
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -207,21 +224,27 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* add header */
-	total_sz = offset = st_hdr->buf->len + (FU_STRUCT_FMAP_AREA_SIZE * images->len);
+	total_sz = st_hdr->buf->len;
+	if (!fu_size_checked_inc_product(&total_sz, FU_STRUCT_FMAP_AREA_SIZE, images->len, error))
+		return NULL;
+	offset = total_sz;
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
 		if (fw == NULL)
 			continue;
-		total_sz += g_bytes_get_size(fw);
+		if (!fu_size_checked_inc(&total_sz, g_bytes_get_size(fw), error))
+			return NULL;
 	}
 
 	/* header */
+	if (!fu_size_checked_inc(&total_sz, priv->signature_offset, error))
+		return NULL;
 	fu_struct_fmap_set_ver_major(st_hdr, priv->ver_major);
 	fu_struct_fmap_set_ver_minor(st_hdr, priv->ver_minor);
 	fu_struct_fmap_set_base(st_hdr, fu_firmware_get_addr(firmware));
 	fu_struct_fmap_set_nareas(st_hdr, images->len);
-	fu_struct_fmap_set_size(st_hdr, priv->signature_offset + total_sz);
+	fu_struct_fmap_set_size(st_hdr, total_sz);
 	fu_byte_array_append_array(buf, st_hdr->buf);
 
 	/* add each area */
@@ -238,7 +261,8 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 				return NULL;
 		}
 		fu_byte_array_append_array(buf, st_area->buf);
-		offset += g_bytes_get_size(fw);
+		if (!fu_size_checked_inc(&offset, g_bytes_get_size(fw), error))
+			return NULL;
 	}
 
 	/* add the images */
@@ -272,6 +296,7 @@ fu_fmap_firmware_init(FuFmapFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USWID_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void

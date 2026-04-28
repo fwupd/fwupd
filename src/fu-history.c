@@ -156,7 +156,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	fu_device_set_install_duration(device, sqlite3_column_int(stmt, 19));
 
 	/* release flags */
-	fu_release_set_flags(release, sqlite3_column_int(stmt, 20));
+	fu_release_set_flags(release, sqlite3_column_int64(stmt, 20));
 
 	/* success */
 	fu_device_convert_instance_ids(device);
@@ -651,6 +651,7 @@ fu_history_load(FuHistory *self, GError **error)
 				  filename,
 				  error_migrate->message);
 			sqlite3_close(self->db);
+			self->db = NULL;
 			if (g_unlink(filename) != 0) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -944,7 +945,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	sqlite3_bind_text(stmt, 18, fu_release_get_appstream_id(release), -1, SQLITE_STATIC);
 	sqlite3_bind_int(stmt, 19, fu_device_get_version_format(device));
 	sqlite3_bind_int(stmt, 20, fu_device_get_install_duration(device));
-	sqlite3_bind_int(stmt, 21, fu_release_get_flags(release));
+	sqlite3_bind_int64(stmt, 21, fu_release_get_flags(release));
 	return fu_history_stmt_exec(self, stmt, NULL, error);
 }
 

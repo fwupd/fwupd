@@ -19,9 +19,13 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These device uses the standard DeviceInstanceId values, e.g.
+These devices use the standard Instance ID values, e.g.
 
-* `HIDRAW\VEN_27C6&DEV_1234`
+* `HIDRAW\VEN_27C6&DEV_012D`
+
+It also supports one extra Instance ID to represent the "patch PID", e.g.
+
+* `HIDRAW\VEN_27C6&DEV_012D&PID_GT7936L`
 
 ## Update Behavior
 

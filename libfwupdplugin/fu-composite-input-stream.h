@@ -18,13 +18,13 @@ G_DECLARE_FINAL_TYPE(FuCompositeInputStream,
 
 GInputStream *
 fu_composite_input_stream_new(void);
-void
-fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes)
+gboolean
+fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes, GError **error)
     G_GNUC_NON_NULL(1, 2);
-void
+gboolean
 fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
-					     FuPartialInputStream *partial_stream)
-    G_GNUC_NON_NULL(1, 2);
+					     FuPartialInputStream *partial_stream,
+					     GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
 				     GInputStream *stream,

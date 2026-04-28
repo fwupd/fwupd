@@ -88,6 +88,7 @@ fu_raydium_tp_hid_device_read_cb(FuDevice *device, gpointer user_data, GError **
 {
 	FuRaydiumTpHidDevice *self = FU_RAYDIUM_TP_HID_DEVICE(device);
 	FuRaydiumTpHidReadHelper *helper = (FuRaydiumTpHidReadHelper *)user_data;
+	guint8 chk_idx = 0;
 	g_autoptr(GByteArray) buf = NULL;
 
 	if (!fu_raydium_tp_hid_device_set_report(self, helper->outbuf, error))
@@ -95,7 +96,9 @@ fu_raydium_tp_hid_device_read_cb(FuDevice *device, gpointer user_data, GError **
 	buf = fu_raydium_tp_hid_device_get_report(self, error);
 	if (buf == NULL)
 		return FALSE;
-	if (buf->data[RAYDIUM_HIDI2C_CHK_IDX] != 0xFF && buf->data[0] != 0xFF) {
+	if (!fu_memread_uint8_safe(buf->data, buf->len, RAYDIUM_HIDI2C_CHK_IDX, &chk_idx, error))
+		return FALSE;
+	if (chk_idx != 0xFF && buf->data[0] != 0xFF) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "device not ready");
 		return FALSE;
 	}
@@ -217,6 +220,15 @@ fu_raydium_tp_hid_device_tp_write(FuRaydiumTpHidDevice *self,
 	g_autoptr(FuStructRaydiumTpHidPacket) st1 = fu_struct_raydium_tp_hid_packet_new();
 	g_autoptr(FuStructRaydiumTpHidPacket) st2 = fu_struct_raydium_tp_hid_packet_new();
 
+	/* sanity check */
+	if (length > G_MAXUINT8 - 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "write length too large for packet");
+		return FALSE;
+	}
+
 	fu_struct_raydium_tp_hid_packet_set_header3(st1, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
 	fu_struct_raydium_tp_hid_packet_set_header4(st1, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
 	fu_struct_raydium_tp_hid_packet_set_data0(st1, FU_RAYDIUM_TP_CMD2_WRT);
@@ -286,7 +298,7 @@ fu_raydium_tp_hid_device_set_bl_mem(FuRaydiumTpHidDevice *self,
 	fu_memwrite_uint32(buf + 6, addr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint32(buf + 10, value, G_LITTLE_ENDIAN);
 	return fu_raydium_tp_hid_device_bl_write(self,
-						 FU_RAYDIUM_TP_CMD_BL_CMD_WRITE_REGISTER,
+						 FU_RAYDIUM_TP_BL_CMD_WRITE_REGISTER,
 						 buf,
 						 sizeof(buf),
 						 RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -306,7 +318,7 @@ fu_raydium_tp_hid_device_get_bl_mem(FuRaydiumTpHidDevice *self,
 	fu_memwrite_uint32(buf + 6, addr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 10, length, G_LITTLE_ENDIAN);
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_READ_ADDRESS_MEMORY,
+					       FU_RAYDIUM_TP_BL_CMD_READ_ADDRESS_MEMORY,
 					       buf,
 					       sizeof(buf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -323,7 +335,7 @@ fu_raydium_tp_hid_device_jump_to_boot(FuRaydiumTpHidDevice *self, GError **error
 	guint8 buf[RAYDIUM_I2C_BUF_SIZE] = {0};
 
 	return fu_raydium_tp_hid_device_tp_write(self,
-						 FU_RAYDIUM_TP_CMD_ADDR_JUMP_TO_BOOTLOADER,
+						 FU_RAYDIUM_TP_ADDR_JUMP_TO_BOOTLOADER,
 						 buf,
 						 sizeof(buf),
 						 1,
@@ -433,7 +445,8 @@ static gboolean
 fu_raydium_tp_hid_device_wait_idle_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuRaydiumTpHidDevice *self = FU_RAYDIUM_TP_HID_DEVICE(device);
-	FuRaydiumTpCmd boot_main_state;
+	FuRaydiumTpBlCmd boot_main_state;
+	guint8 chk_idx = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_append_uint8(buf, FU_RAYDIUM_TP_CMD2_CHK);
@@ -442,13 +455,15 @@ fu_raydium_tp_hid_device_wait_idle_cb(FuDevice *device, gpointer user_data, GErr
 
 	if (!fu_raydium_tp_hid_device_bl_read(self, buf->data, buf->len, 6, error))
 		return FALSE;
-	boot_main_state = buf->data[RAYDIUM_HIDI2C_CHK_IDX];
-	if (boot_main_state != FU_RAYDIUM_TP_CMD_BL_CMD_IDLE) {
+	if (!fu_memread_uint8_safe(buf->data, buf->len, RAYDIUM_HIDI2C_CHK_IDX, &chk_idx, error))
+		return FALSE;
+	boot_main_state = chk_idx;
+	if (boot_main_state != FU_RAYDIUM_TP_BL_CMD_IDLE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "not idle; got %s",
-			    fu_raydium_tp_cmd_to_string(boot_main_state));
+			    fu_raydium_tp_bl_cmd_to_string(boot_main_state));
 		return FALSE;
 	}
 
@@ -478,7 +493,7 @@ fu_raydium_tp_hid_device_bl_set_wdt(FuRaydiumTpHidDevice *self, guint8 enable, G
 		buf[3] = FU_RAYDIUM_TP_CMD_BL_WATCHDOG_DISABLE;
 
 	return fu_raydium_tp_hid_device_bl_write(self,
-						 FU_RAYDIUM_TP_CMD_BL_CMD_WATCHDOG_FUNCTION_SET,
+						 FU_RAYDIUM_TP_BL_CMD_WATCHDOG_FUNCTION_SET,
 						 buf,
 						 sizeof(buf),
 						 RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -542,7 +557,7 @@ fu_raydium_tp_hid_device_bl_erase_fw_flash(FuRaydiumTpHidDevice *self, GError **
 
 	buf[3] = FU_RAYDIUM_TP_CMD_BL_ERASE_FLASH_MODE1;
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_ERASE_FLASH,
+					       FU_RAYDIUM_TP_BL_CMD_ERASE_FLASH,
 					       buf,
 					       sizeof(buf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -566,7 +581,7 @@ fu_raydium_tp_hid_device_bl_erase_flash_sector(FuRaydiumTpHidDevice *self,
 	buf[11] = loop;
 
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_ERASE_FLASH,
+					       FU_RAYDIUM_TP_BL_CMD_ERASE_FLASH,
 					       buf,
 					       sizeof(buf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -600,7 +615,7 @@ fu_raydium_tp_hid_device_bl_write_flash_chunk(FuRaydiumTpHidDevice *self,
 		return FALSE;
 
 	return fu_raydium_tp_hid_device_bl_write(self,
-						 FU_RAYDIUM_TP_CMD_BL_CMD_WRITE_HID_I2C_FLASH,
+						 FU_RAYDIUM_TP_BL_CMD_WRITE_HID_I2C_FLASH,
 						 buf,
 						 sizeof(buf),
 						 RAYDIUM_HIDI2C_WRITE_SIZE,
@@ -787,14 +802,14 @@ fu_raydium_tp_hid_device_bl_trig_desc_to_flash(FuRaydiumTpHidDevice *self,
 {
 	guint8 buf[RAYDIUM_I2C_BUF_SIZE] = {0};
 
-	buf[3] = FU_RAYDIUM_TP_CMD_BL_CMD_WRITE_RAM_FLASH;
+	buf[3] = FU_RAYDIUM_TP_BL_CMD_WRITE_RAM_FLASH;
 	buf[4] = FU_RAYDIUM_TP_HID_DATA_HEADER5;
 	fu_memwrite_uint32(buf + 8, pram_addr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint32(buf + 12, flash_addr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 16, length, G_LITTLE_ENDIAN);
 
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_WRITE_RAM_FLASH,
+					       FU_RAYDIUM_TP_BL_CMD_WRITE_RAM_FLASH,
 					       buf,
 					       sizeof(buf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -811,10 +826,10 @@ fu_raydium_tp_hid_device_bl_trig_pram_to_flash(FuRaydiumTpHidDevice *self, GErro
 	guint8 buf[RAYDIUM_I2C_BUF_SIZE] = {0};
 
 	buf[0] = FU_RAYDIUM_TP_CMD2_WRT;
-	buf[2] = FU_RAYDIUM_TP_CMD_BL_CMD_TRIGGER_WRITE_FLASH;
+	buf[2] = FU_RAYDIUM_TP_BL_CMD_TRIGGER_WRITE_FLASH;
 
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_TRIGGER_WRITE_FLASH,
+					       FU_RAYDIUM_TP_BL_CMD_TRIGGER_WRITE_FLASH,
 					       buf,
 					       sizeof(buf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -853,7 +868,7 @@ fu_raydium_tp_hid_device_set_mem_addr(FuRaydiumTpHidDevice *self,
 	buf[4] = type;
 
 	return fu_raydium_tp_hid_device_tp_write(self,
-						 FU_RAYDIUM_TP_CMD_ADDR_MEM_ADDRESS_SET,
+						 FU_RAYDIUM_TP_ADDR_MEM_ADDRESS_SET,
 						 buf,
 						 sizeof(buf),
 						 5,
@@ -867,7 +882,7 @@ fu_raydium_tp_hid_device_set_mem_write(FuRaydiumTpHidDevice *self, guint32 value
 
 	fu_memwrite_uint32(buf, value, G_LITTLE_ENDIAN);
 	return fu_raydium_tp_hid_device_tp_write(self,
-						 FU_RAYDIUM_TP_CMD_ADDR_MEM_WRITE,
+						 FU_RAYDIUM_TP_ADDR_MEM_WRITE,
 						 buf,
 						 sizeof(buf),
 						 4,
@@ -883,7 +898,7 @@ fu_raydium_tp_hid_device_get_mem_read(FuRaydiumTpHidDevice *self,
 	guint8 rbuf[RAYDIUM_I2C_BUF_SIZE] = {0};
 
 	if (!fu_raydium_tp_hid_device_tp_read(self,
-					      FU_RAYDIUM_TP_CMD_ADDR_MEM_READ,
+					      FU_RAYDIUM_TP_ADDR_MEM_READ,
 					      rbuf,
 					      sizeof(rbuf),
 					      error))
@@ -1043,7 +1058,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr_fallback(FuRaydiumTpHidDevice *self
 	minor_ver = fu_struct_raydium_tp_ft_record_info_get_version_minor(st_info);
 
 	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
 	return TRUE;
 }
 
@@ -1060,7 +1075,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 	fu_memwrite_uint32(wbuf + 6, FU_RAYDIUM_TP_FLASH_DESC_RECORD_ADDR, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(wbuf + 10, RAYDIUM_HIDI2C_WRITE_SIZE, G_LITTLE_ENDIAN);
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_READ_FLASH_ADDR,
+					       FU_RAYDIUM_TP_BL_CMD_READ_FLASH_ADDR,
 					       wbuf,
 					       sizeof(wbuf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -1088,7 +1103,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 	fu_memwrite_uint32(wbuf + 6, FU_RAYDIUM_TP_FLASH_FT_RECORD_ADDR, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(wbuf + 10, 16, G_LITTLE_ENDIAN); /* length */
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_READ_FLASH_ADDR,
+					       FU_RAYDIUM_TP_BL_CMD_READ_FLASH_ADDR,
 					       wbuf,
 					       sizeof(wbuf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,
@@ -1100,7 +1115,7 @@ fu_raydium_tp_hid_device_ensure_version_bldr(FuRaydiumTpHidDevice *self, GError 
 		return fu_raydium_tp_hid_device_ensure_version_bldr_fallback(self, error);
 
 	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
 	return TRUE;
 }
 
@@ -1115,7 +1130,7 @@ fu_raydium_tp_hid_device_ensure_version_main(FuRaydiumTpHidDevice *self, GError 
 
 	wbuf[0] = RAYDIUM_GET_SYS_FW_VERSION_NUM;
 	if (!fu_raydium_tp_hid_device_tp_write(self,
-					       FU_RAYDIUM_TP_CMD_ADDR_SYSTEM_INFO_MODE_WRITE,
+					       FU_RAYDIUM_TP_ADDR_SYSTEM_INFO_MODE_WRITE,
 					       wbuf,
 					       sizeof(wbuf),
 					       1,
@@ -1123,7 +1138,7 @@ fu_raydium_tp_hid_device_ensure_version_main(FuRaydiumTpHidDevice *self, GError 
 		return FALSE;
 
 	if (!fu_raydium_tp_hid_device_tp_read(self,
-					      FU_RAYDIUM_TP_CMD_ADDR_SYSTEM_INFO_MODE_READ,
+					      FU_RAYDIUM_TP_ADDR_SYSTEM_INFO_MODE_READ,
 					      rbuf,
 					      sizeof(rbuf),
 					      error))
@@ -1139,7 +1154,7 @@ fu_raydium_tp_hid_device_ensure_version_main(FuRaydiumTpHidDevice *self, GError 
 	}
 	major_ver = rbuf[5];
 	minor_ver = rbuf[6];
-	fu_device_set_version_raw(FU_DEVICE(self), (major_ver << 24) | minor_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (((guint32)major_ver) << 24) | minor_ver);
 
 	/* success */
 	return TRUE;
@@ -1187,6 +1202,14 @@ fu_raydium_tp_hid_device_write_fwimage(FuRaydiumTpHidDevice *self,
 	gsize img_length = fu_firmware_get_size(img);
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 
+	if (img_length < RAYDIUM_CRC_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware image too small");
+		return FALSE;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -1231,6 +1254,15 @@ fu_raydium_tp_hid_device_write_descimage(FuRaydiumTpHidDevice *self,
 	gsize img_length = fu_firmware_get_size(img);
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 	guint8 sector = (guint8)(img_length / RAYDIUM_FLASH_SECTOR_SIZE);
+
+	if (img_length < RAYDIUM_CRC_LEN || img_length > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware image size invalid: 0x%x",
+			    (guint)img_length);
+		return FALSE;
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1298,7 +1330,7 @@ fu_raydium_tp_hid_device_read_flash_crc(FuRaydiumTpHidDevice *self,
 	fu_memwrite_uint32(wbuf + 6, addr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint32(wbuf + 10, crc_length, G_LITTLE_ENDIAN);
 	if (!fu_raydium_tp_hid_device_bl_write(self,
-					       FU_RAYDIUM_TP_CMD_BL_CMD_READ_FLASH_ADDR,
+					       FU_RAYDIUM_TP_BL_CMD_READ_FLASH_ADDR,
 					       wbuf,
 					       sizeof(wbuf),
 					       RAYDIUM_HIDI2C_WRITE_MAX_LENGTH,

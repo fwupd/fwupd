@@ -289,9 +289,9 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 
 		/* max firmware size */
 		if (fu_struct_dell_kestrel_dock_data_get_board_id(self->dock_data) < 0x4)
-			fu_device_set_firmware_size(FU_DEVICE(ilan_device), 2 * 1024 * 1024);
+			fu_device_set_firmware_size(FU_DEVICE(ilan_device), 2 * FU_MB);
 		else
-			fu_device_set_firmware_size(FU_DEVICE(ilan_device), 1 * 1024 * 1024);
+			fu_device_set_firmware_size(FU_DEVICE(ilan_device), 1 * FU_MB);
 	}
 
 	return TRUE;

@@ -679,7 +679,7 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 
 	/* load from quirks */
 	if (g_strcmp0(key, "FastbootBlockSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0x40, 0x100000, FU_INTEGER_BASE_AUTO, error))
+		if (!fu_strtoull(value, &tmp, 0x40, 1 * FU_MB, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->blocksz = tmp;
 		return TRUE;

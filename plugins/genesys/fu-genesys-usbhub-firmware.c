@@ -330,7 +330,8 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse remaining firmware bytes */
-	offset += code_size;
+	if (!fu_size_checked_inc(&offset, code_size, error))
+		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	while (offset < streamsz) {
@@ -350,7 +351,8 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(firmware_sub, offset);
 		if (!fu_firmware_add_image(firmware, firmware_sub, error))
 			return FALSE;
-		offset += fu_firmware_get_size(firmware_sub);
+		if (!fu_size_checked_inc(&offset, fu_firmware_get_size(firmware_sub), error))
+			return FALSE;
 	}
 
 	/* success */
@@ -534,6 +536,7 @@ fu_genesys_usbhub_firmware_init(FuGenesysUsbhubFirmware *self)
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

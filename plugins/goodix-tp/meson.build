@@ -7,6 +7,7 @@ plugin_builtins += static_library('fu_plugin_goodixtp',
   sources: [
     'fu-goodixtp-brlb-device.c',
     'fu-goodixtp-brlb-firmware.c',
+    'fu-goodixtp-brlb-config.c',
     'fu-goodixtp-firmware.c',
     'fu-goodixtp-gtx8-device.c',
     'fu-goodixtp-gtx8-firmware.c',
@@ -18,3 +19,4 @@ plugin_builtins += static_library('fu_plugin_goodixtp',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+device_tests += files('tests/goodixtp-brlb.json')

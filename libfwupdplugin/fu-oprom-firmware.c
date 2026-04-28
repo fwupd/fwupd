@@ -121,6 +121,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	guint16 expansion_header_offset = 0;
 	guint16 pci_header_offset;
 	guint16 image_length = 0;
+	gsize image_size = 0;
 	g_autoptr(FuStructOprom) st_hdr = NULL;
 	g_autoptr(FuStructOpromPci) st_pci = NULL;
 
@@ -155,7 +156,14 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid image");
 		return FALSE;
 	}
-	fu_firmware_set_size(firmware, image_length * FU_OPROM_FIRMWARE_ALIGN_LEN);
+	if (!fu_size_checked_inc_product(&image_size,
+					 image_length,
+					 FU_OPROM_FIRMWARE_ALIGN_LEN,
+					 error)) {
+		g_prefix_error_literal(error, "image size overflow: ");
+		return FALSE;
+	}
+	fu_firmware_set_size(firmware, image_size);
 	fu_firmware_set_idx(firmware, fu_struct_oprom_pci_get_code_type(st_pci));
 
 	/* is last image */
@@ -199,11 +207,15 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob_cpd = NULL;
 
 	/* the smallest each image (and header) can be is 512 bytes */
-	image_size += fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_512);
+	image_size = fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_512);
 	blob_cpd = fu_firmware_get_image_by_id_bytes(firmware, "cpd", NULL);
 	if (blob_cpd != NULL) {
-		image_size +=
+		gsize cpd_size =
 		    fu_common_align_up(g_bytes_get_size(blob_cpd), FU_FIRMWARE_ALIGNMENT_512);
+		if (!fu_size_checked_inc(&image_size, cpd_size, error)) {
+			g_prefix_error_literal(error, "overflow calculating OptionROM size: ");
+			return NULL;
+		}
 	}
 
 	/* write the header */
@@ -293,6 +305,7 @@ fu_oprom_firmware_init(FuOpromFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFWI_CPD_FIRMWARE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void

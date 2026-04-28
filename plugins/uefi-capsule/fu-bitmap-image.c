@@ -79,6 +79,7 @@ static void
 fu_bitmap_image_init(FuBitmapImage *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 FuBitmapImage *
