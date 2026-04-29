@@ -91,15 +91,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 
 	/* parse extensions */
 	header_length = fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd);
-	if (header_length > G_MAXSIZE / 4) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "manifest header length 0x%" G_GSIZE_MODIFIER "x would overflow",
-			    header_length);
-		return FALSE;
-	}
-	if (!fu_size_checked_inc(&offset, header_length * 4, error)) {
+	if (!fu_size_checked_inc_product(&offset, header_length, 4, error)) {
 		g_prefix_error_literal(error, "manifest offset overflow: ");
 		return FALSE;
 	}
@@ -276,7 +268,7 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	/* fixup the image offsets */
 	if (!fu_size_checked_inc(&offset, st->buf->len, error))
 		return NULL;
-	if (!fu_size_checked_inc(&offset, (gsize)FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len, error))
+	if (!fu_size_checked_inc_product(&offset, FU_STRUCT_IFWI_CPD_ENTRY_SIZE, imgs->len, error))
 		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);

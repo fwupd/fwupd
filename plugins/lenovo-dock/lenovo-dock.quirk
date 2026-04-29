@@ -1,6 +1,7 @@
 # Lenovo USB4 Dock [IoT]
 [USB\VID_17EF&PID_111E]
 Plugin = lenovo_dock
+Flags = can-provision
 
 ## these are all updated using the DMC
 [USB\VID_17EF&PID_111A]

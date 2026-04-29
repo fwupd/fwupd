@@ -193,6 +193,14 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 		guint32 length;
 		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
 
+		if (offset > G_MAXUINT32 - 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "offset overflow at container %u",
+				    i);
+			return FALSE;
+		}
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		g_debug("parsing RmiContainerDescriptor at 0x%x", addr);
@@ -355,14 +363,6 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 				container_id);
 			break;
 		}
-		if (offset > G_MAXUINT32 - 4) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "offset overflow at container %u",
-				    i);
-			return FALSE;
-		}
 		offset += 4;
 	}
 	if (product_id[0] != '\0') {
@@ -390,7 +390,17 @@ fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 	if (img_sz > 0) {
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
-			guint32 sig_offset = img_sz - self->sig_size;
+			guint32 sig_offset;
+			if (self->sig_size > img_sz) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "signature size 0x%x exceeds image size 0x%x",
+					    self->sig_size,
+					    img_sz);
+				return FALSE;
+			}
+			sig_offset = img_sz - self->sig_size;
 			if (!fu_synaptics_rmi_firmware_add_image(self,
 								 "sig",
 								 stream,

@@ -513,7 +513,7 @@ fu_pixart_rf_ble_device_write_chunk(FuPixartRfBleDevice *self, FuChunk *chk, GEr
 			    FWUPD_ERROR_READ,
 			    "checksum fail, got 0x%04x, expected 0x%04x",
 			    checksum_device,
-			    checksum);
+			    self->fwstate.checksum);
 		return FALSE;
 	}
 

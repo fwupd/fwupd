@@ -286,6 +286,9 @@ fu_hughski_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError
 			    error_local->message);
 		return FALSE;
 	}
+
+	/* this takes some time */
+	fu_progress_sleep_idle(progress, 1000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -315,6 +318,9 @@ fu_hughski_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError
 			    error_local->message);
 		return FALSE;
 	}
+
+	/* this takes some time */
+	fu_progress_sleep_idle(progress, 1000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -655,10 +661,10 @@ fu_hughski_colorhug_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 57, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 43, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 8, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 63, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 27, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
 static void

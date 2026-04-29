@@ -107,7 +107,7 @@ struct _FuGenesysUsbhubDevice {
 	guint32 flash_sector_size;
 	guint32 flash_rw_size;
 
-	guint16 fw_bank_code_sizes[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
+	guint32 fw_bank_code_sizes[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	guint16 fw_bank_vers[FW_BANK_COUNT][FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 	FuGenesysFwBank update_fw_banks[FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT];
 
@@ -2186,6 +2186,15 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 {
 	FuGenesysWaitFlashRegisterHelper helper = {.reg = 5, .expected_val = 0};
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* validate sector size */
+	if (self->flash_sector_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash sector size not set");
+		return FALSE;
+	}
 
 	chunks = fu_chunk_array_new(NULL,
 				    len,

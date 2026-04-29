@@ -267,13 +267,14 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		const gchar *freg_str = fu_ifd_region_to_string(i);
 		guint32 freg_base = FU_IFD_FREG_BASE(priv->flash_descriptor_regs[i]);
 		guint32 freg_limt = FU_IFD_FREG_LIMIT(priv->flash_descriptor_regs[i]);
-		guint32 freg_size = (freg_limt - freg_base) + 1;
+		guint32 freg_size;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
-		/* invalid */
+		/* invalid - check before subtraction */
 		if (freg_base > freg_limt)
 			continue;
+		freg_size = (freg_limt - freg_base) + 1;
 
 		/* create image */
 		g_debug("freg %s 0x%04x -> 0x%04x", freg_str, freg_base, freg_limt);

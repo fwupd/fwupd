@@ -619,9 +619,9 @@ fu_util_get_plugins(FuUtil *self, gchar **values, GError **error)
 
 	/* get results from daemon */
 	plugins = fwupd_client_get_plugins(self->client, self->cancellable, error);
-	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (plugins == NULL)
 		return FALSE;
+	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (self->as_json) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(plugins, "Plugins", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
@@ -915,7 +915,7 @@ fu_util_maybe_expand_basename(FuUtil *self, const gchar *maybe_basename, GError 
 	remote = fwupd_client_get_remote_by_id(self->client, "lvfs", self->cancellable, error);
 	if (remote == NULL)
 		return NULL;
-	if (fwupd_remote_get_firmware_base_uri(remote)) {
+	if (fwupd_remote_get_firmware_base_uri(remote) == NULL) {
 		g_debug("no FirmwareBaseURI set in lvfs.conf, using default");
 		return g_strdup_printf("https://fwupd.org/downloads/%s", maybe_basename);
 	}
@@ -3049,7 +3049,7 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 			if ((self->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0 && vercmp == 0)
 				continue;
 			title = g_strdup_printf("%s %s",
-						fwupd_client_get_host_product(self->client),
+						fwupd_client_get_host_vendor(self->client),
 						fwupd_client_get_host_product(self->client));
 			if (!fu_util_prompt_warning(self->console, dev_tmp, rel_tmp, title, error))
 				return FALSE;

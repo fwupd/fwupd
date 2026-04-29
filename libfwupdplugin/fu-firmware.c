@@ -2460,6 +2460,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareFlags flags_for_display = priv->flags;
 	const gchar *gtypestr = G_OBJECT_TYPE_NAME(self);
 
 	/* object */
@@ -2467,8 +2468,9 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		xb_builder_node_set_attr(bn, "gtype", gtypestr);
 
 	/* subclassed type */
-	if (priv->flags != FU_FIRMWARE_FLAG_NONE) {
-		g_autofree gchar *str = fu_firmware_flags_to_string(priv->flags);
+	flags_for_display &= ~FU_FIRMWARE_FLAG_DONE_PARSE;
+	if (flags_for_display != FU_FIRMWARE_FLAG_NONE) {
+		g_autofree gchar *str = fu_firmware_flags_to_string(flags_for_display);
 		fu_xmlb_builder_insert_kv(bn, "flags", str);
 	}
 	fu_xmlb_builder_insert_kv(bn, "id", priv->id);

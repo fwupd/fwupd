@@ -1069,8 +1069,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	fw_size += 0x410;
-	if (fw_size > PANAMERA_FIRMWARE_SIZE) {
+	if (fw_size > PANAMERA_FIRMWARE_SIZE - 0x410) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -1078,6 +1077,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			    fw_size);
 		return FALSE;
 	}
+	fw_size += 0x410;
 
 	/* current max firmware size is 104K */
 	if (fw_size < g_bytes_get_size(fw))
@@ -1631,7 +1631,7 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 static FuSynapticsMstFamily
 fu_synaptics_mst_device_family_from_chip_id(guint16 chip_id)
 {
-	if (chip_id >= 0x8000 && chip_id < 0xA000)
+	if (chip_id >= 0x9000 && chip_id < 0xA000)
 		return FU_SYNAPTICS_MST_FAMILY_CARRERA;
 	if (chip_id >= 0x7000 && chip_id < 0x8000)
 		return FU_SYNAPTICS_MST_FAMILY_SPYDER;

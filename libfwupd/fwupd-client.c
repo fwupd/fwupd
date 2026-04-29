@@ -3198,7 +3198,7 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 	}
 
 	/* success */
-	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_object_unref);
 }
 
 /**
@@ -3670,11 +3670,12 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 
 	/* local and directory remotes may have the firmware already */
 	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_LOCAL &&
-	    !fwupd_client_is_url_http(uri_tmp)) {
+	    !fwupd_client_is_url_http(uri_tmp) && fwupd_remote_get_filename_cache(remote) != NULL) {
 		const gchar *fn_cache = fwupd_remote_get_filename_cache(remote);
 		g_autofree gchar *path = g_path_get_dirname(fn_cache);
 		fn = g_build_filename(path, uri_tmp, NULL);
-	} else if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+	} else if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DIRECTORY &&
+		   g_str_has_prefix(uri_tmp, "file://")) {
 		fn = g_strdup(uri_tmp + 7);
 	}
 
@@ -5739,7 +5740,9 @@ fwupd_client_download_ipfs(FwupdClient *self,
 		return NULL;
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	if (g_subprocess_get_exit_status(subprocess) != 0) {
-		const gchar *msg = g_bytes_get_data(bstderr, NULL);
+		gsize msgsz = 0;
+		const gchar *msgdata = g_bytes_get_data(bstderr, &msgsz);
+		g_autofree gchar *msg = g_strndup(msgdata, msgsz);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -5764,7 +5767,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	} else {
 		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
@@ -6194,7 +6197,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	} else {
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 1L);
-		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 1L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);

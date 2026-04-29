@@ -6,20 +6,21 @@
 # Cheng-Chia Tseng <pswo10680@gmail.com>, 2017-2018,2024
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # EESF-2 <eesf-2@users.noreply.hosted.weblate.org>, 2026.
+# UDP <udp@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-03-27 00:09+0000\n"
-"Last-Translator: EESF-2 <eesf-2@users.noreply.hosted.weblate.org>\n"
+"POT-Creation-Date: 2026-04-23 08:04+0100\n"
+"PO-Revision-Date: 2026-04-29 09:09+0000\n"
+"Last-Translator: UDP <udp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hant/>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 5.17.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 廠商韌體服務（穩定版韌體）"
@@ -39,7 +40,7 @@ msgstr "這個遠端站點包含未列入禁運，但仍處於硬體廠商測試
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
-msgstr "設定會在系統重新開機後套用"
+msgstr "設定將在系統重新開機後套用"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -54,18 +55,18 @@ msgid "Enabled"
 msgstr "已啟用"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "停止 fwupd 服務"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "必須先通過身份驗證才能停止韌體更新服務"
 
 msgid "Install signed system firmware"
 msgstr "安裝已簽署的系統韌體"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "必須先通過身份核對才能更新這臺機器上的韌體"
+msgstr "必須先通過身份驗證才能更新這臺機器上的韌體"
 
 msgid "Install unsigned system firmware"
 msgstr "安裝未簽署的系統韌體"
@@ -75,7 +76,7 @@ msgstr "安裝已簽署的舊版系統韌體"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "必須先通過身份核對才能降級這臺機器上的韌體"
+msgstr "必須先通過身份驗證才能降級此機器的韌體"
 
 msgid "Install old version of unsigned system firmware"
 msgstr "安裝未簽署的舊版系統韌體"
@@ -85,28 +86,28 @@ msgstr "安裝已簽署的裝置韌體"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "必須先通過身份核對才能更新可移除裝置上的韌體"
+msgstr "必須先通過身份驗證才能更新可移除裝置上的韌體"
 
 msgid "Install unsigned device firmware"
 msgstr "安裝未簽署的裝置韌體"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "必須先通過身份核對才能降級可移除裝置上的韌體"
+msgstr "必須先通過身份驗證才能降級可移除裝置上的韌體"
 
 msgid "Unlock the device to allow access"
 msgstr "解鎖裝置以允許存取"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "必須先通過身份核對才能解鎖裝置"
+msgstr "必須先通過身份驗證才能解鎖裝置"
 
 msgid "Modify daemon configuration"
 msgstr "修改守護程式配置"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr "必須先通過身份核對才能修改守護程式組態"
+msgstr "必須先通過身份驗證才能修改守護程式組態"
 
 msgid "Reset daemon configuration"
 msgstr "重設守護程式配置"
@@ -120,21 +121,21 @@ msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "必須先通過身份核對才能切換到新版韌體"
+msgstr "必須先通過身份驗證才能切換到新版韌體"
 
 msgid "Update the stored device verification information"
-msgstr "更新儲存的裝置核驗資訊"
+msgstr "更新儲存的裝置驗證資訊"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr "必須先通過身份核對才能更新裝置的儲存校驗計算碼"
+msgstr "必須先通過身份驗證才能更新裝置的儲存校驗和"
 
 msgid "Modify a configured remote"
 msgstr "修改設定的遠端站點"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "必須通過身份核對才能修改設定作韌體更新的遠端站點"
+msgstr "必須通過身份驗證才能修改設定作韌體更新的遠端站點"
 
 msgid "Clean a configured remote"
 msgstr ""
@@ -149,28 +150,28 @@ msgstr "設定已批准韌體的清單"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "必須先通過身份核對才能設定已批准韌體的清單"
+msgstr "必須先通過身份驗證才能設定已批准韌體的清單"
 
 msgid "Sign data using the client certificate"
-msgstr "使用客戶端憑證簽署資料"
+msgstr "以用戶端憑證簽署資料"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
-msgstr "必須先通過身份核對才能修改客戶端憑證簽署資料"
+msgstr "必須先通過身份驗證才能修改用戶端憑證簽署資料"
 
 msgid "Get BIOS settings"
 msgstr "取得 BIOS 設定"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
-msgstr "必須先通過身份核對才能讀取 BIOS 設定"
+msgstr "必須先通過身份驗證才能讀取 BIOS 設定"
 
 msgid "Set one or more BIOS settings"
 msgstr "設定一個或多個 BIOS 選項"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr "必須先通過身份核對才能修改 BIOS 設定"
+msgstr "必須先通過身份驗證才能修改 BIOS 設定"
 
 msgid "Security hardening for HSI"
 msgstr "HSI 安全硬化"
@@ -208,7 +209,7 @@ msgstr ""
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "安裝韌體更新中…"
+msgstr "正在安裝韌體更新…"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -232,7 +233,7 @@ msgstr "指定 dbx 資料庫檔案"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
-msgstr "檔名"
+msgstr "檔案名稱"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -277,7 +278,7 @@ msgstr "此程式僅有 root 身份才能正常運作"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
-msgstr ""
+msgstr "需要檔案名稱"
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
@@ -297,12 +298,12 @@ msgstr ""
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "核驗 ESP 內容中…"
+msgstr "正在驗證 ESP 內容…"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
 msgid "Failed to validate ESP contents"
-msgstr "無法核驗 ESP 內容"
+msgstr "無法驗證 ESP 內容"
 
 #. TRANSLATORS: actually sending the update to the hardware
 msgid "Applying update…"
@@ -323,13 +324,13 @@ msgstr "未指定動作！"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "請輸入從 0 到 %u 的數字:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "請輸入 %s 或 %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -361,7 +362,7 @@ msgstr "抹除中…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "核驗中…"
+msgstr "驗證中…"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -539,11 +540,11 @@ msgstr "CET OS 支援"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"
-msgstr ""
+msgstr "SMAP"
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
-msgstr ""
+msgstr "加密的記憶體"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -572,7 +573,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
-msgstr ""
+msgstr "UEFI 平臺金鑰"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -606,14 +607,14 @@ msgstr ""
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s override"
-msgstr ""
+msgstr "%s 覆寫"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the
 #. * "override" is the physical PIN that can be driven to
 #. * logic high -- luckily it is probably not accessible to
 #. * end users on consumer boards
 msgid "MEI override"
-msgstr ""
+msgstr "MEI 覆寫"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
 #. * to the private/public key used to secure loading of firmware
@@ -644,15 +645,15 @@ msgstr ""
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "fwupd plugins"
-msgstr ""
+msgstr "fwupd 外掛"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
-msgstr ""
+msgstr "平臺除錯"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Supported CPU"
-msgstr ""
+msgstr "支援的 CPU"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "Processor rollback protection"
@@ -664,11 +665,11 @@ msgstr "平臺安全啟動"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
-msgstr ""
+msgstr "SPI 重播防護"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "SPI write protection"
-msgstr ""
+msgstr "SPI 寫入防護"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -676,7 +677,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
-msgstr ""
+msgstr "模擬的主機"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -684,7 +685,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS mitigation"
-msgstr ""
+msgstr "Intel GDS 緩解"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS firmware updates"
@@ -704,7 +705,7 @@ msgstr "UEFI db"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
@@ -1193,7 +1194,7 @@ msgstr "選擇韌體"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
-msgstr ""
+msgstr "寫入檔案:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
@@ -1296,7 +1297,7 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
-msgstr "顯示客戶端與守護程式版本"
+msgstr "顯示用戶端與守護程式版本"
 
 #. TRANSLATORS: command line option
 msgid "Allow reinstalling existing firmware versions"
@@ -1404,7 +1405,7 @@ msgstr "顯示韌體更新的歷史"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"
-msgstr "[裝置 ID|GUID]"
+msgstr "[裝置-ID|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
@@ -1424,7 +1425,7 @@ msgstr "監看硬體是否有變更"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID [VERSION]"
-msgstr "檔名 裝置 ID [版本]"
+msgstr "檔案名稱 裝置-ID [版本]"
 
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
@@ -1432,7 +1433,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE [DEVICE-ID|GUID]"
-msgstr "檔案 [裝置 ID|GUID]"
+msgstr "檔案 [裝置-ID|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
@@ -1440,7 +1441,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID|GUID"
-msgstr "裝置 ID|GUID"
+msgstr "裝置-ID|GUID"
 
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
@@ -1464,7 +1465,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
-msgstr "子系統 驅動程式 [裝置 ID|GUID]"
+msgstr "子系統 驅動程式 [裝置-ID|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
@@ -1505,7 +1506,7 @@ msgstr "文字"
 #. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
-msgstr "使用客戶端憑證簽署資料"
+msgstr "以用戶端憑證簽署資料"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
@@ -1513,7 +1514,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME CERTIFICATE PRIVATE-KEY"
-msgstr "檔名 憑證 私鑰"
+msgstr "檔案名稱 憑證 私鑰"
 
 #. TRANSLATORS: command description
 msgid "Sign a firmware with a new key"
@@ -1521,7 +1522,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
-msgstr "檔名 [裝置 ID|GUID]"
+msgstr "檔案名稱 [裝置-ID|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1533,7 +1534,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
-msgstr "檔名 偏移 資料 [韌體類型]"
+msgstr "檔案名稱 偏移 資料 [韌體類型]"
 
 #. TRANSLATORS: command description
 msgid "Patch a firmware blob at a known offset"
@@ -1557,7 +1558,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [FIRMWARE-TYPE]"
-msgstr "檔名 [韌體類型]"
+msgstr "檔案名稱 [韌體類型]"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
@@ -1593,7 +1594,7 @@ msgstr "重整遠端伺服器的中介資料"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FWUPD-VERSION]"
-msgstr ""
+msgstr "[FWUPD-版本]"
 
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
@@ -1625,7 +1626,7 @@ msgstr "列出 ESP 上的檔案"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
-msgstr "[裝置 ID|GUID] [分支]"
+msgstr "[裝置-ID|GUID] [分支]"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -1633,7 +1634,7 @@ msgstr "切換裝置上使用的韌體的分支"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID"
-msgstr "裝置 ID"
+msgstr "裝置-ID"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
@@ -1645,7 +1646,7 @@ msgstr "抹除所有韌體更新歷史"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[設定1] [設定2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1690,7 +1691,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX1,INDEX2"
-msgstr ""
+msgstr "索引1,索引2"
 
 #. TRANSLATORS: command description
 msgid "Set the EFI boot order"
@@ -1722,7 +1723,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[APPSTREAM_ID]"
-msgstr ""
+msgstr "[APPSTREAM_ID]"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1766,7 +1767,7 @@ msgstr "修改指定的遠端站點"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
-msgstr ""
+msgstr "遠端-ID"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
@@ -1818,7 +1819,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr "CRC 檔名"
+msgstr "CRC 檔案名稱"
 
 #. TRANSLATORS: command description
 msgid "Finds an algorithm that matches the file CRC"
@@ -2034,7 +2035,7 @@ msgstr ""
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
-msgstr ""
+msgstr "選擇發布"
 
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"
@@ -2174,7 +2175,7 @@ msgstr ""
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
-msgstr "不支援的守護程式版本 %s，客戶端版本是 %s"
+msgstr "不支援的守護程式版本 %s，用戶端版本是 %s"
 
 #. TRANSLATORS: explain why we want to upload
 #, c-format
@@ -2199,7 +2200,7 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Sign the uploaded data with the client certificate"
-msgstr "使用客戶端憑證簽署上傳的資料"
+msgstr "使用用戶端憑證簽署上傳的資料"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
@@ -2243,7 +2244,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
-msgstr "[裝置 ID|GUID] [VERSION]"
+msgstr "[裝置-ID|GUID] [VERSION]"
 
 #. TRANSLATORS: command description
 msgid "Install a specific firmware file on all devices that match"
@@ -2299,7 +2300,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
-msgstr ""
+msgstr "位置"
 
 #. TRANSLATORS: command description
 msgid "Download a file"
@@ -2307,7 +2308,7 @@ msgstr "下載檔案"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
-msgstr ""
+msgstr "[檔案名稱1] [檔案名稱2]"
 
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
@@ -2335,7 +2336,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "GUID|DEVICE-ID"
-msgstr "GUID|裝置 ID"
+msgstr "GUID|裝置-ID"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"
@@ -2804,7 +2805,7 @@ msgstr "裝置在更新完成後不會再次出現"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
-msgstr "密碼學雜湊核驗可以使用"
+msgstr "密碼學雜湊驗證可以使用"
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
@@ -3014,7 +3015,7 @@ msgstr "最小版本"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "最大版本"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3026,7 +3027,7 @@ msgstr "供應商"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3116,7 +3117,7 @@ msgstr ""
 
 #. TRANSLATORS: user needs to run a command
 msgid "Authentication details are required"
-msgstr "需要身份核對資料"
+msgstr "需要身份驗證資料"
 
 #. TRANSLATORS: no peeking
 msgid "Configuration is only readable by the system administrator"
@@ -3348,15 +3349,15 @@ msgstr "密碼"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
-msgstr "檔名"
+msgstr "檔案名稱"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
-msgstr "檔名簽章"
+msgstr "檔案名稱簽章"
 
 #. TRANSLATORS: full path of the remote.conf file
 msgid "Filename Source"
-msgstr "檔名來源"
+msgstr "檔案名稱來源"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -3578,7 +3579,7 @@ msgstr "有些裝置有問題："
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
-msgstr ""
+msgstr "執行環境後綴"
 
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
 msgid "This system has a low HSI security level."
@@ -3614,7 +3615,7 @@ msgstr "您是否瞭解切換韌體分支的後果？"
 
 #. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
 msgid "Some of the platform secrets may be invalidated when updating this firmware."
-msgstr "有些平臺暗記可能在更新此韌體時無法通過核驗。"
+msgstr "有些平臺秘密可能在更新此韌體時無法通過驗證。"
 
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
@@ -3632,7 +3633,7 @@ msgstr "已偵測到全磁碟加密"
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
-msgstr "此軟體包尚未核驗，而可能不會正常運作。"
+msgstr "此套件尚未驗證，而可能不會正常運作。"
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"

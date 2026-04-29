@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-progress-private.h"
+#include "fu-test.h"
 
 typedef struct {
 	guint last_percentage;
@@ -56,6 +57,29 @@ fu_progress_func(void)
 	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.05);
 	str = fu_progress_traceback(progress);
 	g_debug("%s", str);
+}
+
+static void
+fu_progress_idle_func(void)
+{
+	FuProgressHelper helper = {0};
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	g_signal_connect(FU_PROGRESS(progress),
+			 "percentage-changed",
+			 G_CALLBACK(fu_progress_percentage_changed_cb),
+			 &helper);
+
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.f, 0.001);
+
+	fu_progress_sleep_idle(progress, 500);
+	g_assert_cmpint(helper.last_percentage, ==, 0);
+
+	fu_test_loop_run_with_timeout(600);
+	g_assert_cmpint(helper.updates, ==, 101);
+	g_assert_cmpint(helper.last_percentage, ==, 100);
+
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.5f, 0.05);
 }
 
 static void
@@ -313,8 +337,10 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	if (g_test_slow())
+	if (g_test_slow()) {
 		g_test_add_func("/fwupd/progress", fu_progress_func);
+		g_test_add_func("/fwupd/progress/idle", fu_progress_idle_func);
+	}
 	g_test_add_func("/fwupd/progress/scaling", fu_progress_scaling_func);
 	g_test_add_func("/fwupd/progress/child", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress/child-finished", fu_progress_child_finished);

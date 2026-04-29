@@ -1132,6 +1132,16 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 		return FALSE;
 	}
 	hd2_fw_offset = fu_struct_vli_usbhub_hdr_get_usb3_fw_addr(st_hd);
+	if ((gsize)hd2_fw_offset + hd2_fw_sz > buf_fwsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FW2 offset 0x%x + size 0x%x exceeds firmware 0x%x",
+			    (guint)hd2_fw_offset,
+			    (guint)hd2_fw_sz,
+			    (guint)buf_fwsz);
+		return FALSE;
+	}
 	g_debug("FW2 @0x%x (length 0x%x, offset 0x%x)", hd2_fw_addr, hd2_fw_sz, hd2_fw_offset);
 
 	/* progress */
@@ -1285,6 +1295,16 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	}
 	hd2_fw_offset = (fu_struct_vli_usbhub_hdr_get_usb3_fw_addr_high(st_hd) << 16);
 	hd2_fw_offset += fu_struct_vli_usbhub_hdr_get_usb3_fw_addr(st_hd);
+	if ((gsize)hd2_fw_offset + hd2_fw_sz > buf_fwsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FW2 offset 0x%x + size 0x%x exceeds firmware 0x%x",
+			    (guint)hd2_fw_offset,
+			    (guint)hd2_fw_sz,
+			    (guint)buf_fwsz);
+		return FALSE;
+	}
 	g_debug("FW2 @0x%x (length 0x%x, offset 0x%x)", hd2_fw_addr, hd2_fw_sz, hd2_fw_offset);
 
 	/* progress */

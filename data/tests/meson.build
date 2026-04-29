@@ -142,7 +142,7 @@ configure_file(
   install_dir: join_paths(datadir, 'fwupd', 'remotes.d'),
 )
 
-if umockdev_integration_tests.allowed()
+if umockdev.found()
   fwupd_mockdev_tests = files('fwupd_test.py')
   r = run_command(
     unittest_inspector,

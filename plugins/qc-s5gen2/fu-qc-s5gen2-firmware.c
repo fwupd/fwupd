@@ -76,7 +76,10 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 	device_variant = fu_struct_qc_fw_update_hdr_get_dev_variant(st, NULL);
 	self->device_variant = fu_strsafe((const gchar *)device_variant, 8);
 
-	if (!fu_size_checked_inc(&offset, fu_struct_qc_fw_update_hdr_get_upgrades(st) * 4, error))
+	if (!fu_size_checked_inc_product(&offset,
+					 fu_struct_qc_fw_update_hdr_get_upgrades(st),
+					 4,
+					 error))
 		return FALSE;
 	if (!fu_input_stream_read_u16(stream, offset, &config_ver, G_BIG_ENDIAN, error))
 		return FALSE;

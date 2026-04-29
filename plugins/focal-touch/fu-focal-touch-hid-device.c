@@ -51,6 +51,16 @@ static gboolean
 fu_focal_touch_hid_device_send(FuFocalTouchHidDevice *self, GByteArray *buf, GError **error)
 {
 	guint buflen = buf->len;
+
+	if (buflen >= REPORT_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "buffer length 0x%x exceeds report size",
+			    buflen);
+		return FALSE;
+	}
+
 	fu_byte_array_set_size(buf, REPORT_SIZE, 0x00);
 	buf->data[buflen] = fu_xor8(buf->data + 1, buflen - 1) + 1;
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),

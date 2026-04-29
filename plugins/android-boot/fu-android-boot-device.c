@@ -17,7 +17,7 @@
 struct _FuAndroidBootDevice {
 	FuBlockPartition parent_instance;
 	gchar *boot_slot;
-	guint64 max_size;
+	gsize max_size;
 };
 
 G_DEFINE_TYPE(FuAndroidBootDevice, fu_android_boot_device, FU_TYPE_BLOCK_PARTITION)
@@ -35,8 +35,8 @@ static gboolean
 fu_android_boot_device_probe(FuDevice *device, GError **error)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
-	guint64 sectors = 0;
-	guint64 size = 0;
+	guint64 sectors64 = 0;
+	gsize sectors = 0;
 	g_autofree gchar *prop_size = NULL;
 	g_autoptr(GHashTable) cmdline = NULL;
 
@@ -68,10 +68,12 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 				    "device does not expose its size");
 		return FALSE;
 	}
-	if (!fu_strtoull(prop_size, &sectors, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
+	if (!fu_strtoull(prop_size, &sectors64, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
-	size = sectors * ANDROID_BOOT_SECTOR_SIZE;
-	self->max_size = size;
+	if (!fu_size_from_uint64(sectors64, &sectors, error))
+		return FALSE;
+	if (!fu_size_checked_inc_product(&self->max_size, sectors, ANDROID_BOOT_SECTOR_SIZE, error))
+		return FALSE;
 
 	/* extract serial number and set it */
 	fu_device_set_serial(device, g_hash_table_lookup(cmdline, "androidboot.serialno"));

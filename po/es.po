@@ -19,9 +19,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-04-15 14:09+0000\n"
-"Last-Translator: Yago Raña Gayoso <yago.rana.gayoso@gmail.com>\n"
+"POT-Creation-Date: 2026-04-23 08:04+0100\n"
+"PO-Revision-Date: 2026-04-23 06:03+0000\n"
+"Last-Translator: Francisco Serrador <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/fwupd/fwupd/es/>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
@@ -725,7 +725,7 @@ msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
-msgstr ""
+msgstr "Firma de microcódigo AMD"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -900,7 +900,7 @@ msgstr "Protección de Memoria UEFI"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
-msgstr ""
+msgstr "Firma de Microcódigo AMD"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -1051,7 +1051,7 @@ msgstr "HP SureStart es una característica de seguridad del firmware, que prote
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
-msgstr ""
+msgstr "La verificación de Firma de Microcódigo AMD asegura que el microcódigo de la CPU es auténtico y no ha sido manipulado."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1819,7 +1819,7 @@ msgstr "Compara dos versiones para igualdad"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "WORD"
-msgstr ""
+msgstr "WORD"
 
 #. TRANSLATORS: command description
 msgid "Finds firmware releases from the metadata"
@@ -1827,7 +1827,7 @@ msgstr "Buscar la versión del firmware desde los metadatos"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "KIND FILENAME"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
@@ -1835,20 +1835,19 @@ msgstr "Calcula el CRC de un fichero"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "CRC FILENAME"
-msgstr ""
+msgstr "CRC FILENAME"
 
 #. TRANSLATORS: command description
 msgid "Finds an algorithm that matches the file CRC"
-msgstr ""
+msgstr "Encuentra un algoritmo que coincida con el archivo CRC"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
-#, fuzzy
 msgid "Parse the system PCR eventlog"
-msgstr "Interpreta el PCR del sistema en enentlog"
+msgstr "Interpreta el PCR del sistema en eventlog"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2055,7 +2054,6 @@ msgid "No releases available"
 msgstr "Ninguna liberación disponible"
 
 #. TRANSLATORS: no repositories to download from
-#, fuzzy
 msgid "No matching releases for search token"
 msgstr "No coincide versiones para vale de búsqueda"
 
@@ -3053,7 +3051,7 @@ msgstr "Versión Mínima"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "Versión máxima"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3065,7 +3063,7 @@ msgstr "Proveedor"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3198,7 +3196,6 @@ msgid "Plugin is only for testing"
 msgstr "El complemento es solo para pruebas"
 
 #. TRANSLATORS: The plugin enumeration might change the device current mode
-#, fuzzy
 msgid "Plugin enumeration may change device state"
 msgstr "La enumeración del complemento puede cambiar el estado del dispositivo"
 
@@ -3594,7 +3591,7 @@ msgstr "HP SureStart está habilitado"
 
 #. TRANSLATORS: HSI event title
 msgid "AMD microcode signature vulnerability fixed"
-msgstr ""
+msgstr "Se ha corregido la vulnerabilidad de la firma del microcódigo de AMD"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"

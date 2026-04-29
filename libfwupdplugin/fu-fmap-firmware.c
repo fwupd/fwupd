@@ -35,6 +35,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fmap_firmware_get_instance_private(o))
 
+#define FU_FMAP_FIRMWARE_AREAS_MAX 1024
+
 static void
 fu_fmap_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -123,6 +125,14 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "number of areas invalid");
+		return FALSE;
+	}
+	if (nareas > FU_FMAP_FIRMWARE_AREAS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive number of areas: %u",
+			    (guint)nareas);
 		return FALSE;
 	}
 	if (!fu_size_checked_inc(&offset, st_hdr->buf->len, error)) {
@@ -215,7 +225,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* add header */
 	total_sz = st_hdr->buf->len;
-	if (!fu_size_checked_inc(&total_sz, FU_STRUCT_FMAP_AREA_SIZE * images->len, error))
+	if (!fu_size_checked_inc_product(&total_sz, FU_STRUCT_FMAP_AREA_SIZE, images->len, error))
 		return NULL;
 	offset = total_sz;
 	for (guint i = 0; i < images->len; i++) {

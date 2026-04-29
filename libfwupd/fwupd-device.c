@@ -2411,7 +2411,7 @@ fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
-				      g_variant_new_uint64(priv->version_raw));
+				      g_variant_new_uint64(priv->version_bootloader_raw));
 	}
 	if (priv->flashes_left > 0) {
 		g_variant_builder_add(builder,

@@ -637,12 +637,21 @@ fu_hpi_cfu_device_send_payload(FuHpiCfuDevice *self, GByteArray *cfu_buf, GError
 static gboolean
 fu_hpi_cfu_device_untransmitted_data(GByteArray *payload_data,
 				     GByteArray *untransmitted_data,
-				     gint8 payload_header_length,
-				     guint32 fill_from_position,
+				     gsize payload_header_length,
+				     gsize fill_from_position,
 				     GError **error)
 {
-	guint32 remaining_byte_count = payload_header_length - fill_from_position;
+	gsize remaining_byte_count = payload_header_length - fill_from_position;
 
+	if (fill_from_position > payload_header_length) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "position 0x%x > payload header length 0x%x",
+			    (guint)fill_from_position,
+			    (guint)payload_header_length);
+		return FALSE;
+	}
 	fu_byte_array_set_size(untransmitted_data, remaining_byte_count, 0x00);
 	return fu_memcpy_safe(untransmitted_data->data,
 			      untransmitted_data->len,
@@ -674,7 +683,7 @@ fu_hpi_cfu_device_get_payload_header(GByteArray *payload_header,
 static gboolean
 fu_hpi_cfu_device_get_payload_data(GByteArray *payload_data,
 				   GByteArray *payload_buf,
-				   gint8 payload_header_length,
+				   guint8 payload_header_length,
 				   gint32 read_index,
 				   GError **error)
 {
@@ -957,32 +966,30 @@ fu_hpi_cfu_device_handler_send_payload_chunk(FuHpiCfuDevice *self,
 		g_autoptr(GByteArray) payload_header = g_byte_array_new();
 		g_autoptr(GByteArray) payload_data = g_byte_array_new();
 		g_autoptr(GByteArray) cfu_data = g_byte_array_new();
-		gint8 payload_header_length = 0;
+		guint8 payload_header_length = 0;
 
 		/* payload header */
 		if (!fu_hpi_cfu_device_get_payload_header(payload_header,
 							  payload_buf,
 							  read_index,
 							  error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "to get payload header");
+			g_prefix_error_literal(error, "failed to get payload header: ");
 			return FALSE;
 		}
 
-		payload_header_length = payload_header->data[4];
-
 		/* payload data */
+		if (!fu_memread_uint8_safe(payload_header->data,
+					   payload_header->len,
+					   0x4,
+					   &payload_header_length,
+					   error))
+			return FALSE;
 		if (!fu_hpi_cfu_device_get_payload_data(payload_data,
 							payload_buf,
 							payload_header_length,
 							read_index,
 							error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "to get payload data");
+			g_prefix_error_literal(error, "failed to get payload data: ");
 			return FALSE;
 		}
 
@@ -1024,10 +1031,9 @@ fu_hpi_cfu_device_handler_send_payload_chunk(FuHpiCfuDevice *self,
 									  payload_header_length,
 									  fill_from_position,
 									  error)) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_DATA,
-							    "to set untransmitted_data");
+					g_prefix_error_literal(
+					    error,
+					    "failed to set untransmitted data: ");
 					return FALSE;
 				}
 			} else {
@@ -1537,6 +1543,14 @@ fu_hpi_cfu_device_write_firmware(FuDevice *device,
 	/* cfu state machine framework */
 	while (!self->exit_state_machine_framework) {
 		g_debug("hpi-cfu-state: %s", fu_hpi_cfu_state_to_string(self->state));
+		if (self->state >= G_N_ELEMENTS(hpi_cfu_states)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "invalid state 0x%x",
+				    self->state);
+			return FALSE;
+		}
 		if (!hpi_cfu_states[self->state].handler(self,
 							 progress,
 							 hpi_cfu_states[self->state].options,

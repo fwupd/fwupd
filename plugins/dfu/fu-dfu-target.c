@@ -419,7 +419,7 @@ fu_dfu_target_status_to_error_msg(FuDfuStatus status)
 		return "Something unexpected went wrong";
 	if (status == FU_DFU_STATUS_ERR_STALLDPKT)
 		return "Device stalled an unexpected request";
-	return NULL;
+	return "Unknown error";
 }
 
 static gboolean

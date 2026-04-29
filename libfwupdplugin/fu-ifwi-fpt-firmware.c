@@ -137,7 +137,7 @@ fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 	/* fixup the image offsets */
 	if (!fu_size_checked_inc(&offset, st->buf->len, error))
 		return NULL;
-	if (!fu_size_checked_inc(&offset, (gsize)FU_STRUCT_IFWI_FPT_ENTRY_SIZE * imgs->len, error))
+	if (!fu_size_checked_inc_product(&offset, FU_STRUCT_IFWI_FPT_ENTRY_SIZE, imgs->len, error))
 		return NULL;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);

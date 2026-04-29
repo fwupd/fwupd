@@ -25,7 +25,7 @@ def _scan_file(fn: str) -> Dict[str, int]:
             "./src/fwupdtool",
             "firmware-parse",
             fn,
-            "ifd-firmware",
+            "ifd",
             "--json",
             "--no-timestamp",
         ]

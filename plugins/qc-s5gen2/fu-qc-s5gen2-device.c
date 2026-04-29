@@ -593,7 +593,9 @@ fu_qc_s5gen2_device_write_blocks(FuQcS5gen2Device *self,
 		more_data = (blobsz <= (cur_offset + data_sz)) ? FU_QC_MORE_DATA_LAST_PACKET
 							       : FU_QC_MORE_DATA_MORE;
 
-		data_out = g_bytes_new_from_bytes(bytes, cur_offset, data_sz);
+		data_out = fu_bytes_new_offset(bytes, cur_offset, data_sz, error);
+		if (data_out == NULL)
+			return FALSE;
 
 		if (!fu_qc_s5gen2_device_write_bucket(self, data_out, more_data, error))
 			return FALSE;

@@ -29,6 +29,11 @@ fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM);
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_SERVER)) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
 
 	/* load file */
 	fn = fu_context_build_filename(ctx,

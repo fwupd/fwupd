@@ -534,15 +534,19 @@ fu_console_refresh(FuConsole *self)
 		for (i = midpoint_floor + 1; i < self->length_percentage - 1; i++)
 			g_string_append_c(str, ' ');
 	} else {
-		const gchar chars[] = {
-		    '-',
-		    '\\',
-		    '|',
-		    '/',
+		const gchar *chars[] = {
+		    "⣾",
+		    "⣽",
+		    "⣻",
+		    "⢿",
+		    "⡿",
+		    "⣟",
+		    "⣯",
+		    "⣷",
 		};
 		for (i = 0; i < self->spinner_idx; i++)
 			g_string_append_c(str, ' ');
-		g_string_append_c(str, chars[i / 4 % G_N_ELEMENTS(chars)]);
+		g_string_append(str, chars[i / 2 % G_N_ELEMENTS(chars)]);
 		for (i = i + 1; i < self->length_percentage - 1; i++)
 			g_string_append_c(str, ' ');
 	}

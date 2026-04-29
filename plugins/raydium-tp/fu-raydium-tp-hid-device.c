@@ -88,6 +88,7 @@ fu_raydium_tp_hid_device_read_cb(FuDevice *device, gpointer user_data, GError **
 {
 	FuRaydiumTpHidDevice *self = FU_RAYDIUM_TP_HID_DEVICE(device);
 	FuRaydiumTpHidReadHelper *helper = (FuRaydiumTpHidReadHelper *)user_data;
+	guint8 chk_idx = 0;
 	g_autoptr(GByteArray) buf = NULL;
 
 	if (!fu_raydium_tp_hid_device_set_report(self, helper->outbuf, error))
@@ -95,7 +96,9 @@ fu_raydium_tp_hid_device_read_cb(FuDevice *device, gpointer user_data, GError **
 	buf = fu_raydium_tp_hid_device_get_report(self, error);
 	if (buf == NULL)
 		return FALSE;
-	if (buf->data[RAYDIUM_HIDI2C_CHK_IDX] != 0xFF && buf->data[0] != 0xFF) {
+	if (!fu_memread_uint8_safe(buf->data, buf->len, RAYDIUM_HIDI2C_CHK_IDX, &chk_idx, error))
+		return FALSE;
+	if (chk_idx != 0xFF && buf->data[0] != 0xFF) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "device not ready");
 		return FALSE;
 	}
@@ -216,6 +219,15 @@ fu_raydium_tp_hid_device_tp_write(FuRaydiumTpHidDevice *self,
 {
 	g_autoptr(FuStructRaydiumTpHidPacket) st1 = fu_struct_raydium_tp_hid_packet_new();
 	g_autoptr(FuStructRaydiumTpHidPacket) st2 = fu_struct_raydium_tp_hid_packet_new();
+
+	/* sanity check */
+	if (length > G_MAXUINT8 - 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "write length too large for packet");
+		return FALSE;
+	}
 
 	fu_struct_raydium_tp_hid_packet_set_header3(st1, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
 	fu_struct_raydium_tp_hid_packet_set_header4(st1, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
@@ -434,6 +446,7 @@ fu_raydium_tp_hid_device_wait_idle_cb(FuDevice *device, gpointer user_data, GErr
 {
 	FuRaydiumTpHidDevice *self = FU_RAYDIUM_TP_HID_DEVICE(device);
 	FuRaydiumTpBlCmd boot_main_state;
+	guint8 chk_idx = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_append_uint8(buf, FU_RAYDIUM_TP_CMD2_CHK);
@@ -442,7 +455,9 @@ fu_raydium_tp_hid_device_wait_idle_cb(FuDevice *device, gpointer user_data, GErr
 
 	if (!fu_raydium_tp_hid_device_bl_read(self, buf->data, buf->len, 6, error))
 		return FALSE;
-	boot_main_state = buf->data[RAYDIUM_HIDI2C_CHK_IDX];
+	if (!fu_memread_uint8_safe(buf->data, buf->len, RAYDIUM_HIDI2C_CHK_IDX, &chk_idx, error))
+		return FALSE;
+	boot_main_state = chk_idx;
 	if (boot_main_state != FU_RAYDIUM_TP_BL_CMD_IDLE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1187,6 +1202,14 @@ fu_raydium_tp_hid_device_write_fwimage(FuRaydiumTpHidDevice *self,
 	gsize img_length = fu_firmware_get_size(img);
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 
+	if (img_length < RAYDIUM_CRC_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware image too small");
+		return FALSE;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -1231,6 +1254,15 @@ fu_raydium_tp_hid_device_write_descimage(FuRaydiumTpHidDevice *self,
 	gsize img_length = fu_firmware_get_size(img);
 	guint32 image_crc = fu_raydium_tp_image_get_checksum(FU_RAYDIUM_TP_IMAGE(img));
 	guint8 sector = (guint8)(img_length / RAYDIUM_FLASH_SECTOR_SIZE);
+
+	if (img_length < RAYDIUM_CRC_LEN || img_length > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware image size invalid: 0x%x",
+			    (guint)img_length);
+		return FALSE;
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
