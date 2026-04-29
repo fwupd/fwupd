@@ -164,17 +164,10 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 			force_table_addr_wrds =
 			    fu_struct_elantp_firmware_hdr_get_iap_forcetable(st);
 		}
-		if (force_table_addr_wrds == 0xFFFF) {
+		if (force_table_addr_wrds == 0xFFFF || force_table_addr_wrds % 32 != 0 ||
+		    force_table_addr_wrds >= 0x7FFF) {
 			self->force_table_support = FALSE;
 		} else {
-			if (force_table_addr_wrds % 32 != 0 || force_table_addr_wrds >= 0x7FFF) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "forcetable address invalid: 0x%x",
-					    force_table_addr_wrds);
-				return FALSE;
-			}
 			self->force_table_addr = force_table_addr_wrds * 2;
 			self->force_table_support = TRUE;
 		}
