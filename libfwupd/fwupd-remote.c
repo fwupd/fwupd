@@ -1453,7 +1453,7 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 
 	/* look for the metadata hash */
 	jcat_blobs = jcat_item_get_blobs_by_kind(jcat_item, JCAT_BLOB_KIND_SHA256);
-	if (jcat_blobs->len == 1) {
+	if (jcat_blobs->len >= 1) {
 		JcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
 		g_autofree gchar *hash = jcat_blob_get_data_as_string(blob);
 		fwupd_remote_set_checksum_sig_metadata(self, hash);
