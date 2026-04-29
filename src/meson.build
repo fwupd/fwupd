@@ -284,7 +284,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
 
-  foreach test_name: [
+  test_names = [
     'cabinet',
     'client-list',
     'console',
@@ -300,10 +300,13 @@ if get_option('tests')
     'release',
     'remote',
     'remote-list',
-    'unix-seekable-input-stream',
     'usb-backend',
     'util',
   ]
+  if giounix.found()
+    test_names += 'unix-seekable-input-stream'
+  endif
+  foreach test_name: test_names
     e = executable(
       'fu-' + test_name + '-test',
       fwupdengine_rs,
