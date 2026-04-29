@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-23 08:04+0100\n"
-"PO-Revision-Date: 2026-04-23 15:45+0000\n"
+"PO-Revision-Date: 2026-04-29 09:09+0000\n"
 "Last-Translator: UDP <udp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hant/>\n"
 "Language: zh_TW\n"
@@ -540,11 +540,11 @@ msgstr "CET OS 支援"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"
-msgstr ""
+msgstr "SMAP"
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
-msgstr ""
+msgstr "加密的記憶體"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -573,7 +573,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
-msgstr ""
+msgstr "UEFI 平臺金鑰"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -607,14 +607,14 @@ msgstr ""
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s override"
-msgstr ""
+msgstr "%s 覆寫"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the
 #. * "override" is the physical PIN that can be driven to
 #. * logic high -- luckily it is probably not accessible to
 #. * end users on consumer boards
 msgid "MEI override"
-msgstr ""
+msgstr "MEI 覆寫"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
 #. * to the private/public key used to secure loading of firmware
@@ -645,15 +645,15 @@ msgstr ""
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "fwupd plugins"
-msgstr ""
+msgstr "fwupd 外掛"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
-msgstr ""
+msgstr "平臺除錯"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Supported CPU"
-msgstr ""
+msgstr "支援的 CPU"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "Processor rollback protection"
@@ -665,11 +665,11 @@ msgstr "平臺安全啟動"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
-msgstr ""
+msgstr "SPI 重播防護"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "SPI write protection"
-msgstr ""
+msgstr "SPI 寫入防護"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -677,7 +677,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: if we are emulating a different host
 msgid "Emulated host"
-msgstr ""
+msgstr "模擬的主機"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -685,7 +685,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS mitigation"
-msgstr ""
+msgstr "Intel GDS 緩解"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS firmware updates"
@@ -705,7 +705,7 @@ msgstr "UEFI db"
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
@@ -1194,7 +1194,7 @@ msgstr "選擇韌體"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
-msgstr ""
+msgstr "寫入檔案:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
@@ -1594,7 +1594,7 @@ msgstr "重整遠端伺服器的中介資料"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FWUPD-VERSION]"
-msgstr ""
+msgstr "[FWUPD-版本]"
 
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
@@ -1646,7 +1646,7 @@ msgstr "抹除所有韌體更新歷史"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2]…"
-msgstr ""
+msgstr "[設定1] [設定2]…"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -1691,7 +1691,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX1,INDEX2"
-msgstr ""
+msgstr "索引1,索引2"
 
 #. TRANSLATORS: command description
 msgid "Set the EFI boot order"
@@ -1723,7 +1723,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[APPSTREAM_ID]"
-msgstr ""
+msgstr "[APPSTREAM_ID]"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1767,7 +1767,7 @@ msgstr "修改指定的遠端站點"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
-msgstr ""
+msgstr "遠端-ID"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
@@ -2035,7 +2035,7 @@ msgstr ""
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose release"
-msgstr ""
+msgstr "選擇發布"
 
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"
@@ -2300,7 +2300,7 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
-msgstr ""
+msgstr "位置"
 
 #. TRANSLATORS: command description
 msgid "Download a file"
@@ -2308,7 +2308,7 @@ msgstr "下載檔案"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
-msgstr ""
+msgstr "[檔案名稱1] [檔案名稱2]"
 
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
@@ -3579,7 +3579,7 @@ msgstr "有些裝置有問題："
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
-msgstr ""
+msgstr "執行環境後綴"
 
 #. TRANSLATORS: this is instructions on how to improve the HSI security level
 msgid "This system has a low HSI security level."
