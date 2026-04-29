@@ -888,7 +888,7 @@ fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GErro
 			}
 		}
 	}
-	if (ic_type == 0x13) {
+	if (ic_type == FU_ETP_IC_NUM13) {
 		if (!fu_elantp_hid_device_write_cmd(self,
 						    FU_ETP_RPTID_TP_FEATURE,
 						    FU_ETP_CMD_I2C_IAP_RESET,
