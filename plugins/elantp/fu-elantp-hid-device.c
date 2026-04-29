@@ -888,6 +888,14 @@ fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GErro
 			}
 		}
 	}
+	if (ic_type == 0x13) {
+		if (!fu_elantp_hid_device_write_cmd(self,
+						    FU_ETP_RPTID_TP_FEATURE,
+						    FU_ETP_CMD_I2C_IAP_RESET,
+						    ETP_I2C_CLEAR_PROTECT_AI_TABLE,
+						    error))
+			return FALSE;
+	}
 	if (!fu_elantp_hid_device_write_fw_password(self, ic_type, iap_ver, error))
 		return FALSE;
 	if (!fu_elantp_hid_device_write_cmd(self,
