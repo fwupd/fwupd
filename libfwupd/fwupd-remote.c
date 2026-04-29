@@ -1412,6 +1412,46 @@ fwupd_remote_get_metadata_uri(FwupdRemote *self)
 	return priv->metadata_uri;
 }
 
+/**
+ * fwupd_remote_jcat_item_get_id_safe:
+ * @jcat_item: a #JcatItem
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the item ID, if safe to use as a path.
+ *
+ * Returns: string
+ **/
+static const gchar *
+fwupd_remote_jcat_item_get_id_safe(JcatItem *jcat_item, GError **error)
+{
+	const gchar *id;
+	g_autofree gchar *id_basename = NULL;
+
+	g_return_val_if_fail(JCAT_IS_ITEM(jcat_item), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	id = jcat_item_get_id(jcat_item);
+	if (id == NULL || id[0] == '\0') {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "ID not set");
+		return NULL;
+	}
+
+	/* verify there is no path component */
+	id_basename = g_path_get_basename(id);
+	if (g_strcmp0(id, id_basename) != 0 || g_strcmp0(id_basename, G_DIR_SEPARATOR_S) == 0 ||
+	    g_strcmp0(id_basename, "..") == 0 || g_strcmp0(id_basename, ".") == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "ID cannot contain path components");
+		return NULL;
+	}
+
+	/* success */
+	return id;
+}
+
 static gboolean
 fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError **error)
 {
@@ -1433,14 +1473,9 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 		if (jcat_item == NULL)
 			return FALSE;
 	}
-	id = jcat_item_get_id(jcat_item);
-	if (id == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "No ID for JCat item");
+	id = fwupd_remote_jcat_item_get_id_safe(jcat_item, error);
+	if (id == NULL)
 		return FALSE;
-	}
 
 	/* replace the URI if required */
 	baseuri = g_path_get_dirname(priv->metadata_uri);
