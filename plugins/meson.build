@@ -16,6 +16,7 @@ plugins = {
   'acpi-facp': false,
   'acpi-ivrs': false,
   'acpi-phat': false,
+  'acpi-sbom': false,
   'algoltek-usb': false,
   'algoltek-usbcr': false,
   'amd-kria': false,
