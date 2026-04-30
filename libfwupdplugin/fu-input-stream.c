@@ -363,7 +363,7 @@ fu_input_stream_read_bytes(GInputStream *stream,
 	buf = fu_input_stream_read_byte_array(stream, offset, count, progress, error);
 	if (buf == NULL)
 		return NULL;
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 }
 
 /**

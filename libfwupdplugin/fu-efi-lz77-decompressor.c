@@ -676,8 +676,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 		if (fu_efi_lz77_decompressor_internal(&helper,
 						      decompressor_versions[i],
 						      &error_local)) {
-			g_autoptr(GBytes) blob =
-			    g_byte_array_free_to_bytes(g_steal_pointer(&dst)); /* nocheck:blocked */
+			g_autoptr(GBytes) blob = g_byte_array_free_to_bytes(g_steal_pointer(&dst));
 			if (!fu_firmware_set_stream(firmware, NULL, error))
 				return FALSE;
 			fu_firmware_set_bytes(firmware, blob);
