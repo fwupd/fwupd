@@ -1,0 +1,7 @@
+<firmware gtype="FuAcpiSbomTable">
+  <id>SBOM</id>
+  <firmware gtype="FuAcpiSbomEntry">
+    <format>cyclonedx</format>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>
