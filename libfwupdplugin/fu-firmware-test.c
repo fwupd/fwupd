@@ -863,6 +863,11 @@ fu_firmware_builder_round_trip_func(void)
 		FuFirmwareBuilderFlags flags;
 	} map[] = {
 	    {
+		"acpi-table.builder.xml",
+		"e286af7d9e0fcfc0e3fd3f2199156a5f1282c3ca",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		"cab.builder.xml",
 		"a708f47b1a46377f1ea420597641ffe9a40abd75",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
