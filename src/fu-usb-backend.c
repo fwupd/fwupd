@@ -188,7 +188,7 @@ fu_usb_backend_rescan_cb(gpointer user_data)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(user_data);
 	fu_usb_backend_rescan(self);
-	return TRUE;
+	return G_SOURCE_CONTINUE;
 }
 
 static void
@@ -285,7 +285,7 @@ fu_usb_backend_idle_hotplug_cb(gpointer user_data)
 	}
 
 	/* all done */
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 /* this is run in the libusb thread */

@@ -116,7 +116,7 @@ fu_udev_backend_rescan_dpaux_devices_cb(gpointer user_data)
 		fu_udev_backend_rescan_dpaux_device(self, dpaux_device);
 	}
 	self->dpaux_devices_rescan_id = 0;
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 static void

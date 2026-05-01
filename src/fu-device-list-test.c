@@ -123,7 +123,7 @@ fu_device_list_remove_cb(gpointer user_data)
 {
 	FuDeviceListReplugHelper *helper = (FuDeviceListReplugHelper *)user_data;
 	fu_device_list_remove(helper->device_list, helper->device_old);
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -131,7 +131,7 @@ fu_device_list_add_cb(gpointer user_data)
 {
 	FuDeviceListReplugHelper *helper = (FuDeviceListReplugHelper *)user_data;
 	fu_device_list_add(helper->device_list, helper->device_new);
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 static void
