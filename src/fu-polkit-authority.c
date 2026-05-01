@@ -95,6 +95,9 @@ fu_polkit_authority_check(FuPolkitAuthority *self,
 	g_return_if_fail(action_id != NULL);
 	g_return_if_fail(callback != NULL);
 
+	/* tag for debugging */
+	g_task_set_source_tag(task, fu_polkit_authority_check);
+
 #ifdef HAVE_POLKIT
 	if (owner != NULL && sender != NULL) {
 		g_autoptr(PolkitSubject) pksubject = polkit_system_bus_name_new(sender);
