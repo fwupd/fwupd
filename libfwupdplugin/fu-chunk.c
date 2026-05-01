@@ -218,10 +218,7 @@ fu_chunk_set_bytes(FuChunk *self, GBytes *bytes)
 	if (self->bytes == bytes)
 		return;
 
-	if (self->bytes != NULL) {
-		g_bytes_unref(self->bytes);
-		self->bytes = NULL;
-	}
+	g_clear_pointer(&self->bytes, g_bytes_unref);
 	if (bytes != NULL) {
 		self->bytes = g_bytes_ref(bytes);
 		self->data = g_bytes_get_data(bytes, NULL);

@@ -884,8 +884,7 @@ fu_volume_unmount(FuVolume *self, GError **error)
 				     error);
 	if (val == NULL)
 		return FALSE;
-	g_free(self->mount_path);
-	self->mount_path = NULL;
+	g_clear_pointer(&self->mount_path, g_free);
 	return TRUE;
 }
 

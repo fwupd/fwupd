@@ -480,8 +480,7 @@ sync_device_removed(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 		return;
 	}
 
-	g_object_unref(target->fu_device);
-	target->fu_device = NULL;
+	g_clear_object(&target->fu_device);
 }
 
 static void
@@ -611,8 +610,7 @@ mock_tree_detach(FuThunderboltMockTree *node)
 	for (guint i = 0; i < node->children->len; i++) {
 		FuThunderboltMockTree *child = g_ptr_array_index(node->children, i);
 		mock_tree_detach(child);
-		g_free(child->sysfs_parent);
-		child->sysfs_parent = NULL;
+		g_clear_pointer(&child->sysfs_parent, g_free);
 	}
 
 	bed = node->bed;

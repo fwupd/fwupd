@@ -606,8 +606,7 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 	priv->metadata_uri = g_strdup(metadata_uri);
 
 	/* generate the signature URI too */
-	g_free(priv->metadata_uri_sig);
-	priv->metadata_uri_sig = NULL;
+	g_clear_pointer(&priv->metadata_uri_sig, g_free);
 
 	/* optional */
 	if (metadata_uri != NULL)

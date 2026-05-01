@@ -58,8 +58,7 @@ fu_qc_s5gen2_ble_device_notify_release(FuQcS5gen2BleDevice *self, GError **error
 	if (self->io_cmd == NULL)
 		return (TRUE);
 
-	g_object_unref(self->io_cmd);
-	self->io_cmd = NULL;
+	g_clear_object(&self->io_cmd);
 	self->mtu = 0;
 
 	return TRUE;

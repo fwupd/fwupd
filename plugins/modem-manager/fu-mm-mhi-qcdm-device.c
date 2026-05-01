@@ -116,10 +116,7 @@ fu_mm_mhi_qcdm_device_cleanup(FuDevice *device,
 	g_clear_object(&self->search_path_locker);
 
 	/* no longer required */
-	if (self->firehose_prog != NULL) {
-		g_bytes_unref(self->firehose_prog);
-		self->firehose_prog = NULL;
-	}
+	g_clear_pointer(&self->firehose_prog, g_bytes_unref);
 
 	/* success */
 	return TRUE;
