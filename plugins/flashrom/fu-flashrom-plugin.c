@@ -375,6 +375,7 @@ fu_flashrom_plugin_unlock(FuPlugin *self, FuDevice *device, GError **error)
 	return fu_flashrom_device_unlock(FU_FLASHROM_DEVICE(device), error);
 }
 
+/* goblint-ignore-next-line: g_object_virtual_methods_chain_up */
 static void
 fu_flashrom_plugin_constructed(GObject *obj)
 {
@@ -392,6 +393,7 @@ fu_flashrom_plugin_constructed(GObject *obj)
 	/* nocheck:finalize */
 }
 
+/* goblint-ignore-next-line: g_object_virtual_methods_chain_up */
 static void
 fu_flashrom_plugin_finalize(GObject *obj)
 {

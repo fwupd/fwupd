@@ -9,6 +9,7 @@
 static void
 fu_gobject_finalize(GObject *object);
 
+/* goblint-ignore-next-line: g_object_virtual_methods_chain_up */
 static void
 fu_gobject_finalize(GObject *object)
 {
