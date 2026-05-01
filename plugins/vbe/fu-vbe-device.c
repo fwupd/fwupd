@@ -10,7 +10,7 @@
 
 #include "fu-vbe-device.h"
 
-enum { PROP_0, PROP_VBE_METHOD, PROP_FDT_ROOT, PROP_FDT_NODE, PROP_LAST };
+enum { PROP_0, PROP_FDT_ROOT, PROP_FDT_NODE, PROP_LAST };
 
 typedef struct {
 	FuFdtImage *fdt_root;
