@@ -83,7 +83,7 @@ fu_common_get_block_devices(GError **error)
 
 			g_variant_unref(props);
 
-			if (strcmp(iface, UDISKS_DBUS_INTERFACE_BLOCK) != 0)
+			if (g_strcmp0(iface, UDISKS_DBUS_INTERFACE_BLOCK) != 0)
 				continue;
 
 			proxy_blk = g_dbus_proxy_new_sync(connection,
