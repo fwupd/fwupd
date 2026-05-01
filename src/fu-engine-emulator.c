@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-backend-private.h"
+#include "fu-backend.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine-emulator.h"

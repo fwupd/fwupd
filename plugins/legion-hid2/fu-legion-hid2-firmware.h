@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuLegionHid2Firmware,
 		     FU,
 		     LEGION_HID2_FIRMWARE,
 		     FuFirmware)
-
-FuFirmware *
-fu_legion_hid2_firmware_new(void);
