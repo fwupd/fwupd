@@ -1374,10 +1374,7 @@ fu_device_set_poll_interval(FuDevice *self, guint interval)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	if (priv->poll_id != 0) {
-		g_source_remove(priv->poll_id);
-		priv->poll_id = 0;
-	}
+	g_clear_handle_id(&priv->poll_id, g_source_remove);
 	if (interval == 0)
 		return;
 	if (interval % 1000 == 0) {

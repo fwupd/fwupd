@@ -576,10 +576,7 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	fu_device_add_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 
 	/* ensure never fired if the remove delay is changed */
-	if (item->remove_id > 0) {
-		g_source_remove(item->remove_id);
-		item->remove_id = 0;
-	}
+	g_clear_handle_id(&item->remove_id, g_source_remove);
 
 	/* delay the removal and check for replug */
 	if (fu_device_list_should_remove_with_delay(item->device)) {
@@ -698,10 +695,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 	g_autofree gchar *str = NULL;
 
 	/* clear timeout if scheduled */
-	if (item->remove_id != 0) {
-		g_source_remove(item->remove_id);
-		item->remove_id = 0;
-	}
+	g_clear_handle_id(&item->remove_id, g_source_remove);
 
 	/* remove flag on both old and new devices */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {

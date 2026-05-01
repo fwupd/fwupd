@@ -282,8 +282,7 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 	guint32 remaining_size;
 	guint16 error_code = 0;
 
-	g_source_remove(ctx->timeout_id);
-	ctx->timeout_id = 0;
+	g_clear_handle_id(&ctx->timeout_id, g_source_remove);
 	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
 	ctx->indication_id = 0;
 
@@ -501,8 +500,7 @@ fu_mm_qmi_device_activate_config_indication(QmiClientPdc *client,
 {
 	guint16 error_code = 0;
 
-	g_source_remove(ctx->timeout_id);
-	ctx->timeout_id = 0;
+	g_clear_handle_id(&ctx->timeout_id, g_source_remove);
 	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
 	ctx->indication_id = 0;
 
@@ -619,8 +617,7 @@ fu_mm_qmi_device_set_selected_config_indication(QmiClientPdc *client,
 {
 	guint16 error_code = 0;
 
-	g_source_remove(ctx->timeout_id);
-	ctx->timeout_id = 0;
+	g_clear_handle_id(&ctx->timeout_id, g_source_remove);
 	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
 	ctx->indication_id = 0;
 

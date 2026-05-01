@@ -56,8 +56,7 @@ fu_idle_stop(FuIdle *self)
 {
 	if (self->idle_id == 0)
 		return;
-	g_source_remove(self->idle_id);
-	self->idle_id = 0;
+	g_clear_handle_id(&self->idle_id, g_source_remove);
 }
 
 static void

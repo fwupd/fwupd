@@ -194,10 +194,7 @@ fu_usb_backend_rescan_cb(gpointer user_data)
 static void
 fu_usb_backend_ensure_rescan_timeout(FuUsbBackend *self)
 {
-	if (self->hotplug_poll_id > 0) {
-		g_source_remove(self->hotplug_poll_id);
-		self->hotplug_poll_id = 0;
-	}
+	g_clear_handle_id(&self->hotplug_poll_id, g_source_remove);
 	if (self->hotplug_poll_interval > 0) {
 		self->hotplug_poll_id =
 		    g_timeout_add(self->hotplug_poll_interval, fu_usb_backend_rescan_cb, self);
