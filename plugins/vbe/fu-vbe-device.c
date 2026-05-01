@@ -163,7 +163,7 @@ fu_vbe_device_class_init(FuVbeDeviceClass *klass)
 	pspec =
 	    g_param_spec_object("fdt-root",
 				NULL,
-				"FDT root containing method parameters",
+				NULL,
 				FU_TYPE_FDT_IMAGE,
 				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FDT_ROOT, pspec);
@@ -171,7 +171,7 @@ fu_vbe_device_class_init(FuVbeDeviceClass *klass)
 	pspec =
 	    g_param_spec_object("fdt-node",
 				NULL,
-				"FDT image within the device tree containing method parameters'",
+				NULL,
 				FU_TYPE_FDT_IMAGE,
 				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FDT_NODE, pspec);
