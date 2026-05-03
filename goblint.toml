@@ -1,0 +1,34 @@
+min_glib_version = "2.68"
+format = "text"
+editor_url = "vscode://file{path}:{line}:{column}"
+
+ignore = [
+    "contrib/ci/tests/**",
+]
+
+[rules.use_g_object_class_install_properties]
+level = "ignore"
+
+[rules.use_g_object_notify_by_pspec]
+level = "ignore"
+
+[rules.include_order]
+level = "ignore"
+
+[rules.property_enum_convention]
+level = "ignore"
+
+[rules.use_g_autoptr_inline_cleanup]
+level = "ignore"
+
+[rules.g_source_id_not_stored]
+level = "ignore"
+
+[rules.property_enum_coverage]
+level = "ignore"
+
+[rules.property_switch_exhaustiveness]
+level = "ignore"
+
+[rules.missing_implementation]
+level = "error"

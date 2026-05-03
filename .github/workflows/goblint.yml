@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run goblint
-        run: goblint --min-glib-version 2.68 --exclude use_g_object_class_install_properties --exclude use_g_object_notify_by_pspec --exclude include_order --exclude property_enum_convention --exclude use_g_autoptr_inline_cleanup --exclude g_source_id_not_stored --exclude property_enum_coverage --exclude property_switch_exhaustiveness
+        run: goblint
