@@ -31,8 +31,6 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 			  GInputStream *stream_payload,
 			  FuProgress *progress,
 			  GError **error) G_GNUC_NON_NULL(1, 3);
-gboolean
-fu_igsc_device_restart(FuIgscDevice *self, GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_igsc_device_get_aux_version(FuIgscDevice *self,
