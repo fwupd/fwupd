@@ -42,6 +42,9 @@ fu_jcat_sha256_engine_func(void)
 	const gchar *sig_actual =
 	    "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447";
 
+	/* set up context */
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
+
 	/* get engine */
 	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_SHA256, &error);
 	g_assert_no_error(error);
@@ -93,7 +96,7 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 	g_autofree gchar *fn_fail = NULL;
 	g_autofree gchar *fn_pass = NULL;
 	g_autofree gchar *fn_sig = NULL;
-	g_autofree gchar *pki_f = NULL;
+	g_autofree gchar *pki_dir = NULL;
 	g_autofree gchar *sig_fn2 = NULL;
 	g_autoptr(GBytes) blob_sig2 = NULL;
 	g_autoptr(GBytes) data_fail = NULL;
@@ -106,8 +109,9 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 	g_autoptr(FuJcatResult) result_pass = NULL;
 
 	/* set up context */
-	pki_f = g_test_build_filename(G_TEST_DIST, "tests", "pki", "LVFS-CA.pem", NULL);
-	fu_jcat_context_add_public_key(context, pki_f);
+	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 
 	/* get engine */
 	if (test_data == NULL) {
@@ -192,6 +196,9 @@ fwupd_jcat_pkcs7_engine_self_signed_func(gconstpointer test_data)
 				   "    FuJcat*Pkcs7Engine:\n"
 				   "        Kind:           pkcs7\n"
 				   "        VerifyKind:     signature\n";
+
+	/* set up context */
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 
 	/* get engine */
 	if (test_data == NULL) {
@@ -337,11 +344,12 @@ fu_jcat_context_verify_blob_func(void)
 	g_autoptr(FuJcatEngine) engine3 = NULL;
 	g_autoptr(FuJcatEngine) engine4 = NULL;
 	g_autoptr(FuJcatResult) result = NULL;
-	g_autoptr(FuJcatResult) result_disallow = NULL;
 
 	/* set up context */
 	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
 	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
 
 	/* get all engines */
 	engine1 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_SHA256, &error);
@@ -350,8 +358,8 @@ fu_jcat_context_verify_blob_func(void)
 	engine3 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(engine3);
-	engine4 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_LAST, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	engine4 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_GPG, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(engine4);
 	g_clear_error(&error);
 
@@ -376,16 +384,44 @@ fu_jcat_context_verify_blob_func(void)
 	g_assert_cmpstr(fu_jcat_result_get_authority(result),
 			==,
 			"O=Linux Vendor Firmware Project,CN=LVFS CA");
+}
+
+static void
+fu_jcat_context_verify_blob_disallow_func(void)
+{
+	g_autofree gchar *fn_pass = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autofree gchar *pki_dir = NULL;
+	g_autoptr(GBytes) data_fwbin = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdJcatBlob) blob = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatResult) result = NULL;
+
+	/* set up context (no PKCS#7 support) */
+	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
+	fu_jcat_context_add_public_keys(context, pki_dir);
+
+	/* verify blob */
+	fn_pass = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fwbin = fu_bytes_get_contents(fn_pass, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fwbin);
+	fn_sig = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7b", NULL);
+	data_sig = fu_bytes_get_contents(fn_sig, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_sig);
+	blob = fwupd_jcat_blob_new(FWUPD_JCAT_BLOB_KIND_PKCS7, data_sig, FWUPD_JCAT_BLOB_FLAG_NONE);
 
 	/* not supported */
-	fu_jcat_context_blob_kind_disallow(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
-	result_disallow = fu_jcat_context_verify_blob(context,
-						      data_fwbin,
-						      blob,
-						      FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
-						      &error);
+	result = fu_jcat_context_verify_blob(context,
+					     data_fwbin,
+					     blob,
+					     FU_JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+					     &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_null(result_disallow);
+	g_assert_null(result);
 }
 
 static void
@@ -403,13 +439,14 @@ fu_jcat_context_verify_item_sign_func(void)
 	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
 	g_autoptr(FuJcatEngine) engine1 = NULL;
 	g_autoptr(FuJcatEngine) engine3 = NULL;
-	g_autoptr(FuJcatEngine) engine4 = NULL;
 	g_autoptr(GPtrArray) results_fail = NULL;
 	g_autoptr(GPtrArray) results_pass = NULL;
 
 	/* set up context */
 	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
 	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
 
 	/* get all engines */
 	engine1 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_SHA256, &error);
@@ -418,10 +455,6 @@ fu_jcat_context_verify_item_sign_func(void)
 	engine3 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(engine3);
-	engine4 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_LAST, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_null(engine4);
-	g_clear_error(&error);
 
 	/* verify blob */
 	fn_pass = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
@@ -467,7 +500,7 @@ fu_jcat_context_verify_item_target_func(void)
 	FuJcatResult *result;
 	g_autofree gchar *fn_pass = NULL;
 	g_autofree gchar *fn_sig = NULL;
-	g_autofree gchar *pki_f = NULL;
+	g_autofree gchar *pki_dir = NULL;
 	g_autoptr(GBytes) data_fwbin = NULL;
 	g_autoptr(GBytes) data_sig = NULL;
 	g_autoptr(GError) error = NULL;
@@ -481,8 +514,10 @@ fu_jcat_context_verify_item_target_func(void)
 	g_autoptr(GPtrArray) results_pass = NULL;
 
 	/* set up context */
-	pki_f = g_test_build_filename(G_TEST_BUILT, "tests", "pki", "test.pem", NULL);
-	fu_jcat_context_add_public_key(context, pki_f);
+	pki_dir = g_test_build_filename(G_TEST_BUILT, "tests", "pki", NULL);
+	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
 
 	/* get all engines */
 	engine_sha256 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_SHA256, &error);
@@ -553,6 +588,8 @@ fu_jcat_context_verify_item_csum_func(void)
 	/* set up context */
 	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
 	fu_jcat_context_add_public_keys(context, pki_dir);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
 
 	/* get all engines */
 	engine1 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_SHA256, &error);
@@ -561,10 +598,6 @@ fu_jcat_context_verify_item_csum_func(void)
 	engine3 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_PKCS7, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(engine3);
-	engine4 = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_LAST, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_null(engine4);
-	g_clear_error(&error);
 
 	/* verify blob */
 	fn_pass = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
@@ -637,6 +670,8 @@ main(int argc, char **argv)
 			     fwupd_jcat_pkcs7_engine_self_signed_pq_func);
 #endif
 	g_test_add_func("/jcat/context/verify/blob", fu_jcat_context_verify_blob_func);
+	g_test_add_func("/jcat/context/verify/blob/disallow",
+			fu_jcat_context_verify_blob_disallow_func);
 	g_test_add_func("/jcat/context/verify/item/sign", fu_jcat_context_verify_item_sign_func);
 	g_test_add_func("/jcat/context/verify/item/csum", fu_jcat_context_verify_item_csum_func);
 	g_test_add_func("/jcat/context/verify/item/target",

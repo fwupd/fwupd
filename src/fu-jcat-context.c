@@ -21,24 +21,23 @@
 #include "fu-jcat-libcrypto-pkcs7-engine.h"
 #endif
 
-typedef struct {
+struct _FuJcatContext {
+	GObject parent_instance;
 	GPtrArray *engines;
 	GPtrArray *public_keys;
 	gchar *keyring_path;
 	guint32 blob_kinds;
-} FuJcatContextPrivate;
+};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuJcatContext, fu_jcat_context, G_TYPE_OBJECT)
-#define GET_PRIVATE(o) (fu_jcat_context_get_instance_private(o))
+G_DEFINE_TYPE(FuJcatContext, fu_jcat_context, G_TYPE_OBJECT)
 
 static void
 fu_jcat_context_finalize(GObject *obj)
 {
 	FuJcatContext *self = FU_JCAT_CONTEXT(obj);
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
-	g_free(priv->keyring_path);
-	g_ptr_array_unref(priv->engines);
-	g_ptr_array_unref(priv->public_keys);
+	g_free(self->keyring_path);
+	g_ptr_array_unref(self->engines);
+	g_ptr_array_unref(self->public_keys);
 	G_OBJECT_CLASS(fu_jcat_context_parent_class)->finalize(obj);
 }
 
@@ -52,37 +51,18 @@ fu_jcat_context_class_init(FuJcatContextClass *klass)
 static void
 fu_jcat_context_init(FuJcatContext *self)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
+	self->keyring_path = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, NULL);
+	self->engines = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->public_keys = g_ptr_array_new_with_free_func(g_free);
 
-	priv->blob_kinds = G_MAXUINT32;
-	priv->keyring_path = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, NULL);
-	priv->engines = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	priv->public_keys = g_ptr_array_new_with_free_func(g_free);
-
-	g_ptr_array_add(priv->engines, fu_jcat_sha256_engine_new(self));
-	g_ptr_array_add(priv->engines, fu_jcat_sha512_engine_new(self));
+	g_ptr_array_add(self->engines, fu_jcat_sha256_engine_new(self));
+	g_ptr_array_add(self->engines, fu_jcat_sha512_engine_new(self));
 #ifdef HAVE_GNUTLS
-	g_ptr_array_add(priv->engines, fu_jcat_gnutls_pkcs7_engine_new(self));
+	g_ptr_array_add(self->engines, fu_jcat_gnutls_pkcs7_engine_new(self));
 #endif
 #ifdef HAVE_LIBCRYPTO
-	g_ptr_array_add(priv->engines, fu_jcat_libcrypto_pkcs7_engine_new(self));
+	g_ptr_array_add(self->engines, fu_jcat_libcrypto_pkcs7_engine_new(self));
 #endif
-}
-
-/**
- * fu_jcat_context_add_public_key:
- * @self: #FuJcatContext
- * @filename: A filename
- *
- * Adds a single public key.
- **/
-void
-fu_jcat_context_add_public_key(FuJcatContext *self, const gchar *filename)
-{
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
-	g_return_if_fail(filename != NULL);
-	g_ptr_array_add(priv->public_keys, g_strdup(filename));
 }
 
 /**
@@ -95,7 +75,6 @@ fu_jcat_context_add_public_key(FuJcatContext *self, const gchar *filename)
 void
 fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
 	const gchar *fn_tmp;
 	g_autoptr(GDir) dir = NULL;
 
@@ -107,7 +86,7 @@ fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path)
 	if (dir == NULL)
 		return;
 	while ((fn_tmp = g_dir_read_name(dir)) != NULL) {
-		g_ptr_array_add(priv->public_keys, g_build_filename(path, fn_tmp, NULL));
+		g_ptr_array_add(self->public_keys, g_build_filename(path, fn_tmp, NULL));
 	}
 }
 
@@ -115,8 +94,7 @@ fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path)
 GPtrArray *
 fu_jcat_context_get_public_keys(FuJcatContext *self)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
-	return priv->public_keys;
+	return self->public_keys;
 }
 
 /**
@@ -129,11 +107,10 @@ fu_jcat_context_get_public_keys(FuJcatContext *self)
 void
 fu_jcat_context_set_keyring_path(FuJcatContext *self, const gchar *path)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
 	g_return_if_fail(path != NULL);
-	g_free(priv->keyring_path);
-	priv->keyring_path = g_strdup(path);
+	g_free(self->keyring_path);
+	self->keyring_path = g_strdup(path);
 }
 
 /**
@@ -147,16 +124,14 @@ fu_jcat_context_set_keyring_path(FuJcatContext *self, const gchar *path)
 const gchar *
 fu_jcat_context_get_keyring_path(FuJcatContext *self)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_JCAT_CONTEXT(self), NULL);
-	return priv->keyring_path;
+	return self->keyring_path;
 }
 
 static gboolean
 fu_jcat_context_is_blob_kind_allowed(FuJcatContext *self, FwupdJcatBlobKind kind)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
-	return (priv->blob_kinds & (1u << kind)) > 0;
+	return (self->blob_kinds & (1u << kind)) > 0;
 }
 
 /**
@@ -173,7 +148,6 @@ fu_jcat_context_is_blob_kind_allowed(FuJcatContext *self, FwupdJcatBlobKind kind
 FuJcatEngine *
 fu_jcat_context_get_engine(FuJcatContext *self, FwupdJcatBlobKind kind, GError **error)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_JCAT_CONTEXT(self), NULL);
 
@@ -185,8 +159,8 @@ fu_jcat_context_get_engine(FuJcatContext *self, FwupdJcatBlobKind kind, GError *
 			    fwupd_jcat_blob_kind_to_string(kind));
 		return NULL;
 	}
-	for (guint i = 0; i < priv->engines->len; i++) {
-		FuJcatEngine *engine = g_ptr_array_index(priv->engines, i);
+	for (guint i = 0; i < self->engines->len; i++) {
+		FuJcatEngine *engine = g_ptr_array_index(self->engines, i);
 		if (fu_jcat_engine_get_kind(engine) == kind)
 			return g_object_ref(engine);
 	}
@@ -235,7 +209,7 @@ fu_jcat_context_verify_blob(FuJcatContext *self,
 }
 
 /**
- * fu_jcat_context_blob_kind_allow:
+ * fu_jcat_context_allow_blob_kind:
  * @self: #FuJcatContext
  * @kind: #FwupdJcatBlobKind, e.g. %FWUPD_JCAT_BLOB_KIND_GPG
  *
@@ -246,42 +220,11 @@ fu_jcat_context_verify_blob(FuJcatContext *self,
  * Since: 0.1.12
  **/
 void
-fu_jcat_context_blob_kind_allow(FuJcatContext *self, FwupdJcatBlobKind kind)
+fu_jcat_context_allow_blob_kind(FuJcatContext *self, FwupdJcatBlobKind kind)
 {
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
-
 	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
 	g_return_if_fail(kind < FWUPD_JCAT_BLOB_KIND_LAST);
-
-	/* clear all */
-	if (priv->blob_kinds == G_MAXUINT32)
-		priv->blob_kinds = 0x0;
-
-	/* enable this */
-	FU_BIT_SET(priv->blob_kinds, kind);
-}
-
-/**
- * fu_jcat_context_blob_kind_disallow:
- * @self: #FuJcatContext
- * @kind: #FwupdJcatBlobKind, e.g. %FWUPD_JCAT_BLOB_KIND_GPG
- *
- * Removes a blob kind from the allowlist. By default, JCat will use all signature and checksum
- * schemes compiled in at build time. Once this function has been called this @kind will not be
- * used in functions like fu_jcat_context_verify_blob().
- *
- * Since: 0.1.12
- **/
-void
-fu_jcat_context_blob_kind_disallow(FuJcatContext *self, FwupdJcatBlobKind kind)
-{
-	FuJcatContextPrivate *priv = GET_PRIVATE(self);
-
-	g_return_if_fail(FU_IS_JCAT_CONTEXT(self));
-	g_return_if_fail(kind < FWUPD_JCAT_BLOB_KIND_LAST);
-
-	/* disable this */
-	FU_BIT_CLEAR(priv->blob_kinds, kind);
+	FU_BIT_SET(self->blob_kinds, kind);
 }
 
 /**

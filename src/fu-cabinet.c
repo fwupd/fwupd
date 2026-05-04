@@ -1113,9 +1113,9 @@ fu_cabinet_init(FuCabinet *self)
 	self->jcat_file = fwupd_jcat_file_new();
 	self->jcat_context = fu_jcat_context_new();
 	self->trustlist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	fu_jcat_context_blob_kind_allow(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
-	fu_jcat_context_blob_kind_allow(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
-	fu_jcat_context_blob_kind_allow(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 }
 
 static void

@@ -15,16 +15,10 @@
 
 #define FU_TYPE_JCAT_CONTEXT fu_jcat_context_get_type()
 
-G_DECLARE_DERIVABLE_TYPE(FuJcatContext, fu_jcat_context, FU, JCAT_CONTEXT, GObject)
-
-struct _FuJcatContextClass {
-	GObjectClass parent_class;
-};
+G_DECLARE_FINAL_TYPE(FuJcatContext, fu_jcat_context, FU, JCAT_CONTEXT, GObject)
 
 FuJcatContext *
 fu_jcat_context_new(void);
-void
-fu_jcat_context_add_public_key(FuJcatContext *self, const gchar *filename) G_GNUC_NON_NULL(1, 2);
 void
 fu_jcat_context_add_public_keys(FuJcatContext *self, const gchar *path) G_GNUC_NON_NULL(1, 2);
 FuJcatEngine *
@@ -53,8 +47,6 @@ fu_jcat_context_verify_target(FuJcatContext *self,
 			      FuJcatVerifyFlags flags,
 			      GError **error) G_GNUC_NON_NULL(1, 2, 3);
 void
-fu_jcat_context_blob_kind_allow(FuJcatContext *self, FwupdJcatBlobKind kind) G_GNUC_NON_NULL(1);
-void
-fu_jcat_context_blob_kind_disallow(FuJcatContext *self, FwupdJcatBlobKind kind) G_GNUC_NON_NULL(1);
+fu_jcat_context_allow_blob_kind(FuJcatContext *self, FwupdJcatBlobKind kind) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_jcat_context_get_public_keys(FuJcatContext *self) G_GNUC_NON_NULL(1);

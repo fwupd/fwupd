@@ -9387,9 +9387,9 @@ fu_engine_constructed(GObject *obj)
 
 	/* setup Jcat context */
 	self->jcat_context = fu_jcat_context_new();
-	fu_jcat_context_blob_kind_allow(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
-	fu_jcat_context_blob_kind_allow(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
-	fu_jcat_context_blob_kind_allow(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA256);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_SHA512);
+	fu_jcat_context_allow_blob_kind(self->jcat_context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
