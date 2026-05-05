@@ -31,8 +31,20 @@ Vendor = SHIFT
 VendorId = DRIVE:SHIFT
 AndroidBootVersionProperty = androidboot.abl.revision
 
+[DRIVE\UUID_18b70f04-4bd9-16ac-4397-036c8411526b&LABEL_abl-a]
+Flags = updatable,signed-payload
+Vendor = SHIFT
+VendorId = DRIVE:SHIFT
+AndroidBootVersionProperty = androidboot.abl.revision
+
 # SHIFTphone 8 ABL B
 [DRIVE\UUID_584e4f5f-6023-f6d6-eb3f-48bb7da59feb&LABEL_abl-b]
+Flags = updatable,signed-payload
+Vendor = SHIFT
+VendorId = DRIVE:SHIFT
+AndroidBootVersionProperty = androidboot.abl.revision
+
+[DRIVE\UUID_08eee555-61cc-7b82-a313-bbc64f941dab&LABEL_abl-b]
 Flags = updatable,signed-payload
 Vendor = SHIFT
 VendorId = DRIVE:SHIFT
