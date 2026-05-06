@@ -453,6 +453,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
+		g_auto(GStrv) split_prefix = NULL;
 		guint64 port = 0;
 
 		if (g_str_has_prefix(redfish_uri, "https://")) {
@@ -469,6 +470,13 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "invalid scheme");
 			return FALSE;
+		}
+
+		/* if our uri contains a /, split it between host:port and path_prefix */
+		split_prefix = g_strsplit(ip_str, "/", 2);
+		if (g_strv_length(split_prefix) > 1) {
+			ip_str = split_prefix[0];
+			fu_redfish_backend_set_path_prefix(self->backend, split_prefix[1]);
 		}
 
 		split = g_strsplit(ip_str, ":", 2);

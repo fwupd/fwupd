@@ -30,6 +30,7 @@ struct _FuRedfishBackend {
 	gchar *uuid;
 	gchar *update_uri_path;
 	gchar *push_uri_path;
+	gchar *path_prefix;
 	gboolean use_https;
 	gboolean cacheck;
 	gboolean wildcard_targets;
@@ -72,6 +73,8 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
 	fu_redfish_request_set_curlsh(request, self->curlsh);
+	if (self->path_prefix != NULL)
+		fu_redfish_request_set_path_prefix(request, self->path_prefix);
 
 	/* set up defaults */
 	curl = fu_redfish_request_get_curl(request);
@@ -295,6 +298,13 @@ fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_u
 {
 	g_free(self->push_uri_path);
 	self->push_uri_path = g_strdup(push_uri_path);
+}
+
+void
+fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix)
+{
+	g_free(self->path_prefix);
+	self->path_prefix = g_strdup(path_prefix);
 }
 
 static gboolean
@@ -649,6 +659,8 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
 	fwupd_codec_string_append(str, idt, "UpdateUriPath", self->update_uri_path);
 	fwupd_codec_string_append(str, idt, "PushUriPath", self->push_uri_path);
+	if (self->path_prefix != NULL)
+		fwupd_codec_string_append(str, idt, "PathPrefix", self->path_prefix);
 	fwupd_codec_string_append_bool(str, idt, "UseHttps", self->use_https);
 	fwupd_codec_string_append_bool(str, idt, "Cacheck", self->cacheck);
 	fwupd_codec_string_append_bool(str, idt, "WildcardTargets", self->wildcard_targets);
@@ -665,6 +677,7 @@ fu_redfish_backend_finalize(GObject *object)
 	curl_share_cleanup(self->curlsh);
 	g_free(self->update_uri_path);
 	g_free(self->push_uri_path);
+	g_free(self->path_prefix);
 	g_free(self->hostname);
 	g_free(self->username);
 	g_free(self->password);

@@ -40,6 +40,8 @@ void
 fu_redfish_backend_set_cacheck(FuRedfishBackend *self, gboolean cacheck);
 void
 fu_redfish_backend_set_wildcard_targets(FuRedfishBackend *self, gboolean wildcard_targets);
+void
+fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix);
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
 const gchar *
