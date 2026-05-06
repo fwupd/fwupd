@@ -142,6 +142,7 @@ test_modify_config_opts=(
 )
 
 redfish_modify_config_opts=(
+	'BearerToken'
 	'CACheck'
 	'IpmiDisableCreateUser'
 	'ManagerResetTimeout'

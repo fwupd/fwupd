@@ -22,6 +22,7 @@ struct _FuRedfishBackend {
 	gchar *hostname;
 	gchar *username;
 	gchar *password;
+	gchar *bearer_token;
 	gchar *session_key;
 	guint port;
 	gchar *vendor;
@@ -79,13 +80,21 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	(void)curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
 	(void)curl_url_set(uri, CURLUPART_PORT, port, 0);
 	(void)curl_easy_setopt(curl, CURLOPT_CURLU, uri);
-
-	/* since DSP0266 makes Basic Authorization a requirement,
-	 * it is safe to use Basic Auth for all implementations */
-	(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
-	(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
-	(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
+
+	if (self->bearer_token != NULL) {
+		/* Some custom implementation require special authentication through bearer token.
+		 * Let's use that if configured to do so. */
+		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
+		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
+	} else {
+		/* Here is the common auth scenario, when no specific bearer token is configured.
+		 * since DSP0266 makes Basic Authorization a requirement,
+		 * it is safe to use Basic Auth for all implementations */
+		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
+		(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
+		(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
+	}
 
 	/* setup networking */
 	user_agent = g_strdup_printf("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
@@ -609,6 +618,13 @@ fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 	self->password = g_strdup(password);
 }
 
+void
+fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token)
+{
+	g_free(self->bearer_token);
+	self->bearer_token = g_strdup(bearer_token);
+}
+
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self)
 {
@@ -628,6 +644,7 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Hostname", self->hostname);
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
+	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
 	fwupd_codec_string_append(str, idt, "SessionKey", self->session_key);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
 	fwupd_codec_string_append(str, idt, "UpdateUriPath", self->update_uri_path);
@@ -651,6 +668,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->hostname);
 	g_free(self->username);
 	g_free(self->password);
+	g_free(self->bearer_token);
 	g_free(self->session_key);
 	g_free(self->vendor);
 	g_free(self->version);
