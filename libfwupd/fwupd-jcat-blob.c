@@ -326,7 +326,7 @@ fwupd_jcat_blob_init(FwupdJcatBlob *self)
  *
  * Creates a new blob.
  *
- * Returns: a #FwupdJcatBlob
+ * Returns: (transfer full): a #FwupdJcatBlob
  *
  * Since: 2.1.3
  **/
@@ -350,7 +350,7 @@ fwupd_jcat_blob_new(FwupdJcatBlobKind kind, GBytes *data, FwupdJcatBlobFlags fla
  *
  * Creates a new ASCII blob.
  *
- * Returns: a #FwupdJcatBlob
+ * Returns: (transfer full): a #FwupdJcatBlob
  *
  * Since: 2.1.3
  **/
