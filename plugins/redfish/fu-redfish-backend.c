@@ -22,6 +22,7 @@ struct _FuRedfishBackend {
 	gchar *hostname;
 	gchar *username;
 	gchar *password;
+	gchar *bearer_token;
 	gchar *session_key;
 	guint port;
 	gchar *vendor;
@@ -29,6 +30,7 @@ struct _FuRedfishBackend {
 	gchar *uuid;
 	gchar *update_uri_path;
 	gchar *push_uri_path;
+	gchar *path_prefix;
 	gboolean use_https;
 	gboolean cacheck;
 	gboolean wildcard_targets;
@@ -71,6 +73,8 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	/* set the cache location */
 	fu_redfish_request_set_cache(request, self->request_cache);
 	fu_redfish_request_set_curlsh(request, self->curlsh);
+	if (self->path_prefix != NULL)
+		fu_redfish_request_set_path_prefix(request, self->path_prefix);
 
 	/* set up defaults */
 	curl = fu_redfish_request_get_curl(request);
@@ -79,13 +83,21 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	(void)curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
 	(void)curl_url_set(uri, CURLUPART_PORT, port, 0);
 	(void)curl_easy_setopt(curl, CURLOPT_CURLU, uri);
-
-	/* since DSP0266 makes Basic Authorization a requirement,
-	 * it is safe to use Basic Auth for all implementations */
-	(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
-	(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
-	(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
+
+	if (self->bearer_token != NULL) {
+		/* Some custom implementation require special authentication through bearer token.
+		 * Let's use that if configured to do so. */
+		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BEARER);
+		(void)curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, self->bearer_token);
+	} else {
+		/* Here is the common auth scenario, when no specific bearer token is configured.
+		 * since DSP0266 makes Basic Authorization a requirement,
+		 * it is safe to use Basic Auth for all implementations */
+		(void)curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
+		(void)curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
+		(void)curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
+	}
 
 	/* setup networking */
 	user_agent = g_strdup_printf("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
@@ -286,6 +298,13 @@ fu_redfish_backend_set_push_uri_path(FuRedfishBackend *self, const gchar *push_u
 {
 	g_free(self->push_uri_path);
 	self->push_uri_path = g_strdup(push_uri_path);
+}
+
+void
+fu_redfish_backend_set_path_prefix(FuRedfishBackend *self, const gchar *path_prefix)
+{
+	g_free(self->path_prefix);
+	self->path_prefix = g_strdup(path_prefix);
 }
 
 static gboolean
@@ -609,6 +628,13 @@ fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 	self->password = g_strdup(password);
 }
 
+void
+fu_redfish_backend_set_bearer_token(FuRedfishBackend *self, const gchar *bearer_token)
+{
+	g_free(self->bearer_token);
+	self->bearer_token = g_strdup(bearer_token);
+}
+
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self)
 {
@@ -628,10 +654,13 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Hostname", self->hostname);
 	fwupd_codec_string_append(str, idt, "Username", self->username);
 	fwupd_codec_string_append_bool(str, idt, "Password", self->password != NULL);
+	fwupd_codec_string_append_bool(str, idt, "BearerToken", self->bearer_token != NULL);
 	fwupd_codec_string_append(str, idt, "SessionKey", self->session_key);
 	fwupd_codec_string_append_int(str, idt, "Port", self->port);
 	fwupd_codec_string_append(str, idt, "UpdateUriPath", self->update_uri_path);
 	fwupd_codec_string_append(str, idt, "PushUriPath", self->push_uri_path);
+	if (self->path_prefix != NULL)
+		fwupd_codec_string_append(str, idt, "PathPrefix", self->path_prefix);
 	fwupd_codec_string_append_bool(str, idt, "UseHttps", self->use_https);
 	fwupd_codec_string_append_bool(str, idt, "Cacheck", self->cacheck);
 	fwupd_codec_string_append_bool(str, idt, "WildcardTargets", self->wildcard_targets);
@@ -648,9 +677,11 @@ fu_redfish_backend_finalize(GObject *object)
 	curl_share_cleanup(self->curlsh);
 	g_free(self->update_uri_path);
 	g_free(self->push_uri_path);
+	g_free(self->path_prefix);
 	g_free(self->hostname);
 	g_free(self->username);
 	g_free(self->password);
+	g_free(self->bearer_token);
 	g_free(self->session_key);
 	g_free(self->vendor);
 	g_free(self->version);

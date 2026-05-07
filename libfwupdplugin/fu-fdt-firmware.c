@@ -432,8 +432,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 					    "invalid firmware -- dt_struct invalid");
 			return FALSE;
 		}
-		dt_struct_buf =
-		    g_byte_array_free_to_bytes(g_steal_pointer(&dt_struct)); /* nocheck:blocked */
+		dt_struct_buf = g_byte_array_free_to_bytes(g_steal_pointer(&dt_struct));
 		if (!fu_fdt_firmware_parse_dt_struct(self, dt_struct_buf, dt_strings, error))
 			return FALSE;
 	}

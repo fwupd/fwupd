@@ -34,8 +34,6 @@ void
 fu_dfu_target_set_alt_setting(FuDfuTarget *self, guint8 alt_setting);
 
 /* for the other implementations */
-void
-fu_dfu_target_set_alt_name(FuDfuTarget *self, const gchar *alt_name);
 gboolean
 fu_dfu_target_check_status(FuDfuTarget *self, GError **error);
 FuDfuSector *

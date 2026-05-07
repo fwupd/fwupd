@@ -329,5 +329,5 @@ fu_bytes_from_string(const gchar *str, GError **error)
 	buf = fu_byte_array_from_string(str, error);
 	if (buf == NULL)
 		return NULL;
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 }

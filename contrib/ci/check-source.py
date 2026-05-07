@@ -833,7 +833,6 @@ class Checker:
 
         for token, msg in {
             "g_error": "Use GError instead",
-            "g_byte_array_free_to_bytes": "Use g_bytes_new() instead",
             "g_ascii_strtoull": "Use fu_strtoull() instead",
             "g_ascii_strtoll": "Use fu_strtoll() instead",
             "g_strerror": "Use fwupd_strerror() instead",

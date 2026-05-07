@@ -1374,10 +1374,7 @@ fu_device_set_poll_interval(FuDevice *self, guint interval)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	if (priv->poll_id != 0) {
-		g_source_remove(priv->poll_id);
-		priv->poll_id = 0;
-	}
+	g_clear_handle_id(&priv->poll_id, g_source_remove);
 	if (interval == 0)
 		return;
 	if (interval % 1000 == 0) {
@@ -1704,10 +1701,8 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	}
 
 	/* disconnect from old proxy */
-	if (priv->proxy != NULL && priv->notify_flags_proxy_id != 0) {
-		g_signal_handler_disconnect(priv->proxy, priv->notify_flags_proxy_id);
-		priv->notify_flags_proxy_id = 0;
-	}
+	if (priv->proxy != NULL && priv->notify_flags_proxy_id != 0)
+		g_clear_signal_handler(&priv->notify_flags_proxy_id, priv->proxy);
 
 	/* copy from proxy */
 	if (proxy != NULL) {
@@ -8769,7 +8764,7 @@ fu_device_finalize(GObject *object)
 		g_object_unref(priv->progress);
 	if (priv->proxy != NULL) {
 		if (priv->notify_flags_proxy_id != 0)
-			g_signal_handler_disconnect(priv->proxy, priv->notify_flags_proxy_id);
+			g_clear_signal_handler(&priv->notify_flags_proxy_id, priv->proxy);
 		if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY])) {
 			g_object_unref(priv->proxy);
 		} else {

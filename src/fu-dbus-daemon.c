@@ -276,7 +276,7 @@ typedef struct {
 	FuEngineRequest *request;
 	FuProgress *progress;
 	FuClient *client;
-	glong client_sender_changed_id;
+	gulong client_sender_changed_id;
 	GPtrArray *releases;
 	GPtrArray *action_ids;
 	GPtrArray *checksums;
@@ -318,7 +318,7 @@ fu_dbus_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	if (helper->errors != NULL)
 		g_ptr_array_unref(helper->errors);
 	if (helper->client_sender_changed_id > 0)
-		g_signal_handler_disconnect(helper->client, helper->client_sender_changed_id);
+		g_clear_signal_handler(&helper->client_sender_changed_id, helper->client);
 	if (helper->client != NULL)
 		g_object_unref(helper->client);
 	g_free(helper->device_id);

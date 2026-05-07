@@ -656,10 +656,12 @@ fwupd_json_parser_load_from_stream(FwupdJsonParser *self,
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* tokenize in chunks */
-	if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error)) {
-		fwupd_error_convert(error);
-		return NULL;
+	/* seek to start if possible */
+	if (G_IS_SEEKABLE(stream) && g_seekable_can_seek(G_SEEKABLE(stream))) {
+		if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error)) {
+			fwupd_error_convert(error);
+			return NULL;
+		}
 	}
 	helper->stream = g_object_ref(stream);
 	helper->flags = flags;

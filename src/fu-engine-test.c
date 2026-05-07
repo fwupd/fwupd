@@ -2722,12 +2722,12 @@ fu_test_plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer u
 static void
 fu_engine_plugin_module_func(void)
 {
-	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
 
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(ctx,
@@ -2842,7 +2842,6 @@ static void
 fu_engine_plugin_composite_func(void)
 {
 	FuDevice *dev_tmp;
-	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
@@ -2850,6 +2849,7 @@ fu_engine_plugin_composite_func(void)
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) releases =

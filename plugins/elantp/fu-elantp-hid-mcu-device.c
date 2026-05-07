@@ -395,13 +395,18 @@ fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
-	if (self->force_table_support != force_table_support) {
-		g_set_error(error,
+	if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4) {
+		if (self->force_table_support != force_table_support) {
+			g_debug("fixing up mcu force-table support %s->%s due to chip errata",
+				self->force_table_support ? "enabled" : "disabled",
+				force_table_support ? "enabled" : "disabled");
+			self->force_table_support = force_table_support;
+		}
+	} else if (self->force_table_support != force_table_support) {
+		g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "mcu firmware incompatible, forcetable got %i and expected %i",
-			    force_table_support,
-			    self->force_table_support);
+			    "mcu firmware incompatible, forcetable incorrect.");
 		return FALSE;
 	}
 	if (force_table_support) {
@@ -409,6 +414,8 @@ fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
 		guint32 diff_size;
 		force_table_addr =
 		    fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware));
+		if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
+			self->force_table_addr = force_table_addr;
 		if (self->force_table_addr < force_table_addr) {
 			g_set_error(error,
 				    FWUPD_ERROR,

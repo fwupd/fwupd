@@ -511,13 +511,18 @@ fu_elantp_hid_device_check_firmware(FuDevice *device,
 	}
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
-	if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4)
-		self->force_table_support = force_table_support;
-	if (self->force_table_support != force_table_support) {
+	if (self->ic_type == FU_ETP_IC_NUM14 && self->iap_ver == 4) {
+		if (self->force_table_support != force_table_support) {
+			g_debug("fixing up force-table support %s->%s due to chip errata",
+				self->force_table_support ? "enabled" : "disabled",
+				force_table_support ? "enabled" : "disabled");
+			self->force_table_support = force_table_support;
+		}
+	} else if (self->force_table_support != force_table_support) {
 		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware incompatible, forcetable incorrect.");
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware incompatible, forcetable incorrect.");
 		return FALSE;
 	}
 	if (self->force_table_support) {
@@ -887,6 +892,14 @@ fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GErro
 				return FALSE;
 			}
 		}
+	}
+	if (ic_type == FU_ETP_IC_NUM13) {
+		if (!fu_elantp_hid_device_write_cmd(self,
+						    FU_ETP_RPTID_TP_FEATURE,
+						    FU_ETP_CMD_I2C_IAP_RESET,
+						    ETP_I2C_CLEAR_PROTECT_AI_TABLE,
+						    error))
+			return FALSE;
 	}
 	if (!fu_elantp_hid_device_write_fw_password(self, ic_type, iap_ver, error))
 		return FALSE;

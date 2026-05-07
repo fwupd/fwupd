@@ -19,8 +19,6 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelEc,
 
 FuDellKestrelEc *
 fu_dell_kestrel_ec_new(FuUsbDevice *usb_device, gboolean uod);
-void
-fu_dell_kestrel_ec_enable_tbt_passive(FuDellKestrelEc *self);
 gboolean
 fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error);
 gboolean

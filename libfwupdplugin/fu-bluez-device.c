@@ -709,7 +709,7 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	 * The result is a byte array.
 	 */
 	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-	g_variant_builder_add(builder, "{sv}", "offset", g_variant_new("q", 0));
+	g_variant_builder_add(builder, "{sv}", "offset", g_variant_new_uint16(0));
 
 	val = g_dbus_proxy_call_sync(item->proxy,
 				     "ReadValue",

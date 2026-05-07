@@ -285,7 +285,7 @@ fu_device_poll_cb(FuDevice *device, GError **error)
 	guint64 cnt = fu_device_get_metadata_integer(device, "cnt");
 	g_debug("poll cnt=%" G_GUINT64_FORMAT, cnt);
 	fu_device_set_metadata_integer(device, "cnt", cnt + 1);
-	return TRUE;
+	return G_SOURCE_CONTINUE;
 }
 
 static void

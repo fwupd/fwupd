@@ -20,6 +20,17 @@
 #include "fu-common.h"
 #include "fu-path.h"
 
+static gboolean
+fu_path_delete(const gchar *path, GError **error)
+{
+	g_autoptr(GFile) file = g_file_new_for_path(path);
+	if (!g_file_delete(file, NULL, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_path_rmtree:
  * @directory: a directory name
@@ -54,25 +65,11 @@ fu_path_rmtree(const gchar *directory, GError **error)
 			if (!fu_path_rmtree(src, error))
 				return FALSE;
 		} else {
-			if (g_unlink(src) != 0) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "Failed to delete: %s",
-					    src);
+			if (!fu_path_delete(src, error))
 				return FALSE;
-			}
 		}
 	}
-	if (g_remove(directory) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to delete: %s",
-			    directory);
-		return FALSE;
-	}
-	return TRUE;
+	return fu_path_delete(directory, error);
 }
 
 static gboolean

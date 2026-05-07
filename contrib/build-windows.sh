@@ -26,6 +26,7 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
+    -Djson-glib:introspection=disabled \
     -Dlibxmlb:introspection=false \
     -Dlibxmlb:gtkdoc=false \
     -Dlibjcat:man=false \

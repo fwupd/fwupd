@@ -713,6 +713,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_STRICT_EMULATION_ORDER "strict-emulation-order"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_HAS_DS20:
+ *
+ * The device provided a DS-20 quirk descriptor.
+ *
+ * Since: 2.1.3
+ */
+#define FU_DEVICE_PRIVATE_FLAG_HAS_DS20 "has-ds20"
+
 /* standard icons */
 
 /**

@@ -12,6 +12,7 @@ struct _FuRedfishRequest {
 	GObject parent_instance;
 	CURL *curl;
 	CURLU *uri;
+	gchar *path_prefix;
 	GByteArray *buf;
 	glong status_code;
 	FwupdJsonParser *json_parser;
@@ -152,7 +153,12 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 	}
 
 	/* do request */
-	(void)curl_url_set(self->uri, CURLUPART_PATH, path, 0);
+	if (self->path_prefix != NULL) {
+		g_autofree gchar *full_path = g_strconcat(self->path_prefix, path, NULL);
+		(void)curl_url_set(self->uri, CURLUPART_PATH, full_path, 0);
+	} else {
+		(void)curl_url_set(self->uri, CURLUPART_PATH, path, 0);
+	}
 	(void)curl_url_get(self->uri, CURLUPART_URL, &uri_str, 0);
 	res = curl_easy_perform(self->curl);
 	curl_easy_getinfo(self->curl, CURLINFO_RESPONSE_CODE, &self->status_code);
@@ -268,6 +274,14 @@ fu_redfish_request_write_cb(char *ptr, size_t size, size_t nmemb, void *userdata
 }
 
 void
+fu_redfish_request_set_path_prefix(FuRedfishRequest *self, const gchar *path_prefix)
+{
+	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
+	g_free(self->path_prefix);
+	self->path_prefix = g_strdup(path_prefix);
+}
+
+void
 fu_redfish_request_set_cache(FuRedfishRequest *self, GHashTable *cache)
 {
 	g_return_if_fail(FU_IS_REDFISH_REQUEST(self));
@@ -308,6 +322,7 @@ fu_redfish_request_finalize(GObject *object)
 		g_hash_table_unref(self->cache);
 	g_object_unref(self->json_parser);
 	g_byte_array_unref(self->buf);
+	g_free(self->path_prefix);
 	curl_easy_cleanup(self->curl);
 	curl_url_cleanup(self->uri);
 	G_OBJECT_CLASS(fu_redfish_request_parent_class)->finalize(object);

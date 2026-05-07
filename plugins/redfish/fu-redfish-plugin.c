@@ -430,6 +430,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	gboolean credentials_invalid = FALSE;
 #endif
 	g_autofree gchar *password = NULL;
+	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
 #ifdef HAVE_LINUX_IPMI_H
@@ -452,6 +453,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
+		g_auto(GStrv) split_prefix = NULL;
 		guint64 port = 0;
 
 		if (g_str_has_prefix(redfish_uri, "https://")) {
@@ -468,6 +470,13 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "invalid scheme");
 			return FALSE;
+		}
+
+		/* if our uri contains a /, split it between host:port and path_prefix */
+		split_prefix = g_strsplit(ip_str, "/", 2);
+		if (g_strv_length(split_prefix) > 1) {
+			ip_str = split_prefix[0];
+			fu_redfish_backend_set_path_prefix(self->backend, split_prefix[1]);
 		}
 
 		split = g_strsplit(ip_str, ":", 2);
@@ -496,6 +505,9 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	password = fu_plugin_get_config_value(plugin, "Password");
 	if (password != NULL)
 		fu_redfish_backend_set_password(self->backend, password);
+	bearer_token = fu_plugin_get_config_value(plugin, "BearerToken");
+	if (bearer_token != NULL)
+		fu_redfish_backend_set_bearer_token(self->backend, bearer_token);
 	fu_redfish_backend_set_cacheck(self->backend,
 				       fu_plugin_get_config_value_boolean(plugin, "CACheck"));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
@@ -682,6 +694,7 @@ fu_redfish_plugin_modify_config(FuPlugin *plugin,
 				GError **error)
 {
 	const gchar *keys[] = {"CACheck",
+			       "BearerToken",
 			       "IpmiDisableCreateUser",
 			       "ManagerResetTimeout",
 			       "Password",
@@ -724,6 +737,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_plugin_set_config_default(plugin, "CACheck", "false");
+	fu_plugin_set_config_default(plugin, "BearerToken", NULL);
 	fu_plugin_set_config_default(plugin, "IpmiDisableCreateUser", "false");
 	fu_plugin_set_config_default(plugin, "ManagerResetTimeout", "1800"); /* seconds */
 	fu_plugin_set_config_default(plugin, "Password", NULL);

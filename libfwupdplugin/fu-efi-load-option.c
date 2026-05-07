@@ -40,10 +40,7 @@ static void
 fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_data)
 {
 	g_return_if_fail(FU_IS_EFI_LOAD_OPTION(self));
-	if (self->optional_data != NULL) {
-		g_bytes_unref(self->optional_data);
-		self->optional_data = NULL;
-	}
+	g_clear_pointer(&self->optional_data, g_bytes_unref);
 	if (optional_data != NULL)
 		self->optional_data = g_bytes_ref(optional_data);
 }

@@ -62,6 +62,7 @@ plugins/pixart-tp/ @PixartHarris
 plugins/qc-firehose/ @hughsie
 plugins/qc-s5gen2/ @d4s
 plugins/qsi-dock/ @hssinf
+plugins/raydium-tp/ @Maker-Rad
 plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn
 plugins/rts54hub/ @AnyProblem

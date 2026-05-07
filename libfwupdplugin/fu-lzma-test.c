@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-lzma-common.h"
-
 static void
 fu_lzma_func(void)
 {

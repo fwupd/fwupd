@@ -750,10 +750,7 @@ fu_wistron_dock_device_cleanup(FuDevice *device,
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
 
 	/* ensure the timeout has been cleared, even on error */
-	if (self->device_insert_id != 0) {
-		g_source_remove(self->device_insert_id);
-		self->device_insert_id = 0;
-	}
+	g_clear_handle_id(&self->device_insert_id, g_source_remove);
 	return TRUE;
 }
 

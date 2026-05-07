@@ -30,8 +30,6 @@ guint32
 fu_dfu_sector_get_address(FuDfuSector *self);
 guint32
 fu_dfu_sector_get_size(FuDfuSector *self);
-guint32
-fu_dfu_sector_get_size_left(FuDfuSector *self);
 guint16
 fu_dfu_sector_get_zone(FuDfuSector *self);
 gboolean

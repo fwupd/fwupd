@@ -237,8 +237,7 @@ fu_progress_sleep_idle_stop(FuProgress *self)
 {
 	if (self->sleep_timeout_id == 0)
 		return;
-	g_source_remove(self->sleep_timeout_id);
-	self->sleep_timeout_id = 0;
+	g_clear_handle_id(&self->sleep_timeout_id, g_source_remove);
 }
 
 /**
