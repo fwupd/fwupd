@@ -45,9 +45,30 @@ Name = EN25Fxx
 CfiDeviceCmdChipErase = 0x60
 CfiDeviceCmdSectorErase = 0x20
 
-# ST
+# ST / SGS/Thomson / Numonyx / XMC(later acquired by Micron)
 [CFI\FLASHID_20]
 Vendor = ST
+[CFI\FLASHID_2040]
+Vendor = XMC
+Name = XM25QHxxx
+[CFI\FLASHID_204011]
+Name = XM25QH10
+FirmwareSizeMax = 0x20000
+[CFI\FLASHID_204012]
+Name = XM25QH20
+FirmwareSizeMax = 0x40000
+[CFI\FLASHID_204013]
+Name = XM25QH40
+FirmwareSizeMax = 0x80000
+[CFI\FLASHID_204014]
+Name = XM25QH80
+FirmwareSizeMax = 0x100000
+[CFI\FLASHID_204015]
+Name = XM25QH16
+FirmwareSizeMax = 0x200000
+[CFI\FLASHID_204016]
+Name = XM25QH32
+FirmwareSizeMax = 0x400000
 
 # Catalyst
 [CFI\FLASHID_31]
