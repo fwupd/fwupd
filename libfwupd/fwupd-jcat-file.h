@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <fwupd.h>
-
 #include "fwupd-jcat-item.h"
 
 G_BEGIN_DECLS

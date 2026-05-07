@@ -17,6 +17,9 @@
 #include <libfwupd/fwupd-device.h>
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
+#include <libfwupd/fwupd-jcat-blob.h>
+#include <libfwupd/fwupd-jcat-file.h>
+#include <libfwupd/fwupd-jcat-item.h>
 #include <libfwupd/fwupd-json-array.h>
 #include <libfwupd/fwupd-json-node.h>
 #include <libfwupd/fwupd-json-object.h>
