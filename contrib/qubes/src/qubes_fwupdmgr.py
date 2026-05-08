@@ -481,7 +481,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_install)
         p.wait()
         if p.returncode != 0:
-            sys.exit(p.returncode)
+            raise Exception(
+                f"fwupd-qubes: Firmware install failed (fwupdmgr exit {p.returncode})"
+            )
 
     def _find_device_release(
         self, device_id, version=None, allow_older=False, allow_reinstall=False
@@ -526,7 +528,12 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 raise Exception(
                     f"Version '{version}' not found for device '{device_id}'"
                 )
-            return self._release_uri(match), match["Checksum"][-1]
+            uri = self._release_uri(match)
+            if not uri:
+                raise Exception(
+                    f"Release '{version}' for device '{device_id}' has no download URL"
+                )
+            return uri, match["Checksum"][-1]
 
         current = target_device.get("Version", "0")
         candidates = [
@@ -539,7 +546,12 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not candidates:
             raise Exception(f"No eligible release found for device '{device_id}'")
         best = max(candidates, key=lambda r: pversion.Version(r["Version"]))
-        return self._release_uri(best), best["Checksum"][-1]
+        uri = self._release_uri(best)
+        if not uri:
+            raise Exception(
+                f"Best release for device '{device_id}' has no download URL"
+            )
+        return uri, best["Checksum"][-1]
 
     def install_firmware(
         self,
@@ -983,7 +995,10 @@ def main():
         q.get_remotes_qubes()
     elif sys.argv[1] == "update":
         q.update_firmware(
-            whonix=whonix, allow_older=allow_older, allow_reinstall=allow_reinstall, force=force
+            whonix=whonix,
+            allow_older=allow_older,
+            allow_reinstall=allow_reinstall,
+            force=force,
         )
     elif sys.argv[1] == "downgrade":
         q.downgrade_firmware(whonix=whonix)
