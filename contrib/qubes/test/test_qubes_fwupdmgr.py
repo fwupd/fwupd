@@ -283,7 +283,16 @@ class TestQubesFwupdmgr(unittest.TestCase):
         sys.stdout = help_output
         self.q.help()
         with open("test/logs/help.log") as help_log:
-            self.assertEqual(help_log.read(), help_output.getvalue().strip() + "\n")
+
+            def _strip_lines(text):
+                return (
+                    "\n".join(line.rstrip() for line in text.strip().splitlines())
+                    + "\n"
+                )
+
+            self.assertEqual(
+                _strip_lines(help_log.read()), _strip_lines(help_output.getvalue())
+            )
         sys.stdout = self.captured_output
 
     @patch(
