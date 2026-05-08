@@ -7,14 +7,15 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-23 08:04+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2026-05-08 04:11+0000\n"
+"Last-Translator: \"ℂ𝕠𝕠𝕠𝕝 (𝕘𝕚𝕥𝕙𝕦𝕓.𝕔𝕠𝕞/ℂ𝕠𝕠𝕠𝕝)\" <coool@mail.lv>\n"
+"Language-Team: Latvian <https://hosted.weblate.org/projects/fwupd/fwupd/lv/>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n % 10 == 0 || n % 100 >= 11 && n % 100 <= 19) ? 0 : ((n % 10 == 1 && n % 100 != 11) ? 1 : 2);\n"
+"X-Generator: Weblate 5.17.1\n"
 
 #: data/remotes.d/lvfs.metainfo.xml:6
 msgid "Linux Vendor Firmware Service (stable firmware)"
@@ -63,14 +64,14 @@ msgstr ""
 
 #: libfwupdplugin/fu-bios-settings.c:347
 msgid "Enable"
-msgstr ""
+msgstr "Iespējot"
 
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 #: libfwupdplugin/fu-bios-settings.c:350 src/fu-util-common.c:2079
 #: src/fu-util-common.c:2228
 msgid "Enabled"
-msgstr ""
+msgstr "Iespējots"
 
 #: policy/org.freedesktop.fwupd.policy.in:17
 msgid "Stop the fwupd service"
@@ -313,7 +314,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: plugins/uefi-dbx/fu-dbxtool.c:146 src/fu-util.c:5654 src/fu-util.c:5661
 msgid "FILENAME"
-msgstr ""
+msgstr "DATNES_NOSAUKUMS"
 
 #. TRANSLATORS: command line option
 #: plugins/uefi-dbx/fu-dbxtool.c:153
@@ -323,7 +324,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: plugins/uefi-dbx/fu-dbxtool.c:155
 msgid "PATH"
-msgstr ""
+msgstr "CEĻŠ"
 
 #. TRANSLATORS: command line option
 #: plugins/uefi-dbx/fu-dbxtool.c:162
@@ -359,7 +360,7 @@ msgstr ""
 #. TRANSLATORS: the detected version number of the dbx
 #: plugins/uefi-dbx/fu-dbxtool.c:225
 msgid "Version"
-msgstr ""
+msgstr "Versija"
 
 #. TRANSLATORS: we're poking around as a power user
 #: plugins/uefi-dbx/fu-dbxtool.c:248 src/fu-tool.c:6406
@@ -448,7 +449,7 @@ msgstr ""
 #. TRANSLATORS: parsing the firmware information
 #: src/fu-console.c:384
 msgid "Loading…"
-msgstr ""
+msgstr "Ielādē…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 #: src/fu-console.c:388
@@ -458,7 +459,7 @@ msgstr ""
 #. TRANSLATORS: reading from the flash chips
 #: src/fu-console.c:392
 msgid "Reading…"
-msgstr ""
+msgstr "Lasa…"
 
 #. TRANSLATORS: writing to the flash chips
 #: src/fu-console.c:396
@@ -473,7 +474,7 @@ msgstr ""
 #. TRANSLATORS: verifying we wrote the firmware correctly
 #: src/fu-console.c:404
 msgid "Verifying…"
-msgstr ""
+msgstr "Pārbauda…"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 #: src/fu-console.c:408
@@ -483,7 +484,7 @@ msgstr ""
 #. TRANSLATORS: downloading from a remote server
 #: src/fu-console.c:412
 msgid "Downloading…"
-msgstr ""
+msgstr "Lejupielādē…"
 
 #. TRANSLATORS: waiting for user to authenticate
 #: src/fu-console.c:416
@@ -3157,12 +3158,12 @@ msgstr ""
 #. TRANSLATORS: item is TRUE
 #: src/fu-util-bios-setting.c:125
 msgid "True"
-msgstr ""
+msgstr "Patiess"
 
 #. TRANSLATORS: item is FALSE
 #: src/fu-util-bios-setting.c:128
 msgid "False"
-msgstr ""
+msgstr "Nepatiess"
 
 #. TRANSLATORS: BIOS setting is read only
 #: src/fu-util-bios-setting.c:131
@@ -3729,12 +3730,12 @@ msgstr ""
 #. TRANSLATORS: ask the user to do a simple task which should be translated
 #: src/fu-util-common.c:1179
 msgid "Message"
-msgstr ""
+msgstr "Ziņojums"
 
 #. TRANSLATORS: show the user a generic image that can be themed
 #: src/fu-util-common.c:1183
 msgid "Image"
-msgstr ""
+msgstr "Attēls"
 
 #. TRANSLATORS: ask the user a question, and it will not be translated
 #: src/fu-util-common.c:1187
@@ -3871,7 +3872,7 @@ msgstr ""
 #. TRANSLATORS: one line summary of device
 #: src/fu-util-common.c:1363 src/fu-util-common.c:1931
 msgid "Summary"
-msgstr ""
+msgstr "Kopsavilkums"
 
 #. TRANSLATORS: version number of previous firmware
 #: src/fu-util-common.c:1382
@@ -3902,7 +3903,7 @@ msgstr ""
 #: src/fu-util-common.c:1411 src/fu-util-common.c:1414
 #: src/fu-util-common.c:1418 src/fu-util-common.c:1978
 msgid "Vendor"
-msgstr ""
+msgstr "Ražotājs"
 
 #. TRANSLATORS: webpage for the specific device
 #: src/fu-util-common.c:1422
@@ -3939,7 +3940,7 @@ msgstr ""
 #. TRANSLATORS: refers to the battery inside the peripheral device
 #: src/fu-util-common.c:1463 src/fu-util-common.c:1468
 msgid "Battery"
-msgstr ""
+msgstr "Akumulators"
 
 #. TRANSLATORS: error message from last update attempt
 #: src/fu-util-common.c:1479
@@ -4085,22 +4086,22 @@ msgstr ""
 #. TRANSLATORS: the release urgency
 #: src/fu-util-common.c:1792
 msgid "Low"
-msgstr ""
+msgstr "Zems"
 
 #. TRANSLATORS: the release urgency
 #: src/fu-util-common.c:1796
 msgid "Medium"
-msgstr ""
+msgstr "Vidējs"
 
 #. TRANSLATORS: the release urgency
 #: src/fu-util-common.c:1800
 msgid "High"
-msgstr ""
+msgstr "Augsts"
 
 #. TRANSLATORS: the release urgency
 #: src/fu-util-common.c:1804
 msgid "Critical"
-msgstr ""
+msgstr "Kritisks"
 
 #. TRANSLATORS: We verified the payload against the server
 #: src/fu-util-common.c:1817
@@ -4171,7 +4172,7 @@ msgstr ""
 #. TRANSLATORS: the fwupd version the release was tested on
 #: src/fu-util-common.c:1888
 msgid "Version[fwupd]"
-msgstr ""
+msgstr "Versija[fwupd]"
 
 #. TRANSLATORS: version number of new firmware
 #: src/fu-util-common.c:1911
@@ -4197,27 +4198,28 @@ msgstr ""
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 #: src/fu-util-common.c:1936
 msgid "Variant"
-msgstr ""
+msgstr "Variants"
 
 #. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 #: src/fu-util-common.c:1942
 msgid "License"
-msgstr ""
+msgstr "Licence"
 
 #. TRANSLATORS: file size of the download
 #: src/fu-util-common.c:1945
 msgid "Size"
-msgstr ""
+msgstr "Izmērs"
 
 #. TRANSLATORS: when the update was built
 #: src/fu-util-common.c:1947
 msgid "Created"
-msgstr ""
+msgstr "Izveidots"
 
 #. TRANSLATORS: how important the release is
 #: src/fu-util-common.c:1953
+#, fuzzy
 msgid "Urgency"
-msgstr ""
+msgstr "Steidzamība"
 
 #. TRANSLATORS: more details about the update link
 #: src/fu-util-common.c:1963
@@ -4237,7 +4239,7 @@ msgstr ""
 #. TRANSLATORS: length of time the update takes to apply
 #: src/fu-util-common.c:1984
 msgid "Duration"
-msgstr ""
+msgstr "Ilgums"
 
 #. TRANSLATORS: helpful messages for the update
 #: src/fu-util-common.c:1989
@@ -4265,12 +4267,12 @@ msgstr[1] ""
 #. TRANSLATORS: remote checksum
 #: src/fu-util-common.c:2051 src/fu-util-common.c:2099
 msgid "Checksum"
-msgstr ""
+msgstr "Kontrolsumma"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 #: src/fu-util-common.c:2073
 msgid "Type"
-msgstr ""
+msgstr "Tips"
 
 #. TRANSLATORS: if we can get metadata from peer-to-peer clients
 #: src/fu-util-common.c:2086
@@ -4285,7 +4287,7 @@ msgstr ""
 #. TRANSLATORS: the age of the metadata
 #: src/fu-util-common.c:2105
 msgid "Age"
-msgstr ""
+msgstr "Vecums"
 
 #. TRANSLATORS: how often we should refresh the metadata
 #: src/fu-util-common.c:2111

@@ -1,0 +1,9 @@
+<firmware gtype="FuAcpiTable">
+  <id>DMAR</id>
+  <firmware gtype="FuFirmware">
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuFirmware">
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

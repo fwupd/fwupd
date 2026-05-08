@@ -228,6 +228,43 @@ fu_remote_duplicate_func(void)
 			"/tmp/fwupd-self-test/stable.xml");
 }
 
+static void
+fu_remote_empty_credentials_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("remote-empty-credentials", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "remote.conf", NULL);
+
+	ret = g_file_set_contents(fn,
+				  "[fwupd Remote]\n"
+				  "Enabled=true\n"
+				  "MetadataURI=https://example.test/firmware.xml.gz\n"
+				  "Username=\n"
+				  "Password=\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"https://example.test/firmware.xml.gz");
+	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, NULL);
+}
+
 /* verify we used the metadata path for firmware */
 static void
 fu_remote_nopath_func(void)
@@ -336,6 +373,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/remote/no-path", fu_remote_nopath_func);
 	g_test_add_func("/fwupd/remote/local", fu_remote_local_func);
 	g_test_add_func("/fwupd/remote/duplicate", fu_remote_duplicate_func);
+	g_test_add_func("/fwupd/remote/empty-credentials", fu_remote_empty_credentials_func);
 	g_test_add_func("/fwupd/remote/auth", fu_remote_auth_func);
 	return g_test_run();
 }

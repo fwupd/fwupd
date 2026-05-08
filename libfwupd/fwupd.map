@@ -1133,3 +1133,47 @@ LIBFWUPD_2.1.2 {
     fwupd_device_set_version_highest_raw;
   local: *;
 } LIBFWUPD_2.1.1;
+
+LIBFWUPD_2.1.3 {
+  global:
+    fwupd_jcat_blob_flags_to_string;
+    fwupd_jcat_blob_get_data;
+    fwupd_jcat_blob_get_data_as_string;
+    fwupd_jcat_blob_get_kind;
+    fwupd_jcat_blob_get_target;
+    fwupd_jcat_blob_get_timestamp;
+    fwupd_jcat_blob_get_type;
+    fwupd_jcat_blob_kind_from_string;
+    fwupd_jcat_blob_kind_to_string;
+    fwupd_jcat_blob_method_to_string;
+    fwupd_jcat_blob_new;
+    fwupd_jcat_blob_new_utf8;
+    fwupd_jcat_blob_set_target;
+    fwupd_jcat_blob_set_timestamp;
+    fwupd_jcat_file_add_item;
+    fwupd_jcat_file_export_bytes;
+    fwupd_jcat_file_export_json;
+    fwupd_jcat_file_get_item_by_id;
+    fwupd_jcat_file_get_item_default;
+    fwupd_jcat_file_get_items;
+    fwupd_jcat_file_get_type;
+    fwupd_jcat_file_get_version_major;
+    fwupd_jcat_file_get_version_minor;
+    fwupd_jcat_file_import_bytes;
+    fwupd_jcat_file_import_json;
+    fwupd_jcat_file_import_stream;
+    fwupd_jcat_file_new;
+    fwupd_jcat_item_add_alias_id;
+    fwupd_jcat_item_add_blob;
+    fwupd_jcat_item_get_alias_ids;
+    fwupd_jcat_item_get_blob_by_kind;
+    fwupd_jcat_item_get_blobs;
+    fwupd_jcat_item_get_blobs_by_kind;
+    fwupd_jcat_item_get_id;
+    fwupd_jcat_item_get_id_safe;
+    fwupd_jcat_item_get_type;
+    fwupd_jcat_item_has_target;
+    fwupd_jcat_item_new;
+    fwupd_jcat_item_remove_alias_id;
+  local: *;
+} LIBFWUPD_2.1.2;

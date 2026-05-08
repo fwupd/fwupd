@@ -16,6 +16,7 @@ install_data(
 )
 install_data(
   [
+    'acpi-table.builder.xml',
     'cpuinfo',
     'cab.builder.xml',
     'cab-compressed.builder.xml',

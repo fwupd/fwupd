@@ -192,6 +192,9 @@ main(int argc, char *argv[])
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}
 
+	/* load well-known paths into the context's path store */
+	fu_context_load_path_store(ctx);
+
 	/* override the default ESP path */
 	if (esp_path != NULL)
 		fu_context_set_esp_location(ctx, esp_path);

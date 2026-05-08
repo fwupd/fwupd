@@ -17,6 +17,7 @@ fwupd_structs = [
   'fwupd-device.rs', # fuzzing
   'fwupd-enums.rs', # fuzzing
   'fwupd-error.rs', # fuzzing
+  'fwupd-jcat.rs', # fuzzing
   'fwupd-json.rs', # fuzzing
   'fwupd-plugin.rs', # fuzzing
   'fwupd-release.rs', # fuzzing
@@ -79,6 +80,9 @@ install_headers(
     'fwupd-remote.h',
     'fwupd-report.h',
     'fwupd-request.h',
+    'fwupd-jcat-blob.h',
+    'fwupd-jcat-file.h',
+    'fwupd-jcat-item.h',
     'fwupd-json-array.h',
     'fwupd-json-common.h',
     'fwupd-json-node.h',
@@ -93,7 +97,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [giounix, libjcat, libcurl]
+libfwupd_deps = [gio, giounix, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -103,6 +107,9 @@ libfwupd_src = [
   'fwupd-device.c', # fuzzing
   'fwupd-error.c', # fuzzing
   'fwupd-bios-setting.c', # fuzzing
+  'fwupd-jcat-blob.c', # fuzzing
+  'fwupd-jcat-file.c', # fuzzing
+  'fwupd-jcat-item.c', # fuzzing
   'fwupd-json-array.c', # fuzzing
   'fwupd-json-common.c', # fuzzing
   'fwupd-json-node.c', # fuzzing
@@ -184,6 +191,12 @@ if introspection.allowed()
       'fwupd-error.h',
       'fwupd-bios-setting.c',
       'fwupd-bios-setting.h',
+      'fwupd-jcat-blob.c',
+      'fwupd-jcat-blob.h',
+      'fwupd-jcat-file.c',
+      'fwupd-jcat-file.h',
+      'fwupd-jcat-item.c',
+      'fwupd-jcat-item.h',
       'fwupd-json-array.c',
       'fwupd-json-array.h',
       'fwupd-json-common.c',
@@ -270,6 +283,7 @@ if get_option('tests')
     'common',
     'device',
     'enums',
+    'jcat',
     'json',
     'plugin',
     'release',

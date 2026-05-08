@@ -11,8 +11,8 @@ struct FuStructAcpiTable {
     oem_id: [char; 6],
     oem_table_id: [char; 8],
     oem_revision: u32be,
-    _asl_compiler_id: [char; 4],
-    _asl_compiler_revision: u32le,
+    creator_id: [char; 4],
+    creator_revision: u32le,
 }
 
 // ACPI Fixed ACPI Description Table (FADT) Preferred_PM_Profile values.

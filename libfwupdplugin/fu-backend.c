@@ -426,7 +426,7 @@ fu_backend_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **erro
 		}
 
 		/* create device */
-		device_tmp = g_object_new(device_gtype, "context", priv->ctx, NULL);
+		device_tmp = g_object_new(device_gtype, "backend", self, NULL);
 		fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED);
 		if (fwupd_version != NULL)
 			fu_device_set_fwupd_version(device_tmp, fwupd_version);

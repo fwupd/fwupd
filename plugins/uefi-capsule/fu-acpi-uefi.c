@@ -78,10 +78,14 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 {
 	FuAcpiUefi *self = FU_ACPI_UEFI(firmware);
 	fwupd_guid_t guid = {0x0};
+	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)
-		 ->parse(FU_FIRMWARE(self), stream, flags, error))
+		 ->parse(FU_FIRMWARE(self),
+			 stream,
+			 flags | FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+			 error))
 		return FALSE;
 
 	/* check signature and read flags */
@@ -95,11 +99,14 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 	}
 
 	/* GUID for the table */
-	if (!fu_input_stream_read_safe(stream,
+	stream_payload = fu_acpi_table_get_payload(FU_ACPI_TABLE(self), error);
+	if (stream_payload == NULL)
+		return FALSE;
+	if (!fu_input_stream_read_safe(stream_payload,
 				       (guint8 *)guid,
 				       sizeof(guid),
-				       0x0,  /* dst */
-				       0x24, /* src */
+				       0x0, /* dst */
+				       0x0, /* src */
 				       sizeof(guid),
 				       error))
 		return FALSE;

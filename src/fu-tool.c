@@ -4468,6 +4468,51 @@ fu_util_emulation_untag(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileOutputStream) stream = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	/* file already exists */
+	if ((self->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    g_file_test(values[0], G_FILE_TEST_EXISTS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Filename already exists");
+		return FALSE;
+	}
+
+	/* save every tagged device */
+	file = g_file_new_for_path(values[0]);
+	stream = g_file_replace(file,
+				NULL,
+				FALSE,
+				G_FILE_CREATE_REPLACE_DESTINATION,
+				NULL,
+				error);
+	if (stream == NULL)
+		return FALSE;
+	return fu_engine_emulation_save(self->engine, G_OUTPUT_STREAM(stream), error);
+}
+
+static gboolean
 fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GInputStream) stream = NULL;
@@ -5975,6 +6020,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Load device emulation data"),
 			      fu_util_emulation_load);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-save",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Save device emulation data"),
+			      fu_util_emulation_save);
 	fu_util_cmd_array_add(cmd_array,
 			      "esp-mount",
 			      NULL,

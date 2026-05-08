@@ -25,3 +25,5 @@ const gchar *
 fu_acpi_table_get_oem_table_id(FuAcpiTable *self) G_GNUC_NON_NULL(1);
 guint32
 fu_acpi_table_get_oem_revision(FuAcpiTable *self) G_GNUC_NON_NULL(1);
+GInputStream *
+fu_acpi_table_get_payload(FuAcpiTable *self, GError **error) G_GNUC_NON_NULL(1);
