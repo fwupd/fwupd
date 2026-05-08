@@ -59,6 +59,7 @@ HELP = {
         {
             "get-devices": "Get all devices that support firmware updates",
             "get-updates": "Get the list of updates for connected hardware",
+            "get-remotes": "Get all enabled metadata remotes",
             "refresh": "Refresh metadata from remote server",
             "update": "Update chosen device to latest firmware version",
             "update-heads": "Updates heads firmware to the latest version (EXPERIMENTAL, not fully supported yet)",
@@ -546,6 +547,19 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         dom0_devices_info_dict = json.loads(self.dom0_devices_info)
         self._output_crawler(dom0_devices_info_dict, 0)
 
+    def get_remotes_qubes(self):
+        """Prints enabled download remotes and their metadata URIs."""
+        remotes = self.get_remotes()
+        if not remotes:
+            print("No enabled download remotes found.")
+            return
+        decorator = "======================================================"
+        print(decorator)
+        print("Enabled remotes:")
+        print(decorator)
+        for name, uri in remotes.items():
+            print(f"  {name}: {uri}")
+
     def get_updates_qubes(self):
         """Gathers and prints updates information."""
         self._get_dom0_updates()
@@ -674,6 +688,8 @@ def main():
         q.get_updates_qubes()
     elif sys.argv[1] == "get-devices":
         q.get_devices_qubes()
+    elif sys.argv[1] == "get-remotes":
+        q.get_remotes_qubes()
     elif sys.argv[1] == "update":
         q.update_firmware(whonix=whonix)
     elif sys.argv[1] == "downgrade":
