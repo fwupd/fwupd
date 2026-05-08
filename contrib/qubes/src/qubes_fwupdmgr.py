@@ -919,7 +919,7 @@ def main():
     for arg in sys.argv:
         if "--url=" in arg:
             metadata_url = arg.replace("--url=", "")
-            if FWUPD_DOWNLOAD_PREFIX not in metadata_url:
+            if not metadata_url.startswith(FWUPD_DOWNLOAD_PREFIX):
                 print(
                     "Metadata must be stored in the Linux"
                     " Vendor Firmware Service (https://fwupd.org/)"
