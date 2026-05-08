@@ -24,7 +24,7 @@ jobs:
           - { DISTRO: debian, ARCH: arm64 }
           # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
           - { DISTRO: fedora, ARCH: amd64 }
-          # - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
+          - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
     env: ${{ matrix.env }}
     steps:
