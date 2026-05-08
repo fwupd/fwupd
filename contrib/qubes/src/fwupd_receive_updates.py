@@ -68,8 +68,10 @@ class FwupdReceiveUpdates:
         """
         assert file_path.startswith("/"), f"bad file path {file_path!r}"
         cmd_jcat = ["jcat-tool", "verify", file_path, "--public-keys", FWUPD_PKI]
+        environ = os.environ.copy()
+        environ["LC_ALL"] = "C"
         p = subprocess.Popen(
-            cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environ
         )
         stdout, stderr = p.communicate()
         verification = stdout.decode("utf-8")
