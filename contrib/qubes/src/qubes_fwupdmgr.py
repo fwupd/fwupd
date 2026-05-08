@@ -76,7 +76,8 @@ HELP = {
             "--sha": "SHA256 checksum of the firmware archive (required for install)",
             "--allow-older": "Allow installing an older firmware version",
             "--allow-reinstall": "Allow reinstalling the same firmware version",
-            "--force": "Force the firmware update even if not required\n",
+            "--force": "Force the firmware update even if not required",
+            "--ignore-postquantum": "Ignore pkcs7 failures for LVFS CA 2025PQ if at least one other CA signature is verified\n",
         }
     ],
     "Help": [{"-h --help": "Show help options\n"}],
@@ -84,7 +85,9 @@ HELP = {
 
 
 class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
-    def _download_metadata(self, whonix=False, metadata_url=None):
+    def _download_metadata(
+        self, whonix=False, metadata_url=None, ignore_postquantum=False
+    ):
         """Initialize downloading metadata files.
 
         Keywords arguments:
@@ -94,7 +97,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not metadata_url:
             raise Exception("missing metadata URL")
         self.download_metadata(whonix=whonix, metadata_url=metadata_url)
-        self.handle_metadata_update(self.updatevm, metadata_url=metadata_url)
+        self.handle_metadata_update(
+            self.updatevm,
+            metadata_url=metadata_url,
+            ignore_postquantum=ignore_postquantum,
+        )
         if not os.path.exists(self.metadata_file):
             raise FileNotFoundError("Metadata file does not exist")
 
@@ -128,7 +135,13 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._remotes_cache = remotes
         return self._remotes_cache
 
-    def refresh_metadata(self, whonix=False, metadata_url=None, remote_name=None):
+    def refresh_metadata(
+        self,
+        whonix=False,
+        metadata_url=None,
+        remote_name=None,
+        ignore_postquantum=False,
+    ):
         """Updates metadata with downloaded files.
 
         Keyword arguments:
@@ -149,7 +162,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 remote_name = "lvfs-testing"
             else:
                 remote_name = "lvfs"
-        self._download_metadata(whonix=whonix, metadata_url=metadata_url)
+        self._download_metadata(
+            whonix=whonix,
+            metadata_url=metadata_url,
+            ignore_postquantum=ignore_postquantum,
+        )
         cmd_refresh = [
             FWUPDMGR,
             "refresh",
@@ -167,7 +184,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 f"Manual metadata refresh failed: {output.strip() or '(no output)'}"
             )
 
-    def refresh_metadata_all(self, whonix=False):
+    def refresh_metadata_all(self, whonix=False, ignore_postquantum=False):
         """Refresh metadata for all 'download' remotes
 
         Keyword arguments:
@@ -175,7 +192,12 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         """
         for name, url in self.get_remotes().items():
             try:
-                self.refresh_metadata(whonix=whonix, remote_name=name, metadata_url=url)
+                self.refresh_metadata(
+                    whonix=whonix,
+                    remote_name=name,
+                    metadata_url=url,
+                    ignore_postquantum=ignore_postquantum,
+                )
             except Exception as e:
                 print(f"Failed to refresh remote '{name}': {e}")
 
@@ -747,7 +769,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 self.refresh_metadata_all()
             os.remove(BIOS_UPDATE_FLAG)
 
-    def heads_update(self, device=None, whonix=False, metadata_url=None):
+    def heads_update(
+        self, device=None, whonix=False, metadata_url=None, ignore_postquantum=False
+    ):
         """
         Updates heads firmware
 
@@ -763,7 +787,11 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self._get_hwids()
         if device is None:
             device = self._get_hwid_device()
-        self._download_metadata(whonix=whonix, metadata_url=metadata_url)
+        self._download_metadata(
+            whonix=whonix,
+            metadata_url=metadata_url,
+            ignore_postquantum=ignore_postquantum,
+        )
         self._parse_metadata(self.metadata_file)
         if self._gather_firmware_version() == EXIT_CODES["NOTHING_TO_DO"]:
             return EXIT_CODES["NOTHING_TO_DO"]
@@ -835,6 +863,7 @@ def main():
     allow_older = False
     allow_reinstall = False
     force = False
+    ignore_postquantum = False
 
     for arg in sys.argv:
         if "--url=" in arg:
@@ -858,6 +887,8 @@ def main():
             allow_reinstall = True
         if "--force" == arg:
             force = True
+        if "--ignore-postquantum" == arg:
+            ignore_postquantum = True
 
     q.validate_dom0_dirs()
     q.trusted_cleanup()
@@ -865,7 +896,11 @@ def main():
 
     if not os.path.exists(FWUPD_DOM0_DIR):
         if metadata_url:
-            q.refresh_metadata(whonix=whonix, metadata_url=metadata_url)
+            q.refresh_metadata(
+                whonix=whonix,
+                metadata_url=metadata_url,
+                ignore_postquantum=ignore_postquantum,
+            )
         else:
             q.refresh_metadata_all(whonix=whonix)
 
@@ -907,11 +942,20 @@ def main():
         q.clean_cache()
     elif sys.argv[1] == "refresh":
         if metadata_url:
-            q.refresh_metadata(whonix=whonix, metadata_url=metadata_url)
+            q.refresh_metadata(
+                whonix=whonix,
+                metadata_url=metadata_url,
+                ignore_postquantum=ignore_postquantum,
+            )
         else:
-            q.refresh_metadata_all(whonix=whonix)
+            q.refresh_metadata_all(whonix=whonix, ignore_postquantum=ignore_postquantum)
     elif sys.argv[1] == "update-heads":
-        q.heads_update(device=device_override, metadata_url=metadata_url, whonix=whonix)
+        q.heads_update(
+            device=device_override,
+            metadata_url=metadata_url,
+            whonix=whonix,
+            ignore_postquantum=ignore_postquantum,
+        )
     else:
         q.help()
         exit(1)
