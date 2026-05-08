@@ -109,8 +109,8 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         remotes = {}
         for remote in remotes_list:
             name = remote["Id"]
-            # skip disabled
-            if remote.get("Enabled", "true") != "true":
+            # fwupd 2.x emits "Enabled": true (bool), older versions used "true" (str)
+            if remote.get("Enabled", True) not in (True, "true"):
                 continue
             # skip local - for metadata refresh, we only care about those
             # actually needing refreshing
