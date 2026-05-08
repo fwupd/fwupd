@@ -1241,12 +1241,6 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="python3-toml">
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
   <dependency id="python3-markdown">
     <distro id="centos">
       <package variant="x86_64" />
