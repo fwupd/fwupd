@@ -12,7 +12,7 @@ import unittest
 import os
 import subprocess
 import sys
-import imp
+import importlib.util
 import io
 import platform
 import tempfile
@@ -22,13 +22,22 @@ from .fwupd_logs import GET_DEVICES_NO_VERSION
 from unittest.mock import patch
 
 
-QUBES_FWUPDMGR_REPO = "./src/qubes_fwupdmgr.py"
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+QUBES_FWUPDMGR_REPO = os.path.join(_THIS_DIR, "..", "src", "qubes_fwupdmgr.py")
 QUBES_FWUPDMGR_BINDIR = "/usr/sbin/qubes-fwupdmgr"
 
 if os.path.exists(QUBES_FWUPDMGR_REPO):
-    qfwupd = imp.load_source("qubes_fwupdmgr", QUBES_FWUPDMGR_REPO)
+    _qfwupd_path = QUBES_FWUPDMGR_REPO
 elif os.path.exists(QUBES_FWUPDMGR_BINDIR):
-    qfwupd = imp.load_source("qubes_fwupdmgr", QUBES_FWUPDMGR_BINDIR)
+    _qfwupd_path = QUBES_FWUPDMGR_BINDIR
+else:
+    _qfwupd_path = None
+
+qfwupd = None
+if _qfwupd_path is not None:
+    _spec = importlib.util.spec_from_file_location("qubes_fwupdmgr", _qfwupd_path)
+    qfwupd = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(qfwupd)
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
