@@ -11,7 +11,7 @@ import io
 import os
 import platform
 import shutil
-import imp
+import importlib.util
 import src.qubes_fwupd_heads as qf_heads
 import sys
 import unittest
@@ -26,9 +26,15 @@ QUBES_FWUPDMGR_BINDIR = "/usr/sbin/qubes-fwupdmgr"
 class TestQubesFwupdHeads(unittest.TestCase):
     def setUp(self):
         if os.path.exists(QUBES_FWUPDMGR_REPO):
-            self.qfwupd = imp.load_source("qubes_fwupdmgr", QUBES_FWUPDMGR_REPO)
+            path = QUBES_FWUPDMGR_REPO
         elif os.path.exists(QUBES_FWUPDMGR_BINDIR):
-            self.qfwupd = imp.load_source("qubes_fwupdmgr", QUBES_FWUPDMGR_BINDIR)
+            path = QUBES_FWUPDMGR_BINDIR
+        else:
+            path = None
+        if path is not None:
+            spec = importlib.util.spec_from_file_location("qubes_fwupdmgr", path)
+            self.qfwupd = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(self.qfwupd)
         self.q = qf_heads.FwupdHeads()
         self.maxDiff = 2000
         self.captured_output = io.StringIO()
