@@ -54,12 +54,21 @@ class FwupdReceiveUpdates:
         p = subprocess.Popen(
             cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout, __ = p.communicate()
+        stdout, stderr = p.communicate()
         verification = stdout.decode("utf-8")
         print(verification)
         if p.returncode != 0:
             self.clean_cache()
-            raise Exception("jcat-tool: Verification failed")
+            stderr_str = stderr.decode()
+            if "SignatureNotValidYet" in stderr_str:
+                raise Exception(
+                    "PGP signature creation time is in the"
+                    " future (update-vm clock may be out of sync).\n"
+                    "Run /usr/bin/qvm-sync-clock to update the time.\n"
+                    + stderr_str
+                )
+            else:
+                raise Exception("jcat-tool: Verification failed")
 
     def handle_fw_update(self, updatevm, sha, filename):
         """Copies firmware update archives from the updateVM.
