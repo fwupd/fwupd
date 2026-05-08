@@ -69,6 +69,10 @@ if MATRIX_CROSS:
     deps = parse_dependencies(distro, MATRIX_CROSS, False, cross=True)
     deps += [f"crossbuild-essential-{MATRIX_CROSS}"]
 else:
+    if RUNNER_ARCH not in RUNNER_ARCH_DEPS_MAP:
+        arch_items = "|".join(RUNNER_ARCH_DEPS_MAP.keys())
+        print(f"Invalid runner arch, expected {arch_items}")
+        sys.exit(1)
     deps = parse_dependencies(distro, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
