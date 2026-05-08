@@ -204,12 +204,15 @@ fu_dell_dock_mst_write_register(FuDellDockMst *self,
 				GError **error)
 {
 	FuDevice *proxy;
-	g_autofree guint8 *buffer = g_malloc0(length + 4);
+	g_autofree guint8 *buffer = NULL;
 
 	g_return_val_if_fail(data != NULL, FALSE);
-
-	memcpy(buffer, &address, 4);	  /* nocheck:blocked */
-	memcpy(buffer + 4, data, length); /* nocheck:blocked */
+	g_return_val_if_fail(length <= G_MAXSIZE - 4, FALSE);
+	buffer = g_malloc0(length + 4);
+	if (!fu_memcpy_safe(buffer, length + 4, 0x0, (const guint8 *)&address, sizeof(address), 0x0, sizeof(address), error))
+		return FALSE;
+	if (!fu_memcpy_safe(buffer, length + 4, 0x4, data, length, 0x0, length, error))
+		return FALSE;
 
 	/* write the offset we're querying */
 	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
@@ -369,8 +372,10 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 	/* length */
 	memcpy(buffer + 8, &length, 4); /* nocheck:blocked */
 	/* data */
-	if (data != NULL)
-		memcpy(buffer + 16, data, length); /* nocheck:blocked */
+	if (data != NULL) {
+		if (!fu_memcpy_safe(buffer, buffer_len, 0x10, data, (gsize)length, 0x0, (gsize)length, error))
+			return FALSE;
+	}
 
 	/* write the combined register stream */
 	if (!fu_dell_dock_mst_write_register(self,
