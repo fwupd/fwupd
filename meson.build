@@ -455,6 +455,18 @@ if gnutls.found()
   endif
 endif
 
+# fall back to OpenSSL
+if jcat_crypto == 'none'
+  libcrypto = dependency(
+    'libcrypto',
+    required: get_option('openssl'),
+  )
+  if libcrypto.found()
+    jcat_crypto = 'libcrypto'
+    conf.set('HAVE_LIBCRYPTO', '1')
+  endif
+endif
+
 lzma = dependency('liblzma')
 
 platform_deps = []

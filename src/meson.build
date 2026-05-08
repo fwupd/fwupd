@@ -60,6 +60,10 @@ if jcat_crypto == 'gnutls'
   fwupd_engine_src += 'fu-jcat-gnutls-common.c'
   fwupd_engine_src += 'fu-jcat-gnutls-pkcs7-engine.c'
   engine_dep += gnutls
+elif jcat_crypto == 'libcrypto'
+  fwupd_engine_src += 'fu-jcat-libcrypto-common.c'
+  fwupd_engine_src += 'fu-jcat-libcrypto-pkcs7-engine.c'
+  engine_dep += libcrypto
 endif
 
 if giounix.found()

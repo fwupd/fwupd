@@ -302,6 +302,11 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="openssl-dev">
+    <distro id="fedora">
+      <package variant="x86_64">openssl-devel</package>
+    </distro>
+  </dependency>
   <dependency id="dconf">
     <distro id="centos">
       <package variant="x86_64" />

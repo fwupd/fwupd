@@ -18,6 +18,9 @@
 #ifdef HAVE_GNUTLS
 #include "fu-jcat-gnutls-pkcs7-engine.h"
 #endif
+#ifdef HAVE_LIBCRYPTO
+#include "fu-jcat-libcrypto-pkcs7-engine.h"
+#endif
 
 typedef FuJcatEngine *(*FuJcatEngineNewFunc)(FuJcatContext *context);
 
@@ -646,6 +649,14 @@ main(int argc, char **argv)
 	g_test_add_data_func("/jcat/engine/pkcs7/self-signed",
 			     NULL,
 			     fwupd_jcat_pkcs7_engine_self_signed_func);
+#ifdef HAVE_LIBCRYPTO
+	g_test_add_data_func("/jcat/engine/pkcs7/openssl",
+			     &fu_jcat_libcrypto_pkcs7_engine_new,
+			     fwupd_jcat_pkcs7_engine_func);
+	g_test_add_data_func("/jcat/engine/pkcs7/self-signed/openssl",
+			     &fu_jcat_libcrypto_pkcs7_engine_new,
+			     fwupd_jcat_pkcs7_engine_self_signed_func);
+#endif
 #ifdef HAVE_GNUTLS
 	g_test_add_data_func("/jcat/engine/pkcs7/gnutls",
 			     &fu_jcat_gnutls_pkcs7_engine_new,
