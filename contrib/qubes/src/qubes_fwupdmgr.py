@@ -493,66 +493,39 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             raise Exception(f"Device '{device_id}' not found")
 
         current = target_device.get("Version", "0")
-        # Use the canonical DeviceId from fwupd rather than the user-supplied
-        canonical_id = target_device.get("DeviceId", device_id)
         releases = target_device.get("Releases", [])
 
-        # get-devices may omit Releases when fwupd sees no update candidates
-        # fall back to get-releases which queries all metadata for the device
-        result = None
+        stderr = ""
         if not releases:
-            cmd_get_releases = [FWUPDMGR, "--json"]
-            if allow_older:
-                cmd_get_releases.append("--allow-older")
-            if allow_reinstall:
-                cmd_get_releases.append("--allow-reinstall")
-            cmd_get_releases += ["get-releases", "--", canonical_id]
-            result = subprocess.run(
-                cmd_get_releases,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+            releases, stderr = self._fwupd_get_releases(
+                device_id, allow_older, allow_reinstall
             )
-            try:
-                releases = json.loads(result.stdout.decode()).get("Releases", [])
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                releases = []
-
         if not releases:
-            stderr_msg = (
-                result.stderr.decode(errors="replace").strip()
-                if result is not None
-                else ""
-            )
-            detail = f"\n  fwupdmgr: {stderr_msg}" if stderr_msg else ""
+            detail = f"\n  fwupdmgr: {stderr}" if stderr else ""
             raise Exception(
                 f"No releases available for device '{device_id}'.{detail}\n"
-                "  Try: sudo qubes-fwupdmgr refresh\n"
-                "  If firmware is in the testing channel:\n"
-                "    sudo fwupdmgr enable-remote lvfs-testing\n"
-                "    sudo qubes-fwupdmgr refresh"
+                "  Try: sudo qubes-fwupdmgr refresh"
             )
 
         if version is not None:
-            for release in releases:
-                if release.get("Version") == version:
-                    return self._release_uri(release), release["Checksum"][-1]
-            raise Exception(f"Version '{version}' not found for device '{device_id}'")
+            match = next((r for r in releases if r.get("Version") == version), None)
+            if match is None:
+                raise Exception(
+                    f"Version '{version}' not found for device '{device_id}'"
+                )
+            return self._release_uri(match), match["Checksum"][-1]
 
-        candidates = []
-        cv = pversion.parse(current)
-        for release in releases:
-            rel_ver = release.get("Version")
-            rv = pversion.parse(rel_ver)
-            if rv > cv:
-                candidates.append(release)
-            elif rv == cv and allow_reinstall:
-                candidates.append(release)
-            elif rv < cv and allow_older:
-                candidates.append(release)
+        current = target_device.get("Version", "0")
+        candidates = [
+            r
+            for r in releases
+            if self._release_eligible(
+                r.get("Version"), current, allow_older, allow_reinstall
+            )
+        ]
         if not candidates:
-            raise Exception(f"No eligible release found for device '{device_id}")
-
-        best = max(candidates, key=lambda r: pversion.parse(r["Version"]))
+            raise Exception(f"No eligible release found for device '{device_id}'")
+        best = max(candidates, key=lambda r: pversion.Version(r["Version"]))
         return self._release_uri(best), best["Checksum"][-1]
 
     def install_firmware(
@@ -733,7 +706,18 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         """Gathers and prints updates information."""
         self._get_dom0_updates(allow_older=allow_older, allow_reinstall=allow_reinstall)
         self._parse_dom0_updates_info(self.dom0_updates_info)
+        self._get_dom0_updates_string_based(
+            allow_older=allow_older, allow_reinstall=allow_reinstall
+        )
         self._updates_crawler(self.dom0_updates_list)
+
+    def _get_dom0_updates_string_based(self, allow_older=False, allow_reinstall=False):
+        devices_with_releases = sum(1 for d in self.dom0_updates_list if d["Releases"])
+        if devices_with_releases == 0:
+            self.dom0_updates_list = self._string_based_updates(
+                allow_older=allow_older,
+                allow_reinstall=allow_reinstall,
+            )
 
     def help(self):
         """Prints help information"""
@@ -824,6 +808,93 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if locations:
             return locations[0]
         return None
+
+    def _string_based_updates(self, allow_older=False, allow_reinstall=False):
+        """Fallback update scan using version-string comparison."""
+        self._get_dom0_devices()
+        devices = json.loads(self.dom0_devices_info).get("Devices", [])
+
+        updates_list = []
+        for device in devices:
+            if "updatable" not in device.get("Flags", []):
+                continue
+            dev_id = device.get("DeviceId")
+            if not dev_id:
+                continue
+            dev_ver = device.get("Version", "0")
+
+            releases, _ = self._fwupd_get_releases(dev_id, allow_older, allow_reinstall)
+            candidates = [
+                r
+                for r in releases
+                if self._release_eligible(
+                    r.get("Version"), dev_ver, allow_older, allow_reinstall
+                )
+            ]
+            if not candidates:
+                continue
+
+            updates_list.append(
+                {
+                    "Name": device.get("Name", "Unknown"),
+                    "Version": dev_ver,
+                    "Releases": [
+                        {
+                            "Version": r["Version"],
+                            "Url": self._release_uri(r),
+                            "Checksum": r["Checksum"][-1],
+                            "Description": r.get("Description", ""),
+                        }
+                        for r in candidates
+                        if self._release_uri(r) and r.get("Checksum")
+                    ],
+                }
+            )
+        return updates_list
+
+    def _release_eligible(self, rel_ver_str, cur_ver_str, allow_older, allow_reinstall):
+        """Return True if a release is eligible to install over current using
+        packaging.version human-readable Version strings.
+        """
+        if not rel_ver_str:
+            return False
+        try:
+            rv = pversion.parse(rel_ver_str)
+            cv = pversion.parse(cur_ver_str or "0")
+        except Exception:
+            return False
+        if rv > cv:
+            return True
+        if rv == cv and allow_reinstall:
+            return True
+        if rv < cv and allow_older:
+            return True
+        return False
+
+    def _fwupd_get_releases(self, device_id, allow_older=False, allow_reinstall=False):
+        """Run `fwupdmgr --json get-releases <id>` and return its Releases list.
+
+        Returns ([], stderr_str) on failure so the caller can build a useful
+        error message. stderr_str is "" when nothing went wrong.
+        """
+        cmd = [FWUPDMGR, "--json"]
+        if allow_older:
+            cmd.append("--allow-older")
+        if allow_reinstall:
+            cmd.append("--allow-reinstall")
+        cmd += ["get-releases", "--", device_id]
+        try:
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except Exception as e:
+            return [], str(e)
+        try:
+            releases = json.loads(result.stdout.decode(errors="replace")).get(
+                "Releases", []
+            )
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            releases = []
+        stderr = result.stderr.decode(errors="replace").strip()
+        return releases, stderr
 
 
 def main():
