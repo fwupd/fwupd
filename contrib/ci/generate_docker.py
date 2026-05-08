@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+from typing import Optional
 
 from fwupd_setup_helpers import parse_dependencies
 
@@ -22,13 +23,14 @@ RUNNER_ARCH_DEPS_MAP = {
 }
 
 
-def getenv_unwrap(name: str) -> str:
+def getenv_unwrap(name: str) -> Optional[str]:
     val = os.getenv(name)
     if val is None:
         print(f"environment variable has not been set: '{name}'")
         sys.exit(1)
-    else:
-        return val
+    if val.lower() in ["null", "none"]:
+        return None
+    return val
 
 
 def get_container_cmd():
