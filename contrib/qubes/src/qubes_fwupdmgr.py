@@ -156,8 +156,10 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         print(output)
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Refresh failed")
-        if not output != "Successfully refreshed metadata manually":
-            raise Exception("Manual metadata refresh failed!!!")
+        if "Successfully refreshed metadata manually" not in output:
+            raise Exception(
+                f"Manual metadata refresh failed: {output.strip() or '(no output)'}"
+            )
 
     def refresh_metadata_all(self, whonix=False):
         """Refresh metadata for all 'download' remotes
