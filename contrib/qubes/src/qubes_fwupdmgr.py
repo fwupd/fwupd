@@ -983,7 +983,7 @@ def main():
         q.get_remotes_qubes()
     elif sys.argv[1] == "update":
         q.update_firmware(
-            whonix=whonix, allow_older=allow_older, allow_reinstall=allow_reinstall
+            whonix=whonix, allow_older=allow_older, allow_reinstall=allow_reinstall, force=force
         )
     elif sys.argv[1] == "downgrade":
         q.downgrade_firmware(whonix=whonix)
