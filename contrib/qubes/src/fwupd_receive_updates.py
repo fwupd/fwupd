@@ -42,6 +42,23 @@ class FwupdReceiveUpdates:
             self.clean_cache()
             raise ValueError(f"Computed checksum {c_sha} did NOT match {sha}.")
 
+    def _jcat_minimal_verification_pass(self, verification_output):
+        """Return True if at least sha256 plus one pkcs7 entry passed.
+        The verification will fail if post quantum signing algorithms
+        are not supported.
+        """
+        passed = set()
+        for line in verification_output.splitlines():
+            line = line.strip()
+            if line.startswith("PASSED "):
+                kind = line.split()[1].rstrip(":")
+                passed.add(kind)
+            elif line.startswith("FAILED ") and "FAILED: " not in line:
+                # A specific entry failed — only tolerate unsupported-algorithm
+                if "[-89]" not in line:
+                    return False
+        return "sha256" in passed and "pkcs7" in passed
+
     def _jcat_verification(self, file_path, file_directory):
         """Verifies SHA1+SHA256 checksum and PKCS#7 signature.
 
@@ -58,14 +75,15 @@ class FwupdReceiveUpdates:
         verification = stdout.decode("utf-8")
         print(verification)
         if p.returncode != 0:
+            if self._jcat_minimal_verification_pass(verification):
+                return
             self.clean_cache()
             stderr_str = stderr.decode()
             if "SignatureNotValidYet" in stderr_str:
                 raise Exception(
                     "PGP signature creation time is in the"
                     " future (update-vm clock may be out of sync).\n"
-                    "Run /usr/bin/qvm-sync-clock to update the time.\n"
-                    + stderr_str
+                    "Run /usr/bin/qvm-sync-clock to update the time.\n" + stderr_str
                 )
             else:
                 raise Exception("jcat-tool: Verification failed")
