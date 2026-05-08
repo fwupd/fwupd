@@ -64,6 +64,7 @@ HELP = {
             "update": "Update chosen device to latest firmware version",
             "update-heads": "Updates heads firmware to the latest version (EXPERIMENTAL, not fully supported yet)",
             "downgrade": "Downgrade chosen device to chosen firmware version",
+            "install": "Install firmware: DEVICE-UUID [VERSION] or --url with --sha",
             "clean": "Delete all cached update files\n",
         }
     ],
@@ -71,7 +72,11 @@ HELP = {
         {
             "--whonix": "Download firmware updates via Tor",
             "--device": "Specify device for heads update (default - x230)",
-            "--url": "Address of the custom metadata remote server\n",
+            "--url": "Address of the firmware or metadata remote server",
+            "--sha": "SHA256 checksum of the firmware archive (required for install)",
+            "--allow-older": "Allow installing an older firmware version",
+            "--allow-reinstall": "Allow reinstalling the same firmware version",
+            "--force": "Force the firmware update even if not required\n",
         }
     ],
     "Help": [{"-h --help": "Show help options\n"}],
@@ -174,9 +179,14 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             except Exception as e:
                 print(f"Failed to refresh remote '{name}': {e}")
 
-    def _get_dom0_updates(self):
+    def _get_dom0_updates(self, allow_older=False, allow_reinstall=False):
         """Gathers information about available updates."""
-        cmd_get_dom0_updates = [FWUPDMGR, "--json", "get-updates"]
+        cmd_get_dom0_updates = [FWUPDMGR]
+        if allow_older:
+            cmd_get_dom0_updates.append("--allow-older")
+        if allow_reinstall:
+            cmd_get_dom0_updates.append("--allow-reinstall")
+        cmd_get_dom0_updates += ["--json", "get-updates"]
         p = subprocess.Popen(cmd_get_dom0_updates, stdout=subprocess.PIPE)
         self.dom0_updates_info = p.communicate()[0].decode()
         if p.returncode != 0 and p.returncode != 2:
@@ -298,18 +308,6 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
 
-    def _install_dom0_firmware_update(self, arch_path):
-        """Installs firmware update for specified device in dom0.
-
-        Keywords arguments:
-        arch_path - absolute path to firmware update archive
-        """
-        cmd_install = [FWUPDMGR, "install", arch_path]
-        p = subprocess.Popen(cmd_install)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware update failed")
-
     def _read_dmi(self):
         """Reads BIOS information from DMI."""
         cmd_dmidecode_version = ["dmidecode", "-s", "bios-version"]
@@ -359,14 +357,22 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Getting devices info failed")
 
-    def update_firmware(self, whonix=False):
+    def update_firmware(
+        self, whonix=False, allow_older=False, allow_reinstall=False, force=False
+    ):
         """Updates firmware of the specified device.
 
         Keyword arguments:
         whonix -- Flag enforces downloading the metadata updates via Tor
+        allow_older - allow installing an older firmware version
+        allow_reinstall - allow reinstalling the same firmware version
+        force - force installation even when not required
         """
-        self._get_dom0_updates()
+        self._get_dom0_updates(allow_older=allow_older, allow_reinstall=allow_reinstall)
         self._parse_dom0_updates_info(self.dom0_updates_info)
+        self._get_dom0_updates_string_based(
+            allow_older=allow_older, allow_reinstall=allow_reinstall
+        )
         updates_list = self.dom0_updates_list
         ret_input = self._user_input(updates_list)
         if ret_input == -EXIT_CODES["NOTHING_TO_DO"]:
@@ -377,7 +383,12 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if self.name == "System Firmware":
             Path(BIOS_UPDATE_FLAG).touch(mode=0o644, exist_ok=True)
             self._verify_dmi(self.arch_path, self.version)
-        self._install_dom0_firmware_update(self.arch_path)
+        self._install_dom0_firmware(
+            self.arch_path,
+            allow_older=allow_older,
+            allow_reinstall=allow_reinstall,
+            force=force,
+        )
 
     def _parse_downgrades(self, device_list):
         """Parses information about possible downgrades.
@@ -425,6 +436,155 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p.wait()
         if p.returncode != 0:
             raise Exception("fwupd-qubes: Firmware downgrade failed")
+
+    def _install_dom0_firmware(
+        self, arch_path, allow_older=False, allow_reinstall=False, force=False
+    ):
+        """Installs firmware archive with optional install flags.
+
+        Keywords arguments:
+        arch_path - absolute path to firmware archive
+        allow_older - pass --allow-older to fwupdmgr
+        allow_reinstall - pass --allow-reinstall to fwupdmgr
+        force - pass --force to fwupdmgr
+        """
+        cmd_install = [FWUPDMGR]
+        if allow_older:
+            cmd_install.append("--allow-older")
+        if allow_reinstall:
+            cmd_install.append("--allow-reinstall")
+        if force:
+            cmd_install.append("--force")
+        cmd_install += ["install", arch_path]
+        p = subprocess.Popen(cmd_install)
+        p.wait()
+        if p.returncode != 0:
+            sys.exit(p.returncode)
+
+    def _find_device_release(
+        self, device_id, version=None, allow_older=False, allow_reinstall=False
+    ):
+        """Look up firmware URL and SHA for a device by ID.
+
+        Keywords arguments:
+        device_id - DeviceId to identify the device
+        version - exact firmware version to install, omit for best available
+        allow_older - accept releases with a version older than current
+        allow_reinstall - accept a release at the same version as current
+        """
+        self._get_dom0_devices()
+        devices_dict = json.loads(self.dom0_devices_info)
+
+        target_device = None
+        for device in devices_dict.get("Devices", []):
+            if device.get("DeviceId") == device_id:
+                target_device = device
+                break
+        if target_device is None:
+            raise Exception(f"Device '{device_id}' not found")
+
+        current = target_device.get("Version", "0")
+        # Use the canonical DeviceId from fwupd rather than the user-supplied
+        canonical_id = target_device.get("DeviceId", device_id)
+        releases = target_device.get("Releases", [])
+
+        # get-devices may omit Releases when fwupd sees no update candidates
+        # fall back to get-releases which queries all metadata for the device
+        result = None
+        if not releases:
+            cmd_get_releases = [FWUPDMGR, "--json"]
+            if allow_older:
+                cmd_get_releases.append("--allow-older")
+            if allow_reinstall:
+                cmd_get_releases.append("--allow-reinstall")
+            cmd_get_releases += ["get-releases", "--", canonical_id]
+            result = subprocess.run(
+                cmd_get_releases,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            try:
+                releases = json.loads(result.stdout.decode()).get("Releases", [])
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                releases = []
+
+        if not releases:
+            stderr_msg = (
+                result.stderr.decode(errors="replace").strip()
+                if result is not None
+                else ""
+            )
+            detail = f"\n  fwupdmgr: {stderr_msg}" if stderr_msg else ""
+            raise Exception(
+                f"No releases available for device '{device_id}'.{detail}\n"
+                "  Try: sudo qubes-fwupdmgr refresh\n"
+                "  If firmware is in the testing channel:\n"
+                "    sudo fwupdmgr enable-remote lvfs-testing\n"
+                "    sudo qubes-fwupdmgr refresh"
+            )
+
+        if version is not None:
+            for release in releases:
+                if release.get("Version") == version:
+                    return self._release_uri(release), release["Checksum"][-1]
+            raise Exception(f"Version '{version}' not found for device '{device_id}'")
+
+        candidates = []
+        cv = pversion.parse(current)
+        for release in releases:
+            rel_ver = release.get("Version")
+            rv = pversion.parse(rel_ver)
+            if rv > cv:
+                candidates.append(release)
+            elif rv == cv and allow_reinstall:
+                candidates.append(release)
+            elif rv < cv and allow_older:
+                candidates.append(release)
+        if not candidates:
+            raise Exception(f"No eligible release found for device '{device_id}")
+
+        best = max(candidates, key=lambda r: pversion.parse(r["Version"]))
+        return self._release_uri(best), best["Checksum"][-1]
+
+    def install_firmware(
+        self,
+        device_id=None,
+        version=None,
+        url=None,
+        sha=None,
+        allow_older=False,
+        allow_reinstall=False,
+        force=False,
+        whonix=False,
+    ):
+        """Downloads and installs firmware for a device or from a direct URL.
+
+        Keyword arguments:
+        device_id - DeviceId or GUID to identify the target device
+        version - specific firmware version to install (used with device_id)
+        url - direct LVFS URL of the firmware cabinet (alternative to device_id)
+        sha - SHA256 checksum matching url
+        allow_older - allow installing an older firmware version
+        allow_reinstall - allow reinstalling the same firmware version
+        force - force installation even when not required
+        whonix - route download through sys-whonix (Tor)
+        """
+        if device_id is not None:
+            url, sha = self._find_device_release(
+                device_id,
+                version=version,
+                allow_older=allow_older,
+                allow_reinstall=allow_reinstall,
+            )
+        elif not (url and sha):
+            raise Exception("install requires a device UUID or --url and --sha")
+        self._download_firmware_updates(url, sha, whonix=whonix)
+        self._install_dom0_firmware(
+            self.arch_path,
+            allow_older=allow_older,
+            allow_reinstall=allow_reinstall,
+            force=force,
+        )
 
     def downgrade_firmware(self, whonix=False):
         """Downgrades firmware of the specified device.
@@ -560,9 +720,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         for name, uri in remotes.items():
             print(f"  {name}: {uri}")
 
-    def get_updates_qubes(self):
+    def get_updates_qubes(self, allow_older=False, allow_reinstall=False):
         """Gathers and prints updates information."""
-        self._get_dom0_updates()
+        self._get_dom0_updates(allow_older=allow_older, allow_reinstall=allow_reinstall)
         self._parse_dom0_updates_info(self.dom0_updates_info)
         self._updates_crawler(self.dom0_updates_list)
 
@@ -643,6 +803,19 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         if not os.path.exists(FWUPD_DOM0_UPDATES_DIR):
             create_dirs(FWUPD_DOM0_UPDATES_DIR)
 
+    def _release_uri(self, release):
+        """Return the download URL from a release dict.
+
+        Older fwupd emits 'Uri' (string), newer fwupd emits 'Locations' (list).
+        """
+        uri = release.get("Uri")
+        if uri:
+            return uri
+        locations = release.get("Locations")
+        if locations:
+            return locations[0]
+        return None
+
 
 def main():
     if os.geteuid() != 0:
@@ -657,7 +830,11 @@ def main():
 
     metadata_url = None
     device_override = None
+    firmware_sha = None
     whonix = False
+    allow_older = False
+    allow_reinstall = False
+    force = False
 
     for arg in sys.argv:
         if "--url=" in arg:
@@ -669,10 +846,18 @@ def main():
                 )
                 print("Exiting...")
                 exit(1)
+        if "--sha=" in arg:
+            firmware_sha = arg.replace("--sha=", "")
         if "--device=" in arg:
             device_override = arg.replace("--device=", "")
         if "--whonix" == arg:
             whonix = True
+        if "--allow-older" == arg:
+            allow_older = True
+        if "--allow-reinstall" == arg:
+            allow_reinstall = True
+        if "--force" == arg:
+            force = True
 
     q.validate_dom0_dirs()
     q.trusted_cleanup()
@@ -685,15 +870,39 @@ def main():
             q.refresh_metadata_all(whonix=whonix)
 
     if sys.argv[1] == "get-updates":
-        q.get_updates_qubes()
+        q.get_updates_qubes(allow_older=allow_older, allow_reinstall=allow_reinstall)
     elif sys.argv[1] == "get-devices":
         q.get_devices_qubes()
     elif sys.argv[1] == "get-remotes":
         q.get_remotes_qubes()
     elif sys.argv[1] == "update":
-        q.update_firmware(whonix=whonix)
+        q.update_firmware(
+            whonix=whonix, allow_older=allow_older, allow_reinstall=allow_reinstall
+        )
     elif sys.argv[1] == "downgrade":
         q.downgrade_firmware(whonix=whonix)
+    elif sys.argv[1] == "install":
+        install_pos = [a for a in sys.argv[2:] if not a.startswith("--")]
+        install_device_id = install_pos[0] if install_pos else None
+        install_version = install_pos[1] if len(install_pos) > 1 else None
+        if install_device_id and metadata_url:
+            print("install: use either DEVICE-UUID or --url, not both")
+            exit(EXIT_CODES["ERROR"])
+        if not install_device_id and not (metadata_url and firmware_sha):
+            print(
+                "install requires DEVICE-UUID [VERSION] or --url=<URL> --sha=<SHA256>"
+            )
+            exit(EXIT_CODES["ERROR"])
+        q.install_firmware(
+            device_id=install_device_id,
+            version=install_version,
+            url=metadata_url,
+            sha=firmware_sha,
+            allow_older=allow_older,
+            allow_reinstall=allow_reinstall,
+            force=force,
+            whonix=whonix,
+        )
     elif sys.argv[1] == "clean":
         q.clean_cache()
     elif sys.argv[1] == "refresh":
