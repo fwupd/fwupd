@@ -11,31 +11,26 @@ jobs:
   push_to_registry:
     permissions:
       packages: write # for docker/build-push-action
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     strategy:
       fail-fast: false
       matrix:
-        distro: [arch, centos, debian, debian-i386, debian-tartan, fedora, ubuntu]
-        runner: [ubuntu-latest]
-        cross: [null]
-        include:
-          - distro: debian
-            runner: ubuntu-latest
-            cross: i386
-          - distro: debian
-            runner: ubuntu-24.04-arm
-            cross: null
-          - distro: debian
-            runner: ubuntu-24.04-arm
-            cross: s390x
+        env:
+          # NOTE: values are joined by '-' for name of container image
+          - { DISTRO: arch, ARCH: amd64 }
+          - { DISTRO: centos, ARCH: amd64 }
+          - { DISTRO: debian, ARCH: amd64 }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
+          - { DISTRO: debian, ARCH: arm64 }
+          # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: fedora, ARCH: amd64 }
+          - { DISTRO: ubuntu, ARCH: amd64 }
+    env: ${{ matrix.env }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: "Generate Dockerfile"
-        env:
-          MATRIX_CROSS: ${{ matrix.cross || '' }}
-          TARGET_DISTRO: ${{ matrix.distro }}
-          RUNNER_ARCH: ${{ runner.arch }}
+      - name: Generate Dockerfile
         run: ./contrib/ci/generate_docker.py
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
@@ -50,4 +45,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}${{ case(contains(matrix.distro, '-'), '', runner.arch == 'ARM64', '-arm64', '-amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
+          tags: "ghcr.io/fwupd/fwupd/fwupd-${{ join(matrix.env.*, '-') }}:latest"

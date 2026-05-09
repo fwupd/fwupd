@@ -16,4 +16,3 @@ RUN set -euxo pipefail; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /github/workspace
-CMD ["./contrib/ci/debian.sh"]
