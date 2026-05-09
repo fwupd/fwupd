@@ -12,9 +12,20 @@ jobs:
       SKIP: no-commit-to-branch
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up APT caching
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: pre-commit-apt-${{ runner.os }}-${{ hashFiles('.github/workflows/*.yml') }}
+          restore-keys: pre-commit-apt-${{ runner.os }}-
       - name: Set up pre-commit
         run: |
-          sudo apt-get update && sudo apt-get install -yq --no-install-recommends \
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            -o APT::Keep-Downloaded-Packages=true \
+            -o Binary::apt::APT::Keep-Downloaded-Packages=true \
             clang-format \
             git \
             meson \
