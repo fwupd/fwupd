@@ -69,6 +69,16 @@ match (DISTRO, VARIANT):
         content = content.replace("FROM debian:testing", "FROM debian:unstable")
 
 
+# insert commands to prepare cross compile
+if CROSS:
+    cross_setup = f"""\
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
+    dpkg --add-architecture {CROSS};"""
+else:
+    cross_setup = "    "
+content = content.replace("%%%SETUP%%%", cross_setup)
+
+
 # insert dependencies to install
 if CROSS:
     deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True)
