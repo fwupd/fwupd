@@ -85,7 +85,11 @@ jobs:
           name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.env.VARIANT == null && (matrix.env.DISTRO == 'debian' || matrix.env.DISTRO == 'arch')
+        if: steps.supported.outputs.supported == 'true' &&
+          matrix.env.VARIANT != 'tartan' && (
+          matrix.env.DISTRO == 'arch' ||
+          matrix.env.DISTRO == 'debian' ||
+          matrix.env.DISTRO == 'fedora')
         uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

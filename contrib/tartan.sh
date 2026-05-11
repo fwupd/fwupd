@@ -8,7 +8,7 @@ plugin=/usr/lib64/tartan/18.1/libtartan.so
     exit 1
 }
 
-/usr/bin/scan-build-18 \
+exec /usr/bin/scan-build-18 \
     -load-plugin "$plugin" \
     -disable-checker core.CallAndMessage \
     -disable-checker core.NullDereference \
