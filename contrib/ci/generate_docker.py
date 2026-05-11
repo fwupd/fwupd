@@ -65,8 +65,6 @@ with open(template_file) as file:
 match (DISTRO, VARIANT):
     case ("debian", "i386"):
         content = content.replace("FROM debian:testing", "FROM i386/debian:testing")
-    case ("debian", "tartan"):
-        content = content.replace("FROM debian:testing", "FROM debian:unstable")
 
 
 # insert commands to prepare cross compile
