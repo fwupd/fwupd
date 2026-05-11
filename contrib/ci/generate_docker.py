@@ -81,6 +81,8 @@ content = content.replace("%%%SETUP%%%", cross_setup)
 if CROSS:
     deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True)
     deps += [f"crossbuild-essential-{CROSS}"]
+elif VARIANT == "i386":
+    deps = parse_dependencies(DISTRO, VARIANT, False)
 else:
     deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[ARCH], False)
 deps = sorted(set(deps))
