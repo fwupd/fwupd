@@ -3494,10 +3494,10 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 						       self->cancellable,
 						       error))
 				return FALSE;
+			fu_console_print_literal(self->console,
+						 /* TRANSLATORS: success message */
+						 _("Successfully cleaned remote"));
 		}
-		fu_console_print_literal(self->console,
-					 /* TRANSLATORS: success message */
-					 _("Successfully cleaned remote"));
 	}
 
 	/* success */

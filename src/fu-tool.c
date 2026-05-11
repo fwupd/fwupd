@@ -2414,10 +2414,10 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 					  _("Delete the now-unused remote cache files?"))) {
 			if (!fu_engine_clean_remote(self->engine, values[0], error))
 				return FALSE;
+			fu_console_print_literal(self->console,
+						 /* TRANSLATORS: success message */
+						 _("Successfully cleaned remote"));
 		}
-		fu_console_print_literal(self->console,
-					 /* TRANSLATORS: success message */
-					 _("Successfully cleaned remote"));
 	}
 
 	/* success */
