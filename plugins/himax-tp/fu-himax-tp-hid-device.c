@@ -248,7 +248,8 @@ fu_himax_tp_hid_device_get_size_by_id(FuHidReport *report,
 		return FALSE;
 	}
 	item_count_value = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_count));
-	*size = (item_size_value / 8) * item_count_value;
+	if (!fu_size_checked_inc_product(size, item_size_value / 8, item_count_value, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
