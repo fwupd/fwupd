@@ -19,7 +19,7 @@ jobs:
           - { DISTRO: arch, ARCH: amd64 }
           - { DISTRO: centos, ARCH: amd64 }
           - { DISTRO: debian, ARCH: amd64 }
-          # - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
           # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
           - { DISTRO: debian, ARCH: arm64 }
           # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
