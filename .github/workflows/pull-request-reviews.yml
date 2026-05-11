@@ -26,8 +26,12 @@ jobs:
           sudo apt-get install --yes --no-install-recommends \
             -o APT::Keep-Downloaded-Packages=true \
             -o Binary::apt::APT::Keep-Downloaded-Packages=true \
+            black \
             clang-format \
+            codespell \
             git \
+            gitleaks \
+            markdownlint \
             meson \
             patch \
             pre-commit \
