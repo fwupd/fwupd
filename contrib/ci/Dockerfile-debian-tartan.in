@@ -1,5 +1,5 @@
 # -*- mode: dockerfile -*-
-FROM debian:testing
+FROM debian:unstable
 ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
