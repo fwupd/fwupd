@@ -520,13 +520,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 2.45.8)</version>
+        <version>(>= 2.68.0)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 2.45.8)</version>
+        <version>(>= 2.68.0)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -594,7 +594,9 @@
       <package>gnutls</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 3.6.0)</version>
+      </control>
       <multi-arch />
       <package variant="aarch64">libgnutls28-dev</package>
       <package variant="i386">libgnutls28-dev</package>
@@ -602,7 +604,9 @@
       <package variant="x86_64">libgnutls28-dev</package>
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 3.6.0)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -663,13 +667,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.1.13)</version>
+        <version>(>= 0.3.19)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.13)</version>
+        <version>(>= 0.3.19)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -690,11 +694,15 @@
       <package variant="aarch64">libjcat-devel</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 0.1.6)</version>
+      </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 0.1.6)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -778,13 +786,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 1.0.9)</version>
+        <version>(>= 1.0.27)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.3.3)</version>
+        <version>(>= 1.0.27)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -816,11 +824,15 @@
       <package>curl</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 7.62.0)</version>
+      </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 7.62.0)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -887,10 +899,14 @@
       <package variant="mingw64" />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 0.63.0)</version>
+      </control>
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 0.63.0)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -1079,11 +1095,15 @@
       <package variant="aarch64">polkit-devel</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 0.103)</version>
+      </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 0.103)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -1208,8 +1228,15 @@
     <distro id="darwin">
       <package variant="x86_64" />
     </distro>
-    <distro id="debian" />
+    <distro id="debian">
+      <control>
+        <version>(>= 2021.1)</version>
+      </control>
+    </distro>
     <distro id="ubuntu">
+      <control>
+        <version>(>= 2021.1)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>

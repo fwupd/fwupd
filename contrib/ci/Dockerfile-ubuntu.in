@@ -12,4 +12,3 @@ RUN set -euxo pipefail; \
 %%%DEPENDENCIES%%%; \
     apt-get clean
 WORKDIR /github/workspace
-CMD ["./contrib/ci/ubuntu.sh"]

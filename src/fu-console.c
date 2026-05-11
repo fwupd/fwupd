@@ -154,8 +154,11 @@ readline(const gchar *prompt) /* nocheck:name */
 {
 	char buffer[64] = {0};
 
-	if (prompt != NULL)
-		g_print("%s\n", prompt);
+	if (prompt != NULL) {
+		g_print("%s", prompt);
+		/* ensure the prompt reaches the terminal before we block on stdin */
+		fflush(stdout);
+	}
 	if (!fgets(buffer, sizeof(buffer), stdin))
 		return NULL;
 	g_strdelimit(buffer, "\n", '\0');
@@ -171,14 +174,21 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 	va_list args;
 	g_autofree gchar *tmp = NULL;
 	g_autofree gchar *prompt = NULL;
+	g_autofree gchar *retry_prompt = NULL;
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
 	va_end(args);
 
-	fu_console_print_full(self, FU_CONSOLE_PRINT_FLAG_NONE, "%s [0-%u]: ", tmp, maxnum);
+	/* clear active progress spinner so the question is not mangled */
+	fu_console_reset_line(self);
+
+	/* Pass prompt to readline() so it can redraw it when the terminal
+	 * is resized (SIGWINCH) - otherwise readline only knows about the empty
+	 * prompt it was given and the question text disappears on resize */
+	prompt = g_strdup_printf("%s [0-%u]: ", tmp, maxnum);
 	do {
-		g_autofree gchar *buffer = readline(prompt);
+		g_autofree gchar *buffer = readline(retry_prompt != NULL ? retry_prompt : prompt);
 
 		if (buffer == NULL)
 			break;
@@ -190,7 +200,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 		if (retval == 1 && answer <= maxnum)
 			break;
 
-		if (prompt == NULL) {
+		if (retry_prompt == NULL) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			g_string_append_printf(
 			    str,
@@ -198,7 +208,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 			    _("Please enter a number from 0 to %u:"),
 			    maxnum);
 			g_string_append(str, " ");
-			prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
 		}
 	} while (TRUE);
 	return answer;
@@ -210,19 +220,22 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 	va_list args;
 	g_autofree gchar *tmp = NULL;
 	g_autofree gchar *prompt = NULL;
+	g_autofree gchar *retry_prompt = NULL;
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
 	va_end(args);
 
-	fu_console_print_full(self,
-			      FU_CONSOLE_PRINT_FLAG_NONE,
-			      "%s [%s]: ",
-			      tmp,
-			      def ? "Y|n" : "y|N");
+	/* clear active progress spinner so the question is not mangled */
+	fu_console_reset_line(self);
+
+	/* Pass prompt to readline() so it can redraw it when the terminal
+	 * is resized (SIGWINCH) - otherwise readline only knows about the empty
+	 * prompt it was given and the question text disappears on resize */
+	prompt = g_strdup_printf("%s [%s]: ", tmp, def ? "Y|n" : "y|N");
 
 	do {
-		g_autofree gchar *buffer = readline(prompt);
+		g_autofree gchar *buffer = readline(retry_prompt != NULL ? retry_prompt : prompt);
 
 		if (buffer == NULL || !strlen(buffer))
 			return def;
@@ -232,7 +245,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 		if (g_strcmp0(buffer, "N") == 0)
 			return FALSE;
 
-		if (prompt == NULL) {
+		if (retry_prompt == NULL) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			g_string_append_printf(str,
 					       /* TRANSLATORS: the user isn't reading the question
@@ -241,7 +254,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 					       "Y",
 					       "N");
 			g_string_append(str, " ");
-			prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
 		}
 	} while (TRUE);
 	return FALSE;

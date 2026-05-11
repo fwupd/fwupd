@@ -9,27 +9,25 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Optional
 
 from fwupd_setup_helpers import parse_dependencies
 
-
-# this is idiosyncratic for an amazing reason
-RUNNER_ARCH_DEPS_MAP = {
-    "ARM": "armhf",
-    "ARM64": "aarch64",
-    "X64": "x86_64",
-    "X86": "i386",
+# translate debian architecture names (similar to docker/golang names) to the naming in the
+# dependencies file, which is closer to gcc/fedora naming.
+ARCH_TO_DEPS_MAP = {
+    "amd64": "x86_64",
+    "arm": "armhf",
+    "arm64": "aarch64",
+    "i386": "i386",
+    "s390x": "s390x",
 }
 
 
-def getenv_unwrap(name: str) -> Optional[str]:
+def getenv_unwrap(name: str) -> str:
     val = os.getenv(name)
     if val is None:
         print(f"environment variable has not been set: '{name}'")
         sys.exit(1)
-    if val.lower() in ["null", "none"]:
-        return None
     return val
 
 
@@ -43,37 +41,44 @@ def get_container_cmd():
 
 
 directory = os.path.dirname(sys.argv[0])
-MATRIX_CROSS = getenv_unwrap("MATRIX_CROSS")
-RUNNER_ARCH = getenv_unwrap("RUNNER_ARCH")
-TARGET_DISTRO = getenv_unwrap("TARGET_DISTRO")
+DISTRO = getenv_unwrap("DISTRO")
+ARCH = getenv_unwrap("ARCH")
+match os.getenv("VARIANT"):
+    case str(s) if s.startswith("cross-"):
+        CROSS = s.removeprefix("cross-")
+        VARIANT = None
+    case str(s):
+        CROSS = None
+        VARIANT = s
+    case _:
+        CROSS = None
+        VARIANT = None
 
-template_file = os.path.join(directory, f"Dockerfile-{TARGET_DISTRO}.in")
+
+if VARIANT:
+    template_file = os.path.join(directory, f"Dockerfile-{DISTRO}-{VARIANT}.in")
+else:
+    template_file = os.path.join(directory, f"Dockerfile-{DISTRO}.in")
 if not os.path.exists(template_file):
-    print(f"Missing input file {template_file} for {TARGET_DISTRO}")
+    print(f"Missing input file {template_file} for {DISTRO}")
     sys.exit(1)
 
 with open(template_file) as file:
     template = file.read()
 
 
-# special case for i386-based debian container
-match TARGET_DISTRO:
-    case "debian-i386":
+match (DISTRO, VARIANT):
+    case ("debian", "i386"):
         template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
-    case "debian-tartan":
+    case ("debian", "tartan"):
         template = template.replace("FROM debian:testing", "FROM debian:unstable")
 
 
-distro = TARGET_DISTRO.split("-")[0]
-if MATRIX_CROSS:
-    deps = parse_dependencies(distro, MATRIX_CROSS, False, cross=True)
-    deps += [f"crossbuild-essential-{MATRIX_CROSS}"]
+if CROSS:
+    deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True)
+    deps += [f"crossbuild-essential-{CROSS}"]
 else:
-    if RUNNER_ARCH not in RUNNER_ARCH_DEPS_MAP:
-        arch_items = "|".join(RUNNER_ARCH_DEPS_MAP.keys())
-        print(f"Invalid runner arch, expected {arch_items}")
-        sys.exit(1)
-    deps = parse_dependencies(distro, RUNNER_ARCH_DEPS_MAP[RUNNER_ARCH], False)
+    deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[ARCH], False)
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
@@ -85,7 +90,7 @@ with open("Dockerfile", "w") as file:
 
 if len(sys.argv) == 2 and sys.argv[1] == "build":
     cmd = get_container_cmd()
-    args = [cmd, "build", "-t", f"fwupd-{TARGET_DISTRO}"]
+    args = [cmd, "build", "-t", f"fwupd-{DISTRO}"]
     if "http_proxy" in os.environ:
         args += [f"--build-arg=http_proxy={os.environ['http_proxy']}"]
     if "https_proxy" in os.environ:
