@@ -33,7 +33,7 @@ fu_acpi_sbom_plugin_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_ACPI_TABLES, tmpdir);
-	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LIBDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* register plugin GTypes */
 	fu_plugin_runner_init(plugin);
