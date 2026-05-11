@@ -1107,6 +1107,70 @@ fu_novatek_ts_device_stop_crc_reboot(FuNovatekTsDevice *self, GError **error)
 	return TRUE;
 }
 
+static FuDevice *
+fu_novatek_ts_device_get_backend_parent(FuNovatekTsDevice *self, GError **error)
+{
+	if (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)) != FU_HID_BUS_TYPE_I2C) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unexpected bus type: 0x%x",
+			    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
+		return NULL;
+	}
+
+	return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
+}
+
+static gboolean
+fu_novatek_ts_device_rebind_driver(FuNovatekTsDevice *self, GError **error)
+{
+	g_autofree gchar *driver = NULL;
+	g_autofree gchar *subsystem = NULL;
+	g_autoptr(FuUdevDevice) parent = NULL;
+
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
+	parent = FU_UDEV_DEVICE(fu_novatek_ts_device_get_backend_parent(self, error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_device_probe(FU_DEVICE(parent), error)) {
+		g_prefix_error_literal(error, "failed to probe parent: ");
+		return FALSE;
+	}
+
+	driver = g_strdup(fu_udev_device_get_driver(parent));
+	subsystem = g_strdup(fu_udev_device_get_subsystem(parent));
+	if (driver == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent driver for %s",
+			    id_display);
+		return FALSE;
+	}
+	if (subsystem == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent subsystem for %s",
+			    id_display);
+		return FALSE;
+	}
+
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!fu_device_unbind_driver(FU_DEVICE(parent), error))
+		return FALSE;
+	if (!fu_device_bind_driver(FU_DEVICE(parent), subsystem, driver, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_novatek_ts_device_update_firmware_reset(FuNovatekTsDevice *self,
 					   GBytes *blob,
@@ -1483,6 +1547,10 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 	}
 	if (!fu_novatek_ts_device_ensure_fw_ver(self, error))
 		return FALSE;
+	if (!fu_novatek_ts_device_rebind_driver(self, error)) {
+		g_prefix_error_literal(error, "failed to re-enumerate device: ");
+		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -1532,6 +1600,7 @@ fu_novatek_ts_device_init(FuNovatekTsDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
 	fu_device_set_name(FU_DEVICE(self), "Touchscreen");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.novatek.ts");
