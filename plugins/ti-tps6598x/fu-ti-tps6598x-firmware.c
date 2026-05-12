@@ -74,6 +74,15 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
 
 	/* payload */
+	if (offset > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "offset 0x%x exceeds stream size 0x%x",
+			    (guint)offset,
+			    (guint)streamsz);
+		return FALSE;
+	}
 	stream_payload = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
 	if (stream_payload == NULL)
 		return FALSE;
