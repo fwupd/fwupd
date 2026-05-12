@@ -1169,6 +1169,15 @@ fu_pixart_tp_plp239_device_write_section(FuPixartTpPlp239Device *self,
 	fu_progress_set_steps(progress, sector_count * 2);
 
 	start_sector = target_flash_start / FU_PIXART_TP_DEVICE_SECTOR_SIZE;
+	if (start_sector + sector_count > G_MAXUINT8) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "sector range %u+%u exceeds maximum",
+			    start_sector,
+			    sector_count);
+		return FALSE;
+	}
 
 	/* keep sector 0 valid until the end */
 	first_idx = (start_sector == 0) ? 1 : 0;
