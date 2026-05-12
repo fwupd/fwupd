@@ -132,7 +132,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 			    (guint)BCM_NVRAM_STAGE1_BASE);
 		return NULL;
 	}
-	if (stage1_off + stage1_sz > streamsz) {
+	if ((gsize)stage1_off + stage1_sz > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -187,7 +187,7 @@ fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 		return NULL;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return NULL;
-	if (stage2_off + stage2_sz > streamsz) {
+	if ((gsize)stage2_off + stage2_sz > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
