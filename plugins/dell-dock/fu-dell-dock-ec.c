@@ -260,7 +260,7 @@ fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **byt
 	FuDevice *proxy;
 	/* The first byte of result data will be the size of the return,
 	hide this from callers */
-	guint8 result_length = length + 1;
+	gsize result_length = length + 1;
 	g_autoptr(GBytes) bytes_local = NULL;
 	const guint8 *result;
 
