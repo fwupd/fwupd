@@ -19,4 +19,6 @@ Dom0 Devices:
 	Vendor:				Hughski Ltd.
 	VendorId:			USB:0x273F
 	Version:			2.0.6
+	VersionFormat:			triplet
+	InstallDuration:		8
 	Created:			1614224175

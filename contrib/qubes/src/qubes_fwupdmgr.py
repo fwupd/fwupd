@@ -635,7 +635,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         for updev_key in updev_dict:
             style = "\t" * level
             output = style + _tabs(updev_key + ":")
-            if len(updev_key) > 12:
+            if len(updev_key) > 20:
                 continue
             if updev_key == "Icons":
                 continue
