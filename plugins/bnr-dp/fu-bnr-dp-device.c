@@ -162,6 +162,15 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 	actual_checksum ^= fu_xor8(st_response->buf->data, st_response->buf->len);
 
 	/* read command output data */
+	if (fu_struct_bnr_dp_aux_response_get_data_len(st_response) >
+	    FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "data length 0x%x exceeds chunk size",
+			    fu_struct_bnr_dp_aux_response_get_data_len(st_response));
+		return FALSE;
+	}
 	g_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(st_response));
 	if (data->len > 0) {
 		if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
