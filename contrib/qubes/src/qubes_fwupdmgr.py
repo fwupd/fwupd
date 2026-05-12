@@ -382,6 +382,9 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         """
         self._get_dom0_updates(allow_older=allow_older, allow_reinstall=allow_reinstall)
         self._parse_dom0_updates_info(self.dom0_updates_info)
+        self._get_dom0_updates_string_based(
+            allow_older=allow_older, allow_reinstall=allow_reinstall
+        )
         updates_list = self.dom0_updates_list
         ret_input = self._user_input(updates_list)
         if ret_input == -EXIT_CODES["NOTHING_TO_DO"]:
