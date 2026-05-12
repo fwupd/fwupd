@@ -518,6 +518,7 @@ fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 	const gchar *hid_id;
 	const gchar *driver;
 	const gchar *subsystem;
+	const gchar *parent_sysfs_path;
 	g_autofree gchar *fn_bind = NULL;
 	g_autofree gchar *fn_unbind = NULL;
 	g_auto(GStrv) hid_strs = NULL;
@@ -532,16 +533,18 @@ fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 		return FALSE;
 
 	/* find the physical ID to use for the rebind */
-	hid_strs = g_strsplit(fu_udev_device_get_sysfs_path(parent), "/", -1);
-	hid_id = hid_strs[g_strv_length(hid_strs) - 1];
-	if (hid_id == NULL) {
+	parent_sysfs_path = fu_udev_device_get_sysfs_path(parent);
+	if (parent_sysfs_path == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "no HID_PHYS in %s",
-			    fu_udev_device_get_sysfs_path(parent));
+			    "no path for %s",
+			    id_display);
 		return FALSE;
 	}
+	hid_strs = g_strsplit(parent_sysfs_path, "/", -1);
+	hid_id = hid_strs[g_strv_length(hid_strs) - 1];
 
 	driver = fu_udev_device_get_driver(parent);
 	subsystem = fu_udev_device_get_subsystem(parent);
