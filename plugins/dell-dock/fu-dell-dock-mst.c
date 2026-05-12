@@ -412,6 +412,14 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 					    error))
 		return FALSE;
 	data = g_bytes_get_data(bytes, &length);
+	if (length < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "MST register data too small, got %" G_GSIZE_FORMAT,
+			    length);
+		return FALSE;
+	}
 
 	g_debug("MST: firmware check: %d", fu_dell_dock_mst_check_offset(data[0], 0x01));
 	g_debug("MST: HDCP key check: %d", fu_dell_dock_mst_check_offset(data[0], 0x02));
