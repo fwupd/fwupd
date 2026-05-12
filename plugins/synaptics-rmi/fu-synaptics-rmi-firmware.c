@@ -423,6 +423,13 @@ fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 	/* config */
 	cfg_sz = fu_struct_rmi_img_get_config_size(st_img);
 	if (cfg_sz > 0) {
+		if ((gsize)RMI_IMG_FW_OFFSET + (gsize)img_sz > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "config offset would overflow");
+			return FALSE;
+		}
 		if (!fu_synaptics_rmi_firmware_add_image(self,
 							 "config",
 							 stream,
