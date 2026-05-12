@@ -103,7 +103,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 	img_rcd->seg_records =
 	    g_ptr_array_new_with_free_func((GFreeFunc)fu_ccgx_dmc_firmware_segment_record_free);
 	for (guint32 i = 0; i < img_rcd->num_img_segments; i++) {
-		guint16 row_size_bytes = 0;
+		gsize row_size_bytes;
 		g_autoptr(FuCcgxDmcFirmwareSegmentRecord) seg_rcd = NULL;
 		g_autoptr(FuStructCcgxDmcFwctSegmentationInfo) st_info = NULL;
 
@@ -118,7 +118,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 		seg_rcd->num_rows = fu_struct_ccgx_dmc_fwct_segmentation_info_get_num_rows(st_info);
 
 		/* calculate actual row size */
-		row_size_bytes = img_rcd->row_size * 64;
+		row_size_bytes = (gsize)img_rcd->row_size * 64;
 
 		/* create data record array in segment record */
 		seg_rcd->data_records =
