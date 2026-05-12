@@ -532,11 +532,12 @@ fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 	parent_sysfs_path = fu_udev_device_get_sysfs_path(parent);
 	if (parent_sysfs_path == NULL) {
 		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no path for %s",
-			    id_display);
+		/* suppress what appears to be a tartan scan-build false positive */
+		[[clang::suppress]] g_set_error(error,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"no path for %s",
+						id_display);
 		return FALSE;
 	}
 	hid_strs = g_strsplit(parent_sysfs_path, "/", -1);
