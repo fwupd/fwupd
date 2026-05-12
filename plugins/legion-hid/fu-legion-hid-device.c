@@ -637,6 +637,14 @@ fu_legion_hid_device_get_id(GInputStream *stream, FuLegionHidDeviceId *id, GErro
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH + FU_LEGION_HID_DEVICE_FW_ID_LENGTH) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware too small, got 0x%x",
+			    (guint)streamsz);
+		return FALSE;
+	}
 	offset =
 	    streamsz - FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH - FU_LEGION_HID_DEVICE_FW_ID_LENGTH;
 	for (guint i = 0; i < FU_LEGION_HID_DEVICE_FW_ID_LENGTH; i++) {
