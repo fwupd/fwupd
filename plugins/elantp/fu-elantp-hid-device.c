@@ -666,6 +666,15 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
 
 	/* sanity check */
+	if (iap_addr > bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "IAP address 0x%x beyond firmware size 0x%x",
+			    iap_addr,
+			    (guint)bufsz);
+		return FALSE;
+	}
 	if (self->fw_page_size == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
