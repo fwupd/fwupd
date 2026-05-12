@@ -16,7 +16,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
-            $XDG_CACHE_HOME/pre-commit
+            ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: pre-commit-${{ runner.os }}-
       - name: Set up pre-commit
