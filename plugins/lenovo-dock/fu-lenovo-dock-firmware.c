@@ -86,7 +86,7 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 	stream_partial =
 	    fu_partial_input_stream_new(stream_composite,
 					physical_addr,
-					target_size + FU_LENOVO_DOCK_FIRMWARE_SIGNATURE_SIZE,
+					(gsize)target_size + FU_LENOVO_DOCK_FIRMWARE_SIGNATURE_SIZE,
 					error);
 	if (stream_partial == NULL)
 		return FALSE;
@@ -100,7 +100,7 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 		g_autoptr(GInputStream) stream_crc = NULL;
 
 		stream_crc = fu_partial_input_stream_new(stream_composite,
-							 physical_addr +
+							 (gsize)physical_addr +
 							     FU_LENOVO_DOCK_FIRMWARE_SIGNATURE_SIZE,
 							 target_size,
 							 error);
