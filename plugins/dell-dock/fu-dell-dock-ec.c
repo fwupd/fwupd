@@ -280,6 +280,13 @@ fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **byt
 		return FALSE;
 	}
 	result = g_bytes_get_data(bytes_local, NULL);
+	if (g_bytes_get_size(bytes_local) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no data returned from EC read");
+		return FALSE;
+	}
 	/* first byte of result should be size of our data */
 	if (result[0] != length) {
 		g_set_error(error,
