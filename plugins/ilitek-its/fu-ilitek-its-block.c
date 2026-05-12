@@ -35,6 +35,13 @@ fu_ilitek_its_block_parse(FuFirmware *firmware,
 	/* calculate CRC of block minus the CRC16 itself */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small for CRC");
+		return FALSE;
+	}
 	partial_stream = fu_partial_input_stream_new(stream, 0x0, streamsz - 2, error);
 	if (partial_stream == NULL)
 		return FALSE;
