@@ -641,7 +641,7 @@ fu_hpi_cfu_device_untransmitted_data(GByteArray *payload_data,
 				     gsize fill_from_position,
 				     GError **error)
 {
-	gsize remaining_byte_count = payload_header_length - fill_from_position;
+	gsize remaining_byte_count;
 
 	if (fill_from_position > payload_header_length) {
 		g_set_error(error,
@@ -652,6 +652,7 @@ fu_hpi_cfu_device_untransmitted_data(GByteArray *payload_data,
 			    (guint)payload_header_length);
 		return FALSE;
 	}
+	remaining_byte_count = payload_header_length - fill_from_position;
 	fu_byte_array_set_size(untransmitted_data, remaining_byte_count, 0x00);
 	return fu_memcpy_safe(untransmitted_data->data,
 			      untransmitted_data->len,
