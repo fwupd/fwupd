@@ -561,13 +561,23 @@ fu_dell_dock_mst_write_flash_bank(FuDellDockMst *self,
 	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize write_size = 32;
 	guint end;
-	const guint8 *data = g_bytes_get_data(blob_fw, NULL);
+	gsize length = 0;
+	const guint8 *data = g_bytes_get_data(blob_fw, &length);
 
 	g_return_val_if_fail(blob_fw != NULL, FALSE);
 
 	if (!fu_dell_dock_mst_get_bank_attribs(bank, &attribs, error))
 		return FALSE;
 	end = attribs->start + attribs->length;
+	if (end > length) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "payload 0x%x is bigger than data 0x%x",
+			    end,
+			    (guint)length);
+		return FALSE;
+	}
 
 	g_debug("MST: Writing payload to bank %u", bank);
 	for (guint i = attribs->start; i < end; i += write_size) {
