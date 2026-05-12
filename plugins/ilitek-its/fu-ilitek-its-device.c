@@ -493,22 +493,18 @@ fu_ilitek_its_device_io_channel_write(const gchar *fn, const gchar *buf, GError 
 static FuDevice *
 fu_ilitek_its_device_get_backend_parent(FuIlitekItsDevice *self, GError **error)
 {
-	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
-	case FU_HID_BUS_TYPE_I2C:
+	FuHidBusType bus_type = fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self));
+	if (bus_type == FU_HID_BUS_TYPE_I2C)
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
-	case FU_HID_BUS_TYPE_PCI:
+	if (bus_type == FU_HID_BUS_TYPE_PCI)
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
-	case FU_HID_BUS_TYPE_USB:
+	if (bus_type == FU_HID_BUS_TYPE_USB)
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", error);
-	default:
-		break;
-	}
-
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "unexpected bus type: 0x%x",
-		    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
+		    bus_type);
 	return NULL;
 }
 
