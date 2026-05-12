@@ -490,6 +490,15 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 			g_autoptr(GInputStream) partial_stream = NULL;
 			g_autoptr(GByteArray) buf_sec = NULL;
 
+			if (payload_len < FPC_FF2_BLK_SEC_LINK_LEN) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "block %u payload too small for sec-link",
+					    i);
+				return FALSE;
+			}
+
 			/* write sec-link chunk? */
 			buf_sec = fu_input_stream_read_byte_array(stream,
 								  offset,
