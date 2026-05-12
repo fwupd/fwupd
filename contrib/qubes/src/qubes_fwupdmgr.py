@@ -308,18 +308,6 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
                 self.url = ver_check["Url"]
                 self.sha = ver_check["Checksum"]
 
-    def _install_dom0_firmware_update(self, arch_path):
-        """Installs firmware update for specified device in dom0.
-
-        Keywords arguments:
-        arch_path - absolute path to firmware update archive
-        """
-        cmd_install = [FWUPDMGR, "install", arch_path]
-        p = subprocess.Popen(cmd_install)
-        p.wait()
-        if p.returncode != 0:
-            raise Exception("fwupd-qubes: Firmware update failed")
-
     def _read_dmi(self):
         """Reads BIOS information from DMI."""
         cmd_dmidecode_version = ["dmidecode", "-s", "bios-version"]
