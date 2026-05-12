@@ -106,7 +106,7 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GErr
 	 * package format
 	 * | zlp | ack | zlp | data |
 	 */
-	while (1) {
+	for (guint retries = 0; retries < 5000; retries++) {
 		gsize actual_len = 0;
 		gsize crc_offset;
 		guint16 payload_len = 0x0;
@@ -194,6 +194,14 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GErr
 		if (cmd0 == FU_GOODIX_MOC_CMD_ACK && data_reply)
 			continue;
 		break;
+	}
+
+	if (res->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "no response received after retries");
+		return NULL;
 	}
 
 	/* success */
