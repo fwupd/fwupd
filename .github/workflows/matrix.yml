@@ -53,10 +53,13 @@ jobs:
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ join(matrix.env.*, '-') }}
-          path: ${{ github.workspace }}/dist/*
+          path: |
+            ${{ github.workspace }}/build/meson-logs/scanbuild/*
+            ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
