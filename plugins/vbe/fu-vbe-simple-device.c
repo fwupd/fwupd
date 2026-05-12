@@ -107,6 +107,15 @@ fu_vbe_simple_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_fdt_image_get_attr_u32(fdt_node, "area-size", &self->area_size, error))
 		return FALSE;
+	if (self->area_start > self->area_size) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "area start 0x%x is larger than area size 0x%x",
+			    (guint)self->area_start,
+			    (guint)self->area_size);
+		return FALSE;
+	}
 
 	/* an optional skip offset to skip everything, which could be useful for testing */
 	fu_fdt_image_get_attr_u32(fdt_node, "skip-offset", &self->skip_offset, NULL);
