@@ -310,6 +310,8 @@ fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 			return FALSE;
 		}
 		result = g_bytes_get_data(bytes, NULL);
+		if (g_bytes_get_size(bytes) < 4)
+			continue;
 		/* complete */
 		if ((result[2] & 0x80) == 0) {
 			tmp = result[3];
