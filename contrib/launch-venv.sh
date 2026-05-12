@@ -1,4 +1,6 @@
-#!/usr/bin/env -S bash -e
+#!/usr/bin/env bash
+
+set -e
 
 . "$(dirname "$(realpath "$0")")/nix.sh"
 
