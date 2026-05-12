@@ -22,6 +22,8 @@ Flags:
 	--device:			Specify device for heads update (default - x230)
 	--url:				Address of the firmware or metadata remote server
 	--sha:				SHA256 checksum of the firmware archive (required for install)
+	--allow-older:			Allow installing an older firmware version
+	--allow-reinstall:		Allow reinstalling the same firmware version
 	--force:			Force the firmware update even if not required
 
 Help:
