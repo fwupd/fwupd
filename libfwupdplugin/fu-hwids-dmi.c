@@ -25,6 +25,7 @@ fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 		   {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "board_name"},
 		   {FU_HWIDS_KEY_BIOS_VENDOR, "bios_vendor"},
 		   {FU_HWIDS_KEY_BIOS_VERSION, "bios_version"},
+		   {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "bios_date"},
 		   {FU_HWIDS_KEY_FAMILY, "product_family"},
 		   {FU_HWIDS_KEY_MANUFACTURER, "sys_vendor"},
 		   {FU_HWIDS_KEY_PRODUCT_NAME, "product_name"},

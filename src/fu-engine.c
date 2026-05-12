@@ -2115,6 +2115,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 			    {FU_HWIDS_KEY_BIOS_MINOR_RELEASE, "HostBiosMinorRelease"},
 			    {FU_HWIDS_KEY_BIOS_VENDOR, "HostBiosVendor"},
 			    {FU_HWIDS_KEY_BIOS_VERSION, "HostBiosVersion"},
+			    {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "HostBiosReleaseDate"},
 			    {FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE, "HostFirmwareMajorRelease"},
 			    {FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE, "HostFirmwareMinorRelease"},
 			    {FU_HWIDS_KEY_ENCLOSURE_KIND, "HostEnclosureKind"},
