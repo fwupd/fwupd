@@ -2978,6 +2978,10 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 			fu_hwids_add_value(hwids, hwid_key, tmp);
 		}
 	}
+
+	/* load engine */
+	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
+		return FALSE;
 	if (!fu_context_load_hwinfo(ctx, self->progress, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 		return FALSE;
 
