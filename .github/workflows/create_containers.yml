@@ -23,7 +23,7 @@ jobs:
           - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
           - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
           - { DISTRO: debian, ARCH: arm64 }
-          # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
     env: ${{ matrix.env }}
