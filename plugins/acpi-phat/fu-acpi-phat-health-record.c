@@ -74,6 +74,13 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		/* header -> devicepath -> data */
 		if (dataoff == 0x0) {
 			ubufsz = streamsz - 28;
+		} else if (dataoff < 28) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "device specific data offset not valid: 0x%x",
+				    dataoff);
+			return FALSE;
 		} else {
 			ubufsz = dataoff - 28;
 		}
