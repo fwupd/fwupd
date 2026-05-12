@@ -208,7 +208,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 	/* app firmware payload size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz < HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size) {
+	if (streamsz < (gsize)HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -229,10 +229,11 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* add App FW as a new image into firmware */
-	app_fw_stream = fu_partial_input_stream_new(stream,
-						    HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
-						    app_fw_payload_size,
-						    error);
+	app_fw_stream =
+	    fu_partial_input_stream_new(stream,
+					(gsize)HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
+					app_fw_payload_size,
+					error);
 	if (app_fw_stream == NULL)
 		return FALSE;
 	if (!fu_firmware_parse_stream(app_fw_img, app_fw_stream, 0x0, flags, error))
