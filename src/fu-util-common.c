@@ -2117,6 +2117,12 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 		/* TRANSLATORS: the numeric priority */
 		fwupd_codec_string_append(str, idt + 1, _("Priority"), priority_str);
 	}
+	fwupd_codec_string_append(
+	    str,
+	    idt + 1,
+	    /* TRANSLATORS: a username or password is required */
+	    _("Requires Auth"),
+	    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_REQUIRES_AUTH) ? "true" : "false");
 	/* TRANSLATORS: remote filename base */
 	fwupd_codec_string_append(str, idt + 1, _("Username"), fwupd_remote_get_username(remote));
 	tmp = fwupd_remote_get_password(remote);

@@ -2241,6 +2241,13 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
 		download_remote_enabled = TRUE;
+		if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_REQUIRES_AUTH) &&
+		    fwupd_remote_get_username(remote) == NULL &&
+		    fwupd_remote_get_password(remote) == NULL) {
+			g_debug("skipping as remote %s as auth required but not supplied",
+				fwupd_remote_get_id(remote));
+			continue;
+		}
 		if ((self->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 		    !fwupd_remote_needs_refresh(remote)) {
 			g_debug("skipping as remote %s age is %us",
