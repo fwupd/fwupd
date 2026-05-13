@@ -5044,6 +5044,93 @@ fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
+{
+	const gchar *remote_id = "lvfs-embargo";
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autofree gchar *username = NULL;
+	g_autofree gchar *password = NULL;
+
+	/* find remote */
+	if (g_strv_length(values) > 0)
+		remote_id = values[0];
+	remote = fwupd_client_get_remote_by_id(self->client, remote_id, self->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+
+	/* get username */
+	if (g_strv_length(values) > 1) {
+		username = g_strdup(values[1]);
+	} else {
+		username = fu_console_input_string(self->console,
+						   /* TRANSLATORS: remote refers to a website
+						      distributing fw, %1 is a name e.g. 'lvfs' */
+						   _("Enter your email address for remote '%s'"),
+						   remote_id);
+		if (username == NULL || username[0] == '\0') {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "A username is required");
+			return FALSE;
+		}
+	}
+
+	/* get password */
+	if (g_strv_length(values) > 2) {
+		password = g_strdup(values[2]);
+	} else {
+		if (g_strcmp0(remote_id, "lvfs-embargo") == 0) {
+			const gchar *uri = "https://fwupd.org/lvfs/profile";
+			fu_console_print(
+			    self->console,
+			    /* TRANSLATORS: token refers to a password thing; %1 is a URL */
+			    _("To get a new token please go to %s and click 'Generate Token'"),
+			    uri);
+		}
+		password = fu_console_input_string(self->console,
+						   /* TRANSLATORS: remote refers to a website
+						      distributing fw, %1 is a name e.g. 'lvfs' */
+						   _("Enter your token for remote '%s'"),
+						   remote_id);
+		if (password == NULL || password[0] == '\0') {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "A password is required");
+			return FALSE;
+		}
+	}
+
+	/* check this works */
+	fwupd_remote_set_username(remote, username);
+	fwupd_remote_set_password(remote, password);
+	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+		return FALSE;
+	if (!fwupd_client_refresh_remote(self->client,
+					 remote,
+					 self->download_flags,
+					 self->cancellable,
+					 error))
+		return FALSE;
+
+	/* save secrets and enable remote */
+	if (!fwupd_remote_save_user_secrets(remote, error))
+		return FALSE;
+	if (!fwupd_client_modify_remote(self->client,
+					fwupd_remote_get_id(remote),
+					"Enabled",
+					"true",
+					self->cancellable,
+					error))
+		return FALSE;
+
+	/* TRANSLATORS: we've gained access to a new firmware remote */
+	fu_console_print_literal(self->console, _("Remote enabled and refreshed successfully"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_version(FuUtil *self, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -5526,6 +5613,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Disables a given remote"),
 			      fu_util_remote_disable);
+	fu_util_cmd_array_add(cmd_array,
+			      "enable-remote-auth",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[REMOTE-ID] [USERNAME] [TOKEN]"),
+			      /* TRANSLATORS: command description */
+			      _("Enable an authenticated remote"),
+			      fu_util_enable_remote_auth);
 	fu_util_cmd_array_add(cmd_array,
 			      "activate",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

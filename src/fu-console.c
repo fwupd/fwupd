@@ -260,6 +260,23 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 	return FALSE;
 }
 
+gchar *
+fu_console_input_string(FuConsole *self, const gchar *format, ...)
+{
+	va_list args;
+	g_autofree gchar *tmp = NULL;
+	g_autofree gchar *prompt = NULL;
+
+	va_start(args, format);
+	tmp = g_strdup_vprintf(format, args);
+	va_end(args);
+
+	/* clear active progress spinner so the question is not mangled */
+	fu_console_reset_line(self);
+	prompt = g_strdup_printf("%s: ", tmp);
+	return readline(prompt);
+}
+
 static GPtrArray *
 fu_console_strsplit_words(const gchar *text, guint line_len)
 {
