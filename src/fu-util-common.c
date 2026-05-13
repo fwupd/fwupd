@@ -2128,8 +2128,8 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	tmp = fwupd_remote_get_password(remote);
 	if (tmp != NULL) {
 		g_autofree gchar *hidden = g_strnfill(fu_strwidth(tmp), '*');
-		/* TRANSLATORS: remote filename base */
-		fwupd_codec_string_append(str, idt + 1, _("Password"), hidden);
+		/* TRANSLATORS: the account token, a bit like a password */
+		fwupd_codec_string_append(str, idt + 1, _("Token"), hidden);
 	}
 	fwupd_codec_string_append(str,
 				  idt + 1,
