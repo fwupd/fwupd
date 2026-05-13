@@ -295,42 +295,34 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 			   FuProgress *progress,
 			   GError **error)
 {
+	gsize offset_end = offset;
 	gsize start;
 	gsize end;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(size);
 
 	/* sanity checks */
-	if (offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
+	if (offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0 ||
+	    size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "offset 0x%x not aligned",
-			    (guint)offset);
-		return NULL;
-	}
-	if (size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "size 0x%x not aligned",
+			    "misaligned offset/size: 0x%x/0x%x",
+			    (guint)offset,
 			    (guint)size);
 		return NULL;
 	}
-	start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-	if (start > G_MAXUINT16) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "start 0x%x too large",
-			    (guint)start);
+
+	/* validate offset addition */
+	if (!fu_size_checked_inc(&offset_end, size, error))
 		return NULL;
-	}
-	end = (offset + size) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-	if (end > G_MAXUINT16) {
+	start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	end = offset_end / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	if (start > G_MAXUINT16 || end > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "end 0x%x too large",
+			    "start/end exceed valid range: 0x%x/0x%x",
+			    (guint)start,
 			    (guint)end);
 		return NULL;
 	}
@@ -390,19 +382,13 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	g_autoptr(FuStructBnrDpAuxRequest) st_request = NULL;
 
 	/* sanity checks */
-	if (offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
+	if (offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0 ||
+	    bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "offset 0x%x not aligned",
-			    (guint)offset);
-		return FALSE;
-	}
-	if (bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "size 0x%x not aligned",
+			    "misaligned offset/size: 0x%x/0x%x",
+			    (guint)offset,
 			    (guint)bufsz);
 		return FALSE;
 	}
@@ -411,20 +397,13 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	if (!fu_size_checked_inc(&offset_end, bufsz, error))
 		return FALSE;
 	start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-	if (start > G_MAXUINT16) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "start 0x%x too large",
-			    (guint)start);
-		return FALSE;
-	}
 	end = offset_end / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-	if (end > G_MAXUINT16) {
+	if (start > G_MAXUINT16 || end > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "end 0x%x too large",
+			    "start/end exceed valid range: 0x%x/0x%x",
+			    (guint)start,
 			    (guint)end);
 		return FALSE;
 	}
