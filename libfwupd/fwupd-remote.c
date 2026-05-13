@@ -1640,12 +1640,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 			fwupd_remote_set_checksum_sig(self, g_variant_get_string(value, NULL));
-		} else if (g_strcmp0(key, "Enabled") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-		} else if (g_strcmp0(key, "ApprovalRequired") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 		} else if (g_strcmp0(key, "Priority") == 0) {
 			priv->priority = g_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
@@ -1654,14 +1648,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 			priv->refresh_interval = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
-		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
-			/* we can probably stop doing proxying flags when we next branch */
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
-		} else if (g_strcmp0(key, "AutomaticSecurityReports") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self,
-						      FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
 		}
 	}
 }
@@ -1775,30 +1761,6 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "RemotesDir",
 				      g_variant_new_string(priv->remotes_dir));
 	}
-	/* we can probably stop doing proxying flags when we next branch */
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "Enabled",
-	    g_variant_new_boolean(fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "ApprovalRequired",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "AutomaticReports",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "AutomaticSecurityReports",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)));
 }
 
 static void
