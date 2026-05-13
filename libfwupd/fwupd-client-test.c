@@ -237,7 +237,8 @@ fwupd_client_devices_func(void)
 		g_test_skip("no enabled fwupd daemon");
 		return;
 	}
-	if (!g_str_has_prefix(fwupd_client_get_daemon_version(client), "1.")) {
+	if (!g_str_has_prefix(fwupd_client_get_daemon_version(client), "1.") &&
+	    !g_str_has_prefix(fwupd_client_get_daemon_version(client), "2.")) {
 		g_test_skip("running fwupd is too old");
 		return;
 	}
@@ -293,7 +294,8 @@ fwupd_client_remotes_func(void)
 		g_test_skip("no enabled fwupd daemon");
 		return;
 	}
-	if (!g_str_has_prefix(fwupd_client_get_daemon_version(client), "1.")) {
+	if (!g_str_has_prefix(fwupd_client_get_daemon_version(client), "1.") &&
+	    !g_str_has_prefix(fwupd_client_get_daemon_version(client), "2.")) {
 		g_test_skip("running fwupd is too old");
 		return;
 	}
