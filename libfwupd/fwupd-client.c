@@ -4828,6 +4828,15 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		return;
 	}
 
+	/* can we load any usernames or passwords from the users homedir */
+	for (guint i = 0; i < array->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(array, i);
+		if (!fwupd_remote_load_user_secrets(remote, &error)) {
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
+	}
+
 	/* success */
 	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }

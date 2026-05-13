@@ -40,6 +40,9 @@ The values following the equals sign in parameters are all either a string (no q
 unsigned integers, or a boolean, which may be given as **true** or **false**.
 Case is not significant in boolean values, but is preserved in string values.
 
+For per-user credential storage, the remote `Username` and `Password` can also be stored in
+`XDG_CONFIG_HOME` rather than in `{{SYSCONFDIR}}`, for example in `~/.config/fwupd/remotes.d/lvfs-embargo.conf`.
+
 ## REMOTE PARAMETERS
 
 The `[fwupd Remote]` section can contain the following parameters:

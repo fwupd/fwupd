@@ -319,6 +319,8 @@ fwupd_client_remotes_func(void)
 	g_assert_nonnull(remote2);
 	g_assert_cmpstr(fwupd_remote_get_id(remote2), ==, "lvfs");
 	g_assert_nonnull(fwupd_remote_get_metadata_uri(remote2));
+	g_assert_cmpstr(fwupd_remote_get_username(remote2), ==, "DummyUsername");
+	g_assert_cmpstr(fwupd_remote_get_password(remote2), ==, "DummyPassword");
 
 	/* check we set an error when unfound */
 	remote3 = fwupd_client_get_remote_by_id(client, "XXXX", NULL, &error);
@@ -340,6 +342,8 @@ fwupd_has_system_bus(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testsdir = g_build_filename(SRCDIR, "tests", NULL);
+	(void)g_setenv("XDG_CONFIG_HOME", testsdir, TRUE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/client/api", fwupd_client_api);
 	if (g_test_undefined()) {

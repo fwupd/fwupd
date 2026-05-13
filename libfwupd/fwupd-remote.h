@@ -104,4 +104,9 @@ fwupd_remote_load_signature_bytes(FwupdRemote *self,
 				  GBytes *bytes,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 
+gboolean
+fwupd_remote_load_user_secrets(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fwupd_remote_save_user_secrets(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
+
 G_END_DECLS

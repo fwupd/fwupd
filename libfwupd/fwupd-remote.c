@@ -1598,6 +1598,115 @@ fwupd_remote_get_id(FwupdRemote *self)
 	return priv->id;
 }
 
+/**
+ * fwupd_remote_load_user_secrets:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads the secrets from a per-user store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_remote_load_user_secrets(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *password = NULL;
+	g_autofree gchar *username = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return TRUE;
+	basename = g_strdup_printf("%s.conf", priv->id);
+	fn = g_build_filename(g_get_user_config_dir(), "fwupd", "remotes.d", basename, NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_debug("no per-user credentials in %s", fn);
+		return TRUE;
+	}
+	if (!g_key_file_load_from_file(kf, fn, G_KEY_FILE_NONE, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	username = g_key_file_get_string(kf, "fwupd Remote", "Username", NULL);
+	if (username != NULL)
+		fwupd_remote_set_username(self, username);
+	password = g_key_file_get_string(kf, "fwupd Remote", "Password", NULL);
+	if (password != NULL)
+		fwupd_remote_set_password(self, password);
+
+	/* success */
+	return TRUE;
+}
+/**
+ * fwupd_remote_save_user_secrets:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Saves the secrets to a per-user store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_remote_save_user_secrets(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return TRUE;
+
+	/* save local file */
+	if (priv->username != NULL)
+		g_key_file_set_string(kf, "fwupd Remote", "Username", priv->username);
+	else
+		g_key_file_remove_key(kf, "fwupd Remote", "Username", NULL);
+	if (priv->password != NULL)
+		g_key_file_set_string(kf, "fwupd Remote", "Password", priv->password);
+	else
+		g_key_file_remove_key(kf, "fwupd Remote", "Password", NULL);
+	basename = g_strdup_printf("%s.conf", priv->id);
+	dirname = g_build_filename(g_get_user_config_dir(), "fwupd", "remotes.d", NULL);
+	if (g_mkdir_with_parents(dirname, 0700) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to create %s: %s",
+			    dirname,
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	data = g_key_file_to_data(kf, NULL, error);
+	if (data == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	fn = g_build_filename(dirname, basename, NULL);
+	if (!g_file_set_contents_full(fn, data, -1, G_FILE_SET_CONTENTS_NONE, 0600, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	g_debug("written secrets to %s", fn);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {

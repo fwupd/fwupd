@@ -1180,3 +1180,10 @@ LIBFWUPD_2.1.3 {
     fwupd_percentage_is_valid;
   local: *;
 } LIBFWUPD_2.1.2;
+
+LIBFWUPD_2.1.4 {
+  global:
+    fwupd_remote_load_user_secrets;
+    fwupd_remote_save_user_secrets;
+  local: *;
+} LIBFWUPD_2.1.3;
