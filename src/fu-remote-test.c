@@ -140,7 +140,7 @@ fu_remote_auth_func(void)
 
 	/* to/from GVariant */
 	fwupd_remote_set_priority(remote, 999);
-	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_TRUSTED);
 	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -166,7 +166,7 @@ fu_remote_auth_func(void)
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
 	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/firmware.xml.gz");
-	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_TRUSTED, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(

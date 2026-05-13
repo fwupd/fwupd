@@ -22,6 +22,14 @@ if build_standalone and get_option('lvfs') != 'false'
     install_tag: 'runtime',
     install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
   )
+  configure_file(
+    input: 'lvfs-embargo.conf',
+    output: 'lvfs-embargo.conf',
+    configuration: con3,
+    install: true,
+    install_tag: 'runtime',
+    install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
+  )
   i18n.merge_file(
     input: 'lvfs.metainfo.xml',
     output: 'org.freedesktop.fwupd.remotes.lvfs.metainfo.xml',

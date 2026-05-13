@@ -103,10 +103,12 @@ fwupd_remote_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_string(json_obj, "MetadataUriSig", priv->metadata_uri_sig);
 	if (priv->firmware_base_uri != NULL)
 		fwupd_json_object_add_string(json_obj, "FirmwareBaseUri", priv->firmware_base_uri);
-	if (priv->username != NULL)
-		fwupd_json_object_add_string(json_obj, "Username", priv->username);
-	if (priv->password != NULL)
-		fwupd_json_object_add_string(json_obj, "Password", priv->password);
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
+		if (priv->username != NULL)
+			fwupd_json_object_add_string(json_obj, "Username", priv->username);
+		if (priv->password != NULL)
+			fwupd_json_object_add_string(json_obj, "Password", priv->password);
+	}
 	if (priv->title != NULL)
 		fwupd_json_object_add_string(json_obj, "Title", priv->title);
 	if (priv->privacy_uri != NULL)
@@ -1774,23 +1776,25 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->id));
 	}
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
+		if (priv->username != NULL) {
+			g_variant_builder_add(builder,
+					      "{sv}",
+					      "Username",
+					      g_variant_new_string(priv->username));
+		}
+		if (priv->password != NULL) {
+			g_variant_builder_add(builder,
+					      "{sv}",
+					      "Password",
+					      g_variant_new_string(priv->password));
+		}
+	}
 	if (priv->flags != 0) {
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
-	}
-	if (priv->username != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Username",
-				      g_variant_new_string(priv->username));
-	}
-	if (priv->password != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Password",
-				      g_variant_new_string(priv->password));
 	}
 	if (priv->title != NULL) {
 		g_variant_builder_add(builder, "{sv}", "Title", g_variant_new_string(priv->title));
