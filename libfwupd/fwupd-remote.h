@@ -45,8 +45,12 @@ const gchar *
 fwupd_remote_get_checksum_metadata(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_username(FwupdRemote *self) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_username(FwupdRemote *self, const gchar *username) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_password(FwupdRemote *self) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_password(FwupdRemote *self, const gchar *password) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_filename_cache(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *

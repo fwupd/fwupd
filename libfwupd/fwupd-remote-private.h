@@ -48,10 +48,6 @@ fwupd_remote_set_order_before(FwupdRemote *self, const gchar *ids) G_GNUC_NON_NU
 void
 fwupd_remote_set_refresh_interval(FwupdRemote *self, guint64 refresh_interval) G_GNUC_NON_NULL(1);
 void
-fwupd_remote_set_username(FwupdRemote *self, const gchar *username) G_GNUC_NON_NULL(1);
-void
-fwupd_remote_set_password(FwupdRemote *self, const gchar *password) G_GNUC_NON_NULL(1);
-void
 fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_firmware_base_uri(FwupdRemote *self, const gchar *firmware_base_uri)
