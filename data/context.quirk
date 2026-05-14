@@ -3,3 +3,7 @@
 # Manufacturer="Red Hat", BiosVendor="EDK II"
 [c714d9bb-922c-57c2-94e7-3a383887c95b]
 Flags = ignore-efivars-free-space
+
+# Manufacturer="Microsoft Corporation", Family="Virtual Machine", ProductName="Virtual Machine"
+[a3c0bcc5-05f2-52f3-aeeb-c4ea4a082dbb]
+Flags = ignore-efivars-free-space
