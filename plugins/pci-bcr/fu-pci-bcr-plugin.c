@@ -21,6 +21,57 @@ G_DEFINE_TYPE(FuPciBcrPlugin, fu_pci_bcr_plugin, FU_TYPE_PLUGIN)
 #define BCR_BLE	    (1 << 1)
 #define BCR_SMM_BWP (1 << 5)
 
+#define FU_PCI_BCR_INTEL_VENDOR 0x8086
+#define FU_PCI_BCR_SPI_CLASS	0x0c80
+
+static gboolean
+fu_pci_bcr_plugin_is_intel_spi(FuPciBcrPlugin *self, FuDevice *device, GError **error)
+{
+	guint64 class_u64 = 0;
+	guint64 vendor_u64 = 0;
+	g_autofree gchar *attr_class = NULL;
+	g_autofree gchar *attr_vendor = NULL;
+
+	attr_vendor = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+						"vendor",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						error);
+	if (attr_vendor == NULL)
+		return FALSE;
+	if (!fu_strtoull(attr_vendor, &vendor_u64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error)) {
+		g_prefix_error(error, "failed to parse PCI vendor %s: ", attr_vendor);
+		return FALSE;
+	}
+	if (vendor_u64 != FU_PCI_BCR_INTEL_VENDOR) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device vendor is not Intel");
+		return FALSE;
+	}
+
+	attr_class = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					       "class",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       error);
+	if (attr_class == NULL)
+		return FALSE;
+	if (!fu_strtoull(attr_class, &class_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error)) {
+		g_prefix_error(error, "failed to parse PCI class %s: ", attr_class);
+		return FALSE;
+	}
+	if ((class_u64 >> 8) != FU_PCI_BCR_SPI_CLASS) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device is not SPI class");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_pci_bcr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
@@ -165,6 +216,7 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 	FuDevice *device_msf;
 	g_autofree gchar *device_file = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not supported */
 	if (self->bcr_addr == 0x0) {
@@ -178,6 +230,13 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 	/* interesting device? */
 	if (!FU_IS_PCI_DEVICE(device))
 		return TRUE;
+	if (!fu_pci_bcr_plugin_is_intel_spi(self, device, &error_local)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    error_local->message);
+		return FALSE;
+	}
 
 	/* open the config */
 	device_file =
