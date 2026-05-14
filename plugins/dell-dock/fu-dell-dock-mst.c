@@ -204,18 +204,21 @@ fu_dell_dock_mst_write_register(FuDellDockMst *self,
 				GError **error)
 {
 	FuDevice *proxy;
-	g_autofree guint8 *buffer = g_malloc0(length + 4);
+	gsize bufsz = length + 4;
+	g_autofree guint8 *buf = g_malloc0(bufsz);
 
 	g_return_val_if_fail(data != NULL, FALSE);
 
-	memcpy(buffer, &address, 4);	  /* nocheck:blocked */
-	memcpy(buffer + 4, data, length); /* nocheck:blocked */
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 0x0, address, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (!fu_memcpy_safe(buf, bufsz, 0x4, data, length, 0x0, length, error))
+		return FALSE;
 
 	/* write the offset we're querying */
 	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	return fu_dell_dock_hid_i2c_write(proxy, buffer, length + 4, &mst_base_settings, error);
+	return fu_dell_dock_hid_i2c_write(proxy, buf, bufsz, &mst_base_settings, error);
 }
 
 static gboolean
@@ -357,27 +360,23 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	gsize buffer_len = (data == NULL) ? 12 : (gsize)length + 16;
-	g_autofree guint8 *buffer = g_malloc0(buffer_len);
-	guint32 tmp;
+	gsize bufsz = (data == NULL) ? 12 : (gsize)length + 16;
+	g_autofree guint8 *buf = g_malloc0(bufsz);
 
-	/* command */
-	tmp = (cmd | 0x80) << 16;
-	memcpy(buffer, &tmp, 4); /* nocheck:blocked */
-	/* offset */
-	memcpy(buffer + 4, &offset, 4); /* nocheck:blocked */
-	/* length */
-	memcpy(buffer + 8, &length, 4); /* nocheck:blocked */
-	/* data */
-	if (data != NULL)
-		memcpy(buffer + 16, data, length); /* nocheck:blocked */
+	/* command, offset, length, data */
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 0, (cmd | 0x80) << 16, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 4, offset, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 8, length, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (data != NULL) {
+		if (!fu_memcpy_safe(buf, bufsz, 16, data, length, 0x0, length, error))
+			return FALSE;
+	}
 
 	/* write the combined register stream */
-	if (!fu_dell_dock_mst_write_register(self,
-					     self->mst_rc_command_addr,
-					     buffer,
-					     buffer_len,
-					     error))
+	if (!fu_dell_dock_mst_write_register(self, self->mst_rc_command_addr, buf, bufsz, error))
 		return FALSE;
 
 	return fu_dell_dock_mst_trigger_rc_command(self, error);

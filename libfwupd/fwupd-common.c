@@ -607,3 +607,48 @@ fwupd_variant_get_uint64(GVariant *value)
 		return (guint64)g_variant_get_int64(value);
 	return g_variant_get_uint64(value);
 }
+
+/**
+ * fwupd_percentage_is_valid:
+ * @value: maybe a percentage value
+ *
+ * Calculates is a percentage value is valid, i.e. `>= 0.0` and `<= 100.0`.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.3
+ **/
+gboolean
+fwupd_percentage_is_valid(gdouble value)
+{
+	return value >= 0.0 && value <= 100.0;
+}
+
+#define FWUPD_PERCENTAGE_CHANGE_EPSILON (0.01)
+
+/**
+ * fwupd_percentage_delta_notify:
+ * @value_old: a percentage value
+ * @value_new: another percentage value
+ *
+ * Calculates if a percentage change is significant, and worth notifying the client about.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.3
+ **/
+gboolean
+fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new)
+{
+	if (value_old - value_new > FWUPD_PERCENTAGE_CHANGE_EPSILON)
+		return TRUE;
+	if (value_new - value_old > FWUPD_PERCENTAGE_CHANGE_EPSILON)
+		return TRUE;
+	if (value_old < 100.0 && value_new >= 100.0)
+		return TRUE;
+	if (fwupd_percentage_is_valid(value_old) && !fwupd_percentage_is_valid(value_new))
+		return TRUE;
+	if (fwupd_percentage_is_valid(value_new) && !fwupd_percentage_is_valid(value_old))
+		return TRUE;
+	return FALSE;
+}

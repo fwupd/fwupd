@@ -24,14 +24,14 @@ fu_console_func(void)
 	}
 	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
 	for (guint i = 0; i <= 100; i++) {
-		guint pc = (i > 25 && i < 75) ? 0 : i;
+		gdouble pc = (i > 25 && i < 75) ? FWUPD_PERCENTAGE_UNKNOWN : i;
 		fu_console_set_progress(console, FWUPD_STATUS_LOADING, pc);
 		g_usleep(10000);
 	}
 	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);
 
 	for (guint i = 0; i < 5000; i++) {
-		fu_console_set_progress(console, FWUPD_STATUS_LOADING, 0);
+		fu_console_set_progress(console, FWUPD_STATUS_LOADING, FWUPD_PERCENTAGE_UNKNOWN);
 		g_usleep(1000);
 	}
 	fu_console_set_progress(console, FWUPD_STATUS_IDLE, 0);

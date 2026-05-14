@@ -13,8 +13,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-23 08:04+0100\n"
-"PO-Revision-Date: 2026-03-27 00:09+0000\n"
+"POT-Creation-Date: 2026-05-11 14:23+0100\n"
+"PO-Revision-Date: 2026-05-12 10:06+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 2026.5-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -723,7 +723,7 @@ msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
-msgstr ""
+msgstr "Signatura AMD mikrokódu"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -898,7 +898,7 @@ msgstr "UEFI ochrana paměti"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
-msgstr ""
+msgstr "Signatura AMD mikrokódu"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -1049,7 +1049,7 @@ msgstr "HP SureStart je bezpečnostní vlastnost firmware, která chrání BIOS 
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
-msgstr ""
+msgstr "Ověření signatury AMD mikrokódu zajistí, že mikrokód procesoru pochází od výrobce a nebylo s ním nijak manipulováno."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1837,7 +1837,7 @@ msgstr "KONTROLNÍ-SOUČET NÁZEV-SOUBORU"
 
 #. TRANSLATORS: command description
 msgid "Finds an algorithm that matches the file CRC"
-msgstr ""
+msgstr "Najde algoritmus který odpovídá kontrolnímu součtu souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -3059,7 +3059,7 @@ msgstr "Nejstarší použitelná verze"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "Nejvyšší možná verze"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3071,7 +3071,7 @@ msgstr "Výrobce"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3602,7 +3602,7 @@ msgstr "HP SureStart je zapnut"
 
 #. TRANSLATORS: HSI event title
 msgid "AMD microcode signature vulnerability fixed"
-msgstr ""
+msgstr "Zranitelnost signatury AMD mikrokódu opravena"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"

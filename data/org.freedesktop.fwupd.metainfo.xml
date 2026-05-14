@@ -38,6 +38,37 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.3" date="2026-05-12">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for Redfish bearer token authentication</li>
+          <li>Add support for several XMC SPI chips</li>
+          <li>Parse JCat files in libfwupd without using libjcat</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow configuring a Redfish URI with a path prefix</li>
+          <li>Avoid firmware matching errors for Cat-6 and Cat-12 modems</li>
+          <li>Calculate and export a floating point percentage progress value</li>
+          <li>Do not print clean remote success message if aborted</li>
+          <li>Do not probe all Nordic devices with USB VID 0x1915</li>
+          <li>Fix force table support in Elan IC types 0x13 and 0x14</li>
+          <li>Fix Raydium information check flow to avoid incorrect validation</li>
+          <li>Fix the Thunderbolt version number by ignoring the reserved bits</li>
+          <li>Load well-known paths in dbxtool to prevent a regression</li>
+          <li>Match a specific Raydium device to prevent resetting older hardware</li>
+          <li>Only copy the HIDRAW USB properties if a DS-20 has been provided</li>
+          <li>Use CA1 for a SK Hynix NVMe drive</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>SHIFT6mq and SHIFTphone 8</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.2" date="2026-04-24">
       <description>
         <p>

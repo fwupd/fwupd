@@ -493,22 +493,18 @@ fu_ilitek_its_device_io_channel_write(const gchar *fn, const gchar *buf, GError 
 static FuDevice *
 fu_ilitek_its_device_get_backend_parent(FuIlitekItsDevice *self, GError **error)
 {
-	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
-	case FU_HID_BUS_TYPE_I2C:
+	FuHidBusType bus_type = fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self));
+	if (bus_type == FU_HID_BUS_TYPE_I2C)
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
-	case FU_HID_BUS_TYPE_PCI:
+	if (bus_type == FU_HID_BUS_TYPE_PCI)
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
-	case FU_HID_BUS_TYPE_USB:
+	if (bus_type == FU_HID_BUS_TYPE_USB)
 		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", error);
-	default:
-		break;
-	}
-
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "unexpected bus type: 0x%x",
-		    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
+		    bus_type);
 	return NULL;
 }
 
@@ -518,6 +514,7 @@ fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 	const gchar *hid_id;
 	const gchar *driver;
 	const gchar *subsystem;
+	const gchar *parent_sysfs_path;
 	g_autofree gchar *fn_bind = NULL;
 	g_autofree gchar *fn_unbind = NULL;
 	g_auto(GStrv) hid_strs = NULL;
@@ -532,16 +529,18 @@ fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 		return FALSE;
 
 	/* find the physical ID to use for the rebind */
-	hid_strs = g_strsplit(fu_udev_device_get_sysfs_path(parent), "/", -1);
-	hid_id = hid_strs[g_strv_length(hid_strs) - 1];
-	if (hid_id == NULL) {
+	parent_sysfs_path = fu_udev_device_get_sysfs_path(parent);
+	if (parent_sysfs_path == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "no HID_PHYS in %s",
-			    fu_udev_device_get_sysfs_path(parent));
+			    "no path for %s",
+			    id_display);
 		return FALSE;
 	}
+	hid_strs = g_strsplit(parent_sysfs_path, "/", -1);
+	hid_id = hid_strs[g_strv_length(hid_strs) - 1];
 
 	driver = fu_udev_device_get_driver(parent);
 	subsystem = fu_udev_device_get_subsystem(parent);

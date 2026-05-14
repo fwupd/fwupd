@@ -12,12 +12,12 @@
 #include "fu-test.h"
 
 typedef struct {
-	guint last_percentage;
+	gdouble last_percentage;
 	guint updates;
 } FuProgressHelper;
 
 static void
-fu_progress_percentage_changed_cb(FuProgress *progress, guint percentage, gpointer data)
+fu_progress_percentage_changed_cb(FuProgress *progress, gdouble percentage, gpointer data)
 {
 	FuProgressHelper *helper = (FuProgressHelper *)data;
 	helper->last_percentage = percentage;
@@ -40,21 +40,21 @@ fu_progress_func(void)
 
 	fu_progress_set_profile(progress, TRUE);
 	fu_progress_set_steps(progress, 5);
-	g_assert_cmpint(helper.last_percentage, ==, 0);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 0.0, 0.001);
 
 	g_usleep(20 * 1000);
 	fu_progress_step_done(progress);
 	g_assert_cmpint(helper.updates, ==, 2);
-	g_assert_cmpint(helper.last_percentage, ==, 20);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 20.0, 0.001);
 
 	for (guint i = 0; i < 4; i++) {
 		g_usleep(20 * 1000);
 		fu_progress_step_done(progress);
 	}
 
-	g_assert_cmpint(helper.last_percentage, ==, 100);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 100.0, 0.001);
 	g_assert_cmpint(helper.updates, ==, 6);
-	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.05);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1, 0.05);
 	str = fu_progress_traceback(progress);
 	g_debug("%s", str);
 }
@@ -106,7 +106,7 @@ fu_progress_child_func(void)
 	g_debug("parent update #1");
 	fu_progress_step_done(progress);
 	g_assert_cmpint(helper.updates, ==, 1);
-	g_assert_cmpint(helper.last_percentage, ==, 50);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 50.0, 0.001);
 
 	/* now test with a child */
 	child = fu_progress_get_child(progress);
@@ -116,13 +116,13 @@ fu_progress_child_func(void)
 	g_debug("child update #1");
 	fu_progress_step_done(child);
 	g_assert_cmpint(helper.updates, ==, 2);
-	g_assert_cmpint(helper.last_percentage, ==, 75);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 75.0, 0.001);
 
 	/* child update */
 	g_debug("child update #2");
 	fu_progress_step_done(child);
 	g_assert_cmpint(helper.updates, ==, 3);
-	g_assert_cmpint(helper.last_percentage, ==, 100);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 100.0, 0.001);
 
 	/* parent update */
 	g_debug("parent update #2");
@@ -130,7 +130,7 @@ fu_progress_child_func(void)
 
 	/* ensure we ignored the duplicate */
 	g_assert_cmpint(helper.updates, ==, 3);
-	g_assert_cmpint(helper.last_percentage, ==, 100);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 100.0, 0.001);
 }
 
 static void
@@ -142,14 +142,14 @@ fu_progress_scaling_func(void)
 	fu_progress_set_steps(progress, insane_steps);
 	for (guint i = 0; i < insane_steps / 2; i++)
 		fu_progress_step_done(progress);
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 50);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 50.0, 0.01f);
 	for (guint i = 0; i < insane_steps / 2; i++) {
 		FuProgress *progress_child = fu_progress_get_child(progress);
 		fu_progress_set_percentage(progress_child, 0);
 		fu_progress_set_percentage(progress_child, 100);
 		fu_progress_step_done(progress);
 	}
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 100);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 100.0, 0.01f);
 }
 
 static void
@@ -172,11 +172,11 @@ fu_progress_parent_one_step_proxy_func(void)
 	fu_progress_set_steps(child, 2);
 
 	/* child set value */
-	fu_progress_set_percentage(child, 33);
+	fu_progress_set_percentage(child, 33.3);
 
 	/* ensure 1 updates for progress with one step and ensure using child value as parent */
 	g_assert_cmpint(helper.updates, ==, 1);
-	g_assert_cmpint(helper.last_percentage, ==, 33);
+	g_assert_cmpfloat_with_epsilon(helper.last_percentage, 33.3, 0.001);
 }
 
 static void
@@ -191,7 +191,7 @@ fu_progress_non_equal_steps_func(void)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 60, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 20, NULL);
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 0.0, 0.01f);
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_ERASE);
 
 	/* child step should increment according to the custom steps */
@@ -205,7 +205,7 @@ fu_progress_non_equal_steps_func(void)
 	fu_progress_step_done(child);
 
 	/* verify 10% */
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 10);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 10.0, 0.01f);
 
 	/* finish child */
 	fu_progress_step_done(child);
@@ -217,7 +217,7 @@ fu_progress_non_equal_steps_func(void)
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* verify 20% */
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 20);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 20.0, 0.01f);
 
 	/* child step should increment according to the custom steps */
 	child = fu_progress_get_child(progress);
@@ -232,7 +232,7 @@ fu_progress_non_equal_steps_func(void)
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* verify bilinear interpolation is working */
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 35);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 35.0, 0.01f);
 
 	/*
 	 * 0        20                             80         100
@@ -250,7 +250,7 @@ fu_progress_non_equal_steps_func(void)
 	fu_progress_step_done(grandchild);
 
 	/* verify bilinear interpolation (twice) is working for subpercentage */
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 75);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 75.5, 0.01f);
 
 	fu_progress_step_done(grandchild);
 
@@ -261,12 +261,12 @@ fu_progress_non_equal_steps_func(void)
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_READ);
 
 	/* verify 80% */
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 80);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 80.0, 0.01f);
 
 	fu_progress_step_done(progress);
 
 	/* verify 100% */
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 100);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_percentage(progress), 100.0, 0.01f);
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_UNKNOWN);
 }
 

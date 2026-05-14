@@ -9,6 +9,10 @@ else
 fi
 export QUBES_OPTION
 
+if [[ "${VARIANT:-}" == cross-* ]]; then
+    export CROSS=${VARIANT#cross-}
+fi
+
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
@@ -25,26 +29,26 @@ sed -i 's/quilt/native/' debian/source/format
 
 # check if we have all deps available; except on cross builds where this will remove cross lib
 # packages we installed in the Dockerfile that are not multi-arch parallel installable
-if [ -z "${MATRIX_CROSS:-}" ]; then
+if [ -z "${CROSS:-}" ]; then
     apt update -qq && apt install python3-apt -y
     ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
 fi
 dpkg --print-architecture
 dpkg --print-foreign-architectures
-dpkg-checkbuilddeps ${MATRIX_CROSS:+-a $MATRIX_CROSS}
+dpkg-checkbuilddeps ${CROSS:+-a $CROSS}
 
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
     export DEB_BUILD_OPTIONS=nocheck
 fi
 
-if [ ! -z "${MATRIX_CROSS:-}" ]; then
+if [ ! -z "${CROSS:-}" ]; then
     export DEB_BUILD_OPTIONS=nocheck
 fi
 
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v "$VERSION" "CI Build"
-debuild --no-lintian -e CI -e CC -e QUBES_OPTION ${MATRIX_CROSS:+-a$MATRIX_CROSS}
+debuild --no-lintian -e CI -e CC -e QUBES_OPTION ${CROSS:+-a$CROSS}
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way

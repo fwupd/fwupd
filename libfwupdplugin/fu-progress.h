@@ -36,11 +36,11 @@ fu_progress_get_status(FuProgress *self) G_GNUC_NON_NULL(1);
 void
 fu_progress_set_status(FuProgress *self, FwupdStatus status) G_GNUC_NON_NULL(1);
 void
-fu_progress_set_percentage(FuProgress *self, guint percentage) G_GNUC_NON_NULL(1);
+fu_progress_set_percentage(FuProgress *self, gdouble percentage) G_GNUC_NON_NULL(1);
 void
 fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize progress_total)
     G_GNUC_NON_NULL(1);
-guint
+gdouble
 fu_progress_get_percentage(FuProgress *self) G_GNUC_NON_NULL(1);
 gdouble
 fu_progress_get_duration(FuProgress *self) G_GNUC_NON_NULL(1);

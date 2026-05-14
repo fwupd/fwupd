@@ -9,24 +9,24 @@ jobs:
   build:
     permissions:
       contents: read
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     needs: library
     strategy:
       fail-fast: false
       matrix:
-        distro: [arch, centos, debian, fedora, ubuntu]
-        cross: [null]
-        runner: [ubuntu-latest]
-        include:
-          - distro: debian
-            cross: null
-            runner: ubuntu-24.04-arm
-          - distro: debian
-            cross: i386
-            runner: ubuntu-latest
-          - distro: debian
-            cross: s390x
-            runner: ubuntu-24.04-arm
+        env:
+          # NOTE: values are joined by '-' for name of container image, unless `CONTAINER` overrides it
+          - { DISTRO: arch, ARCH: amd64 }
+          - { DISTRO: centos, ARCH: amd64 }
+          - { DISTRO: debian, ARCH: amd64 }
+          # - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
+          # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
+          - { DISTRO: debian, ARCH: arm64 }
+          # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: fedora, ARCH: amd64 }
+          # - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
+          - { DISTRO: ubuntu, ARCH: amd64 }
+    env: ${{ matrix.env }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Docker login
@@ -34,7 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Download tarball
-        if: matrix.distro == 'fedora' || matrix.distro == 'centos'
+        if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         id: download
         with:
@@ -42,50 +42,50 @@ jobs:
       - name: Build in container
         env:
           CI_NETWORK: true
-          CI: true
-          MATRIX_CROSS: ${{ matrix.cross || '' }}
           VERSION: ${{ needs.library.outputs.version }}
         run: |
           docker run --privileged -t \
-              -e "CI_NETWORK=$CI_NETWORK" \
               -e "CI=$CI" \
-              -e "MATRIX_CROSS=$MATRIX_CROSS" \
+              -e "CI_NETWORK=$CI_NETWORK" \
+              -e "VARIANT=$VARIANT" \
               -e "VERSION=$VERSION" \
-              -v $GITHUB_WORKSPACE:/github/workspace \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest"
+              -v "$GITHUB_WORKSPACE:/github/workspace" \
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ matrix.distro }}-${{ case(matrix.cross != null, matrix.cross, runner.arch == 'ARM64', 'arm64', 'amd64') }}
+          name: ${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
         run: |
-          if [ -f contrib/ci/${{matrix.distro}}-test.sh ]; then
+          if [ -x "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh" ]; then
             echo "supported=true" >> $GITHUB_OUTPUT
           else
             echo "supported=false" >> $GITHUB_OUTPUT
           fi
       - name: Test in container
-        if: steps.supported.outputs.supported == 'true' && matrix.cross == null
+        if: steps.supported.outputs.supported == 'true'
         env:
           CI_NETWORK: true
-          CI: true
         run: |
           docker run --privileged -t \
-              -e "CI_NETWORK=$CI_NETWORK" \
               -e "CI=$CI" \
-              -v $GITHUB_WORKSPACE:/github/workspace \
-              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.distro }}-${{ case(runner.arch == 'ARM64', 'arm64', 'amd64') }}${{ case(matrix.cross != null, format('-cross-{0}', matrix.cross), '') }}:latest" \
-              contrib/ci/${{matrix.distro}}-test.sh
+              -e "CI_NETWORK=$CI_NETWORK" \
+              -e "VARIANT=$VARIANT" \
+              -e "VERSION=$VERSION" \
+              -v "$GITHUB_WORKSPACE:/github/workspace" \
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
       - name: Save any coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-${{ join(matrix.*, '-') }}
+          name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.distro == 'debian' || matrix.distro == 'arch'
+        if: matrix.env.VARIANT == null && (matrix.env.DISTRO == 'debian' || matrix.env.DISTRO == 'arch')
         uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

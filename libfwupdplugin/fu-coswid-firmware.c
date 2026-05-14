@@ -632,7 +632,6 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize offset = 0;
 	g_autoptr(FuCborItem) item = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	item = fu_cbor_parse(stream,
 			     &offset,

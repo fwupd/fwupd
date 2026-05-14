@@ -1136,6 +1136,7 @@ LIBFWUPD_2.1.2 {
 
 LIBFWUPD_2.1.3 {
   global:
+    fwupd_client_get_percentage_full;
     fwupd_jcat_blob_flags_to_string;
     fwupd_jcat_blob_get_data;
     fwupd_jcat_blob_get_data_as_string;
@@ -1175,5 +1176,7 @@ LIBFWUPD_2.1.3 {
     fwupd_jcat_item_has_target;
     fwupd_jcat_item_new;
     fwupd_jcat_item_remove_alias_id;
+    fwupd_percentage_delta_notify;
+    fwupd_percentage_is_valid;
   local: *;
 } LIBFWUPD_2.1.2;

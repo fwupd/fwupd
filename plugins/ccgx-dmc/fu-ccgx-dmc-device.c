@@ -454,6 +454,14 @@ fu_ccgx_dmc_device_write_firmware_record(FuCcgxDmcDevice *self,
 
 		/* write row data */
 		row_buffer = g_bytes_get_data(data_rcd, &row_size);
+		if (row_size > G_MAXUINT16) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "row size 0x%x too large",
+				    (guint)row_size);
+			return FALSE;
+		}
 		if (!fu_ccgx_dmc_device_send_row_data(self, row_buffer, (guint16)row_size, error))
 			return FALSE;
 

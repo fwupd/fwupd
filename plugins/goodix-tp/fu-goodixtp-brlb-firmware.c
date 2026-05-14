@@ -124,7 +124,6 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	guint8 update_flag = 0xFF;
 	guint8 vice_ver;
 	g_autoptr(FuStructGoodixBrlbHdr) st = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	st = fu_struct_goodix_brlb_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)

@@ -286,7 +286,7 @@ fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 		event = fu_device_save_event(nlg->device, event_id);
 
 	do {
-		if (nlg->is_emulated) {
+		if (nlg->is_emulated && event != NULL) {
 			const guint8 *response_buf;
 			gsize response_len;
 			g_autofree gchar *response_key = g_strdup_printf("ResponseData%u", i++);
@@ -320,7 +320,7 @@ fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 					    fwupd_strerror(errno));
 				return FALSE;
 			}
-			if (nlg->save_events) {
+			if (nlg->save_events && event != NULL) {
 				g_autoptr(GBytes) response_data = g_bytes_new(nlg->buf, rc);
 				g_autofree gchar *response_key =
 				    g_strdup_printf("ResponseData%u", i++);

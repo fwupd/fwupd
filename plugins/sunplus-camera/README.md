@@ -37,6 +37,7 @@ another node such as `/dev/video4`.
 The normal update flow is:
 
 * enable ISP/download mode using selector `9`
+* clear ASIC register `0x2501` if the previous download-state value is nonzero
 * stream the raw payload using selector `10`
 * compare the XOR checksum using selector `11`
 * finalize the transfer using selector `12`

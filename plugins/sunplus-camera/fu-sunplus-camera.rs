@@ -17,3 +17,8 @@ enum FuSunplusCameraSelector {
     ReadAddr = 0x0E,
     ReadChunk = 0x16,
 }
+
+#[derive(ToString)]
+enum FuSunplusCameraAsicRegister {
+    DownloadStateReg = 0x2501,
+}

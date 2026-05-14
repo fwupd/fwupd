@@ -32,3 +32,9 @@ level = "ignore"
 
 [rules.missing_implementation]
 level = "error"
+
+[rules.type_style]
+level = "ignore"
+
+[rules.use_auto_cleanup]
+level = "ignore"

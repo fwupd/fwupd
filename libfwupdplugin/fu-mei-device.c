@@ -31,7 +31,7 @@
  */
 
 typedef struct {
-	guint32 max_msg_length;
+	gsize max_msg_length;
 	guint8 protocol_version;
 	gchar *uuid;
 } FuMeiDevicePrivate;
@@ -248,11 +248,11 @@ fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error)
  *
  * Since: 1.8.2
  **/
-guint32
+gsize
 fu_mei_device_get_max_msg_length(FuMeiDevice *self)
 {
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), G_MAXUINT32);
+	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), G_MAXSIZE);
 	return priv->max_msg_length;
 }
 

@@ -1010,6 +1010,13 @@ fu_pixart_tp_device_write_sector(FuPixartTpDevice *self,
 
 	/* pages 1..15 */
 	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_PIXART_TP_DEVICE_PAGE_SIZE);
+	if (fu_chunk_array_length(chunks) > G_MAXUINT8) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "too many chunks in sector");
+		return FALSE;
+	}
 	for (guint8 i = 1; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

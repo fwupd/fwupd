@@ -1,9 +1,21 @@
 #!/bin/sh -e
 
-VENV=$(dirname $0)/..
+. "$(dirname "$(readlink -f "$0")")/nix.sh"
+
+VENV=$(dirname "$0")/..
 BUILD=${VENV}/build
 DIST=${VENV}/dist
 EXTRA_ARGS="-Dlibxmlb:gtkdoc=false -Dsystemd=disabled"
+
+# NixOS: extract vendor_ids_dir from mesonFlags set by nix-shell
+# plugin_uefi_capsule_splash disabled, same as in nixpkgs
+if [ -f "${VENV}/.nixos" ] && [ -n "$mesonFlags" ]; then
+    for flag in $mesonFlags; do
+        case "$flag" in
+        -Dvendor_ids_dir=* | -Dplugin_uefi_capsule_splash=*) EXTRA_ARGS="$EXTRA_ARGS $flag" ;;
+        esac
+    done
+fi
 
 #build and install
 if [ ! -d ${BUILD} ] || ! [ -e ${BUILD}/build.ninja ]; then

@@ -35,7 +35,7 @@ fu_mei_device_write(FuMeiDevice *self,
 		    gsize bufsz,
 		    guint timeout_ms,
 		    GError **error) G_GNUC_NON_NULL(1);
-guint
+gsize
 fu_mei_device_get_max_msg_length(FuMeiDevice *self) G_GNUC_NON_NULL(1);
 guint8
 fu_mei_device_get_protocol_version(FuMeiDevice *self) G_GNUC_NON_NULL(1);

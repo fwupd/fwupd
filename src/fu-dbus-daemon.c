@@ -41,7 +41,7 @@ struct _FuDbusDaemon {
 	guint32 clients_inhibit_id;
 	FuPolkitAuthority *authority;
 	FwupdStatus status; /* last emitted */
-	guint percentage;   /* last emitted */
+	gdouble percentage; /* last emitted */
 	guint owner_id;
 	GPtrArray *system_inhibits;
 };
@@ -554,16 +554,22 @@ fu_dbus_daemon_reset_config_cb(GObject *source, GAsyncResult *res, gpointer user
 
 static void
 fu_dbus_daemon_progress_percentage_changed_cb(FuProgress *progress,
-					      guint percentage,
+					      gdouble percentage,
 					      FuDbusDaemon *self)
 {
-	/* sanity check */
-	if (self->percentage == percentage)
-		return;
+	gboolean notify = fwupd_percentage_delta_notify(self->percentage, percentage);
 	self->percentage = percentage;
-
-	g_debug("emitting PropertyChanged('Percentage'='%u%%')", percentage);
-	fu_dbus_daemon_emit_property_changed(self, "Percentage", g_variant_new_uint32(percentage));
+	if (notify) {
+		g_debug("emitting PropertyChanged('Percentage'='%.1f%%')", percentage);
+		fu_dbus_daemon_emit_property_changed(
+		    self,
+		    "Percentage",
+		    g_variant_new_uint32(fwupd_percentage_is_valid(percentage) ? (guint32)percentage
+									       : 0));
+		fu_dbus_daemon_emit_property_changed(self,
+						     "PercentageFull",
+						     g_variant_new_double(percentage));
+	}
 }
 
 static void
@@ -2653,7 +2659,11 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_uint32(self->status);
 
 	if (g_strcmp0(property_name, "Percentage") == 0)
-		return g_variant_new_uint32(self->percentage);
+		return g_variant_new_uint32(
+		    fwupd_percentage_is_valid(self->percentage) ? (guint32)self->percentage : 0);
+
+	if (g_strcmp0(property_name, "PercentageFull") == 0)
+		return g_variant_new_double(self->percentage);
 
 	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
 		FuContext *ctx = fu_engine_get_context(engine);

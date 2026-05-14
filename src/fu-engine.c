@@ -110,7 +110,6 @@ struct _FuEngine {
 	FuDeviceList *device_list;
 	gboolean write_history;
 	gboolean host_emulation;
-	guint percentage;
 	FuHistory *history;
 	FuIdle *idle;
 	XbSilo *silo;
@@ -9474,7 +9473,6 @@ fu_engine_constructed(GObject *obj)
 static void
 fu_engine_init(FuEngine *self)
 {
-	self->percentage = 0;
 	self->device_list = fu_device_list_new();
 	self->idle = fu_idle_new();
 	self->plugin_list = fu_plugin_list_new();

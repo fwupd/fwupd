@@ -62,7 +62,7 @@ struct _FuProgress {
 	gchar *id;
 	gchar *name;
 	FuProgressFlags flags;
-	guint percentage;
+	gdouble percentage;
 	FwupdStatus status;
 	GPtrArray *children; /* of FuProgress */
 	gboolean profile;
@@ -285,16 +285,14 @@ fu_progress_set_status(FuProgress *self, FwupdStatus status)
  *
  * Get the last set progress percentage.
  *
- * Return value: The percentage value, or %G_MAXUINT for error
+ * Return value: The percentage value, or %FWUPD_PERCENTAGE_UNKNOWN for error
  *
- * Since: 1.7.0
+ * Since: 2.1.2
  **/
-guint
+gdouble
 fu_progress_get_percentage(FuProgress *self)
 {
-	g_return_val_if_fail(FU_IS_PROGRESS(self), G_MAXUINT);
-	if (self->percentage == G_MAXUINT)
-		return 0;
+	g_return_val_if_fail(FU_IS_PROGRESS(self), FWUPD_PERCENTAGE_UNKNOWN);
 	return self->percentage;
 }
 
@@ -351,27 +349,25 @@ fu_progress_build_parent_chain(FuProgress *self, GString *str, guint level)
  *
  * NOTE: this must be above what was previously set, or it will be rejected.
  *
- * Since: 1.7.0
+ * Since: 2.1.2
  **/
 void
-fu_progress_set_percentage(FuProgress *self, guint percentage)
+fu_progress_set_percentage(FuProgress *self, gdouble percentage)
 {
-	g_return_if_fail(FU_IS_PROGRESS(self));
-	g_return_if_fail(percentage <= 100);
+	gboolean notify;
 
-	/* is it the same */
-	if (percentage == self->percentage)
-		return;
+	g_return_if_fail(FU_IS_PROGRESS(self));
+	g_return_if_fail(percentage <= 100.0);
 
 	/* stop idle action */
 	fu_progress_sleep_idle_stop(self);
 
 	/* is it less */
-	if (self->percentage != G_MAXUINT && percentage < self->percentage) {
+	if (self->percentage >= 0 && percentage < self->percentage) {
 		if (self->profile) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			fu_progress_build_parent_chain(self, str, 0);
-			g_warning("percentage should not go down from %u to %u: %s",
+			g_warning("percentage should not go down from %.1f to %.1f: %s",
 				  self->percentage,
 				  percentage,
 				  str->str);
@@ -380,7 +376,7 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 	}
 
 	/* done */
-	if (percentage == 100) {
+	if (percentage >= 100.0) {
 		fu_progress_set_duration(self, g_timer_elapsed(self->timer, NULL));
 		for (guint i = 0; i < self->children->len; i++) {
 			FuProgress *child = g_ptr_array_index(self->children, i);
@@ -389,8 +385,10 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 	}
 
 	/* save */
+	notify = fwupd_percentage_delta_notify(self->percentage, percentage);
 	self->percentage = percentage;
-	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
+	if (notify)
+		g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
 }
 
 /**
@@ -410,8 +408,8 @@ fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize pro
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(progress_done <= progress_total);
 	if (progress_total > 0)
-		percentage = (100.f * (gdouble)progress_done) / (gdouble)progress_total;
-	fu_progress_set_percentage(self, (guint)percentage);
+		percentage = (100.0 * (gdouble)progress_done) / (gdouble)progress_total;
+	fu_progress_set_percentage(self, percentage);
 }
 
 /**
@@ -466,7 +464,7 @@ fu_progress_reset(FuProgress *self)
 
 	/* reset values */
 	self->step_now = 0;
-	self->percentage = G_MAXUINT;
+	self->percentage = FWUPD_PERCENTAGE_UNKNOWN;
 
 	/* only use the timer if profiling; it's expensive */
 	if (self->profile) {
@@ -536,7 +534,7 @@ fu_progress_set_steps(FuProgress *self, guint step_max)
 gdouble
 fu_progress_get_global_fraction(FuProgress *self)
 {
-	g_return_val_if_fail(FU_IS_PROGRESS(self), -1.f);
+	g_return_val_if_fail(FU_IS_PROGRESS(self), -1.0);
 	return self->global_fraction;
 }
 
@@ -568,7 +566,7 @@ fu_progress_discrete_to_percent(guint discrete, guint step_max)
 		g_warning("step_max is 0!");
 		return 0;
 	}
-	return ((gdouble)discrete * (100.0f / (gdouble)(step_max)));
+	return MIN(((gdouble)discrete * (100.0f / (gdouble)(step_max))), 100.0);
 }
 
 static gdouble
@@ -579,7 +577,7 @@ fu_progress_get_step_percentage(FuProgress *self, guint idx)
 
 	/* just use proportional */
 	if (!self->any_child_has_step_weighting)
-		return -1;
+		return FWUPD_PERCENTAGE_UNKNOWN;
 
 	/* work out percentage */
 	for (guint i = 0; i < self->children->len; i++) {
@@ -589,8 +587,8 @@ fu_progress_get_step_percentage(FuProgress *self, guint idx)
 		total += child->step_weighting;
 	}
 	if (total == 0)
-		return -1;
-	return ((gdouble)current * 100.f) / (gdouble)total;
+		return FWUPD_PERCENTAGE_UNKNOWN;
+	return MIN(((gdouble)current * 100.0) / (gdouble)total, 100.0);
 }
 
 static void
@@ -600,12 +598,12 @@ fu_progress_child_status_changed_cb(FuProgress *child, FwupdStatus status, FuPro
 }
 
 static void
-fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuProgress *self)
+fu_progress_child_percentage_changed_cb(FuProgress *child, gdouble percentage, FuProgress *self)
 {
 	gdouble offset;
 	gdouble range;
 	gdouble extra;
-	guint parent_percentage = G_MAXUINT;
+	gdouble parent_percentage = FWUPD_PERCENTAGE_UNKNOWN;
 
 	/* propagate up the stack if FuProgress has only one priv */
 	if (self->children->len == 1) {
@@ -624,7 +622,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 	}
 
 	/* if the child finished, set the status back to the last parent status */
-	if (percentage == 100) {
+	if (percentage >= 100.0) {
 		FuProgress *child_tmp = g_ptr_array_index(self->children, self->step_now);
 		if (fu_progress_get_status(child_tmp) != FWUPD_STATUS_UNKNOWN)
 			fu_progress_set_status(self, fu_progress_get_status(child_tmp));
@@ -634,7 +632,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 	if (self->step_now == 0) {
 		gdouble pc = fu_progress_get_step_percentage(self, 0);
 		if (pc > 0)
-			parent_percentage = percentage * pc / 100;
+			parent_percentage = percentage * pc / 100.0;
 	} else {
 		gdouble pc1 = fu_progress_get_step_percentage(self, self->step_now - 1);
 		gdouble pc2 = fu_progress_get_step_percentage(self, self->step_now);
@@ -642,7 +640,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 		if (pc1 >= 0 && pc2 >= 0)
 			parent_percentage = (((100 - percentage) * pc1) + (percentage * pc2)) / 100;
 	}
-	if (parent_percentage != G_MAXUINT) {
+	if (parent_percentage >= 0.0) {
 		fu_progress_set_percentage(self, parent_percentage);
 		return;
 	}
@@ -654,10 +652,10 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 		return;
 
 	/* get the extra contributed by the child */
-	extra = ((gdouble)percentage / 100.0f) * range;
+	extra = (percentage / 100.0f) * range;
 
 	/* emit from the parent */
-	parent_percentage = (guint)(offset + extra);
+	parent_percentage = offset + extra;
 	fu_progress_set_percentage(self, parent_percentage);
 }
 
@@ -694,7 +692,7 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gc
 
 	/* adjust global percentage */
 	if (value > 0)
-		child->global_fraction = self->global_fraction * (gdouble)value / 100.f;
+		child->global_fraction = self->global_fraction * (gdouble)value / 100.0;
 
 	/* connect signals as required */
 	if (fu_progress_get_global_fraction(self) > 0.001f) {
@@ -720,6 +718,9 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gc
 
 	/* reset child timer */
 	g_timer_start(self->timer_child);
+
+	/* now ready */
+	self->percentage = 0.0;
 }
 
 /**
@@ -744,7 +745,7 @@ fu_progress_finished(FuProgress *self)
 
 	/* all done */
 	self->step_now = self->children->len;
-	fu_progress_set_percentage(self, 100);
+	fu_progress_set_percentage(self, 100.0);
 
 	/* we finished early, so invalidate children */
 	for (guint i = 0; i < self->children->len; i++) {
@@ -946,7 +947,7 @@ fu_progress_step_done(FuProgress *self)
 	percentage = fu_progress_get_step_percentage(self, self->step_now - 1);
 	if (percentage < 0)
 		percentage = fu_progress_discrete_to_percent(self->step_now, self->children->len);
-	fu_progress_set_percentage(self, (guint)percentage);
+	fu_progress_set_percentage(self, percentage);
 
 	/* show any profiling stats */
 	if (self->profile && self->step_now == self->children->len)
@@ -972,7 +973,7 @@ fu_progress_sleep(FuProgress *self, guint delay_ms)
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(delay_ms > 0);
 
-	fu_progress_set_percentage(self, 0);
+	fu_progress_set_percentage(self, 0.0);
 	for (guint i = 0; i < 100; i++) {
 		g_usleep(delay_us_pc);
 		fu_progress_set_percentage(self, i + 1);
@@ -985,11 +986,12 @@ fu_progress_sleep_idle_cb(gpointer user_data)
 	FuProgress *self = FU_PROGRESS(user_data);
 
 	/* emit directly to avoid canceling the idle timer */
-	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, ++self->percentage);
-	g_debug("progress on idle @%u%%", self->percentage);
+	self->percentage = MIN(self->percentage + 1.0, 100.0);
+	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, self->percentage);
+	g_debug("progress on idle @%.1f%%", self->percentage);
 
 	/* we're done here */
-	if (self->percentage >= 100) {
+	if (self->percentage >= 100.0) {
 		fu_progress_sleep_idle_stop(self);
 		return G_SOURCE_REMOVE;
 	}
@@ -1015,10 +1017,10 @@ fu_progress_sleep_idle(FuProgress *self, guint delay_ms)
 	g_return_if_fail(delay_ms > 0);
 
 	fu_progress_sleep_idle_stop(self);
-	fu_progress_set_percentage(self, 0);
+	fu_progress_set_percentage(self, 0.0);
 	fu_progress_set_duration(self, (gdouble)delay_ms / 1000.f);
 	self->sleep_timeout_id =
-	    g_timeout_add(MAX(delay_ms / 100, 1), fu_progress_sleep_idle_cb, self);
+	    g_timeout_add(MAX(delay_ms / 1000, 1), fu_progress_sleep_idle_cb, self);
 }
 
 static void
@@ -1041,7 +1043,7 @@ fu_progress_traceback_cb(FuProgress *self,
 			g_string_append_printf(str, ":%s", self->name);
 		if (self->id == NULL && self->name == NULL && child_idx != G_MAXUINT)
 			g_string_append_printf(str, "@%u", child_idx);
-		g_string_append_printf(str, " [%.2fms]", fu_progress_get_duration(self) * 1000.f);
+		g_string_append_printf(str, " [%.2fms]", fu_progress_get_duration(self) * 1000.0);
 		g_string_append(str, self->children->len > 0 ? ":\n" : "\n");
 	}
 	for (guint i = 0; i < self->children->len; i++) {
@@ -1096,12 +1098,12 @@ fu_progress_add_string(FwupdCodec *codec, guint idt, GString *str)
 
 	fwupd_codec_string_append(str, idt, "Id", self->id);
 	fwupd_codec_string_append(str, idt, "Name", self->name);
-	if (self->percentage != G_MAXUINT)
-		fwupd_codec_string_append_int(str, idt, "Percentage", self->percentage);
+	if (self->percentage >= 0.0)
+		fwupd_codec_string_append_int(str, idt, "Percentage", (guint)self->percentage);
 	if (self->status != FWUPD_STATUS_UNKNOWN)
 		fwupd_codec_string_append(str, idt, "Status", fwupd_status_to_string(self->status));
 	if (self->duration > 0.0001)
-		fwupd_codec_string_append_int(str, idt, "DurationMs", self->duration * 1000.f);
+		fwupd_codec_string_append_int(str, idt, "DurationMs", self->duration * 1000.0);
 	fwupd_codec_string_append_int(str, idt, "StepWeighting", self->step_weighting);
 	fwupd_codec_string_append_int(str, idt, "StepNow", self->step_now);
 	for (guint i = 0; i < self->children->len; i++) {
@@ -1121,7 +1123,7 @@ fu_progress_init(FuProgress *self)
 {
 	self->status = FWUPD_STATUS_UNKNOWN;
 	self->step_scaling = 1;
-	self->percentage = G_MAXUINT;
+	self->percentage = FWUPD_PERCENTAGE_UNKNOWN;
 	self->timer = g_timer_new();
 	self->timer_child = g_timer_new();
 	self->children = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -1163,7 +1165,7 @@ fu_progress_class_init(FuProgressClass *klass)
 	 *
 	 * The ::percentage-changed signal is emitted when the tasks completion has changed.
 	 *
-	 * Since: 1.7.0
+	 * Since: 2.1.2
 	 **/
 	signals[SIGNAL_PERCENTAGE_CHANGED] = g_signal_new("percentage-changed",
 							  G_TYPE_FROM_CLASS(object_class),
@@ -1171,10 +1173,10 @@ fu_progress_class_init(FuProgressClass *klass)
 							  0,
 							  NULL,
 							  NULL,
-							  g_cclosure_marshal_VOID__UINT,
+							  g_cclosure_marshal_VOID__DOUBLE,
 							  G_TYPE_NONE,
 							  1,
-							  G_TYPE_UINT);
+							  G_TYPE_DOUBLE);
 	/**
 	 * FuProgress::status-changed:
 	 * @self: the #FuProgress instance that emitted the signal

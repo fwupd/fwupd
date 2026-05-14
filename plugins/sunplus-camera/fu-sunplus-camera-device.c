@@ -151,7 +151,7 @@ fu_sunplus_camera_device_set_read_addr(FuSunplusCameraDevice *self, guint32 addr
 
 static gboolean
 fu_sunplus_camera_device_set_asic_register(FuSunplusCameraDevice *self,
-					   guint16 reg,
+					   FuSunplusCameraAsicRegister reg,
 					   guint8 value,
 					   GError **error)
 {
@@ -162,16 +162,84 @@ fu_sunplus_camera_device_set_asic_register(FuSunplusCameraDevice *self,
 						 FU_SUNPLUS_CAMERA_SELECTOR_REG16_CMD,
 						 cmd,
 						 sizeof(cmd),
-						 error))
+						 error)) {
+		g_prefix_error(error,
+			       "failed to select ASIC register %s: ",
+			       fu_sunplus_camera_asic_register_to_string(reg));
 		return FALSE;
+	}
 	if (!fu_sunplus_camera_device_xu_set_cur(self,
 						 FU_SUNPLUS_CAMERA_SELECTOR_REG8_DATA,
 						 &value,
 						 sizeof(value),
-						 error))
+						 error)) {
+		g_prefix_error(error,
+			       "failed to set ASIC register %s: ",
+			       fu_sunplus_camera_asic_register_to_string(reg));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_sunplus_camera_device_get_asic_register(FuSunplusCameraDevice *self,
+					   FuSunplusCameraAsicRegister reg,
+					   guint8 *value,
+					   GError **error)
+{
+	guint8 cmd[2] = {0x0};
+
+	fu_memwrite_uint16(cmd, reg, G_LITTLE_ENDIAN);
+
+	if (!fu_sunplus_camera_device_xu_set_cur(self,
+						 FU_SUNPLUS_CAMERA_SELECTOR_REG16_CMD,
+						 cmd,
+						 sizeof(cmd),
+						 error)) {
+		g_prefix_error(error,
+			       "failed to select ASIC register %s: ",
+			       fu_sunplus_camera_asic_register_to_string(reg));
+		return FALSE;
+	}
+	if (!fu_sunplus_camera_device_xu_get_cur(self,
+						 FU_SUNPLUS_CAMERA_SELECTOR_REG8_DATA,
+						 value,
+						 sizeof(*value),
+						 error)) {
+		g_prefix_error(error,
+			       "failed to get ASIC register %s: ",
+			       fu_sunplus_camera_asic_register_to_string(reg));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_sunplus_camera_device_clear_download_state(FuSunplusCameraDevice *self, GError **error)
+{
+	guint8 value = 0;
+
+	if (!fu_sunplus_camera_device_get_asic_register(
+		self,
+		FU_SUNPLUS_CAMERA_ASIC_REGISTER_DOWNLOAD_STATE_REG,
+		&value,
+		error))
+		return FALSE;
+	if (value == 0x00)
+		return TRUE;
+	if (!fu_sunplus_camera_device_set_asic_register(
+		self,
+		FU_SUNPLUS_CAMERA_ASIC_REGISTER_DOWNLOAD_STATE_REG,
+		0x00,
+		error))
 		return FALSE;
 
 	/* success */
+	fu_device_sleep(FU_DEVICE(self), 10);
 	return TRUE;
 }
 
@@ -523,6 +591,8 @@ fu_sunplus_camera_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 20, "verify");
 
 	if (!fu_sunplus_camera_device_set_enabled(self, 0x01, error))
+		return FALSE;
+	if (!fu_sunplus_camera_device_clear_download_state(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

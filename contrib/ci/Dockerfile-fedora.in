@@ -9,4 +9,3 @@ RUN echo fubar > /etc/machine-id
 RUN dnf --enablerepo=updates-testing -y install \
 %%%DEPENDENCIES%%%
 WORKDIR /github/workspace
-CMD ["./contrib/ci/fedora.sh"]

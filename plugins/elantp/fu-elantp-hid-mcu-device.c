@@ -227,7 +227,6 @@ fu_elantp_hid_mcu_device_setup(FuDevice *device, GError **error)
 	guint16 fwver = 0;
 	guint16 tmp = 0;
 	g_autofree gchar *version_bl = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_forcetable = NULL;
 
 	/* get pattern */

@@ -728,7 +728,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "mei device max msg length invalid: 0x%x",
-			    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)));
+			    (guint)fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)));
 		return FALSE;
 	}
 	payloadsz =
