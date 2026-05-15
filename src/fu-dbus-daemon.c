@@ -1614,21 +1614,53 @@ fu_dbus_daemon_method_get_host_security_events(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_authorize_clear_results_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_clear_results(engine, helper->device_id, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
 fu_dbus_daemon_method_clear_results(FuDbusDaemon *self,
 				    GVariant *parameters,
 				    FuEngineRequest *request,
 				    GDBusMethodInvocation *invocation)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	const gchar *device_id;
-	g_autoptr(GError) error = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
 
 	g_variant_get(parameters, "(&s)", &device_id);
-	if (!fu_engine_clear_results(engine, device_id, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
-	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->device_id = g_strdup(device_id);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.clear-results",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_clear_results_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
