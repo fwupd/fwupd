@@ -1806,16 +1806,22 @@ fu_dbus_daemon_authorize_modify_device_cb(GObject *source, GAsyncResult *res, gp
 	    helper->invocation);
 }
 
-static gboolean
-fu_dbus_daemon_method_modify_device_flag_needs_auth(const gchar *key, const gchar *value)
+static const gchar *
+fu_dbus_daemon_method_modify_device_flag_to_action_id(const gchar *key,
+						      const gchar *value,
+						      GError **error)
 {
-	if (g_strcmp0(key, "Flags") != 0)
-		return FALSE;
-	if (g_strcmp0(value, "emulation-tag") == 0)
-		return TRUE;
-	if (g_strcmp0(value, "~emulation-tag") == 0)
-		return TRUE;
-	return FALSE;
+	if (g_strcmp0(key, "Flags") == 0) {
+		if (g_strcmp0(value, "emulation-tag") == 0 ||
+		    g_strcmp0(value, "~emulation-tag") == 0)
+			return "org.freedesktop.fwupd.emulation-tag";
+		return "org.freedesktop.fwupd.modify-device";
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "key value pair not supported");
+	return NULL;
 }
 
 static void
@@ -1827,32 +1833,35 @@ fu_dbus_daemon_method_modify_device(FuDbusDaemon *self,
 	const gchar *device_id;
 	const gchar *key;
 	const gchar *value;
+	const gchar *action_id;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s&s&s)", &device_id, &key, &value);
-	if (fu_dbus_daemon_method_modify_device_flag_needs_auth(key, value)) {
-		g_autoptr(FuMainAuthHelper) helper = g_new0(FuMainAuthHelper, 1);
-		helper->self = self;
-		helper->request = g_object_ref(request);
-		helper->invocation = g_object_ref(invocation);
-		helper->device_id = g_strdup(device_id);
-		helper->key = g_strdup(key);
-		helper->value = g_strdup(value);
-		fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
-		fu_polkit_authority_check(
-		    self->authority,
-		    fu_engine_request_get_sender(request),
-		    "org.freedesktop.fwupd.emulation-tag",
-		    fu_dbus_daemon_engine_request_get_authority_check_flags(request),
-		    NULL,
-		    fu_dbus_daemon_authorize_modify_device_cb,
-		    g_steal_pointer(&helper));
-	} else
-		fu_dbus_daemon_authorize_modify_device_internal(
-		    fu_daemon_get_engine(FU_DAEMON(self)),
-		    device_id,
-		    key,
-		    value,
-		    invocation);
+
+	/* use a specific action-id for flag key=value */
+	action_id = fu_dbus_daemon_method_modify_device_flag_to_action_id(key, value, &error);
+	if (action_id == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+
+	/* authenticate */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->device_id = g_strdup(device_id);
+	helper->key = g_strdup(key);
+	helper->value = g_strdup(value);
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  action_id,
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_modify_device_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
