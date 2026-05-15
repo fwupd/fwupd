@@ -203,6 +203,15 @@ fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	ap_end = ap_end_offset + 32 + 2;
+	if (ap_end < ap_start + 2) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "AP end 0x%x is before AP start 0x%x + 0x2",
+			    ap_end,
+			    ap_start + 2);
+		return FALSE;
+	}
 
 	/* get crc for pflash (AP) */
 	ap_stream = fu_partial_input_stream_new(stream, ap_start, ap_end - ap_start, error);

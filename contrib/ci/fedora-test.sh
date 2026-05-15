@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
 # workaround dnf bug
 export FORCE_COLUMNS=100

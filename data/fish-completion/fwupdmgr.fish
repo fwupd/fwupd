@@ -30,6 +30,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         emulation-tag 'Adds devices to watch for future emulation' \
         emulation-untag 'Removes devices to watch for future emulation' \
         enable-remote 'Enables a given remote' \
+        enable-remote-auth 'Enable an authenticated remote' \
         get-approved-firmware 'Gets the list of approved firmware' \
         get-bios-settings 'Retrieve BIOS settings' \
         get-details 'Gets details about a firmware file' \

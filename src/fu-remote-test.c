@@ -140,7 +140,7 @@ fu_remote_auth_func(void)
 
 	/* to/from GVariant */
 	fwupd_remote_set_priority(remote, 999);
-	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_TRUSTED);
 	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -166,34 +166,35 @@ fu_remote_auth_func(void)
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
 	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/firmware.xml.gz");
-	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_TRUSTED, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	ret =
-	    g_strcmp0(
-		json,
-		"{\n"
-		"  \"Id\": \"auth\",\n"
-		"  \"Kind\": \"download\",\n"
-		"  \"ReportUri\": \"https://fwupd.org/lvfs/firmware/report\",\n"
-		"  \"MetadataUri\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
-		"  \"MetadataUriSig\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
-		"  \"FirmwareBaseUri\": \"https://my.fancy.cdn/\",\n"
-		"  \"Username\": \"user\",\n"
-		"  \"Password\": \"pass\",\n"
-		"  \"ChecksumSig\": "
-		"\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
-		"  \"FilenameCache\": \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
-		"  \"FilenameCacheSig\": \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
-		"  \"Flags\": 9,\n"
-		"  \"Enabled\": true,\n"
-		"  \"ApprovalRequired\": false,\n"
-		"  \"AutomaticReports\": false,\n"
-		"  \"AutomaticSecurityReports\": true,\n"
-		"  \"Priority\": 999,\n"
-		"  \"Mtime\": 0,\n"
-		"  \"RefreshInterval\": 86400\n"
-		"}") == 0;
+	ret = fu_test_compare_lines(
+	    json,
+	    "{\n"
+	    "  \"Id\": \"auth\",\n"
+	    "  \"Kind\": \"download\",\n"
+	    "  \"ReportUri\": \"https://fwupd.org/lvfs/firmware/report\",\n"
+	    "  \"MetadataUri\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
+	    "  \"MetadataUriSig\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
+	    "  \"FirmwareBaseUri\": \"https://my.fancy.cdn/\",\n"
+	    "  \"Username\": \"user\",\n"
+	    "  \"Password\": \"pass\",\n"
+	    "  \"ChecksumSig\": "
+	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
+	    "  \"FilenameCache\": \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
+	    "  \"FilenameCacheSig\": \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
+	    "  \"Flags\": 137,\n"
+	    "  \"Enabled\": true,\n"
+	    "  \"ApprovalRequired\": false,\n"
+	    "  \"AutomaticReports\": false,\n"
+	    "  \"AutomaticSecurityReports\": true,\n"
+	    "  \"Priority\": 999,\n"
+	    "  \"Mtime\": 0,\n"
+	    "  \"RefreshInterval\": 86400\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
 }
 

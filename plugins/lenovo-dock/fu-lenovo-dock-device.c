@@ -14,9 +14,10 @@
 #define FU_LENOVO_DOCK_DEVICE_IFACE1_LEN 64
 #define FU_LENOVO_DOCK_DEVICE_IFACE2_LEN 272
 
-#define FU_LENOVO_DOCK_DEVICE_DELAY	 25   /* ms */
-#define FU_LENOVO_DOCK_DEVICE_DELAY_LONG 2500 /* ms */
-#define FU_LENOVO_DOCK_DEVICE_RETRIES	 10
+#define FU_LENOVO_DOCK_DEVICE_DELAY	 25    /* ms */
+#define FU_LENOVO_DOCK_DEVICE_DELAY_LONG 200 /* ms */
+#define FU_LENOVO_DOCK_DEVICE_RETRIES	 200
+#define FU_LENOVO_DOCK_DEVICE_PHASE2_DELAY 30000 /* ms */
 #define FU_LENOVO_DOCK_DEVICE_TIMEOUT	 250 /* ms */
 
 #define FU_LENOVO_DOCK_DEVICE_USAGE_INFO_SIZE  (4 * FU_KB)
@@ -27,6 +28,7 @@
 struct _FuLenovoDockDevice {
 	FuHidDevice parent_instance;
 	guint16 image_pid;
+	FuLenovoDockProvisionStatus provision_status;
 	FuStructLenovoDockUsage *st_usage;
 	GPtrArray *st_usage_items; /* element-type: FuStructLenovoDockUsageItem */
 };
@@ -39,6 +41,11 @@ fu_lenovo_dock_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuLenovoDockDevice *self = FU_LENOVO_DOCK_DEVICE(device);
 
 	fwupd_codec_string_append_hex(str, idt, "ImagePid", self->image_pid);
+	fwupd_codec_string_append(
+	    str,
+	    idt,
+	    "ProvisionStatus",
+	    fu_lenovo_dock_provision_status_to_string(self->provision_status));
 	if (self->st_usage != NULL) {
 		g_autofree gchar *tmp = fu_struct_lenovo_dock_usage_to_string(self->st_usage);
 		fwupd_codec_string_append(str, idt, "Usage", tmp);
@@ -284,13 +291,62 @@ fu_lenovo_dock_device_dfu_control(FuLenovoDockDevice *self,
 }
 
 static gboolean
+fu_lenovo_dock_device_get_dfu_control_state(FuLenovoDockDevice *self,
+					    FuLenovoDockFwCtrlUpgradeStatus *upgrade_status,
+					    FuLenovoDockFwCtrlUpgradePhaseCtrl *ctrl,
+					    GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructLenovoDockGetDfuControlReq) st_req =
+	    fu_struct_lenovo_dock_get_dfu_control_req_new();
+	g_autoptr(FuStructLenovoDockGetDfuControlRes) st_res = NULL;
+
+	if (!fu_lenovo_dock_device_set_report1(self, st_req->buf, error))
+		return FALSE;
+	buf = fu_lenovo_dock_device_get_report1(self, FU_LENOVO_DOCK_DEVICE_DELAY, error);
+	if (buf == NULL)
+		return FALSE;
+	st_res = fu_struct_lenovo_dock_get_dfu_control_res_parse(buf->data, buf->len, 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
+	if (upgrade_status != NULL)
+		*upgrade_status =
+		    fu_struct_lenovo_dock_get_dfu_control_res_get_upgrade_status(st_res);
+	if (ctrl != NULL)
+		*ctrl = fu_struct_lenovo_dock_get_dfu_control_res_get_ctrl(st_res);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_lenovo_dock_device_ensure_version(FuLenovoDockDevice *self, GError **error)
 {
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuStructLenovoDockGetVersionReq) st_req =
 	    fu_struct_lenovo_dock_get_version_req_new();
 	g_autoptr(FuStructLenovoDockGetVersionRes) st_res = NULL;
+	FuLenovoDockFwCtrlUpgradeStatus upgrade_status =
+	    FU_LENOVO_DOCK_FW_CTRL_UPGRADE_STATUS_NON_LOCK;
+	FuLenovoDockFwCtrlUpgradePhaseCtrl ctrl = FU_LENOVO_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_NA;
+
+	/* query upgrade status -- is dock in phase2? */
+	if (fu_lenovo_dock_device_get_dfu_control_state(self,
+							&upgrade_status,
+							&ctrl,
+							&error_local)) {
+		if (upgrade_status == FU_LENOVO_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED &&
+		    ctrl == FU_LENOVO_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_NON_UNPLUG) {
+			g_debug("lenovo-dock: delaying 0x81 for %ums while dock is in phase2",
+				(guint)FU_LENOVO_DOCK_DEVICE_PHASE2_DELAY);
+			fu_device_sleep(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_PHASE2_DELAY);
+		}
+	} else {
+		g_debug("lenovo-dock: failed to query 0x8A before version: %s",
+			error_local->message);
+	}
 
 	if (!fu_lenovo_dock_device_set_report1(self, st_req->buf, error))
 		return FALSE;
@@ -330,11 +386,7 @@ fu_lenovo_dock_device_ensure_edition_state(FuLenovoDockDevice *self, GError **er
 	st_res = fu_struct_lenovo_dock_get_edition_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	if (fu_struct_lenovo_dock_get_edition_res_get_provision_status(st_res) ==
-	    FU_LENOVO_DOCK_PROVISION_STATUS_PROVISIONED) {
-		g_debug("device is provisioned, locking firmware");
-		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
-	}
+	self->provision_status = fu_struct_lenovo_dock_get_edition_res_get_provision_status(st_res);
 
 	/* success */
 	return TRUE;

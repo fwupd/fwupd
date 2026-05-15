@@ -54,6 +54,7 @@ fu_efi_x509_signature_func(void)
 				      FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
+#ifdef HAVE_GNUTLS
 static void
 fu_efi_variable_authentication2_func(void)
 {
@@ -107,6 +108,7 @@ fu_efi_variable_authentication2_func(void)
 			==,
 			fu_x509_certificate_get_subject(FU_X509_CERTIFICATE(signer)));
 }
+#endif
 
 static void
 fu_efi_signature_list_func(void)
@@ -312,8 +314,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/efi/load-option/hive", fu_efi_load_option_hive_func);
 	g_test_add_func("/fwupd/efi/x509-signature", fu_efi_x509_signature_func);
 	g_test_add_func("/fwupd/efi/signature-list", fu_efi_signature_list_func);
+#ifdef HAVE_GNUTLS
 	g_test_add_func("/fwupd/efi/variable-authentication2",
 			fu_efi_variable_authentication2_func);
+#endif
 	g_test_add_func("/fwupd/efi/lz77/decompressor", fu_efi_lz77_decompressor_func);
 	return g_test_run();
 }

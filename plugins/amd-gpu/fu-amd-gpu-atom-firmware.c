@@ -157,7 +157,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 					GError **error)
 {
 	gsize bufsz = 0;
-	guint16 atombios_size;
+	gsize atombios_size;
 	gint num_str, i;
 	guint16 idx;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);

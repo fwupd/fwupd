@@ -40,4 +40,9 @@ if get_option('tests')
     ],
   )
   test('linux-swap-self-test', e, env: env)  # added to installed-tests
+
+  install_subdir('tests',
+    install_dir: installed_test_datadir,
+    install_tag: 'tests',
+  )
 endif

@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <jcat.h>
-
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
@@ -189,7 +187,7 @@ fu_engine_get_approved_firmware(FuEngine *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_engine_self_sign(FuEngine *self, const gchar *value, JcatSignFlags flags, GError **error)
+fu_engine_self_sign(FuEngine *self, const gchar *value, FuJcatSignFlags flags, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_modify_config(FuEngine *self,

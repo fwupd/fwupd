@@ -39,4 +39,7 @@ enum FwupdRemoteFlags {
     // Do not slow deployment using phased updates.
     // Since: 2.0.17
     NoPhasedUpdates = 1 << 6,
+    // A username and/or password is required
+    // Since: 2.1.4
+    RequiresAuth = 1 << 7,
 }

@@ -349,7 +349,7 @@ fu_synaptics_prometheus_device_write_fw(FuSynapticsPrometheusDevice *self,
 	/* collect chunks */
 	buf = g_bytes_get_data(fw, &bufsz);
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
-	while (offset != bufsz) {
+	while (offset < bufsz) {
 		guint32 chunksz = 0;
 		g_autofree guint8 *chunkbuf = NULL;
 		g_autoptr(GByteArray) chunk = g_byte_array_new();

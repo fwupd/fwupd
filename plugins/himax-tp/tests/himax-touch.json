@@ -3,11 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "url": "30896caf56cd9cff760aa4b4be18cec9412ff6cb463948d36dc4d8cc3ab649f3-himax-21f3.cab",
-      "emulation-url": "d43510b2d1e64262ada322a41c89d8965d33eacc1dee155039fcb0b54a115d3e-himaxtp-21f3.zip",
+      "url": "c25e327db58240bb17f6252faabfb2b38370d92a6a62f7a1910966a19565a9dc-himax-21f3-243.0.cab",
+      "emulation-url": "bf9efb66d4e8898bef0fa91e6fc69c57cc8ee70b8d795ce109386c710d42a60c-new-emu-21f3-243.0.zip",
       "components": [
         {
-          "version": "5373.8691",
+          "version": "243.0",
           "guids": [
             "3df6137a-8ba8-5394-894d-31080301bba0"
           ]

@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
 #install RPM packages
 dnf install -y dist/*.rpm

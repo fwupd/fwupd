@@ -150,6 +150,8 @@ configured in the daemon:
 
 **clean-remote**: Cleans a remote, deleting metadata where required.
 
+**enable-remote-auth**: Enable an authenticated (typically embargo) remote so that it can be refreshed and used.
+
 ### Historical Data
 
 The following actions can be used to upload, export or clear historical data:

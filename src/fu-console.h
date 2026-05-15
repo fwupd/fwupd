@@ -44,6 +44,9 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...) G
 gboolean
 fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...) G_GNUC_PRINTF(3, 4)
     G_GNUC_NON_NULL(1, 3);
+gchar *
+fu_console_input_string(FuConsole *self, const gchar *format, ...) G_GNUC_PRINTF(2, 3)
+    G_GNUC_NON_NULL(1, 2);
 
 void
 fu_console_print_full(FuConsole *self, FuConsolePrintFlags flags, const gchar *format, ...)

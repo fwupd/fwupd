@@ -78,6 +78,72 @@ fu_linux_swap_encrypted_func(void)
 	g_assert_nonnull(swap);
 }
 
+static void
+fu_linux_swap_dm_walker_lvm_on_luks_func(void)
+{
+	gboolean encrypted = FALSE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "lvm-on-luks", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_block_has_crypt_below(pstore, "dm-2", 0, &encrypted, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(encrypted);
+}
+
+static void
+fu_linux_swap_dm_walker_direct_func(void)
+{
+	gboolean encrypted = FALSE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "lvm-on-luks", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_block_has_crypt_below(pstore, "dm-0", 0, &encrypted, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(encrypted);
+}
+
+static void
+fu_linux_swap_dm_walker_plain_func(void)
+{
+	gboolean encrypted = FALSE;
+	gboolean ret;
+	g_autofree gchar *testdir = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	testdir = g_test_build_filename(G_TEST_DIST, "tests", "plain", "sys", NULL);
+	if (!g_file_test(testdir, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("missing fake-sysfs fixture");
+		return;
+	}
+	fu_path_store_set_path(pstore, FU_PATH_KIND_SYSFSDIR, testdir);
+
+	ret = fu_linux_swap_block_has_crypt_below(pstore, "sda1", 0, &encrypted, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(encrypted);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -86,5 +152,9 @@ main(int argc, char **argv)
 	g_test_add_func("/linux-swap/none", fu_linux_swap_none_func);
 	g_test_add_func("/linux-swap/plain", fu_linux_swap_plain_func);
 	g_test_add_func("/linux-swap/encrypted", fu_linux_swap_encrypted_func);
+	g_test_add_func("/linux-swap/dm-walker/lvm-on-luks",
+			fu_linux_swap_dm_walker_lvm_on_luks_func);
+	g_test_add_func("/linux-swap/dm-walker/direct", fu_linux_swap_dm_walker_direct_func);
+	g_test_add_func("/linux-swap/dm-walker/plain", fu_linux_swap_dm_walker_plain_func);
 	return g_test_run();
 }

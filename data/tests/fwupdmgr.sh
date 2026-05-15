@@ -220,5 +220,10 @@ echo " ● Testing waiting for device…"
 fwupdmgr device-wait b585990a-003e-5270-89d5-3705a17f9a43
 expect_rc 0
 
+# ---
+echo " ● Enabling lvfs-embargo remote (wrong auth)…"
+fwupdmgr enable-remote-auth lvfs-embargo nobody@fwupd.org NOTSECRET
+expect_rc 1
+
 # success!
 exit 0

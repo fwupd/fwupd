@@ -14,7 +14,6 @@
 #include <gio/gunixoutputstream.h>
 #endif
 #include <glib/gstdio.h>
-#include <jcat.h>
 
 #include "fwupd-enums-private.h"
 
@@ -1403,10 +1402,10 @@ fu_dbus_daemon_method_self_sign(FuDbusDaemon *self,
 		g_debug("got option %s", prop_key);
 		if (g_strcmp0(prop_key, "add-timestamp") == 0 &&
 		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= JCAT_SIGN_FLAG_ADD_TIMESTAMP;
+			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
 		if (g_strcmp0(prop_key, "add-cert") == 0 &&
 		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= JCAT_SIGN_FLAG_ADD_CERT;
+			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
 		g_variant_unref(prop_value);
 	}
 
@@ -1470,23 +1469,77 @@ fu_dbus_daemon_method_get_upgrades(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_method_get_remotes(FuDbusDaemon *self,
-				  GVariant *parameters,
-				  FuEngineRequest *request,
-				  GDBusMethodInvocation *invocation)
+fu_dbus_daemon_return_get_remotes(FuDbusDaemon *self,
+				  GDBusMethodInvocation *invocation,
+				  FwupdCodecFlags flag)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GError) error = NULL;
 
-	g_autoptr(GPtrArray) remotes = NULL;
 	remotes = fu_engine_get_remotes(engine, &error);
 	if (remotes == NULL) {
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-	g_dbus_method_invocation_return_value(
-	    invocation,
-	    fwupd_codec_array_to_variant(remotes, FWUPD_CODEC_FLAG_NONE));
+	g_dbus_method_invocation_return_value(invocation,
+					      fwupd_codec_array_to_variant(remotes, flag));
+}
+
+static void
+fu_dbus_daemon_authorize_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result -- still return the remotes, but only the untrusted bits */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED)) {
+			g_debug("ignoring: %s", error->message);
+			fu_dbus_daemon_return_get_remotes(helper->self,
+							  helper->invocation,
+							  FWUPD_CODEC_FLAG_NONE);
+			return;
+		}
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	fu_dbus_daemon_return_get_remotes(helper->self,
+					  helper->invocation,
+					  FWUPD_CODEC_FLAG_TRUSTED);
+}
+
+static void
+fu_dbus_daemon_method_get_remotes(FuDbusDaemon *self,
+				  GVariant *parameters,
+				  FuEngineRequest *request,
+				  GDBusMethodInvocation *invocation)
+{
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	/* is root */
+	if (fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
+		fu_dbus_daemon_return_get_remotes(self, invocation, FWUPD_CODEC_FLAG_TRUSTED);
+		return;
+	}
+
+	/* create helper object */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->self = self;
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.get-remotes",
+				  FU_POLKIT_AUTHORITY_CHECK_FLAG_NONE, /* non-interactive */
+				  NULL,
+				  fu_dbus_daemon_authorize_get_remotes_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void

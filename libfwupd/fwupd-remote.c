@@ -103,10 +103,12 @@ fwupd_remote_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_string(json_obj, "MetadataUriSig", priv->metadata_uri_sig);
 	if (priv->firmware_base_uri != NULL)
 		fwupd_json_object_add_string(json_obj, "FirmwareBaseUri", priv->firmware_base_uri);
-	if (priv->username != NULL)
-		fwupd_json_object_add_string(json_obj, "Username", priv->username);
-	if (priv->password != NULL)
-		fwupd_json_object_add_string(json_obj, "Password", priv->password);
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
+		if (priv->username != NULL)
+			fwupd_json_object_add_string(json_obj, "Username", priv->username);
+		if (priv->password != NULL)
+			fwupd_json_object_add_string(json_obj, "Password", priv->password);
+	}
 	if (priv->title != NULL)
 		fwupd_json_object_add_string(json_obj, "Title", priv->title);
 	if (priv->privacy_uri != NULL)
@@ -1598,6 +1600,115 @@ fwupd_remote_get_id(FwupdRemote *self)
 	return priv->id;
 }
 
+/**
+ * fwupd_remote_load_user_secrets:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads the secrets from a per-user store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_remote_load_user_secrets(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *password = NULL;
+	g_autofree gchar *username = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return TRUE;
+	basename = g_strdup_printf("%s.conf", priv->id);
+	fn = g_build_filename(g_get_user_config_dir(), "fwupd", "remotes.d", basename, NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_debug("no per-user credentials in %s", fn);
+		return TRUE;
+	}
+	if (!g_key_file_load_from_file(kf, fn, G_KEY_FILE_NONE, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	username = g_key_file_get_string(kf, "fwupd Remote", "Username", NULL);
+	if (username != NULL)
+		fwupd_remote_set_username(self, username);
+	password = g_key_file_get_string(kf, "fwupd Remote", "Password", NULL);
+	if (password != NULL)
+		fwupd_remote_set_password(self, password);
+
+	/* success */
+	return TRUE;
+}
+/**
+ * fwupd_remote_save_user_secrets:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Saves the secrets to a per-user store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_remote_save_user_secrets(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return TRUE;
+
+	/* save local file */
+	if (priv->username != NULL)
+		g_key_file_set_string(kf, "fwupd Remote", "Username", priv->username);
+	else
+		g_key_file_remove_key(kf, "fwupd Remote", "Username", NULL);
+	if (priv->password != NULL)
+		g_key_file_set_string(kf, "fwupd Remote", "Password", priv->password);
+	else
+		g_key_file_remove_key(kf, "fwupd Remote", "Password", NULL);
+	basename = g_strdup_printf("%s.conf", priv->id);
+	dirname = g_build_filename(g_get_user_config_dir(), "fwupd", "remotes.d", NULL);
+	if (g_mkdir_with_parents(dirname, 0700) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to create %s: %s",
+			    dirname,
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	data = g_key_file_to_data(kf, NULL, error);
+	if (data == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	fn = g_build_filename(dirname, basename, NULL);
+	if (!g_file_set_contents_full(fn, data, -1, G_FILE_SET_CONTENTS_NONE, 0600, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	g_debug("written secrets to %s", fn);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
@@ -1640,12 +1751,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 			fwupd_remote_set_checksum_sig(self, g_variant_get_string(value, NULL));
-		} else if (g_strcmp0(key, "Enabled") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-		} else if (g_strcmp0(key, "ApprovalRequired") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 		} else if (g_strcmp0(key, "Priority") == 0) {
 			priv->priority = g_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
@@ -1654,14 +1759,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 			priv->refresh_interval = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
-		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
-			/* we can probably stop doing proxying flags when we next branch */
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
-		} else if (g_strcmp0(key, "AutomaticSecurityReports") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self,
-						      FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
 		}
 	}
 }
@@ -1679,23 +1776,25 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->id));
 	}
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
+		if (priv->username != NULL) {
+			g_variant_builder_add(builder,
+					      "{sv}",
+					      "Username",
+					      g_variant_new_string(priv->username));
+		}
+		if (priv->password != NULL) {
+			g_variant_builder_add(builder,
+					      "{sv}",
+					      "Password",
+					      g_variant_new_string(priv->password));
+		}
+	}
 	if (priv->flags != 0) {
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
-	}
-	if (priv->username != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Username",
-				      g_variant_new_string(priv->username));
-	}
-	if (priv->password != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Password",
-				      g_variant_new_string(priv->password));
 	}
 	if (priv->title != NULL) {
 		g_variant_builder_add(builder, "{sv}", "Title", g_variant_new_string(priv->title));
@@ -1775,30 +1874,6 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "RemotesDir",
 				      g_variant_new_string(priv->remotes_dir));
 	}
-	/* we can probably stop doing proxying flags when we next branch */
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "Enabled",
-	    g_variant_new_boolean(fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "ApprovalRequired",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "AutomaticReports",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "AutomaticSecurityReports",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)));
 }
 
 static void

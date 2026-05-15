@@ -310,6 +310,8 @@ fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 			return FALSE;
 		}
 		result = g_bytes_get_data(bytes, NULL);
+		if (g_bytes_get_size(bytes) < 4)
+			continue;
 		/* complete */
 		if ((result[2] & 0x80) == 0) {
 			tmp = result[3];
@@ -410,6 +412,14 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 					    error))
 		return FALSE;
 	data = g_bytes_get_data(bytes, &length);
+	if (length < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "MST register data too small, got %" G_GSIZE_FORMAT,
+			    length);
+		return FALSE;
+	}
 
 	g_debug("MST: firmware check: %d", fu_dell_dock_mst_check_offset(data[0], 0x01));
 	g_debug("MST: HDCP key check: %d", fu_dell_dock_mst_check_offset(data[0], 0x02));
@@ -490,6 +500,13 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 	/* read result from data register */
 	if (!fu_dell_dock_mst_read_register(self, self->mst_rc_data_addr, 4, &csum_bytes, error))
 		return FALSE;
+	if (g_bytes_get_size(csum_bytes) < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "checksum result too small");
+		return FALSE;
+	}
 	data = g_bytes_get_data(csum_bytes, NULL);
 	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | /* nocheck:blocked nocheck:endian */
 				   data[2] << 16 | data[3] << 24);
@@ -561,13 +578,23 @@ fu_dell_dock_mst_write_flash_bank(FuDellDockMst *self,
 	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize write_size = 32;
 	guint end;
-	const guint8 *data = g_bytes_get_data(blob_fw, NULL);
+	gsize length = 0;
+	const guint8 *data = g_bytes_get_data(blob_fw, &length);
 
 	g_return_val_if_fail(blob_fw != NULL, FALSE);
 
 	if (!fu_dell_dock_mst_get_bank_attribs(bank, &attribs, error))
 		return FALSE;
 	end = attribs->start + attribs->length;
+	if (end > length) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "payload 0x%x is bigger than data 0x%x",
+			    end,
+			    (guint)length);
+		return FALSE;
+	}
 
 	g_debug("MST: Writing payload to bank %u", bank);
 	for (guint i = attribs->start; i < end; i += write_size) {
@@ -777,6 +804,13 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 			return FALSE;
 		}
 		new_tag = g_bytes_get_data(bytes_new, NULL);
+		if (g_bytes_get_size(bytes_new) < 4) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "CRC tag result too small");
+			return FALSE;
+		}
 		g_debug("CRC byte is currently 0x%x", new_tag[3]);
 
 		/* tag successfully cleared */

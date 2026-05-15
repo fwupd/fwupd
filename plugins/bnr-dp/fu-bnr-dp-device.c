@@ -162,6 +162,15 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 	actual_checksum ^= fu_xor8(st_response->buf->data, st_response->buf->len);
 
 	/* read command output data */
+	if (fu_struct_bnr_dp_aux_response_get_data_len(st_response) >
+	    FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "data length 0x%x exceeds chunk size",
+			    fu_struct_bnr_dp_aux_response_get_data_len(st_response));
+		return FALSE;
+	}
 	g_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(st_response));
 	if (data->len > 0) {
 		if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
@@ -286,13 +295,37 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 			   FuProgress *progress,
 			   GError **error)
 {
-	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-	const guint16 end = (offset + size) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	gsize offset_end = offset;
+	gsize start;
+	gsize end;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(size);
 
-	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, NULL);
-	g_return_val_if_fail(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, NULL);
-	g_return_val_if_fail(start < end, NULL);
+	/* sanity checks */
+	if (offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0 ||
+	    size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "misaligned offset/size: 0x%x/0x%x",
+			    (guint)offset,
+			    (guint)size);
+		return NULL;
+	}
+
+	/* validate offset addition */
+	if (!fu_size_checked_inc(&offset_end, size, error))
+		return NULL;
+	start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	end = offset_end / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	if (start > G_MAXUINT16 || end > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "start/end exceed valid range: 0x%x/0x%x",
+			    (guint)start,
+			    (guint)end);
+		return NULL;
+	}
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
@@ -344,21 +377,36 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 			    GError **error)
 {
 	gsize offset_end = offset;
-	guint16 start;
-	guint16 end;
+	gsize start;
+	gsize end;
 	g_autoptr(FuStructBnrDpAuxRequest) st_request = NULL;
 
-	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
-	g_return_val_if_fail(bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
+	/* sanity checks */
+	if (offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0 ||
+	    bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "misaligned offset/size: 0x%x/0x%x",
+			    (guint)offset,
+			    (guint)bufsz);
+		return FALSE;
+	}
 
 	/* validate offset addition */
 	if (!fu_size_checked_inc(&offset_end, bufsz, error))
 		return FALSE;
-
 	start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 	end = offset_end / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
-
-	g_return_val_if_fail(start < end, FALSE);
+	if (start > G_MAXUINT16 || end > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "start/end exceed valid range: 0x%x/0x%x",
+			    (guint)start,
+			    (guint)end);
+		return FALSE;
+	}
 
 	st_request = fu_bnr_dp_device_build_request(opcode,
 						    module_number,

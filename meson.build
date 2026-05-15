@@ -363,11 +363,6 @@ if build_standalone
     conf.set('HAVE_PASSIM', '1')
   endif
 endif
-libjcat = dependency(
-  'jcat',
-  version: '>= 0.1.6',
-  fallback: ['libjcat', 'libjcat_dep'],
-)
 libblkid = dependency(
   'blkid',
   required: get_option('blkid'),
@@ -456,13 +451,31 @@ else
   python3 = find_program(python3path)
 endif
 
+# prefer GnuTLS
+jcat_crypto = 'none'
 gnutls = dependency(
   'gnutls',
   version: '>= 3.6.0',
   required: get_option('gnutls'),
 )
 if gnutls.found()
+  jcat_crypto = 'gnutls'
   conf.set('HAVE_GNUTLS', '1')
+  if cc.has_header_symbol('gnutls/gnutls.h', 'GNUTLS_SIGN_MLDSA87', dependencies: gnutls)
+    conf.set('HAVE_GNUTLS_PQC', '1')
+  endif
+endif
+
+# fall back to OpenSSL
+if jcat_crypto == 'none'
+  libcrypto = dependency(
+    'libcrypto',
+    required: get_option('openssl'),
+  )
+  if libcrypto.found()
+    jcat_crypto = 'libcrypto'
+    conf.set('HAVE_LIBCRYPTO', '1')
+  endif
 endif
 
 enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'android').enabled()
@@ -1015,7 +1028,7 @@ if build_daemon
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,
-      'PKCS7 support': supported_pkcs7,
+      'crypto': jcat_crypto,
     },
     section: 'daemon features',
     bool_yn: true,

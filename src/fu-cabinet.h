@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <jcat.h>
 #include <xmlb.h>
 
 #include "fu-cab-firmware.h"
+#include "fu-jcat-context.h"
 
 #define FU_TYPE_CABINET (fu_cabinet_get_type())
 
@@ -30,7 +30,7 @@ typedef enum {
 FuCabinet *
 fu_cabinet_new(void);
 void
-fu_cabinet_set_jcat_context(FuCabinet *self, JcatContext *jcat_context) G_GNUC_NON_NULL(1);
+fu_cabinet_set_jcat_context(FuCabinet *self, FuJcatContext *jcat_context) G_GNUC_NON_NULL(1);
 gboolean
 fu_cabinet_sign(FuCabinet *self,
 		GBytes *cert,

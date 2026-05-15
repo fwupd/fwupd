@@ -174,6 +174,7 @@ enum FuLenovoDockCfgType {
     MqttCa,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum FuLenovoDockProvisionStatus {
     None,
@@ -357,8 +358,11 @@ enum FuLenovoDockFwCtrlUpgradeStatus {
 enum FuLenovoDockFwCtrlUpgradePhaseCtrl {
     Na,
     InPhase1,
+    // done phase 1 and wait for UFP disconnect or the next power cycle
     Unplug,
+    // done phase 1 and immediately start phase 2
     NonUnplug,
+    // done phase 1 and schedule phase 2 later
     WaitForTimer,
 }
 
@@ -386,6 +390,31 @@ struct FuStructLenovoDockDfuControlRes {
     _reserved: u8,
     upgrade_status: FuLenovoDockFwCtrlUpgradeStatus,
     ctrl: FuLenovoDockFwCtrlUpgradePhaseCtrl,
+}
+
+#[derive(Default, New)]
+#[repr(C, packed)]
+struct FuStructLenovoDockGetDfuControlReq {
+    status: FuLenovoDockStatus == Default,
+    datasz: u8 == 0x00,
+    cmd_class: FuLenovoDockCmdClass == Dock,
+    cmd_id: FuLenovoDockExternalDockCmd == GetDockFirmwareUpgradeCtrl,
+    component_id: FuLenovoDockComponentId == None,
+    _reserved: u8,
+}
+
+#[derive(Default, Parse)]
+#[repr(C, packed)]
+struct FuStructLenovoDockGetDfuControlRes {
+    status: FuLenovoDockStatus == Success,
+    datasz: u8 == 0x06,
+    cmd_class: FuLenovoDockCmdClass == Dock,
+    cmd_id: FuLenovoDockExternalDockCmd == GetDockFirmwareUpgradeCtrl,
+    component_id: FuLenovoDockComponentId == None,
+    _reserved: u8,
+    upgrade_status: FuLenovoDockFwCtrlUpgradeStatus,
+    ctrl: FuLenovoDockFwCtrlUpgradePhaseCtrl,
+    _schedule_time: u32le,
 }
 
 #[derive(Default, New, ToString)]

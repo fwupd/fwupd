@@ -701,6 +701,15 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 
 	/* chunk up the memory space into pages */
 	data = g_bytes_get_data(blob, NULL);
+	if (address_offset > g_bytes_get_size(blob)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "address offset 0x%x is larger than data 0x%x",
+			    (guint)address_offset,
+			    (guint)g_bytes_get_size(blob));
+		return FALSE;
+	}
 	chunks = fu_chunk_array_new(data + address_offset,
 				    g_bytes_get_size(blob) - address_offset,
 				    fu_dfu_sector_get_address(sector),

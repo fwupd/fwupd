@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
 . "$(dirname "$(readlink -f "$0")")/nix.sh"
 

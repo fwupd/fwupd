@@ -1526,6 +1526,14 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
 		return FALSE;
+	if (g_bytes_get_size(blob) < self->flash_start_addr) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware is too small for flash start address 0x%x",
+			    self->flash_start_addr);
+		return FALSE;
+	}
 	blob_offset = fu_bytes_new_offset(blob,
 					  self->flash_start_addr,
 					  g_bytes_get_size(blob) - self->flash_start_addr,

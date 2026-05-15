@@ -9,6 +9,7 @@ _fwupdmgr_cmd_list=(
 	'device-wait'
 	'downgrade'
 	'download'
+	'enable-remote-auth'
 	'enable-remote'
 	'emulation-tag'
 	'emulation-untag'
@@ -389,7 +390,7 @@ _fwupdmgr()
 			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
 		fi
 		;;
-	enable-remote)
+	enable-remote|enable-remote-auth)
 		#find remotes
 		if [[ "$args" = "2" ]]; then
 			_show_remotes

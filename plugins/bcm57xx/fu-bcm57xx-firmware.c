@@ -114,6 +114,14 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 	stage1_wrds = fu_struct_bcm57xx_nvram_header_get_size_wrds(st);
 	stage1_off = fu_struct_bcm57xx_nvram_header_get_offset(st);
 
+	if (stage1_wrds > G_MAXUINT32 / sizeof(guint32)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "stage1 word count too large: 0x%x",
+			    stage1_wrds);
+		return NULL;
+	}
 	stage1_sz = (stage1_wrds * sizeof(guint32));
 	if (stage1_off != BCM_NVRAM_STAGE1_BASE) {
 		g_set_error(error,
@@ -124,7 +132,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 			    (guint)BCM_NVRAM_STAGE1_BASE);
 		return NULL;
 	}
-	if (stage1_off + stage1_sz > streamsz) {
+	if ((gsize)stage1_off + stage1_sz > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -179,7 +187,7 @@ fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 		return NULL;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return NULL;
-	if (stage2_off + stage2_sz > streamsz) {
+	if ((gsize)stage2_off + stage2_sz > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -254,7 +262,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 	/* check against image size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (dict_off + dict_sz > streamsz) {
+	if ((gsize)dict_off + (gsize)dict_sz > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

@@ -80,6 +80,11 @@ fu_remote_list_monitor_changed_cb(GFileMonitor *monitor,
 	FuRemoteList *self = FU_REMOTE_LIST(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *filename = g_file_get_path(file);
+
+	/* ignore permission changes */
+	if (event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED)
+		return;
+
 	g_info("%s changed, reloading all remotes", filename);
 	if (!fu_remote_list_reload(self, &error))
 		g_warning("failed to rescan remotes: %s", error->message);
@@ -338,6 +343,15 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 		if (!fu_remote_list_cleanup_lvfs_remote(self, remote, error))
 			return FALSE;
 	}
+
+#ifndef _WIN32
+	/* if the remote has a username or password it should be readable only by owner */
+	if (fwupd_remote_get_username(remote) != NULL ||
+	    fwupd_remote_get_password(remote) != NULL) {
+		if (g_chmod(filename, 0600) != 0)
+			g_warning("failed to ensure permissions on %s", filename);
+	}
+#endif
 
 	/* watch the remote_list file and the XML file itself */
 	if (!fu_remote_list_add_inotify(self, filename, error))

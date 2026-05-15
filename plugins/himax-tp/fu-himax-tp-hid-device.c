@@ -860,10 +860,10 @@ fu_himax_tp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "CID", NULL))
 		return FALSE;
 
-	/* version format : pid.cid (decimal) */
-	version_str = g_strdup_printf("%u.%u",
-				      fu_struct_himax_tp_hid_info_get_pid(self->st_info),
-				      fu_struct_himax_tp_hid_info_get_cid(self->st_info));
+	/* version format : cid(minor).tp_cfg_ver (decimal) */
+	version_str = g_strdup_printf("%hhu.%hhu",
+				      fu_struct_himax_tp_hid_info_get_cid(self->st_info) & 0xFF,
+				      fu_struct_himax_tp_hid_info_get_tp_cfg_ver(self->st_info));
 	fu_device_set_version(device, version_str);
 
 	/* success */

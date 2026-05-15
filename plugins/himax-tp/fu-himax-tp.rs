@@ -30,7 +30,7 @@ struct FuStructHimaxTpHidInfo {
     vid: u16be,
     pid: u16be,
     _reserved_11: [u8; 32],
-    _reserved_12: u8,
+    tp_cfg_ver: u8,
     _reserved_13: u8,
     _reserved_14: u8,
     _reserved_15: u8,
