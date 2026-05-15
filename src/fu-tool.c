@@ -5890,7 +5890,6 @@ fu_util_jcat_sign(FuUtil *self, gchar **values, GError **error)
 	g_autoptr(FwupdJcatFile) file = NULL;
 	g_autoptr(FwupdJcatItem) item = NULL;
 	g_autoptr(FuJcatEngine) engine = NULL;
-	g_autofree gchar *id_safe = NULL;
 
 	/* check args */
 	if (g_strv_length(values) < 4) {
