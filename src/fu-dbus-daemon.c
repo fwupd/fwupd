@@ -49,6 +49,7 @@ G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 
 #define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_TOTAL	     100
 #define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_PER_SENDER 10
+#define FU_DBUS_DAEMON_SET_HINTS_MAX		     32
 
 static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
@@ -2200,12 +2201,20 @@ fu_dbus_daemon_method_set_hints(FuDbusDaemon *self,
 {
 	const gchar *prop_key;
 	const gchar *prop_value;
+	guint cnt = 0;
 	g_autoptr(FuClient) client = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	g_variant_get(parameters, "(a{ss})", &iter);
 	client = fu_client_list_register(self->client_list, fu_engine_request_get_sender(request));
 	while (g_variant_iter_next(iter, "{&s&s}", &prop_key, &prop_value)) {
+		if (++cnt > FU_DBUS_DAEMON_SET_HINTS_MAX) {
+			g_dbus_method_invocation_return_error_literal(invocation,
+								      FWUPD_ERROR,
+								      FWUPD_ERROR_NOT_SUPPORTED,
+								      "too many hints specified");
+			return;
+		}
 		g_debug("got hint %s=%s", prop_key, prop_value);
 		fu_client_insert_hint(client, prop_key, prop_value);
 	}
