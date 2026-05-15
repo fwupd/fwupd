@@ -5050,6 +5050,7 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autofree gchar *username = NULL;
 	g_autofree gchar *password = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* find remote */
 	if (g_strv_length(values) > 0)
@@ -5105,16 +5106,22 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 	/* check this works */
 	fwupd_remote_set_username(remote, username);
 	fwupd_remote_set_password(remote, password);
-	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
-		return FALSE;
 	if (!fwupd_client_refresh_remote(self->client,
 					 remote,
 					 self->download_flags,
 					 self->cancellable,
-					 error))
-		return FALSE;
+					 &error_local)) {
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) &&
+		    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring: %s", error_local->message);
+	}
 
 	/* save secrets and enable remote */
+	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+		return FALSE;
 	if (!fwupd_remote_save_user_secrets(remote, error))
 		return FALSE;
 	if (!fwupd_client_modify_remote(self->client,
@@ -5123,6 +5130,12 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 					"true",
 					self->cancellable,
 					error))
+		return FALSE;
+	if (!fwupd_client_refresh_remote(self->client,
+					 remote,
+					 self->download_flags,
+					 self->cancellable,
+					 error))
 		return FALSE;
 
 	/* TRANSLATORS: we've gained access to a new firmware remote */
