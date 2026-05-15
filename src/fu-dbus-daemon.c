@@ -2297,17 +2297,26 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	/* get flags */
 	while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 		g_debug("got option %s", prop_key);
-		if (g_strcmp0(prop_key, "install-flags") == 0)
-			helper->flags = g_variant_get_uint64(prop_value);
+		if (g_strcmp0(prop_key, "install-flags") == 0 &&
+		    g_variant_is_of_type(prop_value, G_VARIANT_TYPE_UINT64)) {
+			const guint64 allowed =
+			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER |
+			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |
+			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
+			helper->flags = g_variant_get_uint64(prop_value) & allowed;
+		}
 
 		/* these are all set by libfwupd < 2.0.x; parse for compatibility */
 		if (g_strcmp0(prop_key, "allow-older") == 0 &&
+		    g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN) &&
 		    g_variant_get_boolean(prop_value) == TRUE)
 			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 		if (g_strcmp0(prop_key, "allow-reinstall") == 0 &&
+		    g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN) &&
 		    g_variant_get_boolean(prop_value) == TRUE)
 			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 		if (g_strcmp0(prop_key, "allow-branch-switch") == 0 &&
+		    g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN) &&
 		    g_variant_get_boolean(prop_value) == TRUE)
 			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 
