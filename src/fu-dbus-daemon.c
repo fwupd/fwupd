@@ -2185,34 +2185,67 @@ fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_method_verify(FuDbusDaemon *self,
-			     GVariant *parameters,
-			     FuEngineRequest *request,
-			     GDBusMethodInvocation *invocation)
+fu_dbus_daemon_authorize_verify_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	const gchar *device_id = NULL;
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 
-	g_variant_get(parameters, "(&s)", &device_id);
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 
 	/* progress */
 	fu_progress_set_profile(progress, g_log_get_debug_enabled());
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_percentage_changed_cb),
-			 self);
+			 helper->self);
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_status_changed_cb),
-			 self);
+			 helper->self);
 
-	if (!fu_engine_verify(engine, device_id, progress, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+	/* authenticated */
+	if (!fu_engine_verify(engine, helper->device_id, progress, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_dbus_daemon_method_verify(FuDbusDaemon *self,
+			     GVariant *parameters,
+			     FuEngineRequest *request,
+			     GDBusMethodInvocation *invocation)
+{
+	const gchar *device_id = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	g_variant_get(parameters, "(&s)", &device_id);
+
+	/* create helper object */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->device_id = g_strdup(device_id);
+	helper->self = self;
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.verify",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_verify_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
