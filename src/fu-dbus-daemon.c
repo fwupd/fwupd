@@ -1872,7 +1872,8 @@ fu_dbus_daemon_method_get_results(FuDbusDaemon *self,
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-	val = fwupd_codec_to_variant(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_TRUSTED);
+	val = fwupd_codec_to_variant(FWUPD_CODEC(device),
+				     fu_engine_request_get_converter_flags(request));
 	g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
 }
 
@@ -2417,7 +2418,7 @@ fu_dbus_daemon_method_get_details(FuDbusDaemon *self,
 	}
 	g_dbus_method_invocation_return_value(
 	    invocation,
-	    fwupd_codec_array_to_variant(results, FWUPD_CODEC_FLAG_TRUSTED));
+	    fwupd_codec_array_to_variant(results, fu_engine_request_get_converter_flags(request)));
 #else
 	g_dbus_method_invocation_return_error_literal(invocation,
 						      FWUPD_ERROR,
