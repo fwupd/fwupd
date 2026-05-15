@@ -1887,32 +1887,33 @@ fu_dbus_daemon_method_get_results(FuDbusDaemon *self,
 	g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
 }
 
-static void
-fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
-				      GVariant *parameters,
-				      FuEngineRequest *request,
-				      GDBusMethodInvocation *invocation)
-{
 #ifdef HAVE_GIO_UNIX
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+static void
+fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	const gchar *remote_id = NULL;
 	gint fd_data;
 	gint fd_sig;
-	g_autoptr(GError) error = NULL;
 
-	g_variant_get(parameters, "(&shh)", &remote_id, &fd_data, &fd_sig);
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 
-	/* update the metadata store */
-	message = g_dbus_method_invocation_get_message(invocation);
+	/* get the fds from the message */
+	message = g_dbus_method_invocation_get_message(helper->invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
 	if (fd_list == NULL) {
 		g_set_error_literal(&error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "no file descriptors are associated");
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	if (g_unix_fd_list_get_length(fd_list) != 2) {
@@ -1921,27 +1922,58 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 			    FWUPD_ERROR_INTERNAL,
 			    "wrong number of file descriptors: %i",
 			    g_unix_fd_list_get_length(fd_list));
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	fd_data = g_unix_fd_list_get(fd_list, 0, &error);
 	if (fd_data < 0) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	fd_sig = g_unix_fd_list_get(fd_list, 1, &error);
 	if (fd_sig < 0) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* store new metadata (will close the fds when done) */
-	if (!fu_engine_update_metadata(engine, remote_id, fd_data, fd_sig, &error)) {
-		g_prefix_error(&error, "Failed to update metadata for %s: ", remote_id);
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+	if (!fu_engine_update_metadata(engine, helper->remote_id, fd_data, fd_sig, &error)) {
+		g_prefix_error(&error, "Failed to update metadata for %s: ", helper->remote_id);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+#endif /* HAVE_GIO_UNIX */
+
+static void
+fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
+				      GVariant *parameters,
+				      FuEngineRequest *request,
+				      GDBusMethodInvocation *invocation)
+{
+#ifdef HAVE_GIO_UNIX
+	const gchar *remote_id = NULL;
+	gint fd_data;
+	gint fd_sig;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	g_variant_get(parameters, "(&shh)", &remote_id, &fd_data, &fd_sig);
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->remote_id = g_strdup(remote_id);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.modify-remote",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_update_metadata_cb,
+				  g_steal_pointer(&helper));
 #else
 	g_dbus_method_invocation_return_error_literal(invocation,
 						      FWUPD_ERROR,
