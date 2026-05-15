@@ -43,7 +43,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		g_autoptr(GVariant) hw_address = NULL;
 
 		hw_address = g_dbus_proxy_get_cached_property(proxy, "HwAddress");
-		if (hw_address == NULL)
+		if (hw_address == NULL || !g_variant_is_of_type(hw_address, G_VARIANT_TYPE_STRING))
 			return TRUE;
 		mac_addr = g_variant_get_string(hw_address, NULL);
 
@@ -61,7 +61,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		g_autoptr(GVariant) udi = NULL;
 
 		udi = g_dbus_proxy_get_cached_property(proxy, "Udi");
-		if (udi == NULL)
+		if (udi == NULL || !g_variant_is_of_type(udi, G_VARIANT_TYPE_STRING))
 			return TRUE;
 		udev_backend = fu_context_get_backend_by_name(helper->ctx, "udev", error);
 		if (udev_backend == NULL)

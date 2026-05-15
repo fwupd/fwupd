@@ -271,7 +271,7 @@ fu_volume_get_size(FuVolume *self)
 	if (self->proxy_blk == NULL)
 		return 0;
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Size");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_UINT64))
 		return 0;
 	return g_variant_get_uint64(val);
 }
@@ -296,7 +296,7 @@ fu_volume_get_partition_size(FuVolume *self)
 	if (self->proxy_part == NULL)
 		return 0;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Size");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_UINT64))
 		return 0;
 	return g_variant_get_uint64(val);
 }
@@ -321,7 +321,7 @@ fu_volume_get_partition_offset(FuVolume *self)
 	if (self->proxy_part == NULL)
 		return 0;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Offset");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_UINT64))
 		return 0;
 	return g_variant_get_uint64(val);
 }
@@ -346,7 +346,7 @@ fu_volume_get_partition_number(FuVolume *self)
 	if (self->proxy_part == NULL)
 		return 0;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Number");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_UINT32))
 		return 0;
 	return g_variant_get_uint32(val);
 }
@@ -496,7 +496,7 @@ fu_volume_is_mdraid(FuVolume *self)
 	if (self->proxy_blk == NULL)
 		return FALSE;
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "MDRaid");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 		return FALSE;
 	return g_strcmp0(g_variant_get_string(val, NULL), "/") != 0;
 }
@@ -603,7 +603,7 @@ fu_volume_get_block_size(FuVolume *self, GError **error)
 	}
 
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Device");
-	if (val == NULL) {
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_BYTESTRING)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -639,7 +639,7 @@ fu_volume_get_mount_point(FuVolume *self)
 	if (self->proxy_fs == NULL)
 		return NULL;
 	val = g_dbus_proxy_get_cached_property(self->proxy_fs, "MountPoints");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_BYTESTRING_ARRAY))
 		return NULL;
 	mountpoints = g_variant_get_bytestring_array(val, NULL);
 	return g_strdup(mountpoints[0]);
@@ -746,7 +746,7 @@ fu_volume_is_encrypted(FuVolume *self)
 	if (self->proxy_blk == NULL)
 		return FALSE;
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "CryptoBackingDevice");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 		return FALSE;
 	if (g_strcmp0(g_variant_get_string(val, NULL), "/") == 0)
 		return FALSE;
@@ -820,7 +820,7 @@ fu_volume_is_internal(FuVolume *self)
 	g_return_val_if_fail(FU_IS_VOLUME(self), FALSE);
 
 	val_system = g_dbus_proxy_get_cached_property(self->proxy_blk, "HintSystem");
-	if (val_system == NULL)
+	if (val_system == NULL || !g_variant_is_of_type(val_system, G_VARIANT_TYPE_BOOLEAN))
 		return FALSE;
 
 	return g_variant_get_boolean(val_system);
@@ -843,7 +843,7 @@ fu_volume_get_id_type(FuVolume *self)
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "IdType");
-	if (val == NULL)
+	if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 		return NULL;
 
 	return g_strdup(g_variant_get_string(val, NULL));
@@ -1032,7 +1032,8 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 
 		/* ignore anything in a zfs zvol */
 		symlinks = g_dbus_proxy_get_cached_property(proxy_blk, "Symlinks");
-		if (symlinks != NULL) {
+		if (symlinks != NULL &&
+		    g_variant_is_of_type(symlinks, G_VARIANT_TYPE_BYTESTRING_ARRAY)) {
 			g_autofree const gchar **symlinks_strv =
 			    g_variant_get_bytestring_array(symlinks, NULL);
 			if (!fu_volume_check_block_device_symlinks(symlinks_strv, &error_local)) {
@@ -1158,7 +1159,7 @@ fu_volume_new_by_device(const gchar *device, GError **error)
 		GDBusProxy *proxy_blk = g_ptr_array_index(devices, i);
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy_blk, "Device");
-		if (val == NULL)
+		if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_BYTESTRING))
 			continue;
 		if (g_strcmp0(g_variant_get_bytestring(val), device) == 0) {
 			g_autoptr(GDBusProxy) proxy_fs = NULL;
@@ -1226,7 +1227,7 @@ fu_volume_new_by_devnum(guint32 devnum, GError **error)
 		GDBusProxy *proxy_blk = g_ptr_array_index(devices, i);
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy_blk, "DeviceNumber");
-		if (val == NULL)
+		if (val == NULL || !g_variant_is_of_type(val, G_VARIANT_TYPE_UINT64))
 			continue;
 		if (devnum == g_variant_get_uint64(val)) {
 			return g_object_new(FU_TYPE_VOLUME, "proxy-block", proxy_blk, NULL);

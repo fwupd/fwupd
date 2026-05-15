@@ -27,7 +27,8 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 
 	/* check that we "have" a battery */
 	type_val = g_dbus_proxy_get_cached_property(self->proxy, "Type");
-	if (type_val == NULL || g_variant_get_uint32(type_val) == 0) {
+	if (type_val == NULL || !g_variant_is_of_type(type_val, G_VARIANT_TYPE_UINT32) ||
+	    g_variant_get_uint32(type_val) == 0) {
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
@@ -39,11 +40,16 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
+	if (!g_variant_is_of_type(percentage_val, G_VARIANT_TYPE_DOUBLE)) {
+		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
+		return;
+	}
 	fu_context_set_battery_level(ctx, g_variant_get_double(percentage_val));
 
 	/* get state */
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
-	if (state_val == NULL || g_variant_get_uint32(state_val) == 0) {
+	if (state_val == NULL || !g_variant_is_of_type(state_val, G_VARIANT_TYPE_UINT32) ||
+	    g_variant_get_uint32(state_val) == 0) {
 		g_warning("failed to query power state");
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 	}
@@ -62,6 +68,11 @@ fu_upower_plugin_update_lid(FuPlugin *plugin)
 	lid_is_closed = g_dbus_proxy_get_cached_property(self->proxy_manager, "LidIsClosed");
 	if (lid_is_present == NULL || lid_is_closed == NULL) {
 		g_warning("failed to query lid state");
+		fu_context_set_lid_state(ctx, FU_LID_STATE_UNKNOWN);
+		return;
+	}
+	if (!g_variant_is_of_type(lid_is_present, G_VARIANT_TYPE_BOOLEAN) ||
+	    !g_variant_is_of_type(lid_is_closed, G_VARIANT_TYPE_BOOLEAN)) {
 		fu_context_set_lid_state(ctx, FU_LID_STATE_UNKNOWN);
 		return;
 	}
@@ -85,6 +96,10 @@ fu_upower_plugin_update_battery(FuPlugin *plugin)
 
 	on_battery = g_dbus_proxy_get_cached_property(self->proxy_manager, "OnBattery");
 	if (on_battery == NULL) {
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
+		return;
+	}
+	if (!g_variant_is_of_type(on_battery, G_VARIANT_TYPE_BOOLEAN)) {
 		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
 		return;
 	}

@@ -39,7 +39,7 @@ fu_redfish_network_device_get_state(FuRedfishNetworkDevice *self,
 	if (proxy == NULL)
 		return FALSE;
 	retval = g_dbus_proxy_get_cached_property(proxy, "State");
-	if (retval == NULL) {
+	if (retval == NULL || !g_variant_is_of_type(retval, G_VARIANT_TYPE_UINT32)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
@@ -130,7 +130,7 @@ fu_redfish_network_device_get_address(FuRedfishNetworkDevice *self, GError **err
 	if (proxy == NULL)
 		return NULL;
 	ip4_config = g_dbus_proxy_get_cached_property(proxy, "Ip4Config");
-	if (ip4_config == NULL) {
+	if (ip4_config == NULL || !g_variant_is_of_type(ip4_config, G_VARIANT_TYPE_STRING)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,

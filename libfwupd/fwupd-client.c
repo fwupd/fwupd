@@ -576,13 +576,13 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 	if (g_variant_dict_contains(dict, "Status")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Status");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_UINT32))
 			fwupd_client_set_status(self, g_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Tainted");
-		if (val != NULL) {
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_BOOLEAN)) {
 			priv->tainted = g_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "tainted");
 		}
@@ -590,7 +590,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 	if (g_variant_dict_contains(dict, "Interactive")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Interactive");
-		if (val != NULL) {
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_BOOLEAN)) {
 			priv->interactive = g_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "interactive");
 		}
@@ -598,65 +598,65 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 	if (g_variant_dict_contains(dict, "PercentageFull")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "PercentageFull");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_DOUBLE))
 			fwupd_client_set_percentage(self, g_variant_get_double(val));
 	} else if (g_variant_dict_contains(dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_UINT32))
 			fwupd_client_set_percentage(self, g_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_LEVEL)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_LEVEL);
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_UINT32))
 			fwupd_client_set_battery_level(self, g_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_THRESHOLD)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_THRESHOLD);
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_UINT32))
 			fwupd_client_set_battery_threshold(self, g_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "DaemonVersion");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 			fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostBkc")) {
 		g_autoptr(GVariant) val = g_dbus_proxy_get_cached_property(proxy, "HostBkc");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 			fwupd_client_set_host_bkc(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostVendor")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostVendor");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 			fwupd_client_set_host_vendor(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostProduct")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostProduct");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 			fwupd_client_set_host_product(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostMachineId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostMachineId");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 			fwupd_client_set_host_machine_id(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostSecurityId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostSecurityId");
-		if (val != NULL)
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 			fwupd_client_set_host_security_id(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "OnlyTrusted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "OnlyTrusted");
-		if (val != NULL) {
+		if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_BOOLEAN)) {
 			priv->only_trusted = g_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "only-trusted");
 		}
@@ -1016,34 +1016,34 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 			 G_CALLBACK(fwupd_client_name_owner_changed_cb),
 			 self);
 	val = g_dbus_proxy_get_cached_property(priv->proxy, "DaemonVersion");
-	if (val != NULL)
+	if (val != NULL && g_variant_is_of_type(val, G_VARIANT_TYPE_STRING))
 		fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
 	val2 = g_dbus_proxy_get_cached_property(priv->proxy, "Tainted");
-	if (val2 != NULL)
+	if (val2 != NULL && g_variant_is_of_type(val2, G_VARIANT_TYPE_BOOLEAN))
 		priv->tainted = g_variant_get_boolean(val2);
 	val3 = g_dbus_proxy_get_cached_property(priv->proxy, "Status");
-	if (val3 != NULL)
+	if (val3 != NULL && g_variant_is_of_type(val3, G_VARIANT_TYPE_UINT32))
 		fwupd_client_set_status(self, g_variant_get_uint32(val3));
 	val4 = g_dbus_proxy_get_cached_property(priv->proxy, "Interactive");
-	if (val4 != NULL)
+	if (val4 != NULL && g_variant_is_of_type(val4, G_VARIANT_TYPE_BOOLEAN))
 		priv->interactive = g_variant_get_boolean(val4);
 	val5 = g_dbus_proxy_get_cached_property(priv->proxy, "HostProduct");
-	if (val5 != NULL)
+	if (val5 != NULL && g_variant_is_of_type(val5, G_VARIANT_TYPE_STRING))
 		fwupd_client_set_host_product(self, g_variant_get_string(val5, NULL));
 	val10 = g_dbus_proxy_get_cached_property(priv->proxy, "HostVendor");
-	if (val10 != NULL)
+	if (val10 != NULL && g_variant_is_of_type(val10, G_VARIANT_TYPE_STRING))
 		fwupd_client_set_host_vendor(self, g_variant_get_string(val10, NULL));
 	val6 = g_dbus_proxy_get_cached_property(priv->proxy, "HostMachineId");
-	if (val6 != NULL)
+	if (val6 != NULL && g_variant_is_of_type(val6, G_VARIANT_TYPE_STRING))
 		fwupd_client_set_host_machine_id(self, g_variant_get_string(val6, NULL));
 	val7 = g_dbus_proxy_get_cached_property(priv->proxy, "HostSecurityId");
-	if (val7 != NULL)
+	if (val7 != NULL && g_variant_is_of_type(val7, G_VARIANT_TYPE_STRING))
 		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
 	val8 = g_dbus_proxy_get_cached_property(priv->proxy, "HostBkc");
-	if (val8 != NULL)
+	if (val8 != NULL && g_variant_is_of_type(val8, G_VARIANT_TYPE_STRING))
 		fwupd_client_set_host_bkc(self, g_variant_get_string(val8, NULL));
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
-	if (val9 != NULL)
+	if (val9 != NULL && g_variant_is_of_type(val9, G_VARIANT_TYPE_BOOLEAN))
 		priv->only_trusted = g_variant_get_boolean(val9);
 
 	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");

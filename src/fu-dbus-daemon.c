@@ -1401,9 +1401,11 @@ fu_dbus_daemon_method_self_sign(FuDbusDaemon *self,
 	while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 		g_debug("got option %s", prop_key);
 		if (g_strcmp0(prop_key, "add-timestamp") == 0 &&
+		    g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN) &&
 		    g_variant_get_boolean(prop_value) == TRUE)
 			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
 		if (g_strcmp0(prop_key, "add-cert") == 0 &&
+		    g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN) &&
 		    g_variant_get_boolean(prop_value) == TRUE)
 			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
 		g_variant_unref(prop_value);

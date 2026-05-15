@@ -1387,59 +1387,88 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_appstream_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_security_attr_set_created(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_title(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_description(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_plugin(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_fwupd_version(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_url(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_security_attr_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_LEVEL) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT32))
+			return;
 		fwupd_security_attr_set_level(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT32))
+			return;
 		fwupd_security_attr_set_result(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT32))
+			return;
 		fwupd_security_attr_set_result_fallback(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT32))
+			return;
 		fwupd_security_attr_set_result_success(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
+		g_autofree const gchar **strv = NULL;
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY))
+			return;
+		strv = g_variant_get_strv(value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
 			fwupd_security_attr_add_guid(self, strv[i]);
 		return;
@@ -1451,27 +1480,37 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ID) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_bios_setting_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_bios_setting_target_value(
 		    self,
 		    g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_bios_setting_current_value(
 		    self,
 		    g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_kernel_current_value(self,
 							     g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_security_attr_set_kernel_target_value(self,
 							    g_variant_get_string(value, NULL));
 		return;

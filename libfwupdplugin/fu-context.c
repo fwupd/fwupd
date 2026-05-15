@@ -1181,11 +1181,13 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 		g_autoptr(GVariant) id_type = g_dbus_proxy_get_cached_property(proxy, "IdType");
 		g_autoptr(GVariant) device = g_dbus_proxy_get_cached_property(proxy, "Device");
 		g_autoptr(GVariant) id_label = g_dbus_proxy_get_cached_property(proxy, "IdLabel");
-		if (id_type != NULL && device != NULL &&
+		if (id_type != NULL && g_variant_is_of_type(id_type, G_VARIANT_TYPE_STRING) &&
+		    device != NULL &&
 		    g_strcmp0(g_variant_get_string(id_type, NULL), "BitLocker") == 0)
 			priv->flags |= FU_CONTEXT_FLAG_FDE_BITLOCKER;
 
-		if (id_type != NULL && id_label != NULL &&
+		if (id_type != NULL && g_variant_is_of_type(id_type, G_VARIANT_TYPE_STRING) &&
+		    id_label != NULL && g_variant_is_of_type(id_label, G_VARIANT_TYPE_STRING) &&
 		    g_strcmp0(g_variant_get_string(id_label, NULL), "ubuntu-data-enc") == 0 &&
 		    g_strcmp0(g_variant_get_string(id_type, NULL), "crypto_LUKS") == 0) {
 			priv->flags |= FU_CONTEXT_FLAG_FDE_SNAPD;

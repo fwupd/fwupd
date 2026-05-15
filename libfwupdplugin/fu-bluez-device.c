@@ -411,6 +411,8 @@ fu_bluez_device_read_battery_interface(FuBluezDevice *self,
 		return TRUE;
 	}
 
+	if (!g_variant_is_of_type(obj_percentage, G_VARIANT_TYPE_BYTE))
+		return TRUE;
 	percentage = g_variant_get_byte(obj_percentage);
 	fu_device_set_battery_level(FU_DEVICE(self), percentage);
 
@@ -582,7 +584,7 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	}
 
 	val_address = g_dbus_proxy_get_cached_property(priv->proxy, "Address");
-	if (val_address == NULL) {
+	if (val_address == NULL || !g_variant_is_of_type(val_address, G_VARIANT_TYPE_STRING)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -591,12 +593,11 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	}
 	fu_device_set_logical_id(device, g_variant_get_string(val_address, NULL));
 	val_adapter = g_dbus_proxy_get_cached_property(priv->proxy, "Adapter");
-	if (val_adapter != NULL)
+	if (val_adapter != NULL && g_variant_is_of_type(val_adapter, G_VARIANT_TYPE_STRING))
 		fu_device_set_physical_id(device, g_variant_get_string(val_adapter, NULL));
 	val_name = g_dbus_proxy_get_cached_property(priv->proxy, "Name");
-	if (val_name != NULL) {
+	if (val_name != NULL && g_variant_is_of_type(val_name, G_VARIANT_TYPE_STRING)) {
 		fu_device_set_name(device, g_variant_get_string(val_name, NULL));
-		/* register the device by its alias, since modalias could be absent */
 		fu_device_add_instance_str(FU_DEVICE(self),
 					   "NAME",
 					   g_variant_get_string(val_name, NULL));
@@ -609,9 +610,8 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 						 NULL);
 	}
 	val_alias = g_dbus_proxy_get_cached_property(priv->proxy, "Alias");
-	if (val_alias != NULL) {
+	if (val_alias != NULL && g_variant_is_of_type(val_alias, G_VARIANT_TYPE_STRING)) {
 		fu_device_set_name(device, g_variant_get_string(val_alias, NULL));
-		/* register the device by its alias, since modalias could be absent */
 		fu_device_add_instance_str(FU_DEVICE(self),
 					   "ALIAS",
 					   g_variant_get_string(val_alias, NULL));
@@ -623,10 +623,10 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 						 NULL);
 	}
 	val_icon = g_dbus_proxy_get_cached_property(priv->proxy, "Icon");
-	if (val_icon != NULL)
+	if (val_icon != NULL && g_variant_is_of_type(val_icon, G_VARIANT_TYPE_STRING))
 		fu_device_add_icon(device, g_variant_get_string(val_icon, NULL));
 	val_modalias = g_dbus_proxy_get_cached_property(priv->proxy, "Modalias");
-	if (val_modalias != NULL)
+	if (val_modalias != NULL && g_variant_is_of_type(val_modalias, G_VARIANT_TYPE_STRING))
 		fu_bluez_device_set_modalias(self, g_variant_get_string(val_modalias, NULL));
 
 	/* success, if we added one service or characteristic */

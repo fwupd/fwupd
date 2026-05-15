@@ -211,10 +211,14 @@ static void
 fwupd_plugin_from_key_value(FwupdPlugin *self, const gchar *key, GVariant *value)
 {
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_plugin_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_plugin_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}

@@ -549,42 +549,62 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DISTRO_ID) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_distro_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DISTRO_VARIANT) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_distro_variant(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DISTRO_VERSION) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_distro_version(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_vendor(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT32))
+			return;
 		fwupd_report_set_vendor_id(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_device_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_report_set_created(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_OLD) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_version_old(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_report_set_remote_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_report_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}

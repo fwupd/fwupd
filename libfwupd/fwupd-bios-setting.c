@@ -895,52 +895,77 @@ static void
 fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVariant *value)
 {
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_bios_setting_set_kind(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ID) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_bios_setting_set_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_bios_setting_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FILENAME) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_bios_setting_set_path(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_bios_setting_set_current_value(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_bios_setting_set_filename(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING))
+			return;
 		fwupd_bios_setting_set_description(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
+		g_autofree const gchar **strv = NULL;
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY))
+			return;
+		strv = g_variant_get_strv(value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
 			fwupd_bios_setting_add_possible_value(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_bios_setting_set_lower_bound(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_bios_setting_set_upper_bound(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+			return;
 		fwupd_bios_setting_set_scalar_increment(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY) == 0) {
+		if (!g_variant_is_of_type(value, G_VARIANT_TYPE_BOOLEAN))
+			return;
 		fwupd_bios_setting_set_read_only(self, g_variant_get_boolean(value));
 		return;
 	}

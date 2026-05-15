@@ -41,6 +41,10 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	val_services_resolved = g_dbus_proxy_get_cached_property(proxy, "ServicesResolved");
 	if (val_services_resolved == NULL)
 		return;
+	if (!g_variant_is_of_type(val_connected, G_VARIANT_TYPE_BOOLEAN) ||
+	    !g_variant_is_of_type(val_paired, G_VARIANT_TYPE_BOOLEAN) ||
+	    !g_variant_is_of_type(val_services_resolved, G_VARIANT_TYPE_BOOLEAN))
+		return;
 
 	suitable = g_variant_get_boolean(val_connected) && g_variant_get_boolean(val_paired) &&
 		   g_variant_get_boolean(val_services_resolved);
