@@ -18,5 +18,7 @@ guint32
 fwupd_variant_get_uint32(GVariant *value) G_GNUC_NON_NULL(1);
 guint64
 fwupd_variant_get_uint64(GVariant *value) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_variant_get_string(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

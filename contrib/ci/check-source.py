@@ -839,6 +839,7 @@ class Checker:
             "gnutls_malloc": "Use gnutls_calloc() instead",
             "g_variant_get_uint64": "Use fwupd_variant_get_uint64() instead",
             "g_variant_get_uint32": "Use fwupd_variant_get_uint32() instead",
+            "g_variant_get_string": "Use fwupd_variant_get_string() instead",
             "g_random_int_range": "Use a predicatable token instead",
             "g_assert": "Use g_set_error() or g_return_val_if_fail() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",

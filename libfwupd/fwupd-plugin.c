@@ -212,7 +212,7 @@ static void
 fwupd_plugin_from_key_value(FwupdPlugin *self, const gchar *key, GVariant *value)
 {
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_plugin_set_name(self, g_variant_get_string(value, NULL));
+		fwupd_plugin_set_name(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {

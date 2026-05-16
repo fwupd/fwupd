@@ -82,3 +82,24 @@ fwupd_variant_get_uint64(GVariant *value)
 		return g_variant_get_uint64(value);
 	return 0;
 }
+
+/**
+ * fwupd_variant_get_string:
+ * @value: a #GVariant
+ *
+ * Gets a string value from a variant.
+ *
+ * Returns: string, or %NULL if not valid
+ *
+ * Since: 2.1.4
+ **/
+const gchar *
+fwupd_variant_get_string(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, NULL);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING) ||
+	    g_variant_is_of_type(value, G_VARIANT_TYPE_OBJECT_PATH) ||
+	    g_variant_is_of_type(value, G_VARIANT_TYPE_SIGNATURE))
+		return g_variant_get_string(value, NULL); /* nocheck:blocked */
+	return NULL;
+}

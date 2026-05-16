@@ -45,7 +45,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		hw_address = g_dbus_proxy_get_cached_property(proxy, "HwAddress");
 		if (hw_address == NULL)
 			return TRUE;
-		mac_addr = g_variant_get_string(hw_address, NULL);
+		mac_addr = fwupd_variant_get_string(hw_address);
 
 		/* verify */
 		g_debug("mac_addr=%s", mac_addr);
@@ -67,7 +67,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		if (udev_backend == NULL)
 			return FALSE;
 		udev_device =
-		    fu_backend_create_device(udev_backend, g_variant_get_string(udi, NULL), error);
+		    fu_backend_create_device(udev_backend, fwupd_variant_get_string(udi), error);
 		if (udev_device == NULL)
 			return FALSE;
 
@@ -90,7 +90,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 
 		/* verify */
 		g_debug("%s: 0x%04x, 0x%04x",
-			g_variant_get_string(udi, NULL),
+			fwupd_variant_get_string(udi),
 			fu_device_get_vid(phys_device),
 			fu_device_get_pid(phys_device));
 		if (fu_device_get_vid(phys_device) == helper->vid &&

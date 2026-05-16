@@ -498,7 +498,7 @@ fu_volume_is_mdraid(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "MDRaid");
 	if (val == NULL)
 		return FALSE;
-	return g_strcmp0(g_variant_get_string(val, NULL), "/") != 0;
+	return g_strcmp0(fwupd_variant_get_string(val), "/") != 0;
 }
 
 static guint32
@@ -748,7 +748,7 @@ fu_volume_is_encrypted(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "CryptoBackingDevice");
 	if (val == NULL)
 		return FALSE;
-	if (g_strcmp0(g_variant_get_string(val, NULL), "/") == 0)
+	if (g_strcmp0(fwupd_variant_get_string(val), "/") == 0)
 		return FALSE;
 	return TRUE;
 }
@@ -846,7 +846,7 @@ fu_volume_get_id_type(FuVolume *self)
 	if (val == NULL)
 		return NULL;
 
-	return g_strdup(g_variant_get_string(val, NULL));
+	return g_strdup(fwupd_variant_get_string(val));
 }
 
 /**
