@@ -122,3 +122,22 @@ fwupd_variant_get_boolean(GVariant *value)
 		return g_variant_get_boolean(value); /* nocheck:blocked */
 	return FALSE;
 }
+
+/**
+ * fwupd_variant_get_strv:
+ * @value: a #GVariant
+ *
+ * Gets an array of strings from a variant.
+ *
+ * Returns: (transfer container): An array of constant strings
+ *
+ * Since: 2.1.4
+ **/
+const gchar **
+fwupd_variant_get_strv(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, NULL);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY))
+		return g_variant_get_strv(value, NULL); /* nocheck:blocked */
+	return NULL;
+}

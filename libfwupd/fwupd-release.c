@@ -1940,14 +1940,14 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CATEGORIES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_release_add_category(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_ISSUES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_release_add_issue(self, strv[i]);
 		return;
 	}
@@ -1961,14 +1961,14 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_LOCATIONS) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_release_add_location(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_TAGS) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_release_add_tag(self, strv[i]);
 		return;
 	}

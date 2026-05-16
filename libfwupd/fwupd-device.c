@@ -2553,21 +2553,21 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
-		g_autofree const gchar **guids = g_variant_get_strv(value, NULL);
-		for (guint i = 0; guids != NULL && guids[i] != NULL; i++)
-			fwupd_device_add_guid(self, guids[i]);
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
+			fwupd_device_add_guid(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_INSTANCE_IDS) == 0) {
-		g_autofree const gchar **instance_ids = g_variant_get_strv(value, NULL);
-		for (guint i = 0; instance_ids != NULL && instance_ids[i] != NULL; i++)
-			fwupd_device_add_instance_id(self, instance_ids[i]);
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
+			fwupd_device_add_instance_id(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_ICON) == 0) {
-		g_autofree const gchar **icons = g_variant_get_strv(value, NULL);
-		for (guint i = 0; icons != NULL && icons[i] != NULL; i++)
-			fwupd_device_add_icon(self, icons[i]);
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
+			fwupd_device_add_icon(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
@@ -2626,8 +2626,8 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_ISSUES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_device_add_issue(self, strv[i]);
 		return;
 	}

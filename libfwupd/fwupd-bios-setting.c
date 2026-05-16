@@ -924,8 +924,8 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_bios_setting_add_possible_value(self, strv[i]);
 		return;
 	}
