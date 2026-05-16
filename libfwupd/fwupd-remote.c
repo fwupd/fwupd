@@ -1753,7 +1753,7 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
 			fwupd_remote_set_checksum_sig(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Priority") == 0) {
-			priv->priority = g_variant_get_int32(value);
+			priv->priority = fwupd_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
 			priv->mtime = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "RefreshInterval") == 0) {
