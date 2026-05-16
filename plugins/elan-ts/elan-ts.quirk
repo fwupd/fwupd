@@ -1,0 +1,12 @@
+# Copyright 2026 Elan Microelectronics Corporation <paul.liang@emc.com.tw>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+[HIDRAW\VEN_04F3&DEV_2F6E]
+Plugin = elan_ts
+GType = FuElanTsHidDevice
+Name = Elan Touchscreen
+Icon = input-tablet
+Priority = 255
+Flags = is-visible,embedded,updatable
+
