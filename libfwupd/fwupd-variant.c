@@ -103,3 +103,22 @@ fwupd_variant_get_string(GVariant *value)
 		return g_variant_get_string(value, NULL); /* nocheck:blocked */
 	return NULL;
 }
+
+/**
+ * fwupd_variant_get_boolean:
+ * @value: a #GVariant
+ *
+ * Gets a boolean value from a variant.
+ *
+ * Returns: boolean, or %FALSE if not valid
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_variant_get_boolean(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, FALSE);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_BOOLEAN))
+		return g_variant_get_boolean(value); /* nocheck:blocked */
+	return FALSE;
+}
