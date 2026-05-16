@@ -942,7 +942,7 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY) == 0) {
-		fwupd_bios_setting_set_read_only(self, g_variant_get_boolean(value));
+		fwupd_bios_setting_set_read_only(self, fwupd_variant_get_boolean(value));
 		return;
 	}
 }

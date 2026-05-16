@@ -823,7 +823,7 @@ fu_volume_is_internal(FuVolume *self)
 	if (val_system == NULL)
 		return FALSE;
 
-	return g_variant_get_boolean(val_system);
+	return fwupd_variant_get_boolean(val_system);
 }
 
 /**
