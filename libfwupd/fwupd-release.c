@@ -2021,9 +2021,12 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
-		if (priv->metadata != NULL)
-			g_hash_table_unref(priv->metadata);
-		priv->metadata = fwupd_variant_to_hash_kv(value);
+		g_autoptr(GHashTable) hash = fwupd_variant_to_hash_kv(value);
+		if (hash != NULL) {
+			if (priv->metadata != NULL)
+				g_hash_table_unref(priv->metadata);
+			priv->metadata = g_steal_pointer(&hash);
+		}
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REPORTS) == 0) {
