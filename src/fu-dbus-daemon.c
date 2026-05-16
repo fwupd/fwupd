@@ -2413,8 +2413,13 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	/* get flags */
 	while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 		g_debug("got option %s", prop_key);
-		if (g_strcmp0(prop_key, "install-flags") == 0)
-			helper->flags = g_variant_get_uint64(prop_value);
+		if (g_strcmp0(prop_key, "install-flags") == 0) {
+			const guint64 allowed_mask =
+			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER |
+			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |
+			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
+			helper->flags = g_variant_get_uint64(prop_value) & allowed_mask;
+		}
 		g_variant_unref(prop_value);
 	}
 
