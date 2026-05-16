@@ -1440,8 +1440,8 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_security_attr_add_guid(self, strv[i]);
 		return;
 	}
