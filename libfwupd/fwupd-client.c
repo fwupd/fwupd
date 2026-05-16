@@ -600,7 +600,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "PercentageFull");
 		if (val != NULL)
-			fwupd_client_set_percentage(self, g_variant_get_double(val));
+			fwupd_client_set_percentage(self, fwupd_variant_get_double(val));
 	} else if (g_variant_dict_contains(dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
