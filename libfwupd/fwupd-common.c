@@ -445,39 +445,6 @@ fwupd_guid_hash_string(const gchar *str)
 	return fwupd_guid_hash_data((const guint8 *)str, strlen(str), FWUPD_GUID_FLAG_NONE);
 }
 
-/**
- * fwupd_hash_kv_to_variant: (skip):
- **/
-GVariant *
-fwupd_hash_kv_to_variant(GHashTable *hash)
-{
-	GVariantBuilder builder;
-	g_autoptr(GList) keys = g_hash_table_get_keys(hash);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup(hash, key);
-		g_variant_builder_add(&builder, "{ss}", key, value);
-	}
-	return g_variant_builder_end(&builder);
-}
-
-/**
- * fwupd_variant_to_hash_kv: (skip):
- **/
-GHashTable *
-fwupd_variant_to_hash_kv(GVariant *dict)
-{
-	GHashTable *hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	GVariantIter iter;
-	const gchar *key;
-	const gchar *value;
-	g_variant_iter_init(&iter, dict);
-	while (g_variant_iter_loop(&iter, "{&s&s}", &key, &value))
-		g_hash_table_insert(hash, g_strdup(key), g_strdup(value));
-	return hash;
-}
-
 #ifdef HAVE_GIO_UNIX
 /**
  * fwupd_unix_input_stream_from_bytes: (skip):
@@ -577,36 +544,6 @@ fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(fd, TRUE));
 }
 #endif
-
-/**
- * fwupd_variant_get_uint32: (skip):
- * @value: a #GVariant
- *
- * Gets an unsigned integer from a variant, handling both 'u' and 'i' types.
- **/
-guint32
-fwupd_variant_get_uint32(GVariant *value)
-{
-	g_return_val_if_fail(value != NULL, 0);
-	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT32))
-		return (guint32)g_variant_get_int32(value);
-	return g_variant_get_uint32(value);
-}
-
-/**
- * fwupd_variant_get_uint64: (skip):
- * @value: a #GVariant
- *
- * Gets an unsigned integer from a variant, handling both 't' and 'x' types.
- **/
-guint64
-fwupd_variant_get_uint64(GVariant *value)
-{
-	g_return_val_if_fail(value != NULL, 0);
-	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT64))
-		return (guint64)g_variant_get_int64(value);
-	return g_variant_get_uint64(value);
-}
 
 /**
  * fwupd_percentage_is_valid:

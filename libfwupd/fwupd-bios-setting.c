@@ -12,6 +12,7 @@
 #include "fwupd-error.h"
 #include "fwupd-json-array.h"
 #include "fwupd-json-object.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdBiosSetting:
@@ -895,7 +896,7 @@ static void
 fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVariant *value)
 {
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE) == 0) {
-		fwupd_bios_setting_set_kind(self, g_variant_get_uint64(value));
+		fwupd_bios_setting_set_kind(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ID) == 0) {
@@ -929,15 +930,15 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND) == 0) {
-		fwupd_bios_setting_set_lower_bound(self, g_variant_get_uint64(value));
+		fwupd_bios_setting_set_lower_bound(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND) == 0) {
-		fwupd_bios_setting_set_upper_bound(self, g_variant_get_uint64(value));
+		fwupd_bios_setting_set_upper_bound(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT) == 0) {
-		fwupd_bios_setting_set_scalar_increment(self, g_variant_get_uint64(value));
+		fwupd_bios_setting_set_scalar_increment(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY) == 0) {

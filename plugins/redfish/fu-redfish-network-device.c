@@ -47,7 +47,7 @@ fu_redfish_network_device_get_state(FuRedfishNetworkDevice *self,
 		return FALSE;
 	}
 	if (state != NULL)
-		*state = g_variant_get_uint32(retval);
+		*state = fwupd_variant_get_uint32(retval);
 	return TRUE;
 }
 

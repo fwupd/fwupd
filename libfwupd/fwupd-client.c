@@ -35,6 +35,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-variant.h"
 
 static void
 fwupd_client_fixup_dbus_error(GError *error);
@@ -577,7 +578,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Status");
 		if (val != NULL)
-			fwupd_client_set_status(self, g_variant_get_uint32(val));
+			fwupd_client_set_status(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
@@ -604,19 +605,19 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
 		if (val != NULL)
-			fwupd_client_set_percentage(self, g_variant_get_uint32(val));
+			fwupd_client_set_percentage(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_LEVEL)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_LEVEL);
 		if (val != NULL)
-			fwupd_client_set_battery_level(self, g_variant_get_uint32(val));
+			fwupd_client_set_battery_level(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_THRESHOLD)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_THRESHOLD);
 		if (val != NULL)
-			fwupd_client_set_battery_threshold(self, g_variant_get_uint32(val));
+			fwupd_client_set_battery_threshold(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
@@ -1023,7 +1024,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 		priv->tainted = g_variant_get_boolean(val2);
 	val3 = g_dbus_proxy_get_cached_property(priv->proxy, "Status");
 	if (val3 != NULL)
-		fwupd_client_set_status(self, g_variant_get_uint32(val3));
+		fwupd_client_set_status(self, fwupd_variant_get_uint32(val3));
 	val4 = g_dbus_proxy_get_cached_property(priv->proxy, "Interactive");
 	if (val4 != NULL)
 		priv->interactive = g_variant_get_boolean(val4);

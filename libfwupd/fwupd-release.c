@@ -16,6 +16,7 @@
 #include "fwupd-json-array.h"
 #include "fwupd-release.h"
 #include "fwupd-report.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdRelease:
@@ -1851,7 +1852,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
-				      fwupd_hash_kv_to_variant(priv->metadata));
+				      fwupd_variant_from_hash_kv(priv->metadata));
 	}
 	if (priv->install_duration > 0) {
 		g_variant_builder_add(builder,

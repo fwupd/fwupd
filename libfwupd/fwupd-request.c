@@ -9,6 +9,7 @@
 #include "fwupd-codec.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-request-private.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdRequest:
@@ -247,7 +248,7 @@ fwupd_request_from_key_value(FwupdRequest *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_request_set_created(self, g_variant_get_uint64(value));
+		fwupd_request_set_created(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DEVICE_ID) == 0) {
@@ -263,11 +264,11 @@ fwupd_request_from_key_value(FwupdRequest *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REQUEST_KIND) == 0) {
-		fwupd_request_set_kind(self, g_variant_get_uint32(value));
+		fwupd_request_set_kind(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_request_set_flags(self, g_variant_get_uint64(value));
+		fwupd_request_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 }

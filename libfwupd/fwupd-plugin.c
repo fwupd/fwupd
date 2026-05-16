@@ -12,6 +12,7 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-json-array.h"
 #include "fwupd-plugin.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdPlugin:
@@ -215,7 +216,7 @@ fwupd_plugin_from_key_value(FwupdPlugin *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_plugin_set_flags(self, g_variant_get_uint64(value));
+		fwupd_plugin_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 }

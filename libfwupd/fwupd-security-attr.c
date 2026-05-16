@@ -14,6 +14,7 @@
 #include "fwupd-error.h"
 #include "fwupd-json-array.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdSecurityAttr:
@@ -1299,7 +1300,7 @@ fwupd_security_attr_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwu
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
-				      fwupd_hash_kv_to_variant(priv->metadata));
+				      fwupd_variant_from_hash_kv(priv->metadata));
 	}
 	if (priv->bios_setting_id != NULL) {
 		g_variant_builder_add(builder,
@@ -1391,7 +1392,7 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_security_attr_set_created(self, g_variant_get_uint64(value));
+		fwupd_security_attr_set_created(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
@@ -1419,23 +1420,23 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_security_attr_set_flags(self, g_variant_get_uint64(value));
+		fwupd_security_attr_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_LEVEL) == 0) {
-		fwupd_security_attr_set_level(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_level(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
-		fwupd_security_attr_set_result(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_result(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK) == 0) {
-		fwupd_security_attr_set_result_fallback(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_result_fallback(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS) == 0) {
-		fwupd_security_attr_set_result_success(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_result_success(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {

@@ -30,6 +30,7 @@
 #include <libfwupd/fwupd-report.h>
 #include <libfwupd/fwupd-request.h>
 #include <libfwupd/fwupd-security-attr.h>
+#include <libfwupd/fwupd-variant.h>
 #include <libfwupd/fwupd-version.h>
 
 #undef __FWUPD_H_INSIDE__
