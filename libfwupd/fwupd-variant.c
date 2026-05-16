@@ -31,14 +31,21 @@ fwupd_variant_from_hash_kv(GHashTable *hash)
 GHashTable *
 fwupd_variant_to_hash_kv(GVariant *dict)
 {
-	GHashTable *hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	GVariantIter iter;
 	const gchar *key;
 	const gchar *value;
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	g_return_val_if_fail(dict != NULL, NULL);
+
+	/* sanity check */
+	if (!g_variant_is_of_type(dict, G_VARIANT_TYPE("a{ss}")))
+		return NULL;
+
 	g_variant_iter_init(&iter, dict);
 	while (g_variant_iter_loop(&iter, "{&s&s}", &key, &value))
 		g_hash_table_insert(hash, g_strdup(key), g_strdup(value));
-	return hash;
+	return g_steal_pointer(&hash);
 }
 
 /**

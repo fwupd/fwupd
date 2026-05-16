@@ -1729,33 +1729,14 @@ fwupd_client_get_host_security_events_finish(FwupdClient *self, GAsyncResult *re
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
-static GHashTable *
-fwupd_client_report_metadata_hash_from_variant(GVariant *value)
-{
-	GHashTable *hash;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		g_autoptr(GVariant) data = NULL;
-		const gchar *key = NULL;
-		const gchar *val = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		g_variant_get(data, "{&s&s}", &key, &val);
-		g_hash_table_insert(hash, g_strdup(key), g_strdup(val));
-	}
-	return hash;
-}
-
 static void
 fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GVariant) untuple = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
@@ -1763,11 +1744,25 @@ fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	if (!g_variant_is_of_type(val, G_VARIANT_TYPE("(a{ss})"))) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INTERNAL,
+						"invalid GVariant");
+		return;
+	}
+	untuple = g_variant_get_child_value(val, 0);
+	hash = fwupd_variant_to_hash_kv(untuple);
+	if (hash == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INTERNAL,
+						"invalid hash");
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_client_report_metadata_hash_from_variant(val),
-			      (GDestroyNotify)g_hash_table_unref);
+	g_task_return_pointer(task, g_steal_pointer(&hash), (GDestroyNotify)g_hash_table_unref);
 }
 
 /**
