@@ -63,6 +63,25 @@ fwupd_variant_get_uint32(GVariant *value)
 }
 
 /**
+ * fwupd_variant_get_int32:
+ * @value: a #GVariant
+ *
+ * Gets an signed integer from a variant.
+ *
+ * Returns: integer, or 0 if not valid
+ *
+ * Since: 2.1.4
+ **/
+gint32
+fwupd_variant_get_int32(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, 0);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT32))
+		return g_variant_get_int32(value); /* nocheck:blocked */
+	return 0;
+}
+
+/**
  * fwupd_variant_get_uint64:
  * @value: a #GVariant
  *

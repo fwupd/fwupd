@@ -26,5 +26,7 @@ const gchar **
 fwupd_variant_get_strv(GVariant *value) G_GNUC_NON_NULL(1);
 gdouble
 fwupd_variant_get_double(GVariant *value) G_GNUC_NON_NULL(1);
+gint32
+fwupd_variant_get_int32(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS
