@@ -273,7 +273,7 @@ fu_volume_get_size(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Size");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint64(val);
+	return fwupd_variant_get_uint64(val);
 }
 
 /**
@@ -298,7 +298,7 @@ fu_volume_get_partition_size(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Size");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint64(val);
+	return fwupd_variant_get_uint64(val);
 }
 
 /**
@@ -323,7 +323,7 @@ fu_volume_get_partition_offset(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Offset");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint64(val);
+	return fwupd_variant_get_uint64(val);
 }
 
 /**
@@ -348,7 +348,7 @@ fu_volume_get_partition_number(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Number");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint32(val);
+	return fwupd_variant_get_uint32(val);
 }
 
 /**
@@ -1228,7 +1228,7 @@ fu_volume_new_by_devnum(guint32 devnum, GError **error)
 		val = g_dbus_proxy_get_cached_property(proxy_blk, "DeviceNumber");
 		if (val == NULL)
 			continue;
-		if (devnum == g_variant_get_uint64(val)) {
+		if (devnum == fwupd_variant_get_uint64(val)) {
 			return g_object_new(FU_TYPE_VOLUME, "proxy-block", proxy_blk, NULL);
 		}
 	}

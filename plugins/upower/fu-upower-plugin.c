@@ -27,7 +27,7 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 
 	/* check that we "have" a battery */
 	type_val = g_dbus_proxy_get_cached_property(self->proxy, "Type");
-	if (type_val == NULL || g_variant_get_uint32(type_val) == 0) {
+	if (type_val == NULL || fwupd_variant_get_uint32(type_val) == 0) {
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
@@ -43,7 +43,7 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 
 	/* get state */
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
-	if (state_val == NULL || g_variant_get_uint32(state_val) == 0) {
+	if (state_val == NULL || fwupd_variant_get_uint32(state_val) == 0) {
 		g_warning("failed to query power state");
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 	}

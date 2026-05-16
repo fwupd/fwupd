@@ -1185,5 +1185,7 @@ LIBFWUPD_2.1.4 {
   global:
     fwupd_remote_load_user_secrets;
     fwupd_remote_save_user_secrets;
+    fwupd_variant_get_uint32;
+    fwupd_variant_get_uint64;
   local: *;
 } LIBFWUPD_2.1.3;

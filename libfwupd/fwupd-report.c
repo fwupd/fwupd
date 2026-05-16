@@ -14,6 +14,7 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-json-array.h"
 #include "fwupd-report.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdReport:
@@ -534,7 +535,7 @@ fwupd_report_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
-				      fwupd_hash_kv_to_variant(priv->metadata));
+				      fwupd_variant_from_hash_kv(priv->metadata));
 	}
 	if (priv->flags > 0) {
 		g_variant_builder_add(builder,
@@ -565,7 +566,7 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
-		fwupd_report_set_vendor_id(self, g_variant_get_uint32(value));
+		fwupd_report_set_vendor_id(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
@@ -573,7 +574,7 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_report_set_created(self, g_variant_get_uint64(value));
+		fwupd_report_set_created(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_OLD) == 0) {
@@ -585,7 +586,7 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_report_set_flags(self, g_variant_get_uint64(value));
+		fwupd_report_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
