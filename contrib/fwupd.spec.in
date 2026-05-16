@@ -65,6 +65,9 @@ BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
 BuildRequires: libusb1-devel >= %{libusb_version}
 BuildRequires: libcurl-devel >= %{libcurl_version}
+%if 0%{?libfwupd_19x_version}
+BuildRequires: libjcat-devel
+%endif
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: python3-packaging
 BuildRequires: python3-jinja2
