@@ -16,6 +16,7 @@
 #include "fwupd-error.h"
 #include "fwupd-json-array.h"
 #include "fwupd-json-object.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdDevice:

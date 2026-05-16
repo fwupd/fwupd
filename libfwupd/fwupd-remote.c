@@ -15,6 +15,7 @@
 #include "fwupd-jcat-blob.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdRemote:
