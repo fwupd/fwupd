@@ -47,7 +47,7 @@ fwupd_variant_to_hash_kv(GVariant *dict)
  *
  * Gets an unsigned integer from a variant, handling both 'u' and 'i' types.
  *
- * Returns: integer
+ * Returns: integer, or 0 if not valid
  *
  * Since: 2.1.4
  **/
@@ -56,8 +56,10 @@ fwupd_variant_get_uint32(GVariant *value)
 {
 	g_return_val_if_fail(value != NULL, 0);
 	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT32))
-		return (guint32)g_variant_get_int32(value); /* nocheck:blocked */
-	return g_variant_get_uint32(value);
+		return (guint32)MAX(g_variant_get_int32(value), 0); /* nocheck:blocked */
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_UINT32))
+		return g_variant_get_uint32(value);
+	return 0;
 }
 
 /**
@@ -66,7 +68,7 @@ fwupd_variant_get_uint32(GVariant *value)
  *
  * Gets an unsigned integer from a variant, handling both 't' and 'x' types.
  *
- * Returns: integer
+ * Returns: integer, or 0 if not valid
  *
  * Since: 2.1.4
  **/
@@ -75,6 +77,8 @@ fwupd_variant_get_uint64(GVariant *value)
 {
 	g_return_val_if_fail(value != NULL, 0);
 	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT64))
-		return (guint64)g_variant_get_int64(value); /* nocheck:blocked */
-	return g_variant_get_uint64(value);
+		return (guint64)MAX(g_variant_get_int64(value), 0); /* nocheck:blocked */
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_UINT64))
+		return g_variant_get_uint64(value);
+	return 0;
 }
