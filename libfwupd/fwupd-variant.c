@@ -141,3 +141,22 @@ fwupd_variant_get_strv(GVariant *value)
 		return g_variant_get_strv(value, NULL); /* nocheck:blocked */
 	return NULL;
 }
+
+/**
+ * fwupd_variant_get_double:
+ * @value: a #GVariant
+ *
+ * Gets a double from a variant.
+ *
+ * Returns: boolean, or -1 if not valid
+ *
+ * Since: 2.1.4
+ **/
+gdouble
+fwupd_variant_get_double(GVariant *value)
+{
+	g_return_val_if_fail(value != NULL, -1.0);
+	if (g_variant_is_of_type(value, G_VARIANT_TYPE_DOUBLE))
+		return g_variant_get_double(value); /* nocheck:blocked */
+	return -1.0;
+}

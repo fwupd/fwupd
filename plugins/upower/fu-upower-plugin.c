@@ -39,7 +39,7 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
-	fu_context_set_battery_level(ctx, g_variant_get_double(percentage_val));
+	fu_context_set_battery_level(ctx, fwupd_variant_get_double(percentage_val));
 
 	/* get state */
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
