@@ -584,7 +584,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Tainted");
 		if (val != NULL) {
-			priv->tainted = g_variant_get_boolean(val);
+			priv->tainted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "tainted");
 		}
 	}
@@ -592,7 +592,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Interactive");
 		if (val != NULL) {
-			priv->interactive = g_variant_get_boolean(val);
+			priv->interactive = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "interactive");
 		}
 	}
@@ -658,7 +658,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "OnlyTrusted");
 		if (val != NULL) {
-			priv->only_trusted = g_variant_get_boolean(val);
+			priv->only_trusted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "only-trusted");
 		}
 	}
@@ -1021,13 +1021,13 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 		fwupd_client_set_daemon_version(self, fwupd_variant_get_string(val));
 	val2 = g_dbus_proxy_get_cached_property(priv->proxy, "Tainted");
 	if (val2 != NULL)
-		priv->tainted = g_variant_get_boolean(val2);
+		priv->tainted = fwupd_variant_get_boolean(val2);
 	val3 = g_dbus_proxy_get_cached_property(priv->proxy, "Status");
 	if (val3 != NULL)
 		fwupd_client_set_status(self, fwupd_variant_get_uint32(val3));
 	val4 = g_dbus_proxy_get_cached_property(priv->proxy, "Interactive");
 	if (val4 != NULL)
-		priv->interactive = g_variant_get_boolean(val4);
+		priv->interactive = fwupd_variant_get_boolean(val4);
 	val5 = g_dbus_proxy_get_cached_property(priv->proxy, "HostProduct");
 	if (val5 != NULL)
 		fwupd_client_set_host_product(self, fwupd_variant_get_string(val5));
@@ -1045,7 +1045,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 		fwupd_client_set_host_bkc(self, fwupd_variant_get_string(val8));
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
 	if (val9 != NULL)
-		priv->only_trusted = g_variant_get_boolean(val9);
+		priv->only_trusted = fwupd_variant_get_boolean(val9);
 
 	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
 	if (val_hwids != NULL) {
