@@ -690,6 +690,11 @@
       <package>libxmlb</package>
     </distro>
   </dependency>
+  <dependency id="libjcat-dev">
+    <distro id="centos">
+      <package variant="x86_64">libjcat-devel</package>
+    </distro>
+  </dependency>
   <dependency id="libblkid-dev">
     <distro id="arch">
       <package variant="x86_64">util-linux-libs</package>
