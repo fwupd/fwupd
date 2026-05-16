@@ -1880,43 +1880,43 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
-		fwupd_release_set_remote_id(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_remote_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
-		fwupd_release_set_appstream_id(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_appstream_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_RELEASE_ID) == 0) {
-		fwupd_release_set_id(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETACH_CAPTION) == 0) {
-		fwupd_release_set_detach_caption(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_detach_caption(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETACH_IMAGE) == 0) {
-		fwupd_release_set_detach_image(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_detach_image(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FILENAME) == 0) {
-		fwupd_release_set_filename(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_filename(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
-		fwupd_release_set_protocol(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_protocol(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_LICENSE) == 0) {
-		fwupd_release_set_license(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_license(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_release_set_name(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_name(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX) == 0) {
-		fwupd_release_set_name_variant_suffix(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_name_variant_suffix(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SIZE) == 0) {
@@ -1928,15 +1928,15 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
-		fwupd_release_set_summary(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_summary(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BRANCH) == 0) {
-		fwupd_release_set_branch(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_branch(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
-		fwupd_release_set_description(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_description(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CATEGORIES) == 0) {
@@ -1952,10 +1952,12 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-		const gchar *checksums = g_variant_get_string(value, NULL);
-		g_auto(GStrv) split = g_strsplit(checksums, ",", -1);
-		for (guint i = 0; split[i] != NULL; i++)
-			fwupd_release_add_checksum(self, split[i]);
+		const gchar *str = fwupd_variant_get_string(value);
+		if (str != NULL) {
+			g_auto(GStrv) split = g_strsplit(str, ",", -1);
+			for (guint i = 0; split[i] != NULL; i++)
+				fwupd_release_add_checksum(self, split[i]);
+		}
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_LOCATIONS) == 0) {
@@ -1971,31 +1973,31 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
-		fwupd_release_add_location(self, g_variant_get_string(value, NULL));
+		fwupd_release_add_location(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
-		fwupd_release_set_homepage(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_homepage(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETAILS_URL) == 0) {
-		fwupd_release_set_details_url(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_details_url(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SOURCE_URL) == 0) {
-		fwupd_release_set_source_url(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_source_url(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SBOM_URL) == 0) {
-		fwupd_release_set_sbom_url(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_sbom_url(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
-		fwupd_release_set_version(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_version(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR) == 0) {
-		fwupd_release_set_vendor(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_vendor(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
@@ -2011,11 +2013,11 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
-		fwupd_release_set_update_message(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_update_message(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
-		fwupd_release_set_update_image(self, g_variant_get_string(value, NULL));
+		fwupd_release_set_update_image(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {

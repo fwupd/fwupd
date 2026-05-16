@@ -550,19 +550,19 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 {
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DISTRO_ID) == 0) {
-		fwupd_report_set_distro_id(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_distro_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DISTRO_VARIANT) == 0) {
-		fwupd_report_set_distro_variant(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_distro_variant(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DISTRO_VERSION) == 0) {
-		fwupd_report_set_distro_version(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_distro_version(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR) == 0) {
-		fwupd_report_set_vendor(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_vendor(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
@@ -570,7 +570,7 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DEVICE_NAME) == 0) {
-		fwupd_report_set_device_name(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_device_name(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
@@ -578,11 +578,11 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_OLD) == 0) {
-		fwupd_report_set_version_old(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_version_old(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
-		fwupd_report_set_remote_id(self, g_variant_get_string(value, NULL));
+		fwupd_report_set_remote_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {

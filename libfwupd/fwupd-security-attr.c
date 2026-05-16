@@ -1388,7 +1388,7 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
-		fwupd_security_attr_set_appstream_id(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_appstream_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
@@ -1396,27 +1396,27 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_security_attr_set_name(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_name(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
-		fwupd_security_attr_set_title(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_title(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
-		fwupd_security_attr_set_description(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_description(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
-		fwupd_security_attr_set_plugin(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_plugin(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
-		fwupd_security_attr_set_fwupd_version(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_fwupd_version(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
-		fwupd_security_attr_set_url(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_url(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
@@ -1452,29 +1452,25 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ID) == 0) {
-		fwupd_security_attr_set_bios_setting_id(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_bios_setting_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE) == 0) {
-		fwupd_security_attr_set_bios_setting_target_value(
-		    self,
-		    g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_bios_setting_target_value(self,
+								  fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE) == 0) {
-		fwupd_security_attr_set_bios_setting_current_value(
-		    self,
-		    g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_bios_setting_current_value(self,
+								   fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE) == 0) {
-		fwupd_security_attr_set_kernel_current_value(self,
-							     g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_kernel_current_value(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE) == 0) {
-		fwupd_security_attr_set_kernel_target_value(self,
-							    g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_kernel_target_value(self, fwupd_variant_get_string(value));
 		return;
 	}
 }
