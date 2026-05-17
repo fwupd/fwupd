@@ -5,7 +5,7 @@ title: Plugin: Star Labs Coreboot
 ## Introduction
 
 The plugin exports a device that informs Star Labs users that they need to update their firmware
-manually before it cab be updatable by fwupd via MTD.
+manually before it can be updatable by fwupd via MTD.
 
 ## Version Considerations
 
