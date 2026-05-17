@@ -1,0 +1,3 @@
+# Manufacturer="Star Labs", BiosVendor="coreboot"
+[b8cf5af6-8a46-5deb-ac01-a35b1ea5fb48]
+Plugin = starlabs_coreboot

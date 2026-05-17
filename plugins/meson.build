@@ -118,6 +118,7 @@ plugins = {
   'redfish': false,
   'rp-pico': false,
   'rts54hub': false,
+  'starlabs-coreboot': false,
   'steelseries': false,
   'sunplus-camera': false,
   'scsi': false,
