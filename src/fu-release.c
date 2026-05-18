@@ -318,6 +318,17 @@ fu_release_set_config(FuRelease *self, FuEngineConfig *config)
 	g_set_object(&self->config, config);
 }
 
+static gboolean
+fu_release_locale_is_valid(const gchar *locale)
+{
+	/* locale should only contain alphanumeric, underscore, hyphen */
+	for (gsize i = 0; locale[i] != '\0'; i++) {
+		if (!g_ascii_isalnum(locale[i]) && locale[i] != '_' && locale[i] != '-')
+			return FALSE;
+	}
+	return TRUE;
+}
+
 static gchar *
 fu_release_get_localized_xpath(FuRelease *self, const gchar *element)
 {
@@ -329,7 +340,7 @@ fu_release_get_localized_xpath(FuRelease *self, const gchar *element)
 		locale = fu_engine_request_get_locale(self->request);
 
 	/* prefer the users locale if set */
-	if (locale != NULL) {
+	if (locale != NULL && fu_release_locale_is_valid(locale)) {
 		g_autofree gchar *xpath_locale = NULL;
 		xpath_locale = g_strdup_printf("%s[@xml:lang='%s']|", element, locale);
 		g_string_prepend(xpath, xpath_locale);
