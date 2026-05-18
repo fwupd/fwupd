@@ -674,20 +674,30 @@ fu_lenovo_dock_device_load_usage_from_firmware(FuLenovoDockDevice *self,
 	}
 	if (self->st_usage != NULL)
 		fu_struct_lenovo_dock_usage_unref(self->st_usage);
-	self->st_usage = fu_struct_lenovo_dock_usage_ref(st_usage);
+	self->st_usage =
+	    fu_struct_lenovo_dock_usage_parse(st_usage->buf->data, st_usage->buf->len, 0x0, error);
+	if (self->st_usage == NULL)
+		return FALSE;
 	/* Mirror package signing metadata now that package usage info is the source of truth. */
 	if (fu_struct_lenovo_dock_usage_get_dsa(st_usage) != FU_LENOVO_DOCK_DSA_TYPE_NONE)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	else
-		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	g_ptr_array_set_size(self->st_usage_items, 0);
 	for (guint i = 0; i < st_usage_items->len; i++) {
 		FuStructLenovoDockUsageItem *st_usage_item = g_ptr_array_index(st_usage_items, i);
-		g_ptr_array_add(self->st_usage_items, fu_struct_lenovo_dock_usage_item_ref(st_usage_item));
+		g_autoptr(FuStructLenovoDockUsageItem) st_usage_item_copy = NULL;
+		st_usage_item_copy = fu_struct_lenovo_dock_usage_item_parse(st_usage_item->buf->data,
+							   st_usage_item->buf->len,
+							   0x0,
+							   error);
+		if (st_usage_item_copy == NULL)
+			return FALSE;
+		g_ptr_array_add(self->st_usage_items,
+				fu_struct_lenovo_dock_usage_item_ref(st_usage_item_copy));
 	}
 	return TRUE;
 }
-
 static gboolean
 fu_lenovo_dock_device_get_component_attrs(FuLenovoDockDevice *self,
 					  FuLenovoDockComponentId component_id,
