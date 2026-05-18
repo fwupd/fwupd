@@ -1424,7 +1424,7 @@ fu_engine_verify_update(FuEngine *self,
 	localstatedir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, error);
 	if (localstatedir == NULL)
 		return FALSE;
-	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, device_id);
+	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, fu_device_get_id(device));
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	file = g_file_new_for_path(fn);
