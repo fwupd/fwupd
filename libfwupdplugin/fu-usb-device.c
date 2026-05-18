@@ -87,6 +87,8 @@ static guint quarks[QUARK_LAST] = {0};
 #define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
 #define FU_USB_DEVICE_OPEN_DELAY	50  /* ms */
 
+#define FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX (64 * FU_KB) /* bytes */
+
 static gboolean
 fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
 {
@@ -1822,6 +1824,16 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 	gsize offset = 0;
 	g_autoptr(FuUsbDeviceHdr) st = NULL;
 	g_autoptr(FuUsbInterface) iface_last = NULL;
+
+	/* sanity check */
+	if (g_bytes_get_size(blob) > FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "USB descriptor was too large: limit is 0x%x bytes",
+			    (guint)FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX);
+		return FALSE;
+	}
 
 	st = fu_usb_device_hdr_parse_bytes(blob, offset, error);
 	if (st == NULL)
