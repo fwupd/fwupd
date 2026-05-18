@@ -791,10 +791,6 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* device can self-reboot */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-
 	/* success */
 	return TRUE;
 }
@@ -838,9 +834,7 @@ fu_usi_dock_mcu_device_reload(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	/* device can self-reboot */
-	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
-		return TRUE;
+	fu_progress_sleep_idle(progress, 900000);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
@@ -900,6 +894,8 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
+	fu_progress_sleep_idle(progress, 180000);
+
 	/* interactive request to start the SPI write */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
@@ -940,11 +936,11 @@ static void
 fu_usi_dock_mcu_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 48, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 52, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 2, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 30, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 49, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 21, "reload");
 }
 
 static void
