@@ -16,6 +16,8 @@ Vendor = Elan
 Vendor = Novatek
 [USB\VID_06CB]
 Vendor = Synaptics
+[USB\VID_093A]
+Vendor = Pixart
 [USB\VID_10AB]
 Vendor = USI
 [USB\VID_1BCF]
