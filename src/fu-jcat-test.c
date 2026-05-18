@@ -579,7 +579,6 @@ fu_jcat_context_verify_item_target_func(void)
 	g_autoptr(FwupdJcatItem) item_target = fwupd_jcat_item_new("filename.bin");
 	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
 	g_autoptr(FuJcatEngine) engine_sha256 = NULL;
-	g_autoptr(GPtrArray) results_fail = NULL;
 	g_autoptr(GPtrArray) results_pass = NULL;
 
 	/* set up context */
@@ -648,7 +647,6 @@ fu_jcat_context_verify_item_csum_func(void)
 	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
 	g_autoptr(FuJcatEngine) engine1 = NULL;
 	g_autoptr(FuJcatEngine) engine3 = NULL;
-	g_autoptr(FuJcatEngine) engine4 = NULL;
 	g_autoptr(GPtrArray) results_fail = NULL;
 	g_autoptr(GPtrArray) results_pass = NULL;
 	const gchar *sig_actual =
