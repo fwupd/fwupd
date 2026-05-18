@@ -19,10 +19,10 @@ jobs:
           - { DISTRO: arch, ARCH: amd64 }
           - { DISTRO: centos, ARCH: amd64 }
           - { DISTRO: debian, ARCH: amd64 }
-          # - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
-          # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
           - { DISTRO: debian, ARCH: arm64 }
-          # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
@@ -53,10 +53,13 @@ jobs:
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ join(matrix.env.*, '-') }}
-          path: ${{ github.workspace }}/dist/*
+          path: |
+            ${{ github.workspace }}/build/meson-logs/scanbuild/*
+            ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
@@ -85,7 +88,11 @@ jobs:
           name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.env.VARIANT == null && (matrix.env.DISTRO == 'debian' || matrix.env.DISTRO == 'arch')
+        if: steps.supported.outputs.supported == 'true' &&
+          matrix.env.VARIANT != 'tartan' && (
+          matrix.env.DISTRO == 'arch' ||
+          matrix.env.DISTRO == 'debian' ||
+          matrix.env.DISTRO == 'fedora')
         uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
