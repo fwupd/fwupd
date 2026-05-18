@@ -42,6 +42,23 @@ class FwupdReceiveUpdates:
             self.clean_cache()
             raise ValueError(f"Computed checksum {c_sha} did NOT match {sha}.")
 
+    def _jcat_minimal_verification_pass(self, verification_output):
+        """Return True if at least sha256 plus one pkcs7 entry passed.
+        The verification will fail if post quantum signing algorithms
+        are not supported.
+        """
+        passed = set()
+        for line in verification_output.splitlines():
+            line = line.strip()
+            if line.startswith("PASSED "):
+                kind = line.split()[1].rstrip(":")
+                passed.add(kind)
+            elif line.startswith("FAILED ") and "FAILED: " not in line:
+                # A specific entry failed — only tolerate unsupported-algorithm
+                if "[-89]" not in line:
+                    return False
+        return "sha256" in passed and "pkcs7" in passed
+
     def _jcat_verification(self, file_path, file_directory):
         """Verifies SHA1+SHA256 checksum and PKCS#7 signature.
 
@@ -51,15 +68,27 @@ class FwupdReceiveUpdates:
         """
         assert file_path.startswith("/"), f"bad file path {file_path!r}"
         cmd_jcat = ["jcat-tool", "verify", file_path, "--public-keys", FWUPD_PKI]
+        environ = os.environ.copy()
+        environ["LC_ALL"] = "C"
         p = subprocess.Popen(
-            cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environ
         )
-        stdout, __ = p.communicate()
+        stdout, stderr = p.communicate()
         verification = stdout.decode("utf-8")
         print(verification)
         if p.returncode != 0:
+            if self._jcat_minimal_verification_pass(verification):
+                return
             self.clean_cache()
-            raise Exception("jcat-tool: Verification failed")
+            stderr_str = stderr.decode()
+            if "SignatureNotValidYet" in stderr_str:
+                raise Exception(
+                    "PGP signature creation time is in the"
+                    " future (update-vm clock may be out of sync).\n"
+                    "Run /usr/bin/qvm-sync-clock to update the time.\n" + stderr_str
+                )
+            else:
+                raise Exception("jcat-tool: Verification failed")
 
     def handle_fw_update(self, updatevm, sha, filename):
         """Copies firmware update archives from the updateVM.
