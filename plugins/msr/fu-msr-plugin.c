@@ -592,44 +592,27 @@ fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 	return fu_kernel_check_version(min, error);
 }
 
-static gboolean
-fu_msr_plugin_kernel_enabled_sme(FuMsrPlugin *self, GError **error)
-{
-	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
-	FuPathStore *pstore = fu_context_get_path_store(ctx);
-	const gchar *flags;
-	g_autoptr(GHashTable) cpu_attrs = NULL;
-
-	cpu_attrs = fu_cpu_get_attrs(pstore, error);
-	if (cpu_attrs == NULL)
-		return FALSE;
-	flags = g_hash_table_lookup(cpu_attrs, "flags");
-	if (flags != NULL) {
-		g_auto(GStrv) tokens = g_strsplit(flags, " ", -1);
-		for (guint i = 0; tokens[i] != NULL; i++) {
-			if (g_strcmp0(tokens[i], "sme") == 0)
-				return TRUE;
-		}
-	}
-
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "sme support not enabled by kernel");
-	return FALSE;
-}
-
 static void
 fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_existing = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
 		return;
+
+	/* if pci_psp has already verified TSME is active, skip our check */
+	attr_existing =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM, NULL);
+	if (attr_existing != NULL &&
+	    fwupd_security_attr_has_flag(attr_existing, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring: TSME already verified by pci_psp");
+		return;
+	}
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
@@ -657,14 +640,7 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 		return;
 	}
 
-	if (!(fu_msr_plugin_kernel_enabled_sme(self, &error_local))) {
-		g_debug("%s", error_local->message);
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
-		return;
-	}
-
-	/* success */
+	/* success: SMEE hardware bit is set and kernel is new enough to read it reliably */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_obsolete(attr, "pci_psp");
 }

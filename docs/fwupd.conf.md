@@ -287,7 +287,7 @@ The `[msr]` section can contain the following parameter:
 
 **MinimumSmeKernelVersion={{msr_MinimumSmeKernelVersion}}**
 
-  Minimum kernel version to allow probing for sme flag.
+  Minimum kernel version required for reliable AMD SME detection via the SYSCFG MSR.
 
   This only needs to be modified by enterprise kernels that have cherry picked the feature into a
   kernel with an old version number.
