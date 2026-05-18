@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-lenovo-dock-struct.h"
+
 #define FU_TYPE_LENOVO_DOCK_FIRMWARE (fu_lenovo_dock_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuLenovoDockFirmware,
 		     fu_lenovo_dock_firmware,
@@ -19,3 +21,9 @@ G_DECLARE_FINAL_TYPE(FuLenovoDockFirmware,
 
 guint16
 fu_lenovo_dock_firmware_get_pid(FuLenovoDockFirmware *self);
+
+FuStructLenovoDockUsage *
+fu_lenovo_dock_firmware_get_usage(FuLenovoDockFirmware *self);
+
+GPtrArray *
+fu_lenovo_dock_firmware_get_usage_items(FuLenovoDockFirmware *self);

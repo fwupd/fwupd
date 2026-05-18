@@ -15,6 +15,8 @@
 struct _FuLenovoDockFirmware {
 	FuFirmware parent_instance;
 	guint16 pid;
+	FuStructLenovoDockUsage *st_usage;
+	GPtrArray *st_usage_items;
 };
 
 G_DEFINE_TYPE(FuLenovoDockFirmware, fu_lenovo_dock_firmware, FU_TYPE_FIRMWARE)
@@ -61,8 +63,6 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 		return FALSE;
 	}
 	target_size = fu_struct_lenovo_dock_usage_item_get_target_size(st_item);
-	if (target_size == 0)
-		return TRUE;
 	if (target_size > max_size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -71,6 +71,11 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 			    target_size,
 			    max_size);
 		return FALSE;
+	}
+	/* Preserve zero-sized items so package-driven lookups still match total_number. */
+	if (target_size == 0) {
+		g_ptr_array_add(self->st_usage_items, fu_struct_lenovo_dock_usage_item_ref(st_item));
+		return TRUE;
 	}
 
 	fu_firmware_set_idx(img, component_id);
@@ -122,6 +127,8 @@ fu_lenovo_dock_firmware_parse_image(FuLenovoDockFirmware *self,
 		}
 	}
 	fu_lenovo_dock_image_set_crc(FU_LENOVO_DOCK_IMAGE(img), target_crc32);
+	/* Cache package items so write_firmware can rebuild usage info from the package. */
+	g_ptr_array_add(self->st_usage_items, fu_struct_lenovo_dock_usage_item_ref(st_item));
 
 	/* success */
 	return TRUE;
@@ -156,6 +163,11 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 	st = fu_struct_lenovo_dock_usage_parse_stream(stream_usage, offset, error);
 	if (st == NULL)
 		return FALSE;
+	/* Keep the package usage header so recovery can rebuild from package metadata. */
+	if (self->st_usage != NULL)
+		fu_struct_lenovo_dock_usage_unref(self->st_usage);
+	self->st_usage = fu_struct_lenovo_dock_usage_ref(st);
+	g_ptr_array_set_size(self->st_usage_items, 0);
 	self->pid = fu_struct_lenovo_dock_usage_get_pid(st);
 	fu_firmware_set_version_raw(firmware,
 				    fu_struct_lenovo_dock_usage_get_composite_version(st));
@@ -187,6 +199,20 @@ fu_lenovo_dock_firmware_get_pid(FuLenovoDockFirmware *self)
 	return self->pid;
 }
 
+FuStructLenovoDockUsage *
+fu_lenovo_dock_firmware_get_usage(FuLenovoDockFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_LENOVO_DOCK_FIRMWARE(self), NULL);
+	return self->st_usage;
+}
+
+GPtrArray *
+fu_lenovo_dock_firmware_get_usage_items(FuLenovoDockFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_LENOVO_DOCK_FIRMWARE(self), NULL);
+	return self->st_usage_items;
+}
+
 static gchar *
 fu_lenovo_dock_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
@@ -199,6 +225,8 @@ fu_lenovo_dock_firmware_convert_version(FuFirmware *firmware, guint64 version_ra
 static void
 fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 {
+	self->st_usage_items =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_lenovo_dock_usage_item_unref);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
@@ -208,9 +236,22 @@ fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 }
 
 static void
+fu_lenovo_dock_firmware_finalize(GObject *object)
+{
+	FuLenovoDockFirmware *self = FU_LENOVO_DOCK_FIRMWARE(object);
+	if (self->st_usage != NULL)
+		fu_struct_lenovo_dock_usage_unref(self->st_usage);
+	if (self->st_usage_items != NULL)
+		g_ptr_array_unref(self->st_usage_items);
+	G_OBJECT_CLASS(fu_lenovo_dock_firmware_parent_class)->finalize(object);
+}
+
+static void
 fu_lenovo_dock_firmware_class_init(FuLenovoDockFirmwareClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	object_class->finalize = fu_lenovo_dock_firmware_finalize;
 	firmware_class->parse = fu_lenovo_dock_firmware_parse;
 	firmware_class->export = fu_lenovo_dock_firmware_export;
 	firmware_class->convert_version = fu_lenovo_dock_firmware_convert_version;
