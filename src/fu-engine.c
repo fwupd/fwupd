@@ -7069,15 +7069,21 @@ static gboolean
 fu_engine_plugin_check_supported_cb(FuPlugin *plugin, const gchar *guid, FuEngine *self)
 {
 	g_autoptr(XbNode) n = NULL;
-	g_autofree gchar *xpath = NULL;
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 
 	if (fu_engine_config_get_enumerate_all_devices(self->config))
 		return TRUE;
 
-	xpath = g_strdup_printf("components/component[@type='firmware']/"
-				"provides/firmware[@type='flashed'][text()='%s']",
-				guid);
-	n = xb_silo_query_first(self->silo, xpath, NULL);
+	/* no components in silo */
+	if (self->query_component_by_guid == NULL) {
+		g_debug("no components in silo");
+		return FALSE;
+	}
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
+	n = xb_silo_query_first_with_context(self->silo,
+					     self->query_component_by_guid,
+					     &context,
+					     NULL);
 	return n != NULL;
 }
 
