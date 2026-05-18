@@ -1,0 +1,3 @@
+# Manufacturer="Star Labs", ProductName="StarBook", BiosVendor="coreboot"
+[f919ce8e-f35e-5e5a-ac02-c4196ed84c17]
+Plugin = starlabs_coreboot
