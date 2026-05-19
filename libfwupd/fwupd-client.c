@@ -3656,10 +3656,14 @@ fwupd_client_is_localhost(const gchar *url)
 {
 	g_autoptr(CURLU) h = curl_url();
 	g_autoptr(CURLSTR) hostname = NULL;
+	const gchar *hostnames[] = {"localhost", "127.0.0.1", "::1", "[::1]", NULL};
+
 	if (curl_url_set(h, CURLUPART_URL, url, 0) != CURLUE_OK)
 		return FALSE;
 	(void)curl_url_get(h, CURLUPART_HOST, &hostname, 0);
-	return g_strcmp0(hostname, "localhost") == 0;
+	if (hostname == NULL)
+		return FALSE;
+	return g_strv_contains(hostnames, hostname);
 }
 
 static gboolean
