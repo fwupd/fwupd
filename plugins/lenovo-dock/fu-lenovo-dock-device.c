@@ -9,7 +9,6 @@
 #include "fu-lenovo-dock-device.h"
 #include "fu-lenovo-dock-firmware.h"
 #include "fu-lenovo-dock-image.h"
-#include "fu-lenovo-dock-struct.h"
 
 #define FU_LENOVO_DOCK_DEVICE_IFACE1_LEN 64
 #define FU_LENOVO_DOCK_DEVICE_IFACE2_LEN 272
@@ -700,8 +699,28 @@ fu_lenovo_dock_device_check_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static void
+fu_lenovo_dock_device_set_usage(FuLenovoDockDevice *self, FuStructLenovoDockUsage *st)
+{
+	if (self->st_usage != NULL)
+		fu_struct_lenovo_dock_usage_unref(self->st_usage);
+	self->st_usage = fu_struct_lenovo_dock_usage_ref(st);
+}
+
+static void
+fu_lenovo_dock_device_add_usage_item(FuLenovoDockDevice *self, FuStructLenovoDockUsageItem *st)
+{
+	g_ptr_array_add(self->st_usage_items, fu_struct_lenovo_dock_usage_item_ref(st));
+}
+
+static void
+fu_lenovo_dock_device_clear_usage_items(FuLenovoDockDevice *self)
+{
+	g_ptr_array_set_size(self->st_usage_items, 0);
+}
+
 static gboolean
-fu_lenovo_dock_device_ensure_usage(FuLenovoDockDevice *self, gboolean *valid, GError **error)
+fu_lenovo_dock_device_ensure_usage(FuLenovoDockDevice *self, GError **error)
 {
 	guint32 crc_actual = 0;
 	guint32 crc_calculated;
@@ -735,7 +754,15 @@ fu_lenovo_dock_device_ensure_usage(FuLenovoDockDevice *self, gboolean *valid, GE
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	g_debug("usage info CRC got 0x%08x, expected 0x%08x", crc_actual, crc_calculated);
+	if (crc_calculated != crc_actual) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_SIGNATURE_INVALID,
+			    "usage info CRC got 0x%08x, expected 0x%08x",
+			    crc_actual,
+			    crc_calculated);
+		return FALSE;
+	}
 
 	/* parse the usage metadata */
 	st = fu_struct_lenovo_dock_usage_parse(buf->data, buf->len, offset, error);
@@ -748,12 +775,10 @@ fu_lenovo_dock_device_ensure_usage(FuLenovoDockDevice *self, gboolean *valid, GE
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 
 	/* save so we can reconstruct for erase + program */
-	if (self->st_usage != NULL)
-		fu_struct_lenovo_dock_usage_unref(self->st_usage);
-	self->st_usage = fu_struct_lenovo_dock_usage_ref(st);
+	fu_lenovo_dock_device_set_usage(self, st);
 
 	/* parse each usage metadata item */
-	g_ptr_array_set_size(self->st_usage_items, 0);
+	fu_lenovo_dock_device_clear_usage_items(self);
 	offset += FU_STRUCT_LENOVO_DOCK_USAGE_SIZE;
 	for (guint i = 0; i < usage_items; i++) {
 		g_autoptr(FuStructLenovoDockUsageItem) st_item = NULL;
@@ -761,14 +786,11 @@ fu_lenovo_dock_device_ensure_usage(FuLenovoDockDevice *self, gboolean *valid, GE
 		    fu_struct_lenovo_dock_usage_item_parse(buf->data, buf->len, offset, error);
 		if (st_item == NULL)
 			return FALSE;
-		g_ptr_array_add(self->st_usage_items,
-				fu_struct_lenovo_dock_usage_item_ref(st_item));
+		fu_lenovo_dock_device_add_usage_item(self, st_item);
 		offset += FU_STRUCT_LENOVO_DOCK_USAGE_ITEM_SIZE;
 	}
 
 	/* success */
-	if (valid != NULL)
-		*valid = crc_calculated == crc_actual;
 	return TRUE;
 }
 
@@ -1128,6 +1150,30 @@ fu_lenovo_dock_device_flash_memory_access_release_cb(FuDevice *device, GError **
 	return TRUE;
 }
 
+static void
+fu_lenovo_dock_device_set_usage_from_firmware(FuLenovoDockDevice *self,
+					      FuLenovoDockFirmware *firmware)
+{
+	FuStructLenovoDockUsage *st_usage = fu_lenovo_dock_firmware_get_usage(firmware);
+	GPtrArray *st_usage_items = fu_lenovo_dock_firmware_get_usage_items(firmware);
+
+	if (st_usage != NULL) {
+		fu_lenovo_dock_device_set_usage(self, st_usage);
+		if (fu_struct_lenovo_dock_usage_get_dsa(st_usage) != FU_LENOVO_DOCK_DSA_TYPE_NONE)
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		else
+			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	}
+	if (st_usage_items != NULL) {
+		fu_lenovo_dock_device_clear_usage_items(self);
+		for (guint i = 0; i < st_usage_items->len; i++) {
+			FuStructLenovoDockUsageItem *st_usage_item =
+			    g_ptr_array_index(st_usage_items, i);
+			fu_lenovo_dock_device_add_usage_item(self, st_usage_item);
+		}
+	}
+}
+
 static gboolean
 fu_lenovo_dock_device_write_firmware(FuDevice *device,
 				     FuFirmware *firmware,
@@ -1136,10 +1182,10 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuLenovoDockDevice *self = FU_LENOVO_DOCK_DEVICE(device);
-	gboolean usage_info_valid = FALSE;
 	guint8 component_id_total = 0;
 	guint8 total_number;
 	g_autoptr(FuDeviceLocker) flash_locker = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1166,19 +1212,16 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify existing CRC */
-	if (!fu_lenovo_dock_device_ensure_usage(self, &usage_info_valid, error)) {
-		g_prefix_error_literal(error, "failed to validate usage info: ");
-		return FALSE;
-	}
-	if (!usage_info_valid) {
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "device usage info CRC was not valid");
+	if (!fu_lenovo_dock_device_ensure_usage(self, &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID)) {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to validate usage info: ");
 			return FALSE;
 		}
-		g_warning("usage info CRC was not valid, but continuing");
+		g_debug("recovery from firmware: %s", error_local->message);
+		fu_lenovo_dock_device_set_usage_from_firmware(self,
+							      FU_LENOVO_DOCK_FIRMWARE(firmware));
 	}
 	fu_progress_step_done(progress);
 
