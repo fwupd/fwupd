@@ -531,7 +531,7 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 GUnixOutputStream *
 fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 {
-	gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRWXU);
+	gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
