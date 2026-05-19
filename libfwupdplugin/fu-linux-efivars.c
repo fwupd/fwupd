@@ -533,7 +533,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 	/* open file for writing, optionally append */
 	if (attr & FU_EFI_VARIABLE_ATTR_APPEND_WRITE)
 		open_wflags |= O_APPEND;
-	fd = open(fn, open_wflags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	fd = open(fn, open_wflags, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
