@@ -5707,7 +5707,7 @@ fu_util_jcat_export(FuUtil *self, gchar **values, GError **error)
 			fn = g_build_filename(self->destdir, str->str, NULL);
 			if (!fu_bytes_set_contents_full(fn,
 							fwupd_jcat_blob_get_data(blob),
-							0666,
+							0644,
 							error))
 				return FALSE;
 			fu_console_print(self->console, "Wrote %s", fn);
