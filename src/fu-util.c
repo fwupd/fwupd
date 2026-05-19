@@ -2244,7 +2244,7 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 		if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_REQUIRES_AUTH) &&
 		    fwupd_remote_get_username(remote) == NULL &&
 		    fwupd_remote_get_password(remote) == NULL) {
-			g_debug("skipping as remote %s as auth required but not supplied",
+			g_debug("skipping remote %s as auth required but not supplied",
 				fwupd_remote_get_id(remote));
 			continue;
 		}
