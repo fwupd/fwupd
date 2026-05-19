@@ -1,0 +1,1019 @@
+# Stm32
+[USB\VID_TODO&PID_TODO]
+Plugin = st_stm32
+
+# this data is from https://sourceforge.net/p/stm32flash/code/ci/master/tree/dev_table.c
+
+# C0
+[STM32/CID_0443]
+Name = STM32C011xx
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x2000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x8000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x1800
+
+[STM32/CID_0453]
+Name = STM32C031xx
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x-8000000
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x1800
+
+[STM32/CID_044C]
+Name = STM32C051xx
+StStm32SramAddr = 0x20001400
+StStm32SramLen = 0x1c00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x-8000000
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x3000
+
+[STM32/CID_0493]
+Name = STM32C071xx
+StStm32SramAddr = 0x20002300
+StStm32SramLen = 0x3d00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x-8000000
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_044D]
+Name = STM32C091xx/92xx
+StStm32SramAddr = 0x20002400
+StStm32SramLen = 0x5400
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x-8000000
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x4000
+
+# F0
+[STM32/CID_0440]
+Name = STM32F030x8/F05xxx
+StStm32SramAddr = 0x20000800
+StStm32SramLen = 0x1800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x10000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffec00
+StStm32MemLen = 0xc00
+
+[STM32/CID_0444]
+Name = STM32F03xx4/6
+StStm32SramAddr = 0x20000800
+StStm32SramLen = 0x800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x8000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffec00
+StStm32MemLen = 0xc00
+
+[STM32/CID_0442]
+Name = STM32F030xC/F09xxx
+Flags = obl-launch-required
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0x6800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffd800
+StStm32MemLen = 0x2000
+
+[STM32/CID_0445]
+Name = STM32F04xxx/F070x6
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0x0
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x8000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffc400
+StStm32MemLen = 0x3400
+
+[STM32/CID_0448]
+Name = STM32F070xB/F071xx/F72xx
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0x2800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffc800
+StStm32MemLen = 0x3000
+
+# F1
+[STM32/CID_0412]
+Name = STM32F10xxxLow-density
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x2600
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x8000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1ffff000
+StStm32MemLen = 0x800
+
+[STM32/CID_0410]
+Name = STM32F10xxxMedium-density
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x4e00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1ffff000
+StStm32MemLen = 0x800
+
+[STM32/CID_0414]
+Name = STM32F10xxxHigh-density
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0xfe00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1ffff000
+StStm32MemLen = 0x800
+
+[STM32/CID_0420]
+Name = STM32F10xxxMedium-densityVL
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x1e00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1ffff000
+StStm32MemLen = 0x800
+
+[STM32/CID_0428]
+Name = STM32F10xxxHigh-densityVL
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x7e00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1ffff000
+StStm32MemLen = 0x800
+
+[STM32/CID_0418]
+Name = STM32F105xx/F107xx
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0xf000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffb000
+StStm32MemLen = 0x4800
+
+[STM32/CID_0430]
+Name = STM32F10xxxXL-density
+StStm32SramAddr = 0x20000800
+StStm32SramLen = 0x17800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffe000
+StStm32MemLen = 0x1800
+
+# F2
+[STM32/CID_0411]
+Name = STM32F2xxxx
+StStm32SramAddr = 0x20002000
+StStm32SramLen = 0x1e000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+# F3
+[STM32/CID_0432]
+Name = STM32F373xx/F378xx
+StStm32SramAddr = 0x20001400
+StStm32SramLen = 0x6c00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffd800
+StStm32MemLen = 0x2000
+
+[STM32/CID_0422]
+Name = STM32F302xB(C)/F303xB(C)/F358xx
+StStm32SramAddr = 0x20001400
+StStm32SramLen = 0x8c00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffd800
+StStm32MemLen = 0x2000
+
+[STM32/CID_0439]
+Name = STM32F301xx/F302x4(6/8)/F318xx
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0x2800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x10000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffd800
+StStm32MemLen = 0x2000
+
+[STM32/CID_0438]
+Name = STM32F303x4(6/8)/F334xx/F328xx
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0x1800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x10000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffd800
+StStm32MemLen = 0x2000
+
+[STM32/CID_0446]
+Name = STM32F302xD(E)/F303xD(E)/F398xx
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0xe800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 2
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fffd800
+StStm32MemLen = 0x2000
+
+# F4
+[STM32/CID_0413]
+Name = STM32F40xxx/41xxx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x1d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0419]
+Name = STM32F42xxx/43xxx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x2d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x200000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000,0x20000,0x20000,0x4000,0x4000,0x4000,0x4000,0x10000
+StStm32OptionAddr = 0x1ffec000
+StStm32OptionLen = 0x1000f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0423]
+Name = STM32F401xB(C)
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0xd000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0433]
+Name = STM32F401xD(E)
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x15000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0458]
+Name = STM32F410xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x5000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0431]
+Name = STM32F411xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x1d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0441]
+Name = STM32F412xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x3d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0421]
+Name = STM32F446xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x1d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0434]
+Name = STM32F469xx/479xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x5d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x200000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000,0x20000,0x20000,0x4000,0x4000,0x4000,0x4000,0x10000
+StStm32OptionAddr = 0x1ffec000
+StStm32OptionLen = 0x1000f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+[STM32/CID_0463]
+Name = STM32F413xx/423xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x4d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x180000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fffc000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7800
+
+# F7
+[STM32/CID_0452]
+Name = STM32F72xxx/73xxx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x3c000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x4000,0x4000,0x4000,0x4000,0x10000,0x20000
+StStm32OptionAddr = 0x1fff0000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0xedc0
+
+[STM32/CID_0449]
+Name = STM32F74xxx/75xxx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x4c000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x8000,0x8000,0x8000,0x8000,0x20000,0x40000
+StStm32OptionAddr = 0x1fff0000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0xedc0
+
+[STM32/CID_0451]
+Name = STM32F76xxx/77xxx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x7c000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x200000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x8000,0x8000,0x8000,0x8000,0x20000,0x40000
+StStm32OptionAddr = 0x1fff0000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0xedc0
+
+# G0
+[STM32/CID_0466]
+Name = STM32G03xxx/04xxx
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x1000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x10000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x2000
+
+[STM32/CID_0456]
+Name = STM32G05xxx/061xx
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x3800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x10000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x2000
+
+[STM32/CID_0460]
+Name = STM32G07xxx/08xxx
+StStm32SramAddr = 0x20002700
+StStm32SramLen = 0x6900
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0467]
+Name = STM32G0B0/B1/C1xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x1c000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+# G4
+[STM32/CID_0468]
+Name = STM32G431xx/441xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x1800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x2f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0469]
+Name = STM32G47xxx/48xxx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x14000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x2f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0479]
+Name = STM32G491xx/A1xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x18000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x2f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+# H5
+[STM32/CID_0474]
+Name = STM32H503xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x4000
+StStm32MemAddr = 0xbf87000
+StStm32MemLen = 0x9000
+
+[STM32/CID_0484]
+Name = STM32H563xx/573xx
+StStm32SramAddr = 0x20000000
+StStm32SramLen = 0xa0000
+StStm32MemAddr = 0xbf97000
+StStm32MemLen = 0x9000
+
+[STM32/CID_0478]
+Name = STM32H523xx/33xxx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x40000
+StStm32MemAddr = 0xbf97000
+StStm32MemLen = 0x9000
+
+# H7
+[STM32/CID_0483]
+Name = STM32H72xxx/73xxx
+StStm32SramAddr = 0x20004100
+StStm32SramLen = 0x1bf00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x20000
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1e800
+
+[STM32/CID_0450]
+Name = STM32H74xxx/75xxx
+StStm32SramAddr = 0x20004100
+StStm32SramLen = 0x1bf00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x200000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x20000
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1e800
+
+[STM32/CID_0480]
+Name = STM32H7A3xx/B3xx
+StStm32SramAddr = 0x20004100
+StStm32SramLen = 0x1bf00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x2000
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x14000
+
+[STM32/CID_0485]
+Name = STM32H7Rxxx/7Sxxx
+StStm32SramAddr = 0x20000000
+StStm32SramLen = 0x30000
+StStm32MemAddr = 0x1ff18000
+StStm32MemLen = 0x8000
+
+# L0
+[STM32/CID_0457]
+Name = STM32L01xxx/02xxx
+Flags = no-mass-erase
+StStm32SramAddr = 0x20000800
+StStm32SramLen = 0x0
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x4000
+StStm32PagesPerSector = 32
+StStm32PageSize = 0x80
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1000
+
+[STM32/CID_0425]
+Name = STM32L031xx/041xx
+Flags = no-mass-erase
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x1000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x8000
+StStm32PagesPerSector = 32
+StStm32PageSize = 0x80
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1000
+
+[STM32/CID_0417]
+Name = STM32L05xxx/06xxx
+Flags = no-mass-erase
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x1000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x10000
+StStm32PagesPerSector = 32
+StStm32PageSize = 0x80
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1000
+
+[STM32/CID_0447]
+Name = STM32L07xxx/08xxx
+Flags = no-mass-erase
+StStm32SramAddr = 0x20002000
+StStm32SramLen = 0x3000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x30000
+StStm32PagesPerSector = 32
+StStm32PageSize = 0x80
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x2000
+
+# L1
+[STM32/CID_0416]
+Name = STM32L1xxx6(8/B)
+Flags = no-mass-erase
+StStm32SramAddr = 0x20000800
+StStm32SramLen = 0x3800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 16
+StStm32PageSize = 0x100
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1000
+
+[STM32/CID_0429]
+Name = STM32L1xxx6(8/B)A
+Flags = no-mass-erase
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x7000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 16
+StStm32PageSize = 0x100
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x1000
+
+[STM32/CID_0427]
+Name = STM32L1xxxC
+Flags = no-mass-erase
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x7000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 16
+StStm32PageSize = 0x100
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x2000
+
+[STM32/CID_0436]
+Name = STM32L1xxxD
+Flags = no-mass-erase
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0xb000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x60000
+StStm32PagesPerSector = 16
+StStm32PageSize = 0x100
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x2000
+
+[STM32/CID_0437]
+Name = STM32L1xxxE
+Flags = no-mass-erase
+StStm32SramAddr = 0x20001000
+StStm32SramLen = 0x13000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 16
+StStm32PageSize = 0x100
+StStm32OptionAddr = 0x1ff80000
+StStm32OptionLen = 0x1f
+StStm32MemAddr = 0x1ff00000
+StStm32MemLen = 0x2000
+
+# L4
+[STM32/CID_0464]
+Name = STM32L412xx/422xx
+StStm32SramAddr = 0x20003100
+StStm32SramLen = 0x4f00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0435]
+Name = STM32L43xxx/44xxx
+StStm32SramAddr = 0x20003100
+StStm32SramLen = 0x8f00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0462]
+Name = STM32L45xxx/46xxx
+Flags = clear-pempty
+StStm32SramAddr = 0x20003100
+StStm32SramLen = 0x1cf00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0415]
+Name = STM32L47xxx/48xxx
+StStm32SramAddr = 0x20003100
+StStm32SramLen = 0x14f00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x800f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0461]
+Name = STM32L496xx/4A6xx
+StStm32SramAddr = 0x20003100
+StStm32SramLen = 0x3cf00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x800f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0470]
+Name = STM32L4Rxx/4Sxx
+StStm32SramAddr = 0x20003200
+StStm32SramLen = 0x9ce00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x800f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0471]
+Name = STM32L4P5xx/Q5xx
+Flags = dual-bank
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x4c000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x1000
+StStm32OptionAddr = 0x1ff00000
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+# L5
+[STM32/CID_0472]
+Name = STM32L552xx/562xx
+Flags = dual-bank
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x3c000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x80000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32MemAddr = 0xbf90000
+StStm32MemLen = 0x8000
+
+# U0
+[STM32/CID_0459]
+Name = STM32U031xx
+StStm32SramAddr = 0x20001500
+StStm32SramLen = 0x1b00
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x3800
+
+[STM32/CID_0489]
+Name = STM32U073xx/83xx
+StStm32SramAddr = 0x20002170
+StStm32SramLen = 0x7e90
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x6800
+
+# U3
+[STM32/CID_0454]
+Name = STM32U375xx/85xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x3c000
+StStm32MemAddr = 0xbf8f000
+StStm32MemLen = 0x11000
+
+# U5
+[STM32/CID_0455]
+Name = STM32U535xx/545xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x23c000
+StStm32MemAddr = 0xbf90000
+StStm32MemLen = 0x10000
+
+[STM32/CID_0482]
+Name = STM32U575xx/585xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0xbc000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x200000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x2000
+StStm32MemAddr = 0xbf90000
+StStm32MemLen = 0x10000
+
+[STM32/CID_0481]
+Name = STM32U595xx/599xx/5A9xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x26c000
+StStm32MemAddr = 0xbf90000
+StStm32MemLen = 0x10000
+
+[STM32/CID_0476]
+Name = STM32U5F7xx/5F9xx/5G7xx/5G9xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x2ec000
+StStm32MemAddr = 0xbf90000
+StStm32MemLen = 0x10000
+
+# WB
+[STM32/CID_0494]
+Name = STM32WB10xx/15xx
+StStm32SramAddr = 0x20005000
+StStm32SramLen = 0x3b000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x50000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+[STM32/CID_0495]
+Name = STM32WB30(5)xx/50(5)xx
+StStm32SramAddr = 0x20004000
+StStm32SramLen = 0x8000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x1000
+StStm32OptionAddr = 0x1fff8000
+StStm32OptionLen = 0x7f
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x7000
+
+# WBA
+[STM32/CID_0492]
+Name = STM32WBA5xxx
+StStm32SramAddr = 0x20001800
+StStm32SramLen = 0xe800
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x100000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x2000
+StStm32OptionAddr = 0xbf94000
+StStm32OptionLen = 0x4000
+StStm32MemAddr = 0xbf88000
+StStm32MemLen = 0x7000
+
+[STM32/CID_04B0]
+Name = STM32WBA62xx/63xx/64xx/65xx
+StStm32SramAddr = 0x20003000
+StStm32SramLen = 0x3d000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x200000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x2000
+StStm32OptionAddr = 0xbfa8000
+StStm32OptionLen = 0x10000
+StStm32MemAddr = 0xbf90000
+StStm32MemLen = 0x10000
+
+# WL
+[STM32/CID_0497]
+Name = STM32WLE5xx/WL55xx
+StStm32SramAddr = 0x20002000
+StStm32SramLen = 0xe000
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 1
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x1fff7800
+StStm32OptionLen = 0x7ff
+StStm32MemAddr = 0x1fff0000
+StStm32MemLen = 0x4000
+
+[STM32/CID_0641]
+Name = Medium_DensityPL
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x4e00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x1ffff800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x1ffff000
+StStm32MemLen = 0x800
+
+[STM32/CID_09A8]
+Name = STM32W-128K
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x1e00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x20000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x400
+StStm32OptionAddr = 0x8040800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x8040000
+StStm32MemLen = 0x800
+
+[STM32/CID_09B0]
+Name = STM32W-256K
+StStm32SramAddr = 0x20000200
+StStm32SramLen = 0x3e00
+StStm32FlashAddr = 0x8000000
+StStm32FlashLen = 0x40000
+StStm32PagesPerSector = 4
+StStm32PageSize = 0x800
+StStm32OptionAddr = 0x8040800
+StStm32OptionLen = 0xf
+StStm32MemAddr = 0x8040000
+StStm32MemLen = 0x800
