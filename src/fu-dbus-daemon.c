@@ -1928,8 +1928,8 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	gint fd_data;
-	gint fd_sig;
+	g_autofd gint fd_data = -1;
+	g_autofd gint fd_sig = -1;
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
@@ -1969,7 +1969,11 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 	}
 
 	/* store new metadata (will close the fds when done) */
-	if (!fu_engine_update_metadata(engine, helper->remote_id, fd_data, fd_sig, &error)) {
+	if (!fu_engine_update_metadata(engine,
+				       helper->remote_id,
+				       g_steal_fd(&fd_data),
+				       g_steal_fd(&fd_sig),
+				       &error)) {
 		g_prefix_error(&error, "Failed to update metadata for %s: ", helper->remote_id);
 		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
