@@ -339,13 +339,12 @@ fu_lenovo_dock_device_ensure_version(FuLenovoDockDevice *self, GError **error)
 							&error_local)) {
 		if (upgrade_status == FU_LENOVO_DOCK_FW_CTRL_UPGRADE_STATUS_LOCKED &&
 		    ctrl == FU_LENOVO_DOCK_FW_CTRL_UPGRADE_PHASE_CTRL_NON_UNPLUG) {
-			g_debug("lenovo-dock: delaying 0x81 for %ums while dock is in phase2",
+			g_debug("delaying 0x81 for %ums while dock is in phase2",
 				(guint)FU_LENOVO_DOCK_DEVICE_PHASE2_DELAY);
 			fu_device_sleep(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_PHASE2_DELAY);
 		}
 	} else {
-		g_debug("lenovo-dock: failed to query 0x8A before version: %s",
-			error_local->message);
+		g_debug("failed to query 0x8A before version: %s", error_local->message);
 	}
 
 	if (!fu_lenovo_dock_device_set_report1(self, st_req->buf, error))
