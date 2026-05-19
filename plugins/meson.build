@@ -124,6 +124,7 @@ plugins = {
   'sunplus-camera': false,
   'scsi': false,
   'snapd-uefi': false,
+  'st-stm32': false,
   'sunwinon-hid': false,
   'synaptics-cape': false,
   'synaptics-cxaudio': false,
