@@ -174,7 +174,7 @@ fwupd_variant_get_strv(GVariant *value)
  *
  * Gets a double from a variant.
  *
- * Returns: boolean, or -1 if not valid
+ * Returns: double, or -1.0 if not valid
  *
  * Since: 2.1.4
  **/
