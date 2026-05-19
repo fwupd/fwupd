@@ -1079,7 +1079,7 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* get the fd */
@@ -1105,7 +1105,7 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, error);
 	if (stream == NULL)
 		return NULL;
 	return g_steal_pointer(&stream);
@@ -1121,7 +1121,7 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(GOutputStream) stream = NULL;
 
 	/* get the fd */
@@ -1147,7 +1147,7 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = g_unix_output_stream_new(fd, TRUE);
+	stream = g_unix_output_stream_new(g_steal_fd(&fd), TRUE);
 	if (stream == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
 		return NULL;
@@ -1929,8 +1929,8 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	gint fd_data;
-	gint fd_sig;
+	g_autofd gint fd_data = -1;
+	g_autofd gint fd_sig = -1;
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
@@ -1970,7 +1970,11 @@ fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, 
 	}
 
 	/* store new metadata (will close the fds when done) */
-	if (!fu_engine_update_metadata(engine, helper->remote_id, fd_data, fd_sig, &error)) {
+	if (!fu_engine_update_metadata(engine,
+				       helper->remote_id,
+				       g_steal_fd(&fd_data),
+				       g_steal_fd(&fd_sig),
+				       &error)) {
 		g_prefix_error(&error, "Failed to update metadata for %s: ", helper->remote_id);
 		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;

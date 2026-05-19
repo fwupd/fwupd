@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
+#include <glib/gstdio.h>
 #include <linux/fs.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -130,7 +131,7 @@ fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, G
 static gboolean
 fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GError **error)
 {
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(GInputStream) istr = NULL;
 
 	/* not bare-metal */
@@ -147,7 +148,7 @@ fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
-	istr = g_unix_input_stream_new(fd, TRUE);
+	istr = g_unix_input_stream_new(g_steal_fd(&fd), TRUE);
 	if (istr == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -155,7 +156,11 @@ fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_
 				    "failed to create stream");
 		return FALSE;
 	}
-	return fu_linux_efivars_set_immutable_fd(fd, value, value_old, error);
+	return fu_linux_efivars_set_immutable_fd(
+	    g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(istr)),
+	    value,
+	    value_old,
+	    error);
 }
 
 static gboolean
@@ -510,7 +515,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 			  FuEfiVariableAttrs attr,
 			  GError **error)
 {
-	int fd;
+	g_autofd int fd = -1;
 	int open_wflags = O_WRONLY;
 	gboolean was_immutable = TRUE;
 	g_autofree gchar *fn = NULL;
@@ -543,7 +548,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
-	ostr = g_unix_output_stream_new(fd, TRUE);
+	ostr = g_unix_output_stream_new(g_steal_fd(&fd), TRUE);
 	memcpy(buf, &attr, sizeof(attr));     /* nocheck:blocked */
 	memcpy(buf + sizeof(attr), data, sz); /* nocheck:blocked */
 	if (g_output_stream_write(ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {

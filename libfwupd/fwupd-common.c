@@ -452,7 +452,7 @@ fwupd_guid_hash_string(const gchar *str)
 GUnixInputStream *
 fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 {
-	gint fd;
+	g_autofd gint fd = -1;
 	gssize rc;
 #ifndef HAVE_MEMFD_CREATE
 	gchar tmp_file[] = "/tmp/fwupd.XXXXXX";
@@ -466,10 +466,6 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 	if (fd != -1) {
 		rc = g_unlink(tmp_file);
 		if (rc != 0) {
-			if (!g_close(fd, error)) {
-				g_prefix_error_literal(error, "failed to close temporary file: ");
-				return NULL;
-			}
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
@@ -503,7 +499,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
+	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
 }
 
 /**
