@@ -45,7 +45,7 @@ directory = os.path.dirname(sys.argv[0])
 DISTRO = getenv_unwrap("DISTRO")
 ARCH = getenv_unwrap("ARCH")
 VARIANT = os.getenv("VARIANT")
-CROSS = c if (c := str(VARIANT).removeprefix("cross-")) != VARIANT else None
+CROSS = c if VARIANT and (c := str(VARIANT).removeprefix("cross-")) != VARIANT else None
 
 
 # find first existing
