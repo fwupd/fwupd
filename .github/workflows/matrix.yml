@@ -9,43 +9,59 @@ jobs:
   build:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ case(matrix.env.ARCH == 'arm64', 'ubuntu-24.04-arm', 'ubuntu-latest') }}
     needs: library
     strategy:
       fail-fast: false
       matrix:
-        os: [fedora, centos, debian-x86_64, arch, debian-i386, ubuntu-x86_64]
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - name: Docker login
-        run: docker login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          # NOTE: values are joined by '-' for name of container image, unless `CONTAINER` overrides it
+          - { DISTRO: arch, ARCH: amd64 }
+          - { DISTRO: centos, ARCH: amd64 }
+          - { DISTRO: debian, ARCH: amd64 }
+          - { DISTRO: fedora, ARCH: amd64 }
+          - { DISTRO: ubuntu, ARCH: amd64 }
+    env: ${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download tarball
-        if: matrix.os == 'fedora' || matrix.os == 'centos'
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         id: download
         with:
           name: tarball
       - name: Build in container
         env:
           CI_NETWORK: true
-          CI: true
           VERSION: ${{ needs.library.outputs.version }}
         run: |
-          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t \
-              -v $GITHUB_WORKSPACE:/github/workspace \
-              ghcr.io/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+          docker run --privileged -t \
+              -e "CI=$CI" \
+              -e "CI_NETWORK=$CI_NETWORK" \
+              -e "VARIANT=$VARIANT" \
+              -e "VERSION=$VERSION" \
+              -v "$GITHUB_WORKSPACE:/github/workspace" \
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ matrix.os }}
-          path: ${{ github.workspace }}/dist/*
+          name: ${{ join(matrix.env.*, '-') }}
+          path: |
+            ${{ github.workspace }}/build/meson-logs/scanbuild/*
+            ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
         run: |
-          if [ -f contrib/ci/${{matrix.os}}-test.sh ]; then
+          if [ -x "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh" ]; then
             echo "supported=true" >> $GITHUB_OUTPUT
           else
             echo "supported=false" >> $GITHUB_OUTPUT
@@ -54,20 +70,27 @@ jobs:
         if: steps.supported.outputs.supported == 'true'
         env:
           CI_NETWORK: true
-          CI: true
         run: |
-          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -t \
-              -v $GITHUB_WORKSPACE:/github/workspace \
-              ghcr.io/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
-              contrib/ci/${{matrix.os}}-test.sh
+          docker run --privileged -t \
+              -e "CI=$CI" \
+              -e "CI_NETWORK=$CI_NETWORK" \
+              -e "VARIANT=$VARIANT" \
+              -e "VERSION=$VERSION" \
+              -v "$GITHUB_WORKSPACE:/github/workspace" \
+              "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
+              "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}-test.sh"
       - name: Save any coverage data
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-${{ join(matrix.*, '-') }}
+          name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386' || matrix.os == 'arch'
-        uses: codecov/codecov-action@v5
+        if: steps.supported.outputs.supported == 'true' &&
+          matrix.env.VARIANT != 'tartan' && (
+          matrix.env.DISTRO == 'arch' ||
+          matrix.env.DISTRO == 'debian' ||
+          matrix.env.DISTRO == 'fedora')
+        uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
