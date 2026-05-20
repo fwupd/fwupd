@@ -251,7 +251,8 @@ fu_util_transact(FuUtil *self,
 			return FALSE;
 
 	in = g_steal_pointer(&pending_in);
-	nstatus = AIBinder_transact(self->fwupd_binder, code, &in, out, flags | FLAG_PRIVATE_VENDOR);
+	nstatus =
+	    AIBinder_transact(self->fwupd_binder, code, &in, out, flags | FLAG_PRIVATE_VENDOR);
 
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);
@@ -367,8 +368,6 @@ fu_util_get_remotes_call(FuUtil *self, GError **error)
 
 	return g_steal_pointer(&array);
 }
-
-
 
 // Taken from FuUtil
 static void
@@ -729,7 +728,9 @@ fu_util_get_upgrades_as_json(FuUtil *self, GPtrArray *devices, GError **error)
 						       self->filter_release_include,
 						       self->filter_release_exclude))
 				continue;
-			fwupd_codec_to_json(FWUPD_CODEC(rel), json_obj_tmp, FWUPD_CODEC_FLAG_TRUSTED);
+			fwupd_codec_to_json(FWUPD_CODEC(rel),
+					    json_obj_tmp,
+					    FWUPD_CODEC_FLAG_TRUSTED);
 			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
 	}

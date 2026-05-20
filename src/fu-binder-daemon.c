@@ -60,7 +60,7 @@ struct _FuBinderDaemon {
 	AIBinder *binder;
 	gint binder_fd;
 	FwupdStatus status; /* last emitted */
-	guint percentage;   /* last emitted */
+	gdouble percentage; /* last emitted */
 	GPtrArray *event_listener_binders;
 };
 
@@ -427,18 +427,19 @@ fu_binder_daemon_set_status(FuBinderDaemon *self, FwupdStatus status)
 
 static void
 fu_binder_daemon_progress_percentage_changed_cb(FuProgress *progress,
-						guint percentage,
+						gdouble percentage,
 						FuBinderDaemon *self)
 {
-	/* sanity check */
-	if (self->percentage == percentage)
-		return;
+	gboolean notify = fwupd_percentage_delta_notify(self->percentage, percentage);
 	self->percentage = percentage;
-
-	g_debug("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
-	fu_binder_daemon_emit_property_changed(self,
-					       "Percentage",
-					       g_variant_new_uint32(percentage));
+	if (notify) {
+		g_debug("Emitting PropertyChanged('Percentage'='%.1f%%')", percentage);
+		fu_binder_daemon_emit_property_changed(
+		    self,
+		    "Percentage",
+		    g_variant_new_uint32(fwupd_percentage_is_valid(percentage) ? (guint32)percentage
+									       : 0));
+	}
 }
 
 static void
