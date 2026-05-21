@@ -568,7 +568,7 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 {
 #ifdef HAVE_SOCKET_H
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -584,7 +584,7 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 #endif
 		return FALSE;
 	}
-	io_channel = fu_io_channel_unix_new(fd);
+	io_channel = fu_io_channel_unix_new(g_steal_fd(&fd));
 	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
 	return TRUE;
 #else

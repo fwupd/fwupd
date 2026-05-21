@@ -98,7 +98,7 @@ static void
 fu_remote_list_fixup_inotify_error(GError **error) /* nocheck:error */
 {
 #ifdef HAVE_INOTIFY_H
-	int fd;
+	g_autofd int fd = -1;
 	int wd;
 	const gchar *fn = "/proc/sys/fs/inotify/max_user_instances";
 
@@ -119,7 +119,6 @@ fu_remote_list_fixup_inotify_error(GError **error) /* nocheck:error */
 	} else {
 		inotify_rm_watch(fd, wd);
 	}
-	close(fd);
 #endif
 }
 

@@ -625,7 +625,7 @@ fu_io_channel_unix_new(gint fd)
 FuIOChannel *
 fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlags open_flags, GError **error)
 {
-	gint fd;
+	g_autofd gint fd = -1;
 	int flags = 0;
 
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -662,7 +662,7 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlags open_flags, G
 		fwupd_error_convert(error);
 		return NULL;
 	}
-	return fu_io_channel_unix_new(fd);
+	return fu_io_channel_unix_new(g_steal_fd(&fd));
 }
 
 /**
@@ -680,7 +680,7 @@ FuIOChannel *
 fu_io_channel_virtual_new(const gchar *name, GError **error)
 {
 #ifdef HAVE_MEMFD_CREATE
-	gint fd;
+	g_autofd gint fd = -1;
 
 	g_return_val_if_fail(name != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -700,7 +700,7 @@ fu_io_channel_virtual_new(const gchar *name, GError **error)
 		fwupd_error_convert(error);
 		return NULL;
 	}
-	return fu_io_channel_unix_new(fd);
+	return fu_io_channel_unix_new(g_steal_fd(&fd));
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "memfd not supported");
 	return NULL;
