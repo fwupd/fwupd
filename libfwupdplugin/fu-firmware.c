@@ -981,6 +981,63 @@ fu_firmware_check_compatible(FuFirmware *self,
 }
 
 static gboolean
+fu_firmware_validate_with_magic(FuFirmware *self,
+				GInputStream *stream,
+				gsize offset,
+				gsize *offset_found,
+				GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	gsize offset_lowest = G_MAXSIZE;
+
+	for (guint i = 0; i < priv->magic->len; i++) {
+		FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
+		gsize offset_tmp = 0;
+		g_autoptr(GError) error_local = NULL;
+
+		g_debug("searching for 0x%zx bytes of magic", g_bytes_get_size(patch->blob));
+		if (!fu_input_stream_find(stream,
+					  g_bytes_get_data(patch->blob, NULL),
+					  g_bytes_get_size(patch->blob),
+					  offset,
+					  &offset_tmp,
+					  &error_local)) {
+			g_debug("ignoring: %s", error_local->message);
+			continue;
+		}
+
+		/* ensure magic found at or after expected offset */
+		if (offset_tmp < patch->offset) {
+			g_debug("magic at 0x%zx but expected >= 0x%zx", offset_tmp, patch->offset);
+			continue;
+		}
+		offset_tmp -= patch->offset;
+		g_debug("found magic at 0x%zx", offset_tmp);
+		if (!klass->validate(self, stream, offset_tmp, &error_local)) {
+			g_debug("ignoring: %s", error_local->message);
+			continue;
+		}
+
+		/* any better? */
+		if (offset_tmp < offset_lowest)
+			offset_lowest = offset_tmp;
+	}
+	if (offset_lowest == G_MAXSIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to find magic bytes");
+		return FALSE;
+	}
+
+	/* success */
+	if (offset_found != NULL)
+		*offset_found = offset_lowest;
+	return TRUE;
+}
+
+static gboolean
 fu_firmware_validate_for_offset(FuFirmware *self,
 				GInputStream *stream,
 				gsize offset,
@@ -1003,38 +1060,8 @@ fu_firmware_validate_for_offset(FuFirmware *self,
 	}
 
 	/* try all the magic values, if provided */
-	if (priv->magic != NULL) {
-		for (guint i = 0; i < priv->magic->len; i++) {
-			FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
-			gsize offset_tmp = 0;
-			g_debug("searching for 0x%x bytes of magic",
-				(guint)g_bytes_get_size(patch->blob));
-			if (fu_input_stream_find(stream,
-						 g_bytes_get_data(patch->blob, NULL),
-						 g_bytes_get_size(patch->blob),
-						 offset,
-						 &offset_tmp,
-						 NULL)) {
-				/* ensure magic found at or after expected offset */
-				if (offset_tmp < patch->offset) {
-					g_debug("magic at 0x%x but expected >= 0x%x",
-						(guint)offset_tmp,
-						(guint)patch->offset);
-					continue;
-				}
-				offset_tmp -= patch->offset;
-				g_debug("found magic @0x%x", (guint)offset_tmp);
-				if (offset_found != NULL)
-					*offset_found = offset_tmp;
-				return klass->validate(self, stream, *offset_found, error);
-			}
-		}
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to find magic bytes");
-		return FALSE;
-	}
+	if (priv->magic != NULL)
+		return fu_firmware_validate_with_magic(self, stream, offset, offset_found, error);
 
 	/* limit the size of firmware we search as brute force is expensive */
 	if (!fu_input_stream_size(stream, &streamsz, error))
