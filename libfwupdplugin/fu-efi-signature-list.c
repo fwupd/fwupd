@@ -100,7 +100,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 				 GError **error)
 {
 	FuEfiSignatureKind sig_kind = FU_EFI_SIGNATURE_KIND_UNKNOWN;
-	gsize offset_tmp;
+	gsize offset_tmp = 0x1c;
 	guint32 header_size;
 	guint32 list_size;
 	guint32 size;
@@ -162,28 +162,19 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 				    "invalid as header_size >= size");
 		return FALSE;
 	}
-	/* validate signatures fit exactly */
-	if (size > 0) {
-		gsize data_size = list_size - 0x1c - header_size;
-		if (data_size % size != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "data size 0x%x not evenly divisible by signature size 0x%x",
-				    (guint)data_size,
-				    size);
-			return FALSE;
-		}
-	}
 
 	/* header is typically unused */
-	offset_tmp = *offset;
-	if (!fu_size_checked_inc(&offset_tmp, 0x1c, error))
-		return FALSE;
 	if (!fu_size_checked_inc(&offset_tmp, header_size, error))
 		return FALSE;
-	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
+	while (offset_tmp < list_size) {
+		gsize offset_sig = *offset;
 		g_autoptr(FuEfiSignature) sig = NULL;
+
+		/* as found in pstores */
+		if (offset_tmp + size > list_size) {
+			g_debug("ignoring trailing padding");
+			break;
+		}
 
 		if (sig_kind == FU_EFI_SIGNATURE_KIND_X509) {
 			sig = FU_EFI_SIGNATURE(fu_efi_x509_signature_new());
@@ -191,7 +182,9 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			sig = fu_efi_signature_new(sig_kind);
 		}
 		fu_firmware_set_size(FU_FIRMWARE(sig), size);
-		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig), stream, offset_tmp, flags, error))
+		if (!fu_size_checked_inc(&offset_sig, offset_tmp, error))
+			return FALSE;
+		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig), stream, offset_sig, flags, error))
 			return FALSE;
 		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
