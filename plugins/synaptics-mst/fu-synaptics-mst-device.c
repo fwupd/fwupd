@@ -11,6 +11,7 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <glib/gstdio.h>
 
 #include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
@@ -1528,7 +1529,7 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		g_autofree gchar *filename = NULL;
 		g_autofree gchar *dirname = NULL;
 		gboolean exists_eeprom = FALSE;
-		gint fd;
+		g_autofd gint fd = -1;
 		dirname = g_path_get_dirname(fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)));
 		filename = g_strdup_printf("%s/remote/%s_eeprom",
 					   dirname,
@@ -1558,11 +1559,9 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 				    FWUPD_ERROR_INVALID_DATA,
 				    "error reading EEPROM file %s",
 				    filename);
-			close(fd);
 			return FALSE;
 		}
 		self->board_id = fu_memread_uint16(buf, G_BIG_ENDIAN);
-		close(fd);
 		return TRUE;
 	}
 

@@ -508,7 +508,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 GUnixInputStream *
 fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 {
-	gint fd = open(fn, O_RDONLY);
+	g_autofd gint fd = open(fn, O_RDONLY);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -518,7 +518,7 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
+	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
 }
 
 /**
@@ -527,7 +527,7 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 GUnixOutputStream *
 fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 {
-	gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	g_autofd gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -537,7 +537,7 @@ fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(fd, TRUE));
+	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(g_steal_fd(&fd), TRUE));
 }
 #endif
 
