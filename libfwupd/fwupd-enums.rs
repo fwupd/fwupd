@@ -194,4 +194,7 @@ enum FwupdVersionFormat {
     // Intel ME-style bitshifted notation, with offset 19.
     // Since: 2.0.4
     IntelCsme19,
+    // Compal BIOS-style version number, as two hex bytes.
+    // Since: 2.1.4
+    CompalBios,
 }
