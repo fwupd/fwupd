@@ -505,7 +505,7 @@ static guint32
 fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **error)
 {
 #if defined(HAVE_IOCTL_H) && defined(HAVE_BLKSSZGET)
-	gint fd;
+	g_autofd gint fd = -1;
 	gint rc;
 	gint sector_size = 0;
 
@@ -533,7 +533,6 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 				    "failed to get non-zero logical sector size");
 		/* nocheck:error-false-return */
 	}
-	g_close(fd, NULL);
 	return sector_size;
 #else
 	g_set_error_literal(error,
