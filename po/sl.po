@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
+"POT-Creation-Date: 2026-05-22 07:49+0100\n"
 "PO-Revision-Date: 2026-04-20 23:09+0000\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
@@ -114,6 +114,13 @@ msgstr "Ponastavi prilagoditev prikritega procesa"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Za spreminjanje prilagoditve prikritega procesa na privzeto je potrebno preverjanje pristnosti"
 
+msgid "Modify a device property"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr ""
+
 msgid "Activate the new firmware on the device"
 msgstr "Aktiviraj novo strojno programsko opremo v napravi"
 
@@ -121,12 +128,33 @@ msgstr "Aktiviraj novo strojno programsko opremo v napravi"
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Preverjanje pristnosti je potrebno za preklop na novo različico strojne programske opreme"
 
+msgid "Clear stored firmware update results"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr ""
+
+msgid "Verify device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr ""
+
 msgid "Update the stored device verification information"
 msgstr "Posodobi shranjene informacije za preverjanje naprave"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Preverjanje pristnosti je potrebno za posodobitev shranjenih kontrolnih vsot za napravo"
+
+msgid "Get configured remotes"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr ""
 
 msgid "Modify a configured remote"
 msgstr "Spremeni nastavljeni oddaljeni strežnik"
@@ -204,6 +232,13 @@ msgstr "Omogoči zbiranje podatkov emulacije"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Za omogočanje zbiranja podatkov emulacije strojne opreme je potrebno preverjanje pristnosti"
+
+msgid "Install firmware on emulated device"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr ""
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1365,6 +1400,9 @@ msgstr "Pokaži naprave, ki jih ni mogoče posodobiti"
 msgid "Manually enable specific plugins"
 msgstr "Ročno omogoči določene vstavke"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Zaženite rutino priprave kompozitnih vstavkov pri uporabi zbirke dvojiških podatkov za namestitev (install-blob)"
@@ -1392,6 +1430,9 @@ msgstr "Na vsa vprašanja odgovori pritrdilno"
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Izpis v zapisu JSON (onemogoči vsa vprašanja uporabniku)"
+
+msgid "Prefix for import and output files"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1843,6 +1884,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "Razčleni sistemski zapisnik dogodkov PCR"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "To orodje skrbniku omogoča uporabo vstavkov fwupd, ne da bi bili nameščeni v gostiteljskem sistemu."
@@ -2218,6 +2315,27 @@ msgstr "Želite zdaj naložiti podatke?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Seznam naprav je uspešno naložen, hvala!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr ""
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Nastavite število ponovnih poskusov za občasne napake"
@@ -2305,6 +2423,14 @@ msgstr "Zamenja vdelano programsko opremo naprave s starejšo različico"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Posodobite shranjeno kriptografsko kontrolno vsoto s trenutno vsebino ROM-a"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3388,13 +3514,17 @@ msgstr "Interval osveževanja"
 msgid "Priority"
 msgstr "Prednost"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr ""
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Uporabniško ime"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Geslo"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr ""
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3691,6 +3821,9 @@ msgstr "Želite omogočiti nov oddaljeni strežnik?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Se strinjate in želite omogočiti oddaljeni strežnik?"
+
+#~ msgid "Password"
+#~ msgstr "Geslo"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Najde algoritem, ki se ujema s CRC datoteke"
