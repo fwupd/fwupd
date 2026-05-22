@@ -423,3 +423,33 @@ fu_path_verify_safe(const gchar *filename, GError **error)
 	/* success */
 	return TRUE;
 }
+
+/**
+ * fu_path_sanitize_basename:
+ * @str: a string to sanitize
+ *
+ * Sanitizes a string for use as a path basename by replacing path separators
+ * and other dangerous characters with underscores.
+ *
+ * Returns: (transfer full): a newly allocated sanitized string
+ *
+ * Since: 2.1.4
+ **/
+gchar *
+fu_path_sanitize_basename(const gchar *str)
+{
+	g_autoptr(GString) result = g_string_new(str);
+
+	g_return_val_if_fail(str != NULL, NULL);
+
+	/* replace dangerous characters */
+	g_string_replace(result, "/", "_", 0);
+	g_string_replace(result, "\\", "_", 0);
+	g_string_replace(result, "..", "_", 0);
+
+	/* detect hidden files */
+	if (g_str_has_prefix(result->str, "."))
+		result->str[0] = '_';
+
+	return g_string_free(g_steal_pointer(&result), FALSE);
+}
