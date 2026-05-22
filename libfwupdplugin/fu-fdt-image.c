@@ -77,8 +77,16 @@ fu_fdt_image_strlist_from_blob(GBytes *blob)
 	/* delimit by NUL */
 	for (gsize i = 0; i < bufsz; i++) {
 		const gchar *tmp = (const gchar *)buf + i;
+		gsize len = strnlen(tmp, bufsz - i);
+
+		/* ensure NUL-termination within bounds */
+		if (i + len >= bufsz) {
+			g_warning("FDT strlist not NUL-terminated at offset 0x%x", (guint)i);
+			break;
+		}
+
 		g_ptr_array_add(strs, (gpointer)tmp);
-		i += strlen(tmp);
+		i += len;
 	}
 
 	/* copy to GStrv */
