@@ -11,6 +11,24 @@
 #include "fu-context-private.h"
 
 static void
+fu_fdt_image_strlist_malformed_func(void)
+{
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* test case for SWSPLAT-23690: non-NUL-terminated strlist should not crash */
+	firmware = fu_firmware_new_from_xml(
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"compatible\" format=\"strlist\">YWJjZGVm</metadata>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+}
+
+static void
 fu_fdt_firmware_func(void)
 {
 	gboolean ret;
@@ -84,5 +102,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/fdt-firmware", fu_fdt_firmware_func);
+	g_test_add_func("/fwupd/fdt-image{strlist-malformed}", fu_fdt_image_strlist_malformed_func);
 	return g_test_run();
 }
