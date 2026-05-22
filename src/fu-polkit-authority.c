@@ -86,8 +86,15 @@ fu_polkit_authority_check(FuPolkitAuthority *self,
 	g_return_if_fail(callback != NULL);
 
 #ifdef HAVE_POLKIT
-	if (owner != NULL && sender != NULL) {
+	if (sender != NULL) {
 		g_autoptr(PolkitSubject) pksubject = polkit_system_bus_name_new(sender);
+		if (owner == NULL) {
+			g_task_return_new_error_literal(task,
+							FWUPD_ERROR,
+							FWUPD_ERROR_AUTH_FAILED,
+							"PolicyKit daemon is not available");
+			return;
+		}
 		if (flags & FU_POLKIT_AUTHORITY_CHECK_FLAG_ALLOW_USER_INTERACTION)
 			pkflags |= POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
 		polkit_authority_check_authorization(self->pkauthority,
