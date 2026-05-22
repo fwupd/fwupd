@@ -897,6 +897,7 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	/* make a second pass */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release_tmp = g_ptr_array_index(releases, i);
+		const gchar *action_id;
 		if (!fu_engine_requirements_check(engine,
 						  release_tmp,
 						  helper->flags,
@@ -914,11 +915,11 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		}
 
 		/* get the action IDs for the valid device */
-		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
-			const gchar *action_id = fu_release_get_action_id(release_tmp);
-			if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
-				g_ptr_array_add(helper->action_ids, g_strdup(action_id));
-		}
+		action_id = fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)
+				? "org.freedesktop.fwupd.device-emulate"
+				: fu_release_get_action_id(release_tmp);
+		if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
+			g_ptr_array_add(helper->action_ids, g_strdup(action_id));
 		g_ptr_array_add(helper->releases, g_object_ref(release_tmp));
 	}
 
