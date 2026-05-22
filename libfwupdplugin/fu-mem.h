@@ -69,6 +69,10 @@ fu_memread_uint64_safe(const guint8 *buf,
 		       guint64 *value,
 		       FuEndianType endian,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+GString *
+fu_memread_string_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
 gboolean
 fu_memwrite_uint8_safe(guint8 *buf, gsize bufsz, gsize offset, guint8 value, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
