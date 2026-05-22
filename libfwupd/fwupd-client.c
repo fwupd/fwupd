@@ -927,6 +927,17 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_NOPROGRESS, 0L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_MAXREDIRS, 5L);
+#if CURL_AT_LEAST_VERSION(7, 85, 0)
+	(void)curl_easy_setopt(helper->curl, CURLOPT_PROTOCOLS_STR, "http,https,ipfs");
+	(void)curl_easy_setopt(helper->curl, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+#else
+	(void)curl_easy_setopt(helper->curl,
+			       CURLOPT_PROTOCOLS,
+			       CURLPROTO_HTTP | CURLPROTO_HTTPS | CURLPROTO_IPFS);
+	(void)curl_easy_setopt(helper->curl,
+			       CURLOPT_REDIR_PROTOCOLS,
+			       CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
 #ifdef _WIN32
 	(void)curl_easy_setopt(helper->curl, CURLOPT_CAINFO, "ca-bundle.crt");
 #endif
