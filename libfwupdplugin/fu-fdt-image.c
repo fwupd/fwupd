@@ -67,18 +67,20 @@ fu_fdt_image_guess_format_from_key(const gchar *key)
 }
 
 static gchar **
-fu_fdt_image_strlist_from_blob(GBytes *blob)
+fu_fdt_image_strlist_from_blob(GBytes *blob, GError **error)
 {
 	gchar **val;
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-	g_autoptr(GPtrArray) strs = g_ptr_array_new();
+	g_autoptr(GPtrArray) strs = g_ptr_array_new_with_free_func(g_free);
 
 	/* delimit by NUL */
 	for (gsize i = 0; i < bufsz; i++) {
-		const gchar *tmp = (const gchar *)buf + i;
-		g_ptr_array_add(strs, (gpointer)tmp);
-		i += strlen(tmp);
+		GString *tmp = fu_memread_string_safe(buf, bufsz, i, error);
+		if (tmp == NULL)
+			return NULL;
+		i += tmp->len;
+		g_ptr_array_add(strs, g_string_free(tmp, FALSE));
 	}
 
 	/* copy to GStrv */
@@ -116,8 +118,9 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_STR) == 0 && bufsz > 0) {
 			str = g_strndup((const gchar *)buf, bufsz);
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_STRLIST) == 0 && bufsz > 0) {
-			g_auto(GStrv) tmp = fu_fdt_image_strlist_from_blob(value);
-			str = g_strjoinv(":", tmp);
+			g_auto(GStrv) tmp = fu_fdt_image_strlist_from_blob(value, NULL);
+			if (tmp != NULL)
+				str = g_strjoinv(":", tmp);
 		} else {
 			str = g_base64_encode(buf, bufsz);
 		}
@@ -287,6 +290,7 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
 	g_autoptr(GBytes) blob = NULL;
 	const guint8 *buf;
 	gsize bufsz = 0;
+	g_auto(GStrv) val_tmp = NULL;
 
 	g_return_val_if_fail(FU_IS_FDT_IMAGE(self), FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
@@ -320,9 +324,14 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
 		}
 	}
 
+	/* parse */
+	val_tmp = fu_fdt_image_strlist_from_blob(blob, error);
+	if (val_tmp == NULL)
+		return FALSE;
+
 	/* success */
 	if (val != NULL)
-		*val = fu_fdt_image_strlist_from_blob(blob);
+		*val = g_steal_pointer(&val_tmp);
 	return TRUE;
 }
 
