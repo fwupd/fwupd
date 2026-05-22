@@ -993,3 +993,44 @@ fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError 
 	}
 	return g_steal_pointer(&str);
 }
+
+/**
+ * fu_memread_string_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to read from
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads a NUL-terminated string from a buffer.
+ *
+ * Returns: (transfer full): a string, or %NULL on error
+ *
+ * Since: 2.1.4
+ **/
+GString *
+fu_memread_string_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* validate offset is within buffer bounds */
+	if (offset >= bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "string offset 0x%x exceeds buffer size 0x%x",
+			    (guint)offset,
+			    (guint)bufsz);
+		return NULL;
+	}
+
+	for (gsize i = offset; i < bufsz; i++) {
+		if (buf[i] == '\0')
+			return g_steal_pointer(&str);
+		g_string_append_c(str, (gchar)buf[i]);
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "buffer not NULL terminated");
+	return NULL;
+}
