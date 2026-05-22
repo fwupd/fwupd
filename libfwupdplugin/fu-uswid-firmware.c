@@ -84,6 +84,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	GType img_gtype;
+	gsize payloadsz_max;
 	guint16 hdrsz;
 	guint32 payloadsz;
 	g_autoptr(FuStructUswid) st = NULL;
@@ -142,6 +143,9 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		img_gtype = FU_TYPE_COSWID_FIRMWARE;
 	}
 
+	/* limit inflated size to prevent decompression bombs */
+	payloadsz_max = MIN((gsize)payloadsz * 64, 32 * FU_MB);
+
 	/* zlib stream */
 	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
 		g_autoptr(GConverter) conv = NULL;
@@ -157,7 +161,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		istream2 = g_converter_input_stream_new(istream1, conv);
 		g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(istream2), FALSE);
-		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
+		payload = fu_input_stream_read_bytes(istream2, 0, payloadsz_max + 1, NULL, error);
 		if (payload == NULL)
 			return FALSE;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_LZMA) {
@@ -165,7 +169,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		payload_tmp = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (payload_tmp == NULL)
 			return FALSE;
-		payload = fu_lzma_decompress_bytes(payload_tmp, 16 * FU_MB, error);
+		payload = fu_lzma_decompress_bytes(payload_tmp, payloadsz_max + 1, error);
 		if (payload == NULL)
 			return FALSE;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
@@ -183,6 +187,15 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 
 	/* payload */
 	payloadsz = g_bytes_get_size(payload);
+	if (payloadsz > payloadsz_max) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "inflated size 0x%x larger than allowed 0x%x",
+			    payloadsz,
+			    (guint)payloadsz_max);
+		return FALSE;
+	}
 	for (gsize offset_tmp = 0; offset_tmp < payloadsz;) {
 		g_autoptr(FuFirmware) img = g_object_new(img_gtype, NULL);
 		g_autoptr(GBytes) img_blob = NULL;
