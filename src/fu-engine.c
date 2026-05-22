@@ -892,15 +892,10 @@ fu_engine_modify_config(FuEngine *self,
 	if (g_strcmp0(section, "fwupd") == 0) {
 		const gchar *keys[] = {
 		    "ArchiveSizeMax",
-		    "ApprovedFirmware",
-		    "DisabledDevices",
-		    "DisabledPlugins",
 		    "EnumerateAllDevices",
-		    "EspLocation",
 		    "HostBkc",
 		    "IdleTimeout",
 		    "IgnorePower",
-		    "OnlyTrusted",
 		    "P2pPolicy",
 		    "ReleaseDedupe",
 		    "ReleasePriority",
@@ -908,12 +903,13 @@ fu_engine_modify_config(FuEngine *self,
 		    "ShowDevicePrivate",
 		    "TestDevices",
 		    "TrustedReports",
-		    "TrustedUids",
 		    "UpdateMotd",
 		    "UriSchemes",
 		    "VerboseDomains",
 		    NULL,
 		};
+		/* OnlyTrusted / TrustedUids / EspLocation / DisabledPlugins / DisabledDevices /
+		 * ApprovedFirmware are intentionally NOT writable at runtime */
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
