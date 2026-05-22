@@ -99,7 +99,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 		return FALSE;
 	offset += st_dir->buf->len;
 	for (guint i = 0; i < fu_struct_psp_dir_get_total_entries(st_dir); i++) {
-		guint loc;
+		guint64 loc;
 		guint sz;
 		g_autoptr(FuStructPspDirTable) st_entry = NULL;
 		g_autoptr(FuStructImageSlotHeader) st_hdr = NULL;
