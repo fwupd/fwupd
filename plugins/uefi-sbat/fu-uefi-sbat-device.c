@@ -168,7 +168,29 @@ fu_uefi_sbat_device_write_firmware(FuDevice *device,
 	if (fp_name == NULL)
 		return FALSE;
 	filename_shim = g_build_filename(mount_point, fp_name, NULL);
-	dirname = g_path_get_dirname(filename_shim);
+
+	/* canonicalize and verify the path is still within the ESP to prevent path traversal */
+	{
+		g_autofree gchar *canon = realpath(filename_shim, NULL);
+		if (canon == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to canonicalize BootXXXX FilePath: %s",
+				    fp_name);
+			return FALSE;
+		}
+		if (!g_str_has_prefix(canon, mount_point)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "BootXXXX FilePath escapes ESP: %s",
+				    fp_name);
+			return FALSE;
+		}
+		dirname = g_path_get_dirname(canon);
+	}
+
 	filename_revocation = g_build_filename(dirname, "revocations.efi", NULL);
 
 	/* write image */
