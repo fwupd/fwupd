@@ -584,11 +584,11 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 				    "program is not supported");
 		return FALSE;
 	}
-	if (sector_size == 0) {
+	if (sector_size == 0 || sector_size == G_MAXUINT64) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid or missing sector size");
+				    FWUPD_ERROR_INVALID_DATA,
+				    "SECTOR_SIZE_IN_BYTES invalid");
 		return FALSE;
 	}
 
