@@ -2227,6 +2227,8 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	dp_filename = fu_efi_file_path_device_path_get_name(dp_path, error);
 	if (dp_filename == NULL)
 		return FALSE;
+	if (!fu_path_verify_safe(dp_filename, error))
+		return FALSE;
 
 	/* the file itself */
 	mount_point = fu_volume_get_mount_point(volume);
@@ -2347,6 +2349,7 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_context_get_esp_files_for_entry(self, entry, files, flags, &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 				g_debug("ignoring %s: %s",
 					fu_firmware_get_id(FU_FIRMWARE(entry)),
