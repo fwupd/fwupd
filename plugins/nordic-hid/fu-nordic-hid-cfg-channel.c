@@ -609,6 +609,16 @@ fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
 		if (peer_id == INVALID_PEER_ID)
 			break;
 
+		/* validate peer_id to prevent out-of-bounds access */
+		if (peer_id == 0 || peer_id > PEERS_CACHE_LEN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid peer_id 0x%02x from device",
+				    peer_id);
+			return FALSE;
+		}
+
 		g_debug("detected peer: 0x%02x", peer_id);
 
 		if (peers_cache == NULL) {
