@@ -104,6 +104,22 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 		if (g_strcmp0(value, kv[1]) != 0)
 			g_debug("removing DS-20 whitespace '%s'", kv[1]);
 
+		/* only allow safe quirk keys from device-supplied DS20 descriptors to prevent
+		 * malicious devices from setting Plugin, Flags, Guid, CounterpartGuid, etc. */
+		{
+			static const gchar *ds20_allow[] = {"Name",
+							    "Summary",
+							    "Icon",
+							    "Version",
+							    "VersionFormat",
+							    "Vendor",
+							    NULL};
+			if (!g_strv_contains(ds20_allow, key)) {
+				g_debug("ignoring DS20 quirk key '%s' from device", key);
+				continue;
+			}
+		}
+
 		/* it's fine to be strict here, as we checked the fwupd version was new enough in
 		 * FuUsbDeviceDs20Item */
 		g_debug("setting ds20 device quirk '%s'='%s'", key, value);

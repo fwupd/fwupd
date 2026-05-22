@@ -137,11 +137,11 @@ fu_usb_backend_func(void)
 	devicestr = fu_device_to_string(device_tmp);
 	g_debug("%s", devicestr);
 
-	/* check the fwupd DS20 descriptor was parsed */
+	/* check the fwupd DS20 descriptor was parsed (only safe quirks like Icon) */
 	g_assert_true(fu_device_has_icon(device_tmp, "computer"));
+	/* plugin quirk should be ignored for security (device-supplied DS20) */
 	possible_plugins = fu_device_get_possible_plugins(device_tmp);
-	g_assert_cmpint(possible_plugins->len, ==, 1);
-	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
+	g_assert_cmpint(possible_plugins->len, ==, 0);
 
 	/* load another device with the same VID:PID, and check that we did not get a replug */
 	usb_emulate_fn2 =
