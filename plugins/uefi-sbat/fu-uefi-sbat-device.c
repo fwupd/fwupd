@@ -171,13 +171,9 @@ fu_uefi_sbat_device_write_firmware(FuDevice *device,
 
 	/* canonicalize and verify the path is still within the ESP to prevent path traversal */
 	{
-		g_autofree gchar *canon = realpath(filename_shim, NULL);
+		g_autofree gchar *canon = fu_path_make_absolute(filename_shim, error);
 		if (canon == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to canonicalize BootXXXX FilePath: %s",
-				    fp_name);
+			g_prefix_error(error, "failed to canonicalize BootXXXX FilePath %s: ", fp_name);
 			return FALSE;
 		}
 		if (!g_str_has_prefix(canon, mount_point)) {

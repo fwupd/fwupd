@@ -2231,6 +2231,26 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	/* the file itself */
 	mount_point = fu_volume_get_mount_point(volume);
 	filename = g_build_filename(mount_point, dp_filename, NULL);
+
+	/* canonicalize and verify the path is still within the ESP to prevent path traversal */
+	{
+		g_autofree gchar *canon = fu_path_make_absolute(filename, error);
+		if (canon == NULL) {
+			g_prefix_error(error, "failed to canonicalize BootXXXX FilePath %s: ", dp_filename);
+			return FALSE;
+		}
+		if (!g_str_has_prefix(canon, mount_point)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "BootXXXX FilePath escapes ESP: %s",
+				    dp_filename);
+			return FALSE;
+		}
+		g_free(filename);
+		filename = g_strdup(canon);
+	}
+
 	g_debug("check for 1st stage bootloader: %s", filename);
 	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE) {
 		g_autoptr(FuFirmware) firmware = NULL;
