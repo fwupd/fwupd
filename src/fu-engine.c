@@ -970,11 +970,7 @@ fu_engine_modify_remote(FuEngine *self,
 	    "AutomaticReports",
 	    "AutomaticSecurityReports",
 	    "Enabled",
-	    "FirmwareBaseURI",
-	    "MetadataURI",
 	    "ReportURI",
-	    "Username",
-	    "Password",
 	    NULL,
 	};
 
