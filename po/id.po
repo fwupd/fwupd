@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-04-23 06:03+0000\n"
+"PO-Revision-Date: 2026-05-23 11:11+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -117,11 +117,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Autentikasi diperlukan untuk mengatur ulang konfigurasi daemon ke baku"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Ubah properti perangkat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Diperlukan otentikasi untuk mengubah properti perangkat"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aktifkan firmware baru pada perangkat"
@@ -131,18 +131,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Autentikasi diperlukan untuk beralih ke versi firmware baru"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Bersihkan hasil pembaruan firmware yang tersimpan"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Diperlukan otentikasi untuk membersihkan hasil pembaruan firmware"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Verifikasi firmware perangkat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Diperlukan otentikasi untuk memverifikasi firmware pada perangkat"
 
 msgid "Update the stored device verification information"
 msgstr "Mutakhirkan informasi verifikasi perangkat yang tersimpan"
@@ -152,11 +152,11 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Autentikasi diperlukan untuk memutakhirkan checksum tersimpan bagi perangkat"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "Dapatkan daftar jarak jauh yang dikonfigurasi"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "Diperlukan otentikasi untuk mendapatkan daftar remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 msgid "Modify a configured remote"
 msgstr "Ubah suatu remote yang ditata"
@@ -236,11 +236,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Autentikasi diperlukan untuk memfungsikan pengumpulan data emulasi"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Instal firmware pada perangkat tiruan"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "Diperlukan otentikasi untuk menginstal firmware pada perangkat tiruan"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1391,7 +1391,7 @@ msgid "Manually enable specific plugins"
 msgstr "Aktifkan plugin tertentu secara manual"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "Lokasi direktori kunci publik yang digunakan untuk verifikasi JCat"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1422,7 +1422,7 @@ msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Keluaran dalam format JSON (menonaktifkan semua prompt interaktif)"
 
 msgid "Prefix for import and output files"
-msgstr ""
+msgstr "Awalan untuk file impor dan keluaran"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1876,59 +1876,59 @@ msgstr "Mengurai eventlog PCR sistem"
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "Tampilkan informasi mengenai file JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "NAMAFILE ID ALIAS_ID"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "Tambahkan alias untuk item JCat tertentu"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "Hapus alias untuk item JCat tertentu"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "NAMAFILE [JENIS]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "Mengekspor semua tanda tangan tertanam ke file"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "NAMAFILE DATA KUNCI_TERLEPAS"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "Impor tanda tangan yang sudah ada ke file JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "NAMAFILE SUMBER [JENIS[:VARIAN]] [TARGET]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "Tambahkan tanda tangan yang ditandatangani sendiri ke file JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "NAMAFILE SUMBER SERTIFIKAT PRIVKEY [JENIS[:VARIAN]] [TARGET]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "Tambahkan tanda tangan ke file JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "NAMAFILE [SUMBER]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "Verifikasi tanda tangan dari file JCat"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2291,22 +2291,22 @@ msgstr "Daftar perangkat berhasil diunggah, terima kasih!"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "Masukkan alamat email Anda untuk remote '%s'"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "Untuk mendapatkan token baru, silakan buka %s dan klik 'Generate Token'"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "Masukkan token Anda untuk remote '%s'"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "Remote berhasil diaktifkan dan diperbarui"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2398,11 +2398,11 @@ msgstr "Memperbarui hash kriptografi yang disimpan dengan konten ROM saat ini"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[REMOTE-ID] [USERNAME] [TOKEN]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "Aktifkan remote yang terotentikasi"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3467,7 +3467,7 @@ msgstr "Prioritas"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "Memerlukan Otorisasi"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3475,7 +3475,7 @@ msgstr "Nama Pengguna"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
