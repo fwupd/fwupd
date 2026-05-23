@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-04-15 14:09+0000\n"
+"PO-Revision-Date: 2026-05-23 11:11+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 供应商固件服务（稳定固件）"
@@ -123,11 +123,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "需要身份认证来重置 daemon 配置到默认值"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "修改设备属性"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "修改设备属性要认证身份"
 
 msgid "Activate the new firmware on the device"
 msgstr "激活设备上的新固件"
@@ -137,18 +137,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "需要认证：切换到新固件版本"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "清除存储的固件更新结果"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "清除固件更新结果需要认证身份"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "验证设备固件"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "验证设备上的固件需认证身份"
 
 msgid "Update the stored device verification information"
 msgstr "更新存储的设备验证信息"
@@ -158,11 +158,11 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "需要认证：为设备更新存储的校验和"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "获取配置的远端"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "获得用于更新固件的配置好的远端地址列表需要认证身份"
 
 msgid "Modify a configured remote"
 msgstr "修改已配置的远程源"
@@ -242,11 +242,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "需要身份认证开启仿真数据收集"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "在仿真设备上安装固件"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "在仿真设备上安装固件要认证身份"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1397,7 +1397,7 @@ msgid "Manually enable specific plugins"
 msgstr "手动启用指定插件"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "用于验证 JCat 的公钥目录的位置"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1428,7 +1428,7 @@ msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "JSON 格式的输出（禁用全部互动提示）"
 
 msgid "Prefix for import and output files"
-msgstr ""
+msgstr "导入和导出文件的前缀"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1882,31 +1882,31 @@ msgstr "解析系统 PCR 事件日志"
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "显示 JCat 文件信息"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "FILENAME ID ALIAS_ID"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "为特定 JCat 项目添加别名"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "删除特定 JCat 项目的别名"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "FILENAME [KIND]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "将所有内嵌的签名导出到文件"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "FILENAME DATA DETACHED_KEY"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
@@ -1914,27 +1914,27 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "添加自签署签名到 JCat 文件"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "添加签名到 JCat 文件"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "FILENAME [SOURCE]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "验证 JCat 文件的签名"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2297,22 +2297,22 @@ msgstr "成功上传了设备列表，谢谢！"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "输入远端 “%s” 的电子邮箱地址"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "要获得新的令牌，请转到 %s 并单击”生成了令牌”"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "输入远端 \"%s\" 的令牌"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "成功启用并刷新了远端"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2404,11 +2404,11 @@ msgstr "以当前 ROM 内容更新存储的加密哈希"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[REMOTE-ID] [USERNAME] [TOKEN]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "启用经身份认证的远端"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3473,7 +3473,7 @@ msgstr "优先级"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "需要身份认证"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3481,7 +3481,7 @@ msgstr "用户名"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "令牌"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
