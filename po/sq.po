@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-04-15 14:10+0000\n"
+"PO-Revision-Date: 2026-05-24 14:11+0000\n"
 "Last-Translator: Besnik Bleta <besnik@programeshqip.org>\n"
 "Language-Team: Albanian <https://hosted.weblate.org/projects/fwupd/fwupd/sq/>\n"
 "Language: sq\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Shërbim Firmware-i Tregtuesi Linux (firmware i qëndrueshëm)"
@@ -31,7 +31,7 @@ msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Shërbim Firmware-i Tregtuesi Linux (firmware testimi)"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr ""
+msgstr "Ky shërbyes i largët përmban “firmware” që s’është nën embargo, por është ende duke u testuar nga tregtuesi i hardware-it. Duhet të siguroheni se keni një rrugë për të prapakthyer përditësimin e firmware-it, nëse ky dështon."
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
@@ -112,11 +112,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Që formësimi i demonit të kthehet te parazgjedhjet, duhet bërë mirëfilltësimi"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Ndryshoni një veti pajisjeje"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Për të ndryshuar një veti pajisjeje, duhet bërë mirëfilltësimi"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aktivizo te pajisja firmware-in e ri"
@@ -126,18 +126,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Që të kalohet te një version i ri firmware-i, duhet bërë mirëfilltësimi"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Spastro përfundime të depozituara përditësimesh firmware-i"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Që të spastrohen përfundime përditësimesh firmware-i, duhet bërë mirëfilltësimi"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Verifikoni firmware-in e një pajisjeje"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Që të verifikohet firmware-i në një pajisje, duhet bërë mirëfilltësimi"
 
 msgid "Update the stored device verification information"
 msgstr "Përditëso informacion verifikimi pajisjeje të depozituar"
@@ -147,25 +147,25 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Që të përditësohen checksum-et e depozituar për pajisjen, duhet bërë mirëfilltësimi"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "Merr shërbyes të largët të formësuar"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "Që të merret lista e shërbyesve të largët të formësuar të përdorur për përditësime firmware-i, duhet bërë mirëfilltësimi"
 
 msgid "Modify a configured remote"
-msgstr ""
+msgstr "Ndryshoni një shërbyes të largët të formësuar"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr ""
+msgstr "Që të ndryshohet një shërbyes i largët i formësuar, i përdorur për përditësime firmware-i, duhet bërë mirëfilltësimi"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Pastroni një shërbyes të largët të formësuar"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Që të fshihen tejtëdhëna prej një shërbyesi të largët, duhet bërë mirëfilltësimi"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -231,11 +231,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Që të bëhet grumbullim të dhënash emulimi, duhet bërë mirëfilltësim"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Instalo “firmware” në pajisjeje të emuluar"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "Që të instalohet “firmware” në një pajisje të emulueshme, duhet bërë mirëfilltësimi"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -442,11 +442,11 @@ msgstr "Mos përfshi parashtesë vulash kohore"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
-msgstr ""
+msgstr "Mos përfshi parashtesë përkatësie regjistri"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information for a particular domain"
-msgstr ""
+msgstr "Shfaq informacion të hollësishëm demoni për një përkatësi të dhënë"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -472,8 +472,8 @@ msgstr "Riniseni, që të plotësohet përditësimi."
 #, c-format
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u pajisje s’gjendet nën formësimin më të mirë të ditur."
+msgstr[1] "%u pajisje s’gjenden nën formësimin më të mirë të ditur."
 
 #. TRANSLATORS: this is shown in the MOTD -- %1 is the
 #. * command name, e.g. `fwupdmgr sync`
@@ -516,7 +516,7 @@ msgstr "Publikuesi i shpërndarjes suaj mund të mos ketë verifikuar ndonjë ng
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
-msgstr ""
+msgstr "Rrezikun për aktivizimin e këtij shërbyesi të largët e merrni ju përsipër."
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
@@ -550,7 +550,7 @@ msgstr "Nisje e verifikuar me Intel BootGuard"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
-msgstr ""
+msgstr "Mbrojtur me Intel BootGuard ACM"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
@@ -560,7 +560,7 @@ msgstr "Rregulla gabimesh Intel BootGuard"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * OTP = one time programmable
 msgid "Intel BootGuard OTP fuse"
-msgstr ""
+msgstr "Siguresë OTP Intel BootGuard"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
@@ -773,7 +773,7 @@ msgstr "Nisje e Verifikuar Me Intel BootGuard"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM Protected"
-msgstr ""
+msgstr "Mbrojtur me ACM Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
@@ -782,7 +782,7 @@ msgstr "Rregulla Gabimesh Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
-msgstr ""
+msgstr "Siguresë Intel BootGuard"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
 msgid "Control-flow Enforcement Technology"
@@ -986,7 +986,7 @@ msgstr "Nisje e Siguruar UEFI pengon ngarkim software-i dashakeq, kur niset paji
 
 #. TRANSLATORS: longer description
 msgid "UEFI boot service variables should not be readable from runtime mode."
-msgstr ""
+msgstr "Ndryshoret për shërbime nisjeje UEFI s’duhet të jenë të lexueshme gjatë mënyrës ekzekutim."
 
 #. TRANSLATORS: longer description
 msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
@@ -1069,7 +1069,7 @@ msgstr "HP SureStart është një veçori sigurie firmware-i që mbron BIOS-in n
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
-msgstr ""
+msgstr "Verifikimi i AMD Microcode Signature garanton që mikrokodi për CPU-në është i mirëfilltë dhe në të s’janë futur hundët."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1168,23 +1168,23 @@ msgstr "Pjesa e formësimit u rikthye me sukses te parazgjedhjet"
 
 #. TRANSLATORS: success message for a per-remote setting change
 msgid "Successfully modified remote"
-msgstr ""
+msgstr "Shërbyesi i largët u ndryshua me sukses"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Shërbyesi i largët u pastrua me sukses"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
-msgstr ""
+msgstr "Shërbyesi i largët u çaktivizua me sukses"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Të fshihen kartelat tanimë të papërdorura të fshehtinës për shërbyesin e largët?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr ""
+msgstr "Shërbyesi i largët u aktivizua me sukses"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
@@ -1347,7 +1347,7 @@ msgstr "Lejo ndryshim dege firmware-i"
 
 #. TRANSLATORS: command line option
 msgid "Force the action by relaxing some runtime checks"
-msgstr ""
+msgstr "Detyroje veprimin duke qenë më zemërgjerë me disa kontrolle gjatë ekzekutimit"
 
 #. TRANSLATORS: command line option
 msgid "Ignore firmware checksum failures"
@@ -1390,7 +1390,7 @@ msgid "Manually enable specific plugins"
 msgstr "Aktivizoni dorazi shtojca të çaktuara"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "Vendndodhje e drejtorive të kyçeve publikë të përdorur për verifikim JCat"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1622,7 +1622,7 @@ msgstr "Shfaq GTypes të gatshme firmware-i"
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
-msgstr ""
+msgstr "Merr shërbyesit e largët të formësuar"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
@@ -1763,7 +1763,7 @@ msgstr "Paraqit kartela nisjesh EFI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[APPSTREAM_ID]"
-msgstr ""
+msgstr "[APPSTREAM_ID]"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1803,23 +1803,23 @@ msgstr "REMOTE-ID KYÇ VLERË"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
-msgstr ""
+msgstr "Ndryshon një shërbyes të largët të dhënë"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
-msgstr ""
+msgstr "REMOTE-ID"
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Pastron një shërbyes të largët të dhënë"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
-msgstr ""
+msgstr "Aktivizon një shërbyes të largët të dhënë"
 
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
-msgstr ""
+msgstr "Çaktivizon një shërbyes të largët të dhënë"
 
 #. TRANSLATORS: command description
 msgid "Enables virtual testing devices"
@@ -1851,7 +1851,7 @@ msgstr "Gjen hedhje në qarkullim firmware-i prej tejtëdhënash"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KIND FILENAME"
-msgstr ""
+msgstr "LLOJ EMËRKARTELE"
 
 #. TRANSLATORS: command description
 msgid "Calculates a CRC of a file"
@@ -1875,59 +1875,59 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "Shfaq informacion mbi një kartelë JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "EMËRKARTELE ID ID_ALIASI"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "Shtoni një alias për një objekt JCat specifik"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "Hiqni një alias për një objekt specifik JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "EMËRKARTELE [LLOJ]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "Eksporton në kartela krejt nënshkrimet e trupëzuar"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "EMËRKARTELE TË_DHËNA KYÇ_I_SHKËPUTUR"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "Importo në një kartelë JCat një nënshkrim ekzistues"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "EMËRKARTELE BURIM [LLOJ[:VARIANT]] [OBJEKTIV]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "Shtoni te një kartelë JCat një nënshkrim të vetënëshkruar"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "EMËRKARTELE BURIM DËSHMI KYÇPRIVAT [LLOK[:VARIANT]] [OBJEKTIV]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "Shtoni te një kartelë JCat një nënshkrim"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "EMËRKARTELE [BURIM]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "Verifikoni një nënshkrim nga një kartelë JCat"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2011,7 +2011,7 @@ msgstr "OK!"
 #. TRANSLATORS: the inhibit ID is a short string like dbus-123456
 #, c-format
 msgid "Inhibit ID is %s."
-msgstr ""
+msgstr "Inhibit ID është %s."
 
 #. TRANSLATORS: we can auto-uninhibit after a timeout
 #, c-format
@@ -2083,7 +2083,7 @@ msgstr "U përditësuan me sukses checksum-e pajisjeje"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
-msgstr ""
+msgstr "Aktualisht s’ka shërbyes të largët të aktivizuar, ndaj s’ka tejtëdhëna."
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
@@ -2091,7 +2091,7 @@ msgstr "Tejtëdhënat mund të merren nga Shërbimi i Firmware-it të Tregtuesit
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
-msgstr ""
+msgstr "Të aktivizohet ky shërbyes i largët?"
 
 msgid "Updating"
 msgstr "Përditësim"
@@ -2118,8 +2118,8 @@ msgstr[1] "%u pajisje janë të përditësueshme"
 #, c-format
 msgid "%u device is supported in the enabled remotes (an update has been published)"
 msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Nga shërbyesit e largët të aktivizuar mbulohet %u pajisje (është publikuar një përditësim)"
+msgstr[1] "Nga shërbyesit e largët të aktivizuar mbulohen %u pajisje (është publikuar një përditësim)"
 
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
@@ -2162,7 +2162,7 @@ msgstr "S’ka përditësime gati"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
-msgstr ""
+msgstr "S’ka shërbyes të largët"
 
 #. TRANSLATORS: BKC is the industry name for the best known configuration and is a set
 #. * of firmware that works together
@@ -2187,11 +2187,11 @@ msgstr "Të kryhet veprimi?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
-msgstr ""
+msgstr "Doni të rifreskohet ky shërbyes i largët tani?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
-msgstr ""
+msgstr "Shërbyesi i largët u aktivizua dhe rifreskua me sukses"
 
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
@@ -2296,26 +2296,26 @@ msgstr "Lista e pajisjeve u ngarkua me sukses, faleminderit!"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "Jepni adresën tuaj email për shërbyesin e largët “%s”"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "Që të merrni një token të ri, ju lutemi, kaloni te %s dhe klikoni “Prodho Token”"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "Jepni token-in tuaj për shërbyesin e largët “%s”"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "Shërbyesi i largët u aktivizua dhe rifreskua me sukses"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
-msgstr ""
+msgstr "Caktoni riprova shkarkimi për gabime transienti"
 
 #. TRANSLATORS: command line option
 msgid "Only install onto emulated devices"
@@ -2335,7 +2335,7 @@ msgstr "Mos kontrollo për tejtëdhëna të vjetra"
 
 #. TRANSLATORS: command line option
 msgid "Do not check if download remotes should be enabled"
-msgstr ""
+msgstr "Mos kontrollo nëse duhet aktivizuar a jo shërbyes të largët shkarkimesh"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -2403,11 +2403,11 @@ msgstr "Përditësoni hashin kriptografik të depozituar me lëndën e tanishme 
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[ID-TË-LARGËTI] [EMËRPËRDORUESI] [TOKEN]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "Aktivizo një shërbyes të largët të mirëfilltësuar"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -2569,7 +2569,7 @@ msgstr "Vlerë maksimum"
 
 #. TRANSLATORS: Scalar increment for integer BIOS setting
 msgid "Scalar Increment"
-msgstr ""
+msgstr "Zmadhim Skalar"
 
 #. TRANSLATORS: Shortest valid string for BIOS setting
 msgid "Minimum length"
@@ -3150,7 +3150,7 @@ msgstr "Version Minimum"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "Version Maksimum"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3162,7 +3162,7 @@ msgstr "Tregtues"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3479,7 +3479,7 @@ msgstr "Përparësi"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "Lyp Mirëfilltësim"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3487,7 +3487,7 @@ msgstr "Emër përdoruesi"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3563,7 +3563,7 @@ msgstr "E kyçur"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
-msgstr ""
+msgstr "E shkyçur"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Encrypted"
@@ -3691,7 +3691,7 @@ msgstr "HP SureStart është e aktivizuar"
 
 #. TRANSLATORS: HSI event title
 msgid "AMD microcode signature vulnerability fixed"
-msgstr ""
+msgstr "U ndreq cenueshmëri nënshkrimi mikrokodi AMD"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
@@ -3779,11 +3779,11 @@ msgstr "Kjo paketë s’është vleftësuar, mund të mos funksionojë si duhet.
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
-msgstr ""
+msgstr "Të aktivizohet shërbyesi i ri i largët?"
 
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
-msgstr ""
+msgstr "Pajtohet dhe të aktivizohet shërbyesi i largët?"
 
 #~ msgid "Password"
 #~ msgstr "Fjalëkalim"
