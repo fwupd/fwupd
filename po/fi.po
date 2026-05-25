@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-05-22 10:11+0000\n"
+"PO-Revision-Date: 2026-05-25 17:11+0000\n"
 "Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
 "Language-Team: Finnish <https://hosted.weblate.org/projects/fwupd/fwupd/fi/>\n"
 "Language: fi\n"
@@ -121,11 +121,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Todennus vaaditaan taustaprosessin palauttamiseksi oletuksiin"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Muokkaa laitteen ominaisuutta"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Todennus vaaditaan laitteen ominaisuuksien muokkaamista varten"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aktivoi laitteessa oleva uusi laiteohjelmisto"
@@ -135,18 +135,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Uuden laiteohjelmistoversion käyttöönotto vaatii tunnistautumisen"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Tyhjennä tallennetut laiteohjelmistopäivitystulokset"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Todennus vaaditaan laiteohjelmistopäivitysten tulosten tyhjentämistä varten"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Tarkista laitteen laiteohjelmisto"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Todennus vaaditaan laitteen laiteohjelmiston tarkistamista varten"
 
 msgid "Update the stored device verification information"
 msgstr "Päivitä laitteen tallennetut vahvistustiedot"
@@ -156,11 +156,11 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Tallennettujen tarkistussummien päivitys vaatii tunnistautumisen"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "Hae konfiguroidut etäkoneet"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "Todennus vaaditaan laiteohjelmistopäivityksiin käytettyjen määritettyjen etäkoneiden luettelon saamista varten"
 
 msgid "Modify a configured remote"
 msgstr "Muokkaa lähteen asetuksia"
@@ -240,11 +240,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Todennus vaaditaan laitteiston emulointitietojen keräämiseksi"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Asenna laiteohjelmisto emuloidulle laitteelle"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "Todennus vaaditaan emuloituun laitteeseen laiteohjelmiston asentamista varten"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1399,7 +1399,7 @@ msgid "Manually enable specific plugins"
 msgstr "Ota manuaalisesti tietyt laajennukset käyttöön"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "JCat-tarkistuksessa käytettyjen julkisten avainten hakemistojen sijainti"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1430,7 +1430,7 @@ msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Tuloste JSON-muodossa (poistaa kaikki interaktiiviset kehotteet käytöstä)"
 
 msgid "Prefix for import and output files"
-msgstr ""
+msgstr "Etuliite tuonti- ja tulostustiedostoille"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1884,59 +1884,59 @@ msgstr "Jäsennä järjestelmän PCR:n eventlog"
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "Näytä tietoja JCat-tiedostosta"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "TIEDOSTONIMI TUNNUS ALIASTUNNUS"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "Lisää alias tietylle JCat-kohteelle"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "Poista tietyn JCat-kohteen alias"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "TIEDOSTONIMI [LAJI]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "Vie kaikki upotetut allekirjoitukset tiedostoihin"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "TIEDOSTONIMI DATA IRROTETTU_AVAIN"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "Tuo olemassa oleva allekirjoitus JCat-tiedostoon"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "TIEDOSTONIMI LÄHDE [LAJI[:MUUNNELMA]] [KOHDE]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "Lisää itse allekirjoitettu allekirjoitus JCat-tiedostoon"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "TIEDOSTONIMI LÄHDE VARMENNE YKSITYINEN_AVAIN [LAJI[:MUUNNELMA]] [KOHDE]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "Lisää allekirjoitus JCat-tiedostoon"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "TIEDOSTONIMI [LÄHDE]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "Tarkista allekirjoitus JCat-tiedostosta"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2305,22 +2305,22 @@ msgstr "Laiteluettelo lähetetty, kiitos!"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "Syötä sähköpostiosoitteesi etäkoneelle '%s'"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "Saadaksesi uuden poletin, siirry kohtaan %s ja napsauta 'Luo poletti'"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "Syötä polettisi etäkoneelle '%s'"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "Etäkone otettu käyttöön ja virkistetty onnistuneesti"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2412,11 +2412,11 @@ msgstr "Päivitä tallennettu kryptografinen tiiviste nykyisellä ROM-sisällöl
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[ETÄKONETUNNUS] [KÄYTTÄJÄNIMI] [POLETTI]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "Ota todennettu etäkone käyttöön"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3488,7 +3488,7 @@ msgstr "Prioriteetti"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "Vaatii todennuksen"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3496,7 +3496,7 @@ msgstr "Käyttäjätunnus"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "Poletti"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3520,7 +3520,7 @@ msgstr "Metatietojen allekirjoitus"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
-msgstr "Firmware pohja URI"
+msgstr "Laiteohjelmiston perus-URI"
 
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
