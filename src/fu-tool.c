@@ -252,7 +252,7 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 	if (!fu_engine_load(self->engine, flags, progress, error))
 		return FALSE;
 
-	if (!self->as_json) {
+	if (!self->as_json && !(flags & FU_ENGINE_LOAD_FLAG_READONLY)) {
 		fu_util_show_plugin_warnings(self);
 		fu_util_show_unsupported_warning(self->console);
 	}
@@ -5451,12 +5451,7 @@ fu_util_version(FuUtil *self, GError **error)
 	g_autofree gchar *str = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine(
-		self,
-		FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-		    FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_HWINFO,
-		self->progress,
-		error))
+	if (!fu_util_start_engine(self, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
 		return FALSE;
 
 	/* get metadata */
