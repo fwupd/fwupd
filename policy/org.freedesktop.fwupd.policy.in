@@ -219,10 +219,10 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.fwupd.modify-remote">
+  <action id="org.freedesktop.fwupd.enable-remote">
     <description>Modify a configured remote</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
-    <message>Authentication is required to modify a configured remote used for firmware updates</message>
+    <message>Authentication is required to enable or disable a configured remote used for firmware updates</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -230,6 +230,18 @@
     </defaults>
     <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.get-remotes</annotate>
     <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.clean-remote</annotate>
+  </action>
+
+  <action id="org.freedesktop.fwupd.modify-remote">
+    <description>Modify a configured remote</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to modify a configured remote used for firmware updates</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.enable-remote</annotate>
   </action>
 
   <action id="org.freedesktop.fwupd.clean-remote">
