@@ -44,7 +44,7 @@ enum FuEngineLoadFlags {
     NoCache = 1 << 4,
     BuiltinPlugins = 1 << 6,
     EnsureClientCert = 1 << 7,
-    ExternalPlugins = 1 << 8,   // dload'ed plugins such as flashrom
+    ExternalPlugins = 1 << 8,   // dload'ed plugins such as modem-manager
     DeviceHotplug = 1 << 9,
     ColdplugForce = 1 << 10,    // even without a matched plugin
     Ready = 1 << 11,
