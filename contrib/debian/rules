@@ -22,12 +22,6 @@ ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
 	CONFARGS += -Dtests=false
 endif
 
-ifneq ($(DEB_HOST_ARCH_CPU),ia64)
-	CONFARGS += -Dplugin_flashrom=enabled
-else
-	CONFARGS += -Dplugin_flashrom=disabled
-endif
-
 ifneq ($(QUBES_OPTION),)
 	CONFARGS += -Dqubes=true
 endif

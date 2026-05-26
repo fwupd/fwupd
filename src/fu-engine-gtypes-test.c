@@ -225,7 +225,6 @@ fu_engine_gtypes_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	const gchar *external_plugins[] = {
-	    "flashrom",
 	    "modem-manager",
 	};
 

@@ -112,9 +112,6 @@ if build_daemon
       'char-usb',
       'char-usb_device',
     ]
-    if allow_flashrom
-      device_allows += ['char-mem']
-    endif
     if cc.has_header(
       'linux/nvme_ioctl.h',
       required: false,
@@ -155,9 +152,6 @@ if build_daemon
       'vmsplice',
       'copy_file_range', # for g_file_copy
     ]
-    if allow_flashrom
-      syscall_filter += ['@raw-io']
-    endif
     dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
     if supported_build
       dynamic_options += ['Environment="FWUPD_SYSCALL_FILTER=systemd"']
