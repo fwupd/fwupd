@@ -35,11 +35,6 @@ The list of CHIDs used in Microsoft Windows is:
     HardwareID-13 ← Manufacturer + Baseboard_Manufacturer + Baseboard_Product
     HardwareID-14 ← Manufacturer
 
-Additionally, we also support some fwupd-specific IDs:
-
-    fwupd-05 ← Manufacturer&Family&ProductName&BiosVendor
-    fwupd-14 ← Manufacturer&BiosVendor
-
 On Windows, CHIDs are generated from the ASCII representation of SMBIOS strings, and on Linux the same
 mechanism is used. Additionally, on Linux, the Device Tree, DMI and `kenv` data sources
 are used to construct emulations of the Microsoft CHIDs.
