@@ -2135,13 +2135,44 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 				    FuEngineRequest *request,
 				    GDBusMethodInvocation *invocation)
 {
+	const gchar *action_id;
 	const gchar *remote_id = NULL;
 	const gchar *key = NULL;
 	const gchar *value = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
+	const gchar *keys_enable[] = {
+	    "ApprovalRequired",
+	    "AutomaticReports",
+	    "AutomaticSecurityReports",
+	    "Enabled",
+	    NULL,
+	};
+	const gchar *keys_modify[] = {
+	    "FirmwareBaseURI",
+	    "MetadataURI",
+	    "ReportURI",
+	    "Username",
+	    "Password",
+	    NULL,
+	};
 
 	/* check the id exists */
 	g_variant_get(parameters, "(&s&s&s)", &remote_id, &key, &value);
+
+	/* find the correct polkit authorization */
+	if (g_strv_contains(keys_enable, key)) {
+		action_id = "org.freedesktop.fwupd.enable-remote";
+	} else if (g_strv_contains(keys_modify, key)) {
+		action_id = "org.freedesktop.fwupd.modify-remote";
+	} else {
+		g_dbus_method_invocation_return_error(invocation,
+						      FWUPD_ERROR,
+						      FWUPD_ERROR_NOT_SUPPORTED,
+						      "setting %s=%s not supported",
+						      key,
+						      value);
+		return;
+	}
 
 	/* create helper object */
 	helper = g_new0(FuMainAuthHelper, 1);
@@ -2156,7 +2187,7 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
-				  "org.freedesktop.fwupd.modify-remote",
+				  action_id,
 				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
 				  NULL,
 				  fu_dbus_daemon_authorize_modify_remote_cb,
