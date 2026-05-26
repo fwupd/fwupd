@@ -79,6 +79,6 @@ main(int argc, char **argv)
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/path/verify_safe", fu_path_verify_safe_func);
-	g_test_add_func("/fwupd/path/sanitize_component", fu_path_sanitize_basename_func);
+	g_test_add_func("/fwupd/path/sanitize_basename", fu_path_sanitize_basename_func);
 	return g_test_run();
 }
