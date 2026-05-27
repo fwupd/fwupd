@@ -132,7 +132,6 @@ static gboolean
 fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GError **error)
 {
 	g_autofd gint fd = -1;
-	g_autoptr(GInputStream) istr = NULL;
 
 	/* not bare-metal */
 	if (!g_str_has_prefix(fn, "/sys"))
@@ -148,19 +147,7 @@ fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
-	istr = g_unix_input_stream_new(g_steal_fd(&fd), TRUE);
-	if (istr == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to create stream");
-		return FALSE;
-	}
-	return fu_linux_efivars_set_immutable_fd(
-	    g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(istr)),
-	    value,
-	    value_old,
-	    error);
+	return fu_linux_efivars_set_immutable_fd(fd, value, value_old, error);
 }
 
 static gboolean
