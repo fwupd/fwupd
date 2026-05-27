@@ -9,20 +9,21 @@
 # Pavel Borecki <pavel.borecki@gmail.com>, 2020-2023,2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Marián Kyral <mkyral@email.cz>, 2026.
+# JakubRu13 <ruzicka.jakub@outlook.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-05-12 10:06+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
+"PO-Revision-Date: 2026-05-27 10:11+0000\n"
+"Last-Translator: JakubRu13 <ruzicka.jakub@outlook.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 2026.5-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -119,11 +120,11 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "K vrácení nastavení procesu služby do výchozího stavu je vyžadováno ověření se"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Modifikovat vlastnost zařízení"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Pro úpravu vlastnosti zařízení je zapotřebí vaše heslo"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aktivovat nový firmware na zařízení"
@@ -133,18 +134,18 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Pro přepnutí na novou verzi firmwaru je vyžadováno ověření se"
 
 msgid "Clear stored firmware update results"
-msgstr ""
+msgstr "Vymazat uložené výsledny aktualizace firmwaru"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to clear firmware update results"
-msgstr ""
+msgstr "Pro vymazání výsledků aktualizace firmwaru je zapotřebí vaše heslo"
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Ověřit firmware zařízení"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Pro ověření firmwaru zařízení je zapotřebí vaše heslo"
 
 msgid "Update the stored device verification information"
 msgstr "Aktualizovat uložené informace ohledně ověření správnosti pro zařízení"
@@ -154,11 +155,11 @@ msgid "Authentication is required to update the stored checksums for the device"
 msgstr "K aktualizaci uložených kontrolních součtů pro zařízení je vyžadováno ověření se"
 
 msgid "Get configured remotes"
-msgstr ""
+msgstr "Získat konfigurované ovladače"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
-msgstr ""
+msgstr "Pro získání seznamu konfigurovaných vzdálených zdrojů používaných pro aktualizace firmwaru je zapotřebí vaše heslo"
 
 msgid "Modify a configured remote"
 msgstr "Upravit nastavený vzdálený zdroj"
@@ -238,11 +239,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Pro zapnutí shromažďování dat emulace je vyžadováno ověření se"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Instalovat firmware na emulované zařízení"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "K instalaci firmwaru na emulované zařízení je zapotřepí vaše heslo"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1405,7 +1406,7 @@ msgid "Manually enable specific plugins"
 msgstr "Ručně zapnout konkrétní zásuvné moduly"
 
 msgid "Location of public key directories used for JCat verification"
-msgstr ""
+msgstr "Umístění veřejných adresářů použitých pro JCat ověření"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
@@ -1436,7 +1437,7 @@ msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Výstup v JSON formátu (vypne veškeré interaktivní výzvy)"
 
 msgid "Prefix for import and output files"
-msgstr ""
+msgstr "Předpona pro importované a výstupní soubory"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1890,59 +1891,59 @@ msgstr "Zpracuje systémový záznam PCR událostí"
 
 #. TRANSLATORS: command description
 msgid "Show information about a JCat file"
-msgstr ""
+msgstr "Zobrazit informace o JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME ID ALIAS_ID"
-msgstr ""
+msgstr "SOUBOR ID ALIAS_D"
 
 #. TRANSLATORS: command description
 msgid "Add an alias for a specific JCat item"
-msgstr ""
+msgstr "Přidat alias pro specifický JCat předmět"
 
 #. TRANSLATORS: command description
 msgid "Remove an alias for a specific JCat item"
-msgstr ""
+msgstr "Odebrat alias pro specifický JCat předmět"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [KIND]"
-msgstr ""
+msgstr "SOUBOR [DRUH]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "Exportuje všechny zabudované podpisy do souborů"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "SOUBOR DATA ODDĚLENÝ_KLÍČ"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "Importovat existující soubor do JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "SOUBOR ZDROJ [DRUH[:VARIANTA]] [CÍL]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
-msgstr ""
+msgstr "Přidat self-signed podpis do JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "SOUBOR ZDROJ CERT PRIVKEY [DRUHĐ:VARIANTA]] [CÍL]"
 
 #. TRANSLATORS: command description
 msgid "Add a signature to a JCat file"
-msgstr ""
+msgstr "Přidat podpis do JCat souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [SOURCE]"
-msgstr ""
+msgstr "SOUBOR [ZDROJ]"
 
 #. TRANSLATORS: command description
 msgid "Verify a signature from a JCat file"
-msgstr ""
+msgstr "Ověřit podpis z JCat souboru"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2323,22 +2324,22 @@ msgstr "Seznam zařízení úspěšně odeslán – děkujeme!"
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your email address for remote '%s'"
-msgstr ""
+msgstr "Zadejte emailovou adresu pro remote '%s'"
 
 #. TRANSLATORS: token refers to a password thing; %1 is a URL
 #, c-format
 msgid "To get a new token please go to %s and click 'Generate Token'"
-msgstr ""
+msgstr "Pro získání tokenu jděte na '%s' a klikněte na 'Generate Token'"
 
 #. TRANSLATORS: remote refers to a website
 #. distributing fw, %1 is a name e.g. 'lvfs'
 #, c-format
 msgid "Enter your token for remote '%s'"
-msgstr ""
+msgstr "Zadejte váš token pro vzdálený server '%s'"
 
 #. TRANSLATORS: we've gained access to a new firmware remote
 msgid "Remote enabled and refreshed successfully"
-msgstr ""
+msgstr "Vzdálený server byl povolen a obnoven úspěšně"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2430,11 +2431,11 @@ msgstr "Aktualizovat uložený kryptografický otisk stávajícím obsahem ROM p
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
-msgstr ""
+msgstr "[ID-ZDROJE] [UŽIVATEL] [TOKEN]"
 
 #. TRANSLATORS: command description
 msgid "Enable an authenticated remote"
-msgstr ""
+msgstr "Povolit ověřený vzdálený server"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3520,7 +3521,7 @@ msgstr "Priorita"
 
 #. TRANSLATORS: a username or password is required
 msgid "Requires Auth"
-msgstr ""
+msgstr "Vyžaduje ověření"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -3528,7 +3529,7 @@ msgstr "Uživatelské jméno"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
-msgstr ""
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
