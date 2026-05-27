@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-05-25 17:11+0000\n"
+"PO-Revision-Date: 2026-05-27 10:11+0000\n"
 "Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
 "Language-Team: Finnish <https://hosted.weblate.org/projects/fwupd/fwupd/fi/>\n"
 "Language: fi\n"
@@ -2428,7 +2428,7 @@ msgstr "Hae hyväksytyn laiteohjelmiston luettelo"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "TIEDOSTONIMI|TARKISTUSSUMMA_1[,TARKISTUSSUMMA_2][,TARKISTUSSUMMA_3]"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -2448,7 +2448,7 @@ msgstr "Lataa tiedosto"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
-msgstr "[TIEDOSTONIMI1] [TIEDOSTONIMI2]"
+msgstr "[TIEDOSTONIMI_1] [TIEDOSTONIMI_2]"
 
 #. TRANSLATORS: command description
 msgid "Test a device using a JSON manifest"
@@ -3492,7 +3492,7 @@ msgstr "Vaatii todennuksen"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
-msgstr "Käyttäjätunnus"
+msgstr "Käyttäjänimi"
 
 #. TRANSLATORS: the account token, a bit like a password
 msgid "Token"
@@ -3504,7 +3504,7 @@ msgstr "Tiedostonimi"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
-msgstr "Tiedoston allekirjoitus"
+msgstr "Tiedostonimen allekirjoitus"
 
 #. TRANSLATORS: full path of the remote.conf file
 msgid "Filename Source"
