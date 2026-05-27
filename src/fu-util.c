@@ -1833,7 +1833,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		/* self sign data */
 		if (self->sign) {
 			g_autofree gchar *sig = NULL;
-			g_autoptr(FuFirmware) sig_img = NULL;
+			g_autoptr(FuFirmware) sig_img = fu_zip_file_new();
 			g_autoptr(GBytes) sig_blob = NULL;
 
 			sig = fwupd_client_self_sign(self->client,
@@ -1844,8 +1844,10 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 			if (sig == NULL)
 				return FALSE;
 			sig_blob = g_bytes_new(sig, strlen(sig));
-			sig_img = fu_firmware_new_from_bytes(sig_blob);
 			fu_firmware_set_id(sig_img, "report.json.p7c");
+			fu_firmware_set_bytes(sig_img, sig_blob);
+			fu_zip_file_set_compression(FU_ZIP_FILE(sig_img),
+						    FU_ZIP_COMPRESSION_DEFLATE);
 			if (!fu_firmware_add_image(archive, sig_img, error))
 				return FALSE;
 		}
