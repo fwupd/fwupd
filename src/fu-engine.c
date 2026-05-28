@@ -2032,8 +2032,10 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	struct utsname name_tmp = {0};
 #endif
 	g_autoptr(GHashTable) hash = NULL;
-	g_autoptr(GList) compile_keys = g_hash_table_get_keys(compile_versions);
-	g_autoptr(GList) runtime_keys = g_hash_table_get_keys(runtime_versions);
+	g_autoptr(GList) compile_keys =
+	    g_list_sort(g_hash_table_get_keys(compile_versions), (GCompareFunc)g_strcmp0);
+	g_autoptr(GList) runtime_keys =
+	    g_list_sort(g_hash_table_get_keys(runtime_versions), (GCompareFunc)g_strcmp0);
 
 	/* convert all the runtime and compile-time versions */
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -6134,7 +6136,8 @@ fu_engine_get_approved_firmware(FuEngine *self)
 {
 	GPtrArray *checksums = g_ptr_array_new_with_free_func(g_free);
 	if (self->approved_firmware != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(self->approved_firmware);
+		g_autoptr(GList) keys = g_list_sort(g_hash_table_get_keys(self->approved_firmware),
+						    (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *csum = l->data;
 			g_ptr_array_add(checksums, g_strdup(csum));

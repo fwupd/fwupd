@@ -673,7 +673,7 @@ fwupd_release_add_metadata(FwupdRelease *self, GHashTable *hash)
 
 	/* deep copy the whole map */
 	fwupd_release_ensure_metadata(self);
-	keys = g_hash_table_get_keys(hash);
+	keys = g_list_sort(g_hash_table_get_keys(hash), (GCompareFunc)g_strcmp0);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(hash, key);
@@ -2201,7 +2201,8 @@ fwupd_release_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecF
 
 	/* metadata */
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		g_autoptr(GList) keys =
+		    g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
@@ -2295,7 +2296,8 @@ fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 
 	/* metadata */
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		g_autoptr(GList) keys =
+		    g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);

@@ -652,7 +652,7 @@ fwupd_report_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 	}
 
 	/* metadata */
-	keys = g_hash_table_get_keys(priv->metadata);
+	keys = g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
@@ -695,7 +695,7 @@ fwupd_report_add_string(FwupdCodec *codec, guint idt, GString *str)
 	fwupd_report_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 
 	/* metadata */
-	keys = g_hash_table_get_keys(priv->metadata);
+	keys = g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
