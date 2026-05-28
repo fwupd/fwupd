@@ -70,6 +70,10 @@ install_headers(
 install_headers(
   [
     'fwupd-build.h',
+    'fwupd-build-glib-2-70.h',
+    'fwupd-build-glib-2-72.h',
+    'fwupd-build-glib-2-76.h',
+    'fwupd-build-glib-2-80.h',
     'fwupd-client.h',
     'fwupd-client-sync.h',
     'fwupd-common.h',
