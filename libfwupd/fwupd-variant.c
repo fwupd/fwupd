@@ -15,7 +15,7 @@ GVariant *
 fwupd_variant_from_hash_kv(GHashTable *hash)
 {
 	GVariantBuilder builder;
-	g_autoptr(GList) keys = g_hash_table_get_keys(hash);
+	g_autoptr(GList) keys = g_list_sort(g_hash_table_get_keys(hash), (GCompareFunc)g_strcmp0);
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;

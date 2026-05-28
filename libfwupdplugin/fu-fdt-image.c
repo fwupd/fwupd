@@ -151,7 +151,7 @@ fu_fdt_image_get_attrs(FuFdtImage *self)
 
 	g_return_val_if_fail(FU_IS_FDT_IMAGE(self), NULL);
 
-	keys = g_hash_table_get_keys(priv->hash_attrs);
+	keys = g_list_sort(g_hash_table_get_keys(priv->hash_attrs), (GCompareFunc)g_strcmp0);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		g_ptr_array_add(array, g_strdup(key));
