@@ -1700,7 +1700,8 @@ fwupd_security_attr_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwupd
 		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_GUID, json_arr);
 	}
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		g_autoptr(GList) keys =
+		    g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);

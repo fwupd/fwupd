@@ -152,8 +152,8 @@ fwupd_release_func(void)
 				    "  DetachImage:          detach_image\n"
 				    "  UpdateMessage:        update_message\n"
 				    "  UpdateImage:          update_image\n"
-				    "  foo:                  bar\n"
-				    "  baz:                  bam\n",
+				    "  baz:                  bam\n"
+				    "  foo:                  bar\n",
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
