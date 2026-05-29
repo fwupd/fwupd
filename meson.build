@@ -925,7 +925,6 @@ if build_daemon
     {
       'bluez': bluez.enabled(),
       'libusb': libusb,
-      'uefi': allow_uefi,
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,
