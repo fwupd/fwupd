@@ -3,7 +3,7 @@ project(
   'c',
   version: '2.1.4',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.63.0', # limited by RHEL-9
+  meson_version: '>=0.58.2', # limited by RHEL-8
   default_options: ['warning_level=2', 'c_std=c17'],
 )
 
@@ -253,11 +253,11 @@ localedir = join_paths(prefix, get_option('localedir'))
 diffcmd = find_program('diff')
 gio = dependency(
   'gio-2.0',
-  version: '>= 2.68.0',
+  version: '>= 2.56.4',
 ) # limited by RHEL-9, which has v2.68.4
 giounix = dependency(
   'gio-unix-2.0',
-  version: '>= 2.68.0',
+  version: '>= 2.56.4',
   required: false,
 )
 if giounix.found()
@@ -271,20 +271,18 @@ if get_option('udev_hotplug')
   conf.set('HAVE_UDEV_HOTPLUG' , '1')
 endif
 if build_standalone
-  bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
-  if bluez.allowed()
+  bluez = get_option('bluez')
+  if bluez.enabled()
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').require(host_machine.system() == 'linux').require(
-    host_cpu in ['x86', 'x86_64']
-  ).allowed()
+  hsi = get_option('hsi').enabled()
   if hsi
     conf.set('HAVE_HSI', '1')
   endif
   libxmlb = dependency(
     'xmlb',
-    version: '>= 0.3.19',
+    version: '>= 0.1.15',
     fallback: ['libxmlb', 'libxmlb_dep'],
   )
   if libxmlb.get_variable('zstd') == 'true'
@@ -335,7 +333,7 @@ if build_standalone
     'readline',
     required: get_option('readline'),
   )
-  if readline.found() and get_option('readline').allowed()
+  if readline.found() and get_option('readline').enabled()
     conf.set('HAVE_READLINE', '1')
   endif
   sqlite = dependency('sqlite3')
@@ -346,7 +344,6 @@ if build_standalone
     'passim',
     version: '>= 0.1.6',
     required: get_option('passim'),
-    fallback: ['passim', 'passim_dep'],
   )
   if passim.found()
     conf.set('HAVE_PASSIM', '1')
@@ -365,7 +362,7 @@ valgrind = dependency(
 )
 libcurl = dependency(
   'libcurl',
-  version: '>= 7.62.0',
+  version: '>= 7.61.1', # RHEL 8
 )
 libdrm = dependency(
   'libdrm',
@@ -375,7 +372,7 @@ if libdrm.found()
   conf.set('HAVE_LIBDRM' , '1')
 endif
 polkit = dependency('polkit-gobject-1', version: '>= 0.103',
-         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
+         required: get_option('polkit'))
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
   if polkit.version().version_compare('>= 0.114')
@@ -489,7 +486,7 @@ endif
 
 libsystemd = dependency(
   'libsystemd',
-  required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'),
+  required: get_option('systemd'),
 )
 
 if cc.has_header('sys/auxv.h')
@@ -650,8 +647,8 @@ if build_standalone
 endif
 
 logind = dependency(
-  'systemd', 'libelogind',
-  required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
+  'systemd',
+  required: get_option('logind'),
 )
 
 if logind.found()
@@ -660,7 +657,7 @@ endif
 if libsystemd.found()
   systemd = dependency(
     'systemd',
-    version: '>= 249',
+    version: '>= 239', # RHEL 8
     required: get_option('systemd'),
   )
   conf.set('HAVE_SYSTEMD' , '1')
@@ -698,7 +695,7 @@ if libsystemd.found()
   endif
 endif
 
-supported_build = get_option('supported_build').disable_auto_if(not tag).allowed()
+supported_build = get_option('supported_build')
 if supported_build
   conf.set('SUPPORTED_BUILD', '1')
 endif
@@ -761,9 +758,7 @@ gobject_introspection_dep = dependency(
   'gobject-introspection-1.0',
   required: get_option('introspection'),
 )
-introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(
-  not gobject_introspection_dep.found()
-)
+introspection = get_option('introspection')
 
 gidocgen_dep = dependency(
   'gi-docgen',
@@ -776,17 +771,14 @@ gidocgen_app = find_program(
   'gi-docgen',
   required: gidocgen_dep.found(),
 )
-build_docs = gidocgen_dep.found() and gidocgen_app.found() and introspection.allowed()
+build_docs = gidocgen_dep.found() and gidocgen_app.found() and introspection.enabled()
 
 if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
   markdown_version = run_command(
     [python3, '-c', 'import markdown; print(markdown.__version__)'],
     check: true,
   ).stdout().strip()
-  build_docs = get_option('docs').require(
-    markdown_version.version_compare('>=3.2'),
-    error_message: 'docs=enabled requires at least markdown >= 3.2',
-  ).allowed()
+  build_docs = get_option('docs').enabled()
 endif
 
 jinja2 = run_command(
@@ -843,13 +835,7 @@ dbusmock = run_command(
 )
 umockdev = dependency(
   'umockdev-1.0',
-  required: get_option('umockdev_tests').require(dbusmock.returncode() == 0).require(
-    get_option('tests')
-  ).disable_auto_if(
-    not introspection.allowed()
-  ).disable_auto_if(
-    not run_sanitize_unsafe_tests
-  ),
+  required: get_option('umockdev_tests')
 )
 
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
@@ -918,7 +904,7 @@ summary(
     'vendor_ids_dir': vendor_ids_dir,
     'docs': build_docs,
     'gnutls': gnutls,
-    'introspection': introspection.allowed(),
+    'introspection': introspection.enabled(),
     'libblkid': libblkid,
     'libdrm': libdrm,
     'logind': logind,
@@ -937,8 +923,9 @@ summary(
 if build_daemon
   summary(
     {
-      'bluez': bluez.allowed(),
+      'bluez': bluez.enabled(),
       'libusb': libusb,
+      'uefi': allow_uefi,
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,

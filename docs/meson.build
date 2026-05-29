@@ -289,17 +289,4 @@ if build_docs
     install_tag: 'doc',
     install_dir: join_paths(datadir, 'doc', 'libfwupdplugin'),
   )
-  #make devhelp work
-  install_symlink(
-    'libfwupd',
-    install_tag: 'doc',
-    install_dir: join_paths(datadir, 'doc', 'fwupd'),
-    pointing_to: join_paths('..', 'libfwupd'),
-  )
-  install_symlink(
-    'libfwupdplugin',
-    install_tag: 'doc',
-    install_dir: join_paths(datadir, 'doc', 'fwupd'),
-    pointing_to: join_paths('..', 'libfwupdplugin'),
-  )
 endif

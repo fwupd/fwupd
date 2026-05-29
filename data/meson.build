@@ -122,7 +122,7 @@ if build_daemon
       # for BLKSSZGET
       device_allows += ['block-blkext']
     endif
-    if get_option('plugin_modem_manager').allowed()
+    if get_option('plugin_modem_manager').enabled()
       device_allows += ['char-wwan_port']
       device_allows += ['char-ttyUSB']
     endif

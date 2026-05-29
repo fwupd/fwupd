@@ -14,7 +14,7 @@ engine_dep = [
   fwupdplugin_rs_dep,
 ]
 
-if get_option('passim').allowed()
+if get_option('passim').enabled()
   engine_dep += passim
 endif
 
@@ -72,7 +72,7 @@ endif
 if host_machine.system() in ['linux', 'android']
   fwupd_engine_src += 'fu-udev-backend.c'
 endif
-if bluez.allowed()
+if bluez.enabled()
   fwupd_engine_src += 'fu-bluez-backend.c'
 endif
 

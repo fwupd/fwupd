@@ -173,7 +173,7 @@ option(
 )
 option(
   'supported_build',
-  type: 'feature',
+  type: 'boolean',
   description: 'distribution package with upstream support',
 )
 option(

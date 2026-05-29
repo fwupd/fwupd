@@ -440,7 +440,7 @@ fwupdplugin_rs_dep = declare_dependency(
 )
 
 fwupdplugin_gir_includes = []
-if introspection.allowed()
+if introspection.enabled()
   gir_dep = declare_dependency(
     sources: fwupd_gir
   )

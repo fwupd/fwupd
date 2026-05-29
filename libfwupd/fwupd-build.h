@@ -26,6 +26,24 @@
 #endif
 #endif
 
+#if !GLIB_CHECK_VERSION(2, 58, 0)
+#include "fwupd-build-glib-2-58.h"
+#endif
+#if !GLIB_CHECK_VERSION(2, 60, 0)
+#include "fwupd-build-glib-2-60.h"
+#endif
+#if !GLIB_CHECK_VERSION(2, 62, 0)
+#include "fwupd-build-glib-2-62.h"
+#endif
+#if !GLIB_CHECK_VERSION(2, 64, 0)
+#include "fwupd-build-glib-2-64.h"
+#endif
+#if !GLIB_CHECK_VERSION(2, 66, 0)
+#include "fwupd-build-glib-2-66.h"
+#endif
+#if !GLIB_CHECK_VERSION(2, 68, 0)
+#include "fwupd-build-glib-2-68.h"
+#endif
 #if !GLIB_CHECK_VERSION(2, 70, 0)
 #include "fwupd-build-glib-2-70.h"
 #endif

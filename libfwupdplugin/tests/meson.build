@@ -97,11 +97,6 @@ install_data(
   ['quirks.d/tests.quirk'],
   install_dir: join_paths(installed_test_datadir, 'tests/quirks.d'),
 )
-install_symlink(
-  'localtime',
-  install_dir: join_paths(installed_test_datadir, 'tests'),
-  pointing_to: join_paths('America', 'New_York'),
-)
 
 install_data(
   ['bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/pending_reboot'],

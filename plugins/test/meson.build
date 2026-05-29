@@ -1,7 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginTest"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-if bluez.allowed()
+if bluez.enabled()
   plugin_quirks += files('test-ble.quirk')
 endif
 
@@ -16,7 +16,7 @@ plugin_builtins += static_library('fu_plugin_test',
   dependencies: plugin_deps,
 )
 
-if bluez.allowed()
+if bluez.enabled()
 plugin_builtins += static_library('fu_plugin_test_ble',
   sources: [
     'fu-test-ble-plugin.c',

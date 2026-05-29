@@ -70,9 +70,16 @@ install_headers(
 install_headers(
   [
     'fwupd-build.h',
+    'fwupd-build-glib-2-58.h',
+    'fwupd-build-glib-2-60.h',
+    'fwupd-build-glib-2-62.h',
+    'fwupd-build-glib-2-64.h',
+    'fwupd-build-glib-2-66.h',
+    'fwupd-build-glib-2-68.h',
     'fwupd-build-glib-2-70.h',
     'fwupd-build-glib-2-72.h',
     'fwupd-build-glib-2-76.h',
+    'fwupd-build-glib-2-78.h',
     'fwupd-build-glib-2-80.h',
     'fwupd-client.h',
     'fwupd-client-sync.h',
@@ -174,7 +181,7 @@ pkgg.generate(
   description: 'fwupd is a system daemon for installing device firmware',
 )
 
-if introspection.allowed()
+if introspection.enabled()
   fwupd_gir_deps = [giounix, libcurl]
   fwupd_gir = gnome.generate_gir(
     fwupd,

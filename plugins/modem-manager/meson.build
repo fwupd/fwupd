@@ -5,7 +5,7 @@ libmbim_glib = dependency('mbim-glib', version: '>= 1.28.0', required: get_optio
 libmm_glib.found() or subdir_done()
 libqmi_glib.found() or subdir_done()
 libmbim_glib.found() or subdir_done()
-get_option('plugin_modem_manager').allowed() or subdir_done()
+get_option('plugin_modem_manager').enabled() or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
