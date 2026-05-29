@@ -2460,7 +2460,18 @@ static GPtrArray *
 fu_firmware_get_images_sorted(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) images = g_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, NULL);
+	g_autoptr(GPtrArray) images = NULL;
+
+#if GLIB_CHECK_VERSION(2, 62, 0)
+	images = g_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, NULL);
+#else
+	images = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (guint i = 0; i < priv->images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(priv->images, i);
+		g_ptr_array_add(images, g_object_ref(img));
+	}
+#endif
+
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX)
 		g_ptr_array_sort(images, fu_firmware_sort_by_idx_cb);
 	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID)

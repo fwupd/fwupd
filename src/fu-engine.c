@@ -5534,6 +5534,7 @@ GPtrArray *
 fu_engine_get_remotes(FuEngine *self, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
+	g_autoptr(GPtrArray) remotes_copy = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -5547,8 +5548,19 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 		return NULL;
 	}
 
+#if GLIB_CHECK_VERSION(2, 62, 0)
 	/* deep copy so the remote list can be kept up to date */
-	return g_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, NULL);
+	remotes_copy = g_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, NULL);
+#else
+	remotes_copy = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		g_ptr_array_add(remotes_copy, g_object_ref(remote));
+	}
+#endif
+
+	/* success */
+	return g_steal_pointer(&remotes_copy);
 }
 
 /**

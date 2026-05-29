@@ -121,8 +121,17 @@ fu_gpio_plugin_cleanup(FuPlugin *plugin,
 	g_autoptr(GPtrArray) current_logical_ids = NULL;
 
 	/* deep copy to local to clear transaction array */
+#if GLIB_CHECK_VERSION(2, 62, 0)
 	current_logical_ids =
 	    g_ptr_array_copy(self->current_logical_ids, (GCopyFunc)g_strdup, NULL);
+#else
+	current_logical_ids = g_ptr_array_new_with_free_func(g_free);
+	for (guint i = 0; i < self->current_logical_ids->len; i++) {
+		const gchar *logical_id = g_ptr_array_index(self->current_logical_ids, i);
+		g_ptr_array_add(current_logical_ids, g_strdup(logical_id));
+	}
+#endif
+
 	g_ptr_array_set_size(self->current_logical_ids, 0);
 
 	/* close the fds we opened during ->prepare */

@@ -261,7 +261,16 @@ fu_usb_backend_idle_hotplug_cb(gpointer user_data)
 
 	/* drain the idle events with the lock held */
 	g_mutex_lock(&self->idle_events_mutex);
+#if GLIB_CHECK_VERSION(2, 62, 0)
 	idle_events = g_ptr_array_copy(self->idle_events, fu_usb_backend_idle_helper_copy, NULL);
+#else
+	idle_events =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_usb_backend_idle_helper_free);
+	for (guint i = 0; i < self->idle_events->len; i++) {
+		FuUsbBackendIdleHelper *helper = g_ptr_array_index(self->idle_events, i);
+		g_ptr_array_add(idle_events, fu_usb_backend_idle_helper_copy(helper, NULL));
+	}
+#endif
 	g_ptr_array_set_size(self->idle_events, 0);
 	self->idle_events_id = 0;
 	g_mutex_unlock(&self->idle_events_mutex);
