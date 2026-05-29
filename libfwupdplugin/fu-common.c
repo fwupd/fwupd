@@ -149,6 +149,31 @@ fu_size_from_uint64(guint64 value, gsize *out, GError **error) /* nocheck:name *
 }
 
 /**
+ * fu_base64_encode:
+ * @buf: (nullable): data blob
+ * @bufsz: size of @data
+ *
+ * Encode a sequence of binary data into its Base-64 stringified representation.
+ *
+ * This should be used in preference to g_base64_encode() as GLib < 2.60.0 would return
+ * a critical warning if @data is NULL.
+ *
+ * Returns: zero-terminated Base-64 encoded string representing data, or an empty string for no data
+ *
+ * Since: 2.1.5
+ **/
+gchar *
+fu_base64_encode(const guint8 *buf, gsize bufsz)
+{
+#if !GLIB_CHECK_VERSION(2, 60, 0)
+	if (buf == NULL)
+		return g_strdup("");
+#endif
+	/* nocheck:blocked */
+	return g_base64_encode((const guchar *)buf, bufsz);
+}
+
+/**
  * fu_error_map_entry_to_gerror:
  * @value: the value to look up
  * @entries: the #FuErrorMapEntry map

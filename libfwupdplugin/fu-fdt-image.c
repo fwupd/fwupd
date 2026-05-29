@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-fdt-image.h"
 #include "fu-mem.h"
 #include "fu-string.h"
@@ -122,7 +123,7 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 			if (tmp != NULL)
 				str = g_strjoinv(":", tmp);
 		} else {
-			str = g_base64_encode(buf, bufsz);
+			str = fu_base64_encode(buf, bufsz);
 		}
 		bc = xb_builder_node_insert(bn, "metadata", "key", key, NULL);
 		if (str != NULL)

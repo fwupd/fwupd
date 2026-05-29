@@ -572,7 +572,7 @@ fu_efi_load_option_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	if (self->optional_data != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(self->optional_data, &bufsz);
-		g_autofree gchar *datastr = g_base64_encode(buf, bufsz);
+		g_autofree gchar *datastr = fu_base64_encode(buf, bufsz);
 		xb_builder_node_insert_text(bn, "optional_data", datastr, NULL);
 	}
 }
