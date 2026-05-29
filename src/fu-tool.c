@@ -4513,12 +4513,7 @@ fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
 
 	/* save every tagged device */
 	file = g_file_new_for_path(values[0]);
-	stream = g_file_replace(file,
-				NULL,
-				FALSE,
-				G_FILE_CREATE_REPLACE_DESTINATION,
-				NULL,
-				error);
+	stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_REPLACE_DESTINATION, NULL, error);
 	if (stream == NULL)
 		return FALSE;
 	return fu_engine_emulation_save(self->engine, G_OUTPUT_STREAM(stream), error);
