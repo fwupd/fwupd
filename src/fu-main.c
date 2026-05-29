@@ -61,6 +61,7 @@ fu_main_argv_changed_cb(GFileMonitor *monitor,
 		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 }
 
+#if GLIB_CHECK_VERSION(2, 64, 0)
 static void
 fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 				  GMemoryMonitorWarningLevel level,
@@ -71,6 +72,7 @@ fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 	if (!fu_daemon_stop(daemon, &error))
 		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 }
+#endif
 
 int
 main(int argc, char *argv[])
@@ -102,7 +104,9 @@ main(int argc, char *argv[])
 	g_autoptr(GOptionContext) context = NULL;
 	g_autoptr(FuDaemon) daemon = fu_daemon_new();
 	g_autoptr(GFileMonitor) argv0_monitor = NULL;
+#if GLIB_CHECK_VERSION(2, 64, 0)
 	g_autoptr(GMemoryMonitor) memory_monitor = NULL;
+#endif
 
 	setlocale(LC_ALL, "");
 
@@ -159,6 +163,7 @@ main(int argc, char *argv[])
 			 G_CALLBACK(fu_main_argv_changed_cb),
 			 daemon);
 
+#if GLIB_CHECK_VERSION(2, 64, 0)
 	/* shut down on low memory event as we can just rescan hardware */
 	memory_monitor = g_memory_monitor_dup_default();
 	if (memory_monitor != NULL) {
@@ -167,6 +172,7 @@ main(int argc, char *argv[])
 				 G_CALLBACK(fu_main_memory_monitor_warning_cb),
 				 daemon);
 	}
+#endif
 
 	/* Only timeout and close the mainloop if we have specified it
 	 * on the command line */
