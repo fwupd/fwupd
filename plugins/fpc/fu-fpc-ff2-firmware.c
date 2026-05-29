@@ -62,6 +62,7 @@ fu_fpc_ff2_firmware_get_blocks_num(FuFpcFf2Firmware *self)
 static void
 fu_fpc_ff2_firmware_init(FuFpcFf2Firmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
