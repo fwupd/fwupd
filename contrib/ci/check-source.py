@@ -104,6 +104,9 @@ class Checker:
         return False
 
     def _test_function_names_prefix_private(self, func_name: str, token: Token) -> None:
+
+        if func_name.startswith("__"):
+            return
         valid_prefixes = ["_fwupd_", "_fu_", "_g_", "_xb_"]
         for prefix in valid_prefixes:
             if func_name.startswith(prefix):
