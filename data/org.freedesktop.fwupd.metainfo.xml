@@ -38,6 +38,82 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.4" date="2026-05-29">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a libcrypto-based JCat implementation for Android</li>
+          <li>Add support for NixOS to the quickstart script</li>
+          <li>Add support for the Compal BIOS version format</li>
+          <li>Allow a remote to specify that a username or password is required</li>
+          <li>Allow storing a per-user password in XDG_CONFIG_HOME</li>
+          <li>Detect encrypted swap devices below device-mapper</li>
+          <li>Ensure that all firmware subclasses set the maximum size</li>
+          <li>Remove the flashrom plugin</li>
+          <li>Save the SMBIOS BiosReleaseDate string to uploaded reports</li>
+          <li>Tell Star Labs coreboot users to manually update when required</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a retry limit when updating failing Goodix MoC devices</li>
+          <li>Add several bounds checks for when updating Dell docks</li>
+          <li>Add vendor name and name for the various Framework UEFI certificates</li>
+          <li>Allow recovery if the Lenovo dock internal state is invalid</li>
+          <li>Avoid trunctaion when calculating the AMD GPU atombios size</li>
+          <li>Check firmware size against Novatek flash start address</li>
+          <li>Check for config offset overflow when updating Synaptics RMI devices</li>
+          <li>Check for multiplication overflow in BCM57xx stage1 size calculation</li>
+          <li>Check for overflow when writing to CCGX DMC devices</li>
+          <li>Check stream size before calculating Legion HID ID offset</li>
+          <li>Check stream size before subtracting Ilitek ITS CRC length</li>
+          <li>Clear Sunplus camera download state if the previous flash failed</li>
+          <li>Do not show plugin warnings when using --version</li>
+          <li>Filter the install flags provided by the D-Bus client</li>
+          <li>Fix a potential heap buffer overflow in FDT strlist parsing</li>
+          <li>Fix a potential heap buffer overflow in Nordic HID peer validation</li>
+          <li>Fix a potential OOB read in DFOTA modem response parsing</li>
+          <li>Fix a potential path traversal vulnerability in firmware backup</li>
+          <li>Fix a regression when searching for file magic</li>
+          <li>Fix a regression when using report-export --sign</li>
+          <li>Fix fwupd domain check bypass when using Qubes</li>
+          <li>Ignore efivar free space requirement on Microsoft Hyper-V hosts</li>
+          <li>Limit the number of hints a D-Bus client can set</li>
+          <li>Limit the size of parsed USB descriptors to ~64KiB</li>
+          <li>Make it easy to enable an authenticated remote</li>
+          <li>Make the Novatek boot update more reliable</li>
+          <li>Only read BCR from Intel SPI controllers</li>
+          <li>Prevent a possible division by zero error in the progressbar code</li>
+          <li>Prevent decompression bomb attacks in uSWID zlib payload parsing</li>
+          <li>Prevent NVRAM-seeded ptential path traversal when loading ESP files</li>
+          <li>Redact the username and password of remotes when using a non-active console</li>
+          <li>Require authorization for firmware installation on emulated devices</li>
+          <li>Require authorization for more D-Bus methods from non-local users</li>
+          <li>Restrict Curl protocols to prevent potential SSRF attacks</li>
+          <li>Restrict ModifyRemote to prevent a supply-chain redirection</li>
+          <li>Show a short easy-to-read string as the Pixart touchpad name</li>
+          <li>Tolerate post-quantum CA PKCS#7 failures when using Qubes</li>
+          <li>Validate ACPI PHAT specific data offset before parsing</li>
+          <li>Validate Corsair write size before subtracting header size</li>
+          <li>Validate DFU address offset before parsing the header</li>
+          <li>Validate Elan touchpad IAP address is within firmware bounds</li>
+          <li>Validate Logitech TAP AP region bounds before calculating size</li>
+          <li>Validate payload length is large enough for FPC sec-link</li>
+          <li>Validate sector range before writing pixart-tp firmware</li>
+          <li>Validate VBE area start does not exceed area size</li>
+          <li>Validate write offset does not exceed TI TPS6598x stream size</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Egis MoC devices with PID 9201</li>
+          <li>Intel Arc Pro B65 and Arc Pro B70 (#10389)</li>
+          <li>Lenovo dock devices in 'provisioned' mode</li>
+          <li>Pixart TP devices with PID 1343</li>
+          <li>Several GigaDevice and Puya SPI chips</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.3" date="2026-05-12">
       <description>
         <p>
