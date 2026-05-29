@@ -19,7 +19,7 @@
 #endif
 
 #ifndef G_GNUC_FLAG_ENUM
-#if g_macro__has_attribute(flag_enum)
+#if __has_attribute(flag_enum)
 #define G_GNUC_FLAG_ENUM __attribute__((flag_enum))
 #else
 #define G_GNUC_FLAG_ENUM
