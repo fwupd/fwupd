@@ -177,6 +177,7 @@ static void
 fu_logitech_rdfu_entity_init(FuLogitechRdfuEntity *self)
 {
 	self->blocks = g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 100 * FU_MB);
 }
 
 static void
