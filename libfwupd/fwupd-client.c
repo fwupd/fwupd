@@ -5976,6 +5976,7 @@ fwupd_client_download_error_is_fatal(const GError *error)
 static gboolean
 fwupd_client_test_network(const gchar *url, GError **error)
 {
+#if GLIB_CHECK_VERSION(2, 66, 0)
 	GNetworkMonitor *monitor;
 	g_autoptr(GUri) uri = NULL;
 	g_autoptr(GError) error_monitor = NULL;
@@ -6001,7 +6002,8 @@ fwupd_client_test_network(const gchar *url, GError **error)
 			    error_monitor->message);
 		return FALSE;
 	}
-
+#endif
+	/* success */
 	return TRUE;
 }
 
