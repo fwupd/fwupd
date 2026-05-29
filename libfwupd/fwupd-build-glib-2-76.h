@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <errno.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 
 static inline gboolean
 g_clear_fd(int *fd_ptr, GError **error)
