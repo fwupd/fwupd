@@ -2532,7 +2532,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 								MIN(buf->len, 0x100),
 								NULL);
 				} else {
-					datastr = g_base64_encode(buf->data, buf->len);
+					datastr = fu_base64_encode(buf->data, buf->len);
 				}
 			}
 		}
@@ -2554,7 +2554,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
 			datastr = fu_memstrsafe(buf, bufsz, 0x0, MIN(bufsz, 0x100), NULL);
 		} else {
-			datastr = g_base64_encode(buf, bufsz);
+			datastr = fu_base64_encode(buf, bufsz);
 		}
 		xb_builder_node_insert_text(bn,
 					    "data",

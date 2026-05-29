@@ -813,9 +813,13 @@ fwupd_json_object_add_bytes(FwupdJsonObject *self, const gchar *key, GBytes *val
 	g_return_if_fail(value != NULL);
 
 	buf = g_bytes_get_data(value, &bufsz);
-	b64data = g_base64_encode(buf, bufsz);
-
-	json_node = fwupd_json_node_new_string(b64data);
+	if (buf == NULL) {
+		json_node = fwupd_json_node_new_string("");
+	} else {
+		/* nocheck:blocked */
+		b64data = g_base64_encode(buf, bufsz);
+		json_node = fwupd_json_node_new_string(b64data);
+	}
 	fwupd_json_object_add_node(self, key, json_node);
 }
 

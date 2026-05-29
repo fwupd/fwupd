@@ -118,6 +118,9 @@ gboolean
 fu_size_from_uint64(guint64 value, gsize *out, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(2);
 
+gchar *
+fu_base64_encode(const guint8 *buf, gsize bufsz) G_GNUC_WARN_UNUSED_RESULT;
+
 typedef struct {
 	guint value;
 	FwupdError code;

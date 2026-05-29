@@ -129,7 +129,7 @@ fu_usb_bos_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwu
 	bytes = fu_firmware_get_image_by_id_bytes(FU_FIRMWARE(self), FU_FIRMWARE_ID_PAYLOAD, NULL);
 	if (bytes != NULL && g_bytes_get_size(bytes) > 0) {
 		g_autofree gchar *str =
-		    g_base64_encode(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
+		    fu_base64_encode(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
 		fwupd_json_object_add_string(json_obj, "ExtraData", str);
 	}
 }

@@ -378,7 +378,7 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 			fu_mm_mbim_device_error_convert(error);
 			return NULL;
 		}
-		data_base64 = g_base64_encode(buf, bufsz);
+		data_base64 = fu_base64_encode(buf, bufsz);
 		event_id = g_strdup_printf("MbimDeviceCommand:Data=%s,Length=0x%x",
 					   data_base64,
 					   (guint)bufsz);

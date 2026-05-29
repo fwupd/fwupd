@@ -278,8 +278,8 @@ fu_tpm_plugin_eventlog_report_metadata(FuPlugin *plugin)
 		if (checksum == NULL)
 			continue;
 		g_string_append_printf(str, "0x%08x %s", kind, checksum);
-		blobstr = g_base64_encode((const guchar *)g_bytes_get_data(blob, NULL),
-					  g_bytes_get_size(blob));
+		blobstr = fu_base64_encode((const guchar *)g_bytes_get_data(blob, NULL),
+					   g_bytes_get_size(blob));
 		if (blobstr != NULL)
 			g_string_append_printf(str, " [%s]", blobstr);
 		g_string_append(str, "\n");

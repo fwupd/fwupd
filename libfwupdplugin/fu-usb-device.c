@@ -1481,7 +1481,7 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("ControlTransfer:"
 					   "Direction=0x%02x,"
 					   "RequestType=0x%02x,"
@@ -1613,7 +1613,7 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("BulkTransfer:"
 					   "Endpoint=0x%02x,"
 					   "Data=%s,"
@@ -1717,7 +1717,7 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("InterruptTransfer:"
 					   "Endpoint=0x%02x,"
 					   "Data=%s,"
