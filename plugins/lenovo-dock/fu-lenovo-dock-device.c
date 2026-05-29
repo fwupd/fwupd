@@ -998,7 +998,6 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	guint8 component_id_total = 0;
 	guint8 total_number;
 	g_autoptr(FuDeviceLocker) flash_locker = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
