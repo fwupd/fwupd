@@ -10,9 +10,10 @@ import argparse
 import os
 import sys
 import subprocess
+from typing import List
 
 
-def _check(cwd: str, argv: list[str], limit: int = 0) -> int:
+def _check(cwd: str, argv: List[str], limit: int = 0) -> int:
     # prime cache
     try:
         subprocess.check_output(argv, cwd=cwd)
