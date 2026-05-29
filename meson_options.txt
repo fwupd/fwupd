@@ -32,6 +32,11 @@ option(
   type: 'feature',
   description: 'Build developer documentation',
 )
+option('efi_app_location',
+  type: 'string',
+  value: 'auto',
+  description: 'EFI app location ("auto" uses $libexecdir/fwupd/efi)',
+)
 option(
   'efi_binary',
   type: 'boolean',
