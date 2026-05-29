@@ -219,6 +219,18 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.fwupd.refresh-remote">
+    <description>Update the metadata for a configured remote</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to update the metadata for a configured remote used for firmware updates</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.get-remotes</annotate>
+  </action>
+
   <action id="org.freedesktop.fwupd.enable-remote">
     <description>Modify a configured remote</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->

@@ -2006,7 +2006,7 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 	helper->remote_id = g_strdup(remote_id);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
-				  "org.freedesktop.fwupd.modify-remote",
+				  "org.freedesktop.fwupd.refresh-remote",
 				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
 				  NULL,
 				  fu_dbus_daemon_authorize_update_metadata_cb,
