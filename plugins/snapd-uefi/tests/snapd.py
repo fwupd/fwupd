@@ -21,7 +21,7 @@ import os.path
 from io import StringIO
 from dataclasses import dataclass
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 from flask import Flask, Response, request, current_app
 
@@ -50,7 +50,7 @@ supported_actions = [
 ]
 
 
-def assert_no_extra_keys(d: dict[str, Any], allowed: list[str]):
+def assert_no_extra_keys(d: dict[str, Any], allowed: List[str]):
     unexpected = [a for a in d.keys() if a not in allowed]
     assert len(unexpected) == 0, f"unexpected keys in request data: {unexpected}"
 
