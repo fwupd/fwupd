@@ -97,6 +97,7 @@ fu_raydium_tp_firmware_init(FuRaydiumTpFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_RAYDIUM_TP_IMAGE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
