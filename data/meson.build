@@ -122,7 +122,7 @@ if build_daemon
       # for BLKSSZGET
       device_allows += ['block-blkext']
     endif
-    if get_option('plugin_modem_manager').allowed()
+    if get_option('plugin_modem_manager').enabled()
       device_allows += ['char-wwan_port']
       device_allows += ['char-ttyUSB']
     endif
@@ -152,9 +152,7 @@ if build_daemon
       'vmsplice',
       'copy_file_range', # for g_file_copy
     ]
-    dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
     if supported_build
-      dynamic_options += ['Environment="FWUPD_SYSCALL_FILTER=systemd"']
       dynamic_options += ['SystemCallErrorNumber=EPERM']
     else
       # to debug what additional syscalls are required, we set SystemCallErrorNumber=SIGSYS

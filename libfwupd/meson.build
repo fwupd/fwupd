@@ -180,7 +180,7 @@ pkgg.generate(
   description: 'fwupd is a system daemon for installing device firmware',
 )
 
-if introspection.allowed()
+if introspection.enabled()
   fwupd_gir_deps = [giounix, libcurl]
   fwupd_gir = gnome.generate_gir(
     fwupd,

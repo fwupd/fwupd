@@ -45,9 +45,3 @@ install_data(
   'test/logs/metainfo_version/firmware.metainfo.xml',
   install_dir: 'share/qubes-fwupd/test/logs/metainfo_version',
 )
-
-install_symlink(
-  'qubes-fwupdmgr',
-  pointing_to: '/usr/share/qubes-fwupd/src/qubes_fwupdmgr.py',
-  install_dir: '/usr/sbin',
-)
