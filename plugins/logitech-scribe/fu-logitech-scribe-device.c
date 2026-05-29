@@ -230,7 +230,7 @@ fu_logitech_scribe_device_compute_hash(GInputStream *stream, GError **error)
 				      error))
 		return NULL;
 	g_checksum_get_digest(checksum, (guint8 *)&md5buf, &data_len);
-	return g_base64_encode(md5buf, sizeof(md5buf));
+	return fu_base64_encode(md5buf, sizeof(md5buf));
 }
 
 static gboolean

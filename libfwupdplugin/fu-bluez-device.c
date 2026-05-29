@@ -802,7 +802,7 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(buf->data, buf->len);
+		g_autofree gchar *data_base64 = fu_base64_encode(buf->data, buf->len);
 		event_id = g_strdup_printf("Write:Uuid=%s,Data=%s,Length=0x%x",
 					   uuid,
 					   data_base64,
