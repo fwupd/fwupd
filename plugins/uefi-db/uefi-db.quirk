@@ -6,3 +6,8 @@ Plugin = uefi_db
 Vendor = Framework
 VendorId = UEFI:Framework
 Name = Laptop DB
+
+[UEFI\CRT_A641CD31A73C32B74AF9C717F249F02AEE784990]
+Vendor = ASUS
+VendorId = UEFI:ASUS
+Name = SW Key CA
