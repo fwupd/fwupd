@@ -9,6 +9,7 @@ import glob
 import os
 import sys
 import fnmatch
+from typing import List
 
 
 def test_files() -> int:
@@ -24,8 +25,8 @@ def test_files() -> int:
         if fn.endswith("check-license.py"):
             continue
         lic: str = ""
-        cprts: list[str] = []
-        lines: list[str] = []
+        cprts: List[str] = []
+        lines: List[str] = []
         with open(fn) as f:
             for line in f.read().split("\n"):
                 lines.append(line)

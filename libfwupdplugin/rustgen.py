@@ -68,7 +68,7 @@ class EnumObj:
     def __init__(self, name: str) -> None:
         self.name: str = name
         self._since: Optional[str] = None
-        self.comments: list[str] = []
+        self.comments: List[str] = []
         self.repr_type: Optional[str] = None
         self.items: List[EnumItem] = []
         self.is_imported: bool = False
@@ -193,7 +193,7 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
-        self.comments: list[str] = []
+        self.comments: List[str] = []
         self.since: Optional[str] = None
         self.is_bitfield = False
 
@@ -678,9 +678,9 @@ class Generator:
     ) -> None:
         self.basename: str = basename
         self.prefix: Optional[str] = prefix
-        self.import_headers: list[str] = []
+        self.import_headers: List[str] = []
         self.modules_map: Dict[str, str] = modules_map
-        self.includes: list[str] = includes
+        self.includes: List[str] = includes
         self.struct_objs: Dict[str, StructObj] = {}
         self.enum_objs: Dict[str, EnumObj] = {}
         self._env = Environment(
@@ -754,7 +754,7 @@ class Generator:
         since: Optional[str] = None
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
-        comments_cur: list[str] = []
+        comments_cur: List[str] = []
 
         for line_num, line in enumerate(contents.split("\n")):
             # replace all tabs with spaces
@@ -953,7 +953,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # parse map from module to path
-    modules_map: dict[str, str] = {}
+    modules_map: Dict[str, str] = {}
     for entry in args.use:
         try:
             split = entry.split(":", maxsplit=1)
