@@ -400,9 +400,11 @@ fu_efi_section_parse(FuFirmware *firmware,
 			fu_efi_section_type_to_string(priv->type),
 			priv->type);
 	} else {
+#ifndef HAVE_FUZZER
 		g_warning("no idea how to parse %s [0x%x] EFI section",
 			  fu_efi_section_type_to_string(priv->type),
 			  priv->type);
+#endif
 	}
 
 	/* success */
