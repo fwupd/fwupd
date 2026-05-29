@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 07:49+0100\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
 "PO-Revision-Date: 2026-05-24 14:11+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
@@ -156,8 +156,19 @@ msgstr "Obține depozitele configurate"
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
 msgstr "Autentificarea este necesară pentru a obține lista depozitelor configurate utilizate pentru actualizările firmware"
 
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Modifică un depozit configurat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
