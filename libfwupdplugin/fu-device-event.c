@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-device-event-private.h"
 #include "fu-mem.h"
 #include "fu-string.h"
@@ -193,11 +194,11 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 	g_ptr_array_add(self->values,
-			fu_device_event_blob_new(
-			    G_TYPE_STRING,
-			    key,
-			    g_base64_encode(g_bytes_get_data(value, NULL), g_bytes_get_size(value)),
-			    g_free));
+			fu_device_event_blob_new(G_TYPE_STRING,
+						 key,
+						 fu_base64_encode(g_bytes_get_data(value, NULL),
+								  g_bytes_get_size(value)),
+						 g_free));
 }
 
 /**
@@ -219,7 +220,7 @@ fu_device_event_set_byte_array(FuDeviceEvent *self, const gchar *key, GByteArray
 	g_ptr_array_add(self->values,
 			fu_device_event_blob_new(G_TYPE_STRING,
 						 key,
-						 g_base64_encode(value->data, value->len),
+						 fu_base64_encode(value->data, value->len),
 						 g_free));
 }
 
@@ -241,7 +242,7 @@ fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *bu
 	g_return_if_fail(key != NULL);
 	g_ptr_array_add(
 	    self->values,
-	    fu_device_event_blob_new(G_TYPE_STRING, key, g_base64_encode(buf, bufsz), g_free));
+	    fu_device_event_blob_new(G_TYPE_STRING, key, fu_base64_encode(buf, bufsz), g_free));
 }
 
 /**

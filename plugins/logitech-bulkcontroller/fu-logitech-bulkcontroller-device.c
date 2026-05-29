@@ -1172,7 +1172,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	md5_buf = fu_byte_array_from_string(md5_str, error);
 	if (md5_buf == NULL)
 		return FALSE;
-	base64hash = g_base64_encode(md5_buf->data, md5_buf->len);
+	base64hash = fu_base64_encode(md5_buf->data, md5_buf->len);
 	fu_progress_step_done(progress);
 
 	/* sending INIT. Retry if device is not in IDLE state to receive the file */

@@ -837,6 +837,7 @@ class Checker:
             "g_ascii_strtoll": "Use fu_strtoll() instead",
             "g_strerror": "Use fwupd_strerror() instead",
             "gnutls_malloc": "Use gnutls_calloc() instead",
+            "g_base64_encode": "Use fu_base64_encode() instead",
             "g_variant_get_uint64": "Use fwupd_variant_get_uint64() instead",
             "g_variant_get_uint32": "Use fwupd_variant_get_uint32() instead",
             "g_variant_get_string": "Use fwupd_variant_get_string() instead",
