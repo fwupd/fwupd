@@ -7,7 +7,7 @@
 # pylint: disable=missing-module-docstring,missing-class-docstring,
 # pylint: disable=missing-function-docstring,too-few-public-methods,consider-using-enumerate
 
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from fnmatch import fnmatch
 import sys
@@ -87,7 +87,7 @@ def _token_fuzzy_match(token: Token, data: str) -> bool:
     """
 
     # hint
-    query: list[str] = data.split("@")
+    query: List[str] = data.split("@")
     try:
         if token.hint != TokenHint.value_of(query[1]):
             return False
@@ -142,7 +142,7 @@ class TokenList(list):
 
     def find_fuzzy(
         self,
-        data_fuzzy: list[str],
+        data_fuzzy: List[str],
         offset: Optional[int] = None,
         reverse: bool = False,
         skip_comments: bool = False,
@@ -170,7 +170,7 @@ class TokenList(list):
                 return pos
         return -1
 
-    def endswith_fuzzy(self, data_fuzzy: list[str]) -> bool:
+    def endswith_fuzzy(self, data_fuzzy: List[str]) -> bool:
         """
         Look for a fuzzy token sequence at the end of the list.
         Returns False if not found.
@@ -184,7 +184,7 @@ class TokenList(list):
                 return False
         return True
 
-    def count_fuzzy(self, data_fuzzy: list[str]) -> int:
+    def count_fuzzy(self, data_fuzzy: List[str]) -> int:
         """
         Return the number of fuzzy matches matching all tokens.
         """
@@ -238,7 +238,7 @@ class Node:
 class Tokenizer:
     def __init__(self, data: str):
         self.tokens: TokenList = TokenList()
-        self._nodes: list[Node] = []
+        self._nodes: List[Node] = []
         self._acc: str = ""
         self._linecnt: int = 1
         if data:
@@ -395,7 +395,7 @@ class Tokenizer:
 
         tokens_acc: TokenList = TokenList()
         depth: int = 0
-        stack: list[Node] = []
+        stack: List[Node] = []
         node_parent: Optional[Node] = None
 
         for token in self.tokens:
@@ -452,7 +452,7 @@ class Tokenizer:
             raise ValueError("has unequal nesting")
 
     @property
-    def nodes(self) -> list[Node]:
+    def nodes(self) -> List[Node]:
 
         if not self._nodes:
             self._ensure_nodes()
