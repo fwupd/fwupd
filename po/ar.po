@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 07:49+0100\n"
-"PO-Revision-Date: 2026-05-25 17:11+0000\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-05-29 15:31+0000\n"
 "Last-Translator: jonnysemon <jonnysemon@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Arabic <https://hosted.weblate.org/projects/fwupd/fwupd/ar/>\n"
 "Language: ar\n"
@@ -161,8 +161,19 @@ msgstr "احصل على أجهزة التحكم عن بُعد المضبوطة"
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
 msgstr "الاستيثاق مطلوب للحصول على قائمة الأجهزة البعيدة المضبوطة المستخدمة لتحديثات المشغّل"
 
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "عدّل جهاز التحكم عن بعد المكوَّن"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -1919,19 +1930,19 @@ msgstr "FILENAME [KIND]"
 
 #. TRANSLATORS: command description
 msgid "Exports all embedded signatures to files"
-msgstr ""
+msgstr "يصدّر جميع التوقيعات المضمنة إلى ملفات"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DATA DETACHED_KEY"
-msgstr ""
+msgstr "FILENAME DATA DETACHED_KEY"
 
 #. TRANSLATORS: command description
 msgid "Import an existing signature to a JCat file"
-msgstr ""
+msgstr "استورد توقيع موجود إلى ملف JCat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
-msgstr ""
+msgstr "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
 
 #. TRANSLATORS: command description
 msgid "Add a self-signed signature to a JCat file"
