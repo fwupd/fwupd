@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 07:49+0100\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
 "PO-Revision-Date: 2026-05-27 10:11+0000\n"
 "Last-Translator: JakubRu13 <ruzicka.jakub@outlook.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
@@ -161,8 +161,19 @@ msgstr "Získat konfigurované ovladače"
 msgid "Authentication is required to get the list of configured remotes used for firmware updates"
 msgstr "Pro získání seznamu konfigurovaných vzdálených zdrojů používaných pro aktualizace firmwaru je zapotřebí vaše heslo"
 
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Upravit nastavený vzdálený zdroj"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
