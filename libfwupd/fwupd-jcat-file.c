@@ -45,9 +45,7 @@ fwupd_jcat_file_add_string(FwupdCodec *codec, guint idt, GString *str)
 }
 
 static gboolean
-fwupd_jcat_file_import_node(FwupdJcatFile *self,
-			    FwupdJsonNode *json_node,
-			    GError **error)
+fwupd_jcat_file_import_node(FwupdJcatFile *self, FwupdJsonNode *json_node, GError **error)
 {
 	gint64 version = 0;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
@@ -144,9 +142,7 @@ fwupd_jcat_file_json_parser_new(void)
  * Since: 2.1.3
  **/
 gboolean
-fwupd_jcat_file_import_json(FwupdJcatFile *self,
-			    const gchar *json,
-			    GError **error)
+fwupd_jcat_file_import_json(FwupdJcatFile *self, const gchar *json, GError **error)
 {
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_jcat_file_json_parser_new();
@@ -175,9 +171,7 @@ fwupd_jcat_file_import_json(FwupdJcatFile *self,
  * Since: 2.1.3
  **/
 gboolean
-fwupd_jcat_file_import_stream(FwupdJcatFile *self,
-			      GInputStream *istream,
-			      GError **error)
+fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError **error)
 {
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_jcat_file_json_parser_new();
@@ -214,9 +208,7 @@ fwupd_jcat_file_import_stream(FwupdJcatFile *self,
  * Since: 2.1.3
  **/
 gboolean
-fwupd_jcat_file_import_bytes(FwupdJcatFile *self,
-			     GBytes *blob,
-			     GError **error)
+fwupd_jcat_file_import_bytes(FwupdJcatFile *self, GBytes *blob, GError **error)
 {
 	g_autoptr(GInputStream) istream = NULL;
 

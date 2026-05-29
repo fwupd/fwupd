@@ -279,10 +279,10 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 	} else {
 		if (hw_sku_raw >= 32) {
 			g_set_error(error,
-						FWUPD_ERROR,
-						FWUPD_ERROR_INVALID_DATA,
-						"invalid hw_sku index: 0x%x",
-						hw_sku_raw);
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid hw_sku index: 0x%x",
+				    hw_sku_raw);
 			return FALSE;
 		}
 		self->hw_sku = 1u << hw_sku_raw;

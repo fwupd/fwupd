@@ -463,7 +463,6 @@ fu_hwids_init(FuHwids *self)
 			  "HardwareID-13",
 			  "Manufacturer&BaseboardManufacturer&BaseboardProduct");
 	fu_hwids_add_chid(self, "HardwareID-14", "Manufacturer");
-
 }
 
 /**

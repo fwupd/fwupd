@@ -403,9 +403,9 @@ fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
 		}
 	} else if (self->force_table_support != force_table_support) {
 		g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "mcu firmware incompatible, forcetable incorrect.");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "mcu firmware incompatible, forcetable incorrect.");
 		return FALSE;
 	}
 	if (force_table_support) {
