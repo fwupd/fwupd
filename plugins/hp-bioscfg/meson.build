@@ -31,7 +31,6 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
       plugin_builtin_hp_bioscfg,
-      plugin_builtin_uefi_capsule,
     ],
     c_args: [
       cargs,
