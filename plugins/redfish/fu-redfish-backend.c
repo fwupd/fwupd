@@ -66,7 +66,11 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
 	FuRedfishRequest *request = g_object_new(FU_TYPE_REDFISH_REQUEST, NULL);
 	CURL *curl;
+#if CURL_AT_LEAST_VERSION(7, 63, 0)
 	CURLU *uri;
+#else
+	g_autofree gchar *uri = NULL;
+#endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
 
@@ -78,11 +82,17 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 
 	/* set up defaults */
 	curl = fu_redfish_request_get_curl(request);
+#if CURL_AT_LEAST_VERSION(7, 63, 0)
 	uri = fu_redfish_request_get_uri(request);
 	(void)curl_url_set(uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
 	(void)curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
 	(void)curl_url_set(uri, CURLUPART_PORT, port, 0);
 	(void)curl_easy_setopt(curl, CURLOPT_CURLU, uri);
+#else
+	uri =
+	    g_strdup_printf("%s://%s:%s", self->use_https ? "https" : "http", self->hostname, port);
+	(void)curl_easy_setopt(curl, CURLOPT_URL, uri);
+#endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
 	if (self->bearer_token != NULL) {
