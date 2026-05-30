@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-29 13:24+0100\n"
-"PO-Revision-Date: 2026-05-23 11:11+0000\n"
+"PO-Revision-Date: 2026-05-30 06:41+0000\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
@@ -165,18 +165,18 @@ msgid "Authentication is required to get the list of configured remotes used for
 msgstr "Autentisering krävs för att erhålla listan på konfigurerade fjärrkällor som används för uppdateringar av fast programvara"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Uppdatera metadata för en konfigurerad fjärrkälla"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Autentisering krävs för att uppdatera metadata för en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
 
 msgid "Modify a configured remote"
 msgstr "Modifiera en konfigurerad fjärrkälla"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Autentisering krävs för att aktivera eller inaktivera en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
