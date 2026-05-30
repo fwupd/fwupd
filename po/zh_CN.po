@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-29 13:24+0100\n"
-"PO-Revision-Date: 2026-05-23 11:11+0000\n"
+"PO-Revision-Date: 2026-05-30 06:41+0000\n"
 "Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
@@ -165,18 +165,18 @@ msgid "Authentication is required to get the list of configured remotes used for
 msgstr "获得用于更新固件的配置好的远端地址列表需要认证身份"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "更新已配置远端的元数据"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "更新用来固件更新的已配置的远端需身份认证"
 
 msgid "Modify a configured remote"
 msgstr "修改已配置的远程源"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "启用或禁用用来更新固件的已配置的远端需要身份认证"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
