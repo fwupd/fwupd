@@ -513,37 +513,37 @@ fu_bios_settings_get_all(FuBiosSettings *self)
 gboolean
 fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GError **error)
 {
-	FwupdBiosSetting *attr = NULL;
-	g_autofree gchar *data = NULL;
-	guint64 val = 0;
+	gboolean found = FALSE;
 
 	g_return_val_if_fail(result != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 
+	*result = FALSE;
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdBiosSetting *attr_tmp = g_ptr_array_index(self->attrs, i);
 		const gchar *tmp = fwupd_bios_setting_get_name(attr_tmp);
+		g_autofree gchar *data = NULL;
+		guint64 val = 0;
+
 		if (g_strcmp0(tmp, FWUPD_BIOS_SETTING_PENDING_REBOOT) == 0) {
-			attr = attr_tmp;
-			break;
+			found = TRUE;
+			/* refresh/re-read */
+			if (!fu_bios_setting_get_key(attr_tmp, NULL, &data, error))
+				return FALSE;
+			fwupd_bios_setting_set_current_value(attr_tmp, data);
+			if (!fu_strtoull(data, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+				return FALSE;
+			if (val == 1)
+				*result = TRUE;
 		}
 	}
-	if (attr == NULL) {
+	if (!found) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
 				    "failed to find pending reboot attribute");
 		return FALSE;
 	}
-
-	/* refresh/re-read */
-	if (!fu_bios_setting_get_key(attr, NULL, &data, error))
-		return FALSE;
-	fwupd_bios_setting_set_current_value(attr, data);
-	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
-		return FALSE;
-
-	*result = (val == 1);
 
 	return TRUE;
 }
