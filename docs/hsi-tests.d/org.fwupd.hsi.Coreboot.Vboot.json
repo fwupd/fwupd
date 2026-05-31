@@ -1,0 +1,20 @@
+{
+  "id": "org.fwupd.hsi.Coreboot.Vboot",
+  "name": "coreboot verified boot",
+  "description": [
+    "coreboot verified boot checks that signed firmware stages are loaded when the device starts."
+  ],
+  "failure-impact": [
+    "When verified boot is not enabled, an attacker may be able to run modified firmware stages."
+  ],
+  "failure-results": {
+    "not-enabled": "coreboot verified boot disabled",
+    "not-found": "TPM event log not found"
+  },
+  "success-results": {
+    "enabled": "coreboot verified boot enabled"
+  },
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
+  "hsi-level": 2,
+  "fwupd-version": "2.1.5"
+}

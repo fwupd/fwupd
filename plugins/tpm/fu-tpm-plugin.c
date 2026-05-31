@@ -239,6 +239,72 @@ fu_tpm_plugin_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+static gboolean
+fu_tpm_plugin_is_coreboot(FuPlugin *plugin)
+{
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	const gchar *bios_vendor = NULL;
+
+	if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
+		return FALSE;
+	bios_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
+	return g_strcmp0(bios_vendor, "coreboot") == 0;
+}
+
+static gboolean
+fu_tpm_plugin_eventlog_has_data_prefix(FuTpmPlugin *self, const gchar *prefix)
+{
+	gsize prefixsz = strlen(prefix);
+	g_autoptr(GPtrArray) items = NULL;
+
+	if (self->eventlog == NULL)
+		return FALSE;
+
+	items = fu_firmware_get_images(FU_FIRMWARE(self->eventlog));
+	for (guint i = 0; i < items->len; i++) {
+		FuTpmEventlogItem *item = g_ptr_array_index(items, i);
+		gsize blobsz = 0;
+		const guint8 *blobbuf = NULL;
+		g_autoptr(GBytes) blob = fu_firmware_get_bytes(FU_FIRMWARE(item), NULL);
+
+		if (blob == NULL)
+			continue;
+		blobbuf = g_bytes_get_data(blob, &blobsz);
+		if (blobsz < prefixsz)
+			continue;
+		if (memcmp(blobbuf, prefix, prefixsz) == 0)
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+static void
+fu_tpm_plugin_add_security_attr_coreboot_vboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	if (!fu_tpm_plugin_is_coreboot(plugin))
+		return;
+
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_append(attrs, attr);
+
+	if (self->eventlog == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+	if (!fu_tpm_plugin_eventlog_has_data_prefix(self, "VBOOT:")) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		return;
+	}
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
 static void
 fu_tpm_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
@@ -247,6 +313,7 @@ fu_tpm_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_tpm_plugin_add_security_attr_version(plugin, attrs);
 	fu_tpm_plugin_add_security_attr_eventlog(plugin, attrs);
 	fu_tpm_plugin_add_security_attr_empty(plugin, attrs);
+	fu_tpm_plugin_add_security_attr_coreboot_vboot(plugin, attrs);
 }
 
 static gchar *

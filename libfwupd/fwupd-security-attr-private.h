@@ -182,6 +182,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP "org.fwupd.hsi.Spi.SmmBwp"
 /**
+ * FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS: (skip)
+ *
+ * Host Security ID attribute for Intel SPI protected regions
+ *
+ * Since: 2.1.5
+ **/
+#define FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS "org.fwupd.hsi.IntelSpi.ProtectedRegions"
+/**
  * FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR: (skip)
  *
  * Host Security ID attribute for Intel SPI descriptor
@@ -427,6 +435,14 @@ G_BEGIN_DECLS
  * Since: 2.1.1
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT "org.fwupd.hsi.Amd.PlatformSecureBoot"
+/**
+ * FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT: (skip)
+ *
+ * Host Security ID attribute for coreboot verified boot.
+ *
+ * Since: 2.1.5
+ **/
+#define FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT "org.fwupd.hsi.Coreboot.Vboot"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
