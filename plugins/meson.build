@@ -34,6 +34,7 @@ plugins = {
   'ccgx-dmc': false,
   'cfu': false,
   'corsair': false,
+  'coreboot-cfr': false,
   'cpu': false,
   'cros-ec': false,
   'dell': false,
