@@ -109,6 +109,7 @@ fu_idle_inhibit(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 {
 	FuIdleItem *item;
 	g_autofree gchar *inhibit_str = fu_idle_inhibit_to_string(inhibit);
+	g_autoptr(GByteArray) buf = NULL;
 
 	g_return_val_if_fail(FU_IS_IDLE(self), 0);
 	g_return_val_if_fail(inhibit != FU_IDLE_INHIBIT_NONE, 0);
@@ -117,7 +118,16 @@ fu_idle_inhibit(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 	item = g_new0(FuIdleItem, 1);
 	item->inhibit = inhibit;
 	item->reason = g_strdup(reason);
-	item->token = g_random_int_range(1, G_MAXINT); /* nocheck:blocked */
+
+	/* prefer a cryptographically secure RNG, fall back if not available */
+	buf = fu_common_get_random(sizeof(guint32), NULL);
+	if (buf != NULL)
+		item->token = fu_memread_uint32(buf->data, G_LITTLE_ENDIAN);
+	if (item->token == 0) {
+		/* nocheck:blocked */
+		item->token = g_random_int_range(1, G_MAXINT);
+	}
+
 	g_ptr_array_add(self->items, item);
 
 	fu_idle_emit_inhibit_changed(self);
