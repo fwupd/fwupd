@@ -2373,6 +2373,8 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 	const gchar *reason = NULL;
 	const gchar *sender = fu_engine_request_get_sender(request);
 	guint sender_count = 0;
+	g_autofree gchar *id = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_variant_get(parameters, "(&s)", &reason);
 
@@ -2401,11 +2403,17 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 		return;
 	}
 
+	/* use a cryptographically secure RNG */
+	id = fu_common_get_random_string(6, &error_local);
+	if (id == NULL) {
+		g_dbus_method_invocation_return_gerror(invocation, error_local);
+		return;
+	}
+
 	/* watch */
 	inhibit = g_new0(FuDbusDaemonSystemInhibit, 1);
 	inhibit->sender = g_strdup(sender);
-	inhibit->id =
-	    g_strdup_printf("dbus-%i", g_random_int_range(1, G_MAXINT - 1)); /* nocheck:blocked */
+	inhibit->id = g_strdup_printf("dbus-%s", id);
 	inhibit->watcher_id =
 	    g_bus_watch_name_on_connection(self->connection,
 					   sender,
