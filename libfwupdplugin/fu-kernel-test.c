@@ -60,6 +60,11 @@ fu_kernel_get_config_func(void)
 	g_autoptr(GHashTable) hash = NULL;
 	struct utsname name_tmp;
 
+#ifndef __linux__
+	g_test_skip("only works on Linux");
+	return;
+#endif
+
 	memset(&name_tmp, 0, sizeof(struct utsname));
 	g_assert_cmpint(uname(&name_tmp), >=, 0);
 
@@ -137,6 +142,40 @@ fu_kernel_lockdown_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_kernel_add_cmdline_arg_no_grubby_func(void)
+{
+	gboolean ret;
+	const gchar *old_path;
+	g_autoptr(GError) error = NULL;
+
+	old_path = g_getenv("PATH");
+	g_assert_nonnull(old_path);
+	g_setenv("PATH", "/nonexistent", TRUE);
+	ret = fu_kernel_add_cmdline_arg("iommu=pt", &error);
+	g_setenv("PATH", old_path, TRUE);
+
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+}
+
+static void
+fu_kernel_remove_cmdline_arg_no_grubby_func(void)
+{
+	gboolean ret;
+	const gchar *old_path;
+	g_autoptr(GError) error = NULL;
+
+	old_path = g_getenv("PATH");
+	g_assert_nonnull(old_path);
+	g_setenv("PATH", "/nonexistent", TRUE);
+	ret = fu_kernel_remove_cmdline_arg("iommu=pt", &error);
+	g_setenv("PATH", old_path, TRUE);
+
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -146,6 +185,10 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/kernel/config", fu_kernel_config_func);
 	g_test_add_func("/fwupd/kernel/get-config", fu_kernel_get_config_func);
 	g_test_add_func("/fwupd/kernel/get-config/notfound", fu_kernel_get_config_notfound_func);
+	g_test_add_func("/fwupd/kernel/add-cmdline-arg/no-grubby",
+			fu_kernel_add_cmdline_arg_no_grubby_func);
+	g_test_add_func("/fwupd/kernel/remove-cmdline-arg/no-grubby",
+			fu_kernel_remove_cmdline_arg_no_grubby_func);
 	g_test_add_func("/fwupd/kernel/lockdown", fu_kernel_lockdown_func);
 	return g_test_run();
 }
