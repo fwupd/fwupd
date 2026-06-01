@@ -10,6 +10,8 @@
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-mtd-device.h"
+#include "fu-mtd-ifd-device.h"
+#include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
 
 typedef struct {
@@ -102,6 +104,240 @@ fu_test_mtd_prepare_mtdram_device(FuMtdDevice *device,
 	fu_device_probe_invalidate(FU_DEVICE(device));
 	fu_device_set_firmware_gtype(FU_DEVICE(device), firmware_gtype);
 	return g_steal_pointer(&firmware);
+}
+
+static void
+fu_test_mtd_ifd_device_probe_bios_rw_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
+	g_autoptr(FuMtdIfdDevice) device = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_idx(FU_FIRMWARE(img), FU_IFD_REGION_BIOS);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_BIOS, FU_IFD_ACCESS_READ | FU_IFD_ACCESS_WRITE);
+	device = fu_mtd_ifd_device_new(proxy, img);
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(device)), ==, "BIOS");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(device)), ==, "bios");
+	g_assert_true(fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE));
+	g_assert_true(fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+static void
+fu_test_mtd_ifd_device_probe_bios_ro_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
+	g_autoptr(FuMtdIfdDevice) device = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_idx(FU_FIRMWARE(img), FU_IFD_REGION_BIOS);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_BIOS, FU_IFD_ACCESS_READ);
+	device = fu_mtd_ifd_device_new(proxy, img);
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(device)), ==, "BIOS");
+	g_assert_true(fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE));
+	g_assert_false(fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+static void
+fu_test_mtd_ifd_device_security_attrs_locked_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
+	g_autoptr(FuMtdIfdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_idx(FU_FIRMWARE(img), FU_IFD_REGION_DESC);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_BIOS, FU_IFD_ACCESS_READ);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_ME, FU_IFD_ACCESS_NONE);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_EC, FU_IFD_ACCESS_NONE);
+	device = fu_mtd_ifd_device_new(proxy, img);
+	fu_device_set_plugin(FU_DEVICE(device), "mtd");
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_test_mtd_ifd_device_security_attrs_writable_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
+	g_autoptr(FuMtdIfdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_idx(FU_FIRMWARE(img), FU_IFD_REGION_DESC);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_BIOS, FU_IFD_ACCESS_READ | FU_IFD_ACCESS_WRITE);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_ME, FU_IFD_ACCESS_NONE);
+	fu_ifd_image_set_access(img, FU_IFD_REGION_EC, FU_IFD_ACCESS_NONE);
+	device = fu_mtd_ifd_device_new(proxy, img);
+	fu_device_set_plugin(FU_DEVICE(device), "mtd");
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+}
+
+static void
+fu_test_mtd_ifd_device_security_attrs_non_desc_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuDevice) proxy = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuIfdImage) img = FU_IFD_IMAGE(fu_ifd_image_new());
+	g_autoptr(FuMtdIfdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_idx(FU_FIRMWARE(img), FU_IFD_REGION_BIOS);
+	device = fu_mtd_ifd_device_new(proxy, img);
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
+						     NULL);
+	g_assert_null(attr);
+}
+
+static void
+fu_test_mtd_device_quirk_metadata_offset_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_device_set_quirk_kv(device,
+				     "MtdMetadataOffset",
+				     "0x1000",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_test_mtd_device_quirk_metadata_size_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_device_set_quirk_kv(device,
+				     "MtdMetadataSize",
+				     "0x200",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_test_mtd_device_quirk_fmap_offset_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_device_set_quirk_kv(device,
+				     "MtdFmapOffset",
+				     "0x500",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_device_get_firmware_gtype(device), ==, FU_TYPE_FMAP_FIRMWARE);
+}
+
+static void
+fu_test_mtd_device_quirk_fmap_regions_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_device_set_quirk_kv(device,
+				     "MtdFmapRegions",
+				     "SBOM,FMAP",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_test_mtd_device_quirk_fmap_regions_empty_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_device_set_quirk_kv(device,
+				     "MtdFmapRegions",
+				     ",",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+}
+
+static void
+fu_test_mtd_device_quirk_unknown_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_device_set_quirk_kv(device,
+				     "InvalidKey",
+				     "value",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 }
 
 static void
@@ -322,6 +558,39 @@ main(int argc, char **argv)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	g_test_add_data_func("/mtd/ifd-device/probe/bios-rw",
+			     self,
+			     fu_test_mtd_ifd_device_probe_bios_rw_func);
+	g_test_add_data_func("/mtd/ifd-device/probe/bios-ro",
+			     self,
+			     fu_test_mtd_ifd_device_probe_bios_ro_func);
+	g_test_add_data_func("/mtd/ifd-device/security-attrs/locked",
+			     self,
+			     fu_test_mtd_ifd_device_security_attrs_locked_func);
+	g_test_add_data_func("/mtd/ifd-device/security-attrs/writable",
+			     self,
+			     fu_test_mtd_ifd_device_security_attrs_writable_func);
+	g_test_add_data_func("/mtd/ifd-device/security-attrs/non-desc",
+			     self,
+			     fu_test_mtd_ifd_device_security_attrs_non_desc_func);
+	g_test_add_data_func("/mtd/device/quirk/metadata-offset",
+			     self,
+			     fu_test_mtd_device_quirk_metadata_offset_func);
+	g_test_add_data_func("/mtd/device/quirk/metadata-size",
+			     self,
+			     fu_test_mtd_device_quirk_metadata_size_func);
+	g_test_add_data_func("/mtd/device/quirk/fmap-offset",
+			     self,
+			     fu_test_mtd_device_quirk_fmap_offset_func);
+	g_test_add_data_func("/mtd/device/quirk/fmap-regions",
+			     self,
+			     fu_test_mtd_device_quirk_fmap_regions_func);
+	g_test_add_data_func("/mtd/device/quirk/fmap-regions-empty",
+			     self,
+			     fu_test_mtd_device_quirk_fmap_regions_empty_func);
+	g_test_add_data_func("/mtd/device/quirk/unknown",
+			     self,
+			     fu_test_mtd_device_quirk_unknown_func);
 	g_test_add_data_func("/mtd/device/raw", self, fu_test_mtd_device_raw_func);
 	g_test_add_data_func("/mtd/device/uswid", self, fu_test_mtd_device_uswid_func);
 	g_test_add_data_func("/mtd/device/ifd", self, fu_test_mtd_device_ifd_func);
