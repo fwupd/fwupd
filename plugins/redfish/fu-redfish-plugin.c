@@ -6,9 +6,6 @@
 
 #include "config.h"
 
-#include <errno.h>
-#include <sys/random.h>
-
 #ifdef HAVE_LINUX_IPMI_H
 #include "fu-ipmi-device.h"
 #endif
@@ -52,52 +49,19 @@ fu_redfish_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "UUID", fu_redfish_backend_get_uuid(self->backend));
 }
 
-static gchar *
-fu_redfish_plugin_generate_password(guint length)
-{
-	g_autoptr(GString) str = g_string_sized_new(length);
-
-	/* get a random password string using cryptographically secure RNG */
-	while (str->len < length) {
-		guint8 tmp;
-		gssize rc;
-
-		/* retry on EINTR or short reads */
-		do {
-			rc = getrandom(&tmp, sizeof(tmp), 0);
-		} while (rc == -1 && errno == EINTR);
-
-		/* handle errors other than EINTR */
-		if (rc == -1)
-			return NULL;
-
-		/* continue to next iteration */
-		if (rc == 0)
-			continue;
-
-		if (g_ascii_isalnum((gchar)tmp))
-			g_string_append_c(str, (gchar)tmp);
-	}
-	return g_string_free(g_steal_pointer(&str), FALSE);
-}
-
 static gboolean
 fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
+	g_autofree gchar *password_new = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
 	/* check password generation succeeded */
-	if (password_new == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to generate secure random password");
+	password_new = fu_common_get_random_string(15, error);
+	if (password_new == NULL)
 		return FALSE;
-	}
 
 	/* select correct, falling back to default for old fwupd versions */
 	uri = fu_plugin_get_config_value(plugin, "UserUri");
@@ -361,20 +325,23 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	const gchar *username_fwupd = "fwupd";
 	guint8 user_id = G_MAXUINT8;
-	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
-	g_autofree gchar *password_tmp = fu_redfish_plugin_generate_password(15);
+	g_autofree gchar *password_new = NULL;
+	g_autofree gchar *password_tmp = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 
-	/* check password generation succeeded */
-	if (password_new == NULL || password_tmp == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to generate secure random password");
+	/* generate both passwords */
+	password_tmp = fu_common_get_random_string(15, error);
+	if (password_tmp == NULL) {
+		g_prefix_error_literal(error, "failed to generate temp password: ");
+		return FALSE;
+	}
+	password_new = fu_common_get_random_string(15, error);
+	if (password_new == NULL) {
+		g_prefix_error_literal(error, "failed to generate password: ");
 		return FALSE;
 	}
 

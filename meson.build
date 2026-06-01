@@ -615,6 +615,12 @@ endif
 if cc.has_header_symbol('sys/mount.h', 'BLKSSZGET')
   conf.set('HAVE_BLKSSZGET', '1')
 endif
+if cc.has_header_symbol('stdlib.h', 'arc4random_buf')
+  conf.set('HAVE_ARC4RANDOM', '1')
+endif
+if cc.has_header_symbol('sys/random.h', 'getrandom')
+  conf.set('HAVE_GETRANDOM', '1')
+endif
 
 if host_machine.system() == 'freebsd'
   if cc.has_type(

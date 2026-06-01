@@ -11,6 +11,19 @@
 #ifdef HAVE_CPUID_H
 #include <cpuid.h>
 #endif
+#include <errno.h>
+#ifdef HAVE_GETRANDOM
+#include <sys/random.h>
+#endif
+#ifdef HAVE_ARC4RANDOM
+#include <stdlib.h>
+#endif
+#ifdef _WIN32
+/* clang-format off */
+#include <windows.h>
+#include <wincrypt.h>
+/* clang-format on */
+#endif
 
 #include "fu-common-private.h"
 #include "fu-firmware.h"
@@ -480,6 +493,130 @@ fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **
 	error->domain = FWUPD_ERROR;
 	error->code = FWUPD_ERROR_INTERNAL;
 	return FALSE;
+}
+
+static gboolean
+fu_common_get_random_raw(guint8 *buf, gsize bufsz, gsize *bufsz_valid, GError **error)
+{
+#ifdef HAVE_GETRANDOM
+	gssize rc;
+	rc = getrandom(buf, bufsz, 0);
+	if (rc == -1) {
+		if (errno == EINTR) {
+			*bufsz_valid = 0;
+			return TRUE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to get random data: %s",
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	*bufsz_valid = rc;
+	return TRUE;
+#elif defined(HAVE_ARC4RANDOM)
+	arc4random_buf(buf, bufsz);
+	*bufsz_valid = bufsz;
+	return TRUE;
+#elif defined(_WIN32)
+	HCRYPTPROV ctx = {0};
+
+	if (!CryptAcquireContext(&ctx, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to acquire context");
+		return FALSE;
+	}
+	if (!CryptGenRandom(ctx, (DWORD)bufsz, (BYTE *)buf)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no random data");
+		return FALSE;
+	}
+	if (!CryptReleaseContext(ctx, 0)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to release context");
+		return FALSE;
+	}
+	*bufsz_valid = bufsz;
+	return TRUE;
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no RNG available");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_common_get_random:
+ * @bufsz: the number of bytes to return
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets random bytes using a cryptographically secure RNG.
+ *
+ * Returns: (transfer full): a blob of random data, or %NULL for error
+ *
+ * Since: 2.1.5
+ **/
+GByteArray *
+fu_common_get_random(guint bufsz, GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(bufsz);
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* get a blob using cryptographically secure RNG */
+	while (buf->len < bufsz) {
+		guint8 tbuf[32] = {0};
+		gsize tbuf_valid = 0;
+		if (!fu_common_get_random_raw(tbuf, sizeof(tbuf), &tbuf_valid, error))
+			return NULL;
+		g_byte_array_append(buf, tbuf, tbuf_valid);
+	}
+
+	/* success */
+	g_byte_array_set_size(buf, bufsz);
+	return g_steal_pointer(&buf);
+}
+
+/**
+ * fu_common_get_random_string:
+ * @length: the exact string length of bytes to return
+ * @error: (nullable): optional return location for an error
+ *
+ * Generates a random password using a cryptographically secure RNG.
+ *
+ * Returns: (transfer full): a string of alphanumeric chars, or %NULL for error
+ *
+ * Since: 2.1.5
+ **/
+gchar *
+fu_common_get_random_string(guint length, GError **error)
+{
+	g_autoptr(GString) str = g_string_sized_new(length);
+
+	g_return_val_if_fail(length > 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* filtering ~62:256 */
+	while (str->len < length) {
+		guint8 tbuf[32] = {0};
+		gsize tbuf_valid = 0;
+		if (!fu_common_get_random_raw(tbuf, sizeof(tbuf), &tbuf_valid, error))
+			return NULL;
+		for (gsize i = 0; i < tbuf_valid && str->len < length; i++) {
+			const gchar tmp = (gchar)tbuf[i];
+			if (g_ascii_isalnum(tmp))
+				g_string_append_c(str, tmp);
+		}
+	}
+
+	/* success */
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /**
