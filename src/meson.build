@@ -347,6 +347,22 @@ if get_option('tests')
     )
   endforeach
 
+  if libsystemd.found()
+    e = executable(
+      'fu-systemd-test',
+      sources: ['fu-systemd-test.c', 'fu-systemd.c'],
+      include_directories: [root_incdir, fwupd_incdir],
+      dependencies: [libfwupd_deps, fwupdplugin_rs_dep],
+      link_with: [fwupd],
+    )
+    test(
+      'fu-systemd-test',
+      e,
+      timeout: 180,
+      env: env,
+    )
+  endif
+
   if polkit.found()
     e = executable(
       'fu-polkit-test',
