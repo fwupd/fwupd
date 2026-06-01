@@ -85,7 +85,7 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	rcv_buf[0] = REPORT_ID;
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  rcv_buf,
-					  sizeof(rcv_buf),
+					  PACKAGE_LEN,
 					  FU_IOCTL_FLAG_NONE,
 					  error)) {
 		g_prefix_error_literal(error, "failed get report: ");
