@@ -91,32 +91,6 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	} version;
 } FuDellDockEcQueryEntry;
 
-typedef enum {
-	MODULE_TYPE_45_TBT = 1,
-	MODULE_TYPE_45,
-	MODULE_TYPE_130_TBT,
-	MODULE_TYPE_130_DP,
-	MODULE_TYPE_130_UNIVERSAL,
-	MODULE_TYPE_240_TRIN,
-	MODULE_TYPE_210_DUAL,
-	MODULE_TYPE_130_USB4,
-} FuDellDockDockModule;
-
-typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint8 dock_configuration;
-	guint8 dock_type;
-	guint16 power_supply_wattage;
-	guint16 module_type;
-	guint16 board_id;
-	guint16 port0_dock_status;
-	guint16 port1_dock_status;
-	guint32 dock_firmware_pkg_ver;
-	guint64 module_serial;
-	guint64 original_module_serial;
-	gchar service_tag[7];
-	gchar marketing_name[64];
-} FuDellDockDockDataStructure;
-
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 ec_version;
 	guint32 mst_version;
@@ -128,7 +102,7 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 
 struct _FuDellDockEc {
 	FuDevice parent_instance;
-	FuDellDockDockDataStructure *data;
+	FuStructDellDockData *st_data;
 	FuDellDockDockPackageFWVersion *raw_versions;
 	guint8 base_type;
 	gchar *ec_version;
@@ -164,7 +138,8 @@ fu_dell_dock_ec_set_board(FuDellDockEc *self)
 	const gchar *summary = NULL;
 	g_autofree gchar *board_type_str = NULL;
 
-	board_type_str = g_strdup_printf("DellDockBoard%u", self->data->board_id);
+	board_type_str = g_strdup_printf("DellDockBoard%u",
+					 fu_struct_dell_dock_data_get_board_id(self->st_data));
 	summary = fu_device_get_metadata(FU_DEVICE(self), board_type_str);
 	if (summary != NULL)
 		fu_device_set_summary(FU_DEVICE(self), summary);
@@ -173,7 +148,8 @@ fu_dell_dock_ec_set_board(FuDellDockEc *self)
 gboolean
 fu_dell_dock_ec_module_is_usb4(FuDellDockEc *self)
 {
-	return self->data->module_type == MODULE_TYPE_130_USB4;
+	return fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+	       FU_DELL_DOCK_MODULE_TYPE_W130_USB4;
 }
 
 guint8
@@ -185,22 +161,22 @@ fu_dell_dock_ec_get_dock_type(FuDellDockEc *self)
 const gchar *
 fu_dell_dock_ec_get_module_type(FuDellDockEc *self)
 {
-	switch (self->data->module_type) {
-	case MODULE_TYPE_45_TBT:
+	switch (fu_struct_dell_dock_data_get_module_type(self->st_data)) {
+	case FU_DELL_DOCK_MODULE_TYPE_W45_TBT:
 		return "45 (TBT)";
-	case MODULE_TYPE_45:
+	case FU_DELL_DOCK_MODULE_TYPE_W45_GENERIC:
 		return "45";
-	case MODULE_TYPE_130_TBT:
+	case FU_DELL_DOCK_MODULE_TYPE_W130_TBT:
 		return "130 (TBT)";
-	case MODULE_TYPE_130_DP:
+	case FU_DELL_DOCK_MODULE_TYPE_W130_DP:
 		return "130 (DP)";
-	case MODULE_TYPE_130_UNIVERSAL:
+	case FU_DELL_DOCK_MODULE_TYPE_W130_UNIVERSAL:
 		return "130 (Universal)";
-	case MODULE_TYPE_240_TRIN:
+	case FU_DELL_DOCK_MODULE_TYPE_W240_TRIN:
 		return "240 (Trinity)";
-	case MODULE_TYPE_210_DUAL:
+	case FU_DELL_DOCK_MODULE_TYPE_W210_DUAL:
 		return "210 (Dual)";
-	case MODULE_TYPE_130_USB4:
+	case FU_DELL_DOCK_MODULE_TYPE_W130_USB4:
 		return "130 (TBT4)";
 	default:
 		return "unknown";
@@ -210,11 +186,14 @@ fu_dell_dock_ec_get_module_type(FuDellDockEc *self)
 gboolean
 fu_dell_dock_ec_needs_tbt(FuDellDockEc *self)
 {
-	gboolean port0_tbt_mode = self->data->port0_dock_status & TBT_MODE_MASK;
+	gboolean port0_tbt_mode =
+	    fu_struct_dell_dock_data_get_port0_dock_status(self->st_data) & TBT_MODE_MASK;
 
 	/* check for TBT module type */
-	if (self->data->module_type != MODULE_TYPE_130_TBT &&
-	    self->data->module_type != MODULE_TYPE_45_TBT)
+	if (fu_struct_dell_dock_data_get_module_type(self->st_data) !=
+		FU_DELL_DOCK_MODULE_TYPE_W130_TBT &&
+	    fu_struct_dell_dock_data_get_module_type(self->st_data) !=
+		FU_DELL_DOCK_MODULE_TYPE_W45_TBT)
 		return FALSE;
 	g_info("found thunderbolt dock, port mode: %d", port0_tbt_mode);
 
@@ -258,7 +237,7 @@ static gboolean
 fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **bytes, GError **error)
 {
 	FuDevice *proxy;
-	/* The first byte of result data will be the size of the return,
+	/* The first byte of result st_data will be the size of the return,
 	hide this from callers */
 	gsize result_length = length + 1;
 	g_autoptr(GBytes) bytes_local = NULL;
@@ -466,9 +445,12 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 							    device_entry[i].version.version_8[3]);
 			g_debug("\tParsed version %s", self->mst_version);
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT &&
-			   (self->data->module_type == MODULE_TYPE_130_TBT ||
-			    self->data->module_type == MODULE_TYPE_45_TBT ||
-			    self->data->module_type == MODULE_TYPE_130_USB4)) {
+			   (fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+				FU_DELL_DOCK_MODULE_TYPE_W130_TBT ||
+			    fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+				FU_DELL_DOCK_MODULE_TYPE_W45_TBT ||
+			    fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+				FU_DELL_DOCK_MODULE_TYPE_W130_USB4)) {
 			/* guard against invalid Thunderbolt version read from EC */
 			if (!fu_dell_dock_ec_test_valid_byte(device_entry[i].version.version_8,
 							     2)) {
@@ -504,9 +486,12 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 	}
 
 	/* Thunderbolt SKU takes a little longer */
-	if (self->data->module_type == MODULE_TYPE_130_TBT ||
-	    self->data->module_type == MODULE_TYPE_45_TBT ||
-	    self->data->module_type == MODULE_TYPE_130_USB4) {
+	if (fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+		FU_DELL_DOCK_MODULE_TYPE_W130_TBT ||
+	    fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+		FU_DELL_DOCK_MODULE_TYPE_W45_TBT ||
+	    fu_struct_dell_dock_data_get_module_type(self->st_data) ==
+		FU_DELL_DOCK_MODULE_TYPE_W130_USB4) {
 		guint64 tmp = fu_device_get_install_duration(FU_DEVICE(self));
 		fu_device_set_install_duration(FU_DEVICE(self), tmp + 20);
 	}
@@ -521,55 +506,50 @@ static gboolean
 fu_dell_dock_ec_get_dock_data(FuDellDockEc *self, GError **error)
 {
 	g_autoptr(GBytes) data = NULL;
-	g_autoptr(GString) name = NULL;
-	gchar service_tag[8] = {0x00};
-	const guint8 *result;
-	gsize length = sizeof(FuDellDockDockDataStructure);
-	g_autofree gchar *bundled_serial = NULL;
+	g_autofree gchar *name = NULL;
+	g_autofree gchar *service_tag = NULL;
 	FuDellDockECFWUpdateStatus status;
 
 	g_return_val_if_fail(self != NULL, FALSE);
 
-	if (!fu_dell_dock_ec_read(self, EC_CMD_GET_DOCK_DATA, length, &data, error)) {
+	if (!fu_dell_dock_ec_read(self,
+				  EC_CMD_GET_DOCK_DATA,
+				  FU_STRUCT_DELL_DOCK_DATA_SIZE,
+				  &data,
+				  error)) {
 		g_prefix_error_literal(error, "Failed to query dock info: ");
 		return FALSE;
 	}
-	result = g_bytes_get_data(data, NULL);
-	if (result == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "Failed to read dock data");
+	if (self->st_data != NULL)
+		fu_struct_dell_dock_data_unref(self->st_data);
+	self->st_data = fu_struct_dell_dock_data_parse_bytes(data, 0x0, error);
+	if (self->st_data == NULL)
 		return FALSE;
-	}
-	if (g_bytes_get_size(data) != length) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "Unexpected dock data size %" G_GSIZE_FORMAT,
-			    g_bytes_get_size(data));
-		return FALSE;
-	}
-	memcpy(self->data, result, length); /* nocheck:blocked */
 
 	/* guard against EC not yet ready and fail init */
-	name = g_string_new(self->data->marketing_name);
-	if (name->len > 0)
-		fu_device_set_name(FU_DEVICE(self), name->str);
+	name = fu_struct_dell_dock_data_get_marketing_name(self->st_data);
+	if (name != NULL)
+		fu_device_set_name(FU_DEVICE(self), name);
 	else
 		g_warning("[EC bug] Invalid dock name detected");
 
-	if (self->data->module_type >= 0xfe)
-		g_warning("[EC bug] Invalid module type 0x%02x", self->data->module_type);
+	if (fu_struct_dell_dock_data_get_module_type(self->st_data) >= 0xfe)
+		g_warning("[EC bug] Invalid module type 0x%02x",
+			  fu_struct_dell_dock_data_get_module_type(self->st_data));
 
 	/* set serial number */
-	memcpy(service_tag, self->data->service_tag, 7); /* nocheck:blocked */
-	bundled_serial =
-	    g_strdup_printf("%s/%08" G_GUINT64_FORMAT, service_tag, self->data->module_serial);
-	fu_device_set_serial(FU_DEVICE(self), bundled_serial);
+	service_tag = fu_struct_dell_dock_data_get_service_tag(self->st_data);
+	if (service_tag != NULL) {
+		g_autofree gchar *bundled_serial =
+		    g_strdup_printf("%s/%08" G_GUINT64_FORMAT,
+				    service_tag,
+				    fu_struct_dell_dock_data_get_module_serial(self->st_data));
+		fu_device_set_serial(FU_DEVICE(self), bundled_serial);
+	}
 
 	/* copy this for being able to send in next commit transaction */
-	self->raw_versions->pkg_version = self->data->dock_firmware_pkg_ver;
+	self->raw_versions->pkg_version =
+	    fu_struct_dell_dock_data_get_dock_firmware_pkg_ver(self->st_data);
 
 	/* read if passive update pending */
 	if (!fu_dell_dock_ec_get_status(self, &status, error))
@@ -594,27 +574,62 @@ static void
 fu_dell_dock_ec_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
-	gchar service_tag[8] = {0x00};
 
 	fwupd_codec_string_append_int(str, idt, "BaseType", self->base_type);
-	fwupd_codec_string_append_int(str, idt, "BoardId", self->data->board_id);
-	fwupd_codec_string_append_int(str, idt, "PowerSupply", self->data->power_supply_wattage);
-	fwupd_codec_string_append_hex(str, idt, "StatusPort0", self->data->port0_dock_status);
-	fwupd_codec_string_append_hex(str, idt, "StatusPort1", self->data->port1_dock_status);
-	memcpy(service_tag, self->data->service_tag, 7); /* nocheck:blocked */
-	fwupd_codec_string_append(str, idt, "ServiceTag", service_tag);
-	fwupd_codec_string_append_int(str, idt, "Configuration", self->data->dock_configuration);
-	fwupd_codec_string_append_hex(str,
-				      idt,
-				      "PackageFirmwareVersion",
-				      self->data->dock_firmware_pkg_ver);
-	fwupd_codec_string_append_int(str, idt, "ModuleSerial", self->data->module_serial);
-	fwupd_codec_string_append_int(str,
-				      idt,
-				      "OriginalModuleSerial",
-				      self->data->original_module_serial);
-	fwupd_codec_string_append_int(str, idt, "Type", self->data->dock_type);
-	fwupd_codec_string_append_hex(str, idt, "ModuleType", self->data->module_type);
+	if (self->st_data != NULL) {
+		g_autofree gchar *service_tag =
+		    fu_struct_dell_dock_data_get_service_tag(self->st_data);
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      "BoardId",
+					      fu_struct_dell_dock_data_get_board_id(self->st_data));
+		fwupd_codec_string_append_int(
+		    str,
+		    idt,
+		    "PowerSupply",
+		    fu_struct_dell_dock_data_get_power_supply_wattage(self->st_data));
+		fwupd_codec_string_append_hex(
+		    str,
+		    idt,
+		    "StatusPort0",
+		    fu_struct_dell_dock_data_get_port0_dock_status(self->st_data));
+		fwupd_codec_string_append_hex(
+		    str,
+		    idt,
+		    "StatusPort1",
+		    fu_struct_dell_dock_data_get_port1_dock_status(self->st_data));
+		fwupd_codec_string_append(str, idt, "ServiceTag", service_tag);
+		fwupd_codec_string_append_int(
+		    str,
+		    idt,
+		    "Configuration",
+		    fu_struct_dell_dock_data_get_dock_configuration(self->st_data));
+		fwupd_codec_string_append_hex(
+		    str,
+		    idt,
+		    "PackageFirmwareVersion",
+		    fu_struct_dell_dock_data_get_dock_firmware_pkg_ver(self->st_data));
+		fwupd_codec_string_append_int(
+		    str,
+		    idt,
+		    "ModuleSerial",
+		    fu_struct_dell_dock_data_get_module_serial(self->st_data));
+		fwupd_codec_string_append_int(
+		    str,
+		    idt,
+		    "OriginalModuleSerial",
+		    fu_struct_dell_dock_data_get_original_module_serial(self->st_data));
+		fwupd_codec_string_append_int(
+		    str,
+		    idt,
+		    "Type",
+		    fu_struct_dell_dock_data_get_dock_type(self->st_data));
+		fwupd_codec_string_append_hex(
+		    str,
+		    idt,
+		    "ModuleType",
+		    fu_struct_dell_dock_data_get_module_type(self->st_data));
+	}
 	fwupd_codec_string_append(str, idt, "MinimumEc", self->ec_minimum_version);
 	fwupd_codec_string_append_int(str, idt, "PassiveFlow", self->passive_flow);
 }
@@ -963,7 +978,7 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_device_open(proxy, error))
 		return FALSE;
-	if (!self->data->dock_type)
+	if (self->st_data != NULL && !fu_struct_dell_dock_data_get_dock_type(self->st_data))
 		return fu_dell_dock_ec_is_valid_dock(self, error);
 	return TRUE;
 }
@@ -981,10 +996,11 @@ static void
 fu_dell_dock_ec_finalize(GObject *object)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(object);
+	if (self->st_data != NULL)
+		fu_struct_dell_dock_data_unref(self->st_data);
 	g_free(self->ec_version);
 	g_free(self->mst_version);
 	g_free(self->tbt_version);
-	g_free(self->data);
 	g_free(self->raw_versions);
 	g_free(self->ec_minimum_version);
 	G_OBJECT_CLASS(fu_dell_dock_ec_parent_class)->finalize(object);
@@ -1004,7 +1020,6 @@ fu_dell_dock_ec_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_dell_dock_ec_init(FuDellDockEc *self)
 {
-	self->data = g_new0(FuDellDockDockDataStructure, 1);
 	self->raw_versions = g_new0(FuDellDockDockPackageFWVersion, 1);
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
