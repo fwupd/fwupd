@@ -5960,7 +5960,9 @@ main(int argc, char *argv[])
 	/* start polkit tty agent to listen for password requests */
 	if (is_interactive) {
 		g_autoptr(GError) error_polkit = NULL;
-		if (!fu_polkit_agent_open(polkit_agent, &error_polkit)) {
+		g_autoptr(FuPathStore) pstore = fu_path_store_new();
+		fu_path_store_load_from_env(pstore);
+		if (!fu_polkit_agent_open(polkit_agent, pstore, &error_polkit)) {
 			fu_console_print(self->console,
 					 "Failed to open polkit agent: %s",
 					 error_polkit->message);

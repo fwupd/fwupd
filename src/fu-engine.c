@@ -1824,11 +1824,12 @@ fu_engine_get_report_metadata_cpu_device(FuEngine *self, GHashTable *hash)
 }
 
 static gboolean
-fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
+fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GError **error)
 {
 #ifdef HOST_MACHINE_SYSTEM_DARWIN
+	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	g_autofree gchar *stdout = NULL;
-	g_autofree gchar *sw_vers = g_find_program_in_path("sw_vers");
+	g_autofree gchar *sw_vers = NULL;
 	g_auto(GStrv) split = NULL;
 	struct {
 		const gchar *key;
@@ -1839,10 +1840,9 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 		   {NULL, NULL}};
 
 	/* macOS */
-	if (sw_vers == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "No os-release found");
+	sw_vers = fu_path_store_find_program(pstore, "sw_vers", error);
+	if (sw_vers == NULL)
 		return FALSE;
-	}
 
 	/* parse from format:
 	 *    ProductName:    Mac OS X
@@ -2054,7 +2054,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 				    g_strdup(version));
 	}
 	fu_engine_get_report_metadata_cpu_device(self, hash);
-	if (!fu_engine_get_report_metadata_os_release(hash, error))
+	if (!fu_engine_get_report_metadata_os_release(self, hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_lsb_release(hash, error))
 		return NULL;

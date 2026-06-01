@@ -180,32 +180,6 @@ fu_path_mkdir_parent(const gchar *filename, GError **error)
 	return fu_path_mkdir(parent, error);
 }
 
-/**
- * fu_path_find_program:
- * @basename: the program to search
- * @error: (nullable): optional return location for an error
- *
- * Looks for a program in the PATH variable
- *
- * Returns: a new #gchar, or %NULL for error
- *
- * Since: 1.8.2
- **/
-gchar *
-fu_path_find_program(const gchar *basename, GError **error)
-{
-	gchar *fn = g_find_program_in_path(basename);
-	if (fn == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "missing executable %s in PATH",
-			    basename);
-		return NULL;
-	}
-	return fn;
-}
-
 static gint
 fu_path_glob_sort_cb(gconstpointer a, gconstpointer b)
 {
