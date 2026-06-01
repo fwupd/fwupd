@@ -20,6 +20,7 @@ static gboolean
 fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self, const gchar *app_dst, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
 	g_autofree gchar *fn_grub_cfg = NULL;
 	const gchar *argv_mkconfig[] = {"", "-o", "grub.cfg", NULL};
@@ -84,9 +85,9 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self, const gchar *app_dst, GE
 	}
 
 	/* find grub-mkconfig */
-	grub_mkconfig = fu_path_find_program("grub-mkconfig", NULL);
+	grub_mkconfig = fu_path_store_find_program(pstore, "grub-mkconfig", NULL);
 	if (grub_mkconfig == NULL)
-		grub_mkconfig = fu_path_find_program("grub2-mkconfig", NULL);
+		grub_mkconfig = fu_path_store_find_program(pstore, "grub2-mkconfig", NULL);
 	if (grub_mkconfig == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -96,9 +97,9 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self, const gchar *app_dst, GE
 	}
 
 	/* find grub-reboot */
-	grub_reboot = fu_path_find_program("grub-reboot", NULL);
+	grub_reboot = fu_path_store_find_program(pstore, "grub-reboot", NULL);
 	if (grub_reboot == NULL)
-		grub_reboot = fu_path_find_program("grub2-reboot", NULL);
+		grub_reboot = fu_path_store_find_program(pstore, "grub2-reboot", NULL);
 	if (grub_reboot == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

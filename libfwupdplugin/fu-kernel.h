@@ -23,6 +23,8 @@ fu_kernel_parse_cmdline(const gchar *buf, gsize bufsz) G_GNUC_NON_NULL(1);
 gboolean
 fu_kernel_check_cmdline_mutable(FuPathStore *pstore, GError **error);
 gboolean
-fu_kernel_add_cmdline_arg(const gchar *arg, GError **error) G_GNUC_NON_NULL(1);
+fu_kernel_add_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_kernel_remove_cmdline_arg(const gchar *arg, GError **error) G_GNUC_NON_NULL(1);
+fu_kernel_remove_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
+    G_GNUC_NON_NULL(1, 2);

@@ -116,15 +116,19 @@ fu_iommu_plugin_constructed(GObject *obj)
 }
 
 static gboolean
-fu_iommu_plugin_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_fix_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
 {
-	return fu_kernel_add_cmdline_arg("iommu=force", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_add_cmdline_arg(pstore, "iommu=force", error);
 }
 
 static gboolean
-fu_iommu_plugin_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_undo_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
 {
-	return fu_kernel_remove_cmdline_arg("iommu=force", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_remove_cmdline_arg(pstore, "iommu=force", error);
 }
 
 static void

@@ -217,7 +217,9 @@ fu_linux_lockdown_plugin_fix_host_security_attr(FuPlugin *plugin,
 						FwupdSecurityAttr *attr,
 						GError **error)
 {
-	return fu_kernel_add_cmdline_arg("lockdown=integrity", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_add_cmdline_arg(pstore, "lockdown=integrity", error);
 }
 
 static gboolean
@@ -225,7 +227,9 @@ fu_linux_lockdown_plugin_undo_host_security_attr(FuPlugin *plugin,
 						 FwupdSecurityAttr *attr,
 						 GError **error)
 {
-	return fu_kernel_remove_cmdline_arg("lockdown=integrity", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_remove_cmdline_arg(pstore, "lockdown=integrity", error);
 }
 
 static void

@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include <glib/gstdio.h>
+
 static void
 fu_path_store_load(void)
 {
@@ -91,6 +93,37 @@ fu_path_store_tmpdir(void)
 	g_assert_nonnull(dirname);
 }
 
+static void
+fu_path_store_find_program_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *fn_found = NULL;
+	g_autofree gchar *fn_unfound = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+
+	tmpdir = fu_temporary_directory_new("program-path", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "test", NULL);
+	ret = g_file_set_contents(fn, "#!/bin/bash", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_chmod(fn, 0700), ==, 0);
+	fu_path_store_add_program_path(pstore, "/not-going-to-exist");
+	fu_path_store_add_program_path(pstore, fu_temporary_directory_get_path(tmpdir));
+	fu_path_store_add_program_path(pstore, fu_temporary_directory_get_path(tmpdir));
+
+	fn_found = fu_path_store_find_program(pstore, "test", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fn_found);
+	fn_unfound = fu_path_store_find_program(pstore, "not-going-to-exist", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(fn_unfound);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -100,5 +133,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/path-store/env", fu_path_store_env);
 	g_test_add_func("/fwupd/path-store/prefix", fu_path_store_prefix);
 	g_test_add_func("/fwupd/path-store/tmpdir", fu_path_store_tmpdir);
+	g_test_add_func("/fwupd/path-store/find-program", fu_path_store_find_program_func);
 	return g_test_run();
 }

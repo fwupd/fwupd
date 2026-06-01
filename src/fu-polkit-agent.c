@@ -179,7 +179,7 @@ fu_polkit_agent_wait_for_terminate(pid_t pid)
 }
 
 gboolean
-fu_polkit_agent_open(FuPolkitAgent *self, GError **error)
+fu_polkit_agent_open(FuPolkitAgent *self, FuPathStore *pstore, GError **error)
 {
 	int r;
 	int pipe_fd[2];
@@ -187,20 +187,17 @@ fu_polkit_agent_open(FuPolkitAgent *self, GError **error)
 	g_autofree gchar *pkttyagent_fn = NULL;
 
 	g_return_val_if_fail(FU_IS_POLKIT_AGENT(self), FALSE);
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* already open */
 	if (self->agent_pid > 0)
 		return TRUE;
 
 	/* find binary */
-	pkttyagent_fn = g_find_program_in_path("pkttyagent");
-	if (pkttyagent_fn == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "missing pkttyagent");
+	pkttyagent_fn = fu_path_store_find_program(pstore, "pkttyagent", error);
+	if (pkttyagent_fn == NULL)
 		return FALSE;
-	}
 
 	/* check STDIN here, not STDOUT, since this is about input, not output */
 	if (!isatty(STDIN_FILENO))
