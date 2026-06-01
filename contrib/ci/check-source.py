@@ -838,6 +838,7 @@ class Checker:
             "g_error": "Use GError instead",
             "g_ascii_strtoull": "Use fu_strtoull() instead",
             "g_ascii_strtoll": "Use fu_strtoll() instead",
+            "g_find_program_in_path": "Use fu_path_store_find_program() instead",
             "g_strerror": "Use fwupd_strerror() instead",
             "gnutls_malloc": "Use gnutls_calloc() instead",
             "g_base64_encode": "Use fu_base64_encode() instead",

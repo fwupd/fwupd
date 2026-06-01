@@ -15,9 +15,68 @@ struct _FuPathStore {
 	gchar *paths[FU_PATH_KIND_LAST];
 	gboolean loaded_defaults;
 	gboolean loaded_from_env;
+	GPtrArray *program_paths; /* element-type utf-8*/
 };
 
 G_DEFINE_TYPE(FuPathStore, fu_path_store, G_TYPE_OBJECT)
+
+/**
+ * fu_path_store_add_program_path:
+ * @self: a #FuPathStore
+ * @path: (not nullable): directory name
+ *
+ * Sets a possible program path.
+ *
+ * If the directory does not exist it is ignored
+ *
+ * Since: 2.1.5
+ **/
+void
+fu_path_store_add_program_path(FuPathStore *self, const gchar *path)
+{
+	g_return_if_fail(FU_IS_PATH_STORE(self));
+	g_return_if_fail(path != NULL);
+
+	if (!g_file_test(path, G_FILE_TEST_IS_DIR))
+		return;
+	if (g_ptr_array_find_with_equal_func(self->program_paths, path, g_str_equal, NULL))
+		return;
+	g_ptr_array_add(self->program_paths, g_strdup(path));
+}
+
+/**
+ * fu_path_store_find_program:
+ * @self: a #FuPathStore
+ * @basename: the program to search
+ * @error: (nullable): optional return location for an error
+ *
+ * Looks for a program in a path added by fu_path_store_add_program_path() -- in most cases this
+ * will be the same as the `PATH` environment variable.
+ *
+ * Returns: a new path, or %NULL for error
+ *
+ * Since: 2.1.5
+ **/
+gchar *
+fu_path_store_find_program(FuPathStore *self, const gchar *basename, GError **error)
+{
+	g_return_val_if_fail(FU_IS_PATH_STORE(self), NULL);
+	g_return_val_if_fail(basename != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < self->program_paths->len; i++) {
+		const gchar *path = g_ptr_array_index(self->program_paths, i);
+		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
+		if (g_file_test(fn, G_FILE_TEST_IS_EXECUTABLE))
+			return g_steal_pointer(&fn);
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "missing executable %s in PATH",
+		    basename);
+	return NULL;
+}
 
 /**
  * fu_path_store_get_path:
@@ -469,6 +528,14 @@ fu_path_store_load_from_env(FuPathStore *self)
 		fu_path_store_add_prefix(self, FU_PATH_KIND_SYSCONFDIR, tmp);
 	}
 
+	/* program executable paths */
+	tmp = g_getenv("PATH");
+	if (tmp != NULL) {
+		g_auto(GStrv) path_envs = g_strsplit(tmp, G_SEARCHPATH_SEPARATOR_S, -1);
+		for (guint i = 0; path_envs[i] != NULL; i++)
+			fu_path_store_add_program_path(self, path_envs[i]);
+	}
+
 	/* success */
 	self->loaded_from_env = TRUE;
 }
@@ -477,6 +544,7 @@ static void
 fu_path_store_finalize(GObject *object)
 {
 	FuPathStore *self = FU_PATH_STORE(object);
+	g_ptr_array_unref(self->program_paths);
 	for (guint i = 0; i < FU_PATH_KIND_LAST; i++)
 		g_free(self->paths[i]);
 	G_OBJECT_CLASS(fu_path_store_parent_class)->finalize(object);
@@ -492,6 +560,7 @@ fu_path_store_class_init(FuPathStoreClass *klass)
 static void
 fu_path_store_init(FuPathStore *self)
 {
+	self->program_paths = g_ptr_array_new_with_free_func(g_free);
 }
 
 /**

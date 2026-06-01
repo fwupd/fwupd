@@ -367,9 +367,9 @@ if get_option('tests')
     e = executable(
       'fu-polkit-test',
       sources: ['fu-polkit-test.c', 'fu-polkit-agent.c'],
-      include_directories: [root_incdir, fwupd_incdir],
+      include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [libfwupd_deps, fwupd_rs_dep],
-      link_with: [fwupd],
+      link_with: [fwupdplugin],
     )
     test(
       'fu-polkit-test',

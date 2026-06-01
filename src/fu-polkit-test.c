@@ -12,10 +12,12 @@ static void
 fu_polkit_agent_func(void)
 {
 	gboolean ret;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(FuPolkitAgent) polkit_agent = fu_polkit_agent_new();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_polkit_agent_open(polkit_agent, &error);
+	fu_path_store_load_from_env(pstore);
+	ret = fu_polkit_agent_open(polkit_agent, pstore, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }

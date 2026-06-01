@@ -29,6 +29,13 @@ fu_path_store_add_prefix(FuPathStore *self, FuPathKind kind, const gchar *prefix
     G_GNUC_NON_NULL(1, 3);
 
 void
+fu_path_store_add_program_path(FuPathStore *self, const gchar *path) G_GNUC_NON_NULL(1, 2);
+gchar *
+fu_path_store_find_program(FuPathStore *self,
+			   const gchar *basename,
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
+void
 fu_path_store_load_defaults(FuPathStore *self) G_GNUC_NON_NULL(1);
 void
 fu_path_store_load_from_env(FuPathStore *self) G_GNUC_NON_NULL(1);
