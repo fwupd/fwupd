@@ -1,0 +1,11 @@
+[b8e532dc-1e9f-5b7c-9487-fbbe99a02159]
+GpioForUpdate = gpiochip0,PIN_A,high
+
+[d4735e3a-265e-516e-be89-2d5d128f1c77]
+GpioForUpdate = gpiochip0,PIN_A,invalid
+
+[4e074085-27f6-5946-b8a5-3b7e4c26e40f]
+GpioForUpdate = too-few-fields
+
+[2ce109e9-5a49-5f0d-9e96-7c157d46b2fb]
+GpioForUpdate = gpiochip-missing,PIN_A,high
