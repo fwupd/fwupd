@@ -9368,20 +9368,22 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	/* backends */
+#ifdef HAVE_UDEV
 	{
-		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
+		g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
+		/* list this before FuUsbBackend in case LIBUSB_OPTION_NO_DEVICE_DISCOVERY is
+		 * not available -- we want to bind the netlink socket, not libusb */
 		fu_context_add_backend(self->ctx, backend);
 	}
+#endif
 	{
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);
 	}
-#ifdef HAVE_UDEV
 	{
-		g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
+		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);
 	}
-#endif
 #ifdef HAVE_BLUEZ
 	{
 		g_autoptr(FuBackend) backend = fu_bluez_backend_new(self->ctx);
