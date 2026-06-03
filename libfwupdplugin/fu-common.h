@@ -102,6 +102,15 @@ fu_common_get_kernel_cmdline(GError **error);
 gchar *
 fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error);
 
+guint16
+fu_common_to_bcd_u16(guint16 value);
+guint8
+fu_common_to_bcd_u8(guint8 value);
+guint16
+fu_common_from_bcd_u16(guint16 value);
+guint8
+fu_common_from_bcd_u8(guint8 value);
+
 gsize
 fu_common_align_up(gsize value, guint8 alignment);
 gboolean
