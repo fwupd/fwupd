@@ -3918,8 +3918,9 @@ fu_engine_install_blob(FuEngine *self,
 	self->emulator_write_cnt = FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT;
 	fu_progress_step_done(progress);
 
-	/* update history database */
-	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
+	/* update history database -- only set to success if not already needs reboot */
+	if (fu_device_get_update_state(device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 	fu_device_set_install_duration(device, g_timer_elapsed(timer, NULL));
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
 		if (!fu_history_modify_device(self->history, device, error)) {
