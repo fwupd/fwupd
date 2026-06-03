@@ -284,6 +284,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	} else if (fu_plugin_get_config_value_boolean(plugin, "NeedsReboot")) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 	} else {
 		g_autofree gchar *ver = NULL;
 		g_autoptr(GBytes) blob_fw = NULL;
