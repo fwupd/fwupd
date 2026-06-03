@@ -146,34 +146,26 @@ static void
 fu_kernel_add_cmdline_arg_no_grubby_func(void)
 {
 	gboolean ret;
-	const gchar *old_path;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
-	old_path = g_getenv("PATH");
-	g_assert_nonnull(old_path);
-	g_setenv("PATH", "/nonexistent", TRUE);
-	ret = fu_kernel_add_cmdline_arg("iommu=pt", &error);
-	g_setenv("PATH", old_path, TRUE);
-
+	fu_path_store_add_program_path(pstore, "/nonexistent");
+	ret = fu_kernel_add_cmdline_arg(pstore, "iommu=pt", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 }
 
 static void
 fu_kernel_remove_cmdline_arg_no_grubby_func(void)
 {
 	gboolean ret;
-	const gchar *old_path;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
 	g_autoptr(GError) error = NULL;
 
-	old_path = g_getenv("PATH");
-	g_assert_nonnull(old_path);
-	g_setenv("PATH", "/nonexistent", TRUE);
-	ret = fu_kernel_remove_cmdline_arg("iommu=pt", &error);
-	g_setenv("PATH", old_path, TRUE);
-
+	fu_path_store_add_program_path(pstore, "/nonexistent");
+	ret = fu_kernel_remove_cmdline_arg(pstore, "iommu=pt", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 }
 
 int
