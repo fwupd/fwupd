@@ -531,10 +531,9 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 		for (guint i = 0; i < devices->len; i++) {
 			FwupdDevice *device = g_ptr_array_index(devices, i);
 
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			if (fwupd_device_get_update_state(device) ==
+			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	} else {
 		for (guint i = 0; values[i] != NULL; i++) {
@@ -542,15 +541,13 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 			device = fu_util_get_device_by_id(self, values[i], error);
 			if (device == NULL)
 				return FALSE;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			if (fwupd_device_get_update_state(device) ==
+			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	}
 
-	if (!(self->completion_flags &
-	      (FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN | FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
+	if (!(self->completion_flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
