@@ -108,6 +108,30 @@ fu_gpio_plugin_prepare_device_not_found_func(void)
 }
 
 static void
+fu_gpio_plugin_prepare_multiple_guids_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_gpio_plugin_get_type(), ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_gpio_test_load_quirks(ctx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_device_set_physical_id(device, "gpio");
+	/* first GUID has no matching quirk, second has an invalid level */
+	fwupd_device_add_guid(FWUPD_DEVICE(device), "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fwupd_device_add_guid(FWUPD_DEVICE(device), "d4735e3a-265e-516e-be89-2d5d128f1c77");
+
+	ret = fu_plugin_runner_prepare(plugin, device, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+}
+
+static void
 fu_gpio_plugin_cleanup_no_assignments_func(void)
 {
 	gboolean ret;
@@ -138,6 +162,7 @@ main(int argc, char **argv)
 	g_test_add_func("/gpio/prepare/invalid-format", fu_gpio_plugin_prepare_invalid_format_func);
 	g_test_add_func("/gpio/prepare/device-not-found",
 			fu_gpio_plugin_prepare_device_not_found_func);
+	g_test_add_func("/gpio/prepare/multiple-guids", fu_gpio_plugin_prepare_multiple_guids_func);
 	g_test_add_func("/gpio/cleanup/no-assignments", fu_gpio_plugin_cleanup_no_assignments_func);
 	return g_test_run();
 }
