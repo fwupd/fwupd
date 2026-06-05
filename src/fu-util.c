@@ -1791,7 +1791,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "No reports require uploading");
+				    "No reports require exporting");
 		return FALSE;
 	}
 
