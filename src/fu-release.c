@@ -25,7 +25,7 @@ struct _FuRelease {
 	FuEngineRequest *request;
 	FuDevice *device;
 	FwupdRemote *remote;
-	FuEngineConfig *config;
+	FuConfig *config;
 	GInputStream *stream;
 	gchar *update_request_id;
 	gchar *device_version_old;
@@ -306,13 +306,13 @@ fu_release_get_remote(FuRelease *self)
 /**
  * fu_release_set_config:
  * @self: a #FuRelease
- * @config: (nullable): a #FuEngineConfig
+ * @config: (nullable): a #FuConfig
  *
  * Sets the config to use when loading. The config may be used for things like ordering attributes
- *like protocol priority.
+ * like protocol priority.
  **/
 void
-fu_release_set_config(FuRelease *self, FuEngineConfig *config)
+fu_release_set_config(FuRelease *self, FuConfig *config)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
 	g_set_object(&self->config, config);
@@ -447,6 +447,21 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static guint
+fu_release_get_uri_scheme_prio(FuRelease *self, const gchar *scheme)
+{
+	g_auto(GStrv) uri_schemes = NULL;
+
+	uri_schemes = fu_config_get_value_strv(self->config, "fwupd", "UriSchemes");
+	if (uri_schemes != NULL) {
+		for (guint i = 0; uri_schemes[i] != NULL; i++) {
+			if (g_strcmp0(uri_schemes[i], scheme) == 0)
+				return i;
+		}
+	}
+	return G_MAXUINT;
+}
+
 static gboolean
 fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 {
@@ -481,9 +496,7 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 				g_autofree gchar *scheme =
 				    fu_release_uri_get_scheme(xb_node_get_text(n));
 				if (scheme != NULL) {
-					guint prio =
-					    fu_engine_config_get_uri_scheme_prio(self->config,
-										 scheme);
+					guint prio = fu_release_get_uri_scheme_prio(self, scheme);
 					if (prio == G_MAXUINT)
 						continue;
 				}
@@ -540,8 +553,8 @@ fu_release_scheme_compare_cb(gconstpointer a, gconstpointer b, gpointer user_dat
 	const gchar *location2 = *((const gchar **)b);
 	g_autofree gchar *scheme1 = fu_release_uri_get_scheme(location1);
 	g_autofree gchar *scheme2 = fu_release_uri_get_scheme(location2);
-	guint prio1 = fu_engine_config_get_uri_scheme_prio(self->config, scheme1);
-	guint prio2 = fu_engine_config_get_uri_scheme_prio(self->config, scheme2);
+	guint prio1 = fu_release_get_uri_scheme_prio(self, scheme1);
+	guint prio2 = fu_release_get_uri_scheme_prio(self, scheme2);
 	if (prio1 < prio2)
 		return -1;
 	if (prio1 > prio2)
@@ -1339,7 +1352,6 @@ fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 
 /**
  * fu_release_get_action_id:
- * @self: a #FuEngine
  *
  * Gets the PolicyKit action ID to use for the install operation.
  *

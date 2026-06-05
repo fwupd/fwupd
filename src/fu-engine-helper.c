@@ -86,13 +86,13 @@ gboolean
 fu_engine_update_motd(FuEngine *self, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
-	const gchar *host_bkc = fu_engine_get_host_bkc(self);
 	guint upgrade_count = 0;
 	guint sync_count = 0;
 	guint reboot_count = 0;
 	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
+	g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
 	g_autofree gchar *target = NULL;
 
 	/* a subset of what fwupdmgr can do */
@@ -249,8 +249,7 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 		g_debug("ignoring update devices file: %s", error_local->message);
 		return TRUE;
 	}
-
-	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
+	if (fu_context_get_config_bool(ctx, "ShowDevicePrivate"))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 
 	devices = fu_engine_get_devices(self, NULL);
@@ -556,4 +555,85 @@ fu_engine_build_machine_id(const gchar *salt, GError **error)
 		g_checksum_update(csum, (const guchar *)salt, (gssize)strlen(salt));
 	g_checksum_update(csum, (const guchar *)buf, (gssize)bufsz);
 	return g_strdup(g_checksum_get_string(csum));
+}
+
+static gboolean
+fu_engine_report_from_flags(FwupdReport *report, const gchar *flags_str, GError **error)
+{
+	g_auto(GStrv) flags_strv = g_strsplit(flags_str, ",", -1);
+	for (guint i = 0; flags_strv[i] != NULL; i++) {
+		FwupdReportFlags flag = fwupd_report_flag_from_string(flags_strv[i]);
+		if (flag == FWUPD_REPORT_FLAG_UNKNOWN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "report flag '%s' unknown",
+				    flags_strv[i]);
+			return FALSE;
+		}
+		fwupd_report_add_flag(report, flag);
+	}
+	return TRUE;
+}
+
+FwupdReport *
+fu_engine_report_from_spec(const gchar *report_spec, GError **error)
+{
+	g_auto(GStrv) parts = g_strsplit(report_spec, "&", -1);
+	g_autoptr(FwupdReport) report = fwupd_report_new();
+
+	for (guint i = 0; parts[i] != NULL; i++) {
+		g_autofree gchar *value = NULL;
+		g_auto(GStrv) kv = g_strsplit(parts[i], "=", 2);
+		if (g_strv_length(kv) != 2) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to parse report specifier key=value %s",
+				    parts[i]);
+			return NULL;
+		}
+		if (g_str_has_prefix(kv[1], "$"))
+			value = g_get_os_info(kv[1] + 1);
+		if (value == NULL)
+			value = g_strdup(kv[1]);
+		if (g_strcmp0(kv[0], "VendorId") == 0) {
+			guint64 tmp = 0;
+			if (g_strcmp0(value, "$OEM") == 0) {
+				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
+			} else {
+				if (!fu_strtoull(value,
+						 &tmp,
+						 0,
+						 G_MAXUINT32,
+						 FU_INTEGER_BASE_AUTO,
+						 error)) {
+					g_prefix_error(error, "failed to parse '%s': ", value);
+					return NULL;
+				}
+				fwupd_report_set_vendor_id(report, tmp);
+			}
+		} else if (g_strcmp0(kv[0], "DistroId") == 0) {
+			fwupd_report_set_distro_id(report, value);
+		} else if (g_strcmp0(kv[0], "DistroVariant") == 0) {
+			fwupd_report_set_distro_variant(report, value);
+		} else if (g_strcmp0(kv[0], "DistroVersion") == 0) {
+			fwupd_report_set_distro_version(report, value);
+		} else if (g_strcmp0(kv[0], "RemoteId") == 0) {
+			fwupd_report_set_remote_id(report, value);
+		} else if (g_strcmp0(kv[0], "Flags") == 0) {
+			if (!fu_engine_report_from_flags(report, value, error))
+				return NULL;
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to parse report specifier key %s",
+				    kv[0]);
+			return NULL;
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&report);
 }

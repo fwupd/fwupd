@@ -25,3 +25,6 @@ fu_engine_build_machine_id(const gchar *salt, GError **error);
 
 void
 fu_engine_add_firmware_gtypes(FuEngine *self) G_GNUC_NON_NULL(1);
+
+FwupdReport *
+fu_engine_report_from_spec(const gchar *report_spec, GError **error) G_GNUC_NON_NULL(1);
