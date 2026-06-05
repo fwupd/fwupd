@@ -60,7 +60,7 @@ if build_standalone
           'fu-uefi-capsule-plugin.c',
         ),
         '--defines',
-        join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
+        join_paths(meson.project_source_root(), 'src', 'fu-engine.c'),
       ],
       install: true,
       install_tag: 'man',
@@ -135,7 +135,7 @@ if build_standalone
           'fu-uefi-capsule-plugin.c',
         ),
         '--defines',
-        join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
+        join_paths(meson.project_source_root(), 'src', 'fu-engine.c'),
         '--md',
       ],
     )

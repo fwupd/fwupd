@@ -10,6 +10,7 @@
 
 #include "../plugins/test/fu-test-plugin.h"
 #include "fu-bios-settings-private.h"
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine-requirements.h"
@@ -168,30 +169,12 @@ fu_engine_generate_md_func(void)
 static void
 fu_engine_test_plugin_mutable_enumeration(void)
 {
-	g_autofree gchar *fake_localconf_fn = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
 	g_autoptr(FuEngine) engine = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
-	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	gboolean ret;
-
-	/* set up test harness */
-	tmpdir = fu_temporary_directory_new("mutable-enumeration", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(tmpdir);
-	fu_context_set_tmpdir(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, tmpdir);
-	fake_localconf_fn = fu_temporary_directory_build(tmpdir, "fwupd.conf", NULL);
-
-	ret = g_file_set_contents(fake_localconf_fn,
-				  "# use `man 5 fwupd.conf` for documentation\n"
-				  "[fwupd]\n"
-				  "RequireImmutableEnumeration=true\n",
-				  -1,
-				  &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	engine = fu_engine_new(ctx);
 	g_assert_nonnull(engine);
@@ -199,6 +182,11 @@ fu_engine_test_plugin_mutable_enumeration(void)
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	fu_config_set_value_internal(fu_context_get_config(ctx),
+				     "fwupd",
+				     "RequireImmutableEnumeration",
+				     "true");
 
 	/* engine requires, plugin doesn't have */
 	ret = fu_engine_plugin_allows_enumeration(engine, plugin);
@@ -210,10 +198,10 @@ fu_engine_test_plugin_mutable_enumeration(void)
 	g_assert_false(ret);
 
 	/* clear config and reload engine */
-	ret = g_file_set_contents(fake_localconf_fn, "[fwupd]\n", -1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_clear_object(&engine);
+	fu_config_set_value_internal(fu_context_get_config(ctx),
+				     "fwupd",
+				     "RequireImmutableEnumeration",
+				     NULL);
 
 	engine = fu_engine_new(ctx);
 	g_assert_nonnull(engine);
@@ -1793,16 +1781,17 @@ fu_engine_history_func(void)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(plugin, "AnotherWriteRequired", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
-
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN |
 				 FU_ENGINE_LOAD_FLAG_HISTORY,
 			     progress,
 			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tell the plugin how to act */
+	ret = fu_plugin_set_config_value(plugin, "AnotherWriteRequired", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1989,15 +1978,16 @@ fu_engine_install_loop_restart_func(void)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(plugin, "InstallLoopRestart", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
-
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 			     progress,
 			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tell the plugin how to act */
+	ret = fu_plugin_set_config_value(plugin, "InstallLoopRestart", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2067,7 +2057,6 @@ fu_engine_multiple_rels_func(void)
 
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, plugin);
-
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 			     progress,
@@ -2186,15 +2175,17 @@ fu_engine_history_inherit(void)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(plugin, "NeedsActivation", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY |
 				 FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 			     progress,
 			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tell the plugin how to act */
+	ret = fu_plugin_set_config_value(plugin, "NeedsActivation", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2332,14 +2323,16 @@ fu_engine_install_needs_reboot(void)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(plugin, "NeedsReboot", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 			     progress,
 			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tell the plugin how to act */
+	ret = fu_plugin_set_config_value(plugin, "NeedsReboot", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2441,14 +2434,16 @@ fu_engine_install_request(void)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(plugin, "RequestSupported", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 			     progress,
 			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tell the plugin how to act */
+	ret = fu_plugin_set_config_value(plugin, "RequestSupported", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2545,15 +2540,17 @@ fu_engine_history_error_func(void)
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(plugin, "WriteSupported", "false", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HISTORY |
 				 FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 			     progress,
 			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tell the plugin how to act */
+	ret = fu_plugin_set_config_value(plugin, "WriteSupported", "false", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

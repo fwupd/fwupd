@@ -265,8 +265,9 @@ fu_dbus_daemon_device_array_to_variant(FuDbusDaemon *self,
 				       GError **error)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
-	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
+	if (fu_context_get_config_bool(ctx, "ShowDevicePrivate"))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 	return fwupd_codec_array_to_variant(devices, flags);
 }
@@ -2435,6 +2436,7 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 {
 #ifdef HAVE_GIO_UNIX
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 	GVariant *prop_value;
 	const gchar *device_id = NULL;
 	const gchar *prop_key;
@@ -2475,7 +2477,7 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	}
 
 	/* relax these */
-	if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
+	if (fu_context_get_config_bool(ctx, "IgnoreRequirements"))
 		helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* install all the things in the store */
@@ -2848,6 +2850,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 {
 	FuDbusDaemon *self = FU_DBUS_DAEMON(user_data);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 
 	/* activity */
 	fu_engine_idle_reset(engine);
@@ -2855,8 +2858,12 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "DaemonVersion") == 0)
 		return g_variant_new_string(PACKAGE_VERSION);
 
-	if (g_strcmp0(property_name, "HostBkc") == 0)
-		return g_variant_new_string(fu_engine_get_host_bkc(engine));
+	if (g_strcmp0(property_name, "HostBkc") == 0) {
+		g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
+		if (host_bkc == NULL)
+			return g_variant_new_string("");
+		return g_variant_new_string(host_bkc);
+	}
 
 	if (g_strcmp0(property_name, "Tainted") == 0)
 		return g_variant_new_boolean(FALSE);
@@ -2871,15 +2878,11 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "PercentageFull") == 0)
 		return g_variant_new_double(self->percentage);
 
-	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
-		FuContext *ctx = fu_engine_get_context(engine);
+	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0)
 		return g_variant_new_uint32(fu_context_get_battery_level(ctx));
-	}
 
-	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_THRESHOLD) == 0) {
-		FuContext *ctx = fu_engine_get_context(engine);
+	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_THRESHOLD) == 0)
 		return g_variant_new_uint32(fu_context_get_battery_threshold(ctx));
-	}
 
 	if (g_strcmp0(property_name, "HostVendor") == 0)
 		return g_variant_new_string(fu_engine_get_host_vendor(engine));
@@ -2926,8 +2929,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_boolean(isatty(fileno(stdout)) != 0);
 
 	if (g_strcmp0(property_name, "OnlyTrusted") == 0) {
-		return g_variant_new_boolean(
-		    fu_engine_config_get_only_trusted(fu_engine_get_config(engine)));
+		return g_variant_new_boolean(fu_context_get_config_bool(ctx, "OnlyTrusted"));
 	}
 	if (g_strcmp0(property_name, "Hwids") == 0)
 		return fu_dbus_daemon_get_property_hwids(self);
