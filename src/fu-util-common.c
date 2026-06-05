@@ -732,6 +732,10 @@ fu_util_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: headphones with an integrated microphone */
 			return g_strdup_printf(_("%s Headset Update"), name);
 		}
+		if (g_strcmp0(cat, "X-Touchscreen") == 0) {
+			/* TRANSLATORS: a display that can detect touch input from a user */
+			return g_strdup_printf(_("%s Touchscreen Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release

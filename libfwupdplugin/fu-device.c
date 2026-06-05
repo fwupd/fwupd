@@ -7338,6 +7338,8 @@ fu_device_category_to_name(const gchar *cat)
 		return "Headphones";
 	if (g_strcmp0(cat, "X-Headset") == 0)
 		return "Headset";
+	if (g_strcmp0(cat, "X-Touchscreen") == 0)
+		return "Touchscreen";
 	return NULL;
 }
 
