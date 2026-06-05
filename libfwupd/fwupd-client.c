@@ -5894,15 +5894,17 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to download file: %s",
-				    errbuf);
+				    "failed to download file: %s [%u]",
+				    errbuf,
+				    (guint)res);
 			return NULL;
 		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to download file: %s",
-			    curl_easy_strerror(res));
+			    "failed to download file: %s [%u]",
+			    curl_easy_strerror(res),
+			    (guint)res);
 		return NULL;
 	}
 
