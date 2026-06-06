@@ -174,6 +174,7 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 	g_autoptr(FuJcatEngine) engine = NULL;
 	g_autoptr(FuJcatResult) result_fail = NULL;
 	g_autoptr(FuJcatResult) result_pass = NULL;
+	g_autoptr(FuJcatResult) result_pass2 = NULL;
 
 	/* set up context */
 	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
@@ -212,20 +213,19 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 			==,
 			"O=Linux Vendor Firmware Project,CN=LVFS CA");
 
-	/* verify will fail with a self-signed signature */
-	sig_fn2 =
-	    g_test_build_filename(G_TEST_BUILT, "tests", "colorhug", "firmware.bin.p7c", NULL);
+	/* verify will pass with the trusted self-signed signature fixture */
+	sig_fn2 = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7c", NULL);
 	blob_sig2 = fu_bytes_get_contents(sig_fn2, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_sig2);
-	result_fail = fu_jcat_engine_pubkey_verify(engine,
+	result_pass2 = fu_jcat_engine_pubkey_verify(engine,
 						   data_fwbin,
 						   blob_sig2,
 						   FU_JCAT_VERIFY_FLAG_NONE,
 						   &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_null(result_fail);
-	g_clear_error(&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass2);
+	g_assert_cmpstr(fu_jcat_result_get_authority(result_pass2), ==, "O=Hughski Limited");
 
 	/* verify will fail with valid signature and different data */
 	fn_fail = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.asc", NULL);
@@ -582,7 +582,7 @@ fu_jcat_context_verify_item_target_func(void)
 	g_autoptr(GPtrArray) results_pass = NULL;
 
 	/* set up context */
-	pki_dir = g_test_build_filename(G_TEST_BUILT, "tests", "pki", NULL);
+	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
 	fu_jcat_context_add_public_keys(context, pki_dir);
 	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
@@ -605,7 +605,7 @@ fu_jcat_context_verify_item_target_func(void)
 
 	/* create the item to verify, with a checksum and the PKCS#7 signature *of the hash* */
 	fwupd_jcat_item_add_blob(item, blob_target_sha256);
-	fn_sig = g_test_build_filename(G_TEST_BUILT,
+	fn_sig = g_test_build_filename(G_TEST_DIST,
 				       "tests",
 				       "colorhug",
 				       "firmware.bin.sha256.p7c",
