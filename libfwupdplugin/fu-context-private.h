@@ -71,6 +71,16 @@ FuHwids *
 fu_context_get_hwids(FuContext *self) G_GNUC_NON_NULL(1);
 FuConfig *
 fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1);
+
+gchar *
+fu_context_get_config_str(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+gchar **
+fu_context_get_config_strv(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_context_get_config_bool(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+guint64
+fu_context_get_config_u64(FuContext *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
+
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind) G_GNUC_NON_NULL(1);
 void

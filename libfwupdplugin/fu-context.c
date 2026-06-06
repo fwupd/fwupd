@@ -336,6 +336,86 @@ fu_context_get_config(FuContext *self)
 }
 
 /**
+ * fu_context_get_config_str:
+ * @self: a #FuContext
+ * @key: (not nullable): a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: (transfer full) (nullable): string value
+ *
+ * Since: 2.1.5
+ **/
+gchar *
+fu_context_get_config_str(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	return fu_config_get_value(priv->config, "fwupd", key);
+}
+
+/**
+ * fu_context_get_config_strv:
+ * @self: a #FuContext
+ * @key: (not nullable): a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: (transfer full) (nullable): string array value
+ *
+ * Since: 2.1.5
+ **/
+gchar **
+fu_context_get_config_strv(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	return fu_config_get_value_strv(priv->config, "fwupd", key);
+}
+
+/**
+ * fu_context_get_config_bool:
+ * @self: a #FuContext
+ * @key: (not nullable): a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: boolean value
+ *
+ * Since: 2.1.5
+ **/
+gboolean
+fu_context_get_config_bool(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	return fu_config_get_value_bool(priv->config, "fwupd", key);
+}
+
+/**
+ * fu_context_get_config_u64:
+ * @self: a #FuContext
+ * @key: a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: integer key value
+ *
+ * Since: 2.1.5
+ **/
+guint64
+fu_context_get_config_u64(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), G_MAXUINT64);
+	g_return_val_if_fail(key != NULL, G_MAXUINT64);
+	return fu_config_get_value_u64(priv->config, "fwupd", key);
+}
+
+/**
  * fu_context_get_smbios_string:
  * @self: a #FuContext
  * @type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
