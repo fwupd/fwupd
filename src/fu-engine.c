@@ -409,6 +409,16 @@ fu_engine_config_reload(FuEngine *self)
 	g_auto(GStrv) uids = NULL;
 	g_autofree gchar *domains = NULL;
 
+	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
+	if (fu_context_get_config_bool(self->ctx, "IgnoreEfivarsFreeSpace"))
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE);
+
+	/* set up idle exit */
+	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES)) {
+		fu_idle_set_timeout(self->idle,
+				    fu_context_get_config_u64(self->ctx, "IdleTimeout"));
+	}
+
 	/* get disabled devices */
 	g_ptr_array_set_size(self->disabled_devices, 0);
 	disabled_devices = fu_context_get_config_strv(self->ctx, "DisabledDevices");
@@ -1027,8 +1037,11 @@ fu_engine_modify_config(FuEngine *self,
 		    "EspLocation",
 		    "HostBkc",
 		    "IdleTimeout",
+		    "IgnoreEfivarsFreeSpace",
 		    "IgnorePower",
+		    "IgnoreRequirements",
 		    "OnlyTrusted",
+		    "OnlyTrustPostQuantumSignatures",
 		    "P2pPolicy",
 		    "ReleaseDedupe",
 		    "ReleasePriority",
@@ -4701,16 +4714,10 @@ fu_engine_remote_list_ensure_p2p_policy_remote(FuEngine *self, FwupdRemote *remo
 static void
 fu_engine_config_changed_cb(FuConfig *config, FuEngine *self)
 {
-	guint64 idle_timeout = fu_context_get_config_u64(self->ctx, "IdleTimeout");
-	g_autofree gchar *esp_location = fu_engine_config_get_esp_location(self);
 	g_autoptr(GPtrArray) remotes = fu_remote_list_get_all(self->remote_list);
 
+	/* sync */
 	fu_engine_config_reload(self);
-	fu_idle_set_timeout(self->idle, idle_timeout);
-
-	/* allow changing the hardcoded ESP location */
-	if (esp_location != NULL)
-		fu_context_set_esp_location(self->ctx, esp_location);
 
 	/* amend P2P policy */
 	for (guint i = 0; i < remotes->len; i++) {
@@ -8819,7 +8826,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
 	const gchar *keyring_path;
-	g_autofree gchar *esp_location = NULL;
 	g_autofree gchar *pkidir_fw = NULL;
 	g_autofree gchar *pkidir_md = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
@@ -8912,16 +8918,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 	if (!fu_context_load(self->ctx, fu_progress_get_child(progress), load_flags, error))
 		return FALSE;
+	fu_engine_config_reload(self);
 	fu_progress_step_done(progress);
-
-	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
-	if (fu_context_get_config_bool(self->ctx, "IgnoreEfivarsFreeSpace"))
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE);
-
-	/* set the hardcoded ESP */
-	esp_location = fu_engine_config_get_esp_location(self);
-	if (esp_location != NULL)
-		fu_context_set_esp_location(self->ctx, esp_location);
 
 	/* read remotes */
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
@@ -8970,6 +8968,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	plugin_uefi = fu_plugin_list_find_by_name(self->plugin_list, "uefi_capsule", NULL);
 	if (plugin_uefi != NULL) {
 		const gchar *tmp = fu_plugin_get_config_value(plugin_uefi, "OverrideESPMountPoint");
+		g_autofree gchar *esp_location = fu_engine_config_get_esp_location(self);
 		if (tmp != NULL && g_strcmp0(tmp, esp_location) != 0) {
 			g_info("migrating OverrideESPMountPoint=%s to EspLocation", tmp);
 			if (!fu_config_set_value(fu_context_get_config(self->ctx),
@@ -8979,12 +8978,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 						 error))
 				return FALSE;
 		}
-	}
-
-	/* set up idle exit */
-	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES)) {
-		fu_idle_set_timeout(self->idle,
-				    fu_context_get_config_u64(self->ctx, "IdleTimeout"));
 	}
 
 	/* load AppStream metadata */
