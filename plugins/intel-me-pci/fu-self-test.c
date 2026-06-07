@@ -31,7 +31,7 @@ fu_intel_me_pci_plugin_func(void)
 
 	fu_context_set_cpu_vendor(ctx, FU_CPU_VENDOR_INTEL);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, &error);
+	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

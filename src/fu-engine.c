@@ -8980,7 +8980,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS);
 	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	if (!fu_context_load_quirks(self->ctx, &error_quirks))
+	if (!fu_context_load_quirks(self->ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error_quirks))
 		g_warning("Failed to load quirks: %s", error_quirks->message);
 	fu_progress_step_done(progress);
 
