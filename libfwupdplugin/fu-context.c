@@ -1560,6 +1560,8 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
 /**
  * fu_context_load_quirks:
  * @self: a #FuContext
+ * @progress: a #FuProgress
+ * @flags: a #FuContextLoadFlags, e.g. %FU_CONTEXT_LOAD_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Loads all quirks into the context.
@@ -1569,12 +1571,16 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
  * Since: 1.6.0
  **/
 gboolean
-fu_context_load_quirks(FuContext *self, GError **error)
+fu_context_load_quirks(FuContext *self,
+		       FuProgress *progress,
+		       FuContextLoadFlags flags,
+		       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* rebuild silo if required */

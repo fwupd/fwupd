@@ -19,10 +19,11 @@ fu_ata_id_func(void)
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuAtaDevice) dev = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, &error);
+	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -54,10 +55,11 @@ fu_ata_oui_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuAtaDevice) dev = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, &error);
+	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
