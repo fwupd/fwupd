@@ -19,7 +19,7 @@ fu_gpio_test_load_quirks(FuContext *ctx, GError **error)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	return fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, error);
+	return fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, error);
 }
 
 static void

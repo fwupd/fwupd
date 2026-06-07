@@ -80,7 +80,7 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 
 	/* load context */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -314,7 +314,7 @@ fu_plugin_quirks_device_func(void)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -152,11 +152,7 @@ fu_context_hwids_dmi_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, testdatadir);
 
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_DMI, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_DMI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	dump = fu_firmware_to_string(FU_FIRMWARE(fu_context_get_smbios(ctx)));
@@ -181,11 +177,8 @@ fu_context_hwids_unset_func(void)
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -249,7 +242,7 @@ fu_context_hwids_fdt_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_FDT, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_FDT, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	dump = fu_firmware_to_string(FU_FIRMWARE(fu_context_get_smbios(ctx)));
@@ -276,7 +269,7 @@ fu_context_quirks_func(void)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

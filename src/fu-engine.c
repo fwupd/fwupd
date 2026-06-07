@@ -8812,6 +8812,8 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error)
 {
+	FuContextLoadFlags load_flags =
+	    FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS | FU_CONTEXT_LOAD_FLAG_WATCH_FILES;
 	FuPlugin *plugin_uefi;
 	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
@@ -8820,7 +8822,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autofree gchar *esp_location = NULL;
 	g_autofree gchar *pkidir_fw = NULL;
 	g_autofree gchar *pkidir_md = NULL;
-	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -8835,13 +8836,11 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-config");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "read-remotes");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "ensure-client-cert");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "write-db");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-plugins");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-quirks");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-hwinfo");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-appstream");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "backend-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "plugins-init");
@@ -8897,14 +8896,27 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (self->host_machine_id == NULL)
 		g_info("failed to build machine-id: %s", error_local->message);
 
-	/* read config file */
-	if (!fu_config_load(fu_context_get_config(self->ctx),
-			    FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS | FU_CONFIG_LOAD_FLAG_WATCH_FILES,
-			    error)) {
-		g_prefix_error_literal(error, "failed to load config: ");
-		return FALSE;
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY) {
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS);
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 	}
+	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE);
+
+	/* load SMBIOS and the hwids */
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
+		load_flags |= FU_CONTEXT_LOAD_FLAG_HWID_CONFIG | FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS |
+			      FU_CONTEXT_LOAD_FLAG_HWID_FDT | FU_CONTEXT_LOAD_FLAG_HWID_DMI |
+			      FU_CONTEXT_LOAD_FLAG_HWID_KENV | FU_CONTEXT_LOAD_FLAG_HWID_DARWIN;
+	}
+	if (!fu_context_load(self->ctx, fu_progress_get_child(progress), load_flags, error))
+		return FALSE;
 	fu_progress_step_done(progress);
+
+	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
+	if (fu_context_get_config_bool(self->ctx, "IgnoreEfivarsFreeSpace"))
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE);
 
 	/* set the hardcoded ESP */
 	esp_location = fu_engine_config_get_esp_location(self);
@@ -8947,7 +8959,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 	fu_progress_step_done(progress);
 
-	/* load plugins early, as we have to call ->load() *before* building quirk silo */
+	/* load plugins */
 	if (!fu_engine_load_plugins(self, flags, fu_progress_get_child(progress), error)) {
 		g_prefix_error_literal(error, "failed to load plugins: ");
 		return FALSE;
@@ -8974,35 +8986,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		fu_idle_set_timeout(self->idle,
 				    fu_context_get_config_u64(self->ctx, "IdleTimeout"));
 	}
-
-	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS);
-	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	if (!fu_context_load_quirks(self->ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error_quirks))
-		g_warning("Failed to load quirks: %s", error_quirks->message);
-	fu_progress_step_done(progress);
-
-	/* do not mount disks if only loading readonly */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
-
-	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
-	if (fu_context_get_config_bool(self->ctx, "IgnoreEfivarsFreeSpace"))
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE);
-
-	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
-		if (!fu_context_load_hwinfo(self->ctx,
-					    fu_progress_get_child(progress),
-					    FU_CONTEXT_LOAD_FLAG_HWID_ALL |
-						FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS |
-						FU_CONTEXT_LOAD_FLAG_WATCH_FILES,
-					    error))
-			return FALSE;
-	}
-	fu_progress_step_done(progress);
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store(self, flags, error)) {

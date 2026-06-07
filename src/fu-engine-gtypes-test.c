@@ -219,6 +219,7 @@ fu_engine_gtypes_func(void)
 {
 	GPtrArray *plugins;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 	g_autoptr(FuDrmDevice) drm_device = g_object_new(FU_TYPE_DRM_DEVICE, NULL);
@@ -235,14 +236,8 @@ fu_engine_gtypes_func(void)
 	};
 
 	/* set up test harness */
-	g_autofree gchar *testdatadir = NULL;
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
-
-	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -268,7 +263,7 @@ fu_engine_gtypes_func(void)
 	/* load all plugins */
 	ret =
 	    fu_engine_load(engine,
-			   FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+			   FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_HWINFO |
 			       FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			   progress,
 			   &error);

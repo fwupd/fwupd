@@ -6,7 +6,7 @@ enum FuContextFlags {
     None                    = 0,
     SaveEvents              = 1 << 0, // so that they can be replayed to emulate devices
     SystemInhibit           = 1 << 1, // all devices are not updatable
-    LoadedHwinfo            = 1 << 2, // has called fu_context_load_hwinfo()
+    LoadedHwinfo            = 1 << 2, // has called fu_context_load()
     InhibitVolumeMount      = 1 << 3, // usually for self tests
     FdeBitlocker            = 1 << 4, // full disk encryption
     FdeSnapd                = 1 << 5, // full disk encryption
