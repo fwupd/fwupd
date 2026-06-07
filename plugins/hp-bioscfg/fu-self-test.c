@@ -31,10 +31,7 @@ fu_test_self_init(FuTest *self)
 	confdir = g_test_build_filename(G_TEST_DIST, "tests", "etc", "fwupd", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, confdir);
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

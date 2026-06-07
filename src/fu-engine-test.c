@@ -765,11 +765,6 @@ fu_engine_require_hwid_func(void)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 
-	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
@@ -2726,15 +2721,6 @@ fu_engine_plugin_module_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
-	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx,
-				     progress,
-				     FU_CONTEXT_LOAD_FLAG_HWID_CONFIG |
-					 FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
-				     &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
 	/* create a fake device */
 	ret = fu_plugin_set_config_value(plugin, "RegistrationSupported", "true", &error);
 	g_assert_no_error(error);
@@ -3447,14 +3433,9 @@ fu_engine_report_metadata_func(void)
 
 	/* load dummy hwids */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	ret = fu_engine_load(engine,
-			     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			     FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE |
+				 FU_CONTEXT_LOAD_FLAG_HWID_CONFIG,
 			     progress,
 			     &error);
 	g_assert_no_error(error);

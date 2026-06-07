@@ -29,7 +29,7 @@ fu_intel_me_smbios_subtype18_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -72,7 +72,7 @@ fu_intel_me_smbios_subtype30_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

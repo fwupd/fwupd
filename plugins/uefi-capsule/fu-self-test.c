@@ -338,12 +338,9 @@ fu_uefi_capsule_no_coalesce_func(void)
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -461,12 +458,9 @@ fu_uefi_capsule_no_cod_func(void)
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -516,12 +510,9 @@ fu_uefi_capsule_no_flashes_func(void)
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -628,12 +619,9 @@ fu_uefi_capsule_nvram_func(void)
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -797,12 +785,9 @@ fu_uefi_capsule_cod_func(void)
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -899,12 +884,9 @@ fu_uefi_capsule_grub_func(void)
 
 	/* do not save silo */
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
-	ret = fu_context_load_quirks(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -736,12 +736,7 @@ fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 	const gchar *configdir;
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
-
-	/* already done */
-	if (priv->items->len > 0) {
-		g_debug("already set up config");
-		return fu_config_reload(self, flags, error);
-	}
+	g_return_val_if_fail(priv->items->len == 0, FALSE);
 
 	/* load the main daemon config file */
 	configdir = fu_path_store_get_path(priv->pstore, FU_PATH_KIND_SYSCONFDIR_PKG, NULL);

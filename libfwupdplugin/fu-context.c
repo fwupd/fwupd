@@ -1410,28 +1410,26 @@ fu_context_detect_hypervisor(FuContext *self)
 }
 
 /**
- * fu_context_load_hwinfo:
+ * fu_context_load:
  * @self: a #FuContext
  * @progress: a #FuProgress
  * @flags: a #FuContextLoadFlags, e.g. %FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS
  * @error: (nullable): optional return location for an error
  *
- * Loads all hardware information parts of the context.
+ * Loads all hardware information and quirks into the context.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.8.10
+ * Since: 2.1.5
  **/
 gboolean
-fu_context_load_hwinfo(FuContext *self,
-		       FuProgress *progress,
-		       FuContextLoadFlags flags,
-		       GError **error)
+fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	FuConfigLoadFlags config_load_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	GPtrArray *guids;
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
+	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
@@ -1452,12 +1450,20 @@ fu_context_load_hwinfo(FuContext *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "quirks");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup-funcs");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-fde");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-hypervisor-container");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
+
+	/* rebuild silo if required */
+	if (!fu_quirks_load(priv->quirks, &error_quirks)) {
+		if (!g_error_matches(error_quirks, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("failed to load quirks: %s", error_quirks->message);
+	}
+	fu_progress_step_done(progress);
 
 	/* required always */
 	if (flags & FU_CONTEXT_LOAD_FLAG_WATCH_FILES)
@@ -1555,40 +1561,6 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 	return g_hash_table_lookup(priv->hwid_flags, flag) != NULL;
-}
-
-/**
- * fu_context_load_quirks:
- * @self: a #FuContext
- * @progress: a #FuProgress
- * @flags: a #FuContextLoadFlags, e.g. %FU_CONTEXT_LOAD_FLAG_NONE
- * @error: (nullable): optional return location for an error
- *
- * Loads all quirks into the context.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.6.0
- **/
-gboolean
-fu_context_load_quirks(FuContext *self,
-		       FuProgress *progress,
-		       FuContextLoadFlags flags,
-		       GError **error)
-{
-	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* rebuild silo if required */
-	if (!fu_quirks_load(priv->quirks, &error_local))
-		g_warning("Failed to load quirks: %s", error_local->message);
-
-	/* always */
-	return TRUE;
 }
 
 /**
