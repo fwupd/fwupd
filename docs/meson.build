@@ -47,6 +47,8 @@ if build_standalone
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
         '--defines',
+        join_paths(meson.project_source_root(), 'plugins', 'dell-kestrel', 'fu-dell-kestrel-plugin.c'),
+        '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
         '--defines',
         join_paths(
@@ -117,6 +119,8 @@ if build_standalone
         join_paths(meson.project_source_root(), 'plugins', 'msr', 'fu-msr-plugin.c'),
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
+        '--defines',
+        join_paths(meson.project_source_root(), 'plugins', 'dell-kestrel', 'fu-dell-kestrel-plugin.c'),
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
         '--defines',

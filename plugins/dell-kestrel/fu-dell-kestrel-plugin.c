@@ -12,9 +12,6 @@
 /* register the firmware types */
 #include "fu-dell-kestrel-rtshub-firmware.h"
 
-/* plugin config */
-#define FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD "UpdateOnDisconnect"
-
 struct _FuDellKestrelPlugin {
 	FuPlugin parent_instance;
 };
@@ -104,8 +101,7 @@ fu_dell_kestrel_plugin_add_device(FuPlugin *plugin, FuDevice *device, GError **e
 		g_autoptr(FuDeviceLocker) locker = NULL;
 		gboolean uod = FALSE;
 
-		uod = fu_plugin_get_config_value_boolean(plugin,
-							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
+		uod = fu_plugin_get_config_value_boolean(plugin, "UpdateOnDisconnect");
 
 		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type, uod);
 		if (hub_device == NULL) {
@@ -188,8 +184,7 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 		g_autoptr(FuDellKestrelEc) ec_dev = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		uod = fu_plugin_get_config_value_boolean(plugin,
-							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
+		uod = fu_plugin_get_config_value_boolean(plugin, "UpdateOnDisconnect");
 		ec_dev = fu_dell_kestrel_ec_new(FU_USB_DEVICE(device), uod);
 		if (ec_dev == NULL) {
 			g_set_error_literal(error,
@@ -360,7 +355,7 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 		return FALSE;
 
 	/* update on connected, i.e., uod is false */
-	if (!fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
+	if (!fu_plugin_get_config_value_boolean(plugin, "UpdateOnDisconnect")) {
 		/* releasing the dock will activate devices immediately */
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *dev = g_ptr_array_index(devices, i);
@@ -405,7 +400,7 @@ fu_dell_kestrel_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, G
 		return FALSE;
 
 	/* conditionally enable passive flow */
-	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
+	if (fu_plugin_get_config_value_boolean(plugin, "UpdateOnDisconnect")) {
 		if (fu_device_has_flag(ec_dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 			if (!fu_dell_kestrel_ec_run_passive_update(FU_DELL_KESTREL_EC(ec_dev),
 								   error))
@@ -422,7 +417,7 @@ fu_dell_kestrel_plugin_modify_config(FuPlugin *plugin,
 				     const gchar *value,
 				     GError **error)
 {
-	const gchar *keys[] = {FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, NULL};
+	const gchar *keys[] = {"UpdateOnDisconnect", NULL};
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -444,7 +439,7 @@ fu_dell_kestrel_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device
 		return TRUE;
 
 	/* uod: device is managed to activate when disconnected */
-	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD) &&
+	if (fu_plugin_get_config_value_boolean(plugin, "UpdateOnDisconnect") &&
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		g_debug("uod dropped needs-activation flag for %s", fu_device_get_name(device));
@@ -492,7 +487,7 @@ fu_dell_kestrel_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, FU_TYPE_DELL_KESTREL_RTSHUB_FIRMWARE);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "true");
+	fu_plugin_set_config_default(plugin, "UpdateOnDisconnect", "true");
 
 	/* chain up to parent */
 	G_OBJECT_CLASS(fu_dell_kestrel_plugin_parent_class)->constructed(obj);
