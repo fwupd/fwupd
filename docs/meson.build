@@ -51,6 +51,8 @@ if build_standalone
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
         '--defines',
+        join_paths(meson.project_source_root(), 'plugins', 'test', 'fu-test-plugin.c'),
+        '--defines',
         join_paths(
           meson.project_source_root(),
           'plugins',
@@ -123,6 +125,8 @@ if build_standalone
         join_paths(meson.project_source_root(), 'plugins', 'dell-kestrel', 'fu-dell-kestrel-plugin.c'),
         '--defines',
         join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
+        '--defines',
+        join_paths(meson.project_source_root(), 'plugins', 'test', 'fu-test-plugin.c'),
         '--defines',
         join_paths(
           meson.project_source_root(),
