@@ -910,9 +910,7 @@ test_set_up(FuThunderboltTest *tt, gconstpointer params)
 	const gchar *udev_subsystems[] = {"thunderbolt", NULL};
 
 	tt->ctx = fu_context_new();
-	ret = fu_context_load_quirks(tt->ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
+	ret = fu_context_load_quirks(tt->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

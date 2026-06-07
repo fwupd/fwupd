@@ -41,9 +41,7 @@ fu_self_init(FuTest *self)
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
 
-	ret = fu_context_load_quirks(ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
