@@ -240,7 +240,7 @@ fu_engine_gtypes_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

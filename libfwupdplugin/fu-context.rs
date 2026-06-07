@@ -24,14 +24,14 @@ enum FuContextFlags {
     NoCache                 = 1 << 17, // do not save to a persistent cache
 }
 
-enum FuContextHwidFlags {
+enum FuContextLoadFlags {
     None                    = 0,
-    LoadConfig              = 1 << 0,
-    LoadSmbios              = 1 << 1,
-    LoadFdt                 = 1 << 2,
-    LoadDmi                 = 1 << 3,
-    LoadKenv                = 1 << 4,
-    LoadDarwin              = 1 << 5,
+    HwidConfig              = 1 << 0,
+    HwidSmbios              = 1 << 1,
+    HwidFdt                 = 1 << 2,
+    HwidDmi                 = 1 << 3,
+    HwidKenv                = 1 << 4,
+    HwidDarwin              = 1 << 5,
     WatchFiles              = 1 << 6,
     FixPermissions          = 1 << 7,
 }

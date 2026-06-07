@@ -766,7 +766,7 @@ fu_engine_require_hwid_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2729,7 +2729,7 @@ fu_engine_plugin_module_func(void)
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(ctx,
 				     progress,
-				     FU_CONTEXT_HWID_FLAG_LOAD_CONFIG |
+				     FU_CONTEXT_LOAD_FLAG_HWID_CONFIG |
 					 FU_ENGINE_LOAD_FLAG_ALLOW_TEST_PLUGIN,
 				     &error);
 	g_assert_no_error(error);
@@ -3450,7 +3450,7 @@ fu_engine_report_metadata_func(void)
 	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_load(engine,

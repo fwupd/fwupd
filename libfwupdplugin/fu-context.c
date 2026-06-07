@@ -1413,7 +1413,7 @@ fu_context_detect_hypervisor(FuContext *self)
  * fu_context_load_hwinfo:
  * @self: a #FuContext
  * @progress: a #FuProgress
- * @flags: a #FuContextHwidFlags, e.g. %FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS
+ * @flags: a #FuContextLoadFlags, e.g. %FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS
  * @error: (nullable): optional return location for an error
  *
  * Loads all hardware information parts of the context.
@@ -1425,7 +1425,7 @@ fu_context_detect_hypervisor(FuContext *self)
 gboolean
 fu_context_load_hwinfo(FuContext *self,
 		       FuProgress *progress,
-		       FuContextHwidFlags flags,
+		       FuContextLoadFlags flags,
 		       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
@@ -1437,15 +1437,15 @@ fu_context_load_hwinfo(FuContext *self,
 	g_autoptr(GError) error_bios_settings = NULL;
 	struct {
 		const gchar *name;
-		FuContextHwidFlags flag;
+		FuContextLoadFlags flag;
 		FuContextHwidsSetupFunc func;
-	} hwids_setup_map[] = {{"config", FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, fu_hwids_config_setup},
-			       {"smbios", FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, fu_hwids_smbios_setup},
-			       {"fdt", FU_CONTEXT_HWID_FLAG_LOAD_FDT, fu_hwids_fdt_setup},
-			       {"kenv", FU_CONTEXT_HWID_FLAG_LOAD_KENV, fu_hwids_kenv_setup},
-			       {"dmi", FU_CONTEXT_HWID_FLAG_LOAD_DMI, fu_hwids_dmi_setup},
-			       {"darwin", FU_CONTEXT_HWID_FLAG_LOAD_DARWIN, fu_hwids_darwin_setup},
-			       {NULL, FU_CONTEXT_HWID_FLAG_NONE, NULL}};
+	} hwids_setup_map[] = {{"config", FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, fu_hwids_config_setup},
+			       {"smbios", FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS, fu_hwids_smbios_setup},
+			       {"fdt", FU_CONTEXT_LOAD_FLAG_HWID_FDT, fu_hwids_fdt_setup},
+			       {"kenv", FU_CONTEXT_LOAD_FLAG_HWID_KENV, fu_hwids_kenv_setup},
+			       {"dmi", FU_CONTEXT_LOAD_FLAG_HWID_DMI, fu_hwids_dmi_setup},
+			       {"darwin", FU_CONTEXT_LOAD_FLAG_HWID_DARWIN, fu_hwids_darwin_setup},
+			       {NULL, FU_CONTEXT_LOAD_FLAG_NONE, NULL}};
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -1460,9 +1460,9 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
 
 	/* required always */
-	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
+	if (flags & FU_CONTEXT_LOAD_FLAG_WATCH_FILES)
 		config_load_flags |= FU_CONFIG_LOAD_FLAG_WATCH_FILES;
-	if (flags & FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS)
+	if (flags & FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS)
 		config_load_flags |= FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
 	if (!fu_config_load(priv->config, config_load_flags, error))
 		return FALSE;
