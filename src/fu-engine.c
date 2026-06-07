@@ -8996,9 +8996,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		if (!fu_context_load_hwinfo(self->ctx,
 					    fu_progress_get_child(progress),
-					    FU_CONTEXT_HWID_FLAG_LOAD_ALL |
-						FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS |
-						FU_CONTEXT_HWID_FLAG_WATCH_FILES,
+					    FU_CONTEXT_LOAD_FLAG_HWID_ALL |
+						FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS |
+						FU_CONTEXT_LOAD_FLAG_WATCH_FILES,
 					    error))
 			return FALSE;
 	}

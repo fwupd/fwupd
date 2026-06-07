@@ -80,7 +80,7 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 
 	/* load context */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

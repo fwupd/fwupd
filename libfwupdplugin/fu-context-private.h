@@ -14,10 +14,10 @@
 #include "fu-quirks.h"
 #include "fu-volume.h"
 
-#define FU_CONTEXT_HWID_FLAG_LOAD_ALL                                                              \
-	(FU_CONTEXT_HWID_FLAG_LOAD_CONFIG | FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS |                     \
-	 FU_CONTEXT_HWID_FLAG_LOAD_FDT | FU_CONTEXT_HWID_FLAG_LOAD_DMI |                           \
-	 FU_CONTEXT_HWID_FLAG_LOAD_KENV | FU_CONTEXT_HWID_FLAG_LOAD_DARWIN)
+#define FU_CONTEXT_LOAD_FLAG_HWID_ALL                                                              \
+	(FU_CONTEXT_LOAD_FLAG_HWID_CONFIG | FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS |                     \
+	 FU_CONTEXT_LOAD_FLAG_HWID_FDT | FU_CONTEXT_LOAD_FLAG_HWID_DMI |                           \
+	 FU_CONTEXT_LOAD_FLAG_HWID_KENV | FU_CONTEXT_LOAD_FLAG_HWID_DARWIN)
 
 FuContext *
 fu_context_new(void);
@@ -30,7 +30,7 @@ fu_context_reload_bios_settings(FuContext *self, GError **error);
 gboolean
 fu_context_load_hwinfo(FuContext *self,
 		       FuProgress *progress,
-		       FuContextHwidFlags flags,
+		       FuContextLoadFlags flags,
 		       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_load_quirks(FuContext *self, GError **error) G_GNUC_NON_NULL(1);

@@ -47,7 +47,7 @@ fu_self_init(FuTest *self)
 
 	/* load the config file */
 	fu_config_set_basename(fu_context_get_config(ctx), "redfish-fwupd.conf");
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
