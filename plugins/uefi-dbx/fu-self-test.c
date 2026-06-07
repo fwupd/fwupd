@@ -27,7 +27,8 @@ fu_uefi_dbx_zero_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -126,7 +127,8 @@ fu_uefi_dbx_not_present_func(void)
 	g_autofree gchar *ms_kek_xml = NULL;
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

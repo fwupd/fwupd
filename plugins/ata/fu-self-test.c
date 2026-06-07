@@ -21,7 +21,8 @@ fu_ata_id_func(void)
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -55,7 +56,8 @@ fu_ata_oui_func(void)
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

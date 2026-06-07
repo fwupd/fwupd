@@ -19,7 +19,8 @@ fu_nvme_serial_suffix_func(void)
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_NVME_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -57,7 +58,8 @@ fu_nvme_cns_func(void)
 	g_autoptr(FuNvmeDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -1560,7 +1560,6 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
 /**
  * fu_context_load_quirks:
  * @self: a #FuContext
- * @flags: quirks load flags, e.g. %FU_QUIRKS_LOAD_FLAG_READONLY_FS
  * @error: (nullable): optional return location for an error
  *
  * Loads all quirks into the context.
@@ -1570,7 +1569,7 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
  * Since: 1.6.0
  **/
 gboolean
-fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error)
+fu_context_load_quirks(FuContext *self, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
@@ -1579,7 +1578,7 @@ fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* rebuild silo if required */
-	if (!fu_quirks_load(priv->quirks, flags, &error_local))
+	if (!fu_quirks_load(priv->quirks, &error_local))
 		g_warning("Failed to load quirks: %s", error_local->message);
 
 	/* always */
