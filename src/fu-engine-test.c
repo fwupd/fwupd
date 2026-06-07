@@ -3446,7 +3446,8 @@ fu_engine_report_metadata_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, testdatadir_sysfs);
 
 	/* load dummy hwids */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);

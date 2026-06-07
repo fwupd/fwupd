@@ -8813,7 +8813,6 @@ gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin_uefi;
-	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
@@ -8978,10 +8977,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* on a read-only filesystem don't care about the cache GUID */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS);
 	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
-	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error_quirks))
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	if (!fu_context_load_quirks(self->ctx, &error_quirks))
 		g_warning("Failed to load quirks: %s", error_quirks->message);
 	fu_progress_step_done(progress);
 

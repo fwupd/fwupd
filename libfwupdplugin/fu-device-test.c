@@ -130,8 +130,8 @@ fu_device_cfi_device_func(void)
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -435,7 +435,8 @@ fu_device_instance_ids_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -657,7 +658,8 @@ fu_device_children_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -803,7 +805,8 @@ fu_device_incorporate_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	/* load quirks */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

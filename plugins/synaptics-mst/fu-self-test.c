@@ -36,7 +36,8 @@ fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 	g_assert_no_error(error);
 	g_assert_nonnull(dir);
 
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
@@ -92,8 +93,8 @@ fu_plugin_synaptics_mst_none_func(void)
 
 	/* set up test harness */
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, g_test_get_dir(G_TEST_DIST));
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
@@ -139,8 +140,8 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

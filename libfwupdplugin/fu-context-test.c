@@ -142,7 +142,7 @@ fu_context_hwids_dmi_func(void)
 {
 	g_autofree gchar *dump = NULL;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_CACHE);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -152,7 +152,7 @@ fu_context_hwids_dmi_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_DMI, testdatadir);
 
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -184,7 +184,8 @@ fu_context_hwids_unset_func(void)
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -273,8 +274,8 @@ fu_context_quirks_func(void)
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load_quirks(ctx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

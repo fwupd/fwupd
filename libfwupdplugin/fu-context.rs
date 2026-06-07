@@ -20,6 +20,8 @@ enum FuContextFlags {
     NoQuirks                = 1 << 13,
     DummyEfivars            = 1 << 14,
     IsServer                = 1 << 15,
+    ReadonlyFs              = 1 << 16, // ignore readonly filesystem errors
+    NoCache                 = 1 << 17, // do not save to a persistent cache
 }
 
 enum FuContextHwidFlags {

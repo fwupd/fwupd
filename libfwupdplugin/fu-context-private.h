@@ -33,7 +33,7 @@ fu_context_load_hwinfo(FuContext *self,
 		       FuContextHwidFlags flags,
 		       GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error) G_GNUC_NON_NULL(1);
+fu_context_load_quirks(FuContext *self, GError **error) G_GNUC_NON_NULL(1);
 void
 fu_context_load_path_store(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
