@@ -137,31 +137,29 @@ def _convert_md_to_man(data: str) -> str:
 def _add_defines(defines: Dict[str, str], fn: str) -> None:
     with open(fn, "rb") as f:
         for line in f.read().decode().split("\n"):
-            if (
-                line.find("set_config_default") == -1
-                and line.find("config_set_default") == -1
-            ):
-                continue
-            try:
-                _, wrapped_key, wrapped_value = line.split(",", maxsplit=2)
-                wrapped_value = wrapped_value.rsplit(")", maxsplit=1)[0]
-            except ValueError:
-                print(f"failed to define value for {line} in {fn}")
-                continue
-            try:
-                _, key, _ = wrapped_key.split('"', maxsplit=2)
-            except ValueError:
-                continue
-            try:
-                _, value, _ = wrapped_value.split('"', maxsplit=2)
-            except ValueError:
-                value = wrapped_value.strip()
-            source_prefix: str = (
-                os.path.basename(os.path.dirname(fn)).replace("-", "_") + "_"
-            )
-            if source_prefix == "src_":
-                source_prefix = ""
-            defines[f"{source_prefix}{key}"] = {"NULL": ""}.get(value, value)
+            for name, key_pos in {
+                "fu_config_set_default": 2,
+                "fu_plugin_set_config_default": 1,
+            }.items():
+                idx = line.find(name)
+                if idx == -1:
+                    continue
+                line = line[idx + len(name) :].split(")")[0]
+                for delim in ['"', " ", "NULL"]:
+                    line = line.replace(delim, "")
+                data = line.split(",", maxsplit=4)
+                try:
+                    key = data[key_pos]
+                    value = data[key_pos + 1]
+                except IndexError:
+                    print(f"failed to define value for {line} in {fn}")
+                    continue
+                source_prefix: str = (
+                    os.path.basename(os.path.dirname(fn)).replace("-", "_") + "_"
+                )
+                if source_prefix == "src_":
+                    source_prefix = ""
+                defines[f"{source_prefix}{key}"] = value
 
 
 if __name__ == "__main__":
