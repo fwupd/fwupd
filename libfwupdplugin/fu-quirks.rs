@@ -9,6 +9,4 @@ enum FuQuirksLoadFlags {
     ReadonlyFs = 1 << 0,
     // Do not save to a persistent cache
     NoCache = 1 << 1,
-    // Do not check the key files for errors
-    NoVerify = 1 << 2,
 }

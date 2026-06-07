@@ -65,9 +65,7 @@ fu_test_self_init(FuTest *self)
 	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, testdir_fw_attrib);
 
-	ret = fu_context_load_quirks(ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
