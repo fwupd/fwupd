@@ -286,6 +286,7 @@ fu_processor_device_probe_model(FuProcessorDevice *self, GError **error)
 static gboolean
 fu_processor_device_probe_extended_features(FuProcessorDevice *self, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	guint32 ebx = 0;
 	guint32 ecx = 0;
 	guint32 edx = 0;
@@ -297,7 +298,7 @@ fu_processor_device_probe_extended_features(FuProcessorDevice *self, GError **er
 	if ((ecx >> 7) & 0x1)
 		self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_SHSTK;
 
-	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
+	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL) {
 		if ((ecx >> 13) & 0x1)
 			self->feature_flags |= FU_PROCESSOR_FEATURE_FLAG_TME;
 		if ((edx >> 20) & 0x1)
@@ -363,6 +364,7 @@ fu_processor_device_set_quirk_kv(FuDevice *device,
 static void
 fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
@@ -370,7 +372,7 @@ fu_processor_device_add_security_attrs_cet_enabled(FuProcessorDevice *self, FuSe
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
 	fu_security_attrs_append(attrs, attr);
 
-	switch (fu_cpu_get_vendor()) {
+	switch (fu_context_get_cpu_vendor(ctx)) {
 	case FU_CPU_VENDOR_INTEL:
 		if (fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_SHSTK) &&
 		    fu_processor_device_has_feature(self, FU_PROCESSOR_FEATURE_FLAG_IBT)) {
@@ -483,8 +485,10 @@ fu_processor_device_add_security_attrs_smap(FuProcessorDevice *self, FuSecurityA
 static void
 fu_processor_device_add_x86_64_security_attrs(FuProcessorDevice *self, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+
 	/* only Intel */
-	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL)
 		fu_processor_device_add_security_attrs_intel_tme(self, attrs);
 	fu_processor_device_add_security_attrs_cet_enabled(self, attrs);
 	fu_processor_device_add_security_attrs_cet_active(self, attrs);

@@ -187,6 +187,7 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 static gboolean
 fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	guint eax = 0;
 	guint ebx = 0;
@@ -202,7 +203,7 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 
 	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
-	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
+	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL) {
 		if (!fu_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
 			return FALSE;
 		self->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
@@ -214,7 +215,7 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	}
 
 	/* indicates support for SME and SEV */
-	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_AMD) {
+	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_AMD) {
 		if (!fu_cpuid(0x8000001f, &eax, &ebx, NULL, NULL, error))
 			return FALSE;
 		g_debug("SME/SEV check MSR: eax 0%x, ebx 0%x", eax, ebx);
@@ -232,6 +233,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 				   FuProgress *progress,
 				   GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device_cpu = fu_plugin_cache_lookup(plugin, "cpu");
 	guint8 buf[8] = {0x0};
@@ -394,7 +396,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 			return FALSE;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));
-		offset = fu_cpu_get_vendor() == FU_CPU_VENDOR_AMD ? 0x0 : 0x4;
+		offset = fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_AMD ? 0x0 : 0x4;
 		if (!fu_memread_uint32_safe(buf,
 					    sizeof(buf),
 					    offset,
@@ -422,12 +424,13 @@ fu_msr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 static void
 fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* create attr */
@@ -456,12 +459,13 @@ fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 static void
 fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
 		return;
 	if (device == NULL)
 		return;
@@ -509,11 +513,12 @@ fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *att
 static void
 fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* create attr (which should already have been created in the cpu plugin) */
@@ -554,12 +559,13 @@ fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAt
 static void
 fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* create attr */
@@ -622,13 +628,14 @@ fu_msr_plugin_kernel_enabled_sme(FuMsrPlugin *self, GError **error)
 static void
 fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD)
 		return;
 
 	/* create attr */
@@ -672,13 +679,14 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 static void
 fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	gboolean sinkclose_vuln = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_AMD)
 		return;
 
 	/* check fields */
