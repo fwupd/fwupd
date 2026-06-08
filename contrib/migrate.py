@@ -109,7 +109,7 @@ if __name__ == "__main__":
             "fu_common_mkdir_parent": "fu_path_mkdir_parent",
             "fu_common_find_program_in_path": "fu_path_store_find_program",
             "fu_common_cpuid": "fu_cpuid",
-            "fu_common_get_cpu_vendor": "fu_cpu_get_vendor",
+            "fu_common_get_cpu_vendor": "fu_context_get_cpu_vendor",
             "fu_common_vercmp_full": "fu_version_compare",
             "fu_common_version_ensure_semver_full": "fu_version_ensure_semver",
             "fu_common_version_from_uint16": "fu_version_from_uint16",

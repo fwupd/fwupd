@@ -122,6 +122,9 @@ fu_context_get_battery_threshold(FuContext *self) G_GNUC_NON_NULL(1);
 void
 fu_context_set_battery_threshold(FuContext *self, guint battery_threshold) G_GNUC_NON_NULL(1);
 
+FuCpuVendor
+fu_context_get_cpu_vendor(FuContext *self) G_GNUC_NON_NULL(1);
+
 FuBiosSettings *
 fu_context_get_bios_settings(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean

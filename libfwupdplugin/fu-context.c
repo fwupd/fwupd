@@ -8,6 +8,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_CPUID_H
+#include <cpuid.h>
+#endif
+
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
@@ -56,6 +60,7 @@ typedef struct {
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
+	FuCpuVendor cpu_vendor;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
@@ -1281,6 +1286,30 @@ fu_context_detect_hypervisor_privileged(FuContext *self)
 }
 
 static void
+fu_context_detect_cpu_vendor(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	guint ebx = 0;
+	guint ecx = 0;
+	guint edx = 0;
+
+	if (priv->cpu_vendor != FU_CPU_VENDOR_UNKNOWN)
+		return;
+
+	if (!fu_cpuid(0x0, NULL, &ebx, &ecx, &edx, NULL))
+		return;
+#ifdef HAVE_CPUID_H
+	if (ebx == signature_INTEL_ebx && edx == signature_INTEL_edx &&
+	    ecx == signature_INTEL_ecx) {
+		priv->cpu_vendor = FU_CPU_VENDOR_INTEL;
+	} else if (ebx == signature_AMD_ebx && edx == signature_AMD_edx &&
+		   ecx == signature_AMD_ecx) {
+		priv->cpu_vendor = FU_CPU_VENDOR_AMD;
+	}
+#endif
+}
+
+static void
 fu_context_detect_hypervisor(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
@@ -1416,6 +1445,7 @@ fu_context_load_hwinfo(FuContext *self,
 		fu_context_detect_hypervisor(self);
 		fu_context_detect_container(self);
 	}
+	fu_context_detect_cpu_vendor(self);
 	fu_progress_step_done(progress);
 
 	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);
@@ -2594,6 +2624,33 @@ fu_context_load_path_store(FuContext *self)
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	fu_path_store_load_defaults(priv->pstore);
 	fu_path_store_load_from_env(priv->pstore);
+}
+
+/**
+ * fu_context_get_cpu_vendor:
+ * @self: a #FuContext
+ *
+ * Uses CPUID to discover the CPU vendor.
+ *
+ * Returns: a CPU vendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
+ *
+ * Since: 2.1.5
+ **/
+FuCpuVendor
+fu_context_get_cpu_vendor(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FU_CPU_VENDOR_UNKNOWN);
+	return priv->cpu_vendor;
+}
+
+/* private */
+void
+fu_context_set_cpu_vendor(FuContext *self, FuCpuVendor cpu_vendor)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	priv->cpu_vendor = cpu_vendor;
 }
 
 static void

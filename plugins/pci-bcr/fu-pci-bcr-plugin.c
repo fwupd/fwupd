@@ -230,8 +230,10 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 static void
 fu_pci_bcr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+
 	/* only Intel */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* add attrs */

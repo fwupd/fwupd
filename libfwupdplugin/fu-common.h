@@ -90,8 +90,6 @@
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
-FuCpuVendor
-fu_cpu_get_vendor(void);
 GHashTable *
 fu_cpu_get_attrs(FuPathStore *pstore, GError **error);
 

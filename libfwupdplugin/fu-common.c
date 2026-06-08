@@ -384,39 +384,6 @@ fu_cpu_get_attrs(FuPathStore *pstore, GError **error)
 }
 
 /**
- * fu_cpu_get_vendor:
- *
- * Uses CPUID to discover the CPU vendor.
- *
- * Returns: a CPU vendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
- *
- * Since: 1.8.2
- **/
-FuCpuVendor
-fu_cpu_get_vendor(void)
-{
-#ifdef HAVE_CPUID_H
-	guint ebx = 0;
-	guint ecx = 0;
-	guint edx = 0;
-
-	if (fu_cpuid(0x0, NULL, &ebx, &ecx, &edx, NULL)) {
-		if (ebx == signature_INTEL_ebx && edx == signature_INTEL_edx &&
-		    ecx == signature_INTEL_ecx) {
-			return FU_CPU_VENDOR_INTEL;
-		}
-		if (ebx == signature_AMD_ebx && edx == signature_AMD_edx &&
-		    ecx == signature_AMD_ecx) {
-			return FU_CPU_VENDOR_AMD;
-		}
-	}
-#endif
-
-	/* failed */
-	return FU_CPU_VENDOR_UNKNOWN;
-}
-
-/**
  * fu_common_get_memory_size:
  *
  * Returns the size of physical memory.
