@@ -29,6 +29,15 @@ G_DECLARE_DERIVABLE_TYPE(FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 #define fu_plugin_add_flag(p, f)    fwupd_plugin_add_flag(FWUPD_PLUGIN(p), f)
 #define fu_plugin_remove_flag(p, f) fwupd_plugin_remove_flag(FWUPD_PLUGIN(p), f)
 
+void
+fu_plugin_register_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+void
+fu_plugin_add_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+void
+fu_plugin_remove_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+
 /**
  * FuPluginVerifyFlags:
  * @FU_PLUGIN_VERIFY_FLAG_NONE:		No flags set
