@@ -233,11 +233,6 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 	if (fu_engine_get_loaded(self->engine))
 		return TRUE;
 
-	if (!fu_util_lock(self, error)) {
-		/* TRANSLATORS: another fwupdtool instance is already running */
-		g_prefix_error(error, "%s: ", _("Failed to lock"));
-		return FALSE;
-	}
 #ifdef HAVE_SYSTEMD
 	if (getuid() != 0 || geteuid() != 0) {
 		g_info("not attempting to stop daemon when running as user");
@@ -249,8 +244,15 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 #endif
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
+	flags |= FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS;
 	if (!fu_engine_load(self->engine, flags, progress, error))
 		return FALSE;
+
+	if (!fu_util_lock(self, error)) {
+		/* TRANSLATORS: another fwupdtool instance is already running */
+		g_prefix_error(error, "%s: ", _("Failed to lock"));
+		return FALSE;
+	}
 
 	if (!self->as_json && !(flags & FU_ENGINE_LOAD_FLAG_READONLY)) {
 		fu_util_show_plugin_warnings(self);
@@ -2634,7 +2636,10 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_REMOTES, self->progress, error))
+	if (!fu_engine_load(self->engine,
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_REMOTES,
+			    self->progress,
+			    error))
 		return FALSE;
 
 	/* get search results */
@@ -2851,10 +2856,6 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 	gboolean has_pending = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
-	/* check the history database before starting the daemon */
-	if (!fu_util_check_activation_needed(self, error))
-		return FALSE;
-
 	/* progress */
 	fu_progress_set_id(self->progress, G_STRLOC);
 	fu_progress_add_step(self->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
@@ -2871,6 +2872,10 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 		error))
 		return FALSE;
 	fu_progress_step_done(self->progress);
+
+	/* check the history database */
+	if (!fu_util_check_activation_needed(self, error))
+		return FALSE;
 
 	/* parse arguments */
 	if (g_strv_length(values) == 0) {
@@ -2948,7 +2953,8 @@ fu_util_export_hwids(FuUtil *self, gchar **values, GError **error)
 
 	/* setup default hwids */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_HWINFO,
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_HWINFO,
 			    self->progress,
 			    error))
 		return FALSE;
@@ -2990,7 +2996,8 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_HWINFO,
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_HWINFO,
 			    self->progress,
 			    error))
 		return FALSE;
@@ -3174,7 +3181,8 @@ fu_util_get_firmware_types(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3204,7 +3212,8 @@ fu_util_get_firmware_gtypes(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3292,7 +3301,8 @@ fu_util_firmware_parse(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3414,7 +3424,8 @@ fu_util_firmware_export(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3532,7 +3543,8 @@ fu_util_firmware_extract(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3594,7 +3606,8 @@ fu_util_firmware_build(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3698,7 +3711,8 @@ fu_util_firmware_convert(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -3849,7 +3863,8 @@ fu_util_firmware_patch(FuUtil *self, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(self->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+			    FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS | FU_ENGINE_LOAD_FLAG_READONLY |
+				FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    self->progress,
 			    error))
@@ -4995,6 +5010,14 @@ fu_util_efiboot_next(FuUtil *self, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	guint64 value = 0;
 
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
+
 	/* just show */
 	if (values[0] == NULL) {
 		guint16 idx = 0;
@@ -5016,6 +5039,14 @@ fu_util_efiboot_order(FuUtil *self, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GArray) order = NULL;
+
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
 
 	/* just show */
 	if (values[0] == NULL) {
@@ -5049,6 +5080,14 @@ fu_util_efiboot_create(FuUtil *self, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(FuVolume) volume = NULL;
 	guint64 idx = 0;
+
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
 
 	/* check args */
 	if (g_strv_length(values) < 3) {
@@ -5118,6 +5157,14 @@ fu_util_efiboot_delete(FuUtil *self, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	guint64 value = 0;
 
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
+
 	if (values[0] == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -5177,6 +5224,14 @@ fu_util_efiboot_hive(FuUtil *self, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(FuEfiLoadOption) loadopt = NULL;
 	guint64 idx = 0;
+
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
 
 	/* check args */
 	if (g_strv_length(values) < 2) {
@@ -5250,6 +5305,14 @@ fu_util_efiboot_info(FuUtil *self, gchar **values, GError **error)
 	g_autoptr(GPtrArray) entries = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 	guint16 idx = 0;
+
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
 
 	entries = fu_efivars_get_boot_entries(efivars, error);
 	if (entries == NULL)
@@ -5327,6 +5390,14 @@ fu_util_efivar_files(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) files = NULL;
 
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
+
 	files = fu_context_get_esp_files(self->ctx,
 					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
 					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE |
@@ -5357,6 +5428,14 @@ fu_util_efivar_list(FuUtil *self, gchar **values, GError **error)
 {
 	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	g_autoptr(GPtrArray) names = NULL;
+
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
 
 	/* sanity check */
 	if (g_strv_length(values) < 1) {
@@ -5470,6 +5549,15 @@ static gboolean
 fu_util_clear_history(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
+
+	/* load paths */
+	if (!fu_context_load(self->ctx,
+			     self->progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     error))
+		return FALSE;
+
 	return fu_history_remove_all(history, error);
 }
 
@@ -7116,7 +7204,6 @@ main(int argc, char *argv[])
 			 G_CALLBACK(fu_util_context_flags_notify_cb),
 			 self);
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
-	fu_context_load_path_store(self->ctx);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "device-request",

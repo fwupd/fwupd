@@ -50,6 +50,7 @@ enum FuEngineLoadFlags {
     Ready = 1 << 11,
     History = 1 << 12,
     AllowTestPlugin = 1 << 13,
+    PathStoreDefaults = 1 << 14,
 }
 
 #[derive(ToString)]

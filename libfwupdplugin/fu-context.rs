@@ -34,6 +34,8 @@ enum FuContextLoadFlags {
     HwidDarwin              = 1 << 5,
     WatchFiles              = 1 << 6,
     FixPermissions          = 1 << 7,
+    PathStoreDefaults       = 1 << 8,
+    PathStoreEnv            = 1 << 9,
 }
 
 enum FuContextEspFileFlags {

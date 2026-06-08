@@ -30,8 +30,6 @@ fu_context_reload_bios_settings(FuContext *self, GError **error);
 gboolean
 fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags, GError **error)
     G_GNUC_NON_NULL(1, 2);
-void
-fu_context_load_path_store(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
 fu_context_get_runtime_versions(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
