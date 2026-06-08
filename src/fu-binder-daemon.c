@@ -34,6 +34,8 @@
 #include "gparcelable.h"
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
+#include <gio/gunixinputstream.h>
+#include <gio/gunixoutputstream.h>
 #endif
 
 #include "fu-binder-daemon.h"
@@ -915,6 +917,213 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 #endif
 }
 
+static binder_status_t
+fu_binder_daemon_method_emulation_tag(FuBinderDaemon *self,
+				      FuEngineRequest *request,
+				      const AParcel *in,
+				      AParcel *out,
+				      GError **error)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const GVariantType *param_type = G_VARIANT_TYPE("(s)");
+	g_autoptr(GVariant) parameters = NULL;
+	g_auto(GVariantBuilder) builder;
+	const gchar *device_id;
+
+	g_variant_builder_init(&builder, param_type);
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+	parameters = g_variant_builder_end(&builder);
+	g_variant_get(parameters, "(&s)", &device_id);
+
+	if (!fu_engine_modify_device(engine, device_id, "Flags", "emulation-tag", error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out, NULL, error);
+}
+
+static binder_status_t
+fu_binder_daemon_method_emulation_untag(FuBinderDaemon *self,
+					FuEngineRequest *request,
+					const AParcel *in,
+					AParcel *out,
+					GError **error)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const GVariantType *param_type = G_VARIANT_TYPE("(s)");
+	g_autoptr(GVariant) parameters = NULL;
+	g_auto(GVariantBuilder) builder;
+	const gchar *device_id;
+
+	g_variant_builder_init(&builder, param_type);
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+	parameters = g_variant_builder_end(&builder);
+	g_variant_get(parameters, "(&s)", &device_id);
+
+	if (!fu_engine_modify_device(engine, device_id, "Flags", "~emulation-tag", error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out, NULL, error);
+}
+
+static binder_status_t
+fu_binder_daemon_method_emulation_load(FuBinderDaemon *self,
+				       FuEngineRequest *request,
+				       const AParcel *in,
+				       AParcel *out,
+				       GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const GVariantType *param_type = G_VARIANT_TYPE("(hh)");
+	g_autoptr(GVariant) parameters = NULL;
+	g_auto(GVariantBuilder) builder;
+	gint32 fd_emu = -1;
+	gint32 fd_cab = -1;
+	g_autoptr(GInputStream) stream_emu = NULL;
+
+	g_variant_builder_init(&builder, param_type);
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+	parameters = g_variant_builder_end(&builder);
+	g_variant_get(parameters, "(hh)", &fd_emu, &fd_cab);
+
+	stream_emu = fu_unix_seekable_input_stream_new(fd_emu, TRUE, error);
+	if (stream_emu == NULL) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+	if (!fu_engine_emulation_load(engine, stream_emu, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	if (fd_cab != -1) {
+		g_autoptr(GInputStream) stream_cab = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+
+		stream_cab = fu_unix_seekable_input_stream_new(fd_cab, TRUE, error);
+		if (stream_cab == NULL) {
+			fu_binder_daemon_method_invocation_return_error(out, *error);
+			return STATUS_OK;
+		}
+
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->request = g_object_ref(request);
+		helper->progress = fu_progress_new(G_STRLOC);
+		helper->device_id = g_strdup(FWUPD_DEVICE_ID_ANY);
+		helper->self = self;
+		helper->stream = g_steal_pointer(&stream_cab);
+
+		if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
+			helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+
+		if (!fu_dbus_daemon_install_with_helper(helper, error)) {
+			fu_binder_daemon_method_invocation_return_error(out, *error);
+			return STATUS_OK;
+		}
+
+		if (!fu_dbus_daemon_authorize_install_queue(g_steal_pointer(&helper), error)) {
+			fu_binder_daemon_method_invocation_return_error(out, *error);
+			return STATUS_OK;
+		}
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out, NULL, error);
+#else
+	fu_binder_daemon_method_invocation_return_error_literal(out,
+								FWUPD_ERROR_INTERNAL,
+								"unsupported feature");
+	return STATUS_OK;
+#endif
+}
+
+static binder_status_t
+fu_binder_daemon_method_emulation_save(FuBinderDaemon *self,
+				       FuEngineRequest *request,
+				       const AParcel *in,
+				       AParcel *out,
+				       GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const GVariantType *param_type = G_VARIANT_TYPE("(h)");
+	g_autoptr(GVariant) parameters = NULL;
+	g_auto(GVariantBuilder) builder;
+	gint32 fd_handle = 0;
+	g_autoptr(GOutputStream) stream = NULL;
+
+	g_variant_builder_init(&builder, param_type);
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+	parameters = g_variant_builder_end(&builder);
+	g_variant_get(parameters, "(h)", &fd_handle);
+
+	stream = g_unix_output_stream_new(fd_handle, TRUE);
+	if (!fu_engine_emulation_save(engine, stream, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out, NULL, error);
+#else
+	fu_binder_daemon_method_invocation_return_error_literal(out,
+								FWUPD_ERROR_INTERNAL,
+								"unsupported feature");
+	return STATUS_OK;
+#endif
+}
+
+static binder_status_t
+fu_binder_daemon_method_modify_device(FuBinderDaemon *self,
+				      FuEngineRequest *request,
+				      const AParcel *in,
+				      AParcel *out,
+				      GError **error)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const GVariantType *param_type = G_VARIANT_TYPE("(sss)");
+	g_autoptr(GVariant) parameters = NULL;
+	g_auto(GVariantBuilder) builder;
+	const gchar *device_id;
+	const gchar *key;
+	const gchar *value;
+
+	g_variant_builder_init(&builder, param_type);
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+	parameters = g_variant_builder_end(&builder);
+	g_variant_get(parameters, "(&s&s&s)", &device_id, &key, &value);
+
+	g_autoptr(FuDevice) dev = fu_engine_get_device(engine, device_id, error);
+	if (dev == NULL) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	if (!fu_engine_modify_device(engine, fu_device_get_id(dev), key, value, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out, NULL, error);
+}
+
 static void *
 listener_on_create(void *arg)
 {
@@ -1325,6 +1534,11 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 	    fu_binder_daemon_method_get_remotes,	/* getRemotes */
 	    fu_binder_daemon_method_update_metadata,	/* updateMetadata */
 	    fu_binder_daemon_method_get_hwids,		/* getHwids */
+	    fu_binder_daemon_method_emulation_tag,	/* emulationTag */
+	    fu_binder_daemon_method_emulation_untag,	/* emulationUntag */
+	    fu_binder_daemon_method_emulation_load,	/* emulationLoad */
+	    fu_binder_daemon_method_emulation_save,	/* emulationSave */
+	    fu_binder_daemon_method_modify_device,	/* modifyDevice */
 	};
 
 	g_debug("daemon transaction code %d (%s)",

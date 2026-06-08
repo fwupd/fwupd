@@ -18,6 +18,8 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-error.h"
@@ -26,6 +28,7 @@
 #include "fu-debug.h"
 #include "fu-util-common.h"
 #include "gparcelable.h"
+#include <libfwupd/fwupd-json-parser.h>
 
 /* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
@@ -1067,6 +1070,261 @@ fu_binder_client_log_handler(const gchar *log_domain,
 	g_printerr("%s %s: %s\n", timestamp, log_domain, message);
 }
 
+static gboolean
+fu_util_emulation_tag(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected DEVICE-ID|GUID");
+		return FALSE;
+	}
+
+	val = g_variant_new("(s)", values[0]);
+	return fu_util_transact(self, FWUPD_BINDER_CALL_EMULATION_TAG, val, 0, &out, error);
+}
+
+static gboolean
+fu_util_emulation_untag(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected DEVICE-ID|GUID");
+		return FALSE;
+	}
+
+	val = g_variant_new("(s)", values[0]);
+	return fu_util_transact(self, FWUPD_BINDER_CALL_EMULATION_UNTAG, val, 0, &out, error);
+}
+
+static gboolean
+fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GUnixInputStream) istr_emu = NULL;
+	g_autoptr(GUnixInputStream) istr_cab = NULL;
+	gint fd_emu = -1;
+	gint fd_cab = -1;
+
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected EMULATION-FILE [ARCHIVE-FILE]");
+		return FALSE;
+	}
+
+	istr_emu = fwupd_unix_input_stream_from_fn(values[0], error);
+	if (istr_emu == NULL)
+		return FALSE;
+	fd_emu = g_unix_input_stream_get_fd(istr_emu);
+
+	if (g_strv_length(values) > 1) {
+		istr_cab = fwupd_unix_input_stream_from_fn(values[1], error);
+		if (istr_cab == NULL)
+			return FALSE;
+		fd_cab = g_unix_input_stream_get_fd(istr_cab);
+	}
+
+	val = g_variant_new("(hh)", fd_emu, fd_cab);
+	return fu_util_transact(self, FWUPD_BINDER_CALL_EMULATION_LOAD, val, 0, &out, error);
+}
+
+static gboolean
+fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+	int fd;
+	gboolean ret;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+
+	fd = open(values[0], O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+	if (fd < 0) {
+		g_set_error(error,
+			    G_FILE_ERROR,
+			    g_file_error_from_errno(errno),
+			    "failed to open %s: %s",
+			    values[0],
+			    g_strerror(errno));
+		return FALSE;
+	}
+
+	val = g_variant_new("(h)", fd);
+	ret = fu_util_transact(self, FWUPD_BINDER_CALL_EMULATION_SAVE, val, 0, &out, error);
+	close(fd);
+	return ret;
+}
+
+static gboolean
+fu_util_device_emulate_remove_devices(FuUtil *self, GError **error)
+{
+	g_autoptr(GPtrArray) devices = fu_util_get_devices_call(self, error);
+	if (devices == NULL)
+		return FALSE;
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(AParcel) out = NULL;
+		g_autoptr(GVariant) val = NULL;
+
+		if (!fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			continue;
+
+		val = g_variant_new("(sss)", fwupd_device_get_id(device), "Flags", "~emulated");
+		if (!fu_util_transact(self, FWUPD_BINDER_CALL_MODIFY_DEVICE, val, 0, &out, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_emulate_step(FuUtil *self, FwupdJsonObject *json_obj, GError **error)
+{
+	const gchar *emulation_filename;
+	g_autoptr(GUnixInputStream) istr_emu = NULL;
+	gint fd_emu = -1;
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+	const gchar *url_tmp;
+
+	emulation_filename = fwupd_json_object_get_string(json_obj, "emulation-file", NULL);
+	if (emulation_filename == NULL) {
+		return TRUE; 
+	}
+
+	/* load emulation */
+	istr_emu = fwupd_unix_input_stream_from_fn(emulation_filename, error);
+	if (istr_emu == NULL)
+		return FALSE;
+	fd_emu = g_unix_input_stream_get_fd(istr_emu);
+
+	val = g_variant_new("(hh)", fd_emu, -1);
+	if (!fu_util_transact(self, FWUPD_BINDER_CALL_EMULATION_LOAD, val, 0, &out, error))
+		return FALSE;
+	
+	g_clear_object(&istr_emu);
+	g_clear_pointer(&out, AParcel_delete);
+
+	/* download/install file if required */
+	url_tmp = fwupd_json_object_get_string(json_obj, "url", NULL);
+	if (url_tmp != NULL) {
+		g_autofree gchar *filename = NULL;
+		g_autoptr(GUnixInputStream) istr_cab = NULL;
+		FwupdInstallFlags install_flags = self->flags | FWUPD_INSTALL_FLAG_ALLOW_OLDER | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+
+		filename = fu_util_download_if_required(self, url_tmp, error);
+		if (filename == NULL)
+			return FALSE;
+
+		istr_cab = fwupd_unix_input_stream_from_fn(filename, error);
+		if (istr_cab == NULL)
+			return FALSE;
+
+		{
+			g_auto(GVariantBuilder) builder;
+			g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+			g_variant_builder_add(&builder, "{sv}", "reason", g_variant_new_string("user-action"));
+			g_variant_builder_add(&builder, "{sv}", "filename", g_variant_new_string(filename));
+			g_variant_builder_add(&builder, "{sv}", "install-flags", g_variant_new_uint64(install_flags));
+
+			val = g_variant_new("(sha{sv})", FWUPD_DEVICE_ID_ANY, g_unix_input_stream_get_fd(istr_cab), &builder);
+		}
+
+		if (!fu_util_transact(self, FWUPD_BINDER_CALL_INSTALL, val, 0, &out, error))
+			return FALSE;
+		
+		g_clear_pointer(&out, AParcel_delete);
+	}
+
+	/* remove emulated devices */
+	if (!fu_util_device_emulate_remove_devices(self, error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_emulate_filename(FuUtil *self, const gchar *filename, GError **error)
+{
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FwupdJsonArray) json_steps = NULL;
+	gint64 repeat = 1;
+
+	fwupd_json_parser_set_max_depth(json_parser, 10);
+	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_quoted(json_parser, 10000);
+
+	blob = fu_bytes_get_contents(filename, error);
+	if (blob == NULL)
+		return FALSE;
+	json_node =
+	    fwupd_json_parser_load_from_bytes(json_parser, blob, FWUPD_JSON_LOAD_FLAG_NONE, error);
+	if (json_node == NULL) {
+		g_prefix_error_literal(error, "test not in JSON format: ");
+		return FALSE;
+	}
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
+		return FALSE;
+
+	if (!fwupd_json_object_get_integer_with_default(json_obj, "repeat", &repeat, 1, error))
+		return FALSE;
+
+	json_steps = fwupd_json_object_get_array(json_obj, "steps", error);
+	if (json_steps == NULL)
+		return FALSE;
+
+	for (guint j = 0; j < repeat; j++) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_steps); i++) {
+			g_autoptr(FwupdJsonObject) json_step = NULL;
+			json_step = fwupd_json_array_get_object(json_steps, i, error);
+			if (json_step == NULL)
+				return FALSE;
+
+			if (!fu_util_device_emulate_step(self, json_step, error))
+				return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_emulate(FuUtil *self, gchar **values, GError **error)
+{
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected JSON-MANIFEST");
+		return FALSE;
+	}
+
+	return fu_util_device_emulate_filename(self, values[0], error);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1085,6 +1343,7 @@ main(int argc, char *argv[])
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	g_autofree gchar *cmd_descriptions = NULL;
+	g_autofree gchar *filter_device = NULL;
 	const AIBinder_Class *fwupd_binder_class = AIBinder_Class_define(BINDER_DEFAULT_IFACE,
 									 fwupd_service_on_create,
 									 fwupd_service_on_destroy,
@@ -1141,6 +1400,15 @@ main(int argc, char *argv[])
 					 &allow_branch_switch,
 					 /* TRANSLATORS: command line option */
 					 N_("Allow switching firmware branch"),
+					 NULL},
+					{"filter",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_STRING,
+					 &filter_device,
+					 /* TRANSLATORS: command line option */
+					 N_("Filter with a set of device flags using a ~ prefix to "
+					    "exclude, e.g. 'internal,~needs-reboot'"),
 					 NULL},
 					{"json",
 					 '\0',
@@ -1216,6 +1484,41 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Return all the hardware IDs for the machine"),
 			      fu_util_hwids);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-tag",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("DEVICE-ID|GUID"),
+			      /* TRANSLATORS: command description */
+			      _("Adds devices to watch for future emulation"),
+			      fu_util_emulation_tag);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-untag",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("DEVICE-ID|GUID"),
+			      /* TRANSLATORS: command description */
+			      _("Removes devices to watch for future emulation"),
+			      fu_util_emulation_untag);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-load",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("EMULATION-FILE [ARCHIVE-FILE]"),
+			      /* TRANSLATORS: command description */
+			      _("Load device emulation data"),
+			      fu_util_emulation_load);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-save",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Save device emulation data"),
+			      fu_util_emulation_save);
+	fu_util_cmd_array_add(cmd_array,
+			      "device-emulate",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("JSON-MANIFEST"),
+			      /* TRANSLATORS: command description */
+			      _("Emulate a device using a JSON manifest"),
+			      fu_util_device_emulate);
 
 	/* get a list of the commands */
 	self->context = g_option_context_new(NULL);
@@ -1239,6 +1542,20 @@ main(int argc, char *argv[])
 				 _("Failed to parse arguments"),
 				 error->message);
 		return EXIT_FAILURE;
+	}
+
+	if (filter_device != NULL) {
+		if (!fu_util_parse_filter_device_flags(filter_device,
+						       &self->filter_device_include,
+						       &self->filter_device_exclude,
+						       &error)) {
+			fu_console_print(self->console,
+					 "%s: %s",
+					 /* TRANSLATORS: the user entered an invalid filter */
+					 _("Failed to parse --filter"),
+					 error->message);
+			return EXIT_FAILURE;
+		}
 	}
 
 	/* show version */
