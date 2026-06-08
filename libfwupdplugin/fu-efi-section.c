@@ -363,8 +363,10 @@ fu_efi_section_parse(FuFirmware *firmware,
 			fu_efi_section_type_to_string(priv->type),
 			priv->type);
 	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
+#ifndef HAVE_FUZZER
 		g_warning("no idea how to decompress encapsulation section of type %s",
 			  fu_firmware_get_id(firmware));
+#endif
 	} else if (priv->type == FU_EFI_SECTION_TYPE_USER_INTERFACE) {
 		if (!fu_efi_section_parse_user_interface(self, partial_stream, flags, error)) {
 			g_prefix_error_literal(error, "failed to parse user interface: ");
