@@ -8,6 +8,7 @@
 
 #include "fu-huddly-usb-common.h"
 #include "fu-huddly-usb-device.h"
+#include "fu-huddly-usb-firmware.h"
 #include "fu-huddly-usb-struct.h"
 
 enum { EP_OUT, EP_IN, EP_LAST };
@@ -673,6 +674,7 @@ fu_huddly_usb_device_init(FuHuddlyUsbDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000); /* 60 second remove delay */
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_HUDDLY_USB_FIRMWARE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.huddly.usb");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
