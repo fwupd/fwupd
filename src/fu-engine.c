@@ -8923,15 +8923,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* read remotes */
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
-		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI;
-		if (fu_context_get_config_bool(self->ctx, "TestDevices"))
-			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE;
-		if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
-		if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
-			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE;
 		fu_remote_list_set_lvfs_metadata_format(self->remote_list, FU_LVFS_METADATA_FORMAT);
-		if (!fu_remote_list_load(self->remote_list, remote_list_flags, error)) {
+		if (!fu_remote_list_load(self->remote_list, load_flags, error)) {
 			g_prefix_error_literal(error, "failed to load remotes: ");
 			return FALSE;
 		}

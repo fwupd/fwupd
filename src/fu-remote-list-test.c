@@ -30,10 +30,11 @@ fu_remote_list_repair_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
+	fu_config_set_default(fu_context_get_config(ctx), "fwupd", "TestDevices", "false");
 	remote_list = fu_remote_list_new(ctx);
 
 	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
-	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
+	ret = fu_remote_list_load(remote_list, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

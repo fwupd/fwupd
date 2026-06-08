@@ -19,6 +19,7 @@
 
 #include "fwupd-remote-private.h"
 
+#include "fu-context-private.h"
 #include "fu-remote-list.h"
 #include "fu-remote.h"
 
@@ -718,7 +719,7 @@ fu_remote_list_set_testing_remote_enabled(FuRemoteList *self, gboolean enable, G
 }
 
 gboolean
-fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
+fu_remote_list_load(FuRemoteList *self, FuContextLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names();
 	g_autoptr(GError) error_local = NULL;
@@ -731,11 +732,11 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 	g_return_val_if_fail(self->silo == NULL, FALSE);
 
 	/* enable testing only remotes */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE)
+	if (fu_context_get_config_bool(self->ctx, "TestDevices"))
 		self->testing_remote = TRUE;
 
 	/* autofix on reload too */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI)
+	if ((flags & FU_CONTEXT_FLAG_READONLY_FS) == 0)
 		self->fix_metadata_uri = TRUE;
 
 	/* load AppStream about the remote_list */
@@ -747,11 +748,11 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 		xb_builder_add_locale(builder, locales[i]);
 
 	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS)
+	if (flags & FU_CONTEXT_FLAG_READONLY_FS)
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
 
 	/* build the metainfo silo */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE) {
+	if (flags & FU_CONTEXT_FLAG_NO_CACHE) {
 		g_autoptr(GFileIOStream) iostr = NULL;
 		xmlb = g_file_new_tmp(NULL, &iostr, error);
 		if (xmlb == NULL)
