@@ -58,32 +58,48 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 				  const guint8 *data,
 				  GError **error)
 {
-	g_autoptr(FuStructLxsTouchPacket) packet = fu_struct_lxs_touch_packet_new();
+	g_autoptr(FuStructLxsTouchPacket) st_packet = fu_struct_lxs_touch_packet_new();
 	guint8 buf[FU_LXSTOUCH_BUFFER_SIZE] = {0};
 	guint16 adjusted_length = length;
 
 	if (flag == FU_LXSTOUCH_FLAG_WRITE)
 		adjusted_length += 2;
 
-	fu_struct_lxs_touch_packet_set_report_id(packet, FU_LXSTOUCH_REPORT_ID);
-	fu_struct_lxs_touch_packet_set_flag(packet, flag);
-	fu_struct_lxs_touch_packet_set_length_lo(packet, (guint8)(adjusted_length & 0x00FF));
-	fu_struct_lxs_touch_packet_set_length_hi(packet, (guint8)((adjusted_length & 0xFF00) >> 8));
-	fu_struct_lxs_touch_packet_set_command_hi(packet, (guint8)((command & 0xFF00) >> 8));
-	fu_struct_lxs_touch_packet_set_command_lo(packet, (guint8)(command & 0x00FF));
+	fu_struct_lxs_touch_packet_set_report_id(st_packet, FU_LXSTOUCH_REPORT_ID);
+	fu_struct_lxs_touch_packet_set_flag(st_packet, flag);
+	fu_struct_lxs_touch_packet_set_length_lo(st_packet, (guint8)(adjusted_length & 0x00FF));
+	fu_struct_lxs_touch_packet_set_length_hi(st_packet, (guint8)((adjusted_length & 0xFF00) >> 8));
+	fu_struct_lxs_touch_packet_set_command_hi(st_packet, (guint8)((command & 0xFF00) >> 8));
+	fu_struct_lxs_touch_packet_set_command_lo(st_packet, (guint8)(command & 0x00FF));
 
-	memcpy(buf, packet->buf->data, packet->buf->len);
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0x0, /* dst */
+			    st_packet->buf->data,
+			    st_packet->buf->len,
+			    0x0, /* src */
+			    st_packet->buf->len,
+			    error))
+		return FALSE;
 
 	if (flag == FU_LXSTOUCH_FLAG_WRITE && data != NULL && length > 0) {
 		if (length > FU_LXSTOUCH_BUFFER_SIZE - FU_STRUCT_LXS_TOUCH_PACKET_SIZE) {
 			g_set_error(error,
-						FWUPD_ERROR,
-						FWUPD_ERROR_INTERNAL,
-						"data length %u exceeds buffer limit",
-						length);
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "data length %u exceeds buffer limit",
+				    length);
 			return FALSE;
 		}
-		memcpy(&buf[FU_STRUCT_LXS_TOUCH_PACKET_SIZE], data, length);
+		if (!fu_memcpy_safe(buf,
+				    sizeof(buf),
+				    FU_STRUCT_LXS_TOUCH_PACKET_SIZE, /* dst */
+				    data,
+				    length,
+				    0x0, /* src */
+				    length,
+				    error))
+			return FALSE;
 	}
 
 	return fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
@@ -141,7 +157,15 @@ fu_lxs_touch_device_read_data(FuLxsTouchDevice *self,
 				    length);
 			return FALSE;
 		}
-		memcpy(data, &buf[4], length);
+		if (!fu_memcpy_safe(data,
+				    length,
+				    0x0, /* dst */
+				    buf,
+				    sizeof(buf),
+				    4, /* src */
+				    length,
+				    error))
+			return FALSE;
 	}
 
 	return TRUE;
@@ -644,7 +668,7 @@ fu_lxs_touch_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 }
 
 static void
-fu_lxs_touch_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_lxs_touch_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-firmware");
