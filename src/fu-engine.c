@@ -9397,7 +9397,6 @@ fu_engine_constructed(GObject *obj)
 {
 	FuEngine *self = FU_ENGINE(obj);
 	FuConfig *config = fu_context_get_config(self->ctx);
-	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 #ifdef HAVE_UTSNAME_H
 	struct utsname uname_tmp = {0};
 #endif
@@ -9503,7 +9502,7 @@ fu_engine_constructed(GObject *obj)
 	self->history = fu_history_new(self->ctx);
 	self->emulation = fu_engine_emulator_new(self);
 
-	self->remote_list = fu_remote_list_new(pstore);
+	self->remote_list = fu_remote_list_new(self->ctx);
 	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
 			 "changed",
 			 G_CALLBACK(fu_engine_remote_list_changed_cb),

@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-context-private.h"
 #include "fu-remote-list.h"
 
 static void
@@ -13,7 +14,7 @@ fu_remote_list_repair_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuRemoteList) remote_list = NULL;
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(FwupdRemote) remote1 = NULL;
@@ -26,10 +27,10 @@ fu_remote_list_repair_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(tmpdir);
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	fu_path_store_set_path(pstore, FU_PATH_KIND_DATADIR_PKG, testdatadir);
-	fu_path_store_set_tmpdir(pstore, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
-	fu_path_store_set_tmpdir(pstore, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
-	remote_list = fu_remote_list_new(pstore);
+	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_PKG, testdatadir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, tmpdir);
+	remote_list = fu_remote_list_new(ctx);
 
 	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
 	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
