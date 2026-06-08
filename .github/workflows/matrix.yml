@@ -95,7 +95,7 @@ jobs:
           matrix.env.DISTRO == 'arch' ||
           matrix.env.DISTRO == 'debian' ||
           matrix.env.DISTRO == 'fedora')
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
