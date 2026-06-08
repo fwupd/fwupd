@@ -35,6 +35,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-variant.h"
 
 static void
 fwupd_client_fixup_dbus_error(GError *error);
@@ -577,13 +578,13 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Status");
 		if (val != NULL)
-			fwupd_client_set_status(self, g_variant_get_uint32(val));
+			fwupd_client_set_status(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Tainted");
 		if (val != NULL) {
-			priv->tainted = g_variant_get_boolean(val);
+			priv->tainted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "tainted");
 		}
 	}
@@ -591,7 +592,7 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Interactive");
 		if (val != NULL) {
-			priv->interactive = g_variant_get_boolean(val);
+			priv->interactive = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "interactive");
 		}
 	}
@@ -599,65 +600,65 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "PercentageFull");
 		if (val != NULL)
-			fwupd_client_set_percentage(self, g_variant_get_double(val));
+			fwupd_client_set_percentage(self, fwupd_variant_get_double(val));
 	} else if (g_variant_dict_contains(dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
 		if (val != NULL)
-			fwupd_client_set_percentage(self, g_variant_get_uint32(val));
+			fwupd_client_set_percentage(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_LEVEL)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_LEVEL);
 		if (val != NULL)
-			fwupd_client_set_battery_level(self, g_variant_get_uint32(val));
+			fwupd_client_set_battery_level(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_THRESHOLD)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_THRESHOLD);
 		if (val != NULL)
-			fwupd_client_set_battery_threshold(self, g_variant_get_uint32(val));
+			fwupd_client_set_battery_threshold(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "DaemonVersion");
 		if (val != NULL)
-			fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_daemon_version(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostBkc")) {
 		g_autoptr(GVariant) val = g_dbus_proxy_get_cached_property(proxy, "HostBkc");
 		if (val != NULL)
-			fwupd_client_set_host_bkc(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_bkc(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostVendor")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostVendor");
 		if (val != NULL)
-			fwupd_client_set_host_vendor(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_vendor(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostProduct")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostProduct");
 		if (val != NULL)
-			fwupd_client_set_host_product(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_product(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostMachineId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostMachineId");
 		if (val != NULL)
-			fwupd_client_set_host_machine_id(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_machine_id(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostSecurityId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostSecurityId");
 		if (val != NULL)
-			fwupd_client_set_host_security_id(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_security_id(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "OnlyTrusted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "OnlyTrusted");
 		if (val != NULL) {
-			priv->only_trusted = g_variant_get_boolean(val);
+			priv->only_trusted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "only-trusted");
 		}
 	}
@@ -926,6 +927,15 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_NOPROGRESS, 0L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_MAXREDIRS, 5L);
+#if CURL_AT_LEAST_VERSION(7, 85, 0)
+	(void)curl_easy_setopt(helper->curl, CURLOPT_PROTOCOLS_STR, "http,https");
+	(void)curl_easy_setopt(helper->curl, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+#else
+	(void)curl_easy_setopt(helper->curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+	(void)curl_easy_setopt(helper->curl,
+			       CURLOPT_REDIR_PROTOCOLS,
+			       CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
 #ifdef _WIN32
 	(void)curl_easy_setopt(helper->curl, CURLOPT_CAINFO, "ca-bundle.crt");
 #endif
@@ -1017,34 +1027,34 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 			 self);
 	val = g_dbus_proxy_get_cached_property(priv->proxy, "DaemonVersion");
 	if (val != NULL)
-		fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
+		fwupd_client_set_daemon_version(self, fwupd_variant_get_string(val));
 	val2 = g_dbus_proxy_get_cached_property(priv->proxy, "Tainted");
 	if (val2 != NULL)
-		priv->tainted = g_variant_get_boolean(val2);
+		priv->tainted = fwupd_variant_get_boolean(val2);
 	val3 = g_dbus_proxy_get_cached_property(priv->proxy, "Status");
 	if (val3 != NULL)
-		fwupd_client_set_status(self, g_variant_get_uint32(val3));
+		fwupd_client_set_status(self, fwupd_variant_get_uint32(val3));
 	val4 = g_dbus_proxy_get_cached_property(priv->proxy, "Interactive");
 	if (val4 != NULL)
-		priv->interactive = g_variant_get_boolean(val4);
+		priv->interactive = fwupd_variant_get_boolean(val4);
 	val5 = g_dbus_proxy_get_cached_property(priv->proxy, "HostProduct");
 	if (val5 != NULL)
-		fwupd_client_set_host_product(self, g_variant_get_string(val5, NULL));
+		fwupd_client_set_host_product(self, fwupd_variant_get_string(val5));
 	val10 = g_dbus_proxy_get_cached_property(priv->proxy, "HostVendor");
 	if (val10 != NULL)
-		fwupd_client_set_host_vendor(self, g_variant_get_string(val10, NULL));
+		fwupd_client_set_host_vendor(self, fwupd_variant_get_string(val10));
 	val6 = g_dbus_proxy_get_cached_property(priv->proxy, "HostMachineId");
 	if (val6 != NULL)
-		fwupd_client_set_host_machine_id(self, g_variant_get_string(val6, NULL));
+		fwupd_client_set_host_machine_id(self, fwupd_variant_get_string(val6));
 	val7 = g_dbus_proxy_get_cached_property(priv->proxy, "HostSecurityId");
 	if (val7 != NULL)
-		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
+		fwupd_client_set_host_security_id(self, fwupd_variant_get_string(val7));
 	val8 = g_dbus_proxy_get_cached_property(priv->proxy, "HostBkc");
 	if (val8 != NULL)
-		fwupd_client_set_host_bkc(self, g_variant_get_string(val8, NULL));
+		fwupd_client_set_host_bkc(self, fwupd_variant_get_string(val8));
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
 	if (val9 != NULL)
-		priv->only_trusted = g_variant_get_boolean(val9);
+		priv->only_trusted = fwupd_variant_get_boolean(val9);
 
 	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
 	if (val_hwids != NULL) {
@@ -1728,33 +1738,14 @@ fwupd_client_get_host_security_events_finish(FwupdClient *self, GAsyncResult *re
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
-static GHashTable *
-fwupd_client_report_metadata_hash_from_variant(GVariant *value)
-{
-	GHashTable *hash;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		g_autoptr(GVariant) data = NULL;
-		const gchar *key = NULL;
-		const gchar *val = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		g_variant_get(data, "{&s&s}", &key, &val);
-		g_hash_table_insert(hash, g_strdup(key), g_strdup(val));
-	}
-	return hash;
-}
-
 static void
 fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GVariant) untuple = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
@@ -1762,11 +1753,25 @@ fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	if (!g_variant_is_of_type(val, G_VARIANT_TYPE("(a{ss})"))) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INTERNAL,
+						"invalid GVariant");
+		return;
+	}
+	untuple = g_variant_get_child_value(val, 0);
+	hash = fwupd_variant_to_hash_kv(untuple);
+	if (hash == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INTERNAL,
+						"invalid hash");
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_client_report_metadata_hash_from_variant(val),
-			      (GDestroyNotify)g_hash_table_unref);
+	g_task_return_pointer(task, g_steal_pointer(&hash), (GDestroyNotify)g_hash_table_unref);
 }
 
 /**
@@ -3660,10 +3665,14 @@ fwupd_client_is_localhost(const gchar *url)
 {
 	g_autoptr(CURLU) h = curl_url();
 	g_autoptr(CURLSTR) hostname = NULL;
+	const gchar *hostnames[] = {"localhost", "127.0.0.1", "::1", "[::1]", NULL};
+
 	if (curl_url_set(h, CURLUPART_URL, url, 0) != CURLUE_OK)
 		return FALSE;
 	(void)curl_url_get(h, CURLUPART_HOST, &hostname, 0);
-	return g_strcmp0(hostname, "localhost") == 0;
+	if (hostname == NULL)
+		return FALSE;
+	return g_strv_contains(hostnames, hostname);
 }
 
 static gboolean
@@ -5885,15 +5894,17 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to download file: %s",
-				    errbuf);
+				    "failed to download file: %s [%u]",
+				    errbuf,
+				    (guint)res);
 			return NULL;
 		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to download file: %s",
-			    curl_easy_strerror(res));
+			    "failed to download file: %s [%u]",
+			    curl_easy_strerror(res),
+			    (guint)res);
 		return NULL;
 	}
 

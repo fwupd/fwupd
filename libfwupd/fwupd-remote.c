@@ -15,6 +15,7 @@
 #include "fwupd-jcat-blob.h"
 #include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdRemote:
@@ -1722,7 +1723,7 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 	/* three passes, as we have to construct Id -> Url -> * */
 	while (g_variant_iter_loop(iter, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
-			fwupd_remote_set_id(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_id(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "Type") == 0)
 			fwupd_remote_set_kind(self, fwupd_variant_get_uint32(value));
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
@@ -1730,35 +1731,35 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 	}
 	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
-			fwupd_remote_set_metadata_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_metadata_uri(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "FilenameCache") == 0)
-			fwupd_remote_set_filename_cache(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_filename_cache(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "FilenameSource") == 0)
-			fwupd_remote_set_filename_source(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_filename_source(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "ReportUri") == 0)
-			fwupd_remote_set_report_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_report_uri(self, fwupd_variant_get_string(value));
 	}
 	while (g_variant_iter_loop(iter3, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, "Username") == 0) {
-			fwupd_remote_set_username(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_username(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Password") == 0) {
-			fwupd_remote_set_password(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_password(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Title") == 0) {
-			fwupd_remote_set_title(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_title(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "PrivacyUri") == 0) {
-			fwupd_remote_set_privacy_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_privacy_uri(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Agreement") == 0) {
-			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_agreement(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-			fwupd_remote_set_checksum_sig(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_checksum_sig(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Priority") == 0) {
-			priv->priority = g_variant_get_int32(value);
+			priv->priority = fwupd_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
 			priv->mtime = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "RefreshInterval") == 0) {
 			priv->refresh_interval = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
-			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_firmware_base_uri(self, fwupd_variant_get_string(value));
 		}
 	}
 }

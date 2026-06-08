@@ -125,12 +125,13 @@ fu_mm_dfota_device_upload_chunk(FuMmDfotaDevice *self, FuChunk *chk, GError **er
 			    ack_size);
 		return FALSE;
 	}
-	if (!g_regex_match(ack_regex, ack_result, 0, NULL)) {
+	if (!g_regex_match_full(ack_regex, ack_result, ack_size, 0, 0, NULL, NULL)) {
+		g_autofree gchar *ack_str = g_strndup(ack_result, ack_size);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "expected ACKs (A), got %s",
-			    ack_result);
+			    ack_str);
 		return FALSE;
 	}
 
@@ -145,6 +146,7 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 {
 	guint64 tmp;
 	const gchar *result = NULL;
+	gsize result_size = 0;
 	g_autofree gchar *checksum_match = NULL;
 	g_autofree gchar *size_match = NULL;
 	g_autoptr(GBytes) result_bytes = NULL;
@@ -167,16 +169,16 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 		g_prefix_error_literal(error, "failed to read AT+QFUPL response: ");
 		return FALSE;
 	}
-	result = g_bytes_get_data(result_bytes, NULL);
+	result = g_bytes_get_data(result_bytes, &result_size);
 
-	if (g_strrstr(result, "\r\nOK\r\n") == NULL) {
+	if (g_strstr_len(result, result_size, "\r\nOK\r\n") == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "upload command exited with error");
 		return FALSE;
 	}
-	if (!g_regex_match(result_regex, result, 0, &match_info)) {
+	if (!g_regex_match_full(result_regex, result, result_size, 0, 0, &match_info, NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

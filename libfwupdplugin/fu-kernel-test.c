@@ -6,6 +6,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #include <fwupdplugin.h>
 
 static void
@@ -43,6 +47,72 @@ fu_kernel_config_func(void)
 }
 
 static void
+fu_kernel_get_config_func(void)
+{
+#ifdef HAVE_UTSNAME_H
+	const gchar *buf = "CONFIG_EFI=y\n"
+			   "# CONFIG_EFI_STUB is not set\n"
+			   "CONFIG_MODULES=y\n";
+	g_autofree gchar *config_fn = NULL;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) hash = NULL;
+	struct utsname name_tmp;
+
+#ifndef __linux__
+	g_test_skip("only works on Linux");
+	return;
+#endif
+
+	memset(&name_tmp, 0, sizeof(struct utsname));
+	g_assert_cmpint(uname(&name_tmp), >=, 0);
+
+	tmpdir = fu_temporary_directory_new("kernel", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+
+	config_fn = g_strdup_printf("%s/config-%s",
+				    fu_temporary_directory_get_path(tmpdir),
+				    name_tmp.release);
+	g_assert_true(g_file_set_contents(config_fn, buf, -1, &error));
+
+	fu_path_store_set_path(pstore, FU_PATH_KIND_PROCFS, "/nonexistent");
+	fu_path_store_set_path(pstore,
+			       FU_PATH_KIND_HOSTFS_BOOT,
+			       fu_temporary_directory_get_path(tmpdir));
+
+	hash = fu_kernel_get_config(pstore, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(hash);
+	g_assert_true(g_hash_table_contains(hash, "CONFIG_EFI"));
+	g_assert_cmpstr(g_hash_table_lookup(hash, "CONFIG_EFI"), ==, "y");
+	g_assert_true(g_hash_table_contains(hash, "CONFIG_MODULES"));
+	g_assert_false(g_hash_table_contains(hash, "CONFIG_EFI_STUB"));
+#endif
+}
+
+static void
+fu_kernel_get_config_notfound_func(void)
+{
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) hash = NULL;
+
+#ifndef __linux__
+	g_test_skip("only works on Linux");
+	return;
+#endif
+
+	fu_path_store_set_path(pstore, FU_PATH_KIND_PROCFS, "/nonexistent");
+	fu_path_store_set_path(pstore, FU_PATH_KIND_HOSTFS_BOOT, "/nonexistent");
+
+	hash = fu_kernel_get_config(pstore, &error);
+	g_assert_null(hash);
+	g_assert_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+}
+
+static void
 fu_kernel_lockdown_func(void)
 {
 	gboolean ret;
@@ -72,6 +142,32 @@ fu_kernel_lockdown_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_kernel_add_cmdline_arg_no_grubby_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_path_store_add_program_path(pstore, "/nonexistent");
+	ret = fu_kernel_add_cmdline_arg(pstore, "iommu=pt", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+}
+
+static void
+fu_kernel_remove_cmdline_arg_no_grubby_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuPathStore) pstore = fu_path_store_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_path_store_add_program_path(pstore, "/nonexistent");
+	ret = fu_kernel_remove_cmdline_arg(pstore, "iommu=pt", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -79,6 +175,12 @@ main(int argc, char **argv)
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/kernel/cmdline", fu_kernel_cmdline_func);
 	g_test_add_func("/fwupd/kernel/config", fu_kernel_config_func);
+	g_test_add_func("/fwupd/kernel/get-config", fu_kernel_get_config_func);
+	g_test_add_func("/fwupd/kernel/get-config/notfound", fu_kernel_get_config_notfound_func);
+	g_test_add_func("/fwupd/kernel/add-cmdline-arg/no-grubby",
+			fu_kernel_add_cmdline_arg_no_grubby_func);
+	g_test_add_func("/fwupd/kernel/remove-cmdline-arg/no-grubby",
+			fu_kernel_remove_cmdline_arg_no_grubby_func);
 	g_test_add_func("/fwupd/kernel/lockdown", fu_kernel_lockdown_func);
 	return g_test_run();
 }

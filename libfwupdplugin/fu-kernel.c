@@ -361,7 +361,7 @@ fu_kernel_check_cmdline_mutable(FuPathStore *pstore, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not found */
-	grubby_path = fu_path_find_program("grubby", error);
+	grubby_path = fu_path_store_find_program(pstore, "grubby", error);
 	if (grubby_path == NULL)
 		return FALSE;
 
@@ -411,14 +411,14 @@ fu_kernel_check_cmdline_mutable(FuPathStore *pstore, GError **error)
 }
 
 static gboolean
-fu_kernel_set_commandline(const gchar *arg, gboolean enable, GError **error)
+fu_kernel_set_commandline(FuPathStore *pstore, const gchar *arg, gboolean enable, GError **error)
 {
 	g_autofree gchar *output = NULL;
 	g_autofree gchar *arg_string = NULL;
 	g_autofree gchar *grubby_path = NULL;
 	const gchar *argv_grubby[] = {"", "--update-kernel=DEFAULT", "", NULL};
 
-	grubby_path = fu_path_find_program("grubby", error);
+	grubby_path = fu_path_store_find_program(pstore, "grubby", error);
 	if (grubby_path == NULL) {
 		g_prefix_error_literal(error, "failed to find grubby: ");
 		return FALSE;
@@ -444,6 +444,7 @@ fu_kernel_set_commandline(const gchar *arg, gboolean enable, GError **error)
 
 /**
  * fu_kernel_add_cmdline_arg:
+ * @pstore: a #FuPathStore
  * @arg: (not nullable): key to set
  * @error: (nullable): optional return location for an error
  *
@@ -454,13 +455,17 @@ fu_kernel_set_commandline(const gchar *arg, gboolean enable, GError **error)
  * Since: 1.9.5
  **/
 gboolean
-fu_kernel_add_cmdline_arg(const gchar *arg, GError **error)
+fu_kernel_add_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
 {
-	return fu_kernel_set_commandline(arg, TRUE, error);
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), FALSE);
+	g_return_val_if_fail(arg != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_kernel_set_commandline(pstore, arg, TRUE, error);
 }
 
 /**
  * fu_kernel_remove_cmdline_arg:
+ * @pstore: a #FuPathStore
  * @arg: (not nullable): key to set
  * @error: (nullable): optional return location for an error
  *
@@ -471,7 +476,10 @@ fu_kernel_add_cmdline_arg(const gchar *arg, GError **error)
  * Since: 1.9.5
  **/
 gboolean
-fu_kernel_remove_cmdline_arg(const gchar *arg, GError **error)
+fu_kernel_remove_cmdline_arg(FuPathStore *pstore, const gchar *arg, GError **error)
 {
-	return fu_kernel_set_commandline(arg, FALSE, error);
+	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), FALSE);
+	g_return_val_if_fail(arg != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_kernel_set_commandline(pstore, arg, FALSE, error);
 }

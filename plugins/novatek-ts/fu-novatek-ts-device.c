@@ -398,7 +398,7 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	}
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_novatek_ts_device_wait_cmd_issue_cb,
-				  2000,
+				  100,
 				  1,
 				  &cmd_issue_ctx,
 				  error)) {
@@ -1066,6 +1066,31 @@ fu_novatek_ts_device_gcm_read_flash_mid_did(FuNovatekTsDevice *self, GError **er
 }
 
 static gboolean
+fu_novatek_ts_device_read_start_chip_id(FuNovatekTsDevice *self, GError **error)
+{
+	guint8 buf[6] = {0};
+
+	if (!fu_novatek_ts_device_hid_read(self, self->chip_ver_trim_addr, buf, sizeof(buf), error))
+		return FALSE;
+
+	g_info("IC chip id: %02x %02x %02x %02x %02x %02x",
+	       buf[0],
+	       buf[1],
+	       buf[2],
+	       buf[3],
+	       buf[4],
+	       buf[5]);
+	return TRUE;
+}
+
+static gboolean
+fu_novatek_ts_device_read_start_chip_id_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(device);
+	return fu_novatek_ts_device_read_start_chip_id(self, error);
+}
+
+static gboolean
 fu_novatek_ts_device_bootloader_reset(FuNovatekTsDevice *self, GError **error)
 {
 	guint8 buf[1] = {FU_NOVATEK_TS_CMD_BOOT_RESET};
@@ -1074,7 +1099,7 @@ fu_novatek_ts_device_bootloader_reset(FuNovatekTsDevice *self, GError **error)
 		return FALSE;
 
 	/* success */
-	fu_device_sleep(FU_DEVICE(self), 235);
+	fu_device_sleep(FU_DEVICE(self), 500);
 	return TRUE;
 }
 
@@ -1083,11 +1108,16 @@ fu_novatek_ts_device_sw_reset_and_idle(FuNovatekTsDevice *self, GError **error)
 {
 	guint8 buf[1] = {FU_NOVATEK_TS_CMD_SW_RESET};
 
-	if (!fu_novatek_ts_device_hid_write(self, self->swrst_sif_addr, buf, sizeof(buf), error))
-		return FALSE;
+	for (guint i = 0; i < 3; i++) {
+		if (!fu_novatek_ts_device_hid_write(self,
+						    self->swrst_sif_addr,
+						    buf,
+						    sizeof(buf),
+						    error))
+			return FALSE;
 
-	/* success */
-	fu_device_sleep(FU_DEVICE(self), 50);
+		fu_device_sleep(FU_DEVICE(self), 50);
+	}
 	return TRUE;
 }
 
@@ -1104,70 +1134,6 @@ fu_novatek_ts_device_stop_crc_reboot(FuNovatekTsDevice *self, GError **error)
 			return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 5);
-	return TRUE;
-}
-
-static FuDevice *
-fu_novatek_ts_device_get_backend_parent(FuNovatekTsDevice *self, GError **error)
-{
-	if (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)) != FU_HID_BUS_TYPE_I2C) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unexpected bus type: 0x%x",
-			    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
-		return NULL;
-	}
-
-	return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
-}
-
-static gboolean
-fu_novatek_ts_device_rebind_driver(FuNovatekTsDevice *self, GError **error)
-{
-	g_autofree gchar *driver = NULL;
-	g_autofree gchar *subsystem = NULL;
-	g_autoptr(FuUdevDevice) parent = NULL;
-
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return TRUE;
-
-	parent = FU_UDEV_DEVICE(fu_novatek_ts_device_get_backend_parent(self, error));
-	if (parent == NULL)
-		return FALSE;
-	if (!fu_device_probe(FU_DEVICE(parent), error)) {
-		g_prefix_error_literal(error, "failed to probe parent: ");
-		return FALSE;
-	}
-
-	driver = g_strdup(fu_udev_device_get_driver(parent));
-	subsystem = g_strdup(fu_udev_device_get_subsystem(parent));
-	if (driver == NULL) {
-		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no parent driver for %s",
-			    id_display);
-		return FALSE;
-	}
-	if (subsystem == NULL) {
-		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(parent));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no parent subsystem for %s",
-			    id_display);
-		return FALSE;
-	}
-
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	if (!fu_device_unbind_driver(FU_DEVICE(parent), error))
-		return FALSE;
-	if (!fu_device_bind_driver(FU_DEVICE(parent), subsystem, driver, error))
-		return FALSE;
-
-	/* success */
 	return TRUE;
 }
 
@@ -1283,7 +1249,7 @@ fu_novatek_ts_device_check_fw_reset_state(FuNovatekTsDevice *self, guint8 state,
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_novatek_ts_device_wait_reset_state_cb,
 				  100,
-				  10,
+				  30,
 				  &ctx,
 				  error)) {
 		g_set_error(error,
@@ -1325,6 +1291,31 @@ fu_novatek_ts_device_ensure_fw_ver(FuNovatekTsDevice *self, GError **error)
 
 	/* success */
 	fu_device_set_version_raw(FU_DEVICE(self), ctx.buf[0]);
+	return TRUE;
+}
+
+static gboolean
+fu_novatek_ts_device_check_start_ready(FuNovatekTsDevice *self, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_novatek_ts_device_read_start_chip_id_cb,
+				  100,
+				  50,
+				  NULL,
+				  error)) {
+		g_prefix_error_literal(error, "read start chip id failed: ");
+		return FALSE;
+	}
+
+	if (!fu_novatek_ts_device_check_fw_reset_state(
+		self,
+		FU_NOVATEK_TS_RESET_STATE_RESET_STATE_NORMAL_RUN,
+		&error_local)) {
+		g_warning("firmware is not normal running: %s", error_local->message);
+	}
+
 	return TRUE;
 }
 
@@ -1424,29 +1415,10 @@ fu_novatek_ts_device_setup(FuDevice *device, GError **error)
 {
 	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(device);
 	FuDeviceClass *parent_class = FU_DEVICE_CLASS(fu_novatek_ts_device_parent_class);
-	guint8 debug_buf[6] = {0};
-	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_novatek_ts_device_hid_read(self,
-					   self->chip_ver_trim_addr,
-					   debug_buf,
-					   sizeof(debug_buf),
-					   error))
+	if (!fu_novatek_ts_device_check_start_ready(self, error))
 		return FALSE;
-	g_info("IC chip id: %02x %02x %02x %02x %02x %02x",
-	       debug_buf[0],
-	       debug_buf[1],
-	       debug_buf[2],
-	       debug_buf[3],
-	       debug_buf[4],
-	       debug_buf[5]);
 
-	if (!fu_novatek_ts_device_check_fw_reset_state(
-		self,
-		FU_NOVATEK_TS_RESET_STATE_RESET_STATE_NORMAL_RUN,
-		&error_local)) {
-		g_warning("firmware is not normal running: %s", error_local->message);
-	}
 	if (!fu_novatek_ts_device_ensure_fw_ver(self, error))
 		return FALSE;
 
@@ -1512,6 +1484,9 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 
 	g_return_val_if_fail(FU_IS_NOVATEK_TS_FIRMWARE(firmware), FALSE);
 
+	if (!fu_novatek_ts_device_check_start_ready(self, error))
+		return FALSE;
+
 	/* always use FLASH_NORMAL start (0x2000) */
 	if (self->flash_start_addr < FLASH_SECTOR_SIZE) {
 		g_set_error(error,
@@ -1555,10 +1530,6 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 	}
 	if (!fu_novatek_ts_device_ensure_fw_ver(self, error))
 		return FALSE;
-	if (!fu_novatek_ts_device_rebind_driver(self, error)) {
-		g_prefix_error_literal(error, "failed to re-enumerate device: ");
-		return FALSE;
-	}
 
 	/* success */
 	return TRUE;
@@ -1608,7 +1579,6 @@ fu_novatek_ts_device_init(FuNovatekTsDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
 	fu_device_set_name(FU_DEVICE(self), "Touchscreen");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.novatek.ts");

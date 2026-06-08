@@ -130,7 +130,9 @@ fu_util_interesting_device_func(void)
 			g_ptr_array_add(devices, g_object_ref(child));
 		}
 
-		g_assert_cmpint(fu_util_is_interesting_device(devices, device), ==, map[i].expected);
+		g_assert_cmpint(fu_util_is_interesting_device(devices, device),
+				==,
+				map[i].expected);
 	}
 }
 

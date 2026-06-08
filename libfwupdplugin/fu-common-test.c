@@ -11,6 +11,40 @@
 #include "fu-test.h"
 
 static void
+fu_common_bcd_u8_func(void)
+{
+	struct {
+		guint8 dec;
+		guint8 bcd;
+	} map[] = {
+	    {0, 0},
+	    {16, 0b00010110},
+	    {99, 0b10011001},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		g_assert_cmpint(fu_common_to_bcd_u8(map[i].dec), ==, map[i].bcd);
+		g_assert_cmpint(fu_common_from_bcd_u8(map[i].bcd), ==, map[i].dec);
+	}
+}
+
+static void
+fu_common_bcd_u16_func(void)
+{
+	struct {
+		guint16 dec;
+		guint16 bcd;
+	} map[] = {
+	    {0, 0},
+	    {16, 0b00010110},
+	    {1234, 0b0001001000110100},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		g_assert_cmpint(fu_common_to_bcd_u16(map[i].dec), ==, map[i].bcd);
+		g_assert_cmpint(fu_common_from_bcd_u16(map[i].bcd), ==, map[i].dec);
+	}
+}
+
+static void
 fu_common_align_up_func(void)
 {
 	g_assert_cmpint(fu_common_align_up(0, 0), ==, 0);
@@ -205,6 +239,44 @@ fu_common_olson_timezone_id_func(void)
 }
 
 static void
+fu_common_random_func(void)
+{
+	guint cnt = 0;
+	guint valid = 0;
+	g_autofree gchar *passwd = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* make sure the RNG is at least plausible */
+	buf = fu_common_get_random(20, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf);
+	g_assert_cmpint(buf->len, ==, 20);
+	for (guint i = 0; i < buf->len; i++) {
+		guint8 data = buf->data[i];
+		if (data == 0x00 || data == 0xFF)
+			cnt++;
+	}
+	str = fu_byte_array_to_string(buf);
+	g_debug("%s", str);
+	g_assert_cmpint(cnt, <, 10);
+
+	/* generate a random string to be used as a password */
+	passwd = fu_common_get_random_string(20, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(passwd);
+	g_assert_cmpint(strlen(passwd), ==, 20);
+	for (guint i = 0; passwd[i] != '\0'; i++) {
+		gchar data = passwd[i];
+		if (g_ascii_isalnum(data))
+			valid++;
+	}
+	g_debug("%s", passwd);
+	g_assert_cmpint(valid, ==, 20);
+}
+
+static void
 fu_cpuid_func(void)
 {
 	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
@@ -223,7 +295,10 @@ fu_cpuid_func(void)
 int
 main(int argc, char **argv)
 {
+	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
+	g_test_add_func("/fwupd/common/bcd/u8", fu_common_bcd_u8_func);
+	g_test_add_func("/fwupd/common/bcd/u16", fu_common_bcd_u16_func);
 	g_test_add_func("/fwupd/common/checked-add", fu_common_checked_add_func);
 	g_test_add_func("/fwupd/common/checked-inc", fu_common_checked_inc_func);
 	g_test_add_func("/fwupd/common/checked-inc-product", fu_common_checked_inc_product_func);
@@ -233,6 +308,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common/crc", fu_common_crc_func);
 	g_test_add_func("/fwupd/common/guid", fu_common_guid_func);
 	g_test_add_func("/fwupd/common/olson-timezone-id", fu_common_olson_timezone_id_func);
+	g_test_add_func("/fwupd/common/random", fu_common_random_func);
 	g_test_add_func("/fwupd/common/cpuid", fu_cpuid_func);
 	return g_test_run();
 }

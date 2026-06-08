@@ -7,6 +7,7 @@ plugin_builtins += static_library('fu_plugin_huddly_usb',
   sources: [
     'fu-huddly-usb-common.c',
     'fu-huddly-usb-device.c',
+    'fu-huddly-usb-firmware.c',
     'fu-huddly-usb-plugin.c',
   ],
   include_directories: plugin_incdirs,

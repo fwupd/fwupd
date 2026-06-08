@@ -252,7 +252,7 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 	if (!fu_engine_load(self->engine, flags, progress, error))
 		return FALSE;
 
-	if (!self->as_json) {
+	if (!self->as_json && !(flags & FU_ENGINE_LOAD_FLAG_READONLY)) {
 		fu_util_show_plugin_warnings(self);
 		fu_util_show_unsupported_warning(self->console);
 	}
@@ -2947,6 +2947,8 @@ fu_util_export_hwids(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* setup default hwids */
+	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
+		return FALSE;
 	if (!fu_context_load_hwinfo(ctx, self->progress, FU_CONTEXT_HWID_FLAG_LOAD_ALL, error))
 		return FALSE;
 
@@ -4511,12 +4513,7 @@ fu_util_emulation_save(FuUtil *self, gchar **values, GError **error)
 
 	/* save every tagged device */
 	file = g_file_new_for_path(values[0]);
-	stream = g_file_replace(file,
-				NULL,
-				FALSE,
-				G_FILE_CREATE_REPLACE_DESTINATION,
-				NULL,
-				error);
+	stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_REPLACE_DESTINATION, NULL, error);
 	if (stream == NULL)
 		return FALSE;
 	return fu_engine_emulation_save(self->engine, G_OUTPUT_STREAM(stream), error);
@@ -5449,12 +5446,7 @@ fu_util_version(FuUtil *self, GError **error)
 	g_autofree gchar *str = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine(
-		self,
-		FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-		    FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_HWINFO,
-		self->progress,
-		error))
+	if (!fu_util_start_engine(self, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
 		return FALSE;
 
 	/* get metadata */
@@ -5705,7 +5697,7 @@ fu_util_jcat_export(FuUtil *self, gchar **values, GError **error)
 			fn = g_build_filename(self->destdir, str->str, NULL);
 			if (!fu_bytes_set_contents_full(fn,
 							fwupd_jcat_blob_get_data(blob),
-							0666,
+							0644,
 							error))
 				return FALSE;
 			fu_console_print(self->console, "Wrote %s", fn);
@@ -5888,7 +5880,6 @@ fu_util_jcat_sign(FuUtil *self, gchar **values, GError **error)
 	g_autoptr(FwupdJcatFile) file = NULL;
 	g_autoptr(FwupdJcatItem) item = NULL;
 	g_autoptr(FuJcatEngine) engine = NULL;
-	g_autofree gchar *id_safe = NULL;
 
 	/* check args */
 	if (g_strv_length(values) < 4) {

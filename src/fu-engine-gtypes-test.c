@@ -158,6 +158,12 @@ fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 	firmware = g_object_new(gtype, NULL);
 	g_assert_nonnull(firmware);
 
+	/* check the size max is set */
+	if (gtype != FU_TYPE_FIRMWARE &&
+	    !fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_IS_ABSTRACT) &&
+	    fu_firmware_get_size_max(firmware) == FU_FIRMWARE_SIZE_MAX_DEFAULT)
+		g_warning("%s did not set firmware max size", g_type_name(gtype));
+
 	/* ensure we have data set even if parsing fails */
 	fu_firmware_set_bytes(firmware, fw);
 
@@ -225,7 +231,6 @@ fu_engine_gtypes_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	const gchar *external_plugins[] = {
-	    "flashrom",
 	    "modem-manager",
 	};
 

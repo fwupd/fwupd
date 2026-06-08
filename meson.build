@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.1.4',
+  version: '2.1.5',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -670,6 +670,12 @@ endif
 if cc.has_header_symbol('sys/mount.h', 'BLKSSZGET')
   conf.set('HAVE_BLKSSZGET', '1')
 endif
+if cc.has_header_symbol('stdlib.h', 'arc4random_buf')
+  conf.set('HAVE_ARC4RANDOM', '1')
+endif
+if cc.has_header_symbol('sys/random.h', 'getrandom')
+  conf.set('HAVE_GETRANDOM', '1')
+endif
 
 if host_machine.system() == 'freebsd'
   if cc.has_type(
@@ -704,31 +710,6 @@ if build_standalone
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 endif
 
-flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-libflashrom = disabler()
-if build_standalone
-  libflashrom = dependency(
-    'flashrom',
-    fallback: ['flashrom', 'flashrom_dep'],
-    required: flashrom,
-  )
-  if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
-    'flashrom_set_progress_callback_v2',
-    dependencies: libflashrom,
-  )
-    conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
-  endif
-  allow_flashrom = flashrom.allowed() and libflashrom.found()
-  if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
-    'flashrom_flash_probe_v2',
-    dependencies: libflashrom,
-  )
-    conf.set('HAVE_FLASHROM_FLASH_PROBE_V2' , '1')
-  endif
-else
-  allow_flashrom = false
-endif
-
 logind = dependency(
   'systemd', 'libelogind',
   required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
@@ -737,7 +718,6 @@ logind = dependency(
 if logind.found()
   conf.set('HAVE_LOGIND', '1')
 endif
-
 if libsystemd.found()
   systemd = dependency(
     'systemd',

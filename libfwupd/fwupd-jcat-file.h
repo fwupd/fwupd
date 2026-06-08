@@ -20,17 +20,14 @@ G_DECLARE_FINAL_TYPE(FwupdJcatFile, fwupd_jcat_file, FWUPD, JCAT_FILE, GObject)
 FwupdJcatFile *
 fwupd_jcat_file_new(void) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fwupd_jcat_file_import_stream(FwupdJcatFile *self,
-			      GInputStream *istream,
-			      GError **error) G_GNUC_NON_NULL(1, 2);
+fwupd_jcat_file_import_stream(FwupdJcatFile *self, GInputStream *istream, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_jcat_file_import_bytes(FwupdJcatFile *self,
-			     GBytes *blob,
-			     GError **error) G_GNUC_NON_NULL(1, 2);
+fwupd_jcat_file_import_bytes(FwupdJcatFile *self, GBytes *blob, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_jcat_file_import_json(FwupdJcatFile *self,
-			    const gchar *json,
-			    GError **error) G_GNUC_NON_NULL(1, 2);
+fwupd_jcat_file_import_json(FwupdJcatFile *self, const gchar *json, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 GBytes *
 fwupd_jcat_file_export_bytes(FwupdJcatFile *self, GError **error) G_GNUC_NON_NULL(1);
 gchar *

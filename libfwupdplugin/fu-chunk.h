@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include <fwupd.h>
 
 #define FU_TYPE_CHUNK (fu_chunk_get_type())
 

@@ -19,20 +19,22 @@ jobs:
           - { DISTRO: arch, ARCH: amd64 }
           - { DISTRO: centos, ARCH: amd64 }
           - { DISTRO: debian, ARCH: amd64 }
-          # - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
+          - { DISTRO: debian, ARCH: amd64, VARIANT: i386 }
           # - { DISTRO: debian, ARCH: amd64, VARIANT: tartan }
           - { DISTRO: debian, ARCH: arm64 }
-          # - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
+          - { DISTRO: debian, ARCH: arm64, VARIANT: cross-s390x }
           - { DISTRO: fedora, ARCH: amd64 }
           - { DISTRO: fedora, ARCH: amd64, VARIANT: openssl, CONTAINER: fedora-amd64 }
           - { DISTRO: ubuntu, ARCH: amd64 }
     env: ${{ matrix.env }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Docker login
-        run: docker login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download tarball
         if: matrix.env.DISTRO == 'fedora' || matrix.env.DISTRO == 'centos'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -53,10 +55,13 @@ jobs:
               "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.env.CONTAINER || join(matrix.env.*, '-') }}:latest" \
               "./contrib/ci/$DISTRO${VARIANT:+-$VARIANT}.sh"
       - name: Save any applicable artifacts
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ join(matrix.env.*, '-') }}
-          path: ${{ github.workspace }}/dist/*
+          path: |
+            ${{ github.workspace }}/build/meson-logs/scanbuild/*
+            ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
       - name: Check if tests supported
         id: supported
@@ -85,7 +90,11 @@ jobs:
           name: coverage-${{ join(matrix.env.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.env.VARIANT == null && (matrix.env.DISTRO == 'debian' || matrix.env.DISTRO == 'arch')
+        if: steps.supported.outputs.supported == 'true' &&
+          matrix.env.VARIANT != 'tartan' && (
+          matrix.env.DISTRO == 'arch' ||
+          matrix.env.DISTRO == 'debian' ||
+          matrix.env.DISTRO == 'fedora')
         uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -186,7 +195,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Build
         id: test
-        uses: vmactions/freebsd-vm@v1.4.5
+        uses: vmactions/freebsd-vm@v1.4.6
         env:
           CI: true
           CC: gcc

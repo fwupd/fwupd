@@ -531,10 +531,9 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 		for (guint i = 0; i < devices->len; i++) {
 			FwupdDevice *device = g_ptr_array_index(devices, i);
 
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			if (fwupd_device_get_update_state(device) ==
+			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	} else {
 		for (guint i = 0; values[i] != NULL; i++) {
@@ -542,15 +541,13 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 			device = fu_util_get_device_by_id(self, values[i], error);
 			if (device == NULL)
 				return FALSE;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			if (fwupd_device_get_update_state(device) ==
+			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	}
 
-	if (!(self->completion_flags &
-	      (FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN | FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
+	if (!(self->completion_flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -1794,7 +1791,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "No reports require uploading");
+				    "No reports require exporting");
 		return FALSE;
 	}
 
@@ -1833,7 +1830,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		/* self sign data */
 		if (self->sign) {
 			g_autofree gchar *sig = NULL;
-			g_autoptr(FuFirmware) sig_img = NULL;
+			g_autoptr(FuFirmware) sig_img = fu_zip_file_new();
 			g_autoptr(GBytes) sig_blob = NULL;
 
 			sig = fwupd_client_self_sign(self->client,
@@ -1844,8 +1841,10 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 			if (sig == NULL)
 				return FALSE;
 			sig_blob = g_bytes_new(sig, strlen(sig));
-			sig_img = fu_firmware_new_from_bytes(sig_blob);
 			fu_firmware_set_id(sig_img, "report.json.p7c");
+			fu_firmware_set_bytes(sig_img, sig_blob);
+			fu_zip_file_set_compression(FU_ZIP_FILE(sig_img),
+						    FU_ZIP_COMPRESSION_DEFLATE);
 			if (!fu_firmware_add_image(archive, sig_img, error))
 				return FALSE;
 		}
@@ -2244,7 +2243,7 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 		if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_REQUIRES_AUTH) &&
 		    fwupd_remote_get_username(remote) == NULL &&
 		    fwupd_remote_get_password(remote) == NULL) {
-			g_debug("skipping as remote %s as auth required but not supplied",
+			g_debug("skipping remote %s as auth required but not supplied",
 				fwupd_remote_get_id(remote));
 			continue;
 		}
@@ -5050,6 +5049,7 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autofree gchar *username = NULL;
 	g_autofree gchar *password = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* find remote */
 	if (g_strv_length(values) > 0)
@@ -5105,16 +5105,22 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 	/* check this works */
 	fwupd_remote_set_username(remote, username);
 	fwupd_remote_set_password(remote, password);
-	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
-		return FALSE;
 	if (!fwupd_client_refresh_remote(self->client,
 					 remote,
 					 self->download_flags,
 					 self->cancellable,
-					 error))
-		return FALSE;
+					 &error_local)) {
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) &&
+		    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring: %s", error_local->message);
+	}
 
 	/* save secrets and enable remote */
+	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+		return FALSE;
 	if (!fwupd_remote_save_user_secrets(remote, error))
 		return FALSE;
 	if (!fwupd_client_modify_remote(self->client,
@@ -5123,6 +5129,12 @@ fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
 					"true",
 					self->cancellable,
 					error))
+		return FALSE;
+	if (!fwupd_client_refresh_remote(self->client,
+					 remote,
+					 self->download_flags,
+					 self->cancellable,
+					 error))
 		return FALSE;
 
 	/* TRANSLATORS: we've gained access to a new firmware remote */
@@ -5945,7 +5957,9 @@ main(int argc, char *argv[])
 	/* start polkit tty agent to listen for password requests */
 	if (is_interactive) {
 		g_autoptr(GError) error_polkit = NULL;
-		if (!fu_polkit_agent_open(polkit_agent, &error_polkit)) {
+		g_autoptr(FuPathStore) pstore = fu_path_store_new();
+		fu_path_store_load_from_env(pstore);
+		if (!fu_polkit_agent_open(polkit_agent, pstore, &error_polkit)) {
 			fu_console_print(self->console,
 					 "Failed to open polkit agent: %s",
 					 error_polkit->message);

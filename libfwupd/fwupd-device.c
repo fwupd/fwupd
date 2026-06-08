@@ -16,6 +16,7 @@
 #include "fwupd-error.h"
 #include "fwupd-json-array.h"
 #include "fwupd-json-object.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdDevice:
@@ -2516,15 +2517,15 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DEVICE_ID) == 0) {
-		fwupd_device_set_id(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PARENT_DEVICE_ID) == 0) {
-		fwupd_device_set_parent_id(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_parent_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_COMPOSITE_ID) == 0) {
-		fwupd_device_set_composite_id(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_composite_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
@@ -2552,94 +2553,98 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
-		g_autofree const gchar **guids = g_variant_get_strv(value, NULL);
-		for (guint i = 0; guids != NULL && guids[i] != NULL; i++)
-			fwupd_device_add_guid(self, guids[i]);
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
+			fwupd_device_add_guid(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_INSTANCE_IDS) == 0) {
-		g_autofree const gchar **instance_ids = g_variant_get_strv(value, NULL);
-		for (guint i = 0; instance_ids != NULL && instance_ids[i] != NULL; i++)
-			fwupd_device_add_instance_id(self, instance_ids[i]);
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
+			fwupd_device_add_instance_id(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_ICON) == 0) {
-		g_autofree const gchar **icons = g_variant_get_strv(value, NULL);
-		for (guint i = 0; icons != NULL && icons[i] != NULL; i++)
-			fwupd_device_add_icon(self, icons[i]);
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
+			fwupd_device_add_icon(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_device_set_name(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_name(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR) == 0) {
-		fwupd_device_set_vendor(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_vendor(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
-		g_auto(GStrv) vendor_ids = NULL;
-		vendor_ids = g_strsplit(g_variant_get_string(value, NULL), "|", -1);
-		for (guint i = 0; vendor_ids[i] != NULL; i++)
-			fwupd_device_add_vendor_id(self, vendor_ids[i]);
+		const gchar *str = fwupd_variant_get_string(value);
+		if (str != NULL) {
+			g_auto(GStrv) strv = g_strsplit(str, "|", -1);
+			for (guint i = 0; strv[i] != NULL; i++)
+				fwupd_device_add_vendor_id(self, strv[i]);
+		}
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SERIAL) == 0) {
-		fwupd_device_set_serial(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_serial(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
-		fwupd_device_set_summary(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_summary(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETAILS_URL) == 0) {
-		fwupd_device_set_details_url(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_details_url(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BRANCH) == 0) {
-		fwupd_device_set_branch(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_branch(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-		const gchar *checksums = g_variant_get_string(value, NULL);
-		if (checksums != NULL) {
-			g_auto(GStrv) split = g_strsplit(checksums, ",", -1);
+		const gchar *str = fwupd_variant_get_string(value);
+		if (str != NULL) {
+			g_auto(GStrv) split = g_strsplit(str, ",", -1);
 			for (guint i = 0; split[i] != NULL; i++)
 				fwupd_device_add_checksum(self, split[i]);
 		}
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
-		fwupd_device_set_plugin(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_plugin(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
-		g_auto(GStrv) protocols = NULL;
-		protocols = g_strsplit(g_variant_get_string(value, NULL), "|", -1);
-		for (guint i = 0; protocols[i] != NULL; i++)
-			fwupd_device_add_protocol(self, protocols[i]);
+		const gchar *str = fwupd_variant_get_string(value);
+		if (str != NULL) {
+			g_auto(GStrv) strv = g_strsplit(str, "|", -1);
+			for (guint i = 0; strv[i] != NULL; i++)
+				fwupd_device_add_protocol(self, strv[i]);
+		}
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_ISSUES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_device_add_issue(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
-		fwupd_device_set_version(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_version(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_LOWEST) == 0) {
-		fwupd_device_set_version_lowest(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_version_lowest(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_HIGHEST) == 0) {
-		fwupd_device_set_version_highest(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_version_highest(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER) == 0) {
-		fwupd_device_set_version_bootloader(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_version_bootloader(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLASHES_LEFT) == 0) {
@@ -2659,7 +2664,7 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
-		fwupd_device_set_update_error(self, g_variant_get_string(value, NULL));
+		fwupd_device_set_update_error(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {

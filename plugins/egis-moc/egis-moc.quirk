@@ -2,3 +2,7 @@
 [USB\VID_1C7A&PID_05AE]
 Plugin = egis_moc
 Flags = enforce-requires
+
+[USB\VID_1C7A&PID_9201]
+Plugin = egis_moc
+Flags = enforce-requires

@@ -18,8 +18,12 @@ repos:
       - id: check-xml
       - id: end-of-file-fixer
         types_or: [c, shell, python, proto]
+      - id: end-of-file-fixer
+        files: \.quirk$
       - id: trailing-whitespace
         types_or: [c, shell, python, xml]
+      - id: trailing-whitespace
+        files: \.quirk$
       - id: check-docstring-first
       - id: check-merge-conflict
       - id: mixed-line-ending

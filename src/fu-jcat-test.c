@@ -91,6 +91,73 @@ fu_jcat_sha256_engine_func(void)
 }
 
 static void
+fu_jcat_sha512_engine_func(void)
+{
+	g_autofree gchar *fn_fail = NULL;
+	g_autofree gchar *fn_pass = NULL;
+	g_autofree gchar *sig = NULL;
+	g_autoptr(GBytes) blob_sig1 = NULL;
+	g_autoptr(GBytes) data_fail = NULL;
+	g_autoptr(GBytes) data_fwbin = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdJcatBlob) blob_sig2 = NULL;
+	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
+	g_autoptr(FuJcatEngine) engine = NULL;
+	g_autoptr(FuJcatResult) result_fail = NULL;
+	g_autoptr(FuJcatResult) result_pass = NULL;
+	const gchar *sig_actual =
+	    "db3974a97f2407b7cae1ae637c0030687a11913274d578492558e39c16c017de84eacdc8c62fe34ee4e12b"
+	    "4b1428817f09b6a2760c3f8a664ceae94d2434a593";
+
+	/* set up context */
+	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA512);
+
+	/* get engine */
+	engine = fu_jcat_context_get_engine(context, FWUPD_JCAT_BLOB_KIND_SHA512, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(engine);
+	g_assert_cmpint(fu_jcat_engine_get_kind(engine), ==, FWUPD_JCAT_BLOB_KIND_SHA512);
+	g_assert_cmpint(fu_jcat_engine_get_method(engine), ==, FWUPD_JCAT_BLOB_METHOD_CHECKSUM);
+
+	/* verify checksum */
+	fn_pass = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	data_fwbin = fu_bytes_get_contents(fn_pass, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fwbin);
+	blob_sig1 = g_bytes_new_static(sig_actual, strlen(sig_actual));
+	result_pass = fu_jcat_engine_self_verify(engine,
+						 data_fwbin,
+						 blob_sig1,
+						 FU_JCAT_VERIFY_FLAG_NONE,
+						 &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass);
+	g_assert_cmpint(fu_jcat_result_get_timestamp(result_pass), ==, 0);
+	g_assert_cmpstr(fu_jcat_result_get_authority(result_pass), ==, NULL);
+
+	/* verify will fail */
+	fn_fail = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.asc", NULL);
+	data_fail = fu_bytes_get_contents(fn_fail, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_fail);
+	result_fail = fu_jcat_engine_self_verify(engine,
+						 data_fail,
+						 blob_sig1,
+						 FU_JCAT_VERIFY_FLAG_NONE,
+						 &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(result_fail);
+	g_clear_error(&error);
+
+	/* verify signing */
+	blob_sig2 = fu_jcat_engine_self_sign(engine, data_fwbin, FU_JCAT_SIGN_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_sig2);
+	sig = fwupd_jcat_blob_get_data_as_string(blob_sig2);
+	g_assert_cmpstr(sig, ==, sig_actual);
+}
+
+static void
 fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 {
 	g_autofree gchar *fn_fail = NULL;
@@ -107,6 +174,7 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 	g_autoptr(FuJcatEngine) engine = NULL;
 	g_autoptr(FuJcatResult) result_fail = NULL;
 	g_autoptr(FuJcatResult) result_pass = NULL;
+	g_autoptr(FuJcatResult) result_pass2 = NULL;
 
 	/* set up context */
 	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
@@ -145,20 +213,19 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 			==,
 			"O=Linux Vendor Firmware Project,CN=LVFS CA");
 
-	/* verify will fail with a self-signed signature */
-	sig_fn2 =
-	    g_test_build_filename(G_TEST_BUILT, "tests", "colorhug", "firmware.bin.p7c", NULL);
+	/* verify will pass with the trusted self-signed signature fixture */
+	sig_fn2 = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.p7c", NULL);
 	blob_sig2 = fu_bytes_get_contents(sig_fn2, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_sig2);
-	result_fail = fu_jcat_engine_pubkey_verify(engine,
+	result_pass2 = fu_jcat_engine_pubkey_verify(engine,
 						   data_fwbin,
 						   blob_sig2,
 						   FU_JCAT_VERIFY_FLAG_NONE,
 						   &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_null(result_fail);
-	g_clear_error(&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(result_pass2);
+	g_assert_cmpstr(fu_jcat_result_get_authority(result_pass2), ==, "O=Hughski Limited");
 
 	/* verify will fail with valid signature and different data */
 	fn_fail = g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin.asc", NULL);
@@ -512,11 +579,10 @@ fu_jcat_context_verify_item_target_func(void)
 	g_autoptr(FwupdJcatItem) item_target = fwupd_jcat_item_new("filename.bin");
 	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
 	g_autoptr(FuJcatEngine) engine_sha256 = NULL;
-	g_autoptr(GPtrArray) results_fail = NULL;
 	g_autoptr(GPtrArray) results_pass = NULL;
 
 	/* set up context */
-	pki_dir = g_test_build_filename(G_TEST_BUILT, "tests", "pki", NULL);
+	pki_dir = g_test_build_filename(G_TEST_DIST, "tests", "pki", NULL);
 	fu_jcat_context_add_public_keys(context, pki_dir);
 	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_PKCS7);
 	fu_jcat_context_allow_blob_kind(context, FWUPD_JCAT_BLOB_KIND_SHA256);
@@ -539,7 +605,7 @@ fu_jcat_context_verify_item_target_func(void)
 
 	/* create the item to verify, with a checksum and the PKCS#7 signature *of the hash* */
 	fwupd_jcat_item_add_blob(item, blob_target_sha256);
-	fn_sig = g_test_build_filename(G_TEST_BUILT,
+	fn_sig = g_test_build_filename(G_TEST_DIST,
 				       "tests",
 				       "colorhug",
 				       "firmware.bin.sha256.p7c",
@@ -581,7 +647,6 @@ fu_jcat_context_verify_item_csum_func(void)
 	g_autoptr(FuJcatContext) context = fu_jcat_context_new();
 	g_autoptr(FuJcatEngine) engine1 = NULL;
 	g_autoptr(FuJcatEngine) engine3 = NULL;
-	g_autoptr(FuJcatEngine) engine4 = NULL;
 	g_autoptr(GPtrArray) results_fail = NULL;
 	g_autoptr(GPtrArray) results_pass = NULL;
 	const gchar *sig_actual =
@@ -645,6 +710,7 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	g_test_add_func("/jcat/engine/sha256", fu_jcat_sha256_engine_func);
+	g_test_add_func("/jcat/engine/sha512", fu_jcat_sha512_engine_func);
 	g_test_add_data_func("/jcat/engine/pkcs7", NULL, fwupd_jcat_pkcs7_engine_func);
 	g_test_add_data_func("/jcat/engine/pkcs7/self-signed",
 			     NULL,

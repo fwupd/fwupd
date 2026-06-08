@@ -30,7 +30,7 @@ enum FuLenovoDockIotFlag {
     Managed = 0x01,
 }
 
-#[derive(Parse, ParseStream, Default, ToString, Setters)]
+#[derive(Parse, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructLenovoDockUsage {
     total_number: u8,
@@ -51,7 +51,7 @@ enum FuLenovoDockUsageItemFlag {
     DoUpdate,
 }
 
-#[derive(Parse, ParseStream, Default, ToString, Setters)]
+#[derive(ParseStream, Default, Setters)]
 #[repr(C, packed)]
 struct FuStructLenovoDockUsageItem {
     address: u32le,

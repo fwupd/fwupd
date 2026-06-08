@@ -5440,7 +5440,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	}
 	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		g_autoptr(GList) keys =
+		    g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
@@ -7337,6 +7338,8 @@ fu_device_category_to_name(const gchar *cat)
 		return "Headphones";
 	if (g_strcmp0(cat, "X-Headset") == 0)
 		return "Headset";
+	if (g_strcmp0(cat, "X-Touchscreen") == 0)
+		return "Touchscreen";
 	return NULL;
 }
 

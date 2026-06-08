@@ -305,7 +305,7 @@ fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 						MIN(self->data_sz, 16),
 						NULL);
 		} else {
-			datastr = g_base64_encode(self->data, self->data_sz);
+			datastr = fu_base64_encode(self->data, self->data_sz);
 		}
 		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
 	} else {

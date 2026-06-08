@@ -674,7 +674,7 @@ static gchar *
 fu_history_convert_hash_to_string(GHashTable *hash)
 {
 	GString *str = g_string_new(NULL);
-	g_autoptr(GList) keys = g_hash_table_get_keys(hash);
+	g_autoptr(GList) keys = g_list_sort(g_hash_table_get_keys(hash), (GCompareFunc)g_strcmp0);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(hash, key);

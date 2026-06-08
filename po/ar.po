@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
-"PO-Revision-Date: 2026-04-15 14:09+0000\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-05-29 15:31+0000\n"
 "Last-Translator: jonnysemon <jonnysemon@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Arabic <https://hosted.weblate.org/projects/fwupd/fwupd/ar/>\n"
 "Language: ar\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "خدمة المشغلات لموردي لينكس (المشغلات المستقرة)"
@@ -119,12 +119,33 @@ msgstr "أعد تعيين ضبط الخدمة"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "الاستيثاق مطلوب لإعادة ضبط الخدمة إلى الإعدادات المبدئية"
 
+msgid "Modify a device property"
+msgstr "عدّل خاصية الجهاز"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "الاستيثاق مطلوب لتعديل خاصية الجهاز"
+
 msgid "Activate the new firmware on the device"
 msgstr "نشّط المشغّل الجديد على الجهاز"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "الاستيثاق مطلوب للتبديل إلى إصدار المشغّل الجديد"
+
+msgid "Clear stored firmware update results"
+msgstr "امحُ نتائج تحديث المشغّل المخزنة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "الاستيثاق مطلوب لمحُ نتائج تحديث المشغّل"
+
+msgid "Verify device firmware"
+msgstr "تحقق من مشغّل الجهاز"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "الاستيثاق مطلوب للتحقق من المشغّل على الجهاز"
 
 msgid "Update the stored device verification information"
 msgstr "حدّث معلومات التحقق من الجهاز المخزن"
@@ -133,8 +154,26 @@ msgstr "حدّث معلومات التحقق من الجهاز المخزن"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "الاستيثاق مطلوب لتحديث المجموع الاختباري المخزن للجهاز"
 
+msgid "Get configured remotes"
+msgstr "احصل على أجهزة التحكم عن بُعد المضبوطة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "الاستيثاق مطلوب للحصول على قائمة الأجهزة البعيدة المضبوطة المستخدمة لتحديثات المشغّل"
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "عدّل جهاز التحكم عن بعد المكوَّن"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -209,6 +248,13 @@ msgstr "مكّن جمع بيانات المحاكاة"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
 msgstr "الاستيثاق مطلوب لتمكين جمع بيانات المحاكاة"
+
+msgid "Install firmware on emulated device"
+msgstr "ثبّت المشغّل على الجهاز المحاكى"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "الاستيثاق مطلوب لتثبيت المشغّل على جهاز محاكى"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1378,6 +1424,9 @@ msgstr "اعرض الأجهزة التي لا يمكن تحديثها"
 msgid "Manually enable specific plugins"
 msgstr "فعّل الإضافات محدّدة يدوياً"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "موقع أدلة المفاتيح العامة المستخدمة للتحقق من JCat"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "شغّل روتين تحضير مكوّن الإضافة عند استخدام install-blob"
@@ -1405,6 +1454,9 @@ msgstr "أجب بنعم على كل الأسئلة"
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "أخرج بصيغة JSON (عطّل كل المطالبات التفاعلية)"
+
+msgid "Prefix for import and output files"
+msgstr "بادئة لملفات الاستيراد والإخراج"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1856,6 +1908,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "تحليل سجل أحداث الـ PCR الخاص بالنظام"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "اعرض معلومات حول ملف JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "FILENAME ID ALIAS_ID"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "أضف اسم بديل لعنصر JCat محدّد"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "أزِل الاسم البديل لعنصر JCat محدّد"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "FILENAME [KIND]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "يصدّر جميع التوقيعات المضمنة إلى ملفات"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "FILENAME DATA DETACHED_KEY"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "استورد توقيع موجود إلى ملف JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "هذه الأداة تسمح للمُدير باستخدام إضافات fwupd دون تثبيتها على نظام المُضيف."
@@ -2201,7 +2309,7 @@ msgstr "اقتُرح تغيير في التشكيلة"
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
-msgstr "يمكن لهذه الأداة تغيير إعداد BIOS ‏'%s' من '%s' إلى '%s' آلياً، لكن لن يصبح سارياً إلا بعد إعادة إقلاع الحاسوب."
+msgstr "يمكن لهذه الأداة تغيير إعداد BIOS ‏'%s' من '%s' إلى '%s' آليًا، لكن لن يصبح ساريًا إلا بعد إعادة إقلاع الحاسوب."
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
@@ -2210,12 +2318,12 @@ msgstr "اضمن ارتياحك لاستعادة الإعداد من إعداد 
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
 msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
-msgstr "يمكن لهذه الأداة تغيير وسيط النواة من '%s' إلى '%s'، لكن لن يصبح سارياً إلا بعد إعادة إقلاع الحاسوب."
+msgstr "يمكن لهذه الأداة تغيير وسيط النواة من '%s' إلى '%s'، لكن لن يصبح ساريًا إلا بعد إعادة إقلاع الحاسوب."
 
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
 msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
-msgstr "يمكن لهذه الأداة إضافة وسيط نواة '%s'، لكن لن يصبح سارياً إلا بعد إعادة إقلاع الحاسوب."
+msgstr "يمكن لهذه الأداة إضافة وسيط نواة '%s'، لكن لن يصبح ساريًا إلا بعد إعادة إقلاع الحاسوب."
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
@@ -2242,6 +2350,27 @@ msgstr "أرفع البيانات الآن؟"
 #. TRANSLATORS: success, so say thank you to the user
 msgid "Device list uploaded successfully, thanks!"
 msgstr "رُفعت قائمة الأجهزة بنجاح، شكرا!"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "أدخل عنوان بريدك الإلكتروني لـ '%s' عن بُعد"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "للحصول على رمز جديد، يُرجى الانتقال إلى %s والنقر على 'Generate Token'"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "أدخل رمزك للطرف البعيد '%s'"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "فُعّل التحكم عن بُعد وتحديثه بنجاح"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2330,6 +2459,14 @@ msgstr "خفّض إصدار المشغّل على جهاز"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "حدّث التجزئة التشفيرية المخزّنة بمحتويات ذاكرة القراءة فقط الحالية"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3427,13 +3564,17 @@ msgstr "فاصل التحديث"
 msgid "Priority"
 msgstr "الأولوية"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "يتطلب الاستيثاق"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "اسم المستخدم"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "كلمة السر"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "الرمز"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3730,6 +3871,9 @@ msgstr "فَعِّل المورد البعيد الجديد؟"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "وافق وفعّل المورد البعيد؟"
+
+#~ msgid "Password"
+#~ msgstr "كلمة السر"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "إيجاد خوارزمية تطابق الـ CRC الخاص بالملف"

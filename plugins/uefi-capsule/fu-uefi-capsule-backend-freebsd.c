@@ -115,7 +115,7 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progres
 	FuUefiCapsuleBackend *self = FU_UEFI_CAPSULE_BACKEND(backend);
 	const gchar *esrt_dev = "/dev/efi";
 	struct efi_get_table_ioc table = {.uuid = EFI_TABLE_ESRT};
-	gint efi_fd;
+	g_autofd gint efi_fd = -1;
 	struct efi_esrt_entry_v1 *entries;
 	g_autofree struct efi_esrt_table *esrt = NULL;
 
@@ -130,7 +130,6 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progres
 	}
 
 	if (ioctl(efi_fd, EFIIOC_GET_TABLE, &table) == -1) /* nocheck:blocked */ {
-		g_close(efi_fd, NULL);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -140,7 +139,6 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progres
 
 	esrt = g_malloc(table.table_len);
 	if (esrt == NULL) {
-		g_close(efi_fd, NULL);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -151,7 +149,6 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progres
 	table.buf = esrt;
 	table.buf_len = table.table_len;
 	if (ioctl(efi_fd, EFIIOC_GET_TABLE, &table) == -1) {
-		g_close(efi_fd, NULL);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

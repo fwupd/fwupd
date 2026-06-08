@@ -27,7 +27,7 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 
 	/* check that we "have" a battery */
 	type_val = g_dbus_proxy_get_cached_property(self->proxy, "Type");
-	if (type_val == NULL || g_variant_get_uint32(type_val) == 0) {
+	if (type_val == NULL || fwupd_variant_get_uint32(type_val) == 0) {
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
@@ -39,11 +39,11 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
-	fu_context_set_battery_level(ctx, g_variant_get_double(percentage_val));
+	fu_context_set_battery_level(ctx, fwupd_variant_get_double(percentage_val));
 
 	/* get state */
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
-	if (state_val == NULL || g_variant_get_uint32(state_val) == 0) {
+	if (state_val == NULL || fwupd_variant_get_uint32(state_val) == 0) {
 		g_warning("failed to query power state");
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 	}
@@ -65,11 +65,11 @@ fu_upower_plugin_update_lid(FuPlugin *plugin)
 		fu_context_set_lid_state(ctx, FU_LID_STATE_UNKNOWN);
 		return;
 	}
-	if (!g_variant_get_boolean(lid_is_present)) {
+	if (!fwupd_variant_get_boolean(lid_is_present)) {
 		fu_context_set_lid_state(ctx, FU_LID_STATE_UNKNOWN);
 		return;
 	}
-	if (g_variant_get_boolean(lid_is_closed)) {
+	if (fwupd_variant_get_boolean(lid_is_closed)) {
 		fu_context_set_lid_state(ctx, FU_LID_STATE_CLOSED);
 		return;
 	}
@@ -88,7 +88,7 @@ fu_upower_plugin_update_battery(FuPlugin *plugin)
 		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
 		return;
 	}
-	if (g_variant_get_boolean(on_battery))
+	if (fwupd_variant_get_boolean(on_battery))
 		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY);
 	else
 		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);

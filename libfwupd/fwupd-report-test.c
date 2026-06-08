@@ -70,8 +70,8 @@ fwupd_report_func(void)
 				    "  VendorId:             2468\n"
 				    "  RemoteId:             lvfs\n"
 				    "  Flags:                none\n"
-				    "  foo:                  bar\n"
-				    "  baz:                  bam\n",
+				    "  baz:                  bam\n"
+				    "  foo:                  bar\n",
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

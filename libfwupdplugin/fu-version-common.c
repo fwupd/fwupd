@@ -16,6 +16,10 @@
 #include "fu-string.h"
 #include "fu-version-common.h"
 
+/*
+ * nocheck:magic-inlines=81
+ */
+
 #define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
 
 static gchar *
@@ -51,6 +55,12 @@ fu_version_from_uint64(guint64 val, FwupdVersionFormat kind)
 		return g_strdup_printf("%" G_GUINT64_FORMAT ".%" G_GUINT64_FORMAT "",
 				       (val >> 32) & 0xffffffff,
 				       val & 0xffffffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_COMPAL_BIOS) {
+		/* AA.BB */
+		return g_strdup_printf("%02x.%02x",
+				       (guint)((val >> 8) & 0xff),
+				       (guint)(val & 0xff));
 	}
 	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		/* AABBCCDD */
@@ -100,6 +110,10 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
 		/* AABB.CCDD */
 		return g_strdup_printf("%u.%u", (val >> 16) & 0xffff, val & 0xffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_COMPAL_BIOS) {
+		/* AA.BB */
+		return g_strdup_printf("%02x.%02x", (val >> 8) & 0xff, val & 0xff);
 	}
 	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		/* AABBCCDD */
@@ -294,6 +308,8 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 	}
 	if (kind == FWUPD_VERSION_FORMAT_PAIR)
 		return g_strdup_printf("%u.%u", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
+	if (kind == FWUPD_VERSION_FORMAT_COMPAL_BIOS)
+		return g_strdup_printf("%02x.%02x", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
 	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
 		return g_strdup_printf("%u.%u.%u.%u",
 				       (guint)(val >> 12) & 0xF,
@@ -418,7 +434,8 @@ fu_version_format_number_sections(FwupdVersionFormat fmt)
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_NUMBER ||
 	    fmt == FWUPD_VERSION_FORMAT_HEX)
 		return 1;
-	if (fmt == FWUPD_VERSION_FORMAT_PAIR || fmt == FWUPD_VERSION_FORMAT_BCD)
+	if (fmt == FWUPD_VERSION_FORMAT_PAIR || fmt == FWUPD_VERSION_FORMAT_COMPAL_BIOS ||
+	    fmt == FWUPD_VERSION_FORMAT_BCD)
 		return 2;
 	if (fmt == FWUPD_VERSION_FORMAT_TRIPLET || fmt == FWUPD_VERSION_FORMAT_SURFACE_LEGACY ||
 	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS ||
@@ -680,6 +697,8 @@ fu_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **
 	fmt_guess = fu_version_guess_format(version);
 	if (fmt == FWUPD_VERSION_FORMAT_BCD &&
 	    (fmt_guess == FWUPD_VERSION_FORMAT_PAIR || fmt_guess == FWUPD_VERSION_FORMAT_QUAD))
+		return TRUE;
+	if (fmt_guess == FWUPD_VERSION_FORMAT_PAIR && fmt == FWUPD_VERSION_FORMAT_COMPAL_BIOS)
 		return TRUE;
 	if (fmt_guess != fu_version_format_convert_base(fmt)) {
 		g_set_error(error,

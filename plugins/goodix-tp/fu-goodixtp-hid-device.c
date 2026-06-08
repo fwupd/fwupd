@@ -80,7 +80,7 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-	guint8 rcv_buf[PACKAGE_LEN + 1] = {0};
+	guint8 rcv_buf[PACKAGE_LEN] = {0};
 
 	rcv_buf[0] = REPORT_ID;
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),

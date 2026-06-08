@@ -735,9 +735,13 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 
 	/* back the old firmware up to /var/lib/fwupd */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL)) {
+		const gchar *serial_raw;
+		const gchar *version_raw;
 		g_autoptr(GBytes) fw_old = NULL;
 		g_autofree gchar *path = NULL;
 		g_autofree gchar *fn = NULL;
+		g_autofree gchar *serial_safe = NULL;
+		g_autofree gchar *version_safe = NULL;
 
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
@@ -750,16 +754,25 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			g_prefix_error_literal(error, "failed to backup old firmware: ");
 			return FALSE;
 		}
-		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
-		path = fu_context_build_filename(
-		    priv->ctx,
-		    error,
-		    FU_PATH_KIND_LOCALSTATEDIR_PKG,
-		    "backup",
-		    fu_device_get_id(device),
-		    fu_device_get_serial(device) != NULL ? fu_device_get_serial(device) : "default",
-		    fn,
-		    NULL);
+
+		/* sanitize device-controlled strings to prevent path traversal */
+		serial_raw = fu_device_get_serial(device);
+		version_raw = fu_device_get_version(device);
+
+		if (serial_raw != NULL)
+			serial_safe = fu_path_sanitize_basename(serial_raw);
+		if (version_raw != NULL)
+			version_safe = fu_path_sanitize_basename(version_raw);
+
+		fn = g_strdup_printf("%s.bin", version_safe != NULL ? version_safe : "unknown");
+		path = fu_context_build_filename(priv->ctx,
+						 error,
+						 FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						 "backup",
+						 fu_device_get_id(device),
+						 serial_safe != NULL ? serial_safe : "default",
+						 fn,
+						 NULL);
 		if (path == NULL)
 			return FALSE;
 		fu_progress_step_done(progress);

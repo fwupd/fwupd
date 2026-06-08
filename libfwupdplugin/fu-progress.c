@@ -508,7 +508,11 @@ fu_progress_set_steps(FuProgress *self, guint step_max)
 	/* adjust global fraction */
 	for (guint i = 0; i < self->children->len; i++) {
 		FuProgress *child = g_ptr_array_index(self->children, i);
-		child->global_fraction = self->global_fraction / step_max;
+		if (step_max > 0) {
+			child->global_fraction = self->global_fraction / step_max;
+		} else {
+			child->global_fraction = 0.0f;
+		}
 		if (child->global_fraction < 0.01f)
 			g_signal_handlers_disconnect_by_data(child, self);
 	}

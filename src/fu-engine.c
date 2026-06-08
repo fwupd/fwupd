@@ -1424,7 +1424,7 @@ fu_engine_verify_update(FuEngine *self,
 	localstatedir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, error);
 	if (localstatedir == NULL)
 		return FALSE;
-	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, device_id);
+	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, fu_device_get_id(device));
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
 	file = g_file_new_for_path(fn);
@@ -1824,11 +1824,12 @@ fu_engine_get_report_metadata_cpu_device(FuEngine *self, GHashTable *hash)
 }
 
 static gboolean
-fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
+fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GError **error)
 {
 #ifdef HOST_MACHINE_SYSTEM_DARWIN
+	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	g_autofree gchar *stdout = NULL;
-	g_autofree gchar *sw_vers = g_find_program_in_path("sw_vers");
+	g_autofree gchar *sw_vers = NULL;
 	g_auto(GStrv) split = NULL;
 	struct {
 		const gchar *key;
@@ -1839,10 +1840,9 @@ fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 		   {NULL, NULL}};
 
 	/* macOS */
-	if (sw_vers == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "No os-release found");
+	sw_vers = fu_path_store_find_program(pstore, "sw_vers", error);
+	if (sw_vers == NULL)
 		return FALSE;
-	}
 
 	/* parse from format:
 	 *    ProductName:    Mac OS X
@@ -2032,8 +2032,10 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	struct utsname name_tmp = {0};
 #endif
 	g_autoptr(GHashTable) hash = NULL;
-	g_autoptr(GList) compile_keys = g_hash_table_get_keys(compile_versions);
-	g_autoptr(GList) runtime_keys = g_hash_table_get_keys(runtime_versions);
+	g_autoptr(GList) compile_keys =
+	    g_list_sort(g_hash_table_get_keys(compile_versions), (GCompareFunc)g_strcmp0);
+	g_autoptr(GList) runtime_keys =
+	    g_list_sort(g_hash_table_get_keys(runtime_versions), (GCompareFunc)g_strcmp0);
 
 	/* convert all the runtime and compile-time versions */
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -2052,7 +2054,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 				    g_strdup(version));
 	}
 	fu_engine_get_report_metadata_cpu_device(self, hash);
-	if (!fu_engine_get_report_metadata_os_release(hash, error))
+	if (!fu_engine_get_report_metadata_os_release(self, hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_lsb_release(hash, error))
 		return NULL;
@@ -3918,8 +3920,9 @@ fu_engine_install_blob(FuEngine *self,
 	self->emulator_write_cnt = FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT;
 	fu_progress_step_done(progress);
 
-	/* update history database */
-	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
+	/* update history database -- only set to success if not already needs reboot */
+	if (fu_device_get_update_state(device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 	fu_device_set_install_duration(device, g_timer_elapsed(timer, NULL));
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
 		if (!fu_history_modify_device(self->history, device, error)) {
@@ -6134,7 +6137,8 @@ fu_engine_get_approved_firmware(FuEngine *self)
 {
 	GPtrArray *checksums = g_ptr_array_new_with_free_func(g_free);
 	if (self->approved_firmware != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(self->approved_firmware);
+		g_autoptr(GList) keys = g_list_sort(g_hash_table_get_keys(self->approved_firmware),
+						    (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *csum = l->data;
 			g_ptr_array_add(checksums, g_strdup(csum));
@@ -7069,15 +7073,21 @@ static gboolean
 fu_engine_plugin_check_supported_cb(FuPlugin *plugin, const gchar *guid, FuEngine *self)
 {
 	g_autoptr(XbNode) n = NULL;
-	g_autofree gchar *xpath = NULL;
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 
 	if (fu_engine_config_get_enumerate_all_devices(self->config))
 		return TRUE;
 
-	xpath = g_strdup_printf("components/component[@type='firmware']/"
-				"provides/firmware[@type='flashed'][text()='%s']",
-				guid);
-	n = xb_silo_query_first(self->silo, xpath, NULL);
+	/* no components in silo */
+	if (self->query_component_by_guid == NULL) {
+		g_debug("no components in silo");
+		return FALSE;
+	}
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
+	n = xb_silo_query_first_with_context(self->silo,
+					     self->query_component_by_guid,
+					     &context,
+					     NULL);
 	return n != NULL;
 }
 
@@ -9358,20 +9368,22 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	/* backends */
+#ifdef HAVE_UDEV
 	{
-		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
+		g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
+		/* list this before FuUsbBackend in case LIBUSB_OPTION_NO_DEVICE_DISCOVERY is
+		 * not available -- we want to bind the netlink socket, not libusb */
 		fu_context_add_backend(self->ctx, backend);
 	}
+#endif
 	{
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);
 	}
-#ifdef HAVE_UDEV
 	{
-		g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
+		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);
 	}
-#endif
 #ifdef HAVE_BLUEZ
 	{
 		g_autoptr(FuBackend) backend = fu_bluez_backend_new(self->ctx);

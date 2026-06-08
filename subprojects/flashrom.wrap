@@ -1,4 +1,0 @@
-[wrap-git]
-directory = flashrom
-url = https://github.com/flashrom/flashrom
-revision = v1.6.0
