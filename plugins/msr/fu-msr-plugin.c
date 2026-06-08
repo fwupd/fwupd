@@ -10,6 +10,14 @@
 
 #include "fu-msr-plugin.h"
 
+#define FU_MSR_PLUGIN_FLAG_IA32_DEBUG		  "ia32-debug"
+#define FU_MSR_PLUGIN_FLAG_IA32_TME		  "ia32-tme"
+#define FU_MSR_PLUGIN_FLAG_IA32_ARCH_CAPABILITIES "ia32-arch-capabilities"
+#define FU_MSR_PLUGIN_FLAG_IA32_MCU_OPT_CTRL	  "ia32-mcu-opt-ctrl"
+#define FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG		  "amd64-syscfg"
+#define FU_MSR_PLUGIN_FLAG_AMD64_SEV		  "amd64-sev"
+#define FU_MSR_PLUGIN_FLAG_AMD64_HWCFG		  "amd64-hwcfg"
+
 typedef union {
 	guint32 data;
 	struct {
@@ -87,17 +95,10 @@ typedef union {
 
 struct _FuMsrPlugin {
 	FuPlugin parent_instance;
-	gboolean ia32_debug_supported;
-	gboolean ia32_tme_supported;
-	gboolean ia32_arch_capabilities_supported;
-	gboolean ia32_mcu_opt_ctrl_supported;
 	FuMsrIa32Debug ia32_debug;
 	FuMsrIa32TmeActivation ia32_tme_activation;
 	FuMsrIa32ArchCapabilities ia32_arch_capabilities;
 	FuMsrIa32McuOptCtrl ia32_mcu_opt_ctrl;
-	gboolean amd64_syscfg_supported;
-	gboolean amd64_sev_supported;
-	gboolean amd64_hwcfg_supported;
 	FuMsrAMD64Syscfg amd64_syscfg;
 	FuMsrAMD64Sev amd64_sev;
 	FuMsrAMD64HwCR amd64_hwcfg;
@@ -118,7 +119,7 @@ static void
 fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
-	if (self->ia32_debug_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG)) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Ia32DebugInterfaceEnabled",
@@ -132,7 +133,7 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 					       "Ia32DebugInterfaceDebugOccurred",
 					       self->ia32_debug.fields.debug_occurred);
 	}
-	if (self->ia32_tme_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_TME)) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Ia32TmeActivateLockRo",
@@ -146,7 +147,7 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 					       "Ia32TmeActivateBypassEnable",
 					       self->ia32_tme_activation.fields.bypass_enable);
 	}
-	if (self->ia32_mcu_opt_ctrl_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_MCU_OPT_CTRL)) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "GdsMitgDis",
@@ -156,19 +157,19 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 					       "GdsMitgLock",
 					       self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock > 0);
 	}
-	if (self->amd64_syscfg_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG)) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Amd64SyscfgSmeIsEnabled",
 					       self->amd64_syscfg.fields.sme_is_enabled);
 	}
-	if (self->amd64_sev_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SEV)) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Amd64SevIsEnabled",
 					       self->amd64_sev.fields.sev_is_enabled);
 	}
-	if (self->amd64_hwcfg_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_HWCFG)) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Amd64SmmLock",
@@ -188,7 +189,6 @@ static gboolean
 fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	guint eax = 0;
 	guint ebx = 0;
 	guint ecx = 0;
@@ -206,12 +206,17 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	if (fu_context_get_cpu_vendor(ctx) == FU_CPU_VENDOR_INTEL) {
 		if (!fu_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
 			return FALSE;
-		self->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
+		if (((ecx >> 11) & 0x1) > 0)
+			fu_plugin_add_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG);
 		if (!fu_cpuid(0x07, NULL, NULL, &ecx, &edx, error))
 			return FALSE;
-		self->ia32_tme_supported = ((ecx >> 13) & 0x1) > 0;
-		self->ia32_arch_capabilities_supported = ((edx >> 29) & 0x1) > 0;
-		self->ia32_mcu_opt_ctrl_supported = ((edx >> 9) & 0x1) > 0;
+		if (((ecx >> 13) & 0x1) > 0)
+			fu_plugin_add_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_TME);
+		if (((edx >> 29) & 0x1) > 0)
+			fu_plugin_add_private_flag(plugin,
+						   FU_MSR_PLUGIN_FLAG_IA32_ARCH_CAPABILITIES);
+		if (((edx >> 9) & 0x1) > 0)
+			fu_plugin_add_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_MCU_OPT_CTRL);
 	}
 
 	/* indicates support for SME and SEV */
@@ -219,9 +224,11 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		if (!fu_cpuid(0x8000001f, &eax, &ebx, NULL, NULL, error))
 			return FALSE;
 		g_debug("SME/SEV check MSR: eax 0%x, ebx 0%x", eax, ebx);
-		self->amd64_syscfg_supported = ((eax >> 0) & 0x1) > 0;
-		self->amd64_sev_supported = ((eax >> 1) & 0x1) > 0;
-		self->amd64_hwcfg_supported = TRUE;
+		if (((eax >> 0) & 0x1) > 0)
+			fu_plugin_add_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG);
+		if (((eax >> 1) & 0x1) > 0)
+			fu_plugin_add_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SEV);
+		fu_plugin_add_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_HWCFG);
 	}
 
 	return TRUE;
@@ -258,7 +265,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 
 	/* grab Intel MSR */
-	if (self->ia32_debug_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_IA32_DEBUG_INTERFACE,
 					  buf,
@@ -275,7 +282,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    error))
 			return FALSE;
 	}
-	if (self->ia32_tme_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_TME)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_IA32_TME_ACTIVATION,
 					  buf,
@@ -292,7 +299,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    error))
 			return FALSE;
 	}
-	if (self->ia32_arch_capabilities_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_ARCH_CAPABILITIES)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_IA32_ARCH_CAPABILITIES,
 					  buf,
@@ -309,7 +316,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    error))
 			return FALSE;
 	}
-	if (self->ia32_mcu_opt_ctrl_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_MCU_OPT_CTRL)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_IA32_MCU_OPT_CTRL,
 					  buf,
@@ -328,7 +335,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 	}
 
 	/* grab AMD MSRs */
-	if (self->amd64_syscfg_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_AMD64_SYSCFG,
 					  buf,
@@ -345,7 +352,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    error))
 			return FALSE;
 	}
-	if (self->amd64_sev_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SEV)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_AMD64_SEV,
 					  buf,
@@ -362,7 +369,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    error))
 			return FALSE;
 	}
-	if (self->amd64_hwcfg_supported) {
+	if (fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_HWCFG)) {
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
 					  PCI_MSR_AMD64_HWCFG,
 					  buf,
@@ -441,7 +448,7 @@ fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
-	if (!self->ia32_debug_supported) {
+	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
@@ -532,7 +539,7 @@ fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAt
 	}
 
 	/* check fields */
-	if (!self->ia32_tme_supported) {
+	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_TME)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
@@ -576,7 +583,7 @@ fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *at
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
-	if (!self->ia32_debug_supported) {
+	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_IA32_DEBUG)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
@@ -646,7 +653,7 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 	fu_security_attrs_append(attrs, attr);
 
 	/* check fields */
-	if (!self->amd64_syscfg_supported) {
+	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;
 	}
@@ -690,7 +697,7 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 		return;
 
 	/* check fields */
-	if (!self->amd64_hwcfg_supported)
+	if (!fu_plugin_has_private_flag(plugin, FU_MSR_PLUGIN_FLAG_AMD64_HWCFG))
 		return;
 
 	if (device != NULL &&
@@ -754,6 +761,13 @@ fu_msr_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *val
 static void
 fu_msr_plugin_init(FuMsrPlugin *self)
 {
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_DEBUG);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_TME);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_ARCH_CAPABILITIES);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_IA32_MCU_OPT_CTRL);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_AMD64_SYSCFG);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_AMD64_SEV);
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_MSR_PLUGIN_FLAG_AMD64_HWCFG);
 }
 
 static void
