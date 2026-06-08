@@ -46,7 +46,7 @@ It communicates over the HID RAW interface (hidraw) and handles two protocol mod
 
 The version consists of four fields:
 
-```
+```text
 {boot_ver}.{core_ver}.{app_ver}.{param_ver}
 ```
 

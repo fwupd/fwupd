@@ -52,11 +52,11 @@ fu_lxs_touch_device_probe(FuDevice *device, GError **error)
 
 static gboolean
 fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
-								 guint8 flag,
-								 guint16 command,
-								 guint16 length,
-								 const guint8 *data,
-								 GError **error)
+				  guint8 flag,
+				  guint16 command,
+				  guint16 length,
+				  const guint8 *data,
+				  GError **error)
 {
 	g_autoptr(FuStructLxsTouchPacket) packet = fu_struct_lxs_touch_packet_new();
 	guint8 buf[FU_LXSTOUCH_BUFFER_SIZE] = {0};
@@ -95,10 +95,10 @@ fu_lxs_touch_device_write_command(FuLxsTouchDevice *self,
 
 static gboolean
 fu_lxs_touch_device_read_data(FuLxsTouchDevice *self,
-			     guint16 command,
-			     guint16 length,
-			     guint8 *data,
-			     GError **error)
+			      guint16 command,
+			      guint16 length,
+			      guint8 *data,
+			      GError **error)
 {
 	guint8 buf[FU_LXSTOUCH_BUFFER_SIZE] = {0};
 
@@ -397,10 +397,10 @@ fu_lxs_touch_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 
 static gboolean
 fu_lxs_touch_device_write_normal_mode(FuLxsTouchDevice *self,
-				     FuChunkArray *chunks,
-				     guint32 fw_offset,
-				     FuProgress *progress,
-				     GError **error)
+				      FuChunkArray *chunks,
+				      guint32 fw_offset,
+				      FuProgress *progress,
+				      GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -515,10 +515,10 @@ fu_lxs_touch_device_write_4k_chunk_cb(FuDevice *device, gpointer user_data, GErr
 
 static gboolean
 fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
-				 FuChunkArray *chunks,
-				 guint32 fw_offset,
-				 FuProgress *progress,
-				 GError **error)
+				  FuChunkArray *chunks,
+				  guint32 fw_offset,
+				  FuProgress *progress,
+				  GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -549,10 +549,10 @@ fu_lxs_touch_device_write_4k_mode(FuLxsTouchDevice *self,
 
 static gboolean
 fu_lxs_touch_device_write_firmware(FuDevice *device,
-				  FuFirmware *firmware,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
+				   FuFirmware *firmware,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
 	FuLxsTouchFirmware *fw = FU_LXS_TOUCH_FIRMWARE(firmware);

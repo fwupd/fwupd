@@ -19,9 +19,9 @@ G_DEFINE_TYPE(FuLxsTouchFirmware, fu_lxs_touch_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_lxs_touch_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
-			   FuFirmwareParseFlags flags,
-			   GError **error)
+			    GInputStream *stream,
+			    FuFirmwareParseFlags flags,
+			    GError **error)
 {
 	FuLxsTouchFirmware *self = FU_LXS_TOUCH_FIRMWARE(firmware);
 	gsize streamsz = 0;
