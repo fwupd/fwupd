@@ -94,7 +94,7 @@ plugins = {
   'logitech-rallysystem': false,
   'logitech-scribe': false,
   'logitech-tap': false,
-  'lxstouch': false,
+  'lxs-touch': false,
   'mediatek-scaler': false,
   'modem-manager': false,
   'msr': false,
