@@ -8819,8 +8819,9 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error)
 {
-	FuContextLoadFlags load_flags =
-	    FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS | FU_CONTEXT_LOAD_FLAG_WATCH_FILES;
+	FuContextLoadFlags load_flags = FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS |
+					FU_CONTEXT_LOAD_FLAG_WATCH_FILES |
+					FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV;
 	FuPlugin *plugin_uefi;
 	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
@@ -8868,6 +8869,25 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		return FALSE;
 	}
 
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY) {
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS);
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
+	}
+	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE);
+
+	/* load SMBIOS and the hwids */
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
+		load_flags |= FU_CONTEXT_LOAD_FLAG_HWID_CONFIG | FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS |
+			      FU_CONTEXT_LOAD_FLAG_HWID_FDT | FU_CONTEXT_LOAD_FLAG_HWID_DMI |
+			      FU_CONTEXT_LOAD_FLAG_HWID_KENV | FU_CONTEXT_LOAD_FLAG_HWID_DARWIN;
+	}
+	if (flags & FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS)
+		load_flags |= FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS;
+	if (!fu_context_load(self->ctx, fu_progress_get_child(progress), load_flags, error))
+		return FALSE;
+
 	/* load JCat */
 	keyring_path = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
 	if (keyring_path != NULL)
@@ -8901,23 +8921,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 #endif
 	if (self->host_machine_id == NULL)
 		g_info("failed to build machine-id: %s", error_local->message);
-
-	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY) {
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS);
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
-	}
-	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE);
-
-	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
-		load_flags |= FU_CONTEXT_LOAD_FLAG_HWID_CONFIG | FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS |
-			      FU_CONTEXT_LOAD_FLAG_HWID_FDT | FU_CONTEXT_LOAD_FLAG_HWID_DMI |
-			      FU_CONTEXT_LOAD_FLAG_HWID_KENV | FU_CONTEXT_LOAD_FLAG_HWID_DARWIN;
-	}
-	if (!fu_context_load(self->ctx, fu_progress_get_child(progress), load_flags, error))
-		return FALSE;
 	fu_engine_config_reload(self);
 	fu_progress_step_done(progress);
 

@@ -1458,6 +1458,12 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-hypervisor-container");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
 
+	/* load paths */
+	if (flags & FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS)
+		fu_path_store_load_defaults(priv->pstore);
+	if (flags & FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV)
+		fu_path_store_load_from_env(priv->pstore);
+
 	/* rebuild silo if required */
 	if (!fu_quirks_load(priv->quirks, &error_quirks)) {
 		if (!g_error_matches(error_quirks, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
@@ -2662,25 +2668,6 @@ fu_context_get_path_store(FuContext *self)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	return priv->pstore;
-}
-
-/**
- * fu_context_load_path_store:
- * @self: a #FuContext
- *
- * Loads the path store defaults and overrides.
- *
- * IMPORTANT: This should only be used for binaries, NEVER self tests!
- *
- * Since: 2.1.1
- **/
-void
-fu_context_load_path_store(FuContext *self)
-{
-	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_CONTEXT(self));
-	fu_path_store_load_defaults(priv->pstore);
-	fu_path_store_load_from_env(priv->pstore);
 }
 
 /**
