@@ -9,9 +9,8 @@ It communicates over the HID RAW interface (hidraw) and handles two protocol mod
 
 | Mode | VID | PID | Description |
 |------|-----|-----|-------------|
-| SWIP (normal) | `0x1FD2` | `0xB011` | Normal operation mode (SW42101) |
-| DFUP (update) | `0x29BD` | `0x5357` | Bootloader/update mode |
-| DFUP (update, alt) | `0x1FD2` | `0x5357` | Bootloader/update mode (alt VID) |
+| SWIP (normal) | `0x1FD2` | `0x5010` | Normal operation mode (SW42101) |
+| Boot (DFUP) | `0x1FD2` | `0xB011` | Bootloader mode (app firmware missing or corrupt) |
 
 ## How It Works
 
@@ -122,7 +121,7 @@ fwupdmgr get-devices | grep -A5 "LXS Touch"
 # Tag by device ID
 fwupdmgr emulation-tag <device-id>
 # or by the SWIP-mode GUID
-fwupdmgr emulation-tag 1aaafe55-608a-574e-ac7a-a36c155856a2
+fwupdmgr emulation-tag caa39ae6-7e34-5216-8d6b-6071d32f468e
 
 # Restart the daemon so the setup sequence is re-captured
 fwupdmgr quit
