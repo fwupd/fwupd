@@ -2,6 +2,9 @@
  * Copyright 2026 JS Park <mameforever2@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-defines=25
  */
 
 #pragma once

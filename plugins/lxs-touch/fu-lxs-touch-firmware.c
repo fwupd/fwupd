@@ -29,7 +29,7 @@ fu_lxs_touch_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 
-	/* Validate firmware size */
+	/* validate firmware size */
 	if (streamsz != FU_LXSTOUCH_FW_SIZE_APP_ONLY && streamsz != FU_LXSTOUCH_FW_SIZE_BOOT_APP) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -41,14 +41,14 @@ fu_lxs_touch_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* Determine firmware type and offset */
+	/* determine firmware type and offset */
 	if (streamsz == FU_LXSTOUCH_FW_SIZE_APP_ONLY) {
 		self->fw_offset = FU_LXSTOUCH_FW_OFFSET_APP_ONLY;
-		g_debug("Application-only firmware detected (112KB), offset=0x%04x",
+		g_debug("application-only firmware detected (112KB), offset=0x%04x",
 			self->fw_offset);
 	} else if (streamsz == FU_LXSTOUCH_FW_SIZE_BOOT_APP) {
 		self->fw_offset = 0x0;
-		g_debug("Boot+Application firmware detected (128KB), offset=0x%04x",
+		g_debug("boot+application firmware detected (128KB), offset=0x%04x",
 			self->fw_offset);
 	}
 
