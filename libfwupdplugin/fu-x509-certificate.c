@@ -9,6 +9,7 @@
 #ifdef HAVE_GNUTLS
 #include <gnutls/abstract.h>
 #include <gnutls/crypto.h>
+#include <gnutls/x509.h>
 #endif
 
 #include "fu-common.h"
@@ -24,10 +25,18 @@ fu_x509_certificate_gnutls_datum_deinit(gnutls_datum_t *d)
 	gnutls_free(d);
 }
 
+static void
+fu_x509_certificate_gnutls_datum_clear(gnutls_datum_t *d)
+{
+	gnutls_free(d->data);
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_datum_t, fu_x509_certificate_gnutls_datum_deinit)
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(gnutls_datum_t, fu_x509_certificate_gnutls_datum_clear)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_privkey_t, gnutls_x509_privkey_deinit, NULL)
 #pragma clang diagnostic pop
 #endif
 
@@ -73,8 +82,16 @@ fu_x509_certificate_get_issuer(FuX509Certificate *self)
 	return self->issuer;
 }
 
-#ifdef HAVE_GNUTLS
-static void
+/**
+ * fu_x509_certificate_set_issuer:
+ * @self: A #FuX509Certificate
+ * @issuer: the certificate issuer
+ *
+ * Sets the certificate issuer.
+ *
+ * Since: 2.1.5
+ **/
+void
 fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer)
 {
 	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
@@ -84,7 +101,16 @@ fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer)
 	self->issuer = g_strdup(issuer);
 }
 
-static void
+/**
+ * fu_x509_certificate_set_subject:
+ * @self: A #FuX509Certificate
+ * @subject: the certificate subject
+ *
+ * Sets the certificate subject.
+ *
+ * Since: 2.0.13
+ **/
+void
 fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject)
 {
 	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
@@ -94,7 +120,16 @@ fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject)
 	self->subject = g_strdup(subject);
 }
 
-static void
+/**
+ * fu_x509_certificate_set_activation_time:
+ * @self: A #FuX509Certificate
+ * @activation_time: the activation time as a UNIX epoch
+ *
+ * Sets the certificate activation time.
+ *
+ * Since: 2.1.5
+ **/
+void
 fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activation_time)
 {
 	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
@@ -102,7 +137,6 @@ fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activati
 		g_date_time_unref(self->activation_time);
 	self->activation_time = g_date_time_new_from_unix_utc(activation_time);
 }
-#endif
 
 /**
  * fu_x509_certificate_get_subject:
@@ -244,6 +278,148 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 #endif
 }
 
+static GByteArray *
+fu_x509_certificate_write(FuFirmware *firmware, GError **error)
+{
+#ifdef HAVE_GNUTLS
+	FuX509Certificate *self = FU_X509_CERTIFICATE(firmware);
+	int rc;
+	g_auto(gnutls_datum_t) d = {0};
+	g_auto(gnutls_x509_crt_t) crt = NULL;
+	g_auto(gnutls_x509_privkey_t) key = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+
+	/* generate a small private key */
+	rc = gnutls_x509_privkey_init(&key);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "privkey_init: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	rc = gnutls_x509_privkey_generate(key,
+					  GNUTLS_PK_ECDSA,
+					  GNUTLS_CURVE_TO_BITS(GNUTLS_ECC_CURVE_SECP256R1),
+					  0);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "privkey_generate: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+
+	/* create a self-signed certificate */
+	rc = gnutls_x509_crt_init(&crt);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_init: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	rc = gnutls_x509_crt_set_version(crt, 3);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_set_version: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	if (self->subject != NULL) {
+		rc = gnutls_x509_crt_set_dn(crt, self->subject, NULL);
+		if (rc < 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "crt_set_dn: %s [%i]",
+				    gnutls_strerror(rc),
+				    rc);
+			return NULL;
+		}
+	}
+	rc = gnutls_x509_crt_set_serial(crt, "\x01", 1);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_set_serial: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	rc = gnutls_x509_crt_set_activation_time(
+	    crt,
+	    self->activation_time != NULL ? g_date_time_to_unix(self->activation_time) : 0);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_set_activation_time: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	rc = gnutls_x509_crt_set_expiration_time(crt, (time_t)-1);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_set_expiration_time: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	rc = gnutls_x509_crt_set_key(crt, key);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_set_key: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	rc = gnutls_x509_crt_sign2(crt, crt, key, GNUTLS_DIG_SHA256, 0);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_sign2: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+
+	/* export as DER */
+	rc = gnutls_x509_crt_export2(crt, GNUTLS_X509_FMT_DER, &d);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "crt_export2: %s [%i]",
+			    gnutls_strerror(rc),
+			    rc);
+		return NULL;
+	}
+	buf = g_byte_array_sized_new(d.size);
+	g_byte_array_append(buf, d.data, d.size);
+	return g_steal_pointer(&buf);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no GnuTLS support");
+	return NULL;
+#endif
+}
+
 static void
 fu_x509_certificate_init(FuX509Certificate *self)
 {
@@ -269,6 +445,7 @@ fu_x509_certificate_class_init(FuX509CertificateClass *klass)
 	object_class->finalize = fu_x509_certificate_finalize;
 	firmware_class->export = fu_x509_certificate_export;
 	firmware_class->parse = fu_x509_certificate_parse;
+	firmware_class->write = fu_x509_certificate_write;
 }
 
 /**

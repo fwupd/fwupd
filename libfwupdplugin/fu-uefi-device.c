@@ -225,6 +225,45 @@ fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
 	return g_steal_pointer(&blob);
 }
 
+/**
+ * fu_uefi_device_read_default:
+ * @self: a #FuUefiDevice
+ * @guid: Globally unique identifier
+ * @name: Variable name, e.g. `db`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the data from a UEFI variable in NVRAM, emulating if required.
+ *
+ * Returns: (transfer full): a #FuFirmware, or %NULL on error
+ *
+ * Since: 2.1.5
+ **/
+FuFirmware *
+fu_uefi_device_read_default(FuUefiDevice *self,
+			    const gchar *guid,
+			    const gchar *name,
+			    GError **error)
+{
+	g_autofree gchar *name_default = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
+	g_return_val_if_fail(guid != NULL, NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	name_default = g_strdup_printf("%sDefault", name);
+	blob = fu_uefi_device_get_efivar_bytes(self, guid, name_default, NULL, error);
+	if (blob == NULL)
+		return NULL;
+	firmware = g_object_new(fu_device_get_firmware_gtype(FU_DEVICE(self)), NULL);
+	if (!fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
 static void
 fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
