@@ -14,7 +14,6 @@
 #include "fu-mm-firehose-device.h"
 #include "fu-mm-mbim-device.h"
 #include "fu-mm-mhi-qcdm-device.h"
-#include "fu-mm-mhi-firehose-device.h"
 #include "fu-mm-qcdm-device.h"
 #include "fu-mm-qdu-mbim-device.h"
 #include "fu-mm-qmi-device.h"
@@ -192,11 +191,6 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 		FU_TYPE_MM_DFOTA_DEVICE,
 		MM_MODEM_PORT_TYPE_AT,
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA,
-	    },
-	    {
-		FU_TYPE_MM_MHI_FIREHOSE_DEVICE,
-	        MM_MODEM_PORT_TYPE_IGNORED,
-	        MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE,
 	    },
 	};
 
