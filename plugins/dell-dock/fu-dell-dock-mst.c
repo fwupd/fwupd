@@ -78,31 +78,32 @@ typedef struct {
 	guint checksum_cmd;
 } FuDellDockMstBankAttributes;
 
-const FuDellDockMstBankAttributes bank0_attributes = {
+static const FuDellDockMstBankAttributes bank0_attributes = {
     .start = 0,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const FuDellDockMstBankAttributes bank1_attributes = {
+static const FuDellDockMstBankAttributes bank1_attributes = {
     .start = EEPROM_BANK_OFFSET,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const FuDellDockMstBankAttributes esm_attributes = {
+static const FuDellDockMstBankAttributes esm_attributes = {
     .start = EEPROM_ESM_OFFSET,
     .length = 0x3ffff,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const FuDellDockMstBankAttributes cayenne_attributes = {
+static const FuDellDockMstBankAttributes cayenne_attributes = {
     .start = 0,
     .length = 0x50000,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM,
 };
 
-FuHIDI2CParameters mst_base_settings = {
+/* nocheck:static */
+static FuHIDI2CParameters mst_base_settings = {
     .i2ctargetaddr = I2C_MST_ADDRESS,
     .regaddrlen = 0,
     .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,

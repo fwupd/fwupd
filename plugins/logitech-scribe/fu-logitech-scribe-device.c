@@ -39,21 +39,12 @@ enum { EP_OUT, EP_IN, EP_LAST };
 enum { BULK_INTERFACE_UPD };
 
 #define FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
-/* 2 byte for get len query */
-#define kDefaultUvcGetLenQueryControlSize 2
 
-const guchar kLogiCameraVersionSelector = 1;
-const guchar kLogiUvcXuDevInfoCsEepromVersion = 3;
-const guint kLogiVideoImageVersionMaxSize = 32;
-const guchar kLogiVideoAitInitiateSetMMPData = 1;
-const guchar kLogiVideoAitFinalizeSetMMPData = 1;
-const guchar kLogiUnitIdAccessMmp = 6;
-const guchar kLogiUvcXuAitCustomCsSetMmp = 4;
-const guchar kLogiUvcXuAitCustomCsGetMmpResult = 5;
-const guchar kLogiUnitIdPeripheralControl = 11;
+#define FU_LOGITECH_SCRIBE_UVC_GET_LEN_SIZE 2
 
-const guchar kLogiUnitIdCameraVersion = 8;
-const guchar kLogiAitSetMmpCmdFwBurning = 1;
+#define FU_LOGITECH_SCRIBE_CAMERA_VERSION_SELECTOR 1
+
+#define FU_LOGITECH_SCRIBE_UNIT_ID_CAMERA_VERSION 8
 
 struct _FuLogitechScribeDevice {
 	FuV4lDevice parent_instance;
@@ -253,7 +244,7 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 					  guint16 *data_size,
 					  GError **error)
 {
-	guint8 buf[kDefaultUvcGetLenQueryControlSize] = {0x0};
+	guint8 buf[FU_LOGITECH_SCRIBE_UVC_GET_LEN_SIZE] = {0x0};
 	struct uvc_xu_control_query query = {
 	    .unit = unit_id,
 	    .selector = control_selector,
@@ -286,7 +277,7 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 		*data_size,
 		unit_id,
 		control_selector);
-	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LEN", buf, kDefaultUvcGetLenQueryControlSize);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LEN", buf, FU_LOGITECH_SCRIBE_UVC_GET_LEN_SIZE);
 
 	/* success */
 	return TRUE;
@@ -580,8 +571,8 @@ fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **
 
 	/* query current device version */
 	if (!fu_logitech_scribe_device_query_data_size(self,
-						       kLogiUnitIdCameraVersion,
-						       kLogiCameraVersionSelector,
+						       FU_LOGITECH_SCRIBE_UNIT_ID_CAMERA_VERSION,
+						       FU_LOGITECH_SCRIBE_CAMERA_VERSION_SELECTOR,
 						       &data_len,
 						       error))
 		return FALSE;
@@ -603,8 +594,8 @@ fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **
 	}
 	query_data = g_malloc0(data_len);
 	if (!fu_logitech_scribe_device_get_xu_control(self,
-						      kLogiUnitIdCameraVersion,
-						      kLogiCameraVersionSelector,
+						      FU_LOGITECH_SCRIBE_UNIT_ID_CAMERA_VERSION,
+						      FU_LOGITECH_SCRIBE_CAMERA_VERSION_SELECTOR,
 						      query_data,
 						      data_len,
 						      error))
