@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-bytes.h"
 #include "fu-chunk-array.h"
 #include "fu-chunk-private.h"
 #include "fu-input-stream.h"
@@ -120,7 +121,11 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 
 	/* create new chunk */
 	if (self->blob != NULL) {
-		g_autoptr(GBytes) blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
+		g_autoptr(GBytes) blob_chk = NULL;
+
+		blob_chk = fu_bytes_new_offset(self->blob, offset, chunksz, error);
+		if (blob_chk == NULL)
+			return NULL;
 		chk = fu_chunk_bytes_new(blob_chk);
 	} else if (self->stream != NULL) {
 		g_autoptr(GBytes) blob_chk =

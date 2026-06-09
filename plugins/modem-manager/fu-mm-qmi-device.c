@@ -261,8 +261,7 @@ fu_mm_qmi_device_load_config_timeout(gpointer user_data)
 	FuMmQmiDeviceWriteContext *ctx = user_data;
 
 	ctx->timeout_id = 0;
-	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
-	ctx->indication_id = 0;
+	g_clear_signal_handler(&ctx->indication_id, ctx->qmi_client);
 
 	g_set_error_literal(&ctx->error,
 			    FWUPD_ERROR,
@@ -282,10 +281,8 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 	guint32 remaining_size;
 	guint16 error_code = 0;
 
-	g_source_remove(ctx->timeout_id);
-	ctx->timeout_id = 0;
-	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
-	ctx->indication_id = 0;
+	g_clear_handle_id(&ctx->timeout_id, g_source_remove);
+	g_clear_signal_handler(&ctx->indication_id, ctx->qmi_client);
 
 	if (!qmi_indication_pdc_load_config_output_get_indication_result(output,
 									 &error_code,
@@ -485,8 +482,7 @@ fu_mm_qmi_device_activate_config_timeout(gpointer user_data)
 	FuMmQmiDeviceActivateContext *ctx = user_data;
 
 	ctx->timeout_id = 0;
-	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
-	ctx->indication_id = 0;
+	g_clear_signal_handler(&ctx->indication_id, ctx->qmi_client);
 
 	/* not an error, the device may go away without sending the indication */
 	g_main_loop_quit(ctx->mainloop);
@@ -501,10 +497,8 @@ fu_mm_qmi_device_activate_config_indication(QmiClientPdc *client,
 {
 	guint16 error_code = 0;
 
-	g_source_remove(ctx->timeout_id);
-	ctx->timeout_id = 0;
-	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
-	ctx->indication_id = 0;
+	g_clear_handle_id(&ctx->timeout_id, g_source_remove);
+	g_clear_signal_handler(&ctx->indication_id, ctx->qmi_client);
 
 	if (!qmi_indication_pdc_activate_config_output_get_indication_result(output,
 									     &error_code,
@@ -600,8 +594,7 @@ fu_mm_qmi_device_set_selected_config_timeout(gpointer user_data)
 	FuMmQmiDeviceActivateContext *ctx = user_data;
 
 	ctx->timeout_id = 0;
-	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
-	ctx->indication_id = 0;
+	g_clear_signal_handler(&ctx->indication_id, ctx->qmi_client);
 
 	g_set_error_literal(&ctx->error,
 			    FWUPD_ERROR,
@@ -619,10 +612,8 @@ fu_mm_qmi_device_set_selected_config_indication(QmiClientPdc *client,
 {
 	guint16 error_code = 0;
 
-	g_source_remove(ctx->timeout_id);
-	ctx->timeout_id = 0;
-	g_signal_handler_disconnect(ctx->qmi_client, ctx->indication_id);
-	ctx->indication_id = 0;
+	g_clear_handle_id(&ctx->timeout_id, g_source_remove);
+	g_clear_signal_handler(&ctx->indication_id, ctx->qmi_client);
 
 	if (!qmi_indication_pdc_set_selected_config_output_get_indication_result(output,
 										 &error_code,

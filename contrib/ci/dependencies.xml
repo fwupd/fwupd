@@ -136,6 +136,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="fedora">
+      <package variant="x86_64">gcovr</package>
+    </distro>
   </dependency>
   <dependency id="libcairo-dev">
     <distro id="centos">
@@ -299,6 +302,11 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="openssl-dev">
+    <distro id="fedora">
+      <package variant="x86_64">openssl-devel</package>
+    </distro>
+  </dependency>
   <dependency id="dconf">
     <distro id="centos">
       <package variant="x86_64" />
@@ -385,31 +393,6 @@
     </distro>
   </dependency>
   <dependency id="libjaylink-dev">
-    <distro id="debian">
-      <control>
-        <exclusive>ia64</exclusive>
-      </control>
-      <multi-arch />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <exclusive>ia64</exclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
-  <dependency id="libflashrom-dev">
-    <distro id="arch">
-      <package variant="x86_64">flashrom</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">flashrom-devel</package>
-      <package variant="aarch64">flashrom-devel</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">flashrom-devel</package>
-    </distro>
     <distro id="debian">
       <control>
         <exclusive>ia64</exclusive>
@@ -520,13 +503,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 2.45.8)</version>
+        <version>(>= 2.68.0)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 2.45.8)</version>
+        <version>(>= 2.68.0)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -594,7 +577,9 @@
       <package>gnutls</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 3.6.0)</version>
+      </control>
       <multi-arch />
       <package variant="aarch64">libgnutls28-dev</package>
       <package variant="i386">libgnutls28-dev</package>
@@ -602,7 +587,9 @@
       <package variant="x86_64">libgnutls28-dev</package>
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 3.6.0)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -663,13 +650,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.1.13)</version>
+        <version>(>= 0.3.19)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.13)</version>
+        <version>(>= 0.3.19)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -679,27 +666,8 @@
     </distro>
   </dependency>
   <dependency id="libjcat-dev">
-    <distro id="arch">
-      <package variant="x86_64">libjcat</package>
-    </distro>
     <distro id="centos">
       <package variant="x86_64">libjcat-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libjcat-devel</package>
-      <package variant="aarch64">libjcat-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <multi-arch />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="freebsd">
-      <package>libjcat</package>
     </distro>
   </dependency>
   <dependency id="libblkid-dev">
@@ -778,13 +746,13 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 1.0.9)</version>
+        <version>(>= 1.0.27)</version>
       </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.3.3)</version>
+        <version>(>= 1.0.27)</version>
       </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -816,11 +784,15 @@
       <package>curl</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 7.62.0)</version>
+      </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 7.62.0)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -887,10 +859,14 @@
       <package variant="mingw64" />
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 0.63.0)</version>
+      </control>
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 0.63.0)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -1079,11 +1055,15 @@
       <package variant="aarch64">polkit-devel</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <version>(>= 0.103)</version>
+      </control>
       <multi-arch />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <version>(>= 0.103)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -1208,8 +1188,15 @@
     <distro id="darwin">
       <package variant="x86_64" />
     </distro>
-    <distro id="debian" />
+    <distro id="debian">
+      <control>
+        <version>(>= 2021.1)</version>
+      </control>
+    </distro>
     <distro id="ubuntu">
+      <control>
+        <version>(>= 2021.1)</version>
+      </control>
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
@@ -1236,12 +1223,6 @@
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
-  <dependency id="python3-toml">
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />

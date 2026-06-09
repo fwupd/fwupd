@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "d421b6adb9586b24ad6d51c3374668d4e870b480668a0a2aaf5af4ce32b04d4c-raydiumtp-v1.6a2.cab",
-      "emulation-url": "b4cc50f0d7fc75480250c97bb79fc3ecbfd9527136b77e02d9ab11e7c053a61a-raydiumtp-emu-0402.zip",
+      "emulation-url": "fa5cac455b35265aa90a31334e0956992a7df225973521d2da3aa4b16116461d-raydiumtp-emu-0408.zip",
       "components": [
         {
           "version": "0x01000006",

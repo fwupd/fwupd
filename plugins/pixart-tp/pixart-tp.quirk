@@ -8,6 +8,9 @@ Plugin = pixart_tp
 [HIDRAW\VEN_093A&DEV_0343]
 Plugin = pixart_tp
 
+[HIDRAW\VEN_093A&DEV_1343]
+Plugin = pixart_tp
+
 [HIDRAW\VEN_093A&DEV_3307]
 Plugin = pixart_tp
 

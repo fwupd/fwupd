@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
 # if invoked outside of CI
 if [ "$CI" != "true" ]; then

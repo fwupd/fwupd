@@ -813,9 +813,13 @@ fwupd_json_object_add_bytes(FwupdJsonObject *self, const gchar *key, GBytes *val
 	g_return_if_fail(value != NULL);
 
 	buf = g_bytes_get_data(value, &bufsz);
-	b64data = g_base64_encode(buf, bufsz);
-
-	json_node = fwupd_json_node_new_string(b64data);
+	if (buf == NULL) {
+		json_node = fwupd_json_node_new_string("");
+	} else {
+		/* nocheck:blocked */
+		b64data = g_base64_encode(buf, bufsz);
+		json_node = fwupd_json_node_new_string(b64data);
+	}
 	fwupd_json_object_add_node(self, key, json_node);
 }
 
@@ -936,26 +940,25 @@ fwupd_json_object_add_object(FwupdJsonObject *self, const gchar *key, FwupdJsonO
  * @key: (not nullable): dictionary key
  * @value: (element-type utf8 utf8): a hash table
  *
- * Adds a  object to the JSON object.
+ * Adds a string:string object to the JSON object.
  *
  * Since: 2.1.1
  **/
 void
 fwupd_json_object_add_object_map(FwupdJsonObject *self, const gchar *key, GHashTable *value)
 {
-	GHashTableIter iter;
-	gpointer hash_key, hash_value;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(GList) keys = NULL;
 
 	g_return_if_fail(self != NULL);
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 
-	g_hash_table_iter_init(&iter, value);
-	while (g_hash_table_iter_next(&iter, &hash_key, &hash_value)) {
-		fwupd_json_object_add_string(json_obj,
-					     (const gchar *)hash_key,
-					     (const gchar *)hash_value);
+	keys = g_list_sort(g_hash_table_get_keys(value), (GCompareFunc)g_strcmp0);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *dict_key = l->data;
+		const gchar *dict_value = g_hash_table_lookup(value, dict_key);
+		fwupd_json_object_add_string(json_obj, dict_key, dict_value);
 	}
 	fwupd_json_object_add_object(self, key, json_obj);
 }

@@ -25,6 +25,8 @@
 
 G_DEFINE_TYPE(FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
 
+#define FU_DFUSE_FIRMWARE_CHUNKS_MAX 10000
+
 static FuChunk *
 fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 				    GInputStream *stream,
@@ -91,6 +93,14 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 				    "DfuSe image has no chunks");
 		return NULL;
 	}
+	if (chunks > FU_DFUSE_FIRMWARE_CHUNKS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive chunk count: %u",
+			    chunks);
+		return NULL;
+	}
 
 	/* parse chunks */
 	if (!fu_size_checked_inc(offset, st_img->buf->len, error)) {
@@ -140,6 +150,15 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 	/* check image size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (fu_dfu_firmware_get_footer_len(dfu_firmware) > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "footer length 0x%x exceeds stream size 0x%x",
+			    (guint)fu_dfu_firmware_get_footer_len(dfu_firmware),
+			    (guint)streamsz);
+		return FALSE;
+	}
 	if (fu_struct_dfuse_hdr_get_image_size(st_hdr) !=
 	    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
 		g_set_error(error,

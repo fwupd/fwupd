@@ -33,10 +33,7 @@ fu_test_loop_run_with_timeout(guint timeout_ms)
 void
 fu_test_loop_quit(void)
 {
-	if (_test_loop_timeout_id > 0) {
-		g_source_remove(_test_loop_timeout_id);
-		_test_loop_timeout_id = 0;
-	}
+	g_clear_handle_id(&_test_loop_timeout_id, g_source_remove);
 	if (_test_loop != NULL) {
 		g_main_loop_quit(_test_loop);
 		g_main_loop_unref(_test_loop);

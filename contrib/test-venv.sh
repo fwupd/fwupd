@@ -1,6 +1,9 @@
-#!/bin/sh -e
+#!/bin/sh
+set -e
 
-VENV=$(dirname $0)/..
+. "$(dirname "$(readlink -f "$0")")/nix.sh"
+
+VENV=$(dirname "$0")/..
 BUILD=${VENV}/build
 INSTALLED_TESTS=${VENV}/dist/share/installed-tests/fwupd
 SUDO=$(which sudo)

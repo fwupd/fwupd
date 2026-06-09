@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    viewBox="0 0 128 128"
    style="display:inline;enable-background:new"
    version="1.0"
@@ -15,7 +7,15 @@
    height="128"
    width="128"
    sodipodi:docname="org.freedesktop.fwupd.svg"
-   inkscape:version="0.92.4 (unknown)">
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -25,17 +25,20 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1016"
+     inkscape:window-width="3840"
+     inkscape:window-height="1531"
      id="namedview21"
      showgrid="false"
-     inkscape:zoom="5.2149125"
-     inkscape:cx="62.010516"
-     inkscape:cy="69.937009"
+     inkscape:zoom="8"
+     inkscape:cx="77.125"
+     inkscape:cy="59.5"
      inkscape:window-x="0"
-     inkscape:window-y="826"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg11300" />
+     inkscape:current-layer="text832"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <title
      id="title4162">Adwaita Icon Template</title>
   <defs
@@ -175,35 +178,29 @@
      id="g1480"
      style="fill:url(#linearGradient1496);fill-opacity:1"
      transform="translate(0,-172)" />
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:33.5784874px;line-height:17.9884758px;font-family:Cantarell;-inkscape-font-specification:Cantarell;letter-spacing:0px;word-spacing:0px;fill:#dedfda;fill-opacity:1;stroke:#6b6d67;stroke-width:0.44971189;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;"
-     x="25.814859"
-     y="68.982178"
+  <g
      id="text832"
-     inkscape:export-xdpi="281.42465"
-     inkscape:export-ydpi="281.42465"><tspan
-       sodipodi:role="line"
-       id="tspan830"
-       x="25.814859"
-       y="68.982178"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.9884758px;line-height:8.9942379px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT';stroke:#6b6d67;stroke-width:0.44971189;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill:#dedfda;fill-opacity:1;">fwupd</tspan></text>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.19264412px;line-height:6.53177357px;font-family:Cantarell;-inkscape-font-specification:Cantarell;letter-spacing:0px;word-spacing:0px;display:inline;fill:#dedfda;fill-opacity:1;stroke:#6b6d67;stroke-width:0.16329435;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new;"
-     x="26.370913"
-     y="77.332085"
+     style="opacity:1">
+    <path
+       style="font-size:17.9885px;line-height:8.99424px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT';letter-spacing:0px;word-spacing:0px;baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;fill:#dedfda;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
+       d="m 26.912789,56.017827 h 12.999484 v 2.599897 H 29.512686 v 2.599897 h 7.79969 v 2.599897 h -7.79969 v 5.16466 h -2.599897 z m 15.195343,0 h 2.599897 v 7.799691 h 2.599897 v 2.599897 h -2.599897 v 2.564763 h -2.599897 z m 10.399587,0 h 2.599897 v 12.964351 h -2.599897 v -2.564763 h -2.599896 v -2.599897 h 2.599896 z m -5.199793,5.199794 h 2.599897 v 2.599897 h -2.599897 z m 9.995549,-5.199794 h 2.599897 v 10.399588 h -2.599897 z m 10.399587,0 h 2.599897 v 10.399588 h -2.599897 z m -7.79969,10.399588 h 7.79969 v 2.564763 h -7.79969 z M 72.498818,56.017827 h 10.399587 v 2.599897 h -7.79969 v 2.599897 h 7.79969 v 2.599897 h -7.79969 v 5.16466 h -2.599897 z m 10.399587,2.599897 h 2.599897 v 2.599897 h -2.599897 z m 4.795756,-2.599897 h 10.399587 v 2.599897 h -7.79969 v 7.799691 h 7.79969 v 2.564763 H 87.694161 Z m 10.399587,2.599897 h 2.599902 v 7.799691 h -2.599902 z"
+       id="path3" />
+    <path
+       style="font-size:17.9885px;line-height:8.99424px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT';letter-spacing:0px;word-spacing:0px;baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;fill:#6b6d67;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
+       d="m 26.6875,55.792969 v 13.414062 h 3.050781 v -5.164062 h 7.798828 v -3.050782 h -7.798828 v -2.15039 h 10.398438 v -3.048828 z m 15.195312,0 v 13.414062 h 3.050782 v -2.564453 h 2.599609 v -2.599609 h 2.150391 v 2.599609 h 2.599609 v 2.564453 h 3.048828 V 55.792969 h -3.048828 v 7.798828 h -2.150391 v -2.59961 h -3.048828 v 2.59961 h -2.15039 v -7.798828 z m 15.195313,0 v 10.849609 h 2.599609 v 2.564453 h 8.25 v -2.564453 h 2.59961 V 55.792969 h -3.048828 v 10.40039 h -7.34961 v -10.40039 z m 15.195312,0 v 13.414062 h 3.050782 v -5.164062 h 7.798828 v -2.59961 h 2.599609 v -3.050781 h -2.599609 v -2.599609 z m 15.195313,0 v 13.414062 h 10.849609 v -2.564453 h 2.599611 v -8.25 H 98.318359 V 55.792969 Z M 27.136719,56.242187 H 39.6875 v 2.150391 H 29.287109 v 3.050781 h 7.800782 v 2.148438 h -7.800782 v 5.166015 h -2.15039 z m 15.195312,0 h 2.150391 v 7.800782 h 2.601562 v 2.15039 h -2.601562 v 2.564453 h -2.150391 z m 10.400391,0 h 2.15039 v 12.515625 h -2.15039 v -2.564453 h -2.59961 v -2.15039 h 2.59961 z m 4.796875,0 h 2.148437 v 9.951172 h -2.148437 z m 10.398437,0 h 2.150391 v 9.951172 h -2.150391 z m 4.796875,0 h 9.949219 v 2.150391 h -7.800781 v 3.050781 h 7.800781 v 2.148438 h -7.800781 v 5.166015 h -2.148438 z m 15.195313,0 h 9.949219 v 2.150391 h -7.800782 v 8.25 h 7.800782 v 2.115234 h -9.949219 z m -12.595703,2.59961 h 7.349609 v 2.15039 h -7.349609 z m 7.798828,0 h 2.15039 v 2.15039 h -2.15039 z m 7.396484,0 h 7.34961 v 7.351562 h -7.34961 z m 7.798828,0 h 2.150391 v 7.351562 h -2.150391 z m -50.785156,2.601562 h 2.150391 v 2.148438 h -2.150391 z m 12.595703,5.199219 h 7.34961 v 2.115234 h -7.34961 z"
+       id="path4" />
+  </g>
+  <g
      id="text832-7"
-     inkscape:export-xdpi="281.42465"
-     inkscape:export-ydpi="281.42465"><tspan
-       sodipodi:role="line"
-       id="tspan830-9"
-       x="26.370913"
-       y="77.332085"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.53177357px;line-height:3.26588678px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT';stroke:#6b6d67;stroke-width:0.16329435;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill:#dedfda;fill-opacity:1;">firmware</tspan><tspan
-       sodipodi:role="line"
-       x="26.370913"
-       y="83.863861"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.53177357px;line-height:3.26588678px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT';stroke:#6b6d67;stroke-width:0.16329435;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill:#dedfda;fill-opacity:1;"
-       id="tspan4796">updater</tspan></text>
+     style="font-size:12.1926px;line-height:6.53177px;font-family:Cantarell;-inkscape-font-specification:Cantarell;letter-spacing:0px;word-spacing:0px;fill:#dedfda;stroke:#6b6d67;stroke-width:0.163294"
+     aria-label="firmware&#10;updater">
+    <path
+       style="font-size:6.53177px;line-height:3.26589px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT'"
+       d="m 26.76958,72.624615 h 4.720227 v 0.944045 h -3.776181 v 0.944046 h 2.832136 v 0.944045 h -2.832136 v 1.875334 H 26.76958 Z m 5.517563,0 h 4.720227 v 0.944045 h -1.888091 v 2.832137 h 1.888091 v 0.931288 h -4.720227 v -0.931288 h 1.888091 V 73.56866 h -1.888091 z m 5.517563,0 h 3.776182 v 0.944045 h -2.832136 v 0.944046 h 2.832136 v 0.944045 h -2.832136 v 1.875334 h -0.944046 z m 3.776182,0.944045 h 0.944045 v 0.944046 h -0.944045 z m 0,1.888091 h 0.944045 v 1.875334 h -0.944045 z m 1.741381,-2.832136 h 0.944045 v 0.944045 h 0.944046 v 0.944046 h -0.944046 v 2.819379 h -0.944045 z m 3.776182,0 h 0.944045 v 4.70747 H 47.098451 V 74.512706 H 46.154405 V 73.56866 h 0.944046 z m -1.888091,1.888091 h 0.944045 v 0.944045 H 45.21036 Z m 3.629472,-1.888091 h 0.944045 v 2.832136 h 0.944046 v 0.944046 h -0.944046 v 0.931288 h -0.944045 z m 3.776181,0 h 0.944046 v 4.70747 h -0.944046 v -0.931288 h -0.944045 v -0.944046 h 0.944045 z m -1.88809,1.888091 h 0.944045 v 0.944045 h -0.944045 z m 4.573517,-1.888091 h 2.832136 V 73.56866 H 55.30144 Z m -0.944045,0.944045 h 0.944045 v 0.944046 h 2.832136 V 73.56866 h 0.944046 v 3.763425 H 58.133576 V 75.456751 H 55.30144 v 1.875334 h -0.944045 z m 5.517563,-0.944045 h 3.776181 v 0.944045 h -2.832136 v 0.944046 h 2.832136 v 0.944045 h -2.832136 v 1.875334 h -0.944045 z m 3.776181,0.944045 h 0.944046 v 0.944046 h -0.944046 z m 0,1.888091 h 0.944046 v 1.875334 h -0.944046 z m 1.741381,-2.832136 h 4.720227 v 0.944045 h -3.776181 v 0.944046 h 2.832136 v 0.944045 h -2.832136 v 0.944046 h 3.776181 v 0.931288 H 65.39252 Z"
+       id="path1" />
+    <path
+       style="font-size:6.53177px;line-height:3.26589px;font-family:'Petyka - Retro Computer___SHORT';-inkscape-font-specification:'Petyka - Retro Computer___SHORT'"
+       d="m 26.76958,79.156388 h 0.944046 V 82.93257 H 26.76958 Z m 3.776182,0 h 0.944045 v 3.776182 h -0.944045 z m -2.832136,3.776182 h 2.832136 v 0.931288 h -2.832136 z m 4.573517,-3.776182 h 3.776182 v 0.944046 h -2.832136 v 0.944045 h 2.832136 v 0.944046 h -2.832136 v 1.875333 h -0.944046 z m 3.776182,0.944046 h 0.944045 v 0.944045 h -0.944045 z m 1.741381,-0.944046 h 3.776182 v 0.944046 h -2.832136 v 2.832136 h 2.832136 v 0.931288 h -3.776182 z m 3.776182,0.944046 h 0.944045 v 2.832136 h -0.944045 z m 2.685426,-0.944046 h 2.832137 v 0.944046 h -2.832137 z m -0.944045,0.944046 h 0.944045 v 0.944045 h 2.832137 v -0.944045 h 0.944045 v 3.763424 h -0.944045 v -1.875333 h -2.832137 v 1.875333 h -0.944045 z m 5.517563,-0.944046 h 4.720227 v 0.944046 h -1.888091 v 3.763424 h -0.944045 v -3.763424 h -1.888091 z m 5.517563,0 h 4.720227 v 0.944046 H 55.30144 v 0.944045 h 2.832136 v 0.944046 H 55.30144 v 0.944045 h 3.776182 v 0.931288 h -4.720227 z m 5.517563,0 h 3.776181 v 0.944046 h -2.832136 v 0.944045 h 2.832136 v 0.944046 h -2.832136 v 1.875333 h -0.944045 z m 3.776181,0.944046 h 0.944046 v 0.944045 h -0.944046 z m 0,1.888091 h 0.944046 v 1.875333 h -0.944046 z"
+       id="path2" />
+  </g>
 </svg>

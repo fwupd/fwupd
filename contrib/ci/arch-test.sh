@@ -1,4 +1,5 @@
-#!/bin/sh -ex
+#!/bin/sh
+set -ex
 
 pacman -Sy --noconfirm qt5-base gcovr python-flask swtpm tpm2-tools
 pacman -U --noconfirm dist/*.pkg.*

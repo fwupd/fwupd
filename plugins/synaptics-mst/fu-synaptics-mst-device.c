@@ -11,6 +11,7 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <glib/gstdio.h>
 
 #include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
@@ -1069,8 +1070,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	fw_size += 0x410;
-	if (fw_size > PANAMERA_FIRMWARE_SIZE) {
+	if (fw_size > PANAMERA_FIRMWARE_SIZE - 0x410) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -1078,6 +1078,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 			    fw_size);
 		return FALSE;
 	}
+	fw_size += 0x410;
 
 	/* current max firmware size is 104K */
 	if (fw_size < g_bytes_get_size(fw))
@@ -1528,7 +1529,7 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		g_autofree gchar *filename = NULL;
 		g_autofree gchar *dirname = NULL;
 		gboolean exists_eeprom = FALSE;
-		gint fd;
+		g_autofd gint fd = -1;
 		dirname = g_path_get_dirname(fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)));
 		filename = g_strdup_printf("%s/remote/%s_eeprom",
 					   dirname,
@@ -1558,11 +1559,9 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 				    FWUPD_ERROR_INVALID_DATA,
 				    "error reading EEPROM file %s",
 				    filename);
-			close(fd);
 			return FALSE;
 		}
 		self->board_id = fu_memread_uint16(buf, G_BIG_ENDIAN);
-		close(fd);
 		return TRUE;
 	}
 
@@ -1631,7 +1630,7 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 static FuSynapticsMstFamily
 fu_synaptics_mst_device_family_from_chip_id(guint16 chip_id)
 {
-	if (chip_id >= 0x8000 && chip_id < 0xA000)
+	if (chip_id >= 0x9000 && chip_id < 0xA000)
 		return FU_SYNAPTICS_MST_FAMILY_CARRERA;
 	if (chip_id >= 0x7000 && chip_id < 0x8000)
 		return FU_SYNAPTICS_MST_FAMILY_SPYDER;

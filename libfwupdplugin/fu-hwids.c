@@ -108,6 +108,7 @@ fu_hwids_get_keys(FuHwids *self)
 	    FU_HWIDS_KEY_BIOS_VERSION,
 	    FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
 	    FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
+	    FU_HWIDS_KEY_BIOS_RELEASE_DATE,
 	    FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE,
 	    FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE,
 	    FU_HWIDS_KEY_MANUFACTURER,
@@ -462,13 +463,6 @@ fu_hwids_init(FuHwids *self)
 			  "HardwareID-13",
 			  "Manufacturer&BaseboardManufacturer&BaseboardProduct");
 	fu_hwids_add_chid(self, "HardwareID-14", "Manufacturer");
-
-	/* used by the flashrom plugin */
-	fu_hwids_add_chid(self,
-			  "fwupd-04",
-			  "Manufacturer&Family&ProductName&ProductSku&BiosVendor");
-	fu_hwids_add_chid(self, "fwupd-05", "Manufacturer&Family&ProductName&BiosVendor");
-	fu_hwids_add_chid(self, "fwupd-14", "Manufacturer&BiosVendor");
 }
 
 /**

@@ -5,7 +5,6 @@ endif
 client_src = []
 systemd_src = []
 engine_dep = [
-  libjcat,
   libxmlb,
   giounix,
   gmodule,
@@ -19,7 +18,7 @@ if get_option('passim').allowed()
   engine_dep += passim
 endif
 
-client_dep = [libcurl, libjcat, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
+client_dep = [libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif
@@ -32,7 +31,6 @@ fwupd_engine_src = [
   'fu-debug.c',
   'fu-device-list.c',
   'fu-engine.c',
-  'fu-engine-config.c',
   'fu-engine-emulator.c',
   'fu-engine-helper.c',
   'fu-engine-request.c',
@@ -50,7 +48,22 @@ fwupd_engine_src = [
   'fu-usb-backend.c',
   'fu-client.c',
   'fu-client-list.c',
+  'fu-jcat-context.c',
+  'fu-jcat-engine.c',
+  'fu-jcat-sha256-engine.c',
+  'fu-jcat-sha512-engine.c',
+  'fu-jcat-result.c',
 ] + systemd_src
+
+if jcat_crypto == 'gnutls'
+  fwupd_engine_src += 'fu-jcat-gnutls-common.c'
+  fwupd_engine_src += 'fu-jcat-gnutls-pkcs7-engine.c'
+  engine_dep += gnutls
+elif jcat_crypto == 'libcrypto'
+  fwupd_engine_src += 'fu-jcat-libcrypto-common.c'
+  fwupd_engine_src += 'fu-jcat-libcrypto-pkcs7-engine.c'
+  engine_dep += libcrypto
+endif
 
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
@@ -284,7 +297,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
 
-  foreach test_name: [
+  test_names = [
     'cabinet',
     'client-list',
     'console',
@@ -300,10 +313,16 @@ if get_option('tests')
     'release',
     'remote',
     'remote-list',
-    'unix-seekable-input-stream',
     'usb-backend',
     'util',
   ]
+  if jcat_crypto in ['gnutls', 'libcrypto']
+    test_names += 'jcat'
+  endif
+  if giounix.found()
+    test_names += 'unix-seekable-input-stream'
+  endif
+  foreach test_name: test_names
     e = executable(
       'fu-' + test_name + '-test',
       fwupdengine_rs,
@@ -327,13 +346,29 @@ if get_option('tests')
     )
   endforeach
 
+  if libsystemd.found()
+    e = executable(
+      'fu-systemd-test',
+      sources: ['fu-systemd-test.c', 'fu-systemd.c'],
+      include_directories: [root_incdir, fwupd_incdir],
+      dependencies: [libfwupd_deps, fwupdplugin_rs_dep],
+      link_with: [fwupd],
+    )
+    test(
+      'fu-systemd-test',
+      e,
+      timeout: 180,
+      env: env,
+    )
+  endif
+
   if polkit.found()
     e = executable(
       'fu-polkit-test',
       sources: ['fu-polkit-test.c', 'fu-polkit-agent.c'],
-      include_directories: [root_incdir, fwupd_incdir],
+      include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [libfwupd_deps, fwupd_rs_dep],
-      link_with: [fwupd],
+      link_with: [fwupdplugin],
     )
     test(
       'fu-polkit-test',

@@ -171,6 +171,7 @@ fu_self_test_set_up(FuTestFixture *fixture, gconstpointer user_data)
 	FuTestCase *tc = (FuTestCase *)user_data;
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *testfwdir = NULL;
 	const gchar *socket_override = g_getenv("FWUPD_SNAPD_SNAP_SOCKET");
 
@@ -211,9 +212,8 @@ fu_self_test_set_up(FuTestFixture *fixture, gconstpointer user_data)
 	fu_context_set_path(fixture->ctx, FU_PATH_KIND_SYSFSDIR_FW, testfwdir);
 
 	fu_context_add_flag(fixture->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
-	ret = fu_context_load_quirks(fixture->ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
+	fu_context_add_flag(fixture->ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(fixture->ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -546,9 +546,8 @@ fu_uefi_dbx_test_plugin_startup(FuTestFixture *fixture, gconstpointer user_data)
 		return;
 	}
 
-	ret = fu_context_load_quirks(ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -405,8 +405,7 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 			}
 			fu_byte_array_append_bytes(buf_tmp, img_blob_tmp);
 		}
-		img_blob =
-		    g_byte_array_free_to_bytes(g_steal_pointer(&buf_tmp)); /* nocheck:blocked */
+		img_blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf_tmp));
 	}
 
 	/* pack */

@@ -42,6 +42,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWAR
 
 #define FU_PEFILE_SECTION_ID_STRTAB_SIZE 16
 
+#define FU_PEFILE_FIRMWARE_SYMBOLS_MAX 1000000
+
 static void
 fu_pefile_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -233,6 +235,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	gsize subsystem_offset;
 	gsize symbols_sz_safe = 0;
 	guint32 nr_sections;
+	guint32 nr_symbols;
 	guint64 symbols_sz;
 	g_autoptr(FuStructPeCoffFileHeader) st_coff = NULL;
 	g_autoptr(FuStructPeDosHeader) st_doshdr = NULL;
@@ -350,8 +353,17 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	strtab_offset = fu_struct_pe_coff_file_header_get_pointer_to_symbol_table(st_coff);
-	symbols_sz = (guint64)fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff) *
-		     FU_STRUCT_PE_COFF_SYMBOL_SIZE;
+
+	nr_symbols = fu_struct_pe_coff_file_header_get_number_of_symbols(st_coff);
+	if (nr_symbols > FU_PEFILE_FIRMWARE_SYMBOLS_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "excessive number of symbols: %u",
+			    nr_symbols);
+		return FALSE;
+	}
+	symbols_sz = (guint64)nr_symbols * FU_STRUCT_PE_COFF_SYMBOL_SIZE;
 	if (!fu_size_from_uint64(symbols_sz, &symbols_sz_safe, error))
 		return FALSE;
 	if (!fu_size_checked_inc(&strtab_offset, symbols_sz_safe, error))

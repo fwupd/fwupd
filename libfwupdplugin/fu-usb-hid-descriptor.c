@@ -59,7 +59,7 @@ fu_usb_hid_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwu
 
 	if (self->blob == NULL)
 		return;
-	str = g_base64_encode(g_bytes_get_data(self->blob, NULL), g_bytes_get_size(self->blob));
+	str = fu_base64_encode(g_bytes_get_data(self->blob, NULL), g_bytes_get_size(self->blob));
 	fwupd_json_object_add_string(json_obj, "Data", str);
 }
 

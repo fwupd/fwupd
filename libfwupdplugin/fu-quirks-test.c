@@ -52,7 +52,8 @@ fu_quirks_append_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
 
 	/* lookup a duplicate group name */
-	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_quirks_load(quirks, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_quirks_lookup_by_id_iter(quirks,
@@ -91,7 +92,7 @@ fu_quirks_vendor_ids_func(void)
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_CACHEDIR_PKG, tmpdir);
 
 	/* lookup a duplicate group name */
-	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_quirks_load(quirks, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	tmp = fu_quirks_lookup_by_id(quirks, guid1, "Vendor");
@@ -125,8 +126,8 @@ fu_quirks_performance_func(void)
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
-
-	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_quirks_load(quirks, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

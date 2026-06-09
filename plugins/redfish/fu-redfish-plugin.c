@@ -49,28 +49,19 @@ fu_redfish_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "UUID", fu_redfish_backend_get_uuid(self->backend));
 }
 
-static gchar *
-fu_redfish_plugin_generate_password(guint length)
-{
-	GString *str = g_string_sized_new(length);
-
-	/* get a random password string */
-	while (str->len < length) {
-		gchar tmp = (gchar)g_random_int_range(0x0, 0xff); /* nocheck:blocked */
-		if (g_ascii_isalnum(tmp))
-			g_string_append_c(str, tmp);
-	}
-	return g_string_free(str, FALSE);
-}
-
 static gboolean
 fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
+	g_autofree gchar *password_new = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+
+	/* check password generation succeeded */
+	password_new = fu_common_get_random_string(15, error);
+	if (password_new == NULL)
+		return FALSE;
 
 	/* select correct, falling back to default for old fwupd versions */
 	uri = fu_plugin_get_config_value(plugin, "UserUri");
@@ -201,11 +192,10 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 	userpass_safe = g_strndup(g_bytes_get_data(userpass, NULL), g_bytes_get_size(userpass));
 	split = g_strsplit(userpass_safe, ":", -1);
 	if (g_strv_length(split) != 2) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid format for username:password, got '%s'",
-			    userpass_safe);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid format for username:password");
 		return FALSE;
 	}
 	fu_redfish_backend_set_username(self->backend, split[0]);
@@ -335,13 +325,25 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	const gchar *username_fwupd = "fwupd";
 	guint8 user_id = G_MAXUINT8;
-	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
-	g_autofree gchar *password_tmp = fu_redfish_plugin_generate_password(15);
+	g_autofree gchar *password_new = NULL;
+	g_autofree gchar *password_tmp = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+
+	/* generate both passwords */
+	password_tmp = fu_common_get_random_string(15, error);
+	if (password_tmp == NULL) {
+		g_prefix_error_literal(error, "failed to generate temp password: ");
+		return FALSE;
+	}
+	password_new = fu_common_get_random_string(15, error);
+	if (password_new == NULL) {
+		g_prefix_error_literal(error, "failed to generate password: ");
+		return FALSE;
+	}
 
 	/* create device */
 	locker = fu_device_locker_new(FU_DEVICE(device), error);
@@ -430,6 +432,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	gboolean credentials_invalid = FALSE;
 #endif
 	g_autofree gchar *password = NULL;
+	g_autofree gchar *bearer_token = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
 #ifdef HAVE_LINUX_IPMI_H
@@ -452,6 +455,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
+		g_auto(GStrv) split_prefix = NULL;
 		guint64 port = 0;
 
 		if (g_str_has_prefix(redfish_uri, "https://")) {
@@ -468,6 +472,13 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "invalid scheme");
 			return FALSE;
+		}
+
+		/* if our uri contains a /, split it between host:port and path_prefix */
+		split_prefix = g_strsplit(ip_str, "/", 2);
+		if (g_strv_length(split_prefix) > 1) {
+			ip_str = split_prefix[0];
+			fu_redfish_backend_set_path_prefix(self->backend, split_prefix[1]);
 		}
 
 		split = g_strsplit(ip_str, ":", 2);
@@ -496,6 +507,9 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	password = fu_plugin_get_config_value(plugin, "Password");
 	if (password != NULL)
 		fu_redfish_backend_set_password(self->backend, password);
+	bearer_token = fu_plugin_get_config_value(plugin, "BearerToken");
+	if (bearer_token != NULL)
+		fu_redfish_backend_set_bearer_token(self->backend, bearer_token);
 	fu_redfish_backend_set_cacheck(self->backend,
 				       fu_plugin_get_config_value_boolean(plugin, "CACheck"));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
@@ -682,6 +696,7 @@ fu_redfish_plugin_modify_config(FuPlugin *plugin,
 				GError **error)
 {
 	const gchar *keys[] = {"CACheck",
+			       "BearerToken",
 			       "IpmiDisableCreateUser",
 			       "ManagerResetTimeout",
 			       "Password",
@@ -724,6 +739,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_plugin_set_config_default(plugin, "CACheck", "false");
+	fu_plugin_set_config_default(plugin, "BearerToken", NULL);
 	fu_plugin_set_config_default(plugin, "IpmiDisableCreateUser", "false");
 	fu_plugin_set_config_default(plugin, "ManagerResetTimeout", "1800"); /* seconds */
 	fu_plugin_set_config_default(plugin, "Password", NULL);

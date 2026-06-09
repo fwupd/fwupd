@@ -7,5 +7,6 @@
 
 #pragma once
 
+/* goblint-ignore-next-line: missing_implementation */
 void
 fu_cpu_helper_cet_testfn1(void);

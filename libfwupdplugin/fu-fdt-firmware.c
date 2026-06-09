@@ -39,22 +39,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuFdtFirmware, fu_fdt_firmware, FU_TYPE_FIRMWARE)
 #define FDT_LAST_COMP_VERSION 2
 #define FDT_DEPTH_MAX	      128
 
-static GString *
-fu_fdt_firmware_string_new_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	for (gsize i = offset; i < bufsz; i++) {
-		if (buf[i] == '\0')
-			return g_steal_pointer(&str);
-		g_string_append_c(str, (gchar)buf[i]);
-	}
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "buffer not NULL terminated");
-	return NULL;
-}
-
 static void
 fu_fdt_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -201,7 +185,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 				return FALSE;
 			}
 
-			str = fu_fdt_firmware_string_new_safe(buf, bufsz, offset, error);
+			str = fu_memread_string_safe(buf, bufsz, offset, error);
 			if (str == NULL)
 				return FALSE;
 			if (!fu_size_checked_inc(&offset, str->len + 1, error))
@@ -262,10 +246,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			}
 
 			/* add property */
-			str = fu_fdt_firmware_string_new_safe(strtab->data,
-							      strtab->len,
-							      prop_nameoff,
-							      error);
+			str =
+			    fu_memread_string_safe(strtab->data, strtab->len, prop_nameoff, error);
 			if (str == NULL) {
 				g_prefix_error(error, "invalid strtab offset 0x%x: ", prop_nameoff);
 				return FALSE;
@@ -420,8 +402,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 					    "invalid firmware -- dt_struct invalid");
 			return FALSE;
 		}
-		dt_struct_buf =
-		    g_byte_array_free_to_bytes(g_steal_pointer(&dt_struct)); /* nocheck:blocked */
+		dt_struct_buf = g_byte_array_free_to_bytes(g_steal_pointer(&dt_struct));
 		if (!fu_fdt_firmware_parse_dt_struct(self, dt_struct_buf, dt_strings, error))
 			return FALSE;
 	}

@@ -140,7 +140,7 @@ fu_remote_auth_func(void)
 
 	/* to/from GVariant */
 	fwupd_remote_set_priority(remote, 999);
-	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_TRUSTED);
 	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -166,34 +166,35 @@ fu_remote_auth_func(void)
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
 	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/firmware.xml.gz");
-	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_TRUSTED, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	ret =
-	    g_strcmp0(
-		json,
-		"{\n"
-		"  \"Id\": \"auth\",\n"
-		"  \"Kind\": \"download\",\n"
-		"  \"ReportUri\": \"https://fwupd.org/lvfs/firmware/report\",\n"
-		"  \"MetadataUri\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
-		"  \"MetadataUriSig\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
-		"  \"FirmwareBaseUri\": \"https://my.fancy.cdn/\",\n"
-		"  \"Username\": \"user\",\n"
-		"  \"Password\": \"pass\",\n"
-		"  \"ChecksumSig\": "
-		"\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
-		"  \"FilenameCache\": \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
-		"  \"FilenameCacheSig\": \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
-		"  \"Flags\": 9,\n"
-		"  \"Enabled\": true,\n"
-		"  \"ApprovalRequired\": false,\n"
-		"  \"AutomaticReports\": false,\n"
-		"  \"AutomaticSecurityReports\": true,\n"
-		"  \"Priority\": 999,\n"
-		"  \"Mtime\": 0,\n"
-		"  \"RefreshInterval\": 86400\n"
-		"}") == 0;
+	ret = fu_test_compare_lines(
+	    json,
+	    "{\n"
+	    "  \"Id\": \"auth\",\n"
+	    "  \"Kind\": \"download\",\n"
+	    "  \"ReportUri\": \"https://fwupd.org/lvfs/firmware/report\",\n"
+	    "  \"MetadataUri\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
+	    "  \"MetadataUriSig\": \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
+	    "  \"FirmwareBaseUri\": \"https://my.fancy.cdn/\",\n"
+	    "  \"Username\": \"user\",\n"
+	    "  \"Password\": \"pass\",\n"
+	    "  \"ChecksumSig\": "
+	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
+	    "  \"FilenameCache\": \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
+	    "  \"FilenameCacheSig\": \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
+	    "  \"Flags\": 137,\n"
+	    "  \"Enabled\": true,\n"
+	    "  \"ApprovalRequired\": false,\n"
+	    "  \"AutomaticReports\": false,\n"
+	    "  \"AutomaticSecurityReports\": true,\n"
+	    "  \"Priority\": 999,\n"
+	    "  \"Mtime\": 0,\n"
+	    "  \"RefreshInterval\": 86400\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
 }
 
@@ -226,6 +227,43 @@ fu_remote_duplicate_func(void)
 	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote),
 			==,
 			"/tmp/fwupd-self-test/stable.xml");
+}
+
+static void
+fu_remote_empty_credentials_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("remote-empty-credentials", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fn = fu_temporary_directory_build(tmpdir, "remote.conf", NULL);
+
+	ret = g_file_set_contents(fn,
+				  "[fwupd Remote]\n"
+				  "Enabled=true\n"
+				  "MetadataURI=https://example.test/firmware.xml.gz\n"
+				  "Username=\n"
+				  "Password=\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"https://example.test/firmware.xml.gz");
+	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, NULL);
 }
 
 /* verify we used the metadata path for firmware */
@@ -336,6 +374,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/remote/no-path", fu_remote_nopath_func);
 	g_test_add_func("/fwupd/remote/local", fu_remote_local_func);
 	g_test_add_func("/fwupd/remote/duplicate", fu_remote_duplicate_func);
+	g_test_add_func("/fwupd/remote/empty-credentials", fu_remote_empty_credentials_func);
 	g_test_add_func("/fwupd/remote/auth", fu_remote_auth_func);
 	return g_test_run();
 }

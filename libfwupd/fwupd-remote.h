@@ -45,8 +45,12 @@ const gchar *
 fwupd_remote_get_checksum_metadata(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_username(FwupdRemote *self) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_username(FwupdRemote *self, const gchar *username) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_password(FwupdRemote *self) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_password(FwupdRemote *self, const gchar *password) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_filename_cache(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
@@ -99,5 +103,10 @@ gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self,
 				  GBytes *bytes,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
+gboolean
+fwupd_remote_load_user_secrets(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fwupd_remote_save_user_secrets(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

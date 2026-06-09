@@ -337,12 +337,10 @@ fu_uefi_capsule_no_coalesce_func(void)
 	fu_config_set_default(fu_context_get_config(ctx), "fwupd", "Manufacturer", "fwupd");
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -459,12 +457,10 @@ fu_uefi_capsule_no_cod_func(void)
 	fu_config_set_default(fu_context_get_config(ctx), "fwupd", "Manufacturer", "fwupd");
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -513,12 +509,10 @@ fu_uefi_capsule_no_flashes_func(void)
 	fu_context_add_esp_volume(ctx, esp);
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -624,12 +618,10 @@ fu_uefi_capsule_nvram_func(void)
 	g_assert_true(ret);
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -792,12 +784,10 @@ fu_uefi_capsule_cod_func(void)
 	g_assert_true(ret);
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -893,12 +883,10 @@ fu_uefi_capsule_grub_func(void)
 	g_assert_true(ret);
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -915,6 +903,7 @@ fu_uefi_capsule_grub_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_HOSTFS_BOOT, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_EFIAPPDIR, fu_temporary_directory_get_path(tmpdir));
 	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED);
+	fu_path_store_add_program_path(fu_context_get_path_store(ctx), testdatadir);
 
 	fwupdx64_efi_signed = fu_temporary_directory_build(tmpdir, "fwupdx64.efi.signed", NULL);
 	ret = g_file_set_contents(fwupdx64_efi_signed, "PEBINARY", -1, &error);
@@ -1054,16 +1043,12 @@ fu_uefi_update_info_func(void)
 int
 main(int argc, char **argv)
 {
-	g_autofree gchar *testdatadir = NULL;
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
 
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 	(void)g_setenv("LANGUAGE", "en", TRUE);
 
-	/* find our version of grub-mkconfig */
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	(void)g_setenv("PATH", testdatadir, TRUE);
 	g_type_ensure(FU_TYPE_UEFI_UPDATE_INFO);
 	g_test_add_func("/uefi-capsule/update-esp/valid", fu_uefi_update_esp_valid_func);
 	g_test_add_func("/uefi-capsule/update-esp/invalid", fu_uefi_update_esp_invalid_func);

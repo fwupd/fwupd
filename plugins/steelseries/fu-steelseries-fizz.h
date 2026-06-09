@@ -48,11 +48,6 @@ fu_steelseries_fizz_write_firmware_fs(FuSteelseriesFizz *self,
 				      FwupdInstallFlags flags,
 				      GError **error);
 gboolean
-fu_steelseries_fizz_get_battery_level(FuSteelseriesFizz *self,
-				      gboolean tunnel,
-				      guint8 *level,
-				      GError **error);
-gboolean
 fu_steelseries_fizz_get_connection_status(FuSteelseriesFizz *self,
 					  FuSteelseriesFizzConnectionStatus *status,
 					  GError **error);

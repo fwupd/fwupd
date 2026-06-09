@@ -17,3 +17,9 @@ gboolean
 fu_linux_swap_get_enabled(FuLinuxSwap *self);
 gboolean
 fu_linux_swap_get_encrypted(FuLinuxSwap *self);
+gboolean
+fu_linux_swap_block_has_crypt_below(FuPathStore *pstore,
+				    const gchar *name,
+				    guint depth,
+				    gboolean *encrypted,
+				    GError **error);

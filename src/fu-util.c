@@ -83,7 +83,7 @@ fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtil *self)
 		return;
 	fu_console_set_progress(self->console,
 				fwupd_client_get_status(self->client),
-				fwupd_client_get_percentage(self->client));
+				fwupd_client_get_percentage_full(self->client));
 }
 
 static void
@@ -531,10 +531,9 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 		for (guint i = 0; i < devices->len; i++) {
 			FwupdDevice *device = g_ptr_array_index(devices, i);
 
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			if (fwupd_device_get_update_state(device) ==
+			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	} else {
 		for (guint i = 0; values[i] != NULL; i++) {
@@ -542,15 +541,13 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 			device = fu_util_get_device_by_id(self, values[i], error);
 			if (device == NULL)
 				return FALSE;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+			if (fwupd_device_get_update_state(device) ==
+			    FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	}
 
-	if (!(self->completion_flags &
-	      (FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN | FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
+	if (!(self->completion_flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -619,9 +616,9 @@ fu_util_get_plugins(FuUtil *self, gchar **values, GError **error)
 
 	/* get results from daemon */
 	plugins = fwupd_client_get_plugins(self->client, self->cancellable, error);
-	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (plugins == NULL)
 		return FALSE;
+	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (self->as_json) {
 		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 		fwupd_codec_array_to_json(plugins, "Plugins", json_obj, FWUPD_CODEC_FLAG_TRUSTED);
@@ -915,7 +912,7 @@ fu_util_maybe_expand_basename(FuUtil *self, const gchar *maybe_basename, GError 
 	remote = fwupd_client_get_remote_by_id(self->client, "lvfs", self->cancellable, error);
 	if (remote == NULL)
 		return NULL;
-	if (fwupd_remote_get_firmware_base_uri(remote)) {
+	if (fwupd_remote_get_firmware_base_uri(remote) == NULL) {
 		g_debug("no FirmwareBaseURI set in lvfs.conf, using default");
 		return g_strdup_printf("https://fwupd.org/downloads/%s", maybe_basename);
 	}
@@ -1794,7 +1791,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "No reports require uploading");
+				    "No reports require exporting");
 		return FALSE;
 	}
 
@@ -1833,7 +1830,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		/* self sign data */
 		if (self->sign) {
 			g_autofree gchar *sig = NULL;
-			g_autoptr(FuFirmware) sig_img = NULL;
+			g_autoptr(FuFirmware) sig_img = fu_zip_file_new();
 			g_autoptr(GBytes) sig_blob = NULL;
 
 			sig = fwupd_client_self_sign(self->client,
@@ -1844,8 +1841,10 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 			if (sig == NULL)
 				return FALSE;
 			sig_blob = g_bytes_new(sig, strlen(sig));
-			sig_img = fu_firmware_new_from_bytes(sig_blob);
 			fu_firmware_set_id(sig_img, "report.json.p7c");
+			fu_firmware_set_bytes(sig_img, sig_blob);
+			fu_zip_file_set_compression(FU_ZIP_FILE(sig_img),
+						    FU_ZIP_COMPRESSION_DEFLATE);
 			if (!fu_firmware_add_image(archive, sig_img, error))
 				return FALSE;
 		}
@@ -2241,6 +2240,13 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
 		download_remote_enabled = TRUE;
+		if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_REQUIRES_AUTH) &&
+		    fwupd_remote_get_username(remote) == NULL &&
+		    fwupd_remote_get_password(remote) == NULL) {
+			g_debug("skipping remote %s as auth required but not supplied",
+				fwupd_remote_get_id(remote));
+			continue;
+		}
 		if ((self->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 		    !fwupd_remote_needs_refresh(remote)) {
 			g_debug("skipping as remote %s age is %us",
@@ -3049,7 +3055,7 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 			if ((self->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0 && vercmp == 0)
 				continue;
 			title = g_strdup_printf("%s %s",
-						fwupd_client_get_host_product(self->client),
+						fwupd_client_get_host_vendor(self->client),
 						fwupd_client_get_host_product(self->client));
 			if (!fu_util_prompt_warning(self->console, dev_tmp, rel_tmp, title, error))
 				return FALSE;
@@ -3494,10 +3500,10 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 						       self->cancellable,
 						       error))
 				return FALSE;
+			fu_console_print_literal(self->console,
+						 /* TRANSLATORS: success message */
+						 _("Successfully cleaned remote"));
 		}
-		fu_console_print_literal(self->console,
-					 /* TRANSLATORS: success message */
-					 _("Successfully cleaned remote"));
 	}
 
 	/* success */
@@ -5037,6 +5043,106 @@ fu_util_emulation_load(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_enable_remote_auth(FuUtil *self, gchar **values, GError **error)
+{
+	const gchar *remote_id = "lvfs-embargo";
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autofree gchar *username = NULL;
+	g_autofree gchar *password = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* find remote */
+	if (g_strv_length(values) > 0)
+		remote_id = values[0];
+	remote = fwupd_client_get_remote_by_id(self->client, remote_id, self->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+
+	/* get username */
+	if (g_strv_length(values) > 1) {
+		username = g_strdup(values[1]);
+	} else {
+		username = fu_console_input_string(self->console,
+						   /* TRANSLATORS: remote refers to a website
+						      distributing fw, %1 is a name e.g. 'lvfs' */
+						   _("Enter your email address for remote '%s'"),
+						   remote_id);
+		if (username == NULL || username[0] == '\0') {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "A username is required");
+			return FALSE;
+		}
+	}
+
+	/* get password */
+	if (g_strv_length(values) > 2) {
+		password = g_strdup(values[2]);
+	} else {
+		if (g_strcmp0(remote_id, "lvfs-embargo") == 0) {
+			const gchar *uri = "https://fwupd.org/lvfs/profile";
+			fu_console_print(
+			    self->console,
+			    /* TRANSLATORS: token refers to a password thing; %1 is a URL */
+			    _("To get a new token please go to %s and click 'Generate Token'"),
+			    uri);
+		}
+		password = fu_console_input_string(self->console,
+						   /* TRANSLATORS: remote refers to a website
+						      distributing fw, %1 is a name e.g. 'lvfs' */
+						   _("Enter your token for remote '%s'"),
+						   remote_id);
+		if (password == NULL || password[0] == '\0') {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "A password is required");
+			return FALSE;
+		}
+	}
+
+	/* check this works */
+	fwupd_remote_set_username(remote, username);
+	fwupd_remote_set_password(remote, password);
+	if (!fwupd_client_refresh_remote(self->client,
+					 remote,
+					 self->download_flags,
+					 self->cancellable,
+					 &error_local)) {
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) &&
+		    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* save secrets and enable remote */
+	if (!fu_util_modify_remote_warning(self->console, remote, self->assume_yes, error))
+		return FALSE;
+	if (!fwupd_remote_save_user_secrets(remote, error))
+		return FALSE;
+	if (!fwupd_client_modify_remote(self->client,
+					fwupd_remote_get_id(remote),
+					"Enabled",
+					"true",
+					self->cancellable,
+					error))
+		return FALSE;
+	if (!fwupd_client_refresh_remote(self->client,
+					 remote,
+					 self->download_flags,
+					 self->cancellable,
+					 error))
+		return FALSE;
+
+	/* TRANSLATORS: we've gained access to a new firmware remote */
+	fu_console_print_literal(self->console, _("Remote enabled and refreshed successfully"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_version(FuUtil *self, GError **error)
 {
 	g_autoptr(GHashTable) metadata = NULL;
@@ -5520,6 +5626,13 @@ main(int argc, char *argv[])
 			      _("Disables a given remote"),
 			      fu_util_remote_disable);
 	fu_util_cmd_array_add(cmd_array,
+			      "enable-remote-auth",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[REMOTE-ID] [USERNAME] [TOKEN]"),
+			      /* TRANSLATORS: command description */
+			      _("Enable an authenticated remote"),
+			      fu_util_enable_remote_auth);
+	fu_util_cmd_array_add(cmd_array,
 			      "activate",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
@@ -5844,7 +5957,9 @@ main(int argc, char *argv[])
 	/* start polkit tty agent to listen for password requests */
 	if (is_interactive) {
 		g_autoptr(GError) error_polkit = NULL;
-		if (!fu_polkit_agent_open(polkit_agent, &error_polkit)) {
+		g_autoptr(FuPathStore) pstore = fu_path_store_new();
+		fu_path_store_load_from_env(pstore);
+		if (!fu_polkit_agent_open(polkit_agent, pstore, &error_polkit)) {
 			fu_console_print(self->console,
 					 "Failed to open polkit agent: %s",
 					 error_polkit->message);

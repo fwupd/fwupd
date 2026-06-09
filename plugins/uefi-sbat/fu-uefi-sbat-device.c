@@ -167,6 +167,8 @@ fu_uefi_sbat_device_write_firmware(FuDevice *device,
 	fp_name = fu_efi_file_path_device_path_get_name(FU_EFI_FILE_PATH_DEVICE_PATH(dp_fp), error);
 	if (fp_name == NULL)
 		return FALSE;
+	if (!fu_path_verify_safe(fp_name, error))
+		return FALSE;
 	filename_shim = g_build_filename(mount_point, fp_name, NULL);
 	dirname = g_path_get_dirname(filename_shim);
 	filename_revocation = g_build_filename(dirname, "revocations.efi", NULL);

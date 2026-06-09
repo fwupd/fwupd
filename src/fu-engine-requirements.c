@@ -13,6 +13,56 @@
 #include "fu-device-private.h"
 #include "fu-engine-requirements.h"
 
+#define FU_ENGINE_REQUIREMENTS_VERSION_REQ_MAX_LEN 1024
+
+static gboolean
+fu_engine_requirements_regex_match(const gchar *version_req, const gchar *version, GError **error)
+{
+	if (strlen(version_req) > FU_ENGINE_REQUIREMENTS_VERSION_REQ_MAX_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "rejecting overly long regex pattern");
+		return FALSE;
+	}
+	if (!g_regex_match_simple(version_req, version, 0, 0)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed regex [%s %s]",
+			    version_req,
+			    version);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_requirements_glob_match(const gchar *version_req, const gchar *version, GError **error)
+{
+	if (strlen(version_req) > FU_ENGINE_REQUIREMENTS_VERSION_REQ_MAX_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "rejecting overly long glob pattern");
+		return FALSE;
+	}
+	if (!g_pattern_match_simple(version_req, version)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed glob [%s %s]",
+			    version_req,
+			    version);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_engine_requirements_require_vercmp_part(const gchar *compare,
 					   const gchar *version_req,
@@ -42,9 +92,9 @@ fu_engine_requirements_require_vercmp_part(const gchar *compare,
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc >= 0;
 	} else if (g_strcmp0(compare, "glob") == 0) {
-		ret = g_pattern_match_simple(version_req, version);
+		return fu_engine_requirements_glob_match(version_req, version, error);
 	} else if (g_strcmp0(compare, "regex") == 0) {
-		ret = g_regex_match_simple(version_req, version, 0, 0);
+		return fu_engine_requirements_regex_match(version_req, version, error);
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -120,6 +170,23 @@ fu_engine_requirements_require_vercmp(XbNode *req,
 	const gchar *compare = xb_node_get_attr(req, "compare");
 	const gchar *version_req = xb_node_get_attr(req, "version");
 	g_auto(GStrv) split = NULL;
+
+	if (version_req == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no version attribute supplied");
+		return FALSE;
+	}
+
+	/* limit pattern length to prevent resource exhaustion */
+	if (strlen(version_req) > FU_ENGINE_REQUIREMENTS_VERSION_REQ_MAX_LEN) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "version requirement too long");
+		return FALSE;
+	}
 
 	/* parse globbed version, e.g. `1.9.*=1.9.7|1.8.*=1.8.23|2.0.15`, or just `2.0.5` */
 	split = g_strsplit(version_req, "|", 0);

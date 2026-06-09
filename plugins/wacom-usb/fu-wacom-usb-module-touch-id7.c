@@ -207,6 +207,14 @@ fu_wacom_usb_module_touch_id7_write_block(FuWacomUsbModule *self,
 	if (st_blk == NULL)
 		return FALSE;
 	info->offset += FU_STRUCT_WTA_BLOCK_HEADER_SIZE;
+	if (info->offset + fu_struct_wta_block_header_get_block_size(st_blk) > info->bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "block size 0x%x exceeds remaining data",
+			    fu_struct_wta_block_header_get_block_size(st_blk));
+		return FALSE;
+	}
 	chunks = fu_chunk_array_new(info->buf + info->offset,
 				    fu_struct_wta_block_header_get_block_size(st_blk),
 				    fu_struct_wta_block_header_get_block_start(st_blk),
@@ -229,7 +237,7 @@ fu_wacom_usb_module_touch_id7_write_block(FuWacomUsbModule *self,
 		fu_memwrite_uint32(&buf[7], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		memcpy(&buf[11], /* nocheck:blocked */
 		       fu_chunk_get_data(chk),
-		       FU_WACOM_USB_MODULE_CHUNK_SIZE);
+		       fu_chunk_get_data_sz(chk));
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
 		if (!fu_wacom_usb_module_set_feature(self,
 						     FU_WACOM_USB_MODULE_COMMAND_DATA,

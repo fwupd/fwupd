@@ -62,7 +62,6 @@ fwupd_device_func(void)
 	g_autoptr(FwupdDevice) dev_new = fwupd_device_new();
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GString) str_ascii = NULL;
 
 	/* create dummy object */
 	dev = fwupd_device_new();
@@ -106,12 +105,8 @@ fwupd_device_func(void)
 	g_assert_true(fwupd_device_has_guid(dev, "00000000-0000-0000-0000-000000000000"));
 	g_assert_false(fwupd_device_has_guid(dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
 
-	/* convert the new non-breaking space back into a normal space:
-	 * https://gitlab.gnome.org/GNOME/glib/commit/76af5dabb4a25956a6c41a75c0c7feeee74496da */
-	str_ascii = g_string_new(str);
-	g_string_replace(str_ascii, " ", " ", 0);
 	ret = fu_test_compare_lines(
-	    str_ascii->str,
+	    str,
 	    "FwupdDevice:\n"
 	    "  DeviceId:             0000000000000000000000000000000000000000\n"
 	    "  Name:                 ColorHug2\n"

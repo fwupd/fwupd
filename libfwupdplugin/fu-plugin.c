@@ -53,6 +53,8 @@ typedef struct {
 	GFileMonitor *config_monitor;
 	FuPluginData *data;
 	FuPluginVfuncs vfuncs;
+	GArray *private_flags_registered; /* (element-type GQuark) */
+	GArray *private_flags;		  /* (element-type GQuark) */
 } FuPluginPrivate;
 
 enum { PROP_0, PROP_CONTEXT, PROP_LAST };
@@ -361,6 +363,181 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_has_private_flag_quark(FuPlugin *self, GQuark flag_quark)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	for (guint i = 0; i < priv->private_flags->len; i++) {
+		GQuark flag_tmp = g_array_index(priv->private_flags, GQuark, i);
+		if (flag_quark == flag_tmp)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_plugin_add_private_flag_quark(FuPlugin *self, GQuark flag_quark)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	if (fu_plugin_has_private_flag_quark(self, flag_quark))
+		return FALSE;
+	g_array_append_val(priv->private_flags, flag_quark);
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_remove_private_flag_quark(FuPlugin *self, GQuark flag_quark)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	for (guint i = 0; i < priv->private_flags->len; i++) {
+		GQuark flag_tmp = g_array_index(priv->private_flags, GQuark, i);
+		if (flag_quark == flag_tmp) {
+			g_array_remove_index(priv->private_flags, i);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+static GQuark
+fu_plugin_find_private_flag_quark(FuPlugin *self, const gchar *flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	GQuark flag_quark = g_quark_from_string(flag);
+	for (guint i = 0; i < priv->private_flags_registered->len; i++) {
+		GQuark flag_tmp = g_array_index(priv->private_flags_registered, GQuark, i);
+		if (flag_quark == flag_tmp)
+			return flag_tmp;
+	}
+	return 0;
+}
+
+/**
+ * fu_plugin_register_private_flag:
+ * @self: a #FuPlugin
+ * @flag: a plugin flag
+ *
+ * Registers a private flag so it can be used by fu_plugin_add_private_flag() and
+ * fu_plugin_has_private_flag().
+ *
+ * Since: 2.1.5
+ **/
+void
+fu_plugin_register_private_flag(FuPlugin *self, const gchar *flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	GQuark flag_quark;
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(flag != NULL);
+
+#ifndef SUPPORTED_BUILD
+	if (fwupd_plugin_flag_from_string(flag) != FWUPD_PLUGIN_FLAG_UNKNOWN) {
+		g_critical("%s private flag %s already exists as an exported flag",
+			   G_OBJECT_TYPE_NAME(self),
+			   flag);
+		return;
+	}
+#endif
+	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark != 0)) {
+		g_critical("already registered private %s flag %s", G_OBJECT_TYPE_NAME(self), flag);
+		return;
+	}
+
+	flag_quark = g_quark_from_static_string(flag);
+	g_array_append_val(priv->private_flags_registered, flag_quark);
+}
+
+/**
+ * fu_plugin_add_private_flag:
+ * @self: a #FuPlugin
+ * @flag: a plugin flag
+ *
+ * Adds a private flag that can be used by the plugin for any purpose.
+ *
+ * Since: 2.1.5
+ **/
+void
+fu_plugin_add_private_flag(FuPlugin *self, const gchar *flag)
+{
+	GQuark flag_quark;
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(flag != NULL);
+
+	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark == 0)) {
+#ifndef SUPPORTED_BUILD
+		g_critical("%s flag %s is unknown -- use fu_plugin_register_private_flag()",
+			   G_OBJECT_TYPE_NAME(self),
+			   flag);
+#endif
+		return;
+	}
+	fu_plugin_add_private_flag_quark(self, flag_quark);
+}
+
+/**
+ * fu_plugin_remove_private_flag:
+ * @self: a #FuPlugin
+ * @flag: a plugin flag
+ *
+ * Removes a private flag that can be used by the plugin for any purpose.
+ *
+ * Since: 2.1.5
+ **/
+void
+fu_plugin_remove_private_flag(FuPlugin *self, const gchar *flag)
+{
+	GQuark flag_quark;
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(flag != NULL);
+
+	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark == 0)) {
+#ifndef SUPPORTED_BUILD
+		g_critical("%s flag %s is unknown -- use fu_plugin_register_private_flag()",
+			   G_OBJECT_TYPE_NAME(self),
+			   flag);
+#endif
+		return;
+	}
+	fu_plugin_remove_private_flag_quark(self, flag_quark);
+}
+
+/**
+ * fu_plugin_has_private_flag:
+ * @self: a #FuPlugin
+ * @flag: a plugin flag
+ *
+ * Tests for a private flag that can be used by the plugin for any purpose.
+ *
+ * Returns: %TRUE if @flag is set
+ *
+ * Since: 2.1.5
+ **/
+gboolean
+fu_plugin_has_private_flag(FuPlugin *self, const gchar *flag)
+{
+	GQuark flag_quark;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(flag != NULL, FALSE);
+
+	flag_quark = fu_plugin_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark == 0)) {
+#ifndef SUPPORTED_BUILD
+		g_critical("%s flag %s is unknown -- use fu_plugin_register_private_flag()",
+			   G_OBJECT_TYPE_NAME(self),
+			   flag);
+#endif
+		return FALSE;
+	}
+	return fu_plugin_has_private_flag_quark(self, flag_quark);
+}
+
 /**
  * fu_plugin_add_string:
  * @self: a #FuPlugin
@@ -389,6 +566,18 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 					  idt + 1,
 					  "DeviceGTypeDefault",
 					  g_type_name(priv->device_gtype_default));
+	}
+
+	if (priv->private_flags->len != 0) {
+		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
+		for (guint i = 0; i < priv->private_flags->len; i++) {
+			GQuark flag_quark = g_array_index(priv->private_flags, GQuark, i);
+			g_ptr_array_add(tmpv, (gpointer)g_quark_to_string(flag_quark));
+		}
+		if (tmpv->len > 0) {
+			g_autofree gchar *tmps = fu_strjoin(",", tmpv);
+			fwupd_codec_string_append(str, idt + 1, "PrivateFlags", tmps);
+		}
 	}
 
 	/* optional */
@@ -735,9 +924,13 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 
 	/* back the old firmware up to /var/lib/fwupd */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL)) {
+		const gchar *serial_raw;
+		const gchar *version_raw;
 		g_autoptr(GBytes) fw_old = NULL;
 		g_autofree gchar *path = NULL;
 		g_autofree gchar *fn = NULL;
+		g_autofree gchar *serial_safe = NULL;
+		g_autofree gchar *version_safe = NULL;
 
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
@@ -750,16 +943,25 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			g_prefix_error_literal(error, "failed to backup old firmware: ");
 			return FALSE;
 		}
-		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
-		path = fu_context_build_filename(
-		    priv->ctx,
-		    error,
-		    FU_PATH_KIND_LOCALSTATEDIR_PKG,
-		    "backup",
-		    fu_device_get_id(device),
-		    fu_device_get_serial(device) != NULL ? fu_device_get_serial(device) : "default",
-		    fn,
-		    NULL);
+
+		/* sanitize device-controlled strings to prevent path traversal */
+		serial_raw = fu_device_get_serial(device);
+		version_raw = fu_device_get_version(device);
+
+		if (serial_raw != NULL)
+			serial_safe = fu_path_sanitize_basename(serial_raw);
+		if (version_raw != NULL)
+			version_safe = fu_path_sanitize_basename(version_raw);
+
+		fn = g_strdup_printf("%s.bin", version_safe != NULL ? version_safe : "unknown");
+		path = fu_context_build_filename(priv->ctx,
+						 error,
+						 FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						 "backup",
+						 fu_device_get_id(device),
+						 serial_safe != NULL ? serial_safe : "default",
+						 fn,
+						 NULL);
 		if (path == NULL)
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -3098,6 +3300,8 @@ fu_plugin_init(FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	priv->device_gtype_default = G_TYPE_INVALID;
+	priv->private_flags_registered = g_array_new(FALSE, FALSE, sizeof(GQuark));
+	priv->private_flags = g_array_new(FALSE, FALSE, sizeof(GQuark));
 }
 
 static void
@@ -3131,6 +3335,8 @@ fu_plugin_finalize(GObject *object)
 		g_array_unref(priv->device_gtypes);
 	if (priv->config_monitor != NULL)
 		g_object_unref(priv->config_monitor);
+	g_array_unref(priv->private_flags_registered);
+	g_array_unref(priv->private_flags);
 	g_free(priv->data);
 
 	G_OBJECT_CLASS(fu_plugin_parent_class)->finalize(object);

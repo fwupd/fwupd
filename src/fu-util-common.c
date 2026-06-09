@@ -732,6 +732,10 @@ fu_util_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: headphones with an integrated microphone */
 			return g_strdup_printf(_("%s Headset Update"), name);
 		}
+		if (g_strcmp0(cat, "X-Touchscreen") == 0) {
+			/* TRANSLATORS: a display that can detect touch input from a user */
+			return g_strdup_printf(_("%s Touchscreen Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
@@ -1369,8 +1373,10 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		if (fwupd_device_get_version_build_date(dev) != 0) {
 			guint64 value = fwupd_device_get_version_build_date(dev);
 			g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc((gint64)value);
-			g_autofree gchar *datestr = g_date_time_format(date, "%F");
-			g_string_append_printf(verstr, " [%s]", datestr);
+			if (date != NULL) {
+				g_autofree gchar *datestr = g_date_time_format(date, "%F");
+				g_string_append_printf(verstr, " [%s]", datestr);
+			}
 		}
 		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
 			fwupd_codec_string_append(
@@ -2115,13 +2121,19 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 		/* TRANSLATORS: the numeric priority */
 		fwupd_codec_string_append(str, idt + 1, _("Priority"), priority_str);
 	}
+	fwupd_codec_string_append(
+	    str,
+	    idt + 1,
+	    /* TRANSLATORS: a username or password is required */
+	    _("Requires Auth"),
+	    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_REQUIRES_AUTH) ? "true" : "false");
 	/* TRANSLATORS: remote filename base */
 	fwupd_codec_string_append(str, idt + 1, _("Username"), fwupd_remote_get_username(remote));
 	tmp = fwupd_remote_get_password(remote);
 	if (tmp != NULL) {
 		g_autofree gchar *hidden = g_strnfill(fu_strwidth(tmp), '*');
-		/* TRANSLATORS: remote filename base */
-		fwupd_codec_string_append(str, idt + 1, _("Password"), hidden);
+		/* TRANSLATORS: the account token, a bit like a password */
+		fwupd_codec_string_append(str, idt + 1, _("Token"), hidden);
 	}
 	fwupd_codec_string_append(str,
 				  idt + 1,

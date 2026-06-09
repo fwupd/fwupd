@@ -9,20 +9,22 @@
 # Pavel Borecki <pavel.borecki@gmail.com>, 2020-2023,2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Marián Kyral <mkyral@email.cz>, 2026.
+# JakubRu13 <ruzicka.jakub@outlook.com>, 2026.
+# AsciiWolf <mail@asciiwolf.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-03-27 00:09+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-06-01 10:01+0000\n"
+"Last-Translator: AsciiWolf <mail@asciiwolf.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 2026.6\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilní firmware)"
@@ -118,12 +120,33 @@ msgstr "Vrátit nastavení procesu služby do výchozího stavu"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "K vrácení nastavení procesu služby do výchozího stavu je vyžadováno ověření se"
 
+msgid "Modify a device property"
+msgstr "Modifikovat vlastnost zařízení"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Pro úpravu vlastnosti zařízení je zapotřebí vaše heslo"
+
 msgid "Activate the new firmware on the device"
 msgstr "Aktivovat nový firmware na zařízení"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Pro přepnutí na novou verzi firmwaru je vyžadováno ověření se"
+
+msgid "Clear stored firmware update results"
+msgstr "Vymazat uložené výsledny aktualizace firmwaru"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Pro vymazání výsledků aktualizace firmwaru je zapotřebí vaše heslo"
+
+msgid "Verify device firmware"
+msgstr "Ověřit firmware zařízení"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Pro ověření firmwaru zařízení je zapotřebí vaše heslo"
 
 msgid "Update the stored device verification information"
 msgstr "Aktualizovat uložené informace ohledně ověření správnosti pro zařízení"
@@ -132,8 +155,26 @@ msgstr "Aktualizovat uložené informace ohledně ověření správnosti pro za�
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "K aktualizaci uložených kontrolních součtů pro zařízení je vyžadováno ověření se"
 
+msgid "Get configured remotes"
+msgstr "Získat konfigurované ovladače"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Pro získání seznamu konfigurovaných vzdálených zdrojů používaných pro aktualizace firmwaru je zapotřebí vaše heslo"
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Upravit nastavený vzdálený zdroj"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -208,6 +249,13 @@ msgstr "Zapnout shromažďování údajů emulace"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Pro zapnutí shromažďování dat emulace je vyžadováno ověření se"
+
+msgid "Install firmware on emulated device"
+msgstr "Instalovat firmware na emulované zařízení"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "K instalaci firmwaru na emulované zařízení je zapotřepí vaše heslo"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -723,7 +771,7 @@ msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
-msgstr ""
+msgstr "Signatura AMD mikrokódu"
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware Write Protection"
@@ -898,7 +946,7 @@ msgstr "UEFI ochrana paměti"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
-msgstr ""
+msgstr "Signatura AMD mikrokódu"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
@@ -1049,7 +1097,7 @@ msgstr "HP SureStart je bezpečnostní vlastnost firmware, která chrání BIOS 
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
-msgstr ""
+msgstr "Ověření signatury AMD mikrokódu zajistí, že mikrokód procesoru pochází od výrobce a nebylo s ním nijak manipulováno."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1099,14 +1147,14 @@ msgstr "Zařízení bez dostupných aktualizací firmwaru:"
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available
 msgid "Devices with the latest available firmware version:"
-msgstr "Zařízení s nejnovějšími dostupnými verzemi firmware:"
+msgstr "Zařízení s nejnovějšími dostupnými verzemi firmwaru:"
 
 msgid "No updates available for remaining devices"
 msgstr "Pro zbývající zařízení nejsou k dispozici žádné aktualizace"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "Nezjištěn žádný hardware vybavený pro aktualizaci firmware v něm."
+msgstr "Nezjištěn žádný hardware vybavený pro aktualizaci firmwaru v něm."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1369,6 +1417,9 @@ msgstr "Zobrazit zařízení, která nelze aktualizovat"
 msgid "Manually enable specific plugins"
 msgstr "Ručně zapnout konkrétní zásuvné moduly"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "Umístění veřejných adresářů použitých pro JCat ověření"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Při použití install-blob spustit zásuvný modul rutina připravení složeného"
@@ -1396,6 +1447,9 @@ msgstr "Na všechny dotazy odpovědět ano"
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Výstup v JSON formátu (vypne veškeré interaktivní výzvy)"
+
+msgid "Prefix for import and output files"
+msgstr "Předpona pro importované a výstupní soubory"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1837,7 +1891,7 @@ msgstr "KONTROLNÍ-SOUČET NÁZEV-SOUBORU"
 
 #. TRANSLATORS: command description
 msgid "Finds an algorithm that matches the file CRC"
-msgstr ""
+msgstr "Najde algoritmus který odpovídá kontrolnímu součtu souboru"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
@@ -1846,6 +1900,62 @@ msgstr "[PCR]"
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
 msgstr "Zpracuje systémový záznam PCR událostí"
+
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "Zobrazit informace o JCat souboru"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "SOUBOR ID ALIAS_D"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "Přidat alias pro specifický JCat předmět"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "Odebrat alias pro specifický JCat předmět"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "SOUBOR [DRUH]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "Exportuje všechny zabudované podpisy do souborů"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "SOUBOR DATA ODDĚLENÝ_KLÍČ"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "Importovat existující soubor do JCat souboru"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "SOUBOR ZDROJ [DRUH[:VARIANTA]] [CÍL]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr "Přidat self-signed podpis do JCat souboru"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr "SOUBOR ZDROJ CERT PRIVKEY [DRUHĐ:VARIANTA]] [CÍL]"
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr "Přidat podpis do JCat souboru"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr "SOUBOR [ZDROJ]"
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr "Ověřit podpis z JCat souboru"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -2222,6 +2332,27 @@ msgstr "Odeslat data nyní?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Seznam zařízení úspěšně odeslán – děkujeme!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "Zadejte emailovou adresu pro remote '%s'"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "Pro získání tokenu jděte na '%s' a klikněte na 'Generate Token'"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "Zadejte váš token pro vzdálený server '%s'"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "Vzdálený server byl povolen a obnoven úspěšně"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Nastavit opakované pokusy o stažení pro přechodné chyby"
@@ -2309,6 +2440,14 @@ msgstr "Vrátit firmware v zařízení na starší verzi"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Aktualizovat uložený kryptografický otisk stávajícím obsahem ROM paměti"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr "[ID-ZDROJE] [UŽIVATEL] [TOKEN]"
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr "Povolit ověřený vzdálený server"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3059,7 +3198,7 @@ msgstr "Nejstarší použitelná verze"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "Nejvyšší možná verze"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3071,7 +3210,7 @@ msgstr "Výrobce"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3392,13 +3531,17 @@ msgstr "Interval opětovného načítání"
 msgid "Priority"
 msgstr "Priorita"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "Vyžaduje ověření"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Heslo"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3602,7 +3745,7 @@ msgstr "HP SureStart je zapnut"
 
 #. TRANSLATORS: HSI event title
 msgid "AMD microcode signature vulnerability fixed"
-msgstr ""
+msgstr "Zranitelnost signatury AMD mikrokódu opravena"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
 #. %2 refers to a result value, e.g. "Invalid"
@@ -3695,6 +3838,9 @@ msgstr "Povolit nový vzdálený zdroj?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Odsouhlasit a povolit vzdálený zdroj?"
+
+#~ msgid "Password"
+#~ msgstr "Heslo"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Nalezne algoritmus který odpovídá kontrolnímu součtu souboru"

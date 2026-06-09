@@ -23,4 +23,4 @@ void
 fu_config_set_value_internal(FuConfig *self,
 			     const gchar *section,
 			     const gchar *key,
-			     const gchar *value) G_GNUC_NON_NULL(1, 2, 3, 4);
+			     const gchar *value) G_GNUC_NON_NULL(1, 2, 3);

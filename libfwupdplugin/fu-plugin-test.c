@@ -80,7 +80,7 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 
 	/* load context */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -307,13 +307,14 @@ fu_plugin_quirks_device_func(void)
 	g_autoptr(FuDevice) child2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_DATADIR_QUIRKS, testdatadir);
-
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -358,6 +359,44 @@ fu_plugin_quirks_device_func(void)
 	g_assert_null(child2);
 }
 
+static void
+fu_plugin_private_flags_func(void)
+{
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
+
+	fu_plugin_register_private_flag(plugin, "flag-a");
+	fu_plugin_register_private_flag(plugin, "flag-b");
+	fu_plugin_register_private_flag(plugin, "flag-c");
+
+	/* not set by default */
+	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-a"));
+	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-b"));
+	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-c"));
+
+	/* add */
+	fu_plugin_add_private_flag(plugin, "flag-a");
+	g_assert_true(fu_plugin_has_private_flag(plugin, "flag-a"));
+	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-b"));
+
+	/* add another */
+	fu_plugin_add_private_flag(plugin, "flag-b");
+	g_assert_true(fu_plugin_has_private_flag(plugin, "flag-a"));
+	g_assert_true(fu_plugin_has_private_flag(plugin, "flag-b"));
+
+	/* remove */
+	fu_plugin_remove_private_flag(plugin, "flag-a");
+	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-a"));
+	g_assert_true(fu_plugin_has_private_flag(plugin, "flag-b"));
+
+	/* add is idempotent */
+	fu_plugin_add_private_flag(plugin, "flag-b");
+	g_assert_true(fu_plugin_has_private_flag(plugin, "flag-b"));
+
+	/* remove is idempotent */
+	fu_plugin_remove_private_flag(plugin, "flag-a");
+	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-a"));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -372,5 +411,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin/devices", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin/delay", fu_plugin_delay_func);
 	g_test_add_func("/fwupd/plugin/quirks-device", fu_plugin_quirks_device_func);
+	g_test_add_func("/fwupd/plugin/private-flags", fu_plugin_private_flags_func);
 	return g_test_run();
 }

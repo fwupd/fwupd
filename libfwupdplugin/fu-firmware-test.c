@@ -863,6 +863,11 @@ fu_firmware_builder_round_trip_func(void)
 		FuFirmwareBuilderFlags flags;
 	} map[] = {
 	    {
+		"acpi-table.builder.xml",
+		"e286af7d9e0fcfc0e3fd3f2199156a5f1282c3ca",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		"cab.builder.xml",
 		"a708f47b1a46377f1ea420597641ffe9a40abd75",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
@@ -919,7 +924,7 @@ fu_firmware_builder_round_trip_func(void)
 	    },
 	    {
 		"fit.builder.xml",
-		"293ce07351bb7d76631c4e2ba47243db1e150f3c",
+		"3185644581a7d58c04e7faa32364c933d21377e8",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {

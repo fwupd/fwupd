@@ -7,13 +7,15 @@
 #include "config.h"
 
 #include <curl/curl.h>
-#include <jcat.h>
 
 #include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
+#include "fwupd-jcat-blob.h"
+#include "fwupd-jcat-file.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdRemote:
@@ -102,10 +104,12 @@ fwupd_remote_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFl
 		fwupd_json_object_add_string(json_obj, "MetadataUriSig", priv->metadata_uri_sig);
 	if (priv->firmware_base_uri != NULL)
 		fwupd_json_object_add_string(json_obj, "FirmwareBaseUri", priv->firmware_base_uri);
-	if (priv->username != NULL)
-		fwupd_json_object_add_string(json_obj, "Username", priv->username);
-	if (priv->password != NULL)
-		fwupd_json_object_add_string(json_obj, "Password", priv->password);
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
+		if (priv->username != NULL)
+			fwupd_json_object_add_string(json_obj, "Username", priv->username);
+		if (priv->password != NULL)
+			fwupd_json_object_add_string(json_obj, "Password", priv->password);
+	}
 	if (priv->title != NULL)
 		fwupd_json_object_add_string(json_obj, "Title", priv->title);
 	if (priv->privacy_uri != NULL)
@@ -508,7 +512,14 @@ fwupd_remote_build_uri(FwupdRemote *self,
 				    url_noauth);
 			return NULL;
 		}
-		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
+		if (curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0) != CURLUE_OK) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to get path from '%s'",
+				    url_noauth);
+			return NULL;
+		}
 		basename = g_path_get_basename(path);
 		path_new = g_build_path("/", priv->firmware_base_uri, basename, path_suffix, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
@@ -527,7 +538,14 @@ fwupd_remote_build_uri(FwupdRemote *self,
 				    priv->metadata_uri);
 			return NULL;
 		}
-		(void)curl_url_get(uri, CURLUPART_PATH, &path, 0);
+		if (curl_url_get(uri, CURLUPART_PATH, &path, 0) != CURLUE_OK) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to get path from '%s'",
+				    priv->metadata_uri);
+			return NULL;
+		}
 		basename = g_path_get_dirname(path);
 		path_new = g_build_path("/", basename, url_noauth, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
@@ -555,7 +573,13 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		g_autofree gchar *pass_escaped = g_uri_escape_string(priv->password, NULL, FALSE);
 		(void)curl_url_set(uri, CURLUPART_PASSWORD, pass_escaped, 0);
 	}
-	(void)curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
+	if (curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0) != CURLUE_OK) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to get constructed URL");
+		return NULL;
+	}
 	return g_strdup(tmp_uri);
 }
 
@@ -586,8 +610,11 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 	priv->metadata_uri = g_strdup(metadata_uri);
 
 	/* generate the signature URI too */
-	g_free(priv->metadata_uri_sig);
-	priv->metadata_uri_sig = g_strconcat(metadata_uri, ".jcat", NULL);
+	g_clear_pointer(&priv->metadata_uri_sig, g_free);
+
+	/* optional */
+	if (metadata_uri != NULL)
+		priv->metadata_uri_sig = g_strconcat(metadata_uri, ".jcat", NULL);
 }
 
 /**
@@ -1389,38 +1416,35 @@ fwupd_remote_get_metadata_uri(FwupdRemote *self)
 }
 
 static gboolean
-fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError **error)
+fwupd_remote_load_signature_jcat(FwupdRemote *self, FwupdJcatFile *jcat_file, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	const gchar *id;
+	g_autofree gchar *id_basename = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *baseuri = NULL;
 	g_autofree gchar *metadata_uri = NULL;
 	g_autoptr(GPtrArray) jcat_blobs = NULL;
-	g_autoptr(JcatItem) jcat_item = NULL;
+	g_autoptr(FwupdJcatItem) jcat_item = NULL;
 
 	/* this seems pointless to get the item by ID then just read the ID,
 	 * but _get_item_by_id() uses the AliasIds as a fallback */
 	basename = g_path_get_basename(priv->metadata_uri);
-	jcat_item = jcat_file_get_item_by_id(jcat_file, basename, NULL);
+	jcat_item = fwupd_jcat_file_get_item_by_id(jcat_file, basename, NULL);
 	if (jcat_item == NULL) {
 		/* if we're using libjcat 0.1.0 just get the default item */
-		jcat_item = jcat_file_get_item_default(jcat_file, error);
+		jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 		if (jcat_item == NULL)
 			return FALSE;
 	}
-	id = jcat_item_get_id(jcat_item);
-	if (id == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "No ID for JCat item");
+	id = fwupd_jcat_item_get_id_safe(jcat_item, error);
+	if (id == NULL)
 		return FALSE;
-	}
 
 	/* replace the URI if required */
 	baseuri = g_path_get_dirname(priv->metadata_uri);
-	metadata_uri = g_build_path("/", baseuri, id, NULL);
+	id_basename = g_path_get_basename(id);
+	metadata_uri = g_build_path("/", baseuri, id_basename, NULL);
 	if (g_strcmp0(metadata_uri, priv->metadata_uri) != 0) {
 		g_info("changing metadata URI from %s to %s", priv->metadata_uri, metadata_uri);
 		g_free(priv->metadata_uri);
@@ -1428,10 +1452,10 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 	}
 
 	/* look for the metadata hash */
-	jcat_blobs = jcat_item_get_blobs_by_kind(jcat_item, JCAT_BLOB_KIND_SHA256);
-	if (jcat_blobs->len == 1) {
-		JcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
-		g_autofree gchar *hash = jcat_blob_get_data_as_string(blob);
+	jcat_blobs = fwupd_jcat_item_get_blobs_by_kind(jcat_item, FWUPD_JCAT_BLOB_KIND_SHA256);
+	if (jcat_blobs->len >= 1) {
+		FwupdJcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
+		g_autofree gchar *hash = fwupd_jcat_blob_get_data_as_string(blob);
 		fwupd_remote_set_checksum_sig_metadata(self, hash);
 	}
 
@@ -1454,15 +1478,13 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self, GBytes *bytes, GError **error)
 {
-	g_autoptr(GInputStream) istr = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	istr = g_memory_input_stream_new_from_bytes(bytes);
-	if (!jcat_file_import_stream(jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))
+	if (!fwupd_jcat_file_import_bytes(jcat_file, bytes, error))
 		return FALSE;
 	return fwupd_remote_load_signature_jcat(self, jcat_file, error);
 }
@@ -1483,7 +1505,8 @@ gboolean
 fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **error)
 {
 	g_autoptr(GFile) gfile = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(FwupdJcatFile) jcat_file = fwupd_jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
@@ -1491,10 +1514,13 @@ fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **e
 
 	/* load JCat file */
 	gfile = g_file_new_for_path(filename);
-	if (!jcat_file_import_file(jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
+	istream = G_INPUT_STREAM(g_file_read(gfile, NULL, error));
+	if (istream == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;
 	}
+	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+		return FALSE;
 	return fwupd_remote_load_signature_jcat(self, jcat_file, error);
 }
 
@@ -1575,6 +1601,115 @@ fwupd_remote_get_id(FwupdRemote *self)
 	return priv->id;
 }
 
+/**
+ * fwupd_remote_load_user_secrets:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads the secrets from a per-user store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_remote_load_user_secrets(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *password = NULL;
+	g_autofree gchar *username = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return TRUE;
+	basename = g_strdup_printf("%s.conf", priv->id);
+	fn = g_build_filename(g_get_user_config_dir(), "fwupd", "remotes.d", basename, NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_debug("no per-user credentials in %s", fn);
+		return TRUE;
+	}
+	if (!g_key_file_load_from_file(kf, fn, G_KEY_FILE_NONE, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	username = g_key_file_get_string(kf, "fwupd Remote", "Username", NULL);
+	if (username != NULL)
+		fwupd_remote_set_username(self, username);
+	password = g_key_file_get_string(kf, "fwupd Remote", "Password", NULL);
+	if (password != NULL)
+		fwupd_remote_set_password(self, password);
+
+	/* success */
+	return TRUE;
+}
+/**
+ * fwupd_remote_save_user_secrets:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Saves the secrets to a per-user store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.4
+ **/
+gboolean
+fwupd_remote_save_user_secrets(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
+		return TRUE;
+
+	/* save local file */
+	if (priv->username != NULL)
+		g_key_file_set_string(kf, "fwupd Remote", "Username", priv->username);
+	else
+		g_key_file_remove_key(kf, "fwupd Remote", "Username", NULL);
+	if (priv->password != NULL)
+		g_key_file_set_string(kf, "fwupd Remote", "Password", priv->password);
+	else
+		g_key_file_remove_key(kf, "fwupd Remote", "Password", NULL);
+	basename = g_strdup_printf("%s.conf", priv->id);
+	dirname = g_build_filename(g_get_user_config_dir(), "fwupd", "remotes.d", NULL);
+	if (g_mkdir_with_parents(dirname, 0700) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to create %s: %s",
+			    dirname,
+			    fwupd_strerror(errno));
+		return FALSE;
+	}
+	data = g_key_file_to_data(kf, NULL, error);
+	if (data == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	fn = g_build_filename(dirname, basename, NULL);
+	if (!g_file_set_contents_full(fn, data, -1, G_FILE_SET_CONTENTS_NONE, 0600, error)) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	g_debug("written secrets to %s", fn);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
@@ -1588,7 +1723,7 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 	/* three passes, as we have to construct Id -> Url -> * */
 	while (g_variant_iter_loop(iter, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
-			fwupd_remote_set_id(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_id(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "Type") == 0)
 			fwupd_remote_set_kind(self, fwupd_variant_get_uint32(value));
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
@@ -1596,49 +1731,35 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 	}
 	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
-			fwupd_remote_set_metadata_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_metadata_uri(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "FilenameCache") == 0)
-			fwupd_remote_set_filename_cache(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_filename_cache(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "FilenameSource") == 0)
-			fwupd_remote_set_filename_source(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_filename_source(self, fwupd_variant_get_string(value));
 		if (g_strcmp0(key, "ReportUri") == 0)
-			fwupd_remote_set_report_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_report_uri(self, fwupd_variant_get_string(value));
 	}
 	while (g_variant_iter_loop(iter3, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, "Username") == 0) {
-			fwupd_remote_set_username(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_username(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Password") == 0) {
-			fwupd_remote_set_password(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_password(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Title") == 0) {
-			fwupd_remote_set_title(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_title(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "PrivacyUri") == 0) {
-			fwupd_remote_set_privacy_uri(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_privacy_uri(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Agreement") == 0) {
-			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_agreement(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-			fwupd_remote_set_checksum_sig(self, g_variant_get_string(value, NULL));
-		} else if (g_strcmp0(key, "Enabled") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-		} else if (g_strcmp0(key, "ApprovalRequired") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
+			fwupd_remote_set_checksum_sig(self, fwupd_variant_get_string(value));
 		} else if (g_strcmp0(key, "Priority") == 0) {
-			priv->priority = g_variant_get_int32(value);
+			priv->priority = fwupd_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
 			priv->mtime = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "RefreshInterval") == 0) {
 			priv->refresh_interval = fwupd_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
-			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
-		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
-			/* we can probably stop doing proxying flags when we next branch */
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
-		} else if (g_strcmp0(key, "AutomaticSecurityReports") == 0) {
-			if (g_variant_get_boolean(value))
-				fwupd_remote_add_flag(self,
-						      FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
+			fwupd_remote_set_firmware_base_uri(self, fwupd_variant_get_string(value));
 		}
 	}
 }
@@ -1656,23 +1777,25 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->id));
 	}
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
+		if (priv->username != NULL) {
+			g_variant_builder_add(builder,
+					      "{sv}",
+					      "Username",
+					      g_variant_new_string(priv->username));
+		}
+		if (priv->password != NULL) {
+			g_variant_builder_add(builder,
+					      "{sv}",
+					      "Password",
+					      g_variant_new_string(priv->password));
+		}
+	}
 	if (priv->flags != 0) {
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
-	}
-	if (priv->username != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Username",
-				      g_variant_new_string(priv->username));
-	}
-	if (priv->password != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Password",
-				      g_variant_new_string(priv->password));
 	}
 	if (priv->title != NULL) {
 		g_variant_builder_add(builder, "{sv}", "Title", g_variant_new_string(priv->title));
@@ -1752,30 +1875,6 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "RemotesDir",
 				      g_variant_new_string(priv->remotes_dir));
 	}
-	/* we can probably stop doing proxying flags when we next branch */
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "Enabled",
-	    g_variant_new_boolean(fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "ApprovalRequired",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "AutomaticReports",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)));
-	g_variant_builder_add(
-	    builder,
-	    "{sv}",
-	    "AutomaticSecurityReports",
-	    g_variant_new_boolean(
-		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)));
 }
 
 static void

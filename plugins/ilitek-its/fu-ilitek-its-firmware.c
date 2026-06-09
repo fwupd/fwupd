@@ -79,7 +79,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	fu_byte_array_set_size(buf, start_addr - buf->len, 0xFF);
 	fu_byte_array_append_bytes(buf, hex_blob);
 	fu_byte_array_set_size(buf, FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE, 0xFF);
-	blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+	blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 	st_mm = fu_struct_ilitek_its_mm_info_parse_bytes(blob, self->mm_addr, error);
 	if (st_mm == NULL)
 		return FALSE;

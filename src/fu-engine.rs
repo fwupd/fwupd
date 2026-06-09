@@ -44,12 +44,13 @@ enum FuEngineLoadFlags {
     NoCache = 1 << 4,
     BuiltinPlugins = 1 << 6,
     EnsureClientCert = 1 << 7,
-    ExternalPlugins = 1 << 8,   // dload'ed plugins such as flashrom
+    ExternalPlugins = 1 << 8,   // dload'ed plugins such as modem-manager
     DeviceHotplug = 1 << 9,
     ColdplugForce = 1 << 10,    // even without a matched plugin
     Ready = 1 << 11,
     History = 1 << 12,
     AllowTestPlugin = 1 << 13,
+    PathStoreDefaults = 1 << 14,
 }
 
 #[derive(ToString)]
@@ -101,4 +102,19 @@ enum FuUdevAction {
     Offline,
     Bind,
     Unbind,
+}
+
+enum FuJcatVerifyFlags {
+    None = 0,
+    DisableTimeChecks = 1 << 0,
+    RequireChecksum = 1 << 1,
+    RequireSignature = 1 << 2,
+    OnlyPq = 1 << 3,
+}
+
+enum FuJcatSignFlags {
+    None = 0,
+    AddTimestamp = 1 << 0,
+    AddCert = 1 << 1,
+    UsePq = 1 << 2,
 }

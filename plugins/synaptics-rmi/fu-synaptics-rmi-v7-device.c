@@ -462,6 +462,15 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GByteArray) pubkey = g_byte_array_new();
 
+	/* validate flash block size */
+	if (flash->block_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash block size not set");
+		return NULL;
+	}
+
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
 	if (f34 == NULL)
@@ -1040,6 +1049,20 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 			 0x0001;
 
 	/* sanity check */
+	if (flash->block_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "flash block size not set");
+		return FALSE;
+	}
+	if (flash->payload_length == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "payload length not set");
+		return FALSE;
+	}
 	if ((guint32)flash->block_size * (guint32)flash->config_length > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,

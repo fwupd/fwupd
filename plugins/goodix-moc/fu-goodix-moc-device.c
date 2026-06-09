@@ -106,7 +106,7 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GErr
 	 * package format
 	 * | zlp | ack | zlp | data |
 	 */
-	while (1) {
+	for (guint retries = 0; retries < 5000; retries++) {
 		gsize actual_len = 0;
 		gsize crc_offset;
 		guint16 payload_len = 0x0;
@@ -146,6 +146,14 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GErr
 		/* parse package header */
 		cmd0 = fu_struct_goodix_moc_pkg_header_get_cmd0(st);
 		payload_len = fu_struct_goodix_moc_pkg_header_get_len(st);
+		if (payload_len < GX_SIZE_CRC32) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "payload length 0x%x too small for CRC",
+				    payload_len);
+			return NULL;
+		}
 		crc_offset = FU_STRUCT_GOODIX_MOC_PKG_HEADER_SIZE + payload_len - GX_SIZE_CRC32;
 		if (!fu_crc32_safe(FU_CRC_KIND_B32_STANDARD,
 				   reply->data,
@@ -186,6 +194,14 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self, gboolean data_reply, GErr
 		if (cmd0 == FU_GOODIX_MOC_CMD_ACK && data_reply)
 			continue;
 		break;
+	}
+
+	if (res->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "no response received after retries");
+		return NULL;
 	}
 
 	/* success */

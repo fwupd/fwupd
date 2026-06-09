@@ -15,4 +15,3 @@ RUN ls -R /var/cache
 RUN wget -P /var/cache https://github.com/fwupd/fwupd/releases/download/1.9.31/fwupd-1.9.31.tar.xz
 RUN wget -P /var/cache https://github.com/fwupd/fwupd-efi/archive/refs/tags/1.7.tar.gz
 WORKDIR /github/workspace
-CMD ["./contrib/ci/centos.sh"]

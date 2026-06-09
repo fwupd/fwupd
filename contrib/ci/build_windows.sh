@@ -49,10 +49,6 @@ xvfb-run meson setup .. \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
     -Dpassim=disabled \
-    -Dlibjcat:man=false \
-    -Dlibjcat:gpg=false \
-    -Dlibjcat:tests=false \
-    -Dlibjcat:introspection=false \
     $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja --verbose -C "$build" -v install

@@ -339,7 +339,7 @@ fu_novatek_ts_device_retry_busy_cb(FuDevice *device, gpointer user_data, GError 
 static gboolean
 fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer, GError **error)
 {
-	gint32 write_len = 0;
+	guint32 write_len = 0;
 	g_autoptr(FuStructNovatekTsGcmCmd) st_cmd = fu_struct_novatek_ts_gcm_cmd_new();
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	FuNovatekTsCmdIssueCtx cmd_issue_ctx = {.addr = self->flash_cmd_issue_addr,
@@ -377,6 +377,14 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	else
 		fu_struct_novatek_ts_gcm_cmd_set_flash_addr(st_cmd, 0);
 	write_len = xfer->flash_addr_len + xfer->pem_byte_len + xfer->dummy_byte_len + xfer->tx_len;
+	if (write_len > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "GCM write length too large: 0x%x",
+			    write_len);
+		return FALSE;
+	}
 	fu_struct_novatek_ts_gcm_cmd_set_write_len(st_cmd, (guint16)write_len);
 	fu_struct_novatek_ts_gcm_cmd_set_read_len(st_cmd, (guint16)xfer->rx_len);
 	fu_struct_novatek_ts_gcm_cmd_set_flash_checksum(st_cmd, xfer->flash_checksum);
@@ -390,7 +398,7 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 	}
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_novatek_ts_device_wait_cmd_issue_cb,
-				  2000,
+				  100,
 				  1,
 				  &cmd_issue_ctx,
 				  error)) {
@@ -1058,6 +1066,31 @@ fu_novatek_ts_device_gcm_read_flash_mid_did(FuNovatekTsDevice *self, GError **er
 }
 
 static gboolean
+fu_novatek_ts_device_read_start_chip_id(FuNovatekTsDevice *self, GError **error)
+{
+	guint8 buf[6] = {0};
+
+	if (!fu_novatek_ts_device_hid_read(self, self->chip_ver_trim_addr, buf, sizeof(buf), error))
+		return FALSE;
+
+	g_info("IC chip id: %02x %02x %02x %02x %02x %02x",
+	       buf[0],
+	       buf[1],
+	       buf[2],
+	       buf[3],
+	       buf[4],
+	       buf[5]);
+	return TRUE;
+}
+
+static gboolean
+fu_novatek_ts_device_read_start_chip_id_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(device);
+	return fu_novatek_ts_device_read_start_chip_id(self, error);
+}
+
+static gboolean
 fu_novatek_ts_device_bootloader_reset(FuNovatekTsDevice *self, GError **error)
 {
 	guint8 buf[1] = {FU_NOVATEK_TS_CMD_BOOT_RESET};
@@ -1066,7 +1099,7 @@ fu_novatek_ts_device_bootloader_reset(FuNovatekTsDevice *self, GError **error)
 		return FALSE;
 
 	/* success */
-	fu_device_sleep(FU_DEVICE(self), 235);
+	fu_device_sleep(FU_DEVICE(self), 500);
 	return TRUE;
 }
 
@@ -1075,11 +1108,16 @@ fu_novatek_ts_device_sw_reset_and_idle(FuNovatekTsDevice *self, GError **error)
 {
 	guint8 buf[1] = {FU_NOVATEK_TS_CMD_SW_RESET};
 
-	if (!fu_novatek_ts_device_hid_write(self, self->swrst_sif_addr, buf, sizeof(buf), error))
-		return FALSE;
+	for (guint i = 0; i < 3; i++) {
+		if (!fu_novatek_ts_device_hid_write(self,
+						    self->swrst_sif_addr,
+						    buf,
+						    sizeof(buf),
+						    error))
+			return FALSE;
 
-	/* success */
-	fu_device_sleep(FU_DEVICE(self), 50);
+		fu_device_sleep(FU_DEVICE(self), 50);
+	}
 	return TRUE;
 }
 
@@ -1211,7 +1249,7 @@ fu_novatek_ts_device_check_fw_reset_state(FuNovatekTsDevice *self, guint8 state,
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_novatek_ts_device_wait_reset_state_cb,
 				  100,
-				  10,
+				  30,
 				  &ctx,
 				  error)) {
 		g_set_error(error,
@@ -1253,6 +1291,31 @@ fu_novatek_ts_device_ensure_fw_ver(FuNovatekTsDevice *self, GError **error)
 
 	/* success */
 	fu_device_set_version_raw(FU_DEVICE(self), ctx.buf[0]);
+	return TRUE;
+}
+
+static gboolean
+fu_novatek_ts_device_check_start_ready(FuNovatekTsDevice *self, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_novatek_ts_device_read_start_chip_id_cb,
+				  100,
+				  50,
+				  NULL,
+				  error)) {
+		g_prefix_error_literal(error, "read start chip id failed: ");
+		return FALSE;
+	}
+
+	if (!fu_novatek_ts_device_check_fw_reset_state(
+		self,
+		FU_NOVATEK_TS_RESET_STATE_RESET_STATE_NORMAL_RUN,
+		&error_local)) {
+		g_warning("firmware is not normal running: %s", error_local->message);
+	}
+
 	return TRUE;
 }
 
@@ -1352,29 +1415,10 @@ fu_novatek_ts_device_setup(FuDevice *device, GError **error)
 {
 	FuNovatekTsDevice *self = FU_NOVATEK_TS_DEVICE(device);
 	FuDeviceClass *parent_class = FU_DEVICE_CLASS(fu_novatek_ts_device_parent_class);
-	guint8 debug_buf[6] = {0};
-	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_novatek_ts_device_hid_read(self,
-					   self->chip_ver_trim_addr,
-					   debug_buf,
-					   sizeof(debug_buf),
-					   error))
+	if (!fu_novatek_ts_device_check_start_ready(self, error))
 		return FALSE;
-	g_info("IC chip id: %02x %02x %02x %02x %02x %02x",
-	       debug_buf[0],
-	       debug_buf[1],
-	       debug_buf[2],
-	       debug_buf[3],
-	       debug_buf[4],
-	       debug_buf[5]);
 
-	if (!fu_novatek_ts_device_check_fw_reset_state(
-		self,
-		FU_NOVATEK_TS_RESET_STATE_RESET_STATE_NORMAL_RUN,
-		&error_local)) {
-		g_warning("firmware is not normal running: %s", error_local->message);
-	}
 	if (!fu_novatek_ts_device_ensure_fw_ver(self, error))
 		return FALSE;
 
@@ -1440,6 +1484,9 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 
 	g_return_val_if_fail(FU_IS_NOVATEK_TS_FIRMWARE(firmware), FALSE);
 
+	if (!fu_novatek_ts_device_check_start_ready(self, error))
+		return FALSE;
+
 	/* always use FLASH_NORMAL start (0x2000) */
 	if (self->flash_start_addr < FLASH_SECTOR_SIZE) {
 		g_set_error(error,
@@ -1454,6 +1501,14 @@ fu_novatek_ts_device_write_firmware(FuDevice *device,
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
 		return FALSE;
+	if (g_bytes_get_size(blob) < self->flash_start_addr) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "firmware is too small for flash start address 0x%x",
+			    self->flash_start_addr);
+		return FALSE;
+	}
 	blob_offset = fu_bytes_new_offset(blob,
 					  self->flash_start_addr,
 					  g_bytes_get_size(blob) - self->flash_start_addr,

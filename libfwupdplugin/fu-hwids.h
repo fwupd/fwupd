@@ -61,6 +61,14 @@ G_DECLARE_FINAL_TYPE(FuHwids, fu_hwids, FU, HWIDS, GObject)
  **/
 #define FU_HWIDS_KEY_BIOS_VERSION "BiosVersion"
 /**
+ * FU_HWIDS_KEY_BIOS_RELEASE_DATE:
+ *
+ * The HwID key for the BIOS date.
+ *
+ * Since: 2.1.4
+ **/
+#define FU_HWIDS_KEY_BIOS_RELEASE_DATE "BiosReleaseDate"
+/**
  * FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE:
  *
  * The HwID key for the firmware major version.

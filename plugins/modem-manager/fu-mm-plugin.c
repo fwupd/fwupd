@@ -49,6 +49,7 @@ fu_mm_plugin_backend_device_added(FuPlugin *plugin,
 	return TRUE;
 }
 
+/* goblint-ignore-next-line: g_object_virtual_methods_chain_up */
 static void
 fu_mm_plugin_constructed(GObject *obj)
 {

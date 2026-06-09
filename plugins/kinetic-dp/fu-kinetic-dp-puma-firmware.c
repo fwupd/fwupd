@@ -290,7 +290,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	/* add App FW as a new image into firmware */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz < HEADER_LEN_ISP_DRV_SIZE + isp_drv_size) {
+	if (streamsz < (gsize)HEADER_LEN_ISP_DRV_SIZE + isp_drv_size) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -299,7 +299,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	}
 	app_fw_size = streamsz - HEADER_LEN_ISP_DRV_SIZE - isp_drv_size;
 	app_fw_stream = fu_partial_input_stream_new(stream,
-						    HEADER_LEN_ISP_DRV_SIZE + isp_drv_size,
+						    (gsize)HEADER_LEN_ISP_DRV_SIZE + isp_drv_size,
 						    app_fw_size,
 						    error);
 	if (app_fw_stream == NULL)

@@ -134,7 +134,7 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 			    (guint)buf->len);
 		return NULL;
 	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 }
 
 static void

@@ -311,6 +311,10 @@ The `[redfish]` section can contain the following parameters:
 
   The password to use when connecting to the Redfish service.
 
+**BearerToken={{redfish_BearerToken}}**
+
+  The bearer token to use for authenticating to the Redfish service.
+
 **CACheck={{redfish_CACheck}}**
 
   Whether to verify the server certificate or not. This is turned off by default.

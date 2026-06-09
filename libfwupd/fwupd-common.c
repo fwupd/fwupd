@@ -445,39 +445,6 @@ fwupd_guid_hash_string(const gchar *str)
 	return fwupd_guid_hash_data((const guint8 *)str, strlen(str), FWUPD_GUID_FLAG_NONE);
 }
 
-/**
- * fwupd_hash_kv_to_variant: (skip):
- **/
-GVariant *
-fwupd_hash_kv_to_variant(GHashTable *hash)
-{
-	GVariantBuilder builder;
-	g_autoptr(GList) keys = g_hash_table_get_keys(hash);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup(hash, key);
-		g_variant_builder_add(&builder, "{ss}", key, value);
-	}
-	return g_variant_builder_end(&builder);
-}
-
-/**
- * fwupd_variant_to_hash_kv: (skip):
- **/
-GHashTable *
-fwupd_variant_to_hash_kv(GVariant *dict)
-{
-	GHashTable *hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	GVariantIter iter;
-	const gchar *key;
-	const gchar *value;
-	g_variant_iter_init(&iter, dict);
-	while (g_variant_iter_loop(&iter, "{&s&s}", &key, &value))
-		g_hash_table_insert(hash, g_strdup(key), g_strdup(value));
-	return hash;
-}
-
 #ifdef HAVE_GIO_UNIX
 /**
  * fwupd_unix_input_stream_from_bytes: (skip):
@@ -485,7 +452,7 @@ fwupd_variant_to_hash_kv(GVariant *dict)
 GUnixInputStream *
 fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 {
-	gint fd;
+	g_autofd gint fd = -1;
 	gssize rc;
 #ifndef HAVE_MEMFD_CREATE
 	gchar tmp_file[] = "/tmp/fwupd.XXXXXX";
@@ -499,10 +466,6 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 	if (fd != -1) {
 		rc = g_unlink(tmp_file);
 		if (rc != 0) {
-			if (!g_close(fd, error)) {
-				g_prefix_error_literal(error, "failed to close temporary file: ");
-				return NULL;
-			}
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
@@ -536,7 +499,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
+	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
 }
 
 /**
@@ -545,7 +508,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 GUnixInputStream *
 fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 {
-	gint fd = open(fn, O_RDONLY);
+	g_autofd gint fd = open(fn, O_RDONLY);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -555,7 +518,7 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
+	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(g_steal_fd(&fd), TRUE));
 }
 
 /**
@@ -564,7 +527,7 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 GUnixOutputStream *
 fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 {
-	gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRWXU);
+	g_autofd gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -574,36 +537,51 @@ fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
 			    fwupd_strerror(errno));
 		return NULL;
 	}
-	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(fd, TRUE));
+	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(g_steal_fd(&fd), TRUE));
 }
 #endif
 
 /**
- * fwupd_variant_get_uint32: (skip):
- * @value: a #GVariant
+ * fwupd_percentage_is_valid:
+ * @value: maybe a percentage value
  *
- * Gets an unsigned integer from a variant, handling both 'u' and 'i' types.
+ * Calculates is a percentage value is valid, i.e. `>= 0.0` and `<= 100.0`.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.3
  **/
-guint32
-fwupd_variant_get_uint32(GVariant *value)
+gboolean
+fwupd_percentage_is_valid(gdouble value)
 {
-	g_return_val_if_fail(value != NULL, 0);
-	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT32))
-		return (guint32)g_variant_get_int32(value);
-	return g_variant_get_uint32(value);
+	return value >= 0.0 && value <= 100.0;
 }
 
+#define FWUPD_PERCENTAGE_CHANGE_EPSILON (0.01)
+
 /**
- * fwupd_variant_get_uint64: (skip):
- * @value: a #GVariant
+ * fwupd_percentage_delta_notify:
+ * @value_old: a percentage value
+ * @value_new: another percentage value
  *
- * Gets an unsigned integer from a variant, handling both 't' and 'x' types.
+ * Calculates if a percentage change is significant, and worth notifying the client about.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.3
  **/
-guint64
-fwupd_variant_get_uint64(GVariant *value)
+gboolean
+fwupd_percentage_delta_notify(gdouble value_old, gdouble value_new)
 {
-	g_return_val_if_fail(value != NULL, 0);
-	if (g_variant_is_of_type(value, G_VARIANT_TYPE_INT64))
-		return (guint64)g_variant_get_int64(value);
-	return g_variant_get_uint64(value);
+	if (value_old - value_new > FWUPD_PERCENTAGE_CHANGE_EPSILON)
+		return TRUE;
+	if (value_new - value_old > FWUPD_PERCENTAGE_CHANGE_EPSILON)
+		return TRUE;
+	if (value_old < 100.0 && value_new >= 100.0)
+		return TRUE;
+	if (fwupd_percentage_is_valid(value_old) && !fwupd_percentage_is_valid(value_new))
+		return TRUE;
+	if (fwupd_percentage_is_valid(value_new) && !fwupd_percentage_is_valid(value_old))
+		return TRUE;
+	return FALSE;
 }

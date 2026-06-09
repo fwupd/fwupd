@@ -18,8 +18,12 @@ repos:
       - id: check-xml
       - id: end-of-file-fixer
         types_or: [c, shell, python, proto]
+      - id: end-of-file-fixer
+        files: \.quirk$
       - id: trailing-whitespace
         types_or: [c, shell, python, xml]
+      - id: trailing-whitespace
+        files: \.quirk$
       - id: check-docstring-first
       - id: check-merge-conflict
       - id: mixed-line-ending
@@ -109,6 +113,10 @@ repos:
         name: check cli actions
         language: script
         entry: ./contrib/ci/check-cli-actions.py
+      - id: check-hsi-tests
+        name: check HSI test JSON files are listed in meson.build
+        language: script
+        entry: ./contrib/ci/check-hsi-tests.py
       - id: check-license
         name: Check license header
         types_or: [shell, c, python]
@@ -118,6 +126,12 @@ repos:
         name: Check meson install tags
         language: script
         entry: ./contrib/ci/check-meson-install-tags.py
+      - id: check-dep-versions
+        name: Check dependency versions match meson
+        language: script
+        entry: ./contrib/ci/check-dep-versions.py
+        files: ^(meson\.build|contrib/ci/dependencies\.xml)$
+        pass_filenames: false
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.45.0
     hooks:

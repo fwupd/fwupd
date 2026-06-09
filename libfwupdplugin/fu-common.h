@@ -90,8 +90,6 @@
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
-FuCpuVendor
-fu_cpu_get_vendor(void);
 GHashTable *
 fu_cpu_get_attrs(FuPathStore *pstore, GError **error);
 
@@ -101,6 +99,15 @@ gchar *
 fu_common_get_kernel_cmdline(GError **error);
 gchar *
 fu_common_get_olson_timezone_id(FuPathStore *pstore, GError **error);
+
+guint16
+fu_common_to_bcd_u16(guint16 value);
+guint8
+fu_common_to_bcd_u8(guint8 value);
+guint16
+fu_common_from_bcd_u16(guint16 value);
+guint8
+fu_common_from_bcd_u8(guint8 value);
 
 gsize
 fu_common_align_up(gsize value, guint8 alignment);
@@ -117,6 +124,9 @@ fu_size_checked_inc_product(gsize *value, gsize a, gsize b, GError **error)
 gboolean
 fu_size_from_uint64(guint64 value, gsize *out, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(2);
+
+gchar *
+fu_base64_encode(const guint8 *buf, gsize bufsz) G_GNUC_WARN_UNUSED_RESULT;
 
 typedef struct {
 	guint value;
@@ -139,6 +149,11 @@ typedef struct {
 gboolean
 fu_error_convert(const FuErrorConvertEntry entries[], guint n_entries, GError **perror)
     G_GNUC_NON_NULL(1);
+
+GByteArray *
+fu_common_get_random(guint bufsz, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gchar *
+fu_common_get_random_string(guint length, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 void
 fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value)

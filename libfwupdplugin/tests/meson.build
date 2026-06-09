@@ -16,12 +16,14 @@ install_data(
 )
 install_data(
   [
+    'acpi-table.builder.xml',
     'cpuinfo',
     'cab.builder.xml',
     'cab-compressed.builder.xml',
     'cfu-offer.builder.xml',
     'cfu-payload.builder.xml',
     'chassis_type',
+    'context.quirk',
     'csv.builder.xml',
     'dfu.builder.xml',
     'dfuse.builder.xml',

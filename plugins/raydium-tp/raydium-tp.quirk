@@ -1,2 +1,2 @@
-[HIDRAW\VEN_2386]
+[HIDRAW\VEN_2386&DEV_8C08]
 Plugin = raydium_tp

@@ -87,6 +87,8 @@ static guint quarks[QUARK_LAST] = {0};
 #define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
 #define FU_USB_DEVICE_OPEN_DELAY	50  /* ms */
 
+#define FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX (18 + (64 * FU_KB)) /* dev descr + max-size raw descr */
+
 static gboolean
 fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
 {
@@ -277,6 +279,7 @@ fu_usb_device_init(FuUsbDevice *self)
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
@@ -898,6 +901,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 		g_prefix_error_literal(error, "failed to apply DS20 data: ");
 		return FALSE;
 	}
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 
 	/* success */
 	return TRUE;
@@ -1477,7 +1481,7 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("ControlTransfer:"
 					   "Direction=0x%02x,"
 					   "RequestType=0x%02x,"
@@ -1609,7 +1613,7 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("BulkTransfer:"
 					   "Endpoint=0x%02x,"
 					   "Data=%s,"
@@ -1713,7 +1717,7 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("InterruptTransfer:"
 					   "Endpoint=0x%02x,"
 					   "Data=%s,"
@@ -1820,6 +1824,16 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 	gsize offset = 0;
 	g_autoptr(FuUsbDeviceHdr) st = NULL;
 	g_autoptr(FuUsbInterface) iface_last = NULL;
+
+	/* sanity check */
+	if (g_bytes_get_size(blob) > FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "USB descriptor was too large: limit is 0x%x bytes",
+			    (guint)FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX);
+		return FALSE;
+	}
 
 	st = fu_usb_device_hdr_parse_bytes(blob, offset, error);
 	if (st == NULL)
@@ -3204,9 +3218,10 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	 *
 	 * Since: 2.0.0
 	 */
-	pspec = g_param_spec_pointer("libusb-device",
-				     NULL,
-				     NULL,
-				     G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	pspec =
+	    g_param_spec_pointer("libusb-device",
+				 NULL,
+				 NULL,
+				 G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LIBUSB_DEVICE, pspec);
 }

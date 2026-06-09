@@ -14,7 +14,6 @@
 #include <gio/gunixoutputstream.h>
 #endif
 #include <glib/gstdio.h>
-#include <jcat.h>
 
 #include "fwupd-enums-private.h"
 
@@ -41,7 +40,7 @@ struct _FuDbusDaemon {
 	guint32 clients_inhibit_id;
 	FuPolkitAuthority *authority;
 	FwupdStatus status; /* last emitted */
-	guint percentage;   /* last emitted */
+	gdouble percentage; /* last emitted */
 	guint owner_id;
 	GPtrArray *system_inhibits;
 };
@@ -50,6 +49,7 @@ G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 
 #define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_TOTAL	     100
 #define FU_DBUS_DAEMON_SYSTEM_INHIBIT_MAX_PER_SENDER 10
+#define FU_DBUS_DAEMON_SET_HINTS_MAX		     32
 
 static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
@@ -265,8 +265,9 @@ fu_dbus_daemon_device_array_to_variant(FuDbusDaemon *self,
 				       GError **error)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
-	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
+	if (fu_context_get_config_bool(ctx, "ShowDevicePrivate"))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 	return fwupd_codec_array_to_variant(devices, flags);
 }
@@ -276,7 +277,7 @@ typedef struct {
 	FuEngineRequest *request;
 	FuProgress *progress;
 	FuClient *client;
-	glong client_sender_changed_id;
+	gulong client_sender_changed_id;
 	GPtrArray *releases;
 	GPtrArray *action_ids;
 	GPtrArray *checksums;
@@ -318,7 +319,7 @@ fu_dbus_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	if (helper->errors != NULL)
 		g_ptr_array_unref(helper->errors);
 	if (helper->client_sender_changed_id > 0)
-		g_signal_handler_disconnect(helper->client, helper->client_sender_changed_id);
+		g_clear_signal_handler(&helper->client_sender_changed_id, helper->client);
 	if (helper->client != NULL)
 		g_object_unref(helper->client);
 	g_free(helper->device_id);
@@ -554,16 +555,22 @@ fu_dbus_daemon_reset_config_cb(GObject *source, GAsyncResult *res, gpointer user
 
 static void
 fu_dbus_daemon_progress_percentage_changed_cb(FuProgress *progress,
-					      guint percentage,
+					      gdouble percentage,
 					      FuDbusDaemon *self)
 {
-	/* sanity check */
-	if (self->percentage == percentage)
-		return;
+	gboolean notify = fwupd_percentage_delta_notify(self->percentage, percentage);
 	self->percentage = percentage;
-
-	g_debug("emitting PropertyChanged('Percentage'='%u%%')", percentage);
-	fu_dbus_daemon_emit_property_changed(self, "Percentage", g_variant_new_uint32(percentage));
+	if (notify) {
+		g_debug("emitting PropertyChanged('Percentage'='%.1f%%')", percentage);
+		fu_dbus_daemon_emit_property_changed(
+		    self,
+		    "Percentage",
+		    g_variant_new_uint32(fwupd_percentage_is_valid(percentage) ? (guint32)percentage
+									       : 0));
+		fu_dbus_daemon_emit_property_changed(self,
+						     "PercentageFull",
+						     g_variant_new_double(percentage));
+	}
 }
 
 static void
@@ -867,7 +874,7 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 			return FALSE;
 		rels = xb_node_query_full(component, query, NULL);
 		/* add all but the first entry */
-		for (guint i = 1; i < rels->len; i++) {
+		for (guint i = 1; rels != NULL && i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index(rels, i);
 			g_autoptr(FuRelease) release2 = fu_release_new();
 			g_autoptr(GError) error_loop = NULL;
@@ -891,6 +898,7 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	/* make a second pass */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release_tmp = g_ptr_array_index(releases, i);
+		const gchar *action_id;
 		if (!fu_engine_requirements_check(engine,
 						  release_tmp,
 						  helper->flags,
@@ -908,11 +916,11 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		}
 
 		/* get the action IDs for the valid device */
-		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
-			const gchar *action_id = fu_release_get_action_id(release_tmp);
-			if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
-				g_ptr_array_add(helper->action_ids, g_strdup(action_id));
-		}
+		action_id = fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)
+				? "org.freedesktop.fwupd.device-emulate"
+				: fu_release_get_action_id(release_tmp);
+		if (!g_ptr_array_find(helper->action_ids, action_id, NULL))
+			g_ptr_array_add(helper->action_ids, g_strdup(action_id));
 		g_ptr_array_add(helper->releases, g_object_ref(release_tmp));
 	}
 
@@ -1072,7 +1080,7 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* get the fd */
@@ -1098,7 +1106,7 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE, error);
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, error);
 	if (stream == NULL)
 		return NULL;
 	return g_steal_pointer(&stream);
@@ -1114,7 +1122,7 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(GOutputStream) stream = NULL;
 
 	/* get the fd */
@@ -1140,7 +1148,7 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 		return NULL;
 
 	/* get details about the file (will close the fd when done) */
-	stream = g_unix_output_stream_new(fd, TRUE);
+	stream = g_unix_output_stream_new(g_steal_fd(&fd), TRUE);
 	if (stream == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
 		return NULL;
@@ -1396,11 +1404,11 @@ fu_dbus_daemon_method_self_sign(FuDbusDaemon *self,
 	while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 		g_debug("got option %s", prop_key);
 		if (g_strcmp0(prop_key, "add-timestamp") == 0 &&
-		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= JCAT_SIGN_FLAG_ADD_TIMESTAMP;
+		    fwupd_variant_get_boolean(prop_value) == TRUE)
+			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_TIMESTAMP;
 		if (g_strcmp0(prop_key, "add-cert") == 0 &&
-		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= JCAT_SIGN_FLAG_ADD_CERT;
+		    fwupd_variant_get_boolean(prop_value) == TRUE)
+			helper->flags |= FU_JCAT_SIGN_FLAG_ADD_CERT;
 		g_variant_unref(prop_value);
 	}
 
@@ -1464,23 +1472,77 @@ fu_dbus_daemon_method_get_upgrades(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_method_get_remotes(FuDbusDaemon *self,
-				  GVariant *parameters,
-				  FuEngineRequest *request,
-				  GDBusMethodInvocation *invocation)
+fu_dbus_daemon_return_get_remotes(FuDbusDaemon *self,
+				  GDBusMethodInvocation *invocation,
+				  FwupdCodecFlags flag)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GError) error = NULL;
 
-	g_autoptr(GPtrArray) remotes = NULL;
 	remotes = fu_engine_get_remotes(engine, &error);
 	if (remotes == NULL) {
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-	g_dbus_method_invocation_return_value(
-	    invocation,
-	    fwupd_codec_array_to_variant(remotes, FWUPD_CODEC_FLAG_NONE));
+	g_dbus_method_invocation_return_value(invocation,
+					      fwupd_codec_array_to_variant(remotes, flag));
+}
+
+static void
+fu_dbus_daemon_authorize_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result -- still return the remotes, but only the untrusted bits */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED)) {
+			g_debug("ignoring: %s", error->message);
+			fu_dbus_daemon_return_get_remotes(helper->self,
+							  helper->invocation,
+							  FWUPD_CODEC_FLAG_NONE);
+			return;
+		}
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	fu_dbus_daemon_return_get_remotes(helper->self,
+					  helper->invocation,
+					  FWUPD_CODEC_FLAG_TRUSTED);
+}
+
+static void
+fu_dbus_daemon_method_get_remotes(FuDbusDaemon *self,
+				  GVariant *parameters,
+				  FuEngineRequest *request,
+				  GDBusMethodInvocation *invocation)
+{
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	/* is root */
+	if (fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
+		fu_dbus_daemon_return_get_remotes(self, invocation, FWUPD_CODEC_FLAG_TRUSTED);
+		return;
+	}
+
+	/* create helper object */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->self = self;
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.get-remotes",
+				  FU_POLKIT_AUTHORITY_CHECK_FLAG_NONE, /* non-interactive */
+				  NULL,
+				  fu_dbus_daemon_authorize_get_remotes_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
@@ -1554,21 +1616,53 @@ fu_dbus_daemon_method_get_host_security_events(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_authorize_clear_results_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_clear_results(engine, helper->device_id, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
 fu_dbus_daemon_method_clear_results(FuDbusDaemon *self,
 				    GVariant *parameters,
 				    FuEngineRequest *request,
 				    GDBusMethodInvocation *invocation)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	const gchar *device_id;
-	g_autoptr(GError) error = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
 
 	g_variant_get(parameters, "(&s)", &device_id);
-	if (!fu_engine_clear_results(engine, device_id, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
-	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->device_id = g_strdup(device_id);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.clear-results",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_clear_results_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
@@ -1746,16 +1840,22 @@ fu_dbus_daemon_authorize_modify_device_cb(GObject *source, GAsyncResult *res, gp
 	    helper->invocation);
 }
 
-static gboolean
-fu_dbus_daemon_method_modify_device_flag_needs_auth(const gchar *key, const gchar *value)
+static const gchar *
+fu_dbus_daemon_method_modify_device_flag_to_action_id(const gchar *key,
+						      const gchar *value,
+						      GError **error)
 {
-	if (g_strcmp0(key, "Flags") != 0)
-		return FALSE;
-	if (g_strcmp0(value, "emulation-tag") == 0)
-		return TRUE;
-	if (g_strcmp0(value, "~emulation-tag") == 0)
-		return TRUE;
-	return FALSE;
+	if (g_strcmp0(key, "Flags") == 0) {
+		if (g_strcmp0(value, "emulation-tag") == 0 ||
+		    g_strcmp0(value, "~emulation-tag") == 0)
+			return "org.freedesktop.fwupd.emulation-tag";
+		return "org.freedesktop.fwupd.modify-device";
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "key value pair not supported");
+	return NULL;
 }
 
 static void
@@ -1767,32 +1867,35 @@ fu_dbus_daemon_method_modify_device(FuDbusDaemon *self,
 	const gchar *device_id;
 	const gchar *key;
 	const gchar *value;
+	const gchar *action_id;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s&s&s)", &device_id, &key, &value);
-	if (fu_dbus_daemon_method_modify_device_flag_needs_auth(key, value)) {
-		g_autoptr(FuMainAuthHelper) helper = g_new0(FuMainAuthHelper, 1);
-		helper->self = self;
-		helper->request = g_object_ref(request);
-		helper->invocation = g_object_ref(invocation);
-		helper->device_id = g_strdup(device_id);
-		helper->key = g_strdup(key);
-		helper->value = g_strdup(value);
-		fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
-		fu_polkit_authority_check(
-		    self->authority,
-		    fu_engine_request_get_sender(request),
-		    "org.freedesktop.fwupd.emulation-tag",
-		    fu_dbus_daemon_engine_request_get_authority_check_flags(request),
-		    NULL,
-		    fu_dbus_daemon_authorize_modify_device_cb,
-		    g_steal_pointer(&helper));
-	} else
-		fu_dbus_daemon_authorize_modify_device_internal(
-		    fu_daemon_get_engine(FU_DAEMON(self)),
-		    device_id,
-		    key,
-		    value,
-		    invocation);
+
+	/* use a specific action-id for flag key=value */
+	action_id = fu_dbus_daemon_method_modify_device_flag_to_action_id(key, value, &error);
+	if (action_id == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+
+	/* authenticate */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->device_id = g_strdup(device_id);
+	helper->key = g_strdup(key);
+	helper->value = g_strdup(value);
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  action_id,
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_modify_device_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
@@ -1813,36 +1916,38 @@ fu_dbus_daemon_method_get_results(FuDbusDaemon *self,
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-	val = fwupd_codec_to_variant(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_TRUSTED);
+	val = fwupd_codec_to_variant(FWUPD_CODEC(device),
+				     fu_engine_request_get_converter_flags(request));
 	g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
 }
 
-static void
-fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
-				      GVariant *parameters,
-				      FuEngineRequest *request,
-				      GDBusMethodInvocation *invocation)
-{
 #ifdef HAVE_GIO_UNIX
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+static void
+fu_dbus_daemon_authorize_update_metadata_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 	GDBusMessage *message;
 	GUnixFDList *fd_list;
-	const gchar *remote_id = NULL;
-	gint fd_data;
-	gint fd_sig;
-	g_autoptr(GError) error = NULL;
+	g_autofd gint fd_data = -1;
+	g_autofd gint fd_sig = -1;
 
-	g_variant_get(parameters, "(&shh)", &remote_id, &fd_data, &fd_sig);
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 
-	/* update the metadata store */
-	message = g_dbus_method_invocation_get_message(invocation);
+	/* get the fds from the message */
+	message = g_dbus_method_invocation_get_message(helper->invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
 	if (fd_list == NULL) {
 		g_set_error_literal(&error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "no file descriptors are associated");
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	if (g_unix_fd_list_get_length(fd_list) != 2) {
@@ -1851,27 +1956,62 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 			    FWUPD_ERROR_INTERNAL,
 			    "wrong number of file descriptors: %i",
 			    g_unix_fd_list_get_length(fd_list));
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	fd_data = g_unix_fd_list_get(fd_list, 0, &error);
 	if (fd_data < 0) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	fd_sig = g_unix_fd_list_get(fd_list, 1, &error);
 	if (fd_sig < 0) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* store new metadata (will close the fds when done) */
-	if (!fu_engine_update_metadata(engine, remote_id, fd_data, fd_sig, &error)) {
-		g_prefix_error(&error, "Failed to update metadata for %s: ", remote_id);
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+	if (!fu_engine_update_metadata(engine,
+				       helper->remote_id,
+				       g_steal_fd(&fd_data),
+				       g_steal_fd(&fd_sig),
+				       &error)) {
+		g_prefix_error(&error, "Failed to update metadata for %s: ", helper->remote_id);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+#endif /* HAVE_GIO_UNIX */
+
+static void
+fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
+				      GVariant *parameters,
+				      FuEngineRequest *request,
+				      GDBusMethodInvocation *invocation)
+{
+#ifdef HAVE_GIO_UNIX
+	const gchar *remote_id = NULL;
+	gint fd_data;
+	gint fd_sig;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	g_variant_get(parameters, "(&shh)", &remote_id, &fd_data, &fd_sig);
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->remote_id = g_strdup(remote_id);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.refresh-remote",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_update_metadata_cb,
+				  g_steal_pointer(&helper));
 #else
 	g_dbus_method_invocation_return_error_literal(invocation,
 						      FWUPD_ERROR,
@@ -1996,13 +2136,44 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 				    FuEngineRequest *request,
 				    GDBusMethodInvocation *invocation)
 {
+	const gchar *action_id;
 	const gchar *remote_id = NULL;
 	const gchar *key = NULL;
 	const gchar *value = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
+	const gchar *keys_enable[] = {
+	    "ApprovalRequired",
+	    "AutomaticReports",
+	    "AutomaticSecurityReports",
+	    "Enabled",
+	    NULL,
+	};
+	const gchar *keys_modify[] = {
+	    "FirmwareBaseURI",
+	    "MetadataURI",
+	    "ReportURI",
+	    "Username",
+	    "Password",
+	    NULL,
+	};
 
 	/* check the id exists */
 	g_variant_get(parameters, "(&s&s&s)", &remote_id, &key, &value);
+
+	/* find the correct polkit authorization */
+	if (g_strv_contains(keys_enable, key)) {
+		action_id = "org.freedesktop.fwupd.enable-remote";
+	} else if (g_strv_contains(keys_modify, key)) {
+		action_id = "org.freedesktop.fwupd.modify-remote";
+	} else {
+		g_dbus_method_invocation_return_error(invocation,
+						      FWUPD_ERROR,
+						      FWUPD_ERROR_NOT_SUPPORTED,
+						      "setting %s=%s not supported",
+						      key,
+						      value);
+		return;
+	}
 
 	/* create helper object */
 	helper = g_new0(FuMainAuthHelper, 1);
@@ -2017,7 +2188,7 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_polkit_authority_check(self->authority,
 				  fu_engine_request_get_sender(request),
-				  "org.freedesktop.fwupd.modify-remote",
+				  action_id,
 				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
 				  NULL,
 				  fu_dbus_daemon_authorize_modify_remote_cb,
@@ -2085,34 +2256,67 @@ fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_method_verify(FuDbusDaemon *self,
-			     GVariant *parameters,
-			     FuEngineRequest *request,
-			     GDBusMethodInvocation *invocation)
+fu_dbus_daemon_authorize_verify_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	const gchar *device_id = NULL;
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 
-	g_variant_get(parameters, "(&s)", &device_id);
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 
 	/* progress */
 	fu_progress_set_profile(progress, g_log_get_debug_enabled());
 	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_percentage_changed_cb),
-			 self);
+			 helper->self);
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
 			 G_CALLBACK(fu_dbus_daemon_progress_status_changed_cb),
-			 self);
+			 helper->self);
 
-	if (!fu_engine_verify(engine, device_id, progress, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+	/* authenticated */
+	if (!fu_engine_verify(engine, helper->device_id, progress, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_dbus_daemon_method_verify(FuDbusDaemon *self,
+			     GVariant *parameters,
+			     FuEngineRequest *request,
+			     GDBusMethodInvocation *invocation)
+{
+	const gchar *device_id = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	g_variant_get(parameters, "(&s)", &device_id);
+
+	/* create helper object */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->device_id = g_strdup(device_id);
+	helper->self = self;
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.verify",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_verify_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
@@ -2140,12 +2344,20 @@ fu_dbus_daemon_method_set_hints(FuDbusDaemon *self,
 {
 	const gchar *prop_key;
 	const gchar *prop_value;
+	guint cnt = 0;
 	g_autoptr(FuClient) client = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	g_variant_get(parameters, "(a{ss})", &iter);
 	client = fu_client_list_register(self->client_list, fu_engine_request_get_sender(request));
 	while (g_variant_iter_next(iter, "{&s&s}", &prop_key, &prop_value)) {
+		if (++cnt > FU_DBUS_DAEMON_SET_HINTS_MAX) {
+			g_dbus_method_invocation_return_error_literal(invocation,
+								      FWUPD_ERROR,
+								      FWUPD_ERROR_NOT_SUPPORTED,
+								      "too many hints specified");
+			return;
+		}
 		g_debug("got hint %s=%s", prop_key, prop_value);
 		fu_client_insert_hint(client, prop_key, prop_value);
 	}
@@ -2162,6 +2374,8 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 	const gchar *reason = NULL;
 	const gchar *sender = fu_engine_request_get_sender(request);
 	guint sender_count = 0;
+	g_autofree gchar *id = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_variant_get(parameters, "(&s)", &reason);
 
@@ -2190,11 +2404,17 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 		return;
 	}
 
+	/* use a cryptographically secure RNG */
+	id = fu_common_get_random_string(6, &error_local);
+	if (id == NULL) {
+		g_dbus_method_invocation_return_gerror(invocation, error_local);
+		return;
+	}
+
 	/* watch */
 	inhibit = g_new0(FuDbusDaemonSystemInhibit, 1);
 	inhibit->sender = g_strdup(sender);
-	inhibit->id =
-	    g_strdup_printf("dbus-%i", g_random_int_range(1, G_MAXINT - 1)); /* nocheck:blocked */
+	inhibit->id = g_strdup_printf("dbus-%s", id);
 	inhibit->watcher_id =
 	    g_bus_watch_name_on_connection(self->connection,
 					   sender,
@@ -2216,6 +2436,7 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 {
 #ifdef HAVE_GIO_UNIX
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 	GVariant *prop_value;
 	const gchar *device_id = NULL;
 	const gchar *prop_key;
@@ -2238,20 +2459,13 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	/* get flags */
 	while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 		g_debug("got option %s", prop_key);
-		if (g_strcmp0(prop_key, "install-flags") == 0)
-			helper->flags = g_variant_get_uint64(prop_value);
-
-		/* these are all set by libfwupd < 2.0.x; parse for compatibility */
-		if (g_strcmp0(prop_key, "allow-older") == 0 &&
-		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-		if (g_strcmp0(prop_key, "allow-reinstall") == 0 &&
-		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
-		if (g_strcmp0(prop_key, "allow-branch-switch") == 0 &&
-		    g_variant_get_boolean(prop_value) == TRUE)
-			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-
+		if (g_strcmp0(prop_key, "install-flags") == 0) {
+			const guint64 allowed_mask =
+			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER |
+			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |
+			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
+			helper->flags = fwupd_variant_get_uint64(prop_value) & allowed_mask;
+		}
 		g_variant_unref(prop_value);
 	}
 
@@ -2263,7 +2477,7 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	}
 
 	/* relax these */
-	if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
+	if (fu_context_get_config_bool(ctx, "IgnoreRequirements"))
 		helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* install all the things in the store */
@@ -2358,7 +2572,7 @@ fu_dbus_daemon_method_get_details(FuDbusDaemon *self,
 	}
 	g_dbus_method_invocation_return_value(
 	    invocation,
-	    fwupd_codec_array_to_variant(results, FWUPD_CODEC_FLAG_TRUSTED));
+	    fwupd_codec_array_to_variant(results, fu_engine_request_get_converter_flags(request)));
 #else
 	g_dbus_method_invocation_return_error_literal(invocation,
 						      FWUPD_ERROR,
@@ -2636,6 +2850,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 {
 	FuDbusDaemon *self = FU_DBUS_DAEMON(user_data);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 
 	/* activity */
 	fu_engine_idle_reset(engine);
@@ -2643,8 +2858,12 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "DaemonVersion") == 0)
 		return g_variant_new_string(PACKAGE_VERSION);
 
-	if (g_strcmp0(property_name, "HostBkc") == 0)
-		return g_variant_new_string(fu_engine_get_host_bkc(engine));
+	if (g_strcmp0(property_name, "HostBkc") == 0) {
+		g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
+		if (host_bkc == NULL)
+			return g_variant_new_string("");
+		return g_variant_new_string(host_bkc);
+	}
 
 	if (g_strcmp0(property_name, "Tainted") == 0)
 		return g_variant_new_boolean(FALSE);
@@ -2653,17 +2872,17 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_uint32(self->status);
 
 	if (g_strcmp0(property_name, "Percentage") == 0)
-		return g_variant_new_uint32(self->percentage);
+		return g_variant_new_uint32(
+		    fwupd_percentage_is_valid(self->percentage) ? (guint32)self->percentage : 0);
 
-	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0) {
-		FuContext *ctx = fu_engine_get_context(engine);
+	if (g_strcmp0(property_name, "PercentageFull") == 0)
+		return g_variant_new_double(self->percentage);
+
+	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_LEVEL) == 0)
 		return g_variant_new_uint32(fu_context_get_battery_level(ctx));
-	}
 
-	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_THRESHOLD) == 0) {
-		FuContext *ctx = fu_engine_get_context(engine);
+	if (g_strcmp0(property_name, FWUPD_RESULT_KEY_BATTERY_THRESHOLD) == 0)
 		return g_variant_new_uint32(fu_context_get_battery_threshold(ctx));
-	}
 
 	if (g_strcmp0(property_name, "HostVendor") == 0)
 		return g_variant_new_string(fu_engine_get_host_vendor(engine));
@@ -2687,6 +2906,14 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "HostSecurityId") == 0) {
 #ifdef HAVE_HSI
 		g_autofree gchar *tmp = fu_engine_get_host_security_id(engine, NULL);
+		if (tmp == NULL) {
+			g_set_error(error, /* nocheck:error */
+				    G_DBUS_ERROR,
+				    G_DBUS_ERROR_NOT_SUPPORTED,
+				    "failed to get daemon property %s",
+				    property_name);
+			return NULL;
+		}
 		return g_variant_new_string(tmp);
 #else
 		g_set_error(error, /* nocheck:error */
@@ -2702,8 +2929,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_boolean(isatty(fileno(stdout)) != 0);
 
 	if (g_strcmp0(property_name, "OnlyTrusted") == 0) {
-		return g_variant_new_boolean(
-		    fu_engine_config_get_only_trusted(fu_engine_get_config(engine)));
+		return g_variant_new_boolean(fu_context_get_config_bool(ctx, "OnlyTrusted"));
 	}
 	if (g_strcmp0(property_name, "Hwids") == 0)
 		return fu_dbus_daemon_get_property_hwids(self);
@@ -2927,6 +3153,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
 				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT |
+				FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS |
 				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG | FU_ENGINE_LOAD_FLAG_HISTORY,
 			    fu_progress_get_child(progress),
 			    error)) {

@@ -62,10 +62,12 @@ plugins/pixart-tp/ @PixartHarris
 plugins/qc-firehose/ @hughsie
 plugins/qc-s5gen2/ @d4s
 plugins/qsi-dock/ @hssinf
+plugins/raydium-tp/ @Maker-Rad
 plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn
 plugins/rts54hub/ @AnyProblem
 plugins/snapd-uefi/ @BAMF0 @bboozzoo
+plugins/starlabs-coreboot/ @Sean-StarLabs
 plugins/sunwinon-hid/ @xiaosa-zhz
 plugins/synaptics-cape/ @CNXT-Simon
 plugins/synaptics-mst/ @ApolloLing

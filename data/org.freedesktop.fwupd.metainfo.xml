@@ -38,6 +38,183 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.4" date="2026-05-29">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a libcrypto-based JCat implementation for Android</li>
+          <li>Add support for NixOS to the quickstart script</li>
+          <li>Add support for the Compal BIOS version format</li>
+          <li>Allow a remote to specify that a username or password is required</li>
+          <li>Allow storing a per-user password in XDG_CONFIG_HOME</li>
+          <li>Detect encrypted swap devices below device-mapper</li>
+          <li>Ensure that all firmware subclasses set the maximum size</li>
+          <li>Remove the flashrom plugin</li>
+          <li>Save the SMBIOS BiosReleaseDate string to uploaded reports</li>
+          <li>Tell Star Labs coreboot users to manually update when required</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a retry limit when updating failing Goodix MoC devices</li>
+          <li>Add several bounds checks for when updating Dell docks</li>
+          <li>Add vendor name and name for the various Framework UEFI certificates</li>
+          <li>Allow recovery if the Lenovo dock internal state is invalid</li>
+          <li>Avoid trunctaion when calculating the AMD GPU atombios size</li>
+          <li>Check firmware size against Novatek flash start address</li>
+          <li>Check for config offset overflow when updating Synaptics RMI devices</li>
+          <li>Check for multiplication overflow in BCM57xx stage1 size calculation</li>
+          <li>Check for overflow when writing to CCGX DMC devices</li>
+          <li>Check stream size before calculating Legion HID ID offset</li>
+          <li>Check stream size before subtracting Ilitek ITS CRC length</li>
+          <li>Clear Sunplus camera download state if the previous flash failed</li>
+          <li>Do not show plugin warnings when using --version</li>
+          <li>Filter the install flags provided by the D-Bus client</li>
+          <li>Fix a potential heap buffer overflow in FDT strlist parsing</li>
+          <li>Fix a potential heap buffer overflow in Nordic HID peer validation</li>
+          <li>Fix a potential OOB read in DFOTA modem response parsing</li>
+          <li>Fix a potential path traversal vulnerability in firmware backup</li>
+          <li>Fix a regression when searching for file magic</li>
+          <li>Fix a regression when using report-export --sign</li>
+          <li>Fix fwupd domain check bypass when using Qubes</li>
+          <li>Ignore efivar free space requirement on Microsoft Hyper-V hosts</li>
+          <li>Limit the number of hints a D-Bus client can set</li>
+          <li>Limit the size of parsed USB descriptors to ~64KiB</li>
+          <li>Make it easy to enable an authenticated remote</li>
+          <li>Make the Novatek boot update more reliable</li>
+          <li>Only read BCR from Intel SPI controllers</li>
+          <li>Prevent a possible division by zero error in the progressbar code</li>
+          <li>Prevent decompression bomb attacks in uSWID zlib payload parsing</li>
+          <li>Prevent NVRAM-seeded ptential path traversal when loading ESP files</li>
+          <li>Redact the username and password of remotes when using a non-active console</li>
+          <li>Require authorization for firmware installation on emulated devices</li>
+          <li>Require authorization for more D-Bus methods from non-local users</li>
+          <li>Restrict Curl protocols to prevent potential SSRF attacks</li>
+          <li>Restrict ModifyRemote to prevent a supply-chain redirection</li>
+          <li>Show a short easy-to-read string as the Pixart touchpad name</li>
+          <li>Tolerate post-quantum CA PKCS#7 failures when using Qubes</li>
+          <li>Validate ACPI PHAT specific data offset before parsing</li>
+          <li>Validate Corsair write size before subtracting header size</li>
+          <li>Validate DFU address offset before parsing the header</li>
+          <li>Validate Elan touchpad IAP address is within firmware bounds</li>
+          <li>Validate Logitech TAP AP region bounds before calculating size</li>
+          <li>Validate payload length is large enough for FPC sec-link</li>
+          <li>Validate sector range before writing pixart-tp firmware</li>
+          <li>Validate VBE area start does not exceed area size</li>
+          <li>Validate write offset does not exceed TI TPS6598x stream size</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Egis MoC devices with PID 9201</li>
+          <li>Intel Arc Pro B65 and Arc Pro B70 (#10389)</li>
+          <li>Lenovo dock devices in 'provisioned' mode</li>
+          <li>Pixart TP devices with PID 1343</li>
+          <li>Several GigaDevice and Puya SPI chips</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.3" date="2026-05-12">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for Redfish bearer token authentication</li>
+          <li>Add support for several XMC SPI chips</li>
+          <li>Parse JCat files in libfwupd without using libjcat</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow configuring a Redfish URI with a path prefix</li>
+          <li>Avoid firmware matching errors for Cat-6 and Cat-12 modems</li>
+          <li>Calculate and export a floating point percentage progress value</li>
+          <li>Do not print clean remote success message if aborted</li>
+          <li>Do not probe all Nordic devices with USB VID 0x1915</li>
+          <li>Fix force table support in Elan IC types 0x13 and 0x14</li>
+          <li>Fix Raydium information check flow to avoid incorrect validation</li>
+          <li>Fix the Thunderbolt version number by ignoring the reserved bits</li>
+          <li>Load well-known paths in dbxtool to prevent a regression</li>
+          <li>Match a specific Raydium device to prevent resetting older hardware</li>
+          <li>Only copy the HIDRAW USB properties if a DS-20 has been provided</li>
+          <li>Use CA1 for a SK Hynix NVMe drive</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>SHIFT6mq and SHIFTphone 8</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.1.2" date="2026-04-24">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add an HSI check for AMD SB-7033 aka EntrySign</li>
+          <li>Add native CBOR parsing and drop libcbor2 as a dep</li>
+          <li>Add server platform detection to suspend HSI checks</li>
+          <li>Allow setting a maximum version number for a device</li>
+          <li>Allow setting context flags from HWID matches</li>
+          <li>Increment the progressbar when waiting for replug</li>
+          <li>Require Windows 8+ for the MSI build artifact</li>
+          <li>Support loading EFI authenticated variables with ContentInfo headers</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add daemon support for modems that export ttyUSB devices</li>
+          <li>Add decompression ratio limit to prevent parsing emulation ZIP bombs</li>
+          <li>Add device activation flag for Dell servers after firmware upgrade</li>
+          <li>Allow using a custom Telink HidToolVer quirk</li>
+          <li>Check the UEFI capsule payload is less than 4GiB in size</li>
+          <li>Cleanup all the user inhibits when required</li>
+          <li>Do not allow using non-regular files like devnull as metadata</li>
+          <li>Do not use capsule-on-disk on Lenovo ThinkCentre M60e Tiny</li>
+          <li>Fix a buffer overread when parsing a malicious PE file</li>
+          <li>Fix a CRC validation mistake in ZIP firmware parser</li>
+          <li>Fix a maybe-impossible NULL pointer dereference when parsing netlink data</li>
+          <li>Fix a small memory leak when writing Redfish firmware</li>
+          <li>Fix accessing Nordic devices connected through a dongle</li>
+          <li>Fix handling snapd payloads with only a default image</li>
+          <li>Fix potential NULL pointer dereference in QMI firmware write</li>
+          <li>Fix the auto-generated Redfish HBA device name</li>
+          <li>Fix the displayed Thunderbolt version number by ignoring reserved bits</li>
+          <li>Fix UF2 race with UDisks2 volume discovery during replug</li>
+          <li>Fix warning when probing removable USB devices with no medium</li>
+          <li>Guard HSI feature with platforms requirements</li>
+          <li>Hardcode the modification timestamp in generated zip archive</li>
+          <li>Increase the resolution of the progress bar updates</li>
+          <li>Limit the maximum number of files that can be parsed from ZIP archives</li>
+          <li>Prevent users from asking for unlimited system inhibits</li>
+          <li>Properly handle Dell iDRAC when using Redfish</li>
+          <li>Reject DFU sectors with zero size to prevent a possible infinite loop</li>
+          <li>Restore the VID check in Algoltek USBCR probe function</li>
+          <li>Set sensible parsing limits in each FuFirmware subclass</li>
+          <li>Show a suitable version when the Novatek update is interrupted</li>
+          <li>Support CAB image filenames longer than 255 chars</li>
+          <li>Update the Focal touch firmware format to the latest release</li>
+          <li>Use overflow-checked arithmetic for all offset calculations</li>
+          <li>Use prepared queries when querying silos</li>
+          <li>Validate CCGX record data size before flash write</li>
+          <li>Validate Nordic HID peer index before accessing peers cache array</li>
+          <li>Validate Synaptics cxaudio EEPROM size before trusting it</li>
+          <li>Wait for mock snapd API socket to appear when running tests</li>
+          <li>Wait for the new version when updating the Nordic TK059 Keyboard</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Elan TP IC type 0x19</li>
+          <li>Google Moonstone</li>
+          <li>HP 400 and 405 Mouse</li>
+          <li>Lenovo USB-4 dock</li>
+          <li>LX Semicon SW42101 touch controller</li>
+          <li>Parade USB hubs with GPIO control</li>
+          <li>Pixart PLP239 devices</li>
+          <li>Raydium TP devices</li>
+          <li>Sunplus cameras</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.1" date="2026-03-11">
       <description>
         <p>

@@ -441,6 +441,13 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 		blob = fu_firmware_get_bytes(FU_FIRMWARE(zip_file), error);
 		if (blob == NULL)
 			return NULL;
+		if (g_bytes_get_size(blob) >= G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "uncompressed size exceeds ZIP format limit");
+			return NULL;
+		}
 
 		if (compression == FU_ZIP_COMPRESSION_NONE) {
 			blob_compressed = g_bytes_ref(blob);
@@ -460,6 +467,13 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 				g_prefix_error_literal(error, "failed to read compressed stream: ");
 				return NULL;
 			}
+			if (g_bytes_get_size(blob_compressed) >= G_MAXUINT32) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "compressed size exceeds ZIP format limit");
+				return NULL;
+			}
 		} else {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -476,7 +490,14 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_zip_lfh_set_compression(st_lfh, compression);
 		items[i].compressed_size = g_bytes_get_size(blob_compressed);
 		fu_struct_zip_lfh_set_compressed_size(st_lfh, items[i].compressed_size);
-		fu_struct_zip_lfh_set_filename_size(st_lfh, strlen(filename));
+		if (strlen(filename) > G_MAXUINT16) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "filename too long for ZIP format");
+			return NULL;
+		}
+		fu_struct_zip_lfh_set_filename_size(st_lfh, (guint16)strlen(filename));
 
 		g_byte_array_append(buf, st_lfh->buf->data, st_lfh->buf->len);
 		g_byte_array_append(buf, (const guint8 *)filename, strlen(filename));
@@ -495,7 +516,14 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_zip_cdfh_set_compressed_size(st_cdfh, items[i].compressed_size);
 		fu_struct_zip_cdfh_set_uncompressed_crc(st_cdfh, items[i].uncompressed_crc);
 		fu_struct_zip_cdfh_set_uncompressed_size(st_cdfh, items[i].uncompressed_size);
-		fu_struct_zip_cdfh_set_filename_size(st_cdfh, strlen(filename));
+		fu_struct_zip_cdfh_set_filename_size(st_cdfh, (guint16)strlen(filename));
+		if (fu_firmware_get_offset(FU_FIRMWARE(zip_file)) >= G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "local file header offset exceeds ZIP format limit");
+			return NULL;
+		}
 		fu_struct_zip_cdfh_set_offset_lfh(st_cdfh,
 						  fu_firmware_get_offset(FU_FIRMWARE(zip_file)));
 
@@ -504,9 +532,23 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* EOCD */
+	if (cd_offset >= G_MAXUINT32) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "central directory offset exceeds ZIP format limit");
+		return NULL;
+	}
 	fu_struct_zip_eocd_set_cd_offset(st_eocd, cd_offset);
 	fu_struct_zip_eocd_set_cd_number_disk(st_eocd, imgs->len);
 	fu_struct_zip_eocd_set_cd_number(st_eocd, imgs->len);
+	if (buf->len - cd_offset >= G_MAXUINT32) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "central directory size exceeds ZIP format limit");
+		return NULL;
+	}
 	fu_struct_zip_eocd_set_cd_size(st_eocd, buf->len - cd_offset);
 	g_byte_array_append(buf, st_eocd->buf->data, st_eocd->buf->len);
 

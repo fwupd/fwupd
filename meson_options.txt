@@ -61,6 +61,11 @@ option(
   description: 'GnuTLS support',
 )
 option(
+  'openssl',
+  type: 'feature',
+  description: 'OpenSSL support',
+)
+option(
   'hsi',
   type: 'feature',
   description: 'Host Security Information',
@@ -127,11 +132,6 @@ option(
   'passim',
   type: 'feature',
   description: 'Passim support',
-)
-option(
-  'plugin_flashrom',
-  type: 'feature',
-  description: 'flashrom support',
 )
 option(
   'plugin_modem_manager',

@@ -226,7 +226,7 @@ fu_usb_interface_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCod
 			if (blob != NULL)
 				fu_byte_array_append_bytes(buf, blob);
 		}
-		str = g_base64_encode(buf->data, buf->len);
+		str = fu_base64_encode(buf->data, buf->len);
 		fwupd_json_object_add_string(json_obj, "ExtraData", str);
 	}
 }

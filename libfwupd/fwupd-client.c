@@ -35,6 +35,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-variant.h"
 
 static void
 fwupd_client_fixup_dbus_error(GError *error);
@@ -59,7 +60,7 @@ typedef struct {
 	FwupdStatus status;
 	gboolean tainted;
 	gboolean interactive;
-	guint percentage;
+	gdouble percentage;
 	guint32 battery_level;
 	guint32 battery_threshold;
 	guint download_retries;
@@ -107,6 +108,7 @@ enum {
 	PROP_0,
 	PROP_STATUS,
 	PROP_PERCENTAGE,
+	PROP_PERCENTAGE_FULL,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
 	PROP_HOST_PRODUCT,
@@ -530,13 +532,15 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 }
 
 static void
-fwupd_client_set_percentage(FwupdClient *self, guint percentage)
+fwupd_client_set_percentage(FwupdClient *self, gdouble percentage)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	if (priv->percentage == percentage)
-		return;
+	gboolean notify = fwupd_percentage_delta_notify(priv->percentage, percentage);
 	priv->percentage = percentage;
-	fwupd_client_object_notify(self, "percentage");
+	if (notify) {
+		fwupd_client_object_notify(self, "percentage");
+		fwupd_client_object_notify(self, "percentage-full");
+	}
 }
 
 static void
@@ -574,13 +578,13 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Status");
 		if (val != NULL)
-			fwupd_client_set_status(self, g_variant_get_uint32(val));
+			fwupd_client_set_status(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Tainted");
 		if (val != NULL) {
-			priv->tainted = g_variant_get_boolean(val);
+			priv->tainted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "tainted");
 		}
 	}
@@ -588,68 +592,73 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Interactive");
 		if (val != NULL) {
-			priv->interactive = g_variant_get_boolean(val);
+			priv->interactive = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "interactive");
 		}
 	}
-	if (g_variant_dict_contains(dict, "Percentage")) {
+	if (g_variant_dict_contains(dict, "PercentageFull")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, "PercentageFull");
+		if (val != NULL)
+			fwupd_client_set_percentage(self, fwupd_variant_get_double(val));
+	} else if (g_variant_dict_contains(dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "Percentage");
 		if (val != NULL)
-			fwupd_client_set_percentage(self, g_variant_get_uint32(val));
+			fwupd_client_set_percentage(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_LEVEL)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_LEVEL);
 		if (val != NULL)
-			fwupd_client_set_battery_level(self, g_variant_get_uint32(val));
+			fwupd_client_set_battery_level(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, FWUPD_RESULT_KEY_BATTERY_THRESHOLD)) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, FWUPD_RESULT_KEY_BATTERY_THRESHOLD);
 		if (val != NULL)
-			fwupd_client_set_battery_threshold(self, g_variant_get_uint32(val));
+			fwupd_client_set_battery_threshold(self, fwupd_variant_get_uint32(val));
 	}
 	if (g_variant_dict_contains(dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "DaemonVersion");
 		if (val != NULL)
-			fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_daemon_version(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostBkc")) {
 		g_autoptr(GVariant) val = g_dbus_proxy_get_cached_property(proxy, "HostBkc");
 		if (val != NULL)
-			fwupd_client_set_host_bkc(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_bkc(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostVendor")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostVendor");
 		if (val != NULL)
-			fwupd_client_set_host_vendor(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_vendor(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostProduct")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostProduct");
 		if (val != NULL)
-			fwupd_client_set_host_product(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_product(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostMachineId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostMachineId");
 		if (val != NULL)
-			fwupd_client_set_host_machine_id(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_machine_id(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "HostSecurityId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "HostSecurityId");
 		if (val != NULL)
-			fwupd_client_set_host_security_id(self, g_variant_get_string(val, NULL));
+			fwupd_client_set_host_security_id(self, fwupd_variant_get_string(val));
 	}
 	if (g_variant_dict_contains(dict, "OnlyTrusted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property(proxy, "OnlyTrusted");
 		if (val != NULL) {
-			priv->only_trusted = g_variant_get_boolean(val);
+			priv->only_trusted = fwupd_variant_get_boolean(val);
 			fwupd_client_object_notify(self, "only-trusted");
 		}
 	}
@@ -853,14 +862,14 @@ fwupd_client_progress_callback_cb(void *clientp,
 
 	/* calculate percentage */
 	if (dltotal > 0 && dlnow >= 0 && dlnow <= dltotal) {
-		guint percentage = (guint)((100 * dlnow) / dltotal);
-		if (priv->percentage != percentage)
-			g_info("download progress: %u%%", percentage);
+		gdouble percentage = ((100.0 * (gdouble)dlnow) / (gdouble)dltotal);
+		if (fwupd_percentage_delta_notify(priv->percentage, percentage))
+			g_info("download progress: %.1f%%", percentage);
 		fwupd_client_set_percentage(self, percentage);
 	} else if (ultotal > 0 && ulnow >= 0 && ulnow <= ultotal) {
-		guint percentage = (guint)((100 * ulnow) / ultotal);
-		if (priv->percentage != percentage)
-			g_info("upload progress: %u%%", percentage);
+		gdouble percentage = ((100.0 * (gdouble)ulnow) / (gdouble)ultotal);
+		if (fwupd_percentage_delta_notify(priv->percentage, percentage))
+			g_info("upload progress: %.1f%%", percentage);
 		fwupd_client_set_percentage(self, percentage);
 	}
 
@@ -918,6 +927,15 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_NOPROGRESS, 0L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_MAXREDIRS, 5L);
+#if CURL_AT_LEAST_VERSION(7, 85, 0)
+	(void)curl_easy_setopt(helper->curl, CURLOPT_PROTOCOLS_STR, "http,https");
+	(void)curl_easy_setopt(helper->curl, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+#else
+	(void)curl_easy_setopt(helper->curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+	(void)curl_easy_setopt(helper->curl,
+			       CURLOPT_REDIR_PROTOCOLS,
+			       CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
 #ifdef _WIN32
 	(void)curl_easy_setopt(helper->curl, CURLOPT_CAINFO, "ca-bundle.crt");
 #endif
@@ -1009,34 +1027,34 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 			 self);
 	val = g_dbus_proxy_get_cached_property(priv->proxy, "DaemonVersion");
 	if (val != NULL)
-		fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
+		fwupd_client_set_daemon_version(self, fwupd_variant_get_string(val));
 	val2 = g_dbus_proxy_get_cached_property(priv->proxy, "Tainted");
 	if (val2 != NULL)
-		priv->tainted = g_variant_get_boolean(val2);
+		priv->tainted = fwupd_variant_get_boolean(val2);
 	val3 = g_dbus_proxy_get_cached_property(priv->proxy, "Status");
 	if (val3 != NULL)
-		fwupd_client_set_status(self, g_variant_get_uint32(val3));
+		fwupd_client_set_status(self, fwupd_variant_get_uint32(val3));
 	val4 = g_dbus_proxy_get_cached_property(priv->proxy, "Interactive");
 	if (val4 != NULL)
-		priv->interactive = g_variant_get_boolean(val4);
+		priv->interactive = fwupd_variant_get_boolean(val4);
 	val5 = g_dbus_proxy_get_cached_property(priv->proxy, "HostProduct");
 	if (val5 != NULL)
-		fwupd_client_set_host_product(self, g_variant_get_string(val5, NULL));
+		fwupd_client_set_host_product(self, fwupd_variant_get_string(val5));
 	val10 = g_dbus_proxy_get_cached_property(priv->proxy, "HostVendor");
 	if (val10 != NULL)
-		fwupd_client_set_host_vendor(self, g_variant_get_string(val10, NULL));
+		fwupd_client_set_host_vendor(self, fwupd_variant_get_string(val10));
 	val6 = g_dbus_proxy_get_cached_property(priv->proxy, "HostMachineId");
 	if (val6 != NULL)
-		fwupd_client_set_host_machine_id(self, g_variant_get_string(val6, NULL));
+		fwupd_client_set_host_machine_id(self, fwupd_variant_get_string(val6));
 	val7 = g_dbus_proxy_get_cached_property(priv->proxy, "HostSecurityId");
 	if (val7 != NULL)
-		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
+		fwupd_client_set_host_security_id(self, fwupd_variant_get_string(val7));
 	val8 = g_dbus_proxy_get_cached_property(priv->proxy, "HostBkc");
 	if (val8 != NULL)
-		fwupd_client_set_host_bkc(self, g_variant_get_string(val8, NULL));
+		fwupd_client_set_host_bkc(self, fwupd_variant_get_string(val8));
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
 	if (val9 != NULL)
-		priv->only_trusted = g_variant_get_boolean(val9);
+		priv->only_trusted = fwupd_variant_get_boolean(val9);
 
 	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
 	if (val_hwids != NULL) {
@@ -1127,6 +1145,9 @@ fwupd_client_connect_async(FwupdClient *self,
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	g_return_if_fail(locker != NULL);
+
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_connect_async);
 
 	/* nothing to do */
 	if (priv->proxy != NULL) {
@@ -1284,6 +1305,7 @@ fwupd_client_quit_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_quit_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Quit",
 			  NULL,
@@ -1421,6 +1443,7 @@ fwupd_client_get_host_security_attrs_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_host_security_attrs_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetHostSecurityAttrs",
 			  NULL,
@@ -1504,6 +1527,7 @@ fwupd_client_modify_bios_setting_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_modify_bios_setting_async);
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
 	g_hash_table_iter_init(&iter, settings);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -1595,6 +1619,7 @@ fwupd_client_get_bios_settings_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_bios_settings_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetBiosSettings",
 			  NULL,
@@ -1681,6 +1706,7 @@ fwupd_client_get_host_security_events_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_host_security_events_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetHostSecurityEvents",
 			  g_variant_new("(u)", limit),
@@ -1712,33 +1738,14 @@ fwupd_client_get_host_security_events_finish(FwupdClient *self, GAsyncResult *re
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
-static GHashTable *
-fwupd_client_report_metadata_hash_from_variant(GVariant *value)
-{
-	GHashTable *hash;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		g_autoptr(GVariant) data = NULL;
-		const gchar *key = NULL;
-		const gchar *val = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		g_variant_get(data, "{&s&s}", &key, &val);
-		g_hash_table_insert(hash, g_strdup(key), g_strdup(val));
-	}
-	return hash;
-}
-
 static void
 fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GVariant) untuple = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
@@ -1746,11 +1753,25 @@ fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	if (!g_variant_is_of_type(val, G_VARIANT_TYPE("(a{ss})"))) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INTERNAL,
+						"invalid GVariant");
+		return;
+	}
+	untuple = g_variant_get_child_value(val, 0);
+	hash = fwupd_variant_to_hash_kv(untuple);
+	if (hash == NULL) {
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INTERNAL,
+						"invalid hash");
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_client_report_metadata_hash_from_variant(val),
-			      (GDestroyNotify)g_hash_table_unref);
+	g_task_return_pointer(task, g_steal_pointer(&hash), (GDestroyNotify)g_hash_table_unref);
 }
 
 /**
@@ -1782,6 +1803,7 @@ fwupd_client_get_report_metadata_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_report_metadata_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetReportMetadata",
 			  NULL,
@@ -1867,6 +1889,7 @@ fwupd_client_get_devices_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_devices_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetDevices",
 			  NULL,
@@ -1951,6 +1974,7 @@ fwupd_client_get_plugins_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_plugins_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetPlugins",
 			  NULL,
@@ -2036,6 +2060,7 @@ fwupd_client_get_history_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_history_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetHistory",
 			  NULL,
@@ -2148,6 +2173,7 @@ fwupd_client_get_device_by_id_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_device_by_id_async);
 	g_task_set_task_data(task, g_strdup(device_id), g_free);
 	fwupd_client_get_devices_async(self,
 				       cancellable,
@@ -2247,6 +2273,7 @@ fwupd_client_get_devices_by_guid_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_devices_by_guid_async);
 	g_task_set_task_data(task, g_strdup(guid), g_free);
 	fwupd_client_get_devices_async(self,
 				       cancellable,
@@ -2331,6 +2358,7 @@ fwupd_client_get_releases_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_releases_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetReleases",
 			  g_variant_new("(s)", device_id),
@@ -2418,6 +2446,7 @@ fwupd_client_search_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_search_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Search",
 			  g_variant_new("(s)", token),
@@ -2505,6 +2534,7 @@ fwupd_client_get_downgrades_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_downgrades_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetDowngrades",
 			  g_variant_new("(s)", device_id),
@@ -2592,6 +2622,7 @@ fwupd_client_get_upgrades_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_upgrades_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetUpgrades",
 			  g_variant_new("(s)", device_id),
@@ -2677,6 +2708,7 @@ fwupd_client_modify_config_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_modify_config_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyConfig",
 			  g_variant_new("(sss)", section, key, value),
@@ -2756,6 +2788,7 @@ fwupd_client_reset_config_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_reset_config_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "ResetConfig",
 			  g_variant_new("(s)", section),
@@ -2835,6 +2868,7 @@ fwupd_client_activate_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_activate_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Activate",
 			  g_variant_new("(s)", device_id),
@@ -2913,6 +2947,7 @@ fwupd_client_verify_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_verify_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Verify",
 			  g_variant_new("(s)", device_id),
@@ -2991,6 +3026,7 @@ fwupd_client_verify_update_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_verify_update_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "VerifyUpdate",
 			  g_variant_new("(s)", device_id),
@@ -3069,6 +3105,7 @@ fwupd_client_unlock_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_unlock_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Unlock",
 			  g_variant_new("(s)", device_id),
@@ -3147,6 +3184,7 @@ fwupd_client_clear_results_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_clear_results_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "ClearResults",
 			  g_variant_new("(s)", device_id),
@@ -3198,7 +3236,7 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 	}
 
 	/* success */
-	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_object_unref);
 }
 
 /**
@@ -3233,6 +3271,7 @@ fwupd_client_get_results_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_results_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetResults",
 			  g_variant_new("(s)", device_id),
@@ -3306,6 +3345,9 @@ fwupd_client_install_stream_async(FwupdClient *self,
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_install_stream_async);
 
 	/* set options */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
@@ -3385,6 +3427,7 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_bytes(bytes, &error);
 	if (istr == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_install_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -3400,6 +3443,7 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 					  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_install_bytes_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -3470,6 +3514,7 @@ fwupd_client_install_async(FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_fn(filename, &error);
 	if (istr == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_install_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -3485,6 +3530,7 @@ fwupd_client_install_async(FwupdClient *self,
 					  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_install_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -3619,10 +3665,14 @@ fwupd_client_is_localhost(const gchar *url)
 {
 	g_autoptr(CURLU) h = curl_url();
 	g_autoptr(CURLSTR) hostname = NULL;
+	const gchar *hostnames[] = {"localhost", "127.0.0.1", "::1", "[::1]", NULL};
+
 	if (curl_url_set(h, CURLUPART_URL, url, 0) != CURLUE_OK)
 		return FALSE;
 	(void)curl_url_get(h, CURLUPART_HOST, &hostname, 0);
-	return g_strcmp0(hostname, "localhost") == 0;
+	if (hostname == NULL)
+		return FALSE;
+	return g_strv_contains(hostnames, hostname);
 }
 
 static gboolean
@@ -3670,11 +3720,12 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 
 	/* local and directory remotes may have the firmware already */
 	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_LOCAL &&
-	    !fwupd_client_is_url_http(uri_tmp)) {
+	    !fwupd_client_is_url_http(uri_tmp) && fwupd_remote_get_filename_cache(remote) != NULL) {
 		const gchar *fn_cache = fwupd_remote_get_filename_cache(remote);
 		g_autofree gchar *path = g_path_get_dirname(fn_cache);
 		fn = g_build_filename(path, uri_tmp, NULL);
-	} else if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+	} else if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DIRECTORY &&
+		   g_str_has_prefix(uri_tmp, "file://")) {
 		fn = g_strdup(uri_tmp + 7);
 	}
 
@@ -3808,6 +3859,7 @@ fwupd_client_install_release_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_install_release_async);
 	data = g_new0(FwupdClientInstallReleaseData, 1);
 	data->device = g_object_ref(device);
 	data->release = g_object_ref(release);
@@ -3903,6 +3955,9 @@ fwupd_client_get_details_stream_async(FwupdClient *self,
 	g_autoptr(GUnixFDList) fd_list = NULL;
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_get_details_stream_async);
+
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
 	g_unix_fd_list_append(fd_list, fd, NULL);
@@ -3957,6 +4012,7 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_bytes(bytes, &error);
 	if (istr == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_get_details_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -3965,6 +4021,7 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_details_bytes_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -4026,6 +4083,7 @@ fwupd_client_get_details_async(FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_fn(filename, &error);
 	if (istr == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_get_details_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -4034,6 +4092,7 @@ fwupd_client_get_details_async(FwupdClient *self,
 	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_details_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -4077,6 +4136,24 @@ fwupd_client_get_percentage(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), 0);
+	return (guint)priv->percentage;
+}
+
+/**
+ * fwupd_client_get_percentage_full:
+ * @self: a #FwupdClient
+ *
+ * Gets the last returned percentage value.
+ *
+ * Returns: a percentage, or %FWUPD_PERCENTAGE_UNKNOWN for unknown.
+ *
+ * Since: 2.1.3
+ **/
+gdouble
+fwupd_client_get_percentage_full(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_PERCENTAGE_UNKNOWN);
 	return priv->percentage;
 }
 
@@ -4359,6 +4436,9 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
 	g_autoptr(GUnixFDList) fd_list = NULL;
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_update_metadata_stream_async);
+
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
 	g_unix_fd_list_append(fd_list, g_unix_input_stream_get_fd(istr), NULL);
@@ -4435,12 +4515,14 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_bytes(metadata, &error);
 	if (istr == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_update_metadata_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
 	istr_sig = fwupd_unix_input_stream_from_bytes(signature, &error);
 	if (istr_sig == NULL) {
 		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_set_source_tag(task, fwupd_client_update_metadata_bytes_async);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -4455,6 +4537,7 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 						  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_update_metadata_bytes_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -4671,6 +4754,7 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_refresh_remote_async);
 	data = g_new0(FwupdClientRefreshRemoteData, 1);
 	data->download_flags = download_flags;
 	data->remote = g_object_ref(remote);
@@ -4753,6 +4837,15 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		return;
 	}
 
+	/* can we load any usernames or passwords from the users homedir */
+	for (guint i = 0; i < array->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(array, i);
+		if (!fwupd_remote_load_user_secrets(remote, &error)) {
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
+	}
+
 	/* success */
 	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
@@ -4786,6 +4879,7 @@ fwupd_client_get_remotes_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_remotes_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetRemotes",
 			  NULL,
@@ -4870,6 +4964,7 @@ fwupd_client_get_approved_firmware_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_approved_firmware_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "GetApprovedFirmware",
 			  NULL,
@@ -4948,6 +5043,7 @@ fwupd_client_set_approved_firmware_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_set_approved_firmware_async);
 	strv = g_new0(gchar *, checksums->len + 1);
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *tmp = g_ptr_array_index(checksums, i);
@@ -5013,6 +5109,7 @@ fwupd_client_get_blocked_firmware_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_blocked_firmware_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -5067,6 +5164,7 @@ fwupd_client_set_blocked_firmware_async(FwupdClient *self,
 	g_return_if_fail(priv->proxy != NULL);
 
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_set_blocked_firmware_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -5142,6 +5240,7 @@ fwupd_client_set_feature_flags_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_set_feature_flags_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "SetFeatureFlags",
 			  g_variant_new("(t)", (guint64)feature_flags),
@@ -5240,6 +5339,7 @@ fwupd_client_self_sign_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_self_sign_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "SelfSign",
 			  g_variant_new("(sa{sv})", value, &builder),
@@ -5324,6 +5424,7 @@ fwupd_client_modify_remote_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_modify_remote_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyRemote",
 			  g_variant_new("(sss)", remote_id, key, value),
@@ -5402,6 +5503,7 @@ fwupd_client_clean_remote_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_clean_remote_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "CleanRemote",
 			  g_variant_new("(s)", remote_id),
@@ -5487,6 +5589,7 @@ fwupd_client_modify_device_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_modify_device_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyDevice",
 			  g_variant_new("(sss)", device_id, key, value),
@@ -5587,6 +5690,7 @@ fwupd_client_get_remote_by_id_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_get_remote_by_id_async);
 	g_task_set_task_data(task, g_strdup(remote_id), g_free);
 	fwupd_client_get_remotes_async(self,
 				       cancellable,
@@ -5720,7 +5824,7 @@ fwupd_client_download_ipfs(FwupdClient *self,
 
 	/* we get no detailed progress details */
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
-	fwupd_client_set_percentage(self, 0);
+	fwupd_client_set_percentage(self, 0.0);
 
 	/* convert from URI to path */
 	if (g_str_has_prefix(url, "ipfs://")) {
@@ -5737,9 +5841,10 @@ fwupd_client_download_ipfs(FwupdClient *self,
 		return NULL;
 	if (!g_subprocess_communicate(subprocess, NULL, cancellable, &bstdout, &bstderr, error))
 		return NULL;
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	if (g_subprocess_get_exit_status(subprocess) != 0) {
-		const gchar *msg = g_bytes_get_data(bstderr, NULL);
+		gsize msgsz = 0;
+		const gchar *msgdata = g_bytes_get_data(bstderr, &msgsz);
+		g_autofree gchar *msg = g_strndup(msgdata, msgsz);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -5764,7 +5869,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	} else {
 		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
@@ -5775,8 +5880,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 			       fwupd_client_download_write_callback_cb);
 	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
-	fwupd_client_set_percentage(self, 100);
+	fwupd_client_set_percentage(self, 100.0);
 	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -5790,15 +5894,17 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "failed to download file: %s",
-				    errbuf);
+				    "failed to download file: %s [%u]",
+				    errbuf,
+				    (guint)res);
 			return NULL;
 		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to download file: %s",
-			    curl_easy_strerror(res));
+			    "failed to download file: %s [%u]",
+			    curl_easy_strerror(res),
+			    (guint)res);
 		return NULL;
 	}
 
@@ -5966,8 +6072,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 			g_task_return_error(task, g_steal_pointer(&error));
 			return;
 		}
-		fwupd_client_set_percentage(self, 0);
-		fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+		fwupd_client_set_percentage(self, 0.0);
 		g_info("failed to download %s: %s, trying next URI…", url, error->message);
 	}
 	g_task_return_pointer(task, g_steal_pointer(&blob), (GDestroyNotify)g_bytes_unref);
@@ -5992,6 +6097,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 
 	/* ensure networking set up */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_download_bytes2_async);
 	helper = fwupd_client_curl_new(self, &error);
 	if (helper == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -6089,7 +6195,7 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 			       fwupd_client_download_write_callback_cb);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(helper->curl);
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+	fwupd_client_set_percentage(self, 100.0);
 	if (res != CURLE_OK) {
 		glong status_code = 0;
 		curl_easy_getinfo(helper->curl, CURLINFO_RESPONSE_CODE, &status_code);
@@ -6161,6 +6267,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 
 	/* ensure networking set up */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_upload_bytes_async);
 	helper = fwupd_client_curl_new(self, &error);
 	if (helper == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -6194,10 +6301,9 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	} else {
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 1L);
-		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 1L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	}
 
-	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	g_info("uploading to %s", url);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_URL, url);
 	g_task_set_task_data(task,
@@ -6359,6 +6465,7 @@ fwupd_client_upload_report_async(FwupdClient *self,
 	g_return_if_fail(priv->proxy != NULL);
 
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_upload_report_async);
 	fwupd_client_upload_bytes_async(self,
 					url,
 					payload,
@@ -6442,6 +6549,7 @@ fwupd_client_inhibit_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_inhibit_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Inhibit",
 			  g_variant_new("(s)", reason),
@@ -6521,6 +6629,7 @@ fwupd_client_uninhibit_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_uninhibit_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "Uninhibit",
 			  g_variant_new("(s)", inhibit_id),
@@ -6634,6 +6743,9 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_emulation_load_async);
+
 	istr = fwupd_unix_input_stream_from_fn(filename, &error);
 	if (istr == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -6661,6 +6773,7 @@ fwupd_client_emulation_load_async(FwupdClient *self,
 						  g_steal_pointer(&task));
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_emulation_load_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -6758,6 +6871,9 @@ fwupd_client_emulation_save_async(FwupdClient *self,
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 
+	/* tag for debugging */
+	g_task_set_source_tag(task, fwupd_client_emulation_save_async);
+
 	istr = fwupd_unix_output_stream_from_fn(filename, &error);
 	if (istr == NULL) {
 		g_task_return_error(task, g_steal_pointer(&error));
@@ -6785,6 +6901,7 @@ fwupd_client_emulation_save_async(FwupdClient *self,
 						  g_steal_pointer(&task));
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_emulation_save_async);
 	g_task_return_new_error_literal(task,
 					FWUPD_ERROR,
 					FWUPD_ERROR_NOT_SUPPORTED,
@@ -6860,6 +6977,7 @@ fwupd_client_fix_host_security_attr_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_fix_host_security_attr_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "FixHostSecurityAttr",
 			  g_variant_new("(s)", appstream_id),
@@ -6938,6 +7056,7 @@ fwupd_client_undo_host_security_attr_async(FwupdClient *self,
 
 	/* call into daemon */
 	task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_set_source_tag(task, fwupd_client_undo_host_security_attr_async);
 	g_dbus_proxy_call(priv->proxy,
 			  "UndoHostSecurityAttr",
 			  g_variant_new("(s)", appstream_id),
@@ -7332,6 +7451,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_PERCENTAGE:
 		g_value_set_uint(value, priv->percentage);
 		break;
+	case PROP_PERCENTAGE_FULL:
+		g_value_set_double(value, priv->percentage);
+		break;
 	case PROP_DAEMON_VERSION:
 		g_value_set_string(value, priv->daemon_version);
 		break;
@@ -7380,6 +7502,9 @@ fwupd_client_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_PERCENTAGE:
 		priv->percentage = g_value_get_uint(value);
+		break;
+	case PROP_PERCENTAGE_FULL:
+		priv->percentage = g_value_get_double(value);
 		break;
 	case PROP_BATTERY_LEVEL:
 		fwupd_client_set_battery_level(self, g_value_get_uint(value));
@@ -7606,6 +7731,22 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	g_object_class_install_property(object_class, PROP_PERCENTAGE, pspec);
 
 	/**
+	 * FwupdClient:percentage-full:
+	 *
+	 * The last-reported percentage of the daemon.
+	 *
+	 * Since: 2.1.3
+	 */
+	pspec = g_param_spec_double("percentage-full",
+				    NULL,
+				    NULL,
+				    -1.0,
+				    100.0,
+				    -1.0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PERCENTAGE_FULL, pspec);
+
+	/**
 	 * FwupdClient:daemon-version:
 	 *
 	 * The daemon version number.
@@ -7740,6 +7881,7 @@ static void
 fwupd_client_init(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	priv->percentage = FWUPD_PERCENTAGE_UNKNOWN;
 	g_mutex_init(&priv->proxy_mutex);
 	g_mutex_init(&priv->idle_mutex);
 	priv->idle_sources =

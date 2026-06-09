@@ -38,4 +38,6 @@ fu_redfish_request_get_uri(FuRedfishRequest *self);
 glong
 fu_redfish_request_get_status_code(FuRedfishRequest *self);
 void
+fu_redfish_request_set_path_prefix(FuRedfishRequest *self, const gchar *path_prefix);
+void
 fu_redfish_request_set_cache(FuRedfishRequest *self, GHashTable *cache);

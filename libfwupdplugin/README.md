@@ -85,7 +85,7 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_common_dump*`: Use `fu_dump` prefix, i.e. remove the `_common`
 * `fu_common_error_array_get_best()`: You should not be using this.
 * `fu_common_cpuid()`: Use `fu_cpuid` instead.
-* `fu_common_get_cpu_vendor()`: Use `fu_cpu_get_vendor` instead.
+* `fu_common_get_cpu_vendor()`: Use `fu_context_get_cpu_vendor` instead.
 * `fu_common_vercmp_full()`: Use `fu_version_compare()` instead.
 * `fu_version_ensure_semver()`: Use `fu_version_ensure_semver()` instead.
 * `fu_common_version_from_uint*()`: Use `fu_version_from_uint*()` instead.
@@ -227,3 +227,5 @@ Use `./contrib/migrate.py` to migrate up out-of-tree plugins to the new API.
 * `fu_chunk_array_mutable_new()`: Add `GError`
 * `fu_composite_input_stream_add_bytes()`: Add `GError`
 * `fu_composite_input_stream_add_partial_stream()`: Add `GError`
+* `fu_progress_get_percentage()`: Convert `guint` to `gdouble`
+* `fu_progress_set_percentage()`: Convert `guint` to `gdouble`

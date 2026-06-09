@@ -1,0 +1,35 @@
+# -*- mode: dockerfile -*-
+FROM debian:unstable
+ENV CI_NETWORK=true
+RUN echo fubar > /etc/machine-id
+RUN set -euxo pipefail; \
+    export DEBIAN_FRONTEND=noninteractive; \
+%%%SETUP%%% \
+    apt-get update; \
+    apt-get install --yes --no-install-recommends \
+    build-essential \
+    clang-18 \
+    clang-tools-18 \
+    dpkg-dev \
+    libclang-18-dev \
+    libgirepository-2.0-dev \
+    llvm-18-dev \
+    python3-apt \
+%%%DEPENDENCIES%%%; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+RUN set -euxo pipefail; \
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100; \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100; \
+    update-alternatives --install /usr/bin/scan-build scan-build /usr/bin/scan-build-18 100
+ENV CC=clang
+ENV CXX=clang++
+RUN set -euxo pipefail; \
+    tmpclone=$(mktemp -d); \
+    git clone https://gitlab.freedesktop.org/tartan/tartan.git "$tmpclone"; \
+    cd "$tmpclone"; \
+    meson setup --prefix /usr build; \
+    ninja -vC build install; \
+    tartan-build --help
+WORKDIR /github/workspace
+ENV SCANBUILD=/github/workspace/contrib/tartan.sh

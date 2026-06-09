@@ -99,6 +99,7 @@ main(int argc, char *argv[])
 	g_autofree gchar *dbxfile = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GOptionContext) context = NULL;
 	g_autofree gchar *tmp = NULL;
 	g_autofree gchar *esp_path = NULL;
@@ -190,6 +191,19 @@ main(int argc, char *argv[])
 		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 	} else {
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
+	}
+
+	/* load well-known paths into the context's path store */
+	if (!fu_context_load(ctx,
+			     progress,
+			     FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS |
+				 FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV,
+			     &error)) {
+		g_printerr("%s: %s\n",
+			   /* TRANSLATORS: could not do the most basic of setup tasks */
+			   _("Failed to load context"),
+			   error->message);
+		return EXIT_FAILURE;
 	}
 
 	/* override the default ESP path */

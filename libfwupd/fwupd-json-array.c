@@ -351,6 +351,11 @@ fwupd_json_array_add_bytes(FwupdJsonArray *self, GBytes *value)
 	g_return_if_fail(value != NULL);
 
 	buf = g_bytes_get_data(value, &bufsz);
+	if (buf == NULL) {
+		g_ptr_array_add(self->nodes, fwupd_json_node_new_string(""));
+		return;
+	}
+	/* nocheck:blocked */
 	b64data = g_base64_encode(buf, bufsz);
 
 	g_ptr_array_add(self->nodes, fwupd_json_node_new_string(b64data));

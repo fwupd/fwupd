@@ -21,6 +21,7 @@ fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error)
 		   {FU_HWIDS_KEY_BASEBOARD_PRODUCT, "smbios.planar.product"},
 		   {FU_HWIDS_KEY_BIOS_VENDOR, "smbios.bios.vendor"},
 		   {FU_HWIDS_KEY_BIOS_VERSION, "smbios.bios.version"},
+		   {FU_HWIDS_KEY_BIOS_RELEASE_DATE, "smbios.bios.reldate"},
 		   {FU_HWIDS_KEY_FAMILY, "smbios.system.family"},
 		   {FU_HWIDS_KEY_MANUFACTURER, "smbios.system.maker"},
 		   {FU_HWIDS_KEY_PRODUCT_NAME, "smbios.system.product"},

@@ -40,10 +40,7 @@ static void
 fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_data)
 {
 	g_return_if_fail(FU_IS_EFI_LOAD_OPTION(self));
-	if (self->optional_data != NULL) {
-		g_bytes_unref(self->optional_data);
-		self->optional_data = NULL;
-	}
+	g_clear_pointer(&self->optional_data, g_bytes_unref);
 	if (optional_data != NULL)
 		self->optional_data = g_bytes_ref(optional_data);
 }
@@ -575,7 +572,7 @@ fu_efi_load_option_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	if (self->optional_data != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(self->optional_data, &bufsz);
-		g_autofree gchar *datastr = g_base64_encode(buf, bufsz);
+		g_autofree gchar *datastr = fu_base64_encode(buf, bufsz);
 		xb_builder_node_insert_text(bn, "optional_data", datastr, NULL);
 	}
 }

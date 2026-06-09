@@ -35,6 +35,13 @@ fu_genesys_usbhub_codesign_firmware_validate(FuFirmware *firmware,
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (offset > streamsz) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "offset is larger than stream");
+		return FALSE;
+	}
 	if (streamsz - offset != FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE &&
 	    streamsz - offset != FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE) {
 		g_set_error_literal(error,
@@ -100,6 +107,7 @@ fu_genesys_usbhub_codesign_firmware_export(FuFirmware *firmware,
 static void
 fu_genesys_usbhub_codesign_firmware_init(FuGenesysUsbhubCodesignFirmware *self)
 {
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

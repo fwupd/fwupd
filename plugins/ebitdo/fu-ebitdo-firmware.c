@@ -23,6 +23,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 {
 	guint32 version;
 	gsize streamsz = 0;
+	gsize total_size;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(FuStructEbitdoHdr) st = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
@@ -60,7 +61,10 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_set_addr(firmware, fu_struct_ebitdo_hdr_get_destination_addr(st));
-	fu_firmware_set_size(firmware, st->buf->len + fu_struct_ebitdo_hdr_get_destination_len(st));
+	total_size = st->buf->len;
+	if (!fu_size_checked_inc(&total_size, fu_struct_ebitdo_hdr_get_destination_len(st), error))
+		return FALSE;
+	fu_firmware_set_size(firmware, total_size);
 	return TRUE;
 }
 
@@ -95,6 +99,7 @@ fu_ebitdo_firmware_init(FuEbitdoFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void

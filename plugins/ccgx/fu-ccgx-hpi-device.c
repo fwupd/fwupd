@@ -480,14 +480,18 @@ fu_ccgx_hpi_device_reg_write_cb(FuDevice *device, gpointer user_data, GError **e
 {
 	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *)user_data;
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	g_autofree guint8 *bufhw = g_malloc0(helper->bufsz + self->hpi_addrsz);
+	gsize bufhw_sz = helper->bufsz;
+	g_autofree guint8 *bufhw = NULL;
 
+	if (!fu_size_checked_inc(&bufhw_sz, self->hpi_addrsz, error))
+		return FALSE;
+	bufhw = g_malloc0(bufhw_sz);
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
 		bufhw[i] = (guint8)(helper->addr >> (8 * i));
 	memcpy(&bufhw[self->hpi_addrsz], helper->buf, helper->bufsz); /* nocheck:blocked */
 	if (!fu_ccgx_hpi_device_i2c_write(self,
 					  bufhw,
-					  helper->bufsz + self->hpi_addrsz,
+					  bufhw_sz,
 					  FU_CCGX_I2C_DATA_CONFIG_STOP |
 					      FU_CCGX_I2C_DATA_CONFIG_NAK,
 					  error)) {
@@ -525,13 +529,18 @@ fu_ccgx_hpi_device_reg_write_no_resp(FuCcgxHpiDevice *self,
 				     guint16 bufsz,
 				     GError **error)
 {
-	g_autofree guint8 *bufhw = g_malloc0(bufsz + self->hpi_addrsz);
+	gsize bufhw_sz = bufsz;
+	g_autofree guint8 *bufhw = NULL;
+
+	if (!fu_size_checked_inc(&bufhw_sz, self->hpi_addrsz, error))
+		return FALSE;
+	bufhw = g_malloc0(bufhw_sz);
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
 		bufhw[i] = (guint8)(addr >> (8 * i));
 	memcpy(&bufhw[self->hpi_addrsz], buf, bufsz); /* nocheck:blocked */
 	if (!fu_ccgx_hpi_device_i2c_write_no_resp(self,
 						  bufhw,
-						  bufsz + self->hpi_addrsz,
+						  bufhw_sz,
 						  FU_CCGX_I2C_DATA_CONFIG_STOP |
 						      FU_CCGX_I2C_DATA_CONFIG_NAK,
 						  error)) {
@@ -1206,7 +1215,6 @@ fu_ccgx_hpi_device_get_metadata_offset(FuCcgxHpiDevice *self,
 	}
 
 	/* get the row offset for the flash size */
-	addr_max = self->flash_size / self->flash_row_size;
 	if (self->flash_row_size == 128) {
 		*offset = HPI_META_DATA_OFFSET_ROW_128;
 	} else if (self->flash_row_size == 256) {
@@ -1219,6 +1227,7 @@ fu_ccgx_hpi_device_get_metadata_offset(FuCcgxHpiDevice *self,
 			    self->flash_row_size);
 		return FALSE;
 	}
+	addr_max = self->flash_size / self->flash_row_size;
 
 	/* get the row offset in the flash */
 	switch (fw_mode) {
@@ -1344,6 +1353,14 @@ fu_ccgx_hpi_device_write_firmware(FuDevice *device,
 		FuCcgxFirmwareRecord *rcd = g_ptr_array_index(records, i);
 
 		/* write chunk */
+		if (g_bytes_get_size(rcd->data) > G_MAXUINT16) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "record data too large: 0x%x",
+				    (guint)g_bytes_get_size(rcd->data));
+			return FALSE;
+		}
 		if (!fu_ccgx_hpi_device_write_flash(self,
 						    rcd->row_number,
 						    g_bytes_get_data(rcd->data, NULL),

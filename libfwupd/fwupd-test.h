@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include "fwupd-build.h"
 
 gboolean
 fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error);

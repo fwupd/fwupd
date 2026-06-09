@@ -424,7 +424,7 @@ mock_tree_attach_device(gpointer user_data)
 		g_timeout_add(child->device->delay_ms, mock_tree_attach_device, child);
 	}
 
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 typedef struct {
@@ -437,7 +437,7 @@ on_sync_timeout(gpointer user_data)
 {
 	FuThunderboltSyncContext *ctx = (FuThunderboltSyncContext *)user_data;
 	g_main_loop_quit(ctx->loop);
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -480,8 +480,7 @@ sync_device_removed(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 		return;
 	}
 
-	g_object_unref(target->fu_device);
-	target->fu_device = NULL;
+	g_clear_object(&target->fu_device);
 }
 
 static void
@@ -611,8 +610,7 @@ mock_tree_detach(FuThunderboltMockTree *node)
 	for (guint i = 0; i < node->children->len; i++) {
 		FuThunderboltMockTree *child = g_ptr_array_index(node->children, i);
 		mock_tree_detach(child);
-		g_free(child->sysfs_parent);
-		child->sysfs_parent = NULL;
+		g_clear_pointer(&child->sysfs_parent, g_free);
 	}
 
 	bed = node->bed;
@@ -690,7 +688,7 @@ reattach_tree(gpointer user_data)
 	node->bed = g_object_ref(ctx->bed);
 	g_timeout_add(node->device->delay_ms, mock_tree_attach_device, node);
 
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -912,9 +910,7 @@ test_set_up(FuThunderboltTest *tt, gconstpointer params)
 	const gchar *udev_subsystems[] = {"thunderbolt", NULL};
 
 	tt->ctx = fu_context_new();
-	ret = fu_context_load_quirks(tt->ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
+	ret = fu_context_load(tt->ctx, FU_CONTEXT_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

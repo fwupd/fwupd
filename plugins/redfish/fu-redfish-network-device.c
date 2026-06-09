@@ -47,7 +47,7 @@ fu_redfish_network_device_get_state(FuRedfishNetworkDevice *self,
 		return FALSE;
 	}
 	if (state != NULL)
-		*state = g_variant_get_uint32(retval);
+		*state = fwupd_variant_get_uint32(retval);
 	return TRUE;
 }
 
@@ -141,7 +141,7 @@ fu_redfish_network_device_get_address(FuRedfishNetworkDevice *self, GError **err
 					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
 					       NULL,
 					       NETWORK_MANAGER_SERVICE_NAME,
-					       g_variant_get_string(ip4_config, NULL),
+					       fwupd_variant_get_string(ip4_config),
 					       NETWORK_MANAGER_INTERFACE_IP4_CONFIG,
 					       NULL,
 					       error);

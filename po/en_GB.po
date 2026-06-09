@@ -11,16 +11,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-04-15 14:09+0000\n"
-"Last-Translator: Andi Chandler <andi@gowling.com>\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-05-23 11:11+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: English (United Kingdom) <https://hosted.weblate.org/projects/fwupd/fwupd/en_GB/>\n"
 "Language: en_GB\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stable firmware)"
@@ -116,12 +116,33 @@ msgstr "Reset daemon configuration"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Authentication is required to reset daemon configuration to defaults"
 
+msgid "Modify a device property"
+msgstr "Modify a device property"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Authentication is required to modify a device property"
+
 msgid "Activate the new firmware on the device"
 msgstr "Activate the new firmware on the device"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Authentication is required to switch to the new firmware version"
+
+msgid "Clear stored firmware update results"
+msgstr "Clear stored firmware update results"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Authentication is required to clear firmware update results"
+
+msgid "Verify device firmware"
+msgstr "Verify device firmware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Authentication is required to verify firmware on a device"
 
 msgid "Update the stored device verification information"
 msgstr "Update the stored device verification information"
@@ -130,8 +151,26 @@ msgstr "Update the stored device verification information"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Authentication is required to update the stored checksums for the device"
 
+msgid "Get configured remotes"
+msgstr "Get configured remotes"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Authentication is required to get the list of configured remotes used for firmware updates"
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Modify a configured remote"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -206,6 +245,13 @@ msgstr "Enable emulation data collection"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Authentication is required to enable emulation data collection"
+
+msgid "Install firmware on emulated device"
+msgstr "Install firmware on emulated device"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "Authentication is required to install firmware on an emulated device"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1359,6 +1405,9 @@ msgstr "Show devices that are not updatable"
 msgid "Manually enable specific plugins"
 msgstr "Manually enable specific plug-ins"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "Location of public key directories used for JCat verification"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Run the plug-in composite prepare routine when using install-blob"
@@ -1386,6 +1435,9 @@ msgstr "Answer yes to all questions"
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Output in JSON format (disables all interactive prompts)"
+
+msgid "Prefix for import and output files"
+msgstr "Prefix for import and output files"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1837,6 +1889,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "Parse the system PCR eventlog"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "Show information about a JCat file"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "FILENAME ID ALIAS_ID"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "Add an alias for a specific JCat item"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "Remove an alias for a specific JCat item"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "FILENAME [KIND]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "Exports all embedded signatures to files"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "FILENAME DATA DETACHED_KEY"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "Import an existing signature to a JCat file"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr "Add a self-signed signature to a JCat file"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr "Add a signature to a JCat file"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr "FILENAME [SOURCE]"
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr "Verify a signature from a JCat file"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "This tool allows an administrator to use the fwupd plug-ins without being installed on the host system."
@@ -2200,6 +2308,27 @@ msgstr "Upload data now?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Device list uploaded successfully, thanks!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "Enter your email address for remote '%s'"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "To get a new token please go to %s and click 'Generate Token'"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "Enter your token for remote '%s'"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "Remote enabled and refreshed successfully"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Set the download retries for transient errors"
@@ -2287,6 +2416,14 @@ msgstr "Downgrades the firmware on a device"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Update the stored cryptographic hash with current ROM contents"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr "[REMOTE-ID] [USERNAME] [TOKEN]"
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr "Enable an authenticated remote"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3356,13 +3493,17 @@ msgstr "Refresh Interval"
 msgid "Priority"
 msgstr "Priority"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "Requires Auth"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Username"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Password"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3659,6 +3800,9 @@ msgstr "Enable new remote?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Agree and enable the remote?"
+
+#~ msgid "Password"
+#~ msgstr "Password"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Finds a algorithm that matches the file CRC"

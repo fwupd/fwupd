@@ -11,7 +11,7 @@ from fwupd_setup_helpers import parse_dependencies
 
 def parse_control_dependencies():
     QUBES = os.getenv("QUBES")
-    variant = os.getenv("MATRIX_CROSS")
+    variant = os.getenv("CROSS")
     if not variant:
         variant = "x86_64"
     return parse_dependencies("debian", variant, True), QUBES

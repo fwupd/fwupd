@@ -25,10 +25,14 @@ fu_acpi_dmar_parse(FuFirmware *firmware,
 {
 	FuAcpiDmar *self = FU_ACPI_DMAR(firmware);
 	guint8 dma_flags = 0;
+	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_dmar_parent_class)
-		 ->parse(FU_FIRMWARE(self), stream, flags, error))
+		 ->parse(FU_FIRMWARE(self),
+			 stream,
+			 flags | FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+			 error))
 		return FALSE;
 
 	/* check signature and read flags */
@@ -40,7 +44,11 @@ fu_acpi_dmar_parse(FuFirmware *firmware,
 			    fu_firmware_get_id(FU_FIRMWARE(self)));
 		return FALSE;
 	}
-	if (!fu_input_stream_read_u8(stream, 0x25, &dma_flags, error))
+
+	stream_payload = fu_acpi_table_get_payload(FU_ACPI_TABLE(self), error);
+	if (stream_payload == NULL)
+		return FALSE;
+	if (!fu_input_stream_read_u8(stream_payload, 0x1, &dma_flags, error))
 		return FALSE;
 	g_debug("flags: 0x%02x", dma_flags);
 	self->opt_in = (dma_flags & DMAR_DMA_CTRL_PLATFORM_OPT_IN_FLAG) > 0;

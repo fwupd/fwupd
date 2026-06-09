@@ -651,6 +651,8 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, G
 					      FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE,
 					      NULL,
 					      error);
+	if (buf == NULL)
+		return FALSE;
 
 	fu_struct_dell_kestrel_ec_databytes_set_cmd(st_req, FU_DELL_KESTREL_EC_CMD_SET_DOCK_PKG);
 	fu_struct_dell_kestrel_ec_databytes_set_data_sz(st_req, streamsz);

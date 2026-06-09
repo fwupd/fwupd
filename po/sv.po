@@ -17,8 +17,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-04-15 14:09+0000\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-05-30 06:41+0000\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -122,12 +122,33 @@ msgstr "Återställ demonkonfiguration"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Autentisering krävs för att återställa demonkonfigurationer till standardvärden"
 
+msgid "Modify a device property"
+msgstr "Modifiera en enhetsegenskap"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Autentisering krävs för att modifiera en enhetsegenskap"
+
 msgid "Activate the new firmware on the device"
 msgstr "Aktiverar den nya fasta programvaran på enheten"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Autentisering krävs för att växla till den nya fasta programvaruversionen"
+
+msgid "Clear stored firmware update results"
+msgstr "Rensa lagrade uppdateringsresultat för fast programvara"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Autentisering krävs för att rensa uppdateringsresultat för fast programvara"
+
+msgid "Verify device firmware"
+msgstr "Verifiera fast programvara för enhet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Autentisering krävs för att verifiera fast programvara på en enhet"
 
 msgid "Update the stored device verification information"
 msgstr "Uppdatera den lagrade enhetens verifikationsinformation"
@@ -136,8 +157,26 @@ msgstr "Uppdatera den lagrade enhetens verifikationsinformation"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Autentisering krävs för att uppdatera lagrade kontrollsummor för enheten"
 
+msgid "Get configured remotes"
+msgstr "Erhåll konfigurerade fjärrar"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Autentisering krävs för att erhålla listan på konfigurerade fjärrkällor som används för uppdateringar av fast programvara"
+
+msgid "Update the metadata for a configured remote"
+msgstr "Uppdatera metadata för en konfigurerad fjärrkälla"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr "Autentisering krävs för att uppdatera metadata för en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
+
 msgid "Modify a configured remote"
 msgstr "Modifiera en konfigurerad fjärrkälla"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr "Autentisering krävs för att aktivera eller inaktivera en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -212,6 +251,13 @@ msgstr "Aktivera datasamling för emulering"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Autentisering krävs för att aktivera emuleringsdatainsamling"
+
+msgid "Install firmware on emulated device"
+msgstr "Installera fast programvara på emulerad enhet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "Autentisering krävs för att installera fast programvara på en emulerad enhet"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1365,6 +1411,9 @@ msgstr "Visa enheter som inte kan uppdateras"
 msgid "Manually enable specific plugins"
 msgstr "Aktivera manuellt specifika insticksmoduler"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "Plats för öppen nyckel-kataloger som används för JCat-verifiering"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Kör förberedelsesammansättningsrutin för insticksmodulen när install-blob används"
@@ -1392,6 +1441,9 @@ msgstr "Svara ja på alla frågor"
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Utdata i JSON-format (inaktiverar alla interaktiva frågor)"
+
+msgid "Prefix for import and output files"
+msgstr "Prefix för import- och utdatafiler"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1843,6 +1895,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "TOLKA systemets PCR-händelselogg"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "Visa information om en JCat-fil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "FILENAMN ID ALIAS-ID"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "Lägg till ett alias för ett specifikt JCat-objekt"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "Ta bort ett alias för ett specifikt JCat-objekt"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "FILENAMN [TYP]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "Exporterar alla inbäddade signaturer till filer"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "FILENAMN DATA FRÅNKOPPLAD_NYCKEL"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "Importera en befintlig signatur till en JCat-fil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "FILENAMN KÄLLA [TYP[:VARIANT]] [MÅL]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr "Lägg till en självsignerad signatur till en JCat-fil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr "FILENAMN KÄLLA CERT PRIVNYCKEL [TYP[:VARIANT]] [MÅL]"
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr "Lägg till en signatur till en JCat-fil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr "FILENAMN [KÄLLA]"
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr "Verifiera en signatur från en JCat-fil"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Detta verktyg tillåter en administratör att använda fwupd-insticksmoduler utan att dessa är installerade på värdsystemet."
@@ -2206,6 +2314,27 @@ msgstr "Skicka data nu?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Lyckades skicka enhetslista, tack!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "Ange din e-postadress för fjärrkällan ”%s”"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "För att få en ny token, gå till %s och klicka på ”Generate Token”"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "Ange din token för fjärren ”%s”"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "Aktiverade och uppdaterade framgångsrikt fjärrkälla"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Ställ in antalet försök att hämta igen för tillfälliga fel"
@@ -2293,6 +2422,14 @@ msgstr "Nedgradera fast programvara på en enhet"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Uppdatera den lagrade kryptografiska hashen med aktuellt ROM-innehåll"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr "[FJÄRR-ID] [ANVÄNDARNAMN] [TOKEN]"
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr "Aktivera en autentiserad fjärrkälla"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3362,13 +3499,17 @@ msgstr "Uppdateringsintervall"
 msgid "Priority"
 msgstr "Prioritet"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "Kräver autentisering"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Användarnamn"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Lösenord"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3665,6 +3806,9 @@ msgstr "Aktivera ny fjärrkälla?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Samtyck och aktivera fjärrkällan?"
+
+#~ msgid "Password"
+#~ msgstr "Lösenord"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Hittar en algoritm som matchar filens CRC"

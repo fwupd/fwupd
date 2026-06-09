@@ -241,6 +241,7 @@ fu_igsc_device_get_subsystem_ids(FuIgscDevice *self, GError **error)
 static gboolean
 fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 {
+	guint32 hw_sku_raw;
 	guint8 res_buf[FU_IGSC_FWU_HECI_GET_CONFIG_RES_SIZE] = {0};
 	g_autoptr(FuIgscFwuHeciGetConfigReq) st_req = fu_igsc_fwu_heci_get_config_req_new();
 	g_autoptr(FuIgscFwuHeciGetConfigRes) st_res = NULL;
@@ -265,7 +266,29 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 		return FALSE;
 
 	/* success */
-	self->hw_sku = fu_igsc_fwu_heci_get_config_res_get_hw_sku(st_res);
+	/* hw_sku from HECI GetConfig may be a SKU index (e.g. G31 returns 0x3) or
+	 * already a bitmask (e.g. G21 returns 0x2). Normalize: power-of-2 = bitmask,
+	 * otherwise index -> (1u << index). */
+	hw_sku_raw = fu_igsc_fwu_heci_get_config_res_get_hw_sku(st_res);
+	if (hw_sku_raw == 0) {
+		self->hw_sku = 0;
+		g_debug("hw_sku unset: 0x0");
+	} else if ((hw_sku_raw & (hw_sku_raw - 1)) == 0) {
+		self->hw_sku = hw_sku_raw;
+		g_debug("hw_sku already bitmask: 0x%x", self->hw_sku);
+	} else {
+		if (hw_sku_raw >= 32) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid hw_sku index: 0x%x",
+				    hw_sku_raw);
+			return FALSE;
+		}
+		self->hw_sku = 1u << hw_sku_raw;
+		g_debug("hw_sku index: 0x%x, bitmask: 0x%x", hw_sku_raw, self->hw_sku);
+	}
+
 	self->oprom_code_devid_enforcement =
 	    fu_igsc_fwu_heci_get_config_res_get_flags(st_res) &
 	    FU_IGSC_FWU_HECI_GET_CONFIG_FLAG_OPROM_CODE_DEVID_ENFORCEMENT;
@@ -728,7 +751,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "mei device max msg length invalid: 0x%x",
-			    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)));
+			    (guint)fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)));
 		return FALSE;
 	}
 	payloadsz =

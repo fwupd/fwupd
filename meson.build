@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.1.2',
+  version: '2.1.5',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -276,8 +276,8 @@ if build_standalone
     conf.set('HAVE_BLUEZ', '1')
   endif
   host_cpu = host_machine.cpu_family()
-  hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(
-    host_cpu != 'x86' and host_cpu != 'x86_64'
+  hsi = get_option('hsi').require(host_machine.system() == 'linux').require(
+    host_cpu in ['x86', 'x86_64']
   ).allowed()
   if hsi
     conf.set('HAVE_HSI', '1')
@@ -352,11 +352,6 @@ if build_standalone
     conf.set('HAVE_PASSIM', '1')
   endif
 endif
-libjcat = dependency(
-  'jcat',
-  version: '>= 0.1.6',
-  fallback: ['libjcat', 'libjcat_dep'],
-)
 libblkid = dependency(
   'blkid',
   required: get_option('blkid'),
@@ -445,13 +440,31 @@ else
   python3 = find_program(python3path)
 endif
 
+# prefer GnuTLS
+jcat_crypto = 'none'
 gnutls = dependency(
   'gnutls',
   version: '>= 3.6.0',
   required: get_option('gnutls'),
 )
 if gnutls.found()
+  jcat_crypto = 'gnutls'
   conf.set('HAVE_GNUTLS', '1')
+  if cc.has_header_symbol('gnutls/gnutls.h', 'GNUTLS_SIGN_MLDSA87', dependencies: gnutls)
+    conf.set('HAVE_GNUTLS_PQC', '1')
+  endif
+endif
+
+# fall back to OpenSSL
+if jcat_crypto == 'none'
+  libcrypto = dependency(
+    'libcrypto',
+    required: get_option('openssl'),
+  )
+  if libcrypto.found()
+    jcat_crypto = 'libcrypto'
+    conf.set('HAVE_LIBCRYPTO', '1')
+  endif
 endif
 
 lzma = dependency('liblzma')
@@ -602,6 +615,12 @@ endif
 if cc.has_header_symbol('sys/mount.h', 'BLKSSZGET')
   conf.set('HAVE_BLKSSZGET', '1')
 endif
+if cc.has_header_symbol('stdlib.h', 'arc4random_buf')
+  conf.set('HAVE_ARC4RANDOM', '1')
+endif
+if cc.has_header_symbol('sys/random.h', 'getrandom')
+  conf.set('HAVE_GETRANDOM', '1')
+endif
 
 if host_machine.system() == 'freebsd'
   if cc.has_type(
@@ -636,25 +655,6 @@ if build_standalone
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 endif
 
-flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-libflashrom = disabler()
-if build_standalone
-  libflashrom = dependency(
-    'flashrom',
-    fallback: ['flashrom', 'flashrom_dep'],
-    required: flashrom,
-  )
-  if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
-    'flashrom_set_progress_callback_v2',
-    dependencies: libflashrom,
-  )
-    conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
-  endif
-  allow_flashrom = flashrom.allowed() and libflashrom.found()
-else
-  allow_flashrom = false
-endif
-
 logind = dependency(
   'systemd', 'libelogind',
   required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
@@ -663,7 +663,6 @@ logind = dependency(
 if logind.found()
   conf.set('HAVE_LOGIND', '1')
 endif
-
 if libsystemd.found()
   systemd = dependency(
     'systemd',
@@ -848,20 +847,16 @@ dbusmock = run_command(
   [python3, '-c', 'import dbusmock; print(dbusmock.__version__)'],
   check: false,
 )
-
-umockdev_integration_tests = get_option('umockdev_tests') \
-  .disable_auto_if(not get_option('tests')) \
-  .disable_auto_if(not introspection.allowed()) \
-  .disable_auto_if(not run_sanitize_unsafe_tests) \
-  .disable_auto_if(dbusmock.returncode() != 0)
-dependency(
+umockdev = dependency(
   'umockdev-1.0',
-  required: get_option('umockdev_tests'),
+  required: get_option('umockdev_tests').require(dbusmock.returncode() == 0).require(
+    get_option('tests')
+  ).disable_auto_if(
+    not introspection.allowed()
+  ).disable_auto_if(
+    not run_sanitize_unsafe_tests
+  ),
 )
-
-if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
-  warning('python dbusmock not found, umockdev tests will be disabled')
-endif
 
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
@@ -939,7 +934,7 @@ summary(
     'supported_build': supported_build,
     'static_analysis': static_analysis,
     'tests': get_option('tests'),
-    'umockdev_tests': umockdev_integration_tests.allowed(),
+    'umockdev_tests': umockdev.found(),
   },
   section: 'project features',
   bool_yn: true,
@@ -953,7 +948,7 @@ if build_daemon
       'hsi': hsi,
       'lvfs_metadata_format': lvfs_metadata_format,
       'passim': passim,
-      'PKCS7 support': supported_pkcs7,
+      'crypto': jcat_crypto,
     },
     section: 'daemon features',
     bool_yn: true,

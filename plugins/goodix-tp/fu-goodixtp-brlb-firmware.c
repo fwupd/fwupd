@@ -124,7 +124,6 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	guint8 update_flag = 0xFF;
 	guint8 vice_ver;
 	g_autoptr(FuStructGoodixBrlbHdr) st = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	st = fu_struct_goodix_brlb_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -234,6 +233,7 @@ fu_goodixtp_brlb_firmware_init(FuGoodixtpBrlbFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GOODIXTP_BRLB_CONFIG);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void

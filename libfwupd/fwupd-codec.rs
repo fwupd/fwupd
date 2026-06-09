@@ -11,4 +11,7 @@ enum FwupdCodecFlags {
     // Compress values to the smallest possible size.
     // Since: 2.0.8
     Compressed = 1 << 1,
+    // Do not include timestamps.
+    // Since: 2.1.3
+    NoTimestamp = 1 << 2,
 }

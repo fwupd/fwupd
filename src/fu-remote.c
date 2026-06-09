@@ -97,6 +97,12 @@ fu_remote_load_from_filename(FwupdRemote *self,
 		else
 			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES);
 	}
+	if (g_key_file_has_key(kf, group, "RequiresAuth", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "RequiresAuth", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_REQUIRES_AUTH);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_REQUIRES_AUTH);
+	}
 	if (g_key_file_has_key(kf, group, "Title", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);
@@ -117,10 +123,14 @@ fu_remote_load_from_filename(FwupdRemote *self,
 	if (g_key_file_has_key(kf, group, "Username", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Username", NULL);
 		fwupd_remote_set_username(self, tmp);
+		if (tmp != NULL && tmp[0] != '\0')
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_REQUIRES_AUTH);
 	}
 	if (g_key_file_has_key(kf, group, "Password", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Password", NULL);
 		fwupd_remote_set_password(self, tmp);
+		if (tmp != NULL && tmp[0] != '\0')
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_REQUIRES_AUTH);
 	}
 	if (g_key_file_has_key(kf, group, "FirmwareBaseURI", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "FirmwareBaseURI", NULL);
@@ -228,6 +238,8 @@ fu_remote_save_to_filename(FwupdRemote *self,
 		g_key_file_set_boolean(kf, group, "AutomaticReports", TRUE);
 	if (fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS))
 		g_key_file_set_boolean(kf, group, "AutomaticSecurityReports", TRUE);
+	if (fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_REQUIRES_AUTH))
+		g_key_file_set_boolean(kf, group, "RequiresAuth", TRUE);
 
 	/* save file */
 	if (!fu_path_mkdir_parent(filename, error))
@@ -254,6 +266,8 @@ fu_remote_clean(FwupdRemote *self, GError **error)
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	if (fwupd_remote_get_filename_cache(self) == NULL)
+		return TRUE;
 	dirname = g_path_get_dirname(fwupd_remote_get_filename_cache(self));
 	files = fu_path_get_files(dirname, &error_local);
 	if (files == NULL) {

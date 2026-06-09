@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include "fu-cabinet.h"
-#include "fu-engine-config.h"
 #include "fu-engine-request.h"
 
 #define FU_TYPE_RELEASE (fu_release_get_type())
@@ -78,7 +77,7 @@ fu_release_set_device(FuRelease *self, FuDevice *device) G_GNUC_NON_NULL(1);
 void
 fu_release_set_remote(FuRelease *self, FwupdRemote *remote) G_GNUC_NON_NULL(1);
 void
-fu_release_set_config(FuRelease *self, FuEngineConfig *config) G_GNUC_NON_NULL(1);
+fu_release_set_config(FuRelease *self, FuConfig *config) G_GNUC_NON_NULL(1);
 void
 fu_release_set_firmware_basename(FuRelease *self, const gchar *firmware_basename)
     G_GNUC_NON_NULL(1);

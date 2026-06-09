@@ -28,4 +28,3 @@ Plugin = vli
 GType = FuVliPdDevice
 Flags = skips-rom
 VliDeviceKind = vl105
-

@@ -97,6 +97,7 @@
 #include <libfwupdplugin/fu-kernel-search-path.h>
 #include <libfwupdplugin/fu-kernel.h>
 #include <libfwupdplugin/fu-linear-firmware.h>
+#include <libfwupdplugin/fu-lzma-common.h>
 #include <libfwupdplugin/fu-mei-device.h>
 #include <libfwupdplugin/fu-mem.h>
 #include <libfwupdplugin/fu-msgpack-item.h>

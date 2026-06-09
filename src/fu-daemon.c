@@ -150,6 +150,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	FuDaemonClass *klass = FU_DAEMON_GET_CLASS(self);
 	FuEngine *engine = fu_daemon_get_engine(self);
+	FuContext *ctx = fu_engine_get_context(engine);
 	guint timer_max_ms;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GTimer) timer = g_timer_new();
@@ -167,9 +168,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 		return FALSE;
 
 	/* how did we do */
-	timer_max_ms = fu_config_get_value_u64(FU_CONFIG(fu_engine_get_config(engine)),
-					       "fwupd",
-					       "IdleInhibitStartupThreshold");
+	timer_max_ms = fu_context_get_config_u64(ctx, "IdleInhibitStartupThreshold");
 	if (timer_max_ms > 0) {
 		guint timer_ms = g_timer_elapsed(timer, NULL) * 1000.f;
 		if (timer_ms > timer_max_ms) {
@@ -255,7 +254,6 @@ fu_daemon_init(FuDaemon *self)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuContext) ctx = fu_context_new();
-	fu_context_load_path_store(ctx);
 	priv->engine = fu_engine_new(ctx);
 	priv->loop = g_main_loop_new(NULL, FALSE);
 }

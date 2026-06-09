@@ -8,13 +8,10 @@
 
 #include <fwupdplugin.h>
 
-#include <jcat.h>
-
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
 #include "fu-cabinet.h"
-#include "fu-engine-config.h"
 #include "fu-engine-struct.h"
 #include "fu-release.h"
 
@@ -43,8 +40,6 @@ const gchar *
 fu_engine_get_host_product(FuEngine *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_engine_get_host_machine_id(FuEngine *self) G_GNUC_NON_NULL(1);
-const gchar *
-fu_engine_get_host_bkc(FuEngine *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid) G_GNUC_NON_NULL(1);
 gchar *
@@ -52,8 +47,6 @@ fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version) G_GNU
 FuCabinet *
 fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
-FuEngineConfig *
-fu_engine_get_config(FuEngine *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self) G_GNUC_NON_NULL(1);
 FuPlugin *
@@ -188,10 +181,8 @@ GPtrArray *
 fu_engine_get_approved_firmware(FuEngine *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_add_approved_firmware(FuEngine *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
-void
-fu_engine_set_approved_firmware(FuEngine *self, GPtrArray *checksums) G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_engine_self_sign(FuEngine *self, const gchar *value, JcatSignFlags flags, GError **error)
+fu_engine_self_sign(FuEngine *self, const gchar *value, FuJcatSignFlags flags, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_modify_config(FuEngine *self,

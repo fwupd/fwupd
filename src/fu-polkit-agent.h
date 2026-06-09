@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include <fu-path-store.h>
 
 #define FU_TYPE_POLKIT_AGENT (fu_polkit_agent_get_type())
 G_DECLARE_FINAL_TYPE(FuPolkitAgent, fu_polkit_agent, FU, POLKIT_AGENT, GObject)
@@ -16,4 +16,4 @@ G_DECLARE_FINAL_TYPE(FuPolkitAgent, fu_polkit_agent, FU, POLKIT_AGENT, GObject)
 FuPolkitAgent *
 fu_polkit_agent_new(void);
 gboolean
-fu_polkit_agent_open(FuPolkitAgent *self, GError **error);
+fu_polkit_agent_open(FuPolkitAgent *self, FuPathStore *pstore, GError **error);

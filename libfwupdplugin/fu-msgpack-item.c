@@ -590,6 +590,24 @@ fu_msgpack_item_read_binary(GByteArray *buf, gsize offset, gsize n, GError **err
 	return g_steal_pointer(&tmp);
 }
 
+static gchar *
+fu_msgpack_item_read_string(GByteArray *buf, gsize offset, gsize n, GError **error)
+{
+	g_autofree gchar *tmp = NULL;
+
+	if (!fu_memchk_read(buf->len, offset, n, error))
+		return NULL;
+	tmp = g_strndup((const gchar *)buf->data + offset, n);
+	if (!g_utf8_validate_len(tmp, n, NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid UTF-8 string");
+		return NULL;
+	}
+	return g_steal_pointer(&tmp);
+}
+
 FuMsgpackItem *
 fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 {
@@ -682,7 +700,7 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 	/* string */
 	if (cmd >= FU_MSGPACK_CMD_FIXSTR && cmd <= FU_MSGPACK_CMD_FIXSTR_END) {
 		gsize n = cmd & 0b00011111;
-		tmp_string = fu_memstrsafe(buf->data, buf->len, *offset, n, error);
+		tmp_string = fu_msgpack_item_read_string(buf, *offset, n, error);
 		if (tmp_string == NULL)
 			return NULL;
 		if (!fu_size_checked_inc(offset, n, error))
@@ -693,7 +711,7 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		guint8 n = 0;
 		if (!fu_memread_uint8_safe(buf->data, buf->len, *offset, &n, error))
 			return NULL;
-		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
+		tmp_string = fu_msgpack_item_read_string(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
 		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
@@ -704,7 +722,7 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		guint16 n = 0;
 		if (!fu_memread_uint16_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
+		tmp_string = fu_msgpack_item_read_string(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
 		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))
@@ -715,7 +733,7 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 		guint32 n = 0;
 		if (!fu_memread_uint32_safe(buf->data, buf->len, *offset, &n, G_BIG_ENDIAN, error))
 			return NULL;
-		tmp_string = fu_memstrsafe(buf->data, buf->len, (*offset) + sizeof(n), n, error);
+		tmp_string = fu_msgpack_item_read_string(buf, (*offset) + sizeof(n), n, error);
 		if (tmp_string == NULL)
 			return NULL;
 		if (!fu_size_checked_inc(offset, sizeof(n) + n, error))

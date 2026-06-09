@@ -31,7 +31,7 @@ struct _FuConsole {
 	guint spinner_idx;	   /* width in visible chars */
 	guint length_percentage;   /* width in visible chars */
 	guint length_status;	   /* width in visible chars */
-	guint percentage;
+	gdouble percentage;
 	GSource *timer_source;
 	gint64 last_animated; /* monotonic */
 	GTimer *time_elapsed;
@@ -154,8 +154,11 @@ readline(const gchar *prompt) /* nocheck:name */
 {
 	char buffer[64] = {0};
 
-	if (prompt != NULL)
-		g_print("%s\n", prompt);
+	if (prompt != NULL) {
+		g_print("%s", prompt);
+		/* ensure the prompt reaches the terminal before we block on stdin */
+		fflush(stdout);
+	}
 	if (!fgets(buffer, sizeof(buffer), stdin))
 		return NULL;
 	g_strdelimit(buffer, "\n", '\0');
@@ -171,14 +174,21 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 	va_list args;
 	g_autofree gchar *tmp = NULL;
 	g_autofree gchar *prompt = NULL;
+	g_autofree gchar *retry_prompt = NULL;
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
 	va_end(args);
 
-	fu_console_print_full(self, FU_CONSOLE_PRINT_FLAG_NONE, "%s [0-%u]: ", tmp, maxnum);
+	/* clear active progress spinner so the question is not mangled */
+	fu_console_reset_line(self);
+
+	/* Pass prompt to readline() so it can redraw it when the terminal
+	 * is resized (SIGWINCH) - otherwise readline only knows about the empty
+	 * prompt it was given and the question text disappears on resize */
+	prompt = g_strdup_printf("%s [0-%u]: ", tmp, maxnum);
 	do {
-		g_autofree gchar *buffer = readline(prompt);
+		g_autofree gchar *buffer = readline(retry_prompt != NULL ? retry_prompt : prompt);
 
 		if (buffer == NULL)
 			break;
@@ -190,7 +200,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 		if (retval == 1 && answer <= maxnum)
 			break;
 
-		if (prompt == NULL) {
+		if (retry_prompt == NULL) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			g_string_append_printf(
 			    str,
@@ -198,7 +208,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 			    _("Please enter a number from 0 to %u:"),
 			    maxnum);
 			g_string_append(str, " ");
-			prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
 		}
 	} while (TRUE);
 	return answer;
@@ -210,19 +220,22 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 	va_list args;
 	g_autofree gchar *tmp = NULL;
 	g_autofree gchar *prompt = NULL;
+	g_autofree gchar *retry_prompt = NULL;
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
 	va_end(args);
 
-	fu_console_print_full(self,
-			      FU_CONSOLE_PRINT_FLAG_NONE,
-			      "%s [%s]: ",
-			      tmp,
-			      def ? "Y|n" : "y|N");
+	/* clear active progress spinner so the question is not mangled */
+	fu_console_reset_line(self);
+
+	/* Pass prompt to readline() so it can redraw it when the terminal
+	 * is resized (SIGWINCH) - otherwise readline only knows about the empty
+	 * prompt it was given and the question text disappears on resize */
+	prompt = g_strdup_printf("%s [%s]: ", tmp, def ? "Y|n" : "y|N");
 
 	do {
-		g_autofree gchar *buffer = readline(prompt);
+		g_autofree gchar *buffer = readline(retry_prompt != NULL ? retry_prompt : prompt);
 
 		if (buffer == NULL || !strlen(buffer))
 			return def;
@@ -232,7 +245,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 		if (g_strcmp0(buffer, "N") == 0)
 			return FALSE;
 
-		if (prompt == NULL) {
+		if (retry_prompt == NULL) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			g_string_append_printf(str,
 					       /* TRANSLATORS: the user isn't reading the question
@@ -241,10 +254,27 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 					       "Y",
 					       "N");
 			g_string_append(str, " ");
-			prompt = g_string_free(g_steal_pointer(&str), FALSE);
+			retry_prompt = g_string_free(g_steal_pointer(&str), FALSE);
 		}
 	} while (TRUE);
 	return FALSE;
+}
+
+gchar *
+fu_console_input_string(FuConsole *self, const gchar *format, ...)
+{
+	va_list args;
+	g_autofree gchar *tmp = NULL;
+	g_autofree gchar *prompt = NULL;
+
+	va_start(args, format);
+	tmp = g_strdup_vprintf(format, args);
+	va_end(args);
+
+	/* clear active progress spinner so the question is not mangled */
+	fu_console_reset_line(self);
+	prompt = g_strdup_printf("%s: ", tmp);
+	return readline(prompt);
 }
 
 static GPtrArray *
@@ -445,13 +475,13 @@ _fu_status_is_predictable(FwupdStatus status)
 }
 
 static gboolean
-fu_console_estimate_ready(FuConsole *self, guint percentage)
+fu_console_estimate_ready(FuConsole *self, gdouble percentage)
 {
 	gdouble old;
 	gdouble elapsed;
 
 	/* now invalid */
-	if (percentage == 0 || percentage == 100) {
+	if (!fwupd_percentage_is_valid(percentage)) {
 		g_timer_start(self->time_elapsed);
 		self->last_estimate = 0;
 		return FALSE;
@@ -463,7 +493,7 @@ fu_console_estimate_ready(FuConsole *self, guint percentage)
 
 	old = self->last_estimate;
 	elapsed = g_timer_elapsed(self->time_elapsed, NULL);
-	self->last_estimate = elapsed / percentage * (100 - percentage);
+	self->last_estimate = elapsed / percentage * (100.0 - percentage);
 
 	/* estimate is ready if we have decreased */
 	return old > self->last_estimate;
@@ -521,12 +551,11 @@ fu_console_refresh(FuConsole *self)
 
 	/* add console */
 	g_string_append(str, "▕");
-	if (self->percentage == 100) {
+	if (self->percentage >= 100.0) {
 		for (i = 0; i < self->length_percentage - 1; i++)
 			g_string_append(str, "⣿");
-	} else if (self->percentage > 0) {
-		gdouble midpoint =
-		    (self->length_percentage - 1) * (gdouble)self->percentage / 100.f;
+	} else if (fwupd_percentage_is_valid(self->percentage)) {
+		gdouble midpoint = (self->length_percentage - 1) * self->percentage / 100.0;
 		guint midpoint_floor = (guint)midpoint;
 		for (i = 0; i < midpoint_floor; i++)
 			g_string_append(str, "⣿");
@@ -710,7 +739,7 @@ static void
 fu_console_spin_start(FuConsole *self)
 {
 	if (self->timer_source != NULL)
-		g_source_destroy(self->timer_source);
+		return;
 	self->timer_source = g_timeout_source_new(40);
 	g_source_set_callback(self->timer_source, fu_console_spin_cb, self, NULL);
 	g_source_attach(self->timer_source, self->main_ctx);
@@ -720,21 +749,17 @@ fu_console_spin_start(FuConsole *self)
  * fu_console_set_progress:
  * @self: A #FuConsole
  * @status: A #FwupdStatus
- * @percentage: unsigned integer
+ * @percentage: value
  *
  * Refreshes the progress bar with the new percentage and status.
  **/
 void
-fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
+fu_console_set_progress(FuConsole *self, FwupdStatus status, gdouble percentage)
 {
 	g_return_if_fail(FU_IS_CONSOLE(self));
 
 	/* not useful */
 	if (status == FWUPD_STATUS_UNKNOWN)
-		return;
-
-	/* ignore duplicates */
-	if (self->status == status && self->percentage == percentage)
 		return;
 
 	/* cache */
@@ -743,13 +768,17 @@ fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
 
 	/* dumb */
 	if (!self->interactive) {
-		g_printerr("%s: %u%%\n", fu_console_status_to_string(status), percentage);
+		if (fwupd_percentage_is_valid(percentage)) {
+			g_printerr("%s: %.1f%%\n", fu_console_status_to_string(status), percentage);
+		} else {
+			g_printerr("%s\n", fu_console_status_to_string(status));
+		}
 		return;
 	}
 
 	/* if the main loop isn't spinning and we've not had a chance to
 	 * execute the callback just do the refresh now manually */
-	if (percentage == 0 && status != FWUPD_STATUS_IDLE &&
+	if (percentage <= 0.0 && status != FWUPD_STATUS_IDLE &&
 	    self->status != FWUPD_STATUS_UNKNOWN) {
 		if ((g_get_monotonic_time() - self->last_animated) / 1000 > 40) {
 			fu_console_spin_inc(self);
@@ -758,7 +787,7 @@ fu_console_set_progress(FuConsole *self, FwupdStatus status, guint percentage)
 	}
 
 	/* enable or disable the spinner timeout */
-	if (percentage > 0) {
+	if (fwupd_percentage_is_valid(percentage)) {
 		fu_console_spin_end(self);
 	} else {
 		fu_console_spin_start(self);

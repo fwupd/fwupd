@@ -43,8 +43,6 @@ Plugin = fastboot
 FastbootBlockSize = 16384
 FastbootOperationDelay = 0
 Summary = Rolling RW101 Modem (fastboot)
-CounterpartGuid = USB\VID_33F8&PID_0301
-CounterpartGuid = USB\VID_33F8&PID_0302
 
 # Taurus HC40 4x2
 [USB\VID_276F&PID_0188]

@@ -118,6 +118,9 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		g_autofree gchar *csum =
 		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
 
+		if (csum == NULL)
+			continue;
+
 		if (g_strcmp0(owner, FU_EFI_SIGNATURE_GUID_MICROSOFT) != 0) {
 			g_debug("skipping dbx entry %s as non-microsoft (%s)", csum, owner);
 			continue;

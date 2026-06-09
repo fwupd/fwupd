@@ -1,12 +1,12 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(Bitfield)]
+#[derive(Bitfield, FromString(enum))]
 enum FuContextFlags {
     None                    = 0,
     SaveEvents              = 1 << 0, // so that they can be replayed to emulate devices
     SystemInhibit           = 1 << 1, // all devices are not updatable
-    LoadedHwinfo            = 1 << 2, // has called fu_context_load_hwinfo()
+    LoadedHwinfo            = 1 << 2, // has called fu_context_load()
     InhibitVolumeMount      = 1 << 3, // usually for self tests
     FdeBitlocker            = 1 << 4, // full disk encryption
     FdeSnapd                = 1 << 5, // full disk encryption
@@ -20,18 +20,22 @@ enum FuContextFlags {
     NoQuirks                = 1 << 13,
     DummyEfivars            = 1 << 14,
     IsServer                = 1 << 15,
+    ReadonlyFs              = 1 << 16, // ignore readonly filesystem errors
+    NoCache                 = 1 << 17, // do not save to a persistent cache
 }
 
-enum FuContextHwidFlags {
+enum FuContextLoadFlags {
     None                    = 0,
-    LoadConfig              = 1 << 0,
-    LoadSmbios              = 1 << 1,
-    LoadFdt                 = 1 << 2,
-    LoadDmi                 = 1 << 3,
-    LoadKenv                = 1 << 4,
-    LoadDarwin              = 1 << 5,
+    HwidConfig              = 1 << 0,
+    HwidSmbios              = 1 << 1,
+    HwidFdt                 = 1 << 2,
+    HwidDmi                 = 1 << 3,
+    HwidKenv                = 1 << 4,
+    HwidDarwin              = 1 << 5,
     WatchFiles              = 1 << 6,
     FixPermissions          = 1 << 7,
+    PathStoreDefaults       = 1 << 8,
+    PathStoreEnv            = 1 << 9,
 }
 
 enum FuContextEspFileFlags {

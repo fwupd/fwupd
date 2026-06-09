@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-fdt-image.h"
 #include "fu-mem.h"
 #include "fu-string.h"
@@ -67,18 +68,20 @@ fu_fdt_image_guess_format_from_key(const gchar *key)
 }
 
 static gchar **
-fu_fdt_image_strlist_from_blob(GBytes *blob)
+fu_fdt_image_strlist_from_blob(GBytes *blob, GError **error)
 {
 	gchar **val;
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-	g_autoptr(GPtrArray) strs = g_ptr_array_new();
+	g_autoptr(GPtrArray) strs = g_ptr_array_new_with_free_func(g_free);
 
 	/* delimit by NUL */
 	for (gsize i = 0; i < bufsz; i++) {
-		const gchar *tmp = (const gchar *)buf + i;
-		g_ptr_array_add(strs, (gpointer)tmp);
-		i += strlen(tmp);
+		GString *tmp = fu_memread_string_safe(buf, bufsz, i, error);
+		if (tmp == NULL)
+			return NULL;
+		i += tmp->len;
+		g_ptr_array_add(strs, g_string_free(tmp, FALSE));
 	}
 
 	/* copy to GStrv */
@@ -116,10 +119,11 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_STR) == 0 && bufsz > 0) {
 			str = g_strndup((const gchar *)buf, bufsz);
 		} else if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_STRLIST) == 0 && bufsz > 0) {
-			g_auto(GStrv) tmp = fu_fdt_image_strlist_from_blob(value);
-			str = g_strjoinv(":", tmp);
+			g_auto(GStrv) tmp = fu_fdt_image_strlist_from_blob(value, NULL);
+			if (tmp != NULL)
+				str = g_strjoinv(":", tmp);
 		} else {
-			str = g_base64_encode(buf, bufsz);
+			str = fu_base64_encode(buf, bufsz);
 		}
 		bc = xb_builder_node_insert(bn, "metadata", "key", key, NULL);
 		if (str != NULL)
@@ -148,7 +152,7 @@ fu_fdt_image_get_attrs(FuFdtImage *self)
 
 	g_return_val_if_fail(FU_IS_FDT_IMAGE(self), NULL);
 
-	keys = g_hash_table_get_keys(priv->hash_attrs);
+	keys = g_list_sort(g_hash_table_get_keys(priv->hash_attrs), (GCompareFunc)g_strcmp0);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		g_ptr_array_add(array, g_strdup(key));
@@ -287,6 +291,7 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
 	g_autoptr(GBytes) blob = NULL;
 	const guint8 *buf;
 	gsize bufsz = 0;
+	g_auto(GStrv) val_tmp = NULL;
 
 	g_return_val_if_fail(FU_IS_FDT_IMAGE(self), FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
@@ -320,9 +325,14 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
 		}
 	}
 
+	/* parse */
+	val_tmp = fu_fdt_image_strlist_from_blob(blob, error);
+	if (val_tmp == NULL)
+		return FALSE;
+
 	/* success */
 	if (val != NULL)
-		*val = fu_fdt_image_strlist_from_blob(blob);
+		*val = g_steal_pointer(&val_tmp);
 	return TRUE;
 }
 
@@ -637,6 +647,7 @@ fu_fdt_image_init(FuFdtImage *self)
 	priv->hash_attrs_format = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FDT_IMAGE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void

@@ -45,8 +45,6 @@ fu_wacom_raw_device_cmd(FuWacomRawDevice *self,
 			FuWacomRawDeviceCmdFlags flags,
 			GError **error);
 gboolean
-fu_wacom_raw_device_erase_all(FuWacomRawDevice *self, GError **error);
-gboolean
 fu_wacom_raw_device_check_mpu(FuWacomRawDevice *self, GError **error);
 gsize
 fu_wacom_raw_device_get_block_sz(FuWacomRawDevice *self);

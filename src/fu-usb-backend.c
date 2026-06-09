@@ -188,16 +188,13 @@ fu_usb_backend_rescan_cb(gpointer user_data)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(user_data);
 	fu_usb_backend_rescan(self);
-	return TRUE;
+	return G_SOURCE_CONTINUE;
 }
 
 static void
 fu_usb_backend_ensure_rescan_timeout(FuUsbBackend *self)
 {
-	if (self->hotplug_poll_id > 0) {
-		g_source_remove(self->hotplug_poll_id);
-		self->hotplug_poll_id = 0;
-	}
+	g_clear_handle_id(&self->hotplug_poll_id, g_source_remove);
 	if (self->hotplug_poll_interval > 0) {
 		self->hotplug_poll_id =
 		    g_timeout_add(self->hotplug_poll_interval, fu_usb_backend_rescan_cb, self);
@@ -285,7 +282,7 @@ fu_usb_backend_idle_hotplug_cb(gpointer user_data)
 	}
 
 	/* all done */
-	return FALSE;
+	return G_SOURCE_REMOVE;
 }
 
 /* this is run in the libusb thread */

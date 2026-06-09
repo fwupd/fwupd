@@ -10,23 +10,19 @@
 #include "fu-logitech-bulkcontroller-device.h"
 #include "fu-logitech-bulkcontroller-plugin.h"
 
+#define FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL "post-install"
+
 struct _FuLogitechBulkcontrollerPlugin {
 	FuPlugin parent_instance;
-	gboolean post_install;
 };
 
 G_DEFINE_TYPE(FuLogitechBulkcontrollerPlugin, fu_logitech_bulkcontroller_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_logitech_bulkcontroller_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
-{
-	FuLogitechBulkcontrollerPlugin *self = FU_LOGITECH_BULKCONTROLLER_PLUGIN(plugin);
-	fwupd_codec_string_append_bool(str, idt, "PostInstall", self->post_install);
-}
-
-static void
 fu_logitech_bulkcontroller_plugin_init(FuLogitechBulkcontrollerPlugin *self)
 {
+	fu_plugin_register_private_flag(FU_PLUGIN(self),
+					FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL);
 }
 
 static gboolean
@@ -37,7 +33,6 @@ fu_logitech_bulkcontroller_plugin_write_firmware(FuPlugin *plugin,
 						 FwupdInstallFlags flags,
 						 GError **error)
 {
-	FuLogitechBulkcontrollerPlugin *self = FU_LOGITECH_BULKCONTROLLER_PLUGIN(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	locker = fu_device_locker_new(device, error);
@@ -45,18 +40,19 @@ fu_logitech_bulkcontroller_plugin_write_firmware(FuPlugin *plugin,
 		return FALSE;
 	if (!fu_device_write_firmware(device, firmware, progress, flags, error))
 		return FALSE;
-	self->post_install = TRUE;
+	fu_plugin_add_private_flag(plugin, FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL);
 	return TRUE;
 }
 
 static gboolean
 fu_logitech_bulkcontroller_plugin_device_created(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuLogitechBulkcontrollerPlugin *self = FU_LOGITECH_BULKCONTROLLER_PLUGIN(plugin);
-	if (self->post_install) {
+	if (fu_plugin_has_private_flag(plugin,
+				       FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL)) {
 		fu_device_add_private_flag(device,
 					   FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
-		self->post_install = FALSE;
+		fu_plugin_remove_private_flag(plugin,
+					      FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL);
 	}
 	return TRUE;
 }
@@ -80,5 +76,4 @@ fu_logitech_bulkcontroller_plugin_class_init(FuLogitechBulkcontrollerPluginClass
 	plugin_class->constructed = fu_logitech_bulkcontroller_plugin_constructed;
 	plugin_class->write_firmware = fu_logitech_bulkcontroller_plugin_write_firmware;
 	plugin_class->device_created = fu_logitech_bulkcontroller_plugin_device_created;
-	plugin_class->to_string = fu_logitech_bulkcontroller_plugin_to_string;
 }

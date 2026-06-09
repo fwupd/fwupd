@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-04-15 14:09+0000\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-05-31 08:01+0000\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
 "Language: ro\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Serviciul de furnizare a firmware-ului Linux de la producător „LVFS” (firmware stabil)"
@@ -57,14 +57,14 @@ msgstr "Oprește serviciul fwupd"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr "Autentificarea este necesară pentru a opri serviciul de actualizare a firmware-ului"
+msgstr "Este necesară autentificarea pentru a opri serviciul de actualizare a firmware-ului"
 
 msgid "Install signed system firmware"
 msgstr "Instalează firmware de sistem semnat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "Autentificarea este necesară pentru a actualiza firmware-ul acestei mașini"
+msgstr "Este necesară autentificarea pentru a actualiza firmware-ul acestei mașini"
 
 msgid "Install unsigned system firmware"
 msgstr "Instalează firmware de sistem nesemnat"
@@ -74,7 +74,7 @@ msgstr "Instalează versiunea veche a firmware-ului semnat al sistemului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Autentificarea este necesară pentru a retrograda firmware-ul la o versiune anterioară pe această mașină"
+msgstr "Este necesară autentificarea pentru a retrograda firmware-ul la o versiune anterioară pe această mașină"
 
 msgid "Install old version of unsigned system firmware"
 msgstr "Instalează versiunea veche a firmware-ului nesemnat al sistemului"
@@ -84,63 +84,102 @@ msgstr "Instalează firmware-ul semnat al dispozitivului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "Autentificarea este necesară pentru a actualiza firmware-ul pe un dispozitiv amovibil"
+msgstr "Este necesară autentificarea pentru a actualiza firmware-ul pe un dispozitiv amovibil"
 
 msgid "Install unsigned device firmware"
 msgstr "Instalează firmware-ul nesemnat al dispozitivului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Autentificarea este necesară pentru a retrograda firmware-ul la o versiune anterioară pe un dispozitiv amovibil"
+msgstr "Este necesară autentificarea pentru a retrograda firmware-ul la o versiune anterioară pe un dispozitiv amovibil"
 
 msgid "Unlock the device to allow access"
 msgstr "Deblocați dispozitivul pentru a permite accesul"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "Autentificarea este necesară pentru a debloca un dispozitiv"
+msgstr "Este necesară autentificarea pentru a debloca un dispozitiv"
 
 msgid "Modify daemon configuration"
 msgstr "Modifică configurația demonului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr "Autentificarea este necesară pentru a modifica configurația daemonului"
+msgstr "Este necesară autentificarea pentru a modifica configurația daemonului"
 
 msgid "Reset daemon configuration"
 msgstr "Restabilește configurația daemonului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr "Autentificarea este necesară pentru a restabili configurația demonului la valorile implicite"
+msgstr "Este necesară autentificarea pentru a restabili configurația demonului la valorile implicite"
+
+msgid "Modify a device property"
+msgstr "Modifică o proprietate a dispozitivului"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Pentru a modifica o proprietate a dispozitivului este necesară autentificarea"
 
 msgid "Activate the new firmware on the device"
 msgstr "Activează noul firmware pe dispozitiv"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "Autentificarea este necesară pentru a trece la noua versiune de firmware"
+msgstr "Este necesară autentificarea pentru a trece la noua versiune de firmware"
+
+msgid "Clear stored firmware update results"
+msgstr "Șterge rezultatele actualizărilor de firmware salvate"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Este necesară autentificarea pentru a șterge rezultatele actualizării firmware-ului"
+
+msgid "Verify device firmware"
+msgstr "Verifică firmware-ul dispozitivului"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Este necesară autentificarea pentru a verifica firmware-ul unui dispozitiv"
 
 msgid "Update the stored device verification information"
 msgstr "Actualizează informațiile de verificare a dispozitivului stocate"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr "Autentificarea este necesară pentru a actualiza sumele de control stocate pentru dispozitiv"
+msgstr "Este necesară autentificarea pentru a actualiza sumele de control stocate pentru dispozitiv"
+
+msgid "Get configured remotes"
+msgstr "Obține depozitele configurate"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Este necesară autentificarea pentru a obține lista depozitelor configurate utilizate pentru actualizările firmware"
+
+msgid "Update the metadata for a configured remote"
+msgstr "Actualizează metadatele pentru un depozit configurat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr "Este necesară autentificarea pentru a actualiza metadatele unui depozit configurat, utilizat pentru actualizările de firmware"
 
 msgid "Modify a configured remote"
 msgstr "Modifică un depozit configurat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr "Este necesară autentificarea pentru a activa sau dezactiva un depozit configurat la distanță utilizat pentru actualizările de firmware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "Autentificarea este necesară pentru a modifica un depozit configurat utilizat pentru actualizările firmware"
+msgstr "Este necesară autentificarea pentru a modifica un depozit configurat utilizat pentru actualizările firmware"
 
 msgid "Clean a configured remote"
 msgstr "Curăță un depozit/dispozitiv de la distanță configurat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr "Autentificarea este necesară pentru a șterge metadatele dintr-un dispozitiv la distanță"
+msgstr "Este necesară autentificarea pentru a șterge metadatele dintr-un dispozitiv la distanță"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -148,39 +187,39 @@ msgstr "Stabilește lista de firmware aprobat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "Autentificarea este necesară pentru a defini lista de firmware aprobat"
+msgstr "Este necesară autentificarea pentru a defini lista de firmware aprobat"
 
 msgid "Sign data using the client certificate"
 msgstr "Semnează datele utilizând certificatul clientului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
-msgstr "Autentificarea este necesară pentru semnarea datelor utilizând certificatul clientului"
+msgstr "Este necesară autentificarea pentru semnarea datelor utilizând certificatul clientului"
 
 msgid "Get BIOS settings"
 msgstr "Obține configurația BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
-msgstr "Autentificarea este necesară pentru a citi parametrii BIOS"
+msgstr "Este necesară autentificarea pentru a citi parametrii BIOS"
 
 msgid "Set one or more BIOS settings"
 msgstr "Configurează unul sau mai mulți parametri BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr "Autentificarea este necesară pentru a modifica parametrii BIOS"
+msgstr "Este necesară autentificarea pentru a modifica parametrii BIOS"
 
 msgid "Security hardening for HSI"
 msgstr "Întărirea securității pentru HSI"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
-msgstr "Autentificarea este necesară pentru a rezolva o problemă de securitate a gazdei"
+msgstr "Este necesară autentificarea pentru a rezolva o problemă de securitate a gazdei"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
-msgstr "Autentificarea este necesară pentru a anula remedierea unei probleme de securitate a gazdei"
+msgstr "Este necesară autentificarea pentru a anula remedierea unei probleme de securitate a gazdei"
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
@@ -188,7 +227,7 @@ msgstr "Încarcă datele de emulare a dispozitivului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
-msgstr "Autentificarea este necesară pentru încărcarea datelor de emulare hardware"
+msgstr "Este necesară autentificarea pentru încărcarea datelor de emulare hardware"
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
@@ -196,14 +235,21 @@ msgstr "Salvează datele de emulare a dispozitivului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
-msgstr "Autentificarea este necesară pentru a salva datele de emulare hardware"
+msgstr "Este necesară autentificarea pentru a salva datele de emulare hardware"
 
 msgid "Enable emulation data collection"
 msgstr "Activează colectarea datelor de emulare"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
-msgstr "Autentificarea este necesară pentru a activa colectarea datelor de emulare"
+msgstr "Este necesară autentificarea pentru a activa colectarea datelor de emulare"
+
+msgid "Install firmware on emulated device"
+msgstr "Instalează firmware-ul pe dispozitivul emulat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "Este necesară autentificarea pentru a instala firmware-ul pe un dispozitiv emulat"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1361,6 +1407,9 @@ msgstr "Afișează dispozitivele care nu sunt actualizabile"
 msgid "Manually enable specific plugins"
 msgstr "Activează manual modulele specificate"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "Locația directoarelor cu chei publice utilizate pentru verificarea JCat"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Rulează rutina de pregătire a modulului compozit atunci când se utilizează „install-blob”"
@@ -1388,6 +1437,9 @@ msgstr "Răspunde afirmativ la toate întrebările"
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Ieșire în format JSON (dezactivează toate solicitările interactive)"
+
+msgid "Prefix for import and output files"
+msgstr "Prefix pentru fișierele de import și de ieșire"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1839,6 +1891,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "Analizează jurnalul de evenimente PCR al sistemului"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "Afișează informații despre un fișier JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "NUME_FIȘIER ID ID-ALIAS"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "Adaugă un alias pentru un anumit element JCat"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "Elimină un alias pentru un anumit element JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "NUME_FIȘIER [TIP]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "Exportă toate semnăturile încorporate în fișiere"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "NUME_FIȘIER DATE CHEIE-DETAȘATĂ"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "Importă o semnătură existentă într-un fișier JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "NUME_FIȘIER SURSĂ [TIP[:VARIANTA]] [ȚINTA]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr "Adaugă o semnătură autosemnată la un fișier JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr "NUME_FIȘIER SURSĂ CERTIFICAT CHEIE-PRIVATĂ [TIP[:VARIANTA]] [ȚINTA]"
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr "Adaugă o semnătură la un fișier JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr "NUME_FIȘIER [SURSĂ]"
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr "Verifică o semnătură dintr-un fișier JCat"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Acest instrument permite unui administrator să utilizeze modulele «fwupd» fără a fi instalate pe sistemul gazdă."
@@ -2208,6 +2316,27 @@ msgstr "Încărcați datele acum?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Lista de dispozitive a fost încărcată cu succes, vă mulțumim!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "Introduceți adresa dvs. de poștă electronică pentru depozitul „%s”"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "Pentru a obține un nou jeton, accesați %s și faceți clic pe „Generați jeton”."
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "Introduceți jetonul dvs. pentru depozitul „%s”"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "Depozitul a fost activat și actualizat cu succes"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Stabilește numărul de reîncercări de descărcare în cazul unor erori tranzitorii"
@@ -2295,6 +2424,14 @@ msgstr "Retrogradează versiunea firmware a unui dispozitiv"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Actualizează suma de control criptografică stocată cu conținutul actual al ROM"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr "[ID-DEPOZIT] [NUME-UTILIZATOR] [JETONN]"
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr "Activează un depozit autentificat"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -3371,13 +3508,17 @@ msgstr "Intervalul de reîmprospătare"
 msgid "Priority"
 msgstr "Prioritate"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "Este necesară autentificarea"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Numele utilizatorului"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Parola"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "Jeton"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3674,6 +3815,9 @@ msgstr "Activați noul depozit ca sursă de software?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Acceptați și activați depozitul ca sursă de software?"
+
+#~ msgid "Password"
+#~ msgstr "Parola"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Găsește un algoritm care se potrivește cu codul CRC al fișierului"

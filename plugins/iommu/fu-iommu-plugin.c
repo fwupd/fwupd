@@ -8,19 +8,13 @@
 
 #include "fu-iommu-plugin.h"
 
+#define FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU "has-iommu"
+
 struct _FuIommuPlugin {
 	FuPlugin parent_instance;
-	gboolean has_iommu;
 };
 
 G_DEFINE_TYPE(FuIommuPlugin, fu_iommu_plugin, FU_TYPE_PLUGIN)
-
-static void
-fu_iommu_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
-{
-	FuIommuPlugin *self = FU_IOMMU_PLUGIN(plugin);
-	fwupd_codec_string_append_bool(str, idt, "HasIommu", self->has_iommu);
-}
 
 static gboolean
 fu_iommu_plugin_backend_device_added(FuPlugin *plugin,
@@ -28,14 +22,12 @@ fu_iommu_plugin_backend_device_added(FuPlugin *plugin,
 				     FuProgress *progress,
 				     GError **error)
 {
-	FuIommuPlugin *self = FU_IOMMU_PLUGIN(plugin);
-
 	/* interesting device? */
 	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "iommu") != 0)
 		return TRUE;
-	self->has_iommu = TRUE;
+	fu_plugin_add_private_flag(plugin, FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU);
 
 	return TRUE;
 }
@@ -44,7 +36,6 @@ static void
 fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuIommuPlugin *self = FU_IOMMU_PLUGIN(plugin);
 	FuPathStore *pstore = fu_context_get_path_store(ctx);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -88,7 +79,7 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	 */
 	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.ThunderboltAccess", "enable");
 
-	if (!self->has_iommu) {
+	if (!fu_plugin_has_private_flag(plugin, FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
@@ -103,6 +94,7 @@ fu_iommu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 static void
 fu_iommu_plugin_init(FuIommuPlugin *self)
 {
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_IOMMU_PLUGIN_FLAG_HAS_IOMMU);
 }
 
 static void
@@ -116,15 +108,19 @@ fu_iommu_plugin_constructed(GObject *obj)
 }
 
 static gboolean
-fu_iommu_plugin_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_fix_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
 {
-	return fu_kernel_add_cmdline_arg("iommu=force", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_add_cmdline_arg(pstore, "iommu=force", error);
 }
 
 static gboolean
-fu_iommu_plugin_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_undo_host_security_attr(FuPlugin *plugin, FwupdSecurityAttr *attr, GError **error)
 {
-	return fu_kernel_remove_cmdline_arg("iommu=force", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_remove_cmdline_arg(pstore, "iommu=force", error);
 }
 
 static void
@@ -132,7 +128,6 @@ fu_iommu_plugin_class_init(FuIommuPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_iommu_plugin_constructed;
-	plugin_class->to_string = fu_iommu_plugin_to_string;
 	plugin_class->backend_device_added = fu_iommu_plugin_backend_device_added;
 	plugin_class->add_security_attrs = fu_iommu_plugin_add_security_attrs;
 	plugin_class->fix_host_security_attr = fu_iommu_plugin_fix_host_security_attr;

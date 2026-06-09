@@ -343,7 +343,17 @@ fu_corsair_device_write_firmware_full(FuCorsairDevice *self,
 	g_autoptr(FuChunk) chk0 = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob_rest = NULL;
-	guint32 chk0_size = self->cmd_write_size - CORSAIR_FIRST_CHUNK_HEADER_SIZE;
+	guint32 chk0_size;
+
+	if (self->cmd_write_size < CORSAIR_FIRST_CHUNK_HEADER_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "write size 0x%x too small",
+			    self->cmd_write_size);
+		return FALSE;
+	}
+	chk0_size = self->cmd_write_size - CORSAIR_FIRST_CHUNK_HEADER_SIZE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

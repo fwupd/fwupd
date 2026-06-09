@@ -313,11 +313,20 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 			helper->zstrm.avail_out = helper->decompress_bufsz;
 			helper->zstrm.next_out = helper->decompress_buf;
 			zret = inflate(&helper->zstrm, Z_BLOCK);
-			if (zret == Z_STREAM_END)
-				break;
 			g_byte_array_append(buf,
 					    helper->decompress_buf,
 					    helper->decompress_bufsz - helper->zstrm.avail_out);
+			if (buf->len > blob_uncomp) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "decompressed size mismatch (0x%x, specified 0x%x)",
+					    (guint)buf->len,
+					    (guint)blob_uncomp);
+				return FALSE;
+			}
+			if (zret == Z_STREAM_END)
+				break;
 			if (zret != Z_OK) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -380,8 +389,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
-		bytes_uncomp =
-		    g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+		bytes_uncomp = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 		if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
 							 bytes_uncomp,
 							 error))
@@ -783,6 +791,15 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		img_blob = fu_firmware_get_bytes(img, error);
 		if (img_blob == NULL)
 			return NULL;
+		if (g_bytes_get_size(img_blob) > G_MAXUINT32) {
+			g_autofree gchar *sz_val = g_format_size(g_bytes_get_size(img_blob));
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "file size %s exceeds CAB format limit",
+				    sz_val);
+			return NULL;
+		}
 		fu_byte_array_append_bytes(cfdata_linear, img_blob);
 	}
 
@@ -794,12 +811,19 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 				    "no data to compress");
 		return NULL;
 	}
-	cfdata_linear_blob =
-	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck:blocked */
+	cfdata_linear_blob = g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear));
 	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
 					       0x8000);
+	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "too many data blocks: %u",
+			    fu_chunk_array_length(chunks));
+		return NULL;
+	}
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) chunk_zlib = g_byte_array_new();
@@ -887,7 +911,16 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	offset = FU_STRUCT_CAB_HEADER_SIZE;
 	if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FOLDER_SIZE, error))
 		return NULL;
-	fu_struct_cab_header_set_size(st_hdr, archive_size);
+	if (archive_size > G_MAXUINT32) {
+		g_autofree gchar *sz_val = g_format_size(archive_size);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "archive size %s exceeds CAB format limit",
+			    sz_val);
+		return NULL;
+	}
+	fu_struct_cab_header_set_size(st_hdr, (guint32)archive_size);
 	fu_struct_cab_header_set_off_cffile(st_hdr, offset);
 	fu_struct_cab_header_set_nr_files(st_hdr, imgs->len);
 
@@ -903,7 +936,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 	}
 	fu_struct_cab_folder_set_offset(st_folder, offset);
-	fu_struct_cab_folder_set_ndatab(st_folder, fu_chunk_array_length(chunks));
+	fu_struct_cab_folder_set_ndatab(st_folder, (guint16)fu_chunk_array_length(chunks));
 	fu_struct_cab_folder_set_compression(st_folder,
 					     priv->compressed ? FU_CAB_COMPRESSION_MSZIP
 							      : FU_CAB_COMPRESSION_NONE);
@@ -921,7 +954,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		if (!g_str_is_ascii(filename_win32))
 			fattr |= FU_CAB_FILE_ATTRIBUTE_NAME_UTF8;
 		fu_struct_cab_file_set_fattr(st_file, fattr);
-		fu_struct_cab_file_set_usize(st_file, g_bytes_get_size(img_blob));
+		fu_struct_cab_file_set_usize(st_file, (guint32)g_bytes_get_size(img_blob));
 
 		/* validate offset fits */
 		if (index_into > G_MAXUINT32) {

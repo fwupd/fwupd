@@ -93,7 +93,8 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 					    G_BIG_ENDIAN,
 					    error))
 			return FALSE;
-		if ((gint)(bufsz - firmware_size - 6) != (gint)cfg_packlen + 6) {
+		if (bufsz < (gsize)firmware_size + 12 ||
+		    bufsz - firmware_size - 6 != (gsize)cfg_packlen + 6) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,

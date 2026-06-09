@@ -204,18 +204,21 @@ fu_dell_dock_mst_write_register(FuDellDockMst *self,
 				GError **error)
 {
 	FuDevice *proxy;
-	g_autofree guint8 *buffer = g_malloc0(length + 4);
+	gsize bufsz = length + 4;
+	g_autofree guint8 *buf = g_malloc0(bufsz);
 
 	g_return_val_if_fail(data != NULL, FALSE);
 
-	memcpy(buffer, &address, 4);	  /* nocheck:blocked */
-	memcpy(buffer + 4, data, length); /* nocheck:blocked */
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 0x0, address, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (!fu_memcpy_safe(buf, bufsz, 0x4, data, length, 0x0, length, error))
+		return FALSE;
 
 	/* write the offset we're querying */
 	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
 	if (proxy == NULL)
 		return FALSE;
-	return fu_dell_dock_hid_i2c_write(proxy, buffer, length + 4, &mst_base_settings, error);
+	return fu_dell_dock_hid_i2c_write(proxy, buf, bufsz, &mst_base_settings, error);
 }
 
 static gboolean
@@ -307,6 +310,8 @@ fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 			return FALSE;
 		}
 		result = g_bytes_get_data(bytes, NULL);
+		if (g_bytes_get_size(bytes) < 4)
+			continue;
 		/* complete */
 		if ((result[2] & 0x80) == 0) {
 			tmp = result[3];
@@ -357,27 +362,23 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	gint buffer_len = (data == NULL) ? 12 : length + 16;
-	g_autofree guint8 *buffer = g_malloc0(buffer_len);
-	guint32 tmp;
+	gsize bufsz = (data == NULL) ? 12 : (gsize)length + 16;
+	g_autofree guint8 *buf = g_malloc0(bufsz);
 
-	/* command */
-	tmp = (cmd | 0x80) << 16;
-	memcpy(buffer, &tmp, 4); /* nocheck:blocked */
-	/* offset */
-	memcpy(buffer + 4, &offset, 4); /* nocheck:blocked */
-	/* length */
-	memcpy(buffer + 8, &length, 4); /* nocheck:blocked */
-	/* data */
-	if (data != NULL)
-		memcpy(buffer + 16, data, length); /* nocheck:blocked */
+	/* command, offset, length, data */
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 0, (cmd | 0x80) << 16, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 4, offset, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (!fu_memwrite_uint32_safe(buf, bufsz, 8, length, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (data != NULL) {
+		if (!fu_memcpy_safe(buf, bufsz, 16, data, length, 0x0, length, error))
+			return FALSE;
+	}
 
 	/* write the combined register stream */
-	if (!fu_dell_dock_mst_write_register(self,
-					     self->mst_rc_command_addr,
-					     buffer,
-					     buffer_len,
-					     error))
+	if (!fu_dell_dock_mst_write_register(self, self->mst_rc_command_addr, buf, bufsz, error))
 		return FALSE;
 
 	return fu_dell_dock_mst_trigger_rc_command(self, error);
@@ -411,6 +412,14 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 					    error))
 		return FALSE;
 	data = g_bytes_get_data(bytes, &length);
+	if (length < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "MST register data too small, got %" G_GSIZE_FORMAT,
+			    length);
+		return FALSE;
+	}
 
 	g_debug("MST: firmware check: %d", fu_dell_dock_mst_check_offset(data[0], 0x01));
 	g_debug("MST: HDCP key check: %d", fu_dell_dock_mst_check_offset(data[0], 0x02));
@@ -491,6 +500,13 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 	/* read result from data register */
 	if (!fu_dell_dock_mst_read_register(self, self->mst_rc_data_addr, 4, &csum_bytes, error))
 		return FALSE;
+	if (g_bytes_get_size(csum_bytes) < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "checksum result too small");
+		return FALSE;
+	}
 	data = g_bytes_get_data(csum_bytes, NULL);
 	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | /* nocheck:blocked nocheck:endian */
 				   data[2] << 16 | data[3] << 24);
@@ -562,13 +578,23 @@ fu_dell_dock_mst_write_flash_bank(FuDellDockMst *self,
 	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize write_size = 32;
 	guint end;
-	const guint8 *data = g_bytes_get_data(blob_fw, NULL);
+	gsize length = 0;
+	const guint8 *data = g_bytes_get_data(blob_fw, &length);
 
 	g_return_val_if_fail(blob_fw != NULL, FALSE);
 
 	if (!fu_dell_dock_mst_get_bank_attribs(bank, &attribs, error))
 		return FALSE;
 	end = attribs->start + attribs->length;
+	if (end > length) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "payload 0x%x is bigger than data 0x%x",
+			    end,
+			    (guint)length);
+		return FALSE;
+	}
 
 	g_debug("MST: Writing payload to bank %u", bank);
 	for (guint i = attribs->start; i < end; i += write_size) {
@@ -629,7 +655,15 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(quad_bytes, &length);
-	memcpy(data_out, data, length); /* nocheck:blocked */
+	if (!fu_memcpy_safe(data_out,
+			    sizeof(data_out),
+			    0x0, /* dst */
+			    data,
+			    length,
+			    0x0, /* src */
+			    length,
+			    error))
+		return FALSE;
 	data_out[0] = 0x00;
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
@@ -656,7 +690,15 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(hdcp_bytes, &length);
-	memcpy(data_out, data, length); /* nocheck:blocked */
+	if (!fu_memcpy_safe(data_out,
+			    sizeof(data_out),
+			    0x0, /* dst */
+			    data,
+			    length,
+			    0x0, /* src */
+			    length,
+			    error))
+		return FALSE;
 	data_out[0] = data[0] & (1 << 2);
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
@@ -762,6 +804,13 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 			return FALSE;
 		}
 		new_tag = g_bytes_get_data(bytes_new, NULL);
+		if (g_bytes_get_size(bytes_new) < 4) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "CRC tag result too small");
+			return FALSE;
+		}
 		g_debug("CRC byte is currently 0x%x", new_tag[3]);
 
 		/* tag successfully cleared */

@@ -11,6 +11,7 @@
 #include "fwupd-device.h"
 #include "fwupd-release.h"
 #include "fwupd-test.h"
+#include "fwupd-variant.h"
 
 static void
 fwupd_variant_func(void)

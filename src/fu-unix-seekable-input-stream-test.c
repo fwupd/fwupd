@@ -18,7 +18,7 @@ fu_unix_seekable_input_stream_func(void)
 {
 #ifdef HAVE_GIO_UNIX
 	gssize ret;
-	gint fd;
+	g_autofd gint fd = -1;
 	guint8 buf[6] = {0};
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GError) error = NULL;
@@ -29,7 +29,7 @@ fu_unix_seekable_input_stream_func(void)
 	fd = g_open(fn, O_RDONLY, 0);
 	g_assert_cmpint(fd, >=, 0);
 
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE, &error);
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 
@@ -62,14 +62,14 @@ static void
 fu_unix_seekable_input_stream_non_regular_func(void)
 {
 #ifdef HAVE_GIO_UNIX
-	gint fd;
+	g_autofd gint fd = -1;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
 	fd = g_open("/dev/zero", O_RDONLY, 0);
 	g_assert_cmpint(fd, >=, 0);
 
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE, &error);
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(stream);
 #else

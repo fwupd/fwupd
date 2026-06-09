@@ -17,7 +17,7 @@ enum FwupdJsonNodeKind {
 enum FwupdJsonExportFlags {
     None = 0,
     Indent = 1 << 0,
-    TrailingNewline = 2 << 0,
+    TrailingNewline = 1 << 1,
 }
 
 // JSON load flags.

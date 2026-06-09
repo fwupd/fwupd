@@ -62,8 +62,8 @@ class Checker:
         self._current_fn: Optional[str] = None
         self._current_nocheck: Optional[str] = None
         self._gtype_parents: dict[str, str] = {}
-        self._klass_funcs: list[str] = []
-        self._expected_failure_prefixes: list[str] = []
+        self._klass_funcs: List[str] = []
+        self._expected_failure_prefixes: List[str] = []
 
     def add_expected_failure(self, message_prefix: str) -> None:
         self._expected_failure_prefixes.append(message_prefix)
@@ -104,6 +104,9 @@ class Checker:
         return False
 
     def _test_function_names_prefix_private(self, func_name: str, token: Token) -> None:
+
+        if func_name.startswith("__"):
+            return
         valid_prefixes = ["_fwupd_", "_fu_", "_g_", "_xb_"]
         for prefix in valid_prefixes:
             if func_name.startswith(prefix):
@@ -833,12 +836,20 @@ class Checker:
 
         for token, msg in {
             "g_error": "Use GError instead",
-            "g_byte_array_free_to_bytes": "Use g_bytes_new() instead",
             "g_ascii_strtoull": "Use fu_strtoull() instead",
             "g_ascii_strtoll": "Use fu_strtoll() instead",
+            "g_find_program_in_path": "Use fu_path_store_find_program() instead",
             "g_strerror": "Use fwupd_strerror() instead",
             "gnutls_malloc": "Use gnutls_calloc() instead",
-            "g_random_int_range": "Use a predicatable token instead",
+            "g_base64_encode": "Use fu_base64_encode() instead",
+            "g_variant_get_uint64": "Use fwupd_variant_get_uint64() instead",
+            "g_variant_get_uint32": "Use fwupd_variant_get_uint32() instead",
+            "g_variant_get_string": "Use fwupd_variant_get_string() instead",
+            "g_variant_get_boolean": "Use fwupd_variant_get_boolean() instead",
+            "g_variant_get_strv": "Use fwupd_variant_get_strv() instead",
+            "g_variant_get_double": "Use fwupd_variant_get_double() instead",
+            "g_variant_get_int32": "Use fwupd_variant_get_int32() instead",
+            "g_random_int_range": "Use fu_common_get_random() or a predictable token instead",
             "g_assert": "Use g_set_error() or g_return_val_if_fail() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
@@ -890,7 +901,7 @@ class Checker:
                         linecnt=token.linecnt,
                     )
 
-    def _test_magic_numbers_defined(self, nodes: list[Node]) -> None:
+    def _test_magic_numbers_defined(self, nodes: List[Node]) -> None:
 
         cnt: int = 0
         limit: int = 15
@@ -913,7 +924,7 @@ class Checker:
                 linecnt=linecnt,
             )
 
-    def _test_magic_numbers_inline(self, nodes: list[Node]) -> None:
+    def _test_magic_numbers_inline(self, nodes: List[Node]) -> None:
 
         cnt: int = 0
         limit: int = 80
@@ -938,7 +949,7 @@ class Checker:
                 linecnt=linecnt,
             )
 
-    def _test_gerror_false_returns(self, nodes: list[Node]) -> None:
+    def _test_gerror_false_returns(self, nodes: List[Node]) -> None:
 
         for node in nodes:
             if node.depth == 0:
@@ -958,7 +969,7 @@ class Checker:
                     )
                     break
 
-    def _test_gerror_not_set(self, nodes: list[Node]) -> None:
+    def _test_gerror_not_set(self, nodes: List[Node]) -> None:
 
         limit: int = 10
         for node in nodes:
@@ -972,7 +983,7 @@ class Checker:
                 if self.verbose:
                     print(f"GError required @{linecnt}")
 
-                found_linecnt: list[int] = []
+                found_linecnt: List[int] = []
 
                 # set error inner
                 idx_found = node.tokens.find_fuzzy(
@@ -1037,7 +1048,7 @@ class Checker:
             "dereferences GError; use error_local instead", linecnt=token.linecnt
         )
 
-    def _test_switch(self, nodes: list[Node]) -> None:
+    def _test_switch(self, nodes: List[Node]) -> None:
 
         limit: int = 2
         cnt: int = 0
@@ -1055,7 +1066,7 @@ class Checker:
                     )
                     break
 
-    def _test_null_false_returns(self, nodes: list[Node]) -> None:
+    def _test_null_false_returns(self, nodes: List[Node]) -> None:
 
         # allowed values from g_return_val_if_fail()
         types_rvif = {
@@ -1186,7 +1197,7 @@ class Checker:
                 linecnt=node.linecnt,
             )
 
-    def _test_firmware_convert_version(self, nodes: list[Node]) -> None:
+    def _test_firmware_convert_version(self, nodes: List[Node]) -> None:
 
         # contains fu_firmware_set_version_raw()
         _set_version_raw: bool = False
@@ -1213,7 +1224,7 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
-    def _test_device_convert_version(self, nodes: list[Node]) -> None:
+    def _test_device_convert_version(self, nodes: List[Node]) -> None:
 
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-engine-test.c",
@@ -1284,7 +1295,7 @@ class Checker:
                 linecnt=token.linecnt,
             )
 
-    def _test_small_conditionals_with_braces(self, nodes: list[Node]) -> None:
+    def _test_small_conditionals_with_braces(self, nodes: List[Node]) -> None:
 
         # we need to parse the nodes in order
         for idx, node in enumerate(nodes):
@@ -1385,7 +1396,7 @@ class Checker:
                 linecnt=node.linecnt,
             )
 
-    def _test_gobject_parents(self, nodes: list[Node]) -> None:
+    def _test_gobject_parents(self, nodes: List[Node]) -> None:
 
         gtype: str = ""
         gtypeparent: str = ""
@@ -1437,7 +1448,7 @@ class Checker:
                         linecnt=node.linecnt,
                     )
 
-    def _test_nodes(self, nodes: list[Node]) -> None:
+    def _test_nodes(self, nodes: List[Node]) -> None:
 
         # preroll
         self._klass_funcs.clear()
@@ -1597,7 +1608,7 @@ class Checker:
         self._test_nodes(nodes)
 
 
-def test_files(fns_optional: list[str], verbose: bool = False) -> int:
+def test_files(fns_optional: List[str], verbose: bool = False) -> int:
     # test all C and H files
 
     checker = Checker(verbose=verbose)

@@ -186,7 +186,7 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 		fu_byte_array_append_bytes(buf, iface_data);
 		fu_byte_array_append_uint8(buf, 0x1);
 		fu_byte_array_append_uint8(buf, 0x1);
-		bytes = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+		bytes = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 	} else {
 		bytes = g_bytes_ref(iface_data);
 	}
@@ -1206,6 +1206,14 @@ fu_dfu_device_download(FuDfuDevice *self,
 		guint8 alt;
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
 
+		if (fu_firmware_get_idx(image) > G_MAXUINT8) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "alt setting too large: 0x%x",
+				    (guint)fu_firmware_get_idx(image));
+			return FALSE;
+		}
 		alt = fu_firmware_get_idx(image);
 		target_tmp = fu_dfu_device_get_target_by_alt_setting(self, alt, error);
 		if (target_tmp == NULL)

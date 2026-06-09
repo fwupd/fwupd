@@ -18,6 +18,7 @@ _fwupdtool_cmd_list=(
 	'emulation-tag'
 	'emulation-untag'
 	'emulation-load'
+	'emulation-save'
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'
@@ -291,7 +292,7 @@ _fwupdtool()
 			_show_device_ids
 		fi
 		;;
-	emulation-load)
+	emulation-load|emulation-save)
 		#find files
 		if [[ "$args" = "2" ]]; then
 			_filedir

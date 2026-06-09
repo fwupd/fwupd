@@ -248,7 +248,8 @@ fu_himax_tp_hid_device_get_size_by_id(FuHidReport *report,
 		return FALSE;
 	}
 	item_count_value = fu_hid_report_item_get_value(FU_HID_REPORT_ITEM(item_count));
-	*size = (item_size_value / 8) * item_count_value;
+	if (!fu_size_checked_inc_product(size, item_size_value / 8, item_count_value, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -859,10 +860,11 @@ fu_himax_tp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "CID", NULL))
 		return FALSE;
 
-	/* version format : pid.cid (decimal) */
-	version_str = g_strdup_printf("%u.%u",
-				      fu_struct_himax_tp_hid_info_get_pid(self->st_info),
-				      fu_struct_himax_tp_hid_info_get_cid(self->st_info));
+	/* version format : cid(minor).tp_cfg_ver (decimal) */
+	version_str =
+	    g_strdup_printf("%u.%u",
+			    (guint)(fu_struct_himax_tp_hid_info_get_cid(self->st_info) & 0xFF),
+			    fu_struct_himax_tp_hid_info_get_tp_cfg_ver(self->st_info));
 	fu_device_set_version(device, version_str);
 
 	/* success */

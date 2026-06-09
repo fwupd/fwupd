@@ -1,4 +1,6 @@
 subdir('auth')
+subdir('pki')
+subdir('colorhug')
 subdir('missing-hwid')
 subdir('multiple-rels')
 subdir('host-emulate')

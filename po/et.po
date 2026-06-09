@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the fwupd package.
-# Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>, 2025.
+# Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>, 2025, 2026.
 # Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2025-12-11 22:02+0000\n"
+"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"PO-Revision-Date: 2026-05-01 00:10+0000\n"
 "Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15-dev\n"
+"X-Generator: Weblate 5.17.1\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr ""
@@ -36,11 +36,11 @@ msgstr ""
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "Settings will apply after system reboots"
-msgstr ""
+msgstr "Seadistused jõustuvad peale süsteemi uuesti käivitamist"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
-msgstr ""
+msgstr "BIOS-i uuendused kas LVFS või Windows Update'i abil"
 
 msgid "Enable"
 msgstr "Võta kasutusele"
@@ -51,52 +51,52 @@ msgid "Enabled"
 msgstr "Kasutusel"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "Lõpeta fwupd taustateenuse töö"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "Autentimine on vajalik püsivara uuendamise taustateenuse töö lõpetamiseks"
 
 msgid "Install signed system firmware"
-msgstr ""
+msgstr "Paigalda allkirjastatud süsteemne püsivara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr ""
+msgstr "Selles seadmes/masinas püsivara uuendamine eeldab autentimist"
 
 msgid "Install unsigned system firmware"
-msgstr ""
+msgstr "Paigalda allkirjastamata süsteemne püsivara"
 
 msgid "Install old version of signed system firmware"
-msgstr ""
+msgstr "Paigalda allkirjastatud süsteemse püsivara eelmine või varasem versioon"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr ""
+msgstr "Selles seadmes/masinas püsivara eelmise või varasema versiooni paigaldamine eeldab autentimist"
 
 msgid "Install old version of unsigned system firmware"
-msgstr ""
+msgstr "Paigalda allkirjastamata süsteemse püsivara eelmine või varasem versioon"
 
 msgid "Install signed device firmware"
-msgstr ""
+msgstr "Paigalda allkirjastatud seadme püsivara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr ""
+msgstr "Selles masinas eemaldatava seadme püsivara uuendamine eeldab autentimist"
 
 msgid "Install unsigned device firmware"
-msgstr ""
+msgstr "Paigalda allkirjastamata seadme püsivara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr ""
+msgstr "Selles masinas eemaldatava seadme püsivara varasema või eelmise versiooni eeldab autentimist"
 
 msgid "Unlock the device to allow access"
-msgstr ""
+msgstr "Ligipääsu lubamiseks eemalda seadme lukustus"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr ""
+msgstr "Seadme lukustuse avamine eeldab autentimist"
 
 msgid "Modify daemon configuration"
 msgstr ""
@@ -112,11 +112,32 @@ msgstr ""
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr ""
 
+msgid "Modify a device property"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr ""
+
 msgid "Activate the new firmware on the device"
 msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
+msgstr ""
+
+msgid "Clear stored firmware update results"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr ""
+
+msgid "Verify device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
 msgstr ""
 
 msgid "Update the stored device verification information"
@@ -126,7 +147,25 @@ msgstr ""
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr ""
 
+msgid "Get configured remotes"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr ""
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
 msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
@@ -160,14 +199,14 @@ msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
-msgstr ""
+msgstr "Autentimine on vajalik BIOS-i seadistuste lugemiseks"
 
 msgid "Set one or more BIOS settings"
 msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
-msgstr ""
+msgstr "Autentimine on vajalik BIOS-i seadistuste muutmiseks"
 
 msgid "Security hardening for HSI"
 msgstr ""
@@ -190,26 +229,33 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
-msgstr ""
+msgstr "Salvesta seadme emuleerimise andmed"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to save hardware emulation data"
-msgstr ""
+msgstr "Autentimine on vajalik seadme emuleerimise andmete salvestamiseks"
 
 msgid "Enable emulation data collection"
-msgstr ""
+msgstr "Lülita emuleeritav andmekogumine sisse"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
+msgstr "Autentimine on vajalik seadme emuleeritava andmekogumise sisselülitamiseks"
+
+msgid "Install firmware on emulated device"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
 msgstr ""
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr ""
+msgstr "Paigaldan püsivara uuendust…"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr ""
+msgstr "Näita täiendavat silumise- ja veaotsinguteavet"
 
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
@@ -221,11 +267,11 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
-msgstr ""
+msgstr "Rakenda uuendusfailid"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
-msgstr ""
+msgstr "Määratle dbx-andmebaasifail"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -233,7 +279,7 @@ msgstr "FAILINIMI"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
-msgstr ""
+msgstr "Sürjuta vaikimisi ESP asukoht"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -241,11 +287,11 @@ msgstr "ASUKOHT"
 
 #. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
-msgstr ""
+msgstr "Rakenda uuendus ka siis, kui see pole soovitatud"
 
 #. TRANSLATORS: description of dbxtool
 msgid "This tool allows an administrator to apply UEFI dbx updates."
-msgstr ""
+msgstr "Selle tarvikuga saab peakasutaja rakendada UEFI dbx-i uuendusi."
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -258,11 +304,11 @@ msgstr ""
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
 msgid "Failed to load local dbx"
-msgstr ""
+msgstr "Kohaliku dbx-faili laadimine ei õnnestunud"
 
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
-msgstr ""
+msgstr "Süsteemi dbx-faili laadimine ei õnnestunud"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -270,44 +316,44 @@ msgstr "Versioon"
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
-msgstr ""
+msgstr "See programm toimib korrektselt vaid juurkasutaja (peakasutaja) õigustes"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
-msgstr ""
+msgstr "Failinimi on vajalik"
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
-msgstr ""
+msgstr "Loen ja töötlen süsteemi dbx-faili…"
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr ""
+msgstr "Loen ja töötlen dbx-faili uuendust…"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
-msgstr ""
+msgstr "Kohaliku dbx-faili lugemine ja töötlemine ei õnnestunud"
 
 #. TRANSLATORS: same or newer update already applied
 msgid "Cannot apply as dbx update has already been applied."
-msgstr ""
+msgstr "Kuna dbx-faili uuendus on juba tehtud, siis seda uuesti teha ei saa."
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr ""
+msgstr "Kontrollin ESP-sisu õigsust…"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
 msgid "Failed to validate ESP contents"
-msgstr ""
+msgstr "ESP-sisu õigsuse kontrollimine ei õnnestunud"
 
 #. TRANSLATORS: actually sending the update to the hardware
 msgid "Applying update…"
-msgstr ""
+msgstr "Rakendan uuendust…"
 
 #. TRANSLATORS: dbx file failed to be applied as an update
 msgid "Failed to apply update"
-msgstr ""
+msgstr "Uuenduse rakendamine ei õnnestunud"
 
 #. TRANSLATORS: success
 msgid "Done!"
@@ -315,7 +361,7 @@ msgstr "Tehtud!"
 
 #. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
-msgstr ""
+msgstr "Ühtegi tegevust pole määratletud!"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1355,6 +1401,9 @@ msgstr ""
 msgid "Manually enable specific plugins"
 msgstr ""
 
+msgid "Location of public key directories used for JCat verification"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr ""
@@ -1381,6 +1430,9 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
+msgstr ""
+
+msgid "Prefix for import and output files"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
@@ -1833,6 +1885,62 @@ msgstr ""
 msgid "Parse the system PCR eventlog"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr ""
@@ -2196,6 +2304,27 @@ msgstr ""
 msgid "Device list uploaded successfully, thanks!"
 msgstr ""
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr ""
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2282,6 +2411,14 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -3001,91 +3138,91 @@ msgstr ""
 
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
-msgstr ""
+msgstr "Tundmatu seade"
 
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
-msgstr ""
+msgstr "Seadme tunnus"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
-msgstr ""
+msgstr "Kokkuvõte"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
-msgstr ""
+msgstr "Eelmine versioon"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
-msgstr ""
+msgstr "Praegune versioon"
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
-msgstr ""
+msgstr "Miinimumversioon"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "Maksimumversioon"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
-msgstr ""
+msgstr "Alglaaduri versioon"
 
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
-msgstr ""
+msgstr "Valmistaja/tarnija"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "Võrguaadress"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
-msgstr ""
+msgstr "Väljalaskeharu"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
-msgstr ""
+msgstr "Paigalduse kestus"
 
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
-msgstr ""
+msgstr "Seerianumber"
 
 #. TRANSLATORS: hardware state, e.g. "pending"
 msgid "Update State"
-msgstr ""
+msgstr "Uuenduse olek"
 
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
 msgid "%u%% (threshold %u%%)"
-msgstr ""
+msgstr "%u%% (alampiir %u%%)"
 
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
-msgstr ""
+msgstr "Aku"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
-msgstr ""
+msgstr "Viga uuendamisel"
 
 #. TRANSLATORS: reasons the device is not updatable
 msgid "Problems"
-msgstr ""
+msgstr "Probleemid"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
-msgstr ""
+msgstr "Viimati muudetud"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "GUID"
+msgstr[1] "GUID-d"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
-msgstr ""
+msgstr "Seadme andmed"
 
 #. TRANSLATORS: description of the device requests
 msgid "Device Requests"
@@ -3352,13 +3489,17 @@ msgstr ""
 msgid "Priority"
 msgstr ""
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr ""
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr ""
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Salasõna"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr ""
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3655,3 +3796,6 @@ msgstr ""
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr ""
+
+#~ msgid "Password"
+#~ msgstr "Salasõna"

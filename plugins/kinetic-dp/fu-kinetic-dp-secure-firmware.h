@@ -27,5 +27,3 @@ guint16
 fu_kinetic_dp_secure_firmware_get_cmdb_block_size(FuKineticDpSecureFirmware *self);
 gboolean
 fu_kinetic_dp_secure_firmware_get_esm_xip_enabled(FuKineticDpSecureFirmware *self);
-guint8
-fu_kinetic_dp_secure_firmware_get_customer_project_id(FuKineticDpSecureFirmware *self);

@@ -469,6 +469,8 @@ gboolean
 fwupd_client_get_daemon_interactive(FwupdClient *self) G_GNUC_NON_NULL(1);
 guint
 fwupd_client_get_percentage(FwupdClient *self) G_GNUC_NON_NULL(1);
+gdouble
+fwupd_client_get_percentage_full(FwupdClient *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_client_get_daemon_version(FwupdClient *self) G_GNUC_NON_NULL(1);
 void

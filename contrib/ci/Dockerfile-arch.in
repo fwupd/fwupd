@@ -11,4 +11,3 @@ RUN pacman -Syu --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm --needed \
 %%%DEPENDENCIES%%%
 WORKDIR /github/workspace
-CMD ["./contrib/ci/arch.sh"]
