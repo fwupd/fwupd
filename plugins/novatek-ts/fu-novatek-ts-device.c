@@ -1009,8 +1009,8 @@ fu_novatek_ts_device_gcm_verify_flash(FuNovatekTsDevice *self,
 		write_checksum = (flash_addr & 0xFF);
 		write_checksum += ((flash_addr >> 8) & 0xFF);
 		write_checksum += ((flash_addr >> 16) & 0xFF);
-		write_checksum += ((bufsz) & 0xFF);
-		write_checksum += (((bufsz) >> 8) & 0xFF);
+		write_checksum += (bufsz & 0xFF);
+		write_checksum += ((bufsz >> 8) & 0xFF);
 		write_checksum += fu_sum16(buf, bufsz);
 		write_checksum = ~write_checksum + 1;
 		if (!fu_novatek_ts_device_gcm_get_checksum(self,
