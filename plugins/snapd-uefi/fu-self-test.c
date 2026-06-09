@@ -521,8 +521,9 @@ fu_uefi_dbx_test_plugin_coldplug_probed_device(FuTestFixture *fixture, gconstpoi
 	if (tc->snapd_supported && g_str_equal(tc->mock_snapd_scenario, "failed-startup")) {
 		/* startup failed for whatever reason, device updates are inhibited */
 		g_assert_true(ret);
-	} else
+	} else {
 		g_assert_false(ret);
+	}
 
 	fu_self_test_mock_snapd_assert_calls(fixture,
 					     (FuTestSnapdCalls){

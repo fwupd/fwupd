@@ -728,8 +728,9 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 		   !self->amd64_hwcfg.fields.smm_base_lock) {
 		fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-	} else
+	} else {
 		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	}
 }
 
 static void

@@ -401,13 +401,13 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 						       &cmp,
 						       error))
 				return FALSE;
-			if ((value == 0x35) && (cmp == 0x96))
+			if ((value == 0x35) && (cmp == 0x96)) {
 				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
 						       FU_VLI_DEVICE_KIND_VL108);
-			else if ((value == 0x36) && (cmp == 0x01))
+			} else if ((value == 0x36) && (cmp == 0x01)) {
 				fu_vli_device_set_kind(FU_VLI_DEVICE(self),
 						       FU_VLI_DEVICE_KIND_VL109);
-			else {
+			} else {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
