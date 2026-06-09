@@ -22,13 +22,7 @@ G_DEFINE_TYPE(FuMmMhiFirehoseDevice, fu_mm_mhi_firehose_device, FU_TYPE_MM_DEVIC
 static gboolean
 fu_mm_mhi_firehose_device_trigger_edl(FuDevice *device, GError **error)
 {
-<<<<<<< HEAD
 	g_autoptr(GPtrArray) attrs = NULL;
-=======
-	const gchar *mhi_name = NULL;
-	g_autoptr(GPtrArray) attrs = NULL;
-	g_autofree gchar *trigger_path = NULL;
->>>>>>> dc09c9671 (modem-manager: add new device type(FuMmMhiFirehoseDevice) to support new vid/pid)
 
 	attrs = fu_udev_device_list_sysfs(FU_UDEV_DEVICE(device), error);
 	if (attrs == NULL) {
@@ -36,7 +30,6 @@ fu_mm_mhi_firehose_device_trigger_edl(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-<<<<<<< HEAD
 	for (guint i = 0; i < attrs->len; i++) {
 		const gchar *name = g_ptr_array_index(attrs, i);
 
@@ -60,29 +53,6 @@ fu_mm_mhi_firehose_device_trigger_edl(FuDevice *device, GError **error)
 
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 			    "No MHI port found");
-=======
-	/* Find the first MHI port (only one expected) */
-	for (guint i = 0; i < attrs->len; i++) {
-		const gchar *name = g_ptr_array_index(attrs, i);
-		if (g_str_has_prefix(name, "mhi")) {
-			mhi_name = name;
-			break;
-		}
-	}
-
-	if (mhi_name == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-				    "No MHI port found");
-		return FALSE;
-	}
-
-	trigger_path = g_strdup_printf("%s/trigger_edl", mhi_name);
-	if (fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), trigger_path, "1", 3000, error))
-		return TRUE;
-
-	/* write_sysfs already set a detailed error, just add context */
-	g_prefix_error(error, "failed to trigger EDL for MHI port '%s': ", mhi_name);
->>>>>>> dc09c9671 (modem-manager: add new device type(FuMmMhiFirehoseDevice) to support new vid/pid)
 	return FALSE;
 }
 
@@ -276,10 +246,7 @@ fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
         return FALSE;
     }
 
-<<<<<<< HEAD
     /* 先找第一个（也是唯一一个）mhi 条目 */
-=======
->>>>>>> dc09c9671 (modem-manager: add new device type(FuMmMhiFirehoseDevice) to support new vid/pid)
     for (guint i = 0; i < attrs->len; i++) {
         const gchar *name = g_ptr_array_index(attrs, i);
         if (g_str_has_prefix(name, "mhi")) {
@@ -295,10 +262,7 @@ fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
     }
 
     devnode = g_strdup_printf("%s/%s/%s_MBIM", sysfs_path, mhi_name, mhi_name);
-<<<<<<< HEAD
     g_debug("checking MBIM port: %s", devnode);
-=======
->>>>>>> dc09c9671 (modem-manager: add new device type(FuMmMhiFirehoseDevice) to support new vid/pid)
 
     if (!g_file_test(devnode, G_FILE_TEST_EXISTS)) {
         g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
@@ -306,11 +270,7 @@ fu_mm_mhi_firehose_device_probe(FuDevice *device, GError **error)
         return FALSE;
     }
 
-<<<<<<< HEAD
     g_debug("found MBIM port at %s", devnode);
-=======
-    g_info("found MBIM port at %s", devnode);
->>>>>>> dc09c9671 (modem-manager: add new device type(FuMmMhiFirehoseDevice) to support new vid/pid)
     return TRUE;
 }
 
