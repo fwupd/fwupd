@@ -37,7 +37,8 @@ typedef struct {
 
 G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 
-#define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5 /* s */
+#define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5	       /* s */
+#define FU_UDEV_BACKEND_SOCKET_RCV_SIZE	   (8 * FU_MB) /* 8MB */
 
 static void
 fu_udev_backend_coldplug_cache_item_free(FuUdevBackendColdplugCacheItem *item)
@@ -685,6 +686,7 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 static gboolean
 fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 {
+	int rcvbuf = FU_UDEV_BACKEND_SOCKET_RCV_SIZE;
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
 	    .nl_pid = getpid(),
@@ -714,6 +716,8 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
+	if (setsockopt(self->netlink_fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) < 0)
+		g_warning("failed to set SO_RCVBUF: %s", fwupd_strerror(errno));
 	if (bind(self->netlink_fd, (void *)&nls, sizeof(nls))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
