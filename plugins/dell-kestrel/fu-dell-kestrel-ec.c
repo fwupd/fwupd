@@ -497,10 +497,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 	/* ec included in cmd, set bit2 in data for tbt */
 	fu_struct_dell_kestrel_ec_databytes_set_cmd(st_req, FU_DELL_KESTREL_EC_CMD_SET_PASSIVE);
 	fu_struct_dell_kestrel_ec_databytes_set_data_sz(st_req, 1);
-	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req,
-							  (const guint8 *)&bitmap,
-							  sizeof(bitmap),
-							  error))
+	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req, &bitmap, sizeof(bitmap), error))
 		return FALSE;
 
 	for (guint i = 1; i <= max_tries; i++) {

@@ -86,7 +86,7 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 	}
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(usb_device),
 					 ep,
-					 (guint8 *)buf->data,
+					 buf->data,
 					 buf->len,
 					 &transferred,
 					 BULK_TRANSFER_TIMEOUT,
@@ -284,8 +284,8 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 	*data_size = buf[1] << 8 | buf[0];
 	g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
 		*data_size,
-		(guchar)unit_id,
-		(guchar)control_selector);
+		unit_id,
+		control_selector);
 	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LEN", buf, kDefaultUvcGetLenQueryControlSize);
 
 	/* success */
@@ -328,8 +328,8 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 		return FALSE;
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
 		bufsz,
-		(guchar)unit_id,
-		(guchar)control_selector);
+		unit_id,
+		control_selector);
 	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CUR", buf, bufsz);
 
 	/* success */

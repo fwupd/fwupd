@@ -123,7 +123,7 @@ fu_efi_filesystem_write(FuFirmware *firmware, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "EFI filesystem too large, 0x%02x > 0x%02x",
-				    (guint)buf->len,
+				    buf->len,
 				    (guint)FU_EFI_FILESYSTEM_SIZE_MAX);
 			return NULL;
 		}

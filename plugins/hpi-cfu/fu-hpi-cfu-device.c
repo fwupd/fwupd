@@ -1476,7 +1476,7 @@ fu_hpi_cfu_device_setup(FuDevice *device, GError **error)
 	    version_table_offset + component_index * component_data_size + component_id_offset;
 
 	/* get bulk optimization value */
-	if (!fu_memcpy_safe((guint8 *)&self->bulk_opt,
+	if (!fu_memcpy_safe(&self->bulk_opt,
 			    sizeof(self->bulk_opt),
 			    0x0,
 			    (guint8 *)buf + bulk_opt_index,

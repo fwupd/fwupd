@@ -658,7 +658,7 @@ fu_pixart_tp_device_flash_erase_sector(FuPixartTpDevice *self, guint sector, GEr
 						       error))
 		return FALSE;
 
-	g_debug("erase sector %u (addr=0x%08x)", (guint)sector, flash_address);
+	g_debug("erase sector %u (addr=0x%08x)", sector, flash_address);
 
 	/* execute erase command */
 	if (!fu_pixart_tp_device_flash_execute(self,
