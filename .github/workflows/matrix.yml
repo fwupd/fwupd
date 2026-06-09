@@ -97,7 +97,7 @@ jobs:
           matrix.env.DISTRO == 'arch' ||
           matrix.env.DISTRO == 'debian' ||
           matrix.env.DISTRO == 'fedora')
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -207,7 +207,7 @@ jobs:
           persist-credentials: false
       - name: Build
         id: test
-        uses: vmactions/freebsd-vm@v1.4.6
+        uses: vmactions/freebsd-vm@a6de9343ef5747433d9c25784c90e84998b9d69a # v1.4.6
         env:
           CI: true
           CC: gcc
@@ -231,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Download artifact
@@ -240,7 +240,7 @@ jobs:
         with:
           name: ubuntu-amd64
       - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
+        uses: shimataro/ssh-key-action@87a8f067114a8ce263df83e9ed5c849953548bc3 # v2.8.1
         with:
           key: ${{ secrets.FWUPD_GITHUB_IO_SSH_KEY }}
           name: id_rsa # optional
@@ -280,7 +280,7 @@ jobs:
         with:
           name: windows
       - name: Upload Binaries to Release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # 2.11.5
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
