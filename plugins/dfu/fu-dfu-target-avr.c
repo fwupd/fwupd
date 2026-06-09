@@ -410,7 +410,7 @@ fu_dfu_target_avr_get_chip_signature_for_addr(FuDfuTarget *target,
 			    "cannot read signature memory page:0x%02x "
 			    "addr:0x%02x, got 0x%02x bytes",
 			    (guint)page,
-			    (guint)addr,
+			    addr,
 			    (guint)g_bytes_get_size(buf));
 		return NULL;
 	}

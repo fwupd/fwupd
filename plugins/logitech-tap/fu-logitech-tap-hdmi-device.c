@@ -235,7 +235,7 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 	if (!fu_logitech_tap_hdmi_device_get_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapUvcXuAitCustomCsGetMmpResult,
-							(guint8 *)mmp_get_data,
+							mmp_get_data,
 							data_len,
 							error))
 		return FALSE;
@@ -298,7 +298,7 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsGetMmpResult,
-			(guint8 *)mmp_get_data,
+			mmp_get_data,
 			data_len,
 			error))
 			return FALSE;
@@ -364,7 +364,7 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 		if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 								kLogiUnitIdVidCapExtension,
 								kLogiUvcXuAitCustomCsSetFwData,
-								(guint8 *)data_pkt,
+								data_pkt,
 								kLogiDefaultImageBlockSize,
 								error))
 			return FALSE;

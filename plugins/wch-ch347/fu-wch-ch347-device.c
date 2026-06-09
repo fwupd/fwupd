@@ -75,7 +75,7 @@ fu_wch_ch347_device_write(FuWchCh347Device *self,
 			    FWUPD_ERROR_INTERNAL,
 			    "only wrote 0x%x of 0x%x",
 			    (guint)actual_length,
-			    (guint)st->buf->len);
+			    st->buf->len);
 		return FALSE;
 	}
 

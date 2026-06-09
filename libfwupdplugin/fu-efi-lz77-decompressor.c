@@ -318,7 +318,7 @@ fu_efi_lz77_decompressor_read_pt_len(FuEfiLz77DecompressHelper *helper,
 			return FALSE;
 		fu_efi_lz77_decompressor_memset16(&helper->pt_table[0],
 						  sizeof(helper->pt_table),
-						  (guint16)char_c);
+						  char_c);
 		memset(helper->pt_len, 0, number_of_symbols);
 		return TRUE;
 	}
