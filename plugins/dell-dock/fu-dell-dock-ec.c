@@ -45,7 +45,7 @@ typedef enum {
 	FW_UPDATE_AUTHENTICATION_FAILED,
 } FuDellDockECFWUpdateStatus;
 
-const FuHIDI2CParameters ec_base_settings = {
+static const FuHIDI2CParameters ec_base_settings = {
     .i2ctargetaddr = I2C_EC_ADDRESS,
     .regaddrlen = 1,
     .i2cspeed = FU_DELL_DOCK_I2C_SPEED_250K,

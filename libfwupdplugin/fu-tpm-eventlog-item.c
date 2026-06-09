@@ -12,7 +12,7 @@
 #include "fu-common.h"
 #include "fu-tpm-eventlog-item.h"
 
-const FuTpmAlg algs[] = {
+static const FuTpmAlg algs[] = {
     FU_TPM_ALG_SHA1,
     FU_TPM_ALG_SHA256,
     FU_TPM_ALG_SHA384,

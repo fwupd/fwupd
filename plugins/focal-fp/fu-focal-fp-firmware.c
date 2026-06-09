@@ -19,8 +19,6 @@ G_DEFINE_TYPE(FuFocalFpFirmware, fu_focal_fp_firmware, FU_TYPE_FIRMWARE)
 /* firmware block update */
 #define FOCAL_NAME_START_ADDR_WRDS 0x011E
 
-const guint8 focal_fp_signature[] = {0xFF};
-
 guint32
 fu_focal_fp_firmware_get_checksum(FuFocalFpFirmware *self)
 {

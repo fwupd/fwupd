@@ -29,7 +29,7 @@
 #define FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT "update-on-reboot"
 
 /* nocheck:magic */
-const guint8 report_data[15] =
+static const guint8 report_data[15] =
     {0x00, 0xff, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 struct _FuHpiCfuDevice {
@@ -52,7 +52,7 @@ typedef struct {
 	FuFirmware *fw_offer;
 	FuFirmware *fw_payload;
 } FuHpiCfuHandlerOptions;
-FuHpiCfuHandlerOptions handler_options;
+static FuHpiCfuHandlerOptions handler_options;
 
 typedef gint32 (*FuHpiCfuStateHandler)(FuHpiCfuDevice *self,
 				       FuProgress *progress,
@@ -1377,7 +1377,7 @@ fu_hpi_cfu_device_handler_verify_error(FuHpiCfuDevice *self,
 	return TRUE;
 }
 
-FuHpiCfuStateMachineFramework hpi_cfu_states[] = {
+static FuHpiCfuStateMachineFramework hpi_cfu_states[] = {
     {FU_HPI_CFU_STATE_START_ENTIRE_TRANSACTION,
      fu_hpi_cfu_device_handler_start_entire_transaction,
      NULL},
