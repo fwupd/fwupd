@@ -51,6 +51,7 @@ typedef struct {
 	FuDevice *device_old;
 	FuDeviceList *self; /* no ref */
 	guint remove_id;
+    guint reprobe_id;
 } FuDeviceItem;
 
 static void
@@ -515,10 +516,29 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
+static gboolean
+fu_device_list_reload_cdc_mbim_cb(gpointer user_data)
+{
+    FuDeviceItem *item = (FuDeviceItem *)user_data;
+    /* no longer valid */
+    item->reprobe_id = 0;
+
+    g_info("reload cdc_mbim driver");
+
+    if (!g_spawn_command_line_sync("modprobe -r cdc_mbim", NULL, NULL, NULL, NULL))
+        g_debug("failed to remove cdc_mbim");
+    if (!g_spawn_command_line_sync("modprobe cdc_mbim", NULL, NULL, NULL, NULL))
+        g_debug("failed to load cdc_mbim");
+
+    return G_SOURCE_REMOVE;
+}
+
 static void
 fu_device_list_remove_with_delay(FuDeviceItem *item)
 {
 	g_autofree gchar *id_display = fu_device_get_id_display(item->device);
+    guint16 vid = fu_device_get_vid(item->device);
+    guint16 pid = fu_device_get_pid(item->device);
 	/* give the hardware time to re-enumerate or the user time to
 	 * re-insert the device with a magic button pressed */
 	g_info("waiting %ums for %s device removal",
@@ -527,6 +547,12 @@ fu_device_list_remove_with_delay(FuDeviceItem *item)
 	item->remove_id = g_timeout_add(fu_device_get_remove_delay(item->device),
 					fu_device_list_device_delayed_remove_cb,
 					item);
+    if (vid == 0x33f8 && pid == 0xd00d) {
+        g_info("reprobe cdc_mbim driver timer added");
+        item->reprobe_id = g_timeout_add(fu_device_get_remove_delay(item->device) / 2,
+                        fu_device_list_reload_cdc_mbim_cb,
+                        item);
+    }
 }
 
 /* nocheck:name */
@@ -577,6 +603,7 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 
 	/* ensure never fired if the remove delay is changed */
 	g_clear_handle_id(&item->remove_id, g_source_remove);
+    g_clear_handle_id(&item->reprobe_id, g_source_remove);
 
 	/* delay the removal and check for replug */
 	if (fu_device_list_should_remove_with_delay(item->device)) {
@@ -696,6 +723,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 
 	/* clear timeout if scheduled */
 	g_clear_handle_id(&item->remove_id, g_source_remove);
+    g_clear_handle_id(&item->reprobe_id, g_source_remove);
 
 	/* remove flag on both old and new devices */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
@@ -1093,7 +1121,9 @@ fu_device_list_item_free(FuDeviceItem *item)
 {
 	if (item->remove_id != 0)
 		g_source_remove(item->remove_id);
-	if (item->device_old != NULL)
+	if (item->reprobe_id != 0)
+		g_source_remove(item->reprobe_id);
+    if (item->device_old != NULL)
 		g_object_unref(item->device_old);
 	fu_device_list_item_set_device(item, NULL);
 	g_free(item);
