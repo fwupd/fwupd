@@ -39,9 +39,11 @@ fu_linux_lockdown_plugin_rescan(FuPlugin *plugin)
 	}
 
 	/* update metadata */
-	fu_plugin_add_report_metadata(plugin,
-				      "LinuxLockdown",
-				      fu_linux_lockdown_to_string(self->lockdown));
+	if (self->lockdown != FU_LINUX_LOCKDOWN_UNKNOWN) {
+		fu_plugin_add_report_metadata(plugin,
+					      "LinuxLockdown",
+					      fu_linux_lockdown_to_string(self->lockdown));
+	}
 }
 
 static void
