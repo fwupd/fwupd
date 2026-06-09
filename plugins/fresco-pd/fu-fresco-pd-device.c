@@ -332,8 +332,9 @@ fu_fresco_pd_device_write_firmware(FuDevice *device,
 		} else if (config[0] == 0x6c && config[1] == 0x00 && config[2] != 0x01) {
 			if (!fu_fresco_pd_device_write_byte(self, i + 2, 0x01, error))
 				return FALSE;
-		} else if (config[0] == 0x00 && config[1] == 0x00 && config[2] != 0x00)
+		} else if (config[0] == 0x00 && config[1] == 0x00 && config[2] != 0x00) {
 			break;
+		}
 	}
 	fu_progress_step_done(progress);
 

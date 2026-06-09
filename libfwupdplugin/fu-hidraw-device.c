@@ -297,8 +297,9 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 				 FU_INTEGER_BASE_AUTO,
 				 &error_local)) {
 			g_info("failed to parse HID_FIRMWARE_VERSION: %s", error_local->message);
-		} else
+		} else {
 			fu_device_set_version_raw(FU_DEVICE(self), hid_version);
+		}
 	}
 
 	/* set the hidraw device */

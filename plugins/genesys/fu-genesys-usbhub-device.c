@@ -1575,8 +1575,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		} else if (!fu_genesys_usbhub_device_get_info_from_vendor_ts(self,
 									     buf,
 									     bufsz,
-									     error))
+									     error)) {
 			return FALSE;
+		}
 	} else {
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}

@@ -573,8 +573,9 @@ fu_hpi_cfu_device_handler_send_offer_accepted(FuHpiCfuDevice *self,
 				self->state = FU_HPI_CFU_STATE_NOTIFY_ON_READY;
 				g_warning("send_offer_accepted after 3 retry "
 					  "attempts. Restart the device(Reason: Device busy)");
-			} else
+			} else {
 				self->state = FU_HPI_CFU_STATE_START_ENTIRE_TRANSACTION;
+			}
 		} else {
 			self->state = FU_HPI_CFU_STATE_UPDATE_MORE_OFFERS;
 		}
@@ -797,8 +798,9 @@ fu_hpi_cfu_device_handler_set_status_report_25(FuHpiCfuDevice *self,
 			g_debug("check_update_content: reason: %s for last_packet_sent",
 				fu_hpi_cfu_firmware_update_offer_to_string(status));
 			self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-		} else
+		} else {
 			self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
+		}
 		break;
 
 	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_BUSY:
@@ -936,8 +938,9 @@ fu_hpi_cfu_device_handler_check_update_content(FuHpiCfuDevice *self,
 
 	if (self->last_packet_sent) {
 		self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-	} else
+	} else {
 		self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
+	}
 
 	if (report_id == 0x25) {
 		g_debug("check_update_content: report_id:0x%x", report_id);

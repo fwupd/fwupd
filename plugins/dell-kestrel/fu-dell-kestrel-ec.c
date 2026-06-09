@@ -471,9 +471,9 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
 	if (!fu_dell_kestrel_ec_write(self, st_req->buf, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring: %s", error_local->message);
-		else {
+		} else {
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
 						   "failed to %s: ",
