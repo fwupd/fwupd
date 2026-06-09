@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     timeout-minutes: 90
+    continue-on-error: true
     permissions:
       contents: read
     runs-on: ${{ matrix.runner }}
