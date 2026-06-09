@@ -7,6 +7,7 @@ systemd_src = []
 engine_dep = [
   libxmlb,
   giounix,
+  glib,
   gmodule,
   libusb,
   polkit,
@@ -18,7 +19,7 @@ if get_option('passim').allowed()
   engine_dep += passim
 endif
 
-client_dep = [libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
+client_dep = [glib, libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif

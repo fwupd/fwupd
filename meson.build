@@ -251,6 +251,11 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
+glib = dependency(
+  'glib-2.0',
+  version: '>= 2.68.0',
+  include_type: 'system',
+) # limited by RHEL-9, which has v2.68.4
 gio = dependency(
   'gio-2.0',
   version: '>= 2.68.0',

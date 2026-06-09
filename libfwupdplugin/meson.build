@@ -401,7 +401,7 @@ fwupdplugin_headers = [
   'fu-zip-firmware.h',
 ]
 
-introspection_deps = [libxmlb, giounix, libusb]
+introspection_deps = [libxmlb, giounix, glib, libusb]
 
 library_deps = [
   introspection_deps,
