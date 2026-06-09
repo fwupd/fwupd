@@ -84,6 +84,13 @@ if build_daemon
       ]
     endif
 
+    if get_option('plugin_modem_manager').allowed()
+      rw_directories += [
+        '-/lib/firmware/qcom/sdx35/rolling',
+        '-/lib/firmware/qcom/sdx75/rolling',
+      ]
+    endif
+
     # not using ConfigurationDirectory further down
     if get_option('prefix') != '/usr'
       rw_directories += join_paths(sysconfdir, 'fwupd')
