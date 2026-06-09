@@ -22,6 +22,7 @@ enum FuContextFlags {
     IsServer                = 1 << 15,
     ReadonlyFs              = 1 << 16, // ignore readonly filesystem errors
     NoCache                 = 1 << 17, // do not save to a persistent cache
+    DualBootWindows         = 1 << 18,
 }
 
 enum FuContextLoadFlags {

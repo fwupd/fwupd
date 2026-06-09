@@ -229,7 +229,7 @@ The `[fwupd]` section can contain the following parameters:
   Create virtual test devices and remote for validating daemon flows.
   This is only intended for CI testing and development purposes.
 
-{% if plugin_uefi_capsule %}
+{% if plugin_uefi %}
 
 ## UEFI_CAPSULE PARAMETERS
 
@@ -276,6 +276,18 @@ The `[uefi_capsule]` section can contain the following parameters:
 **ScreenHeight={{uefi_capsule_ScreenHeight}}**
 
   Override the screen height in pixels of the EFI framebuffer as used by the UX capsule.
+
+## UEFI_DB PARAMETERS
+
+The `[uefi_db]` section can contain the following parameters:
+
+**UpdateWindowsCA={{uefi_db_UpdateWindowsCA}}**
+
+  The flash space used by UEFI updates is limited -- if we update the Windows CA (when we're not
+  dual-booted with Windows) then we are using the flash space we need for UEFI db and dbx updates.
+
+  This setting forces the Windows UEFI certificate to be updatable even if Microsoft Windows is not
+  detected.
 
 {% endif %}
 

@@ -1409,6 +1409,38 @@ fu_context_detect_hypervisor(FuContext *self)
 	}
 }
 
+static gboolean
+fu_context_load_boot_entries(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) entries = NULL;
+
+	/* skip unless UEFI is enabled in SMBIOS */
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED))
+		return TRUE;
+
+	entries = fu_efivars_get_boot_entries(priv->efivars, error);
+	if (entries == NULL)
+		return FALSE;
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		const gchar *path;
+
+		path =
+		    fu_efi_load_option_get_metadata(entry, FU_EFI_LOAD_OPTION_METADATA_PATH, NULL);
+		if (path != NULL) {
+			g_autofree gchar *path_lower = g_ascii_strdown(path, -1);
+			if (g_strstr_len(path_lower, -1, "bootmgfw.efi") != NULL) {
+				fu_context_add_flag(self, FU_CONTEXT_FLAG_DUAL_BOOT_WINDOWS);
+				break;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_context_load:
  * @self: a #FuContext
@@ -1433,6 +1465,8 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
+	g_autoptr(GError) error_efivars = NULL;
+	g_autoptr(GPtrArray) entries = NULL;
 	struct {
 		const gchar *name;
 		FuContextLoadFlags flag;
@@ -1544,6 +1578,13 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
 		g_debug("%s", error_bios_settings->message);
 	fu_progress_step_done(progress);
+
+	/* is this dual booted with Windows */
+	if (!fu_context_load_boot_entries(self, &error_efivars)) {
+		if (!g_error_matches(error_efivars, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) &&
+		    !g_error_matches(error_efivars, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			g_warning("failed to check boot entries: %s", error_efivars->message);
+	}
 
 	/* always */
 	return TRUE;
