@@ -28,6 +28,7 @@ plugins/egis-moc/ @jasonhouang
 plugins/elan-kbd/ @hughsie
 plugins/elanfp/ @MichaelCheng04
 plugins/elantp/ @jinglewu @josh-chen-elan
+plugins/elan-ts/ @PaulLiang01043
 plugins/focal-fp/ @waynehuang2022
 plugins/focal-touch/ @waynehuang2022
 plugins/fpc/ @jimzhang2
