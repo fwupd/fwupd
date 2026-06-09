@@ -431,8 +431,6 @@ fu_udev_backend_devnode_wait_cb(FuDevice *device, gpointer user_data, GError **e
 		return TRUE;
 
 	const gchar *dev_file = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
-	if (dev_file == NULL)
-		return FALSE;
 
 	/* if the device has no associated /dev/ node (e.g. pure sysfs), we skip it */
 	if (dev_file != NULL && !g_file_test(dev_file, G_FILE_TEST_EXISTS)) {
@@ -653,8 +651,12 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 		       MSG_DONTWAIT,
 		       (struct sockaddr *)&sender_addr,
 		       &sender_len);
-	if (len < 0)
+	if (len < 0) {
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
+			g_warning("netlink recvfrom failed: %s", g_strerror(errno));
+		}
 		return TRUE;
+	}
 
 	/* only accept messages from kernel (pid 0) to prevent spoofing attacks */
 	if (sender_addr.nl_groups == FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL &&
@@ -714,6 +716,12 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 			    "failed to connect to netlink: %s",
 			    fwupd_strerror(errno));
 		return FALSE;
+	}
+	{
+		int rcvbuf = 8 * 1024 * 1024; /* 8MB */
+		if (setsockopt(self->netlink_fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) < 0) {
+			g_warning("failed to set SO_RCVBUF: %s", g_strerror(errno));
+		}
 	}
 	if (bind(self->netlink_fd, (void *)&nls, sizeof(nls))) {
 		g_set_error(error,
