@@ -167,6 +167,18 @@ GType = FuMmMhiQcdmDevice
 CounterpartGuid = PCI\VEN_1EAC&DEV_1002
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
+[PCI\VID_17CB&PID_011A]
+GType = FuMmMhiFirehoseDevice
+CounterpartGuid = PCI\VEN_17CB&DEV_011A
+ModemManagerFirehoseProgFile = prog_firehose_ddr.elf
+ModemManagerLibFirmwarePath = /lib/firmware/qcom/sdx35/rolling
+
+[PCI\VID_17CB&PID_0309]
+GType = FuMmMhiFirehoseDevice
+CounterpartGuid = PCI\VEN_17CB&DEV_0309
+ModemManagerFirehoseProgFile = prog_firehose_lite.elf
+ModemManagerLibFirmwarePath = /lib/firmware/qcom/sdx75/rolling
+
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_100D]
 GType = FuMmMhiQcdmDevice
