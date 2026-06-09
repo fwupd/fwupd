@@ -586,7 +586,7 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 
 			/* write bytes_remaining of bytes into dst_buf */
 			bytes_remaining--;
-			while ((gint16)(bytes_remaining) >= 0) {
+			while ((gint16)bytes_remaining >= 0) {
 				if (dst_offset >= helper->dst->len) {
 					g_set_error_literal(error,
 							    FWUPD_ERROR,

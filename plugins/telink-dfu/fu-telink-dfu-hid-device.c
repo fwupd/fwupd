@@ -248,7 +248,7 @@ fu_telink_dfu_hid_device_ota_start(FuTelinkDfuHidDevice *self, GError **error)
 static gboolean
 fu_telink_dfu_hid_device_ota_stop(FuTelinkDfuHidDevice *self, guint number_chunks, GError **error)
 {
-	guint16 pkt_index = (guint16)(number_chunks)-1;
+	guint16 pkt_index = (guint16)number_chunks - 1;
 	g_autoptr(FuStructTelinkDfuEndCheck) st_end_check = fu_struct_telink_dfu_end_check_new();
 	g_autoptr(FuStructTelinkDfuHidPkt) st_pkt = NULL;
 
