@@ -1,0 +1,32 @@
+# Copyright 2026 Elan Microelectronics Corporation <paul.liang@emc.com.tw>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+# Elan TS Bootloader
+[HIDRAW\VEN_04F3&DEV_0732]
+Plugin = elan_ts
+Flags = is-bootloader
+
+# HP Radiohead
+[HIDRAW\VEN_04F3&DEV_2F6E]
+Plugin = elan_ts
+
+# HP Gaston (FWID: 0x48EA)
+[HIDRAW\VEN_04F3&DEV_4832]
+Plugin = elan_ts
+
+# HP Gaston (FWID: 0x48EB)
+[HIDRAW\VEN_04F3&DEV_4833]
+Plugin = elan_ts
+
+# HP Gaston (FWID: 0x48ED)
+[HIDRAW\VEN_04F3&DEV_4835]
+Plugin = elan_ts
+
+# HP Gaston (FWID: 0x48EE)
+[HIDRAW\VEN_04F3&DEV_4836]
+Plugin = elan_ts
+
+# HP Gaston (FWID: 0x498F)
+[HIDRAW\VEN_04F3&DEV_489D]
+Plugin = elan_ts

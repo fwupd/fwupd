@@ -471,9 +471,9 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
 	if (!fu_dell_kestrel_ec_write(self, st_req->buf, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring: %s", error_local->message);
-		else {
+		} else {
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
 						   "failed to %s: ",
@@ -497,10 +497,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 	/* ec included in cmd, set bit2 in data for tbt */
 	fu_struct_dell_kestrel_ec_databytes_set_cmd(st_req, FU_DELL_KESTREL_EC_CMD_SET_PASSIVE);
 	fu_struct_dell_kestrel_ec_databytes_set_data_sz(st_req, 1);
-	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req,
-							  (const guint8 *)&bitmap,
-							  sizeof(bitmap),
-							  error))
+	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req, &bitmap, sizeof(bitmap), error))
 		return FALSE;
 
 	for (guint i = 1; i <= max_tries; i++) {

@@ -828,7 +828,7 @@ fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
 			g_info("required ESP free space is not configured, using (2 x %uMB) + %uMB",
 			       (guint)(fu_firmware_get_size(firmware) / FU_MB),
 			       (guint)(FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / FU_MB));
-			sz_reqd = fu_firmware_get_size(firmware) * 2 +
+			sz_reqd = (fu_firmware_get_size(firmware) * 2) +
 				  FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED;
 		}
 	}

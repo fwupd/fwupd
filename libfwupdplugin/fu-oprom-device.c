@@ -131,7 +131,7 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware too small: 0x%x bytes",
-			    (guint)buf->len);
+			    buf->len);
 		return NULL;
 	}
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));

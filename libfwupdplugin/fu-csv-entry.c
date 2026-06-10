@@ -90,6 +90,9 @@ fu_csv_entry_get_value_by_column_id(FuCsvEntry *self, const gchar *column_id)
 	g_return_val_if_fail(idx != G_MAXUINT, NULL);
 	g_return_val_if_fail(column_id != NULL, NULL);
 
+	/* the column may be defined in the header but absent from this shorter row */
+	if (idx >= priv->values->len)
+		return NULL;
 	return g_ptr_array_index(priv->values, idx);
 }
 

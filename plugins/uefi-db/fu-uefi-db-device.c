@@ -22,11 +22,27 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) siglist = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GPtrArray) default_sigs = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* FuUefiDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_uefi_db_device_parent_class)->probe(device, error))
 		return FALSE;
+
+	/* for specific vendors we care about the default value */
+	if (fu_context_has_hwid_flag(ctx, "use-db-default-ids")) {
+		g_autoptr(FuFirmware) firmware_default = NULL;
+		g_autoptr(GError) error_local = NULL;
+		firmware_default = fu_uefi_device_read_default(FU_UEFI_DEVICE(device),
+							       FU_EFIVARS_GUID_EFI_GLOBAL,
+							       "db",
+							       &error_local);
+		if (firmware_default == NULL) {
+			g_debug("failed to get dbDefault, ignoring: %s", error_local->message);
+		} else {
+			default_sigs = fu_firmware_get_images(firmware_default);
+		}
+	}
 
 	/* add each subdevice */
 	siglist = fu_device_read_firmware(device,
@@ -47,6 +63,26 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 		fu_device_add_flag(FU_DEVICE(x509_device), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 		fu_device_set_physical_id(FU_DEVICE(x509_device), "db");
 		fu_device_set_proxy(FU_DEVICE(x509_device), device);
+		if (!fu_device_probe(FU_DEVICE(x509_device), error))
+			return FALSE;
+		for (guint j = 0; default_sigs != NULL && j < default_sigs->len; j++) {
+			FuFirmware *default_sig = g_ptr_array_index(default_sigs, j);
+			if (fu_firmware_get_id(default_sig) == NULL)
+				continue;
+			if (g_strcmp0(fu_firmware_get_id(default_sig),
+				      fu_firmware_get_id(FU_FIRMWARE(sig))) == 0)
+				continue;
+			fu_device_add_instance_strup(FU_DEVICE(x509_device),
+						     "CRTD",
+						     fu_firmware_get_id(default_sig));
+			if (!fu_device_build_instance_id(FU_DEVICE(x509_device),
+							 error,
+							 "UEFI",
+							 "CRT",
+							 "CRTD",
+							 NULL))
+				return FALSE;
+		}
 		fu_device_add_child(device, FU_DEVICE(x509_device));
 	}
 

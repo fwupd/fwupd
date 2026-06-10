@@ -102,7 +102,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [gio, giounix, libcurl]
+libfwupd_deps = [gio, giounix, glib, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',

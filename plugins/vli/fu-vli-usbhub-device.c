@@ -594,9 +594,9 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 	} else if (chipid2 == 0x35 && chipid1 == 0x95) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL822T);
 	} else if (chipid2 == 0x35 && chipid1 == 0x99) {
-		if (chipver == 0xC0 || chipver == 0xC1)
+		if (chipver == 0xC0 || chipver == 0xC1) {
 			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL822C0);
-		else {
+		} else {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,

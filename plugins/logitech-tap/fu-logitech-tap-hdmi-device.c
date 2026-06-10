@@ -21,26 +21,26 @@
 /* 2 byte for get len query */
 #define kDefaultUvcGetLenQueryControlSize 2
 
-const guint8 kLogiTapCameraVersionSelector = 1;
-const guint8 kLogiTapUvcXuAitCustomCsGetMmpResult = 5;
+static const guint8 kLogiTapCameraVersionSelector = 1;
+static const guint8 kLogiTapUvcXuAitCustomCsGetMmpResult = 5;
 
-const guint8 kLogiTapHdmiVerSetData = 0x0B;
+static const guint8 kLogiTapHdmiVerSetData = 0x0B;
 
-const guint8 kLogiUnitIdVidCapExtension = 0x06;
-const guint8 kLogiHdmiVerGetSelector = 2;
+static const guint8 kLogiUnitIdVidCapExtension = 0x06;
+static const guint8 kLogiHdmiVerGetSelector = 2;
 
-const guint8 kLogiTapAitSetMmpCmdFwBurning = 0x01;
-const guint8 kLogiTapVideoAitInitiateSetMMPData = 1;
-const guint kLogiDefaultImageBlockSize = 32;
-const guint8 kLogiUvcXuAitCustomCsSetFwData = 0x03;
+static const guint8 kLogiTapAitSetMmpCmdFwBurning = 0x01;
+static const guint8 kLogiTapVideoAitInitiateSetMMPData = 1;
+static const guint kLogiDefaultImageBlockSize = 32;
+static const guint8 kLogiUvcXuAitCustomCsSetFwData = 0x03;
 
-const guint8 kLogiTapUvcXuAitCustomCsSetMmp = 4;
-const guint kLogiDefaultAitSleepIntervalMs = 1000;
+static const guint8 kLogiTapUvcXuAitCustomCsSetMmp = 4;
+static const guint kLogiDefaultAitSleepIntervalMs = 1000;
 
 /* when finalize Ait, max polling duration is 120sec */
-const guint kLogiDefaultAitFinalizeMaxPollingDurationMs = 120000;
-const guint8 kLogiDefaultAitSuccessValue = 0x00;
-const guint8 kLogiDefaultAitFailureValue = 0x82;
+static const guint kLogiDefaultAitFinalizeMaxPollingDurationMs = 120000;
+static const guint8 kLogiDefaultAitSuccessValue = 0x00;
+static const guint8 kLogiDefaultAitFailureValue = 0x82;
 
 struct _FuLogitechTapHdmiDevice {
 	FuV4lDevice parent_instance;
@@ -235,7 +235,7 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 	if (!fu_logitech_tap_hdmi_device_get_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapUvcXuAitCustomCsGetMmpResult,
-							(guint8 *)mmp_get_data,
+							mmp_get_data,
 							data_len,
 							error))
 		return FALSE;
@@ -298,7 +298,7 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsGetMmpResult,
-			(guint8 *)mmp_get_data,
+			mmp_get_data,
 			data_len,
 			error))
 			return FALSE;
@@ -306,7 +306,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			if (pass == 0)
 				fu_device_sleep(FU_DEVICE(self), 8 * 1000);
 			break;
-		} else if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
+		}
+		if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -364,7 +365,7 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 		if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 								kLogiUnitIdVidCapExtension,
 								kLogiUvcXuAitCustomCsSetFwData,
-								(guint8 *)data_pkt,
+								data_pkt,
 								kLogiDefaultImageBlockSize,
 								error))
 			return FALSE;

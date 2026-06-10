@@ -978,7 +978,8 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GTask) task = G_TASK(user_data);
 	GVariantBuilder builder;
 	GHashTableIter iter;
-	gpointer key, value;
+	gpointer key;
+	gpointer value;
 	FwupdClient *self = g_task_get_source_object(task);
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	GCancellable *cancellable = g_task_get_cancellable(task);
@@ -1516,7 +1517,8 @@ fwupd_client_modify_bios_setting_async(FwupdClient *self,
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
 	GHashTableIter iter;
-	gpointer key, value;
+	gpointer key;
+	gpointer value;
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));

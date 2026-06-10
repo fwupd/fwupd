@@ -45,7 +45,7 @@ typedef enum {
 	FW_UPDATE_AUTHENTICATION_FAILED,
 } FuDellDockECFWUpdateStatus;
 
-const FuHIDI2CParameters ec_base_settings = {
+static const FuHIDI2CParameters ec_base_settings = {
     .i2ctargetaddr = I2C_EC_ADDRESS,
     .regaddrlen = 1,
     .i2cspeed = FU_DELL_DOCK_I2C_SPEED_250K,
@@ -385,7 +385,7 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 		return FALSE;
 	}
 	if (sizeof(FuDellDockDockInfoHeader) +
-		(gsize)header->total_devices * sizeof(FuDellDockEcQueryEntry) >
+		((gsize)header->total_devices * sizeof(FuDellDockEcQueryEntry)) >
 	    EXPECTED_DOCK_INFO_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -8,9 +8,10 @@
 
 #include "fu-pci-bcr-plugin.h"
 
+#define FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE "has-device"
+
 struct _FuPciBcrPlugin {
 	FuPlugin parent_instance;
-	gboolean has_device;
 	guint8 bcr_addr;
 	guint8 bcr;
 };
@@ -76,7 +77,6 @@ static void
 fu_pci_bcr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	fwupd_codec_string_append_bool(str, idt, "HasDevice", self->has_device);
 	fwupd_codec_string_append_hex(str, idt, "BcrAddr", self->bcr_addr);
 	fwupd_codec_string_append_hex(str, idt, "Bcr", self->bcr);
 }
@@ -106,7 +106,7 @@ fu_pci_bcr_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *at
 	fu_security_attrs_append(attrs, attr);
 
 	/* no device */
-	if (!self->has_device) {
+	if (!fu_plugin_has_private_flag(plugin, FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
@@ -134,7 +134,7 @@ fu_pci_bcr_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs
 	fu_security_attrs_append(attrs, attr);
 
 	/* no device */
-	if (!self->has_device) {
+	if (!fu_plugin_has_private_flag(plugin, FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
@@ -161,7 +161,7 @@ fu_pci_bcr_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *a
 	fu_security_attrs_append(attrs, attr);
 
 	/* no device */
-	if (!self->has_device) {
+	if (!fu_plugin_has_private_flag(plugin, FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
@@ -223,15 +223,17 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 	}
 
 	/* success */
-	self->has_device = TRUE;
+	fu_plugin_add_private_flag(plugin, FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE);
 	return TRUE;
 }
 
 static void
 fu_pci_bcr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+
 	/* only Intel */
-	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
+	if (fu_context_get_cpu_vendor(ctx) != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* add attrs */
@@ -245,6 +247,7 @@ fu_pci_bcr_plugin_init(FuPciBcrPlugin *self)
 {
 	/* this is true except for some Atoms */
 	self->bcr_addr = 0xdc;
+	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE);
 }
 
 static void

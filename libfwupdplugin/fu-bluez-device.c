@@ -806,7 +806,7 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 		event_id = g_strdup_printf("Write:Uuid=%s,Data=%s,Length=0x%x",
 					   uuid,
 					   data_base64,
-					   (guint)buf->len);
+					   buf->len);
 	}
 
 	/* emulated */

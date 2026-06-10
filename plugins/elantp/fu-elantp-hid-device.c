@@ -235,7 +235,7 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 				       guint16 iap_ver,
 				       GError **error)
 {
-	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
+	guint16 pw;
 	guint16 value = 0;
 
 	if (iap_ver >= 0x7 && ic_type == FU_ETP_IC_NUM13)
@@ -717,7 +717,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 					    error);
 		if (chunks == NULL)
 			return FALSE;
-		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
+		total_pages = ((self->force_table_addr - iap_addr - 1) / self->fw_page_size) + 1;
 		if (total_pages > chunks->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,

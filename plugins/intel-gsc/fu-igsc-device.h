@@ -28,7 +28,7 @@ gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
 			  FuIgscFwuHeciPayloadType payload_type,
 			  GBytes *fw_info,
-			  GInputStream *stream_payload,
+			  GInputStream *stream,
 			  FuProgress *progress,
 			  GError **error) G_GNUC_NON_NULL(1, 3);
 

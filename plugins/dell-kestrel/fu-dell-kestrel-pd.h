@@ -12,6 +12,6 @@
 G_DECLARE_FINAL_TYPE(FuDellKestrelPd, fu_dell_kestrel_pd, FU, DELL_KESTREL_PD, FuDevice)
 
 FuDellKestrelPd *
-fu_dell_kestrel_pd_new(FuDevice *parent,
+fu_dell_kestrel_pd_new(FuDevice *proxy,
 		       FuDellKestrelEcDevSubtype pd_subtype,
 		       FuDellKestrelEcDevInstance pd_instance);

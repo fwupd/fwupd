@@ -302,7 +302,7 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 			*buf_offset_enable = FALSE;
 			return TRUE;
 		}
-		*token = data;
+		*token = (FwupdJsonParserToken)data;
 		helper->newlinecnt = 0;
 		helper->whitespacecnt = 0;
 		return TRUE;

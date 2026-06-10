@@ -197,16 +197,15 @@ fu_raydium_tp_hid_device_bl_read(FuRaydiumTpHidDevice *self,
 				      0, /* src */
 				      rcv_bufsz,
 				      error);
-	} else {
-		return fu_memcpy_safe(rcv_buf,
-				      rcv_bufsz,
-				      0, /* dst */
-				      inbuf->data,
-				      inbuf->len,
-				      1, /* src */
-				      rcv_bufsz - 1,
-				      error);
 	}
+	return fu_memcpy_safe(rcv_buf,
+			      rcv_bufsz,
+			      0, /* dst */
+			      inbuf->data,
+			      inbuf->len,
+			      1, /* src */
+			      rcv_bufsz - 1,
+			      error);
 }
 
 static gboolean

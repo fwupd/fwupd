@@ -21,7 +21,7 @@
  *
  * Since: 2.0.0
  **/
-#define FU_BIT_SET(val, pos) (val |= (1ull << (pos))) /* nocheck:blocked */
+#define FU_BIT_SET(val, pos) ((val) |= (1ull << (pos))) /* nocheck:blocked */
 
 /**
  * FU_BIT_CLEAR:
@@ -32,7 +32,7 @@
  *
  * Since: 2.0.0
  **/
-#define FU_BIT_CLEAR(val, pos) (val &= ~(1ull << (pos))) /* nocheck:blocked */
+#define FU_BIT_CLEAR(val, pos) ((val) &= ~(1ull << (pos))) /* nocheck:blocked */
 
 /**
  * FU_BIT_IS_SET:
@@ -45,7 +45,7 @@
  *
  * Since: 2.0.0
  **/
-#define FU_BIT_IS_SET(val, pos) (val & (1ull << (pos)))
+#define FU_BIT_IS_SET(val, pos) ((val) & (1ull << (pos)))
 
 /**
  * FU_BIT_IS_CLEAR:
@@ -90,8 +90,6 @@
 gboolean
 fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
-FuCpuVendor
-fu_cpu_get_vendor(void);
 GHashTable *
 fu_cpu_get_attrs(FuPathStore *pstore, GError **error);
 

@@ -40,16 +40,11 @@ fu_self_init(FuTest *self)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, testdatadir);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
-
-	ret = fu_context_load_quirks(ctx,
-				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
 
 	/* load the config file */
 	fu_config_set_basename(fu_context_get_config(ctx), "redfish-fwupd.conf");
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

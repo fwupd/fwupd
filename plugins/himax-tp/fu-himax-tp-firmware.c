@@ -71,7 +71,7 @@ fu_himax_tp_firmware_calculate_crc32c(guint32 crc, const guint8 *buf, gsize bufs
 		current_data = buf[i * 4];
 
 		for (gsize j = 1; j < 4; j++) {
-			tmp = buf[i * 4 + j];
+			tmp = buf[(i * 4) + j];
 			current_data += (tmp << (j * 8));
 		}
 		crc ^= current_data;

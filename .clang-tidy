@@ -1,46 +1,48 @@
----
-Checks: "-*,\
-bugprone-*,\
--bugprone-assignment-in-if-condition,\
--bugprone-casting-through-void,\
--bugprone-easily-swappable-parameters,\
--bugprone-implicit-widening-of-multiplication-result,\
--bugprone-macro-parentheses,\
--bugprone-misplaced-widening-cast,\
--bugprone-narrowing-conversions,\
--bugprone-reserved-identifier,\
--bugprone-too-small-loop-variable,\
--bugprone-unchecked-optional-access,\
--bugprone-multi-level-pointer-conversion,\
--bugprone-multi-level-implicit-pointer-conversion,\
-misc-*,\
--misc-confusable-identifiers,\
--misc-const-correctness,\
--misc-non-private-member-variables-in-classes,\
--misc-no-recursion,\
--misc-static-assert,\
--misc-unused-parameters,\
-modernize-*,\
--modernize-macro-to-enum,\
--modernize-use-trailing-return-type,\
--modernize-use-transparent-functors,\
-performance-*,\
--performance-inefficient-vector-operation,\
--performance-no-int-to-ptr,\
-readability-*,\
--readability-avoid-const-params-in-decls,\
--readability-braces-around-statements,\
--readability-function-cognitive-complexity,\
--readability-identifier-length,\
--readability-identifier-naming,\
--readability-implicit-bool-conversion,\
--readability-isolate-declaration,\
--readability-magic-numbers,\
--readability-non-const-parameter,\
--readability-qualified-auto,\
--readability-redundant-declaration,\
--readability-suspicious-call-argument,\
--readability-uppercase-literal-suffix,\
--header-filter=.*\
-"
-...
+# -*- yaml -*-
+
+Checks:
+  - -*
+
+  - bugprone-*
+  - -bugprone-branch-clone # TODO: enable and autofix
+  - -bugprone-casting-through-void
+  - -bugprone-easily-swappable-parameters
+  - -bugprone-implicit-widening-of-multiplication-result
+  - -bugprone-macro-parentheses
+  - -bugprone-misplaced-widening-cast
+  - -bugprone-multi-level-implicit-pointer-conversion
+  - -bugprone-narrowing-conversions
+  - -bugprone-reserved-identifier
+  - -bugprone-unchecked-string-to-number-conversion
+
+  # - clang-analyzer-*
+
+  # - clang-diagnostics-*
+
+  - misc-*
+  - -misc-header-include-cycle
+  - -misc-include-cleaner
+  - -misc-no-recursion
+  - -misc-unused-parameters
+
+  - modernize-*
+  - -modernize-macro-to-enum
+
+  - performance-*
+  - -performance-no-int-to-ptr
+
+  - readability-*
+  - -readability-avoid-const-params-in-decls
+  - -readability-avoid-unconditional-preprocessor-if
+  - -readability-braces-around-statements
+  - -readability-enum-initial-value
+  - -readability-function-cognitive-complexity
+  - -readability-function-size # TODO: enable and fix or suppress with NOLINT
+  - -readability-identifier-length
+  - -readability-magic-numbers
+  - -readability-non-const-parameter
+  - -readability-suspicious-call-argument
+  - -readability-uppercase-literal-suffix
+  - -readability-use-concise-preprocessor-directives
+
+WarningsAsErrors: "*"

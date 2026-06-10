@@ -22,12 +22,14 @@ fu_uefi_dbx_zero_func(void)
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(FU_EFI_SIGNATURE_KIND_SHA256);
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) csum = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -122,11 +124,13 @@ fu_uefi_dbx_not_present_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) ms_blob = NULL;
 	g_autoptr(FuFirmware) ms_siglist = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *ms_kek_filename = NULL;
 	g_autofree gchar *ms_kek_xml = NULL;
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

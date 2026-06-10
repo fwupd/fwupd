@@ -386,7 +386,7 @@ fu_novatek_ts_device_gcm_xfer(FuNovatekTsDevice *self, FuNovatekTsGcmXfer *xfer,
 		return FALSE;
 	}
 	fu_struct_novatek_ts_gcm_cmd_set_write_len(st_cmd, (guint16)write_len);
-	fu_struct_novatek_ts_gcm_cmd_set_read_len(st_cmd, (guint16)xfer->rx_len);
+	fu_struct_novatek_ts_gcm_cmd_set_read_len(st_cmd, xfer->rx_len);
 	fu_struct_novatek_ts_gcm_cmd_set_flash_checksum(st_cmd, xfer->flash_checksum);
 	if (!fu_novatek_ts_device_hid_write(self,
 					    self->flash_cmd_addr,
@@ -1009,8 +1009,8 @@ fu_novatek_ts_device_gcm_verify_flash(FuNovatekTsDevice *self,
 		write_checksum = (flash_addr & 0xFF);
 		write_checksum += ((flash_addr >> 8) & 0xFF);
 		write_checksum += ((flash_addr >> 16) & 0xFF);
-		write_checksum += ((bufsz) & 0xFF);
-		write_checksum += (((bufsz) >> 8) & 0xFF);
+		write_checksum += (bufsz & 0xFF);
+		write_checksum += ((bufsz >> 8) & 0xFF);
 		write_checksum += fu_sum16(buf, bufsz);
 		write_checksum = ~write_checksum + 1;
 		if (!fu_novatek_ts_device_gcm_get_checksum(self,

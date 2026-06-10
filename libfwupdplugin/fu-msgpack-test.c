@@ -129,6 +129,7 @@ fu_msgpack_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) items_new = NULL;
 	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	GString *str;
 	FuMsgpackItemKind kinds[] = {
 	    FU_MSGPACK_ITEM_KIND_MAP,
 	    FU_MSGPACK_ITEM_KIND_STRING,
@@ -162,16 +163,18 @@ fu_msgpack_func(void)
 	g_ptr_array_add(items, fu_msgpack_item_new_string("array-of-data"));
 	g_ptr_array_add(items, fu_msgpack_item_new_array(1));
 	g_ptr_array_add(items, fu_msgpack_item_new_binary(buf_in));
+	g_ptr_array_add(items, fu_msgpack_item_new_string(""));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("UTF-8™"));
 	buf2 = fu_msgpack_write(items, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(buf2);
-	g_assert_cmpint(buf2->len, ==, 53);
+	g_assert_cmpint(buf2->len, ==, 63);
 
 	/* parse it back */
 	items_new = fu_msgpack_parse(buf2, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(items_new);
-	g_assert_cmpint(items_new->len, ==, 10);
+	g_assert_cmpint(items_new->len, ==, 12);
 
 	for (guint i = 0; i < G_N_ELEMENTS(kinds); i++) {
 		FuMsgpackItem *item = g_ptr_array_index(items_new, i);
@@ -184,6 +187,12 @@ fu_msgpack_func(void)
 				       1.0,
 				       0.00001);
 	g_assert_cmpint(fu_msgpack_item_get_array(g_ptr_array_index(items_new, 8)), ==, 1);
+	str = fu_msgpack_item_get_string(g_ptr_array_index(items_new, 10));
+	g_assert_nonnull(str);
+	g_assert_cmpstr(str->str, ==, "");
+	str = fu_msgpack_item_get_string(g_ptr_array_index(items_new, 11));
+	g_assert_nonnull(str);
+	g_assert_cmpstr(str->str, ==, "UTF-8™");
 }
 
 int

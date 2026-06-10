@@ -37,7 +37,6 @@ fwupdplugin_structs = [
   'fu-pci.rs', # fuzzing
   'fu-processor.rs', # fuzzing
   'fu-protobuf.rs', # fuzzing
-  'fu-quirks.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-security-attrs.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
@@ -402,7 +401,7 @@ fwupdplugin_headers = [
   'fu-zip-firmware.h',
 ]
 
-introspection_deps = [libxmlb, giounix, libusb]
+introspection_deps = [libxmlb, giounix, glib, libusb]
 
 library_deps = [
   introspection_deps,
