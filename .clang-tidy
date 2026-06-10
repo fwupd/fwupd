@@ -56,8 +56,6 @@ Checks:
   - -readability-magic-numbers
   - -readability-math-missing-parentheses
   - -readability-non-const-parameter
-  - -readability-qualified-auto
-  - -readability-redundant-declaration
   - -readability-suspicious-call-argument
   - -readability-uppercase-literal-suffix
   - -readability-use-concise-preprocessor-directives
