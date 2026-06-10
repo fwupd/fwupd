@@ -15,7 +15,6 @@ Checks:
   - -bugprone-multi-level-pointer-conversion # TODO: enable and autofix
   - -bugprone-narrowing-conversions
   - -bugprone-reserved-identifier
-  - -bugprone-signed-char-misuse # TODO: enable and fix
   - -bugprone-sizeof-expression
   - -bugprone-too-small-loop-variable
   - -bugprone-unchecked-optional-access
