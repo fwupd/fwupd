@@ -29,7 +29,6 @@ Checks:
   - -clang-analyzer-core.NullDereference
   - -clang-analyzer-deadcode.DeadStores
   - -clang-analyzer-optin.core.EnumCastOutOfRange
-  - -clang-analyzer-optin.performance.Padding
   - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
   - -clang-analyzer-unix.Malloc
   - -concurrency-mt-unsafe

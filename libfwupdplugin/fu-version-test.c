@@ -69,7 +69,7 @@ static void
 fu_version_func(void)
 {
 	guint i;
-	struct {
+	/* NOLINT(clang-analyzer-optin.performance.Padding) */ struct {
 		guint32 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
@@ -101,7 +101,7 @@ fu_version_func(void)
 	    {0x0000ff01, "ff.01", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	    {0x00001234, "12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	};
-	struct {
+	/* NOLINT(clang-analyzer-optin.performance.Padding) */ struct {
 		guint32 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
@@ -128,7 +128,7 @@ fu_version_func(void)
 	    {0xff01, "ff.01", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	    {0x1234, "12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	};
-	struct {
+	/* NOLINT(clang-analyzer-optin.performance.Padding) */ struct {
 		guint16 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
