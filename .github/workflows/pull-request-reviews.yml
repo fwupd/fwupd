@@ -26,11 +26,3 @@ jobs:
     with:
       deploy: false
     secrets: inherit
-
-  matrix:
-    needs: pre-commit
-    if: ${{ !cancelled() }}
-    uses: ./.github/workflows/matrix.yml
-    with:
-      publish: false
-    secrets: inherit
