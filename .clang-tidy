@@ -16,7 +16,6 @@ Checks:
   - -bugprone-reserved-identifier
   - -bugprone-sizeof-expression
   - -bugprone-too-small-loop-variable
-  - -bugprone-unchecked-optional-access
   - -bugprone-unchecked-string-to-number-conversion
 
   # - clang-analyzer-*
@@ -24,22 +23,15 @@ Checks:
   # - clang-diagnostics-*
 
   - misc-*
-  - -misc-confusable-identifiers
-  - -misc-const-correctness
   - -misc-header-include-cycle
   - -misc-include-cleaner
   - -misc-no-recursion
-  - -misc-non-private-member-variables-in-classes
-  - -misc-static-assert
   - -misc-unused-parameters
 
   - modernize-*
   - -modernize-macro-to-enum
-  - -modernize-use-trailing-return-type
-  - -modernize-use-transparent-functors
 
   - performance-*
-  - -performance-inefficient-vector-operation
   - -performance-no-int-to-ptr
 
   - readability-*
