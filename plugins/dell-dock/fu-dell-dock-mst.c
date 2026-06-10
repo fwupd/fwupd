@@ -757,7 +757,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 		/* CRC8 is not 0xff, erase last 4k of bank# */
 		if (crc_tag[3] != 0xff) {
 			guint32 sector = FLASH_SECTOR_ERASE_4K +
-					 (attribs->start + attribs->length - 0x1000) / 0x1000;
+					 ((attribs->start + attribs->length - 0x1000) / 0x1000);
 			g_debug("erasing 4k from sector 0x%x invalidate bank %u",
 				sector,
 				bank_in_use);

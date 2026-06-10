@@ -958,7 +958,7 @@ fu_synaptics_mst_device_update_panamera_set_new_valid_cb(FuDevice *device,
 	if (!fu_synaptics_mst_device_rc_set_command(
 		self,
 		FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
-		(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
+		((EEPROM_BANK_OFFSET * helper->bank_to_update) + EEPROM_TAG_OFFSET),
 		buf,
 		sizeof(buf),
 		error)) {
@@ -969,7 +969,7 @@ fu_synaptics_mst_device_update_panamera_set_new_valid_cb(FuDevice *device,
 	if (!fu_synaptics_mst_device_rc_get_command(
 		self,
 		FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_EEPROM,
-		(EEPROM_BANK_OFFSET * helper->bank_to_update + EEPROM_TAG_OFFSET),
+		((EEPROM_BANK_OFFSET * helper->bank_to_update) + EEPROM_TAG_OFFSET),
 		buf_verify,
 		sizeof(buf_verify),
 		error)) {
@@ -1001,7 +1001,8 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 	/* CRC8 is not 0xff, erase last 4k of bank# */
 	if (helper->checksum != 0xff) {
 		guint32 erase_offset =
-		    (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_BANK_OFFSET - 0x1000) / 0x1000;
+		    ((EEPROM_BANK_OFFSET * self->active_bank) + EEPROM_BANK_OFFSET - 0x1000) /
+		    0x1000;
 		g_debug("erasing offset 0x%x", erase_offset);
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self,
 								    FLASH_SECTOR_ERASE_4K,
@@ -1014,7 +1015,7 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 	if (!fu_synaptics_mst_device_rc_set_command(
 		self,
 		FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
-		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+		((EEPROM_BANK_OFFSET * self->active_bank) + EEPROM_TAG_OFFSET + 15),
 		&checksum_nul,
 		sizeof(checksum_nul),
 		error)) {
@@ -1024,7 +1025,7 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 	if (!fu_synaptics_mst_device_rc_get_command(
 		self,
 		FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_EEPROM,
-		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+		((EEPROM_BANK_OFFSET * self->active_bank) + EEPROM_TAG_OFFSET + 15),
 		&checksum_tmp,
 		sizeof(checksum_tmp),
 		error)) {
@@ -1114,7 +1115,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	if (!fu_synaptics_mst_device_rc_get_command(
 		self,
 		FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_EEPROM,
-		(EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+		((EEPROM_BANK_OFFSET * self->active_bank) + EEPROM_TAG_OFFSET + 15),
 		&checksum8,
 		sizeof(checksum8),
 		error)) {

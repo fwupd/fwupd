@@ -717,7 +717,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 					    error);
 		if (chunks == NULL)
 			return FALSE;
-		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
+		total_pages = ((self->force_table_addr - iap_addr - 1) / self->fw_page_size) + 1;
 		if (total_pages > chunks->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,

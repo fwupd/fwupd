@@ -86,7 +86,7 @@ fu_synaptics_rmi_function_parse(GByteArray *buf,
 	func->function_version =
 	    (data[RMI_FUNCTION_INTERRUPT_SOURCES_OFFSET] & RMI_FUNCTION_VERSION_MASK) >> 5;
 	if (func->interrupt_source_count > 0) {
-		func->interrupt_reg_num = (interrupt_count + 8) / 8 - 1;
+		func->interrupt_reg_num = ((interrupt_count + 8) / 8) - 1;
 		/* set an enable bit for each data source */
 		interrupt_offset = interrupt_count % 8;
 		func->interrupt_mask = 0;

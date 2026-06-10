@@ -104,7 +104,7 @@ fu_pixart_tp_haptic_device_tf_write_rmi_with_packet(FuPixartTpHapticDevice *self
 	fu_struct_pixart_tp_tf_write_packet_cmd_set_addr(st, addr);
 	fu_struct_pixart_tp_tf_write_packet_cmd_set_datalen(st,
 							    (guint16)in_bufsz +
-								sizeof(guint16) * 2);
+								(sizeof(guint16) * 2));
 	fu_struct_pixart_tp_tf_write_packet_cmd_set_packet_total(st, (guint16)packet_total);
 	fu_struct_pixart_tp_tf_write_packet_cmd_set_packet_index(st, (guint16)packet_index);
 
