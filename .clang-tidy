@@ -19,6 +19,7 @@ Checks:
   - -bugprone-sizeof-expression
   - -bugprone-too-small-loop-variable
   - -bugprone-unchecked-optional-access
+  - -bugprone-unchecked-string-to-number-conversion
 
   # - clang-analyzer-*
 
