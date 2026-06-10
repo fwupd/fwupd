@@ -46,7 +46,6 @@ Checks:
   - -readability-avoid-const-params-in-decls
   - -readability-avoid-unconditional-preprocessor-if
   - -readability-braces-around-statements
-  - -readability-else-after-return # TODO: enable and autofix
   - -readability-enum-initial-value
   - -readability-function-cognitive-complexity
   - -readability-function-size # TODO: enable and fix or suppress with NOLINT

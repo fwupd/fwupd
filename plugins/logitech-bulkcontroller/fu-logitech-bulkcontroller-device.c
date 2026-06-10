@@ -1112,9 +1112,8 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 				    "waiting for download to finish");
 		self->is_sync_flush_events_in_progress = TRUE;
 		return FALSE;
-	} else {
-		self->is_sync_flush_events_in_progress = FALSE;
 	}
+	self->is_sync_flush_events_in_progress = FALSE;
 
 	fu_progress_set_status(
 	    progress,

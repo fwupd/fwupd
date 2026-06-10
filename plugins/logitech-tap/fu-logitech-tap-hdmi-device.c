@@ -306,7 +306,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			if (pass == 0)
 				fu_device_sleep(FU_DEVICE(self), 8 * 1000);
 			break;
-		} else if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
+		}
+		if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
