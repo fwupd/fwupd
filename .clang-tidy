@@ -30,16 +30,16 @@ Checks:
   - -clang-analyzer-deadcode.DeadStores
   - -clang-analyzer-optin.core.EnumCastOutOfRange
   - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
-  - -clang-analyzer-unix.Malloc
+  - -clang-analyzer-unix.Malloc # issues with g_autofree, g_auto
   - -concurrency-mt-unsafe
   - -misc-header-include-cycle
   - -misc-include-cleaner
   - -misc-no-recursion
-  - -misc-unused-parameters
+  - -misc-unused-parameters # difficult with GObject-style C
   - -modernize-macro-to-enum
   - -readability-avoid-unconditional-preprocessor-if
-  - -readability-braces-around-statements
-  - -readability-function-cognitive-complexity
+  - -readability-braces-around-statements # causes a huge diff
+  - -readability-function-cognitive-complexity # may need tweaking, long test functions, etc.
   - -readability-identifier-length
   - -readability-magic-numbers
   - -readability-suspicious-call-argument
