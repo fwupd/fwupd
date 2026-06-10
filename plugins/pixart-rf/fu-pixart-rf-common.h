@@ -73,4 +73,4 @@ fu_pixart_rf_ota_fw_state_parse(FuPixartRfOtaFwState *fwstate,
 				GError **error);
 
 gchar *
-fu_pixart_rf_hpac_version_info_parse(const guint16 hpac_ver);
+fu_pixart_rf_hpac_version_info_parse(guint16 hpac_ver);
