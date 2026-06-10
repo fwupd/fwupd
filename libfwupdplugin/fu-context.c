@@ -1466,7 +1466,6 @@ fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags,
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
 	g_autoptr(GError) error_efivars = NULL;
-	g_autoptr(GPtrArray) entries = NULL;
 	struct {
 		const gchar *name;
 		FuContextLoadFlags flag;
