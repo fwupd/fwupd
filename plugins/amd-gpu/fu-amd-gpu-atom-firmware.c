@@ -158,7 +158,8 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 {
 	gsize bufsz = 0;
 	gsize atombios_size;
-	gint num_str, i;
+	gint num_str;
+	gint i;
 	guint16 idx;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_autofree gchar *model = NULL;

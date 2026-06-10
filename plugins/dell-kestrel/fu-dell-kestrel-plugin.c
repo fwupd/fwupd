@@ -168,7 +168,8 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 					    FuProgress *progress,
 					    GError **error)
 {
-	guint16 vid, pid;
+	guint16 vid;
+	guint16 pid;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
