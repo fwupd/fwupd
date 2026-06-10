@@ -325,7 +325,7 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
 			return FALSE;
 		}
 
-		for (guint8 i = 1; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM; i <<= 1) {
+		for (guint i = 1; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM; i <<= 1) {
 			if (available_sections & i) {
 				gsize section_len = 0;
 

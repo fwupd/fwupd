@@ -450,7 +450,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 	    {.cmd = 0xAB01, .len = 0x02},
 	};
 
-	for (guint8 i = 0; i < G_N_ELEMENTS(rdid); i++) {
+	for (gsize i = 0; i < G_N_ELEMENTS(rdid); i++) {
 		guint8 buf[3] = {0};
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuCfiDevice) cfi_device = NULL;

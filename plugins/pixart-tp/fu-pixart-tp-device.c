@@ -1017,7 +1017,7 @@ fu_pixart_tp_device_write_sector(FuPixartTpDevice *self,
 				    "too many chunks in sector");
 		return FALSE;
 	}
-	for (guint8 i = 1; i < fu_chunk_array_length(chunks); i++) {
+	for (guint i = 1; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
