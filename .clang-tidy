@@ -62,7 +62,6 @@ Checks:
   - -readability-non-const-parameter
   - -readability-qualified-auto
   - -readability-redundant-casting # TODO: enable and autofix
-  - -readability-redundant-control-flow # TODO: enable and autofix
   - -readability-redundant-declaration
   - -readability-suspicious-call-argument
   - -readability-uppercase-literal-suffix
