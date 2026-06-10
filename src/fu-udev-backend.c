@@ -651,7 +651,7 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 		       (struct sockaddr *)&sender_addr,
 		       &sender_len);
 	if (len < 0) {
-		if (errno != EAGAIN && errno != EWOULDBLOCK)
+		if (errno != EAGAIN)
 			g_warning("netlink recvfrom failed: %s", fwupd_strerror(errno));
 		return TRUE;
 	}
