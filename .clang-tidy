@@ -50,8 +50,6 @@ Checks:
   - -readability-function-cognitive-complexity
   - -readability-function-size # TODO: enable and fix or suppress with NOLINT
   - -readability-identifier-length
-  - -readability-identifier-naming
-  - -readability-implicit-bool-conversion
   - -readability-magic-numbers
   - -readability-non-const-parameter
   - -readability-suspicious-call-argument
