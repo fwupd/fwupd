@@ -28,13 +28,13 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 #define HIDI2C_MAX_WRITE 128
 
 gboolean
-fu_dell_dock_hid_i2c_write(FuDevice *self,
+fu_dell_dock_hid_i2c_write(FuDevice *device,
 			   const guint8 *input,
 			   gsize write_size,
 			   const FuHIDI2CParameters *parameters,
 			   GError **error);
 gboolean
-fu_dell_dock_hid_i2c_read(FuDevice *self,
+fu_dell_dock_hid_i2c_read(FuDevice *device,
 			  guint32 cmd,
 			  gsize read_size,
 			  GBytes **bytes,
@@ -42,29 +42,29 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 			  GError **error);
 
 gboolean
-fu_dell_dock_hid_get_hub_version(FuDevice *self, GError **error);
+fu_dell_dock_hid_get_hub_version(FuDevice *device, GError **error);
 
 gboolean
-fu_dell_dock_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error);
+fu_dell_dock_hid_raise_mcu_clock(FuDevice *device, gboolean enable, GError **error);
 
 gboolean
-fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error);
+fu_dell_dock_hid_erase_bank(FuDevice *device, guint8 idx, GError **error);
 
 gboolean
-fu_dell_dock_hid_write_flash(FuDevice *self,
+fu_dell_dock_hid_write_flash(FuDevice *device,
 			     guint32 addr,
 			     const guint8 *input,
 			     gsize write_size,
 			     GError **error);
 
 gboolean
-fu_dell_dock_hid_verify_update(FuDevice *self, gboolean *result, GError **error);
+fu_dell_dock_hid_verify_update(FuDevice *device, gboolean *result, GError **error);
 
 gboolean
-fu_dell_dock_hid_tbt_wake(FuDevice *self, const FuHIDI2CParameters *parameters, GError **error);
+fu_dell_dock_hid_tbt_wake(FuDevice *device, const FuHIDI2CParameters *parameters, GError **error);
 
 gboolean
-fu_dell_dock_hid_tbt_write(FuDevice *self,
+fu_dell_dock_hid_tbt_write(FuDevice *device,
 			   guint32 start_addr,
 			   const guint8 *input,
 			   gsize write_size,
@@ -72,6 +72,6 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 			   GError **error);
 
 gboolean
-fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
+fu_dell_dock_hid_tbt_authenticate(FuDevice *device,
 				  const FuHIDI2CParameters *parameters,
 				  GError **error);

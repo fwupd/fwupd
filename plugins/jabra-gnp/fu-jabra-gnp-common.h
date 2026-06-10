@@ -45,41 +45,41 @@ guint64
 fu_jabra_gnp_calculate_crc(GBytes *bytes);
 
 gboolean
-fu_jabra_gnp_ensure_name(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean
-fu_jabra_gnp_ensure_battery_level(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean
-fu_jabra_gnp_read_dfu_pid(FuDevice *self,
+fu_jabra_gnp_read_dfu_pid(FuDevice *device,
 			  guint8 address,
 			  guint8 seq,
 			  guint16 *dfu_pid,
 			  GError **error) G_GNUC_NON_NULL(1, 4);
 gboolean
-fu_jabra_gnp_ensure_version(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
 
 gboolean
-fu_jabra_gnp_read_fwu_protocol(FuDevice *self,
+fu_jabra_gnp_read_fwu_protocol(FuDevice *device,
 			       guint8 address,
 			       guint8 seq,
 			       guint8 *fwu_protocol,
 			       GError **error) G_GNUC_NON_NULL(1, 4);
 gboolean
-fu_jabra_gnp_write_partition(FuDevice *self,
+fu_jabra_gnp_write_partition(FuDevice *device,
 			     guint8 address,
 			     guint8 seq,
 			     guint8 part,
 			     GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
-fu_jabra_gnp_start(FuDevice *self, guint8 address, guint8 seq, GError **error) G_GNUC_NON_NULL(1);
+fu_jabra_gnp_start(FuDevice *device, guint8 address, guint8 seq, GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
-fu_jabra_gnp_flash_erase_done(FuDevice *self, guint8 address, GError **error) G_GNUC_NON_NULL(1);
+fu_jabra_gnp_flash_erase_done(FuDevice *device, guint8 address, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_jabra_gnp_write_crc(FuDevice *self,
+fu_jabra_gnp_write_crc(FuDevice *device,
 		       guint8 address,
 		       guint8 seq,
 		       guint32 crc,
@@ -88,7 +88,7 @@ fu_jabra_gnp_write_crc(FuDevice *self,
 		       GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
-fu_jabra_gnp_write_extended_crc(FuDevice *self,
+fu_jabra_gnp_write_extended_crc(FuDevice *device,
 				guint8 address,
 				guint8 seq,
 				guint32 crc,
@@ -96,19 +96,20 @@ fu_jabra_gnp_write_extended_crc(FuDevice *self,
 				guint preload_count,
 				GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_jabra_gnp_write_chunks(FuDevice *self,
+fu_jabra_gnp_write_chunks(FuDevice *device,
 			  guint8 address,
 			  FuChunkArray *chunks,
 			  FuProgress *progress,
 			  GError **error) G_GNUC_NON_NULL(1, 3);
 gboolean
-fu_jabra_gnp_read_verify_status(FuDevice *self, guint8 address, GError **error) G_GNUC_NON_NULL(1);
+fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
-fu_jabra_gnp_write_version(FuDevice *self,
+fu_jabra_gnp_write_version(FuDevice *device,
 			   guint8 address,
 			   guint8 seq,
 			   FuJabraGnpVersionData *version_data,
 			   GError **error) G_GNUC_NON_NULL(1, 4);
 gboolean
-fu_jabra_gnp_write_dfu_from_squif(FuDevice *self, guint8 address, guint8 seq, GError **error)
+fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
     G_GNUC_NON_NULL(1);
