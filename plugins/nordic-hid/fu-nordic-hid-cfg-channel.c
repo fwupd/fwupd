@@ -192,6 +192,18 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 			break;
 		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	}
+
+	/* the length is chosen by the device, so sanity check it before any
+	 * caller reads recv_msg->data using recv_msg->data_len as the bound */
+	if (recv_msg->data_len > sizeof(recv_msg->data)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "received %u bytes, while maximum is %u",
+			    recv_msg->data_len,
+			    (guint)sizeof(recv_msg->data));
+		return FALSE;
+	}
 	if (!fu_memcpy_safe(buf,
 			    bufsz,
 			    0,
