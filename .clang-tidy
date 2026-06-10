@@ -17,7 +17,6 @@ Checks:
   - -bugprone-reserved-identifier
   - -bugprone-signed-char-misuse # TODO: enable and fix
   - -bugprone-sizeof-expression
-  - -bugprone-suspicious-string-compare # TODO: enable and fix
   - -bugprone-too-small-loop-variable
   - -bugprone-unchecked-optional-access
 
