@@ -38,6 +38,39 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.5" date="2026-06-09">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow overriding the detected CPU vendor to allow more self tests</li>
+          <li>Allow updating the Windows-specific UEFI CA on dual boot machines</li>
+          <li>Install the db updates on broken hardware with new firmware</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add tests for the vbe, upower, uefi-sbat, pci-bcr, mtd, gpio and msr plugins</li>
+          <li>Check the array index in some runtime-generated code</li>
+          <li>Claim the udev netlink backend before old libusb versions</li>
+          <li>Expand the netlink socket buffer to prevent packet loss during event floods</li>
+          <li>Fix a msgpack regression when updating some Huddly cameras</li>
+          <li>Fix HID feature read buffer size in goodix-tp device probe</li>
+          <li>Fix reproducible builds</li>
+          <li>Fix the check-reboot-needed command</li>
+          <li>Increase the i2c-hid re-bind delay for synaptics-rmi PID 0x96e7</li>
+          <li>Parse the dell-dock marketing name in a more safe way</li>
+          <li>Set a firmware size limit on intel-gsc aux and oprom firmware types</li>
+          <li>Simplify the engine by only loading the config object once</li>
+          <li>Use a cryptographically secure RNG when building the idle and inhibit IDs</li>
+          <li>Use a more appropriate firmware maximum size for Huddly cameras</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Elan touchscreens</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.4" date="2026-05-29">
       <description>
         <p>
