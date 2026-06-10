@@ -48,10 +48,10 @@
  * depending on the version of libfwupd installed.
  */
 #define FWUPD_CHECK_VERSION(major, minor, micro)                                                   \
-	(FWUPD_MAJOR_VERSION > major ||                                                            \
-	 (FWUPD_MAJOR_VERSION == major && FWUPD_MINOR_VERSION > minor) ||                          \
-	 (FWUPD_MAJOR_VERSION == major && FWUPD_MINOR_VERSION == minor &&                          \
-	  FWUPD_MICRO_VERSION >= micro))
+	(FWUPD_MAJOR_VERSION > (major) ||							   \
+	 (FWUPD_MAJOR_VERSION == (major) && FWUPD_MINOR_VERSION > (minor)) ||			   \
+	 (FWUPD_MAJOR_VERSION == (major) && FWUPD_MINOR_VERSION == (minor) &&			   \
+	  FWUPD_MICRO_VERSION >= (micro)))
 
 const gchar *
 fwupd_version_string(void);

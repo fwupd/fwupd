@@ -20,7 +20,7 @@
 #define UPD_PACKET_HEADER_SIZE		     (2 * sizeof(guint32))
 #define HASH_TIMEOUT			     1500
 #define MAX_DATA_SIZE			     8192 /* 8k */
-#define PAYLOAD_SIZE			     MAX_DATA_SIZE - UPD_PACKET_HEADER_SIZE
+#define PAYLOAD_SIZE			     (MAX_DATA_SIZE - UPD_PACKET_HEADER_SIZE)
 #define UPD_INTERFACE_SUBPROTOCOL_ID	     101
 #define BULK_TRANSFER_TIMEOUT		     1000
 #define HASH_VALUE_SIZE			     16

@@ -23,7 +23,7 @@ struct _FuAmdKriaSomEeprom {
 G_DEFINE_TYPE(FuAmdKriaSomEeprom, fu_amd_kria_som_eeprom, FU_TYPE_FIRMWARE)
 
 /* IPMI spec encodes 0:5 as length and 6:7 as "type" code */
-#define LENGTH(data)	data & 0x3f
+#define LENGTH(data)	(data & 0x3f)
 #define TYPE_CODE(data) data >> 6
 
 static gboolean

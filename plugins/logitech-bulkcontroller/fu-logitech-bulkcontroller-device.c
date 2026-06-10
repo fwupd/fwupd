@@ -22,7 +22,7 @@
 #define MAX_RETRIES		      5
 #define MAX_SETUP_RETRIES	      50
 #define MAX_WAIT_COUNT		      150
-#define POST_INSTALL_SLEEP_DURATION   80 * 1000 /* ms */
+#define POST_INSTALL_SLEEP_DURATION   (80 * 1000) /* ms */
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
