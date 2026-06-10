@@ -260,7 +260,6 @@ fu_dell_kestrel_plugin_config_mst_dev(FuPlugin *plugin)
 	/* flags */
 	fu_device_add_private_flag(device_mst, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 	fu_device_add_private_flag(device_mst, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
-	return;
 }
 
 static void
