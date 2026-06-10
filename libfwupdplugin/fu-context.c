@@ -2242,13 +2242,13 @@ fu_context_esp_load_pe_file(const gchar *filename, GError **error)
 static gchar *
 fu_context_build_uefi_basename_for_arch(const gchar *app_name)
 {
-#if defined(__x86_64__)
+#ifdef __x86_64__
 	return g_strdup_printf("%sx64.efi", app_name);
 #endif
-#if defined(__aarch64__)
+#ifdef __aarch64__
 	return g_strdup_printf("%saa64.efi", app_name);
 #endif
-#if defined(__loongarch_lp64)
+#ifdef __loongarch_lp64
 	return g_strdup_printf("%sloongarch64.efi", app_name);
 #endif
 #if (defined(__riscv) && __riscv_xlen == 64)
@@ -2257,7 +2257,7 @@ fu_context_build_uefi_basename_for_arch(const gchar *app_name)
 #if defined(__i386__) || defined(__i686__)
 	return g_strdup_printf("%sia32.efi", app_name);
 #endif
-#if defined(__arm__)
+#ifdef __arm__
 	return g_strdup_printf("%sarm.efi", app_name);
 #endif
 	return NULL;

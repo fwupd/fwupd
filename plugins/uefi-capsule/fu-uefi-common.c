@@ -19,7 +19,7 @@ fu_uefi_bootmgr_get_suffix(FuPathStore *pstore, GError **error)
 		guint64 bits;
 		const gchar *arch;
 	} suffixes[] = {
-#if defined(__x86_64__)
+#ifdef __x86_64__
 	    {64, "x64"},
 #elif defined(__aarch64__)
 	    {64, "aa64"},
