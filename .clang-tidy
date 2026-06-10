@@ -4,7 +4,6 @@ Checks:
   - -*
 
   - bugprone-*
-  - -bugprone-assignment-in-if-condition
   - -bugprone-branch-clone # TODO: enable and autofix
   - -bugprone-casting-through-void
   - -bugprone-easily-swappable-parameters
