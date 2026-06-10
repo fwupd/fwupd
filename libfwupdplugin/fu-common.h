@@ -21,7 +21,7 @@
  *
  * Since: 2.0.0
  **/
-#define FU_BIT_SET(val, pos) (val |= (1ull << (pos))) /* nocheck:blocked */
+#define FU_BIT_SET(val, pos) ((val) |= (1ull << (pos))) /* nocheck:blocked */
 
 /**
  * FU_BIT_CLEAR:
@@ -32,7 +32,7 @@
  *
  * Since: 2.0.0
  **/
-#define FU_BIT_CLEAR(val, pos) (val &= ~(1ull << (pos))) /* nocheck:blocked */
+#define FU_BIT_CLEAR(val, pos) ((val) &= ~(1ull << (pos))) /* nocheck:blocked */
 
 /**
  * FU_BIT_IS_SET:
@@ -45,7 +45,7 @@
  *
  * Since: 2.0.0
  **/
-#define FU_BIT_IS_SET(val, pos) (val & (1ull << (pos)))
+#define FU_BIT_IS_SET(val, pos) ((val) & (1ull << (pos)))
 
 /**
  * FU_BIT_IS_CLEAR:

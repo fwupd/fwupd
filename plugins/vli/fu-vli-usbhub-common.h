@@ -21,8 +21,8 @@
 #define FU_VLI_USBHUB_HEADER_STRAPPING2_FWRTY  (1 << 1)
 #define FU_VLI_USBHUB_HEADER_STRAPPING2_SELFW2 (1 << 7)
 
-#define VLI_USBHUB_FLASHMAP_ADDR_TO_IDX(addr) (addr / 0x20)
-#define VLI_USBHUB_FLASHMAP_IDX_TO_ADDR(addr) (addr * 0x20)
+#define VLI_USBHUB_FLASHMAP_ADDR_TO_IDX(addr) ((addr) / 0x20)
+#define VLI_USBHUB_FLASHMAP_IDX_TO_ADDR(addr) ((addr) * 0x20)
 
 #define VLI_USBHUB_FLASHMAP_IDX_HD1	0x00 /* factory firmware */
 #define VLI_USBHUB_FLASHMAP_IDX_HD2	0x80 /* update firmware */
