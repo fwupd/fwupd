@@ -703,7 +703,7 @@ gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
 			  FuIgscFwuHeciPayloadType payload_type,
 			  GBytes *fw_info,
-			  GInputStream *fw,
+			  GInputStream *stream,
 			  FuProgress *progress,
 			  GError **error)
 {
@@ -738,7 +738,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* start */
-	if (!fu_igsc_device_update_start(self, payload_type, fw_info, fw, error)) {
+	if (!fu_igsc_device_update_start(self, payload_type, fw_info, stream, error)) {
 		g_prefix_error_literal(error, "failed to start: ");
 		return FALSE;
 	}
@@ -756,7 +756,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	}
 	payloadsz =
 	    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) - FU_IGSC_FWU_HECI_DATA_REQ_SIZE;
-	chunks = fu_chunk_array_new_from_stream(fw,
+	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
 						payloadsz,
