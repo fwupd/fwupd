@@ -897,6 +897,7 @@ fwupd_client_curl_helper_set_proxy(FwupdClient *self,
 	return TRUE;
 }
 
+/* NOLINTBEGIN(readability-function-size) */
 static FwupdCurlHelper *
 fwupd_client_curl_new(FwupdClient *self, GError **error)
 {
@@ -946,7 +947,7 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	/* this disables the double-compression of the firmware.xml.gz file */
 	(void)curl_easy_setopt(helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
 	return g_steal_pointer(&helper);
-}
+} /* NOLINTEND(readability-function-size) */
 
 static void
 fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
@@ -5857,6 +5858,7 @@ fwupd_client_download_ipfs(FwupdClient *self,
 	return g_steal_pointer(&bstdout);
 }
 
+/* NOLINTBEGIN(readability-function-size) */
 static GBytes *
 fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
 {
@@ -5967,7 +5969,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	}
 
 	return g_bytes_new(buf->data, buf->len);
-}
+} /* NOLINTEND(readability-function-size) */
 
 static gboolean
 fwupd_client_download_error_is_fatal(const GError *error)
@@ -6223,6 +6225,7 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 			      (GDestroyNotify)g_bytes_unref);
 }
 
+/* NOLINTBEGIN(readability-function-size) */
 /**
  * fwupd_client_upload_bytes_async:
  * @self: a #FwupdClient
@@ -6312,7 +6315,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 			     g_steal_pointer(&helper),
 			     (GDestroyNotify)fwupd_client_curl_helper_free);
 	g_task_run_in_thread(task, fwupd_client_upload_bytes_thread_cb);
-}
+} /* NOLINTEND(readability-function-size) */
 
 /**
  * fwupd_client_upload_bytes_finish:

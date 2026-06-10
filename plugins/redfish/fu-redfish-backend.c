@@ -61,6 +61,7 @@ fu_redfish_backend_get_uuid(FuRedfishBackend *self)
 	return self->uuid;
 }
 
+/* NOLINTBEGIN(readability-function-size) */
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
@@ -110,7 +111,7 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 
 	/* success */
 	return request;
-}
+} /* NOLINTEND(readability-function-size) */
 
 static gboolean
 fu_redfish_backend_coldplug_member(FuRedfishBackend *self,

@@ -42,7 +42,6 @@ Checks:
   - -readability-avoid-unconditional-preprocessor-if
   - -readability-braces-around-statements
   - -readability-function-cognitive-complexity
-  - -readability-function-size # TODO: enable and fix or suppress with NOLINT
   - -readability-identifier-length
   - -readability-magic-numbers
   - -readability-non-const-parameter
