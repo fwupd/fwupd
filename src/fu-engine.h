@@ -12,7 +12,6 @@
 #include "fwupd-enums.h"
 
 #include "fu-cabinet.h"
-#include "fu-engine-config.h"
 #include "fu-engine-struct.h"
 #include "fu-release.h"
 
@@ -41,8 +40,6 @@ const gchar *
 fu_engine_get_host_product(FuEngine *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_engine_get_host_machine_id(FuEngine *self) G_GNUC_NON_NULL(1);
-const gchar *
-fu_engine_get_host_bkc(FuEngine *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid) G_GNUC_NON_NULL(1);
 gchar *
@@ -50,8 +47,6 @@ fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version) G_GNU
 FuCabinet *
 fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
-FuEngineConfig *
-fu_engine_get_config(FuEngine *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_engine_get_plugins(FuEngine *self) G_GNUC_NON_NULL(1);
 FuPlugin *

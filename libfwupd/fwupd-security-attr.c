@@ -1893,7 +1893,8 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	}
 	if (priv->metadata != NULL) {
 		GHashTableIter iter;
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		g_hash_table_iter_init(&iter, priv->metadata);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			fwupd_security_attr_add_metadata(new,

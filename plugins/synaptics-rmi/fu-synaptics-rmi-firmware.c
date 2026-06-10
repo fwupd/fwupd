@@ -793,7 +793,7 @@ fu_synaptics_rmi_firmware_parse_sbl_container_v10(FuSynapticsRmiFirmware *self,
 		return FALSE;
 	}
 	for (guint32 i = 0; i < cntrs_len; i++) {
-		guint32 addr_offset = offset + i * 4;
+		guint32 addr_offset = offset + (i * 4);
 		guint16 container_id;
 		guint32 addr;
 		guint32 length;

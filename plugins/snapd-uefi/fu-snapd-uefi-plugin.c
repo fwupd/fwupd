@@ -184,7 +184,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 		}
 
 		g_info("snapd request failed with status %ld, response: %s",
-		       (glong)status_code,
+		       status_code,
 		       rsp != NULL ? rsp : "<none>");
 
 		if (snapd_msg != NULL) {
@@ -192,7 +192,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "snapd request failed with status %ld: %s",
-				    (glong)status_code,
+				    status_code,
 				    snapd_msg);
 			return FALSE;
 		}
@@ -200,7 +200,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "snapd request failed with status %ld",
-			    (glong)status_code);
+			    status_code);
 		return FALSE;
 	}
 

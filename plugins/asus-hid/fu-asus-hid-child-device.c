@@ -101,11 +101,11 @@ fu_asus_hid_child_device_ensure_version(FuAsusHidChildDevice *self, GError **err
 	g_autoptr(FuStructAsusHidDesc) st_fwinfo = NULL;
 	g_autofree gchar *version = NULL;
 
-	if (self->idx == FU_ASUS_HID_CONTROLLER_PRIMARY)
+	if (self->idx == FU_ASUS_HID_CONTROLLER_PRIMARY) {
 		fu_struct_asus_hid_command_set_cmd(st, FU_ASUS_HID_COMMAND_FW_VERSION);
-	else if (self->idx == FU_ASUS_HID_CONTROLLER_MAIN)
+	} else if (self->idx == FU_ASUS_HID_CONTROLLER_MAIN) {
 		fu_struct_asus_hid_command_set_cmd(st, FU_ASUS_HID_COMMAND_MAIN_FW_VERSION);
-	else {
+	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

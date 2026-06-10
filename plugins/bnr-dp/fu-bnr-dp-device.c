@@ -330,7 +330,7 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
 
-	for (guint16 idx = start; idx < end; idx++) {
+	for (gsize idx = start; idx < end; idx++) {
 		g_autoptr(GByteArray) chunk = NULL;
 
 		chunk = fu_bnr_dp_device_exec_cmd(self, opcode, module_number, idx, error);
@@ -421,7 +421,7 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
 
-	for (guint16 idx = start; idx < end; idx++) {
+	for (gsize idx = start; idx < end; idx++) {
 		gsize cur_offset = idx * FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 
 		if (fu_bnr_dp_device_can_skip_chunk(buf, bufsz, cur_offset)) {
@@ -435,13 +435,16 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 						    &buf[cur_offset],
 						    FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE,
 						    error)) {
-			g_prefix_error(error, "failed @0x%x (idx: 0x%x): ", (guint)cur_offset, idx);
+			g_prefix_error(error,
+				       "failed @0x%x (idx: 0x%zx): ",
+				       (guint)cur_offset,
+				       idx);
 			return FALSE;
 		}
 
 		if (!fu_bnr_dp_device_poll_status(self, error)) {
 			g_prefix_error(error,
-				       "command %s to module %s at offset 0x%X: ",
+				       "command %s to module %s at offset 0x%zx: ",
 				       fu_bnr_dp_opcodes_to_string(opcode),
 				       fu_bnr_dp_module_number_to_string(module_number),
 				       idx);

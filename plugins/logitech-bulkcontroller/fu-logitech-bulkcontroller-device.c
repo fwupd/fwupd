@@ -22,7 +22,7 @@
 #define MAX_RETRIES		      5
 #define MAX_SETUP_RETRIES	      50
 #define MAX_WAIT_COUNT		      150
-#define POST_INSTALL_SLEEP_DURATION   80 * 1000 /* ms */
+#define POST_INSTALL_SLEEP_DURATION   (80 * 1000) /* ms */
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
@@ -1112,9 +1112,8 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 				    "waiting for download to finish");
 		self->is_sync_flush_events_in_progress = TRUE;
 		return FALSE;
-	} else {
-		self->is_sync_flush_events_in_progress = FALSE;
 	}
+	self->is_sync_flush_events_in_progress = FALSE;
 
 	fu_progress_set_status(
 	    progress,

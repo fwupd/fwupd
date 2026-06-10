@@ -19,6 +19,7 @@
 
 #include "fwupd-remote-private.h"
 
+#include "fu-context-private.h"
 #include "fu-remote-list.h"
 #include "fu-remote.h"
 
@@ -33,7 +34,7 @@ fu_remote_list_finalize(GObject *obj);
 
 struct _FuRemoteList {
 	GObject parent_instance;
-	FuPathStore *pstore;
+	FuContext *ctx;
 	GPtrArray *array;    /* (element-type FwupdRemote) */
 	GPtrArray *monitors; /* (element-type GFileMonitor) */
 	gboolean testing_remote;
@@ -288,8 +289,7 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 	g_autoptr(FwupdRemote) remote_tmp = NULL;
 
 	/* set directory to store data */
-	remotesdir =
-	    fu_path_store_get_path(self->pstore, FU_PATH_KIND_LOCALSTATEDIR_METADATA, error);
+	remotesdir = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_METADATA, error);
 	if (remotesdir == NULL)
 		return FALSE;
 	fwupd_remote_set_remotes_dir(remote, remotesdir);
@@ -479,12 +479,12 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_PERM)) {
 			g_autofree gchar *basename = g_path_get_basename(filename);
 
-			filename_new = fu_path_store_build_filename(self->pstore,
-								    error,
-								    FU_PATH_KIND_LOCALSTATEDIR_PKG,
-								    "remotes.d",
-								    basename,
-								    NULL);
+			filename_new = fu_context_build_filename(self->ctx,
+								 error,
+								 FU_PATH_KIND_LOCALSTATEDIR_PKG,
+								 "remotes.d",
+								 basename,
+								 NULL);
 			if (filename_new == NULL)
 				return FALSE;
 			if (!fu_path_mkdir_parent(filename_new, error))
@@ -605,17 +605,17 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	g_ptr_array_set_size(self->monitors, 0);
 
 	/* search mutable, and then fall back to /etc and immutable */
-	remotesdir_mut = fu_path_store_get_path(self->pstore, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
+	remotesdir_mut = fu_context_get_path(self->ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, NULL);
 	if (remotesdir_mut != NULL) {
 		if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
 			return FALSE;
 	}
-	remotesdir = fu_path_store_get_path(self->pstore, FU_PATH_KIND_SYSCONFDIR_PKG, NULL);
+	remotesdir = fu_context_get_path(self->ctx, FU_PATH_KIND_SYSCONFDIR_PKG, NULL);
 	if (remotesdir != NULL) {
 		if (!fu_remote_list_add_for_path(self, remotesdir, error))
 			return FALSE;
 	}
-	remotesdir_immut = fu_path_store_get_path(self->pstore, FU_PATH_KIND_DATADIR_PKG, NULL);
+	remotesdir_immut = fu_context_get_path(self->ctx, FU_PATH_KIND_DATADIR_PKG, NULL);
 	if (remotesdir_immut != NULL) {
 		if (!fu_remote_list_add_for_path(self, remotesdir_immut, error))
 			return FALSE;
@@ -666,11 +666,8 @@ fu_remote_list_load_metainfos(FuRemoteList *self, XbBuilder *builder, GError **e
 	g_autoptr(GDir) dir = NULL;
 
 	/* pkg metainfo dir */
-	metainfo_path = fu_path_store_build_filename(self->pstore,
-						     error,
-						     FU_PATH_KIND_DATADIR_PKG,
-						     "metainfo",
-						     NULL);
+	metainfo_path =
+	    fu_context_build_filename(self->ctx, error, FU_PATH_KIND_DATADIR_PKG, "metainfo", NULL);
 	if (metainfo_path == NULL)
 		return FALSE;
 	if (!g_file_test(metainfo_path, G_FILE_TEST_EXISTS))
@@ -722,7 +719,7 @@ fu_remote_list_set_testing_remote_enabled(FuRemoteList *self, gboolean enable, G
 }
 
 gboolean
-fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
+fu_remote_list_load(FuRemoteList *self, FuContextLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names();
 	g_autoptr(GError) error_local = NULL;
@@ -735,11 +732,11 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 	g_return_val_if_fail(self->silo == NULL, FALSE);
 
 	/* enable testing only remotes */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE)
+	if (fu_context_get_config_bool(self->ctx, "TestDevices"))
 		self->testing_remote = TRUE;
 
 	/* autofix on reload too */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI)
+	if ((flags & FU_CONTEXT_FLAG_READONLY_FS) == 0)
 		self->fix_metadata_uri = TRUE;
 
 	/* load AppStream about the remote_list */
@@ -751,11 +748,11 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 		xb_builder_add_locale(builder, locales[i]);
 
 	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS)
+	if (flags & FU_CONTEXT_FLAG_READONLY_FS)
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
 
 	/* build the metainfo silo */
-	if (flags & FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE) {
+	if (flags & FU_CONTEXT_FLAG_NO_CACHE) {
 		g_autoptr(GFileIOStream) iostr = NULL;
 		xmlb = g_file_new_tmp(NULL, &iostr, error);
 		if (xmlb == NULL)
@@ -763,11 +760,11 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 	} else {
 		g_autofree gchar *xmlbfn = NULL;
 
-		xmlbfn = fu_path_store_build_filename(self->pstore,
-						      error,
-						      FU_PATH_KIND_CACHEDIR_PKG,
-						      "metainfo.xmlb",
-						      NULL);
+		xmlbfn = fu_context_build_filename(self->ctx,
+						   error,
+						   FU_PATH_KIND_CACHEDIR_PKG,
+						   "metainfo.xmlb",
+						   NULL);
 		if (xmlbfn == NULL)
 			return FALSE;
 		xmlb = g_file_new_for_path(xmlbfn);
@@ -868,7 +865,8 @@ static void
 fu_remote_list_finalize(GObject *obj)
 {
 	FuRemoteList *self = FU_REMOTE_LIST(obj);
-	g_object_unref(self->pstore);
+	if (self->ctx != NULL)
+		g_object_unref(self->ctx);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
 	if (self->query != NULL)
@@ -880,13 +878,13 @@ fu_remote_list_finalize(GObject *obj)
 }
 
 FuRemoteList *
-fu_remote_list_new(FuPathStore *pstore)
+fu_remote_list_new(FuContext *ctx)
 {
 	FuRemoteList *self;
 
-	g_return_val_if_fail(FU_IS_PATH_STORE(pstore), NULL);
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx), NULL);
 
 	self = g_object_new(FU_TYPE_REMOTE_LIST, NULL);
-	self->pstore = g_object_ref(pstore);
+	self->ctx = g_object_ref(ctx);
 	return FU_REMOTE_LIST(self);
 }

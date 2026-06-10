@@ -324,9 +324,8 @@ fu_config_reload(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 					    FWUPD_ERROR_PERMISSION_DENIED)) {
 				g_debug("ignoring config file %s: ", error_load->message);
 				continue;
-			} else if (g_error_matches(error_load,
-						   FWUPD_ERROR,
-						   FWUPD_ERROR_INVALID_FILE)) {
+			}
+			if (g_error_matches(error_load, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 				g_debug("%s", error_load->message);
 				continue;
 			}
@@ -451,6 +450,10 @@ fu_config_set_value_internal(FuConfig *self,
 	g_return_if_fail(FU_IS_CONFIG(self));
 	g_return_if_fail(section != NULL);
 	g_return_if_fail(key != NULL);
+	if (value == NULL) {
+		g_key_file_remove_key(priv->keyfile, section, key, NULL);
+		return;
+	}
 	g_key_file_set_string(priv->keyfile, section, key, value);
 }
 

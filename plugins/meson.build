@@ -2,6 +2,7 @@
 plugin_deps = [
   gio,
   giounix,
+  glib,
   gnutls,
   gmodule,
   libusb,
@@ -43,6 +44,7 @@ plugins = {
   'dfu': false,
   'ebitdo': false,
   'egis-moc': false,
+  'elan-ts': false,
   'elantp': false,
   'elanfp': false,
   'elan-kbd': false,

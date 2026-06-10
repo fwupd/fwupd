@@ -424,6 +424,7 @@ static void
 fu_firmware_csv_func(void)
 {
 	FuCsvEntry *entry_tmp;
+	FuCsvEntry *entry_short;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_csv_firmware_new();
@@ -432,7 +433,8 @@ fu_firmware_csv_func(void)
 	g_autoptr(GPtrArray) imgs = NULL;
 	const gchar *data =
 	    "sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md\n"
-	    "grub,1,Free Software Foundation,grub,2.04,https://www.gnu.org/software/grub/\n";
+	    "grub,1,Free Software Foundation,grub,2.04,https://www.gnu.org/software/grub/\n"
+	    "shorty,9\n";
 
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "$id");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "component_generation");
@@ -458,7 +460,7 @@ fu_firmware_csv_func(void)
 	g_debug("%s", str);
 
 	imgs = fu_firmware_get_images(firmware);
-	g_assert_cmpint(imgs->len, ==, 2);
+	g_assert_cmpint(imgs->len, ==, 3);
 
 	entry_tmp = g_ptr_array_index(imgs, 1);
 
@@ -468,6 +470,13 @@ fu_firmware_csv_func(void)
 	g_assert_cmpstr(fu_csv_entry_get_value_by_column_id(entry_tmp, "vendor_version"),
 			==,
 			"2.04");
+
+	/* a row with fewer values than the header has columns must not read past
+	 * the row when a far column is looked up by ID */
+	entry_short = g_ptr_array_index(imgs, 2);
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_short, 0), ==, "shorty");
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_short, 5), ==, NULL);
+	g_assert_cmpstr(fu_csv_entry_get_value_by_column_id(entry_short, "vendor_url"), ==, NULL);
 }
 
 static void

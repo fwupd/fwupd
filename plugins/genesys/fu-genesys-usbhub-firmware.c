@@ -43,13 +43,15 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 
 	if (memcmp(project_ic_type, "3521", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3521;
-		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		self->chip.revision =
+		    (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 		return TRUE;
 	}
 
 	if (memcmp(project_ic_type, "3523", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3523;
-		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		self->chip.revision =
+		    (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 		return TRUE;
 	}
 
@@ -67,7 +69,8 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 
 	if (memcmp(project_ic_type, "3523", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3523PLUS;
-		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		self->chip.revision =
+		    (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 		return TRUE;
 	}
 
@@ -85,7 +88,8 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 
 	if (memcmp(project_ic_type, "3590", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3590;
-		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		self->chip.revision =
+		    (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 		return TRUE;
 	}
 
@@ -103,7 +107,8 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 
 	if (memcmp(project_ic_type, "3525", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3525;
-		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		self->chip.revision =
+		    (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 		return TRUE;
 	}
 
@@ -121,7 +126,8 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 
 	if (memcmp(project_ic_type, "3525", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3525;
-		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		self->chip.revision =
+		    (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 		return TRUE;
 	}
 
@@ -477,9 +483,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid tool_string_version");
 		return FALSE;
-	} else {
-		fu_struct_genesys_ts_static_set_tool_string_version(self->st_static_ts, tmp[0]);
 	}
+	fu_struct_genesys_ts_static_set_tool_string_version(self->st_static_ts, tmp[0]);
 
 	/* mask_project_code */
 	tmp = xb_node_query_text(n, "mask_project_code", NULL);

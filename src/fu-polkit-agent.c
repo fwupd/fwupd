@@ -47,7 +47,8 @@ fu_polkit_agent_fork_agent(FuPolkitAgent *self, const char *path, ...)
 	int fd;
 	pid_t n_agent_pid;
 	pid_t parent_pid;
-	unsigned n, i;
+	unsigned n;
+	unsigned i;
 	va_list ap;
 
 	g_return_val_if_fail(path != NULL, 0);

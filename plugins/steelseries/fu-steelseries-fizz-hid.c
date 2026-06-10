@@ -9,7 +9,7 @@
 #include "fu-steelseries-fizz-hid.h"
 #include "fu-steelseries-fizz-struct.h"
 
-#define FU_STEELSERIES_BUFFER_REPORT_SIZE 64 + 1
+#define FU_STEELSERIES_BUFFER_REPORT_SIZE (64 + 1)
 
 #define FU_STEELSERIES_HID_MAX_RETRIES 20
 #define FU_STEELSERIES_HID_CB_TIMEOUT  300 /* ms */

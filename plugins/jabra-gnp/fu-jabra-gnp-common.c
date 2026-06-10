@@ -61,7 +61,7 @@ fu_jabra_gnp_update_crc(guint64 acc, guint64 delta)
 	    0xB9887C5B, 0x62F97A1A, 0xD41B7698, 0x0F6A70D9};
 	guint64 t = acc >> 24;
 	guint32 lookup = (guint32)(t & 0xFF);
-	acc = ((acc) << 8) ^ crcLookupTable[lookup] ^ (delta);
+	acc = (acc << 8) ^ crcLookupTable[lookup] ^ delta;
 	return acc & 0x00000000FFFFFFFF;
 }
 

@@ -195,13 +195,13 @@ fu_logitech_tap_sensor_device_ensure_version(FuLogitechTapSensorDevice *self, GE
 					  error))
 		return FALSE;
 	if (!fu_logitech_tap_sensor_device_get_feature(self,
-						       (guint8 *)st_res->buf->data,
+						       st_res->buf->data,
 						       st_res->buf->len,
 						       error))
 		return FALSE;
 
 	/* MinorVersion byte 3, MajorVersion byte 4, BuildVersion byte 2 & 1 */
-	if (!fu_memread_uint32_safe((guint8 *)st_res->buf->data,
+	if (!fu_memread_uint32_safe(st_res->buf->data,
 				    st_res->buf->len,
 				    0x01,
 				    &version,
@@ -266,7 +266,7 @@ fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GEr
 		    FU_LOGITECH_TAP_SENSOR_HID_GET_CMD_SERIAL_NUMBER);
 
 		if (!fu_logitech_tap_sensor_device_get_feature(self,
-							       (guint8 *)st_res->buf->data,
+							       st_res->buf->data,
 							       st_res->buf->len,
 							       error))
 			return FALSE;

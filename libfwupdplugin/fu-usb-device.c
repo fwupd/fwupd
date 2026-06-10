@@ -464,7 +464,7 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 	if (priv->usb_device != NULL) {
 		rc = libusb_open(priv->usb_device, &priv->handle);
 	} else {
-#if defined(HAVE_LIBUSB_WRAP_SYS_DEVICE)
+#ifdef HAVE_LIBUSB_WRAP_SYS_DEVICE
 		gint fd;
 		FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 		if (io_channel == NULL) {

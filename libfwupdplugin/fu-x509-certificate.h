@@ -17,5 +17,12 @@ const gchar *
 fu_x509_certificate_get_issuer(FuX509Certificate *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_x509_certificate_get_subject(FuX509Certificate *self) G_GNUC_NON_NULL(1);
+void
+fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer) G_GNUC_NON_NULL(1);
+void
+fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject) G_GNUC_NON_NULL(1);
+void
+fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activation_time)
+    G_GNUC_NON_NULL(1);
 GDateTime *
 fu_x509_certificate_get_activation_time(FuX509Certificate *self) G_GNUC_NON_NULL(1);

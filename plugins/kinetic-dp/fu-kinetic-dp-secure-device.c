@@ -712,11 +712,11 @@ fu_kinetic_dp_secure_device_send_app_fw(FuKineticDpSecureDevice *self,
 	if (self->isp_secure_auth_mode) {
 		g_autoptr(GBytes) fw_crt = NULL;
 
-		fw_crt =
-		    fu_bytes_new_offset(fw,
-					0x0,
-					FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2,
-					error);
+		fw_crt = fu_bytes_new_offset(fw,
+					     0x0,
+					     (FW_CERTIFICATE_SIZE * 2) +
+						 (FW_RSA_SIGNATURE_BLOCK_SIZE * 2),
+					     error);
 		if (fw_crt == NULL)
 			return FALSE;
 		if (!fu_kinetic_dp_secure_device_send_payload(self,

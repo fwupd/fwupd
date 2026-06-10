@@ -115,6 +115,7 @@ void
 {{item.c_getter}}(const {{obj.name}} *st, guint idx)
 {
     g_return_val_if_fail(st != NULL, 0x0);
+    g_return_val_if_fail(idx < {{item.n_elements}}, 0x0);
     return fu_memread_{{item.type_mem}}(st->buf->data + {{item.offset}} + (sizeof({{item.type_glib}}) * idx),
                                         {{item.endian_glib}});
 }

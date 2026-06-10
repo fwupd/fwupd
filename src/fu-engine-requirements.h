@@ -12,7 +12,7 @@
 #include "fu-release.h"
 
 gboolean
-fu_engine_requirements_check(FuEngine *engine,
+fu_engine_requirements_check(FuEngine *self,
 			     FuRelease *release,
 			     FwupdInstallFlags flags,
 			     GError **error) G_GNUC_NON_NULL(1, 2);

@@ -219,7 +219,7 @@ fu_efi_file_write_sections(FuEfiFile *self, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "EFI file too large, 0x%02x > 0x%02x",
-				    (guint)buf->len,
+				    buf->len,
 				    (guint)FU_EFI_FILE_SIZE_MAX);
 			return NULL;
 		}

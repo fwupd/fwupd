@@ -127,7 +127,7 @@ fu_coswid_firmware_parse_meta(FuCborItem *item, gpointer user_data, GError **err
 
 		fu_cbor_item_map_index(item, i, &item_key, &item_value);
 		if (!fu_coswid_read_tag(item_key, &tag_id, error)) {
-			g_prefix_error(error, "failed to parse meta tag %u: ", (guint)i);
+			g_prefix_error(error, "failed to parse meta tag %u: ", i);
 			return FALSE;
 		}
 		if (tag_id == FU_COSWID_TAG_SUMMARY) {

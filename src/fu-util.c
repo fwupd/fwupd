@@ -4714,7 +4714,8 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 	}
 
 	if (!self->as_json) {
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		GHashTableIter iter;
 
 		g_hash_table_iter_init(&iter, settings);
@@ -6082,12 +6083,13 @@ main(int argc, char *argv[])
 			 * where $1 is something like 'fwupdmgr --help' */
 			g_string_append_printf(str, _("Use %s for help"), cmd);
 			fu_console_print_literal(self->console, str->str);
-		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			return EXIT_NOTHING_TO_DO;
-		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE))
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE)) {
 			return EXIT_NOT_REACHABLE;
-		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			return EXIT_NOT_FOUND;
+		}
 		return EXIT_FAILURE;
 	}
 
