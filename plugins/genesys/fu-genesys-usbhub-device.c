@@ -1119,7 +1119,8 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 			    "ic type %s already EOL and not supported",
 			    project_ic_type);
 		return FALSE;
-	} else if (memcmp(project_ic_type, "3523", 4) == 0) {
+	}
+	if (memcmp(project_ic_type, "3523", 4) == 0) {
 		if (self->spec.chip.revision >= 60) {
 			self->spec.chip.model = ISP_MODEL_HUB_GL3523PLUS;
 		} else {

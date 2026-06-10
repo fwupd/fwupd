@@ -434,16 +434,16 @@ fu_elan_ts_device_is_gen6_gen7_ic(FuElanTsDevice *self)
 			(solution_id == FU_ELAN_TS_SOLUTION_ID_EKTH7315X1) ||
 			(solution_id == FU_ELAN_TS_SOLUTION_ID_EKTH7315X2) ||
 			(solution_id == FU_ELAN_TS_SOLUTION_ID_EKTH7318X1));
-	} else {
-		/* we cannot access the Solution ID, so use the high byte of the Boot Code */
-		bc_ver_h = (guint8)((self->bc_version & 0xFF00) >> 8);
-		return ((bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTA6315X1) ||
-			(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTH6315_TO_5015M) ||
-			(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTH6315_TO_3915P) ||
-			(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTA6308X1) ||
-			(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTA7315X1) ||
-			(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTH7318X1));
 	}
+
+	/* we cannot access the Solution ID, so use the high byte of the Boot Code */
+	bc_ver_h = (guint8)((self->bc_version & 0xFF00) >> 8);
+	return ((bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTA6315X1) ||
+		(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTH6315_TO_5015M) ||
+		(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTH6315_TO_3915P) ||
+		(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTA6308X1) ||
+		(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTA7315X1) ||
+		(bc_ver_h == FU_ELAN_TS_BC_VER_HIGH_BYTE_EKTH7318X1));
 }
 
 /* reads 2 bytes of data from device's rom at specified address */

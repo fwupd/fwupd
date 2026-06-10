@@ -477,9 +477,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid tool_string_version");
 		return FALSE;
-	} else {
-		fu_struct_genesys_ts_static_set_tool_string_version(self->st_static_ts, tmp[0]);
 	}
+	fu_struct_genesys_ts_static_set_tool_string_version(self->st_static_ts, tmp[0]);
 
 	/* mask_project_code */
 	tmp = xb_node_query_text(n, "mask_project_code", NULL);
