@@ -11,8 +11,7 @@ Checks:
   - -bugprone-implicit-widening-of-multiplication-result
   - -bugprone-macro-parentheses
   - -bugprone-misplaced-widening-cast
-  - -bugprone-multi-level-implicit-pointer-conversion # TODO: enable and autofix
-  - -bugprone-multi-level-pointer-conversion # TODO: enable and autofix
+  - -bugprone-multi-level-implicit-pointer-conversion
   - -bugprone-narrowing-conversions
   - -bugprone-reserved-identifier
   - -bugprone-sizeof-expression
@@ -29,7 +28,6 @@ Checks:
   - -misc-const-correctness
   - -misc-header-include-cycle
   - -misc-include-cleaner
-  - -misc-misplaced-const # TODO: enable and autofix
   - -misc-no-recursion
   - -misc-non-private-member-variables-in-classes
   - -misc-static-assert
@@ -61,7 +59,6 @@ Checks:
   - -readability-math-missing-parentheses
   - -readability-non-const-parameter
   - -readability-qualified-auto
-  - -readability-redundant-casting # TODO: enable and autofix
   - -readability-redundant-declaration
   - -readability-suspicious-call-argument
   - -readability-uppercase-literal-suffix
