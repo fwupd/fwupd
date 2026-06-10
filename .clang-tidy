@@ -66,6 +66,6 @@ Checks:
   - -readability-redundant-declaration
   - -readability-suspicious-call-argument
   - -readability-uppercase-literal-suffix
-  - -readability-use-concise-preprocessor-directives # TODO: enable and autofix
+  - -readability-use-concise-preprocessor-directives
 
 WarningsAsErrors: "*"
