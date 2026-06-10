@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"POT-Creation-Date: 2026-06-10 14:50+0100\n"
 "PO-Revision-Date: 2026-04-15 14:10+0000\n"
 "Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
 "Language-Team: Hebrew <https://hosted.weblate.org/projects/fwupd/fwupd/he/>\n"
@@ -306,6 +306,10 @@ msgstr "כלי dbx ל־UEFI"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "פענוח הארגומנטים נכשל"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -2873,6 +2877,11 @@ msgstr ""
 #. TRANSLATORS: headphones with an integrated microphone
 #, c-format
 msgid "%s Headset Update"
+msgstr ""
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
 msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
