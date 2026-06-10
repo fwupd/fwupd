@@ -60,8 +60,8 @@ typedef struct {
 	guint32 sub_bit_buf;
 	guint16 block_size;
 
-	guint16 left[2 * NC - 1];
-	guint16 right[2 * NC - 1];
+	guint16 left[(2 * NC) - 1];
+	guint16 right[(2 * NC) - 1];
 	guint8 c_len[NC];
 	guint8 pt_len[NPT];
 	guint16 c_table[4096];
@@ -234,12 +234,12 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 			index = (guint16)(len - mapping_table_bits);
 
 			while (index != 0) {
-				if (*pointer == 0 && avail_symbols < (2 * NC - 1)) {
+				if (*pointer == 0 && avail_symbols < ((2 * NC) - 1)) {
 					helper->right[avail_symbols] = helper->left[avail_symbols] =
 					    0;
 					*pointer = avail_symbols++;
 				}
-				if (*pointer < (2 * NC - 1)) {
+				if (*pointer < ((2 * NC) - 1)) {
 					if ((index3 & mask) != 0)
 						pointer = &helper->right[*pointer];
 					else

@@ -678,8 +678,8 @@ fu_pixart_tp_device_flash_program_256b_to_flash(FuPixartTpDevice *self,
 						guint8 page,
 						GError **error)
 {
-	guint32 flash_address = (guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE +
-				(guint32)page * FU_PIXART_TP_DEVICE_PAGE_SIZE;
+	guint32 flash_address = ((guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE) +
+				((guint32)page * FU_PIXART_TP_DEVICE_PAGE_SIZE);
 
 	/* wait for flash ready and enable write */
 	if (!fu_pixart_tp_device_flash_wait_busy(self, error))

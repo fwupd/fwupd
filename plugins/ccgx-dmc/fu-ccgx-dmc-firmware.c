@@ -182,7 +182,7 @@ fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 {
 	gsize img_off = FU_STRUCT_CCGX_DMC_FWCT_INFO_SIZE;
 	gsize seg_off = FU_STRUCT_CCGX_DMC_FWCT_INFO_SIZE +
-			image_count * FU_STRUCT_CCGX_DMC_FWCT_IMAGE_INFO_SIZE;
+			(image_count * FU_STRUCT_CCGX_DMC_FWCT_IMAGE_INFO_SIZE);
 
 	/* set initial segment info offset */
 	for (guint32 i = 0; i < image_count; i++) {

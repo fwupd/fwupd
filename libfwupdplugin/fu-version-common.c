@@ -20,7 +20,7 @@
  * nocheck:magic-inlines=81
  */
 
-#define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
+#define FU_COMMON_VERSION_DECODE_BCD(val) (((((val) >> 4) & 0x0f) * 10) + ((val) & 0x0f))
 
 static gchar *
 fu_version_ensure_semver_internal(const gchar *version);

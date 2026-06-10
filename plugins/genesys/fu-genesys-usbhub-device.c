@@ -1110,7 +1110,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
 
 	/* verify chip model and revision */
-	self->spec.chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+	self->spec.chip.revision = (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 
 	if (memcmp(project_ic_type, "3521", 4) == 0) {
 		g_set_error(error,

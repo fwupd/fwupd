@@ -256,7 +256,8 @@ fu_wacom_usb_module_touch_id7_write_block(FuWacomUsbModule *self,
 		 * record start and end commands */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						info->op_id,
-						info->bufsz / FU_WACOM_USB_MODULE_CHUNK_SIZE + 10);
+						(info->bufsz / FU_WACOM_USB_MODULE_CHUNK_SIZE) +
+						    10);
 	}
 
 	/* incrementing data to the next block */

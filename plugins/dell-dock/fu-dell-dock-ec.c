@@ -385,7 +385,7 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 		return FALSE;
 	}
 	if (sizeof(FuDellDockDockInfoHeader) +
-		(gsize)header->total_devices * sizeof(FuDellDockEcQueryEntry) >
+		((gsize)header->total_devices * sizeof(FuDellDockEcQueryEntry)) >
 	    EXPECTED_DOCK_INFO_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
