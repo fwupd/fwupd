@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"POT-Creation-Date: 2026-06-10 14:50+0100\n"
 "PO-Revision-Date: 2026-03-21 07:55+0000\n"
 "Last-Translator: \"Марко М. Костић\" <marko.m.kostic@gmail.com>\n"
 "Language-Team: Serbian <https://hosted.weblate.org/projects/fwupd/fwupd/sr/>\n"
@@ -304,6 +304,10 @@ msgstr "UEFI dbx алат"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Не могу да обрадим аргументе"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -2872,6 +2876,11 @@ msgstr "Ажурирање %s слушалица"
 #, c-format
 msgid "%s Headset Update"
 msgstr "Ажурирање %s слушалица са микрофоном"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
