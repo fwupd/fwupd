@@ -4714,7 +4714,8 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 	}
 
 	if (!self->as_json) {
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		GHashTableIter iter;
 
 		g_hash_table_iter_init(&iter, settings);

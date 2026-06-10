@@ -4798,7 +4798,8 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 	}
 
 	if (!self->as_json) {
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		GHashTableIter iter;
 
 		g_hash_table_iter_init(&iter, settings);
@@ -5351,7 +5352,8 @@ fu_util_efivar_files_as_json(FuUtil *self, GPtrArray *files)
 							   g_free,
 							   (GDestroyNotify)g_ptr_array_unref);
 	GHashTableIter iter;
-	gpointer key, value;
+	gpointer key;
+	gpointer value;
 
 	/* convert an array of FuPeFirmware to a map with the BootXXXX ID as the hash key and the
 	 * filename as an array */

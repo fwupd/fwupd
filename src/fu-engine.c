@@ -1197,7 +1197,8 @@ fu_engine_modify_bios_settings(FuEngine *self,
 	g_autoptr(FuBiosSettings) bios_settings = fu_context_get_bios_settings(self->ctx);
 	gboolean changed = FALSE;
 	GHashTableIter iter;
-	gpointer key, value;
+	gpointer key;
+	gpointer value;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(settings != NULL, FALSE);
@@ -2041,7 +2042,8 @@ fu_engine_load_os_release(const gchar *filename, GError **error)
 		return NULL;
 	lines = g_strsplit(buf, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
-		gsize len, off = 0;
+		gsize len;
+		gsize off = 0;
 		g_auto(GStrv) split = NULL;
 
 		/* split up into sections */

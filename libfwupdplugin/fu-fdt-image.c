@@ -97,7 +97,8 @@ fu_fdt_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 	FuFdtImage *self = FU_FDT_IMAGE(firmware);
 	FuFdtImagePrivate *priv = GET_PRIVATE(self);
 	GHashTableIter iter;
-	gpointer key, value;
+	gpointer key;
+	gpointer value;
 
 	g_hash_table_iter_init(&iter, priv->hash_attrs);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {

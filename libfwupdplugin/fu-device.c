@@ -5473,7 +5473,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	}
 	if (priv->instance_hash != NULL) {
 		GHashTableIter iter;
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		g_hash_table_iter_init(&iter, priv->instance_hash);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			g_autofree gchar *title =
@@ -7043,7 +7044,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS) {
 		if (priv_donor->instance_hash != NULL) {
 			GHashTableIter iter;
-			gpointer key, value;
+			gpointer key;
+			gpointer value;
 			g_hash_table_iter_init(&iter, priv_donor->instance_hash);
 			while (g_hash_table_iter_next(&iter, &key, &value)) {
 				if (fu_device_get_instance_str(self, key) == NULL)
@@ -7124,7 +7126,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_METADATA) {
 		if (priv_donor->metadata != NULL) {
 			GHashTableIter iter;
-			gpointer key, value;
+			gpointer key;
+			gpointer value;
 			g_hash_table_iter_init(&iter, priv_donor->metadata);
 			while (g_hash_table_iter_next(&iter, &key, &value)) {
 				if (fu_device_get_metadata(self, key) == NULL)
