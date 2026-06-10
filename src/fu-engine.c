@@ -2293,7 +2293,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 #if defined(HAVE_AUXV_H) && !defined(__FreeBSD__)
 	/* this is the architecture of the userspace, e.g. i686 would be returned for
 	 * glibc-2.40-17.fc41.i686 on kernel-6.12.9-200.fc41.x86_64 */
-	tmp = (const gchar *)getauxval(AT_PLATFORM);
+	tmp = (const gchar *)getauxval(AT_PLATFORM); /* NOLINT(performance-no-int-to-ptr) */
 	if (tmp == NULL) {
 		tmp = name_tmp.machine;
 		g_debug("no AT_PLATFORM, so using CpuArchitecture (%s) for platform", tmp);

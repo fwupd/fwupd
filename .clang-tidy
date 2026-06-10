@@ -39,7 +39,6 @@ Checks:
   - -misc-no-recursion
   - -misc-unused-parameters
   - -modernize-macro-to-enum
-  - -performance-no-int-to-ptr
   - -readability-avoid-unconditional-preprocessor-if
   - -readability-braces-around-statements
   - -readability-function-cognitive-complexity
