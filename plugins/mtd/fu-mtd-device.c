@@ -123,8 +123,13 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
-	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GInputStream) stream = NULL;
+
+	/* fall back to a generic firmware when no specific type was detected */
+	if (firmware_gtype == G_TYPE_INVALID)
+		firmware_gtype = FU_TYPE_FIRMWARE;
+	firmware = g_object_new(firmware_gtype, NULL);
 
 	/* parse as firmware image */
 	stream = fu_mtd_device_read_stream(self, progress, error);
