@@ -142,7 +142,7 @@ fu_binder_daemon_device_array_to_variant(FuBinderDaemon *self,
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
-	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
+	if (fu_context_get_config_bool(fu_engine_get_context(engine), "ShowDevicePrivate"))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 	return fwupd_codec_array_to_variant(devices, flags);
 }
@@ -279,8 +279,14 @@ fu_binder_daemon_method_get_properties(FuBinderDaemon *self,
 		if (g_strcmp0(property_name, "DaemonVersion") == 0)
 			value = g_variant_new_string(PACKAGE_VERSION);
 
-		if (g_strcmp0(property_name, "HostBkc") == 0)
-			value = g_variant_new_string(fu_engine_get_host_bkc(engine));
+		if (g_strcmp0(property_name, "HostBkc") == 0) {
+			FuContext *ctx = fu_engine_get_context(engine);
+			g_autofree gchar *host_bkc = fu_context_get_config_str(ctx, "HostBkc");
+			if (host_bkc == NULL)
+				value = g_variant_new_string("");
+			else
+				value = g_variant_new_string(host_bkc);
+		}
 
 		if (g_strcmp0(property_name, "Tainted") == 0)
 			value = g_variant_new_boolean(FALSE);
@@ -340,8 +346,8 @@ fu_binder_daemon_method_get_properties(FuBinderDaemon *self,
 			value = g_variant_new_boolean(isatty(fileno(stdout)) != 0);
 
 		if (g_strcmp0(property_name, "OnlyTrusted") == 0) {
-			value = g_variant_new_boolean(
-			    fu_engine_config_get_only_trusted(fu_engine_get_config(engine)));
+			FuContext *ctx = fu_engine_get_context(engine);
+			value = g_variant_new_boolean(fu_context_get_config_bool(ctx, "OnlyTrusted"));
 		}
 
 		if (value) {
@@ -876,7 +882,7 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 	}
 
 	/* relax these */
-	if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
+	if (fu_context_get_config_bool(fu_engine_get_context(engine), "IgnoreRequirements"))
 		helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	// TODO: fu_client_list_register notify::flags (watch for death of client)
@@ -1026,7 +1032,7 @@ fu_binder_daemon_method_emulation_load(FuBinderDaemon *self,
 		helper->self = self;
 		helper->stream = g_steal_pointer(&stream_cab);
 
-		if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
+		if (fu_context_get_config_bool(fu_engine_get_context(engine), "IgnoreRequirements"))
 			helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 		if (!fu_dbus_daemon_install_with_helper(helper, error)) {
