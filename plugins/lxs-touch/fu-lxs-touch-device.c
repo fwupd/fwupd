@@ -211,10 +211,12 @@ fu_lxs_touch_device_wait_ready(FuLxsTouchDevice *self, GError **error)
 				    error);
 }
 
-static gchar *
+static gboolean
 fu_lxs_touch_device_read_version(FuLxsTouchDevice *self, GError **error)
 {
 	g_autoptr(FuStructLxsTouchVersion) st_ver = NULL;
+	g_autofree gchar *version = NULL;
+	g_autofree gchar *version_bootloader = NULL;
 	guint8 buf[8] = {0};
 
 	if (!fu_lxs_touch_device_read_data(self,
@@ -222,18 +224,27 @@ fu_lxs_touch_device_read_version(FuLxsTouchDevice *self, GError **error)
 					  sizeof(buf),
 					  buf,
 					  error))
-		return NULL;
+		return FALSE;
 
 	st_ver = fu_struct_lxs_touch_version_parse(buf, sizeof(buf), 0x0, error);
 	if (st_ver == NULL)
-		return NULL;
+		return FALSE;
 
-	return g_strdup_printf(
-	    "%04X.%04X.%04X.%04X",
-	    fu_struct_lxs_touch_version_get_boot_ver(st_ver),
+	/* application version: core.app.param (this is what the cab updates) */
+	version = g_strdup_printf(
+	    "%04X.%04X.%04X",
 	    fu_struct_lxs_touch_version_get_core_ver(st_ver),
 	    fu_struct_lxs_touch_version_get_app_ver(st_ver),
 	    fu_struct_lxs_touch_version_get_param_ver(st_ver));
+	fu_device_set_version(FU_DEVICE(self), version);
+
+	/* bootloader version: informational only */
+	version_bootloader = g_strdup_printf(
+	    "%04X",
+	    fu_struct_lxs_touch_version_get_boot_ver(st_ver));
+	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
+
+	return TRUE;
 }
 
 static gboolean
@@ -382,7 +393,6 @@ static gboolean
 fu_lxs_touch_device_setup(FuDevice *device, GError **error)
 {
 	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
-	g_autofree gchar *version = NULL;
 
 	if (!fu_lxs_touch_device_check_mode(self, error))
 		return FALSE;
@@ -391,10 +401,8 @@ fu_lxs_touch_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	} else {
-		version = fu_lxs_touch_device_read_version(self, error);
-		if (version == NULL)
+		if (!fu_lxs_touch_device_read_version(self, error))
 			return FALSE;
-		fu_device_set_version(device, version);
 
 		if (!fu_lxs_touch_device_read_panel_info(self, error))
 			return FALSE;
