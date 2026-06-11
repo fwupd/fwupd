@@ -124,7 +124,7 @@ fwupd_jcat_file_json_parser_new(void)
 {
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	fwupd_json_parser_set_max_depth(json_parser, 5);
-	fwupd_json_parser_set_max_items(json_parser, 100);
+	fwupd_json_parser_set_max_items(json_parser, 1000);
 	fwupd_json_parser_set_max_quoted(json_parser, 100 * 1024);
 	return g_steal_pointer(&json_parser);
 }
