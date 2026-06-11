@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-10 14:50+0100\n"
-"PO-Revision-Date: 2026-05-30 06:41+0000\n"
+"PO-Revision-Date: 2026-06-11 16:49+0000\n"
 "Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.6\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
@@ -313,7 +313,7 @@ msgstr "Misslyckades med att tolka argument"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Misslyckades med att läsa in sammanhang"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -2876,7 +2876,7 @@ msgstr "%s-headsetuppdatering"
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "%s-pekskärmsuppdatering"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
