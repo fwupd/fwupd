@@ -116,6 +116,7 @@
 #include <libfwupdplugin/fu-processor-device.h>
 #include <libfwupdplugin/fu-progress.h>
 #include <libfwupdplugin/fu-protobuf.h>
+#include <libfwupdplugin/fu-ptr-array.h>
 #include <libfwupdplugin/fu-sbatlevel-section.h>
 #include <libfwupdplugin/fu-security-attr.h>
 #include <libfwupdplugin/fu-security-attrs.h>
