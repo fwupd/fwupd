@@ -241,6 +241,14 @@ typedef struct {
 	libusb_hotplug_event event;
 } FuUsbBackendIdleHelper;
 
+static void
+fu_usb_backend_idle_helper_free(FuUsbBackendIdleHelper *helper)
+{
+	g_object_unref(helper->self);
+	libusb_unref_device(helper->dev);
+	g_free(helper);
+}
+
 static gpointer
 fu_usb_backend_idle_helper_copy(gconstpointer src, gpointer user_data)
 {
@@ -261,7 +269,9 @@ fu_usb_backend_idle_hotplug_cb(gpointer user_data)
 
 	/* drain the idle events with the lock held */
 	g_mutex_lock(&self->idle_events_mutex);
-	idle_events = g_ptr_array_copy(self->idle_events, fu_usb_backend_idle_helper_copy, NULL);
+	idle_events = fu_ptr_array_copy(self->idle_events,
+					fu_usb_backend_idle_helper_copy,
+					(GDestroyNotify)fu_usb_backend_idle_helper_free);
 	g_ptr_array_set_size(self->idle_events, 0);
 	self->idle_events_id = 0;
 	g_mutex_unlock(&self->idle_events_mutex);
@@ -480,16 +490,6 @@ fu_usb_backend_finalize(GObject *object)
 
 	G_OBJECT_CLASS(fu_usb_backend_parent_class)->finalize(object);
 }
-
-#ifndef HAVE_UDEV
-static void
-fu_usb_backend_idle_helper_free(FuUsbBackendIdleHelper *helper)
-{
-	g_object_unref(helper->self);
-	libusb_unref_device(helper->dev);
-	g_free(helper);
-}
-#endif
 
 static void
 fu_usb_backend_init(FuUsbBackend *self)

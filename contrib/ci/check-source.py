@@ -849,6 +849,7 @@ class Checker:
             "g_variant_get_strv": "Use fwupd_variant_get_strv() instead",
             "g_variant_get_double": "Use fwupd_variant_get_double() instead",
             "g_variant_get_int32": "Use fwupd_variant_get_int32() instead",
+            "g_ptr_array_copy": "Use fu_ptr_array_copy() instead",
             "g_random_int_range": "Use fu_common_get_random() or a predictable token instead",
             "g_assert": "Use g_set_error() or g_return_val_if_fail() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
