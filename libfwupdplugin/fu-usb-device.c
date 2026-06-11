@@ -1385,6 +1385,7 @@ fu_usb_device_incorporate(FuDevice *device, FuDevice *device_donor)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	FuUsbDevicePrivate *priv_donor = GET_PRIVATE(donor);
 
+	g_return_if_fail(priv_donor != NULL);
 	fu_usb_device_set_dev(self, priv_donor->usb_device);
 
 	/* all descriptor fields */
