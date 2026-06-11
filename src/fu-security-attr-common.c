@@ -28,6 +28,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return g_strdup(_("SPI BIOS region"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS) == 0) {
+		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
+		return g_strdup(_("Intel SPI protected regions"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return g_strdup(_("SPI BIOS Descriptor"));
@@ -205,6 +209,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return g_strdup(_("SPI write protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return g_strdup(_("coreboot verified boot"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: Title: if the part has been fused */
 		return g_strdup(_("Fused platform"));
@@ -264,6 +272,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP) == 0) {
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return _("Firmware BIOS Region");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS) == 0) {
+		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
+		return _("Intel SPI Protected Regions");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
 		/* TRANSLATORS: Title: firmware refers to the flash chip in the computer */
@@ -414,6 +426,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return _("AMD Firmware Write Protection");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return _("coreboot Verified Boot");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: Title: if the part has been fused */
 		return _("Fused Platform");
@@ -469,6 +485,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("Firmware BIOS Region protects device firmware memory from being "
 			 "tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Intel SPI Protected Regions prevent host writes to protected firmware "
+			 "regions.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
 		/* TRANSLATORS: longer description */
@@ -632,6 +653,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Platform Secure Boot prevents unsigned software from being loaded "
+			 "when the device starts.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("coreboot verified boot prevents unsigned firmware from being loaded "
 			 "when the device starts.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {

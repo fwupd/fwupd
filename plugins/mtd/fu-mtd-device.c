@@ -32,6 +32,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
 #define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_MTD_DEVICE_PCI_VENDOR_INTEL 0x8086
+#define FU_MTD_DEVICE_PCI_CLASS_SPI    0x0c80
 
 static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -46,6 +48,126 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
 		fwupd_codec_string_append(str, idt, "FmapRegions", fmap_regions);
 	}
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "IntelSpi",
+	    fu_device_has_private_flag(device, FU_MTD_DEVICE_FLAG_INTEL_SPI));
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "IntelSpiProtectionSupported",
+	    fu_device_has_private_flag(device, FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTION_SUPPORTED));
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "IntelSpiProtected",
+	    fu_device_has_private_flag(device, FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTED));
+}
+
+static FuDevice *
+fu_mtd_device_get_pci_parent(FuMtdDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) parent_device = NULL;
+
+	parent_device = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", NULL);
+	if (parent_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no PCI parent");
+		return NULL;
+	}
+	if (!fu_device_probe(parent_device, error))
+		return NULL;
+	return g_steal_pointer(&parent_device);
+}
+
+static gboolean
+fu_mtd_device_parent_sysfs_uint64(FuMtdDevice *self,
+				  const gchar *attr,
+				  guint64 min,
+				  guint64 max,
+				  guint64 *value,
+				  GError **error)
+{
+	g_autofree gchar *attr_value = NULL;
+	g_autoptr(FuDevice) parent_device = NULL;
+
+	parent_device = fu_mtd_device_get_pci_parent(self, error);
+	if (parent_device == NULL)
+		return FALSE;
+	attr_value = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(parent_device),
+					       attr,
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       error);
+	if (attr_value == NULL)
+		return FALSE;
+
+	return fu_strtoull(attr_value, value, min, max, FU_INTEGER_BASE_AUTO, error);
+}
+
+static gboolean
+fu_mtd_device_parent_sysfs_bool(FuMtdDevice *self,
+				const gchar *attr,
+				gboolean *value,
+				GError **error)
+{
+	guint64 value_u64 = 0;
+
+	if (!fu_mtd_device_parent_sysfs_uint64(self, attr, 0, 1, &value_u64, error))
+		return FALSE;
+
+	*value = value_u64 == 1;
+	return TRUE;
+}
+
+static void
+fu_mtd_device_setup_intel_spi_security(FuMtdDevice *self)
+{
+	guint64 class_u64 = 0;
+	guint64 vendor_u64 = 0;
+	gboolean protected = FALSE;
+	g_autoptr(GError) error_local = NULL;
+
+	fu_device_remove_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_INTEL_SPI);
+	fu_device_remove_private_flag(FU_DEVICE(self),
+				      FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTION_SUPPORTED);
+	fu_device_remove_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTED);
+
+	if (!fu_mtd_device_parent_sysfs_uint64(self,
+					       "vendor",
+					       0,
+					       G_MAXUINT16,
+					       &vendor_u64,
+					       &error_local)) {
+		g_debug("no PCI vendor found: %s", error_local->message);
+		return;
+	}
+	if (vendor_u64 != FU_MTD_DEVICE_PCI_VENDOR_INTEL)
+		return;
+
+	if (!fu_mtd_device_parent_sysfs_uint64(self,
+					       "class",
+					       0,
+					       G_MAXUINT32,
+					       &class_u64,
+					       &error_local)) {
+		g_debug("no PCI class found: %s", error_local->message);
+		return;
+	}
+	if ((class_u64 >> 8) != FU_MTD_DEVICE_PCI_CLASS_SPI)
+		return;
+
+	fu_device_add_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_INTEL_SPI);
+	if (!fu_mtd_device_parent_sysfs_bool(self,
+					     "intel_spi_protected",
+					     &protected,
+					     &error_local)) {
+		g_debug("no Intel SPI protection status found: %s", error_local->message);
+		return;
+	}
+	fu_device_add_private_flag(FU_DEVICE(self),
+				   FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTION_SUPPORTED);
+	if (protected)
+		fu_device_add_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTED);
 }
 
 static gchar *
@@ -473,11 +595,14 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 		g_debug("truncating metadata size to 0x%x", (guint)priv->metadata_size);
 	}
 
+	fu_mtd_device_setup_intel_spi_security(self);
+
 	/* nothing to do */
 	if (fu_device_get_firmware_gtype(device) == G_TYPE_INVALID)
 		return TRUE;
 	if (!fu_mtd_device_metadata_load_versions(self, &error_local)) {
 		g_debug("no version metadata found: %s", error_local->message);
+		g_clear_error(&error_local);
 		return TRUE;
 	}
 
@@ -1133,6 +1258,32 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 }
 
 static void
+fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr_spi = NULL;
+
+	if (!fu_device_has_private_flag(device, FU_MTD_DEVICE_FLAG_INTEL_SPI))
+		return;
+
+	attr_spi =
+	    fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS);
+	fwupd_security_attr_set_result_success(attr_spi, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr_spi);
+	if (!fu_device_has_private_flag(device,
+					FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTION_SUPPORTED)) {
+		fwupd_security_attr_add_flag(attr_spi, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fwupd_security_attr_set_result(attr_spi, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+	if (!fu_device_has_private_flag(device, FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTED)) {
+		fwupd_security_attr_set_result(attr_spi, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr_spi, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+	fwupd_security_attr_add_flag(attr_spi, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_mtd_device_init(FuMtdDevice *self)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
@@ -1152,6 +1303,10 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_INTEL_SPI);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTION_SUPPORTED);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTED);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
@@ -1183,5 +1338,6 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->read_firmware = fu_mtd_device_read_firmware;
 	device_class->prepare_firmware = fu_mtd_device_prepare_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
+	device_class->add_security_attrs = fu_mtd_device_add_security_attrs;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 }
