@@ -224,7 +224,7 @@ struct FuStructEfiVolumeBlockMap {
     length: u32le,
 }
 
-#[derive(Getters, New, ToString, NewInternal, ValidateInternal)]
+#[derive(Getters, New, ToString, NewInternal)]
 #[repr(C, packed)]
 struct FuStructEfiTime {
     year: u16le,

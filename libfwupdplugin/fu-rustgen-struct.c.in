@@ -567,8 +567,10 @@ void
         g_autofree gchar *str = {{obj.c_method('ToString')}}(st);
         g_debug("%s", str);
     }
+{%- if obj.export('ValidateInternal') != Export.NONE %}
     if (!{{obj.c_method('ValidateInternal')}}(st, error))
         return FALSE;
+{%- endif %}
     return TRUE;
 }
 {%- endif %}

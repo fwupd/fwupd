@@ -20,7 +20,7 @@ enum FuIntelMeIssue {
     Patched,
 }
 
-#[derive(New, NewInternal, ValidateInternal, Parse, ToString)]
+#[derive(New, NewInternal, Parse, ToString)]
 #[repr(C, packed)]
 struct FuStructIntelMeHfsts {
     value: u32le,

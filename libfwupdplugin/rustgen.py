@@ -341,9 +341,10 @@ class StructObj:
             self.add_private_export("Parse")
         elif derive == "ParseInternal":
             self.add_private_export("ToString")
-            self.add_private_export("ValidateInternal")
+            if self.has_constant:
+                self.add_private_export("ValidateInternal")
             for item in self.items:
-                if item.struct_obj:
+                if item.struct_obj and item.struct_obj.has_constant:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
             self.add_private_export("NewInternal")
