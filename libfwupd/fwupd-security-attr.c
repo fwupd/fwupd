@@ -1603,7 +1603,8 @@ fwupd_security_attr_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwupd
 			if ((priv->flags & ((guint64)1 << i)) == 0)
 				continue;
 			tmp = fwupd_security_attr_flag_to_string((guint64)1 << i);
-			fwupd_json_array_add_string(json_arr, tmp);
+			if (tmp != NULL)
+				fwupd_json_array_add_string(json_arr, tmp);
 		}
 		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_FLAGS, json_arr);
 	}
