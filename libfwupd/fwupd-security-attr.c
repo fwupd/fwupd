@@ -63,46 +63,6 @@ G_DEFINE_TYPE_EXTENDED(FwupdSecurityAttr,
 #define GET_PRIVATE(o) (fwupd_security_attr_get_instance_private(o))
 
 /**
- * fwupd_security_attr_flag_to_string:
- * @flag: security attribute flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_SUCCESS
- *
- * Returns the printable string for the flag.
- *
- * Returns: string, or %NULL
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
-{
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_NONE)
-		return "none";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_SUCCESS)
-		return "success";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)
-		return "obsoleted";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA)
-		return "missing-data";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES)
-		return "runtime-updates";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION)
-		return "runtime-attestation";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE)
-		return "runtime-issue";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM)
-		return "action-contact-oem";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW)
-		return "action-config-fw";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS)
-		return "action-config-os";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)
-		return "can-fix";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)
-		return "can-undo";
-	return NULL;
-}
-
-/**
  * fwupd_security_attr_flag_from_string:
  * @flag: (nullable): a string, e.g. `success`
  *
@@ -138,50 +98,6 @@ fwupd_security_attr_flag_from_string(const gchar *flag)
 	if (g_strcmp0(flag, "can-undo") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO;
 	return FWUPD_SECURITY_ATTR_FLAG_NONE;
-}
-
-/**
- * fwupd_security_attr_result_to_string:
- * @result: security attribute result, e.g. %FWUPD_SECURITY_ATTR_RESULT_ENABLED
- *
- * Returns the printable string for the result enum.
- *
- * Returns: string, or %NULL
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result)
-{
-	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID)
-		return "valid";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID)
-		return "not-valid";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_ENABLED)
-		return "enabled";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED)
-		return "not-enabled";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_LOCKED)
-		return "locked";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED)
-		return "not-locked";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED)
-		return "encrypted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED)
-		return "not-encrypted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_TAINTED)
-		return "tainted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED)
-		return "not-tainted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_FOUND)
-		return "found";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND)
-		return "not-found";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_SUPPORTED)
-		return "supported";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED)
-		return "not-supported";
-	return NULL;
 }
 
 /**
