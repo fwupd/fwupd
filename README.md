@@ -37,14 +37,54 @@ useful to update a specific device on the command line that needs a bleeding
 edge fwupd version, but it should not be considered as a replacement to the
 distro-provided system version.
 
-### Using Tartan
+### Static analysis
+
+If you're developing code for fwupd, you may use a number of tools for static
+analysis during development. Some may also be used in CI and code needs to
+comply to certain rules. False positives may be possible in these static
+analysis tools.
+
+#### Using clang-tidy
+
+Rules are defined in the `.clang-tidy` file in the repository. Meson
+automatically provides targets to run clang-tidy on all files in the build.
+
+For this purpose, depending on your environment, you may also want to ensure
+you're setting `CC=clang` during meson setup for better results.
+
+```sh
+meson setup build
+ninja -C build
+ninja -C build clang-tidy
+```
+
+Additionally, there is also a target that will try to apply automatic fixes to
+source files where possible.
+
+```sh
+ninja -C build clang-tidy-fix
+```
+
+#### Using gcc `-fanalyzer`
+
+GCC can also provide static analysis. To enable this scan, fwupd provides a
+separate Meson option.
+
+```sh
+meson setup build -Dstatic_analysis=true
+ninja -C build
+```
+
+#### Using Tartan
 
 [Tartan](https://gitlab.freedesktop.org/tartan/tartan/-/wikis/home) is a LLVM static
 analysis plugin built to analyze GLib code. It can be installed and then run using:
 
-    mkdir build-tartan
-    CC=clang-18 meson ../
-    SCANBUILD=../contrib/tartan.sh ninja scan-build
+```sh
+mkdir build-tartan
+CC=clang-18 meson ../
+SCANBUILD=../contrib/tartan.sh ninja scan-build
+```
 
 ## LVFS
 
@@ -124,7 +164,9 @@ list of approved updates can be set in `fwupd.conf` using a comma-delimited list
 
 For example:
 
-    ApprovedFirmware=foo,bar
+```ini
+ApprovedFirmware=foo,bar
+```
 
 Where `foo,bar` refers to the container checksums that would correspond
 to two updates in the metadata file.
