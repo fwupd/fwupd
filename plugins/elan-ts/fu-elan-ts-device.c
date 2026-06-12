@@ -40,6 +40,8 @@ G_DEFINE_TYPE(FuElanTsDevice, fu_elan_ts_device, FU_TYPE_HIDRAW_DEVICE)
 #define FU_ELAN_TS_FW_PAGE_DATA_SIZE  128 /* bytes */
 #define FU_ELAN_TS_FW_PAGES_PER_BLOCK 30  /* maximum pages per write cycle */
 
+#define FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID "check-remark-id"
+
 static gboolean
 fu_elan_ts_device_write_cb(FuDevice *device, gpointer user_data, GError **error)
 {
@@ -824,10 +826,6 @@ fu_elan_ts_device_setup(FuDevice *device, GError **error)
 			    "failed to read test-solution version in normal mode: ");
 			return FALSE;
 		}
-		if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
-			g_prefix_error_literal(error, "failed to get remark id in normal mode: ");
-			return FALSE;
-		}
 
 		/* display combined fw and test versions in the main version field */
 		version = g_strdup_printf("%x.%x", self->fw_version, self->test_version);
@@ -839,13 +837,6 @@ fu_elan_ts_device_setup(FuDevice *device, GError **error)
 	case FU_ELAN_TS_HELLO_PACKET_RECOVERY_MODE:
 		self->touch_state = FU_ELAN_TS_STATE_RECOVERY_MODE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-
-		/* update internal data */
-		if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
-			g_prefix_error_literal(error, "failed to get remark id in recovery mode: ");
-			return FALSE;
-		}
-
 		fu_device_set_version(device, "0");
 		summary = g_strdup_printf("Elan Touchscreen (Recovery Mode)");
 		fu_device_set_summary(device, summary);
@@ -858,6 +849,28 @@ fu_elan_ts_device_setup(FuDevice *device, GError **error)
 			    "unknown hello packet (0x%02x)",
 			    hello_packet);
 		return FALSE;
+	}
+
+	/* read remark id only if supported by firmware */
+	if (self->touch_state == FU_ELAN_TS_STATE_NORMAL_MODE) {
+		guint8 iap_version = (guint8)(self->bc_version & 0x00FF);
+		if (iap_version >= 0x60) {
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID);
+		}
+	} else {
+		guint8 bc_hbyte = (guint8)((self->bc_version & 0xFF00) >> 8);
+		guint8 bc_lbyte = (guint8)(self->bc_version & 0x00FF);
+		if (bc_hbyte != bc_lbyte) {
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID);
+		}
+	}
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID)) {
+		if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
+			g_prefix_error_literal(error, "failed to get remark id: ");
+			return FALSE;
+		}
 	}
 
 	/* set boot code version as the bootloader version */
@@ -1050,7 +1063,6 @@ fu_elan_ts_device_check_firmware(FuDevice *device,
 				 GError **error)
 {
 	FuElanTsDevice *self = FU_ELAN_TS_DEVICE(device);
-	gboolean remark_id_check = FALSE;
 
 	/* check type */
 	if (fu_elan_ts_firmware_get_fw_type(FU_ELAN_TS_FIRMWARE(firmware)) !=
@@ -1064,17 +1076,7 @@ fu_elan_ts_device_check_firmware(FuDevice *device,
 	}
 
 	/* remark id compatibility check */
-	if (self->touch_state == FU_ELAN_TS_STATE_NORMAL_MODE) {
-		guint8 iap_version = (guint8)(self->bc_version & 0x00FF);
-		if (iap_version >= 0x60)
-			remark_id_check = TRUE;
-	} else {
-		guint8 bc_hbyte = (guint8)((self->bc_version & 0xFF00) >> 8);
-		guint8 bc_lbyte = (guint8)(self->bc_version & 0x00FF);
-		if (bc_hbyte != bc_lbyte)
-			remark_id_check = TRUE;
-	}
-	if (remark_id_check) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID)) {
 		if (!fu_elan_ts_device_iap_check_remark_id(self,
 							   FU_ELAN_TS_FIRMWARE(firmware),
 							   error)) {
@@ -1409,6 +1411,7 @@ fu_elan_ts_device_init(FuElanTsDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
