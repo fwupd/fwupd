@@ -70,6 +70,12 @@ install_headers(
 install_headers(
   [
     'fwupd-build.h',
+    'fwupd-build-glib-2-58.h',
+    'fwupd-build-glib-2-60.h',
+    'fwupd-build-glib-2-62.h',
+    'fwupd-build-glib-2-64.h',
+    'fwupd-build-glib-2-66.h',
+    'fwupd-build-glib-2-68.h',
     'fwupd-build-glib-2-70.h',
     'fwupd-build-glib-2-72.h',
     'fwupd-build-glib-2-76.h',
