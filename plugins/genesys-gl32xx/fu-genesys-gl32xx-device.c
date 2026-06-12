@@ -563,8 +563,8 @@ fu_genesys_gl32xx_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 	g_autoptr(FuDeviceLocker) locker =
 	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_genesys_gl32xx_device_detach,
-				      (FuDeviceLockerFunc)fu_genesys_gl32xx_device_attach,
+				      fu_device_detach,
+				      fu_device_attach,
 				      error);
 
 	if (locker == NULL)
