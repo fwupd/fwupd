@@ -30,7 +30,7 @@ enum FuLenovoAccessoryCmdDir {
 }
 
 #[repr(u8)]
-enum FuLenovoStatus {
+enum FuLenovoAccessoryStatus {
     NewCommand = 0x00,
     CommandBusy = 0x01,
     CommandSuccessful = 0x02,
@@ -40,20 +40,20 @@ enum FuLenovoStatus {
 }
 
 #[repr(u8)]
-enum FuLenovoDeviceMode {
+enum FuLenovoAccessoryDeviceMode {
     NormalMode = 0x00,
     DriverMode = 0x01,
     DfuMode = 0x02,
 }
 
 #[repr(u8)]
-enum FuLenovoDfuFileType {
+enum FuLenovoAccessoryDfuFileType {
     HexFile = 0x00,
     BinFile = 0x01,
 }
 
 #[repr(u8)]
-enum FuLenovoDfuExitCode {
+enum FuLenovoAccessoryDfuExitCode {
     DfuSuccess = 0x00,
     Abort = 0x01,
 }
@@ -73,7 +73,7 @@ struct FuStructLenovoAccessoryCmd {
 #[repr(C, packed)]
 struct FuStructLenovoDfuFwReq {
     cmd: FuStructLenovoAccessoryCmd,
-    file_type: FuLenovoDfuFileType,
+    file_type: FuLenovoAccessoryDfuFileType,
     offset_address: u32be,
     data: [u8; 32],
 }
@@ -82,7 +82,7 @@ struct FuStructLenovoDfuFwReq {
 #[repr(C, packed)]
 struct FuStructLenovoDfuExitReq {
     cmd: FuStructLenovoAccessoryCmd,
-    exit_code: FuLenovoDfuExitCode,
+    exit_code: FuLenovoAccessoryDfuExitCode,
 }
 
 #[derive(Parse)]
@@ -106,7 +106,7 @@ struct FuStructLenovoDfuCrcRsp {
 #[repr(C, packed)]
 struct FuStructLenovoDfuPrepareReq {
     cmd: FuStructLenovoAccessoryCmd,
-    file_type: FuLenovoDfuFileType,
+    file_type: FuLenovoAccessoryDfuFileType,
     start_address: u32be,
     end_address: u32be,
     crc32: u32be,
@@ -116,13 +116,13 @@ struct FuStructLenovoDfuPrepareReq {
 #[repr(C, packed)]
 struct FuStructLenovoDevicemodeReq {
     cmd: FuStructLenovoAccessoryCmd,
-    mode: FuLenovoDeviceMode,
+    mode: FuLenovoAccessoryDeviceMode,
 }
 
-//#[derive(Parse)]
+#[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructLenovoDevicemodeRsp {
-    mode: FuLenovoDeviceMode,
+    mode: FuLenovoAccessoryDeviceMode,
 }
 
 #[derive(Parse)]
