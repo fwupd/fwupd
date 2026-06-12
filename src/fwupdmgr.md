@@ -46,7 +46,7 @@ rough behavior groups as follows:
 
 The following actions can be used to view details about the enumerated devices on the system:
 
-**get-devices**: Show all devices, with optional filtering applied using `--filter`.
+**get-devices**: Show all devices, with optional filtering applied using `--filter` or `--filter-protocol`.
 
 **get-updates**: Show all the available updates for a specific device.
 
