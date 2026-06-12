@@ -33,15 +33,15 @@ fu_lenovo_accessory_impl_get_fwversion(FuLenovoAccessoryImpl *self,
 				       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_lenovo_accessory_impl_get_mode(FuLenovoAccessoryImpl *self,
-				  FuLenovoDeviceMode *mode,
+				  FuLenovoAccessoryDeviceMode *mode,
 				  GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_lenovo_accessory_impl_set_mode(FuLenovoAccessoryImpl *self,
-				  FuLenovoDeviceMode mode,
+				  FuLenovoAccessoryDeviceMode mode,
 				  GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_lenovo_accessory_impl_dfu_exit(FuLenovoAccessoryImpl *self,
-				  FuLenovoDfuExitCode exit_code,
+				  FuLenovoAccessoryDfuExitCode exit_code,
 				  GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_lenovo_accessory_impl_dfu_attribute(FuLenovoAccessoryImpl *self,
@@ -54,14 +54,14 @@ fu_lenovo_accessory_impl_dfu_attribute(FuLenovoAccessoryImpl *self,
 				       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_lenovo_accessory_impl_dfu_prepare(FuLenovoAccessoryImpl *self,
-				     FuLenovoDfuFileType file_type,
+				     FuLenovoAccessoryDfuFileType file_type,
 				     guint32 start_address,
 				     guint32 end_address,
 				     guint32 crc32,
 				     GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_lenovo_accessory_impl_dfu_file(FuLenovoAccessoryImpl *self,
-				  FuLenovoDfuFileType file_type,
+				  FuLenovoAccessoryDfuFileType file_type,
 				  guint32 address,
 				  const guint8 *data,
 				  gsize datasz,

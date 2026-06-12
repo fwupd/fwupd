@@ -11,7 +11,7 @@
 #include "fu-lenovo-accessory-hid-device.h"
 
 struct _FuLenovoAccessoryHidDevice {
-	FuHidrawDevice parent_instance;
+	FuHidDevice parent_instance;
 };
 
 static void
@@ -19,7 +19,7 @@ fu_lenovo_accessory_hid_device_impl_iface_init(FuLenovoAccessoryImplInterface *i
 
 G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidDevice,
 			fu_lenovo_accessory_hid_device,
-			FU_TYPE_HIDRAW_DEVICE,
+			FU_TYPE_HID_DEVICE,
 			G_IMPLEMENT_INTERFACE(FU_TYPE_LENOVO_ACCESSORY_IMPL,
 					      fu_lenovo_accessory_hid_device_impl_iface_init))
 
@@ -31,25 +31,41 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 	guint8 minor = 0;
 	guint8 micro = 0;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuHidDescriptor) desc = NULL;
-	g_autoptr(FuHidReport) report = NULL;
+	g_autoptr(GPtrArray) descriptors = NULL;
+	gboolean found_report = FALSE;
 
-	desc = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
-	if (desc == NULL)
+	/* the command interface is a vendor HID collection (UsagePage 0xFF00,
+	 * Usage 0x02) carrying a 64-byte report; confirm it is present so we
+	 * fail early on a device that does not speak this protocol */
+	descriptors = fu_hid_device_parse_descriptors(FU_HID_DEVICE(self), error);
+	if (descriptors == NULL)
 		return FALSE;
-	report = fu_hid_descriptor_find_report(desc,
-					       error,
-					       "usage-page",
-					       0xFF00,
-					       "usage",
-					       0x02,
-					       "report-size",
-					       8,
-					       "report-count",
-					       0x40,
-					       NULL);
-	if (report == NULL)
+	for (guint i = 0; i < descriptors->len; i++) {
+		FuHidDescriptor *desc = g_ptr_array_index(descriptors, i);
+		g_autoptr(FuHidReport) report = NULL;
+		report = fu_hid_descriptor_find_report(desc,
+						       NULL,
+						       "usage-page",
+						       0xFF00,
+						       "usage",
+						       0x02,
+						       "report-size",
+						       8,
+						       "report-count",
+						       0x40,
+						       NULL);
+		if (report != NULL) {
+			found_report = TRUE;
+			break;
+		}
+	}
+	if (!found_report) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no vendor command report (0xFF00/0x02) found");
 		return FALSE;
+	}
 	if (!fu_lenovo_accessory_impl_get_fwversion(FU_LENOVO_ACCESSORY_IMPL(device),
 						    &major,
 						    &minor,
@@ -67,7 +83,7 @@ fu_lenovo_accessory_hid_device_detach(FuDevice *device, FuProgress *progress, GE
 	FuLenovoAccessoryHidDevice *self = FU_LENOVO_ACCESSORY_HID_DEVICE(device);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_lenovo_accessory_impl_set_mode(FU_LENOVO_ACCESSORY_IMPL(self),
-					       FU_LENOVO_DEVICE_MODE_DFU_MODE,
+					       FU_LENOVO_ACCESSORY_DEVICE_MODE_DFU_MODE,
 					       error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -114,6 +130,5 @@ fu_lenovo_accessory_hid_device_init(FuLenovoAccessoryHidDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 30);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_USB_RECEIVER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
-	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_hid_device_set_interface(FU_HID_DEVICE(self), FU_LENOVO_ACCESSORY_IFACE_CMD);
 }

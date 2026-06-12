@@ -106,9 +106,10 @@ fu_lenovo_accessory_impl_get_fwversion(FuLenovoAccessoryImpl *self,
 	return TRUE;
 }
 
-#if 0
 gboolean
-fu_lenovo_accessory_impl_get_mode(FuLenovoAccessoryImpl *self, FuLenovoDeviceMode *mode, GError **error)
+fu_lenovo_accessory_impl_get_mode(FuLenovoAccessoryImpl *self,
+				  FuLenovoAccessoryDeviceMode *mode,
+				  GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
 	g_autoptr(FuStructLenovoDevicemodeRsp) st_rsp = NULL;
@@ -120,10 +121,12 @@ fu_lenovo_accessory_impl_get_mode(FuLenovoAccessoryImpl *self, FuLenovoDeviceMod
 	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DEVICE_INFORMATION);
 	fu_struct_lenovo_accessory_cmd_set_command_id(
 	    st_cmd,
-	    FU_LENOVO_ACCESSORY_INFO_ID_DEVICE_MODE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_SET << 7));
+	    FU_LENOVO_ACCESSORY_INFO_ID_DEVICE_MODE | (FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
 	buf = fu_lenovo_accessory_impl_process(self, st_cmd->buf, error);
-	if (buf == NULL)
+	if (buf == NULL) {
+		g_prefix_error_literal(error, "get device mode: ");
 		return FALSE;
+	}
 	st_rsp = fu_struct_lenovo_devicemode_rsp_parse(buf->data, buf->len, 0x0, error);
 	if (st_rsp == NULL)
 		return FALSE;
@@ -132,11 +135,10 @@ fu_lenovo_accessory_impl_get_mode(FuLenovoAccessoryImpl *self, FuLenovoDeviceMod
 	/* success */
 	return TRUE;
 }
-#endif
 
 gboolean
 fu_lenovo_accessory_impl_set_mode(FuLenovoAccessoryImpl *self,
-				  FuLenovoDeviceMode mode,
+				  FuLenovoAccessoryDeviceMode mode,
 				  GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
@@ -153,7 +155,7 @@ fu_lenovo_accessory_impl_set_mode(FuLenovoAccessoryImpl *self,
 	if (!fu_struct_lenovo_devicemode_req_set_cmd(st_req, st_cmd, error))
 		return FALSE;
 	fu_struct_lenovo_devicemode_req_set_mode(st_req, mode);
-	if (mode == FU_LENOVO_DEVICE_MODE_DFU_MODE)
+	if (mode == FU_LENOVO_ACCESSORY_DEVICE_MODE_DFU_MODE)
 		return fu_lenovo_accessory_impl_write(self, st_req->buf, error);
 	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
 	if (buf == NULL)
@@ -166,7 +168,7 @@ fu_lenovo_accessory_impl_set_mode(FuLenovoAccessoryImpl *self,
 /* @exit_code: the exit status code (e.g., 0x00 for success/reboot) */
 gboolean
 fu_lenovo_accessory_impl_dfu_exit(FuLenovoAccessoryImpl *self,
-				  FuLenovoDfuExitCode exit_code,
+				  FuLenovoAccessoryDfuExitCode exit_code,
 				  GError **error)
 {
 	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
@@ -243,7 +245,7 @@ fu_lenovo_accessory_impl_dfu_attribute(FuLenovoAccessoryImpl *self,
 
 gboolean
 fu_lenovo_accessory_impl_dfu_prepare(FuLenovoAccessoryImpl *self,
-				     FuLenovoDfuFileType file_type,
+				     FuLenovoAccessoryDfuFileType file_type,
 				     guint32 start_address,
 				     guint32 end_address,
 				     guint32 crc32,
@@ -276,7 +278,7 @@ fu_lenovo_accessory_impl_dfu_prepare(FuLenovoAccessoryImpl *self,
 
 gboolean
 fu_lenovo_accessory_impl_dfu_file(FuLenovoAccessoryImpl *self,
-				  FuLenovoDfuFileType file_type,
+				  FuLenovoAccessoryDfuFileType file_type,
 				  guint32 address,
 				  const guint8 *data,
 				  gsize datasz,
