@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-10 14:50+0100\n"
-"PO-Revision-Date: 2026-05-01 00:10+0000\n"
+"PO-Revision-Date: 2026-06-12 21:01+0000\n"
 "Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17.1\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr ""
@@ -594,7 +594,7 @@ msgstr "SMAP"
 
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
-msgstr ""
+msgstr "Krüptitud RAM-mälu"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -607,11 +607,11 @@ msgstr ""
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
-msgstr ""
+msgstr "Linuxi kernel"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
-msgstr ""
+msgstr "Linuxi saaleala"
 
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
@@ -623,7 +623,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
-msgstr ""
+msgstr "UEFI platvormi võti"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -835,7 +835,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
-msgstr ""
+msgstr "UEFI platvormi võti"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI Secure Boot"
@@ -994,7 +994,7 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
-msgstr ""
+msgstr "UEFI platvormi võti on kasutusel tuvastamaks, et seadme tarkvara on pärit usaldusväärsest allikast."
 
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
@@ -1103,11 +1103,11 @@ msgstr "Katkestatud"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
-msgstr ""
+msgstr "Tegevus on vajalik:"
 
 #. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
-msgstr ""
+msgstr "Valitud seade"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -1115,7 +1115,7 @@ msgstr "Katkesta"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose device"
-msgstr ""
+msgstr "Vali seade"
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -1126,7 +1126,7 @@ msgstr ""
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Seadmeid, millele ei leidu püsivara uuendusi:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1135,48 +1135,48 @@ msgstr ""
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available
 msgid "Devices with the latest available firmware version:"
-msgstr ""
+msgstr "Seadmed, millel on viimane püsivaraversioon juba olemas:"
 
 msgid "No updates available for remaining devices"
-msgstr ""
+msgstr "Ülejäänud seadmetele ei leidu ühtegi uuendust"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr ""
+msgstr "Ei õnnestunud tuvastada raudvara, mille püsivara saaks uuendada"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Updating %s…"
-msgstr ""
+msgstr "Uuendan %s…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Installing on %s…"
-msgstr ""
+msgstr "Paigaldan %s seadmesse…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Reading from %s…"
-msgstr ""
+msgstr "Loen %s seadmest…"
 
 #. TRANSLATORS: there is a reason the device can't update
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s seade pole hetkel uuendatav:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Pole midagi teha"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Püsivara uuendustega seadmed, mille puhul on vajalik kasutaja sekkumine:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
-msgstr ""
+msgstr "Seadistuse väärtuse muutmine õnnestus"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully reset configuration section"
@@ -1212,7 +1212,7 @@ msgstr ""
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
-msgstr ""
+msgstr "Aktiveerin püsivara uuendust"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
@@ -1244,17 +1244,17 @@ msgstr "Vali püsivara"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
-msgstr ""
+msgstr "Kirjutan faili:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Metateave on juba uuendatud"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
 #, c-format
 msgid "Metadata is up to date; use %s to refresh again."
-msgstr ""
+msgstr "Metateave on juba uuendatud; sundkorras uuendamiseks kasuta %s võtit."
 
 #. TRANSLATORS: error message for unsupported feature
 msgid "Host Security ID (HSI) is not supported"
@@ -1266,11 +1266,11 @@ msgstr ""
 
 #. TRANSLATORS: Volume has been chosen by the user
 msgid "Selected volume"
-msgstr ""
+msgstr "Valitud köide"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
-msgstr ""
+msgstr "Vali köide"
 
 #. TRANSLATORS: get interactive prompt, where branch is the
 #. * supplier of the firmware, e.g. "non-free" or "free"
@@ -1399,7 +1399,7 @@ msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Show devices that are not updatable"
-msgstr ""
+msgstr "Näita seadmeid, mis pole uuendatavad"
 
 #. TRANSLATORS: command line option
 msgid "Manually enable specific plugins"
@@ -1453,11 +1453,11 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr ""
+msgstr "Näita püsivara faili üksikasju"
 
 #. TRANSLATORS: command description
 msgid "Show history of firmware updates"
-msgstr ""
+msgstr "Näita püsivarauuenduste ajalugu"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"
@@ -1469,7 +1469,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr ""
+msgstr "Näita kõiki seadmeid, mis toetavad püsivara uuendamist"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1477,11 +1477,11 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
-msgstr ""
+msgstr "Jälgi raudvara muudatusi"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID [VERSION]"
-msgstr ""
+msgstr "FAILINIMI SEADMETUNNUS [VERSIOON]"
 
 #. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
@@ -1501,7 +1501,7 @@ msgstr "SEADME-TUNNUS|GUID"
 
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
-msgstr ""
+msgstr "Paigalda püsivara seadmesse uuesti"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -1562,7 +1562,7 @@ msgstr "TEKST"
 #. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
-msgstr ""
+msgstr "Allkirjasta andmed kliendisertifikaadiga"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
@@ -1574,19 +1574,19 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Sign a firmware with a new key"
-msgstr ""
+msgstr "Allkirjasta püsivara uue võtmega"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
-msgstr ""
+msgstr "FAILINIMI [DEVICE-ID|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
-msgstr ""
+msgstr "Loe seadmest püsivara bloob"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware from a device"
-msgstr ""
+msgstr "Loe seadmest püsivara"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
@@ -1614,15 +1614,15 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [FIRMWARE-TYPE]"
-msgstr ""
+msgstr "FAILINIMI [FIRMWARE-TYPE]"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
-msgstr ""
+msgstr "Parsi ja näita püsivara faili üksikasju"
 
 #. TRANSLATORS: command description
 msgid "Export a firmware file structure to XML"
-msgstr ""
+msgstr "Ekspordi püsivara struktuur XML-failina"
 
 #. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
@@ -1731,11 +1731,11 @@ msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "List EFI variables with a specific GUID"
-msgstr ""
+msgstr "Loetle konkreetse GUID-ga EFI muutujad"
 
 #. TRANSLATORS: command description
 msgid "List EFI boot parameters"
-msgstr ""
+msgstr "Loetle EFI alglaadimise parameetrid"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX"
@@ -1747,15 +1747,15 @@ msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX1,INDEX2"
-msgstr ""
+msgstr "INDEX1,INDEX2"
 
 #. TRANSLATORS: command description
 msgid "Set the EFI boot order"
-msgstr ""
+msgstr "Määratle EFI alglaadimise järjestus"
 
 #. TRANSLATORS: command description
 msgid "Delete an EFI boot entry"
-msgstr ""
+msgstr "Kustuta EFI alglaadimise kirje"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX NAME TARGET [MOUNTPOINT]"
@@ -1763,7 +1763,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Create an EFI boot entry"
-msgstr ""
+msgstr "Lisa EFI alglaadimise kirje"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX KEY [VALUE]"
@@ -2115,27 +2115,27 @@ msgstr ""
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata:"
-msgstr ""
+msgstr "Uue metateabe allalaadimine õnnestus:"
 
 #. TRANSLATORS: no devices that can be upgraded with new firmware
 msgid "No devices are updatable"
-msgstr ""
+msgstr "Mitte ükski seade pole uuendatav"
 
 #. TRANSLATORS: how many devices could be updated in theory if
 #. we had the firmware locally
 #, c-format
 msgid "%u device is updatable"
 msgid_plural "%u devices are updatable"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u seade on uuendatav"
+msgstr[1] "%u seadet on uuendatavad"
 
 #. TRANSLATORS: how many devices have published updates on
 #. something like the LVFS
 #, c-format
 msgid "%u device is supported in the enabled remotes (an update has been published)"
 msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Kasutusel kaugandmekogudes on toetatud %u seade (uuendus on olnud avaldatud)"
+msgstr[1] "Kasutusel kaugandmekogudes on toetatud %u seadet (uuendus on olnud avaldatud)"
 
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
@@ -2174,7 +2174,7 @@ msgstr ""
 
 #. TRANSLATORS: this is an error string
 msgid "No updates available"
-msgstr ""
+msgstr "Ühtegi uuendust pole saadaval"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
@@ -2879,85 +2879,85 @@ msgstr ""
 #, c-format
 msgid "%u second"
 msgid_plural "%u seconds"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u sekund"
+msgstr[1] "%u sekundit"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u minute"
 msgid_plural "%u minutes"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u minut"
+msgstr[1] "%u minutit"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
 msgid_plural "%u hours"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u tund"
+msgstr[1] "%u tundi"
 
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
 msgid_plural "%u days"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u päev"
+msgstr[1] "%u päeva"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
-msgstr ""
+msgstr "Sisemine seade"
 
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
-msgstr ""
+msgstr "Uuendatav"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
-msgstr ""
+msgstr "Süsteem eeldab, et kasutusel on väline toietallikas"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
-msgstr ""
+msgstr "Seade on lukustatud"
 
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
-msgstr ""
+msgstr "Toetatud kaugserveris"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
-msgstr ""
+msgstr "Eeldab buutlaadija kasutamist"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
-msgstr ""
+msgstr "Peale paigaldamist eeldab taaskäivitust"
 
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
-msgstr ""
+msgstr "Peale paigaldamist eeldab seiskamist"
 
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
-msgstr ""
+msgstr "On teatatud kaugserverile"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
-msgstr ""
+msgstr "Kasutaja on saanud teavituse"
 
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
-msgstr ""
+msgstr "On buutlaadija režiimis"
 
 #. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
-msgstr ""
+msgstr "Raudvara on uuesti ühendamise ootel"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
-msgstr ""
+msgstr "Seadme uuendamine vajab aktiveerimist"
 
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
-msgstr ""
+msgstr "Peale uuenduse lõpetamist pole seade enam nähtav"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -2969,11 +2969,11 @@ msgstr ""
 
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
-msgstr ""
+msgstr "Seade oskab ületada paigalduse vigu"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
-msgstr ""
+msgstr "Seade on uuenduse ajal kasutatav"
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
@@ -2999,7 +2999,7 @@ msgstr ""
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
-msgstr ""
+msgstr "Lubatud on vaid versiooniuuendused"
 
 #. TRANSLATORS: currently unreachable, perhaps because it is in a lower power state
 #. * or is out of wireless range
@@ -3016,11 +3016,11 @@ msgstr ""
 
 #. TRANSLATORS: firmware is verified on-device the payload using strong crypto
 msgid "Signed Payload"
-msgstr ""
+msgstr "Tegelikud andmed on allkirjastatud"
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
-msgstr ""
+msgstr "Tegelikud andmed on allkirjastamata"
 
 #. TRANSLATORS: this device is not actually real
 msgid "Emulated"
@@ -3037,7 +3037,7 @@ msgstr ""
 
 #. TRANSLATORS: we can save all device enumeration events for emulation
 msgid "Can tag for emulation"
-msgstr ""
+msgstr "Sündmused on märgistatavad emuleerimiseks"
 
 #. TRANSLATORS: ask the user to do a simple task which should be translated
 msgid "Message"
@@ -3266,7 +3266,7 @@ msgstr ""
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
-msgstr ""
+msgstr "UEFI-kapslite põhilised uuendused on püsivara seadistustes kas lülitatud välja või pole saadaval"
 
 #. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
 #, c-format
