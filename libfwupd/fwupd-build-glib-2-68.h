@@ -18,9 +18,9 @@ g_string_replace(GString *string, const gchar *find, const gchar *replace, guint
 	g_return_val_if_fail(string != NULL, 0);
 	g_return_val_if_fail(find != NULL, 0);
 	g_return_val_if_fail(replace != NULL, 0);
-	if (g_strcmp0(find, "") == 0)
+	if (g_strcmp0(string->str, "") == 0)
 		return 0;
-	strv = g_strsplit(string->str, find, limit + 1);
+	strv = g_strsplit(string->str, find, limit == 0 ? -1 : (gint)limit + 1);
 	str2 = g_strjoinv(replace, strv);
 	g_string_assign(string, str2);
 	return g_strv_length(strv) - 1;
