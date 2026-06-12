@@ -783,6 +783,9 @@ fu_elan_ts_device_setup(FuDevice *device, GError **error)
 {
 	FuElanTsDevice *self = FU_ELAN_TS_DEVICE(device);
 	guint8 hello_packet = 0;
+	guint8 iap_version = 0;
+	guint8 bc_hbyte = 0;
+	guint8 bc_lbyte = 0;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *summary = NULL;
 
@@ -824,9 +827,15 @@ fu_elan_ts_device_setup(FuDevice *device, GError **error)
 			    "failed to read test-solution version in normal mode: ");
 			return FALSE;
 		}
-		if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
-			g_prefix_error_literal(error, "failed to get remark id in normal mode: ");
-			return FALSE;
+
+		/* read Remark ID only if supported by the bootloader */
+		iap_version = (guint8)(self->bc_version & 0x00FF);
+		if (iap_version >= 0x60) {
+			if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
+				g_prefix_error_literal(error,
+						       "failed to get remark id in normal mode: ");
+				return FALSE;
+			}
 		}
 
 		/* display combined fw and test versions in the main version field */
@@ -840,10 +849,16 @@ fu_elan_ts_device_setup(FuDevice *device, GError **error)
 		self->touch_state = FU_ELAN_TS_STATE_RECOVERY_MODE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
-		/* update internal data */
-		if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
-			g_prefix_error_literal(error, "failed to get remark id in recovery mode: ");
-			return FALSE;
+		/* read Remark ID only if supported by firmware */
+		bc_hbyte = (guint8)((self->bc_version & 0xFF00) >> 8);
+		bc_lbyte = (guint8)(self->bc_version & 0x00FF);
+		if (bc_hbyte != bc_lbyte) {
+			if (!fu_elan_ts_device_ensure_remark_id(self, error)) {
+				g_prefix_error_literal(
+				    error,
+				    "failed to get remark id in recovery mode: ");
+				return FALSE;
+			}
 		}
 
 		fu_device_set_version(device, "0");
