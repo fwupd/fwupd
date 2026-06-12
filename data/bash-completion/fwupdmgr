@@ -76,6 +76,7 @@ _fwupdmgr_opts=(
 	'--sign'
 	'--filter'
 	'--filter-release'
+	'--filter-protocol'
 	'--disable-ssl-strict'
 	'--p2p'
 	'--json'

@@ -81,6 +81,7 @@ _fwupdtool_opts=(
 	'--allow-older'
 	'--filter'
 	'--filter-release'
+	'--filter-protocol'
 	'--force'
 	'--json'
 	'--show-all'

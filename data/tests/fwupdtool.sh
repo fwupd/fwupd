@@ -288,6 +288,16 @@ if [ $? != 0 ]; then
 fi
 
 # ---
+echo " ● Get devices (including not-known protocol)…"
+run get-devices --filter-protocol com.does.not.exist
+expect_rc 2
+
+# ---
+echo " ● Get devices (excluding not-known protocol)…"
+run get-devices --filter-protocol ~com.does.not.exist
+expect_rc 0
+
+# ---
 echo " ● Clearing history…"
 run clear-history ${DEVICE}
 expect_rc 0
