@@ -75,6 +75,7 @@ fu_redfish_multipart_device_location_headers_callback(char *ptr,
 	return size * nmemb;
 }
 
+/* NOLINTBEGIN(readability-function-size) */
 static gboolean
 fu_redfish_multipart_device_write_firmware(FuDevice *device,
 					   FuFirmware *firmware,
@@ -170,7 +171,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 		location = g_strdup(location_tmp);
 	}
 	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
-}
+} /* NOLINTEND(readability-function-size) */
 
 static void
 fu_redfish_multipart_device_set_progress(FuDevice *device, FuProgress *progress)

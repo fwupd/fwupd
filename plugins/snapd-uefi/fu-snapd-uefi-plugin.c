@@ -119,6 +119,7 @@ fu_snapd_uefi_plugin_extract_error_message(const guint8 *data, gsize len)
 	return g_strdup(msg);
 }
 
+/* NOLINTBEGIN(readability-function-size) */
 static gboolean
 fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 				const gchar *endpoint,
@@ -205,7 +206,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 	}
 
 	return TRUE;
-}
+} /* NOLINTEND(readability-function-size) */
 
 static gboolean
 fu_snapd_uefi_plugin_is_in_snap(void)

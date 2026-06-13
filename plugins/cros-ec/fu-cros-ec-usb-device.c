@@ -266,7 +266,7 @@ fu_cros_ec_usb_device_ext_cmd(FuCrosEcUsbDevice *self,
 			      guint8 *cmd_body,
 			      gsize body_size,
 			      guint8 *resp,
-			      gsize *resp_size,
+			      const gsize *resp_size,
 			      gboolean allow_less,
 			      GError **error)
 {

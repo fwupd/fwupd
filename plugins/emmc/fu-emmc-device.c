@@ -236,7 +236,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_emmc_device_ioctl_buffer_cb(FuIoctl *self,
 			       gpointer ptr,
-			       guint8 *buf,
+			       guint8 *buf /* NOLINT(readability-non-const-parameter) */,
 			       gsize bufsz,
 			       GError **error)
 {

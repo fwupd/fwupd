@@ -138,7 +138,7 @@ fu_efi_lz77_decompressor_get_bits(FuEfiLz77DecompressHelper *helper,
 static gboolean
 fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 					    guint16 number_of_symbols,
-					    guint8 *code_length_array,
+					    const guint8 *code_length_array,
 					    guint16 mapping_table_bits,
 					    guint16 *table,
 					    GError **error)

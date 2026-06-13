@@ -1,48 +1,48 @@
 # -*- yaml -*-
 
 Checks:
-  - -*
-
+  # desired group patterns
   - bugprone-*
+  - cert-*
+  - clang-analyzer-*
+  - concurrency-*
+  - linuxkernel-*
+  - misc-*
+  - modernize-*
+  - performance-*
+  - portability-*
+  - readability-*
+
+  # TODO: currently required exclusions; fix as many as possible.
+  # review fixes carefully so as not to simply mask an underlying mistake!
   - -bugprone-branch-clone # TODO: enable and autofix
-  - -bugprone-casting-through-void
   - -bugprone-easily-swappable-parameters
   - -bugprone-implicit-widening-of-multiplication-result
   - -bugprone-macro-parentheses
-  - -bugprone-misplaced-widening-cast
   - -bugprone-multi-level-implicit-pointer-conversion
   - -bugprone-narrowing-conversions
   - -bugprone-reserved-identifier
-  - -bugprone-unchecked-string-to-number-conversion
-
-  # - clang-analyzer-*
-
-  # - clang-diagnostics-*
-
-  - misc-*
+  - -cert-dcl37-c
+  - -cert-dcl51-cpp
+  - -cert-err33-c
+  - -cert-err34-c
+  - -clang-analyzer-core.NullDereference
+  - -clang-analyzer-deadcode.DeadStores
+  - -clang-analyzer-optin.core.EnumCastOutOfRange
+  - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+  - -clang-analyzer-unix.Malloc # issues with g_autofree, g_auto
+  - -concurrency-mt-unsafe
   - -misc-header-include-cycle
   - -misc-include-cleaner
   - -misc-no-recursion
-  - -misc-unused-parameters
-
-  - modernize-*
+  - -misc-unused-parameters # difficult with GObject-style C
   - -modernize-macro-to-enum
-
-  - performance-*
-  - -performance-no-int-to-ptr
-
-  - readability-*
-  - -readability-avoid-const-params-in-decls
   - -readability-avoid-unconditional-preprocessor-if
-  - -readability-braces-around-statements
-  - -readability-enum-initial-value
-  - -readability-function-cognitive-complexity
-  - -readability-function-size # TODO: enable and fix or suppress with NOLINT
+  - -readability-braces-around-statements # causes a huge diff
+  - -readability-function-cognitive-complexity # may need tweaking, long test functions, etc.
   - -readability-identifier-length
   - -readability-magic-numbers
-  - -readability-non-const-parameter
   - -readability-suspicious-call-argument
   - -readability-uppercase-literal-suffix
-  - -readability-use-concise-preprocessor-directives
 
 WarningsAsErrors: "*"
