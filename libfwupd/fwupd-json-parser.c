@@ -207,6 +207,35 @@ fwupd_json_parser_unescape_char(gchar data)
 }
 
 static gboolean
+fwupd_json_parser_helper_add_acc_alnum(FwupdJsonParserHelper *helper, GError **error)
+{
+	const guint8 *buf = helper->buf->data;
+	gsize offset;
+	gsize len;
+	guint bufsz = helper->buf->len;
+
+	/* the common case is "another non-control char" */
+	for (offset = helper->buf_offset + 1; offset < bufsz; offset++) {
+		if (!g_ascii_isalnum(buf[offset]))
+			break;
+	}
+	len = offset - helper->buf_offset;
+	if (G_UNLIKELY(helper->max_quoted > 0 && helper->acc->len + len > helper->max_quoted)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "token too long, limit was %u",
+			    helper->max_quoted);
+		return FALSE;
+	}
+	g_string_append_len(helper->acc, (const gchar *)buf + helper->buf_offset, len);
+
+	/* success */
+	helper->buf_offset = offset - 1;
+	return TRUE;
+}
+
+static gboolean
 fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 					      FwupdJsonParserToken *token,
 					      GRefString **str,
@@ -252,21 +281,25 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 				return FALSE;
 			}
 			helper->is_escape = FALSE;
+			helper->newlinecnt = 0;
+			helper->whitespacecnt = 0;
+			g_string_append_c(helper->acc, data);
+			if (G_UNLIKELY(helper->max_quoted > 0 &&
+				       helper->acc->len > helper->max_quoted)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "token too long, limit was %u",
+					    helper->max_quoted);
+				return FALSE;
+			}
+			return TRUE;
 		}
 
 		/* save acc */
 		helper->newlinecnt = 0;
 		helper->whitespacecnt = 0;
-		g_string_append_c(helper->acc, data);
-		if (G_UNLIKELY(helper->max_quoted > 0 && helper->acc->len > helper->max_quoted)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "token too long, limit was %u",
-				    helper->max_quoted);
-			return FALSE;
-		}
-		return TRUE;
+		return fwupd_json_parser_helper_add_acc_alnum(helper, error);
 	}
 
 	/* newline, for error messages */
@@ -344,9 +377,8 @@ fwupd_json_parser_helper_get_next_token_chunk(FwupdJsonParserHelper *helper,
 	}
 
 	/* save acc */
-	g_string_append_c(helper->acc, data);
 	helper->whitespacecnt = 0;
-	return TRUE;
+	return fwupd_json_parser_helper_add_acc_alnum(helper, error);
 }
 
 static gboolean

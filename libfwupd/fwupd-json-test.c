@@ -180,6 +180,7 @@ fwupd_json_parser_invalid_func(void)
 	    ":1",
 	    "\x02",
 	    "\n\n\n\n\n\n\n[]",
+	    "[\"\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\": \"\"]",
 	    "         []",
 	};
 
