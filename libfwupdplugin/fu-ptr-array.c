@@ -12,14 +12,14 @@
 
 /**
  * fu_ptr_array_copy:
- * @array: a #GPtrArray
- * @func: a copy function
+ * @array: (element-type void): a #GPtrArray
+ * @func: (scope call): a copy function
  * @free_func: (nullable): a free function for the new array
  *
  * Deep copies a #GPtrArray using @func to copy each element. The new array uses @free_func
  * as the element free function.
  *
- * Returns: (transfer full): a new #GPtrArray
+ * Returns: (transfer full) (element-type void): a new #GPtrArray
  *
  * Since: 2.0.8
  **/
