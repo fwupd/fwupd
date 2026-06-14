@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-10 14:50+0100\n"
-"PO-Revision-Date: 2026-06-12 21:01+0000\n"
+"PO-Revision-Date: 2026-06-14 13:36+0000\n"
 "Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
@@ -99,32 +99,32 @@ msgid "Authentication is required to unlock a device"
 msgstr "Seadme lukustuse avamine eeldab autentimist"
 
 msgid "Modify daemon configuration"
-msgstr ""
+msgstr "Taustateenuse seadistuste muutmine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr ""
+msgstr "Taustateenuse seadistuste muutmiseks on vajalik autentimine"
 
 msgid "Reset daemon configuration"
-msgstr ""
+msgstr "Taustateenuste seadistuste lähtestamine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr ""
+msgstr "Taustateenuse seadistuste lähtestamiseks on vajalik autentimine"
 
 msgid "Modify a device property"
-msgstr ""
+msgstr "Seadme omaduste muutmine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a device property"
-msgstr ""
+msgstr "Seadme omaduste muutmiseks on vajalik autentimine"
 
 msgid "Activate the new firmware on the device"
-msgstr ""
+msgstr "Seadmes uue püsivara aktiveerimine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr ""
+msgstr "Seadmes uue püsivara aktiveerimiseks on vajalik autentimine"
 
 msgid "Clear stored firmware update results"
 msgstr ""
@@ -134,18 +134,18 @@ msgid "Authentication is required to clear firmware update results"
 msgstr ""
 
 msgid "Verify device firmware"
-msgstr ""
+msgstr "Seadme püsivara verifitseerimine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to verify firmware on a device"
-msgstr ""
+msgstr "Seadme püsivara verifitseerimiseks on vajalik autentimine"
 
 msgid "Update the stored device verification information"
-msgstr ""
+msgstr "Verifitseeritud seadmeteabe salvestise uuendamine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr ""
+msgstr "Verifitseeritud seadmeteabe salvestise uuendamiseks on vajalik autentimine"
 
 msgid "Get configured remotes"
 msgstr ""
@@ -173,11 +173,11 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr ""
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Seadistatud andmeallika tühjendamine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Seadistatud andmeallikast metaandmete kustutamiseks on vajalik autentimine"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -221,11 +221,11 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
-msgstr ""
+msgstr "Seadme emuleerimisandmete laadimine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to load hardware emulation data"
-msgstr ""
+msgstr "Seadme emuleerimisandmete laadimiseks on vajalik autentimine"
 
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
@@ -243,11 +243,11 @@ msgid "Authentication is required to enable emulation data collection"
 msgstr "Autentimine on vajalik seadme emuleeritava andmekogumise sisselülitamiseks"
 
 msgid "Install firmware on emulated device"
-msgstr ""
+msgstr "Emuleeritud seadmele püsivara paigaldamine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to install firmware on an emulated device"
-msgstr ""
+msgstr "Emuleeritud seadmele püsivara paigaldamiseks on vajalik autentimine"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -259,11 +259,11 @@ msgstr "Näita täiendavat silumise- ja veaotsinguteavet"
 
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
-msgstr ""
+msgstr "Näita dbx-i arvutatud versiooni"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
-msgstr ""
+msgstr "Näita dbx-i kirjete loendit"
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
@@ -295,15 +295,15 @@ msgstr "Selle tarvikuga saab peakasutaja rakendada UEFI dbx-i uuendusi."
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
-msgstr ""
+msgstr "UEFI dbx-abitarvik"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr ""
+msgstr "Argumentide parsimine või töötlemine ei õnnestunud"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Konteksti laadimine ei õnnestunud"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -370,13 +370,13 @@ msgstr "Ühtegi tegevust pole määratletud!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Palun sisesta number vahemikust 0 kuni %u:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Palun sisesta kas %s või %s:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -392,7 +392,7 @@ msgstr "Laadin andmeid…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr ""
+msgstr "Käivitan seadet uuesti…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -435,14 +435,14 @@ msgstr "Pole teada"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
-msgstr ""
+msgstr "Jäänud on alla minuti"
 
 #. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Jäänud on %.0f minut"
+msgstr[1] "Jäänud on %.0f minutit"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
@@ -450,39 +450,39 @@ msgstr "HOIATUS"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
-msgstr ""
+msgstr "Näita silumisteavet kõikide domeenide kohta"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
-msgstr ""
+msgstr "Ära kaasa ajatempli eesliidet"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
-msgstr ""
+msgstr "Ära kaasa logidomeeni eesliidet"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information for a particular domain"
-msgstr ""
+msgstr "Näita konkreetse domeeni kohta taustateenuse täismahulist teavet"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
-msgstr ""
+msgstr "Silumis- ja veaotsingu valikud"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
-msgstr ""
+msgstr "Näita silumis- ja veaotsingu valikuid"
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u seade on uuendatud ja vajab uuesti käivitamist."
+msgstr[1] "%u seadet on uuendatud ja vajavad uuesti käivitamist."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Uuenduse lõpetamiseks taaskäivita."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -520,11 +520,11 @@ msgstr ""
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr ""
+msgstr "Püsivara uuendamise taustateenus"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr ""
+msgstr "Püsivara uuendamise D-Busi teenus"
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
@@ -532,7 +532,7 @@ msgstr ""
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
-msgstr ""
+msgstr "Selle andmeallika võtad kasutusele omal vastutusel."
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
@@ -643,7 +643,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
-msgstr ""
+msgstr "TPM v2.0"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -874,15 +874,15 @@ msgstr ""
 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware Updates"
-msgstr ""
+msgstr "Püsivara uuendused"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
-msgstr ""
+msgstr "Püsivara õigsuse tõendamine"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "Firmware Updater Verification"
-msgstr ""
+msgstr "Püsivara uuendaja kontroll"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform Debugging"
@@ -1180,35 +1180,35 @@ msgstr "Seadistuse väärtuse muutmine õnnestus"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully reset configuration section"
-msgstr ""
+msgstr "Seadistuste jaotise/osa lähtestamine õnnestus"
 
 #. TRANSLATORS: success message for a per-remote setting change
 msgid "Successfully modified remote"
-msgstr ""
+msgstr "Andmeallika muutmine õnnestus"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Andmeallika puhastamine õnnestus"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
-msgstr ""
+msgstr "Andmeallika väljalülitamine õnnestus"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Kas kustutame nüüdseks kasutamata andmeallikast puhverdatud failid?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr ""
+msgstr "Andmeallika sisselülitamine õnnestus"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
-msgstr ""
+msgstr "Testseadmete väljalülitamine õnnestus"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully enabled test devices"
-msgstr ""
+msgstr "Testseadmete sisselülitamine õnnestus"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
@@ -1638,7 +1638,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
-msgstr ""
+msgstr "Laadib seadistatud andmeallikad"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
@@ -1646,7 +1646,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr ""
+msgstr "Uuenda kaugserveri metaandmed"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FWUPD-VERSION]"
@@ -1819,7 +1819,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
-msgstr ""
+msgstr "Muudab antud andmeallikat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
@@ -1827,15 +1827,15 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Cleans a given remote"
-msgstr ""
+msgstr "Tühjendab antud andmeallika"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
-msgstr ""
+msgstr "Võtab antud andmeallika kasutusele"
 
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
-msgstr ""
+msgstr "Eemaldab antud andmeallika kasutuselelt"
 
 #. TRANSLATORS: command description
 msgid "Enables virtual testing devices"
@@ -2099,7 +2099,7 @@ msgstr ""
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
-msgstr ""
+msgstr "Ühtegi andmeallikat pole hetkel kasutusel ja seega pole ka metateavet saadaval."
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
@@ -2107,7 +2107,7 @@ msgstr ""
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
-msgstr ""
+msgstr "Kas võtad antud andmeallika kasutusele?"
 
 msgid "Updating"
 msgstr ""
@@ -2507,7 +2507,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Upload the list of updatable devices to a remote server"
-msgstr ""
+msgstr "Laadi uuendatavate seadmete loend üles kaugserverisse"
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
@@ -2866,7 +2866,7 @@ msgstr ""
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "Puuteekraani uuendus: %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3405,7 +3405,7 @@ msgstr ""
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
-msgstr ""
+msgstr "Andmeallika tunnus"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -3800,11 +3800,11 @@ msgstr ""
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
-msgstr ""
+msgstr "Kas võtad uue andmeallika kasutusele?"
 
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
-msgstr ""
+msgstr "Kas nõustud ja võtad uue andmeallika kasutusele?"
 
 #~ msgid "Password"
 #~ msgstr "Salasõna"
