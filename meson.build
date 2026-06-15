@@ -657,7 +657,7 @@ endif
 # EFI
 if build_standalone
   efi_app_location = get_option('efi_app_location')
-  if efi_app_location == 'auto'
+  if efi_app_location == ''
     efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   endif
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
