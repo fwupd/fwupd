@@ -318,6 +318,7 @@ fu_test_mock_dbx_update_firmware(void)
 	gsize mock_blob_size = 0;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) mock_bytes = NULL;
+	g_autoptr(FuFirmware) firmware = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
 	g_autofree gchar *mock_dbx_update_path =
 	    g_test_build_filename(G_TEST_DIST, "tests/dbx-update.auth", NULL);
 
@@ -326,7 +327,8 @@ fu_test_mock_dbx_update_firmware(void)
 	g_assert_true(ret);
 
 	mock_bytes = g_bytes_new_take(mock_blob, mock_blob_size);
-	return fu_firmware_new_from_bytes(mock_bytes);
+	fu_firmware_set_bytes(firmware, mock_bytes);
+	return g_steal_pointer(&firmware);
 }
 
 static void
