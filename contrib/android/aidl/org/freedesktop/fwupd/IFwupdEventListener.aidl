@@ -1,10 +1,15 @@
 package org.freedesktop.fwupd;
 
+import org.freedesktop.fwupd.FwupdRequest;
+import org.freedesktop.fwupd.FwupdProperties;
+import org.freedesktop.fwupd.FwupdDevice;
+
+@VintfStability
 interface IFwupdEventListener {
     oneway void onChanged();
-    oneway void onDeviceAdded(in PersistableBundle device);
-    oneway void onDeviceRemoved(in PersistableBundle device);
-    oneway void onDeviceChanged(in PersistableBundle device);
-    oneway void onDeviceRequest(in PersistableBundle request);
-    oneway void onPropertiesChanged(in PersistableBundle properties);
+    oneway void onDeviceAdded(in FwupdDevice device);
+    oneway void onDeviceRemoved(in FwupdDevice device);
+    oneway void onDeviceChanged(in FwupdDevice device);
+    oneway void onDeviceRequest(in FwupdRequest request);
+    oneway void onPropertiesChanged(in FwupdProperties properties);
 }

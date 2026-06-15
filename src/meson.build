@@ -292,7 +292,26 @@ if build_daemon
 endif
 
 if host_machine.system() == 'android' and binder_ndk.found()
-  executable(
+  add_languages('cpp', native: false)
+
+  aidl_inc = include_directories('../aidl_generated/include')
+  gen_path = '../aidl_generated/org/freedesktop/fwupd/'
+
+  aidl_generated_src = [
+    gen_path + 'IFwupd.cpp',
+    gen_path + 'IFwupdEventListener.cpp',
+    gen_path + 'FwupdUpdate.cpp',
+    gen_path + 'FwupdDevice.cpp',
+    gen_path + 'FwupdHwid.cpp',
+    gen_path + 'FwupdRemote.cpp',
+    gen_path + 'FwupdInstallRequest.cpp',
+    gen_path + 'FwupdInstallOptions.cpp',
+    gen_path + 'FwupdRequest.cpp',
+    gen_path + 'FwupdMetadata.cpp',
+    gen_path + 'FwupdProperties.cpp',
+  ]
+
+executable(
     'fwupd-binder',
     fwupdengine_rs,
     plugins_hdr,
@@ -300,14 +319,14 @@ if host_machine.system() == 'android' and binder_ndk.found()
       daemon_loader_src,
       'fu-daemon.c',
       'fu-binder-daemon.c',
-      'fu-binder-common.c',
-      'gparcelable.c',
-    ],
+      'fu-binder-daemon-bridge.cpp',
+    ] + aidl_generated_src,
     include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
+      aidl_inc,
     ],
     dependencies: [
       valgrind,
@@ -319,23 +338,24 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdengine,
       plugin_libs,
     ],
-    install: true,
-    install_rpath: libdir_pkg,
-    install_dir: daemon_dir
-  )
+        link_language: 'c',
+        install: true,
+        install_rpath: libdir_pkg,
+        install_dir: daemon_dir
+      )
   fwupdmgr = executable(
     'fwupdmgr-binder',
     sources: [
       'fu-binder-client.c',
-      'fu-binder-common.c',
       'fu-debug.c',
-      'gparcelable.c',
-    ],
+      'fu-binder-client-bridge.cpp',
+    ] + aidl_generated_src,
     include_directories: [
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
       binder_ndk_platform_incdir,
+      aidl_inc, 
     ],
     dependencies: [
       libfwupd_deps,
@@ -347,26 +367,7 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupdplugin,
       fwupdutil,
     ],
-    install: true,
-  )
-  gparcelable_test = executable(
-    'fwupd-gparcelable-test',
-    sources: [
-      'gparcelable-test.c',
-      'gparcelable.c',
-    ],
-    include_directories: [
-      root_incdir,
-      fwupd_incdir,
-      binder_ndk_platform_incdir,
-    ],
-    dependencies: [
-      libfwupd_deps,
-      binder_ndk,
-    ],
-    link_with: [
-      fwupd,
-    ],
+    link_language: 'c', 
     install: true,
   )
 endif
@@ -374,7 +375,8 @@ endif
 if get_option('tests')
   env = environment()
   env.set('G_DEBUG', 'fatal-criticals')
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_Ssrc/fu-binder-client-bridge.cpp
+RCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
 
