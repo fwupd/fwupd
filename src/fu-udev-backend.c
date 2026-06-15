@@ -922,6 +922,7 @@ fu_udev_backend_finalize(GObject *object)
 static void
 fu_udev_backend_init(FuUdevBackend *self)
 {
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_SORT_DEVICES);
 	self->map_paths = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->coldplug_cache =
 	    g_hash_table_new_full(g_str_hash,

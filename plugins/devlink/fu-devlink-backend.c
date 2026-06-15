@@ -175,6 +175,7 @@ fu_devlink_backend_device_removed(FuDevlinkBackend *self, FuDevice *devlink_devi
 static void
 fu_devlink_backend_init(FuDevlinkBackend *self)
 {
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_SORT_DEVICES);
 }
 
 static void

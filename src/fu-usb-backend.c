@@ -494,6 +494,7 @@ fu_usb_backend_finalize(GObject *object)
 static void
 fu_usb_backend_init(FuUsbBackend *self)
 {
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_SORT_DEVICES);
 #ifndef HAVE_UDEV
 	/* to escape the thread into the mainloop */
 	g_mutex_init(&self->idle_events_mutex);

@@ -173,6 +173,18 @@ fu_backend_emulate_func(void)
 }
 
 static void
+fu_backend_flags_func(void)
+{
+	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, NULL);
+
+	g_assert_false(fu_backend_has_flag(backend, FU_BACKEND_FLAG_SORT_DEVICES));
+	fu_backend_add_flag(backend, FU_BACKEND_FLAG_SORT_DEVICES);
+	g_assert_true(fu_backend_has_flag(backend, FU_BACKEND_FLAG_SORT_DEVICES));
+	fu_backend_add_flag(backend, FU_BACKEND_FLAG_SORT_DEVICES);
+	g_assert_true(fu_backend_has_flag(backend, FU_BACKEND_FLAG_SORT_DEVICES));
+}
+
+static void
 fu_backend_func(void)
 {
 	FuDevice *dev;
@@ -226,6 +238,7 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
+	g_test_add_func("/fwupd/backend/flags", fu_backend_flags_func);
 	g_test_add_func("/fwupd/backend/emulate", fu_backend_emulate_func);
 	return g_test_run();
 }

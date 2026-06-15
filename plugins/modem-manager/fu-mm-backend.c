@@ -497,6 +497,7 @@ fu_mm_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 static void
 fu_mm_backend_init(FuMmBackend *self)
 {
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_SORT_DEVICES);
 }
 
 static void

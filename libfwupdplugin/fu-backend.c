@@ -22,6 +22,7 @@
 typedef struct {
 	FuContext *ctx;
 	gchar *name;
+	FuBackendFlags flags;
 	gboolean enabled;
 	gboolean done_setup;
 	gboolean can_invalidate;
@@ -559,6 +560,42 @@ fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error)
 }
 
 /**
+ * fu_backend_add_flag:
+ * @self: a #FuBackend
+ * @flag: the backend flag
+ *
+ * Adds a specific flag to the backend.
+ *
+ * Since: 2.1.6
+ **/
+void
+fu_backend_add_flag(FuBackend *self, FuBackendFlags flag)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_BACKEND(self));
+	priv->flags |= flag;
+}
+
+/**
+ * fu_backend_has_flag:
+ * @self: a #FuBackend
+ * @flag: the backend flag
+ *
+ * Finds if the backend has a specific flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 2.1.6
+ **/
+gboolean
+fu_backend_has_flag(FuBackend *self, FuBackendFlags flag)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
+	return (priv->flags & flag) > 0;
+}
+
+/**
  * fu_backend_get_name:
  * @self: a #FuBackend
  *
@@ -679,7 +716,8 @@ fu_backend_get_devices(FuBackend *self)
 	values = g_hash_table_get_values(priv->devices);
 	for (GList *l = values; l != NULL; l = l->next)
 		g_ptr_array_add(devices, g_object_ref(l->data));
-	g_ptr_array_sort(devices, fu_backend_get_devices_sort_cb);
+	if (priv->flags & FU_BACKEND_FLAG_SORT_DEVICES)
+		g_ptr_array_sort(devices, fu_backend_get_devices_sort_cb);
 	return g_steal_pointer(&devices);
 }
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-backend-struct.h"
 #include "fu-context.h"
 #include "fu-device.h"
 
@@ -56,6 +57,11 @@ struct _FuBackendClass {
 					     GError **error)G_GNUC_WARN_UNUSED_RESULT;
 };
 
+void
+fu_backend_add_flag(FuBackend *self, FuBackendFlags flag) G_GNUC_NON_NULL(1);
+gboolean
+fu_backend_has_flag(FuBackend *self, FuBackendFlags flag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 const gchar *
 fu_backend_get_name(FuBackend *self) G_GNUC_NON_NULL(1);
 FuContext *

@@ -725,6 +725,7 @@ fu_redfish_backend_init(FuRedfishBackend *self)
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
+	fu_backend_add_flag(FU_BACKEND(self), FU_BACKEND_FLAG_SORT_DEVICES);
 }
 
 FuRedfishBackend *
