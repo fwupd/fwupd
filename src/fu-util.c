@@ -3164,6 +3164,10 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* are the remotes very old */
+	if (!fu_util_perhaps_refresh_remotes(self, error))
+		return FALSE;
+
 	/* DEVICE-ID and GUID are acceptable args to update */
 	for (guint idx = 0; idx < g_strv_length(values); idx++) {
 		if (!fwupd_guid_is_valid(values[idx]) && !fwupd_device_id_is_valid(values[idx])) {
