@@ -39,8 +39,8 @@ option(
 )
 option('efi_app_location',
   type: 'string',
-  value: 'auto',
-  description: 'EFI app location ("auto" uses $libexecdir/fwupd/efi)',
+  value: '',
+  description: 'EFI app location (empty uses $libexecdir/fwupd/efi)',
 )
 option(
   'efi_binary',
