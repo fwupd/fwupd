@@ -230,7 +230,7 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82, NULL);
 
-	/* create session */
+	/* create session; it is torn down later in ->cleanup() */
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
 	if (backend == NULL)
 		return FALSE;
@@ -301,6 +301,22 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_redfish_hpe_device_cleanup(FuDevice *device,
+			      FuProgress *progress,
+			      FwupdInstallFlags flags,
+			      GError **error)
+{
+	FuRedfishHpeDevice *self = FU_REDFISH_HPE_DEVICE(device);
+	FuRedfishBackend *backend;
+
+	/* log out of the session created in ->write_firmware() */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	return fu_redfish_backend_delete_session(backend, error);
+}
+
 static void
 fu_redfish_hpe_device_set_progress(FuDevice *device, FuProgress *progress)
 {
@@ -323,5 +339,6 @@ fu_redfish_hpe_device_class_init(FuRedfishHpeDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->attach = fu_redfish_hpe_device_attach;
 	device_class->write_firmware = fu_redfish_hpe_device_write_firmware;
+	device_class->cleanup = fu_redfish_hpe_device_cleanup;
 	device_class->set_progress = fu_redfish_hpe_device_set_progress;
 }
