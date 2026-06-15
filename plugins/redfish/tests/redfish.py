@@ -301,6 +301,13 @@ def session_service_sessions():
     )
 
 
+@app.route("/redfish/v1/SessionService/Sessions/<session_id>", methods=["DELETE"])
+def session_service_session_delete(session_id):
+    if request.headers.get("X-Auth-Token") != "1234eabcdeabcdeabcdeabcdeabc1234":
+        return _failure("unauthorised", status=401)
+    return Response(status=200)
+
+
 @app.route("/redfish/v1/TaskService/999")
 def task_manager():
     res = {
