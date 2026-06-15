@@ -6841,8 +6841,9 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* check if the device needs emulation-tag */
 	fu_engine_ensure_device_emulation_tag(self, device);
 
-	/* set or clear the SUPPORTED flag */
-	fu_engine_ensure_device_supported(self, device);
+	/* set or clear the SUPPORTED flag right away when doing device holdplug */
+	if (fu_engine_get_loaded(self))
+		fu_engine_ensure_device_supported(self, device);
 
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children(self, device);
@@ -8649,6 +8650,21 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 	}
 }
 
+static void
+fu_engine_ensure_devices_supported_cb(gpointer data, gpointer user_data)
+{
+	FuDevice *device = FU_DEVICE(data);
+	FuEngine *self = FU_ENGINE(user_data);
+	fu_engine_ensure_device_supported(self, device);
+}
+
+static void
+fu_engine_ensure_devices_supported(FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
+	g_ptr_array_foreach(devices, fu_engine_ensure_devices_supported_cb, self);
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -8978,6 +8994,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	} else {
 		fu_progress_step_done(progress);
 	}
+
+	/* rerun <requires> checks against the full device tree */
+	fu_engine_ensure_devices_supported(self);
 
 	/* dump plugin information to the console */
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
