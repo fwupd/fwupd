@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-10 14:50+0100\n"
-"PO-Revision-Date: 2026-06-02 16:01+0000\n"
+"PO-Revision-Date: 2026-06-15 20:01+0000\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
 "Language: sl\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
-"X-Generator: Weblate 2026.6\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Storitev dobaviteljev strojne programske opreme za Linux (stabilna strojna programska oprema)"
@@ -305,7 +305,7 @@ msgstr "Argumentov ni bilo mogoče razčleniti"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Konteksta ni možno naložiti"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -2888,7 +2888,7 @@ msgstr "Posodobitev slušalk z mikrofonom %s"
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "Posodobitev zaslona na dotik %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
