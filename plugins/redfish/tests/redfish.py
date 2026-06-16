@@ -27,6 +27,7 @@ HARDCODED_PASSWORD = "password2"
 app._percentage545: int = 0
 app._percentage546: int = 0
 app._hpeupdatestate: str = "Idle"
+app._hpeupdateresult = None
 
 
 def _failure(msg: str, status=400):
@@ -44,6 +45,7 @@ def index():
     app._percentage545 = 0
     app._percentage546 = 0
     app._hpeupdatestate = "Idle"
+    app._hpeupdateresult = None
 
     # check password from the config file
     try:
@@ -144,6 +146,8 @@ def update_service():
         }
     elif request.authorization["username"] == HARDCODED_HPE_USERNAME:
         res["Oem"] = {"Hpe": {"State": app._hpeupdatestate}}
+        if app._hpeupdateresult is not None:
+            res["Oem"]["Hpe"]["Result"] = app._hpeupdateresult
         res["HttpPushUri"] = "/FWUpdate-hpe"
     else:
         res["MultipartHttpPushUri"] = "/FWUpdate"
@@ -505,8 +509,19 @@ def fwupdate_hpe():
     fileitem = request.files["files[]"]
     if not fileitem:
         return _failure("no file supplied")
+    filecontents = fileitem.read().decode()
 
-    app._hpeupdatestate = "Complete"
+    if filecontents == "hello":
+        app._hpeupdatestate = "Complete"
+        app._hpeupdateresult = None
+    elif filecontents == "reboot":
+        app._hpeupdatestate = "Error"
+        app._hpeupdateresult = {
+            "Message": "A reset is required",
+            "MessageId": "iLO.2.25.SystemResetRequired",
+        }
+    else:
+        return _failure("data invalid")
     return Response(status=200)
 
 

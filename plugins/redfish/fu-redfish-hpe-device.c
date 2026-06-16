@@ -97,10 +97,12 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 	FuRedfishBackend *backend;
 	const gchar *status;
 	gint64 pc = 0;
+	g_autoptr(GString) message = g_string_new("Unknown failure");
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(FwupdJsonObject) json_oem = NULL;
 	g_autoptr(FwupdJsonObject) json_oem_hpe = NULL;
+	g_autoptr(FwupdJsonObject) json_result = NULL;
 
 	/* create URI and poll */
 	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
@@ -123,30 +125,28 @@ fu_redfish_hpe_device_poll_task_once(FuRedfishDevice *self,
 	if (json_oem_hpe == NULL)
 		return TRUE;
 
+	/* parse the OEM Hpe Result if present: it may flag the device (e.g.
+	 * NEEDS_REBOOT) or raise a specific error, and captures the message
+	 * reused for the generic State=Error fallback below */
+	json_result = fwupd_json_object_get_object(json_oem_hpe, "Result", NULL);
+	if (json_result != NULL) {
+		if (!fu_redfish_device_parse_message(self,
+						     json_result,
+						     ctx->progress,
+						     NULL,
+						     message,
+						     error))
+			return FALSE;
+	}
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+		ctx->completed = TRUE;
+		fu_progress_set_status(ctx->progress, FWUPD_STATUS_IDLE);
+		return TRUE;
+	}
+
 	status = fwupd_json_object_get_string(json_oem_hpe, "State", NULL);
 	if (g_strcmp0(status, "Error") == 0) {
-		const gchar *message = NULL;
-		g_autoptr(FwupdJsonObject) json_result = NULL;
-		/* default error, will be replaced by something more fitting
-		 * in fu_redfish_device_parse_message_id if we can
-		 */
-		json_result = fwupd_json_object_get_object(json_oem_hpe, "Result", NULL);
-		if (json_result != NULL) {
-			const gchar *message_id;
-			message_id = fwupd_json_object_get_string(json_result, "MessageId", NULL);
-			message = fwupd_json_object_get_string(json_result, "Message", NULL);
-			g_debug("message [%s]: %s", message_id, message);
-			if (!fu_redfish_device_parse_message_id(self,
-								message_id,
-								message,
-								ctx->progress,
-								error))
-				return FALSE;
-		}
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    message != NULL ? message : "Unknown failure");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, message->str);
 		return FALSE;
 	}
 	if (!fwupd_json_object_get_integer_with_default(json_oem_hpe,
