@@ -427,6 +427,14 @@ G_BEGIN_DECLS
  * Since: 2.1.1
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT "org.fwupd.hsi.Amd.PlatformSecureBoot"
+/**
+ * FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT: (skip)
+ *
+ * Host Security ID attribute for coreboot verified boot.
+ *
+ * Since: 2.1.6
+ **/
+#define FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT "org.fwupd.hsi.Coreboot.Vboot"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
