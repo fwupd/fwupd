@@ -7,3 +7,11 @@ Flags = ignore-efivars-free-space
 # Manufacturer="Microsoft Corporation", Family="Virtual Machine", ProductName="Virtual Machine"
 [a3c0bcc5-05f2-52f3-aeeb-c4ea4a082dbb]
 Flags = ignore-efivars-free-space
+
+# Manufacturer="Google", ProductName="Google Compute Engine"
+[fa23da35-436a-5d5d-add2-bd549606b553]
+Flags = ignore-efivars-free-space
+
+# Manufacturer="Amazon EC2"
+[859925ad-8af0-5855-ab2c-fbd5fa711f21]
+Flags = ignore-efivars-free-space
