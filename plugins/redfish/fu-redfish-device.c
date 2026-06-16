@@ -659,6 +659,7 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 
 	/* set flags */
 	if (g_pattern_match_simple("Base.*.ResetRequired", message_id) ||
+	    g_pattern_match_simple("iLO.*.SystemResetRequired", message_id) ||
 	    g_pattern_match_simple("IDRAC.*.JCP001", message_id) ||
 	    g_pattern_match_simple("IDRAC.*.RED014", message_id)) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
