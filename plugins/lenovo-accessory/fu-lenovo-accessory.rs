@@ -11,6 +11,7 @@ enum FuLenovoAccessoryCommandClass {
 enum FuLenovoAccessoryInfoId {
     FirmwareVersion = 0x01,
     DeviceMode = 0x04,
+    WirelessPairList = 0x13,
 }
 
 #[repr(u8)]
@@ -27,6 +28,21 @@ enum FuLenovoAccessoryDfuId {
 enum FuLenovoAccessoryCmdDir {
     CmdSet = 0x00,
     CmdGet = 0x01,
+}
+
+#[repr(u8)]
+enum FuLenovoAccessoryPairSlotStatus {
+    NeverPaired = 0x00,
+    Disconnected = 0x01,
+    Connected = 0x02,
+}
+
+#[repr(u8)]
+enum FuLenovoAccessoryPairListOpCode {
+    GetSupportInfo = 0x00,
+    GetSlotInfo = 0x01,
+    DeleteSlot = 0x02,
+    GetSlotInfoV2 = 0x03,
 }
 
 #[repr(u8)]
@@ -56,6 +72,33 @@ enum FuLenovoAccessoryDfuFileType {
 enum FuLenovoAccessoryDfuExitCode {
     DfuSuccess = 0x00,
     Abort = 0x01,
+}
+
+// asynchronous notifications pushed by the dongle over the interface-2
+// interrupt-IN endpoint (input reports, no command/response handshake)
+#[repr(u8)]
+enum FuLenovoAccessoryNotifyEvent {
+    WirelessConnectStatusChange = 0x0B,
+    BtHostMsg = 0x0D,
+}
+
+#[repr(u8)]
+enum FuLenovoAccessoryNotifyConnectStatus {
+    Disconnected = 0x00,
+    Connected = 0x01,
+}
+
+#[derive(Parse, Default)]
+#[repr(C, packed)]
+struct FuStructLenovoAccessoryNotify {
+    report_id: u8 == 0x04,
+    ntf_type: u8 == 0x02,
+    event: FuLenovoAccessoryNotifyEvent,
+    // payload interpretation depends on `event`; for
+    // WirelessConnectStatusChange this is the connect status followed by the
+    // wireless slot number
+    connect_status: FuLenovoAccessoryNotifyConnectStatus,
+    slot: u8,
 }
 
 #[derive(New, Parse, Default)]
@@ -131,4 +174,30 @@ struct FuStructLenovoFwVersionRsp {
     major: u8,
     minor: u8,
     internal: u8,
+}
+
+#[derive(New)]
+#[repr(C, packed)]
+struct FuStructLenovoAccessoryPairListReq {
+    cmd: FuStructLenovoAccessoryCmd,
+    op_code: FuLenovoAccessoryPairListOpCode,
+    target_slot: u8,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructLenovoAccessoryPairSupportInfoRsp {
+    op_code: FuLenovoAccessoryPairListOpCode,
+    max_slot_num: u8,
+    slot_status: [u8; 8],
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructLenovoAccessoryPairSlotInfoV2Rsp {
+    op_code: FuLenovoAccessoryPairListOpCode,
+    target_slot: u8,
+    pid: u16be,
+    mac_addr: [u8; 6],
+    bt_name: [char; 48],
 }

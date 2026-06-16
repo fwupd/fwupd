@@ -7,8 +7,10 @@ plugin_builtins += static_library('fu_plugin_lenovo_accessory',
   sources: [
     'fu-lenovo-accessory-ble-device.c',
     'fu-lenovo-accessory-hid-bootloader.c',
+    'fu-lenovo-accessory-hid-child-device.c',
     'fu-lenovo-accessory-hid-common.c',
     'fu-lenovo-accessory-hid-device.c',
+    'fu-lenovo-accessory-hid-dual-device.c',
     'fu-lenovo-accessory-impl.c',
     'fu-lenovo-accessory-plugin.c',
   ],
@@ -19,7 +21,9 @@ plugin_builtins += static_library('fu_plugin_lenovo_accessory',
 )
 
 device_tests += files(
+  'tests/lenovo-accessory-6202-receiver.json',
   'tests/lenovo-accessory-700-keyboard.json',
   'tests/lenovo-accessory-700-mouse.json',
+  'tests/lenovo-accessory-700-mouse-receiver.json',
   'tests/lenovo-accessory-receiver.json',
 )
