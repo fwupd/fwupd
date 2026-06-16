@@ -12,6 +12,7 @@ INPUT="@installedtestsdir@/fakedevice124.bin \
        @installedtestsdir@/fakedevice124.jcat \
        @installedtestsdir@/fakedevice124.metainfo.xml"
 DEVICE=08d460be0f1f9f128413f816022a6439e0078018
+GUID=b585990a-003e-5270-89d5-3705a17f9a43
 
 error() {
     cat fwupdtool.txt
@@ -286,6 +287,11 @@ if [ $? != 0 ]; then
     echo " ● Skipping tests due to no test device enabled"
     exit 0
 fi
+
+# ---
+echo " ● Reboot cleanup by GUID…"
+run reboot-cleanup ${GUID}
+expect_rc 0
 
 # ---
 echo " ● Get devices (including not-known protocol)…"
