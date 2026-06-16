@@ -6684,40 +6684,38 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 }
 
 static void
-fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
+fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
 {
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
-		fu_device_set_parent(device, device_tmp);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
-		fu_device_set_parent(device_tmp, device);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
-		fu_device_set_parent(device, device_tmp);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
-		fu_device_set_parent(device_tmp, device);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
+	fu_device_set_parent(device, parent);
+	if (fu_engine_get_loaded(self)) {
+		fu_engine_ensure_device_supported(self, device);
+		fu_engine_ensure_device_supported(self, parent);
 	}
 }
 
 static void
-fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
+fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
 {
-	fu_device_set_parent(device, parent);
-	fu_engine_ensure_device_supported(self, device);
-	fu_engine_ensure_device_supported(self, parent);
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
+		fu_engine_set_device_parent(self, device, device_tmp);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
+		fu_engine_set_device_parent(self, device_tmp, device);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
+		fu_engine_set_device_parent(self, device, device_tmp);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
+		fu_engine_set_device_parent(self, device_tmp, device);
+		return;
+	}
 }
 
 static void
