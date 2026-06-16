@@ -16,8 +16,10 @@
 
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
+#include "fu-mtd-struct.h"
 
 typedef struct {
+	FuMtdIntelSpiStatus intel_spi_status;
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
@@ -46,6 +48,52 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
 		fwupd_codec_string_append(str, idt, "FmapRegions", fmap_regions);
 	}
+	if (priv->intel_spi_status != FU_MTD_INTEL_SPI_STATUS_NONE) {
+		g_autofree gchar *tmp = fu_mtd_intel_spi_status_to_string(priv->intel_spi_status);
+		fwupd_codec_string_append(str, idt, "IntelSpiStatus", tmp);
+	}
+}
+
+static gboolean
+fu_mtd_device_ensure_intel_spi_status(FuMtdDevice *self, GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *attr_value = NULL;
+	g_autoptr(FuDevice) parent_device = NULL;
+
+	parent_device = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
+	if (parent_device == NULL)
+		return FALSE;
+	if (!fu_device_probe(parent_device, error))
+		return FALSE;
+	if (fu_device_get_vid(parent_device) != FU_PCI_VENDOR_ID_INTEL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "PCI vendor not Intel");
+		return FALSE;
+	}
+	if (fu_pci_device_get_class_code(FU_PCI_DEVICE(parent_device)) !=
+	    FU_PCI_DEVICE_CLASS_CODE_SERIAL_OTHER) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "PCI vendor not Intel");
+		return FALSE;
+	}
+	priv->intel_spi_status |= FU_MTD_INTEL_SPI_STATUS_FOUND;
+	attr_value = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(parent_device),
+					       "intel_spi_protected",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       error);
+	if (attr_value == NULL)
+		return FALSE;
+	priv->intel_spi_status |= FU_MTD_INTEL_SPI_STATUS_SUPPORTED;
+	if (g_strcmp0(attr_value, "1") == 0)
+		priv->intel_spi_status |= FU_MTD_INTEL_SPI_STATUS_PROTECTED;
+
+	/* success */
+	return TRUE;
 }
 
 static gchar *
@@ -478,12 +526,18 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 		g_debug("truncating metadata size to 0x%x", (guint)priv->metadata_size);
 	}
 
+	/* check if SPI is protected */
+	if (!fu_mtd_device_ensure_intel_spi_status(self, &error_local)) {
+		g_debug("cannot check SPI protection: %s", error_local->message);
+		g_clear_error(&error_local);
+	}
+
 	/* nothing to do */
 	if (fu_device_get_firmware_gtype(device) == G_TYPE_INVALID)
 		return TRUE;
 	if (!fu_mtd_device_metadata_load_versions(self, &error_local)) {
 		g_debug("no version metadata found: %s", error_local->message);
-		return TRUE;
+		g_clear_error(&error_local);
 	}
 
 	/* no version was found */
@@ -1138,6 +1192,33 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 }
 
 static void
+fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FwupdSecurityAttr) attr_spi = NULL;
+
+	/* sanity check */
+	if ((priv->intel_spi_status & FU_MTD_INTEL_SPI_STATUS_FOUND) == 0)
+		return;
+
+	attr_spi = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
+	fwupd_security_attr_set_result_success(attr_spi, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr_spi);
+	if ((priv->intel_spi_status & FU_MTD_INTEL_SPI_STATUS_PROTECTED) == 0) {
+		fwupd_security_attr_set_result(attr_spi, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr_spi, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+	if ((priv->intel_spi_status & FU_MTD_INTEL_SPI_STATUS_SUPPORTED) == 0) {
+		fwupd_security_attr_add_flag(attr_spi, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		fwupd_security_attr_set_result(attr_spi, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+	fwupd_security_attr_add_flag(attr_spi, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_mtd_device_init(FuMtdDevice *self)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
@@ -1188,5 +1269,6 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->read_firmware = fu_mtd_device_read_firmware;
 	device_class->prepare_firmware = fu_mtd_device_prepare_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
+	device_class->add_security_attrs = fu_mtd_device_add_security_attrs;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 }
