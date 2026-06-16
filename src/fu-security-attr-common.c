@@ -205,6 +205,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return g_strdup(_("SPI write protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return g_strdup(_("coreboot verified boot"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: Title: if the part has been fused */
 		return g_strdup(_("Fused platform"));
@@ -417,6 +421,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return _("AMD Firmware Write Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return _("coreboot Verified Boot");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: Title: if the part has been fused */
@@ -640,6 +648,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Platform Secure Boot prevents unsigned software from being loaded "
+			 "when the device starts.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("coreboot verified boot prevents unsigned firmware from being loaded "
 			 "when the device starts.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
