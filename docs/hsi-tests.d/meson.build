@@ -17,6 +17,7 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.IntelBootguard.Policy.json',
   'org.fwupd.hsi.IntelBootguard.Verified.json',
   'org.fwupd.hsi.IntelGds.json',
+  'org.fwupd.hsi.IntelSpi.ProtectedRegions.json',
   'org.fwupd.hsi.Iommu.json',
   'org.fwupd.hsi.Kernel.Lockdown.json',
   'org.fwupd.hsi.Kernel.Tainted.json',
@@ -45,4 +46,3 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.Uefi.Pk.json',
   'org.fwupd.hsi.Uefi.SecureBoot.json',
 )
-

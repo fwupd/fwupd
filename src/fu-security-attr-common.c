@@ -28,6 +28,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return g_strdup(_("SPI BIOS region"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS) == 0) {
+		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
+		return g_strdup(_("Intel SPI protected regions"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return g_strdup(_("SPI BIOS Descriptor"));
@@ -265,6 +269,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
 		return _("Firmware BIOS Region");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS) == 0) {
+		/* TRANSLATORS: Title: SPI refers to the flash chip in the computer */
+		return _("Intel SPI Protected Regions");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
 		/* TRANSLATORS: Title: firmware refers to the flash chip in the computer */
 		return _("Firmware BIOS Descriptor");
@@ -469,6 +477,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("Firmware BIOS Region protects device firmware memory from being "
 			 "tampered with.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Intel SPI Protected Regions prevent host writes to protected firmware "
+			 "regions.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR) == 0) {
 		/* TRANSLATORS: longer description */

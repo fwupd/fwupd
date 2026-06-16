@@ -182,6 +182,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP "org.fwupd.hsi.Spi.SmmBwp"
 /**
+ * FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS: (skip)
+ *
+ * Host Security ID attribute for Intel SPI protected regions
+ *
+ * Since: 2.1.5
+ **/
+#define FWUPD_SECURITY_ATTR_ID_INTEL_SPI_PROTECTED_REGIONS "org.fwupd.hsi.IntelSpi.ProtectedRegions"
+/**
  * FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR: (skip)
  *
  * Host Security ID attribute for Intel SPI descriptor
