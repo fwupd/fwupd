@@ -8,96 +8,16 @@
 
 #include "fu-coreboot-cfr-plugin.h"
 #include "fu-coreboot-cfr-setting.h"
+#include "fu-coreboot-cfr-struct.h"
 
 #define COREBOOT_CFR_GUID	       "ceae4c1d-335b-4685-a4a0-fc4a94eea085"
 #define COREBOOT_CFR_SETTINGS_VARIABLE "CorebootCfrSettings"
-#define COREBOOT_CFR_SETTINGS_MAGIC    0x44574643 /* CFWD */
-#define COREBOOT_CFR_SETTINGS_VERSION	  2
-#define COREBOOT_CFR_FLAG_READONLY     (1u << 0)
-#define COREBOOT_CFR_TYPE_ENUM	       1
-#define COREBOOT_CFR_TYPE_NUMBER       2
-#define COREBOOT_CFR_TYPE_BOOL	       3
-#define COREBOOT_CFR_APPLY_METHOD_NONE	  0
-#define COREBOOT_CFR_APPLY_METHOD_APM_CNT 1
-#define COREBOOT_CFR_SETTINGS_HDR_SZ   16
-#define COREBOOT_CFR_OPTION_RECORD_SZ	  60
-#define COREBOOT_CFR_ENUM_RECORD_SZ    8
-
-typedef struct {
-	guint32 magic;
-	guint16 version;
-	guint16 header_size;
-	guint32 size;
-	guint32 record_count;
-} FuCorebootCfrSettingsHeader;
-
-typedef struct {
-	guint16 type;
-	guint16 header_size;
-	guint32 cfr_flags;
-	guint64 object_id;
-	guint32 runtime_apply_method;
-	guint32 runtime_apply_id;
-	guint32 default_value;
-	guint32 min;
-	guint32 max;
-	guint32 step;
-	guint32 display_flags;
-	guint32 name_size;
-	guint32 ui_name_size;
-	guint32 help_text_size;
-	guint32 enum_count;
-} FuCorebootCfrOptionRecord;
-
-typedef struct {
-	guint32 value;
-	guint32 ui_name_size;
-} FuCorebootCfrEnumRecord;
 
 struct _FuCorebootCfrPlugin {
 	FuPlugin parent_instance;
 };
 
 G_DEFINE_TYPE(FuCorebootCfrPlugin, fu_coreboot_cfr_plugin, FU_TYPE_PLUGIN)
-
-static gboolean
-fu_coreboot_cfr_plugin_read_uint16(const guint8 *buf,
-				   gsize bufsz,
-				   gsize *offset,
-				   guint16 *value,
-				   GError **error)
-{
-	if (!fu_memread_uint16_safe(buf, bufsz, *offset, value, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	*offset += sizeof(guint16);
-	return TRUE;
-}
-
-static gboolean
-fu_coreboot_cfr_plugin_read_uint32(const guint8 *buf,
-				   gsize bufsz,
-				   gsize *offset,
-				   guint32 *value,
-				   GError **error)
-{
-	if (!fu_memread_uint32_safe(buf, bufsz, *offset, value, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	*offset += sizeof(guint32);
-	return TRUE;
-}
-
-static gboolean
-fu_coreboot_cfr_plugin_read_uint64(const guint8 *buf,
-				   gsize bufsz,
-				   gsize *offset,
-				   guint64 *value,
-				   GError **error)
-{
-	if (!fu_memread_uint64_safe(buf, bufsz, *offset, value, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	*offset += sizeof(guint64);
-	return TRUE;
-}
 
 static gchar *
 fu_coreboot_cfr_plugin_read_string(const guint8 *buf,
@@ -131,9 +51,9 @@ fu_coreboot_cfr_plugin_read_string(const guint8 *buf,
 }
 
 static FwupdBiosSettingKind
-fu_coreboot_cfr_plugin_setting_kind(guint16 type)
+fu_coreboot_cfr_plugin_setting_kind(FuCorebootCfrType kind)
 {
-	if (type == COREBOOT_CFR_TYPE_NUMBER)
+	if (kind == FU_COREBOOT_CFR_TYPE_NUMBER)
 		return FWUPD_BIOS_SETTING_KIND_INTEGER;
 	return FWUPD_BIOS_SETTING_KIND_ENUMERATION;
 }
@@ -153,76 +73,19 @@ fu_coreboot_cfr_plugin_add_bool_values(GPtrArray *possible_values,
 }
 
 static gboolean
-fu_coreboot_cfr_plugin_read_header(const guint8 *buf,
-				   gsize bufsz,
-				   gsize *offset,
-				   FuCorebootCfrSettingsHeader *hdr,
-				   GError **error)
-{
-	return fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &hdr->magic, error) &&
-	       fu_coreboot_cfr_plugin_read_uint16(buf, bufsz, offset, &hdr->version, error) &&
-	       fu_coreboot_cfr_plugin_read_uint16(buf, bufsz, offset, &hdr->header_size, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &hdr->size, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &hdr->record_count, error);
-}
-
-static gboolean
-fu_coreboot_cfr_plugin_read_option_record(const guint8 *buf,
-					  gsize bufsz,
-					  gsize *offset,
-					  FuCorebootCfrOptionRecord *rec,
-					  GError **error)
-{
-	return fu_coreboot_cfr_plugin_read_uint16(buf, bufsz, offset, &rec->type, error) &&
-	       fu_coreboot_cfr_plugin_read_uint16(buf, bufsz, offset, &rec->header_size, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->cfr_flags, error) &&
-	       fu_coreboot_cfr_plugin_read_uint64(buf, bufsz, offset, &rec->object_id, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf,
-						  bufsz,
-						  offset,
-						  &rec->runtime_apply_method,
-						  error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf,
-						  bufsz,
-						  offset,
-						  &rec->runtime_apply_id,
-						  error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->default_value, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->min, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->max, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->step, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->display_flags, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->name_size, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->ui_name_size, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf,
-						  bufsz,
-						  offset,
-						  &rec->help_text_size,
-						  error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->enum_count, error);
-}
-
-static gboolean
-fu_coreboot_cfr_plugin_read_enum_record(const guint8 *buf,
-					gsize bufsz,
-					gsize *offset,
-					FuCorebootCfrEnumRecord *rec,
-					GError **error)
-{
-	return fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->value, error) &&
-	       fu_coreboot_cfr_plugin_read_uint32(buf, bufsz, offset, &rec->ui_name_size, error);
-}
-
-static gboolean
 fu_coreboot_cfr_plugin_parse_option(FuEfivars *efivars,
 				    FuBiosSettings *bios_settings,
+				    GInputStream *stream,
 				    const guint8 *buf,
 				    gsize bufsz,
 				    gsize *offset,
 				    GError **error)
 {
-	FuCorebootCfrOptionRecord rec;
+	FuCorebootCfrApplyMethod runtime_apply_method = FU_COREBOOT_CFR_APPLY_METHOD_NONE;
+	FuCorebootCfrType kind = FU_COREBOOT_CFR_TYPE_ENUM;
 	FuEfiVariableAttrs attrs = 0;
+	guint32 runtime_apply_id = 0;
+	g_autoptr(FuStructCorebootCfrOptionRecord) st_option = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *ui_name = NULL;
 	g_autofree gchar *help_text = NULL;
@@ -234,44 +97,59 @@ fu_coreboot_cfr_plugin_parse_option(FuEfivars *efivars,
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	g_autoptr(GPtrArray) possible_values = g_ptr_array_new_with_free_func(g_free);
 
-	if (!fu_coreboot_cfr_plugin_read_option_record(buf, bufsz, offset, &rec, error))
+	st_option = fu_struct_coreboot_cfr_option_record_parse_stream(stream, *offset, error);
+	if (st_option == NULL)
+		return FALSE;
+	if (!fu_size_checked_inc(offset, FU_STRUCT_COREBOOT_CFR_OPTION_RECORD_SIZE, error))
 		return FALSE;
 
-	if (rec.header_size != COREBOOT_CFR_OPTION_RECORD_SZ) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "CFR option record has unsupported size");
-		return FALSE;
-	}
-
-	name = fu_coreboot_cfr_plugin_read_string(buf, bufsz, offset, rec.name_size, error);
+	name = fu_coreboot_cfr_plugin_read_string(
+	    buf,
+	    bufsz,
+	    offset,
+	    fu_struct_coreboot_cfr_option_record_get_name_size(st_option),
+	    error);
 	if (name == NULL)
 		return FALSE;
-	ui_name = fu_coreboot_cfr_plugin_read_string(buf, bufsz, offset, rec.ui_name_size, error);
+	ui_name = fu_coreboot_cfr_plugin_read_string(
+	    buf,
+	    bufsz,
+	    offset,
+	    fu_struct_coreboot_cfr_option_record_get_ui_name_size(st_option),
+	    error);
 	if (ui_name == NULL)
 		return FALSE;
-	help_text =
-	    fu_coreboot_cfr_plugin_read_string(buf, bufsz, offset, rec.help_text_size, error);
+	help_text = fu_coreboot_cfr_plugin_read_string(
+	    buf,
+	    bufsz,
+	    offset,
+	    fu_struct_coreboot_cfr_option_record_get_help_text_size(st_option),
+	    error);
 	if (help_text == NULL)
 		return FALSE;
 
-	for (guint32 i = 0; i < rec.enum_count; i++) {
-		FuCorebootCfrEnumRecord enum_rec;
+	for (guint32 i = 0; i < fu_struct_coreboot_cfr_option_record_get_enum_count(st_option);
+	     i++) {
+		g_autoptr(FuStructCorebootCfrEnumRecord) st_enum = NULL;
 		g_autofree gchar *enum_label = NULL;
 		g_autofree gchar *value = NULL;
 
-		if (!fu_coreboot_cfr_plugin_read_enum_record(buf, bufsz, offset, &enum_rec, error))
+		st_enum = fu_struct_coreboot_cfr_enum_record_parse_stream(stream, *offset, error);
+		if (st_enum == NULL)
 			return FALSE;
-		enum_label = fu_coreboot_cfr_plugin_read_string(buf,
-								bufsz,
-								offset,
-								enum_rec.ui_name_size,
-								error);
+		if (!fu_size_checked_inc(offset, FU_STRUCT_COREBOOT_CFR_ENUM_RECORD_SIZE, error))
+			return FALSE;
+		enum_label = fu_coreboot_cfr_plugin_read_string(
+		    buf,
+		    bufsz,
+		    offset,
+		    fu_struct_coreboot_cfr_enum_record_get_ui_name_size(st_enum),
+		    error);
 		if (enum_label == NULL)
 			return FALSE;
 
-		value = g_strdup_printf("%u", enum_rec.value);
+		value =
+		    g_strdup_printf("%u", fu_struct_coreboot_cfr_enum_record_get_value(st_enum));
 		g_ptr_array_add(possible_values, g_strdup(enum_label));
 		g_hash_table_insert(value_map, g_strdup(enum_label), g_strdup(value));
 		g_hash_table_insert(reverse_value_map,
@@ -279,21 +157,24 @@ fu_coreboot_cfr_plugin_parse_option(FuEfivars *efivars,
 				    g_steal_pointer(&enum_label));
 	}
 
-	if (rec.type == COREBOOT_CFR_TYPE_BOOL)
+	kind = fu_struct_coreboot_cfr_option_record_get_kind(st_option);
+	if (kind == FU_COREBOOT_CFR_TYPE_BOOL)
 		fu_coreboot_cfr_plugin_add_bool_values(possible_values,
 						       value_map,
 						       reverse_value_map);
 
-	if (rec.runtime_apply_method == COREBOOT_CFR_APPLY_METHOD_NONE ||
-	    rec.runtime_apply_id == 0) {
+	runtime_apply_method =
+	    fu_struct_coreboot_cfr_option_record_get_runtime_apply_method(st_option);
+	runtime_apply_id = fu_struct_coreboot_cfr_option_record_get_runtime_apply_id(st_option);
+	if (runtime_apply_method == FU_COREBOOT_CFR_APPLY_METHOD_NONE || runtime_apply_id == 0) {
 		g_debug("skipping CFR option %s without a runtime apply hook", name);
 		return TRUE;
 	}
 
-	if (rec.runtime_apply_method != COREBOOT_CFR_APPLY_METHOD_APM_CNT) {
+	if (runtime_apply_method != FU_COREBOOT_CFR_APPLY_METHOD_APM_CNT) {
 		g_debug("skipping CFR option %s with unsupported runtime apply method 0x%x",
 			name,
-			rec.runtime_apply_method);
+			runtime_apply_method);
 		return TRUE;
 	}
 
@@ -302,24 +183,28 @@ fu_coreboot_cfr_plugin_parse_option(FuEfivars *efivars,
 		return FALSE;
 	}
 
-	setting = fu_coreboot_cfr_setting_new(efivars,
-					      name,
-					      ui_name,
-					      help_text,
-					      fu_coreboot_cfr_plugin_setting_kind(rec.type),
-					      attrs,
-					      rec.runtime_apply_method,
-					      rec.runtime_apply_id,
-					      rec.min,
-					      rec.max,
-					      rec.step,
-					      possible_values,
-					      value_map,
-					      reverse_value_map,
-					      error);
+	setting =
+	    fu_coreboot_cfr_setting_new(efivars,
+					name,
+					ui_name,
+					help_text,
+					fu_coreboot_cfr_plugin_setting_kind(kind),
+					attrs,
+					runtime_apply_method,
+					runtime_apply_id,
+					fu_struct_coreboot_cfr_option_record_get_min(st_option),
+					fu_struct_coreboot_cfr_option_record_get_max(st_option),
+					fu_struct_coreboot_cfr_option_record_get_step(st_option),
+					possible_values,
+					value_map,
+					reverse_value_map,
+					error);
 	if (setting == NULL)
 		return FALSE;
-	fwupd_bios_setting_set_read_only(setting, (rec.cfr_flags & COREBOOT_CFR_FLAG_READONLY) > 0);
+	fwupd_bios_setting_set_read_only(
+	    setting,
+	    (fu_struct_coreboot_cfr_option_record_get_cfr_flags(st_option) &
+	     FU_COREBOOT_CFR_FLAG_READONLY) > 0);
 
 	if (!fu_bios_settings_register_attr(bios_settings, setting, &error_local)) {
 		g_debug("failed to register CFR option %s: %s", name, error_local->message);
@@ -335,11 +220,12 @@ fu_coreboot_cfr_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuCorebootCfrSettingsHeader hdr;
 	gsize bufsz = 0;
 	gsize offset = 0;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(FuBiosSettings) bios_settings = NULL;
+	g_autoptr(FuStructCorebootCfrSettingsHeader) st_hdr = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	if (!fu_efivars_exists(efivars, COREBOOT_CFR_GUID, COREBOOT_CFR_SETTINGS_VARIABLE)) {
 		g_debug("CFR settings metadata not found");
@@ -357,16 +243,18 @@ fu_coreboot_cfr_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		return FALSE;
 	}
 
-	if (!fu_coreboot_cfr_plugin_read_header(buf, bufsz, &offset, &hdr, error))
+	stream = g_memory_input_stream_new_from_data(buf, bufsz, NULL);
+	st_hdr = fu_struct_coreboot_cfr_settings_header_parse_stream(stream, offset, error);
+	if (st_hdr == NULL)
+		return FALSE;
+	if (!fu_size_checked_inc(&offset, FU_STRUCT_COREBOOT_CFR_SETTINGS_HEADER_SIZE, error))
 		return FALSE;
 
-	if (hdr.magic != COREBOOT_CFR_SETTINGS_MAGIC ||
-	    hdr.version != COREBOOT_CFR_SETTINGS_VERSION ||
-	    hdr.header_size != COREBOOT_CFR_SETTINGS_HDR_SZ || hdr.size != bufsz) {
+	if (fu_struct_coreboot_cfr_settings_header_get_size(st_hdr) != bufsz) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "CFR settings metadata has an unsupported header");
+				    "CFR settings metadata has invalid size");
 		return FALSE;
 	}
 
@@ -374,9 +262,11 @@ fu_coreboot_cfr_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	if (bios_settings == NULL)
 		return TRUE;
 
-	for (guint32 i = 0; i < hdr.record_count; i++) {
+	for (guint32 i = 0; i < fu_struct_coreboot_cfr_settings_header_get_record_count(st_hdr);
+	     i++) {
 		if (!fu_coreboot_cfr_plugin_parse_option(efivars,
 							 bios_settings,
+							 stream,
 							 buf,
 							 bufsz,
 							 &offset,

@@ -12,14 +12,13 @@
 #include <unistd.h>
 
 #include "fu-coreboot-cfr-setting.h"
+#include "fu-coreboot-cfr-struct.h"
 
 #define COREBOOT_CFR_GUID	   "ceae4c1d-335b-4685-a4a0-fc4a94eea085"
 #define COREBOOT_CFR_APPLY_DEVICE  "/dev/port"
 #define COREBOOT_CFR_APM_CNT_PORT  0xb2
 #define COREBOOT_CFR_APM_STS_PORT  0xb3
 #define COREBOOT_CFR_APM_APPLY_CMD 0xe3
-#define COREBOOT_CFR_APPLY_METHOD_NONE	  0
-#define COREBOOT_CFR_APPLY_METHOD_APM_CNT 1
 
 struct _FuCorebootCfrSetting {
 	FwupdBiosSetting parent_instance;
@@ -137,9 +136,15 @@ fu_coreboot_cfr_setting_apply_apm_cnt(FuCorebootCfrSetting *self, guint32 value,
 	if (!fu_coreboot_cfr_setting_port_write(fd,
 						COREBOOT_CFR_APM_STS_PORT,
 						runtime_apply_id,
-						error) ||
-	    !fu_coreboot_cfr_setting_port_write(fd, COREBOOT_CFR_APM_CNT_PORT, cmd, error) ||
-	    !fu_coreboot_cfr_setting_port_read(fd, COREBOOT_CFR_APM_STS_PORT, &status, error)) {
+						error)) {
+		g_prefix_error(error, "failed to apply %s at runtime: ", self->name);
+		return FALSE;
+	}
+	if (!fu_coreboot_cfr_setting_port_write(fd, COREBOOT_CFR_APM_CNT_PORT, cmd, error)) {
+		g_prefix_error(error, "failed to apply %s at runtime: ", self->name);
+		return FALSE;
+	}
+	if (!fu_coreboot_cfr_setting_port_read(fd, COREBOOT_CFR_APM_STS_PORT, &status, error)) {
 		g_prefix_error(error, "failed to apply %s at runtime: ", self->name);
 		return FALSE;
 	}
@@ -162,9 +167,9 @@ static gboolean
 fu_coreboot_cfr_setting_apply(FuCorebootCfrSetting *self, guint32 value, GError **error)
 {
 	switch (self->runtime_apply_method) {
-	case COREBOOT_CFR_APPLY_METHOD_NONE:
+	case FU_COREBOOT_CFR_APPLY_METHOD_NONE:
 		return TRUE;
-	case COREBOOT_CFR_APPLY_METHOD_APM_CNT:
+	case FU_COREBOOT_CFR_APPLY_METHOD_APM_CNT:
 		return fu_coreboot_cfr_setting_apply_apm_cnt(self, value, error);
 	default:
 		g_set_error(error,

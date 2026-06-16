@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginCorebootCfr"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_builtin_coreboot_cfr = static_library('fu_plugin_coreboot_cfr',
+  rustgen.process('fu-coreboot-cfr.rs'),
   sources: [
     'fu-coreboot-cfr-plugin.c',
     'fu-coreboot-cfr-setting.c',
