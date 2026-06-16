@@ -43,6 +43,7 @@ struct _FuDbusDaemon {
 	gdouble percentage; /* last emitted */
 	guint owner_id;
 	GPtrArray *system_inhibits;
+	guint set_status_id;
 };
 
 G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
@@ -173,7 +174,7 @@ fu_dbus_daemon_emit_property_changed(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_set_status(FuDbusDaemon *self, FwupdStatus status)
+fu_dbus_daemon_set_status_internal(FuDbusDaemon *self, FwupdStatus status)
 {
 	/* sanity check */
 	if (self->status == status)
@@ -182,6 +183,54 @@ fu_dbus_daemon_set_status(FuDbusDaemon *self, FwupdStatus status)
 
 	g_debug("emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	fu_dbus_daemon_emit_property_changed(self, "Status", g_variant_new_uint32(status));
+}
+
+typedef struct {
+	FuDbusDaemon *self;
+	FwupdStatus status;
+} FuDbusDaemonSetStatusHelper;
+
+static gboolean
+fu_dbus_daemon_set_status_cb(gpointer user_data)
+{
+	FuDbusDaemonSetStatusHelper *helper = (FuDbusDaemonSetStatusHelper *)user_data;
+	FuDbusDaemon *self = FU_DBUS_DAEMON(helper->self);
+	self->set_status_id = 0;
+	fu_dbus_daemon_set_status_internal(self, helper->status);
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_dbus_daemon_set_status(FuDbusDaemon *self, FwupdStatus status)
+{
+	FuDbusDaemonSetStatusHelper *helper;
+
+	/* cancel anything pending */
+	if (self->set_status_id != 0) {
+		g_source_remove(self->set_status_id);
+		self->set_status_id = 0;
+	}
+
+	/* sanity check */
+	if (self->status == status)
+		return;
+
+	/* starting or stopping */
+	if ((self->status == FWUPD_STATUS_IDLE && status != FWUPD_STATUS_WAITING_FOR_AUTH) ||
+	    status == FWUPD_STATUS_IDLE) {
+		fu_dbus_daemon_set_status_internal(self, status);
+		return;
+	}
+
+	/* defer all updates to avoid flickering the UI */
+	helper = g_new0(FuDbusDaemonSetStatusHelper, 1);
+	helper->self = self;
+	helper->status = status;
+	self->set_status_id = g_timeout_add_full(G_PRIORITY_DEFAULT,
+						 250, /* ms */
+						 fu_dbus_daemon_set_status_cb,
+						 helper,
+						 g_free);
 }
 
 static void
@@ -3233,6 +3282,8 @@ fu_dbus_daemon_finalize(GObject *obj)
 	FuDbusDaemon *self = FU_DBUS_DAEMON(obj);
 
 	g_ptr_array_unref(self->system_inhibits);
+	if (self->set_status_id != 0)
+		g_source_remove(self->set_status_id);
 	if (self->client_list != NULL)
 		g_object_unref(self->client_list);
 	if (self->owner_id > 0)
