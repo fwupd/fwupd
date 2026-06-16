@@ -32,6 +32,13 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 				   FuProgress *progress,
 				   GError **error);
 gboolean
+fu_redfish_device_parse_message(FuRedfishDevice *self,
+				FwupdJsonObject *json_message,
+				FuProgress *progress,
+				GHashTable *messages_seen,
+				GString *message,
+				GError **error);
+gboolean
 fu_redfish_device_poll_task(FuRedfishDevice *self,
 			    const gchar *location,
 			    FuProgress *progress,
