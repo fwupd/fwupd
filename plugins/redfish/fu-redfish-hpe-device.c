@@ -227,7 +227,6 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_WAITING_FOR_AUTH, 3, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DOWNLOADING, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 5, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82, NULL);
 
 	/* create session; it is torn down later in ->cleanup() */
