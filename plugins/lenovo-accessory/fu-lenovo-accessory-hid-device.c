@@ -74,7 +74,7 @@ fu_lenovo_accessory_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u", major, minor, micro);
 	fu_device_set_version(device, version);
-	return TRUE;
+	return fu_lenovo_accessory_hid_add_children(FU_LENOVO_ACCESSORY_IMPL(device), error);
 }
 
 static gboolean

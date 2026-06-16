@@ -165,6 +165,129 @@ fu_lenovo_accessory_impl_set_mode(FuLenovoAccessoryImpl *self,
 	return TRUE;
 }
 
+gboolean
+fu_lenovo_accessory_impl_get_pair_support_info(FuLenovoAccessoryImpl *self,
+					       guint8 *max_slot_num,
+					       guint8 *slot_status,
+					       gsize slot_status_sz,
+					       GError **error)
+{
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoAccessoryPairListReq) st_req =
+	    fu_struct_lenovo_accessory_pair_list_req_new();
+	g_autoptr(FuStructLenovoAccessoryPairSupportInfoRsp) st_rsp = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x02);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DEVICE_INFORMATION);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_INFO_ID_WIRELESS_PAIR_LIST |
+		(FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
+	if (!fu_struct_lenovo_accessory_pair_list_req_set_cmd(st_req, st_cmd, error))
+		return FALSE;
+	fu_struct_lenovo_accessory_pair_list_req_set_op_code(
+	    st_req,
+	    FU_LENOVO_ACCESSORY_PAIR_LIST_OP_CODE_GET_SUPPORT_INFO);
+	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
+	if (buf == NULL) {
+		g_prefix_error_literal(error, "get pair support info: ");
+		return FALSE;
+	}
+	st_rsp =
+	    fu_struct_lenovo_accessory_pair_support_info_rsp_parse(buf->data, buf->len, 0x0, error);
+	if (st_rsp == NULL)
+		return FALSE;
+	if (max_slot_num != NULL)
+		*max_slot_num =
+		    fu_struct_lenovo_accessory_pair_support_info_rsp_get_max_slot_num(st_rsp);
+	if (slot_status != NULL) {
+		gsize rsp_status_sz = 0;
+		const guint8 *rsp_status =
+		    fu_struct_lenovo_accessory_pair_support_info_rsp_get_slot_status(
+			st_rsp,
+			&rsp_status_sz);
+		gsize copy_sz = MIN(slot_status_sz, rsp_status_sz);
+		if (!fu_memcpy_safe(slot_status,
+				    slot_status_sz,
+				    0,
+				    rsp_status,
+				    rsp_status_sz,
+				    0,
+				    copy_sz,
+				    error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_lenovo_accessory_impl_get_pair_slot_info_v2(FuLenovoAccessoryImpl *self,
+					       guint8 target_slot,
+					       guint16 *pid,
+					       guint8 *mac_addr,
+					       guint8 mac_addr_sz,
+					       gchar **bt_name,
+					       GError **error)
+{
+	g_autoptr(FuStructLenovoAccessoryCmd) st_cmd = fu_struct_lenovo_accessory_cmd_new();
+	g_autoptr(FuStructLenovoAccessoryPairListReq) st_req =
+	    fu_struct_lenovo_accessory_pair_list_req_new();
+	g_autoptr(FuStructLenovoAccessoryPairSlotInfoV2Rsp) st_rsp = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+
+	fu_struct_lenovo_accessory_cmd_set_data_size(st_cmd, 0x02);
+	fu_struct_lenovo_accessory_cmd_set_command_class(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_COMMAND_CLASS_DEVICE_INFORMATION);
+	fu_struct_lenovo_accessory_cmd_set_command_id(
+	    st_cmd,
+	    FU_LENOVO_ACCESSORY_INFO_ID_WIRELESS_PAIR_LIST |
+		(FU_LENOVO_ACCESSORY_CMD_DIR_CMD_GET << 7));
+	if (!fu_struct_lenovo_accessory_pair_list_req_set_cmd(st_req, st_cmd, error))
+		return FALSE;
+	fu_struct_lenovo_accessory_pair_list_req_set_op_code(
+	    st_req,
+	    FU_LENOVO_ACCESSORY_PAIR_LIST_OP_CODE_GET_SLOT_INFO_V2);
+	fu_struct_lenovo_accessory_pair_list_req_set_target_slot(st_req, target_slot);
+	buf = fu_lenovo_accessory_impl_process(self, st_req->buf, error);
+	if (buf == NULL) {
+		g_prefix_error_literal(error, "get pair slot info v2: ");
+		return FALSE;
+	}
+	st_rsp =
+	    fu_struct_lenovo_accessory_pair_slot_info_v2_rsp_parse(buf->data, buf->len, 0x0, error);
+	if (st_rsp == NULL)
+		return FALSE;
+	if (pid != NULL)
+		*pid = fu_struct_lenovo_accessory_pair_slot_info_v2_rsp_get_pid(st_rsp);
+	if (mac_addr != NULL) {
+		gsize rsp_mac_sz = 0;
+		const guint8 *rsp_mac =
+		    fu_struct_lenovo_accessory_pair_slot_info_v2_rsp_get_mac_addr(st_rsp,
+										  &rsp_mac_sz);
+		gsize copy_sz = MIN(mac_addr_sz, rsp_mac_sz);
+		if (!fu_memcpy_safe(mac_addr,
+				    mac_addr_sz,
+				    0,
+				    rsp_mac,
+				    rsp_mac_sz,
+				    0,
+				    copy_sz,
+				    error))
+			return FALSE;
+	}
+	if (bt_name != NULL)
+		*bt_name = fu_struct_lenovo_accessory_pair_slot_info_v2_rsp_get_bt_name(st_rsp);
+
+	/* success */
+	return TRUE;
+}
+
 /* @exit_code: the exit status code (e.g., 0x00 for success/reboot) */
 gboolean
 fu_lenovo_accessory_impl_dfu_exit(FuLenovoAccessoryImpl *self,
