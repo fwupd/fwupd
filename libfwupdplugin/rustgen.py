@@ -936,8 +936,10 @@ class Generator:
             "import_headers": self.import_headers,
             "includes": self.includes,
         }
-        template_h = self._env.get_template(os.path.basename(h := "fu-rustgen.h.in"))
-        template_c = self._env.get_template(os.path.basename(c := "fu-rustgen.c.in"))
+        h = "fu-rustgen.h.in"
+        c = "fu-rustgen.c.in"
+        template_h = self._env.get_template(os.path.basename(h))
+        template_c = self._env.get_template(os.path.basename(c))
         self.input_files.extend([file_next_to_module(i) for i in [h, c]])
         dst_h = template_h.render(subst)
         dst_c = template_c.render(subst)
