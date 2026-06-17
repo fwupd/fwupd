@@ -53,8 +53,11 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuBluezDevice, fu_bluez_device, FU_TYPE_DEVICE)
 static void
 fu_bluez_device_uuid_item_free(FuBluezDeviceUuidItem *item)
 {
-	if (item->proxy != NULL)
+	if (item->proxy != NULL) {
+		if (item->signal_id > 0)
+			g_signal_handler_disconnect(item->proxy, item->signal_id);
 		g_object_unref(item->proxy);
+	}
 	g_free(item->uuid);
 	g_free(item->path);
 	g_free(item);
