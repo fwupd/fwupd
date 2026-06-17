@@ -58,8 +58,8 @@ fu_uefi_backend_create_device(FuBackend *backend, const gchar *backend_id, GErro
 	g_auto(GStrv) split = g_strsplit(backend_id, "-", 2);
 	g_autoptr(FuUefiDevice) uefi_device = NULL;
 
-	/* validate split array has exactly 2 elements */
-	if (g_strv_length(split) != 2) {
+	/* validate split array has exactly 2 elements, e.g. guid-name */
+	if (g_strv_length(split) != 2 || !fwupd_guid_is_valid(split[0])) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
