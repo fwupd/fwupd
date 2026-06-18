@@ -44,13 +44,8 @@ fu_mm_fastboot_device_detach(FuDevice *device, FuProgress *progress, GError **er
 				       FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE)) {
 		has_response = FALSE;
 	}
-	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
-		return FALSE;
-	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), self->detach_at, has_response, error)) {
-		g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
-		return FALSE;
-	}
-
+    if (!g_spawn_command_line_sync("mbimcli -p -d /dev/cdc-wdm0 --fibocom-set-at-command='AT+SYSCMD=sys_reboot bootloader'", NULL, NULL, NULL, NULL))
+        g_info("mbim reboot to bootloader fail");
 	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
