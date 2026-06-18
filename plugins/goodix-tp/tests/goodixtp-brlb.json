@@ -3,11 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "url": "5ff6b7a47a64477d860efc33f167fda0cd3744184513f3df0813fac3b7145cf7-test1.cab",
-      "emulation-url": "873f32fa448392183c4f4349ecd60c49f42da95a398446082a0c03591e9b4188-colorhug.zip",
+      "url": "b8e21213ae148d9ccb8632743936a8bd55c82ec3309ca4a00e41ef02fd7924fb-GT7936L_16753412.cab",
+      "emulation-url": "eba17d117bca44a08bd132ec4053664beab65d17b1cc805f8fb091d763e00af1-emulation.zip",
       "components": [
         {
-          "version": "0.133634",
+          "version": "0.16753412",
           "guids": [
             "9ab116ed-c5fe-5cd0-b7d3-f0ab9b83909c"
           ]
