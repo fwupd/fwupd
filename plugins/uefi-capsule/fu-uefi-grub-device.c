@@ -126,7 +126,7 @@ fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self, const gchar *app_dst, GE
 		return FALSE;
 	}
 
-	/* refresh GRUB configuration */
+	/* refresh GRUB configuration: nocheck:blocked */
 	argv_mkconfig[0] = grub_mkconfig;
 	argv_mkconfig[2] = fn_grub_cfg;
 	if (!g_spawn_sync(NULL,

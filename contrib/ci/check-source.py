@@ -842,6 +842,8 @@ class Checker:
             "g_strerror": "Use fwupd_strerror() instead",
             "gnutls_malloc": "Use gnutls_calloc() instead",
             "g_base64_encode": "Use fu_base64_encode() instead",
+            "g_spawn_command_line_sync": "Do not call out to external tools",
+            "g_spawn_sync": "Do not call out to external tools",
             "g_variant_get_uint64": "Use fwupd_variant_get_uint64() instead",
             "g_variant_get_uint32": "Use fwupd_variant_get_uint32() instead",
             "g_variant_get_string": "Use fwupd_variant_get_string() instead",
