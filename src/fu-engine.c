@@ -1990,7 +1990,7 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 	 *    ProductVersion: 10.14.6
 	 *    BuildVersion:   18G103
 	 */
-	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))
+	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error)) /* nocheck:blocked */
 		return FALSE;
 	split = g_strsplit(stdout, "\n", -1);
 	for (guint j = 0; split[j] != NULL; j++) {

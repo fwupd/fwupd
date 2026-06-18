@@ -33,6 +33,8 @@ fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
 		return FALSE;
 	if (!g_file_set_contents("/tmp/b", txt2safe->str, txt2safe->len, error))
 		return FALSE;
+
+	/* nocheck:blocked */
 	if (!g_spawn_command_line_sync("diff -urNp /tmp/b /tmp/a", &output, NULL, NULL, error))
 		return FALSE;
 
