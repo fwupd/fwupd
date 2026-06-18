@@ -2515,6 +2515,18 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 			    FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 			helper->flags = fwupd_variant_get_uint64(prop_value) & allowed_mask;
 		}
+
+		/* these are all set by libfwupd < 2.0.x; parse for compatibility */
+		if (g_strcmp0(prop_key, "allow-older") == 0 &&
+		    fwupd_variant_get_boolean(prop_value))
+			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+		if (g_strcmp0(prop_key, "allow-reinstall") == 0 &&
+		    fwupd_variant_get_boolean(prop_value))
+			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+		if (g_strcmp0(prop_key, "allow-branch-switch") == 0 &&
+		    fwupd_variant_get_boolean(prop_value))
+			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+
 		g_variant_unref(prop_value);
 	}
 
