@@ -233,6 +233,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return g_strdup(_("UEFI memory protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT) == 0) {
+		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
+		return g_strdup(_("UEFI NX protection"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
 		return g_strdup(_("UEFI db"));
@@ -437,6 +441,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return _("UEFI Memory Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT) == 0) {
+		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
+		return _("UEFI NX Protection");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
@@ -652,6 +660,10 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The UEFI system can set up memory attributes at boot which prevent "
 			 "common exploits from running.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The UEFI bootloader compiled with Data Execution Prevention support.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: longer description */

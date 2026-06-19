@@ -1,25 +1,24 @@
 {
-  "id": "org.fwupd.hsi.Uefi.MemoryProtection",
-  "name": "Early-boot UEFI Memory Protections",
+  "id": "org.fwupd.hsi.Uefi.NxCompat",
+  "name": "Early-boot NX Protection",
   "description": [
     "The UEFI system can set up memory attributes at boot which prevent common exploits from running. For instance, the stack can be marked as non-executable to prevent running any malicious code that can be written to the stack.",
     "In the same way, writing to sections that are read-only can also be prevented, making the system more secure from attackers.",
-    "BIOS vendors should provide a 'memory attribute protocol' table that tags memory sections with specific properties.",
-    "Microsoft Virtualization-based security (VBS) also requires NX protection for UEFI runtime services for DeviceGuard compliance."
+    "Distribution vendors should tag the bootloader as NX compatible, i.e. compiled with Data Execution Prevention (DEP)."
   ],
   "failure-impact": [
     "The attacker is able to run arbitrary executable code from the stack, or write to memory that is supposed to be read-only."
   ],
   "failure-results": {
-    "not-locked": "memory is still executable or writable"
+    "not-enabled": "the bootloader is not marked as NX compatible"
   },
   "success-results": {
-    "locked": "memory is not executable or writable"
+    "enabled": "the bootloader is compiled as NX compatible"
   },
   "hsi-level": 3,
-  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
+  "resolution": "Contact your OS vendor, who may be able to issue a bootloader update.",
   "references": {
     "https://aka.ms/WHCP": "Microsoft Windows WHCP"
   },
-  "fwupd-version": "2.0.7"
+  "fwupd-version": "2.1.6"
 }

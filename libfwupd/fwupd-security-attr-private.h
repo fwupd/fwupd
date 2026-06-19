@@ -403,6 +403,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION "org.fwupd.hsi.Uefi.MemoryProtection"
 /**
+ * FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT: (skip)
+ *
+ * Host Security ID attribute for NX compatible
+ *
+ * Since: 2.1.6
+ **/
+#define FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT "org.fwupd.hsi.Uefi.NxCompat"
+/**
  * FWUPD_SECURITY_ATTR_ID_UEFI_DB: (skip)
  *
  * Host Security ID attribute for UEFI db certificate store
