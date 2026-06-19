@@ -2573,16 +2573,6 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      _("TPM PCR0 reconstruction is now valid")},
 		     /* ------------------------------------------*/
 		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI memory protection enabled but not locked")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI memory protection enabled and locked")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
 		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
 		      /* TRANSLATORS: HSI event title */
@@ -2592,6 +2582,18 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
 		      /* TRANSLATORS: HSI event title */
 		      _("UEFI memory protection is now unlocked")},
+		     /* ------------------------------------------*/
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI NX bootloader protection is now enabled")},
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI NX bootloader protection is now disabled")},
+		     /* ------------------------------------------*/
 		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,

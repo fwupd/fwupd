@@ -42,6 +42,7 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.Uefi.BootserviceVars.json',
   'org.fwupd.hsi.Uefi.Db.json',
   'org.fwupd.hsi.Uefi.MemoryProtection.json',
+  'org.fwupd.hsi.Uefi.NxCompat.json',
   'org.fwupd.hsi.Uefi.Pk.json',
   'org.fwupd.hsi.Uefi.SecureBoot.json',
 )

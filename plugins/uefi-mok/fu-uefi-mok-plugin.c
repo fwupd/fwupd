@@ -49,20 +49,25 @@ fu_uefi_mok_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 static void
 fu_uefi_mok_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_fw = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_nx = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = fu_uefi_mok_plugin_get_filename(plugin, NULL);
 	if (fn == NULL)
 		return;
-	attr = fu_uefi_mok_attr_new(plugin, fn, &error_local);
-	if (attr == NULL) {
+	blob = fu_bytes_get_contents(fn, &error_local);
+	if (blob == NULL) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
 			g_warning("failed to load %s: %s", fn, error_local->message);
 		return;
 	}
-	fu_security_attrs_append(attrs, attr);
+	attr_fw = fu_uefi_mok_attr_fw_new(plugin, blob);
+	fu_security_attrs_append(attrs, attr_fw);
+	attr_nx = fu_uefi_mok_attr_nx_new(plugin, blob);
+	fu_security_attrs_append(attrs, attr_nx);
 }
 
 static void
