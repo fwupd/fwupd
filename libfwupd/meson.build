@@ -310,6 +310,7 @@ if get_option('tests')
       'fwupd-' + test_name + '-test',
       fwupd_rs_targets,
       sources: [
+        'fwupd-test-bios-setting.c',
         'fwupd-' + test_name + '-test.c',
       ],
       include_directories: [root_incdir],
