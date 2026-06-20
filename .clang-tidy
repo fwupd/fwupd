@@ -27,7 +27,6 @@ Checks:
   - -cert-err33-c
   - -cert-err34-c
   - -clang-analyzer-core.NullDereference
-  - -clang-analyzer-deadcode.DeadStores
   - -clang-analyzer-optin.core.EnumCastOutOfRange
   - -clang-analyzer-optin.performance.Padding # not useful enough
   - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling

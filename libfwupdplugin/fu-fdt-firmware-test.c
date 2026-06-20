@@ -16,7 +16,6 @@ fu_fdt_firmware_func(void)
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *compatible = NULL;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuFirmware) fdt = NULL;
 	g_autoptr(FuFirmware) fdt_root = NULL;
@@ -35,7 +34,6 @@ fu_fdt_firmware_func(void)
 	g_assert_nonnull(tmpdir);
 
 	/* set up test harness */
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_tmpdir(ctx, FU_PATH_KIND_LOCALSTATEDIR_PKG, tmpdir);
 
 	/* write file */

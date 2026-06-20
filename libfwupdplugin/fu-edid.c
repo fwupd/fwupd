@@ -372,7 +372,6 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 		memcpy(st->buf->data + offset_desc,
 		       st_desc->buf->data,
 		       st_desc->buf->len); /* nocheck:blocked */
-		offset_desc += st_desc->buf->len;
 	}
 
 	/* success */

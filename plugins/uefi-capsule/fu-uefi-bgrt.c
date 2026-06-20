@@ -27,7 +27,6 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	guint64 type;
 	guint64 version;
 	g_autofree gchar *bgrtdir = NULL;
-	g_autofree gchar *imagefn = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GFile) file = NULL;
 
@@ -70,7 +69,6 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	/* load image */
 	self->xoffset = fu_uefi_read_file_as_uint64(bgrtdir, "xoffset");
 	self->yoffset = fu_uefi_read_file_as_uint64(bgrtdir, "yoffset");
-	imagefn = g_build_filename(bgrtdir, "image", NULL);
 	file = g_file_new_build_filename(bgrtdir, "image", NULL);
 	if (!fu_firmware_parse_file(FU_FIRMWARE(bmp_image),
 				    file,

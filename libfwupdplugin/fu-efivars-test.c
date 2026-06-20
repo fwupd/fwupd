@@ -213,6 +213,7 @@ fu_efivars_boot_func(void)
 	g_assert_nonnull(loadopt2);
 	entries = fu_efivars_get_boot_entries(efivars, &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(entries);
 	g_assert_nonnull(bootorder2);
 	g_assert_cmpint(bootorder2->len, ==, 2);
 
