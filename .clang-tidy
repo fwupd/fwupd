@@ -22,10 +22,12 @@ Checks:
   - -bugprone-multi-level-implicit-pointer-conversion
   - -bugprone-narrowing-conversions
   - -bugprone-reserved-identifier
+  - -bugprone-unchecked-string-to-number-conversion # sscanf is useful
   - -cert-dcl37-c
   - -cert-dcl51-cpp
   - -cert-err33-c
   - -cert-err34-c
+  - -cert-int09-c # too useful for bitfields
   - -clang-analyzer-core.NullDereference
   - -clang-analyzer-deadcode.DeadStores
   - -clang-analyzer-optin.core.EnumCastOutOfRange
@@ -40,6 +42,7 @@ Checks:
   - -modernize-macro-to-enum
   - -readability-avoid-unconditional-preprocessor-if
   - -readability-braces-around-statements # causes a huge diff
+  - -readability-enum-initial-value
   - -readability-function-cognitive-complexity # may need tweaking, long test functions, etc.
   - -readability-function-size # FIXME: revisit once IgnoreMacros option is broadly available
   - -readability-identifier-length
@@ -47,5 +50,6 @@ Checks:
   - -readability-non-const-parameter # not useful enough
   - -readability-suspicious-call-argument
   - -readability-uppercase-literal-suffix
+  - -portability-avoid-pragma-once # too useful to remove
 
 WarningsAsErrors: "*"
