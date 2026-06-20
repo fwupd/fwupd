@@ -80,6 +80,16 @@
     <distro id="arch">
       <package variant="x86_64" />
     </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64">fonts-noto-cjk</package>
+      <package variant="aarch64">fonts-noto-cjk</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64">fonts-noto-cjk</package>
+      <package variant="aarch64">fonts-noto-cjk</package>
+    </distro>
   </dependency>
   <dependency id="ca-certificates">
     <distro id="centos">
