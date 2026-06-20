@@ -29,7 +29,6 @@ Checks:
   - -cert-err34-c
   - -cert-int09-c # too useful for bitfields
   - -clang-analyzer-core.NullDereference
-  - -clang-analyzer-deadcode.DeadStores
   - -clang-analyzer-optin.core.EnumCastOutOfRange
   - -clang-analyzer-optin.performance.Padding # not useful enough
   - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling

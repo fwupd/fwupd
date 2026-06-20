@@ -822,7 +822,7 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 
 	item = fu_bluez_device_get_uuid_item(self, uuid, error);
 	if (item == NULL)

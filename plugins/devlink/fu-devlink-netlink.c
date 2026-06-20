@@ -408,6 +408,7 @@ fu_devlink_netlink_fu_devlink_netlink_genl_ensure_family_cb(const struct nlmsghd
 	struct nlattr *mcgrp;
 
 	g_return_val_if_fail(nlh != NULL, -1);
+	g_return_val_if_fail(genl != NULL, -1);
 
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_genl_ctrl_attr_cb, tb);
 	if (tb[CTRL_ATTR_FAMILY_ID] == NULL)

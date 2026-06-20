@@ -2156,7 +2156,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 	if (!fu_io_channel_write_raw(io_channel,
 				     (const guint8 *)val,
 				     strlen(val),
@@ -2235,7 +2235,7 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 	if (!fu_io_channel_write_byte_array(io_channel,
 					    buf,
 					    timeout_ms,
@@ -2314,7 +2314,7 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 	if (!fu_io_channel_write_bytes(io_channel,
 				       blob,
 				       timeout_ms,

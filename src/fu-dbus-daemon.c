@@ -1361,12 +1361,10 @@ fu_dbus_daemon_method_set_approved_firmware(FuDbusDaemon *self,
 					    FuEngineRequest *request,
 					    GDBusMethodInvocation *invocation)
 {
-	g_autofree gchar *checksums_str = NULL;
 	g_auto(GStrv) checksums = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
 
 	g_variant_get(parameters, "(^as)", &checksums);
-	checksums_str = g_strjoinv(",", checksums);
 
 	/* authenticate */
 	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
