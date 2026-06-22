@@ -1033,7 +1033,17 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to get flash ID list: ");
 		return FALSE;
 	}
-	g_debug("flash ID total: 0x%x", component_id_total);
+	total_number = fu_struct_lenovo_dock_usage_get_total_number(st_usage);
+	g_debug("flash ID total: 0x%x, firmware total: 0x%x", component_id_total, total_number);
+	if (component_id_total < total_number) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "device has fewer components (0x%x) than firmware (0x%x)",
+			    component_id_total,
+			    total_number);
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* set dock FW Update Ctrl */
@@ -1047,7 +1057,6 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* clear all the target versions and write the new usage table with new sizes  */
-	total_number = fu_struct_lenovo_dock_usage_get_total_number(st_usage);
 	for (guint component_id = 1; component_id < total_number; component_id++) {
 		FuStructLenovoDockUsageItem *st_usage_item;
 		g_autoptr(FuFirmware) img = NULL;
