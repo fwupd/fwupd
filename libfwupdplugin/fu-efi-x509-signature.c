@@ -86,6 +86,7 @@ fu_efi_x509_signature_normalize_vendor(const gchar *text)
 	    {"ASUSTeK Notebook", "ASUSTeK"},
 	    {"Canonical Ltd.", "Canonical"},
 	    {"Dell Inc.", "Dell"},
+	    {"HP Inc.", "HP"},
 	    {"Hughski Ltd.", "Hughski"},
 	    {"Lenovo(Beijing) Ltd", "Lenovo"},
 	    {"Lenovo Ltd.", "Lenovo"},
