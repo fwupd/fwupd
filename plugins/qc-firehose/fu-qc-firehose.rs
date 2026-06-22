@@ -46,6 +46,13 @@ enum FuQcFirehoseSaharaStatus {
     Failed,
 }
 
+#[repr(u32le)]
+#[derive(ToString)]
+enum FuQcFirehoseSaharaImageTxStatus {
+    Pending,
+    Complete,
+}
+
 #[derive(Parse)]
 struct FuQcFirehoseSaharaPkt {
     command_id: FuQcFirehoseSaharaCommandId,
@@ -95,7 +102,7 @@ struct FuQcFirehoseSaharaPktRead64 {
 struct FuQcFirehoseSaharaPktEndOfImage {
     command_id: FuQcFirehoseSaharaCommandId == EndOfImage,
     hdr_length: u32le == $struct_size,
-    _image: u32le,
+    image_id: u32le,
     status: FuQcFirehoseSaharaStatus,
 }
 
@@ -109,5 +116,5 @@ struct FuQcFirehoseSaharaPktDone {
 struct FuQcFirehoseSaharaPktDoneResp {
     command_id: FuQcFirehoseSaharaCommandId == DoneResponse,
     hdr_length: u32le == $struct_size,
-    status: FuQcFirehoseSaharaStatus,
+    image_tx_status: FuQcFirehoseSaharaImageTxStatus,
 }

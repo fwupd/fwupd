@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-qc-firehose-firmware.h"
 #include "fu-qc-firehose-impl.h"
 #include "fu-qc-firehose-sahara-impl.h"
 #include "fu-qc-firehose-struct.h"
@@ -24,6 +25,7 @@ struct _FuQcFirehoseUsbDevice {
 	gsize maxpktsize_in;
 	gsize maxpktsize_out;
 	FuQcFirehoseFunctions supported_functions;
+	GArray *allowed_pending_image_ids;
 };
 
 static void
@@ -246,14 +248,21 @@ fu_qc_firehose_usb_device_impl_prepare_firmware(FuDevice *device,
 						FuFirmwareParseFlags flags,
 						GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_zip_firmware_new();
-	if (!fu_firmware_parse_stream(firmware,
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
+	g_autoptr(FuQcFirehoseFirmware) firmware = fu_qc_firehose_firmware_new();
+
+	for (guint i = 0; i < self->allowed_pending_image_ids->len; i++) {
+		guint32 allowed_image_id =
+		    g_array_index(self->allowed_pending_image_ids, guint32, i);
+		fu_qc_firehose_firmware_add_allowed_pending_image_id(firmware, allowed_image_id);
+	}
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(firmware),
 				      stream,
 				      0x0,
 				      flags | FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME,
 				      error))
 		return NULL;
-	return g_steal_pointer(&firmware);
+	return FU_FIRMWARE(g_steal_pointer(&firmware));
 }
 
 static gboolean
@@ -314,6 +323,38 @@ fu_qc_firehose_usb_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
+static gboolean
+fu_qc_firehose_usb_device_set_quirk_kv(FuDevice *device,
+				       const gchar *key,
+				       const gchar *value,
+				       GError **error)
+{
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
+
+	if (g_strcmp0(key, "QcFirehoseAllowedPendingImageIds") == 0) {
+		g_auto(GStrv) image_ids = g_strsplit(value, ",", -1);
+		for (guint i = 0; image_ids[i] != NULL; i++) {
+			guint64 tmp;
+			guint32 image_id;
+			if (!fu_strtoull(image_ids[i],
+					 &tmp,
+					 0,
+					 G_MAXUINT32,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
+			image_id = (guint32)tmp;
+			g_array_append_val(self->allowed_pending_image_ids, image_id);
+		}
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static GByteArray *
 fu_qc_firehose_usb_device_sahara_impl_read(FuQcFirehoseSaharaImpl *impl,
 					   guint timeout_ms,
@@ -371,21 +412,32 @@ fu_qc_firehose_usb_device_sahara_impl_iface_init(FuQcFirehoseSaharaImplInterface
 static void
 fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 {
+	self->allowed_pending_image_ids = g_array_new(FALSE, FALSE, sizeof(guint32));
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.firehose");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ZIP_FIRMWARE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_QC_FIREHOSE_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 90000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 
 static void
+fu_qc_firehose_usb_device_finalize(GObject *object)
+{
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(object);
+	g_array_unref(self->allowed_pending_image_ids);
+	G_OBJECT_CLASS(fu_qc_firehose_usb_device_parent_class)->finalize(object);
+}
+
+static void
 fu_qc_firehose_usb_device_class_init(FuQcFirehoseUsbDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_qc_firehose_usb_device_finalize;
 	device_class->to_string = fu_qc_firehose_usb_device_to_string;
 	device_class->probe = fu_qc_firehose_usb_device_probe;
 	device_class->replace = fu_qc_firehose_usb_device_replace;
@@ -393,5 +445,6 @@ fu_qc_firehose_usb_device_class_init(FuQcFirehoseUsbDeviceClass *klass)
 	device_class->write_firmware = fu_qc_firehose_usb_device_impl_write_firmware;
 	device_class->attach = fu_qc_firehose_usb_device_attach;
 	device_class->set_progress = fu_qc_firehose_usb_device_set_progress;
+	device_class->set_quirk_kv = fu_qc_firehose_usb_device_set_quirk_kv;
 	fu_device_register_private_flag(device_class, FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 }
