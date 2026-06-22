@@ -1,0 +1,23 @@
+{
+  "id": "org.fwupd.hsi.IntelSpi.ProtectedRegions",
+  "name": "Intel SPI protected regions",
+  "description": [
+    "Intel SPI protected regions prevent host writes to protected firmware regions."
+  ],
+  "failure-impact": [
+    "When protected regions are not locked, an attacker with operating system access may be able to tamper with firmware."
+  ],
+  "failure-results": {
+    "not-found": "Intel SPI protection state not available",
+    "not-locked": "Intel SPI protected regions not locked"
+  },
+  "success-results": {
+    "locked": "Intel SPI protected regions locked"
+  },
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
+  "requires": [
+    "CPUID\\VID_GenuineIntel"
+  ],
+  "hsi-level": 2,
+  "fwupd-version": "2.1.5"
+}

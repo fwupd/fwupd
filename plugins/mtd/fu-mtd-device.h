@@ -16,6 +16,9 @@ struct _FuMtdDeviceClass {
 };
 
 #define FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK "smbios-version-fallback"
+#define FU_MTD_DEVICE_FLAG_INTEL_SPI			  "intel-spi"
+#define FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTION_SUPPORTED "intel-spi-protection-supported"
+#define FU_MTD_DEVICE_FLAG_INTEL_SPI_PROTECTED		  "intel-spi-protected"
 
 gboolean
 fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
