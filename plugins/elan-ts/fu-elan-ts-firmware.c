@@ -55,6 +55,13 @@ fu_elan_ts_firmware_parse_remark_id(FuElanTsFirmware *self, GInputStream *stream
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	page_count = streamsz / FU_ELAN_TS_FIRMWARE_PAGE_SIZE;
+	if (page_count == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware too small for remark ID");
+		return FALSE;
+	}
 	last_page_offset = (page_count - 1) * FU_ELAN_TS_FIRMWARE_PAGE_SIZE;
 
 	/* last page address (the first word of the last page) */
