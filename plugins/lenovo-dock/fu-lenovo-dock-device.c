@@ -1123,7 +1123,6 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 300000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK_USB);
