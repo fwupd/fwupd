@@ -119,6 +119,15 @@ fu_raydium_tp_hid_device_bl_write(FuRaydiumTpHidDevice *self,
 	g_autoptr(FuStructRaydiumTpHidPacket) st1 = fu_struct_raydium_tp_hid_packet_new();
 	g_autoptr(FuStructRaydiumTpHidPacket) st2 = fu_struct_raydium_tp_hid_packet_new();
 
+	if (bufsz < 6) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "buffer size %zu too small, expected >= 6",
+			    bufsz);
+		return FALSE;
+	}
+
 	fu_struct_raydium_tp_hid_packet_set_header3(st1, FU_RAYDIUM_TP_HID_DATA_HEADER3_WR);
 	fu_struct_raydium_tp_hid_packet_set_header4(st1, FU_RAYDIUM_TP_HID_DATA_HEADER4_WR);
 	fu_struct_raydium_tp_hid_packet_set_data0(st1, FU_RAYDIUM_TP_CMD2_WRT);
@@ -160,6 +169,15 @@ fu_raydium_tp_hid_device_bl_read(FuRaydiumTpHidDevice *self,
 	guint8 wait_idle_flag = 0;
 	g_autoptr(GByteArray) inbuf = NULL;
 	g_autoptr(FuStructRaydiumTpHidPacket) st = fu_struct_raydium_tp_hid_packet_new();
+
+	if (rcv_bufsz < 6) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "receive buffer size %zu too small, expected >= 6",
+			    rcv_bufsz);
+		return FALSE;
+	}
 
 	if (rcv_buf[1] == 0xFF) {
 		wait_idle_flag = 1;
