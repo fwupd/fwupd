@@ -645,6 +645,20 @@ fu_lenovo_dock_device_get_component_attrs(FuLenovoDockDevice *self,
 	st_res = fu_struct_lenovo_dock_flash_get_attrs_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
+	if (fu_struct_lenovo_dock_flash_get_attrs_res_get_erase_size(st_res) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "device reported zero erase size");
+		return FALSE;
+	}
+	if (fu_struct_lenovo_dock_flash_get_attrs_res_get_program_size(st_res) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "device reported zero program size");
+		return FALSE;
+	}
 	if (storage_size != NULL)
 		*storage_size = fu_struct_lenovo_dock_flash_get_attrs_res_get_storage_size(st_res);
 	if (erase_size != NULL)
