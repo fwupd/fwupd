@@ -24,6 +24,11 @@ fu_test_engine_udev_hidraw(void)
 	g_autoptr(FuUdevDevice) udev_device3 = NULL;
 	g_autoptr(GError) error = NULL;
 
+#ifndef HAVE_HIDRAW_H
+	g_test_skip("linux/hidraw.h not available");
+	return;
+#endif
+
 	/* set up test harness */
 	testdatadir_quirks = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
 	testdatadir_sysfs = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
