@@ -240,7 +240,7 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* if the device is a GPU try to fetch it from vbios_version */
-	if ((priv->class >> 16) == FU_PCI_DEVICE_BASE_CLS_DISPLAY &&
+	if ((priv->class >> 16) == FU_PCI_DEVICE_CLASS_BASE_DISPLAY &&
 	    fu_device_get_version(device) == NULL) {
 		g_autofree gchar *version = NULL;
 
@@ -361,7 +361,7 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 static void
 fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 {
-	if (base == FU_PCI_DEVICE_BASE_CLS_MASS_STORAGE) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_STORAGE) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Mass Storage Device",
@@ -374,7 +374,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_NETWORK) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_NETWORK) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Network Device",
@@ -387,7 +387,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_DISPLAY) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_DISPLAY) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Display Device",
@@ -400,7 +400,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_MULTIMEDIA) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_MULTIMEDIA) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Multimedia Device",
@@ -413,7 +413,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_MEMORY) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_MEMORY) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Memory Device",
@@ -426,7 +426,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_BRIDGE) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_BRIDGE) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Bridge Device",
@@ -439,7 +439,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_SIMPLE_COMMUNICATION) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_SIMPLE_COMMUNICATION) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Simple Communication Device",
@@ -452,7 +452,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_BASE) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_SYSTEM) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Base Device",
@@ -460,7 +460,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_INPUT) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_INPUT) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Input Device",
@@ -468,7 +468,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_DOCKING) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_DOCKING) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Docking Device",
@@ -481,7 +481,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_PROCESSORS) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_PROCESSOR) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Processor Device",
@@ -489,7 +489,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_SERIAL_BUS) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_SERIAL) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Serial Bus Device",
@@ -497,7 +497,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_WIRELESS) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_WIRELESS) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Wireless Device",
@@ -510,7 +510,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_INTELLIGENT_IO) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_INTELLIGENT) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Intelligent I/O Device",
@@ -518,7 +518,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_SATELLITE) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_SATELLITE) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Satellite Device",
@@ -526,7 +526,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_ENCRYPTION) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_ENCRYPTION) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Encryption Device",
@@ -539,7 +539,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_SIGNAL_PROCESSING) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_SIGNAL) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Signal Processing Device",
@@ -547,7 +547,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_ACCELERATOR) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_ACCELERATOR) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Accelerator Device",
@@ -560,7 +560,7 @@ fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
 				       NULL);
 		return;
 	}
-	if (base == FU_PCI_DEVICE_BASE_CLS_NON_ESSENTIAL) {
+	if (base == FU_PCI_DEVICE_CLASS_BASE_NON_ESSENTIAL) {
 		fu_device_set_quirk_kv(FU_DEVICE(self),
 				       FU_QUIRKS_NAME,
 				       "Non-essential Device",
