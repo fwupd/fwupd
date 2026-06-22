@@ -695,6 +695,8 @@ fu_raydium_tp_hid_device_bl_dma_crc(FuRaydiumTpHidDevice *self,
 						 8,
 						 error))
 		return FALSE;
+	/* this DMA address is %RAYDIUM_CRC_LEN (4 bytes) shorter than expected, but is
+	 * part of the internal design and cannot be changed */
 	if (!fu_raydium_tp_hid_device_set_bl_mem(self,
 						 FU_RAYDIUM_TP_FLASH_CTRL_DMA_EADDR,
 						 base_addr + img_length - RAYDIUM_CRC_LEN,
