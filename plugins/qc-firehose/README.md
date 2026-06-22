@@ -64,6 +64,13 @@ The device should not have the Zero Length Packet sent.
 
 Since: 2.0.7
 
+### `AllowedPendingImageIds`
+
+Comma-separated list of Sahara image IDs for which the update should continue even though the image
+transfer is still pending.
+
+Since: 2.1.6
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.

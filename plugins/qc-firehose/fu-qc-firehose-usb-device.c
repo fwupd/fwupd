@@ -24,6 +24,7 @@ struct _FuQcFirehoseUsbDevice {
 	gsize maxpktsize_in;
 	gsize maxpktsize_out;
 	FuQcFirehoseFunctions supported_functions;
+	GArray *allowed_pending_image_ids;
 };
 
 static void
@@ -273,6 +274,7 @@ fu_qc_firehose_usb_device_impl_write_firmware(FuDevice *device,
 	/* load the sahara binary */
 	if (!fu_qc_firehose_sahara_impl_write_firmware(FU_QC_FIREHOSE_SAHARA_IMPL(self),
 						       firmware,
+						       self->allowed_pending_image_ids,
 						       fu_progress_get_child(progress),
 						       error))
 		return FALSE;
@@ -312,6 +314,40 @@ fu_qc_firehose_usb_device_set_progress(FuDevice *device, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
+}
+
+static gboolean
+fu_qc_firehose_usb_device_set_quirk_kv(FuDevice *device,
+				       const gchar *key,
+				       const gchar *value,
+				       GError **error)
+{
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
+	guint64 tmp = 0;
+	g_auto(GStrv) image_ids = NULL;
+
+	if (g_strcmp0(key, "AllowedPendingImageIds") == 0) {
+		image_ids = g_strsplit(value, ",", -1);
+		for (guint i = 0; image_ids[i] != NULL; i++) {
+			guint32 image_id;
+			if (!fu_strtoull(image_ids[i],
+					 &tmp,
+					 0,
+					 G_MAXUINT32,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
+
+			image_id = (guint32)tmp;
+			g_array_append_val(self->allowed_pending_image_ids, image_id);
+		}
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
 }
 
 static GByteArray *
@@ -371,6 +407,7 @@ fu_qc_firehose_usb_device_sahara_impl_iface_init(FuQcFirehoseSaharaImplInterface
 static void
 fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 {
+	self->allowed_pending_image_ids = g_array_new(FALSE, FALSE, sizeof(guint32));
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.firehose");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -384,9 +421,21 @@ fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 }
 
 static void
+fu_qc_firehose_usb_device_finalize(GObject *object)
+{
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(object);
+
+	g_array_unref(self->allowed_pending_image_ids);
+
+	G_OBJECT_CLASS(fu_qc_firehose_usb_device_parent_class)->finalize(object);
+}
+
+static void
 fu_qc_firehose_usb_device_class_init(FuQcFirehoseUsbDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_qc_firehose_usb_device_finalize;
 	device_class->to_string = fu_qc_firehose_usb_device_to_string;
 	device_class->probe = fu_qc_firehose_usb_device_probe;
 	device_class->replace = fu_qc_firehose_usb_device_replace;
@@ -394,4 +443,5 @@ fu_qc_firehose_usb_device_class_init(FuQcFirehoseUsbDeviceClass *klass)
 	device_class->write_firmware = fu_qc_firehose_usb_device_impl_write_firmware;
 	device_class->attach = fu_qc_firehose_usb_device_attach;
 	device_class->set_progress = fu_qc_firehose_usb_device_set_progress;
+	device_class->set_quirk_kv = fu_qc_firehose_usb_device_set_quirk_kv;
 }

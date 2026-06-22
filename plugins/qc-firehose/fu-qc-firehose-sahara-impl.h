@@ -30,5 +30,6 @@ struct _FuQcFirehoseSaharaImplInterface {
 gboolean
 fu_qc_firehose_sahara_impl_write_firmware(FuQcFirehoseSaharaImpl *self,
 					  FuFirmware *firmware,
+					  GArray *allowed_pending_image_ids,
 					  FuProgress *progress,
 					  GError **error) G_GNUC_NON_NULL(1, 2, 3);

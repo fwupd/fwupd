@@ -130,9 +130,14 @@ fu_qc_firehose_sahara_impl_read64(FuQcFirehoseSaharaImpl *self,
 }
 
 static gboolean
-fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self, GByteArray *buf, GError **error)
+fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self,
+			       GByteArray *buf,
+			       GArray *allowed_pending_image_ids,
+			       gboolean *allow_pending_image,
+			       GError **error)
 {
 	FuQcFirehoseSaharaStatus status;
+	guint32 image_id;
 	g_autoptr(FuQcFirehoseSaharaPktEndOfImage) st = NULL;
 	g_autoptr(FuQcFirehoseSaharaPktDone) st_resp = fu_qc_firehose_sahara_pkt_done_new();
 
@@ -150,27 +155,43 @@ fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self, GByteArray *buf, GE
 			    fu_qc_firehose_sahara_status_to_string(status));
 		return FALSE;
 	}
+	image_id = fu_qc_firehose_sahara_pkt_end_of_image_get_image_id(st);
+	for (guint i = 0; i < allowed_pending_image_ids->len; i++) {
+		guint32 allowed_image_id = g_array_index(allowed_pending_image_ids, guint32, i);
+		if (image_id == allowed_image_id) {
+			*allow_pending_image = TRUE;
+			break;
+		}
+	}
+
 	return fu_qc_firehose_sahara_impl_write(self, st_resp->buf->data, st_resp->buf->len, error);
 }
 
 static gboolean
-fu_qc_firehose_sahara_impl_done(FuQcFirehoseSaharaImpl *self, GByteArray *buf, GError **error)
+fu_qc_firehose_sahara_impl_done(FuQcFirehoseSaharaImpl *self,
+				GByteArray *buf,
+				gboolean allow_pending_image,
+				GError **error)
 {
-	FuQcFirehoseSaharaStatus status;
+	FuQcFirehoseSaharaImageTxStatus status;
 	g_autoptr(FuQcFirehoseSaharaPktDoneResp) st = NULL;
+	gboolean is_incomplete_allowed;
 
 	/* re-parse */
 	st = fu_qc_firehose_sahara_pkt_done_resp_parse(buf->data, buf->len, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	status = fu_qc_firehose_sahara_pkt_done_resp_get_status(st);
-	if (status != FU_QC_FIREHOSE_SAHARA_STATUS_SUCCESS) {
+	status = fu_qc_firehose_sahara_pkt_done_resp_get_image_tx_status(st);
+	is_incomplete_allowed =
+	    status == FU_QC_FIREHOSE_SAHARA_IMAGE_TX_STATUS_PENDING && allow_pending_image;
+
+	if (status != FU_QC_FIREHOSE_SAHARA_IMAGE_TX_STATUS_COMPLETE && !is_incomplete_allowed) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid image status for Done 0x%x: %s",
 			    status,
-			    fu_qc_firehose_sahara_status_to_string(status));
+			    fu_qc_firehose_sahara_image_tx_status_to_string(status));
 		return FALSE;
 	}
 	return TRUE;
@@ -179,11 +200,13 @@ fu_qc_firehose_sahara_impl_done(FuQcFirehoseSaharaImpl *self, GByteArray *buf, G
 gboolean
 fu_qc_firehose_sahara_impl_write_firmware(FuQcFirehoseSaharaImpl *self,
 					  FuFirmware *firmware,
+					  GArray *allowed_pending_image_ids,
 					  FuProgress *progress,
 					  GError **error)
 {
 	const gchar *fnglob = "firehose-prog.mbn|prog_nand*.mbn|prog_firehose*";
 	gboolean done = FALSE;
+	gboolean allow_pending_image = FALSE;
 	g_autoptr(GBytes) blob = NULL;
 
 	blob = fu_firmware_get_image_by_id_bytes(firmware, fnglob, error);
@@ -233,11 +256,15 @@ fu_qc_firehose_sahara_impl_write_firmware(FuQcFirehoseSaharaImpl *self,
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_END_OF_IMAGE:
-			if (!fu_qc_firehose_sahara_impl_eoi(self, buf, error))
+			if (!fu_qc_firehose_sahara_impl_eoi(self,
+							    buf,
+							    allowed_pending_image_ids,
+							    &allow_pending_image,
+							    error))
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_DONE_RESPONSE:
-			if (!fu_qc_firehose_sahara_impl_done(self, buf, error))
+			if (!fu_qc_firehose_sahara_impl_done(self, buf, allow_pending_image, error))
 				return FALSE;
 			done = TRUE;
 			break;
