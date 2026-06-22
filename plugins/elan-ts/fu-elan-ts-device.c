@@ -542,6 +542,14 @@ fu_elan_ts_device_read_page_data(FuElanTsDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* prepare command fields */
+	if (buf->len % 2 != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "page data length %u is not word-aligned",
+			    buf->len);
+		return FALSE;
+	}
 	fu_struct_elan_ts_show_bulk_rom_data_cmd_set_mem_addr(st_cmd, mem_addr);
 	fu_struct_elan_ts_show_bulk_rom_data_cmd_set_data_size_words(st_cmd,
 								     (guint16)(buf->len / 2));
