@@ -176,6 +176,24 @@ fu_pci_device_get_revision(FuPciDevice *self)
 	return priv->revision;
 }
 
+/**
+ * fu_pci_device_get_class_code:
+ * @self: a #FuPciDevice
+ *
+ * Gets the device class code.
+ *
+ * Returns: a #FuPciDeviceClassCode, or %FU_PCI_DEVICE_CLASS_CODE_UNKNOWN if unset or invalid
+ *
+ * Since: 2.1.6
+ **/
+FuPciDeviceClassCode
+fu_pci_device_get_class_code(FuPciDevice *self)
+{
+	FuPciDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_PCI_DEVICE(self), 0x00);
+	return priv->class >> 8;
+}
+
 static void
 fu_pci_device_to_incorporate(FuDevice *device, FuDevice *donor)
 {
