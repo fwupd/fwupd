@@ -43,6 +43,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	guint32 start_addr;
 	guint8 block_num;
 	const guint8 *ic_name = NULL;
+	gsize ic_namesz = 0;
 	g_autoptr(FuStructIlitekItsMmInfo) st_mm = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) blob = NULL;
@@ -85,7 +86,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	mm_ver = fu_struct_ilitek_its_mm_info_get_mapping_ver(st_mm);
-	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(st_mm, NULL);
+	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(st_mm, &ic_namesz);
 	g_debug("mm ver: 0x%06x, protocol ver: 0x%06x",
 		mm_ver,
 		fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
@@ -93,7 +94,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	g_free(self->fw_ic_name);
 	switch ((mm_ver >> 16) & 0xFF) {
 	case 0x02:
-		self->fw_ic_name = g_strdup_printf("%s", (gchar *)ic_name);
+		self->fw_ic_name = fu_strsafe((const gchar *)ic_name, ic_namesz);
 		break;
 	case 0x01:
 	default:
