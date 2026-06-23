@@ -38,6 +38,46 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.21" date="2026-06-23">
+      <description>
+        <p>
+          This release backports fixes for over 250 potential security issues found using various
+          AI security scanners over the last 3 months.
+          The 2.1.x releases include even more fixes and hardening work, and so most users should
+          use those instead; this release is provided for the more conservative distros.
+        </p>
+        <p>This release also fixes the following bugs:</p>
+        <ul>
+          <li>Activate NVM when updating Dell docks</li>
+          <li>Add a timeout to fwupd-refresh.service systemd unit</li>
+          <li>Add vendor name and name for various UEFI certificates</li>
+          <li>Allow Intel GPU firmware downgrade</li>
+          <li>Claim the udev netlink backend before old libusb versions</li>
+          <li>Cleanup all the user inhibits when required</li>
+          <li>Do not include EV_NO_ACTION when calculating the TPM PCRs</li>
+          <li>Do not probe all Nordic devices with USB VID 0x1915</li>
+          <li>Do not support JCat files with ID path components</li>
+          <li>Do not use capsule-on-disk on Lenovo ThinkCentre M60e Tiny</li>
+          <li>Enable efi_app_location to be overrideable at build-time</li>
+          <li>Expand netlink socket buffer to prevent packet loss during event floods</li>
+          <li>Fall back to a generic firmware type when parsing unknown mtd devices</li>
+          <li>Fix genesys-gl32xx enumeration crash due to argument mismatch</li>
+          <li>Fix race with UDisks2 volume discovery during replug</li>
+          <li>Fix the check-reboot-needed command to work correctly</li>
+          <li>Fix the Thunderbolt version number by ignoring the reserved bits</li>
+          <li>Get the fastboot device version and set the version format automatically</li>
+          <li>Re-process the device metadata when required after all devices are added</li>
+          <li>Show translated problems when a device cannot be installed</li>
+          <li>Use CA1 for a SK Hynix NVMe drive</li>
+          <li>Use the UOD approach while updating Dell docks</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Intel Arc Pro B65 and Arc Pro B70</li>
+          <li>SHIFTphone 8 and SHIFT6mq</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.20" date="2026-02-26">
       <description>
         <p>
