@@ -30,6 +30,7 @@
 #include "fwupd-error.h"
 #include "fwupd-json-array.h"
 #include "fwupd-json-parser.h"
+#include "fwupd-network.h"
 #include "fwupd-plugin.h"
 #include "fwupd-release.h"
 #include "fwupd-remote-private.h"
@@ -5987,11 +5988,9 @@ fwupd_client_download_error_is_fatal(const GError *error)
 static gboolean
 fwupd_client_test_network(const gchar *url, GError **error)
 {
-#if GLIB_CHECK_VERSION(2, 66, 0)
-	GNetworkMonitor *monitor;
 	g_autoptr(GUri) uri = NULL;
-	g_autoptr(GError) error_monitor = NULL;
-	g_autoptr(GSocketConnectable) address = NULL;
+	const gchar *hostname;
+	gint port;
 
 	if (g_getenv("FWUPD_IGNORE_NETWORK_REACHABLE") != NULL)
 		return TRUE;
@@ -6000,22 +5999,20 @@ fwupd_client_test_network(const gchar *url, GError **error)
 	if (uri == NULL)
 		return FALSE;
 
-	address = g_network_address_parse(g_uri_get_host(uri), g_uri_get_port(uri), error);
-	if (address == NULL)
-		return FALSE;
-
-	monitor = g_network_monitor_get_default();
-	if (!g_network_monitor_can_reach(monitor, address, NULL, &error_monitor)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_REACHABLE,
-			    "network is unreachable: %s",
-			    error_monitor->message);
+	hostname = g_uri_get_host(uri);
+	if (hostname == NULL || hostname[0] == '\0') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no hostname in URL");
 		return FALSE;
 	}
-#endif
-	/* success */
-	return TRUE;
+
+	port = g_uri_get_port(uri);
+	if (port == -1)
+		port = 80; /* default HTTP port */
+
+	return fwupd_network_is_reachable(hostname, port, error);
 }
 
 typedef struct {
