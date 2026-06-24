@@ -108,7 +108,9 @@ fu_system76_launch_device_version_cb(FuDevice *device, gpointer user_data, GErro
 		return FALSE;
 	}
 
-	version = g_strdup_printf("%s", &data[2]);
+	version = fu_memstrsafe(data, sizeof(data), 0x2, sizeof(data) - 2, error);
+	if (version == NULL)
+		return FALSE;
 	fu_device_set_version(device, version);
 
 	return TRUE;
