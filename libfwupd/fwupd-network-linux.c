@@ -10,9 +10,12 @@
 #include <glib/gstdio.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <string.h>
 #include <sys/socket.h>
 
+#include "fwupd-build.h"
 #include "fwupd-error.h"
 #include "fwupd-network.h"
 
@@ -121,27 +124,67 @@ fwupd_network_addr_is_routable(GInetAddress *addr, GError **error)
 }
 
 typedef struct {
-	GMainLoop *loop;
+	gchar *hostname;
 	GList *addresses; /* (element-type GInetAddress) */
-	GError *error;
+	gboolean done;
+	gint refcount;
+	GMutex mutex;
+	GCond cond;
 } FwupdNetworkResolveData;
 
 static void
-fwupd_network_resolve_done_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
+fwupd_network_resolve_data_unref(FwupdNetworkResolveData *data)
 {
-	FwupdNetworkResolveData *data = user_data;
-	data->addresses =
-	    g_resolver_lookup_by_name_finish(G_RESOLVER(source_object), res, &data->error);
-	g_main_loop_quit(data->loop);
+	if (!g_atomic_int_dec_and_test(&data->refcount))
+		return;
+
+	g_list_free_full(data->addresses, g_object_unref);
+	g_free(data->hostname);
+	g_mutex_clear(&data->mutex);
+	g_cond_clear(&data->cond);
+	g_free(data);
 }
 
-static gboolean
-fwupd_network_resolve_timeout_cb(gpointer user_data)
+/*
+ * Runs on a throwaway thread so a stalled getaddrinfo() cannot block us past the
+ * timeout: if we give up first, the thread keeps running until the resolver
+ * returns and then drops the last reference, freeing the (now unwanted) result.
+ */
+static gpointer
+fwupd_network_resolve_worker(gpointer user_data)
 {
-	GCancellable *cancellable = G_CANCELLABLE(user_data);
-	/* makes the async lookup complete with G_IO_ERROR_CANCELLED */
-	g_cancellable_cancel(cancellable);
-	return G_SOURCE_REMOVE;
+	FwupdNetworkResolveData *data = user_data;
+	struct addrinfo hints = {.ai_socktype = SOCK_STREAM};
+	struct addrinfo *res = NULL;
+	GList *addresses = NULL;
+
+	if (getaddrinfo(data->hostname, NULL, &hints, &res) == 0) {
+		for (struct addrinfo *ai = res; ai != NULL; ai = ai->ai_next) {
+			GInetAddress *addr = NULL;
+
+			if (ai->ai_family == AF_INET) {
+				struct sockaddr_in *sin = (struct sockaddr_in *)ai->ai_addr;
+				addr = g_inet_address_new_from_bytes((guint8 *)&sin->sin_addr,
+								     G_SOCKET_FAMILY_IPV4);
+			} else if (ai->ai_family == AF_INET6) {
+				struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ai->ai_addr;
+				addr = g_inet_address_new_from_bytes((guint8 *)&sin6->sin6_addr,
+								     G_SOCKET_FAMILY_IPV6);
+			}
+			if (addr != NULL)
+				addresses = g_list_prepend(addresses, addr);
+		}
+		freeaddrinfo(res);
+	}
+
+	g_mutex_lock(&data->mutex);
+	data->addresses = g_list_reverse(addresses);
+	data->done = TRUE;
+	g_cond_signal(&data->cond);
+	g_mutex_unlock(&data->mutex);
+
+	fwupd_network_resolve_data_unref(data);
+	return NULL;
 }
 
 /*
@@ -149,54 +192,60 @@ fwupd_network_resolve_timeout_cb(gpointer user_data)
  * @hostname: the hostname to resolve
  * @error: (nullable): optional return location for an error
  *
- * Resolve @hostname like g_resolver_lookup_by_name(), but give up after
- * %FWUPD_NETWORK_DNS_TIMEOUT_MS so a stalled resolver cannot block the caller
- * indefinitely.
+ * Resolve @hostname with getaddrinfo(), bounded by %FWUPD_NETWORK_DNS_TIMEOUT_MS.
+ * getaddrinfo() is used rather than GResolver because the latter, since GLib
+ * 2.85, instantiates the default GNetworkMonitor on the first lookup -- whose
+ * netlink backend dumps the entire kernel route table, the very cost #10525 is
+ * about. getaddrinfo() touches no GNetworkMonitor.
  *
  * Returns: (transfer full) (element-type GInetAddress): the addresses, or %NULL.
  */
 static GList *
 fwupd_network_lookup_by_name_timeout(const gchar *hostname, GError **error)
 {
-	g_autoptr(GMainContext) context = g_main_context_new();
-	g_autoptr(GMainLoop) loop = NULL;
-	g_autoptr(GResolver) resolver = g_resolver_get_default();
-	g_autoptr(GCancellable) cancellable = g_cancellable_new();
-	g_autoptr(GSource) timeout_source = NULL;
-	FwupdNetworkResolveData data = {0};
+	FwupdNetworkResolveData *data = g_new0(FwupdNetworkResolveData, 1);
+	GThread *thread;
+	GList *addresses = NULL;
+	gboolean done;
+	gint64 deadline;
 
-	g_main_context_push_thread_default(context);
-	loop = g_main_loop_new(context, FALSE);
-	data.loop = loop;
+	g_mutex_init(&data->mutex);
+	g_cond_init(&data->cond);
+	data->hostname = g_strdup(hostname);
+	data->refcount = 2; /* this function + the worker thread */
 
-	timeout_source = g_timeout_source_new(FWUPD_NETWORK_DNS_TIMEOUT_MS);
-	g_source_set_callback(timeout_source, fwupd_network_resolve_timeout_cb, cancellable, NULL);
-	g_source_attach(timeout_source, context);
+	thread = g_thread_new("fwupd-resolve", fwupd_network_resolve_worker, data);
+	g_thread_unref(thread); /* detached; reclaimed via the shared refcount */
 
-	g_resolver_lookup_by_name_async(resolver,
-					hostname,
-					cancellable,
-					fwupd_network_resolve_done_cb,
-					&data);
-	g_main_loop_run(loop);
+	deadline =
+	    g_get_monotonic_time() + (FWUPD_NETWORK_DNS_TIMEOUT_MS * G_TIME_SPAN_MILLISECOND);
+	g_mutex_lock(&data->mutex);
+	while (!data->done) {
+		if (!g_cond_wait_until(&data->cond, &data->mutex, deadline))
+			break; /* timed out */
+	}
+	done = data->done;
+	if (done)
+		addresses = g_steal_pointer(&data->addresses);
+	g_mutex_unlock(&data->mutex);
 
-	g_source_destroy(timeout_source);
-	g_main_context_pop_thread_default(context);
+	fwupd_network_resolve_data_unref(data);
 
-	if (data.addresses != NULL)
-		return data.addresses;
-
-	/* our timeout surfaces as a cancellation; turn it into a clear error */
-	if (g_error_matches(data.error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-		g_clear_error(&data.error);
+	if (!done) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_REACHABLE,
 				    "timed out resolving hostname");
 		return NULL;
 	}
-	g_propagate_error(error, g_steal_pointer(&data.error));
-	return NULL;
+	if (addresses == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_REACHABLE,
+				    "failed to resolve hostname");
+		return NULL;
+	}
+	return addresses;
 }
 
 /**
