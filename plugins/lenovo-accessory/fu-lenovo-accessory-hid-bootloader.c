@@ -46,7 +46,7 @@ fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *s
 						       file_type,
 						       fu_chunk_get_address(chk),
 						       fu_chunk_get_data(chk),
-						       (guint8)fu_chunk_get_data_sz(chk),
+						       fu_chunk_get_data_sz(chk),
 						       error))
 			return FALSE;
 		fu_progress_step_done(progress);
