@@ -167,7 +167,7 @@ fu_lenovo_accessory_ble_device_setup(FuDevice *device, GError **error)
 						    &micro,
 						    error))
 		return FALSE;
-	version = g_strdup_printf("%u.%u.%02u", major, minor, micro);
+	version = g_strdup_printf("%u.%u.%u", major, minor, micro);
 	fu_device_set_version(device, version);
 	return TRUE;
 }
