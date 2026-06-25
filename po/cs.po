@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 14:50+0100\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
 "PO-Revision-Date: 2026-06-01 10:01+0000\n"
 "Last-Translator: AsciiWolf <mail@asciiwolf.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
@@ -737,6 +737,10 @@ msgstr "Ochrana SPI před replay"
 msgid "SPI write protection"
 msgstr "Ochrana zápisu do SPI"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Platforma s jednorázovým nastavením (fuse)"
@@ -764,6 +768,10 @@ msgstr "SMM režim uzamčen"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "UEFI ochrana paměti"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -924,6 +932,10 @@ msgstr "AMD – zamezení znovupoužití dříve použitého"
 msgid "AMD Firmware Write Protection"
 msgstr "AMD – ochrana zápisu firmware"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Platforma s jednorázovým nastavením (fuse)"
@@ -947,6 +959,10 @@ msgstr "Režim správy systému"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "UEFI ochrana paměti"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1076,6 +1092,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Platforma zabezpečeného spuštění zabrání zavedení nepodepsaného programu během startu zařízení."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Aby bylo možné zmírnit dopad různých problémů s úniky různých informací z procesoru, je třeba zaktualizovat jeho mikrokód."
 
@@ -1090,6 +1110,10 @@ msgstr "Režim System management je používán firmwarem pro přístup k rezide
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "UEFI systém může nastavovat atributy paměti při startu, které brání spouštění běžných zneužití zranitelností."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1443,6 +1467,10 @@ msgstr "Filtrovat podle sady příznaků zařízení (s tím, že předpona ~ sl
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filtrovat podle sady příznaků vydání (s tím, že předpona ~ slouží pro vynechání), např. 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1979,6 +2007,8 @@ msgstr "Ignorují se striktní SSL kontroly. Pokud chcete, aby se tak příště
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Nepodařilo se zpracovat příznak pro %s"
@@ -3729,20 +3759,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstrukce TPM PCR0 je nyní platná"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "UEFI ochrana paměti zapnuta, ale neuzamčena"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "UEFI ochrana paměti zapnuta a uzamčena"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "UEFI ochrana paměti je nyní uzamčena"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "UEFI ochrana paměti je nyní odemčena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3847,6 +3877,12 @@ msgstr "Povolit nový vzdálený zdroj?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Odsouhlasit a povolit vzdálený zdroj?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "UEFI ochrana paměti zapnuta, ale neuzamčena"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "UEFI ochrana paměti zapnuta a uzamčena"
 
 #~ msgid "Password"
 #~ msgstr "Heslo"
