@@ -5854,10 +5854,10 @@ fu_device_prepare_firmware(FuDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware is %04x bytes smaller than the allowed "
-				    "minimum size of %04x bytes",
+				    "firmware is 0x%04x bytes smaller than the allowed "
+				    "minimum size of 0x%04x bytes",
 				    (guint)(priv->size_min - fw_size),
-				    (guint)priv->size_max);
+				    (guint)priv->size_min);
 			return NULL;
 		}
 	}
