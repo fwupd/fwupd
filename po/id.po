@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 14:50+0100\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
 "PO-Revision-Date: 2026-05-23 11:11+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
@@ -721,6 +721,10 @@ msgstr "Perlindungan replay SPI"
 msgid "SPI write protection"
 msgstr "Proteksi penulisan SPI"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Platform yang memakai fuse"
@@ -748,6 +752,10 @@ msgstr "SMM terkunci"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "Perlindungan memori UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -908,6 +916,10 @@ msgstr "Perlindungan Replay Firmware AMD"
 msgid "AMD Firmware Write Protection"
 msgstr "Perlindungan Tulis Firmware AMD"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Platform Fused"
@@ -931,6 +943,10 @@ msgstr "Mode Manajemen Sistem"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "Perlindungan Memori UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1060,6 +1076,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Boot aman platform mencegah perangkat lunak yang tidak ditandatangani dimuat saat perangkat dinyalakan."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Microcode CPU harus diperbarui untuk mengurangi berbagai masalah-masalah keamanan pengungkapan informasi."
 
@@ -1074,6 +1094,10 @@ msgstr "Mode manajemen sistem digunakan oleh firmware untuk mengakses kode dan d
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "Sistem UEFI dapat mengatur atribut memori saat boot yang mencegah eksploit umum berjalan."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1427,6 +1451,10 @@ msgstr "Memfilter dengan suatu set flag perangkat menggunakan awalan ~ untuk men
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filter dengan set flag rilis menggunakan awalan ~ untuk mengecualikan, misalnya 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1963,6 +1991,8 @@ msgstr "Mengabaikan pemeriksaan ketat SSL, untuk melakukan ini secara otomatis d
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Gagal mengurai flag untuk %s"
@@ -3674,20 +3704,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstruksi PCR0 TPM kini valid"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "Perlindungan memori UEFI sekarang dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "Perlindungan memori UEFI sekarang tidak dikunci"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3792,6 +3822,12 @@ msgstr "Aktifkan remote baru?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Setuju dan aktifkan remote?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
 
 #~ msgid "Password"
 #~ msgstr "Kata Sandi"
