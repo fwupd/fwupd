@@ -880,7 +880,8 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 				return FU_DEVICE(g_steal_pointer(&device_new));
 			}
 		} else {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
+			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				g_warning("failed to create device: %s", error_local->message);
 		}
 
