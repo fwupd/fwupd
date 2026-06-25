@@ -1,0 +1,92 @@
+comment:
+  header: Hi, there. I'm a bot and have been asked to have a look at this.
+  footer: |
+    ---
+    This is an automated comment created by a bot. Responding to the bot or mentioning it won't have any effect.
+
+labels:
+  - name: needs-backport
+    labeled:
+      issue:
+        body: |
+          This fix is also needed in the stable branch,
+          please see [this wiki page](https://github.com/fwupd/fwupd/wiki/Label:-needs%E2%80%90backport)
+          for detailed instructions.
+
+  - name: needinfo
+    labeled:
+      pr:
+        body: |
+          The issue requires more information from somebody that can reproduce the issue.
+          Upstream developers are unable to begin fixing this until more information is provided.
+          Please see [this wiki page](https://github.com/fwupd/fwupd/wiki/Label:-Needinfo)
+          for detailed instructions.
+
+  - name: needs-emulation
+    labeled:
+      pr:
+        body: |
+          We need an emulation that records your device being updated.
+          This will be used in CI to perform an emulated update without the hardware being connected.
+          Please look at [the docs](https://fwupd.github.io/libfwupdplugin/device-emulation.html)
+          for more information on how to capture and validate the data.
+
+          Once captured, the emulation should be attached as an "asset" to a firmware on the LVFS --
+          which obviously means that an LVFS account is required.
+          Please follow [the instructions](https://lvfs.readthedocs.io/en/latest/apply.html) if you do not yet have an LVFS account.
+    unlabeled:
+      pr:
+        body: |
+          Thanks for providing the emulation. Someone will be along shortly to review the PR.
+
+  - name: unittest not implemented
+    labeled:
+      pr:
+        body: |
+          The code added in this PR does not have enough testing in the form of a self test.
+          We need to care about code quality and coverage to ensure the project stays maintainable.
+
+          Please add unit-test for newly introduced functionality and/or to verify fixed issues
+          cannot return.
+    unlabeled:
+      pr:
+        body: |
+          Thanks for providing the unit tests. Someone will be along shortly to review the PR.
+
+  - name: needs-squash
+    labeled:
+      pr:
+        body: |
+          Looks like this PR is ready to merge but it first needs to be squashed.
+          Unless specified otherwise in the comments, this should usually be a single commit only
+          with a descriptive commit message.
+
+          Typically this requires the following commands:
+          ```
+          $ git rebase -i origin/main
+          # change 'pick' to 'fixup' for all followup commits to the primary commit, save and exit
+          $ git log -n1 -p  # verify the commit message and patch is what is expected
+          $ git push -f <remote> <branch>  # force-push the branch to the remote
+          ```
+          Then check in the browser that the PR has been updated to a single commit.
+
+          For details please see any of the tutorials on git interactive rebases and
+          git commit squashing online.
+
+  - name: needs-pr
+    labeled:
+      issue:
+        body: |
+          This issue looks like it should be fixed in fwupd. Unfortunately the maintainers have
+          limited time and access to hardware for testing so the best approach to get this fixed
+          is for you to file a pull request.
+
+          If you're trying to add a new plugin to fwupd, [this guide](https://lvfs.readthedocs.io/en/latest/custom-plugin.html)
+          should get you started.
+
+          For a new plugin, or if you're adding a new feature -- do make sure you also read the
+          [Contributor Guidelines](https://github.com/fwupd/fwupd/blob/main/CONTRIBUTING.md) before
+          starting.
+
+          Meanwhile, I'm closing this bug in eager anticipation of a PR. Thanks!
+        action: close
