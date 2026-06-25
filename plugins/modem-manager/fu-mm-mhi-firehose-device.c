@@ -106,9 +106,15 @@ fu_mm_mhi_firehose_device_search_path_locker_new(FuMmMhiFirehoseDevice *self, GE
 	g_autofree gchar *mm_fw_dir = NULL;
 	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
+        if (self->lib_firmware_path == NULL) {
+                g_set_error_literal(error,
+                                    FWUPD_ERROR,
+                                    FWUPD_ERROR_NOT_FOUND,
+                                    "system firmware path is not set for the device");
+                return NULL;
+        }
+
 	mm_fw_dir = g_build_filename(self->lib_firmware_path, NULL);
-	if (mm_fw_dir == NULL)
-		return NULL;
 	if (g_mkdir_with_parents(mm_fw_dir, 0777) == -1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
