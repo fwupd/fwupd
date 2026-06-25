@@ -427,6 +427,7 @@ fu_processor_device_add_security_attrs_cet_active(FuProcessorDevice *self, FuSec
 		g_warning("failed to test CET: %s", error_local->message);
 		return;
 	}
+	/* nocheck:blocked */
 	if (!g_spawn_command_line_sync(toolfn, NULL, NULL, &exit_status, &error_local)) {
 		g_warning("failed to test CET: %s", error_local->message);
 		return;

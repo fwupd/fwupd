@@ -689,11 +689,11 @@ fu_realtek_mst_device_read_firmware(FuDevice *device, FuProgress *progress, GErr
 	g_autofree guint8 *image_bytes = NULL;
 	g_autoptr(GBytes) firmware_bytes = NULL;
 
-	if (self->active_bank == FU_REALTEK_MST_DEVICE_FLASH_BANK_USER1)
+	if (self->active_bank == FU_REALTEK_MST_DEVICE_FLASH_BANK_USER1) {
 		bank_address = FLASH_USER1_ADDR;
-	else if (self->active_bank == FU_REALTEK_MST_DEVICE_FLASH_BANK_USER2)
+	} else if (self->active_bank == FU_REALTEK_MST_DEVICE_FLASH_BANK_USER2) {
 		bank_address = FLASH_USER2_ADDR;
-	else {
+	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

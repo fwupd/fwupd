@@ -156,6 +156,16 @@ if [ $? != 0 ]; then
 fi
 
 # ---
+echo " ● Getting missing devices (should be none)…"
+fwupdmgr get-devices --filter-protocol com.does.not.exist
+expect_rc 2
+
+# ---
+echo " ● Getting devices (should be at least one)…"
+fwupdmgr get-devices --filter-protocol com.acme.test
+expect_rc 0
+
+# ---
 echo " ● Resetting config…"
 fwupdmgr reset-config test
 expect_rc 0

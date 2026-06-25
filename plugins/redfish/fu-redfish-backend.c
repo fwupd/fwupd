@@ -24,6 +24,7 @@ struct _FuRedfishBackend {
 	gchar *password;
 	gchar *bearer_token;
 	gchar *session_key;
+	gchar *session_uri;
 	guint port;
 	gchar *vendor;
 	gchar *version;
@@ -42,6 +43,9 @@ struct _FuRedfishBackend {
 };
 
 G_DEFINE_TYPE(FuRedfishBackend, fu_redfish_backend, FU_TYPE_BACKEND)
+
+typedef struct curl_slist _curl_slist;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
 
 const gchar *
 fu_redfish_backend_get_vendor(FuRedfishBackend *self)
@@ -66,7 +70,11 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 {
 	FuRedfishRequest *request = g_object_new(FU_TYPE_REDFISH_REQUEST, NULL);
 	CURL *curl;
+#if CURL_AT_LEAST_VERSION(7, 63, 0)
 	CURLU *uri;
+#else
+	g_autofree gchar *uri = NULL;
+#endif
 	g_autofree gchar *user_agent = NULL;
 	g_autofree gchar *port = g_strdup_printf("%u", self->port);
 
@@ -78,11 +86,17 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 
 	/* set up defaults */
 	curl = fu_redfish_request_get_curl(request);
+#if CURL_AT_LEAST_VERSION(7, 63, 0)
 	uri = fu_redfish_request_get_uri(request);
 	(void)curl_url_set(uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
 	(void)curl_url_set(uri, CURLUPART_HOST, self->hostname, 0);
 	(void)curl_url_set(uri, CURLUPART_PORT, port, 0);
 	(void)curl_easy_setopt(curl, CURLOPT_CURLU, uri);
+#else
+	uri =
+	    g_strdup_printf("%s://%s:%s", self->use_https ? "https" : "http", self->hostname, port);
+	(void)curl_easy_setopt(curl, CURLOPT_URL, uri);
+#endif
 	(void)curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
 
 	if (self->bearer_token != NULL) {
@@ -246,6 +260,20 @@ fu_redfish_backend_set_session_key(FuRedfishBackend *self, const gchar *session_
 	self->session_key = g_strdup(session_key);
 }
 
+/**
+ * fu_redfish_backend_set_session_uri:
+ * @self: a #FuRedfishBackend
+ * @session_uri: (nullable): Redfish session URI
+ *
+ * Sets the Redfish session URI used when deleting the active session.
+ **/
+static void
+fu_redfish_backend_set_session_uri(FuRedfishBackend *self, const gchar *session_uri)
+{
+	g_free(self->session_uri);
+	self->session_uri = g_strdup(session_uri);
+}
+
 static size_t
 fu_redfish_backend_session_headers_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
@@ -262,8 +290,10 @@ fu_redfish_backend_session_headers_callback(char *ptr, size_t size, size_t nmemb
 gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 {
+	const gchar *session_uri;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_obj_resp = NULL;
 
 	fwupd_json_object_add_string(json_obj, "UserName", self->username);
 	fwupd_json_object_add_string(json_obj, "Password", self->password);
@@ -288,6 +318,71 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 				    "failed to get session key");
 		return FALSE;
 	}
+
+	/* save the session URI so we can log out later */
+	json_obj_resp = fu_redfish_request_get_json_object(request);
+	session_uri = fwupd_json_object_get_string(json_obj_resp, "@odata.id", error);
+	if (session_uri == NULL) {
+		g_prefix_error_literal(error, "failed to get session URI: ");
+		fu_redfish_backend_set_session_key(self, NULL);
+		return FALSE;
+	}
+	fu_redfish_backend_set_session_uri(self, session_uri);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_redfish_backend_delete_session:
+ * @self: a #FuRedfishBackend
+ * @error: (nullable): optional return location for an error
+ *
+ * Logs out of the Redfish session previously opened with
+ * fu_redfish_backend_create_session() by issuing a `DELETE` on the stored
+ * session URI. The session key and URI are cleared on success.
+ *
+ * If no session is currently active this is a no-op and returns successfully.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error)
+{
+	g_autofree gchar *auth_header = NULL;
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(_curl_slist) hs = NULL;
+	CURL *curl;
+
+	g_return_val_if_fail(FU_IS_REDFISH_BACKEND(self), FALSE);
+
+	/* nothing to do */
+	if (self->session_key == NULL && self->session_uri == NULL)
+		return TRUE;
+
+	/* we should never have one without the other */
+	if (self->session_key == NULL || self->session_uri == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "inconsistent session state, cannot delete session");
+		return FALSE;
+	}
+
+	request = fu_redfish_backend_request_new(self);
+	curl = fu_redfish_request_get_curl(request);
+	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+	auth_header = g_strconcat("X-Auth-Token: ", self->session_key, NULL);
+	hs = curl_slist_append(hs, auth_header);
+	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
+	if (!fu_redfish_request_perform(request, self->session_uri, 0, error)) {
+		g_prefix_error_literal(error, "failed to delete session: ");
+		return FALSE;
+	}
+
+	/* the session is no longer valid */
+	fu_redfish_backend_set_session_key(self, NULL);
+	fu_redfish_backend_set_session_uri(self, NULL);
 
 	/* success */
 	return TRUE;
@@ -683,6 +778,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->password);
 	g_free(self->bearer_token);
 	g_free(self->session_key);
+	g_free(self->session_uri);
 	g_free(self->vendor);
 	g_free(self->version);
 	g_free(self->uuid);

@@ -235,7 +235,7 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 				       guint16 iap_ver,
 				       GError **error)
 {
-	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
+	guint16 pw;
 	guint16 value = 0;
 
 	if (iap_ver >= 0x7 && ic_type == FU_ETP_IC_NUM13)
@@ -717,7 +717,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 					    error);
 		if (chunks == NULL)
 			return FALSE;
-		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
+		total_pages = ((self->force_table_addr - iap_addr - 1) / self->fw_page_size) + 1;
 		if (total_pages > chunks->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -902,14 +902,6 @@ fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GErro
 			}
 		}
 	}
-	if (ic_type == FU_ETP_IC_NUM13) {
-		if (!fu_elantp_hid_device_write_cmd(self,
-						    FU_ETP_RPTID_TP_FEATURE,
-						    FU_ETP_CMD_I2C_IAP_RESET,
-						    ETP_I2C_CLEAR_PROTECT_AI_TABLE,
-						    error))
-			return FALSE;
-	}
 	if (!fu_elantp_hid_device_write_fw_password(self, ic_type, iap_ver, error))
 		return FALSE;
 	if (!fu_elantp_hid_device_write_cmd(self,
@@ -927,6 +919,15 @@ fu_elantp_hid_device_detach(FuElantpHidDevice *self, FuProgress *progress, GErro
 				    FWUPD_ERROR_WRITE,
 				    "unexpected bootloader password");
 		return FALSE;
+	}
+	if ((ic_type == FU_ETP_IC_NUM13) || (ic_type == FU_ETP_IC_NUM18) ||
+	    (ic_type == FU_ETP_IC_NUM19)) {
+		if (!fu_elantp_hid_device_write_cmd(self,
+						    FU_ETP_RPTID_TP_FEATURE,
+						    FU_ETP_CMD_I2C_IAP_RESET,
+						    ETP_I2C_CLEAR_PROTECT_AI_TABLE,
+						    error))
+			return FALSE;
 	}
 
 	/* success */

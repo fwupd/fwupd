@@ -2,6 +2,7 @@
 plugin_deps = [
   gio,
   giounix,
+  glib,
   gnutls,
   gmodule,
   libusb,

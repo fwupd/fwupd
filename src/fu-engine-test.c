@@ -596,10 +596,86 @@ fu_engine_device_md_set_flags_func(void)
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_engine_add_device(engine, device);
+	fu_engine_ensure_devices_supported(engine);
 
 	/* check the flag got set */
 	g_assert_true(
 	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE));
+}
+
+static void
+fu_engine_device_md_added_order_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuDevice) device1 = fu_device_new(ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	    "<components version=\"0.9\">\n"
+	    "  <component type=\"firmware\">\n"
+	    "    <id>org.fwupd.8330a096d9f1af8567c7374cb8403e1ce9cf3163.device</id>\n"
+	    "    <provides>\n"
+	    "      <firmware type=\"flashed\">2d47f29b-83a2-4f31-a2e8-63474f4d4c2e</firmware>\n"
+	    "    </provides>\n"
+	    "    <releases>\n"
+	    "      <release version=\"1\">"
+	    "        <location>https://test.org/foo.cab</location>"
+	    "        <checksum filename=\"foo.cab\" target=\"container\" "
+	    "type=\"md5\">deadbeefdeadbeefdeadbeefdead1111</checksum>"
+	    "      </release>"
+	    "    </releases>\n"
+	    "    <requires>\n"
+	    "      <id compare=\"ge\" version=\"2.0.10\">org.freedesktop.fwupd</id>\n"
+	    "      <firmware>1742ef01-f7c7-5363-8fd9-d066222df9c0</firmware>\n"
+	    "    </requires>\n"
+	    "  </component>\n"
+	    "</components>\n";
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add the XML metadata */
+	ret = xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* add a dummy device */
+	fu_device_set_id(device1, "UEFI-dummy-dev0");
+	fu_device_set_version(device1, "0");
+	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
+	fu_device_add_protocol(device1, "com.acme");
+	fu_device_add_instance_id(device1, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_engine_add_device(engine, device1);
+
+	/* check the flag is not set, 1742ef01-f7c7-5363-8fd9-d066222df9c0 does not yet exist */
+	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_SUPPORTED));
+
+	/* add the device we were depending on */
+	fu_device_set_id(device2, "UEFI-dummy-dev1");
+	fu_device_add_instance_id(device2, "1742ef01-f7c7-5363-8fd9-d066222df9c0");
+	fu_engine_add_device(engine, device2);
+
+	/* run the post-coldplug check*/
+	fu_engine_ensure_devices_supported(engine);
+	g_assert_true(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_SUPPORTED));
 }
 
 static void
@@ -3471,6 +3547,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/engine/device-unlock", fu_engine_device_unlock_func);
 	g_test_add_func("/fwupd/engine/device-equivalent", fu_engine_device_equivalent_func);
 	g_test_add_func("/fwupd/engine/device-md-set-flags", fu_engine_device_md_set_flags_func);
+	g_test_add_func("/fwupd/engine/device-md-added-order",
+			fu_engine_device_md_added_order_func);
 	g_test_add_func("/fwupd/engine/device-md-checksum-set-version",
 			fu_engine_device_md_checksum_set_version_func);
 	g_test_add_func("/fwupd/engine/device-md-checksum-set-version-wrong-proto",

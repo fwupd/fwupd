@@ -39,6 +39,8 @@ G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 
 #define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5 /* s */
 
+#define FU_UDEV_BACKEND_SOCKET_RCV_SIZE (8 * FU_MB)
+
 static void
 fu_udev_backend_coldplug_cache_item_free(FuUdevBackendColdplugCacheItem *item)
 {
@@ -201,7 +203,7 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) device = NULL;
-	GType gtype = FU_TYPE_UDEV_DEVICE;
+	GType gtype;
 
 	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)), "block") == 0) {
@@ -648,8 +650,11 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 		       MSG_DONTWAIT,
 		       (struct sockaddr *)&sender_addr,
 		       &sender_len);
-	if (len < 0)
+	if (len < 0) {
+		if (errno != EAGAIN)
+			g_warning("netlink recvfrom failed: %s", fwupd_strerror(errno));
 		return TRUE;
+	}
 
 	/* only accept messages from kernel (pid 0) to prevent spoofing attacks */
 	if (sender_addr.nl_groups == FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL &&
@@ -681,6 +686,7 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 static gboolean
 fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 {
+	int rcvbuf = FU_UDEV_BACKEND_SOCKET_RCV_SIZE;
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
 	    .nl_pid = getpid(),
@@ -710,6 +716,8 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
+	if (setsockopt(self->netlink_fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) < 0)
+		g_warning("failed to set SO_RCVBUF: %s", fwupd_strerror(errno));
 	if (bind(self->netlink_fd, (void *)&nls, sizeof(nls))) {
 		g_set_error(error,
 			    FWUPD_ERROR,

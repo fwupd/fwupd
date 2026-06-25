@@ -658,7 +658,7 @@ fu_pixart_tp_device_flash_erase_sector(FuPixartTpDevice *self, guint sector, GEr
 						       error))
 		return FALSE;
 
-	g_debug("erase sector %u (addr=0x%08x)", (guint)sector, flash_address);
+	g_debug("erase sector %u (addr=0x%08x)", sector, flash_address);
 
 	/* execute erase command */
 	if (!fu_pixart_tp_device_flash_execute(self,
@@ -678,8 +678,8 @@ fu_pixart_tp_device_flash_program_256b_to_flash(FuPixartTpDevice *self,
 						guint8 page,
 						GError **error)
 {
-	guint32 flash_address = (guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE +
-				(guint32)page * FU_PIXART_TP_DEVICE_PAGE_SIZE;
+	guint32 flash_address = ((guint32)sector * FU_PIXART_TP_DEVICE_SECTOR_SIZE) +
+				((guint32)page * FU_PIXART_TP_DEVICE_PAGE_SIZE);
 
 	/* wait for flash ready and enable write */
 	if (!fu_pixart_tp_device_flash_wait_busy(self, error))
@@ -1017,7 +1017,7 @@ fu_pixart_tp_device_write_sector(FuPixartTpDevice *self,
 				    "too many chunks in sector");
 		return FALSE;
 	}
-	for (guint8 i = 1; i < fu_chunk_array_length(chunks); i++) {
+	for (guint i = 1; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);

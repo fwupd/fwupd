@@ -168,7 +168,8 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 					    FuProgress *progress,
 					    GError **error)
 {
-	guint16 vid, pid;
+	guint16 vid;
+	guint16 pid;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
@@ -260,7 +261,6 @@ fu_dell_kestrel_plugin_config_mst_dev(FuPlugin *plugin)
 	/* flags */
 	fu_device_add_private_flag(device_mst, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 	fu_device_add_private_flag(device_mst, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
-	return;
 }
 
 static void

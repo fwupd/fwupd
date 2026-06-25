@@ -61,7 +61,7 @@ fu_jabra_gnp_update_crc(guint64 acc, guint64 delta)
 	    0xB9887C5B, 0x62F97A1A, 0xD41B7698, 0x0F6A70D9};
 	guint64 t = acc >> 24;
 	guint32 lookup = (guint32)(t & 0xFF);
-	acc = ((acc) << 8) ^ crcLookupTable[lookup] ^ (delta);
+	acc = (acc << 8) ^ crcLookupTable[lookup] ^ delta;
 	return acc & 0x00000000FFFFFFFF;
 }
 
@@ -285,15 +285,8 @@ fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError
 	if (version == NULL)
 		return FALSE;
 
-	/* some devices append a few extra non number characters to the version, which can confuse
-	 * fwupd's formats, so remove it */
-	while (!(g_str_has_suffix(version, "0") || g_str_has_suffix(version, "1") ||
-		 g_str_has_suffix(version, "2") || g_str_has_suffix(version, "3") ||
-		 g_str_has_suffix(version, "4") || g_str_has_suffix(version, "5") ||
-		 g_str_has_suffix(version, "6") || g_str_has_suffix(version, "7") ||
-		 g_str_has_suffix(version, "8") || g_str_has_suffix(version, "9")))
-		version[strlen(version) - 1] = '\0';
-
+	/* some devices append a few extra non number characters to the version; the devices set
+	 * FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER so fu_device_set_version() strips that for us */
 	fu_device_set_version(device, version);
 	return TRUE;
 }

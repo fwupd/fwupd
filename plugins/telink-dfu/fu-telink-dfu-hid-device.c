@@ -26,7 +26,7 @@ G_DEFINE_TYPE(FuTelinkDfuHidDevice, fu_telink_dfu_hid_device, FU_TYPE_HID_DEVICE
 #define FU_TELINK_DFU_HID_DEVICE_REPORT_ID	    6
 #define FU_TELINK_DFU_HID_EP_IN			    (0x80 | 4)
 #define FU_TELINK_DFU_HID_EP_OUT		    (0x00 | 5)
-#define FU_TELINK_DEVICE_WINDOWS_TOOL_VERSION(a, b) ((a) * 100 + (b))
+#define FU_TELINK_DEVICE_WINDOWS_TOOL_VERSION(a, b) (((a) * 100) + (b))
 
 static void
 fu_telink_dfu_hid_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -248,7 +248,7 @@ fu_telink_dfu_hid_device_ota_start(FuTelinkDfuHidDevice *self, GError **error)
 static gboolean
 fu_telink_dfu_hid_device_ota_stop(FuTelinkDfuHidDevice *self, guint number_chunks, GError **error)
 {
-	guint16 pkt_index = (guint16)(number_chunks)-1;
+	guint16 pkt_index = (guint16)number_chunks - 1;
 	g_autoptr(FuStructTelinkDfuEndCheck) st_end_check = fu_struct_telink_dfu_end_check_new();
 	g_autoptr(FuStructTelinkDfuHidPkt) st_pkt = NULL;
 

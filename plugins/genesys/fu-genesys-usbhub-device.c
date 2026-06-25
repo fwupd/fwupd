@@ -450,7 +450,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 	    {.cmd = 0xAB01, .len = 0x02},
 	};
 
-	for (guint8 i = 0; i < G_N_ELEMENTS(rdid); i++) {
+	for (gsize i = 0; i < G_N_ELEMENTS(rdid); i++) {
 		guint8 buf[3] = {0};
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuCfiDevice) cfi_device = NULL;
@@ -1110,7 +1110,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
 
 	/* verify chip model and revision */
-	self->spec.chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+	self->spec.chip.revision = (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
 
 	if (memcmp(project_ic_type, "3521", 4) == 0) {
 		g_set_error(error,
@@ -1119,7 +1119,8 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 			    "ic type %s already EOL and not supported",
 			    project_ic_type);
 		return FALSE;
-	} else if (memcmp(project_ic_type, "3523", 4) == 0) {
+	}
+	if (memcmp(project_ic_type, "3523", 4) == 0) {
 		if (self->spec.chip.revision >= 60) {
 			self->spec.chip.model = ISP_MODEL_HUB_GL3523PLUS;
 		} else {
@@ -1575,8 +1576,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		} else if (!fu_genesys_usbhub_device_get_info_from_vendor_ts(self,
 									     buf,
 									     bufsz,
-									     error))
+									     error)) {
 			return FALSE;
+		}
 	} else {
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
 	}

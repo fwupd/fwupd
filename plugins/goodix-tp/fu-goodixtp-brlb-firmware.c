@@ -65,7 +65,7 @@ fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
 		g_autoptr(FuStructGoodixTpCfgItem) st_cfg_item = NULL;
 
 		st_cfg_item = fu_struct_goodix_tp_cfg_item_parse_stream(stream,
-									offset + 6 + (gsize)i * 3,
+									offset + 6 + ((gsize)i * 3),
 									error);
 		if (st_cfg_item == NULL)
 			return FALSE;

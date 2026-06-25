@@ -324,9 +324,8 @@ fu_config_reload(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 					    FWUPD_ERROR_PERMISSION_DENIED)) {
 				g_debug("ignoring config file %s: ", error_load->message);
 				continue;
-			} else if (g_error_matches(error_load,
-						   FWUPD_ERROR,
-						   FWUPD_ERROR_INVALID_FILE)) {
+			}
+			if (g_error_matches(error_load, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 				g_debug("%s", error_load->message);
 				continue;
 			}

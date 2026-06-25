@@ -265,7 +265,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid token 0x%x @0%x",
+			    "invalid token 0x%x @0x%x",
 			    token,
 			    (guint)offset);
 		return FALSE;

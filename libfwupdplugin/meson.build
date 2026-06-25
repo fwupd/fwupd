@@ -187,6 +187,7 @@ fwupdplugin_src = [
   'fu-pkcs7.c',
   'fu-processor-device.c',
   'fu-protobuf.c', # fuzzing
+  'fu-ptr-array.c', # fuzzing
   'fu-oprom-device.c',
   'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
@@ -353,6 +354,7 @@ fwupdplugin_headers = [
   'fu-plugin-private.h',
   'fu-processor-device.h',
   'fu-progress.h',
+  'fu-ptr-array.h',
   'fu-quirks.h',
   'fu-sbatlevel-section.h',
   'fu-security-attr.h',
@@ -401,7 +403,7 @@ fwupdplugin_headers = [
   'fu-zip-firmware.h',
 ]
 
-introspection_deps = [libxmlb, giounix, libusb]
+introspection_deps = [libxmlb, giounix, glib, libusb]
 
 library_deps = [
   introspection_deps,
@@ -533,6 +535,7 @@ if get_option('tests')
     'plugin',
     'progress',
     'protobuf',
+    'ptr-array',
     'quirks',
     'security-attrs',
     'smbios',

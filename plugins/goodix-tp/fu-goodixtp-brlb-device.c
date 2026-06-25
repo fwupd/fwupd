@@ -222,7 +222,7 @@ fu_goodixtp_brlb_device_wait_erase_cb(FuDevice *device, gpointer user_data, GErr
 		return FALSE;
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x14000, recvBuf, 5, error))
 		return FALSE;
-	if (memcmp(hidbuf, recvBuf, 5)) {
+	if (memcmp(hidbuf, recvBuf, 5) != 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "sram not ready");
 		return FALSE;
 	}

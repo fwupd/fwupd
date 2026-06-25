@@ -1,0 +1,37 @@
+name: clang-tidy
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/fwupd/fwupd/fwupd-ubuntu-amd64:latest
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |-
+          apt-get update
+          apt-get install --yes --no-install-recommends clang-tidy
+      - name: configure
+        run: |-
+          meson setup -Dwerror=true build
+      - name: build
+        run: |-
+          ninja -C build
+      - name: clang-tidy
+        run: |-
+          ninja -C build clang-tidy

@@ -41,6 +41,9 @@ enum FuEtpIc {
     Num14 = 0x14,
     Num15 = 0x15,
     Num16 = 0x16,
+    Num17 = 0x17,
+    Num18 = 0x18,
+    Num19 = 0x19,
 }
 
 #[repr(u16le)]

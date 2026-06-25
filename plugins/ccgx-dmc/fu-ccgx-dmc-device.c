@@ -723,6 +723,9 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			return FALSE;
 	}
 
+	/* increment the progressbar when waiting for replug */
+	fu_progress_sleep_idle(progress, fu_device_get_remove_delay(device));
+
 	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -817,13 +820,28 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 static void
 fu_ccgx_dmc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
+	/* dynamically calculate progress weights based on install duration and remove delay */
+	guint remove_delay = fu_device_get_remove_delay(device);
+	guint install_duration = fu_device_get_install_duration(device);
+	guint write_duration = install_duration > 0 ? install_duration * 1000 : 30000;
+	guint write_weight = 75;
+	guint attach_weight = 0;
+	guint reload_weight = 25;
+
+	if (remove_delay > 0) {
+		guint total_duration = write_duration + remove_delay + 10000;
+		write_weight = (write_duration * 100) / total_duration;
+		attach_weight = (remove_delay * 100) / total_duration;
+		reload_weight = 100 - write_weight - attach_weight;
+	}
+
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE); /* actually 0, 20, 0, 80! */
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, write_weight, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, attach_weight, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, reload_weight, "reload");
 }
 
 static gchar *

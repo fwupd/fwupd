@@ -184,7 +184,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 		}
 
 		g_info("snapd request failed with status %ld, response: %s",
-		       (glong)status_code,
+		       status_code,
 		       rsp != NULL ? rsp : "<none>");
 
 		if (snapd_msg != NULL) {
@@ -192,7 +192,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "snapd request failed with status %ld: %s",
-				    (glong)status_code,
+				    status_code,
 				    snapd_msg);
 			return FALSE;
 		}
@@ -200,7 +200,7 @@ fu_snapd_uefi_plugin_simple_req(FuSnapPlugin *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "snapd request failed with status %ld",
-			    (glong)status_code);
+			    status_code);
 		return FALSE;
 	}
 
@@ -338,7 +338,6 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 	const gchar *key_database;
 	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GString) msg = NULL;
-	g_autoptr(GPtrArray) images = NULL;
 
 	if (self->integration_status == FU_SNAPD_API_UNAVAILABLE)
 		return TRUE;
@@ -348,16 +347,15 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 	if (key_database == NULL)
 		return TRUE;
 
-	images = fu_firmware_get_images(firmware);
-	if (images->len == 0) {
-		/* get default image */
+	/* either an EFI variable-authentication, a zipfile or unsupported */
+	if (FU_IS_EFI_VARIABLE_AUTHENTICATION2(firmware)) {
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes(firmware, error);
 		if (fw == NULL)
 			return FALSE;
 		fwupd_json_object_add_bytes(json_obj, "payload", fw);
-	} else {
+	} else if (FU_IS_ZIP_FIRMWARE(firmware)) {
 		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
-
+		g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 		for (guint i = 0; i < images->len; i++) {
 			FuFirmware *image = g_ptr_array_index(images, i);
 			g_autoptr(GBytes) fw = fu_firmware_get_bytes(image, error);
@@ -366,6 +364,13 @@ fu_snapd_uefi_plugin_composite_peek_firmware(FuPlugin *plugin,
 			fwupd_json_array_add_bytes(json_arr, fw);
 		}
 		fwupd_json_object_add_array(json_obj, "payloads", json_arr);
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to send %s firmware to snapd",
+			    G_OBJECT_TYPE_NAME(firmware));
+		return FALSE;
 	}
 
 	/* Notify of an upcoming update to the DBX. A successful call shall initiate a

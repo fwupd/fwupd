@@ -318,6 +318,7 @@ fu_test_mock_dbx_update_firmware(void)
 	gsize mock_blob_size = 0;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) mock_bytes = NULL;
+	g_autoptr(FuFirmware) firmware = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
 	g_autofree gchar *mock_dbx_update_path =
 	    g_test_build_filename(G_TEST_DIST, "tests/dbx-update.auth", NULL);
 
@@ -326,7 +327,8 @@ fu_test_mock_dbx_update_firmware(void)
 	g_assert_true(ret);
 
 	mock_bytes = g_bytes_new_take(mock_blob, mock_blob_size);
-	return fu_firmware_new_from_bytes(mock_bytes);
+	fu_firmware_set_bytes(firmware, mock_bytes);
+	return g_steal_pointer(&firmware);
 }
 
 static void
@@ -521,8 +523,9 @@ fu_uefi_dbx_test_plugin_coldplug_probed_device(FuTestFixture *fixture, gconstpoi
 	if (tc->snapd_supported && g_str_equal(tc->mock_snapd_scenario, "failed-startup")) {
 		/* startup failed for whatever reason, device updates are inhibited */
 		g_assert_true(ret);
-	} else
+	} else {
 		g_assert_false(ret);
+	}
 
 	fu_self_test_mock_snapd_assert_calls(fixture,
 					     (FuTestSnapdCalls){

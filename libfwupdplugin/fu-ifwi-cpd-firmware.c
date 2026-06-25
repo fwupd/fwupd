@@ -79,11 +79,19 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	size = fu_struct_ifwi_cpd_manifest_get_size(st_mhd);
+	if ((guint64)size * 4 > G_MAXUINT32) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "manifest size 0x%x dwords would overflow",
+			    size);
+		return FALSE;
+	}
 	if (size * 4 != streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid manifest invalid length, got 0x%x, expected 0x%x",
+			    "invalid manifest length, got 0x%x, expected 0x%x",
 			    size * 4,
 			    (guint)streamsz);
 		return FALSE;

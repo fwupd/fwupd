@@ -43,8 +43,8 @@
 guint16
 fu_common_from_bcd_u16(guint16 value)
 {
-	return ((value >> 12) & 0xF) * 1000 + ((value >> 8) & 0xF) * 100 +
-	       ((value >> 4) & 0xF) * 10 + (value & 0xF);
+	return (((value >> 12) & 0xF) * 1000) + (((value >> 8) & 0xF) * 100) +
+	       (((value >> 4) & 0xF) * 10) + (value & 0xF);
 }
 
 /**
@@ -77,7 +77,7 @@ fu_common_to_bcd_u16(guint16 value)
 guint8
 fu_common_from_bcd_u8(guint8 value)
 {
-	return ((value >> 4) & 0xF) * 10 + (value & 0xF);
+	return (((value >> 4) & 0xF) * 10) + (value & 0xF);
 }
 
 /**

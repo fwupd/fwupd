@@ -1,39 +1,168 @@
 # Lenovo HID Bootloader
-[HIDRAW\VEN_17EF&DEV_6194]
+[USB\VID_17EF&PID_6194]
 Plugin = lenovo_accessory
 GType = FuLenovoAccessoryHidBootloader
 
-# Lenovo Pro USB-A Unified Pairing Receiver
-[HIDRAW\VEN_17EF&DEV_629D]
-Name = Pro USB-A Unified Pairing Receiver
-Plugin = lenovo_accessory
-GType = FuLenovoAccessoryHidDevice
-CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
+# === GTECH ODM (0x61FA-0x6202) ===
 
-# Lenovo Pro USB-A Unified Pairing Receiver
-[HIDRAW\VEN_17EF&DEV_6201]
-Name = Pro USB-A Unified Pairing Receiver
+# Lenovo Professional Wireless Keyboard 2
+[BLUETOOTH\VID_17EF&PID_61FA]
+Name = Lenovo Professional Wireless Keyboard 2
 Plugin = lenovo_accessory
-GType = FuLenovoAccessoryHidDevice
-CounterpartGuid = HIDRAW\VEN_17EF&DEV_6194
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
 
-# Lenovo 700 Multi-Device Wireless Mouse
-[BLUETOOTH\VID_17EF&PID_61FE]
-Name = 700 Multi-Device Wireless Mouse
+# Lenovo 700 Wireless Modern Keyboard
+[BLUETOOTH\VID_17EF&PID_61FB]
+Name = Lenovo 700 Wireless Modern Keyboard
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Pro Mouse
+[BLUETOOTH\VID_17EF&PID_61FC]
+Name = Lenovo Pro Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Pro Plus Mouse
+[BLUETOOTH\VID_17EF&PID_61FD]
+Name = Lenovo Pro Plus Mouse
 Plugin = lenovo_accessory
 Flags = no-generic-version
 GType = FuLenovoAccessoryBleDevice
 
 # Lenovo 700 Multi-Device Wireless Mouse
-[BLUETOOTH\VID_17EF&PID_629A]
-Name = 700 Multi-Device Wireless Mouse
+[BLUETOOTH\VID_17EF&PID_61FE]
+Name = Lenovo 700 Multi-Device Wireless Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo 350 Bluetooth Mouse
+[BLUETOOTH\VID_17EF&PID_61FF]
+Name = Lenovo 350 Bluetooth Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Yoga AI Mouse
+[BLUETOOTH\VID_17EF&PID_6200]
+Name = Lenovo Yoga AI Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Pro USB-A Unified Pairing Receiver
+[USB\VID_17EF&PID_6201]
+Name = Lenovo Pro USB-A Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDevice
+CounterpartGuid = USB\VID_17EF&PID_6194
+
+# Lenovo Pro USB-C Unified Pairing Receiver
+[USB\VID_17EF&PID_6202]
+Name = Lenovo Pro USB-C Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDualDevice
+
+# === Liteon ODM (0x6296-0x629E) ===
+
+# Lenovo Professional Wireless Keyboard 2
+[BLUETOOTH\VID_17EF&PID_6296]
+Name = Lenovo Professional Wireless Keyboard 2
 Plugin = lenovo_accessory
 Flags = no-generic-version
 GType = FuLenovoAccessoryBleDevice
 
 # Lenovo 700 Wireless Modern Keyboard
 [BLUETOOTH\VID_17EF&PID_6297]
-Name = 700 Wireless Modern Keyboard
+Name = Lenovo 700 Wireless Modern Keyboard
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Pro Mouse
+[BLUETOOTH\VID_17EF&PID_6298]
+Name = Lenovo Pro Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Pro Plus Mouse
+[BLUETOOTH\VID_17EF&PID_6299]
+Name = Lenovo Pro Plus Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo 700 Multi-Device Wireless Mouse
+[BLUETOOTH\VID_17EF&PID_629A]
+Name = Lenovo 700 Multi-Device Wireless Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo 350 Bluetooth Mouse
+[BLUETOOTH\VID_17EF&PID_629B]
+Name = Lenovo 350 Bluetooth Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Yoga AI Mouse
+[BLUETOOTH\VID_17EF&PID_629C]
+Name = Lenovo Yoga AI Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Pro USB-A Unified Pairing Receiver
+[USB\VID_17EF&PID_629D]
+Name = Lenovo Pro USB-A Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDevice
+CounterpartGuid = USB\VID_17EF&PID_6194
+
+# Lenovo Pro USB-C Unified Pairing Receiver
+[USB\VID_17EF&PID_629E]
+Name = Lenovo Pro USB-C Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDualDevice
+
+# === Others ===
+
+# Lenovo Pro USB-A Unified Pairing Receiver
+[USB\VID_17EF&PID_62E7]
+Name = Pro USB-A Unified Pairing Receiver
+Plugin = lenovo_accessory
+GType = FuLenovoAccessoryHidDualDevice
+
+# FUJI 2.0 Mouse (BT)
+[BLUETOOTH\VID_17EF&PID_6282]
+Name = FUJI 2.0 Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Lenovo Solar Keyboard (BT)
+[BLUETOOTH\VID_17EF&PID_61B3]
+Name = Lenovo Solar Keyboard
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Helios Gen II Mouse (BT Mode)
+[BLUETOOTH\VID_17EF&PID_62A7]
+Name = Helios Gen II Mouse
+Plugin = lenovo_accessory
+Flags = no-generic-version
+GType = FuLenovoAccessoryBleDevice
+
+# Helios Gen II Keyboard (BT Mode)
+[BLUETOOTH\VID_17EF&PID_62A8]
+Name = Helios Gen II Keyboard
 Plugin = lenovo_accessory
 Flags = no-generic-version
 GType = FuLenovoAccessoryBleDevice

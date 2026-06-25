@@ -250,3 +250,5 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_plugin_allows_enumeration(FuEngine *self, FuPlugin *plugin) G_GNUC_NON_NULL(1, 2);
+void
+fu_engine_ensure_devices_supported(FuEngine *self) G_GNUC_NON_NULL(1);

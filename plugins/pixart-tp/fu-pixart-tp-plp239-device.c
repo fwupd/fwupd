@@ -1037,7 +1037,7 @@ fu_pixart_tp_plp239_device_flash_erase_sector(FuPixartTpPlp239Device *self,
 		error))
 		return FALSE;
 
-	g_debug("erase sector %u", (guint)erase_sector);
+	g_debug("erase sector %u", erase_sector);
 
 	/* execute erase command */
 	if (!fu_pixart_tp_plp239_device_set_flash_command(self,

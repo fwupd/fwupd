@@ -371,7 +371,8 @@ gchar *
 fu_engine_integrity_to_string(GHashTable *self)
 {
 	GHashTableIter iter;
-	gpointer key, value;
+	gpointer key;
+	gpointer value;
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(self != NULL, NULL);

@@ -36,6 +36,8 @@ typedef struct {
 	guint64 scalar_increment;
 	gboolean read_only;
 	GPtrArray *possible_values;
+	GHashTable *possible_values_to_raw;   /* (nullable) (element-type utf-8 utf-8) */
+	GHashTable *possible_values_from_raw; /* (nullable) (element-type utf-8 utf-8) */
 } FwupdBiosSettingPrivate;
 
 static void
@@ -448,6 +450,20 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 		return NULL;
 	}
 
+	/* explicitly specified by fwupd_bios_setting_add_possible_value_full() */
+	if (priv->possible_values_to_raw != NULL) {
+		const gchar *value_raw = g_hash_table_lookup(priv->possible_values_to_raw, key);
+		if (value_raw == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "cannot map %s to display value",
+				    key);
+			return NULL;
+		}
+		return value_raw;
+	}
+
 	lower_key = g_utf8_strdown(key, -1);
 	positive_key = fwupd_bios_setting_key_is_positive(lower_key);
 	negative_key = fwupd_bios_setting_key_is_negative(lower_key);
@@ -502,6 +518,42 @@ fwupd_bios_setting_has_possible_value(FwupdBiosSetting *self, const gchar *val)
 			return TRUE;
 	}
 	return FALSE;
+}
+
+/**
+ * fwupd_bios_setting_add_possible_value_full:
+ * @self: a #FwupdBiosSetting
+ * @possible_value: the possible value that we show the user, e.g. `Disabled`
+ * @possible_value_raw: the possible value that we send the hardware, e.g. `0`
+ *
+ * Adds a possible value to the attribute that is automatically mapped to a raw value.
+ *
+ * The raw value will be used in the `class->write_value` vfunc.
+ *
+ * Since: 2.1.6
+ **/
+void
+fwupd_bios_setting_add_possible_value_full(FwupdBiosSetting *self,
+					   const gchar *possible_value,
+					   const gchar *possible_value_raw)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
+	if (priv->possible_values_to_raw == NULL) {
+		priv->possible_values_to_raw =
+		    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	}
+	g_hash_table_insert(priv->possible_values_to_raw,
+			    g_strdup(possible_value),
+			    g_strdup(possible_value_raw));
+	if (priv->possible_values_from_raw == NULL) {
+		priv->possible_values_from_raw =
+		    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	}
+	g_hash_table_insert(priv->possible_values_from_raw,
+			    g_strdup(possible_value_raw),
+			    g_strdup(possible_value));
+	fwupd_bios_setting_add_possible_value(self, possible_value);
 }
 
 /**
@@ -625,7 +677,6 @@ fwupd_bios_setting_get_current_value(FwupdBiosSetting *self)
  * @value: (nullable): The string to set an attribute to
  *
  * Sets the string stored in an attribute.
- * This doesn't change the representation in the kernel.
  *
  * Since: 1.8.4
  **/
@@ -739,6 +790,9 @@ fwupd_bios_setting_validate_value(FwupdBiosSetting *self, const gchar *value, GE
  *
  * Writes a new value into the setting if it is different from the current value.
  *
+ * If fwupd_bios_setting_add_possible_value_full() was used then the display value is automatically
+ * mapped to the raw value before being written.
+ *
  * NOTE: A subclass should handle the `->write_value()` vfunc and actually write the value to the
  * firmware.
  *
@@ -751,6 +805,7 @@ fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GErro
 {
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	FwupdBiosSettingClass *klass = FWUPD_BIOS_SETTING_GET_CLASS(self);
+	const gchar *value_raw;
 
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
@@ -779,13 +834,15 @@ fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GErro
 
 	/* convert the value */
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
-		value = fwupd_bios_setting_map_possible_value(self, value, error);
-		if (value == NULL)
+		value_raw = fwupd_bios_setting_map_possible_value(self, value, error);
+		if (value_raw == NULL)
 			return FALSE;
+	} else {
+		value_raw = value;
 	}
 
 	/* also done by the kernel or firmware, doing it here too allows for better errors */
-	if (!fwupd_bios_setting_validate_value(self, value, error))
+	if (!fwupd_bios_setting_validate_value(self, value_raw, error))
 		return FALSE;
 
 	/* not implemented */
@@ -795,7 +852,72 @@ fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GErro
 	}
 
 	/* proxy */
-	return klass->write_value(self, value, error);
+	if (!klass->write_value(self, value_raw, error))
+		return FALSE;
+	fwupd_bios_setting_set_current_value(self, value);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fwupd_bios_setting_setup:
+ * @self: a #FwupdBiosSetting
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads the current value, converting to the display value as required.
+ *
+ * NOTE: A subclass should handle the `->read_value()` vfunc and actually read the raw value from
+ * the firmware.
+ *
+ * If fwupd_bios_setting_add_possible_value_full() was used then the raw value is automatically
+ * mapped to the display value before being set as a the current version.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.1.6
+ **/
+gboolean
+fwupd_bios_setting_setup(FwupdBiosSetting *self, GError **error)
+{
+	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
+	FwupdBiosSettingClass *klass = FWUPD_BIOS_SETTING_GET_CLASS(self);
+	g_autofree gchar *value_raw = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not implemented */
+	if (klass->read_value == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		return FALSE;
+	}
+
+	/* proxy */
+	value_raw = klass->read_value(self, error);
+	if (value_raw == NULL)
+		return FALSE;
+
+	/* map from raw value to visible value */
+	if (priv->possible_values_from_raw != NULL) {
+		const gchar *value_display =
+		    g_hash_table_lookup(priv->possible_values_from_raw, value_raw);
+		if (value_display == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "%s doesn't map to any display value for %s",
+				    value_raw,
+				    priv->name);
+			return FALSE;
+		}
+		fwupd_bios_setting_set_current_value(self, value_display);
+	} else {
+		fwupd_bios_setting_set_current_value(self, value_raw);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -1108,12 +1230,27 @@ fwupd_bios_setting_add_string(FwupdCodec *codec, guint idt, GString *str)
 				  FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 				  priv->read_only ? "True" : "False");
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
-		for (guint i = 0; i < priv->possible_values->len; i++) {
-			const gchar *tmp = g_ptr_array_index(priv->possible_values, i);
-			fwupd_codec_string_append(str,
-						  idt,
-						  FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
-						  tmp);
+		if (priv->possible_values_to_raw != NULL) {
+			for (guint i = 0; i < priv->possible_values->len; i++) {
+				const gchar *tmp = g_ptr_array_index(priv->possible_values, i);
+				const gchar *raw =
+				    g_hash_table_lookup(priv->possible_values_to_raw, tmp);
+				g_autofree gchar *kv = g_strdup_printf("%s→%s", tmp, raw);
+				fwupd_codec_string_append(
+				    str,
+				    idt,
+				    FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
+				    kv);
+			}
+		} else {
+			for (guint i = 0; i < priv->possible_values->len; i++) {
+				const gchar *tmp = g_ptr_array_index(priv->possible_values, i);
+				fwupd_codec_string_append(
+				    str,
+				    idt,
+				    FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
+				    tmp);
+			}
 		}
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
@@ -1163,6 +1300,10 @@ fwupd_bios_setting_finalize(GObject *object)
 	g_free(priv->path);
 	g_free(priv->value_filename);
 	g_ptr_array_unref(priv->possible_values);
+	if (priv->possible_values_to_raw != NULL)
+		g_hash_table_unref(priv->possible_values_to_raw);
+	if (priv->possible_values_from_raw != NULL)
+		g_hash_table_unref(priv->possible_values_from_raw);
 
 	G_OBJECT_CLASS(fwupd_bios_setting_parent_class)->finalize(object);
 }

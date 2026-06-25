@@ -645,6 +645,20 @@ fu_lenovo_dock_device_get_component_attrs(FuLenovoDockDevice *self,
 	st_res = fu_struct_lenovo_dock_flash_get_attrs_res_parse(buf->data, buf->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
+	if (fu_struct_lenovo_dock_flash_get_attrs_res_get_erase_size(st_res) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "device reported zero erase size");
+		return FALSE;
+	}
+	if (fu_struct_lenovo_dock_flash_get_attrs_res_get_program_size(st_res) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "device reported zero program size");
+		return FALSE;
+	}
 	if (storage_size != NULL)
 		*storage_size = fu_struct_lenovo_dock_flash_get_attrs_res_get_storage_size(st_res);
 	if (erase_size != NULL)
@@ -1019,7 +1033,17 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to get flash ID list: ");
 		return FALSE;
 	}
-	g_debug("flash ID total: 0x%x", component_id_total);
+	total_number = fu_struct_lenovo_dock_usage_get_total_number(st_usage);
+	g_debug("flash ID total: 0x%x, firmware total: 0x%x", component_id_total, total_number);
+	if (component_id_total < total_number) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "device has fewer components (0x%x) than firmware (0x%x)",
+			    component_id_total,
+			    total_number);
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* set dock FW Update Ctrl */
@@ -1033,7 +1057,6 @@ fu_lenovo_dock_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* clear all the target versions and write the new usage table with new sizes  */
-	total_number = fu_struct_lenovo_dock_usage_get_total_number(st_usage);
 	for (guint component_id = 1; component_id < total_number; component_id++) {
 		FuStructLenovoDockUsageItem *st_usage_item;
 		g_autoptr(FuFirmware) img = NULL;
@@ -1123,7 +1146,6 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 300000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK_USB);

@@ -323,7 +323,7 @@ fu_himax_tp_hid_device_ensure_flash_id(FuHimaxTpHidDevice *self, GError **error)
 	}
 
 	/* success */
-	self->flash_id = (guint32)reg_value;
+	self->flash_id = reg_value;
 	return TRUE;
 }
 

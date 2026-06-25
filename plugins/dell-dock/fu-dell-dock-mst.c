@@ -78,31 +78,32 @@ typedef struct {
 	guint checksum_cmd;
 } FuDellDockMstBankAttributes;
 
-const FuDellDockMstBankAttributes bank0_attributes = {
+static const FuDellDockMstBankAttributes bank0_attributes = {
     .start = 0,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const FuDellDockMstBankAttributes bank1_attributes = {
+static const FuDellDockMstBankAttributes bank1_attributes = {
     .start = EEPROM_BANK_OFFSET,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const FuDellDockMstBankAttributes esm_attributes = {
+static const FuDellDockMstBankAttributes esm_attributes = {
     .start = EEPROM_ESM_OFFSET,
     .length = 0x3ffff,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const FuDellDockMstBankAttributes cayenne_attributes = {
+static const FuDellDockMstBankAttributes cayenne_attributes = {
     .start = 0,
     .length = 0x50000,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM,
 };
 
-FuHIDI2CParameters mst_base_settings = {
+/* nocheck:static */
+static FuHIDI2CParameters mst_base_settings = {
     .i2ctargetaddr = I2C_MST_ADDRESS,
     .regaddrlen = 0,
     .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,
@@ -756,7 +757,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 		/* CRC8 is not 0xff, erase last 4k of bank# */
 		if (crc_tag[3] != 0xff) {
 			guint32 sector = FLASH_SECTOR_ERASE_4K +
-					 (attribs->start + attribs->length - 0x1000) / 0x1000;
+					 ((attribs->start + attribs->length - 0x1000) / 0x1000);
 			g_debug("erasing 4k from sector 0x%x invalidate bank %u",
 				sector,
 				bank_in_use);

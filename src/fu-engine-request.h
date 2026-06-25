@@ -40,5 +40,5 @@ fu_engine_request_has_converter_flag(FuEngineRequest *self, FwupdCodecFlags devi
 FwupdCodecFlags
 fu_engine_request_get_converter_flags(FuEngineRequest *self) G_GNUC_NON_NULL(1);
 void
-fu_engine_request_set_converter_flags(FuEngineRequest *self, FwupdCodecFlags device_flags)
+fu_engine_request_set_converter_flags(FuEngineRequest *self, FwupdCodecFlags converter_flags)
     G_GNUC_NON_NULL(1);

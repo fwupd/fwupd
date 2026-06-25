@@ -174,7 +174,7 @@ fu_elantp_hid_mcu_device_write_fw_password(FuElantpHidMcuDevice *self,
 					   GError **error)
 {
 	FuDevice *proxy;
-	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
+	guint16 pw;
 	guint16 value;
 
 	if (iap_ver >= 0x7 && ic_type == FU_ETP_IC_NUM13)

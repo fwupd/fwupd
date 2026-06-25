@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"POT-Creation-Date: 2026-06-10 14:50+0100\n"
 "PO-Revision-Date: 2026-05-25 17:11+0000\n"
 "Last-Translator: ssantos <ssantos@web.de>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/fwupd/fwupd/pt/>\n"
@@ -305,6 +305,10 @@ msgstr "Utilitário de dbx UEFI"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Falha ao interpretar argumentos"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -2873,6 +2877,11 @@ msgstr "Atualização do fone de ouvido %s"
 #, c-format
 msgid "%s Headset Update"
 msgstr "Atualização do headset %s"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --

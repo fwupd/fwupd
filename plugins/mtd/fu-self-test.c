@@ -379,6 +379,33 @@ fu_test_mtd_device_raw_func(gconstpointer user_data)
 }
 
 static void
+fu_test_mtd_device_read_firmware_invalid_gtype_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
+	g_autoptr(GError) error = NULL;
+
+	/* find correct device; this leaves the firmware gtype as G_TYPE_INVALID */
+	device = fu_test_mtd_find_mtdram(self->ctx, &error);
+	if (device == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+	g_assert_cmpint(fu_device_get_firmware_gtype(FU_DEVICE(device)), ==, G_TYPE_INVALID);
+
+	/* with no specific firmware type set we should fall back to a generic
+	 * FuFirmware rather than crashing on g_object_new(G_TYPE_INVALID) */
+	firmware = fu_device_read_firmware(FU_DEVICE(device),
+					  progress,
+					  FU_FIRMWARE_PARSE_FLAG_NONE,
+					  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+}
+
+static void
 fu_test_mtd_device_ifd_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -590,6 +617,9 @@ main(int argc, char **argv)
 			     self,
 			     fu_test_mtd_device_quirk_unknown_func);
 	g_test_add_data_func("/mtd/device/raw", self, fu_test_mtd_device_raw_func);
+	g_test_add_data_func("/mtd/device/read-firmware/invalid-gtype",
+			     self,
+			     fu_test_mtd_device_read_firmware_invalid_gtype_func);
 	g_test_add_data_func("/mtd/device/uswid", self, fu_test_mtd_device_uswid_func);
 	g_test_add_data_func("/mtd/device/ifd", self, fu_test_mtd_device_ifd_func);
 	g_test_add_data_func("/mtd/device/fmap", self, fu_test_mtd_device_fmap_func);

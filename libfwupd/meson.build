@@ -70,6 +70,12 @@ install_headers(
 install_headers(
   [
     'fwupd-build.h',
+    'fwupd-build-glib-2-58.h',
+    'fwupd-build-glib-2-60.h',
+    'fwupd-build-glib-2-62.h',
+    'fwupd-build-glib-2-64.h',
+    'fwupd-build-glib-2-66.h',
+    'fwupd-build-glib-2-68.h',
     'fwupd-build-glib-2-70.h',
     'fwupd-build-glib-2-72.h',
     'fwupd-build-glib-2-76.h',
@@ -102,7 +108,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [gio, giounix, libcurl]
+libfwupd_deps = [gio, giounix, glib, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -304,6 +310,7 @@ if get_option('tests')
       'fwupd-' + test_name + '-test',
       fwupd_rs_targets,
       sources: [
+        'fwupd-test-bios-setting.c',
         'fwupd-' + test_name + '-test.c',
       ],
       include_directories: [root_incdir],

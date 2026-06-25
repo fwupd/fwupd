@@ -64,6 +64,8 @@ struct FuUtil {
 	FuUtilOperation current_operation;
 	FwupdDevice *current_device;
 	GPtrArray *post_requests;
+	GPtrArray *filter_protocols_include;
+	GPtrArray *filter_protocols_exclude;
 	FwupdDeviceFlags completion_flags;
 	FwupdDeviceFlags filter_device_include;
 	FwupdDeviceFlags filter_device_exclude;
@@ -169,10 +171,12 @@ fu_util_prompt_for_device(FuUtil *self, GPtrArray *devices, GError **error)
 	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* filter results */
-	devices_filtered = fwupd_device_array_filter_flags(devices,
-							   self->filter_device_include,
-							   self->filter_device_exclude,
-							   error);
+	devices_filtered = fu_util_device_array_filter(devices,
+						       self->filter_device_include,
+						       self->filter_device_exclude,
+						       self->filter_protocols_include,
+						       self->filter_protocols_exclude,
+						       error);
 	if (devices_filtered == NULL)
 		return NULL;
 
@@ -287,6 +291,10 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED))
 			continue;
@@ -446,6 +454,10 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, Fwupd
 					      self->filter_device_include,
 					      self->filter_device_exclude))
 			continue;
+		if (!fu_util_device_match_protocol(dev_tmp,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
+			continue;
 		if (!self->show_all && !fu_util_is_interesting_device(devs, dev_tmp))
 			continue;
 		if (fwupd_device_get_parent(dev_tmp) == dev) {
@@ -491,6 +503,10 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 
 		/* add all releases that could be applied */
@@ -567,6 +583,7 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* get results from daemon */
 	if (g_strv_length(values) > 0) {
@@ -583,15 +600,25 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	/* filter results */
+	devices_filtered = fu_util_device_array_filter(devs,
+						       self->filter_device_include,
+						       self->filter_device_exclude,
+						       self->filter_protocols_include,
+						       self->filter_protocols_exclude,
+						       error);
+	if (devices_filtered == NULL)
+		return FALSE;
+
 	/* not for human consumption */
 	if (self->as_json) {
-		fu_util_get_devices_as_json(self, devs);
+		fu_util_get_devices_as_json(self, devices_filtered);
 		return TRUE;
 	}
 
 	/* print */
-	if (devs->len > 0)
-		fu_util_build_device_tree(self, root, devs, NULL);
+	if (devices_filtered->len > 0)
+		fu_util_build_device_tree(self, root, devices_filtered, NULL);
 	if (g_node_n_children(root) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -721,6 +748,10 @@ fu_util_filter_devices(FuUtil *self, GPtrArray *devices, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		g_ptr_array_add(devices_filtered, g_object_ref(dev));
 	}
@@ -1768,6 +1799,10 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 					      self->filter_device_include,
 					      self->filter_device_exclude))
 			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
+			continue;
 		if ((self->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
 				g_debug("%s has already been reported", fwupd_device_get_id(dev));
@@ -1868,6 +1903,7 @@ fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GErro
 {
 	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* get all devices from the history database, then filter them,
@@ -1877,17 +1913,27 @@ fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GErro
 		return FALSE;
 	g_debug("%u devices with history", devices->len);
 
+	/* filter results */
+	devices_filtered = fu_util_device_array_filter(devices,
+						       self->filter_device_include,
+						       self->filter_device_exclude,
+						       self->filter_protocols_include,
+						       self->filter_protocols_exclude,
+						       error);
+	if (devices_filtered == NULL)
+		return FALSE;
+
 	/* ignore the previous reported flag */
 	if (self->flags & FWUPD_INSTALL_FLAG_FORCE) {
-		for (guint i = 0; i < devices->len; i++) {
-			FwupdDevice *dev = g_ptr_array_index(devices, i);
+		for (guint i = 0; i < devices_filtered->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_filtered, i);
 			fwupd_device_remove_flag(dev, FWUPD_DEVICE_FLAG_REPORTED);
 		}
 	}
 
 	/* needs an extra action, show something to the user */
-	for (guint i = 0; i < devices->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index(devices, i);
+	for (guint i = 0; i < devices_filtered->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices_filtered, i);
 		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			g_autofree gchar *cmd = g_strdup_printf("%s activate", g_get_prgname());
 			fu_console_print(
@@ -2001,6 +2047,10 @@ fu_util_get_history(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		child = g_node_append_data(root, g_object_ref(dev));
 
@@ -2761,6 +2811,10 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 					      self->filter_device_include,
 					      self->filter_device_exclude))
 			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
+			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			g_ptr_array_add(devices_no_support, dev);
 			continue;
@@ -3166,6 +3220,10 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* are the remotes very old */
+	if (!fu_util_perhaps_refresh_remotes(self, error))
+		return FALSE;
+
 	/* DEVICE-ID and GUID are acceptable args to update */
 	for (guint idx = 0; idx < g_strv_length(values); idx++) {
 		if (!fwupd_guid_is_valid(values[idx]) && !fwupd_device_id_is_valid(values[idx])) {
@@ -3216,6 +3274,10 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_match_flags(dev,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(dev,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		supported = TRUE;
 
@@ -3893,6 +3955,10 @@ fu_util_activate(FuUtil *self, gchar **values, GError **error)
 		if (!fwupd_device_match_flags(device,
 					      self->filter_device_include,
 					      self->filter_device_exclude))
+			continue;
+		if (!fu_util_device_match_protocol(device,
+						   self->filter_protocols_include,
+						   self->filter_protocols_exclude))
 			continue;
 		if (!fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
@@ -4581,6 +4647,8 @@ fu_util_private_free(FuUtil *self)
 	if (self->current_device != NULL)
 		g_object_unref(self->current_device);
 	g_ptr_array_unref(self->post_requests);
+	g_ptr_array_unref(self->filter_protocols_include);
+	g_ptr_array_unref(self->filter_protocols_exclude);
 	g_main_loop_unref(self->loop);
 	g_main_context_unref(self->main_ctx);
 	g_object_unref(self->cancellable);
@@ -4714,7 +4782,8 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 	}
 
 	if (!self->as_json) {
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		GHashTableIter iter;
 
 		g_hash_table_iter_init(&iter, settings);
@@ -5210,6 +5279,7 @@ main(int argc, char *argv[])
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	guint download_retries = 0;
+	g_auto(GStrv) filter_protocols = NULL;
 	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
@@ -5408,6 +5478,14 @@ main(int argc, char *argv[])
 	     N_("Filter with a set of release flags using a ~ prefix to "
 		"exclude, e.g. 'trusted-release,~trusted-metadata'"),
 	     NULL},
+	    {"filter-protocol",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_STRING_ARRAY,
+	     &filter_protocols,
+	     /* TRANSLATORS: command line option */
+	     N_("Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"),
+	     NULL},
 	    {"json",
 	     '\0',
 	     0,
@@ -5458,6 +5536,8 @@ main(int argc, char *argv[])
 	self->loop = g_main_loop_new(self->main_ctx, FALSE);
 	self->console = fu_console_new();
 	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->filter_protocols_include = g_ptr_array_new_with_free_func(g_free);
+	self->filter_protocols_exclude = g_ptr_array_new_with_free_func(g_free);
 	fu_console_set_main_context(self->console, self->main_ctx);
 
 	/* add commands */
@@ -5918,6 +5998,20 @@ main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 	}
+	if (filter_protocols != NULL) {
+		if (!fu_util_parse_filter_protocol_flags(filter_protocols,
+							 self->filter_protocols_include,
+							 self->filter_protocols_exclude,
+							 &error)) {
+			g_autofree gchar *str =
+			    /* TRANSLATORS: the user didn't read the man page, %1 is
+			       '--filter-protocol' */
+			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter-protocol");
+			g_prefix_error(&error, "%s: ", str);
+			fu_util_print_error(self, error);
+			return EXIT_FAILURE;
+		}
+	}
 
 	/* set verbose? */
 	if (verbose) {
@@ -6082,12 +6176,13 @@ main(int argc, char *argv[])
 			 * where $1 is something like 'fwupdmgr --help' */
 			g_string_append_printf(str, _("Use %s for help"), cmd);
 			fu_console_print_literal(self->console, str->str);
-		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			return EXIT_NOTHING_TO_DO;
-		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE))
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE)) {
 			return EXIT_NOT_REACHABLE;
-		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			return EXIT_NOT_FOUND;
+		}
 		return EXIT_FAILURE;
 	}
 

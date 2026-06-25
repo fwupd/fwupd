@@ -48,5 +48,7 @@ const gchar *
 fu_redfish_backend_get_session_key(FuRedfishBackend *self);
 gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error);
+gboolean
+fu_redfish_backend_delete_session(FuRedfishBackend *self, GError **error);
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self);

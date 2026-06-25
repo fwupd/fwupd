@@ -106,6 +106,22 @@ fu_util_parse_filter_release_flags(const gchar *filter,
 				   FwupdReleaseFlags *include,
 				   FwupdReleaseFlags *exclude,
 				   GError **error) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fu_util_parse_filter_protocol_flags(gchar **filters,
+				    GPtrArray *include,
+				    GPtrArray *exclude,
+				    GError **error) G_GNUC_NON_NULL(1, 2, 3);
+GPtrArray *
+fu_util_device_array_filter(GPtrArray *devices,
+			    FwupdDeviceFlags include,
+			    FwupdDeviceFlags exclude,
+			    GPtrArray *protocols_include,
+			    GPtrArray *protocols_exclude,
+			    GError **error) G_GNUC_NON_NULL(1, 4, 5);
+gboolean
+fu_util_device_match_protocol(FwupdDevice *device,
+			      GPtrArray *protocols_include,
+			      GPtrArray *protocols_exclude) G_GNUC_NON_NULL(1, 2, 3);
 gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt) G_GNUC_NON_NULL(1, 2);
 gchar *

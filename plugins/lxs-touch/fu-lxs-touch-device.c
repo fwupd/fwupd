@@ -147,6 +147,7 @@ fu_lxs_touch_device_ensure_version(FuLxsTouchDevice *self, GError **error)
 {
 	guint8 buf[8] = {0};
 	g_autofree gchar *version = NULL;
+	g_autofree gchar *version_bootloader = NULL;
 	g_autoptr(FuStructLxsTouchVersion) st_ver = NULL;
 
 	if (!fu_lxs_touch_device_read_data(self,
@@ -158,12 +159,17 @@ fu_lxs_touch_device_ensure_version(FuLxsTouchDevice *self, GError **error)
 	st_ver = fu_struct_lxs_touch_version_parse(buf, sizeof(buf), 0x0, error);
 	if (st_ver == NULL)
 		return FALSE;
-	version = g_strdup_printf("%04X.%04X.%04X.%04X",
-				  fu_struct_lxs_touch_version_get_boot_ver(st_ver),
+	/* application version only: core.app.param (excludes boot from comparison) */
+	version = g_strdup_printf("%04X.%04X.%04X",
 				  fu_struct_lxs_touch_version_get_core_ver(st_ver),
 				  fu_struct_lxs_touch_version_get_app_ver(st_ver),
 				  fu_struct_lxs_touch_version_get_param_ver(st_ver));
 	fu_device_set_version(FU_DEVICE(self), version);
+
+	/* bootloader version: informational only, not used for comparison */
+	version_bootloader = g_strdup_printf("%04X",
+					     fu_struct_lxs_touch_version_get_boot_ver(st_ver));
+	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 
 	/* success */
 	return TRUE;

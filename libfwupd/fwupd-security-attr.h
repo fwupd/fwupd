@@ -149,14 +149,10 @@ gboolean
 fwupd_security_attr_has_flag(FwupdSecurityAttr *self,
 			     FwupdSecurityAttrFlags flag) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
-const gchar *
-fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag);
 FwupdSecurityAttrFlags
 fwupd_security_attr_flag_from_string(const gchar *flag);
 const gchar *
 fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag);
-const gchar *
-fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result);
 FwupdSecurityAttrResult
 fwupd_security_attr_result_from_string(const gchar *result);
 
