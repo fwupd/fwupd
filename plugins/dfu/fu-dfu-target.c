@@ -504,7 +504,7 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 
 	/* STM32-specific long errors */
 	status = fu_dfu_device_get_status(FU_DFU_DEVICE(proxy));
-	if (fu_dfu_device_get_version(FU_DFU_DEVICE(proxy)) == FU_DFU_FIRMARE_VERSION_DFUSE) {
+	if (fu_dfu_device_get_version(FU_DFU_DEVICE(proxy)) == FU_DFU_FIRMWARE_VERSION_DFUSE) {
 		if (status == FU_DFU_STATUS_ERR_VENDOR) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -729,7 +729,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 
 	/* for STM32 devices, the action only occurs when we do GetStatus --
 	 * and it can take a long time to complete! */
-	if (fu_dfu_device_get_version(FU_DFU_DEVICE(proxy)) == FU_DFU_FIRMARE_VERSION_DFUSE) {
+	if (fu_dfu_device_get_version(FU_DFU_DEVICE(proxy)) == FU_DFU_FIRMWARE_VERSION_DFUSE) {
 		if (!fu_dfu_device_refresh(FU_DFU_DEVICE(proxy), 35000, error))
 			return FALSE;
 	}
