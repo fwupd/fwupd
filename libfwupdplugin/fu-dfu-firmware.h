@@ -16,49 +16,39 @@ struct _FuDfuFirmwareClass {
 };
 
 /**
- * FU_DFU_FIRMARE_VERSION_UNKNOWN:
+ * FU_DFU_FIRMWARE_VERSION_UNKNOWN:
  *
  * Unknown version of the DFU standard in BCD format.
- *
- * Since: 1.6.1
  **/
-#define FU_DFU_FIRMARE_VERSION_UNKNOWN (0u)
+#define FU_DFU_FIRMWARE_VERSION_UNKNOWN (0u)
 
 /**
- * FU_DFU_FIRMARE_VERSION_DFU_1_0:
+ * FU_DFU_FIRMWARE_VERSION_DFU_1_0:
  *
  * The 1.0 version of the DFU standard in BCD format.
- *
- * Since: 1.6.1
  **/
-#define FU_DFU_FIRMARE_VERSION_DFU_1_0 (0x0100)
+#define FU_DFU_FIRMWARE_VERSION_DFU_1_0 (0x0100)
 
 /**
- * FU_DFU_FIRMARE_VERSION_DFU_1_1:
+ * FU_DFU_FIRMWARE_VERSION_DFU_1_1:
  *
  * The 1.1 version of the DFU standard in BCD format.
- *
- * Since: 1.6.1
  **/
-#define FU_DFU_FIRMARE_VERSION_DFU_1_1 (0x0110)
+#define FU_DFU_FIRMWARE_VERSION_DFU_1_1 (0x0110)
 
 /**
- * FU_DFU_FIRMARE_VERSION_DFUSE:
+ * FU_DFU_FIRMWARE_VERSION_DFUSE:
  *
  * The DfuSe version of the DFU standard in BCD format, defined by ST.
- *
- * Since: 1.6.1
  **/
-#define FU_DFU_FIRMARE_VERSION_DFUSE (0x011a)
+#define FU_DFU_FIRMWARE_VERSION_DFUSE (0x011a)
 
 /**
- * FU_DFU_FIRMARE_VERSION_ATMEL_AVR:
+ * FU_DFU_FIRMWARE_VERSION_ATMEL_AVR:
  *
  * The Atmel AVR version of the DFU standard in BCD format.
- *
- * Since: 1.6.1
  **/
-#define FU_DFU_FIRMARE_VERSION_ATMEL_AVR (0xff01)
+#define FU_DFU_FIRMWARE_VERSION_ATMEL_AVR (0xff01)
 
 FuFirmware *
 fu_dfu_firmware_new(void);
