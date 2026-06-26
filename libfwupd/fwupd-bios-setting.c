@@ -871,7 +871,7 @@ fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GErro
  * the firmware.
  *
  * If fwupd_bios_setting_add_possible_value_full() was used then the raw value is automatically
- * mapped to the display value before being set as a the current version.
+ * mapped to the display value before being set as the current version.
  *
  * Returns: %TRUE for success
  *

@@ -121,7 +121,7 @@ fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind)
  * fwupd_checksum_get_best:
  * @checksums: (element-type utf8): checksums
  *
- * Gets a the best possible checksum kind.
+ * Gets the best possible checksum kind.
  *
  * Returns: a checksum from the array, or %NULL if nothing was suitable
  *
