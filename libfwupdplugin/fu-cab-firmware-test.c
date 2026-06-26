@@ -11,34 +11,6 @@
 #include "fu-cab-firmware-private.h"
 
 static void
-fu_cab_firmware_checksum_func(void)
-{
-	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
-	guint32 checksums[] = {
-	    0xc0404040,
-	    0x40604060,
-	    0x40307070,
-	    0x40302040,
-	    0x40302010,
-	    0x102030,
-	    0x1020,
-	    0x10,
-	    0x0,
-	};
-
-	for (guint i = 0; i <= sizeof(buf); i++) {
-		gboolean ret;
-		guint32 checksum = 0x0;
-		g_autoptr(GError) error = NULL;
-
-		ret = fu_cab_firmware_compute_checksum(buf, sizeof(buf) - i, &checksum, &error);
-		g_assert_no_error(error);
-		g_assert_true(ret);
-		g_assert_cmpint(checksum, ==, checksums[i]);
-	}
-}
-
-static void
 fu_cab_firmware_compressed_size_func(void)
 {
 	gboolean ret;
@@ -80,7 +52,7 @@ fu_cab_firmware_compressed_size_func(void)
 				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
-	g_assert_true(g_str_has_prefix(error->message, "decompressed size mismatch"));
+	g_assert_true(g_str_has_prefix(error->message, "CAB format error: file 'foo.txt' extends past end of folder data"));
 	g_assert_false(ret);
 }
 
@@ -88,7 +60,6 @@ int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
-	g_test_add_func("/fwupd/cab-firmware/checksum", fu_cab_firmware_checksum_func);
 	g_test_add_func("/fwupd/cab-firmware/compressed-size",
 			fu_cab_firmware_compressed_size_func);
 	return g_test_run();

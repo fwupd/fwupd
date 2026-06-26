@@ -7,6 +7,3 @@
 #pragma once
 
 #include "fu-cab-firmware.h"
-
-gboolean
-fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error);

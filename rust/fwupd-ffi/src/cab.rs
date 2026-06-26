@@ -39,8 +39,8 @@ use fwupd::firmware::FuFirmwareParseFlags;
 
 use crate::common::*;
 
-// GSeekType constants
-const G_SEEK_SET: i32 = 0;
+// GSeekType constants (note: GLib order differs from POSIX: CUR=0, SET=1, END=2)
+const G_SEEK_SET: i32 = 1;
 const G_SEEK_END: i32 = 2;
 
 // ---------------------------------------------------------------------------
@@ -77,7 +77,6 @@ impl GInputStreamReadAt {
             return Err("stream is not seekable".to_string());
         }
         // determine size by seeking to end
-        let cur = unsafe { g_seekable_tell(stream) };
         let mut gerr: *mut GError = core::ptr::null_mut();
         if unsafe { g_seekable_seek(stream, 0, G_SEEK_END, core::ptr::null_mut(), &mut gerr) } == 0
         {
@@ -85,12 +84,11 @@ impl GInputStreamReadAt {
             return Err(format!("failed to seek to end: {msg}"));
         }
         let end = unsafe { g_seekable_tell(stream) };
-        // seek back
-        if unsafe { g_seekable_seek(stream, cur, G_SEEK_SET, core::ptr::null_mut(), &mut gerr) }
-            == 0
+        // seek back to start -- read_at() seeks explicitly before each read
+        if unsafe { g_seekable_seek(stream, 0, G_SEEK_SET, core::ptr::null_mut(), &mut gerr) } == 0
         {
             let msg = unsafe { take_gerror_message(gerr) };
-            return Err(format!("failed to seek back to offset 0x{cur:x}: {msg}"));
+            return Err(format!("failed to seek back to start: {msg}"));
         }
         // take a ref
         unsafe { g_object_ref(stream) };

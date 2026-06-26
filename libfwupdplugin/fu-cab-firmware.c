@@ -8,19 +8,13 @@
 
 #include "config.h"
 
-#include <zlib.h>
-
-#include "fu-byte-array.h"
-#include "fu-cab-firmware-private.h"
+#include "fu-cab-firmware.h"
 #include "fu-cab-image.h"
 #include "fu-cab-struct.h"
-#include "fu-chunk-array.h"
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
-#include "fu-input-stream.h"
-#include "fu-mem-private.h"
 #include "fu-partial-input-stream.h"
-#include "fu-path.h"
+#include "fu-rs-cab.h"
 #include "fu-string.h"
 
 typedef struct {
@@ -29,12 +23,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_cab_firmware_get_instance_private(o))
-
-#define FU_CAB_FIRMWARE_MAX_FILES    1024
-#define FU_CAB_FIRMWARE_MAX_FOLDERS  64
-#define FU_CAB_FIRMWARE_MAX_FILENAME 1000
-
-#define FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ 0x4000 /* bytes */
 
 /**
  * fu_cab_firmware_get_compressed:
@@ -71,35 +59,8 @@ fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed)
 	priv->compressed = compressed;
 }
 
-typedef struct {
-	GInputStream *stream;
-	FuFirmwareParseFlags parse_flags;
-	gsize rsvd_folder;
-	gsize rsvd_block;
-	gsize size_total;
-	FuCabCompression compression;
-	GPtrArray *folder_data; /* of FuCompositeInputStream */
-	z_stream zstrm;
-	guint8 *decompress_buf;
-	gsize decompress_bufsz;
-	gsize ndatabsz;
-} FuCabFirmwareParseHelper;
-
-static void
-fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
-{
-	inflateEnd(&helper->zstrm);
-	if (helper->stream != NULL)
-		g_object_unref(helper->stream);
-	if (helper->folder_data != NULL)
-		g_ptr_array_unref(helper->folder_data);
-	g_free(helper->decompress_buf);
-	g_free(helper);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCabFirmwareParseHelper, fu_cab_firmware_parse_helper_free)
-
-/* compute the MS cabinet checksum */
+/* obsolete: checksum is now computed in the Rust CAB parser */
+#if 0
 gboolean
 fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
 {
@@ -129,477 +90,15 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 	*checksum = tmp;
 	return TRUE;
 }
-
-static gboolean
-fu_cab_firmware_compute_checksum_stream_cb(const guint8 *buf,
-					   gsize bufsz,
-					   gpointer user_data,
-					   GError **error)
-{
-	guint32 *checksum = (guint32 *)user_data;
-	return fu_cab_firmware_compute_checksum(buf, bufsz, checksum, error);
-}
-
-static voidpf
-fu_cab_firmware_zalloc(voidpf opaque, uInt items, uInt size)
-{
-	return g_malloc0_n(items, size);
-}
-
-static void
-fu_cab_firmware_zfree(voidpf opaque, voidpf address)
-{
-	g_free(address);
-}
-
-typedef z_stream z_stream_deflater;
-
-static void
-fu_cab_firmware_zstream_deflater_free(z_stream_deflater *zstrm)
-{
-	deflateEnd(zstrm);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_deflater, fu_cab_firmware_zstream_deflater_free)
-
-static gboolean
-fu_cab_firmware_parse_data(FuCabFirmware *self,
-			   FuCabFirmwareParseHelper *helper,
-			   gsize *offset,
-			   GInputStream *folder_data,
-			   GError **error)
-{
-	gsize blob_comp;
-	gsize blob_uncomp;
-	gsize hdr_sz;
-	gsize payload_offset = *offset;
-	gsize size_max = fu_firmware_get_size_max(FU_FIRMWARE(self));
-	g_autoptr(FuStructCabData) st = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
-
-	/* parse header */
-	st = fu_struct_cab_data_parse_stream(helper->stream, *offset, error);
-	if (st == NULL)
-		return FALSE;
-
-	/* sanity check */
-	blob_comp = fu_struct_cab_data_get_comp(st);
-	blob_uncomp = fu_struct_cab_data_get_uncomp(st);
-
-	/* validate blob sizes are reasonable */
-	if (blob_comp == 0 || blob_uncomp == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "compressed or uncompressed size is zero");
-		return FALSE;
-	}
-
-	if (helper->compression == FU_CAB_COMPRESSION_NONE && blob_comp != blob_uncomp) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "mismatched compressed data");
-		return FALSE;
-	}
-	if (!fu_size_checked_inc(&helper->size_total, blob_uncomp, error))
-		return FALSE;
-	if (size_max > 0 && helper->size_total > size_max) {
-		g_autofree gchar *sz_val = g_format_size(helper->size_total);
-		g_autofree gchar *sz_max = g_format_size(size_max);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "uncompressed data too large (%s, limit %s)",
-			    sz_val,
-			    sz_max);
-		return FALSE;
-	}
-
-	/* header size calculation */
-	hdr_sz = st->buf->len;
-	if (!fu_size_checked_inc(&hdr_sz, helper->rsvd_block, error)) {
-		g_prefix_error_literal(error, "CFDATA header size overflow: ");
-		return FALSE;
-	}
-
-	/* verify checksum */
-	if (!fu_size_checked_inc(&payload_offset, hdr_sz, error))
-		return FALSE;
-	partial_stream =
-	    fu_partial_input_stream_new(helper->stream, payload_offset, blob_comp, error);
-	if (partial_stream == NULL) {
-		g_prefix_error_literal(error, "failed to cut cabinet checksum: ");
-		return FALSE;
-	}
-	if ((helper->parse_flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint32 checksum = fu_struct_cab_data_get_checksum(st);
-		if (checksum != 0) {
-			guint32 checksum_actual = 0;
-			g_autoptr(GByteArray) hdr = g_byte_array_new();
-
-			if (!fu_input_stream_chunkify(partial_stream,
-						      fu_cab_firmware_compute_checksum_stream_cb,
-						      &checksum_actual,
-						      error))
-				return FALSE;
-			fu_byte_array_append_uint16(hdr, blob_comp, G_LITTLE_ENDIAN);
-			fu_byte_array_append_uint16(hdr, blob_uncomp, G_LITTLE_ENDIAN);
-			if (!fu_cab_firmware_compute_checksum(hdr->data,
-							      hdr->len,
-							      &checksum_actual,
-							      error))
-				return FALSE;
-			if (checksum_actual != checksum) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "invalid checksum at 0x%x, expected 0x%x, got 0x%x",
-					    (guint)*offset,
-					    checksum,
-					    checksum_actual);
-				return FALSE;
-			}
-		}
-	}
-
-	/* decompress Zlib data after removing *another *header... */
-	if (helper->compression == FU_CAB_COMPRESSION_MSZIP) {
-		int zret;
-		g_autofree gchar *kind = NULL;
-		g_autoptr(GByteArray) buf = g_byte_array_new();
-		g_autoptr(GBytes) bytes_comp = NULL;
-		g_autoptr(GBytes) bytes_uncomp = NULL;
-
-		/* check compressed header */
-		bytes_comp = fu_input_stream_read_bytes(helper->stream,
-							payload_offset,
-							blob_comp,
-							NULL,
-							error);
-		if (bytes_comp == NULL)
-			return FALSE;
-		kind = fu_memstrsafe(g_bytes_get_data(bytes_comp, NULL),
-				     g_bytes_get_size(bytes_comp),
-				     0x0,
-				     2,
-				     error);
-		if (kind == NULL)
-			return FALSE;
-		if (g_strcmp0(kind, "CK") != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "compressed header invalid: %s",
-				    kind);
-			return FALSE;
-		}
-		if (helper->decompress_buf == NULL) {
-			/* sanity check decompress buffer size */
-			if (helper->decompress_bufsz == 0 ||
-			    helper->decompress_bufsz > 32 * FU_MB) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "invalid decompress buffer size: 0x%x",
-					    (guint)helper->decompress_bufsz);
-				return FALSE;
-			}
-			helper->decompress_buf = g_malloc0(helper->decompress_bufsz);
-		}
-		helper->zstrm.avail_in = g_bytes_get_size(bytes_comp) - 2;
-		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(bytes_comp, NULL) + 2;
-		while (1) {
-			helper->zstrm.avail_out = helper->decompress_bufsz;
-			helper->zstrm.next_out = helper->decompress_buf;
-			zret = inflate(&helper->zstrm, Z_BLOCK);
-			g_byte_array_append(buf,
-					    helper->decompress_buf,
-					    helper->decompress_bufsz - helper->zstrm.avail_out);
-			if (buf->len > blob_uncomp) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "decompressed size mismatch (0x%x, specified 0x%x)",
-					    buf->len,
-					    (guint)blob_uncomp);
-				return FALSE;
-			}
-			if (zret == Z_STREAM_END)
-				break;
-			if (zret != Z_OK) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "inflate error @0x%x: %s",
-					    (guint)*offset,
-					    zError(zret));
-				return FALSE;
-			}
-
-			/* prevent decompression bombs */
-			if (size_max > 0 && buf->len > size_max) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "decompressed data too large (0x%x, limit 0x%x)",
-					    buf->len,
-					    (guint)size_max);
-				return FALSE;
-			}
-		}
-
-		/* verify actual decompressed size matches declared size */
-		if (buf->len != blob_uncomp) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "decompressed size mismatch (0x%x, specified 0x%x)",
-				    buf->len,
-				    (guint)blob_uncomp);
-			return FALSE;
-		}
-
-		zret = inflateReset(&helper->zstrm);
-		if (zret != Z_OK) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to reset inflate: %s",
-				    zError(zret));
-			return FALSE;
-		}
-
-		/* sanity check to zlib dictionary maximum */
-		if (buf->len > 32 * FU_KB) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "dictionary size 0x%x exceeds zlib maximum",
-				    buf->len);
-			return FALSE;
-		}
-
-		zret = inflateSetDictionary(&helper->zstrm, buf->data, buf->len);
-		if (zret != Z_OK) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to set inflate dictionary: %s",
-				    zError(zret));
-			return FALSE;
-		}
-		bytes_uncomp = g_byte_array_free_to_bytes(g_steal_pointer(&buf));
-		if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
-							 bytes_uncomp,
-							 error))
-			return FALSE;
-	} else {
-		if (!fu_composite_input_stream_add_partial_stream(
-			FU_COMPOSITE_INPUT_STREAM(folder_data),
-			FU_PARTIAL_INPUT_STREAM(partial_stream),
-			error))
-			return FALSE;
-	}
-
-	/* success */
-	if (!fu_size_checked_inc(offset, blob_comp, error))
-		return FALSE;
-	return fu_size_checked_inc(offset, hdr_sz, error);
-}
-
-static gboolean
-fu_cab_firmware_parse_folder(FuCabFirmware *self,
-			     FuCabFirmwareParseHelper *helper,
-			     guint idx,
-			     gsize offset,
-			     GInputStream *folder_data,
-			     GError **error)
-{
-	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuStructCabFolder) st = NULL;
-
-	/* parse header */
-	st = fu_struct_cab_folder_parse_stream(helper->stream, offset, error);
-	if (st == NULL)
-		return FALSE;
-
-	/* sanity check */
-	if (fu_struct_cab_folder_get_ndatab(st) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no CFDATA blocks");
-		return FALSE;
-	}
-	helper->compression = fu_struct_cab_folder_get_compression(st);
-	if (helper->compression != FU_CAB_COMPRESSION_NONE)
-		priv->compressed = TRUE;
-	if (helper->compression != FU_CAB_COMPRESSION_NONE &&
-	    helper->compression != FU_CAB_COMPRESSION_MSZIP) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "compression %s not supported",
-			    fu_cab_compression_to_string(helper->compression));
-		return FALSE;
-	}
-
-	/* parse CDATA, either using the stream offset or the per-spec FuStructCabFolder.ndatab */
-	if (helper->ndatabsz > 0) {
-		for (gsize off = fu_struct_cab_folder_get_offset(st); off < helper->ndatabsz;) {
-			if (!fu_cab_firmware_parse_data(self, helper, &off, folder_data, error))
-				return FALSE;
-		}
-	} else {
-		gsize off = fu_struct_cab_folder_get_offset(st);
-		for (guint16 i = 0; i < fu_struct_cab_folder_get_ndatab(st); i++) {
-			if (!fu_cab_firmware_parse_data(self, helper, &off, folder_data, error))
-				return FALSE;
-		}
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_cab_firmware_parse_file(FuCabFirmware *self,
-			   FuCabFirmwareParseHelper *helper,
-			   gsize *offset,
-			   FuFirmwareParseFlags flags,
-			   GError **error)
-{
-	GInputStream *folder_data;
-	guint16 date;
-	guint16 index;
-	guint16 time;
-	g_autoptr(FuCabImage) img = fu_cab_image_new();
-	g_autoptr(FuStructCabFile) st = NULL;
-	g_autoptr(GDateTime) created = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GString) filename = g_string_new(NULL);
-	g_autoptr(GTimeZone) tz_utc = g_time_zone_new_utc();
-
-	/* parse header */
-	st = fu_struct_cab_file_parse_stream(helper->stream, *offset, error);
-	if (st == NULL)
-		return FALSE;
-	fu_firmware_set_offset(FU_FIRMWARE(img), fu_struct_cab_file_get_uoffset(st));
-	fu_firmware_set_size(FU_FIRMWARE(img), fu_struct_cab_file_get_usize(st));
-
-	/* sanity check */
-	index = fu_struct_cab_file_get_index(st);
-	if (index >= helper->folder_data->len) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to get folder data for 0x%x",
-			    index);
-		return FALSE;
-	}
-	folder_data = g_ptr_array_index(helper->folder_data, index);
-
-	/* parse filename */
-	if (!fu_size_checked_inc(offset, FU_STRUCT_CAB_FILE_SIZE, error))
-		return FALSE;
-	for (guint i = 0;; i++) {
-		guint8 value = 0;
-		if (i >= FU_CAB_FIRMWARE_MAX_FILENAME) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "filename exceeds maximum length");
-			return FALSE;
-		}
-		if (!fu_input_stream_read_u8(helper->stream, *offset + i, &value, error))
-			return FALSE;
-		if (value == 0)
-			break;
-		if (!g_ascii_isprint((gchar)value)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "non-ASCII filenames are not supported: 0x%02x",
-				    value);
-			return FALSE;
-		}
-		/* convert to UNIX path */
-		if (value == '\\')
-			value = '/';
-		g_string_append_c(filename, (gchar)value);
-	}
-
-	/* sanity check */
-	if (!fu_path_verify_safe(filename->str, error))
-		return FALSE;
-
-	/* add image */
-	if (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME) {
-		g_autofree gchar *id = g_path_get_basename(filename->str);
-		fu_firmware_set_id(FU_FIRMWARE(img), id);
-	} else {
-		fu_firmware_set_id(FU_FIRMWARE(img), filename->str);
-	}
-	stream = fu_partial_input_stream_new(folder_data,
-					     fu_struct_cab_file_get_uoffset(st),
-					     fu_struct_cab_file_get_usize(st),
-					     error);
-	if (stream == NULL) {
-		g_prefix_error_literal(error, "failed to cut cabinet image: ");
-		return FALSE;
-	}
-	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->parse_flags, error))
-		return FALSE;
-	if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
-		return FALSE;
-
-	/* set created date time */
-	date = fu_struct_cab_file_get_date(st);
-	time = fu_struct_cab_file_get_time(st);
-	created = g_date_time_new(tz_utc,
-				  1980 + ((date & 0xFE00) >> 9),
-				  (date & 0x01E0) >> 5,
-				  date & 0x001F,
-				  (time & 0xF800) >> 11,
-				  (time & 0x07E0) >> 5,
-				  (time & 0x001F) * 2);
-	fu_cab_image_set_created(img, created);
-
-	/* offset to next entry */
-	return fu_size_checked_inc(offset, filename->len + 1, error);
-}
+#endif
 
 static gboolean
 fu_cab_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
+	/* use the auto-generated struct validator rather than fu_rs_cab_validate()
+	 * as the framework calls this at every offset during brute-force magic
+	 * search and the Rust version is too expensive per-call */
 	return fu_struct_cab_header_validate_stream(stream, offset, error);
-}
-
-static FuCabFirmwareParseHelper *
-fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flags, GError **error)
-{
-	int zret;
-	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
-
-	/* zlib */
-	helper->zstrm.zalloc = fu_cab_firmware_zalloc;
-	helper->zstrm.zfree = fu_cab_firmware_zfree;
-	zret = inflateInit2(&helper->zstrm, -MAX_WBITS);
-	if (zret != Z_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to initialize inflate: %s",
-			    zError(zret));
-		return NULL;
-	}
-
-	helper->stream = g_object_ref(stream);
-	helper->parse_flags = flags;
-	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	helper->decompress_bufsz = FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ;
-	return g_steal_pointer(&helper);
 }
 
 static gboolean
@@ -609,152 +108,90 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		      GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
-	gsize off_cffile = 0;
-	gsize offset = 0;
-	gsize streamsz = 0;
-	g_autoptr(FuStructCabHeader) st = NULL;
-	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;
+	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
+	int only_basename = (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_BASENAME) ? 1 : 0;
+	int ignore_checksum = (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) ? 1 : 0;
+	g_autoptr(FuRsCabArchive) archive = NULL; /* nocheck:name */
 
-	/* get size */
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-
-	/* parse header */
-	st = fu_struct_cab_header_parse_stream(stream, offset, error);
-	if (st == NULL)
+	/* delegate to rust FFI */
+	archive = fu_rs_cab_parse(stream, only_basename, ignore_checksum, error);
+	if (archive == NULL)
 		return FALSE;
 
-	/* sanity checks */
-	if (fu_struct_cab_header_get_size(st) > streamsz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "archive size 0x%x exceeds stream size 0x%x",
-			    fu_struct_cab_header_get_size(st),
-			    (guint)streamsz);
-		return FALSE;
-	}
-	if (fu_struct_cab_header_get_idx_cabinet(st) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "chained archive not supported");
-		return FALSE;
-	}
-	if (fu_struct_cab_header_get_nr_folders(st) == 0 ||
-	    fu_struct_cab_header_get_nr_files(st) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "archive is empty");
-		return FALSE;
-	}
-	if (fu_struct_cab_header_get_nr_folders(st) > FU_CAB_FIRMWARE_MAX_FOLDERS) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "too many CFFOLDERS, parsed %u and limit was %u",
-			    fu_struct_cab_header_get_nr_folders(st),
-			    (guint)FU_CAB_FIRMWARE_MAX_FOLDERS);
-		return FALSE;
-	}
-	if (fu_struct_cab_header_get_nr_files(st) > FU_CAB_FIRMWARE_MAX_FILES) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "too many CFFILES, parsed %u and limit was %u",
-			    fu_struct_cab_header_get_nr_files(st),
-			    (guint)FU_CAB_FIRMWARE_MAX_FILES);
-		return FALSE;
-	}
-	off_cffile = fu_struct_cab_header_get_off_cffile(st);
-	if (off_cffile > streamsz) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "archive is corrupt");
-		return FALSE;
-	}
+	/* record whether the archive was compressed */
+	priv->compressed = fu_rs_cab_is_compressed(archive) != 0;
 
-	/* create helper */
-	helper = fu_cab_firmware_parse_helper_new(stream, flags, error);
-	if (helper == NULL)
-		return FALSE;
+	/* iterate results creating FuCabImage children */
+	for (gsize i = 0; i < fu_rs_cab_nfiles(archive); i++) {
+		const gchar *filename = fu_rs_cab_filename(archive, i);
+		g_autoptr(FuCabImage) img = fu_cab_image_new();
+		g_autoptr(GDateTime) created = NULL;
+		g_autoptr(GTimeZone) tz_utc = g_time_zone_new_utc();
 
-	/* if the only folder is >= 2GB then FuStructCabFolder.ndatab will overflow */
-	if (streamsz >= 0x8000 * 0xFFFF && fu_struct_cab_header_get_nr_folders(st) == 1)
-		helper->ndatabsz = streamsz;
+		/* set filename as image id */
+		fu_firmware_set_id(FU_FIRMWARE(img), filename);
 
-	/* reserved sizes */
-	if (!fu_size_checked_inc(&offset, st->buf->len, error)) {
-		g_prefix_error_literal(error, "header offset overflow: ");
-		return FALSE;
-	}
-
-	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
-		g_autoptr(FuStructCabHeaderReserve) st2 = NULL;
-		st2 = fu_struct_cab_header_reserve_parse_stream(stream, offset, error);
-		if (st2 == NULL)
-			return FALSE;
-		if (!fu_size_checked_inc(&offset, st2->buf->len, error)) {
-			g_prefix_error_literal(error, "header reserve offset overflow: ");
-			return FALSE;
+		/* set file data -- zero-copy for uncompressed, bytes for compressed */
+		if (fu_rs_cab_file_is_deferred(archive, i)) {
+			/* uncompressed: create stream views into the original source */
+			gsize nspans = fu_rs_cab_file_nspans(archive, i);
+			g_autoptr(GInputStream) file_stream = NULL;
+			if (nspans == 1) {
+				gsize offset = 0;
+				gsize length = 0;
+				fu_rs_cab_file_span(archive, i, 0, &offset, &length);
+				file_stream = fu_partial_input_stream_new(
+				    stream, offset, length, error);
+				if (file_stream == NULL)
+					return FALSE;
+			} else {
+				g_autoptr(GInputStream) composite =
+				    fu_composite_input_stream_new();
+				for (gsize j = 0; j < nspans; j++) {
+					gsize offset = 0;
+					gsize length = 0;
+					g_autoptr(GInputStream) partial = NULL;
+					fu_rs_cab_file_span(archive, i, j,
+							    &offset, &length);
+					partial = fu_partial_input_stream_new(
+					    stream, offset, length, error);
+					if (partial == NULL)
+						return FALSE;
+					if (!fu_composite_input_stream_add_stream(
+						FU_COMPOSITE_INPUT_STREAM(composite),
+						partial, error))
+						return FALSE;
+				}
+				file_stream = g_steal_pointer(&composite);
+			}
+			if (!fu_firmware_set_stream(FU_FIRMWARE(img),
+						    file_stream, error))
+				return FALSE;
+		} else {
+			/* compressed: data was decompressed by the Rust parser */
+			gsize data_len = 0;
+			const guint8 *data =
+			    fu_rs_cab_file_data(archive, i, &data_len);
+			g_autoptr(GBytes) blob = g_bytes_new(data, data_len);
+			fu_firmware_set_bytes(FU_FIRMWARE(img), blob);
 		}
 
-		if (!fu_size_checked_inc(&offset,
-					 fu_struct_cab_header_reserve_get_rsvd_hdr(st2),
-					 error))
-			return FALSE;
-		helper->rsvd_block = fu_struct_cab_header_reserve_get_rsvd_block(st2);
-		helper->rsvd_folder = fu_struct_cab_header_reserve_get_rsvd_folder(st2);
+		/* set created date/time from unpacked MS-DOS values */
+		created = g_date_time_new(tz_utc,
+					  fu_rs_cab_file_year(archive, i),
+					  fu_rs_cab_file_month(archive, i),
+					  fu_rs_cab_file_day(archive, i),
+					  fu_rs_cab_file_hour(archive, i),
+					  fu_rs_cab_file_minute(archive, i),
+					  fu_rs_cab_file_second(archive, i));
+		if (created != NULL)
+			fu_cab_image_set_created(img, created);
 
-		/* sanity check */
-		if (helper->rsvd_block > 1 * FU_MB) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "reserved block size unreasonably large: 0x%x",
-				    (guint)helper->rsvd_block);
-			return FALSE;
-		}
-		if (helper->rsvd_folder > 1 * FU_MB) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "reserved folder size unreasonably large: 0x%x",
-				    (guint)helper->rsvd_folder);
-			return FALSE;
-		}
-	}
-
-	/* parse CFFOLDER */
-	for (guint i = 0; i < fu_struct_cab_header_get_nr_folders(st); i++) {
-		g_autoptr(GInputStream) folder_data = fu_composite_input_stream_new();
-		if (!fu_cab_firmware_parse_folder(self, helper, i, offset, folder_data, error))
-			return FALSE;
-		if (!fu_input_stream_size(folder_data, &streamsz, error))
-			return FALSE;
-		if (streamsz == 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no folder data");
-			return FALSE;
-		}
-		g_ptr_array_add(helper->folder_data, g_steal_pointer(&folder_data));
-		if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FOLDER_SIZE, error))
-			return FALSE;
-		if (!fu_size_checked_inc(&offset, helper->rsvd_folder, error))
+		/* add image */
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 			return FALSE;
 	}
 
-	/* parse CFFILEs */
-	for (guint i = 0; i < fu_struct_cab_header_get_nr_files(st); i++) {
-		if (!fu_cab_firmware_parse_file(self, helper, &off_cffile, flags, error))
-			return FALSE;
-	}
-
-	/* success */
 	return TRUE;
 }
 
@@ -763,22 +200,23 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize archive_size;
-	gsize offset;
-	gsize index_into = 0;
-	g_autoptr(FuStructCabHeader) st_hdr = fu_struct_cab_header_new();
-	g_autoptr(FuStructCabFolder) st_folder = fu_struct_cab_folder_new();
+	gsize out_len = 0;
+	guint8 *out_buf = NULL;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
-	g_autoptr(GByteArray) cfdata_linear = g_byte_array_new();
-	g_autoptr(GBytes) cfdata_linear_blob = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GPtrArray) chunks_zlib =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
+	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuRsCabArchive) archive = fu_rs_cab_new(); /* nocheck:name */
 
-	/* create linear CFDATA block */
+	/* build archive from images */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
+		GDateTime *created = fu_cab_image_get_created(FU_CAB_IMAGE(img));
+		guint16 year = 0;
+		guint8 month = 0;
+		guint8 day = 0;
+		guint8 hour = 0;
+		guint8 minute = 0;
+		guint second = 0;
 		g_autoptr(GBytes) img_blob = NULL;
 
 		if (filename_win32 == NULL) {
@@ -791,238 +229,38 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		img_blob = fu_firmware_get_bytes(img, error);
 		if (img_blob == NULL)
 			return NULL;
-		if (g_bytes_get_size(img_blob) > G_MAXUINT32) {
-			g_autofree gchar *sz_val = g_format_size(g_bytes_get_size(img_blob));
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "file size %s exceeds CAB format limit",
-				    sz_val);
-			return NULL;
-		}
-		fu_byte_array_append_bytes(cfdata_linear, img_blob);
-	}
 
-	/* chunkify and compress with a fixed size */
-	if (cfdata_linear->len == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no data to compress");
-		return NULL;
-	}
-	cfdata_linear_blob = g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear));
-	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       0x8000);
-	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "too many data blocks: %u",
-			    fu_chunk_array_length(chunks));
-		return NULL;
-	}
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GByteArray) chunk_zlib = g_byte_array_new();
-		g_autoptr(GByteArray) buf = g_byte_array_new();
-
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return NULL;
-		fu_byte_array_set_size(chunk_zlib, fu_chunk_get_data_sz(chk) * 2, 0x0);
-		if (priv->compressed) {
-			int zret;
-			z_stream zstrm = {
-			    .zalloc = fu_cab_firmware_zalloc,
-			    .zfree = fu_cab_firmware_zfree,
-			    .opaque = Z_NULL,
-			    .next_in = (guint8 *)fu_chunk_get_data(chk),
-			    .avail_in = fu_chunk_get_data_sz(chk),
-			    .next_out = chunk_zlib->data,
-			    .avail_out = chunk_zlib->len,
-			};
-			g_autoptr(z_stream_deflater) zstrm_deflater = &zstrm;
-			zret = deflateInit2(zstrm_deflater,
-					    Z_DEFAULT_COMPRESSION,
-					    Z_DEFLATED,
-					    -15,
-					    8,
-					    Z_DEFAULT_STRATEGY);
-			if (zret != Z_OK) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "failed to initialize deflate: %s",
-					    zError(zret));
-				return NULL;
-			}
-			zret = deflate(zstrm_deflater, Z_FINISH);
-			if (zret != Z_OK && zret != Z_STREAM_END) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "zlib deflate failed: %s",
-					    zError(zret));
-				return NULL;
-			}
-			fu_byte_array_append_uint8(buf, (guint8)'C');
-			fu_byte_array_append_uint8(buf, (guint8)'K');
-			g_byte_array_append(buf, chunk_zlib->data, zstrm.total_out);
-		} else {
-			g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		}
-		g_ptr_array_add(chunks_zlib, g_steal_pointer(&buf));
-	}
-
-	/* create header */
-	archive_size = FU_STRUCT_CAB_HEADER_SIZE;
-	if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_FOLDER_SIZE, error))
-		return NULL;
-	for (guint i = 0; i < imgs->len; i++) {
-		FuFirmware *img = g_ptr_array_index(imgs, i);
-		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-
-		/* validate filename exists */
-		if (filename_win32 == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "image filename not set");
-			return NULL;
-		}
-
-		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_FILE_SIZE, error))
-			return NULL;
-		if (!fu_size_checked_inc(&archive_size, strlen(filename_win32), error))
-			return NULL;
-		if (!fu_size_checked_inc(&archive_size, 1, error))
-			return NULL;
-	}
-	for (guint i = 0; i < chunks_zlib->len; i++) {
-		GByteArray *chunk = g_ptr_array_index(chunks_zlib, i);
-		if (!fu_size_checked_inc(&archive_size, FU_STRUCT_CAB_DATA_SIZE, error))
-			return NULL;
-		if (!fu_size_checked_inc(&archive_size, chunk->len, error))
-			return NULL;
-	}
-	offset = FU_STRUCT_CAB_HEADER_SIZE;
-	if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FOLDER_SIZE, error))
-		return NULL;
-	if (archive_size > G_MAXUINT32) {
-		g_autofree gchar *sz_val = g_format_size(archive_size);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "archive size %s exceeds CAB format limit",
-			    sz_val);
-		return NULL;
-	}
-	fu_struct_cab_header_set_size(st_hdr, (guint32)archive_size);
-	fu_struct_cab_header_set_off_cffile(st_hdr, offset);
-	fu_struct_cab_header_set_nr_files(st_hdr, imgs->len);
-
-	/* create folder */
-	for (guint i = 0; i < imgs->len; i++) {
-		FuFirmware *img = g_ptr_array_index(imgs, i);
-		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		if (!fu_size_checked_inc(&offset, FU_STRUCT_CAB_FILE_SIZE, error))
-			return NULL;
-		if (!fu_size_checked_inc(&offset, strlen(filename_win32), error))
-			return NULL;
-		if (!fu_size_checked_inc(&offset, 1, error))
-			return NULL;
-	}
-	fu_struct_cab_folder_set_offset(st_folder, offset);
-	fu_struct_cab_folder_set_ndatab(st_folder, (guint16)fu_chunk_array_length(chunks));
-	fu_struct_cab_folder_set_compression(st_folder,
-					     priv->compressed ? FU_CAB_COMPRESSION_MSZIP
-							      : FU_CAB_COMPRESSION_NONE);
-	fu_byte_array_append_array(st_hdr->buf, st_folder->buf);
-
-	/* create each CFFILE */
-	for (guint i = 0; i < imgs->len; i++) {
-		FuFirmware *img = g_ptr_array_index(imgs, i);
-		FuCabFileAttribute fattr = FU_CAB_FILE_ATTRIBUTE_NONE;
-		GDateTime *created = fu_cab_image_get_created(FU_CAB_IMAGE(img));
-		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		g_autoptr(FuStructCabFile) st_file = fu_struct_cab_file_new();
-		g_autoptr(GBytes) img_blob = fu_firmware_get_bytes(img, NULL);
-
-		if (!g_str_is_ascii(filename_win32))
-			fattr |= FU_CAB_FILE_ATTRIBUTE_NAME_UTF8;
-		fu_struct_cab_file_set_fattr(st_file, fattr);
-		fu_struct_cab_file_set_usize(st_file, (guint32)g_bytes_get_size(img_blob));
-
-		/* validate offset fits */
-		if (index_into > G_MAXUINT32) {
-			g_autofree gchar *sz_val = g_format_size(index_into);
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "file offset %s exceeds CAB format limit",
-				    sz_val);
-			return NULL;
-		}
-		fu_struct_cab_file_set_uoffset(st_file, (guint32)index_into);
+		/* extract date/time from GDateTime if available */
 		if (created != NULL) {
-			fu_struct_cab_file_set_date(st_file,
-						    ((g_date_time_get_year(created) - 1980) << 9) +
-							(g_date_time_get_month(created) << 5) +
-							g_date_time_get_day_of_month(created));
-			fu_struct_cab_file_set_time(st_file,
-						    (g_date_time_get_hour(created) << 11) +
-							(g_date_time_get_minute(created) << 5) +
-							(g_date_time_get_second(created) / 2));
+			year = g_date_time_get_year(created);
+			month = g_date_time_get_month(created);
+			day = g_date_time_get_day_of_month(created);
+			hour = g_date_time_get_hour(created);
+			minute = g_date_time_get_minute(created);
+			second = g_date_time_get_second(created);
 		}
-		fu_byte_array_append_array(st_hdr->buf, st_file->buf);
 
-		g_byte_array_append(st_hdr->buf,
-				    (const guint8 *)filename_win32,
-				    strlen(filename_win32));
-		fu_byte_array_append_uint8(st_hdr->buf, 0x0);
-
-		if (!fu_size_checked_inc(&index_into, g_bytes_get_size(img_blob), error)) {
-			g_prefix_error_literal(error, "file offset overflow: ");
-			return NULL;
-		}
+		fu_rs_cab_add_file(archive,
+				   filename_win32,
+				   g_bytes_get_data(img_blob, NULL),
+				   g_bytes_get_size(img_blob),
+				   year,
+				   month,
+				   day,
+				   hour,
+				   minute,
+				   second,
+				   0x00);
 	}
 
-	/* create each CFDATA */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		guint32 checksum = 0;
-		GByteArray *chunk_zlib = g_ptr_array_index(chunks_zlib, i);
-		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GByteArray) hdr = g_byte_array_new();
-		g_autoptr(FuStructCabData) st_data = fu_struct_cab_data_new();
+	/* delegate write to rust FFI */
+	out_buf = fu_rs_cab_write(archive, priv->compressed ? 1 : 0, &out_len, error);
+	if (out_buf == NULL)
+		return NULL;
 
-		/* prepare chunk */
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return NULL;
-
-		/* first do the 'checksum' on the data, then the partial header -- slightly crazy */
-		if (!fu_cab_firmware_compute_checksum(chunk_zlib->data,
-						      chunk_zlib->len,
-						      &checksum,
-						      error))
-			return NULL;
-		fu_byte_array_append_uint16(hdr, chunk_zlib->len, G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint16(hdr, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
-		if (!fu_cab_firmware_compute_checksum(hdr->data, hdr->len, &checksum, error))
-			return NULL;
-
-		fu_struct_cab_data_set_checksum(st_data, checksum);
-		fu_struct_cab_data_set_comp(st_data, chunk_zlib->len);
-		fu_struct_cab_data_set_uncomp(st_data, fu_chunk_get_data_sz(chk));
-		fu_byte_array_append_array(st_hdr->buf, st_data->buf);
-		g_byte_array_append(st_hdr->buf, chunk_zlib->data, chunk_zlib->len);
-	}
-
-	/* success */
-	return g_steal_pointer(&st_hdr->buf);
+	/* wrap in a GByteArray (takes ownership of the g_memdup2'd buffer) */
+	result = g_byte_array_new_take(out_buf, out_len);
+	return g_steal_pointer(&result);
 }
 
 static gboolean
