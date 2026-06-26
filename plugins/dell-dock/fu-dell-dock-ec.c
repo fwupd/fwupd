@@ -421,6 +421,7 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 		/* BCD but guint32 */
 		if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MAIN_EC) {
 			self->raw_versions->ec_version = device_entry[i].version.version_32;
+			g_free(self->ec_version);
 			self->ec_version = g_strdup_printf("%02x.%02x.%02x.%02x",
 							   device_entry[i].version.version_8[0],
 							   device_entry[i].version.version_8[1],
@@ -439,6 +440,7 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 					  device_entry[i].version.version_32);
 				continue;
 			}
+			g_free(self->mst_version);
 			self->mst_version = g_strdup_printf("%02x.%02x.%02x",
 							    device_entry[i].version.version_8[1],
 							    device_entry[i].version.version_8[2],
@@ -459,6 +461,7 @@ fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 				continue;
 			}
 			self->raw_versions->tbt_version = device_entry[i].version.version_32;
+			g_free(self->tbt_version);
 			self->tbt_version = g_strdup_printf("%02x.%02x",
 							    device_entry[i].version.version_8[2],
 							    device_entry[i].version.version_8[3]);
@@ -914,6 +917,7 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockVersionLowest") == 0) {
+		g_free(self->ec_minimum_version);
 		self->ec_minimum_version = g_strdup(value);
 		return TRUE;
 	}

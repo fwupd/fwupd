@@ -158,6 +158,7 @@ fu_mm_mhi_qcdm_device_set_quirk_kv(FuDevice *device,
 	FuMmMhiQcdmDevice *self = FU_MM_MHI_QCDM_DEVICE(device);
 
 	if (g_strcmp0(key, "ModemManagerFirehoseProgFile") == 0) {
+		g_free(self->firehose_prog_file);
 		self->firehose_prog_file = g_strdup(value);
 		return TRUE;
 	}
