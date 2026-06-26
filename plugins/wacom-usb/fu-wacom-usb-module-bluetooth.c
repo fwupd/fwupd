@@ -78,7 +78,7 @@ fu_wacom_usb_module_bluetooth_parse_blocks(const guint8 *data,
 					   GError **error)
 {
 	const guint8 preamble[] = {0x02, 0x00, 0x0f, 0x06, 0x01, 0x08, 0x01};
-	GPtrArray *blocks = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) blocks = g_ptr_array_new_with_free_func(g_free);
 	for (guint addr = 0x0; addr < sz; addr += FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ) {
 		g_autofree FuWacomUsbModuleBluetoothBlockData *bd = NULL;
 		gsize cdata_sz = FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ;
@@ -110,7 +110,7 @@ fu_wacom_usb_module_bluetooth_parse_blocks(const guint8 *data,
 		    FU_WACOM_USB_MODULE_BLUETOOTH_PAYLOAD_SZ);
 		g_ptr_array_add(blocks, g_steal_pointer(&bd));
 	}
-	return blocks;
+	return g_steal_pointer(&blocks);
 }
 
 static gboolean
