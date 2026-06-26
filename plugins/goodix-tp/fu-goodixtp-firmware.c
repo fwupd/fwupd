@@ -26,6 +26,7 @@ fu_goodixtp_firmware_init(FuGoodixtpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void

@@ -8,6 +8,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_CPUID_H
+#include <cpuid.h>
+#endif
+
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
@@ -56,6 +60,7 @@ typedef struct {
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
+	FuCpuVendor cpu_vendor;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
@@ -328,6 +333,86 @@ fu_context_get_config(FuContext *self)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	return priv->config;
+}
+
+/**
+ * fu_context_get_config_str:
+ * @self: a #FuContext
+ * @key: (not nullable): a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: (transfer full) (nullable): string value
+ *
+ * Since: 2.1.5
+ **/
+gchar *
+fu_context_get_config_str(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	return fu_config_get_value(priv->config, "fwupd", key);
+}
+
+/**
+ * fu_context_get_config_strv:
+ * @self: a #FuContext
+ * @key: (not nullable): a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: (transfer full) (nullable): string array value
+ *
+ * Since: 2.1.5
+ **/
+gchar **
+fu_context_get_config_strv(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	return fu_config_get_value_strv(priv->config, "fwupd", key);
+}
+
+/**
+ * fu_context_get_config_bool:
+ * @self: a #FuContext
+ * @key: (not nullable): a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: boolean value
+ *
+ * Since: 2.1.5
+ **/
+gboolean
+fu_context_get_config_bool(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	return fu_config_get_value_bool(priv->config, "fwupd", key);
+}
+
+/**
+ * fu_context_get_config_u64:
+ * @self: a #FuContext
+ * @key: a settings key
+ *
+ * Return the value of a config key, falling back to the default value if missing.
+ *
+ * Returns: integer key value
+ *
+ * Since: 2.1.5
+ **/
+guint64
+fu_context_get_config_u64(FuContext *self, const gchar *key)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), G_MAXUINT64);
+	g_return_val_if_fail(key != NULL, G_MAXUINT64);
+	return fu_config_get_value_u64(priv->config, "fwupd", key);
 }
 
 /**
@@ -1182,12 +1267,12 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 		g_autoptr(GVariant) device = g_dbus_proxy_get_cached_property(proxy, "Device");
 		g_autoptr(GVariant) id_label = g_dbus_proxy_get_cached_property(proxy, "IdLabel");
 		if (id_type != NULL && device != NULL &&
-		    g_strcmp0(g_variant_get_string(id_type, NULL), "BitLocker") == 0)
+		    g_strcmp0(fwupd_variant_get_string(id_type), "BitLocker") == 0)
 			priv->flags |= FU_CONTEXT_FLAG_FDE_BITLOCKER;
 
 		if (id_type != NULL && id_label != NULL &&
-		    g_strcmp0(g_variant_get_string(id_label, NULL), "ubuntu-data-enc") == 0 &&
-		    g_strcmp0(g_variant_get_string(id_type, NULL), "crypto_LUKS") == 0) {
+		    g_strcmp0(fwupd_variant_get_string(id_label), "ubuntu-data-enc") == 0 &&
+		    g_strcmp0(fwupd_variant_get_string(id_type), "crypto_LUKS") == 0) {
 			priv->flags |= FU_CONTEXT_FLAG_FDE_SNAPD;
 		}
 	}
@@ -1281,6 +1366,30 @@ fu_context_detect_hypervisor_privileged(FuContext *self)
 }
 
 static void
+fu_context_detect_cpu_vendor(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	guint ebx = 0;
+	guint ecx = 0;
+	guint edx = 0;
+
+	if (priv->cpu_vendor != FU_CPU_VENDOR_UNKNOWN)
+		return;
+
+	if (!fu_cpuid(0x0, NULL, &ebx, &ecx, &edx, NULL))
+		return;
+#ifdef HAVE_CPUID_H
+	if (ebx == signature_INTEL_ebx && edx == signature_INTEL_edx &&
+	    ecx == signature_INTEL_ecx) {
+		priv->cpu_vendor = FU_CPU_VENDOR_INTEL;
+	} else if (ebx == signature_AMD_ebx && edx == signature_AMD_edx &&
+		   ecx == signature_AMD_ecx) {
+		priv->cpu_vendor = FU_CPU_VENDOR_AMD;
+	}
+#endif
+}
+
+static void
 fu_context_detect_hypervisor(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
@@ -1300,49 +1409,81 @@ fu_context_detect_hypervisor(FuContext *self)
 	}
 }
 
+static gboolean
+fu_context_load_boot_entries(FuContext *self, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) entries = NULL;
+
+	/* skip unless UEFI is enabled in SMBIOS */
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED))
+		return TRUE;
+
+	entries = fu_efivars_get_boot_entries(priv->efivars, error);
+	if (entries == NULL)
+		return FALSE;
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		const gchar *path;
+
+		path =
+		    fu_efi_load_option_get_metadata(entry, FU_EFI_LOAD_OPTION_METADATA_PATH, NULL);
+		if (path != NULL) {
+			g_autofree gchar *path_lower = g_ascii_strdown(path, -1);
+			if (g_strstr_len(path_lower, -1, "bootmgfw.efi") != NULL) {
+				fu_context_add_flag(self, FU_CONTEXT_FLAG_DUAL_BOOT_WINDOWS);
+				break;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
- * fu_context_load_hwinfo:
+ * fu_context_load:
  * @self: a #FuContext
  * @progress: a #FuProgress
- * @flags: a #FuContextHwidFlags, e.g. %FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS
+ * @flags: a #FuContextLoadFlags, e.g. %FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS
  * @error: (nullable): optional return location for an error
  *
- * Loads all hardware information parts of the context.
+ * Loads all hardware information and quirks into the context.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.8.10
+ * Since: 2.1.5
  **/
 gboolean
-fu_context_load_hwinfo(FuContext *self,
-		       FuProgress *progress,
-		       FuContextHwidFlags flags,
-		       GError **error)
+fu_context_load(FuContext *self, FuProgress *progress, FuContextLoadFlags flags, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	FuConfigLoadFlags config_load_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	GPtrArray *guids;
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
+	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
+	g_autoptr(GError) error_efivars = NULL;
 	struct {
 		const gchar *name;
-		FuContextHwidFlags flag;
+		FuContextLoadFlags flag;
 		FuContextHwidsSetupFunc func;
-	} hwids_setup_map[] = {{"config", FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, fu_hwids_config_setup},
-			       {"smbios", FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, fu_hwids_smbios_setup},
-			       {"fdt", FU_CONTEXT_HWID_FLAG_LOAD_FDT, fu_hwids_fdt_setup},
-			       {"kenv", FU_CONTEXT_HWID_FLAG_LOAD_KENV, fu_hwids_kenv_setup},
-			       {"dmi", FU_CONTEXT_HWID_FLAG_LOAD_DMI, fu_hwids_dmi_setup},
-			       {"darwin", FU_CONTEXT_HWID_FLAG_LOAD_DARWIN, fu_hwids_darwin_setup},
-			       {NULL, FU_CONTEXT_HWID_FLAG_NONE, NULL}};
+	} hwids_setup_map[] = {{"config", FU_CONTEXT_LOAD_FLAG_HWID_CONFIG, fu_hwids_config_setup},
+			       {"smbios", FU_CONTEXT_LOAD_FLAG_HWID_SMBIOS, fu_hwids_smbios_setup},
+			       {"fdt", FU_CONTEXT_LOAD_FLAG_HWID_FDT, fu_hwids_fdt_setup},
+			       {"kenv", FU_CONTEXT_LOAD_FLAG_HWID_KENV, fu_hwids_kenv_setup},
+			       {"dmi", FU_CONTEXT_LOAD_FLAG_HWID_DMI, fu_hwids_dmi_setup},
+			       {"darwin", FU_CONTEXT_LOAD_FLAG_HWID_DARWIN, fu_hwids_darwin_setup},
+			       {NULL, FU_CONTEXT_LOAD_FLAG_NONE, NULL}};
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "quirks");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup-funcs");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
@@ -1350,10 +1491,23 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-hypervisor-container");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
 
+	/* load paths */
+	if (flags & FU_CONTEXT_LOAD_FLAG_PATH_STORE_DEFAULTS)
+		fu_path_store_load_defaults(priv->pstore);
+	if (flags & FU_CONTEXT_LOAD_FLAG_PATH_STORE_ENV)
+		fu_path_store_load_from_env(priv->pstore);
+
+	/* rebuild silo if required */
+	if (!fu_quirks_load(priv->quirks, &error_quirks)) {
+		if (!g_error_matches(error_quirks, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			g_warning("failed to load quirks: %s", error_quirks->message);
+	}
+	fu_progress_step_done(progress);
+
 	/* required always */
-	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
+	if (flags & FU_CONTEXT_LOAD_FLAG_WATCH_FILES)
 		config_load_flags |= FU_CONFIG_LOAD_FLAG_WATCH_FILES;
-	if (flags & FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS)
+	if (flags & FU_CONTEXT_LOAD_FLAG_FIX_PERMISSIONS)
 		config_load_flags |= FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
 	if (!fu_config_load(priv->config, config_load_flags, error))
 		return FALSE;
@@ -1416,12 +1570,20 @@ fu_context_load_hwinfo(FuContext *self,
 		fu_context_detect_hypervisor(self);
 		fu_context_detect_container(self);
 	}
+	fu_context_detect_cpu_vendor(self);
 	fu_progress_step_done(progress);
 
 	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);
 	if (!fu_context_reload_bios_settings(self, &error_bios_settings))
 		g_debug("%s", error_bios_settings->message);
 	fu_progress_step_done(progress);
+
+	/* is this dual booted with Windows */
+	if (!fu_context_load_boot_entries(self, &error_efivars)) {
+		if (!g_error_matches(error_efivars, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) &&
+		    !g_error_matches(error_efivars, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			g_warning("failed to check boot entries: %s", error_efivars->message);
+	}
 
 	/* always */
 	return TRUE;
@@ -1445,35 +1607,6 @@ fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 	return g_hash_table_lookup(priv->hwid_flags, flag) != NULL;
-}
-
-/**
- * fu_context_load_quirks:
- * @self: a #FuContext
- * @flags: quirks load flags, e.g. %FU_QUIRKS_LOAD_FLAG_READONLY_FS
- * @error: (nullable): optional return location for an error
- *
- * Loads all quirks into the context.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.6.0
- **/
-gboolean
-fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error)
-{
-	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* rebuild silo if required */
-	if (!fu_quirks_load(priv->quirks, flags, &error_local))
-		g_warning("Failed to load quirks: %s", error_local->message);
-
-	/* always */
-	return TRUE;
 }
 
 /**
@@ -2149,13 +2282,13 @@ fu_context_esp_load_pe_file(const gchar *filename, GError **error)
 static gchar *
 fu_context_build_uefi_basename_for_arch(const gchar *app_name)
 {
-#if defined(__x86_64__)
+#ifdef __x86_64__
 	return g_strdup_printf("%sx64.efi", app_name);
 #endif
-#if defined(__aarch64__)
+#ifdef __aarch64__
 	return g_strdup_printf("%saa64.efi", app_name);
 #endif
-#if defined(__loongarch_lp64)
+#ifdef __loongarch_lp64
 	return g_strdup_printf("%sloongarch64.efi", app_name);
 #endif
 #if (defined(__riscv) && __riscv_xlen == 64)
@@ -2164,7 +2297,7 @@ fu_context_build_uefi_basename_for_arch(const gchar *app_name)
 #if defined(__i386__) || defined(__i686__)
 	return g_strdup_printf("%sia32.efi", app_name);
 #endif
-#if defined(__arm__)
+#ifdef __arm__
 	return g_strdup_printf("%sarm.efi", app_name);
 #endif
 	return NULL;
@@ -2226,6 +2359,8 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 		return FALSE;
 	dp_filename = fu_efi_file_path_device_path_get_name(dp_path, error);
 	if (dp_filename == NULL)
+		return FALSE;
+	if (!fu_path_verify_safe(dp_filename, error))
 		return FALSE;
 
 	/* the file itself */
@@ -2347,6 +2482,7 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_context_get_esp_files_for_entry(self, entry, files, flags, &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 				g_debug("ignoring %s: %s",
 					fu_firmware_get_id(FU_FIRMWARE(entry)),
@@ -2575,22 +2711,30 @@ fu_context_get_path_store(FuContext *self)
 }
 
 /**
- * fu_context_load_path_store:
+ * fu_context_get_cpu_vendor:
  * @self: a #FuContext
  *
- * Loads the path store defaults and overrides.
+ * Uses CPUID to discover the CPU vendor.
  *
- * IMPORTANT: This should only be used for binaries, NEVER self tests!
+ * Returns: a CPU vendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
  *
- * Since: 2.1.1
+ * Since: 2.1.5
  **/
+FuCpuVendor
+fu_context_get_cpu_vendor(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FU_CPU_VENDOR_UNKNOWN);
+	return priv->cpu_vendor;
+}
+
+/* private */
 void
-fu_context_load_path_store(FuContext *self)
+fu_context_set_cpu_vendor(FuContext *self, FuCpuVendor cpu_vendor)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
-	fu_path_store_load_defaults(priv->pstore);
-	fu_path_store_load_from_env(priv->pstore);
+	priv->cpu_vendor = cpu_vendor;
 }
 
 static void

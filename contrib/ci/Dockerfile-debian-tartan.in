@@ -1,9 +1,10 @@
 # -*- mode: dockerfile -*-
-FROM debian:testing
+FROM debian:unstable
 ENV CI_NETWORK=true
 RUN echo fubar > /etc/machine-id
 RUN set -euxo pipefail; \
     export DEBIAN_FRONTEND=noninteractive; \
+%%%SETUP%%% \
     apt-get update; \
     apt-get install --yes --no-install-recommends \
     build-essential \

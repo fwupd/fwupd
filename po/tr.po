@@ -13,20 +13,21 @@
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # Muhammet Kara <muhammet.kara@metu.edu.tr>, 2025.
 # Emir <bitigchi@me.com>, 2025.
+# Oğuz Ersen <oguz@ersen.moe>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
-"PO-Revision-Date: 2025-12-23 16:00+0000\n"
-"Last-Translator: Emir <bitigchi@me.com>\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-06-10 11:01+0000\n"
+"Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/fwupd/fwupd/tr/>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.15.1\n"
+"X-Generator: Weblate 2026.6\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Satıcı Donanım Yazılımı Hizmeti (Kararlı Donanım Yazılımı)"
@@ -61,11 +62,11 @@ msgid "Enabled"
 msgstr "Etkinleştirildi"
 
 msgid "Stop the fwupd service"
-msgstr ""
+msgstr "fwupd hizmetini durdur"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to stop the firmware update service"
-msgstr ""
+msgstr "Donanım yazılımı güncelleme hizmetini durdurmak için kimlik doğrulama gerekir"
 
 msgid "Install signed system firmware"
 msgstr "İmzalı sistem donanım yazılımını kur"
@@ -116,11 +117,18 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "Ardalan süreci yapılandırmasını değiştirmek için kimlik doğrulama gerekir"
 
 msgid "Reset daemon configuration"
-msgstr ""
+msgstr "Ardalan süreci yapılandırmasını sıfırla"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
-msgstr ""
+msgstr "Ardalan süreci yapılandırmasını öntanımlı ayarlara sıfırlamak için kimlik doğrulaması gerekir"
+
+msgid "Modify a device property"
+msgstr "Bir aygıt özelliğini değiştir"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Bir aygıt özelliğini değiştirmek için kimlik doğrulaması gerekir"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aygıttaki yeni donanım yazılımını etkinleştir"
@@ -129,6 +137,20 @@ msgstr "Aygıttaki yeni donanım yazılımını etkinleştir"
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Bu makine üzerindeki donanım yazılımını güncellemek için kimlik doğrulama gerekir"
 
+msgid "Clear stored firmware update results"
+msgstr "Depolanan donanım yazılımı güncelleme sonuçlarını sil"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Donanım yazılımı güncelleme sonuçlarını silmek için kimlik doğrulaması gerekir"
+
+msgid "Verify device firmware"
+msgstr "Aygıt donanım yazılımını doğrula"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Aygıttaki donanım yazılımını doğrulamak için kimlik doğrulaması gerekir"
+
 msgid "Update the stored device verification information"
 msgstr "Depolanan aygıt doğrulama bilgilerini güncelle"
 
@@ -136,19 +158,37 @@ msgstr "Depolanan aygıt doğrulama bilgilerini güncelle"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Aygıt için depolanan sağlama toplamlarını güncellemek için kimlik doğrulama gerekir"
 
+msgid "Get configured remotes"
+msgstr "Yapılandırılan uzak sunucuları al"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Donanım yazılımı güncellemeleri için kullanılan yapılandırılan uzak sunucuların listesini almak için kimlik doğrulaması gerekir"
+
+msgid "Update the metadata for a configured remote"
+msgstr "Yapılandırılan bir uzak sunucunun üst verilerini güncelle"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr "Donanım yazılımı güncellemeleri için kullanılan yapılandırılan bir uzak sunucunun üst verilerini güncellemek için kimlik doğrulaması gerekir"
+
 msgid "Modify a configured remote"
 msgstr "Uzak yapılandırmayı değiştir"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr "Donanım yazılımı güncellemeleri için kullanılan yapılandırılan bir uzak sunucuyu etkinleştirmek veya devre dışı bırakmak için kimlik doğrulaması gerekir"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Donanım yazılımı güncellemeleri için kullanılan uzak yapılandırmayı değiştirmek için kimlik doğrulama gerekir"
 
 msgid "Clean a configured remote"
-msgstr ""
+msgstr "Yapılandırılan bir uzak sunucuyu temizle"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to delete metadata from a remote"
-msgstr ""
+msgstr "Uzak bir sunucudan üst verileri silmek için kimlik doğrulaması gerekir"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -213,6 +253,13 @@ msgstr ""
 msgid "Authentication is required to enable emulation data collection"
 msgstr ""
 
+msgid "Install firmware on emulated device"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr ""
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Donanım yazılımı güncellemesi kuruluyor…"
@@ -264,6 +311,10 @@ msgstr "UEFI dbx İzlencesi"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Argümanlar ayrıştırılamadı"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -330,13 +381,13 @@ msgstr "Belirtilen eylem yok!"
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u:"
-msgstr ""
+msgstr "Lütfen 0 ile %u arasında bir sayı girin:"
 
 #. TRANSLATORS: the user isn't reading the question
 #. -- %1 is 'Y' and %2 is 'N'
 #, c-format
 msgid "Please enter either %s or %s:"
-msgstr ""
+msgstr "Lütfen %s veya %s girin:"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -436,13 +487,13 @@ msgstr "Hata ayıklama seçeneklerini göster"
 #, c-format
 msgid "%u device has been updated and needs a reboot."
 msgid_plural "%u devices have been updated and need a reboot."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%u aygıt güncellendi ve yeniden başlatılması gerekiyor."
+msgstr[1] "%u aygıt güncellendi ve yeniden başlatılması gerekiyor."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "Reboot to complete the update."
-msgstr ""
+msgstr "Güncellemeyi tamamlamak için yeniden başlatın."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -455,7 +506,7 @@ msgstr[1] "%u aygıtları bilinen en iyi yapılandırma değildir."
 #. * command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "Run `%s` to complete this action."
-msgstr ""
+msgstr "Bu eylemi tamamlamak için `%s` komutunu çalıştırın."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
@@ -468,7 +519,7 @@ msgstr[1] "%u aygıtın donanım yazılımı yükseltmesi var."
 #. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
 msgid "Run `%s` for more information."
-msgstr ""
+msgstr "Daha fazla bilgi için `%s` komutunu çalıştırın."
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -681,6 +732,10 @@ msgstr "SPI yeniden oynatma koruması"
 msgid "SPI write protection"
 msgstr "SPI yazma koruması"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Erimiş platform"
@@ -707,6 +762,10 @@ msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
+msgstr "UEFI bellek koruması"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
@@ -715,7 +774,7 @@ msgstr ""
 
 #. TRANSLATORS: Title: HP SureStart is a firmware security feature
 msgid "HP SureStart"
-msgstr ""
+msgstr "HP SureStart"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD microcode signature"
@@ -868,6 +927,10 @@ msgstr ""
 msgid "AMD Firmware Write Protection"
 msgstr ""
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr ""
@@ -882,14 +945,18 @@ msgstr ""
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS Firmware Updates"
-msgstr ""
+msgstr "BIOS Yazılımı Güncellemeleri"
 
 #. TRANSLATORS: Title: Whether firmware is locked down
 msgid "System Management Mode"
-msgstr ""
+msgstr "Sistem Yönetimi Kipi"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
+msgstr "UEFI Bellek Koruması"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
@@ -994,7 +1061,7 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Device software updates are provided for this device."
-msgstr ""
+msgstr "Bu aygıt için aygıt yazılımı güncellemeleri sağlanıyor."
 
 #. TRANSLATORS: longer description
 msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
@@ -1009,7 +1076,7 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
-msgstr ""
+msgstr "Her sistemde, donanım yazılımının güvenliğini sağlamak için testler olmalıdır."
 
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
@@ -1020,12 +1087,16 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr ""
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "Enabling firmware updates for the BIOS allows fixing security issues."
-msgstr ""
+msgstr "BIOS için donanım yazılımı güncellemelerini etkinleştirmek, güvenlik sorunlarının giderilmesini sağlar."
 
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
@@ -1036,12 +1107,16 @@ msgid "The UEFI system can set up memory attributes at boot which prevent common
 msgstr ""
 
 #. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
 msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "HP SureStart is a firmware security feature that protects the BIOS from tampering."
-msgstr ""
+msgstr "HP SureStart, BIOS'u izinsiz müdahalelere karşı koruyan bir donanım yazılımı güvenlik özelliğidir."
 
 #. TRANSLATORS: longer description
 msgid "AMD Microcode Signature verification ensures that CPU microcode is authentic and has not been tampered with."
@@ -1086,7 +1161,7 @@ msgstr "Aygıt seç"
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates:"
-msgstr ""
+msgstr "Yazılım güncellemesi bulunmayan aygıtlar:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1123,16 +1198,16 @@ msgstr "Şuradan okunuyor %s…"
 #. TRANSLATORS: there are reasons the device can't update
 #, c-format
 msgid "%s is not currently updatable:"
-msgstr ""
+msgstr "%s şu anda güncellenemiyor:"
 
 #. TRANSLATORS: no update can be installed
 msgid "Nothing to do"
-msgstr ""
+msgstr "Yapacak bir şey yok"
 
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action:"
-msgstr ""
+msgstr "Kullanıcı eylemi gerektiren yazılım güncellemesi bulunan aygıtlar:"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1140,35 +1215,35 @@ msgstr "Yapılandırma değeri başarıyla değiştirildi"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully reset configuration section"
-msgstr ""
+msgstr "Yapılandırma bölümü başarıyla sıfırlandı"
 
 #. TRANSLATORS: success message for a per-remote setting change
 msgid "Successfully modified remote"
-msgstr ""
+msgstr "Uzak sunucu başarıyla değiştirildi"
 
 #. TRANSLATORS: success message
 msgid "Successfully cleaned remote"
-msgstr ""
+msgstr "Uzak sunucu başarıyla temizlendi"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
-msgstr ""
+msgstr "Uzak sunucu başarıyla devre dışı bırakıldı"
 
 #. TRANSLATORS: this is now useless
 msgid "Delete the now-unused remote cache files?"
-msgstr ""
+msgstr "Artık kullanılmayan uzak önbellek dosyaları silinsin mi?"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr ""
+msgstr "Uzak sunucu başarıyla etkinleştirildi"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
-msgstr ""
+msgstr "Test aygıtları başarıyla devre dışı bırakıldı"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully enabled test devices"
-msgstr ""
+msgstr "Test aygıtları başarıyla etkinleştirildi"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
@@ -1208,13 +1283,13 @@ msgstr "Dosyaya yazılıyor:"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 msgid "Metadata is already up to date"
-msgstr ""
+msgstr "Üst veriler zaten güncel"
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
 #, c-format
 msgid "Metadata is up to date; use %s to refresh again."
-msgstr ""
+msgstr "Üst veriler güncel; tekrar yenilemek için %s kullanın."
 
 #. TRANSLATORS: error message for unsupported feature
 msgid "Host Security ID (HSI) is not supported"
@@ -1249,15 +1324,15 @@ msgstr ""
 
 #. TRANSLATORS: we've fixed a security problem on the machine
 msgid "Fixed successfully"
-msgstr ""
+msgstr "Sorun başarıyla giderildi"
 
 #. TRANSLATORS: we've fixed a security problem on the machine
 msgid "Fix reverted successfully"
-msgstr ""
+msgstr "Düzeltme başarıyla geri alındı"
 
 #. TRANSLATORS: error message
 msgid "This system doesn't support firmware settings"
-msgstr ""
+msgstr "Bu sistem, donanım yazılımı ayarlarını desteklemiyor"
 
 #. TRANSLATORS: error message
 msgid "Unable to find attribute"
@@ -1269,7 +1344,7 @@ msgstr ""
 
 #. TRANSLATORS: error message
 msgid "Already exists, and no --force specified"
-msgstr ""
+msgstr "Zaten var ve --force belirtilmedi"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1295,7 +1370,7 @@ msgstr ""
 #. TRANSLATORS: ask the user if it's okay to convert,
 #. * "it" being the data contained in the EFI boot entry
 msgid "Do you want to convert it now?"
-msgstr ""
+msgstr "Şimdi dönüştürmek ister misiniz?"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected GUID"
@@ -1363,6 +1438,9 @@ msgstr "Güncellenemeyen aygıtları göster"
 
 #. TRANSLATORS: command line option
 msgid "Manually enable specific plugins"
+msgstr "Belirli eklentileri elle etkinleştir"
+
+msgid "Location of public key directories used for JCat verification"
 msgstr ""
 
 #. TRANSLATORS: command line option
@@ -1386,11 +1464,18 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr ""
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Tüm sorulara evet yanıtı ver"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
+msgstr ""
+
+msgid "Prefix for import and output files"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
@@ -1419,11 +1504,11 @@ msgstr "[DEVICE-ID|GUID]"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
-msgstr ""
+msgstr "Belirtilen tüm aygıtlar için güncelleme listesini alır; herhangi bir aygıt belirtilmezse tüm aygıtlar için alır"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr ""
+msgstr "Donanım yazılımı güncellemelerini destekleyen tüm aygıtları al"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1483,7 +1568,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Activate pending devices"
-msgstr ""
+msgstr "Bekleyen aygıtları etkinleştir"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"
@@ -1507,7 +1592,7 @@ msgstr "Olaylar için art alan hizmetini gözetle"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
-msgstr ""
+msgstr "Belirtilen tüm aygıtları en son donanım yazılımı sürümüne günceller; herhangi bir aygıt belirtilmezse tüm aygıtları günceller"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "TEXT"
@@ -1592,7 +1677,7 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
-msgstr ""
+msgstr "Yapılandırılan uzak sunucuları alır"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
@@ -1624,15 +1709,15 @@ msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Mounts the ESP"
-msgstr ""
+msgstr "ESP bölümünü bağlar"
 
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
-msgstr ""
+msgstr "ESP bölümünün bağlantısını kaldırır"
 
 #. TRANSLATORS: command description
 msgid "Lists files on the ESP"
-msgstr ""
+msgstr "ESP bölümündeki dosyaları listeler"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [BRANCH]"
@@ -1843,6 +1928,62 @@ msgstr ""
 msgid "Parse the system PCR eventlog"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Bu araç, bir yöneticinin ana sisteme kurulmadan fwupd eklentilerini kullanmasına izin verir."
@@ -1861,6 +2002,8 @@ msgstr ""
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr ""
@@ -2206,6 +2349,27 @@ msgstr ""
 msgid "Device list uploaded successfully, thanks!"
 msgstr ""
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr ""
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2292,6 +2456,14 @@ msgstr "Bir aygıttaki üretici yazılımı sürümünü düşürür"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -2730,6 +2902,11 @@ msgstr ""
 #. TRANSLATORS: headphones with an integrated microphone
 #, c-format
 msgid "%s Headset Update"
+msgstr ""
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
 msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
@@ -3362,13 +3539,17 @@ msgstr ""
 msgid "Priority"
 msgstr "Öncelik"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr ""
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Kullanıcı adı"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Parola"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr ""
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3547,19 +3728,19 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr ""
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr ""
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
@@ -3665,6 +3846,9 @@ msgstr ""
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr ""
+
+#~ msgid "Password"
+#~ msgstr "Parola"
 
 #~ msgid "Blocks a specific firmware from being installed"
 #~ msgstr "Belirli bir donanım yazılımının kurulmasını engeller"

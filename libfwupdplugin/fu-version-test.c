@@ -38,6 +38,10 @@ fu_version_verify_format_func(void)
 	ret = fu_version_verify_format("1A", FWUPD_VERSION_FORMAT_NUMBER, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_version_verify_format("12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -92,6 +96,10 @@ fu_version_func(void)
 	    {0x00ff0001, "255.0.1", FWUPD_VERSION_FORMAT_DELL_BIOS},
 	    {0x010f0201, "1.15.2", FWUPD_VERSION_FORMAT_DELL_BIOS_MSB},
 	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_HEX},
+	    {0x0, "00.00", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0xff, "00.ff", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0x0000ff01, "ff.01", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0x00001234, "12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	};
 	struct {
 		guint32 val;
@@ -115,6 +123,10 @@ fu_version_func(void)
 	    {0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR},
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0x11000000c8, "0x00000011000000c8", FWUPD_VERSION_FORMAT_HEX},
+	    {0x0, "00.00", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0xff, "00.ff", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0xff01, "ff.01", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0x1234, "12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	};
 	struct {
 		guint16 val;
@@ -130,6 +142,10 @@ fu_version_func(void)
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0x1234, "4660", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0x1234, "1.2.52", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {0x0, "00.00", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0xff, "00.ff", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0xff01, "ff.01", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
+	    {0x1234, "12.34", FWUPD_VERSION_FORMAT_COMPAL_BIOS},
 	};
 	struct {
 		const gchar *old;

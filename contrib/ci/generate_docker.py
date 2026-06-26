@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from fwupd_setup_helpers import parse_dependencies
 
@@ -43,47 +44,52 @@ def get_container_cmd():
 directory = os.path.dirname(sys.argv[0])
 DISTRO = getenv_unwrap("DISTRO")
 ARCH = getenv_unwrap("ARCH")
-match os.getenv("VARIANT"):
-    case str(s) if s.startswith("cross-"):
-        CROSS = s.removeprefix("cross-")
-        VARIANT = None
-    case str(s):
-        CROSS = None
-        VARIANT = s
-    case _:
-        CROSS = None
-        VARIANT = None
+VARIANT = os.getenv("VARIANT")
+CROSS = c if VARIANT and (c := str(VARIANT).removeprefix("cross-")) != VARIANT else None
 
 
-if VARIANT:
-    template_file = os.path.join(directory, f"Dockerfile-{DISTRO}-{VARIANT}.in")
-else:
-    template_file = os.path.join(directory, f"Dockerfile-{DISTRO}.in")
-if not os.path.exists(template_file):
-    print(f"Missing input file {template_file} for {DISTRO}")
-    sys.exit(1)
-
+# find first existing
+dockerfiles = [
+    Path(directory) / f"Dockerfile-{DISTRO}-{VARIANT}.in",
+    Path(directory) / f"Dockerfile-{DISTRO}.in",
+]
+try:
+    template_file = next(p for p in dockerfiles if p.exists())
+except StopIteration:
+    raise FileNotFoundError("Missing template Dockerfile for {DISTRO}") from None
 with open(template_file) as file:
-    template = file.read()
+    content = file.read()
 
 
+# special cases
 match (DISTRO, VARIANT):
     case ("debian", "i386"):
-        template = template.replace("FROM debian:testing", "FROM i386/debian:testing")
-    case ("debian", "tartan"):
-        template = template.replace("FROM debian:testing", "FROM debian:unstable")
+        content = content.replace("FROM debian:testing", "FROM i386/debian:testing")
 
 
+# insert commands to prepare cross compile
+if CROSS:
+    cross_setup = f"""\
+    sed -i 's|Types: deb|Types: deb deb-src|' /etc/apt/sources.list.d/debian.sources; \\
+    dpkg --add-architecture {CROSS};"""
+else:
+    cross_setup = "    "
+content = content.replace("%%%SETUP%%%", cross_setup)
+
+
+# insert dependencies to install
 if CROSS:
     deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[CROSS], False, cross=True)
     deps += [f"crossbuild-essential-{CROSS}"]
+elif VARIANT == "i386":
+    deps = parse_dependencies(DISTRO, VARIANT, False)
 else:
     deps = parse_dependencies(DISTRO, ARCH_TO_DEPS_MAP[ARCH], False)
 deps = sorted(set(deps))
 deps = [f"    {i}" for i in deps]
 deps = " \\\n".join(deps)
+content = content.replace("%%%DEPENDENCIES%%%", deps)
 
-content = template.replace("%%%DEPENDENCIES%%%", deps)
 
 with open("Dockerfile", "w") as file:
     file.write(content)

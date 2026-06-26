@@ -7,6 +7,7 @@ systemd_src = []
 engine_dep = [
   libxmlb,
   giounix,
+  glib,
   gmodule,
   libusb,
   polkit,
@@ -18,7 +19,7 @@ if get_option('passim').allowed()
   engine_dep += passim
 endif
 
-client_dep = [libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
+client_dep = [glib, libcurl, libxmlb, sqlite, readline, fwupdplugin_rs_dep]
 if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif
@@ -31,7 +32,6 @@ fwupd_engine_src = [
   'fu-debug.c',
   'fu-device-list.c',
   'fu-engine.c',
-  'fu-engine-config.c',
   'fu-engine-emulator.c',
   'fu-engine-helper.c',
   'fu-engine-request.c',
@@ -347,13 +347,29 @@ if get_option('tests')
     )
   endforeach
 
+  if libsystemd.found()
+    e = executable(
+      'fu-systemd-test',
+      sources: ['fu-systemd-test.c', 'fu-systemd.c'],
+      include_directories: [root_incdir, fwupd_incdir],
+      dependencies: [libfwupd_deps, fwupdplugin_rs_dep],
+      link_with: [fwupd],
+    )
+    test(
+      'fu-systemd-test',
+      e,
+      timeout: 180,
+      env: env,
+    )
+  endif
+
   if polkit.found()
     e = executable(
       'fu-polkit-test',
       sources: ['fu-polkit-test.c', 'fu-polkit-agent.c'],
-      include_directories: [root_incdir, fwupd_incdir],
+      include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [libfwupd_deps, fwupd_rs_dep],
-      link_with: [fwupd],
+      link_with: [fwupdplugin],
     )
     test(
       'fu-polkit-test',

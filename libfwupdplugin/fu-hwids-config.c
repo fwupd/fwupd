@@ -15,13 +15,12 @@
 gboolean
 fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error)
 {
-	FuConfig *config = fu_context_get_config(ctx);
 	g_autoptr(GPtrArray) keys = fu_hwids_get_keys(self);
 
 	/* all keys are optional */
 	for (guint i = 0; i < keys->len; i++) {
 		const gchar *key = g_ptr_array_index(keys, i);
-		g_autofree gchar *value = fu_config_get_value(config, "fwupd", key);
+		g_autofree gchar *value = fu_context_get_config_str(ctx, key);
 		if (value != NULL)
 			fu_hwids_add_value(self, key, value);
 	}

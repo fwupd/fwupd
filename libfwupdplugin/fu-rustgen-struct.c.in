@@ -115,6 +115,7 @@ void
 {{item.c_getter}}(const {{obj.name}} *st, guint idx)
 {
     g_return_val_if_fail(st != NULL, 0x0);
+    g_return_val_if_fail(idx < {{item.n_elements}}, 0x0);
     return fu_memread_{{item.type_mem}}(st->buf->data + {{item.offset}} + (sizeof({{item.type_glib}}) * idx),
                                         {{item.endian_glib}});
 }
@@ -566,8 +567,10 @@ void
         g_autofree gchar *str = {{obj.c_method('ToString')}}(st);
         g_debug("%s", str);
     }
+{%- if obj.export('ValidateInternal') != Export.NONE %}
     if (!{{obj.c_method('ValidateInternal')}}(st, error))
         return FALSE;
+{%- endif %}
     return TRUE;
 }
 {%- endif %}

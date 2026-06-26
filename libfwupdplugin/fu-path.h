@@ -23,9 +23,6 @@ gboolean
 fu_path_mkdir_parent(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 gchar *
-fu_path_find_program(const gchar *basename, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
-gchar *
 fu_path_make_absolute(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 gchar *
@@ -34,3 +31,5 @@ fu_path_get_symlink_target(const gchar *filename, GError **error) G_GNUC_WARN_UN
 gboolean
 fu_path_verify_safe(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+gchar *
+fu_path_sanitize_basename(const gchar *str) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

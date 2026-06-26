@@ -321,7 +321,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
 					    "decompressed size mismatch (0x%x, specified 0x%x)",
-					    (guint)buf->len,
+					    buf->len,
 					    (guint)blob_uncomp);
 				return FALSE;
 			}
@@ -343,7 +343,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
 					    "decompressed data too large (0x%x, limit 0x%x)",
-					    (guint)buf->len,
+					    buf->len,
 					    (guint)size_max);
 				return FALSE;
 			}
@@ -355,7 +355,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "decompressed size mismatch (0x%x, specified 0x%x)",
-				    (guint)buf->len,
+				    buf->len,
 				    (guint)blob_uncomp);
 			return FALSE;
 		}
@@ -376,7 +376,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "dictionary size 0x%x exceeds zlib maximum",
-				    (guint)buf->len);
+				    buf->len);
 			return FALSE;
 		}
 

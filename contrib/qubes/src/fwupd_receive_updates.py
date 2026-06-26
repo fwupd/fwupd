@@ -42,7 +42,26 @@ class FwupdReceiveUpdates:
             self.clean_cache()
             raise ValueError(f"Computed checksum {c_sha} did NOT match {sha}.")
 
-    def _jcat_verification(self, file_path, file_directory):
+    def _jcat_verification_without_postquantum(self, verification_output):
+        """Return True e ven if the PQ CA verification fails as long as
+        at least sha256 plus one pkcs7 entry passed for the classic LVFS CA.
+        """
+        passed = set()
+        for line in verification_output.splitlines():
+            line = line.strip()
+            if line.startswith("PASSED "):
+                kind = line.split()[1].rstrip(":")
+                passed.add(kind)
+            elif line.startswith("FAILED ") and "FAILED: " not in line:
+                if "LVFS CA 2025PQ" in line and "[-89]" in line:
+                    print(
+                        "--ignore-postquantum is set, ignoring LVFS CA 2025PQ failure"
+                    )
+                    continue
+                return False
+        return "sha256" in passed and "pkcs7" in passed
+
+    def _jcat_verification(self, file_path, file_directory, ignore_postquantum=False):
         """Verifies SHA1+SHA256 checksum and PKCS#7 signature.
 
         Keyword argument:
@@ -51,15 +70,33 @@ class FwupdReceiveUpdates:
         """
         assert file_path.startswith("/"), f"bad file path {file_path!r}"
         cmd_jcat = ["jcat-tool", "verify", file_path, "--public-keys", FWUPD_PKI]
+        environ = os.environ.copy()
+        environ["LC_ALL"] = "C"
         p = subprocess.Popen(
-            cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd_jcat,
+            cwd=file_directory,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=environ,
         )
-        stdout, __ = p.communicate()
+        stdout, stderr = p.communicate()
         verification = stdout.decode("utf-8")
         print(verification)
         if p.returncode != 0:
+            if ignore_postquantum and self._jcat_verification_without_postquantum(
+                verification
+            ):
+                return
             self.clean_cache()
-            raise Exception("jcat-tool: Verification failed")
+            stderr_str = stderr.decode()
+            if "SignatureNotValidYet" in stderr_str:
+                raise Exception(
+                    "PGP signature creation time is in the"
+                    " future (update-vm clock may be out of sync).\n"
+                    "Run /usr/bin/qvm-sync-clock to update the time.\n" + stderr_str
+                )
+            else:
+                raise Exception("jcat-tool: Verification failed")
 
     def handle_fw_update(self, updatevm, sha, filename):
         """Copies firmware update archives from the updateVM.
@@ -100,7 +137,7 @@ class FwupdReceiveUpdates:
             self.arch_path = os.path.join(FWUPD_DOM0_UPDATES_DIR, filename)
             shutil.move(dom0_firmware_untrusted_path, self.arch_path)
 
-    def handle_metadata_update(self, updatevm, metadata_url):
+    def handle_metadata_update(self, updatevm, metadata_url, ignore_postquantum=False):
         """Copies metadata files from the updateVM.
 
         Keyword argument:
@@ -154,6 +191,7 @@ class FwupdReceiveUpdates:
             self._jcat_verification(
                 untrusted_metadata_file + ".jcat",
                 os.path.dirname(untrusted_metadata_file),
+                ignore_postquantum,
             )
             # verified, move into trusted dir
             shutil.move(untrusted_metadata_file, self.metadata_file)

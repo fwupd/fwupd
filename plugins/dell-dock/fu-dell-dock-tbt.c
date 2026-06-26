@@ -23,7 +23,7 @@
 
 #define I2C_TBT_ADDRESS 0xa2
 
-const FuHIDI2CParameters tbt_base_settings = {
+static const FuHIDI2CParameters tbt_base_settings = {
     .i2ctargetaddr = I2C_TBT_ADDRESS,
     .regaddrlen = 1,
     .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,

@@ -205,6 +205,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return g_strdup(_("SPI write protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return g_strdup(_("coreboot verified boot"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: Title: if the part has been fused */
 		return g_strdup(_("Fused platform"));
@@ -232,6 +236,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return g_strdup(_("UEFI memory protection"));
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT) == 0) {
+		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
+		return g_strdup(_("UEFI NX protection"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
@@ -414,6 +422,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return _("AMD Firmware Write Protection");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return _("coreboot Verified Boot");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
 		/* TRANSLATORS: Title: if the part has been fused */
 		return _("Fused Platform");
@@ -437,6 +449,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return _("UEFI Memory Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT) == 0) {
+		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
+		return _("UEFI NX Protection");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
@@ -634,6 +650,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		return _("Platform Secure Boot prevents unsigned software from being loaded "
 			 "when the device starts.");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("coreboot verified boot prevents unsigned firmware from being loaded "
+			 "when the device starts.");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_GDS) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("CPU Microcode must be updated to mitigate against various "
@@ -652,6 +673,10 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The UEFI system can set up memory attributes at boot which prevent "
 			 "common exploits from running.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The UEFI bootloader compiled with Data Execution Prevention support.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: longer description */

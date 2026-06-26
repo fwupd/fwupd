@@ -81,4 +81,3 @@ InstallDuration = 2
 [USB\VID_06CB&PID_0108]
 Plugin = synaptics_prometheus
 InstallDuration = 2
-

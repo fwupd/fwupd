@@ -80,6 +80,16 @@
     <distro id="arch">
       <package variant="x86_64" />
     </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64">fonts-noto-cjk</package>
+      <package variant="aarch64">fonts-noto-cjk</package>
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64">fonts-noto-cjk</package>
+      <package variant="aarch64">fonts-noto-cjk</package>
+    </distro>
   </dependency>
   <dependency id="ca-certificates">
     <distro id="centos">
@@ -393,31 +403,6 @@
     </distro>
   </dependency>
   <dependency id="libjaylink-dev">
-    <distro id="debian">
-      <control>
-        <exclusive>ia64</exclusive>
-      </control>
-      <multi-arch />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <exclusive>ia64</exclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
-  <dependency id="libflashrom-dev">
-    <distro id="arch">
-      <package variant="x86_64">flashrom</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">flashrom-devel</package>
-      <package variant="aarch64">flashrom-devel</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">flashrom-devel</package>
-    </distro>
     <distro id="debian">
       <control>
         <exclusive>ia64</exclusive>

@@ -87,6 +87,8 @@ static guint quarks[QUARK_LAST] = {0};
 #define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
 #define FU_USB_DEVICE_OPEN_DELAY	50  /* ms */
 
+#define FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX (18 + (64 * FU_KB)) /* dev descr + max-size raw descr */
+
 static gboolean
 fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
 {
@@ -462,7 +464,7 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 	if (priv->usb_device != NULL) {
 		rc = libusb_open(priv->usb_device, &priv->handle);
 	} else {
-#if defined(HAVE_LIBUSB_WRAP_SYS_DEVICE)
+#ifdef HAVE_LIBUSB_WRAP_SYS_DEVICE
 		gint fd;
 		FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 		if (io_channel == NULL) {
@@ -1479,7 +1481,7 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("ControlTransfer:"
 					   "Direction=0x%02x,"
 					   "RequestType=0x%02x,"
@@ -1611,7 +1613,7 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("BulkTransfer:"
 					   "Endpoint=0x%02x,"
 					   "Data=%s,"
@@ -1715,7 +1717,7 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(data, length);
+		g_autofree gchar *data_base64 = fu_base64_encode(data, length);
 		event_id = g_strdup_printf("InterruptTransfer:"
 					   "Endpoint=0x%02x,"
 					   "Data=%s,"
@@ -1822,6 +1824,16 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 	gsize offset = 0;
 	g_autoptr(FuUsbDeviceHdr) st = NULL;
 	g_autoptr(FuUsbInterface) iface_last = NULL;
+
+	/* sanity check */
+	if (g_bytes_get_size(blob) > FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "USB descriptor was too large: limit is 0x%x bytes",
+			    (guint)FU_USB_DEVICE_DESCRIPTOR_SIZE_MAX);
+		return FALSE;
+	}
 
 	st = fu_usb_device_hdr_parse_bytes(blob, offset, error);
 	if (st == NULL)

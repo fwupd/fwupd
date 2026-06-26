@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
-"PO-Revision-Date: 2026-04-23 06:03+0000\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-05-23 11:11+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -116,12 +116,33 @@ msgstr "Setel ulang konfigurasi daemon"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Autentikasi diperlukan untuk mengatur ulang konfigurasi daemon ke baku"
 
+msgid "Modify a device property"
+msgstr "Ubah properti perangkat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Diperlukan otentikasi untuk mengubah properti perangkat"
+
 msgid "Activate the new firmware on the device"
 msgstr "Aktifkan firmware baru pada perangkat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Autentikasi diperlukan untuk beralih ke versi firmware baru"
+
+msgid "Clear stored firmware update results"
+msgstr "Bersihkan hasil pembaruan firmware yang tersimpan"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Diperlukan otentikasi untuk membersihkan hasil pembaruan firmware"
+
+msgid "Verify device firmware"
+msgstr "Verifikasi firmware perangkat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Diperlukan otentikasi untuk memverifikasi firmware pada perangkat"
 
 msgid "Update the stored device verification information"
 msgstr "Mutakhirkan informasi verifikasi perangkat yang tersimpan"
@@ -130,8 +151,26 @@ msgstr "Mutakhirkan informasi verifikasi perangkat yang tersimpan"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Autentikasi diperlukan untuk memutakhirkan checksum tersimpan bagi perangkat"
 
+msgid "Get configured remotes"
+msgstr "Dapatkan daftar jarak jauh yang dikonfigurasi"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Diperlukan otentikasi untuk mendapatkan daftar remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Ubah suatu remote yang ditata"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -207,6 +246,13 @@ msgstr "Memfungsikan pengumpulan data emulasi"
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Autentikasi diperlukan untuk memfungsikan pengumpulan data emulasi"
 
+msgid "Install firmware on emulated device"
+msgstr "Instal firmware pada perangkat tiruan"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "Diperlukan otentikasi untuk menginstal firmware pada perangkat tiruan"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Sedang memasang pembaruan firmware…"
@@ -258,6 +304,10 @@ msgstr "Utilitas dbx UEFI"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Gagal mengurai argumen"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -671,6 +721,10 @@ msgstr "Perlindungan replay SPI"
 msgid "SPI write protection"
 msgstr "Proteksi penulisan SPI"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Platform yang memakai fuse"
@@ -698,6 +752,10 @@ msgstr "SMM terkunci"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "Perlindungan memori UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -858,6 +916,10 @@ msgstr "Perlindungan Replay Firmware AMD"
 msgid "AMD Firmware Write Protection"
 msgstr "Perlindungan Tulis Firmware AMD"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Platform Fused"
@@ -881,6 +943,10 @@ msgstr "Mode Manajemen Sistem"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "Perlindungan Memori UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1010,6 +1076,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Boot aman platform mencegah perangkat lunak yang tidak ditandatangani dimuat saat perangkat dinyalakan."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Microcode CPU harus diperbarui untuk mengurangi berbagai masalah-masalah keamanan pengungkapan informasi."
 
@@ -1024,6 +1094,10 @@ msgstr "Mode manajemen sistem digunakan oleh firmware untuk mengakses kode dan d
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "Sistem UEFI dapat mengatur atribut memori saat boot yang mencegah eksploit umum berjalan."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1355,6 +1429,9 @@ msgstr "Tampilkan peranti yang tidak dapat dimutakhirkan"
 msgid "Manually enable specific plugins"
 msgstr "Aktifkan plugin tertentu secara manual"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "Lokasi direktori kunci publik yang digunakan untuk verifikasi JCat"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Menjalankan rutin persiapan komposit saat menggunakan install-blob"
@@ -1376,12 +1453,19 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr "Filter dengan set flag rilis menggunakan awalan ~ untuk mengecualikan, misalnya 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Menjawab ya untuk semua pertanyaan"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Keluaran dalam format JSON (menonaktifkan semua prompt interaktif)"
+
+msgid "Prefix for import and output files"
+msgstr "Awalan untuk file impor dan keluaran"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1833,6 +1917,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "Mengurai eventlog PCR sistem"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "Tampilkan informasi mengenai file JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "NAMAFILE ID ALIAS_ID"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "Tambahkan alias untuk item JCat tertentu"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "Hapus alias untuk item JCat tertentu"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "NAMAFILE [JENIS]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "Mengekspor semua tanda tangan tertanam ke file"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "NAMAFILE DATA KUNCI_TERLEPAS"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "Impor tanda tangan yang sudah ada ke file JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "NAMAFILE SUMBER [JENIS[:VARIAN]] [TARGET]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr "Tambahkan tanda tangan yang ditandatangani sendiri ke file JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr "NAMAFILE SUMBER SERTIFIKAT PRIVKEY [JENIS[:VARIAN]] [TARGET]"
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr "Tambahkan tanda tangan ke file JCat"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr "NAMAFILE [SUMBER]"
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr "Verifikasi tanda tangan dari file JCat"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Alat ini memungkinkan administrator untuk menggunakan plugin fwupd tanpa diinstal pada sistem host."
@@ -1851,6 +1991,8 @@ msgstr "Mengabaikan pemeriksaan ketat SSL, untuk melakukan ini secara otomatis d
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Gagal mengurai flag untuk %s"
@@ -2190,6 +2332,27 @@ msgstr "Unggah data sekarang?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Daftar perangkat berhasil diunggah, terima kasih!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "Masukkan alamat email Anda untuk remote '%s'"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "Untuk mendapatkan token baru, silakan buka %s dan klik 'Generate Token'"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "Masukkan token Anda untuk remote '%s'"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "Remote berhasil diaktifkan dan diperbarui"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Menyetel percobaan ulang unduhan untuk kesalahan sementara"
@@ -2277,6 +2440,14 @@ msgstr "Menuruntingkatkan firmware pada suatu peranti"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Memperbarui hash kriptografi yang disimpan dengan konten ROM saat ini"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr "[REMOTE-ID] [USERNAME] [TOKEN]"
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr "Aktifkan remote yang terotentikasi"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -2715,6 +2886,11 @@ msgstr "Pembaruan Headphone %s"
 #, c-format
 msgid "%s Headset Update"
 msgstr "Pembaruan Headset %s"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3339,13 +3515,17 @@ msgstr "Selang Waktu Penyegaran"
 msgid "Priority"
 msgstr "Prioritas"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "Memerlukan Otorisasi"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Nama Pengguna"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Kata Sandi"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3524,20 +3704,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstruksi PCR0 TPM kini valid"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "Perlindungan memori UEFI sekarang dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "Perlindungan memori UEFI sekarang tidak dikunci"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3642,6 +3822,15 @@ msgstr "Aktifkan remote baru?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Setuju dan aktifkan remote?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
+
+#~ msgid "Password"
+#~ msgstr "Kata Sandi"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Menemukan algoritma yang cocok dengan CRC file"

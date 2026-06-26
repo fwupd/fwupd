@@ -1,2 +1,8 @@
 [UEFI\GUID_8be4df61-93ca-11d2-aa0d-00e098032b8c&NAME_PK]
 Plugin = uefi_pk
+
+# Lilac PK
+[UEFI\CRT_0CA9F75DFCE7AFFABDBA574B02B8B6AA13F82639]
+Vendor = Framework
+VendorId = UEFI:Framework
+Name = Lilac PK

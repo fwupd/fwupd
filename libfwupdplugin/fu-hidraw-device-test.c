@@ -61,10 +61,12 @@ fu_hidraw_device_probe_hid_phys_func(void)
 	g_autoptr(FuBackend) backend = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuHidrawDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	/* load quirks */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -100,10 +102,12 @@ fu_hidraw_device_probe_hid_phys_empty_func(void)
 	g_autoptr(FuBackend) backend = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuHidrawDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
 	/* load quirks */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

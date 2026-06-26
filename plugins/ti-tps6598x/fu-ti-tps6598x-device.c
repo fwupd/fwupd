@@ -73,7 +73,7 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "got 0x%x but requested 0x%x",
 			    (guint)actual_length,
-			    (guint)buf->len);
+			    buf->len);
 		return NULL;
 	}
 

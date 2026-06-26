@@ -53,14 +53,10 @@ fu_logitech_tap_touch_device_get_feature_cb(FuDevice *device, gpointer user_data
 
 	ret = fu_udev_device_pread(FU_UDEV_DEVICE(self),
 				   0x0,
-				   (guint8 *)outbuffer->data,
+				   outbuffer->data,
 				   outbuffer->len,
 				   &error_local);
-	if (!fu_memread_uint8_safe((guint8 *)outbuffer->data,
-				   outbuffer->len,
-				   0x00U,
-				   &report_id,
-				   error)) {
+	if (!fu_memread_uint8_safe(outbuffer->data, outbuffer->len, 0x00U, &report_id, error)) {
 		g_prefix_error_literal(error, "failed to read report id: ");
 		return FALSE;
 	}

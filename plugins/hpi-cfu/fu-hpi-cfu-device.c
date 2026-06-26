@@ -29,7 +29,7 @@
 #define FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT "update-on-reboot"
 
 /* nocheck:magic */
-const guint8 report_data[15] =
+static const guint8 report_data[15] =
     {0x00, 0xff, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 struct _FuHpiCfuDevice {
@@ -52,7 +52,7 @@ typedef struct {
 	FuFirmware *fw_offer;
 	FuFirmware *fw_payload;
 } FuHpiCfuHandlerOptions;
-FuHpiCfuHandlerOptions handler_options;
+static FuHpiCfuHandlerOptions handler_options;
 
 typedef gint32 (*FuHpiCfuStateHandler)(FuHpiCfuDevice *self,
 				       FuProgress *progress,
@@ -573,8 +573,9 @@ fu_hpi_cfu_device_handler_send_offer_accepted(FuHpiCfuDevice *self,
 				self->state = FU_HPI_CFU_STATE_NOTIFY_ON_READY;
 				g_warning("send_offer_accepted after 3 retry "
 					  "attempts. Restart the device(Reason: Device busy)");
-			} else
+			} else {
 				self->state = FU_HPI_CFU_STATE_START_ENTIRE_TRANSACTION;
+			}
 		} else {
 			self->state = FU_HPI_CFU_STATE_UPDATE_MORE_OFFERS;
 		}
@@ -797,8 +798,9 @@ fu_hpi_cfu_device_handler_set_status_report_25(FuHpiCfuDevice *self,
 			g_debug("check_update_content: reason: %s for last_packet_sent",
 				fu_hpi_cfu_firmware_update_offer_to_string(status));
 			self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-		} else
+		} else {
 			self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
+		}
 		break;
 
 	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_BUSY:
@@ -936,8 +938,9 @@ fu_hpi_cfu_device_handler_check_update_content(FuHpiCfuDevice *self,
 
 	if (self->last_packet_sent) {
 		self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-	} else
+	} else {
 		self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
+	}
 
 	if (report_id == 0x25) {
 		g_debug("check_update_content: report_id:0x%x", report_id);
@@ -1374,7 +1377,7 @@ fu_hpi_cfu_device_handler_verify_error(FuHpiCfuDevice *self,
 	return TRUE;
 }
 
-FuHpiCfuStateMachineFramework hpi_cfu_states[] = {
+static FuHpiCfuStateMachineFramework hpi_cfu_states[] = {
     {FU_HPI_CFU_STATE_START_ENTIRE_TRANSACTION,
      fu_hpi_cfu_device_handler_start_entire_transaction,
      NULL},
@@ -1473,10 +1476,10 @@ fu_hpi_cfu_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_raw(device, version_raw);
 
 	bulk_opt_index =
-	    version_table_offset + component_index * component_data_size + component_id_offset;
+	    version_table_offset + (component_index * component_data_size) + component_id_offset;
 
 	/* get bulk optimization value */
-	if (!fu_memcpy_safe((guint8 *)&self->bulk_opt,
+	if (!fu_memcpy_safe(&self->bulk_opt,
 			    sizeof(self->bulk_opt),
 			    0x0,
 			    (guint8 *)buf + bulk_opt_index,

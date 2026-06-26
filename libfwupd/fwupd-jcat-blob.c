@@ -136,8 +136,12 @@ fwupd_jcat_blob_get_data_as_string(FwupdJcatBlob *self)
 	if (self->data == NULL)
 		return NULL;
 	buf = g_bytes_get_data(self->data, &bufsz);
-	if ((self->flags & FWUPD_JCAT_BLOB_FLAG_IS_UTF8) == 0)
+	if ((self->flags & FWUPD_JCAT_BLOB_FLAG_IS_UTF8) == 0) {
+		if (buf == NULL)
+			return g_strdup("");
+		/* nocheck:blocked */
 		return g_base64_encode(buf, bufsz);
+	}
 	return g_strndup((const gchar *)buf, bufsz);
 }
 

@@ -83,6 +83,6 @@ fu_uefi_capsule_device_set_require_esp_free_space(FuUefiCapsuleDevice *self,
 gboolean
 fu_uefi_capsule_device_perhaps_enable_debugging(FuUefiCapsuleDevice *self, GError **error);
 FuEfiDevicePathList *
-fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *capsule_path, GError **error);
+fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *filename, GError **error);
 gboolean
 fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error);

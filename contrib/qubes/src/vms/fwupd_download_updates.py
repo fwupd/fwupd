@@ -89,6 +89,8 @@ class DownloadData(FwupdVmCommon):
             if not line.startswith("Wrote "):
                 continue
             path = line.split(" ", 1)[1]
+            if not os.path.exists(path):
+                continue
             base_path, ext = os.path.splitext(path)
             if base_path == self.metadata_file:
                 continue

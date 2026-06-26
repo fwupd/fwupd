@@ -11,7 +11,7 @@
 #include "fu-lenovo-accessory-hid-common.h"
 
 struct _FuLenovoAccessoryHidBootloader {
-	FuHidrawDevice parent_instance;
+	FuHidDevice parent_instance;
 };
 
 static void
@@ -19,13 +19,13 @@ fu_lenovo_accessory_hid_bootloader_impl_iface_init(FuLenovoAccessoryImplInterfac
 
 G_DEFINE_TYPE_WITH_CODE(FuLenovoAccessoryHidBootloader,
 			fu_lenovo_accessory_hid_bootloader,
-			FU_TYPE_HIDRAW_DEVICE,
+			FU_TYPE_HID_DEVICE,
 			G_IMPLEMENT_INTERFACE(FU_TYPE_LENOVO_ACCESSORY_IMPL,
 					      fu_lenovo_accessory_hid_bootloader_impl_iface_init))
 
 static gboolean
 fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *self,
-					       FuLenovoDfuFileType file_type,
+					       FuLenovoAccessoryDfuFileType file_type,
 					       GInputStream *stream,
 					       FuProgress *progress,
 					       GError **error)
@@ -46,7 +46,7 @@ fu_lenovo_accessory_hid_bootloader_write_files(FuLenovoAccessoryHidBootloader *s
 						       file_type,
 						       fu_chunk_get_address(chk),
 						       fu_chunk_get_data(chk),
-						       (guint8)fu_chunk_get_data_sz(chk),
+						       fu_chunk_get_data_sz(chk),
 						       error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -58,7 +58,7 @@ static gboolean
 fu_lenovo_accessory_hid_bootloader_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	if (!fu_lenovo_accessory_impl_dfu_exit(FU_LENOVO_ACCESSORY_IMPL(device),
-					       FU_LENOVO_DFU_EXIT_CODE_DFU_SUCCESS,
+					       FU_LENOVO_ACCESSORY_DFU_EXIT_CODE_DFU_SUCCESS,
 					       error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -72,26 +72,42 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 	guint8 major = 0;
 	guint8 minor = 0;
 	guint8 micro = 0;
-	g_autoptr(FuHidDescriptor) desc = NULL;
-	g_autoptr(FuHidReport) report = NULL;
 	g_autofree gchar *version = NULL;
+	g_autoptr(GPtrArray) descriptors = NULL;
+	gboolean found_report = FALSE;
 
-	desc = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
-	if (desc == NULL)
+	/* the command interface is a vendor HID collection (UsagePage 0xFF00,
+	 * Usage 0x02) carrying a 64-byte report; confirm it is present so we
+	 * fail early on a device that does not speak this protocol */
+	descriptors = fu_hid_device_parse_descriptors(FU_HID_DEVICE(device), error);
+	if (descriptors == NULL)
 		return FALSE;
-	report = fu_hid_descriptor_find_report(desc,
-					       error,
-					       "usage-page",
-					       0xFF00,
-					       "usage",
-					       0x02,
-					       "report-size",
-					       8,
-					       "report-count",
-					       0x40,
-					       NULL);
-	if (report == NULL)
+	for (guint i = 0; i < descriptors->len; i++) {
+		FuHidDescriptor *desc = g_ptr_array_index(descriptors, i);
+		g_autoptr(FuHidReport) report = NULL;
+		report = fu_hid_descriptor_find_report(desc,
+						       NULL,
+						       "usage-page",
+						       0xFF00,
+						       "usage",
+						       0x02,
+						       "report-size",
+						       8,
+						       "report-count",
+						       0x40,
+						       NULL);
+		if (report != NULL) {
+			found_report = TRUE;
+			break;
+		}
+	}
+	if (!found_report) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no vendor command report (0xFF00/0x02) found");
 		return FALSE;
+	}
 
 	/* add runtime counterpart */
 	if (!fu_lenovo_accessory_impl_dfu_attribute(FU_LENOVO_ACCESSORY_IMPL(device),
@@ -103,14 +119,16 @@ fu_lenovo_accessory_hid_bootloader_setup(FuDevice *device, GError **error)
 						    NULL,
 						    error))
 		return FALSE;
-	fu_device_add_instance_u16(device, "DEV", usb_pid);
+	fu_device_add_instance_u16(device, "PID", usb_pid);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_COUNTERPART,
 					      error,
-					      "HIDRAW",
-					      "VEN",
-					      "DEV",
+					      "USB",
+					      "VID",
+					      "PID",
 					      NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
 		return FALSE;
 
 	/* ensure always recoverable */
@@ -152,7 +170,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &file_crc, error))
 		return FALSE;
 	if (!fu_lenovo_accessory_impl_dfu_prepare(FU_LENOVO_ACCESSORY_IMPL(device),
-						  FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
+						  FU_LENOVO_ACCESSORY_DFU_FILE_TYPE_BIN_FILE,
 						  0x0,
 						  (guint32)fw_size,
 						  file_crc,
@@ -162,7 +180,7 @@ fu_lenovo_accessory_hid_bootloader_write_firmware(FuDevice *device,
 
 	if (!fu_lenovo_accessory_hid_bootloader_write_files(
 		FU_LENOVO_ACCESSORY_HID_BOOTLOADER(device),
-		FU_LENOVO_DFU_FILE_TYPE_BIN_FILE,
+		FU_LENOVO_ACCESSORY_DFU_FILE_TYPE_BIN_FILE,
 		stream,
 		fu_progress_get_child(progress),
 		error))
@@ -187,6 +205,7 @@ fu_lenovo_accessory_hid_bootloader_init(FuLenovoAccessoryHidBootloader *self)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x4000);
 	fu_device_set_name(FU_DEVICE(self), "HID Bootloader");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_hid_device_set_interface(FU_HID_DEVICE(self), FU_LENOVO_ACCESSORY_IFACE_BL);
 }
 
 static void

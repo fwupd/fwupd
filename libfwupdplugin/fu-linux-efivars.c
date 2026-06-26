@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
+#include <glib/gstdio.h>
 #include <linux/fs.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -130,8 +131,7 @@ fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, G
 static gboolean
 fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GError **error)
 {
-	gint fd;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autofd gint fd = -1;
 
 	/* not bare-metal */
 	if (!g_str_has_prefix(fn, "/sys"))
@@ -145,14 +145,6 @@ fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_
 			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to open: %s",
 			    fwupd_strerror(errno));
-		return FALSE;
-	}
-	istr = g_unix_input_stream_new(fd, TRUE);
-	if (istr == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to create stream");
 		return FALSE;
 	}
 	return fu_linux_efivars_set_immutable_fd(fd, value, value_old, error);
@@ -510,7 +502,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 			  FuEfiVariableAttrs attr,
 			  GError **error)
 {
-	int fd;
+	g_autofd int fd = -1;
 	int open_wflags = O_WRONLY;
 	gboolean was_immutable = TRUE;
 	g_autofree gchar *fn = NULL;
@@ -533,7 +525,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 	/* open file for writing, optionally append */
 	if (attr & FU_EFI_VARIABLE_ATTR_APPEND_WRITE)
 		open_wflags |= O_APPEND;
-	fd = open(fn, open_wflags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	fd = open(fn, open_wflags, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -543,7 +535,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 			    fwupd_strerror(errno));
 		return FALSE;
 	}
-	ostr = g_unix_output_stream_new(fd, TRUE);
+	ostr = g_unix_output_stream_new(g_steal_fd(&fd), TRUE);
 	memcpy(buf, &attr, sizeof(attr));     /* nocheck:blocked */
 	memcpy(buf + sizeof(attr), data, sz); /* nocheck:blocked */
 	if (g_output_stream_write(ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {

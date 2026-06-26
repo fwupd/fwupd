@@ -11,6 +11,7 @@
 #include "fwupd-test.h"
 
 #include "fu-context-private.h"
+#include "fu-ifwi-struct.h"
 
 static void
 fu_firmware_raw_aligned_func(void)
@@ -424,6 +425,7 @@ static void
 fu_firmware_csv_func(void)
 {
 	FuCsvEntry *entry_tmp;
+	FuCsvEntry *entry_short;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_csv_firmware_new();
@@ -432,7 +434,8 @@ fu_firmware_csv_func(void)
 	g_autoptr(GPtrArray) imgs = NULL;
 	const gchar *data =
 	    "sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md\n"
-	    "grub,1,Free Software Foundation,grub,2.04,https://www.gnu.org/software/grub/\n";
+	    "grub,1,Free Software Foundation,grub,2.04,https://www.gnu.org/software/grub/\n"
+	    "shorty,9\n";
 
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "$id");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(firmware), "component_generation");
@@ -458,7 +461,7 @@ fu_firmware_csv_func(void)
 	g_debug("%s", str);
 
 	imgs = fu_firmware_get_images(firmware);
-	g_assert_cmpint(imgs->len, ==, 2);
+	g_assert_cmpint(imgs->len, ==, 3);
 
 	entry_tmp = g_ptr_array_index(imgs, 1);
 
@@ -468,6 +471,13 @@ fu_firmware_csv_func(void)
 	g_assert_cmpstr(fu_csv_entry_get_value_by_column_id(entry_tmp, "vendor_version"),
 			==,
 			"2.04");
+
+	/* a row with fewer values than the header has columns must not read past
+	 * the row when a far column is looked up by ID */
+	entry_short = g_ptr_array_index(imgs, 2);
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_short, 0), ==, "shorty");
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_short, 5), ==, NULL);
+	g_assert_cmpstr(fu_csv_entry_get_value_by_column_id(entry_short, "vendor_url"), ==, NULL);
 }
 
 static void
@@ -567,6 +577,45 @@ fu_firmware_ifwi_cpd_func(void)
 	g_assert_nonnull(img2);
 	g_assert_cmpint(fu_firmware_get_offset(img2), ==, 79);
 	g_assert_cmpint(fu_firmware_get_size(img2), ==, 11);
+}
+
+static void
+fu_firmware_ifwi_cpd_manifest_overflow_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_ifwi_cpd_firmware_new();
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(FuStructIfwiCpd) st_hdr = fu_struct_ifwi_cpd_new();
+	g_autoptr(FuStructIfwiCpdEntry) st_entry = fu_struct_ifwi_cpd_entry_new();
+	g_autoptr(FuStructIfwiCpdManifest) st_mhd = fu_struct_ifwi_cpd_manifest_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* CPD header with a single entry */
+	fu_struct_ifwi_cpd_set_num_of_entries(st_hdr, 0x1);
+	fu_struct_ifwi_cpd_set_header_version(st_hdr, 0x1);
+	fu_struct_ifwi_cpd_set_entry_version(st_hdr, 0x2);
+	fu_struct_ifwi_cpd_set_partition_name(st_hdr, 0x1234);
+	fu_byte_array_append_array(buf, st_hdr->buf);
+
+	/* entry[0] is the manifest, data follows the header and entry, length 0x100 */
+	fu_struct_ifwi_cpd_entry_set_offset(st_entry, st_hdr->buf->len + st_entry->buf->len);
+	fu_struct_ifwi_cpd_entry_set_length(st_entry, 0x100);
+	fu_byte_array_append_array(buf, st_entry->buf);
+
+	/* size is in dwords, 0x40000040 * 4 wraps a guint32 back to the 0x100 stream
+	 * size, so an unchecked multiply lets the length test pass */
+	fu_struct_ifwi_cpd_manifest_set_header_length(st_mhd, 0x40);
+	fu_struct_ifwi_cpd_manifest_set_size(st_mhd, 0x40000040);
+	fu_byte_array_append_array(buf, st_mhd->buf);
+
+	/* pad so the manifest entry stream is the full declared 0x100 bytes */
+	fu_byte_array_set_size(buf, st_hdr->buf->len + st_entry->buf->len + 0x100, 0x0);
+
+	blob = g_bytes_new(buf->data, buf->len);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
 }
 
 static void
@@ -924,7 +973,7 @@ fu_firmware_builder_round_trip_func(void)
 	    },
 	    {
 		"fit.builder.xml",
-		"293ce07351bb7d76631c4e2ba47243db1e150f3c",
+		"3185644581a7d58c04e7faa32364c933d21377e8",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
@@ -1134,6 +1183,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/fdt", fu_firmware_fdt_func);
 	g_test_add_func("/fwupd/firmware/fit", fu_firmware_fit_func);
 	g_test_add_func("/fwupd/firmware/ifwi-cpd", fu_firmware_ifwi_cpd_func);
+	g_test_add_func("/fwupd/firmware/ifwi-cpd-manifest-overflow",
+			fu_firmware_ifwi_cpd_manifest_overflow_func);
 	g_test_add_func("/fwupd/firmware/ifwi-fpt", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware/oprom", fu_firmware_oprom_func);
 	g_test_add_func("/fwupd/firmware/dfu", fu_firmware_dfu_func);

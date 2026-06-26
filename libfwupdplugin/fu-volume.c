@@ -273,7 +273,7 @@ fu_volume_get_size(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Size");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint64(val);
+	return fwupd_variant_get_uint64(val);
 }
 
 /**
@@ -298,7 +298,7 @@ fu_volume_get_partition_size(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Size");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint64(val);
+	return fwupd_variant_get_uint64(val);
 }
 
 /**
@@ -323,7 +323,7 @@ fu_volume_get_partition_offset(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Offset");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint64(val);
+	return fwupd_variant_get_uint64(val);
 }
 
 /**
@@ -348,7 +348,7 @@ fu_volume_get_partition_number(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Number");
 	if (val == NULL)
 		return 0;
-	return g_variant_get_uint32(val);
+	return fwupd_variant_get_uint32(val);
 }
 
 /**
@@ -498,14 +498,14 @@ fu_volume_is_mdraid(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "MDRaid");
 	if (val == NULL)
 		return FALSE;
-	return g_strcmp0(g_variant_get_string(val, NULL), "/") != 0;
+	return g_strcmp0(fwupd_variant_get_string(val), "/") != 0;
 }
 
 static guint32
 fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **error)
 {
 #if defined(HAVE_IOCTL_H) && defined(HAVE_BLKSSZGET)
-	gint fd;
+	g_autofd gint fd = -1;
 	gint rc;
 	gint sector_size = 0;
 
@@ -533,7 +533,6 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 				    "failed to get non-zero logical sector size");
 		/* nocheck:error-false-return */
 	}
-	g_close(fd, NULL);
 	return sector_size;
 #else
 	g_set_error_literal(error,
@@ -748,7 +747,7 @@ fu_volume_is_encrypted(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "CryptoBackingDevice");
 	if (val == NULL)
 		return FALSE;
-	if (g_strcmp0(g_variant_get_string(val, NULL), "/") == 0)
+	if (g_strcmp0(fwupd_variant_get_string(val), "/") == 0)
 		return FALSE;
 	return TRUE;
 }
@@ -823,7 +822,7 @@ fu_volume_is_internal(FuVolume *self)
 	if (val_system == NULL)
 		return FALSE;
 
-	return g_variant_get_boolean(val_system);
+	return fwupd_variant_get_boolean(val_system);
 }
 
 /**
@@ -846,7 +845,7 @@ fu_volume_get_id_type(FuVolume *self)
 	if (val == NULL)
 		return NULL;
 
-	return g_strdup(g_variant_get_string(val, NULL));
+	return g_strdup(fwupd_variant_get_string(val));
 }
 
 /**
@@ -1228,7 +1227,7 @@ fu_volume_new_by_devnum(guint32 devnum, GError **error)
 		val = g_dbus_proxy_get_cached_property(proxy_blk, "DeviceNumber");
 		if (val == NULL)
 			continue;
-		if (devnum == g_variant_get_uint64(val)) {
+		if (devnum == fwupd_variant_get_uint64(val)) {
 			return g_object_new(FU_TYPE_VOLUME, "proxy-block", proxy_blk, NULL);
 		}
 	}

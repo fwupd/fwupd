@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-context-private.h"
+#include "fu-efi-common.h"
 #include "fu-efi-lz77-decompressor.h"
 #include "fu-efi-x509-signature-private.h"
 
@@ -304,6 +305,72 @@ fu_efi_load_option_func(void)
 	}
 }
 
+static void
+fu_efi_timestamp_roundtrip_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuStructEfiTime) st_src = fu_struct_efi_time_new();
+	g_autoptr(FuStructEfiTime) st_dst = fu_struct_efi_time_new();
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("timestamp");
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *xml = NULL;
+
+	fu_struct_efi_time_set_year(st_src, 2024);
+	fu_struct_efi_time_set_month(st_src, 6);
+	fu_struct_efi_time_set_day(st_src, 15);
+	fu_struct_efi_time_set_hour(st_src, 10);
+	fu_struct_efi_time_set_minute(st_src, 30);
+	fu_struct_efi_time_set_second(st_src, 45);
+
+	fu_efi_timestamp_export(st_src, bn);
+
+	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(xml);
+
+	blob = g_bytes_new(xml, strlen(xml));
+	ret = xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	n = xb_silo_query_first(silo, "timestamp", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(n);
+
+	fu_efi_timestamp_build(st_dst, n);
+
+	g_assert_cmpint(fu_struct_efi_time_get_year(st_dst), ==, 2024);
+	g_assert_cmpint(fu_struct_efi_time_get_month(st_dst), ==, 6);
+	g_assert_cmpint(fu_struct_efi_time_get_day(st_dst), ==, 15);
+	g_assert_cmpint(fu_struct_efi_time_get_hour(st_dst), ==, 10);
+	g_assert_cmpint(fu_struct_efi_time_get_minute(st_dst), ==, 30);
+	g_assert_cmpint(fu_struct_efi_time_get_second(st_dst), ==, 45);
+}
+
+static void
+fu_efi_timestamp_export_zero_func(void)
+{
+	g_autoptr(FuStructEfiTime) st = fu_struct_efi_time_new();
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("timestamp");
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *xml = NULL;
+
+	fu_efi_timestamp_export(st, bn);
+
+	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(xml);
+	g_assert_cmpstr(xml, ==, "<timestamp />");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -319,5 +386,7 @@ main(int argc, char **argv)
 			fu_efi_variable_authentication2_func);
 #endif
 	g_test_add_func("/fwupd/efi/lz77/decompressor", fu_efi_lz77_decompressor_func);
+	g_test_add_func("/fwupd/efi/timestamp/roundtrip", fu_efi_timestamp_roundtrip_func);
+	g_test_add_func("/fwupd/efi/timestamp/export-zero", fu_efi_timestamp_export_zero_func);
 	return g_test_run();
 }

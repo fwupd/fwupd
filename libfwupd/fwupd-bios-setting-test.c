@@ -9,7 +9,84 @@
 #include "fwupd-bios-setting.h"
 #include "fwupd-codec.h"
 #include "fwupd-error.h"
+#include "fwupd-test-bios-setting.h"
 #include "fwupd-test.h"
+
+static void
+fwupd_bios_settings_raw_func(void)
+{
+	gboolean ret;
+	g_autoptr(FwupdTestBiosSetting) setting = fwupd_test_bios_setting_new();
+	g_autoptr(GError) error = NULL;
+
+	fwupd_bios_setting_set_id(FWUPD_BIOS_SETTING(setting), "test");
+	fwupd_bios_setting_set_kind(FWUPD_BIOS_SETTING(setting),
+				    FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	fwupd_bios_setting_add_possible_value(FWUPD_BIOS_SETTING(setting), "False");
+	fwupd_bios_setting_add_possible_value(FWUPD_BIOS_SETTING(setting), "True");
+	fwupd_test_bios_setting_set_value_raw(setting, "True");
+	ret = fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(FWUPD_BIOS_SETTING(setting)),
+			==,
+			"True");
+
+	ret = fwupd_bios_setting_write_value(FWUPD_BIOS_SETTING(setting), "False", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(FWUPD_BIOS_SETTING(setting)),
+			==,
+			"False");
+	g_assert_cmpstr(fwupd_test_bios_setting_get_value_raw(setting), ==, "False");
+}
+
+static void
+fwupd_bios_settings_raw_mapped_func(void)
+{
+	gboolean ret;
+	g_autoptr(FwupdTestBiosSetting) setting = fwupd_test_bios_setting_new();
+	g_autoptr(GError) error = NULL;
+
+	fwupd_bios_setting_set_id(FWUPD_BIOS_SETTING(setting), "test");
+	fwupd_bios_setting_set_kind(FWUPD_BIOS_SETTING(setting),
+				    FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	fwupd_bios_setting_add_possible_value_full(FWUPD_BIOS_SETTING(setting), "False", "0");
+	fwupd_bios_setting_add_possible_value_full(FWUPD_BIOS_SETTING(setting), "True", "1");
+	fwupd_test_bios_setting_set_value_raw(setting, "1");
+	ret = fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(FWUPD_BIOS_SETTING(setting)),
+			==,
+			"True");
+
+	ret = fwupd_bios_setting_write_value(FWUPD_BIOS_SETTING(setting), "False", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_bios_setting_get_current_value(FWUPD_BIOS_SETTING(setting)),
+			==,
+			"False");
+	g_assert_cmpstr(fwupd_test_bios_setting_get_value_raw(setting), ==, "0");
+}
+
+static void
+fwupd_bios_settings_raw_invalid_func(void)
+{
+	gboolean ret;
+	g_autoptr(FwupdTestBiosSetting) setting = fwupd_test_bios_setting_new();
+	g_autoptr(GError) error = NULL;
+
+	fwupd_bios_setting_set_id(FWUPD_BIOS_SETTING(setting), "test");
+	fwupd_bios_setting_set_kind(FWUPD_BIOS_SETTING(setting),
+				    FWUPD_BIOS_SETTING_KIND_ENUMERATION);
+	fwupd_bios_setting_add_possible_value_full(FWUPD_BIOS_SETTING(setting), "False", "0");
+	fwupd_bios_setting_add_possible_value_full(FWUPD_BIOS_SETTING(setting), "True", "1");
+	fwupd_test_bios_setting_set_value_raw(setting, "Dave");
+	ret = fwupd_bios_setting_setup(FWUPD_BIOS_SETTING(setting), &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+}
 
 static void
 fwupd_bios_settings_func(void)
@@ -171,5 +248,8 @@ main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/bios-settings", fwupd_bios_settings_func);
+	g_test_add_func("/fwupd/bios-settings/raw", fwupd_bios_settings_raw_func);
+	g_test_add_func("/fwupd/bios-settings/raw/mapped", fwupd_bios_settings_raw_mapped_func);
+	g_test_add_func("/fwupd/bios-settings/raw/invalid", fwupd_bios_settings_raw_invalid_func);
 	return g_test_run();
 }

@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
 "PO-Revision-Date: 2025-10-24 10:22+0000\n"
 "Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Lithuanian <https://hosted.weblate.org/projects/fwupd/fwupd/lt/>\n"
@@ -117,12 +117,33 @@ msgstr "Atstatyti tarnybos konfigūraciją"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Norint atstatyti tarnybos konfigūraciją į numatytąsias reikšmes, reikalingas tapatybės nustatymas"
 
+msgid "Modify a device property"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr ""
+
 msgid "Activate the new firmware on the device"
 msgstr "Aktyvinti naująją aparatinę programinę įrangą įrenginyje"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Norint perjungti į naują aparatinės programinės įrangos versiją, reikalingas tapatybės nustatymas"
+
+msgid "Clear stored firmware update results"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr ""
+
+msgid "Verify device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr ""
 
 msgid "Update the stored device verification information"
 msgstr "Naujinti saugomą įrenginio patikrinimo informaciją"
@@ -131,8 +152,26 @@ msgstr "Naujinti saugomą įrenginio patikrinimo informaciją"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Norint atnaujinti saugomas įrenginio kontrolines sumas, reikalingas tapatybės nustatymas"
 
+msgid "Get configured remotes"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr ""
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Modifikuoti sukonfigūruotą nuotolinę saugyklą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -208,6 +247,13 @@ msgstr ""
 msgid "Authentication is required to enable emulation data collection"
 msgstr ""
 
+msgid "Install firmware on emulated device"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr ""
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Diegiamas aparatinės programinės įrangos naujinimas…"
@@ -259,6 +305,10 @@ msgstr "UEFI dbx paslaugų programa"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Nepavyko išanalizuoti argumentų"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -684,6 +734,10 @@ msgstr ""
 msgid "SPI write protection"
 msgstr ""
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr ""
@@ -710,6 +764,10 @@ msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
@@ -871,6 +929,10 @@ msgstr ""
 msgid "AMD Firmware Write Protection"
 msgstr ""
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr ""
@@ -893,6 +955,10 @@ msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
@@ -1023,6 +1089,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr ""
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr ""
 
@@ -1036,6 +1106,10 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
 msgstr ""
 
 #. TRANSLATORS: longer description
@@ -1368,6 +1442,9 @@ msgstr "Rodyti negalimus naujinti įrenginius"
 msgid "Manually enable specific plugins"
 msgstr ""
 
+msgid "Location of public key directories used for JCat verification"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Paleisti sudėtinę įskiepio paruošimo programą, naudojant install-blob"
@@ -1389,11 +1466,18 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr ""
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Atsakyti taip į visus klausimus"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
+msgstr ""
+
+msgid "Prefix for import and output files"
 msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
@@ -1846,6 +1930,62 @@ msgstr ""
 msgid "Parse the system PCR eventlog"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr ""
@@ -1864,6 +2004,8 @@ msgstr ""
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr ""
@@ -2221,6 +2363,27 @@ msgstr ""
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Įrenginių sąrašas sėkmingai išsiųstas, dėkojame!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr ""
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2307,6 +2470,14 @@ msgstr "Sendina aparatinę programinę įrangą įrenginyje"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
 msgstr ""
 
 #. TRANSLATORS: command description
@@ -2746,6 +2917,11 @@ msgstr "„%s“ ausinių naujinimas"
 #, c-format
 msgid "%s Headset Update"
 msgstr "„%s“ ausinių su mikrofonu naujinimas"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3391,13 +3567,17 @@ msgstr ""
 msgid "Priority"
 msgstr "Pirmenybė"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr ""
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Naudotojo vardas"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Slaptažodis"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr ""
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3576,19 +3756,19 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr ""
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr ""
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
@@ -3694,6 +3874,9 @@ msgstr ""
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Sutikti ir įjungti šią nuotolinę saugyklą?"
+
+#~ msgid "Password"
+#~ msgstr "Slaptažodis"
 
 #~ msgid "Devices with firmware updates that need user action: "
 #~ msgstr "Įrenginiai, kuriems prieinami programinės aparatinės įrangos naujinimai, reikalaujantys naudotojo veiksmų: "

@@ -5,25 +5,25 @@
 # Translators:
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2016
 # gogo <trebelnik2@gmail.com>, 2016
-# Milo Ivir <mail@milotype.de>, 2020-2021, 2025.
-# Milo Ivir <mail@milotype.de>, 2021,2023,2025
-# Milo Ivir <mail@milotype.de>, 2021
+# Milo Ivir <mail@milotype.de>, 2020-2021, 2025, 2026.
+# Milo Ivir <mail@milotype.de>, 2021,2023,2025, 2026.
+# Milo Ivir <mail@milotype.de>, 2021, 2026.
 # gogo <trebelnik2@gmail.com>, 2016-2023
 # Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
-"PO-Revision-Date: 2025-10-24 10:13+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-05-18 15:11+0000\n"
+"Last-Translator: Milo Ivir <mail@milotype.de>\n"
 "Language-Team: Croatian <https://hosted.weblate.org/projects/fwupd/fwupd/hr/>\n"
 "Language: hr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Weblate 5.14.1-dev\n"
+"X-Generator: Weblate 2026.6.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Firmver Usluga Linux Proizvođača (LVFS) (stabilni firmver)"
@@ -119,12 +119,33 @@ msgstr "Resetiraj podešavanja pozadinskog programa"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Potrebna je ovjera za vraćanje konfiguracije pozadinskom programa na zadane postavke"
 
+msgid "Modify a device property"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr ""
+
 msgid "Activate the new firmware on the device"
 msgstr "Aktiviraj novi firmver na uređaju"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Potrebna je ovjera za prebacivanje na novu inačicu firmvera"
+
+msgid "Clear stored firmware update results"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr ""
+
+msgid "Verify device firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr ""
 
 msgid "Update the stored device verification information"
 msgstr "Nadopuni spremljenu informaciju provjere uređaja"
@@ -133,8 +154,26 @@ msgstr "Nadopuni spremljenu informaciju provjere uređaja"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Potrebna je ovjera za nadopunu spremljenog kontrolnog zbroja uređaja"
 
+msgid "Get configured remotes"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr ""
+
+msgid "Update the metadata for a configured remote"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr ""
+
 msgid "Modify a configured remote"
 msgstr "Promijeni zadanu udaljenu lokaciju"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr ""
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -210,6 +249,13 @@ msgstr "Omogući prikupljanja podataka emulacije"
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Potrebna je ovjera za omogućavanje prikupljanja podataka emulacije"
 
+msgid "Install firmware on emulated device"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr ""
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Instalacija nadopune firmvera…"
@@ -220,7 +266,7 @@ msgstr "Prikaži dodatne informacije otklanjanja grešaka"
 
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
-msgstr "Prikaži predviđenu inčicu DBX-a"
+msgstr "Prikaži predviđenu inačicu DBX-a"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -261,6 +307,10 @@ msgstr "UEFI dbx pomagalo"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Neuspjela obrada argumenata"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -682,6 +732,10 @@ msgstr "Zaštita od SPI ponavljanja"
 msgid "SPI write protection"
 msgstr "Zaštita od SPI zapisivanja"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Pregorjela platforma"
@@ -709,6 +763,10 @@ msgstr "SMM jezaključan"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "UEFI zaštita memorije"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -869,6 +927,10 @@ msgstr "Zaštita ponavljanja AMD firmvera"
 msgid "AMD Firmware Write Protection"
 msgstr "Zaštita zpisivanja AMD firmvera"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Pregorjela platforma"
@@ -892,6 +954,10 @@ msgstr "Način upravljanja sustavom"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "UEFI zaštita memorije"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1021,6 +1087,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr ""
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Mikrokod CPU-a se mora nadopuniti kako bi se smanjio rizik od različitih sigurnosnih problema s otkrivanjem informacija."
 
@@ -1034,6 +1104,10 @@ msgstr "Firmware koristi način upravljanja sustavom za pristup rezidentnom BIOS
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
 msgstr ""
 
 #. TRANSLATORS: longer description
@@ -1366,6 +1440,9 @@ msgstr "Prikaži uređaje koji se ne mogu nadopuniti"
 msgid "Manually enable specific plugins"
 msgstr "Ručno omogući određene priključke"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Pokreni rutinu pripreme sastavljanja priključka kada se koristi install-blob"
@@ -1387,12 +1464,19 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr ""
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Odgovori 'da' na sva pitanja"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Rezkutat u JSON formatu (onemogućuje sve interaktivne upite)"
+
+msgid "Prefix for import and output files"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1844,6 +1928,62 @@ msgstr ""
 msgid "Parse the system PCR eventlog"
 msgstr ""
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr ""
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Ovaj alat dopušta administratoru korištenje fwupd priključaka bez instalacije na sustavu."
@@ -1862,6 +2002,8 @@ msgstr "Zanemaruju se stroge SSL provjere, kako bi se ovo ubuduće automatski iz
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Neuspjela obrada oznaka za %s"
@@ -2213,6 +2355,27 @@ msgstr "Sada poslati podatke?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Popis uređaja je uspješno prenesen, hvala!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr ""
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr ""
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr ""
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr ""
@@ -2300,6 +2463,14 @@ msgstr "Vraća stariju inačicu firmvera na uređaju"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Nadopuni spremljenu kriptografsku jedinstvenu vrijednost s trenutnim sadržajem ROM-a"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr ""
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -2738,6 +2909,11 @@ msgstr "%s nadopuna slušalica"
 #, c-format
 msgid "%s Headset Update"
 msgstr "%s nadopuna slušalica s mikrofonom"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr ""
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3376,13 +3552,17 @@ msgstr "Interval osvježavanja"
 msgid "Priority"
 msgstr "Prioritet"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr ""
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Korisničko ime"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Lozinka"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr ""
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3561,20 +3741,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0 rekonstrukcija je sada valjana"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "UEFI zaštita memorije omogućena, ali nije zaključana"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "UEFI zaštita memorije omogućena i zaključana"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "UEFI zaštita memorije je sada zaključana"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "UEFI zaštita memorije je sada otključana"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3679,6 +3859,15 @@ msgstr "Omogućiti udaljenu lokaciju?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Slažete li se s omogućavanjem udaljene lokacije?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "UEFI zaštita memorije omogućena, ali nije zaključana"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "UEFI zaštita memorije omogućena i zaključana"
+
+#~ msgid "Password"
+#~ msgstr "Lozinka"
 
 #, c-format
 #~ msgid "%s is not currently updatable"

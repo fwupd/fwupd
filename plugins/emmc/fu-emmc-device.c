@@ -413,7 +413,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	arg = fu_memread_uint32(ext_csd + EXT_CSD_FFU_ARG_0, G_LITTLE_ENDIAN);
 
 	/* prepare multi_cmd to be sent */
-	multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) + 4 * sizeof(struct mmc_ioc_cmd);
+	multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) + (4 * sizeof(struct mmc_ioc_cmd));
 	multi_cmd = g_malloc0(multi_cmdsz);
 	multi_cmd->num_of_cmds = 4;
 
@@ -537,7 +537,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		/* re-enter ffu mode and install the firmware */
 		multi_cmd->num_of_cmds = 2;
 		multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) +
-			      multi_cmd->num_of_cmds * sizeof(struct mmc_ioc_cmd);
+			      (multi_cmd->num_of_cmds * sizeof(struct mmc_ioc_cmd));
 
 		/* set ext_csd to install mode */
 		multi_cmd->cmds[1].opcode = MMC_SWITCH;

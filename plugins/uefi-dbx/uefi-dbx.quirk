@@ -303,3 +303,8 @@ Flags = no-dbx-updates
 # BaseboardProduct=BOHK-WAX9X-PCB
 [a98d46c9-ed25-54da-8510-ef9035cecdd1]
 Flags = no-dbx-updates
+
+# Manufacturer=ASUSTeK COMPUTER INC.
+# ProductName=GL553VD
+[f59df121-a7ee-59db-8699-bbfbf83965a9]
+Flags = no-dbx-updates

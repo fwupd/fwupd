@@ -14,6 +14,7 @@
 #include "fwupd-error.h"
 #include "fwupd-json-array.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-variant.h"
 
 /**
  * FwupdSecurityAttr:
@@ -62,46 +63,6 @@ G_DEFINE_TYPE_EXTENDED(FwupdSecurityAttr,
 #define GET_PRIVATE(o) (fwupd_security_attr_get_instance_private(o))
 
 /**
- * fwupd_security_attr_flag_to_string:
- * @flag: security attribute flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_SUCCESS
- *
- * Returns the printable string for the flag.
- *
- * Returns: string, or %NULL
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
-{
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_NONE)
-		return "none";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_SUCCESS)
-		return "success";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)
-		return "obsoleted";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA)
-		return "missing-data";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES)
-		return "runtime-updates";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION)
-		return "runtime-attestation";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE)
-		return "runtime-issue";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM)
-		return "action-contact-oem";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW)
-		return "action-config-fw";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS)
-		return "action-config-os";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)
-		return "can-fix";
-	if (flag == FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)
-		return "can-undo";
-	return NULL;
-}
-
-/**
  * fwupd_security_attr_flag_from_string:
  * @flag: (nullable): a string, e.g. `success`
  *
@@ -137,50 +98,6 @@ fwupd_security_attr_flag_from_string(const gchar *flag)
 	if (g_strcmp0(flag, "can-undo") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO;
 	return FWUPD_SECURITY_ATTR_FLAG_NONE;
-}
-
-/**
- * fwupd_security_attr_result_to_string:
- * @result: security attribute result, e.g. %FWUPD_SECURITY_ATTR_RESULT_ENABLED
- *
- * Returns the printable string for the result enum.
- *
- * Returns: string, or %NULL
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result)
-{
-	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID)
-		return "valid";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID)
-		return "not-valid";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_ENABLED)
-		return "enabled";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED)
-		return "not-enabled";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_LOCKED)
-		return "locked";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED)
-		return "not-locked";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED)
-		return "encrypted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED)
-		return "not-encrypted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_TAINTED)
-		return "tainted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED)
-		return "not-tainted";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_FOUND)
-		return "found";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND)
-		return "not-found";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_SUPPORTED)
-		return "supported";
-	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED)
-		return "not-supported";
-	return NULL;
 }
 
 /**
@@ -1299,7 +1216,7 @@ fwupd_security_attr_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwu
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
-				      fwupd_hash_kv_to_variant(priv->metadata));
+				      fwupd_variant_from_hash_kv(priv->metadata));
 	}
 	if (priv->bios_setting_id != NULL) {
 		g_variant_builder_add(builder,
@@ -1387,93 +1304,92 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
-		fwupd_security_attr_set_appstream_id(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_appstream_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_security_attr_set_created(self, g_variant_get_uint64(value));
+		fwupd_security_attr_set_created(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_security_attr_set_name(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_name(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
-		fwupd_security_attr_set_title(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_title(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
-		fwupd_security_attr_set_description(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_description(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
-		fwupd_security_attr_set_plugin(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_plugin(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
-		fwupd_security_attr_set_fwupd_version(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_fwupd_version(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
-		fwupd_security_attr_set_url(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_url(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_security_attr_set_flags(self, g_variant_get_uint64(value));
+		fwupd_security_attr_set_flags(self, fwupd_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_LEVEL) == 0) {
-		fwupd_security_attr_set_level(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_level(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
-		fwupd_security_attr_set_result(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_result(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK) == 0) {
-		fwupd_security_attr_set_result_fallback(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_result_fallback(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS) == 0) {
-		fwupd_security_attr_set_result_success(self, g_variant_get_uint32(value));
+		fwupd_security_attr_set_result_success(self, fwupd_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
-		for (guint i = 0; strv[i] != NULL; i++)
+		g_autofree const gchar **strv = fwupd_variant_get_strv(value);
+		for (guint i = 0; strv != NULL && strv[i] != NULL; i++)
 			fwupd_security_attr_add_guid(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
-		if (priv->metadata != NULL)
-			g_hash_table_unref(priv->metadata);
-		priv->metadata = fwupd_variant_to_hash_kv(value);
+		g_autoptr(GHashTable) hash = fwupd_variant_to_hash_kv(value);
+		if (hash != NULL) {
+			if (priv->metadata != NULL)
+				g_hash_table_unref(priv->metadata);
+			priv->metadata = g_steal_pointer(&hash);
+		}
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_ID) == 0) {
-		fwupd_security_attr_set_bios_setting_id(self, g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_bios_setting_id(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE) == 0) {
-		fwupd_security_attr_set_bios_setting_target_value(
-		    self,
-		    g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_bios_setting_target_value(self,
+								  fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE) == 0) {
-		fwupd_security_attr_set_bios_setting_current_value(
-		    self,
-		    g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_bios_setting_current_value(self,
+								   fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE) == 0) {
-		fwupd_security_attr_set_kernel_current_value(self,
-							     g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_kernel_current_value(self, fwupd_variant_get_string(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE) == 0) {
-		fwupd_security_attr_set_kernel_target_value(self,
-							    g_variant_get_string(value, NULL));
+		fwupd_security_attr_set_kernel_target_value(self, fwupd_variant_get_string(value));
 		return;
 	}
 }
@@ -1687,7 +1603,8 @@ fwupd_security_attr_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwupd
 			if ((priv->flags & ((guint64)1 << i)) == 0)
 				continue;
 			tmp = fwupd_security_attr_flag_to_string((guint64)1 << i);
-			fwupd_json_array_add_string(json_arr, tmp);
+			if (tmp != NULL)
+				fwupd_json_array_add_string(json_arr, tmp);
 		}
 		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_FLAGS, json_arr);
 	}
@@ -1700,7 +1617,8 @@ fwupd_security_attr_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, Fwupd
 		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_GUID, json_arr);
 	}
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		g_autoptr(GList) keys =
+		    g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
@@ -1892,7 +1810,8 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	}
 	if (priv->metadata != NULL) {
 		GHashTableIter iter;
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		g_hash_table_iter_init(&iter, priv->metadata);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			fwupd_security_attr_add_metadata(new,

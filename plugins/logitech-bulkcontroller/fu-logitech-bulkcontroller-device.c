@@ -22,7 +22,7 @@
 #define MAX_RETRIES		      5
 #define MAX_SETUP_RETRIES	      50
 #define MAX_WAIT_COUNT		      150
-#define POST_INSTALL_SLEEP_DURATION   80 * 1000 /* ms */
+#define POST_INSTALL_SLEEP_DURATION   (80 * 1000) /* ms */
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
@@ -1112,9 +1112,8 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 				    "waiting for download to finish");
 		self->is_sync_flush_events_in_progress = TRUE;
 		return FALSE;
-	} else {
-		self->is_sync_flush_events_in_progress = FALSE;
 	}
+	self->is_sync_flush_events_in_progress = FALSE;
 
 	fu_progress_set_status(
 	    progress,
@@ -1172,7 +1171,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	md5_buf = fu_byte_array_from_string(md5_str, error);
 	if (md5_buf == NULL)
 		return FALSE;
-	base64hash = g_base64_encode(md5_buf->data, md5_buf->len);
+	base64hash = fu_base64_encode(md5_buf->data, md5_buf->len);
 	fu_progress_step_done(progress);
 
 	/* sending INIT. Retry if device is not in IDLE state to receive the file */

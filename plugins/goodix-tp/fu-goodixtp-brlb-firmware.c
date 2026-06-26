@@ -65,7 +65,7 @@ fu_goodixtp_brlb_firmware_parse_config(FuGoodixtpFirmware *self,
 		g_autoptr(FuStructGoodixTpCfgItem) st_cfg_item = NULL;
 
 		st_cfg_item = fu_struct_goodix_tp_cfg_item_parse_stream(stream,
-									offset + 6 + (gsize)i * 3,
+									offset + 6 + ((gsize)i * 3),
 									error);
 		if (st_cfg_item == NULL)
 			return FALSE;
@@ -233,6 +233,7 @@ fu_goodixtp_brlb_firmware_init(FuGoodixtpBrlbFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GOODIXTP_BRLB_CONFIG);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void

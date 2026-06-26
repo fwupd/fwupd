@@ -9,6 +9,7 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.Bios.RollbackProtection.json',
   'org.fwupd.hsi.Cet.Active.json',
   'org.fwupd.hsi.Cet.Enabled.json',
+  'org.fwupd.hsi.Coreboot.Vboot.json',
   'org.fwupd.hsi.EncryptedRam.json',
   'org.fwupd.hsi.Hp.Surestart.json',
   'org.fwupd.hsi.IntelBootguard.Acm.json',
@@ -42,6 +43,7 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.Uefi.BootserviceVars.json',
   'org.fwupd.hsi.Uefi.Db.json',
   'org.fwupd.hsi.Uefi.MemoryProtection.json',
+  'org.fwupd.hsi.Uefi.NxCompat.json',
   'org.fwupd.hsi.Uefi.Pk.json',
   'org.fwupd.hsi.Uefi.SecureBoot.json',
 )

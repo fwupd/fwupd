@@ -32,3 +32,32 @@ enum FuDellDockMstBank {
     Esm,
     Cayenne,
 }
+
+#[repr(u16le)]
+enum FuDellDockModuleType {
+	W45Tbt = 1,
+	W45Generic,
+	W130Tbt,
+	W130Dp,
+	W130Universal,
+	W240Trin,
+	W210Dual,
+	W130Usb4,
+}
+
+#[derive(ParseBytes)]
+#[repr(C, packed)]
+struct FuStructDellDockData {
+	dock_configuration: u8,
+	dock_type: u8,
+	power_supply_wattage: u16le,
+	module_type: FuDellDockModuleType,
+	board_id: u16le,
+	port0_dock_status: u16le,
+	port1_dock_status: u16le,
+	dock_firmware_pkg_ver: u32le,
+	module_serial: u64le,
+	original_module_serial: u64le,
+	service_tag: [char; 7],
+	marketing_name: [char; 64],
+}

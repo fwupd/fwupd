@@ -174,7 +174,7 @@ fu_elantp_hid_mcu_device_write_fw_password(FuElantpHidMcuDevice *self,
 					   GError **error)
 {
 	FuDevice *proxy;
-	guint16 pw = ETP_I2C_IC13_IAPV5_PW;
+	guint16 pw;
 	guint16 value;
 
 	if (iap_ver >= 0x7 && ic_type == FU_ETP_IC_NUM13)
@@ -403,9 +403,9 @@ fu_elantp_hid_mcu_device_check_firmware(FuDevice *device,
 		}
 	} else if (self->force_table_support != force_table_support) {
 		g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "mcu firmware incompatible, forcetable incorrect.");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "mcu firmware incompatible, forcetable incorrect.");
 		return FALSE;
 	}
 	if (force_table_support) {

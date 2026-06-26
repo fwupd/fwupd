@@ -39,9 +39,11 @@ fu_linux_lockdown_plugin_rescan(FuPlugin *plugin)
 	}
 
 	/* update metadata */
-	fu_plugin_add_report_metadata(plugin,
-				      "LinuxLockdown",
-				      fu_linux_lockdown_to_string(self->lockdown));
+	if (self->lockdown != FU_LINUX_LOCKDOWN_UNKNOWN) {
+		fu_plugin_add_report_metadata(plugin,
+					      "LinuxLockdown",
+					      fu_linux_lockdown_to_string(self->lockdown));
+	}
 }
 
 static void
@@ -217,7 +219,9 @@ fu_linux_lockdown_plugin_fix_host_security_attr(FuPlugin *plugin,
 						FwupdSecurityAttr *attr,
 						GError **error)
 {
-	return fu_kernel_add_cmdline_arg("lockdown=integrity", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_add_cmdline_arg(pstore, "lockdown=integrity", error);
 }
 
 static gboolean
@@ -225,7 +229,9 @@ fu_linux_lockdown_plugin_undo_host_security_attr(FuPlugin *plugin,
 						 FwupdSecurityAttr *attr,
 						 GError **error)
 {
-	return fu_kernel_remove_cmdline_arg("lockdown=integrity", error);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPathStore *pstore = fu_context_get_path_store(ctx);
+	return fu_kernel_remove_cmdline_arg(pstore, "lockdown=integrity", error);
 }
 
 static void

@@ -127,7 +127,7 @@ fu_ihex_firmware_record_new(guint ln, const gchar *line, FuFirmwareParseFlags fl
 		return NULL;
 
 	/* position of checksum */
-	line_end = 9 + rcd->byte_cnt * 2;
+	line_end = 9 + (rcd->byte_cnt * 2);
 	if (line_end > (guint)rcd->buf->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,

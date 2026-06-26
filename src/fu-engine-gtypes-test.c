@@ -158,6 +158,12 @@ fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 	firmware = g_object_new(gtype, NULL);
 	g_assert_nonnull(firmware);
 
+	/* check the size max is set */
+	if (gtype != FU_TYPE_FIRMWARE &&
+	    !fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_IS_ABSTRACT) &&
+	    fu_firmware_get_size_max(firmware) == FU_FIRMWARE_SIZE_MAX_DEFAULT)
+		g_warning("%s did not set firmware max size", g_type_name(gtype));
+
 	/* ensure we have data set even if parsing fails */
 	fu_firmware_set_bytes(firmware, fw);
 
@@ -213,6 +219,7 @@ fu_engine_gtypes_func(void)
 {
 	GPtrArray *plugins;
 	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 	g_autoptr(FuDrmDevice) drm_device = g_object_new(FU_TYPE_DRM_DEVICE, NULL);
@@ -225,19 +232,12 @@ fu_engine_gtypes_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	const gchar *external_plugins[] = {
-	    "flashrom",
 	    "modem-manager",
 	};
 
 	/* set up test harness */
-	g_autofree gchar *testdatadir = NULL;
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
-
-	/* load dummy hwids */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -263,7 +263,7 @@ fu_engine_gtypes_func(void)
 	/* load all plugins */
 	ret =
 	    fu_engine_load(engine,
-			   FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+			   FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS | FU_ENGINE_LOAD_FLAG_HWINFO |
 			       FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			   progress,
 			   &error);

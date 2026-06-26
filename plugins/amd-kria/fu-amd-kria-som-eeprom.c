@@ -23,7 +23,7 @@ struct _FuAmdKriaSomEeprom {
 G_DEFINE_TYPE(FuAmdKriaSomEeprom, fu_amd_kria_som_eeprom, FU_TYPE_FIRMWARE)
 
 /* IPMI spec encodes 0:5 as length and 6:7 as "type" code */
-#define LENGTH(data)	data & 0x3f
+#define LENGTH(data)	(data & 0x3f)
 #define TYPE_CODE(data) data >> 6
 
 static gboolean
@@ -35,7 +35,7 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 	FuAmdKriaSomEeprom *self = FU_AMD_KRIA_SOM_EEPROM(firmware);
 	guint8 str_len = 0;
 	guint8 str_offset = FU_STRUCT_BOARD_INFO_OFFSET_MANUFACTURER_LEN;
-	guint8 board_offset;
+	gsize board_offset;
 	const guint8 *buf;
 	gsize bufsz = 0;
 	g_autoptr(FuStructIpmiCommon) st_common = NULL;
@@ -142,6 +142,7 @@ static void
 fu_amd_kria_som_eeprom_init(FuAmdKriaSomEeprom *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void

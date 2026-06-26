@@ -732,6 +732,10 @@ fu_util_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: headphones with an integrated microphone */
 			return g_strdup_printf(_("%s Headset Update"), name);
 		}
+		if (g_strcmp0(cat, "X-Touchscreen") == 0) {
+			/* TRANSLATORS: a display that can detect touch input from a user */
+			return g_strdup_printf(_("%s Touchscreen Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
@@ -884,6 +888,118 @@ fu_util_parse_filter_release_flags(const gchar *filter,
 	}
 
 	return TRUE;
+}
+
+/* a protocol must not contain spaces and must contain at least one dot */
+static gboolean
+fu_util_validate_protocol(const gchar *protocol)
+{
+	if (protocol == NULL)
+		return FALSE;
+	if (g_strstr_len(protocol, -1, ".") == NULL)
+		return FALSE;
+	if (g_strstr_len(protocol, -1, " ") != NULL)
+		return FALSE;
+	return TRUE;
+}
+
+gboolean
+fu_util_parse_filter_protocol_flags(gchar **filters,
+				    GPtrArray *include,
+				    GPtrArray *exclude,
+				    GError **error)
+{
+	for (guint i = 0; filters[i] != NULL; i++) {
+		const gchar *protocol = filters[i];
+		if (g_str_has_prefix(protocol, "~")) {
+			if (!fu_util_validate_protocol(protocol + 1)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "invalid filtered protocol '%s'",
+					    protocol + 1);
+				return FALSE;
+			}
+			g_ptr_array_add(exclude, g_strdup(protocol + 1));
+		} else {
+			if (!fu_util_validate_protocol(protocol)) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "invalid filtered protocol '%s'",
+					    protocol);
+				return FALSE;
+			}
+			g_ptr_array_add(include, g_strdup(protocol));
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_has_any_protocol(FwupdDevice *device, GPtrArray *protocols)
+{
+	for (guint i = 0; i < protocols->len; i++) {
+		const gchar *protocol = g_ptr_array_index(protocols, i);
+		if (fwupd_device_has_protocol(device, protocol))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean
+fu_util_device_match_protocol(FwupdDevice *device,
+			      GPtrArray *protocols_include,
+			      GPtrArray *protocols_exclude)
+{
+	if (protocols_exclude->len > 0 &&
+	    fu_util_device_has_any_protocol(device, protocols_exclude))
+		return FALSE;
+	if (protocols_include->len > 0 &&
+	    !fu_util_device_has_any_protocol(device, protocols_include))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+GPtrArray *
+fu_util_device_array_filter(GPtrArray *devices,
+			    FwupdDeviceFlags include,
+			    FwupdDeviceFlags exclude,
+			    GPtrArray *protocols_include,
+			    GPtrArray *protocols_exclude,
+			    GError **error)
+{
+	g_autoptr(GPtrArray) devices1 = NULL;
+	g_autoptr(GPtrArray) devices2 = NULL;
+
+	devices1 = fwupd_device_array_filter_flags(devices, include, exclude, error);
+	if (devices1 == NULL)
+		return NULL;
+	if (protocols_include->len > 0 || protocols_exclude->len > 0) {
+		devices2 = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint i = 0; i < devices1->len; i++) {
+			FwupdDevice *device = g_ptr_array_index(devices1, i);
+			if (!fu_util_device_match_protocol(device,
+							   protocols_include,
+							   protocols_exclude))
+				continue;
+			g_ptr_array_add(devices2, g_object_ref(device));
+		}
+		if (devices2->len == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOTHING_TO_DO,
+					    "no devices");
+			return NULL;
+		}
+	} else {
+		devices2 = g_ptr_array_ref(devices1);
+	}
+	return g_steal_pointer(&devices2);
 }
 
 typedef struct {
@@ -2457,16 +2573,6 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      _("TPM PCR0 reconstruction is now valid")},
 		     /* ------------------------------------------*/
 		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI memory protection enabled but not locked")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
-		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
-		      /* TRANSLATORS: HSI event title */
-		      _("UEFI memory protection enabled and locked")},
-		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
 		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
 		      /* TRANSLATORS: HSI event title */
@@ -2476,6 +2582,18 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
 		      /* TRANSLATORS: HSI event title */
 		      _("UEFI memory protection is now unlocked")},
+		     /* ------------------------------------------*/
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI NX bootloader protection is now enabled")},
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_NX_COMPAT,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI NX bootloader protection is now disabled")},
+		     /* ------------------------------------------*/
 		     {FWUPD_SECURITY_ATTR_ID_UEFI_DB,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,

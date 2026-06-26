@@ -70,6 +70,16 @@ install_headers(
 install_headers(
   [
     'fwupd-build.h',
+    'fwupd-build-glib-2-58.h',
+    'fwupd-build-glib-2-60.h',
+    'fwupd-build-glib-2-62.h',
+    'fwupd-build-glib-2-64.h',
+    'fwupd-build-glib-2-66.h',
+    'fwupd-build-glib-2-68.h',
+    'fwupd-build-glib-2-70.h',
+    'fwupd-build-glib-2-72.h',
+    'fwupd-build-glib-2-76.h',
+    'fwupd-build-glib-2-80.h',
     'fwupd-client.h',
     'fwupd-client-sync.h',
     'fwupd-common.h',
@@ -92,12 +102,13 @@ install_headers(
     'fwupd-security-attr.h',
     'fwupd-release.h',
     'fwupd-plugin.h',
+    'fwupd-variant.h',
     fwupd_version_h,
   ],
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [gio, giounix, libcurl]
+libfwupd_deps = [gio, giounix, glib, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -121,6 +132,7 @@ libfwupd_src = [
   'fwupd-remote.c',
   'fwupd-report.c', # fuzzing
   'fwupd-request.c', # fuzzing
+  'fwupd-variant.c', # fuzzing
   'fwupd-version.c',
 ]
 
@@ -222,6 +234,8 @@ if introspection.allowed()
       'fwupd-request.c',
       'fwupd-request.h',
       'fwupd-request-private.h',
+      'fwupd-variant.c',
+      'fwupd-variant.h',
       'fwupd-version.c',
       fwupd_version_h,
       fwupd_rs_targets,
@@ -296,6 +310,7 @@ if get_option('tests')
       'fwupd-' + test_name + '-test',
       fwupd_rs_targets,
       sources: [
+        'fwupd-test-bios-setting.c',
         'fwupd-' + test_name + '-test.c',
       ],
       include_directories: [root_incdir],

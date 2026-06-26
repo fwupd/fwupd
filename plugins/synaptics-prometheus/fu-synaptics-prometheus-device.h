@@ -19,7 +19,7 @@ G_DECLARE_FINAL_TYPE(FuSynapticsPrometheusDevice,
 FuSynapticsPrometheusDevice *
 fu_synaptics_prometheus_device_new(FuUsbDevice *device);
 gboolean
-fu_synaptics_prometheus_device_cmd_send(FuSynapticsPrometheusDevice *device,
+fu_synaptics_prometheus_device_cmd_send(FuSynapticsPrometheusDevice *self,
 					GByteArray *request,
 					GByteArray *reply,
 					FuProgress *progress,

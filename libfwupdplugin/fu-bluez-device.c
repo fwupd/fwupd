@@ -53,8 +53,11 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuBluezDevice, fu_bluez_device, FU_TYPE_DEVICE)
 static void
 fu_bluez_device_uuid_item_free(FuBluezDeviceUuidItem *item)
 {
-	if (item->proxy != NULL)
+	if (item->proxy != NULL) {
+		if (item->signal_id > 0)
+			g_signal_handler_disconnect(item->proxy, item->signal_id);
 		g_object_unref(item->proxy);
+	}
 	g_free(item->uuid);
 	g_free(item->path);
 	g_free(item);
@@ -589,17 +592,17 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 				    "No required BLE address");
 		return FALSE;
 	}
-	fu_device_set_logical_id(device, g_variant_get_string(val_address, NULL));
+	fu_device_set_logical_id(device, fwupd_variant_get_string(val_address));
 	val_adapter = g_dbus_proxy_get_cached_property(priv->proxy, "Adapter");
 	if (val_adapter != NULL)
-		fu_device_set_physical_id(device, g_variant_get_string(val_adapter, NULL));
+		fu_device_set_physical_id(device, fwupd_variant_get_string(val_adapter));
 	val_name = g_dbus_proxy_get_cached_property(priv->proxy, "Name");
 	if (val_name != NULL) {
-		fu_device_set_name(device, g_variant_get_string(val_name, NULL));
+		fu_device_set_name(device, fwupd_variant_get_string(val_name));
 		/* register the device by its alias, since modalias could be absent */
 		fu_device_add_instance_str(FU_DEVICE(self),
 					   "NAME",
-					   g_variant_get_string(val_name, NULL));
+					   fwupd_variant_get_string(val_name));
 		fu_device_build_instance_id_full(FU_DEVICE(self),
 						 FU_DEVICE_INSTANCE_FLAG_VISIBLE |
 						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -610,11 +613,11 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	}
 	val_alias = g_dbus_proxy_get_cached_property(priv->proxy, "Alias");
 	if (val_alias != NULL) {
-		fu_device_set_name(device, g_variant_get_string(val_alias, NULL));
+		fu_device_set_name(device, fwupd_variant_get_string(val_alias));
 		/* register the device by its alias, since modalias could be absent */
 		fu_device_add_instance_str(FU_DEVICE(self),
 					   "ALIAS",
-					   g_variant_get_string(val_alias, NULL));
+					   fwupd_variant_get_string(val_alias));
 		fu_device_build_instance_id_full(FU_DEVICE(self),
 						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						 NULL,
@@ -624,10 +627,10 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	}
 	val_icon = g_dbus_proxy_get_cached_property(priv->proxy, "Icon");
 	if (val_icon != NULL)
-		fu_device_add_icon(device, g_variant_get_string(val_icon, NULL));
+		fu_device_add_icon(device, fwupd_variant_get_string(val_icon));
 	val_modalias = g_dbus_proxy_get_cached_property(priv->proxy, "Modalias");
 	if (val_modalias != NULL)
-		fu_bluez_device_set_modalias(self, g_variant_get_string(val_modalias, NULL));
+		fu_bluez_device_set_modalias(self, fwupd_variant_get_string(val_modalias));
 
 	/* success, if we added one service or characteristic */
 	if (!fu_bluez_device_ensure_gatt_interfaces(self, error))
@@ -802,11 +805,11 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(buf->data, buf->len);
+		g_autofree gchar *data_base64 = fu_base64_encode(buf->data, buf->len);
 		event_id = g_strdup_printf("Write:Uuid=%s,Data=%s,Length=0x%x",
 					   uuid,
 					   data_base64,
-					   (guint)buf->len);
+					   buf->len);
 	}
 
 	/* emulated */
@@ -819,7 +822,7 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 
 	item = fu_bluez_device_get_uuid_item(self, uuid, error);
 	if (item == NULL)

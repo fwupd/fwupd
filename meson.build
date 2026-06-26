@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.1.4',
+  version: '2.1.6',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -251,6 +251,11 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
+glib = dependency(
+  'glib-2.0',
+  version: '>= 2.68.0',
+  include_type: 'system',
+) # limited by RHEL-9, which has v2.68.4
 gio = dependency(
   'gio-2.0',
   version: '>= 2.68.0',
@@ -615,6 +620,12 @@ endif
 if cc.has_header_symbol('sys/mount.h', 'BLKSSZGET')
   conf.set('HAVE_BLKSSZGET', '1')
 endif
+if cc.has_header_symbol('stdlib.h', 'arc4random_buf')
+  conf.set('HAVE_ARC4RANDOM', '1')
+endif
+if cc.has_header_symbol('sys/random.h', 'getrandom')
+  conf.set('HAVE_GETRANDOM', '1')
+endif
 
 if host_machine.system() == 'freebsd'
   if cc.has_type(
@@ -645,27 +656,11 @@ endif
 
 # EFI
 if build_standalone
-  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
-  conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
-endif
-
-flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-libflashrom = disabler()
-if build_standalone
-  libflashrom = dependency(
-    'flashrom',
-    fallback: ['flashrom', 'flashrom_dep'],
-    required: flashrom,
-  )
-  if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
-    'flashrom_set_progress_callback_v2',
-    dependencies: libflashrom,
-  )
-    conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
+  efi_app_location = get_option('efi_app_location')
+  if efi_app_location == ''
+    efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   endif
-  allow_flashrom = flashrom.allowed() and libflashrom.found()
-else
-  allow_flashrom = false
+  conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 endif
 
 logind = dependency(
@@ -676,7 +671,6 @@ logind = dependency(
 if logind.found()
   conf.set('HAVE_LOGIND', '1')
 endif
-
 if libsystemd.found()
   systemd = dependency(
     'systemd',
@@ -829,27 +823,14 @@ endif
 rustgen = generator(
   python3,
   output: ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
-  # fake custom target to ensure the generator reruns if these input files change
-  depends: custom_target(
-    'rustgen-files-timestamp',
-    input: files(
-      'libfwupdplugin/fu-rustgen-enum.c.in',
-      'libfwupdplugin/fu-rustgen-enum.h.in',
-      'libfwupdplugin/fu-rustgen-struct.c.in',
-      'libfwupdplugin/fu-rustgen-struct.h.in',
-      'libfwupdplugin/fu-rustgen.c.in',
-      'libfwupdplugin/fu-rustgen.h.in',
-      'libfwupdplugin/rustgen.py',
-    ),
-    output: 'rustgen-files-timestamp',
-    command: [python3, '-c', 'from pathlib import Path\nPath("@OUTPUT@").touch()'],
-  ),
+  depfile: '@BASENAME@.deps',
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '--use', 'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
     '@INPUT@',
     '--outc', '@OUTPUT0@',
     '--outh', '@OUTPUT1@',
+    '--depfile', '@DEPFILE@',
     '--include',
     'fwupdplugin.h',
     '--prefix',

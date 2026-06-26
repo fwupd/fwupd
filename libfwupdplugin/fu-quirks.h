@@ -8,7 +8,6 @@
 #pragma once
 
 #include "fu-context.h"
-#include "fu-quirks-struct.h"
 
 #define FU_TYPE_QUIRKS (fu_quirks_get_type())
 G_DECLARE_FINAL_TYPE(FuQuirks, fu_quirks, FU, QUIRKS, GObject)
@@ -31,9 +30,7 @@ typedef void (*FuQuirksIter)(FuQuirks *self,
 FuQuirks *
 fu_quirks_new(FuContext *ctx);
 gboolean
-fu_quirks_load(FuQuirks *self,
-	       FuQuirksLoadFlags load_flags,
-	       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+fu_quirks_load(FuQuirks *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 const gchar *
 fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
     G_GNUC_NON_NULL(1, 2, 3);

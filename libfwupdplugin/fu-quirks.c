@@ -73,7 +73,6 @@ fu_quirks_finalize(GObject *obj);
 struct _FuQuirks {
 	GObject parent_instance;
 	FuContext *ctx;
-	FuQuirksLoadFlags load_flags;
 	GHashTable *possible_keys;
 	GPtrArray *invalid_keys;
 	XbSilo *silo;
@@ -383,7 +382,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	}
 
 	/* load silo */
-	if (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) {
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE)) {
 		g_autoptr(GFileIOStream) iostr = NULL;
 		file = g_file_new_tmp(NULL, &iostr, error);
 		if (file == NULL)
@@ -404,7 +403,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 					     XB_SILO_PROFILE_FLAG_XPATH |
 						 XB_SILO_PROFILE_FLAG_DEBUG);
 	}
-	if (self->load_flags & FU_QUIRKS_LOAD_FLAG_READONLY_FS)
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_READONLY_FS))
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
 	self->silo = xb_builder_ensure(builder, file, compile_flags, NULL, error);
 	if (self->silo == NULL)
@@ -482,7 +481,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 
 #ifdef HAVE_SQLITE
 	/* this is generated from usb.ids and other static sources */
-	if (self->db != NULL && (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+	if (self->db != NULL && !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE)) {
 		g_autoptr(sqlite3_stmt) stmt = NULL;
 		if (sqlite3_prepare_v2(self->db,
 				       "SELECT key, value FROM quirks WHERE guid = ?1 "
@@ -563,7 +562,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 
 #ifdef HAVE_SQLITE
 	/* this is generated from usb.ids and other static sources */
-	if (self->db != NULL && (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+	if (self->db != NULL && !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE)) {
 		g_autoptr(sqlite3_stmt) stmt = NULL;
 		if (key == NULL) {
 			if (sqlite3_prepare_v2(self->db,
@@ -845,7 +844,7 @@ fu_quirks_db_sqlite3_exec(FuQuirks *self, const gchar *sql, GError **error)
 }
 
 static gboolean
-fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
+fu_quirks_db_load(FuQuirks *self, GError **error)
 {
 	g_autoptr(sqlite3_stmt) stmt_insert = NULL;
 	g_autoptr(sqlite3_stmt) stmt_query = NULL;
@@ -859,7 +858,7 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	};
 
 	/* nothing to do */
-	if (load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE)
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE))
 		return TRUE;
 
 	/* create tables and indexes */
@@ -1008,7 +1007,6 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 /**
  * fu_quirks_load: (skip)
  * @self: a #FuQuirks
- * @load_flags: load flags
  * @error: (nullable): optional return location for an error
  *
  * Loads the various files that define the hardware quirks used in plugins.
@@ -1018,17 +1016,16 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
  * Since: 1.0.1
  **/
 gboolean
-fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
+fu_quirks_load(FuQuirks *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	self->loaded = TRUE;
-	self->load_flags = load_flags;
 	self->verbose = g_getenv("FWUPD_XMLB_VERBOSE") != NULL;
 
 #ifdef HAVE_SQLITE
-	if (self->db == NULL && (load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+	if (self->db == NULL && !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_CACHE)) {
 		g_autofree gchar *quirksdb = NULL;
 
 		quirksdb = fu_context_build_filename(self->ctx,
@@ -1050,7 +1047,7 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 				    sqlite3_errmsg(self->db));
 			return FALSE;
 		}
-		if (!fu_quirks_db_load(self, load_flags, error))
+		if (!fu_quirks_db_load(self, error))
 			return FALSE;
 	}
 #endif

@@ -14,4 +14,4 @@
 G_DECLARE_FINAL_TYPE(FuLegionHidChild, fu_legion_hid_child, FU, LEGION_HID_CHILD, FuDevice)
 
 FuLegionHidChild *
-fu_legion_hid_child_new(FuDevice *parent, FuLegionHidDeviceId id);
+fu_legion_hid_child_new(FuDevice *proxy, FuLegionHidDeviceId id);

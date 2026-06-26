@@ -5440,7 +5440,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	}
 	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
-		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		g_autoptr(GList) keys =
+		    g_list_sort(g_hash_table_get_keys(priv->metadata), (GCompareFunc)g_strcmp0);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
@@ -5472,7 +5473,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	}
 	if (priv->instance_hash != NULL) {
 		GHashTableIter iter;
-		gpointer key, value;
+		gpointer key;
+		gpointer value;
 		g_hash_table_iter_init(&iter, priv->instance_hash);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			g_autofree gchar *title =
@@ -5852,10 +5854,10 @@ fu_device_prepare_firmware(FuDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware is %04x bytes smaller than the allowed "
-				    "minimum size of %04x bytes",
+				    "firmware is 0x%04x bytes smaller than the allowed "
+				    "minimum size of 0x%04x bytes",
 				    (guint)(priv->size_min - fw_size),
-				    (guint)priv->size_max);
+				    (guint)priv->size_min);
 			return NULL;
 		}
 	}
@@ -7042,7 +7044,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS) {
 		if (priv_donor->instance_hash != NULL) {
 			GHashTableIter iter;
-			gpointer key, value;
+			gpointer key;
+			gpointer value;
 			g_hash_table_iter_init(&iter, priv_donor->instance_hash);
 			while (g_hash_table_iter_next(&iter, &key, &value)) {
 				if (fu_device_get_instance_str(self, key) == NULL)
@@ -7123,7 +7126,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_METADATA) {
 		if (priv_donor->metadata != NULL) {
 			GHashTableIter iter;
-			gpointer key, value;
+			gpointer key;
+			gpointer value;
 			g_hash_table_iter_init(&iter, priv_donor->metadata);
 			while (g_hash_table_iter_next(&iter, &key, &value)) {
 				if (fu_device_get_metadata(self, key) == NULL)
@@ -7337,6 +7341,8 @@ fu_device_category_to_name(const gchar *cat)
 		return "Headphones";
 	if (g_strcmp0(cat, "X-Headset") == 0)
 		return "Headset";
+	if (g_strcmp0(cat, "X-Touchscreen") == 0)
+		return "Touchscreen";
 	return NULL;
 }
 

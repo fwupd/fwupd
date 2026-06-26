@@ -1460,7 +1460,7 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(buf, bufsz);
+		g_autofree gchar *data_base64 = fu_base64_encode(buf, bufsz);
 		event_id = g_strdup_printf("Pwrite:"
 					   "Port=0x%x,"
 					   "Data=%s,"
@@ -1743,7 +1743,7 @@ fu_udev_device_write(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *data_base64 = g_base64_encode(buf, bufsz);
+		g_autofree gchar *data_base64 = fu_base64_encode(buf, bufsz);
 		event_id = g_strdup_printf("Write:Data=%s,Length=0x%x", data_base64, (guint)bufsz);
 	}
 
@@ -2156,7 +2156,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 	if (!fu_io_channel_write_raw(io_channel,
 				     (const guint8 *)val,
 				     strlen(val),
@@ -2206,7 +2206,7 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *buf_base64 = g_base64_encode(buf->data, buf->len);
+		g_autofree gchar *buf_base64 = fu_base64_encode(buf->data, buf->len);
 		event_id = g_strdup_printf("WriteAttr:Attr=%s,Data=%s", attr, buf_base64);
 	}
 
@@ -2235,7 +2235,7 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 	if (!fu_io_channel_write_byte_array(io_channel,
 					    buf,
 					    timeout_ms,
@@ -2285,7 +2285,7 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
 		g_autofree gchar *buf_base64 =
-		    g_base64_encode(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+		    fu_base64_encode(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
 		event_id = g_strdup_printf("WriteAttr:Attr=%s,Data=%s", attr, buf_base64);
 	}
 
@@ -2314,7 +2314,7 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 
 	/* save */
 	if (event_id != NULL)
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_save_event(FU_DEVICE(self), event_id);
 	if (!fu_io_channel_write_bytes(io_channel,
 				       blob,
 				       timeout_ms,

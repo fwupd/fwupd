@@ -18,16 +18,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 14:23+0100\n"
-"PO-Revision-Date: 2026-04-20 23:09+0000\n"
-"Last-Translator: Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-06-12 21:01+0000\n"
+"Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-Hersteller-Firmwaredienst (stabile Firmware)"
@@ -123,12 +123,33 @@ msgstr "Daemon-Konfiguration zurücksetzen"
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Zum Zurücksetzen der Daemon-Konfiguration auf die Standardeinstellungen ist eine Authentifizierung erforderlich"
 
+msgid "Modify a device property"
+msgstr "Geräteeigenschaft ändern"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a device property"
+msgstr "Zum Ändern einer Geräteeigenschaft ist eine Authentifizierung erforderlich"
+
 msgid "Activate the new firmware on the device"
 msgstr "Die neue Firmware auf dem Gerät aktivieren"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Zum Wechsel auf die neue Firmware-Version ist eine Authentifizierung erforderlich"
+
+msgid "Clear stored firmware update results"
+msgstr "Gespeicherte Ergebnisse von Firmware-Aktualisierungen löschen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to clear firmware update results"
+msgstr "Zum Löschen der Ergebnisse von Firmware-Aktualisierungen ist eine Authentifizierung erforderlich"
+
+msgid "Verify device firmware"
+msgstr "Geräte-Firmware verifizieren"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to verify firmware on a device"
+msgstr "Zum Verifizieren der Firmware auf einem Gerät ist eine Authentifizierung erforderlich"
 
 msgid "Update the stored device verification information"
 msgstr "Gespeicherte Geräteverifizierungsinformationen aktualisieren"
@@ -137,8 +158,26 @@ msgstr "Gespeicherte Geräteverifizierungsinformationen aktualisieren"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Zur Aktualisierung der gespeicherten Prüfsummen für das Gerät ist eine Authentifizierung erforderlich"
 
+msgid "Get configured remotes"
+msgstr "Konfigurierte Gegenstellen abrufen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to get the list of configured remotes used for firmware updates"
+msgstr "Zum Abrufen der Liste der für Firmware-Aktualisierungen konfigurierten Gegenstellen ist eine Authentifizierung erforderlich"
+
+msgid "Update the metadata for a configured remote"
+msgstr "Metadaten für eine konfigurierte Gegenstelle aktualisieren"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
+msgstr "Zum Aktualisieren der Metadaten einer für Firmware-Aktualisierungen konfigurierten Gegenstelle ist eine Authentifizierung erforderlich"
+
 msgid "Modify a configured remote"
 msgstr "Eine konfigurierte Gegenstelle modifizieren"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
+msgstr "Zum Aktivieren oder Deaktivieren einer für Firmware-Aktualisierungen konfigurierten Gegenstelle ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -214,6 +253,13 @@ msgstr "Emulationsdatenerfassung aktivieren"
 msgid "Authentication is required to enable emulation data collection"
 msgstr "Zum Aktivieren der Emulationsdatenerfassung ist eine Authentifizierung erforderlich"
 
+msgid "Install firmware on emulated device"
+msgstr "Firmware auf emuliertem Gerät installieren"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to install firmware on an emulated device"
+msgstr "Zum Installieren der Firmware auf einem emulierten Gerät ist eine Authentifizierung erforderlich"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Firmware-Aktualisierung wird installiert …"
@@ -265,6 +311,10 @@ msgstr "UEFI dbx-Dienstprogramm"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Parsen der Argumente ist fehlgeschlagen"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr "Kontext konnte nicht geladen werden"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -682,6 +732,10 @@ msgstr "SPI-Wiederholungsschutz"
 msgid "SPI write protection"
 msgstr "SPI-Schreibschutz"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Abgesicherte Plattform"
@@ -709,6 +763,10 @@ msgstr "SMM gesperrt"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "UEFI-Speicherschutz"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -869,6 +927,10 @@ msgstr "AMD-Firmware-Wiederholungsschutz"
 msgid "AMD Firmware Write Protection"
 msgstr "AMD-Firmware-Schreibschutz"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Abgesicherte Plattform"
@@ -892,6 +954,10 @@ msgstr "Systemverwaltungsmodus"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "UEFI-Speicherschutz"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1021,6 +1087,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Die Secure Boot Plattform verhindert, dass unsignierte Software geladen wird, wenn das Gerät startet."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Der CPU-Mikrocode muss aktualisiert werden, um verschiedene Sicherheitsprobleme bei der Informationspreisgabe abzumildern."
 
@@ -1035,6 +1105,10 @@ msgstr "Der Systemverwaltungsmodus wird von der Firmware für den Zugriff auf sp
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "Das UEFI-System kann beim Booten Speicherattribute zur Verhinderung gängiger Exploits einrichten."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1366,6 +1440,9 @@ msgstr "Nicht aktualisierbare Geräte anzeigen"
 msgid "Manually enable specific plugins"
 msgstr "Manuelles Aktivieren bestimmter Plugins"
 
+msgid "Location of public key directories used for JCat verification"
+msgstr "Speicherort der Verzeichnisse mit öffentlichen Schlüsseln, die für die JCat-Verifizierung verwendet werden"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Führe die Plugin-Composite-Vorbereitungsroutine aus, wenn install-blob genutzt wird"
@@ -1387,12 +1464,19 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr "Mit einer Reihe von Veröffentlichungsbitschaltern filtern, wobei ein ~-Präfix zum Ausschluss verwendet wird, z. B. 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Alle Fragen mit Ja beantworten"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format (disables all interactive prompts)"
 msgstr "Ausgabe im JSON-Format (deaktiviert alle interaktiven Eingabeaufforderungen)"
+
+msgid "Prefix for import and output files"
+msgstr "Präfix für Import- und Ausgabedateien"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
@@ -1844,6 +1928,62 @@ msgstr "[PCR]"
 msgid "Parse the system PCR eventlog"
 msgstr "Parst das System PCR Eventlog"
 
+#. TRANSLATORS: command description
+msgid "Show information about a JCat file"
+msgstr "Informationen zu einer JCat-Datei anzeigen"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME ID ALIAS_ID"
+msgstr "DATEINAME KENNUNG ALIAS_KENNUNG"
+
+#. TRANSLATORS: command description
+msgid "Add an alias for a specific JCat item"
+msgstr "Alias für ein bestimmtes JCat-Element hinzufügen"
+
+#. TRANSLATORS: command description
+msgid "Remove an alias for a specific JCat item"
+msgstr "Alias für ein bestimmtes JCat-Element entfernen"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [KIND]"
+msgstr "DATEINAME [ART]"
+
+#. TRANSLATORS: command description
+msgid "Exports all embedded signatures to files"
+msgstr "Exportiert alle eingebetteten Signaturen in Dateien"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DATA DETACHED_KEY"
+msgstr "DATEINAME DATEN ABGETRENNTER_SCHLÜSSEL"
+
+#. TRANSLATORS: command description
+msgid "Import an existing signature to a JCat file"
+msgstr "Vorhandene Signatur in eine JCat-Datei importieren"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE [KIND[:VARIANT]] [TARGET]"
+msgstr "DATEINAME QUELLE [ART[:VARIANTE]] [ZIEL]"
+
+#. TRANSLATORS: command description
+msgid "Add a self-signed signature to a JCat file"
+msgstr "Selbstsignierte Signatur zu einer JCat-Datei hinzufügen"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME SOURCE CERT PRIVKEY [KIND[:VARIANT]] [TARGET]"
+msgstr "DATEINAME QUELLE ZERT PRIVSCHL [ART[:VARIANTE]] [ZIEL]"
+
+#. TRANSLATORS: command description
+msgid "Add a signature to a JCat file"
+msgstr "Signatur zu einer JCat-Datei hinzufügen"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [SOURCE]"
+msgstr "DATEINAME [QUELLE]"
+
+#. TRANSLATORS: command description
+msgid "Verify a signature from a JCat file"
+msgstr "Signatur aus einer JCat-Datei verifizieren"
+
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Dieses Werkzeug ermöglicht es einem Administrator, die fwupd-Plugins zu verwenden, ohne auf dem Host-System installiert sein zu müssen."
@@ -1862,6 +2002,8 @@ msgstr "Strenge SSL-Prüfungen werden ignoriert; um dies in Zukunft automatisch 
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Fehler beim Parsen der Flags für %s"
@@ -2207,6 +2349,27 @@ msgstr "Daten jetzt hochladen?"
 msgid "Device list uploaded successfully, thanks!"
 msgstr "Geräteliste erfolgreich hochgeladen, danke!"
 
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your email address for remote '%s'"
+msgstr "Geben Sie Ihre E-Mail-Adresse für die Gegenstelle ‚%s‘ ein"
+
+#. TRANSLATORS: token refers to a password thing; %1 is a URL
+#, c-format
+msgid "To get a new token please go to %s and click 'Generate Token'"
+msgstr "Um einen neuen Token zu erhalten, gehen Sie bitte zu %s und klicken Sie auf ‚Token generieren‘"
+
+#. TRANSLATORS: remote refers to a website
+#. distributing fw, %1 is a name e.g. 'lvfs'
+#, c-format
+msgid "Enter your token for remote '%s'"
+msgstr "Geben Sie Ihr Token für die Gegenstelle ‚%s‘ ein"
+
+#. TRANSLATORS: we've gained access to a new firmware remote
+msgid "Remote enabled and refreshed successfully"
+msgstr "Gegenstelle aktiviert und erfolgreich aufgefrischt"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Legen Sie die Wiederholungsversuche für das Herunterladen bei vorübergehenden Fehlern fest"
@@ -2294,6 +2457,14 @@ msgstr "Stuft die Firmware auf einem Gerät herab"
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Den gespeicherten kryptografischen Hash mit dem aktuellen ROM-Inhalt aktualisieren"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REMOTE-ID] [USERNAME] [TOKEN]"
+msgstr "[GEGENSTELLEN-KENNUNG] [BENUTZERNAME] [TOKEN]"
+
+#. TRANSLATORS: command description
+msgid "Enable an authenticated remote"
+msgstr "Authentifizierte Gegenstelle aktivieren"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
@@ -2732,6 +2903,11 @@ msgstr "%s Kopfhörer-Aktualisierung"
 #, c-format
 msgid "%s Headset Update"
 msgstr "%s Headset-Aktualisierung"
+
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr "%s Touchscreen-Aktualisierung"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3363,13 +3539,17 @@ msgstr "Auffrischungsintervall"
 msgid "Priority"
 msgstr "Priorität"
 
+#. TRANSLATORS: a username or password is required
+msgid "Requires Auth"
+msgstr "Authentifizierung erforderlich"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Benutzername"
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Passwort"
+#. TRANSLATORS: the account token, a bit like a password
+msgid "Token"
+msgstr "Token"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -3548,20 +3728,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM-PCR0-Rekonstruktion ist jetzt gültig"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "UEFI-Speicherschutz aktiviert, aber nicht gesperrt"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "UEFI-Speicherschutz aktiviert und gesperrt"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "UEFI-Speicherschutz ist jetzt gesperrt"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "UEFI-Speicherschutz ist jetzt entsperrt"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3666,6 +3846,15 @@ msgstr "Neue Gegenstelle aktivieren?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Zustimmen und die Gegenstelle aktivieren?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "UEFI-Speicherschutz aktiviert, aber nicht gesperrt"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "UEFI-Speicherschutz aktiviert und gesperrt"
+
+#~ msgid "Password"
+#~ msgstr "Passwort"
 
 #~ msgid "Finds a algorithm that matches the file CRC"
 #~ msgstr "Findet einen Algorithmus, der zur CRC der Datei passt"

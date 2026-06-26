@@ -42,8 +42,9 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	if (val_services_resolved == NULL)
 		return;
 
-	suitable = g_variant_get_boolean(val_connected) && g_variant_get_boolean(val_paired) &&
-		   g_variant_get_boolean(val_services_resolved);
+	suitable = fwupd_variant_get_boolean(val_connected) &&
+		   fwupd_variant_get_boolean(val_paired) &&
+		   fwupd_variant_get_boolean(val_services_resolved);
 
 	/* is this an existing device we've previously added */
 	device_tmp = fu_backend_lookup_by_id(FU_BACKEND(self), path);
@@ -61,9 +62,9 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	if (!suitable) {
 		g_debug("%s connected=%i, paired=%i, services resolved=%i, ignoring",
 			path,
-			g_variant_get_boolean(val_connected),
-			g_variant_get_boolean(val_paired),
-			g_variant_get_boolean(val_services_resolved));
+			fwupd_variant_get_boolean(val_connected),
+			fwupd_variant_get_boolean(val_paired),
+			fwupd_variant_get_boolean(val_services_resolved));
 		return;
 	}
 

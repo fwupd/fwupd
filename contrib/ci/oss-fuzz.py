@@ -187,7 +187,7 @@ class Builder:
             sys.exit(1)
         return os.path.join(self.builddir, f"{dst}")
 
-    def rustgen(self, src: str, includes: list[str] = []) -> str:
+    def rustgen(self, src: str, includes: List[str] = []) -> str:
         fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
@@ -453,6 +453,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("efi-filesystem", pattern="efi-filesystem"),
         Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
+        Fuzzer("ifd"),
         Fuzzer("ifd-bios", pattern="ifd-bios"),
         Fuzzer("zip"),
     ]:

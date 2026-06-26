@@ -105,7 +105,7 @@ static void
 fu_ioctl_append_key_from_buf(GString *event_id, const gchar *key, const guint8 *buf, gsize bufsz)
 {
 	g_autofree gchar *key_data = g_strdup_printf("%sData", key != NULL ? key : "");
-	g_autofree gchar *value_data = g_base64_encode(buf, bufsz);
+	g_autofree gchar *value_data = fu_base64_encode(buf, bufsz);
 	g_autofree gchar *key_length = g_strdup_printf("%sLength", key != NULL ? key : "");
 	g_autofree gchar *value_length = g_strdup_printf("0x%x", (guint)bufsz);
 

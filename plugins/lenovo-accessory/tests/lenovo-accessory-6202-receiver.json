@@ -1,0 +1,18 @@
+{
+  "name": "Lenovo Pro USB-C Unified Pairing Receiver",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "95876f99dd95368c342b5277b9e5637c864d773fc1b7cd57b6e06d2254b505be-Lenovo-hid_6202-vs1.0.4.cab",
+      "emulation-url": "6da26ca0cc05f9ce237bba04059f02ae72457d394564a524634f98de54f411a7-6202-1.0.3-to-1.0.4-emulation.zip",
+      "components": [
+        {
+          "version": "1.0.4",
+          "guids": [
+            "c7c221bf-1f3b-5b5a-baa2-cef86a6f2a1a"
+          ]
+        }
+      ]
+    }
+  ]
+}

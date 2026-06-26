@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <gio/gio.h>
 #include <glib/gi18n.h>
 #include <stdio.h>
@@ -27,6 +28,7 @@ fu_systemd_get_manager(GError **error)
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL) {
 		g_prefix_error_literal(error, "failed to get bus: ");
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	proxy = g_dbus_proxy_new_sync(connection,
@@ -39,6 +41,7 @@ fu_systemd_get_manager(GError **error)
 				      error);
 	if (proxy == NULL) {
 		g_prefix_error(error, "failed to find %s: ", SYSTEMD_SERVICE);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	return g_steal_pointer(&proxy);
@@ -59,6 +62,7 @@ fu_systemd_unit_get_path(GDBusProxy *proxy_manager, const gchar *unit, GError **
 				     error);
 	if (val == NULL) {
 		g_prefix_error(error, "failed to find %s: ", unit);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	g_variant_get(val, "(o)", &path);
@@ -84,6 +88,7 @@ fu_systemd_unit_get_proxy(GDBusProxy *proxy_manager, const gchar *unit, GError *
 					   error);
 	if (proxy_unit == NULL) {
 		g_prefix_error(error, "failed to register proxy for %s: ", path);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	return g_steal_pointer(&proxy_unit);
@@ -111,5 +116,11 @@ fu_systemd_unit_stop(const gchar *unit, GError **error)
 				     -1,
 				     NULL,
 				     error);
-	return val != NULL;
+	if (val == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }

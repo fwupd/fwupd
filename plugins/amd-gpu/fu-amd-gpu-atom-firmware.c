@@ -158,7 +158,8 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 {
 	gsize bufsz = 0;
 	gsize atombios_size;
-	gint num_str, i;
+	gint num_str;
+	gint i;
 	guint16 idx;
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_autofree gchar *model = NULL;
@@ -182,6 +183,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 
 	/* make sure there is enough space for all the strings */
 	atombios_size = fu_firmware_get_size(FU_FIRMWARE(self));
+	/* NOLINTNEXTLINE(bugprone-misplaced-widening-cast)*/
 	if ((gsize)(idx + (num_str * (STRLEN_NORMAL - 1))) > atombios_size) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

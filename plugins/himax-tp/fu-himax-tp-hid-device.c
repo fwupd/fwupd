@@ -323,7 +323,7 @@ fu_himax_tp_hid_device_ensure_flash_id(FuHimaxTpHidDevice *self, GError **error)
 	}
 
 	/* success */
-	self->flash_id = (guint32)reg_value;
+	self->flash_id = reg_value;
 	return TRUE;
 }
 
@@ -861,9 +861,10 @@ fu_himax_tp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* version format : cid(minor).tp_cfg_ver (decimal) */
-	version_str = g_strdup_printf("%hhu.%hhu",
-				      fu_struct_himax_tp_hid_info_get_cid(self->st_info) & 0xFF,
-				      fu_struct_himax_tp_hid_info_get_tp_cfg_ver(self->st_info));
+	version_str =
+	    g_strdup_printf("%u.%u",
+			    (guint)(fu_struct_himax_tp_hid_info_get_cid(self->st_info) & 0xFF),
+			    fu_struct_himax_tp_hid_info_get_tp_cfg_ver(self->st_info));
 	fu_device_set_version(device, version_str);
 
 	/* success */

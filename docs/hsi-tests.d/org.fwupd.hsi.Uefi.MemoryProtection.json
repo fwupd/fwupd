@@ -4,15 +4,14 @@
   "description": [
     "The UEFI system can set up memory attributes at boot which prevent common exploits from running. For instance, the stack can be marked as non-executable to prevent running any malicious code that can be written to the stack.",
     "In the same way, writing to sections that are read-only can also be prevented, making the system more secure from attackers.",
-    "Distribution vendors should tag the bootloader as NX compatible, and BIOS vendors should provide a 'memory attribute protocol' table that tags memory sections with specific properties.",
+    "BIOS vendors should provide a 'memory attribute protocol' table that tags memory sections with specific properties.",
     "Microsoft Virtualization-based security (VBS) also requires NX protection for UEFI runtime services for DeviceGuard compliance."
   ],
   "failure-impact": [
     "The attacker is able to run arbitrary executable code from the stack, or write to memory that is supposed to be read-only."
   ],
   "failure-results": {
-    "not-locked": "memory is still executable or writable",
-    "not-enabled": "the bootloader is not marked as NX compatible and the firmware may be operating in a compatibility mode"
+    "not-locked": "memory is still executable or writable"
   },
   "success-results": {
     "locked": "memory is not executable or writable"

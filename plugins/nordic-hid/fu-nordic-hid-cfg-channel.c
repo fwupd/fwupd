@@ -157,6 +157,18 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 			break;
 		fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	}
+
+	/* the length is chosen by the device, so sanity check it before any
+	 * caller reads recv_msg->data using recv_msg->data_len as the bound */
+	if (recv_msg->data_len > sizeof(recv_msg->data)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "received %u bytes, while maximum is %u",
+			    recv_msg->data_len,
+			    (guint)sizeof(recv_msg->data));
+		return FALSE;
+	}
 	if (!fu_memcpy_safe(buf,
 			    bufsz,
 			    0,
@@ -608,6 +620,16 @@ fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
 		/* end of the list */
 		if (peer_id == INVALID_PEER_ID)
 			break;
+
+		/* validate peer_id to prevent out-of-bounds access */
+		if (peer_id == 0 || peer_id > PEERS_CACHE_LEN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid peer_id 0x%02x from device",
+				    peer_id);
+			return FALSE;
+		}
 
 		g_debug("detected peer: 0x%02x", peer_id);
 

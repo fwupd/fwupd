@@ -28,6 +28,7 @@ plugins/egis-moc/ @jasonhouang
 plugins/elan-kbd/ @hughsie
 plugins/elanfp/ @MichaelCheng04
 plugins/elantp/ @jinglewu @josh-chen-elan
+plugins/elan-ts/ @PaulLiang01043
 plugins/focal-fp/ @waynehuang2022
 plugins/focal-touch/ @waynehuang2022
 plugins/fpc/ @jimzhang2
@@ -67,6 +68,7 @@ plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn
 plugins/rts54hub/ @AnyProblem
 plugins/snapd-uefi/ @BAMF0 @bboozzoo
+plugins/starlabs-coreboot/ @Sean-StarLabs
 plugins/sunwinon-hid/ @xiaosa-zhz
 plugins/synaptics-cape/ @CNXT-Simon
 plugins/synaptics-mst/ @ApolloLing

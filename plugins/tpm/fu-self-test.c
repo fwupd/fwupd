@@ -9,7 +9,9 @@
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
+#include "fu-temporary-directory.h"
 #include "fu-tpm-plugin.h"
+#include "fu-tpm-struct.h"
 #include "fu-tpm-v1-device.h"
 #include "fu-tpm-v2-device.h"
 
@@ -41,7 +43,8 @@ fu_tpm_device_1_2_func(void)
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, testdatadir);
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -110,7 +113,8 @@ fu_tpm_device_2_0_func(void)
 	}
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -231,7 +235,8 @@ fu_tpm_empty_pcr_func(void)
 	}
 
 	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -261,6 +266,220 @@ fu_tpm_empty_pcr_func(void)
 			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 }
 
+static GBytes *
+fu_tpm_test_build_eventlog_v1(const gchar *data, gsize datasz)
+{
+	gboolean ret;
+	guint8 digest[20] = {0};
+	g_autoptr(FuStructTpmEventLog1Item) st = fu_struct_tpm_event_log1_item_new();
+
+	fu_struct_tpm_event_log1_item_set_pcr(st, 0);
+	fu_struct_tpm_event_log1_item_set_type(st, FU_TPM_EVENTLOG_ITEM_KIND_POST_CODE);
+	ret = fu_struct_tpm_event_log1_item_set_digest(st, digest, sizeof(digest), NULL);
+	g_assert_true(ret);
+	fu_struct_tpm_event_log1_item_set_datasz(st, datasz);
+	g_byte_array_append(st->buf, (const guint8 *)data, datasz);
+	return g_byte_array_free_to_bytes(g_byte_array_ref(st->buf));
+}
+
+static void
+fu_tpm_coreboot_vboot_not_found_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error = NULL;
+	FuHwids *hwids = fu_context_get_hwids(ctx);
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
+
+	if (tpm_server_running != NULL) {
+		g_test_skip("Skipping coreboot vboot tests when simulator running");
+		return;
+	}
+
+	/* set up test harness */
+	tmpdir = fu_temporary_directory_new("tpm-no-eventlog", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_SYSFSDIR, tmpdir);
+	fu_context_set_tmpdir(ctx, FU_PATH_KIND_SYSFSDIR_TPM, tmpdir);
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO);
+	fu_hwids_add_value(hwids, FU_HWIDS_KEY_BIOS_VENDOR, "coreboot");
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* load the plugin -- no eventlog file exists */
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify the vboot attr is NOT_FOUND since no eventlog exists */
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+}
+
+static void
+fu_tpm_coreboot_vboot_enabled_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *eventlog_dir = NULL;
+	g_autofree gchar *eventlog_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GBytes) eventlog_blob = NULL;
+	g_autoptr(GError) error = NULL;
+	FuHwids *hwids = fu_context_get_hwids(ctx);
+	const gchar *vboot_data = "VBOOT:test";
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
+
+	if (tpm_server_running != NULL) {
+		g_test_skip("Skipping coreboot vboot tests when simulator running");
+		return;
+	}
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, testdatadir);
+
+	/* build a v1 eventlog with a VBOOT: entry in a temporary directory */
+	tmpdir = fu_temporary_directory_new("tpm-vboot", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	eventlog_dir = fu_temporary_directory_build(tmpdir, "kernel", "security", "tpm0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(eventlog_dir, 0700), ==, 0);
+	eventlog_fn = g_build_filename(eventlog_dir, "binary_bios_measurements", NULL);
+	eventlog_blob = fu_tpm_test_build_eventlog_v1(vboot_data, strlen(vboot_data));
+	ret = fu_bytes_set_contents(eventlog_fn, eventlog_blob, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, fu_temporary_directory_get_path(tmpdir));
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO);
+	fu_hwids_add_value(hwids, FU_HWIDS_KEY_BIOS_VENDOR, "coreboot");
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* load the plugin -- eventlog exists with VBOOT: entry */
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify the vboot attr is SUCCESS */
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_tpm_coreboot_vboot_not_enabled_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *eventlog_dir = NULL;
+	g_autofree gchar *eventlog_fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GBytes) eventlog_blob = NULL;
+	g_autoptr(GError) error = NULL;
+	FuHwids *hwids = fu_context_get_hwids(ctx);
+	const gchar *other_data = "OTHER:data";
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
+
+	if (tpm_server_running != NULL) {
+		g_test_skip("Skipping coreboot vboot tests when simulator running");
+		return;
+	}
+
+	/* set up test harness */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_TPM, testdatadir);
+
+	/* build a v1 eventlog without a VBOOT: entry */
+	tmpdir = fu_temporary_directory_new("tpm-no-vboot", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	eventlog_dir = fu_temporary_directory_build(tmpdir, "kernel", "security", "tpm0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(eventlog_dir, 0700), ==, 0);
+	eventlog_fn = g_build_filename(eventlog_dir, "binary_bios_measurements", NULL);
+	eventlog_blob = fu_tpm_test_build_eventlog_v1(other_data, strlen(other_data));
+	ret = fu_bytes_set_contents(eventlog_fn, eventlog_blob, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR, fu_temporary_directory_get_path(tmpdir));
+
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_NO_CACHE);
+	fu_context_add_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO);
+	fu_hwids_add_value(hwids, FU_HWIDS_KEY_BIOS_VENDOR, "coreboot");
+
+	ret = fu_context_load(ctx, progress, FU_CONTEXT_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* load the plugin -- eventlog exists but no VBOOT: entry */
+	plugin = fu_plugin_new_from_gtype(fu_tpm_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify the vboot attr is NOT_ENABLED */
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -271,5 +490,8 @@ main(int argc, char **argv)
 	g_test_add_func("/tpm/empty-pcr", fu_tpm_empty_pcr_func);
 	g_test_add_func("/tpm/eventlog-parse/v1", fu_tpm_eventlog_parse_v1_func);
 	g_test_add_func("/tpm/eventlog-parse/v2", fu_tpm_eventlog_parse_v2_func);
+	g_test_add_func("/tpm/coreboot-vboot-not-found", fu_tpm_coreboot_vboot_not_found_func);
+	g_test_add_func("/tpm/coreboot-vboot-enabled", fu_tpm_coreboot_vboot_enabled_func);
+	g_test_add_func("/tpm/coreboot-vboot-not-enabled", fu_tpm_coreboot_vboot_not_enabled_func);
 	return g_test_run();
 }

@@ -14,7 +14,7 @@
 #include "fu-crc-private.h"
 #include "fu-mem-private.h"
 
-const struct {
+static const struct {
 	FuCrcKind kind;
 	guint bitwidth;
 	guint32 poly;
