@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-05-23 11:11+0000\n"
+"PO-Revision-Date: 2026-06-26 16:01+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -159,18 +159,18 @@ msgid "Authentication is required to get the list of configured remotes used for
 msgstr "Diperlukan otentikasi untuk mendapatkan daftar remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Perbarui metadata untuk remote yang dikonfigurasi"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Autentikasi diperlukan untuk memperbarui metadata untuk remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 msgid "Modify a configured remote"
 msgstr "Ubah suatu remote yang ditata"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Autentikasi diperlukan untuk mengaktifkan atau menonaktifkan remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -307,7 +307,7 @@ msgstr "Gagal mengurai argumen"
 
 #. TRANSLATORS: could not do the most basic of setup tasks
 msgid "Failed to load context"
-msgstr ""
+msgstr "Gagal memuat konteks"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -723,7 +723,7 @@ msgstr "Proteksi penulisan SPI"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr ""
+msgstr "verified boot coreboot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -755,7 +755,7 @@ msgstr "Perlindungan memori UEFI"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "Perlindungan NX UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -918,7 +918,7 @@ msgstr "Perlindungan Tulis Firmware AMD"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "Verified Boot coreboot"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -946,7 +946,7 @@ msgstr "Perlindungan Memori UEFI"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "Perlindungan NX UEFI"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1077,7 +1077,7 @@ msgstr "Boot aman platform mencegah perangkat lunak yang tidak ditandatangani di
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr ""
+msgstr "verified boot coreboot mencegah firmware tanpa tanda tangan dimuat saat perangkat dinyalakan."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1097,7 +1097,7 @@ msgstr "Sistem UEFI dapat mengatur atribut memori saat boot yang mencegah eksplo
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr ""
+msgstr "Bootloader UEFI dikompilasi dengan dukungan Data Execution Prevention."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1454,7 +1454,7 @@ msgstr "Filter dengan set flag rilis menggunakan awalan ~ untuk mengecualikan, m
 
 #. TRANSLATORS: command line option
 msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
+msgstr "Filter ke protokol tertentu, misalnya '~org.uefi.capsule' atau 'org.nvmexpress'"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -2890,7 +2890,7 @@ msgstr "Pembaruan Headset %s"
 #. TRANSLATORS: a display that can detect touch input from a user
 #, c-format
 msgid "%s Touchscreen Update"
-msgstr ""
+msgstr "Pembaruan Layar Sentuh %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
@@ -3713,11 +3713,11 @@ msgstr "Perlindungan memori UEFI sekarang tidak dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr ""
+msgstr "Perlindungan bootloader NX UEFI sekarang diaktifkan"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr ""
+msgstr "Perlindungan bootloader NX UEFI sekarang dinonaktifkan"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
