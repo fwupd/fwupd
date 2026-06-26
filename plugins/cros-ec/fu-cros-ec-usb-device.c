@@ -486,7 +486,7 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 
 	if (fu_device_has_private_flag(device,
 				       FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED)) {
-		/* sets the the first 32 bits of the SHA256 digest */
+		/* sets the first 32 bits of the SHA256 digest */
 		guint32 digest_val = 0;
 		guint8 digest[SHA256_DIGEST_LENGTH] = {0};
 		gsize out_len = SHA256_DIGEST_LENGTH;
