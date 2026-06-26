@@ -390,6 +390,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},
 			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE, 2},
 			   {0x5786, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE, 2},
+			   {0x0D9C, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_HAYDEN_BRIDGE, 0},
 			   /* Maple ridge devices
 			    * NOTE: These are expected to be flashed via UEFI capsules *not*
 			    * Thunderbolt plugin Flashing via fwupd will require matching kernel
@@ -508,6 +509,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_HAYDEN_BRIDGE:
 		if (!fu_input_stream_read_u16(
 			stream,
 			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
