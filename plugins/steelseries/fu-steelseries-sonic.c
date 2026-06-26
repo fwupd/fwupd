@@ -107,6 +107,8 @@ fu_steelseries_sonic_read_from_ram_chunk(FuSteelseriesSonic *self,
 		return FALSE;
 
 	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
+		return FALSE;
 	st_res = fu_struct_steelseries_sonic_read_from_ram_res_parse(buf_res->data,
 								     buf_res->len,
 								     0x0,
