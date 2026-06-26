@@ -566,7 +566,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		priv->has_pd = fu_intel_thunderbolt_nvm_valid_pd_pointer(pd_pointer);
 	}
 
-	/* as as easy-to-grab payload blob */
+	/* as easy-to-grab payload blob */
 	if (!fu_firmware_parse_stream(img_payload, stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
