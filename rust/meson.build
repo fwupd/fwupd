@@ -1,52 +1,24 @@
-core_cargo_env = cargo_env
-core_cargo_env.set('MESON_SOURCE_DIR', join_paths(meson.current_source_dir()))
+# Build the fwupd Rust crates using meson's native Cargo workspace integration.
 
-fwupd_rs_files = files(
-  'Cargo.toml',
-  'Cargo.lock',
-  'fwupd/Cargo.toml',
-  'fwupd/src/lib.rs',
-)
+# Get the package objects from the workspace
+fwupd_pkg = cargo_ws.package('fwupd')
 
-# Force a build so we pick up any issues during compile
-fwupd_rust = custom_target(
+# Build the pure Rust library.
+fwupd_rust_lib = fwupd_pkg.library(install: false)
+
+# Unit tests for the pure Rust library
+rustmod.test(
   'fwupd-rust',
-  output: 'fwupd-rust.stamp',
-  command: [
-    cargo_wrapper,
-    '-p', 'fwupd',
-    '--stamp',
-    'build',
-    '@OUTPUT@',
-  ],
-  env: core_cargo_env,
-  depend_files: fwupd_rs_files,
-  console: true,
-  install: false,
-  build_by_default: true,
-)
-
-test(
-  'cargo test',
-  cargo_wrapper,
-  args: ['test'],
-  env: core_cargo_env,
+  fwupd_rust_lib,
   timeout: 120,
   suite: 'rust',
-  depends: [fwupd_rust],
 )
 
 if build_docs
-  custom_target(
-    'rust-doc',
-    output: 'doc',
-    command: [cargo_wrapper, 'doc', '@OUTPUT@'],
-    env: core_cargo_env,
-    depend_files: [
-      fwupd_rs_files,
-    ],
-    console: true,
-    install: false,
-    build_by_default: true,
+  rustmod.doctest(
+    'fwupd-doctest',
+    fwupd_rust_lib,
+    timeout: 120,
+    suite: 'rust',
   )
 endif

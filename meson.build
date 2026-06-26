@@ -1,10 +1,10 @@
 project(
   'fwupd',
-  'c',
+  'c', 'rust',
   version: '2.1.6',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.63.0', # limited by RHEL-9
-  default_options: ['warning_level=2', 'c_std=c17'],
+  meson_version: '>=1.11.0',
+  default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
 )
 
 fwupd_version = meson.project_version()
@@ -856,12 +856,8 @@ umockdev = dependency(
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
-cargo = find_program('cargo')
-cargo_env = environment()
-cargo_env.set('MESON_BUILDTYPE', get_option('buildtype'))
-cargo_env.set('MESON_BUILD_ROOT', meson.project_build_root())
-# MESON_SOURCE_DIR is set where the env will be used (after copying)
-cargo_wrapper = find_program(join_paths('generate-build', 'meson-cargo.sh'))
+rustmod = import('rust')
+cargo_ws = rustmod.workspace()
 
 subdir('generate-build')
 subdir('libfwupd')
