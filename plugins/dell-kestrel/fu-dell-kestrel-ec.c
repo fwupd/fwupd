@@ -637,7 +637,7 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, G
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid package size %" G_GSIZE_FORMAT,
+			    "invalid package size %zu",
 			    streamsz);
 		return FALSE;
 	}

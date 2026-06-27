@@ -78,7 +78,7 @@ fu_fastboot_device_write(FuFastbootDevice *self, const guint8 *buf, gsize buflen
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only wrote %" G_GSIZE_FORMAT "bytes",
+			    "only wrote %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -151,7 +151,7 @@ fu_fastboot_device_read(FuFastbootDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "only read %" G_GSIZE_FORMAT "bytes",
+				    "only read %zu bytes",
 				    actual_len);
 			return FALSE;
 		}

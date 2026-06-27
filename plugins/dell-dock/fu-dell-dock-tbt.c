@@ -88,7 +88,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 		return FALSE;
 	dynamic_version = g_strdup_printf("%02x.%02x", major_version, minor_version);
 	g_info("writing Thunderbolt firmware version %s", dynamic_version);
-	g_debug("total image size: %" G_GSIZE_FORMAT, image_size);
+	g_debug("total image size: %zu", image_size);
 	if (!fu_memread_uint32_safe(buffer, image_size, 0x0, &start_offset, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	g_debug("header size 0x%x", start_offset);

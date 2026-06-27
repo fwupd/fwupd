@@ -601,7 +601,7 @@ fu_elan_ts_device_read_page_data(FuElanTsDevice *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "response data reported payload length mismatch: expected "
-				    "%" G_GSIZE_FORMAT " bytes, got %" G_GSIZE_FORMAT " bytes",
+				    "%zu bytes, got %zu bytes",
 				    page_frame_data_len,
 				    (rsp_data_size_words * 2));
 			return FALSE;

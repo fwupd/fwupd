@@ -172,7 +172,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
-					    "outbuf size wrong, expected 4 got %" G_GSIZE_FORMAT,
+					    "outbuf size wrong, expected 4 got %zu",
 					    out_len);
 				return FALSE;
 			}

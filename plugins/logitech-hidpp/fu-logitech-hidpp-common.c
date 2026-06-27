@@ -153,8 +153,7 @@ fu_logitech_hidpp_receive(FuUdevDevice *udev_device, guint timeout, GError **err
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "message length too small, "
-			    "got %" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
+			    "message length too small, got %zu expected %zu",
 			    read_size,
 			    fu_logitech_hidpp_msg_get_payload_length(st));
 		return NULL;

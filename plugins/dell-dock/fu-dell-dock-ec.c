@@ -271,7 +271,7 @@ fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **byt
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "Invalid result data: %d expected %" G_GSIZE_FORMAT,
+			    "Invalid result data: %d expected %zu",
 			    result[0],
 			    length);
 		return FALSE;
@@ -776,7 +776,7 @@ fu_dell_dock_ec_commit_package(FuDellDockEc *self, GBytes *blob_fw, GError **err
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "Invalid package size %" G_GSIZE_FORMAT,
+			    "Invalid package size %zu",
 			    length);
 		return FALSE;
 	}

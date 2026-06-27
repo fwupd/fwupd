@@ -417,7 +417,7 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "MST register data too small, got %" G_GSIZE_FORMAT,
+			    "MST register data too small, got %zu",
 			    length);
 		return FALSE;
 	}

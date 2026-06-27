@@ -907,8 +907,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid size, got %" G_GSIZE_FORMAT ", "
-				    "expected %" G_GSIZE_FORMAT,
+				    "invalid size, got %zu, expected %zu",
 				    total_size,
 				    expected_size);
 			return NULL;
