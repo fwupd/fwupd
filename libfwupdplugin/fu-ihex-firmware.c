@@ -258,8 +258,7 @@ fu_ihex_firmware_parse(FuFirmware *firmware,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "address 0x%" G_GSIZE_MODIFIER
-				    "x exceeds 32-bit limit on line %u",
+				    "address 0x%zx exceeds 32-bit limit on line %u",
 				    addr,
 				    rcd->ln);
 			return FALSE;

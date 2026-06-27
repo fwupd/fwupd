@@ -157,8 +157,7 @@ fu_chunk_array_ensure_offsets(FuChunkArray *self)
 		fu_chunk_array_calculate_chunk_for_offset(self, offset, NULL, NULL, &chunksz);
 		g_array_append_val(self->offsets, offset);
 		if (chunksz > G_MAXSIZE - offset) {
-			g_critical("offset overflow at offset %" G_GSIZE_FORMAT
-				   " with chunk size %" G_GSIZE_FORMAT,
+			g_critical("offset overflow at offset %zu with chunk size %zu",
 				   offset,
 				   chunksz);
 			return;

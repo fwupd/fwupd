@@ -267,7 +267,7 @@ fu_mm_fdl_device_write_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "expected %" G_GSIZE_FORMAT " bytes, but wrote %" G_GSIZE_FORMAT,
+			    "expected %zu bytes, but wrote %zu",
 			    fw_len,
 			    offset);
 		return FALSE;

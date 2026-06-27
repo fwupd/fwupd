@@ -333,7 +333,7 @@ fu_wacom_usb_device_write_block(FuWacomUsbDevice *self, guint32 addr, GBytes *bl
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "packet was too large at %" G_GSIZE_FORMAT " bytes",
+			    "packet was too large at %zu bytes",
 			    sz);
 		return FALSE;
 	}

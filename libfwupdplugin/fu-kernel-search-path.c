@@ -70,7 +70,7 @@ fu_kernel_search_path_get_current(FuPathStore *pstore, GError **error)
 	if (contents[sz - 1] == '\n')
 		contents[sz - 1] = 0;
 
-	g_debug("read firmware search path (%" G_GSIZE_FORMAT "): %s", sz, contents);
+	g_debug("read firmware search path (%zu): %s", sz, contents);
 	return g_steal_pointer(&contents);
 }
 
@@ -82,7 +82,7 @@ fu_kernel_search_path_set_current(FuKernelSearchPathLocker *self, const gchar *p
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(strlen(path) < PATH_MAX, FALSE);
 
-	g_debug("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen(path), path);
+	g_debug("writing firmware search path (%zu): %s", strlen(path), path);
 	sys_fw_search_path_prm =
 	    fu_path_store_get_path(self->pstore, FU_PATH_KIND_FIRMWARE_SEARCH, error);
 	if (sys_fw_search_path_prm == NULL)

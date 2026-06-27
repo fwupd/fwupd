@@ -315,7 +315,7 @@ fu_realtek_mst_device_flash_iface_read(FuRealtekMstDevice *self,
 	g_return_val_if_fail(address < FLASH_SIZE, FALSE);
 	g_return_val_if_fail(buf_size <= FLASH_SIZE, FALSE);
 
-	g_debug("read %#" G_GSIZE_MODIFIER "x bytes from %#08x", buf_size, address);
+	g_debug("read %#zx bytes from %#08x", buf_size, address);
 
 	/* read must start one byte prior to the desired address and ignore the
 	 * first byte of data, since the first read value is unpredictable */
@@ -461,7 +461,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 	g_autoptr(FuChunkArray) chunks =
 	    fu_chunk_array_new_from_bytes(data, address, FU_CHUNK_PAGESZ_NONE, 256);
 
-	g_debug("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", total_size, address);
+	g_debug("write %#zx bytes at %#08x", total_size, address);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chunk = NULL;
 		guint32 chunk_address;

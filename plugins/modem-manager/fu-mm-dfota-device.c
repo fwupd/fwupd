@@ -120,7 +120,7 @@ fu_mm_dfota_device_upload_chunk(FuMmDfotaDevice *self, FuChunk *chk, GError **er
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "expected %" G_GSIZE_FORMAT " ACKs, got %" G_GSIZE_FORMAT,
+			    "expected %zu ACKs, got %zu",
 			    acks_expected,
 			    ack_size);
 		return FALSE;
@@ -431,7 +431,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* put the device into upload mode */
-	upload_cmd = g_strdup_printf("AT+QFUPL=\"%s\",%" G_GSIZE_FORMAT ",5,1",
+	upload_cmd = g_strdup_printf("AT+QFUPL=\"%s\",%zu,5,1",
 				     FU_MM_DFOTA_DEVICE_FILENAME,
 				     fu_firmware_get_size(firmware));
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), upload_cmd, TRUE, error)) {

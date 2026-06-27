@@ -56,7 +56,7 @@ fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "cannot process chunk of size %" G_GSIZE_FORMAT,
+			    "cannot process chunk of size %zu",
 			    ibufsz);
 		return FALSE;
 	}
@@ -98,7 +98,7 @@ fu_hughski_colorhug_device_send(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "request not all sent, got %" G_GSIZE_FORMAT,
+			    "request not all sent, got %zu",
 			    actual_length);
 		return FALSE;
 	}
@@ -123,7 +123,7 @@ fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "cannot process chunk of size %" G_GSIZE_FORMAT,
+			    "cannot process chunk of size %zu",
 			    obufsz);
 		return FALSE;
 	}
@@ -155,7 +155,7 @@ fu_hughski_colorhug_device_recv(FuHughskiColorhugDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "request not all received, got %" G_GSIZE_FORMAT,
+			    "request not all received, got %zu",
 			    actual_length);
 		return FALSE;
 	}

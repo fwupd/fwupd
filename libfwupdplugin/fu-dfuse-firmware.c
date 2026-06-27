@@ -166,7 +166,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 			    FWUPD_ERROR_INTERNAL,
 			    "invalid DfuSe image size, "
 			    "got %" G_GUINT32_FORMAT ", "
-			    "expected %" G_GSIZE_FORMAT,
+			    "expected %zu",
 			    fu_struct_dfuse_hdr_get_image_size(st_hdr),
 			    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware));
 		return FALSE;

@@ -88,7 +88,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "device path not valid: %" G_GSIZE_FORMAT,
+				    "device path not valid: %zu",
 				    ubufsz);
 			return FALSE;
 		}
