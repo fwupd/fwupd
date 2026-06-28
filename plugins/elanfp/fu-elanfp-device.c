@@ -206,7 +206,7 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 				    FWUPD_ERROR_READ,
 				    "only received %zu/%zu bytes",
 				    actual,
-				    outlen);
+				    inlen);
 			return FALSE;
 		}
 	}
