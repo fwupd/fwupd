@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include <fcntl.h>
 #include <glib/gstdio.h>
 
 #include "fwupd-error.h"
@@ -115,6 +116,25 @@ fu_unix_seekable_input_stream_seekable_iface_init(GSeekableIface *iface)
 	iface->truncate_fn = fu_unix_seekable_input_stream_truncate;
 }
 
+static gboolean
+fu_unix_seekable_input_stream_verify_sealed(gint fd, GError **error)
+{
+#ifdef HAVE_MEMFD_CREATE
+	gint seals = fcntl(fd, F_GET_SEALS);
+	if (seals >= 0 && (seals & (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) !=
+			      (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "fd is missing required seals, got 0x%x",
+			    (guint)seals);
+		return FALSE;
+	}
+#endif
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_unix_seekable_input_stream_new:
  * @fd: a UNIX file descriptor
@@ -156,6 +176,10 @@ fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 			    st.st_mode);
 		return NULL;
 	}
+
+	/* if the fd supports sealing (i.e. is a memfd) then require immutability */
+	if (!fu_unix_seekable_input_stream_verify_sealed(fd, error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&stream);
