@@ -1279,8 +1279,8 @@ GHashTable *
 fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
-void
-fu_device_register_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+GQuark
+fu_device_register_private_flag(FuDeviceClass *klass, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_add_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void

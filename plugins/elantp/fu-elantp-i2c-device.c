@@ -812,7 +812,6 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_ELANTP_I2C_DEVICE_ABSOLUTE);
 }
 
 static void
@@ -841,4 +840,5 @@ fu_elantp_i2c_device_class_init(FuElantpI2cDeviceClass *klass)
 	device_class->open = fu_elantp_i2c_device_open;
 	device_class->set_progress = fu_elantp_i2c_device_set_progress;
 	device_class->convert_version = fu_elantp_i2c_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_ELANTP_I2C_DEVICE_ABSOLUTE);
 }

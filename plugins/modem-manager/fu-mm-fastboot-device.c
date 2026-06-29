@@ -114,8 +114,6 @@ fu_mm_fastboot_device_init(FuMmFastbootDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 20000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.fastboot");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "USB\\VID_18D1&PID_D00D",
 				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
@@ -144,4 +142,6 @@ fu_mm_fastboot_device_class_init(FuMmFastbootDeviceClass *klass)
 	device_class->to_string = fu_mm_fastboot_device_to_string;
 	device_class->from_json = fu_mm_fastboot_device_from_json;
 	device_class->add_json = fu_mm_fastboot_device_add_json;
+	fu_device_register_private_flag(device_class,
+					FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE);
 }

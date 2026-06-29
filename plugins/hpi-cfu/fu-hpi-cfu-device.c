@@ -1594,7 +1594,6 @@ fu_hpi_cfu_device_init(FuHpiCfuDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 720); /* 12 min */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_HPI_CFU_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT);
 
 	/* reboot takes down the entire hub for ~12 minutes */
 	fu_device_set_remove_delay(FU_DEVICE(self), 720 * 1000);
@@ -1608,4 +1607,5 @@ fu_hpi_cfu_device_class_init(FuHpiCfuDeviceClass *klass)
 	device_class->setup = fu_hpi_cfu_device_setup;
 	device_class->set_progress = fu_hpi_cfu_device_set_progress;
 	device_class->convert_version = fu_hpi_cfu_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_HPI_CFU_DEVICE_FLAG_UPDATE_ON_REBOOT);
 }

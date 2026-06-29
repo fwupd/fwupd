@@ -364,9 +364,9 @@ fu_plugin_private_flags_func(void)
 {
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
 
-	fu_plugin_register_private_flag(plugin, "flag-a");
-	fu_plugin_register_private_flag(plugin, "flag-b");
-	fu_plugin_register_private_flag(plugin, "flag-c");
+	fu_plugin_register_private_flag(FU_PLUGIN_GET_CLASS(plugin), "flag-a");
+	fu_plugin_register_private_flag(FU_PLUGIN_GET_CLASS(plugin), "flag-b");
+	fu_plugin_register_private_flag(FU_PLUGIN_GET_CLASS(plugin), "flag-c");
 
 	/* not set by default */
 	g_assert_false(fu_plugin_has_private_flag(plugin, "flag-a"));

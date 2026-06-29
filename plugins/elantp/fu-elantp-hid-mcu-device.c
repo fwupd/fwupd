@@ -956,8 +956,6 @@ fu_elantp_hid_mcu_device_init(FuElantpHidMcuDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_ELANTP_HID_DEVICE);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELANTP_DEVICE_PRIVATE_FLAG_CAN_QUERY_HAPTIC_FUNCTION);
 }
 
 static void
@@ -973,6 +971,8 @@ fu_elantp_hid_mcu_device_class_init(FuElantpHidMcuDeviceClass *klass)
 	device_class->check_firmware = fu_elantp_hid_mcu_device_check_firmware;
 	device_class->set_progress = fu_elantp_hid_mcu_device_set_progress;
 	device_class->convert_version = fu_elantp_hid_mcu_device_convert_version;
+	fu_device_register_private_flag(device_class,
+					FU_ELANTP_DEVICE_PRIVATE_FLAG_CAN_QUERY_HAPTIC_FUNCTION);
 }
 
 FuElantpHidMcuDevice *

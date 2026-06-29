@@ -1032,8 +1032,6 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELANTP_DEVICE_PRIVATE_FLAG_CAN_QUERY_HAPTIC_FUNCTION);
 }
 
 static void
@@ -1049,4 +1047,6 @@ fu_elantp_hid_device_class_init(FuElantpHidDeviceClass *klass)
 	device_class->check_firmware = fu_elantp_hid_device_check_firmware;
 	device_class->set_progress = fu_elantp_hid_device_set_progress;
 	device_class->convert_version = fu_elantp_hid_device_convert_version;
+	fu_device_register_private_flag(device_class,
+					FU_ELANTP_DEVICE_PRIVATE_FLAG_CAN_QUERY_HAPTIC_FUNCTION);
 }

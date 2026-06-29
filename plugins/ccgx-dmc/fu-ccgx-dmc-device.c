@@ -865,7 +865,6 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
 }
 
 static void
@@ -881,4 +880,5 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 	device_class->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
 	device_class->set_progress = fu_ccgx_dmc_device_set_progress;
 	device_class->convert_version = fu_ccgx_dmc_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
 }

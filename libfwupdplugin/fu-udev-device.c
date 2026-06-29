@@ -69,6 +69,13 @@ enum { SIGNAL_CHANGED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
+enum {
+	QUARK_SYSFS_USE_PHYSICAL_ID,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 #define GET_PRIVATE(o) (fu_udev_device_get_instance_private(o))
 
 /**
@@ -757,7 +764,7 @@ fu_udev_device_get_sysfs_path(FuUdevDevice *self)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID))
+	if (fu_device_has_private_flag_quark(FU_DEVICE(self), quarks[QUARK_SYSFS_USE_PHYSICAL_ID]))
 		return fu_device_get_physical_id(FU_DEVICE(self));
 	return fu_device_get_backend_id(FU_DEVICE(self));
 }
@@ -2623,7 +2630,6 @@ fu_udev_device_init(FuUdevDevice *self)
 	priv->properties = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_udev_device_vid_notify_cb),
@@ -2656,6 +2662,9 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->probe_complete = fu_udev_device_probe_complete;
 	device_class->from_json = fu_udev_device_from_json;
 	device_class->add_json = fu_udev_device_add_json;
+	quarks[QUARK_SYSFS_USE_PHYSICAL_ID] =
+	    fu_device_register_private_flag_safe(device_class,
+						 FU_UDEV_DEVICE_FLAG_SYSFS_USE_PHYSICAL_ID);
 
 	/**
 	 * FuUdevDevice::changed:

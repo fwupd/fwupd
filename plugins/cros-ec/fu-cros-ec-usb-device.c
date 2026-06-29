@@ -1044,13 +1044,6 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CROS_EC_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED);
 }
 
 static void
@@ -1102,4 +1095,10 @@ fu_cros_ec_usb_device_class_init(FuCrosEcUsbDeviceClass *klass)
 	device_class->reload = fu_cros_ec_usb_device_reload;
 	device_class->replace = fu_cros_ec_usb_device_replace;
 	device_class->cleanup = fu_cros_ec_usb_device_cleanup;
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+	fu_device_register_private_flag(device_class, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+	fu_device_register_private_flag(device_class,
+					FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED);
 }

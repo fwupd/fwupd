@@ -1419,7 +1419,6 @@ fu_elan_ts_device_init(FuElanTsDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
@@ -1435,4 +1434,5 @@ fu_elan_ts_device_class_init(FuElanTsDeviceClass *klass)
 	device_class->write_firmware = fu_elan_ts_device_write_firmware;
 	device_class->set_progress = fu_elan_ts_device_set_progress;
 	device_class->reload = fu_elan_ts_device_reload;
+	fu_device_register_private_flag(device_class, FU_ELAN_TS_DEVICE_FLAG_CHECK_REMARK_ID);
 }

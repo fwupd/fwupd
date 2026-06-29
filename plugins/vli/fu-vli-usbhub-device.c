@@ -1431,20 +1431,6 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_VLI_USBHUB_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB2);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB3);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD);
 }
 
 static void
@@ -1478,4 +1464,15 @@ fu_vli_usbhub_device_class_init(FuVliUsbhubDeviceClass *klass)
 	vli_device_class->spi_write_data = fu_vli_usbhub_device_spi_write_data;
 	vli_device_class->spi_write_enable = fu_vli_usbhub_device_spi_write_enable;
 	vli_device_class->spi_write_status = fu_vli_usbhub_device_spi_write_status;
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB);
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_USB2);
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_USB3);
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813);
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD);
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430);
+	fu_device_register_private_flag(device_class, FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX);
+	fu_device_register_private_flag(device_class,
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE);
+	fu_device_register_private_flag(device_class,
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD);
 }

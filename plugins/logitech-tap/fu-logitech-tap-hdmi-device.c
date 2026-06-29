@@ -553,8 +553,6 @@ fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT);
 }
 
 static void
@@ -565,4 +563,6 @@ fu_logitech_tap_hdmi_device_class_init(FuLogitechTapHdmiDeviceClass *klass)
 	device_class->setup = fu_logitech_tap_hdmi_device_setup;
 	device_class->set_progress = fu_logitech_tap_hdmi_device_set_progress;
 	device_class->write_firmware = fu_logitech_tap_hdmi_device_write_firmware;
+	fu_device_register_private_flag(device_class,
+					FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT);
 }

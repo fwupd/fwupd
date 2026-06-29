@@ -279,7 +279,6 @@ fu_usb_device_init(FuUsbDevice *self)
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
@@ -3206,10 +3205,9 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->convert_version = fu_usb_device_convert_version;
 	device_class->from_json = fu_usb_device_from_json;
 	device_class->add_json = fu_usb_device_add_json;
-
-	/* used as device flags */
+	fu_device_register_private_flag_safe(device_class, FU_DEVICE_PRIVATE_FLAG_HAS_DS20);
 	quarks[QUARK_ADD_INSTANCE_ID_REV] =
-	    g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
+	    fu_device_find_private_flag(device_class, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 
 	/**
 	 * FuUsbDevice:libusb-device:

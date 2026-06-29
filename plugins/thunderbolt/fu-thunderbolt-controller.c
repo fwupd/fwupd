@@ -382,8 +382,6 @@ static void
 fu_thunderbolt_controller_init(FuThunderboltController *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 }
 
 static void
@@ -407,4 +405,5 @@ fu_thunderbolt_controller_class_init(FuThunderboltControllerClass *klass)
 	device_class->probe = fu_thunderbolt_controller_probe;
 	device_class->to_string = fu_thunderbolt_controller_to_string;
 	device_class->write_firmware = fu_thunderbolt_controller_write_firmware;
+	fu_device_register_private_flag(device_class, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 }

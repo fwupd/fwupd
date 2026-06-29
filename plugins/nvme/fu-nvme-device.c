@@ -617,8 +617,6 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_FORCE_ALIGN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_COMMIT_CA3);
 }
 
 static void
@@ -631,6 +629,8 @@ fu_nvme_device_class_init(FuNvmeDeviceClass *klass)
 	device_class->write_firmware = fu_nvme_device_write_firmware;
 	device_class->probe = fu_nvme_device_probe;
 	device_class->set_progress = fu_nvme_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_NVME_DEVICE_FLAG_FORCE_ALIGN);
+	fu_device_register_private_flag(device_class, FU_NVME_DEVICE_FLAG_COMMIT_CA3);
 }
 
 FuNvmeDevice *

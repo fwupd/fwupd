@@ -818,9 +818,9 @@ define a private flag:
 1. Define the flag value. This is normally defined as a macro that
   expands to a binary flag, for example: `#define MY_PRIVATE_FLAG (1 <<
   2)`.  Note that this will be part of the ABI, so it must be versioned
-1. Call `fu_device_register_private_flag` in the device init function
+1. Call `fu_device_register_private_flag` in the device class init function
   and assign a string identifier to the flag:
-  `fu_device_register_private_flag(FU_DEVICE (self), MY_PRIVATE_FLAG);`
+  `fu_device_register_private_flag(device_class, MY_PRIVATE_FLAG);`
 
 You can then add it to the device programmatically with
 `fu_device_add_private_flag`, remove it with `fu_device_remove_private_flag`

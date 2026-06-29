@@ -941,7 +941,6 @@ fu_pixart_rf_ble_device_init(FuPixartRfBleDevice *self)
 	self->retransmit_id = PIXART_RF_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PIXART_RF_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PIXART_RF_HID_DEV_OTA_INPUT_REPORT_ID;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
@@ -964,4 +963,5 @@ fu_pixart_rf_ble_device_class_init(FuPixartRfBleDeviceClass *klass)
 	device_class->write_firmware = fu_pixart_rf_ble_device_write_firmware;
 	device_class->prepare_firmware = fu_pixart_rf_ble_device_prepare_firmware;
 	device_class->set_progress = fu_pixart_rf_ble_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 }
