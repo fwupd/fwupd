@@ -8,6 +8,9 @@
 
 #include <fcntl.h>
 #include <glib/gstdio.h>
+#ifdef HAVE_MEMFD_CREATE
+#include <sys/mman.h>
+#endif
 
 #include "fwupd-error.h"
 
@@ -77,6 +80,51 @@ fu_unix_seekable_input_stream_non_regular_func(void)
 #endif
 }
 
+static void
+fu_unix_seekable_input_stream_sealed_memfd_func(void)
+{
+#if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
+	g_autofd gint fd = -1;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	const gchar data[] = "hello";
+
+	fd = memfd_create("fwupd-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+	g_assert_cmpint(fd, >=, 0);
+	g_assert_cmpint(write(fd, data, sizeof(data)), ==, sizeof(data));
+	g_assert_cmpint(lseek(fd, 0, SEEK_SET), ==, 0);
+	g_assert_cmpint(fcntl(fd, F_ADD_SEALS, F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW), ==, 0);
+
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+#else
+	g_test_skip("No gio-unix-2.0 or memfd_create support, skipping");
+#endif
+}
+
+static void
+fu_unix_seekable_input_stream_unsealed_memfd_func(void)
+{
+#if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
+	g_autofd gint fd = -1;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	const gchar data[] = "hello";
+
+	fd = memfd_create("fwupd-test", MFD_CLOEXEC | MFD_ALLOW_SEALING);
+	g_assert_cmpint(fd, >=, 0);
+	g_assert_cmpint(write(fd, data, sizeof(data)), ==, sizeof(data));
+	g_assert_cmpint(lseek(fd, 0, SEEK_SET), ==, 0);
+
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(stream);
+#else
+	g_test_skip("No gio-unix-2.0 or memfd_create support, skipping");
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
@@ -85,5 +133,9 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream/non-regular",
 			fu_unix_seekable_input_stream_non_regular_func);
+	g_test_add_func("/fwupd/unix-seekable-input-stream/sealed-memfd",
+			fu_unix_seekable_input_stream_sealed_memfd_func);
+	g_test_add_func("/fwupd/unix-seekable-input-stream/unsealed-memfd",
+			fu_unix_seekable_input_stream_unsealed_memfd_func);
 	return g_test_run();
 }
