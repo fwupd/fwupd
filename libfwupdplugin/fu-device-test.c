@@ -585,8 +585,8 @@ fu_device_custom_flags_func(void)
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
-	fu_device_register_private_flag(device, "foo");
-	fu_device_register_private_flag(device, "bar");
+	fu_device_register_private_flag(FU_DEVICE_GET_CLASS(device), "foo");
+	fu_device_register_private_flag(FU_DEVICE_GET_CLASS(device), "bar");
 
 	fu_device_set_custom_flags(device, "foo");
 	g_assert_true(fu_device_has_private_flag(device, "foo"));
@@ -822,7 +822,7 @@ fu_device_incorporate_func(void)
 	fu_device_add_instance_str(donor, "VID", "0A5C");
 	fu_device_add_instance_u16(donor, "PID", 0x6412);
 	fu_device_add_instance_u32(donor, "BOARD_ID", 0x12345678);
-	fu_device_register_private_flag(donor, "self-test");
+	fu_device_register_private_flag(FU_DEVICE_GET_CLASS(donor), "self-test");
 	fu_device_add_private_flag(donor, "self-test");
 
 	/* match a quirk entry, and then clear to ensure incorporate uses the quirk instance ID */

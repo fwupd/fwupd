@@ -191,8 +191,6 @@ fu_devlink_component_init(FuDevlinkComponent *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DEVLINK_DEVICE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
 }
 
 static void
@@ -220,4 +218,5 @@ fu_devlink_component_class_init(FuDevlinkComponentClass *klass)
 	device_class->activate = fu_devlink_component_activate;
 	device_class->prepare = fu_devlink_component_prepare;
 	device_class->cleanup = fu_devlink_component_cleanup;
+	fu_device_register_private_flag(device_class, FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
 }

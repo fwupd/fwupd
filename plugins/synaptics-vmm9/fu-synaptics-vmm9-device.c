@@ -669,8 +669,6 @@ fu_synaptics_vmm9_device_init(FuSynapticsVmm9Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 }
 
 static void
@@ -686,4 +684,6 @@ fu_synaptics_vmm9_device_class_init(FuSynapticsVmm9DeviceClass *klass)
 	device_class->read_firmware = fu_synaptics_vmm9_device_read_firmware;
 	device_class->set_progress = fu_synaptics_vmm9_device_set_progress;
 	device_class->convert_version = fu_synaptics_vmm9_device_convert_version;
+	fu_device_register_private_flag(device_class,
+					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 }

@@ -1290,8 +1290,6 @@ fu_parade_usbhub_device_init(FuParadeUsbhubDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_PARADE_USBHUB_DEVICE_FLAG_USE_GPIO_ENABLE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 }
 
@@ -1334,4 +1332,5 @@ fu_parade_usbhub_device_class_init(FuParadeUsbhubDeviceClass *klass)
 	device_class->write_firmware = fu_parade_usbhub_device_write_firmware;
 	device_class->set_progress = fu_parade_usbhub_device_set_progress;
 	device_class->convert_version = fu_parade_usbhub_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_PARADE_USBHUB_DEVICE_FLAG_USE_GPIO_ENABLE);
 }

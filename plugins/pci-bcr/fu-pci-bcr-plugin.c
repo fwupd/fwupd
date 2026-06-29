@@ -208,7 +208,6 @@ fu_pci_bcr_plugin_init(FuPciBcrPlugin *self)
 {
 	/* this is true except for some Atoms */
 	self->bcr_addr = 0xdc;
-	fu_plugin_register_private_flag(FU_PLUGIN(self), FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE);
 }
 
 static void
@@ -232,4 +231,5 @@ fu_pci_bcr_plugin_class_init(FuPciBcrPluginClass *klass)
 	plugin_class->add_security_attrs = fu_pci_bcr_plugin_add_security_attrs;
 	plugin_class->device_registered = fu_pci_bcr_plugin_device_registered;
 	plugin_class->backend_device_added = fu_pci_bcr_plugin_backend_device_added;
+	fu_plugin_register_private_flag(plugin_class, FU_PCI_BCR_PLUGIN_FLAG_HAS_DEVICE);
 }

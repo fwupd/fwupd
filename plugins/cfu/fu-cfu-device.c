@@ -564,7 +564,6 @@ fu_cfu_device_init(FuCfuDevice *self)
 	self->content_set_report.op = 0x61;
 	self->content_get_report.op = 0x66;
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO);
 }
 
 static void
@@ -575,4 +574,5 @@ fu_cfu_device_class_init(FuCfuDeviceClass *klass)
 	device_class->to_string = fu_cfu_device_to_string;
 	device_class->write_firmware = fu_cfu_device_write_firmware;
 	device_class->set_quirk_kv = fu_cfu_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO);
 }

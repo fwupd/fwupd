@@ -677,7 +677,6 @@ fu_hughski_colorhug_device_init(FuHughskiColorhugDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE);
 	fu_usb_device_set_configuration(FU_USB_DEVICE(self), CH_USB_CONFIG);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), CH_USB_INTERFACE);
 }
@@ -693,4 +692,5 @@ fu_hughski_colorhug_device_class_init(FuHughskiColorhugDeviceClass *klass)
 	device_class->setup = fu_hughski_colorhug_device_setup;
 	device_class->probe = fu_hughski_colorhug_device_probe;
 	device_class->set_progress = fu_hughski_colorhug_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE);
 }

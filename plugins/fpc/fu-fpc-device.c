@@ -715,10 +715,6 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x10000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x64000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FPC_USB_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_MOH_DEVICE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE);
 }
 
 static void
@@ -734,4 +730,8 @@ fu_fpc_device_class_init(FuFpcDeviceClass *klass)
 	device_class->detach = fu_fpc_device_detach;
 	device_class->set_progress = fu_fpc_device_set_progress;
 	device_class->convert_version = fu_fpc_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_FPC_DEVICE_FLAG_MOH_DEVICE);
+	fu_device_register_private_flag(device_class, FU_FPC_DEVICE_FLAG_RTS_DEVICE);
+	fu_device_register_private_flag(device_class, FU_FPC_DEVICE_FLAG_LEGACY_DFU);
+	fu_device_register_private_flag(device_class, FU_FPC_DEVICE_FLAG_LENFY_DEVICE);
 }

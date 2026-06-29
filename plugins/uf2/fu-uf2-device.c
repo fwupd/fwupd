@@ -433,7 +433,6 @@ fu_uf2_device_init(FuUf2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UF2_DEVICE_FLAG_HAS_RUNTIME);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_uf2_device_vid_notify_cb),
@@ -473,4 +472,5 @@ fu_uf2_device_class_init(FuUf2DeviceClass *klass)
 	device_class->write_firmware = fu_uf2_device_write_firmware;
 	device_class->replace = fu_uf2_device_replace;
 	device_class->dump_firmware = fu_uf2_device_dump_firmware;
+	fu_device_register_private_flag(device_class, FU_UF2_DEVICE_FLAG_HAS_RUNTIME);
 }

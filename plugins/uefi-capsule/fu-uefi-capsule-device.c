@@ -903,27 +903,6 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
 }
 
 static void
@@ -966,6 +945,24 @@ fu_uefi_capsule_device_class_init(FuUefiCapsuleDeviceClass *klass)
 	device_class->get_results = fu_uefi_capsule_device_get_results;
 	device_class->set_progress = fu_uefi_capsule_device_set_progress;
 	device_class->convert_version = fu_uefi_capsule_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
+	fu_device_register_private_flag(device_class,
+					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
+	fu_device_register_private_flag(device_class, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
 
 	/**
 	 * FuUefiCapsuleDevice:fw-class:

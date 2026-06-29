@@ -1643,12 +1643,6 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 100);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE);
 
 	/* these are unrecoverable */
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
@@ -1677,4 +1671,10 @@ fu_logitech_bulkcontroller_device_class_init(FuLogitechBulkcontrollerDeviceClass
 	device_class->probe = fu_logitech_bulkcontroller_device_probe;
 	device_class->setup = fu_logitech_bulkcontroller_device_setup;
 	device_class->set_progress = fu_logitech_bulkcontroller_device_set_progress;
+	fu_device_register_private_flag(device_class,
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE);
+	fu_device_register_private_flag(device_class,
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
+	fu_device_register_private_flag(device_class,
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE);
 }

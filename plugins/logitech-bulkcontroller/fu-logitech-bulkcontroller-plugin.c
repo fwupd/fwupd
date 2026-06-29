@@ -21,8 +21,6 @@ G_DEFINE_TYPE(FuLogitechBulkcontrollerPlugin, fu_logitech_bulkcontroller_plugin,
 static void
 fu_logitech_bulkcontroller_plugin_init(FuLogitechBulkcontrollerPlugin *self)
 {
-	fu_plugin_register_private_flag(FU_PLUGIN(self),
-					FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL);
 }
 
 static gboolean
@@ -76,4 +74,6 @@ fu_logitech_bulkcontroller_plugin_class_init(FuLogitechBulkcontrollerPluginClass
 	plugin_class->constructed = fu_logitech_bulkcontroller_plugin_constructed;
 	plugin_class->write_firmware = fu_logitech_bulkcontroller_plugin_write_firmware;
 	plugin_class->device_created = fu_logitech_bulkcontroller_plugin_device_created;
+	fu_plugin_register_private_flag(plugin_class,
+					FU_LOGITECH_BULKCONTROLLER_PLUGIN_FLAG_POST_INSTALL);
 }

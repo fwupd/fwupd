@@ -1150,7 +1150,6 @@ fu_lenovo_dock_device_init(FuLenovoDockDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK_USB);
 	fu_device_set_install_duration(FU_DEVICE(self), 330);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LENOVO_DOCK_FIRMWARE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -1169,4 +1168,5 @@ fu_lenovo_dock_device_class_init(FuLenovoDockDeviceClass *klass)
 	device_class->write_firmware = fu_lenovo_dock_device_write_firmware;
 	device_class->set_progress = fu_lenovo_dock_device_set_progress;
 	device_class->set_quirk_kv = fu_lenovo_dock_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_LENOVO_DOCK_DEVICE_FLAG_CAN_PROVISION);
 }

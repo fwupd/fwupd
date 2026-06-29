@@ -958,12 +958,6 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 			 "notify::private-flags",
 			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
 			 NULL);
-
-	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
@@ -985,4 +979,8 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	device_class->reload = fu_usi_dock_mcu_device_reload;
 	device_class->replace = fu_usi_dock_mcu_device_replace;
 	device_class->prepare = fu_usi_dock_mcu_device_prepare;
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+	fu_device_register_private_flag(device_class, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 }

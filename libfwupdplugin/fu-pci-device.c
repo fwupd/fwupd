@@ -611,7 +611,7 @@ fu_pci_device_class_init(FuPciDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	quarks[QUARK_ADD_INSTANCE_ID_REV] =
-	    g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
+	    fu_device_find_private_flag(device_class, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	device_class->to_string = fu_pci_device_to_string;
 	device_class->probe = fu_pci_device_probe;
 	device_class->probe_complete = fu_pci_device_probe_complete;

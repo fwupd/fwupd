@@ -143,7 +143,6 @@ fu_intel_mchi_device_init(FuIntelMchiDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_MCHI_DEVICE_FLAG_LEAKED_KM);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::private-flags",
 			 G_CALLBACK(fu_intel_mchi_device_version_notify_cb),
@@ -156,4 +155,5 @@ fu_intel_mchi_device_class_init(FuIntelMchiDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_intel_mchi_device_setup;
 	device_class->add_security_attrs = fu_intel_mchi_device_add_security_attrs;
+	fu_device_register_private_flag(device_class, FU_INTEL_MCHI_DEVICE_FLAG_LEAKED_KM);
 }
