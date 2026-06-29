@@ -750,6 +750,7 @@ fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error)
 	if (!fu_qc_firehose_impl_read_xml(self, 5000, &helper, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_debug("ignoring: %s", error_local->message);
+			g_clear_error(&error_local);
 		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
