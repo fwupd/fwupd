@@ -534,7 +534,7 @@ fu_ipmi_device_setup(FuDevice *device, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to parse DEVICE_ID_CMD response (sz: %" G_GSIZE_FORMAT ")",
+			    "failed to parse DEVICE_ID_CMD response (sz: %zu)",
 			    resp_len);
 		return FALSE;
 	}

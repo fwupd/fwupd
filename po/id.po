@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
-"PO-Revision-Date: 2026-05-23 11:11+0000\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-06-26 16:01+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Layanan Firmware Vendor Linux (firmware stabil)"
@@ -159,18 +159,18 @@ msgid "Authentication is required to get the list of configured remotes used for
 msgstr "Diperlukan otentikasi untuk mendapatkan daftar remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Perbarui metadata untuk remote yang dikonfigurasi"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Autentikasi diperlukan untuk memperbarui metadata untuk remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 msgid "Modify a configured remote"
 msgstr "Ubah suatu remote yang ditata"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Autentikasi diperlukan untuk mengaktifkan atau menonaktifkan remote yang dikonfigurasi yang digunakan untuk pembaruan firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -304,6 +304,10 @@ msgstr "Utilitas dbx UEFI"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Gagal mengurai argumen"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr "Gagal memuat konteks"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -717,6 +721,10 @@ msgstr "Perlindungan replay SPI"
 msgid "SPI write protection"
 msgstr "Proteksi penulisan SPI"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr "verified boot coreboot"
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Platform yang memakai fuse"
@@ -744,6 +752,10 @@ msgstr "SMM terkunci"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "Perlindungan memori UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr "Perlindungan NX UEFI"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -904,6 +916,10 @@ msgstr "Perlindungan Replay Firmware AMD"
 msgid "AMD Firmware Write Protection"
 msgstr "Perlindungan Tulis Firmware AMD"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr "Verified Boot coreboot"
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Platform Fused"
@@ -927,6 +943,10 @@ msgstr "Mode Manajemen Sistem"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "Perlindungan Memori UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr "Perlindungan NX UEFI"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1056,6 +1076,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Boot aman platform mencegah perangkat lunak yang tidak ditandatangani dimuat saat perangkat dinyalakan."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr "verified boot coreboot mencegah firmware tanpa tanda tangan dimuat saat perangkat dinyalakan."
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Microcode CPU harus diperbarui untuk mengurangi berbagai masalah-masalah keamanan pengungkapan informasi."
 
@@ -1070,6 +1094,10 @@ msgstr "Mode manajemen sistem digunakan oleh firmware untuk mengakses kode dan d
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "Sistem UEFI dapat mengatur atribut memori saat boot yang mencegah eksploit umum berjalan."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr "Bootloader UEFI dikompilasi dengan dukungan Data Execution Prevention."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1423,6 +1451,10 @@ msgstr "Memfilter dengan suatu set flag perangkat menggunakan awalan ~ untuk men
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filter dengan set flag rilis menggunakan awalan ~ untuk mengecualikan, misalnya 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr "Filter ke protokol tertentu, misalnya '~org.uefi.capsule' atau 'org.nvmexpress'"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1959,6 +1991,8 @@ msgstr "Mengabaikan pemeriksaan ketat SSL, untuk melakukan ini secara otomatis d
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Gagal mengurai flag untuk %s"
@@ -2853,6 +2887,11 @@ msgstr "Pembaruan Headphone %s"
 msgid "%s Headset Update"
 msgstr "Pembaruan Headset %s"
 
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr "Pembaruan Layar Sentuh %s"
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -3665,20 +3704,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "Rekonstruksi PCR0 TPM kini valid"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "Perlindungan memori UEFI sekarang dikunci"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "Perlindungan memori UEFI sekarang tidak dikunci"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr "Perlindungan bootloader NX UEFI sekarang diaktifkan"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr "Perlindungan bootloader NX UEFI sekarang dinonaktifkan"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3783,6 +3822,12 @@ msgstr "Aktifkan remote baru?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Setuju dan aktifkan remote?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "Perlindungan memori UEFI diaktifkan tetapi tidak dikunci"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "Perlindungan memori UEFI diaktifkan dan dikunci"
 
 #~ msgid "Password"
 #~ msgstr "Kata Sandi"

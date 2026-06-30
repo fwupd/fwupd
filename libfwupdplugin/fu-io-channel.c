@@ -289,7 +289,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
 				    "failed to write: "
-				    "wrote %" G_GSSIZE_FORMAT " of %" G_GSIZE_FORMAT ": %s",
+				    "wrote %" G_GSSIZE_FORMAT " of %zu: %s",
 				    wrote,
 				    datasz,
 				    fwupd_strerror(errno));
@@ -338,7 +338,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_WRITE,
-					    "failed to write %" G_GSIZE_FORMAT " bytes to %i: %s",
+					    "failed to write %zu bytes to %i: %s",
 					    datasz,
 					    self->fd,
 					    fwupd_strerror(errno));

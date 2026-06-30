@@ -660,9 +660,9 @@ fu_device_list_item_finalized_cb(gpointer data, GObject *where_the_object_was)
 	FuDeviceItem *item = (FuDeviceItem *)data;
 	FuDeviceList *self = FU_DEVICE_LIST(item->self);
 
-	g_critical("FuDevice %p was finalized without being removed from "
-		   "FuDeviceList, removing item!",
-		   where_the_object_was);
+	g_warning("FuDevice %p was finalized without being removed from "
+		  "FuDeviceList, removing item!",
+		  where_the_object_was);
 	g_rw_lock_writer_lock(&self->devices_mutex);
 	g_ptr_array_remove(self->devices, item);
 	g_rw_lock_writer_unlock(&self->devices_mutex);

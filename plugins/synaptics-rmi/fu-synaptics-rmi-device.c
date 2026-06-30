@@ -362,7 +362,6 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 	guint16 addr;
 	guint16 prod_info_addr;
-	guint8 ds4_query_length = 0;
 	guint8 product_sub_id = 0;
 	gboolean has_build_id_query = FALSE;
 	gboolean has_dds4_queries = FALSE;
@@ -462,7 +461,6 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 			g_prefix_error_literal(error, "failed to read DS4 query length: ");
 			return FALSE;
 		}
-		ds4_query_length = f01_tmp->data[0];
 	}
 	f01_ds4 = fu_synaptics_rmi_device_read(self, addr, 0x1, error);
 	if (f01_ds4 == NULL) {
@@ -471,7 +469,6 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	}
 	has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
 	has_build_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
-	addr += ds4_query_length;
 	if (has_package_id_query)
 		prod_info_addr++;
 	if (has_build_id_query) {

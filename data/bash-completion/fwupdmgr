@@ -76,6 +76,7 @@ _fwupdmgr_opts=(
 	'--sign'
 	'--filter'
 	'--filter-release'
+	'--filter-protocol'
 	'--disable-ssl-strict'
 	'--p2p'
 	'--json'
@@ -101,6 +102,7 @@ fwupd_modify_config_sections=(
 	'test'
 	'thunderbolt'
 	'uefi_capsule'
+	'uefi_db'
 	'dell_kestrel'
 )
 
@@ -416,6 +418,9 @@ _fwupdmgr()
 				;;
 			thunderbolt)
 				COMPREPLY+=( $(compgen -W 'DelayedActivation MinimumKernelVersion' -- "$cur") )
+				;;
+			uefi_db)
+				COMPREPLY+=( $(compgen -W 'UpdateWindowsCA' -- "$cur") )
 				;;
 			fwupd)
 				_show_fwupd_modify_config

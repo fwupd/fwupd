@@ -31,7 +31,7 @@ typedef struct __attribute__((__packed__)) { /* nocheck:blocked */
 static GPtrArray *
 fu_wacom_usb_module_scaler_parse_blocks(const guint8 *data, gsize sz, GError **error)
 {
-	GPtrArray *blocks = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) blocks = g_ptr_array_new_with_free_func(g_free);
 	for (guint addr = 0x0; addr < sz; addr += FU_WACOM_USB_MODULE_SCALER_PAYLOAD_SZ) {
 		g_autofree FuWacomUsbModuleScalerBlockData *bd = NULL;
 		gsize cdata_sz = FU_WACOM_USB_MODULE_SCALER_PAYLOAD_SZ;
@@ -57,7 +57,7 @@ fu_wacom_usb_module_scaler_parse_blocks(const guint8 *data, gsize sz, GError **e
 		bd->crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, bd->cdata, sizeof(bd->cdata));
 		g_ptr_array_add(blocks, g_steal_pointer(&bd));
 	}
-	return blocks;
+	return g_steal_pointer(&blocks);
 }
 
 static gboolean

@@ -70,7 +70,7 @@ fu_wacom_usb_firmware_tokenize_cb(GString *token,
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "invalid header, got %" G_GSIZE_FORMAT " bytes",
+					    "invalid header, got %zu bytes",
 					    token->len);
 				return FALSE;
 			}

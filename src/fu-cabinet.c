@@ -307,7 +307,7 @@ fu_cabinet_parse_release(FuCabinet *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "contents size invalid, expected "
-				    "%" G_GSIZE_FORMAT ", got %" G_GUINT64_FORMAT,
+				    "%zu, got %" G_GUINT64_FORMAT,
 				    streamsz,
 				    size);
 			return FALSE;

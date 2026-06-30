@@ -430,7 +430,7 @@ fu_kernel_set_commandline(FuPathStore *pstore, const gchar *arg, gboolean enable
 
 	argv_grubby[0] = grubby_path;
 	argv_grubby[2] = arg_string;
-	return g_spawn_sync(NULL,
+	return g_spawn_sync(NULL, /* nocheck:blocked */
 			    (gchar **)argv_grubby,
 			    NULL,
 			    G_SPAWN_DEFAULT,

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
 "PO-Revision-Date: 2025-10-24 10:10+0000\n"
 "Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Hindi <https://hosted.weblate.org/projects/fwupd/fwupd/hi/>\n"
@@ -303,6 +303,10 @@ msgstr "UEFI dbx उपयोगिता"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "तर्कों का विश्लेषण करने में विफल"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr ""
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -720,6 +724,10 @@ msgstr "SPI रीप्ले सुरक्षा"
 msgid "SPI write protection"
 msgstr "SPI लेखन सुरक्षा"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "फ़्यूज़्ड प्लेटफ़ॉर्म"
@@ -746,6 +754,10 @@ msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
 msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
@@ -907,6 +919,10 @@ msgstr "AMD फर्मवेयर रीप्ले सुरक्षा"
 msgid "AMD Firmware Write Protection"
 msgstr "AMD फर्मवेयर लेखन सुरक्षा"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "फ़्यूज्ड प्लेटफार्म"
@@ -929,6 +945,10 @@ msgstr ""
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
 msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
@@ -1059,6 +1079,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr ""
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "विभिन्न सूचना-प्रकटीकरण सुरक्षा समस्याओं को कम करने के लिए CPU माइक्रोकोड को अद्यतन किया जाना चाहिए।"
 
@@ -1072,6 +1096,10 @@ msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
 msgstr ""
 
 #. TRANSLATORS: longer description
@@ -1426,6 +1454,10 @@ msgstr "बहिष्कृत करने के लिए ~ उपसर्
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "बाहर करने के लिए ~ उपसर्ग का उपयोग करके रिलीज़ फ्लैग के समूह के साथ फिल्टर करें, उदाहरण के लिए 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -1962,6 +1994,8 @@ msgstr "भविष्य में स्वचालित रूप से �
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr ""
@@ -2862,6 +2896,11 @@ msgstr ""
 msgid "%s Headset Update"
 msgstr ""
 
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr ""
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -3681,19 +3720,19 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0 पुनर्निर्माण अब मान्य है"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr ""
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr ""
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
 msgstr ""
 
 #. TRANSLATORS: HSI event title

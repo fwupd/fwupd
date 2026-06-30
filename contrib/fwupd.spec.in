@@ -136,7 +136,7 @@ Provides: fwupdate-efi
 %endif
 
 # this was removed in 2.1.4
-Obsoletes: %{name}-plugin-flashrom
+Obsoletes: %{name}-plugin-flashrom < 2.1.4
 
 # optional, but a really good idea
 Recommends: udisks2
@@ -409,7 +409,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
 %{_libdir}/fwupd-%{version}/libfwupd*.so
-%ghost %{_localstatedir}/lib/fwupd
 
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager

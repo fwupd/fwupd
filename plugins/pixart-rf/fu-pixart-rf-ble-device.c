@@ -638,7 +638,7 @@ fu_pixart_rf_ble_device_fw_upgrade(FuPixartRfBleDevice *self,
 	if (!fu_pixart_rf_ble_device_wait_notify(self, 0x1, &opcode, NULL, error)) {
 		g_prefix_error(error,
 			       "FwUpgrade command fail, "
-			       "fw-checksum: 0x%04x fw-size: %" G_GSIZE_FORMAT ": ",
+			       "fw-checksum: 0x%04x fw-size: %zu: ",
 			       checksum,
 			       g_bytes_get_size(fw));
 		return FALSE;

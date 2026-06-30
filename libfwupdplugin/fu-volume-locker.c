@@ -97,7 +97,7 @@ fu_volume_locker_init(FuVolumeLocker *self)
  * @error: (nullable): optional return location for an error
  *
  * Locks the volume, mounting it and unmounting it as required. If the volume is
- * already mounted then it is is _not_ unmounted when the locker is closed.
+ * already mounted then it is _not_ unmounted when the locker is closed.
  *
  * Returns: (transfer full): a volume locker if mounted, or %NULL
  *

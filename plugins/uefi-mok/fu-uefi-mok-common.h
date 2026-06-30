@@ -9,4 +9,6 @@
 #include <fwupdplugin.h>
 
 FwupdSecurityAttr *
-fu_uefi_mok_attr_new(FuPlugin *plugin, const gchar *filename, GError **error);
+fu_uefi_mok_attr_fw_new(FuPlugin *plugin, GBytes *blob);
+FwupdSecurityAttr *
+fu_uefi_mok_attr_nx_new(FuPlugin *plugin, GBytes *blob);

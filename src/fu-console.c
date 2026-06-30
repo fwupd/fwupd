@@ -859,6 +859,7 @@ fu_console_init(FuConsole *self)
 	self->spinner_count_up = TRUE;
 	self->time_elapsed = g_timer_new();
 	self->interactive = TRUE;
+	self->percentage = -1;
 }
 
 static void

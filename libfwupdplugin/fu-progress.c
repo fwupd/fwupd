@@ -363,7 +363,7 @@ fu_progress_set_percentage(FuProgress *self, gdouble percentage)
 	fu_progress_sleep_idle_stop(self);
 
 	/* is it less */
-	if (self->percentage >= 0 && percentage < self->percentage) {
+	if (self->percentage >= 0 && self->percentage - percentage > 0.0001) {
 		if (self->profile) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			fu_progress_build_parent_chain(self, str, 0);

@@ -351,7 +351,7 @@ fu_emmc_device_check_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware data size (%" G_GSIZE_FORMAT ") is not aligned",
+			    "firmware data size (%zu) is not aligned",
 			    fu_firmware_get_size(firmware));
 		return FALSE;
 	}
@@ -523,7 +523,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware size and number of sectors written "
-				    "mismatch (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT "):",
+				    "mismatch (%zu/%zu):",
 				    total_done,
 				    streamsz);
 			return FALSE;

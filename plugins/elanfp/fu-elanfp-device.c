@@ -180,7 +180,7 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
-				    "only sent %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
+				    "only sent %zu/%zu bytes",
 				    actual,
 				    outlen);
 			return FALSE;
@@ -204,9 +204,9 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
-				    "only received %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
+				    "only received %zu/%zu bytes",
 				    actual,
-				    outlen);
+				    inlen);
 			return FALSE;
 		}
 	}

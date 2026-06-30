@@ -727,6 +727,8 @@ fu_uefi_capsule_device_get_esp(FuUefiCapsuleDevice *self)
  *
  * If `EFI_OS_DIR` has not been set then we look for the presence of the `systemd` directory,
  * falling back to the os-release `ID` or `ID_LIKE` directories.
+ * If no known directory is found, we create the `EFI/<ID>` (or `EFI/fwupd` if `ID` is not
+ * available) directory.
  *
  * Returns: (transfer full): a path or %NULL for error
  */
@@ -783,13 +785,12 @@ fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
 		}
 	}
 
-	/* nothing sensible to do*/
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_BROKEN_SYSTEM,
-		    "cannot find either EFI/systemd or EFI/%s in ESP",
-		    os_release_id);
-	return NULL;
+	/* create a directory for the OS ID so we can write the capsule there */
+	if (os_release_id == NULL)
+		os_release_id = g_strdup("fwupd");
+	if (!fu_path_mkdir(g_build_filename(esp_path, "EFI", os_release_id, NULL), error))
+		return NULL;
+	return g_build_filename(esp_path, "EFI", os_release_id, filename_built, NULL);
 #else
 	return g_build_filename(esp_path, "EFI", EFI_OS_DIR, filename_built, NULL);
 #endif

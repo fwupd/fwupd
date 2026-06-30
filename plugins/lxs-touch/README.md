@@ -35,9 +35,16 @@ It communicates over the HID RAW interface (hidraw) and handles two protocol mod
 
 ## Version Format
 
-The version consists of four fields in hex: `{boot_ver}.{core_ver}.{app_ver}.{param_ver}`
+The device version used for update comparison consists of three application fields
+(excluding the bootloader version):
 
-Example: `00A1.00B2.00C3.00D4`
+`{core_ver}.{app_ver}.{param_ver}`
+
+Example: `0000.0400.0000`
+
+The bootloader version is stored separately via `fu_device_set_version_bootloader()`
+and is not included in upgrade/downgrade comparisons. This prevents false downgrade
+detection when the boot firmware is updated independently of the application firmware.
 
 ## Communication Protocol
 

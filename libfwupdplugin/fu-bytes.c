@@ -90,7 +90,7 @@ fu_bytes_set_contents_full(const gchar *filename, GBytes *bytes, gint mode, GErr
 			return FALSE;
 	}
 	data = g_bytes_get_data(bytes, &size);
-	g_debug("writing %s with %" G_GSIZE_FORMAT " bytes", filename, size);
+	g_debug("writing %s with %zu bytes", filename, size);
 #if GLIB_CHECK_VERSION(2, 66, 0)
 	return g_file_set_contents_full(filename,
 					data,

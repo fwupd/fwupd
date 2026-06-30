@@ -3,6 +3,7 @@
 
 // The flags available for HSI attributes.
 // Since: 1.5.0
+#[derive(ToString(enum))]
 enum FwupdSecurityAttrFlags {
     // No flags set.
     None = 0,
@@ -49,6 +50,7 @@ enum FwupdSecurityAttrLevel {
 
 // The HSI result.
 // Since: 1.5.0
+#[derive(ToString(enum))]
 enum FwupdSecurityAttrResult {
     // Not known.
     Unknown,

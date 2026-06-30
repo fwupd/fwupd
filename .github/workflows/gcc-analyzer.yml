@@ -1,0 +1,33 @@
+name: gcc-analyzer
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  gcc-analyzer:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/fwupd/fwupd/fwupd-debian-amd64:latest
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: configure
+        env:
+          # FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
+          # can understand. Otherwise, GCC analyzer will complain a lot because it thinks that
+          # `g_assert_nonnull()` doesn't affect control flow.
+          CFLAGS: -D__COVERITY__
+        run: |-
+          meson setup -Dwerror=true -Dstatic_analysis=true build
+      - name: build with `-fanalyzer`
+        run: |-
+          ninja -C build

@@ -1040,7 +1040,6 @@ fu_engine_modify_config(FuEngine *self,
 		    "IgnoreEfivarsFreeSpace",
 		    "IgnorePower",
 		    "IgnoreRequirements",
-		    "OnlyTrusted",
 		    "OnlyTrustPostQuantumSignatures",
 		    "P2pPolicy",
 		    "ReleaseDedupe",
@@ -1049,12 +1048,12 @@ fu_engine_modify_config(FuEngine *self,
 		    "ShowDevicePrivate",
 		    "TestDevices",
 		    "TrustedReports",
-		    "TrustedUids",
 		    "UpdateMotd",
 		    "UriSchemes",
 		    "VerboseDomains",
 		    NULL,
 		};
+		/* OnlyTrusted / TrustedUids are intentionally NOT writable at runtime */
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -1991,7 +1990,7 @@ fu_engine_get_report_metadata_os_release(FuEngine *self, GHashTable *hash, GErro
 	 *    ProductVersion: 10.14.6
 	 *    BuildVersion:   18G103
 	 */
-	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))
+	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error)) /* nocheck:blocked */
 		return FALSE;
 	split = g_strsplit(stdout, "\n", -1);
 	for (guint j = 0; split[j] != NULL; j++) {
@@ -2293,7 +2292,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 #if defined(HAVE_AUXV_H) && !defined(__FreeBSD__)
 	/* this is the architecture of the userspace, e.g. i686 would be returned for
 	 * glibc-2.40-17.fc41.i686 on kernel-6.12.9-200.fc41.x86_64 */
-	tmp = (const gchar *)getauxval(AT_PLATFORM);
+	tmp = (const gchar *)getauxval(AT_PLATFORM); /* NOLINT(performance-no-int-to-ptr) */
 	if (tmp == NULL) {
 		tmp = name_tmp.machine;
 		g_debug("no AT_PLATFORM, so using CpuArchitecture (%s) for platform", tmp);
@@ -5692,7 +5691,7 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 	}
 
 	/* deep copy so the remote list can be kept up to date */
-	return g_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, NULL);
+	return fu_ptr_array_copy(remotes, (GCopyFunc)g_object_ref, g_object_unref);
 }
 
 /**
@@ -6685,40 +6684,38 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 }
 
 static void
-fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
+fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
 {
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
-		fu_device_set_parent(device, device_tmp);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
-		fu_device_set_parent(device_tmp, device);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
-		fu_device_set_parent(device, device_tmp);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
-	}
-	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
-	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
-		fu_device_set_parent(device_tmp, device);
-		fu_engine_ensure_device_supported(self, device_tmp);
-		return;
+	fu_device_set_parent(device, parent);
+	if (fu_engine_get_loaded(self)) {
+		fu_engine_ensure_device_supported(self, device);
+		fu_engine_ensure_device_supported(self, parent);
 	}
 }
 
 static void
-fu_engine_set_device_parent(FuEngine *self, FuDevice *device, FuDevice *parent)
+fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
 {
-	fu_device_set_parent(device, parent);
-	fu_engine_ensure_device_supported(self, device);
-	fu_engine_ensure_device_supported(self, parent);
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
+		fu_engine_set_device_parent(self, device, device_tmp);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
+		fu_engine_set_device_parent(self, device_tmp, device);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
+		fu_engine_set_device_parent(self, device, device_tmp);
+		return;
+	}
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
+		fu_engine_set_device_parent(self, device_tmp, device);
+		return;
+	}
 }
 
 static void
@@ -7013,8 +7010,9 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* check if the device needs emulation-tag */
 	fu_engine_ensure_device_emulation_tag(self, device);
 
-	/* set or clear the SUPPORTED flag */
-	fu_engine_ensure_device_supported(self, device);
+	/* set or clear the SUPPORTED flag right away when doing device holdplug */
+	if (fu_engine_get_loaded(self))
+		fu_engine_ensure_device_supported(self, device);
 
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children(self, device);
@@ -8807,6 +8805,22 @@ fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 	}
 }
 
+static void
+fu_engine_ensure_devices_supported_cb(gpointer data, gpointer user_data)
+{
+	FuDevice *device = FU_DEVICE(data);
+	FuEngine *self = FU_ENGINE(user_data);
+	fu_engine_ensure_device_supported(self, device);
+}
+
+/* exported for the self tests */
+void
+fu_engine_ensure_devices_supported(FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
+	g_ptr_array_foreach(devices, fu_engine_ensure_devices_supported_cb, self);
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -9107,6 +9121,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	} else {
 		fu_progress_step_done(progress);
 	}
+
+	/* rerun <requires> checks against the full device tree */
+	fu_engine_ensure_devices_supported(self);
 
 	/* dump plugin information to the console */
 	if (g_log_get_debug_enabled()) {

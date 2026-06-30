@@ -15,8 +15,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 13:24+0100\n"
-"PO-Revision-Date: 2026-05-27 10:11+0000\n"
+"POT-Creation-Date: 2026-06-23 19:18+0100\n"
+"PO-Revision-Date: 2026-06-17 09:01+0000\n"
 "Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
 "Language-Team: Finnish <https://hosted.weblate.org/projects/fwupd/fwupd/fi/>\n"
 "Language: fi\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.dev0\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-laitetoimittajien laiteohjelmistopalvelu (vakaat laiteohjelmistot)"
@@ -163,18 +163,18 @@ msgid "Authentication is required to get the list of configured remotes used for
 msgstr "Todennus vaaditaan laiteohjelmistopäivityksiin käytettyjen määritettyjen etäkoneiden luettelon saamista varten"
 
 msgid "Update the metadata for a configured remote"
-msgstr ""
+msgstr "Päivitä konfiguroidun etäkoneen metatiedot"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the metadata for a configured remote used for firmware updates"
-msgstr ""
+msgstr "Todennus vaaditaan laiteohjelmistopäivityksiin käytettävän konfiguroidun etälaitteen metatietojen päivittämistä varten"
 
 msgid "Modify a configured remote"
 msgstr "Muokkaa lähteen asetuksia"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable or disable a configured remote used for firmware updates"
-msgstr ""
+msgstr "Todennus vaaditaan laiteohjelmistopäivityksiin käytettävän konfiguroidun etäkoneen ottamiseksi käyttöön tai poistamiseksi käytöstä"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -308,6 +308,10 @@ msgstr "UEFI-dbx-apuohjelma"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Parametrien jäsentäminen epäonnistui"
+
+#. TRANSLATORS: could not do the most basic of setup tasks
+msgid "Failed to load context"
+msgstr "Kontekstin lataaminen epäonnistui"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -725,6 +729,10 @@ msgstr "SPI-toiston suojaus"
 msgid "SPI write protection"
 msgstr "SPI-kirjoitussuojaus"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot verified boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Sulattu alusta"
@@ -752,6 +760,10 @@ msgstr "SMM lukittu"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI memory protection"
 msgstr "UEFI-muistin suojaus"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX protection"
+msgstr ""
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -912,6 +924,10 @@ msgstr "AMD Firmware Replay Protection"
 msgid "AMD Firmware Write Protection"
 msgstr "AMD Firmware Write Protection"
 
+#. TRANSLATORS: Title: if firmware verifies the next firmware stage
+msgid "coreboot Verified Boot"
+msgstr ""
+
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
 msgstr "Yhdistetty alusta"
@@ -935,6 +951,10 @@ msgstr "Järjestelmänhallintatila"
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI Memory Protection"
 msgstr "UEFI-muistin suojaus"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI NX Protection"
+msgstr ""
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1064,6 +1084,10 @@ msgid "Platform Secure Boot prevents unsigned software from being loaded when th
 msgstr "Platform Secure Boot estää allekirjoittamattoman ohjelmiston lataamisen laitteen käynnistyksen yhteydessä."
 
 #. TRANSLATORS: longer description
+msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "CPU-mikrokoodi on päivitettävä erilaisten tietojen paljastamisen turvaongelmien lieventämiseksi."
 
@@ -1078,6 +1102,10 @@ msgstr "Firmware laiteohjelmisto käyttää järjestelmän hallintatilaa BIOS:in
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "UEFI voi määrittää käynnistyksen yhteydessä muistin ominaisuuksia, jotka estää hyökkäysten suorittamisen."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI bootloader compiled with Data Execution Prevention support."
+msgstr ""
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1433,6 +1461,10 @@ msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'tru
 msgstr "Suodata käyttäen julkaisulippuja. ~ poissulkee, esimerkiksi ”trusted-release,~trusted-metadata”"
 
 #. TRANSLATORS: command line option
+msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
+msgstr ""
+
+#. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Vastaa kaikkiin kysymyksiin kyllä"
 
@@ -1654,7 +1686,7 @@ msgstr "Päivitä metatiedot etäpalvelimelta"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FWUPD-VERSION]"
-msgstr "[FWUPD-VERSION]"
+msgstr "[FWUPD-VERSIO]"
 
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
@@ -1670,7 +1702,7 @@ msgstr "Poistaa katsottavat laitteet tulevaa emulointia varten"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "EMULATION-FILE [ARCHIVE-FILE]"
-msgstr "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULAATIOTIEDOSTO [ARKISTOTIEDOSTO]"
 
 #. TRANSLATORS: command description
 msgid "Mounts the ESP"
@@ -1763,7 +1795,7 @@ msgstr "Poista EFI boot merkintä"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX NAME TARGET [MOUNTPOINT]"
-msgstr "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEKSIN NIMI KOHDE [LIITOSKOHTA]"
 
 #. TRANSLATORS: command description
 msgid "Create an EFI boot entry"
@@ -1771,7 +1803,7 @@ msgstr "Luo EFI boot merkintä"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX KEY [VALUE]"
-msgstr "INDEX KEY [VALUE]"
+msgstr "INDEKSIAVAIN [ARVO]"
 
 #. TRANSLATORS: command description
 msgid "Set or remove an EFI boot hive entry"
@@ -1803,7 +1835,7 @@ msgstr "Suorita uudelleenkäynnistyksen jälkeinen puhdistustoiminto"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"
-msgstr "[SECTION] KEY VALUE"
+msgstr "[OSIO] AVAINARVO"
 
 #. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
@@ -1855,7 +1887,7 @@ msgstr "Hae kaikki tunnetut versioformaatit"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "VERSION1 VERSION2 [FORMAT]"
-msgstr "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSIO_1 VERSIO_2 [MUOTO]"
 
 #. TRANSLATORS: command description
 msgid "Compares two versions for equality"
@@ -1887,7 +1919,7 @@ msgstr "Etsii algoritmin, joka vastaa tiedoston CRC:ta"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[PCR]"
-msgstr ""
+msgstr "[PCR]"
 
 #. TRANSLATORS: command description
 msgid "Parse the system PCR eventlog"
@@ -1967,6 +1999,8 @@ msgstr "Ohitetaan tiukat SSL-tarkistukset. Jos haluat tehdä tämän jatkossa au
 #. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
 #. TRANSLATORS: the user didn't read the man page,
 #. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is
+#. '--filter-protocol'
 #, c-format
 msgid "Failed to parse flags for %s"
 msgstr "Kohteen %s lippujen jäsentäminen epäonnistui"
@@ -2471,7 +2505,7 @@ msgstr "Emuloi laitetta käyttäen JSON-manifestia"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON] [TIMEOUT]"
-msgstr "[REASON] [TIMEOUT]"
+msgstr "[SYY] [AIKAKATKAISU]"
 
 #. TRANSLATORS: command description
 msgid "Inhibit the system to prevent upgrades"
@@ -2499,11 +2533,11 @@ msgstr "Pyydä taustaprosessia lopettamaan"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
-msgstr "[ASETUS1] [ASETUS2] [--no-authenticate]"
+msgstr "[ASETUS_1] [ASETUS_2] [--no-authenticate]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
-msgstr "ASETUS1 ARVO1 [ASETUS2] [ARVO2]"
+msgstr "ASETUS_1 ARVO_1 [ASETUS_2] [ARVO_2]"
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
@@ -2867,6 +2901,11 @@ msgstr "%s kuulokkeiden päivitys"
 msgid "%s Headset Update"
 msgstr "%s kuulokemikrofoni päivitys"
 
+#. TRANSLATORS: a display that can detect touch input from a user
+#, c-format
+msgid "%s Touchscreen Update"
+msgstr "%s Kosketusnäytön päivitys"
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else --
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -3182,7 +3221,7 @@ msgstr "Toimittaja"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -3686,20 +3725,20 @@ msgid "TPM PCR0 reconstruction is now valid"
 msgstr "TPM PCR0 -jälleenrakennus on nyt kelvollinen"
 
 #. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled but not locked"
-msgstr "UEFI-muistisuojaus on käytössä, mutta ei lukittu"
-
-#. TRANSLATORS: HSI event title
-msgid "UEFI memory protection enabled and locked"
-msgstr "UEFI-muistisuojaus on käytössä ja lukittu"
-
-#. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"
 msgstr "UEFI-muistisuojaus on nyt lukittu"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now unlocked"
 msgstr "UEFI-muistisuojaus on nyt poistettu"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now enabled"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI NX bootloader protection is now disabled"
+msgstr ""
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
@@ -3804,6 +3843,12 @@ msgstr "Otetaanko uusi lähde käyttöön?"
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Hyväksytäänkö ja otetaanko lähde käyttöön?"
+
+#~ msgid "UEFI memory protection enabled but not locked"
+#~ msgstr "UEFI-muistisuojaus on käytössä, mutta ei lukittu"
+
+#~ msgid "UEFI memory protection enabled and locked"
+#~ msgstr "UEFI-muistisuojaus on käytössä ja lukittu"
 
 #~ msgid "Password"
 #~ msgstr "Salasana"

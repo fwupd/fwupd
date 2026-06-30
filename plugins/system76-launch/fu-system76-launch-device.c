@@ -49,7 +49,7 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "response truncated: received %" G_GSIZE_FORMAT " bytes",
+			    "response truncated: received %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -84,7 +84,7 @@ fu_system76_launch_device_command(FuSystem76LaunchDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "command truncated: sent %" G_GSIZE_FORMAT " bytes",
+			    "command truncated: sent %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -108,7 +108,9 @@ fu_system76_launch_device_version_cb(FuDevice *device, gpointer user_data, GErro
 		return FALSE;
 	}
 
-	version = g_strdup_printf("%s", &data[2]);
+	version = fu_memstrsafe(data, sizeof(data), 0x2, sizeof(data) - 2, error);
+	if (version == NULL)
+		return FALSE;
 	fu_device_set_version(device, version);
 
 	return TRUE;

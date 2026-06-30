@@ -203,7 +203,7 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) device = NULL;
-	GType gtype = FU_TYPE_UDEV_DEVICE;
+	GType gtype;
 
 	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)), "block") == 0) {
@@ -883,7 +883,8 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 				return FU_DEVICE(g_steal_pointer(&device_new));
 			}
 		} else {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
+			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				g_warning("failed to create device: %s", error_local->message);
 		}
 

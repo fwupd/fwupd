@@ -222,10 +222,7 @@ fu_dell_dock_hid_write_flash(FuDevice *device,
 
 	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 	if (!fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error,
-			       "failed to write %" G_GSIZE_FORMAT " flash to %x: ",
-			       write_size,
-			       dwAddr);
+		g_prefix_error(error, "failed to write %zu flash to %x: ", write_size, dwAddr);
 		return FALSE;
 	}
 
