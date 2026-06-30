@@ -1,5 +1,5 @@
 ---
-title: Plugin: Focal TouchPad
+title: Plugin: Focal ForcePad
 ---
 
 ## Introduction
