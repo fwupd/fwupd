@@ -14,10 +14,16 @@ pub struct GBytes {
     _opaque: [u8; 0],
 }
 
-/// Opaque GError type from GLib, only used behind a pointer.
+/// GLib `GError` with the fields we need to read.
+///
+/// The real struct has `domain` (GQuark), `code` (gint), and `message`
+/// (gchar*).  We only read `message`; the first two fields are
+/// declared so the layout matches.
 #[repr(C)]
-pub(crate) struct GError {
-    _opaque: [u8; 0],
+pub struct GError {
+    pub domain: u32,
+    pub code: i32,
+    pub message: *const core::ffi::c_char,
 }
 
 // External functions resolved at link time.
@@ -31,10 +37,30 @@ unsafe extern "C" {
         code: i32,
         message: *const core::ffi::c_char,
     );
-    pub(crate) fn g_memdup2(mem: *const u8, byte_size: usize) -> *mut u8;
-    pub(crate) fn fu_strsafe(str: *const core::ffi::c_char, maxsz: usize)
-    -> *mut core::ffi::c_char;
-    pub(crate) fn g_string_new_len(init: *const core::ffi::c_char, len: isize) -> *mut GString;
+    pub fn g_memdup2(mem: *const u8, byte_size: usize) -> *mut u8;
+    pub fn fu_strsafe(str: *const core::ffi::c_char, maxsz: usize) -> *mut core::ffi::c_char;
+    pub fn g_string_new_len(init: *const core::ffi::c_char, len: isize) -> *mut GString;
+    pub fn g_error_free(error: *mut GError);
+
+    // GIO -- GInputStream / GSeekable
+    pub fn g_object_ref(object: *mut core::ffi::c_void) -> *mut core::ffi::c_void;
+    pub fn g_object_unref(object: *mut core::ffi::c_void);
+    pub fn g_seekable_can_seek(seekable: *mut core::ffi::c_void) -> i32;
+    pub fn g_seekable_seek(
+        seekable: *mut core::ffi::c_void,
+        offset: i64,
+        type_: i32,
+        cancellable: *mut core::ffi::c_void,
+        error: *mut *mut GError,
+    ) -> i32;
+    pub fn g_seekable_tell(seekable: *mut core::ffi::c_void) -> i64;
+    pub fn g_input_stream_read(
+        stream: *mut core::ffi::c_void,
+        buffer: *mut u8,
+        count: usize,
+        cancellable: *mut core::ffi::c_void,
+        error: *mut *mut GError,
+    ) -> isize;
 }
 
 /// Opaque GString type from GLib, only used behind a pointer.
@@ -49,6 +75,31 @@ pub const FWUPD_ERROR_WRITE: i32 = 6;
 pub const FWUPD_ERROR_NOT_FOUND: i32 = 8;
 pub const FWUPD_ERROR_NOT_SUPPORTED: i32 = 10;
 pub const FWUPD_ERROR_INVALID_DATA: i32 = 18;
+
+/// Extract the message from a `GError*`, free it, and return a Rust `String`.
+///
+/// Returns `"unknown error"` if `gerror` is null or the message is not
+/// valid UTF-8.
+///
+/// # Safety
+///
+/// `gerror` must be a valid `GError*` allocated by GLib, or null.
+pub unsafe fn take_gerror_message(gerror: *mut GError) -> String {
+    if gerror.is_null() {
+        return "unknown error".to_string();
+    }
+    let msg = unsafe { &*gerror }.message;
+    let s = if msg.is_null() {
+        "unknown error".to_string()
+    } else {
+        unsafe { core::ffi::CStr::from_ptr(msg) }
+            .to_str()
+            .unwrap_or("unknown error")
+            .to_string()
+    };
+    unsafe { g_error_free(gerror) };
+    s
+}
 
 /// Convert a raw pointer + length to a byte slice.
 ///

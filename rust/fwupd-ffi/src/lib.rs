@@ -15,6 +15,7 @@
 //! `fwupd` crate, producing a static library that can be linked into
 //! `libfwupdplugin.so` to replace the C implementations.
 
+pub mod cab;
 pub mod common;
 pub mod common_guid;
 pub mod crc;
