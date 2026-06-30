@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-06-15 20:01+0000\n"
+"PO-Revision-Date: 2026-06-28 09:01+0000\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
 "Language: sl\n"
@@ -733,7 +733,7 @@ msgstr "Zaščita pred zapisovanjem SPI"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr ""
+msgstr "S coreboot preverjen zagonski nalagalnik"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -765,7 +765,7 @@ msgstr "Zaščita pomnilnika UEFI"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "Zaščita UEFI NX"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -928,7 +928,7 @@ msgstr "Zaščita pred pisanjem vdelane programske opreme AMD"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "S coreboot preverjen zagonski nalagalnik"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -956,7 +956,7 @@ msgstr "Zaščita pomnilnika UEFI"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "Zaščita UEFI NX"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1087,7 +1087,7 @@ msgstr "Varni zagon platforme preprečuje, da se ob zagonu naprave naloži nepod
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr ""
+msgstr "S coreboot preverjen zagonski nalagalnik preprečuje nalaganje nepodpisane programske strojne opreme ob zagonu naprave."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1107,7 +1107,7 @@ msgstr "Sistem UEFI lahko nastavi atribute pomnilnika ob zagonu, ki preprečujej
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr ""
+msgstr "Zagonski nalagalnik UEFI je preveden s podporo DEP (Data Execution Prevention)."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1464,7 +1464,7 @@ msgstr "Filtriraj z naborom zastavic za izdajo s predpono ~, da se izključijo n
 
 #. TRANSLATORS: command line option
 msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
+msgstr "Filtriranje za specifične protokole, npr. '~org.uefi.capsule' ali 'org.nvmexpress'"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -3762,11 +3762,11 @@ msgstr "Zaščita pomnilnika UEFI je zdaj odklenjena"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr ""
+msgstr "Zaščita zagonskega nalagalnika UEFI NX je zdaj omogočena"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr ""
+msgstr "Zaščita zagonskega nalagalnika UEFI NX je zdaj onemogočena"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"

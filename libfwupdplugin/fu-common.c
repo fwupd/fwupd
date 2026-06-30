@@ -143,7 +143,7 @@ fu_size_checked_inc(gsize *value, gsize len, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "0x%" G_GSIZE_MODIFIER "x + 0x%" G_GSIZE_MODIFIER "x would overflow",
+			    "0x%zx + 0x%zx would overflow",
 			    *value,
 			    len);
 		return FALSE;
@@ -181,7 +181,7 @@ fu_size_checked_inc_product(gsize *value, gsize a, gsize b, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "0x%" G_GSIZE_MODIFIER "x * 0x%" G_GSIZE_MODIFIER "x would overflow",
+			    "0x%zx * 0x%zx would overflow",
 			    a,
 			    b);
 		return FALSE;
@@ -215,8 +215,7 @@ fu_size_from_uint64(guint64 value, gsize *out, GError **error) /* nocheck:name *
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "value 0x%" G_GINT64_MODIFIER
-			    "x exceeds gsize range 0x%" G_GSIZE_MODIFIER "x",
+			    "value 0x%" G_GINT64_MODIFIER "x exceeds gsize range 0x%zx",
 			    value,
 			    (gsize)G_MAXSIZE);
 		return FALSE;

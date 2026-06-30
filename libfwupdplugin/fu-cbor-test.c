@@ -96,7 +96,7 @@ fu_cbor_item_boolean_func(void)
 	blob = fu_cbor_item_get_bytes(item, NULL);
 	g_assert_null(blob);
 
-	/* not in an an array or map */
+	/* not in an array or map */
 	buf = fu_cbor_item_write(item, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(buf);

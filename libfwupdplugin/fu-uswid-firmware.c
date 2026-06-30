@@ -35,7 +35,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuUswidFirmware, fu_uswid_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_uswid_firmware_get_instance_private(o))
 
-#define FU_USWID_FIRMARE_MINIMUM_HDRVER 1
+#define FU_USWID_FIRMWARE_MINIMUM_HDRVER 1
 
 static void
 fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -97,7 +97,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 
 	/* hdrver */
 	priv->hdrver = fu_struct_uswid_get_hdrver(st);
-	if (priv->hdrver < FU_USWID_FIRMARE_MINIMUM_HDRVER) {
+	if (priv->hdrver < FU_USWID_FIRMWARE_MINIMUM_HDRVER) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -357,7 +357,7 @@ static void
 fu_uswid_firmware_init(FuUswidFirmware *self)
 {
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	priv->hdrver = FU_USWID_FIRMARE_MINIMUM_HDRVER;
+	priv->hdrver = FU_USWID_FIRMWARE_MINIMUM_HDRVER;
 	priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
 	priv->format = FU_USWID_PAYLOAD_FORMAT_COSWID;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);

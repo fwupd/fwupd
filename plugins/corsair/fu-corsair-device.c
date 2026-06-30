@@ -75,7 +75,7 @@ fu_corsair_device_send(FuCorsairDevice *self, GByteArray *buf, guint timeout, GE
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "wrong size written: %" G_GSIZE_FORMAT,
+			    "wrong size written: %zu",
 			    actual_len);
 		return FALSE;
 	}
@@ -112,7 +112,7 @@ fu_corsair_device_recv(FuCorsairDevice *self, guint timeout, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "wrong size read: %" G_GSIZE_FORMAT,
+			    "wrong size read: %zu",
 			    actual_len);
 		return NULL;
 	}

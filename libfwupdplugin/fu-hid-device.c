@@ -477,7 +477,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "wrote %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
+			    "wrote %zu, requested %zu bytes",
 			    actual_len,
 			    helper->bufsz);
 		return FALSE;
@@ -607,7 +607,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
+			    "read %zu, requested %zu bytes",
 			    actual_len,
 			    helper->bufsz);
 		return FALSE;

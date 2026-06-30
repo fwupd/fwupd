@@ -210,8 +210,7 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid size, got %" G_GSIZE_FORMAT ", "
-				    "expected %" G_GSIZE_FORMAT,
+				    "invalid size, got %zu, expected %zu",
 				    total_size,
 				    expected_size);
 			return NULL;
@@ -409,7 +408,7 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 
 		/* we have to write one final zero-sized chunk for EOF */
 		bytes_tmp = fu_chunk_get_bytes(chk_tmp);
-		g_debug("writing sector at 0x%04x (0x%" G_GSIZE_FORMAT ")",
+		g_debug("writing sector at 0x%04x (0x%zu)",
 			(guint)fu_chunk_get_address(chk_tmp),
 			g_bytes_get_size(bytes_tmp));
 

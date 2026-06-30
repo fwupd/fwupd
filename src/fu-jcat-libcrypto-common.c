@@ -51,7 +51,7 @@ fu_jcat_libcrypto_pkcs7_load_crt_from_blob_pem(GBytes *blob, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "cert PEM data too large: %" G_GSIZE_FORMAT,
+			    "cert PEM data too large: %zu",
 			    blob_size);
 		return NULL;
 	}
@@ -98,7 +98,7 @@ fu_jcat_libcrypto_pkcs7_load_crt_from_blob_der(GBytes *blob, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "cert DER data too large: %" G_GSIZE_FORMAT,
+			    "cert DER data too large: %zu",
 			    blob_size);
 		return NULL;
 	}

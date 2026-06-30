@@ -789,7 +789,7 @@ fu_dbus_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	gboolean ret;
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 
-	/* still more things to to authenticate */
+	/* still more things to authenticate */
 	if (helper->action_ids->len > 0) {
 		g_autofree gchar *action_id = g_strdup(g_ptr_array_index(helper->action_ids, 0));
 		g_autofree gchar *sender = g_strdup(fu_client_get_sender(helper->client));

@@ -166,7 +166,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 			    FWUPD_ERROR_INTERNAL,
 			    "invalid DfuSe image size, "
 			    "got %" G_GUINT32_FORMAT ", "
-			    "expected %" G_GSIZE_FORMAT,
+			    "expected %zu",
 			    fu_struct_dfuse_hdr_get_image_size(st_hdr),
 			    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware));
 		return FALSE;
@@ -294,7 +294,7 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_dfuse_firmware_init(FuDfuseFirmware *self)
 {
-	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMARE_VERSION_DFUSE);
+	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMWARE_VERSION_DFUSE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 255);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);

@@ -282,7 +282,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "SMBIOS entry too small: %" G_GSIZE_FORMAT,
+			    "SMBIOS entry too small: %zu",
 			    streamsz);
 		return FALSE;
 	}

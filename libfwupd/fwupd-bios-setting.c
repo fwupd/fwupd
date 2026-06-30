@@ -751,8 +751,7 @@ fwupd_bios_setting_validate_value(FwupdBiosSetting *self, const gchar *value, GE
 			g_set_error(error, /* nocheck:error */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is too short (%" G_GSIZE_FORMAT
-				    ") expected at least %" G_GUINT64_FORMAT,
+				    "%s is too short (%zu) expected at least %" G_GUINT64_FORMAT,
 				    value,
 				    tmp,
 				    priv->lower_bound);
@@ -762,8 +761,7 @@ fwupd_bios_setting_validate_value(FwupdBiosSetting *self, const gchar *value, GE
 			g_set_error(error, /* nocheck:error */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "%s is too long (%" G_GSIZE_FORMAT
-				    ") expected no more than %" G_GUINT64_FORMAT,
+				    "%s is too long (%zu) expected no more than %" G_GUINT64_FORMAT,
 				    value,
 				    tmp,
 				    priv->upper_bound);
@@ -871,7 +869,7 @@ fwupd_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GErro
  * the firmware.
  *
  * If fwupd_bios_setting_add_possible_value_full() was used then the raw value is automatically
- * mapped to the display value before being set as a the current version.
+ * mapped to the display value before being set as the current version.
  *
  * Returns: %TRUE for success
  *

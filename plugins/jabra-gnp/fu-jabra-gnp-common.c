@@ -626,7 +626,7 @@ fu_jabra_gnp_write_chunk(FuDevice *device,
 			 gsize bufsz,
 			 GError **error)
 {
-	guint8 write_length = 0x00 + bufsz + 10;
+	guint8 write_length = (guint8)(bufsz + 10);
 	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
 	    .buf = st->buf,

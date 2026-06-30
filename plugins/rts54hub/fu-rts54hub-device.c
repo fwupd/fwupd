@@ -237,7 +237,7 @@ fu_rts54hub_device_write_flash(FuRts54hubDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only wrote %" G_GSIZE_FORMAT "bytes",
+			    "only wrote %zu bytes",
 			    actual_len);
 		return FALSE;
 	}
@@ -269,7 +269,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 	}
 	if (actual_len != datasz) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA,
-			     "only read %" G_GSIZE_FORMAT "bytes", actual_len);
+			     "only read %zu bytes", actual_len);
 		return FALSE;
 	}
 	return TRUE;
@@ -377,7 +377,7 @@ fu_rts54hub_device_ensure_status(FuRts54hubDevice *self, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "only read %" G_GSIZE_FORMAT "bytes",
+			    "only read %zu bytes",
 			    actual_len);
 		return FALSE;
 	}

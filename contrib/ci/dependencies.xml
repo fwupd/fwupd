@@ -1083,7 +1083,7 @@
       <package variant="x86_64">python-pip</package>
     </distro>
     <distro id="freebsd">
-      <package>py311-pip</package>
+      <package>py312-pip</package>
     </distro>
   </dependency>
   <dependency id="python3-virtualenv">
@@ -1100,7 +1100,7 @@
       <package>virtualenv</package>
     </distro>
     <distro id="freebsd">
-      <package>py311-virtualenv</package>
+      <package>py312-virtualenv</package>
     </distro>
   </dependency>
   <dependency id="python3-dbusmock">
@@ -1211,7 +1211,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package>py311-gi-docgen</package>
+      <package>py312-gi-docgen</package>
     </distro>
   </dependency>
   <!-- These are needed for gi-docgen -->
@@ -1279,7 +1279,7 @@
       <package variant="aarch64" />
     </distro>
     <distro id="freebsd">
-      <package>py311-pygobject</package>
+      <package>py312-pygobject</package>
     </distro>
   </dependency>
   <dependency id="python3-requests">
@@ -1367,7 +1367,7 @@
   </dependency>
   <dependency id="python3-sqlite3">
     <distro id="freebsd">
-      <package>py311-sqlite3</package>
+      <package>py312-sqlite3</package>
     </distro>
   </dependency>
   <dependency id="efivar">

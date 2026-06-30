@@ -1813,6 +1813,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+		break;
 	default:
 		break;
 	}

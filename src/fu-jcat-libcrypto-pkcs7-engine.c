@@ -166,7 +166,7 @@ fu_jcat_libcrypto_pkcs7_engine_verify(FuJcatEngine *engine,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "signature data too large: %" G_GSIZE_FORMAT,
+			    "signature data too large: %zu",
 			    sig_size);
 		return NULL;
 	}
@@ -226,7 +226,7 @@ fu_jcat_libcrypto_pkcs7_engine_verify(FuJcatEngine *engine,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "blob data too large: %" G_GSIZE_FORMAT,
+			    "blob data too large: %zu",
 			    blob_size);
 		return NULL;
 	}
@@ -453,7 +453,7 @@ fu_jcat_libcrypto_pkcs7_engine_pubkey_sign(FuJcatEngine *engine,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "blob data too large: %" G_GSIZE_FORMAT,
+			    "blob data too large: %zu",
 			    g_bytes_get_size(blob));
 		return NULL;
 	}
