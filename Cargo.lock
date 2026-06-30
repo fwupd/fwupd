@@ -37,3 +37,10 @@ version = "0.1.0"
 dependencies = [
  "fwupd",
 ]
+
+[[package]]
+name = "fwupd-gcab"
+version = "0.1.0"
+dependencies = [
+ "fwupd",
+]

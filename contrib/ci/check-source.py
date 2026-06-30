@@ -772,7 +772,6 @@ class Checker:
             "fu-dbxtool.c",
             "fu-debug.c",
             "fu-fuzzer-main.c",
-            "fu-gcab.c",
             "fu-main.c",
             "fu-main-windows.c",
             "fu-self-test.c",

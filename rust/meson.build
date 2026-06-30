@@ -16,6 +16,11 @@ fwupd_rs_lib = fwupd_ffi_pkg.library(
   install: false,
 )
 
+if get_option('tests')
+  fwupd_gcab_pkg = cargo_ws.package('fwupd-gcab')
+  gcab = fwupd_gcab_pkg.executable(dependencies: [zlib], install: false)
+endif
+
 # Unit tests for the pure Rust library
 rustmod.test(
   'fwupd-rust',

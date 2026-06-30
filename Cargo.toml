@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "rust/fwupd",
     "rust/fwupd-ffi",
+    "rust/fwupd-gcab",
 ]
 
 # Abort instead of trying to unwind through C FFI which is undefined behavior
