@@ -20,6 +20,7 @@ fwupd_rs_lib = fwupd_ffi_pkg.library(
 rustmod.test(
   'fwupd-rust',
   fwupd_rust_lib,
+  dependencies: [zlib],
   timeout: 120,
   suite: 'rust',
 )
