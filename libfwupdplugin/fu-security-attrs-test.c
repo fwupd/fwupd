@@ -190,11 +190,47 @@ fu_security_attrs_hsi_func(void)
 	g_clear_object(&attr);
 }
 
+static void
+fu_security_attrs_firmware_root_func(void)
+{
+	g_autofree gchar *hsi1 = NULL;
+	g_autofree gchar *hsi2 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr_hsi1 = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_hsi2 = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_root = NULL;
+
+	attr_hsi1 = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
+	fwupd_security_attr_set_plugin(attr_hsi1, "test");
+	fwupd_security_attr_add_flag(attr_hsi1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append(attrs, attr_hsi1);
+
+	attr_hsi2 = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_IOMMU);
+	fwupd_security_attr_set_plugin(attr_hsi2, "test");
+	fwupd_security_attr_add_flag(attr_hsi2, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append(attrs, attr_hsi2);
+
+	attr_root = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST);
+	fwupd_security_attr_set_plugin(attr_root, "test");
+	fwupd_security_attr_set_result_success(attr_root, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attrs_append(attrs, attr_root);
+
+	fu_security_attrs_depsolve(attrs);
+	hsi1 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi1, ==, "HSI:1");
+
+	fwupd_security_attr_add_flag(attr_root, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	hsi2 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr(hsi2, ==, "HSI:2");
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/security-attrs", fu_security_attrs_func);
 	g_test_add_func("/fwupd/security-attrs/hsi", fu_security_attrs_hsi_func);
+	g_test_add_func("/fwupd/security-attrs/firmware-root",
+			fu_security_attrs_firmware_root_func);
 	return g_test_run();
 }

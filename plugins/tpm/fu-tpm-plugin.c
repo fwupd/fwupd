@@ -280,6 +280,18 @@ fu_tpm_plugin_eventlog_has_data_prefix(FuTpmPlugin *self, const gchar *prefix)
 }
 
 static void
+fu_tpm_plugin_set_firmware_root(FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST,
+						     NULL);
+	if (attr != NULL)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_tpm_plugin_add_security_attr_coreboot_vboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
@@ -303,6 +315,7 @@ fu_tpm_plugin_add_security_attr_coreboot_vboot(FuPlugin *plugin, FuSecurityAttrs
 	}
 
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_tpm_plugin_set_firmware_root(attrs);
 }
 
 static void

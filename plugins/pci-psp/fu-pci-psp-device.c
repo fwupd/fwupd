@@ -140,6 +140,18 @@ fu_pci_psp_device_set_valid_data(FuPciPspDevice *self, FuSecurityAttrs *attrs)
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+static void
+fu_pci_psp_device_set_firmware_root(FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST,
+						     NULL);
+	if (attr != NULL)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
 static FwupdSecurityAttr *
 fu_pci_psp_device_get_security_attr(FuPciPspDevice *self,
 				    FuSecurityAttrs *attrs,
@@ -422,6 +434,7 @@ fu_pci_psp_device_add_security_attrs_platform_secure_boot(FuPciPspDevice *self,
 
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_pci_psp_device_set_firmware_root(attrs);
 }
 
 static void

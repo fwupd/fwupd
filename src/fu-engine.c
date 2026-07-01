@@ -7265,6 +7265,19 @@ fu_engine_ensure_security_attrs_supported_cpu(FuEngine *self)
 }
 
 static void
+fu_engine_ensure_security_attrs_firmware_root(FuEngine *self)
+{
+	g_autoptr(FwupdSecurityAttr) attr =
+	    fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST);
+	fwupd_security_attr_set_plugin(attr, "core");
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attrs_append(self->host_security_attrs, attr);
+}
+
+static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 {
 	gboolean disabled_plugins = FALSE;
@@ -7740,6 +7753,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 
 	/* built in */
 	fu_engine_ensure_security_attrs_supported_cpu(self);
+	fu_engine_ensure_security_attrs_firmware_root(self);
 	fu_engine_ensure_security_attrs_tainted(self);
 
 	/* call into devices */

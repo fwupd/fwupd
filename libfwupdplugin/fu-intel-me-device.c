@@ -586,6 +586,47 @@ fu_intel_me_device_add_attrs_csme18_bootguard_otp(FuIntelMeDevice *self,
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+static gboolean
+fu_intel_me_device_is_attr_success(FuSecurityAttrs *attrs, const gchar *appstream_id)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(attrs, appstream_id, NULL);
+	if (attr == NULL)
+		return FALSE;
+	return fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_intel_me_device_set_firmware_root(FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr_root = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_verified = NULL;
+
+	if (!fu_intel_me_device_is_attr_success(attrs,
+						FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED))
+		return;
+	if (!fu_intel_me_device_is_attr_success(attrs, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM))
+		return;
+	if (!fu_intel_me_device_is_attr_success(attrs, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP))
+		return;
+
+	attr_verified =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED,
+						  NULL);
+	if (attr_verified != NULL &&
+	    !fwupd_security_attr_has_flag(attr_verified, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+		return;
+
+	attr_root =
+	    fu_security_attrs_get_by_appstream_id(attrs,
+						  FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST,
+						  NULL);
+	if (attr_root != NULL)
+		fwupd_security_attr_add_flag(attr_root, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
 static void
 fu_intel_me_device_add_attrs_mei_version(FuIntelMeDevice *self, FuSecurityAttrs *attrs)
 {
@@ -694,6 +735,7 @@ fu_intel_me_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	}
 
 	/* all */
+	fu_intel_me_device_set_firmware_root(attrs);
 	fu_intel_me_device_add_attrs_mei_version(self, attrs);
 }
 
