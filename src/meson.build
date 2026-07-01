@@ -192,16 +192,14 @@ if build_daemon
   if get_option('man')
     custom_target(
       'fwupdmgr.1',
-      input: 'fwupdmgr.md',
+      input: 'fwupdmgr.adoc',
       output: 'fwupdmgr.1',
       command: [
-        generate_man,
-        '@INPUT@',
-        '-o',
-        '@OUTPUT@',
-        '--replace',
-        'PACKAGE_VERSION',
-        fwupd_version,
+        asciidoctor,
+        '-b', 'manpage',
+        '-a', 'version=' + fwupd_version,
+        '-o', '@OUTPUT@',
+        '@INPUT@'
       ],
       install: true,
       install_tag: 'man',
@@ -210,37 +208,30 @@ if build_daemon
   endif
   if build_docs
     md_targets += custom_target(
-      'fwupdmgr.md',
-      input: 'fwupdmgr.md',
-      output: 'fwupdmgr.md',
+      'fwupdmgr.adoc',
+      input: 'fwupdmgr.adoc',
+      output: 'fwupdmgr.adoc',
       command: [
-        generate_man,
+        'cp',
         '@INPUT@',
-        '-o',
         '@OUTPUT@',
-        '--replace',
-        'PACKAGE_VERSION',
-        fwupd_version,
-        '--md',
       ],
     )
-    man_md += ['"fwupdmgr.md"']
+    man_md += ['"fwupdmgr.adoc"']
   endif
 endif
 if build_standalone
   if get_option('man')
     custom_target(
       'fwupdtool.1',
-      input: 'fwupdtool.md',
+      input: 'fwupdtool.adoc',
       output: 'fwupdtool.1',
       command: [
-        generate_man,
-        '@INPUT@',
-        '-o',
-        '@OUTPUT@',
-        '--replace',
-        'PACKAGE_VERSION',
-        fwupd_version,
+        asciidoctor,
+        '-b', 'manpage',
+        '-a', 'version=' + fwupd_version,
+        '-o', '@OUTPUT@',
+        '@INPUT@'
       ],
       install: true,
       install_tag: 'man',
@@ -249,21 +240,16 @@ if build_standalone
   endif
   if build_docs
     md_targets += custom_target(
-      'fwupdtool.md',
-      input: 'fwupdtool.md',
-      output: 'fwupdtool.md',
+      'fwupdtool.adoc',
+      input: 'fwupdtool.adoc',
+      output: 'fwupdtool.adoc',
       command: [
-        generate_man,
+        'cp',
         '@INPUT@',
-        '-o',
         '@OUTPUT@',
-        '--replace',
-        'PACKAGE_VERSION',
-        fwupd_version,
-        '--md',
       ],
     )
-    man_md += ['"fwupdtool.md"']
+    man_md += ['"fwupdtool.adoc"']
   endif
 endif
 

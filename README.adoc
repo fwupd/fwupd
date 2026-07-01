@@ -1,0 +1,229 @@
+== fwupd
+
+https://github.com/fwupd/fwupd/actions/workflows/ci.yml[image:https://github.com/fwupd/fwupd/actions/workflows/ci.yml/badge.svg[Build
+Status]]
+https://hosted.weblate.org/engage/fwupd/[image:https://hosted.weblate.org/widget/fwupd/svg-badge.svg[Translation
+Status]]
+https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml[image:https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg[CodeQL]]
+https://scan.coverity.com/projects/10744[image:https://scan.coverity.com/projects/10744/badge.svg[Coverity
+Scan Build Status]]
+https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd[image:https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg[Fuzzing
+Status]]
+https://codecov.io/gh/fwupd/fwupd[image:https://codecov.io/gh/fwupd/fwupd/graph/badge.svg?token=vykt2ROfu9[Codecov
+Coverage Status]]
+https://securityscorecards.dev/viewer/?uri=github.com/fwupd/fwupd[image:https://api.securityscorecards.dev/projects/github.com/fwupd/fwupd/badge[OpenSSF
+Scorecard]]
+https://www.bestpractices.dev/projects/8751[image:https://www.bestpractices.dev/projects/8751/badge[OpenSSF
+Best Practices]]
+
+This project aims to make updating firmware on Linux automatic, safe,
+and reliable.
+
+Additional information is available https://fwupd.org/[at the website].
+
+=== Where to get help?
+
+* GitHub issues & discussions in https://github.com/fwupd/fwupd[this
+repository]
+
+=== Compiling
+
+See link:docs/building.adoc[Building and Debugging] for how to build the
+fwupd development environment.
+
+[TIP]
+====
+In most cases, end users should not compile fwupd from scratch;
+it’s a complicated project with dozens of dependencies (and as many
+configuration options) and there’s just too many things that can go
+wrong.
+====
+
+Users should just have fwupd installed and updated by their distro,
+managed and tested by the package maintainer. The distribution will have
+also done some testing with how fwupd interacts with other software on
+your system, for instance using GNOME Software.
+
+Installing fwupd using
+https://github.com/fwupd/fwupd/wiki/fwupd-snap[Snap] or using
+https://github.com/fwupd/fwupd/wiki/fwupd-flatpak[Flatpak] might be
+useful to update a specific device on the command line that needs a
+bleeding edge fwupd version, but it should not be considered as a
+replacement to the distro-provided system version.
+
+==== Static analysis
+
+If you’re developing code for fwupd, you may use a number of tools for
+static analysis during development. Some may also be used in CI and code
+needs to comply to certain rules. False positives may be possible in
+these static analysis tools.
+
+===== Using clang-tidy
+
+Rules are defined in the `.clang-tidy` file in the repository. Meson
+automatically provides targets to run clang-tidy on all files in the
+build.
+
+For this purpose, depending on your environment, you may also want to
+ensure you’re setting `CC=clang` during meson setup for better results.
+
+[source,sh]
+----
+meson setup build
+ninja -C build
+ninja -C build clang-tidy
+----
+
+Additionally, there is also a target that will try to apply automatic
+fixes to source files where possible.
+
+[source,sh]
+----
+ninja -C build clang-tidy-fix
+----
+
+===== Using gcc `-fanalyzer`
+
+GCC can also provide static analysis. To enable this scan, fwupd
+provides a separate Meson option.
+
+[source,sh]
+----
+meson setup build -Dstatic_analysis=true
+ninja -C build
+----
+
+===== Using Tartan
+
+https://gitlab.freedesktop.org/tartan/tartan/-/wikis/home[Tartan] is a
+LLVM static analysis plugin built to analyze GLib code. It can be
+installed and then run using:
+
+[source,sh]
+----
+mkdir build-tartan
+CC=clang-18 meson ../
+SCANBUILD=../contrib/tartan.sh ninja scan-build
+----
+
+=== LVFS
+
+This project is configured by default to download firmware from the
+https://fwupd.org/[Linux Vendor Firmware Service (LVFS)].
+
+This service is available to all OEMs and firmware creators who would
+like to make their firmware available to Linux users.
+
+You can find more information about the technical details of creating a
+firmware capsule in the hardware vendors section of the
+https://fwupd.org[fwupd website].
+
+=== Basic usage flow (command line)
+
+If you have a device with firmware supported by fwupd, this is how you
+can check for updates and apply them using fwupd’s command line tools.
+
+`# fwupdmgr get-devices`
+
+This will display all devices detected by fwupd.
+
+`# fwupdmgr refresh`
+
+This will download the latest metadata from LVFS.
+
+`# fwupdmgr get-updates`
+
+If updates are available for any devices on the system, they’ll be
+displayed.
+
+`# fwupdmgr update`
+
+This will download and apply all updates for your system.
+
+* Updates that can be applied live will be done immediately.
+* Updates that run at boot-up will be staged for the next reboot.
+
+You can find more information about the update workflow in the end users
+section of the https://fwupd.org[fwupd website].
+
+=== Passim
+
+If the https://github.com/hughsie/passim/blob/main/README.md[Passim]
+project is also installed and enabled, fwupd will re-publish the
+downloaded metadata file to be served on `0.0.0.0:27500` by default.
+
+Other clients on the same network can make use of this via mDNS/LLMNR to
+reduce network bandwidth to configured remotes.
+
+To disable this functionality either set `P2pPolicy=none` in
+`/etc/fwupd/daemon.conf`, uninstall the passim package or use
+`systemctl mask passim.service` on the terminal.
+
+=== Reporting status
+
+fwupd will encourage users to report both successful and failed updates
+back to LVFS. This is an optional feature, but encouraged as it provides
+valuable feedback to LVFS administrators and OEM developers regarding
+firmware update process efficacy.
+
+The privacy policy regarding this data can be viewed on the
+https://lvfs.readthedocs.io/en/latest/privacy.html[lvfs readthedocs
+site].
+
+To report the status of an update, run:
+
+`# fwupdmgr report-history`
+
+Only updates that were distributed from the LVFS will be reported to the
+LVFS.
+
+=== Enterprise use
+
+The flow of updates can be controlled in the enterprise using the
+``approved updates'' feature. This allows the domain administrator to
+filter the possible updates from a central server (e.g. the LVFS, or a
+mirror) to only firmware that have been tested specifically in your
+organization.
+
+The list of approved updates can be enabled by adding
+`ApprovalRequired=true` to the remote configuration file,
+e.g. `lvfs.conf`. Once enabled, the list of approved updates can be set
+in `fwupd.conf` using a comma-delimited list.
+
+For example:
+
+[source,ini]
+----
+ApprovedFirmware=foo,bar
+----
+
+Where `foo,bar` refers to the container checksums that would correspond
+to two updates in the metadata file.
+
+Additionally, the list of approved firmware can be supplemented using
+`fwupdmgr set-approved-firmware baz` or using the D-Bus interface.
+
+=== Other frontends
+
+fwupdmgr is a command line client, but various additional graphical
+frontends are enumerated in the
+https://fwupd.github.io/libfwupdplugin/fwupdmgr.html#description[fwupdmgr
+man page].
+
+=== SAST Tools
+
+* https://scan.coverity.com/[Coverity] - static analyzer for Java,
+C/C++, C#, JavaScript, Ruby, and Python code.
+* https://pvs-studio.com/en/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source[PVS-Studio]
+- static analyzer for C, C++, C#, and Java code.
+
+=== Packaging notes
+
+If you are working or maintaining a package of fwupd downstream, please
+consider the following notes.
+
+* The Meson build option `systemd_unit_user` should be used carefully,
+and the specified user (or resulting group) should be inaccessible to
+unprivileged system users. Otherwise, this may pose a risk for privilege
+escalation. The default value for this setting (`DynamicUser=true`) is
+secure and should be used in the general case.

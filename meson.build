@@ -790,6 +790,10 @@ gidocgen_app = find_program(
   'gi-docgen',
   required: gidocgen_dep.found(),
 )
+asciidoctor = find_program(
+  'asciidoctor',
+  required: get_option('docs').allowed() or get_option('man'),
+)
 build_docs = gidocgen_dep.found() and gidocgen_app.found() and introspection.allowed()
 
 if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
