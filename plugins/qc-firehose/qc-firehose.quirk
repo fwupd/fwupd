@@ -1,5 +1,6 @@
 [USB\VID_05C6&PID_9008]
 Plugin = qc_firehose
+AllowedPendingImageIds = 7,13,21
 GType = FuQcFirehoseUsbDevice
 
 # for /dev/wwan0firehose0

@@ -90,6 +90,33 @@ typedef gboolean (*FuQcFirehoseImplReadFunc)(FuQcFirehoseImpl *self,
 					     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 static gboolean
+fu_qc_firehose_impl_parse_supported_functions(FuQcFirehoseImpl *self,
+					      const gchar *text,
+					      gboolean *done,
+					      GError **error)
+{
+	if (g_str_has_prefix(text, "Supported Functions: ")) {
+		g_auto(GStrv) split = g_strsplit(text + 21, " ", -1);
+		for (guint i = 0; split[i] != NULL; i++) {
+			fu_qc_firehose_impl_add_function(
+			    self,
+			    fu_qc_firehose_functions_from_string(split[i]));
+		}
+		*done = TRUE;
+	} else if (g_str_has_prefix(text, "INFO: ")) {
+		if (g_str_has_prefix(text + 6, "End of supported functions")) {
+			*done = TRUE;
+		} else {
+			fu_qc_firehose_impl_add_function(
+			    self,
+			    fu_qc_firehose_functions_from_string(text + 6));
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_qc_firehose_impl_read_xml_init_log(FuQcFirehoseImpl *self,
 				      XbNode *xn,
 				      gboolean *done,
@@ -98,18 +125,7 @@ fu_qc_firehose_impl_read_xml_init_log(FuQcFirehoseImpl *self,
 	const gchar *text = xb_node_get_attr(xn, "value");
 	if (text == NULL)
 		return TRUE;
-
-	if (g_str_has_prefix(text, "Supported Functions: ")) {
-		g_auto(GStrv) split = g_strsplit(text + 21, " ", -1);
-		for (guint i = 0; split[i] != NULL; i++) {
-			fu_qc_firehose_impl_add_function(
-			    self,
-			    fu_qc_firehose_functions_from_string(split[i]));
-		}
-	}
-
-	/* success */
-	return TRUE;
+	return fu_qc_firehose_impl_parse_supported_functions(self, text, done, error);
 }
 
 static gboolean
@@ -143,17 +159,7 @@ fu_qc_firehose_impl_read_xml_nop_log(FuQcFirehoseImpl *self,
 	const gchar *text = xb_node_get_attr(xn, "value");
 	if (text == NULL)
 		return TRUE;
-	if (g_str_has_prefix(text, "INFO: ")) {
-		if (g_str_has_prefix(text + 6, "End of supported functions")) {
-			*done = TRUE;
-			return TRUE;
-		}
-		fu_qc_firehose_impl_add_function(self,
-						 fu_qc_firehose_functions_from_string(text + 6));
-	}
-
-	/* success */
-	return TRUE;
+	return fu_qc_firehose_impl_parse_supported_functions(self, text, done, error);
 }
 
 static gboolean
@@ -750,6 +756,7 @@ fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error)
 	if (!fu_qc_firehose_impl_read_xml(self, 5000, &helper, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_debug("ignoring: %s", error_local->message);
+			g_clear_error(&error_local);
 		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
