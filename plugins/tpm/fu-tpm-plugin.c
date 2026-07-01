@@ -302,6 +302,7 @@ fu_tpm_plugin_add_security_attr_coreboot_vboot(FuPlugin *plugin, FuSecurityAttrs
 		return;
 	}
 
+	fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
