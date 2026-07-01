@@ -75,7 +75,7 @@
           <li>Only show 'authenticating' after a short delay</li>
           <li>Re-process the device metadata when required after all devices are added</li>
           <li>Require sealed memfd input to prevent possible TOCTOU attacks</li>
-          <li>Sanitise the Jabra GNP device version in a more secure way</li>
+          <li>Sanitize the Jabra GNP device version in a more secure way</li>
           <li>Validate raydium-tp buffer size before direct index access</li>
           <li>Validate that Lenovo dock device-reported program sizes are valid</li>
         </ul>
