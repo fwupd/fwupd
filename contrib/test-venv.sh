@@ -15,23 +15,26 @@ export DAEMON_BUILDDIR=${BUILD}/src
 export PATH=${VENV}/bin:$PATH
 
 echo "Build time test suite"
-ninja -C ${BUILD} test
+meson test -C "${BUILD}" "$@"
 
-echo "Testing mtd-self-test"
-${SUDO} modprobe mtdram
-ENV="G_TEST_BUILDDIR=${G_TEST_BUILDDIR} \
-     LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
-     G_TEST_SRCDIR=${G_TEST_SRCDIR}"
-${SUDO} ${ENV} ${VENV}/dist/libexec/installed-tests/fwupd/mtd-self-test
+# If we have arguments to pass to meson test, skip the other tests
+if [ $# -eq 0 ]; then
+    echo "Testing mtd-self-test"
+    ${SUDO} modprobe mtdram
+    ENV="G_TEST_BUILDDIR=${G_TEST_BUILDDIR} \
+        LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
+        G_TEST_SRCDIR=${G_TEST_SRCDIR}"
+    ${SUDO} ${ENV} ${VENV}/dist/libexec/installed-tests/fwupd/mtd-self-test
 
-echo "Testing fwupdtool.sh"
-${INSTALLED_TESTS}/fwupdtool.sh
+    echo "Testing fwupdtool.sh"
+    ${INSTALLED_TESTS}/fwupdtool.sh
 
-echo "Starting daemon"
-G_DEBUG=fatal-criticals ${VENV}/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
+    echo "Starting daemon"
+    G_DEBUG=fatal-criticals ${VENV}/bin/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 
-echo "Testing fwupd.sh"
-${INSTALLED_TESTS}/fwupd.sh
+    echo "Testing fwupd.sh"
+    ${INSTALLED_TESTS}/fwupd.sh
 
-# artifacts from the test run
-rm -f fwupd.txt fwupdtool.txt
+    # artifacts from the test run
+    rm -f fwupd.txt fwupdtool.txt
+fi
