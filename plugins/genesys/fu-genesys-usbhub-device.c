@@ -1108,6 +1108,13 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	}
 
 	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
+	if (project_ic_type == NULL || strlen(project_ic_type) < 6) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid mask project IC type");
+		return FALSE;
+	}
 
 	/* verify chip model and revision */
 	self->spec.chip.revision = (10 * (project_ic_type[4] - '0')) + (project_ic_type[5] - '0');
