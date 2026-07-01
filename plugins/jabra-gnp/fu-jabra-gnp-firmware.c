@@ -176,7 +176,6 @@ static void
 fu_jabra_gnp_firmware_init(FuJabraGnpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_JABRA_GNP_IMAGE);
 }
@@ -187,4 +186,5 @@ fu_jabra_gnp_firmware_class_init(FuJabraGnpFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_jabra_gnp_firmware_parse;
 	firmware_class->export = fu_jabra_gnp_firmware_export;
+	fu_firmware_set_images_max(firmware_class, 1024);
 }

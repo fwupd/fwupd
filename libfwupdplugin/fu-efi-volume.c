@@ -459,10 +459,8 @@ fu_efi_volume_init(FuEfiVolume *self)
 	priv->attrs = 0xfeff;
 #ifdef HAVE_FUZZER
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 #else
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1000);
 #endif
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);
@@ -478,6 +476,11 @@ fu_efi_volume_class_init(FuEfiVolumeClass *klass)
 	firmware_class->parse = fu_efi_volume_parse;
 	firmware_class->write = fu_efi_volume_write;
 	firmware_class->export = fu_efi_volume_export;
+#ifdef HAVE_FUZZER
+	fu_firmware_set_images_max(firmware_class, 10);
+#else
+	fu_firmware_set_images_max(firmware_class, 1000);
+#endif
 }
 
 /**

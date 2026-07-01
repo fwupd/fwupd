@@ -565,7 +565,6 @@ fu_ihex_firmware_init(FuIhexFirmware *self)
 	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_ihex_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
@@ -578,6 +577,7 @@ fu_ihex_firmware_class_init(FuIhexFirmwareClass *klass)
 	firmware_class->parse = fu_ihex_firmware_parse;
 	firmware_class->tokenize = fu_ihex_firmware_tokenize;
 	firmware_class->write = fu_ihex_firmware_write;
+	fu_firmware_set_images_max(firmware_class, 10);
 }
 
 /**
