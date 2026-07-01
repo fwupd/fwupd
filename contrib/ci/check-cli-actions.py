@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # load the manpage, bash-completion, etc
     data: dict[str, str] = {}
     for fn in [
-        "src/fwupdmgr.md",
+        "src/fwupdmgr.adoc",
         "data/bash-completion/fwupdmgr",
         "data/fish-completion/fwupdmgr.fish",
     ]:

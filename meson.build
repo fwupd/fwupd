@@ -792,8 +792,11 @@ gidocgen_app = find_program(
 )
 asciidoctor = find_program(
   'asciidoctor',
-  required: get_option('docs').allowed() or get_option('man'),
+  required: false,
 )
+if get_option('man') and not asciidoctor.found()
+  error('asciidoctor is required for man page generation')
+endif
 build_docs = gidocgen_dep.found() and gidocgen_app.found() and introspection.allowed()
 
 if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
