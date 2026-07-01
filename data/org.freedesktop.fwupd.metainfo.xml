@@ -38,6 +38,53 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.1.6" date="2026-07-01">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add --filter-protocol to fwupdmgr and fwupdtool</li>
+          <li>Add a new HSI attribute for coreboot verified boot</li>
+          <li>Add hashes for the latest DBX for offline machines</li>
+          <li>Allow parsing Hayden Bridge Thunderbolt firmware</li>
+          <li>Handle HPE Redfish reset-required updates</li>
+          <li>Ignore efivar free space on VMWare, GCE and EC2 VMs</li>
+          <li>Prevent FwupdClient from downloading the same file multiple times</li>
+          <li>Split UEFI Memory Protection HSI from NX Compat</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Avoid an integer overflow in the ifwi-cpd manifest length check</li>
+          <li>Avoid truncating the AMD Kria FRU board area offset</li>
+          <li>Block dbx updates on ASUSTeK GL553VD</li>
+          <li>Check SMEE hardware bit directly for AMD SME detection</li>
+          <li>Create the ESP OS directory if not found</li>
+          <li>Detect the BCR device on Celeron LPC SPI controllers</li>
+          <li>Fall back to a binary firmware when no specific MTD image type is set</li>
+          <li>Fix AI table clear behavior of the elantp boot code.</li>
+          <li>Fix errors with fwupd-refresh service not working properly</li>
+          <li>Fix Genesys GL32xx device locker crash due to argument mismatch</li>
+          <li>Fix installing KEK updates when using snapd by sending the correct blob</li>
+          <li>Fix integer underflow when Elan firmware is smaller than one page</li>
+          <li>Fix possible NULL pointer dereference when updating SteelSeries firmware</li>
+          <li>Fix the display of the HP UEFI db certificate</li>
+          <li>Improved usi-dock progress reporting behavior</li>
+          <li>Increase the parser item limit from 100 to 1000 for large KEKs</li>
+          <li>Log out of the Redfish session when required on HPE hardware</li>
+          <li>Only show 'authenticating' after a short delay</li>
+          <li>Re-process the device metadata when required after all devices are added</li>
+          <li>Require sealed memfd input to prevent possible TOCTOU attacks</li>
+          <li>Sanitise the Jabra GNP device version in a more secure way</li>
+          <li>Validate raydium-tp buffer size before direct index access</li>
+          <li>Validate that Lenovo dock device-reported program sizes are valid</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Lenovo dual-bank accessory dongle and paired peripherals</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.1.5" date="2026-06-09">
       <description>
         <p>
