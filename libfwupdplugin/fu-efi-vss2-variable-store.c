@@ -155,10 +155,8 @@ fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 #ifdef HAVE_FUZZER
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_KB);
 #else
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 #endif
 }
@@ -170,6 +168,11 @@ fu_efi_vss2_variable_store_class_init(FuEfiVss2VariableStoreClass *klass)
 	firmware_class->validate = fu_efi_vss2_variable_store_validate;
 	firmware_class->parse = fu_efi_vss2_variable_store_parse;
 	firmware_class->write = fu_efi_vss2_variable_store_write;
+#ifdef HAVE_FUZZER
+	fu_firmware_set_images_max(firmware_class, 10);
+#else
+	fu_firmware_set_images_max(firmware_class, 10000);
+#endif
 }
 
 /**

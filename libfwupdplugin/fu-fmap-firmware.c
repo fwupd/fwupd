@@ -295,7 +295,6 @@ fu_fmap_firmware_init(FuFmapFirmware *self)
 	priv->ver_minor = FU_STRUCT_FMAP_DEFAULT_VER_MINOR;
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USWID_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
@@ -309,6 +308,7 @@ fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
 	firmware_class->export = fu_fmap_firmware_export;
 	firmware_class->build = fu_fmap_firmware_build;
 	firmware_class->add_magic = fu_fmap_firmware_add_magic;
+	fu_firmware_set_images_max(firmware_class, 1024);
 }
 
 /**

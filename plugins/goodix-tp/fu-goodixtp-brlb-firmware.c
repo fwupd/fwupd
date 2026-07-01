@@ -232,13 +232,14 @@ fu_goodixtp_brlb_firmware_init(FuGoodixtpBrlbFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GOODIXTP_BRLB_CONFIG);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
 fu_goodixtp_brlb_firmware_class_init(FuGoodixtpBrlbFirmwareClass *klass)
 {
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_images_max(firmware_class, 1024);
 }
 
 FuFirmware *

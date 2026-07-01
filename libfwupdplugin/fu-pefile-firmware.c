@@ -625,7 +625,6 @@ fu_pefile_firmware_init(FuPefileFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_SBATLEVEL_SECTION);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 100);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
@@ -649,6 +648,7 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	firmware_class->write = fu_pefile_firmware_write;
 	firmware_class->export = fu_pefile_firmware_export;
 	firmware_class->get_checksum = fu_pefile_firmware_get_checksum;
+	fu_firmware_set_images_max(firmware_class, 100);
 }
 
 /**

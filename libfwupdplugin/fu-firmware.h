@@ -145,7 +145,7 @@ fu_firmware_set_size_max(FuFirmware *self, gsize size_max) G_GNUC_NON_NULL(1);
 gsize
 fu_firmware_get_size_max(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_firmware_set_images_max(FuFirmware *self, guint images_max) G_GNUC_NON_NULL(1);
+fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max) G_GNUC_NON_NULL(1);
 guint
 fu_firmware_get_images_max(FuFirmware *self) G_GNUC_NON_NULL(1);
 guint

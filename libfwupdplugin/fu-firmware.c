@@ -46,7 +46,6 @@ typedef struct {
 	guint64 offset;
 	gsize size;
 	gsize size_max;
-	guint images_max;
 	GArray *image_gtypes; /* nullable, element-type GType */
 	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
@@ -54,21 +53,29 @@ typedef struct {
 	GPtrArray *magic;   /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
+typedef struct {
+	guint images_max;
+} FuFirmwareClassPrivate;
+
 static void
 fu_firmware_fuzzer_iface_init(FuFuzzerInterface *iface);
 
-G_DEFINE_TYPE_EXTENDED(FuFirmware,
-		       fu_firmware,
-		       G_TYPE_OBJECT,
-		       0,
-		       G_ADD_PRIVATE(FuFirmware)
-			   G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_firmware_fuzzer_iface_init));
+/* nocheck:name */
+G_DEFINE_TYPE_EXTENDED(FuFirmware, fu_firmware, G_TYPE_OBJECT, 0, G_ADD_PRIVATE(FuFirmware);
+		       g_type_add_class_private(g_define_type_id, sizeof(FuFirmwareClassPrivate));
+		       G_IMPLEMENT_INTERFACE(FU_TYPE_FUZZER, fu_firmware_fuzzer_iface_init));
 
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
 
+static FuFirmwareClassPrivate *
+fu_firmware_get_class_private(FuFirmwareClass *klass)
+{
+	return G_TYPE_CLASS_GET_PRIVATE(klass, FU_TYPE_FIRMWARE, FuFirmwareClassPrivate);
+}
+
 enum { PROP_0, PROP_PARENT, PROP_LAST };
 
-#define FU_FIRMWARE_IMAGE_DEPTH_MAX  50
+#define FU_FIRMWARE_IMAGE_DEPTH_MAX 50
 
 typedef struct {
 	gsize offset;
@@ -1983,13 +1990,17 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 	}
 
 	/* sanity check */
-	if (priv->images_max > 0 && priv->images->len >= priv->images_max) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "too many images, limit is %u",
-			    priv->images_max);
-		return FALSE;
+	{
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->images_max > 0 && priv->images->len >= cpriv->images_max) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "too many images, limit is %u",
+				    cpriv->images_max);
+			return FALSE;
+		}
 	}
 
 	g_ptr_array_add(priv->images, g_object_ref(img));
@@ -2004,24 +2015,23 @@ fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 
 /**
  * fu_firmware_set_images_max:
- * @self: a #FuPlugin
+ * @klass: a #FuFirmwareClass
  * @images_max: integer, or 0 for unlimited
  *
  * Sets the maximum number of images this container can hold.
  *
- * Since: 1.9.3
+ * Since: 2.1.6
  **/
 void
-fu_firmware_set_images_max(FuFirmware *self, guint images_max)
+fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	priv->images_max = images_max;
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
+	cpriv->images_max = images_max;
 }
 
 /**
  * fu_firmware_get_images_max:
- * @self: a #FuPlugin
+ * @self: a #FuFirmware
  *
  * Gets the maximum number of images this container can hold.
  *
@@ -2032,9 +2042,10 @@ fu_firmware_set_images_max(FuFirmware *self, guint images_max)
 guint
 fu_firmware_get_images_max(FuFirmware *self)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv;
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXUINT);
-	return priv->images_max;
+	cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	return cpriv->images_max;
 }
 
 /**

@@ -362,7 +362,6 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 	priv->format = FU_USWID_PAYLOAD_FORMAT_COSWID;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_COSWID_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
@@ -378,6 +377,7 @@ fu_uswid_firmware_class_init(FuUswidFirmwareClass *klass)
 	firmware_class->build = fu_uswid_firmware_build;
 	firmware_class->export = fu_uswid_firmware_export;
 	firmware_class->add_magic = fu_uswid_firmware_add_magic;
+	fu_firmware_set_images_max(firmware_class, 2000);
 }
 
 /**

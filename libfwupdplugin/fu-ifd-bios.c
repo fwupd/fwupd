@@ -94,10 +94,8 @@ fu_ifd_bios_init(FuIfdBios *self)
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_4K);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
 #ifdef HAVE_FUZZER
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 #else
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 #endif
 }
@@ -107,6 +105,11 @@ fu_ifd_bios_class_init(FuIfdBiosClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_ifd_bios_parse;
+#ifdef HAVE_FUZZER
+	fu_firmware_set_images_max(firmware_class, 10);
+#else
+	fu_firmware_set_images_max(firmware_class, 1024);
+#endif
 }
 
 /**

@@ -285,7 +285,6 @@ fu_pixart_tp_firmware_init(FuPixartTpFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 8);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_PIXART_TP_SECTION);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
@@ -300,6 +299,7 @@ fu_pixart_tp_firmware_class_init(FuPixartTpFirmwareClass *klass)
 	firmware_class->write = fu_pixart_tp_firmware_write;
 	firmware_class->build = fu_pixart_tp_firmware_build;
 	firmware_class->convert_version = fu_pixart_tp_firmware_convert_version;
+	fu_firmware_set_images_max(firmware_class, 8);
 }
 
 FuFirmware *

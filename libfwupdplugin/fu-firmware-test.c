@@ -859,7 +859,7 @@ fu_firmware_dedupe_func(void)
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
 	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(firmware, 2);
+	fu_firmware_set_images_max(FU_FIRMWARE_GET_CLASS(firmware), 2);
 
 	fu_firmware_set_idx(img1_old, 13);
 	fu_firmware_set_id(img1_old, "DAVE");
@@ -901,6 +901,9 @@ fu_firmware_dedupe_func(void)
 	ret = fu_firmware_add_image(firmware, img3, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
+
+	/* reset class-level limit */
+	fu_firmware_set_images_max(FU_FIRMWARE_GET_CLASS(firmware), 0);
 }
 
 static void
