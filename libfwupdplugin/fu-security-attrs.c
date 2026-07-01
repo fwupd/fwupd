@@ -529,6 +529,155 @@ fu_security_attrs_ensure_fwupd_version(FwupdSecurityAttr *attr)
 	g_warning("cannot map %s to a fwupd version", appstream_id);
 }
 
+typedef enum {
+	FU_SECURITY_ATTRS_FIRMWARE_ROOT_NONE,
+	FU_SECURITY_ATTRS_FIRMWARE_ROOT_AMD_PLATFORM_SECURE_BOOT,
+	FU_SECURITY_ATTRS_FIRMWARE_ROOT_COREBOOT_VBOOT,
+	FU_SECURITY_ATTRS_FIRMWARE_ROOT_HP_SURESTART,
+	FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD,
+	FU_SECURITY_ATTRS_FIRMWARE_ROOT_LAST,
+} FuSecurityAttrsFirmwareRoot;
+
+static const struct {
+	const gchar *appstream_id;
+	FuSecurityAttrsFirmwareRoot firmware_root;
+	gboolean required;
+} fu_security_attrs_firmware_root_map[] = {
+    {FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+     FU_SECURITY_ATTRS_FIRMWARE_ROOT_AMD_PLATFORM_SECURE_BOOT,
+     TRUE},
+    {FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT, FU_SECURITY_ATTRS_FIRMWARE_ROOT_COREBOOT_VBOOT, TRUE},
+    {FWUPD_SECURITY_ATTR_ID_HP_SURESTART, FU_SECURITY_ATTRS_FIRMWARE_ROOT_HP_SURESTART, TRUE},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM,
+     FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD,
+     TRUE},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED,
+     FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD,
+     TRUE},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP,
+     FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD,
+     TRUE},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+     FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD,
+     FALSE},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED,
+     FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD,
+     FALSE},
+};
+
+static gboolean
+fu_security_attrs_has_successful_attr(FuSecurityAttrs *self, const gchar *appstream_id)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(self, appstream_id, NULL);
+	if (attr == NULL)
+		return FALSE;
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+		return FALSE;
+	return fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static gboolean
+fu_security_attrs_has_unsuccessful_attr(FuSecurityAttrs *self, const gchar *appstream_id)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(self, appstream_id, NULL);
+	if (attr == NULL)
+		return FALSE;
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+		return FALSE;
+	return !fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static FuSecurityAttrsFirmwareRoot
+fu_security_attrs_get_firmware_root(const gchar *appstream_id)
+{
+	for (guint i = 0; i < G_N_ELEMENTS(fu_security_attrs_firmware_root_map); i++) {
+		if (g_strcmp0(appstream_id, fu_security_attrs_firmware_root_map[i].appstream_id) ==
+		    0) {
+			return fu_security_attrs_firmware_root_map[i].firmware_root;
+		}
+	}
+	return FU_SECURITY_ATTRS_FIRMWARE_ROOT_NONE;
+}
+
+static gboolean
+fu_security_attrs_has_successful_firmware_root(FuSecurityAttrs *self,
+					       FuSecurityAttrsFirmwareRoot firmware_root)
+{
+	gboolean found = FALSE;
+
+	for (guint i = 0; i < G_N_ELEMENTS(fu_security_attrs_firmware_root_map); i++) {
+		if (fu_security_attrs_firmware_root_map[i].firmware_root != firmware_root)
+			continue;
+		if (!fu_security_attrs_firmware_root_map[i].required)
+			continue;
+		found = TRUE;
+		if (!fu_security_attrs_has_successful_attr(
+			self,
+			fu_security_attrs_firmware_root_map[i].appstream_id)) {
+			return FALSE;
+		}
+	}
+
+	if (firmware_root == FU_SECURITY_ATTRS_FIRMWARE_ROOT_INTEL_BOOTGUARD &&
+	    fu_security_attrs_has_unsuccessful_attr(
+		self,
+		FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED))
+		return FALSE;
+
+	return found;
+}
+
+static void
+fu_security_attrs_depsolve_firmware_roots(FuSecurityAttrs *self)
+{
+	gboolean firmware_root_success[FU_SECURITY_ATTRS_FIRMWARE_ROOT_LAST] = {FALSE};
+
+	for (guint i = FU_SECURITY_ATTRS_FIRMWARE_ROOT_NONE + 1;
+	     i < FU_SECURITY_ATTRS_FIRMWARE_ROOT_LAST;
+	     i++) {
+		firmware_root_success[i] = fu_security_attrs_has_successful_firmware_root(self, i);
+	}
+
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+		FuSecurityAttrsFirmwareRoot firmware_root =
+		    fu_security_attrs_get_firmware_root(appstream_id);
+
+		if (firmware_root == FU_SECURITY_ATTRS_FIRMWARE_ROOT_NONE)
+			continue;
+		if (firmware_root_success[firmware_root])
+			continue;
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+			continue;
+		if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY) == 0 &&
+		    fu_security_attrs_has_successful_attr(
+			self,
+			FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED)) {
+			continue;
+		}
+
+		for (guint j = FU_SECURITY_ATTRS_FIRMWARE_ROOT_NONE + 1;
+		     j < FU_SECURITY_ATTRS_FIRMWARE_ROOT_LAST;
+		     j++) {
+			if (j == firmware_root)
+				continue;
+			if (!firmware_root_success[j])
+				continue;
+			g_debug("security attr %s obsoleted by alternative firmware root of trust",
+				appstream_id);
+			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
+			break;
+		}
+	}
+}
+
 /**
  * fu_security_attrs_depsolve:
  * @self: a #FuSecurityAttrs
@@ -612,6 +761,8 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 			}
 		}
 	}
+
+	fu_security_attrs_depsolve_firmware_roots(self);
 
 	/* sort */
 	g_ptr_array_sort(self->attrs, fu_security_attrs_sort_cb);

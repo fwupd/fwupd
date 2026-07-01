@@ -11,6 +11,25 @@
 #include "fu-security-attrs-private.h"
 #include "fu-test.h"
 
+static FwupdSecurityAttr *
+fu_security_attrs_test_add_attr(FuSecurityAttrs *attrs, const gchar *appstream_id, gboolean success)
+{
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(appstream_id);
+
+	fwupd_security_attr_set_plugin(attr, "test");
+	if (success)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append(attrs, attr);
+	return g_steal_pointer(&attr);
+}
+
+static void
+fu_security_attrs_test_add_success(FuSecurityAttrs *attrs, const gchar *appstream_id)
+{
+	g_autoptr(FwupdSecurityAttr) attr =
+	    fu_security_attrs_test_add_attr(attrs, appstream_id, TRUE);
+}
+
 static void
 fu_security_attrs_func(void)
 {
@@ -190,11 +209,253 @@ fu_security_attrs_hsi_func(void)
 	g_clear_object(&attr);
 }
 
+static void
+fu_security_attrs_firmware_roots_func(void)
+{
+	g_autofree gchar *hsi1 = NULL;
+	g_autofree gchar *hsi2 = NULL;
+	g_autofree gchar *hsi3 = NULL;
+	g_autofree gchar *hsi4 = NULL;
+	g_autofree gchar *hsi5 = NULL;
+
+	/* coreboot vboot can satisfy HSI:2 instead of other firmware roots */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_coreboot =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						    TRUE);
+		g_autoptr(FwupdSecurityAttr) attr_amd =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_hp =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel_policy =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+						    FALSE);
+
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION);
+
+		fu_security_attrs_depsolve(attrs);
+		hsi1 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+		g_assert_cmpstr(hsi1, ==, "HSI:3");
+		g_assert_false(fwupd_security_attr_has_flag(attr_coreboot,
+							    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_hp, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_intel, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(fwupd_security_attr_has_flag(attr_intel_policy,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* intel BootGuard can satisfy HSI:2 instead of other firmware roots */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_coreboot =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_amd =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_hp =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel_policy =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+						    FALSE);
+
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM);
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION);
+
+		fu_security_attrs_depsolve(attrs);
+		hsi2 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+		g_assert_cmpstr(hsi2, ==, "HSI:2");
+		g_assert_true(fwupd_security_attr_has_flag(attr_coreboot,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_hp, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_false(fwupd_security_attr_has_flag(attr_intel_policy,
+							    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* intel BootGuard needs all required attributes to satisfy HSI:2 */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_coreboot =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_amd =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_hp =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+						    FALSE);
+
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
+
+		fu_security_attrs_depsolve(attrs);
+		g_assert_false(fwupd_security_attr_has_flag(attr_coreboot,
+							    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_hp, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* intel BootGuard policy should still cap HSI:3 when BootGuard is enabled */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_coreboot =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						    TRUE);
+		g_autoptr(FwupdSecurityAttr) attr_intel_acm =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel_policy =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+						    FALSE);
+
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION);
+
+		fu_security_attrs_depsolve(attrs);
+		hsi5 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+		g_assert_cmpstr(hsi5, ==, "HSI:2");
+		g_assert_false(fwupd_security_attr_has_flag(attr_coreboot,
+							    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(fwupd_security_attr_has_flag(attr_intel_acm,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_false(fwupd_security_attr_has_flag(attr_intel_policy,
+							    FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* amd Platform Secure Boot can satisfy HSI:2 instead of other firmware roots */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_amd =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+						    TRUE);
+		g_autoptr(FwupdSecurityAttr) attr_coreboot =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_hp =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel_policy =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+						    FALSE);
+
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION);
+
+		fu_security_attrs_depsolve(attrs);
+		hsi3 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+		g_assert_cmpstr(hsi3, ==, "HSI:3");
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(fwupd_security_attr_has_flag(attr_coreboot,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_hp, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_intel, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(fwupd_security_attr_has_flag(attr_intel_policy,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+
+	/* hp SureStart can satisfy HSI:2 instead of other firmware roots */
+	{
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(FwupdSecurityAttr) attr_hp =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_HP_SURESTART,
+						    TRUE);
+		g_autoptr(FwupdSecurityAttr) attr_amd =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_coreboot =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED,
+						    FALSE);
+		g_autoptr(FwupdSecurityAttr) attr_intel_policy =
+		    fu_security_attrs_test_add_attr(attrs,
+						    FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY,
+						    FALSE);
+
+		fu_security_attrs_test_add_success(attrs,
+						   FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION);
+
+		fu_security_attrs_depsolve(attrs);
+		hsi4 = fu_security_attrs_calculate_hsi(attrs, NULL, FU_SECURITY_ATTRS_FLAG_NONE);
+		g_assert_cmpstr(hsi4, ==, "HSI:3");
+		g_assert_false(
+		    fwupd_security_attr_has_flag(attr_hp, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_amd, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(fwupd_security_attr_has_flag(attr_coreboot,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(
+		    fwupd_security_attr_has_flag(attr_intel, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+		g_assert_true(fwupd_security_attr_has_flag(attr_intel_policy,
+							   FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+	}
+}
+
 int
 main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
 	g_test_add_func("/fwupd/security-attrs", fu_security_attrs_func);
 	g_test_add_func("/fwupd/security-attrs/hsi", fu_security_attrs_hsi_func);
+	g_test_add_func("/fwupd/security-attrs/firmware-roots",
+			fu_security_attrs_firmware_roots_func);
 	return g_test_run();
 }
