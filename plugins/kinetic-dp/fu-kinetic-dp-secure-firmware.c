@@ -260,13 +260,13 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 static void
 fu_kinetic_dp_secure_firmware_init(FuKineticDpSecureFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_kinetic_dp_secure_firmware_class_init(FuKineticDpSecureFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->parse = fu_kinetic_dp_secure_firmware_parse;
 	firmware_class->export = fu_kinetic_dp_secure_firmware_export;
 	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);

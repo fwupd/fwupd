@@ -291,13 +291,13 @@ static void
 fu_hid_descriptor_init(FuHidDescriptor *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_HID_REPORT);
 }
 
 static void
 fu_hid_descriptor_class_init(FuHidDescriptorClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_HID_REPORT);
 	fu_firmware_set_size_max(firmware_class, 64 * FU_KB);
 	firmware_class->parse = fu_hid_descriptor_parse;
 	firmware_class->write = fu_hid_descriptor_write;

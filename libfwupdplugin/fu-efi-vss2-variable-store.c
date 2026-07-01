@@ -151,7 +151,6 @@ fu_efi_vss2_variable_store_write(FuFirmware *firmware, GError **error)
 static void
 fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 }
@@ -163,6 +162,7 @@ fu_efi_vss2_variable_store_class_init(FuEfiVss2VariableStoreClass *klass)
 	firmware_class->validate = fu_efi_vss2_variable_store_validate;
 	firmware_class->parse = fu_efi_vss2_variable_store_parse;
 	firmware_class->write = fu_efi_vss2_variable_store_write;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 #ifdef HAVE_FUZZER
 	fu_firmware_set_size_max(firmware_class, 4 * FU_KB);
 	fu_firmware_set_images_max(firmware_class, 10);

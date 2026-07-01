@@ -457,16 +457,16 @@ fu_efi_volume_init(FuEfiVolume *self)
 {
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VSS2_VARIABLE_STORE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FTW_STORE);
 }
 
 static void
 fu_efi_volume_class_init(FuEfiVolumeClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_FILESYSTEM);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VSS2_VARIABLE_STORE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_FTW_STORE);
 	firmware_class->validate = fu_efi_volume_validate;
 	firmware_class->parse = fu_efi_volume_parse;
 	firmware_class->write = fu_efi_volume_write;

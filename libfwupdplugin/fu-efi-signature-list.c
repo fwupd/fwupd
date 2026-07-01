@@ -386,6 +386,8 @@ static void
 fu_efi_signature_list_class_init(FuEfiSignatureListClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SIGNATURE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_X509_SIGNATURE);
 	firmware_class->validate = fu_efi_signature_list_validate;
 	firmware_class->parse = fu_efi_signature_list_parse;
 	firmware_class->write = fu_efi_signature_list_write;
@@ -398,6 +400,4 @@ static void
 fu_efi_signature_list_init(FuEfiSignatureList *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_X509_SIGNATURE);
 }

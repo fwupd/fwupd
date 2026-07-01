@@ -214,7 +214,7 @@ fu_wacom_usb_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 		return NULL;
 	loader_fw = fu_firmware_new_from_bytes(loader_bytes);
 	fu_firmware_set_id(loader_fw, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE_GET_CLASS(firmware), FU_TYPE_FIRMWARE);
 	if (!fu_firmware_add_image(firmware, loader_fw, error))
 		return NULL;
 

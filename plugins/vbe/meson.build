@@ -6,6 +6,7 @@ plugin_builtin_vbe = static_library('fu_plugin_vbe',
     'fu-vbe-plugin.c',
     'fu-vbe-device.c',
     'fu-vbe-simple-device.c',
+    'fu-vbe-simple-firmware.c',
   ],
   include_directories : [
     root_incdir,

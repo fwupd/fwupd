@@ -6,6 +6,7 @@ plugin_builtins += static_library('fu_plugin_wistron_dock',
   rustgen.process('fu-wistron-dock.rs'),
   sources: [
     'fu-wistron-dock-device.c',
+    'fu-wistron-dock-firmware.c',
     'fu-wistron-dock-plugin.c',
   ],
   include_directories: plugin_incdirs,

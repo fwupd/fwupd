@@ -10,5 +10,5 @@
 
 #define FU_FIRMWARE_SIZE_MAX_DEFAULT ((100 * FU_MB) + 1)
 
-GArray *
-fu_firmware_get_image_gtypes(FuFirmware *self) G_GNUC_NON_NULL(1);
+const GType *
+fu_firmware_get_image_gtypes(FuFirmware *self, guint *n_gtypes) G_GNUC_NON_NULL(1);

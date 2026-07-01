@@ -485,8 +485,6 @@ fu_efi_section_init(FuEfiSection *self)
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SECTION);
 }
 
 static void
@@ -508,6 +506,8 @@ fu_efi_section_class_init(FuEfiSectionClass *klass)
 	firmware_class->write = fu_efi_section_write;
 	firmware_class->build = fu_efi_section_build;
 	firmware_class->export = fu_efi_section_export;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_VOLUME);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SECTION);
 #ifdef HAVE_FUZZER
 	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, 10);

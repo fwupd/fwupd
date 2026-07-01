@@ -295,13 +295,13 @@ static void
 fu_dfuse_firmware_init(FuDfuseFirmware *self)
 {
 	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMWARE_VERSION_DFUSE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_dfuse_firmware_class_init(FuDfuseFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_dfuse_firmware_validate;
 	firmware_class->parse = fu_dfuse_firmware_parse;
 	firmware_class->write = fu_dfuse_firmware_write;

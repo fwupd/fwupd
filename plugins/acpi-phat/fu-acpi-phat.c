@@ -308,8 +308,6 @@ static void
 fu_acpi_phat_init(FuAcpiPhat *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 }
 
 static void
@@ -325,6 +323,8 @@ fu_acpi_phat_class_init(FuAcpiPhatClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 	object_class->finalize = fu_acpi_phat_finalize;
 	firmware_class->validate = fu_acpi_phat_validate;
 	firmware_class->parse = fu_acpi_phat_parse;
