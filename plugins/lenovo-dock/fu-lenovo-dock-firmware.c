@@ -299,7 +299,6 @@ fu_lenovo_dock_firmware_init(FuLenovoDockFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LENOVO_DOCK_IMAGE);
 }
 
 static void
@@ -318,6 +317,7 @@ fu_lenovo_dock_firmware_class_init(FuLenovoDockFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_LENOVO_DOCK_IMAGE);
 	object_class->finalize = fu_lenovo_dock_firmware_finalize;
 	firmware_class->parse = fu_lenovo_dock_firmware_parse;
 	firmware_class->export = fu_lenovo_dock_firmware_export;

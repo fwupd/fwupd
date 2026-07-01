@@ -539,8 +539,6 @@ fu_genesys_usbhub_firmware_init(FuGenesysUsbhubFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE);
 }
 
 static void
@@ -557,6 +555,8 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE);
 	firmware_class->convert_version = fu_genesys_usbhub_firmware_convert_version;
 	object_class->finalize = fu_genesys_usbhub_firmware_finalize;
 	firmware_class->validate = fu_genesys_usbhub_firmware_validate;

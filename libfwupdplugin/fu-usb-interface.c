@@ -451,7 +451,6 @@ static void
 fu_usb_interface_init(FuUsbInterface *self)
 {
 	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USB_DESCRIPTOR);
 }
 
 static void
@@ -459,6 +458,7 @@ fu_usb_interface_class_init(FuUsbInterfaceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_USB_DESCRIPTOR);
 	object_class->finalize = fu_usb_interface_finalize;
 	firmware_class->parse = fu_usb_interface_parse;
 	firmware_class->export = fu_usb_interface_export;

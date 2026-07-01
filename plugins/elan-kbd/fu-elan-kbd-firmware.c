@@ -118,13 +118,13 @@ fu_elan_kbd_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elan_kbd_firmware_init(FuElanKbdFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_elan_kbd_firmware_class_init(FuElanKbdFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_elan_kbd_firmware_validate;
 	firmware_class->parse = fu_elan_kbd_firmware_parse;
 	firmware_class->write = fu_elan_kbd_firmware_write;

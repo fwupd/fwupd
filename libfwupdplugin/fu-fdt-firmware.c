@@ -580,7 +580,6 @@ fu_fdt_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_fdt_firmware_init(FuFdtFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FDT_IMAGE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 
@@ -588,6 +587,7 @@ static void
 fu_fdt_firmware_class_init(FuFdtFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FDT_IMAGE);
 	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	firmware_class->validate = fu_fdt_firmware_validate;
 	firmware_class->export = fu_fdt_firmware_export;

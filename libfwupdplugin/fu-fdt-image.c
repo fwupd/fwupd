@@ -646,7 +646,6 @@ fu_fdt_image_init(FuFdtImage *self)
 	priv->hash_attrs =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_bytes_unref);
 	priv->hash_attrs_format = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FDT_IMAGE);
 }
 
 static void
@@ -665,10 +664,11 @@ fu_fdt_image_class_init(FuFdtImageClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_fdt_image_finalize;
-	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	firmware_class->export = fu_fdt_image_export;
 	firmware_class->build = fu_fdt_image_build;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FDT_IMAGE);
 	fu_firmware_set_images_max(firmware_class, 10000);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 }
 
 /**

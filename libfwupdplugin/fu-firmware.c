@@ -45,16 +45,19 @@ typedef struct {
 	guint64 addr;
 	guint64 offset;
 	gsize size;
-	GArray *image_gtypes; /* nullable, element-type GType */
 	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
 	GPtrArray *magic;   /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
+#define FU_FIRMWARE_IMAGE_GTYPES_MAX 10
+
 typedef struct {
 	guint images_max;
 	gsize size_max;
+	GType image_gtypes[FU_FIRMWARE_IMAGE_GTYPES_MAX];
+	guint image_gtypes_cnt;
 } FuFirmwareClassPrivate;
 
 static void
@@ -1869,51 +1872,55 @@ fu_firmware_get_depth(FuFirmware *self)
 
 /**
  * fu_firmware_add_image_gtype:
- * @self: a #FuFirmware
+ * @klass: a #FuFirmwareClass
  * @type: a #GType, e.g. %FU_TYPE_ELF_FIRMWARE
  *
  * Adds a possible image GType.
  *
- * Since: 2.1.1
+ * Since: 2.1.6
  **/
 void
-fu_firmware_add_image_gtype(FuFirmware *self, GType type)
+fu_firmware_add_image_gtype(FuFirmwareClass *klass, GType type)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
 
-	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(FU_IS_FIRMWARE_CLASS(klass));
 	g_return_if_fail(type != G_TYPE_INVALID);
+	g_return_if_fail(cpriv->image_gtypes_cnt < FU_FIRMWARE_IMAGE_GTYPES_MAX);
 
 	g_type_ensure(type);
-	if (priv->image_gtypes == NULL)
-		priv->image_gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
-	g_array_append_val(priv->image_gtypes, type);
+	cpriv->image_gtypes[cpriv->image_gtypes_cnt++] = type;
 }
 
 /**
  * fu_firmware_get_image_gtypes:
  * @self: a #FuFirmware
+ * @n_gtypes: (out): the number of GTypes
  *
  * Returns all the possible image GTypes.
  *
- * Returns: (element-type GType) (transfer none) (nullable): array of #GType.
+ * Returns: (array length=n_gtypes) (transfer none): array of #GType.
  *
- * Since: 2.1.1
+ * Since: 2.1.6
  **/
-GArray *
-fu_firmware_get_image_gtypes(FuFirmware *self)
+const GType *
+fu_firmware_get_image_gtypes(FuFirmware *self, guint *n_gtypes)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
-	return priv->image_gtypes;
+
+	cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	if (n_gtypes != NULL)
+		*n_gtypes = cpriv->image_gtypes_cnt;
+	return cpriv->image_gtypes;
 }
 
 static gboolean
 fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	if (priv->image_gtypes == NULL) {
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	if (cpriv->image_gtypes_cnt == 0) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s did not add image GType %s with fu_firmware_add_image_gtype()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -1921,9 +1928,8 @@ fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
 #endif
 		return TRUE;
 	}
-	for (guint i = 0; i < priv->image_gtypes->len; i++) {
-		GType gtype_tmp = g_array_index(priv->image_gtypes, GType, i);
-		if (gtype_tmp == gtype)
+	for (guint i = 0; i < cpriv->image_gtypes_cnt; i++) {
+		if (cpriv->image_gtypes[i] == gtype)
 			return TRUE;
 	}
 	g_set_error(error,
@@ -2610,12 +2616,18 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	}
 
 	/* image gtypes */
-	if ((flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) > 0 && priv->image_gtypes != NULL &&
-	    priv->image_gtypes->len > 0) {
-		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "image_gtypes", NULL);
-		for (guint i = 0; i < priv->image_gtypes->len; i++) {
-			GType gtype_tmp = g_array_index(priv->image_gtypes, GType, i);
-			xb_builder_node_insert_text(bp, "gtype", g_type_name(gtype_tmp), NULL);
+	if ((flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) > 0) {
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->image_gtypes_cnt > 0) {
+			g_autoptr(XbBuilderNode) bp =
+			    xb_builder_node_insert(bn, "image_gtypes", NULL);
+			for (guint i = 0; i < cpriv->image_gtypes_cnt; i++) {
+				xb_builder_node_insert_text(bp,
+							    "gtype",
+							    g_type_name(cpriv->image_gtypes[i]),
+							    NULL);
+			}
 		}
 	}
 
@@ -2750,8 +2762,6 @@ fu_firmware_finalize(GObject *object)
 		g_object_unref(priv->stream);
 	if (priv->chunks != NULL)
 		g_ptr_array_unref(priv->chunks);
-	if (priv->image_gtypes != NULL)
-		g_array_unref(priv->image_gtypes);
 	if (priv->patches != NULL)
 		g_ptr_array_unref(priv->patches);
 	if (priv->magic != NULL)

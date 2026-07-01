@@ -296,7 +296,6 @@ static void
 fu_efi_vss_auth_variable_init(FuEfiVssAuthVariable *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 }
 
 static void
@@ -319,6 +318,7 @@ fu_efi_vss_auth_variable_class_init(FuEfiVssAuthVariableClass *klass)
 	firmware_class->export = fu_efi_vss_auth_variable_export;
 	firmware_class->write = fu_efi_vss_auth_variable_write;
 	firmware_class->build = fu_efi_vss_auth_variable_build;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 

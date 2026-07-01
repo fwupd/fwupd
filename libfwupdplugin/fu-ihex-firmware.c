@@ -564,7 +564,6 @@ fu_ihex_firmware_init(FuIhexFirmware *self)
 	priv->padding_value = 0x00; /* chosen as we can't write 0xffff to PIC14 */
 	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_ihex_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
@@ -572,6 +571,7 @@ fu_ihex_firmware_class_init(FuIhexFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	object_class->finalize = fu_ihex_firmware_finalize;
 	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 	firmware_class->parse = fu_ihex_firmware_parse;

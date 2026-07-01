@@ -124,12 +124,12 @@ fu_tpm_eventlog_v1_class_init(FuTpmEventlogV1Class *klass)
 	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	firmware_class->parse = fu_tpm_eventlog_v1_parse;
 	firmware_class->write = fu_tpm_eventlog_v1_write;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_TPM_EVENTLOG_ITEM);
 }
 
 static void
 fu_tpm_eventlog_v1_init(FuTpmEventlogV1 *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_TPM_EVENTLOG_ITEM);
 }
 
 /**

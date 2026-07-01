@@ -211,7 +211,6 @@ static void
 fu_synaptics_prometheus_firmware_init(FuSynapticsPrometheusFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	self->signature_size = FU_SYNAPTICS_PROMETHEUS_FIRMWARE_PROMETHEUS_SIGSIZE;
 }
 
@@ -219,6 +218,7 @@ static void
 fu_synaptics_prometheus_firmware_class_init(FuSynapticsPrometheusFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->parse = fu_synaptics_prometheus_firmware_parse;
 	firmware_class->write = fu_synaptics_prometheus_firmware_write;
 	firmware_class->export = fu_synaptics_prometheus_firmware_export;

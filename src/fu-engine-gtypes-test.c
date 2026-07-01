@@ -136,7 +136,8 @@ static void
 fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 {
 	gboolean ret;
-	GArray *image_gtypes;
+	guint n_gtypes = 0;
+	const GType *image_gtypes;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
@@ -203,14 +204,11 @@ fu_engine_plugin_firmware_gtype(GHashTable *gtype_map, GType gtype)
 	}
 
 	/* check child GType's too */
-	image_gtypes = fu_firmware_get_image_gtypes(firmware);
-	if (image_gtypes != NULL) {
-		for (guint i = 0; i < image_gtypes->len; i++) {
-			GType gtype_tmp = g_array_index(image_gtypes, GType, i);
-			if (gtype_tmp == gtype || gtype_tmp == FU_TYPE_FIRMWARE)
-				continue;
-			fu_engine_plugin_firmware_gtype(gtype_map, gtype_tmp);
-		}
+	image_gtypes = fu_firmware_get_image_gtypes(firmware, &n_gtypes);
+	for (guint i = 0; i < n_gtypes; i++) {
+		if (image_gtypes[i] == gtype || image_gtypes[i] == FU_TYPE_FIRMWARE)
+			continue;
+		fu_engine_plugin_firmware_gtype(gtype_map, image_gtypes[i]);
 	}
 }
 
