@@ -55,16 +55,14 @@ if libsystemd.found()
   if get_option('man')
     custom_target(
       'fwupd-refresh.service.8',
-      input: 'fwupd-refresh.service.md',
+      input: 'fwupd-refresh.service.adoc',
       output: 'fwupd-refresh.service.8',
       command: [
-        generate_man,
-        '@INPUT@',
-        '-o',
-        '@OUTPUT@',
-        '--replace',
-        'PACKAGE_VERSION',
-        fwupd_version,
+        asciidoctor,
+        '-b', 'manpage',
+        '-a', 'version=' + fwupd_version,
+        '-o', '@OUTPUT@',
+        '@INPUT@'
       ],
       install: true,
       install_tag: 'man',
@@ -73,21 +71,16 @@ if libsystemd.found()
   endif
   if build_docs
     md_targets += custom_target(
-      'fwupd-refresh.service.md',
-      input: 'fwupd-refresh.service.md',
-      output: 'fwupd-refresh.service.md',
+      'fwupd-refresh.service.adoc',
+      input: 'fwupd-refresh.service.adoc',
+      output: 'fwupd-refresh.service.adoc',
       command: [
-        generate_man,
+        'cp',
         '@INPUT@',
-        '-o',
         '@OUTPUT@',
-        '--replace',
-        'PACKAGE_VERSION',
-        fwupd_version,
-        '--md',
       ],
     )
-    man_md += ['"fwupd-refresh.service.md"']
+    man_md += ['"fwupd-refresh.service.adoc"']
   endif
 endif
 
