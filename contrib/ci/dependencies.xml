@@ -1214,6 +1214,32 @@
       <package>py312-gi-docgen</package>
     </distro>
   </dependency>
+  <dependency id="asciidoctor">
+    <distro id="arch">
+      <package variant="x86_64">asciidoctor</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">rubygem-asciidoctor</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">rubygem-asciidoctor</package>
+      <package variant="aarch64">rubygem-asciidoctor</package>
+    </distro>
+    <distro id="debian">
+      <control />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64">asciidoctor</package>
+      <package variant="aarch64">asciidoctor</package>
+    </distro>
+    <distro id="freebsd">
+      <package>rubygem-asciidoctor</package>
+    </distro>
+    <distro id="darwin">
+      <package variant="x86_64">asciidoctor</package>
+    </distro>
+  </dependency>
   <!-- These are needed for gi-docgen -->
   <dependency id="python3-pygments">
     <distro id="ubuntu">

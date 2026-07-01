@@ -70,11 +70,14 @@ dbxtool = executable(
 
 if get_option('man')
   custom_target('dbxtool.1',
-    input: 'dbxtool.md',
+    input: 'dbxtool.adoc',
     output: 'dbxtool.1',
     command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
+      asciidoctor,
+      '-b', 'manpage',
+      '-a', 'version=' + fwupd_version,
+      '-o', '@OUTPUT@',
+      '@INPUT@'
     ],
     install: true,
     install_tag: 'man',
@@ -82,14 +85,14 @@ if get_option('man')
   )
 endif
 if build_docs
-  md_targets += custom_target('dbxtool.md',
-    input: 'dbxtool.md',
-    output: 'dbxtool.md',
+  md_targets += custom_target('dbxtool.adoc',
+    input: 'dbxtool.adoc',
+    output: 'dbxtool.adoc',
     command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
-      '--md',
+      'cp',
+      '@INPUT@',
+      '@OUTPUT@',
     ],
   )
-  man_md += ['"dbxtool.md"']
+  man_md += ['"dbxtool.adoc"']
 endif
