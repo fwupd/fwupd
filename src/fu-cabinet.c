@@ -1113,7 +1113,6 @@ fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error)
 static void
 fu_cabinet_init(FuCabinet *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), G_MAXUINT32); /* ~4GB */
 	self->builder = xb_builder_new();
 	self->jcat_file = fwupd_jcat_file_new();
 	self->jcat_context = fu_jcat_context_new();
@@ -1145,6 +1144,7 @@ fu_cabinet_class_init(FuCabinetClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_cabinet_finalize;
+	fu_firmware_set_size_max(firmware_class, G_MAXUINT32); /* ~4GB */
 	firmware_class->parse = fu_cabinet_parse;
 }
 

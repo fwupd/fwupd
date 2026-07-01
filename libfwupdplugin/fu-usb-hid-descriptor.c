@@ -175,7 +175,6 @@ fu_usb_hid_descriptor_codec_iface_init(FwupdCodecInterface *iface)
 static void
 fu_usb_hid_descriptor_init(FuUsbHidDescriptor *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -194,4 +193,5 @@ fu_usb_hid_descriptor_class_init(FuUsbHidDescriptorClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_usb_hid_descriptor_finalize;
 	firmware_class->parse = fu_usb_hid_descriptor_parse;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }

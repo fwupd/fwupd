@@ -471,12 +471,12 @@ fu_edid_class_init(FuEdidClass *klass)
 	firmware_class->write = fu_edid_write;
 	firmware_class->build = fu_edid_build;
 	firmware_class->export = fu_edid_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 static void
 fu_edid_init(FuEdid *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

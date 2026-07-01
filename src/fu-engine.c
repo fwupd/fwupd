@@ -5128,7 +5128,7 @@ fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError
 
 	/* load file */
 	fu_engine_set_status(self, FWUPD_STATUS_DECOMPRESSING);
-	fu_firmware_set_size_max(FU_FIRMWARE(cabinet),
+	fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(cabinet),
 				 fu_context_get_config_u64(self->ctx, "ArchiveSizeMax"));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet), stream, 0x0, flags, error))

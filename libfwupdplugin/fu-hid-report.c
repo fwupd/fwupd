@@ -30,13 +30,13 @@ fu_hid_report_init(FuHidReport *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_IDX);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_HID_REPORT_ITEM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
 fu_hid_report_class_init(FuHidReportClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, G_MAXUINT8);
 }
 

@@ -107,7 +107,6 @@ fu_genesys_usbhub_codesign_firmware_export(FuFirmware *firmware,
 static void
 fu_genesys_usbhub_codesign_firmware_init(FuGenesysUsbhubCodesignFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -117,4 +116,5 @@ fu_genesys_usbhub_codesign_firmware_class_init(FuGenesysUsbhubCodesignFirmwareCl
 	firmware_class->validate = fu_genesys_usbhub_codesign_firmware_validate;
 	firmware_class->parse = fu_genesys_usbhub_codesign_firmware_parse;
 	firmware_class->export = fu_genesys_usbhub_codesign_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

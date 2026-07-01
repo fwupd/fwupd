@@ -73,13 +73,13 @@ fu_bitmap_image_class_init(FuBitmapImageClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_bitmap_image_parse;
 	firmware_class->export = fu_bitmap_image_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 static void
 fu_bitmap_image_init(FuBitmapImage *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 FuBitmapImage *

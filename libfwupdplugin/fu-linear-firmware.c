@@ -204,7 +204,6 @@ static void
 fu_linear_firmware_init(FuLinearFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void
@@ -214,6 +213,7 @@ fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	object_class->get_property = fu_linear_firmware_get_property;
 	object_class->set_property = fu_linear_firmware_set_property;
 	firmware_class->parse = fu_linear_firmware_parse;

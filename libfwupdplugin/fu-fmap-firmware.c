@@ -295,13 +295,13 @@ fu_fmap_firmware_init(FuFmapFirmware *self)
 	priv->ver_minor = FU_STRUCT_FMAP_DEFAULT_VER_MINOR;
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_USWID_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
 fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 	firmware_class->parse_full = fu_fmap_firmware_parse;
 	firmware_class->validate = fu_fmap_firmware_validate;
 	firmware_class->write = fu_fmap_firmware_write;

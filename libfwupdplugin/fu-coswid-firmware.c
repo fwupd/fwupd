@@ -1313,7 +1313,6 @@ fu_coswid_firmware_init(FuCoswidFirmware *self)
 	priv->entities =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_entity_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -1345,6 +1344,7 @@ fu_coswid_firmware_class_init(FuCoswidFirmwareClass *klass)
 	firmware_class->build = fu_coswid_firmware_build;
 	firmware_class->export = fu_coswid_firmware_export;
 	firmware_class->get_checksum = fu_coswid_firmware_get_checksum;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 /**

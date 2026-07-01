@@ -141,11 +141,6 @@ static void
 fu_efi_ftw_store_init(FuEfiFtwStore *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-#ifdef HAVE_FUZZER
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_KB);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
-#endif
 }
 
 static void
@@ -157,4 +152,9 @@ fu_efi_ftw_store_class_init(FuEfiFtwStoreClass *klass)
 	firmware_class->export = fu_efi_ftw_store_export;
 	firmware_class->write = fu_efi_ftw_store_write;
 	firmware_class->build = fu_efi_ftw_store_build;
+#ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(firmware_class, 4 * FU_KB);
+#else
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+#endif
 }

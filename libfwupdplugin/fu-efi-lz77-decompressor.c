@@ -706,7 +706,6 @@ static void
 fu_efi_lz77_decompressor_init(FuEfiLz77Decompressor *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * FU_MB);
 }
 
 static void
@@ -714,6 +713,7 @@ fu_efi_lz77_decompressor_class_init(FuEfiLz77DecompressorClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_efi_lz77_decompressor_parse;
+	fu_firmware_set_size_max(firmware_class, 64 * FU_MB);
 }
 
 /**

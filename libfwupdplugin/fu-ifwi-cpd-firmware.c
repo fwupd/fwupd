@@ -367,13 +367,13 @@ fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_ifwi_cpd_firmware_validate;
 	firmware_class->export = fu_ifwi_cpd_firmware_export;
 	firmware_class->parse = fu_ifwi_cpd_firmware_parse;

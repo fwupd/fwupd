@@ -85,6 +85,7 @@ fu_zip_file_class_init(FuZipFileClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->build = fu_zip_file_build;
 	firmware_class->export = fu_zip_file_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 }
 
 static void
@@ -92,7 +93,6 @@ fu_zip_file_init(FuZipFile *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 /**

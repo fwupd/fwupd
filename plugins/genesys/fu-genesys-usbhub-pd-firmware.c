@@ -72,7 +72,6 @@ static void
 fu_genesys_usbhub_pd_firmware_init(FuGenesysUsbhubPdFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -81,4 +80,5 @@ fu_genesys_usbhub_pd_firmware_class_init(FuGenesysUsbhubPdFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->validate = fu_genesys_usbhub_pd_firmware_validate;
 	firmware_class->parse = fu_genesys_usbhub_pd_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

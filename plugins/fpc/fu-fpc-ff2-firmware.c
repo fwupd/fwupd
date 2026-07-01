@@ -62,7 +62,6 @@ fu_fpc_ff2_firmware_get_blocks_num(FuFpcFf2Firmware *self)
 static void
 fu_fpc_ff2_firmware_init(FuFpcFf2Firmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -72,4 +71,5 @@ fu_fpc_ff2_firmware_class_init(FuFpcFf2FirmwareClass *klass)
 	firmware_class->validate = fu_fpc_ff2_firmware_validate;
 	firmware_class->parse = fu_fpc_ff2_firmware_parse;
 	firmware_class->export = fu_fpc_ff2_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }

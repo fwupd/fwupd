@@ -104,7 +104,6 @@ static void
 fu_legion_hid_firmware_init(FuLegionHidFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -112,4 +111,5 @@ fu_legion_hid_firmware_class_init(FuLegionHidFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_legion_hid_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

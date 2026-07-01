@@ -541,7 +541,6 @@ fu_genesys_usbhub_firmware_init(FuGenesysUsbhubFirmware *self)
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -565,4 +564,5 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 	firmware_class->export = fu_genesys_usbhub_firmware_export;
 	firmware_class->build = fu_genesys_usbhub_firmware_build;
 	firmware_class->write = fu_genesys_usbhub_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

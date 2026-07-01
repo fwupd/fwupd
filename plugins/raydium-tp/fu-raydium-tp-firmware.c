@@ -97,7 +97,6 @@ fu_raydium_tp_firmware_init(FuRaydiumTpFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_RAYDIUM_TP_IMAGE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
@@ -106,4 +105,5 @@ fu_raydium_tp_firmware_class_init(FuRaydiumTpFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	klass_firmware->export = fu_raydium_tp_firmware_export;
 	klass_firmware->parse = fu_raydium_tp_firmware_parse;
+	fu_firmware_set_size_max(klass_firmware, 4 * FU_MB);
 }

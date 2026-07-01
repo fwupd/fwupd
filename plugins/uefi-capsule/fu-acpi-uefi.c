@@ -127,7 +127,6 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 static void
 fu_acpi_uefi_init(FuAcpiUefi *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_KB);
 }
 
 static void
@@ -146,6 +145,7 @@ fu_acpi_uefi_class_init(FuAcpiUefiClass *klass)
 	object_class->finalize = fu_acpi_uefi_finalize;
 	firmware_class->parse = fu_acpi_uefi_parse;
 	firmware_class->export = fu_acpi_uefi_export;
+	fu_firmware_set_size_max(firmware_class, 32 * FU_KB);
 }
 
 FuFirmware *

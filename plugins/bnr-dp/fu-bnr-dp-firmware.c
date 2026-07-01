@@ -566,7 +566,6 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 static void
 fu_bnr_dp_firmware_init(FuBnrDpFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -594,6 +593,7 @@ fu_bnr_dp_firmware_class_init(FuBnrDpFirmwareClass *klass)
 	firmware_class->export = fu_bnr_dp_firmware_export;
 	firmware_class->parse = fu_bnr_dp_firmware_parse;
 	firmware_class->write = fu_bnr_dp_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *

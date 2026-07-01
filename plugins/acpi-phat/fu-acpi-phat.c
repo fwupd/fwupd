@@ -307,7 +307,6 @@ fu_acpi_phat_to_report_string(FuAcpiPhat *self)
 static void
 fu_acpi_phat_init(FuAcpiPhat *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ACPI_PHAT_VERSION_RECORD);
@@ -332,6 +331,7 @@ fu_acpi_phat_class_init(FuAcpiPhatClass *klass)
 	firmware_class->write = fu_acpi_phat_write;
 	firmware_class->export = fu_acpi_phat_export;
 	firmware_class->build = fu_acpi_phat_build;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, 2000);
 }
 
