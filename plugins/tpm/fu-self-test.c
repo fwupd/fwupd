@@ -335,6 +335,9 @@ fu_tpm_coreboot_vboot_not_found_func(void)
 	g_assert_cmpint(fwupd_security_attr_get_result(attr),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+	g_assert_false(
+	    fwupd_security_attr_has_obsolete(attr,
+					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
 static void
@@ -406,6 +409,9 @@ fu_tpm_coreboot_vboot_enabled_func(void)
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_true(
+	    fwupd_security_attr_has_obsolete(attr,
+					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
 static void
@@ -478,6 +484,9 @@ fu_tpm_coreboot_vboot_not_enabled_func(void)
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	g_assert_true(
 	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW));
+	g_assert_false(
+	    fwupd_security_attr_has_obsolete(attr,
+					     FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED));
 }
 
 int
