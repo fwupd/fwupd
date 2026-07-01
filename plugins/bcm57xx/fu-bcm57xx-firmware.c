@@ -645,7 +645,6 @@ fu_bcm57xx_firmware_init(FuBcm57xxFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE1_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_STAGE2_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_BCM57XX_DICT_IMAGE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -657,6 +656,7 @@ fu_bcm57xx_firmware_class_init(FuBcm57xxFirmwareClass *klass)
 	firmware_class->export = fu_bcm57xx_firmware_export;
 	firmware_class->write = fu_bcm57xx_firmware_write;
 	firmware_class->build = fu_bcm57xx_firmware_build;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *

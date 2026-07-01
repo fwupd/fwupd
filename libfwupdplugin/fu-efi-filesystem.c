@@ -136,13 +136,6 @@ fu_efi_filesystem_write(FuFirmware *firmware, GError **error)
 static void
 fu_efi_filesystem_init(FuEfiFilesystem *self)
 {
-#ifdef HAVE_FUZZER
-	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
-	 * when printing the FuEfiFilesystem XML output */
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
-#endif
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILESYSTEM);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_FILE);
@@ -156,8 +149,10 @@ fu_efi_filesystem_class_init(FuEfiFilesystemClass *klass)
 	firmware_class->write = fu_efi_filesystem_write;
 #ifdef HAVE_FUZZER
 	fu_firmware_set_images_max(firmware_class, 50);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 #else
 	fu_firmware_set_images_max(firmware_class, FU_EFI_FILESYSTEM_FILES_MAX);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 #endif
 }
 

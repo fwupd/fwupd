@@ -73,7 +73,6 @@ static void
 fu_mediatek_scaler_firmware_init(FuMediatekScalerFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
@@ -81,4 +80,5 @@ fu_mediatek_scaler_firmware_class_init(FuMediatekScalerFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_mediatek_scaler_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

@@ -71,7 +71,6 @@ fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 static void
 fu_bcm57xx_stage2_image_init(FuBcm57xxStage2Image *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -80,6 +79,7 @@ fu_bcm57xx_stage2_image_class_init(FuBcm57xxStage2ImageClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_bcm57xx_stage2_image_parse;
 	firmware_class->write = fu_bcm57xx_stage2_image_write;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 FuFirmware *

@@ -147,12 +147,12 @@ static void
 fu_logitech_rdfu_firmware_init(FuLogitechRdfuFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_LOGITECH_RDFU_ENTITY);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void
 fu_logitech_rdfu_firmware_class_init(FuLogitechRdfuFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	firmware_class->parse = fu_logitech_rdfu_firmware_parse;
 }

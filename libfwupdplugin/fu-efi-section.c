@@ -483,11 +483,6 @@ fu_efi_section_init(FuEfiSection *self)
 {
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
-#ifdef HAVE_FUZZER
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
-#endif
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
@@ -514,8 +509,10 @@ fu_efi_section_class_init(FuEfiSectionClass *klass)
 	firmware_class->build = fu_efi_section_build;
 	firmware_class->export = fu_efi_section_export;
 #ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, 10);
 #else
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	fu_firmware_set_images_max(firmware_class, 2000);
 #endif
 }

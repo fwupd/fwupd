@@ -625,7 +625,6 @@ fu_pefile_firmware_init(FuPefileFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_FIRMWARE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_SBATLEVEL_SECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
@@ -643,6 +642,7 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_pefile_firmware_finalize;
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 	firmware_class->validate = fu_pefile_firmware_validate;
 	firmware_class->parse = fu_pefile_firmware_parse;
 	firmware_class->write = fu_pefile_firmware_write;

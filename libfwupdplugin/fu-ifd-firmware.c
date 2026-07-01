@@ -533,7 +533,6 @@ fu_ifd_firmware_init(FuIfdFirmware *self)
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_BIOS);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_IFD_IMAGE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_VOLUME);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 static void
@@ -551,6 +550,7 @@ fu_ifd_firmware_class_init(FuIfdFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ifd_firmware_finalize;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	firmware_class->validate = fu_ifd_firmware_validate;
 	firmware_class->export = fu_ifd_firmware_export;
 	firmware_class->parse = fu_ifd_firmware_parse;

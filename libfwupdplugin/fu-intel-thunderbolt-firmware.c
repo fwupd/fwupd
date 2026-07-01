@@ -113,13 +113,13 @@ fu_intel_thunderbolt_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_intel_thunderbolt_firmware_init(FuIntelThunderboltFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 32 * FU_MB);
 }
 
 static void
 fu_intel_thunderbolt_firmware_class_init(FuIntelThunderboltFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 32 * FU_MB);
 	firmware_class->parse = fu_intel_thunderbolt_firmware_parse;
 	firmware_class->write = fu_intel_thunderbolt_firmware_write;
 }

@@ -326,7 +326,6 @@ fu_nordic_hid_archive_init(FuNordicHidArchive *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_NORDIC_HID_FIRMWARE_B0);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -334,5 +333,6 @@ fu_nordic_hid_archive_class_init(FuNordicHidArchiveClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_nordic_hid_archive_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, 1024);
 }

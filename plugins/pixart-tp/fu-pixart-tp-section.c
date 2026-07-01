@@ -67,7 +67,6 @@ fu_pixart_tp_section_init(FuPixartTpSection *self)
 {
 	self->reserved =
 	    g_byte_array_sized_new(FU_STRUCT_PIXART_TP_FIRMWARE_SECTION_HDR_N_ELEMENTS_SHARED);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -242,5 +241,6 @@ fu_pixart_tp_section_class_init(FuPixartTpSectionClass *klass)
 	firmware_class->parse_full = fu_pixart_tp_section_parse;
 	firmware_class->build = fu_pixart_tp_section_build;
 	firmware_class->write = fu_pixart_tp_section_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 	object_class->finalize = fu_pixart_tp_section_finalize;
 }

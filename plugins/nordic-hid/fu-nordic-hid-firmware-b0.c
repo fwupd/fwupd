@@ -126,7 +126,6 @@ fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_firmware_b0_init(FuNordicHidFirmwareB0 *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -135,4 +134,5 @@ fu_nordic_hid_firmware_b0_class_init(FuNordicHidFirmwareB0Class *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_nordic_hid_firmware_b0_parse;
 	firmware_class->write = fu_nordic_hid_firmware_b0_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

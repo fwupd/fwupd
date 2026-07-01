@@ -45,7 +45,6 @@ typedef struct {
 	guint64 addr;
 	guint64 offset;
 	gsize size;
-	gsize size_max;
 	GArray *image_gtypes; /* nullable, element-type GType */
 	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
@@ -55,6 +54,7 @@ typedef struct {
 
 typedef struct {
 	guint images_max;
+	gsize size_max;
 } FuFirmwareClassPrivate;
 
 static void
@@ -500,26 +500,25 @@ fu_firmware_get_size(FuFirmware *self)
 
 /**
  * fu_firmware_set_size_max:
- * @self: a #FuPlugin
+ * @klass: a #FuFirmwareClass
  * @size_max: integer, or 0 for no limit
  *
  * Sets the maximum size of the image allowed during parsing.
  * Implementations should query fu_firmware_get_size_max() during parsing when adding images to
  * ensure the limit is not exceeded.
  *
- * Since: 1.9.7
+ * Since: 2.1.6
  **/
 void
-fu_firmware_set_size_max(FuFirmware *self, gsize size_max)
+fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	priv->size_max = size_max;
+	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(klass);
+	cpriv->size_max = size_max;
 }
 
 /**
  * fu_firmware_get_size_max:
- * @self: a #FuPlugin
+ * @self: a #FuFirmware
  *
  * Gets the maximum size of the image allowed during parsing.
  *
@@ -530,9 +529,10 @@ fu_firmware_set_size_max(FuFirmware *self, gsize size_max)
 gsize
 fu_firmware_get_size_max(FuFirmware *self)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClassPrivate *cpriv;
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXSIZE);
-	return priv->size_max;
+	cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+	return cpriv->size_max;
 }
 
 /**
@@ -1175,27 +1175,32 @@ fu_firmware_parse_stream(FuFirmware *self,
 				    "invalid firmware as zero sized");
 		return FALSE;
 	}
-	if (priv->size_max > 0 && priv->streamsz > priv->size_max) {
-		g_autofree gchar *sz_val = g_format_size(priv->streamsz);
-		g_autofree gchar *sz_max = g_format_size(priv->size_max);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "%s firmware is too large (%s, limit %s)",
-			    G_OBJECT_TYPE_NAME(self),
-			    sz_val,
-			    sz_max);
-		return FALSE;
-	}
+	{
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->size_max > 0 && priv->streamsz > cpriv->size_max) {
+			g_autofree gchar *sz_val = g_format_size(priv->streamsz);
+			g_autofree gchar *sz_max = g_format_size(cpriv->size_max);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "%s firmware is too large (%s, limit %s)",
+				    G_OBJECT_TYPE_NAME(self),
+				    sz_val,
+				    sz_max);
+			return FALSE;
+		}
 
 #ifndef SUPPORTED_BUILD
-	/* we want all firmware subclasses to set this now */
-	if (G_OBJECT_TYPE(self) != FU_TYPE_FIRMWARE &&
-	    priv->size_max == FU_FIRMWARE_SIZE_MAX_DEFAULT) {
-		g_critical("%s did not set firmware max size with fu_firmware_set_size_max()",
-			   G_OBJECT_TYPE_NAME(self));
-	}
+		/* we want all firmware subclasses to set this now */
+		if (G_OBJECT_TYPE(self) != FU_TYPE_FIRMWARE &&
+		    cpriv->size_max == FU_FIRMWARE_SIZE_MAX_DEFAULT) {
+			g_critical(
+			    "%s did not set firmware max size with fu_firmware_set_size_max()",
+			    G_OBJECT_TYPE_NAME(self));
+		}
 #endif
+	}
 
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
 	 * ->tokenize() or ->parse() and needs to be destroyed before parsing again */
@@ -1402,7 +1407,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		fu_firmware_set_size(self, tmpval);
 	tmpval = xb_node_query_text_as_uint(n, "size_max", NULL);
 	if (tmpval != G_MAXUINT64)
-		fu_firmware_set_size_max(self, tmpval);
+		fu_firmware_set_size_max(FU_FIRMWARE_GET_CLASS(self), tmpval);
 	tmpval = xb_node_query_text_as_uint(n, "alignment", NULL);
 	if (tmpval != G_MAXUINT64) {
 		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
@@ -2525,8 +2530,12 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "offset", priv->offset);
 	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);
 	fu_xmlb_builder_insert_kx(bn, "size", priv->size);
-	if (priv->size_max != FU_FIRMWARE_SIZE_MAX_DEFAULT)
-		fu_xmlb_builder_insert_kx(bn, "size_max", priv->size_max);
+	{
+		FuFirmwareClassPrivate *cpriv =
+		    fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+		if (cpriv->size_max != FU_FIRMWARE_SIZE_MAX_DEFAULT)
+			fu_xmlb_builder_insert_kx(bn, "size_max", cpriv->size_max);
+	}
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->stream != NULL) {
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
@@ -2710,7 +2719,6 @@ fu_firmware_init(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->images = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	priv->size_max = FU_FIRMWARE_SIZE_MAX_DEFAULT;
 }
 
 static void
@@ -2764,6 +2772,7 @@ fu_firmware_class_init(FuFirmwareClass *klass)
 	object_class->get_property = fu_firmware_get_property;
 	object_class->set_property = fu_firmware_set_property;
 	object_class->constructed = fu_firmware_constructed;
+	fu_firmware_set_size_max(klass, FU_FIRMWARE_SIZE_MAX_DEFAULT);
 
 	/**
 	 * FuFirmware:parent:

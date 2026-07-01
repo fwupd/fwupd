@@ -401,13 +401,13 @@ fu_dfu_firmware_init(FuDfuFirmware *self)
 	priv->dfu_version = FU_DFU_FIRMWARE_VERSION_DFU_1_0;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_dfu_firmware_validate;
 	firmware_class->export = fu_dfu_firmware_export;
 	firmware_class->parse = fu_dfu_firmware_parse;

@@ -269,6 +269,7 @@ fu_efi_signature_class_init(FuEfiSignatureClass *klass)
 	firmware_class->write = fu_efi_signature_write;
 	firmware_class->build = fu_efi_signature_build;
 	firmware_class->get_checksum = fu_efi_signature_get_checksum;
+	fu_firmware_set_size_max(firmware_class, 500 * FU_KB);
 }
 
 static void
@@ -276,5 +277,4 @@ fu_efi_signature_init(FuEfiSignature *self)
 {
 	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
 	priv->kind = FU_EFI_SIGNATURE_KIND_SHA256;
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 500 * FU_KB);
 }

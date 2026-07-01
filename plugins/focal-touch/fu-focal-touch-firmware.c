@@ -68,7 +68,6 @@ fu_focal_touch_firmware_parse(FuFirmware *firmware,
 static void
 fu_focal_touch_firmware_init(FuFocalTouchFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -77,4 +76,5 @@ fu_focal_touch_firmware_class_init(FuFocalTouchFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_focal_touch_firmware_parse;
 	firmware_class->export = fu_focal_touch_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }

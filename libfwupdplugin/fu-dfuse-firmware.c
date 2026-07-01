@@ -296,7 +296,6 @@ fu_dfuse_firmware_init(FuDfuseFirmware *self)
 {
 	fu_dfu_firmware_set_version(FU_DFU_FIRMWARE(self), FU_DFU_FIRMWARE_VERSION_DFUSE);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
@@ -307,6 +306,7 @@ fu_dfuse_firmware_class_init(FuDfuseFirmwareClass *klass)
 	firmware_class->parse = fu_dfuse_firmware_parse;
 	firmware_class->write = fu_dfuse_firmware_write;
 	fu_firmware_set_images_max(firmware_class, 255);
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
 }
 
 /**

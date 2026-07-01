@@ -99,7 +99,6 @@ fu_dell_kestrel_rtshub_firmware_init(FuDellKestrelRtshubFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * FU_MB);
 }
 
 static void
@@ -109,4 +108,5 @@ fu_dell_kestrel_rtshub_firmware_class_init(FuDellKestrelRtshubFirmwareClass *kla
 	firmware_class->parse = fu_dell_kestrel_rtshub_firmware_parse;
 	firmware_class->export = fu_dell_kestrel_rtshub_firmware_export;
 	firmware_class->convert_version = fu_dell_kestrel_rtshub_firmware_convert_version;
+	fu_firmware_set_size_max(firmware_class, 64 * FU_MB);
 }

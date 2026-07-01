@@ -572,6 +572,7 @@ fu_zip_firmware_class_init(FuZipFirmwareClass *klass)
 	firmware_class->parse = fu_zip_firmware_parse;
 	firmware_class->write = fu_zip_firmware_write;
 	firmware_class->add_magic = fu_zip_firmware_add_magic;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
 	fu_firmware_set_images_max(firmware_class, 1000);
 }
 
@@ -580,7 +581,6 @@ fu_zip_firmware_init(FuZipFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ZIP_FILE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
 }
 
 /**

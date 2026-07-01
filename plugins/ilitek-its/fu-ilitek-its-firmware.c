@@ -200,7 +200,6 @@ fu_ilitek_its_firmware_init(FuIlitekItsFirmware *self)
 {
 	fu_ihex_firmware_set_padding_value(FU_IHEX_FIRMWARE(self), 0xFF);
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_ILITEK_ITS_BLOCK);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
@@ -221,5 +220,6 @@ fu_ilitek_its_firmware_class_init(FuIlitekItsFirmwareClass *klass)
 	firmware_class->convert_version = fu_ilitek_its_firmware_convert_version;
 	firmware_class->parse = fu_ilitek_its_firmware_parse;
 	firmware_class->export = fu_ilitek_its_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, 100);
 }

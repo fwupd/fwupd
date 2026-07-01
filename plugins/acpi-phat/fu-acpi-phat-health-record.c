@@ -186,7 +186,6 @@ fu_acpi_phat_health_record_build(FuFirmware *firmware, XbNode *n, GError **error
 static void
 fu_acpi_phat_health_record_init(FuAcpiPhatHealthRecord *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
@@ -209,6 +208,7 @@ fu_acpi_phat_health_record_class_init(FuAcpiPhatHealthRecordClass *klass)
 	firmware_class->write = fu_acpi_phat_health_record_write;
 	firmware_class->export = fu_acpi_phat_health_record_export;
 	firmware_class->build = fu_acpi_phat_health_record_build;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 	fu_firmware_set_images_max(firmware_class, 2000);
 }
 

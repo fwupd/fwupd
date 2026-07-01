@@ -185,13 +185,13 @@ static void
 fu_ifwi_fpt_firmware_init(FuIfwiFptFirmware *self)
 {
 	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_ifwi_fpt_firmware_class_init(FuIfwiFptFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_ifwi_fpt_firmware_validate;
 	firmware_class->parse = fu_ifwi_fpt_firmware_parse;
 	firmware_class->write = fu_ifwi_fpt_firmware_write;

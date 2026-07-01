@@ -1061,6 +1061,11 @@ fu_cab_firmware_class_init(FuCabFirmwareClass *klass)
 	firmware_class->build = fu_cab_firmware_build;
 	firmware_class->export = fu_cab_firmware_export;
 	fu_firmware_set_images_max(firmware_class, G_MAXUINT16);
+#ifdef __x86_64__
+	fu_firmware_set_size_max(firmware_class, 16 * FU_GB);
+#else
+	fu_firmware_set_size_max(firmware_class, 1 * FU_GB);
+#endif
 }
 
 static void
@@ -1070,11 +1075,6 @@ fu_cab_firmware_init(FuCabFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
-#ifdef __x86_64__
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_GB);
-#else
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_GB);
-#endif
 }
 
 /**

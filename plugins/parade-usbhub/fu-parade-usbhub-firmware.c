@@ -65,7 +65,6 @@ static void
 fu_parade_usbhub_firmware_init(FuParadeUsbhubFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
 }
 
 static void
@@ -75,4 +74,5 @@ fu_parade_usbhub_firmware_class_init(FuParadeUsbhubFirmwareClass *klass)
 	firmware_class->convert_version = fu_parade_usbhub_firmware_convert_version;
 	firmware_class->validate = fu_parade_usbhub_firmware_validate;
 	firmware_class->parse = fu_parade_usbhub_firmware_parse;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }
