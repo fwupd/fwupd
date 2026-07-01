@@ -36,6 +36,9 @@ fu_mm_device_get_inhibition_uid(FuMmDevice *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_mm_device_set_device_file(FuMmDevice *self, MMModemPortType port_type, GError **error)
     G_GNUC_NON_NULL(1);
+gboolean
+fu_mm_device_get_device_file(FuMmDevice *self, MMModemPortType port_type, gchar **out_device_file, GError **error);
+    G_GNUC_NON_NULL(1, 3);
 
 gboolean
 fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **error)

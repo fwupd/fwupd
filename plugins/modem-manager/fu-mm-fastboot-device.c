@@ -17,6 +17,8 @@ G_DEFINE_TYPE(FuMmFastbootDevice, fu_mm_fastboot_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE "detach-at-fastboot-has-no-response"
 
+#define ROLLING_WIRELESS_VENDOR_ID 0x33F8
+
 static void
 fu_mm_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -38,18 +40,37 @@ fu_mm_fastboot_device_detach(FuDevice *device, FuProgress *progress, GError **er
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
 	gboolean has_response = TRUE;
+	g_autofree gchar *device_file = NULL;
+	guint16 vid = fu_device_get_vid(device);
+
+	if (!fu_mm_device_get_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_MBIM, &device_file, error)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
+                            "no mbim port type found for modem: ");
+		return FALSE;
+	}
 
 	/* expect response for fastboot AT command */
 	if (fu_device_has_private_flag(FU_DEVICE(self),
 				       FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE)) {
 		has_response = FALSE;
 	}
-	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
-		return FALSE;
-	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), self->detach_at, has_response, error)) {
-		g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
-		return FALSE;
-	}
+
+	if (vid != ROLLING_WIRELESS_VENDOR_ID) {
+                if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
+                        return FALSE;
+                if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), self->detach_at, has_response, error)) {
+                        g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
+                        return FALSE;
+                }
+        } else {
+	        g_autofree gchar *cmd = g_strdup_printf(
+                        "mbimcli --fibocom-set-at-command='%s' -p -d %s",
+                        self->detach_at, device_file);
+                if (!g_spawn_command_line_sync(cmd, NULL, NULL, NULL, error)) {
+                        g_prefix_error_literal(error, "failed to execute mbimcli command: ");
+                        return FALSE;
+                }
+        }
 
 	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -60,8 +81,13 @@ static gboolean
 fu_mm_fastboot_device_probe(FuDevice *device, GError **error)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
-	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_AT, error);
+	guint16 vid = fu_device_get_vid(device);
+	if (vid != ROLLING_WIRELESS_VENDOR_ID) {
+		return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_AT, error);
+	}
+	return TRUE;
 }
+
 
 static gboolean
 fu_mm_fastboot_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
