@@ -8203,7 +8203,7 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 
 	/* useful for fwupdtool get-devices --show-all --force */
 	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_COLDPLUG_FORCE) > 0 &&
-	    possible_plugins->len == 0) {
+	    possible_plugins == NULL) {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;
 		locker = fu_device_locker_new(device, &error_local);
@@ -8217,6 +8217,10 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 		}
 		return;
 	}
+
+	/* nothing to do */
+	if (possible_plugins == NULL)
+		return;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -8311,7 +8315,7 @@ fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine
 
 	/* there's no point keeping this in the cache */
 	possible_plugins = fu_device_get_possible_plugins(device);
-	if (possible_plugins->len == 0) {
+	if (possible_plugins == NULL) {
 		g_debug("removing %s from backend cache as no possible plugin",
 			fu_device_get_backend_id(device));
 		fu_backend_device_removed(backend, device);
@@ -8718,7 +8722,7 @@ fu_engine_backends_coldplug_backend_add_devices(FuEngine *self,
 
 		/* there's no point keeping this in the cache */
 		possible_plugins = fu_device_get_possible_plugins(device);
-		if (possible_plugins->len == 0) {
+		if (possible_plugins == NULL) {
 			g_debug("removing %s from backend cache as no possible plugin",
 				fu_device_get_backend_id(device));
 			fu_backend_device_removed(backend, device);

@@ -92,7 +92,7 @@ typedef struct {
 	GType specialized_gtype;
 	GType proxy_gtype;
 	GType firmware_gtype;
-	GPtrArray *possible_plugins; /* (element-type utf-8) */
+	GPtrArray *possible_plugins; /* (nullable) (element-type utf-8) */
 	GPtrArray *instance_ids;     /* (nullable) (element-type FuDeviceInstanceIdItem) */
 	GPtrArray *retry_recs;	     /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
@@ -550,7 +550,7 @@ fu_device_get_request_cnt(FuDevice *self, FwupdRequestKind request_kind)
  *
  * Gets the list of possible plugin names, typically added from quirk files.
  *
- * Returns: (element-type utf8) (transfer container): plugin names
+ * Returns: (element-type utf8) (transfer container) (nullable): plugin names
  *
  * Since: 1.3.3
  **/
@@ -558,6 +558,8 @@ GPtrArray *
 fu_device_get_possible_plugins(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->possible_plugins == NULL || priv->possible_plugins->len == 0)
+		return NULL;
 	return g_ptr_array_ref(priv->possible_plugins);
 }
 
@@ -582,6 +584,8 @@ fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin)
 	g_return_if_fail(plugin != NULL);
 
 	/* add if it does not already exist */
+	if (priv->possible_plugins == NULL)
+		priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
 	if (g_ptr_array_find_with_equal_func(priv->possible_plugins, plugin, g_str_equal, NULL))
 		return;
 	g_ptr_array_add(priv->possible_plugins, g_strdup(plugin));
@@ -608,6 +612,8 @@ fu_device_remove_possible_plugin(FuDevice *self, const gchar *plugin)
 	g_return_if_fail(plugin != NULL);
 
 	/* remove if exists */
+	if (priv->possible_plugins == NULL)
+		return;
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *plugin_tmp = g_ptr_array_index(priv->possible_plugins, i);
 		if (g_strcmp0(plugin, plugin_tmp) == 0) {
@@ -5448,7 +5454,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			fwupd_codec_string_append(str, idt, key, value);
 		}
 	}
-	for (guint i = 0; i < priv->possible_plugins->len; i++) {
+	for (guint i = 0; priv->possible_plugins != NULL && i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
 		fwupd_codec_string_append(str, idt, "PossiblePlugin", name);
 	}
@@ -7035,7 +7041,9 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		}
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS) {
-		for (guint i = 0; i < priv_donor->possible_plugins->len; i++) {
+		for (guint i = 0;
+		     priv_donor->possible_plugins != NULL && i < priv_donor->possible_plugins->len;
+		     i++) {
 			const gchar *possible_plugin =
 			    g_ptr_array_index(priv_donor->possible_plugins, i);
 			fu_device_add_possible_plugin(self, possible_plugin);
@@ -8753,7 +8761,6 @@ fu_device_init(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	priv->order = G_MAXINT;
-	priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
 	priv->acquiesce_delay = 50; /* ms */
 	priv->private_flags_registered = g_array_new(FALSE, FALSE, sizeof(GQuark));
 	priv->private_flags = g_array_new(FALSE, FALSE, sizeof(GQuark));
@@ -8800,9 +8807,10 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->instance_ids);
 	if (priv->parent_guids != NULL)
 		g_ptr_array_unref(priv->parent_guids);
+	if (priv->possible_plugins != NULL)
+		g_ptr_array_unref(priv->possible_plugins);
 	g_array_unref(priv->private_flags);
 	g_array_unref(priv->private_flags_registered);
-	g_ptr_array_unref(priv->possible_plugins);
 	g_free(priv->equivalent_id);
 	g_free(priv->physical_id);
 	g_free(priv->logical_id);

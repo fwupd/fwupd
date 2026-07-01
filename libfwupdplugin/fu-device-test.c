@@ -350,6 +350,7 @@ fu_device_func(void)
 	fu_device_add_possible_plugin(device, "test");
 	fu_device_add_possible_plugin(device, "test");
 	possible_plugins = fu_device_get_possible_plugins(device);
+	g_assert_nonnull(possible_plugins);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "sys_vendor", NULL);
@@ -991,6 +992,7 @@ fu_device_possible_plugin_func(void)
 
 	/* verify */
 	possible_plugins = fu_device_get_possible_plugins(device);
+	g_assert_nonnull(possible_plugins);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "abc");
 }

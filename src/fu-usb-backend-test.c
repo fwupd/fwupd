@@ -140,6 +140,7 @@ fu_usb_backend_func(void)
 	/* check the fwupd DS20 descriptor was parsed */
 	g_assert_true(fu_device_has_icon(device_tmp, "computer"));
 	possible_plugins = fu_device_get_possible_plugins(device_tmp);
+	g_assert_nonnull(possible_plugins);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
 
