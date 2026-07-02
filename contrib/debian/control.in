@@ -7,7 +7,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
 Build-Depends: %%%DYNAMIC%%%
 Build-Depends-Indep: gi-docgen <!nodoc>,
 Rules-Requires-Root: no
-Standards-Version: 4.6.0.1
+Standards-Version: 4.7.2
 Section: admin
 Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
@@ -38,17 +38,18 @@ Depends: ${misc:Depends},
 Recommends: python3,
 	    bolt,
 	    default-dbus-system-bus | dbus-system-bus,
-	    secureboot-db,
+	    ${recommends:secureboot-db},
 	    udisks2,
 	    fwupd-signed,
 	    jq
 Suggests: gir1.2-fwupd-2.0
-Provides: fwupdate
+Provides: fwupdate,
+	  ${gir:Provides}
 Conflicts: fwupdate-amd64-signed,
 	   fwupdate-i386-signed,
 	   fwupdate-arm64-signed,
 	   fwupdate-armhf-signed
-Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
+Breaks: ${gir:Depends},
 	libdfu1 (<< 0.9.7-1),
 	fwupdate (<< 12-7),
 	libdfu-dev (<< 0.9.7-1)
@@ -72,6 +73,7 @@ Depends: ${misc:Depends},
          default-dbus-system-bus | dbus-system-bus,
          fwupd,
          gnome-desktop-testing,
+         ieee-data,
          polkitd | policykit-1,
          python3,
          python3-gi,
@@ -109,10 +111,11 @@ Package: libfwupd-dev
 Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupd3 (= ${binary:Version}),
-         gir1.2-fwupd-2.0 (= ${binary:Version}),
-         libcurl4-gnutls-dev,
-         libglib2.0-dev (>= 2.45.8),
-         ${misc:Depends}
+	 gir1.2-fwupd-2.0 (= ${binary:Version}),
+	 libcurl4-gnutls-dev,
+	 libglib2.0-dev (>= 2.45.8),
+	 libjcat-dev,
+	 ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)
 Section: libdevel
@@ -130,6 +133,7 @@ Architecture: linux-any
 Multi-Arch: same
 Depends: ${misc:Depends},
          ${gir:Depends}
+Provides: ${gir:Provides}
 Section: introspection
 Description: GObject introspection data for libfwupd
  This package provides the introspection data for libfwupd.
