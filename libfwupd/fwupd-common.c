@@ -1054,7 +1054,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 #endif
 
 #ifdef HAVE_MEMFD_CREATE
-	fd = memfd_create("fwupd", MFD_CLOEXEC);
+	fd = memfd_create("fwupd", MFD_CLOEXEC | MFD_ALLOW_SEALING);
 #else
 	/* emulate in-memory file by an unlinked temporary file */
 	fd = g_mkstemp(tmp_file);
@@ -1098,6 +1098,16 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 			    g_strerror(errno));
 		return NULL;
 	}
+#ifdef HAVE_MEMFD_CREATE
+	if (fcntl(fd, F_ADD_SEALS, F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_SEAL) < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to seal memfd: %s",
+			    strerror(errno));
+		return NULL;
+	}
+#endif
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
 }
 
