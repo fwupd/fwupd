@@ -1203,18 +1203,6 @@
     <distro id="darwin">
       <package variant="x86_64" />
     </distro>
-    <distro id="debian">
-      <control>
-        <version>(>= 2021.1)</version>
-      </control>
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <version>(>= 2021.1)</version>
-      </control>
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
     <distro id="freebsd">
       <package>py312-gi-docgen</package>
     </distro>
