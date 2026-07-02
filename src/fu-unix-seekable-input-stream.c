@@ -116,25 +116,6 @@ fu_unix_seekable_input_stream_seekable_iface_init(GSeekableIface *iface)
 	iface->truncate_fn = fu_unix_seekable_input_stream_truncate;
 }
 
-static gboolean
-fu_unix_seekable_input_stream_verify_sealed(gint fd, GError **error)
-{
-#ifdef HAVE_MEMFD_CREATE
-	gint seals = fcntl(fd, F_GET_SEALS);
-	if (seals >= 0 && (seals & (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) !=
-			      (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "fd is missing required seals, got 0x%x",
-			    (guint)seals);
-		return FALSE;
-	}
-#endif
-	/* success */
-	return TRUE;
-}
-
 /**
  * fu_unix_seekable_input_stream_new:
  * @fd: a UNIX file descriptor
@@ -177,12 +158,55 @@ fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 		return NULL;
 	}
 
-	/* if the fd supports sealing (i.e. is a memfd) then require immutability */
-	if (!fu_unix_seekable_input_stream_verify_sealed(fd, error))
-		return NULL;
-
 	/* success */
 	return g_steal_pointer(&stream);
+}
+
+/**
+ * fu_unix_seekable_input_stream_require_seal:
+ * @stream: a #FuUnixSeekableInputStream
+ * @error: (nullable): optional return location for an error
+ *
+ * Enforces that the file descriptor backing this stream is a memfd with the required seals set.
+ *
+ * Returns: %TRUE if sealed
+ *
+ * Since: 2.1.7
+ **/
+gboolean
+fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GError **error)
+{
+#ifdef HAVE_MEMFD_CREATE
+	gint fd;
+	gint seals;
+
+	g_return_val_if_fail(FU_IS_UNIX_SEEKABLE_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	fd = g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(stream));
+	seals = fcntl(fd, F_GET_SEALS);
+	if (seals < 0) {
+		/* not supported on this fd */
+		return TRUE;
+	}
+	if ((seals & F_SEAL_SEAL) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "fd not sealed");
+		return FALSE;
+	}
+	if ((seals & F_SEAL_WRITE) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no WRITE seal");
+		return FALSE;
+	}
+	if ((seals & F_SEAL_SHRINK) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no SHRINK seal");
+		return FALSE;
+	}
+	if ((seals & F_SEAL_GROW) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no GROW seal");
+		return FALSE;
+	}
+#endif
+	return TRUE;
 }
 
 static void
