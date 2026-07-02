@@ -1040,12 +1040,6 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 }
 
 static void
@@ -1075,6 +1069,12 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	device_class->to_string = fu_redfish_device_to_string;
 	device_class->probe = fu_redfish_device_probe;
 	device_class->set_quirk_kv = fu_redfish_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
+	fu_device_register_private_flag(device_class, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
+	fu_device_register_private_flag(device_class,
+					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 
 	/**
 	 * FuRedfishDevice:backend:

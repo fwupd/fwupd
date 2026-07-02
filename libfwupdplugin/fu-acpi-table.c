@@ -269,9 +269,6 @@ static void
 fu_acpi_table_init(FuAcpiTable *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
@@ -292,10 +289,13 @@ fu_acpi_table_class_init(FuAcpiTableClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	object_class->finalize = fu_acpi_table_finalize;
 	firmware_class->parse = fu_acpi_table_parse;
 	firmware_class->export = fu_acpi_table_export;
 	firmware_class->write = fu_acpi_table_write;
+	fu_firmware_set_images_max(firmware_class, 2000);
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 /**

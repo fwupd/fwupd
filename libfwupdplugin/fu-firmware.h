@@ -141,11 +141,11 @@ fu_firmware_get_size(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
 fu_firmware_set_size(FuFirmware *self, gsize size) G_GNUC_NON_NULL(1);
 void
-fu_firmware_set_size_max(FuFirmware *self, gsize size_max) G_GNUC_NON_NULL(1);
+fu_firmware_set_size_max(FuFirmwareClass *klass, gsize size_max) G_GNUC_NON_NULL(1);
 gsize
 fu_firmware_get_size_max(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_firmware_set_images_max(FuFirmware *self, guint images_max) G_GNUC_NON_NULL(1);
+fu_firmware_set_images_max(FuFirmwareClass *klass, guint images_max) G_GNUC_NON_NULL(1);
 guint
 fu_firmware_get_images_max(FuFirmware *self) G_GNUC_NON_NULL(1);
 guint
@@ -233,7 +233,7 @@ fu_firmware_check_compatible(FuFirmware *self,
 gboolean
 fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
 void
-fu_firmware_add_image_gtype(FuFirmware *self, GType type) G_GNUC_NON_NULL(1);
+fu_firmware_add_image_gtype(FuFirmwareClass *klass, GType type) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean

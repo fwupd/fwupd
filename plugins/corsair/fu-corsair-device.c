@@ -836,8 +836,6 @@ fu_corsair_device_init(FuCorsairDevice *self)
 	self->vendor_interface = CORSAIR_DEFAULT_VENDOR_INTERFACE_ID;
 	self->cmd_read_size = CORSAIR_DEFAULT_CMD_SIZE;
 	self->cmd_write_size = CORSAIR_DEFAULT_CMD_SIZE;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CORSAIR_DEVICE_FLAG_IS_RECEIVER);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 30);
@@ -862,4 +860,6 @@ fu_corsair_device_class_init(FuCorsairDeviceClass *klass)
 	device_class->to_string = fu_corsair_device_to_string;
 	device_class->set_progress = fu_corsair_device_set_progress;
 	device_class->convert_version = fu_corsair_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_CORSAIR_DEVICE_FLAG_IS_RECEIVER);
+	fu_device_register_private_flag(device_class, FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH);
 }

@@ -344,7 +344,6 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 static void
 fu_fit_firmware_init(FuFitFirmware *self)
 {
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
 static void
@@ -352,6 +351,7 @@ fu_fit_firmware_class_init(FuFitFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_fit_firmware_parse;
+	fu_firmware_set_images_max(firmware_class, 1024);
 }
 
 /**

@@ -168,7 +168,7 @@ fu_firmware_build_func(void)
 	g_assert_nonnull(n);
 
 	/* build object */
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE_GET_CLASS(firmware), FU_TYPE_FIRMWARE);
 	ret = fu_firmware_build(firmware, n, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -304,7 +304,7 @@ fu_firmware_sorted_func(void)
 	fu_firmware_set_idx(firmware2, 0x200);
 	fu_firmware_set_idx(firmware3, 0x100);
 
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE_GET_CLASS(firmware), FU_TYPE_FIRMWARE);
 	ret = fu_firmware_add_image(firmware, firmware1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -733,7 +733,7 @@ fu_firmware_func(void)
 	g_autoptr(GPtrArray) images = NULL;
 	g_autofree gchar *str = NULL;
 
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(FU_FIRMWARE_GET_CLASS(firmware), FU_TYPE_FIRMWARE);
 
 	fu_firmware_set_addr(img1, 0x200);
 	fu_firmware_set_idx(img1, 13);
@@ -787,11 +787,17 @@ fu_firmware_func(void)
 				    "    <idx>0xd</idx>\n"
 				    "    <addr>0x200</addr>\n"
 				    "    <filename>BIOS.bin</filename>\n"
+				    "    <image_gtypes>\n"
+				    "      <gtype>FuFirmware</gtype>\n"
+				    "    </image_gtypes>\n"
 				    "  </firmware>\n"
 				    "  <firmware>\n"
 				    "    <id>secondary</id>\n"
 				    "    <idx>0x17</idx>\n"
 				    "    <addr>0x400</addr>\n"
+				    "    <image_gtypes>\n"
+				    "      <gtype>FuFirmware</gtype>\n"
+				    "    </image_gtypes>\n"
 				    "  </firmware>\n"
 				    "</firmware>\n",
 				    &error);
@@ -858,8 +864,8 @@ fu_firmware_dedupe_func(void)
 
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
-	fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(firmware, 2);
+	fu_firmware_add_image_gtype(FU_FIRMWARE_GET_CLASS(firmware), FU_TYPE_FIRMWARE);
+	fu_firmware_set_images_max(FU_FIRMWARE_GET_CLASS(firmware), 2);
 
 	fu_firmware_set_idx(img1_old, 13);
 	fu_firmware_set_id(img1_old, "DAVE");
@@ -901,6 +907,9 @@ fu_firmware_dedupe_func(void)
 	ret = fu_firmware_add_image(firmware, img3, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
+
+	/* reset class-level limit */
+	fu_firmware_set_images_max(FU_FIRMWARE_GET_CLASS(firmware), 0);
 }
 
 static void

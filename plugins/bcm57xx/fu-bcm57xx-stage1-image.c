@@ -154,7 +154,6 @@ fu_bcm57xx_stage1_image_init(FuBcm57xxStage1Image *self)
 {
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_4);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -164,6 +163,7 @@ fu_bcm57xx_stage1_image_class_init(FuBcm57xxStage1ImageClass *klass)
 	firmware_class->convert_version = fu_bcm57xx_stage1_image_convert_version;
 	firmware_class->parse = fu_bcm57xx_stage1_image_parse;
 	firmware_class->write = fu_bcm57xx_stage1_image_write;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 FuFirmware *

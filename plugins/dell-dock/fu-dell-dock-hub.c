@@ -205,7 +205,6 @@ fu_dell_dock_hub_init(FuDellDockHub *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE);
 }
 
 static void
@@ -217,6 +216,7 @@ fu_dell_dock_hub_class_init(FuDellDockHubClass *klass)
 	device_class->write_firmware = fu_dell_dock_hub_write_fw;
 	device_class->set_quirk_kv = fu_dell_dock_hub_set_quirk_kv;
 	device_class->set_progress = fu_dell_dock_hub_set_progress;
+	fu_device_register_private_flag(device_class, FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE);
 }
 
 FuDellDockHub *

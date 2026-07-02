@@ -187,7 +187,6 @@ fu_efi_device_path_codec_iface_init(FwupdCodecInterface *iface)
 static void
 fu_efi_device_path_init(FuEfiDevicePath *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -198,6 +197,7 @@ fu_efi_device_path_class_init(FuEfiDevicePathClass *klass)
 	firmware_class->parse = fu_efi_device_path_parse;
 	firmware_class->write = fu_efi_device_path_write;
 	firmware_class->build = fu_efi_device_path_build;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 /**

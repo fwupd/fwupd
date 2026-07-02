@@ -65,7 +65,6 @@ static void
 fu_ilitek_its_block_init(FuIlitekItsBlock *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -74,6 +73,7 @@ fu_ilitek_its_block_class_init(FuIlitekItsBlockClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->export = fu_ilitek_its_block_export;
 	firmware_class->parse = fu_ilitek_its_block_parse;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 FuFirmware *

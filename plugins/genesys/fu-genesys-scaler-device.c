@@ -1980,8 +1980,6 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_PAUSE_R2_CPU);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0);
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_SCALER_FIRMWARE);
 	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_GENESYS_USBHUB_DEVICE);
@@ -2017,6 +2015,8 @@ fu_genesys_scaler_device_class_init(FuGenesysScalerDeviceClass *klass)
 	device_class->attach = fu_genesys_scaler_device_attach;
 	device_class->to_string = fu_genesys_scaler_device_to_string;
 	device_class->set_quirk_kv = fu_genesys_scaler_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_SCALER_FLAG_PAUSE_R2_CPU);
+	fu_device_register_private_flag(device_class, FU_SCALER_FLAG_USE_I2C_CH0);
 }
 
 FuGenesysScalerDevice *

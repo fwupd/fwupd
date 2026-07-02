@@ -1433,6 +1433,30 @@ fu_dfu_device_class_init(FuDfuDeviceClass *klass)
 	device_class->set_progress = fu_dfu_device_set_progress;
 	object_class->dispose = fu_dfu_device_dispose;
 	object_class->finalize = fu_dfu_device_finalize;
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_WILL_DETACH);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_NO_PID_CHANGE);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_MANIFEST_POLL);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_GD32);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT);
+	fu_device_register_private_flag(device_class, FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH);
 }
 
 static void
@@ -1458,29 +1482,4 @@ fu_dfu_device_init(FuDfuDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 10);
-
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_PID_CHANGE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_POLL);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH);
 }

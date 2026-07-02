@@ -143,12 +143,12 @@ fu_usb_config_descriptor_class_init(FuUsbConfigDescriptorClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_usb_config_descriptor_parse;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 static void
 fu_usb_config_descriptor_init(FuUsbConfigDescriptor *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 /**

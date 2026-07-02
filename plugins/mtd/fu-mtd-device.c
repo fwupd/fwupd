@@ -1155,8 +1155,6 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
@@ -1189,4 +1187,5 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->prepare_firmware = fu_mtd_device_prepare_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
+	fu_device_register_private_flag(device_class, FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
 }

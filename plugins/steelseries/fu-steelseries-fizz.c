@@ -711,6 +711,8 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 	device_class->write_firmware = fu_steelseries_fizz_write_firmware;
 	device_class->read_firmware = fu_steelseries_fizz_read_firmware;
 	device_class->set_progress = fu_steelseries_fizz_set_progress;
+	fu_device_register_private_flag(device_class, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
+	fu_device_register_private_flag(device_class, FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER);
 }
 
 static void
@@ -720,9 +722,6 @@ fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);

@@ -1654,7 +1654,6 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_retry_set_delay(FU_DEVICE(self), HPI_CMD_RETRY_DELAY);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CCGX_HPI_DEVICE_FLAG_IS_IN_RESTART);
 
 	/* we can recover the I²C link using reset */
 	fu_device_retry_add_recovery(FU_DEVICE(self),
@@ -1686,4 +1685,5 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 	device_class->close = fu_ccgx_hpi_device_close;
 	device_class->set_progress = fu_ccgx_hpi_device_set_progress;
 	device_class->convert_version = fu_ccgx_hpi_device_convert_version;
+	fu_device_register_private_flag(device_class, FU_CCGX_HPI_DEVICE_FLAG_IS_IN_RESTART);
 }

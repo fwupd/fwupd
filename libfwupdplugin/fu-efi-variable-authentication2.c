@@ -248,7 +248,6 @@ static void
 fu_efi_variable_authentication2_init(FuEfiVariableAuthentication2 *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	self->signers = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
@@ -271,4 +270,5 @@ fu_efi_variable_authentication2_class_init(FuEfiVariableAuthentication2Class *kl
 	firmware_class->export = fu_efi_variable_authentication2_export;
 	firmware_class->write = fu_efi_variable_authentication2_write;
 	firmware_class->add_magic = fu_efi_variable_authentication2_add_magic;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_SIGNATURE_LIST);
 }

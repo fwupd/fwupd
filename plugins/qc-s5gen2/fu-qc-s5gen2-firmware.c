@@ -124,7 +124,6 @@ fu_qc_s5gen2_firmware_init(FuQcS5gen2Firmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
@@ -145,6 +144,7 @@ fu_qc_s5gen2_firmware_class_init(FuQcS5gen2FirmwareClass *klass)
 	klass_firmware->parse = fu_qc_s5gen2_firmware_parse;
 	klass_firmware->write = fu_qc_s5gen2_firmware_write;
 	klass_firmware->export = fu_qc_s5gen2_firmware_export;
+	fu_firmware_set_size_max(klass_firmware, 256 * FU_MB);
 }
 
 FuFirmware *

@@ -983,8 +983,6 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MODEM);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW);
 	fu_device_add_possible_plugin(FU_DEVICE(self), "modem_manager");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -1027,4 +1025,6 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 				     FALSE,
 				     G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_INHIBITED, pspec);
+	fu_device_register_private_flag(device_class, FU_MM_DEVICE_FLAG_USE_BRANCH);
+	fu_device_register_private_flag(device_class, FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW);
 }

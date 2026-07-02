@@ -378,19 +378,19 @@ fu_wacom_usb_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_wacom_usb_firmware_init(FuWacomUsbFirmware *self)
 {
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_SREC_FIRMWARE);
 }
 
 static void
 fu_wacom_usb_firmware_class_init(FuWacomUsbFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_SREC_FIRMWARE);
 	firmware_class->validate = fu_wacom_usb_firmware_validate;
 	firmware_class->parse = fu_wacom_usb_firmware_parse;
 	firmware_class->write = fu_wacom_usb_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 1024);
 }
 
 FuFirmware *

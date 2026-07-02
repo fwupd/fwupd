@@ -114,12 +114,6 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SYNAPTICS_MST_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
@@ -1875,4 +1869,9 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	device_class->attach = fu_synaptics_mst_device_attach;
 	device_class->check_firmware = fu_synaptics_mst_device_check_firmware;
 	device_class->set_progress = fu_synaptics_mst_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID);
+	fu_device_register_private_flag(device_class,
+					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
+	fu_device_register_private_flag(device_class,
+					FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 }

@@ -410,7 +410,6 @@ fu_redfish_smbios_finalize(GObject *object)
 static void
 fu_redfish_smbios_init(FuRedfishSmbios *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1 * FU_MB);
 }
 
 static void
@@ -423,6 +422,7 @@ fu_redfish_smbios_class_init(FuRedfishSmbiosClass *klass)
 	firmware_class->write = fu_redfish_smbios_write;
 	firmware_class->build = fu_redfish_smbios_build;
 	firmware_class->export = fu_redfish_smbios_export;
+	fu_firmware_set_size_max(firmware_class, 1 * FU_MB);
 }
 
 FuRedfishSmbios *

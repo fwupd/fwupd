@@ -201,12 +201,12 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 static void
 fu_telink_dfu_archive_init(FuTelinkDfuArchive *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_telink_dfu_archive_class_init(FuTelinkDfuArchiveClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->parse = fu_telink_dfu_archive_parse;
 }

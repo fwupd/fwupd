@@ -151,18 +151,18 @@ fu_sbatlevel_section_write(FuFirmware *firmware, GError **error)
 static void
 fu_sbatlevel_section_init(FuSbatlevelSection *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_CSV_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 2);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 10 * FU_KB);
 }
 
 static void
 fu_sbatlevel_section_class_init(FuSbatlevelSectionClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_CSV_FIRMWARE);
 
+	fu_firmware_set_size_max(firmware_class, 10 * FU_KB);
 	firmware_class->parse = fu_sbatlevel_section_parse;
 	firmware_class->write = fu_sbatlevel_section_write;
+	fu_firmware_set_images_max(firmware_class, 2);
 }
 
 FuFirmware *

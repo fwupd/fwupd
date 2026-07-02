@@ -437,18 +437,18 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_elf_firmware_init(FuElfFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 256 * FU_MB);
 }
 
 static void
 fu_elf_firmware_class_init(FuElfFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_elf_firmware_validate;
 	firmware_class->parse = fu_elf_firmware_parse;
 	firmware_class->write = fu_elf_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 256 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, 1024);
 }
 
 /**

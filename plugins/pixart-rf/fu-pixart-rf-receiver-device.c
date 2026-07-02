@@ -879,7 +879,6 @@ fu_pixart_rf_receiver_device_init(FuPixartRfReceiverDevice *self)
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PIXART_RF_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
@@ -895,4 +894,5 @@ fu_pixart_rf_receiver_device_class_init(FuPixartRfReceiverDeviceClass *klass)
 	device_class->write_firmware = fu_pixart_rf_receiver_device_write_firmware;
 	device_class->prepare_firmware = fu_pixart_rf_receiver_device_prepare_firmware;
 	device_class->set_progress = fu_pixart_rf_receiver_device_set_progress;
+	fu_device_register_private_flag(device_class, FU_PIXART_RF_DEVICE_FLAG_IS_HPAC);
 }

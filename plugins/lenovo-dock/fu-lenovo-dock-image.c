@@ -52,8 +52,6 @@ fu_lenovo_dock_image_init(FuLenovoDockImage *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), G_MAXUINT8);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -62,6 +60,8 @@ fu_lenovo_dock_image_class_init(FuLenovoDockImageClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->export = fu_lenovo_dock_image_export;
 	firmware_class->convert_version = fu_lenovo_dock_image_convert_version;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_set_images_max(firmware_class, G_MAXUINT8);
 }
 
 FuFirmware *

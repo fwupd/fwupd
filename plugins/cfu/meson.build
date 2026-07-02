@@ -5,6 +5,7 @@ plugin_quirks += files('cfu.quirk')
 plugin_builtins += static_library('fu_plugin_cfu',
   sources: [
     'fu-cfu-device.c',
+    'fu-cfu-firmware.c',
     'fu-cfu-module.c',
     'fu-cfu-plugin.c',
   ],

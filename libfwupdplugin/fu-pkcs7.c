@@ -132,15 +132,15 @@ fu_pkcs7_parse(FuFirmware *firmware,
 static void
 fu_pkcs7_init(FuPkcs7 *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_X509_CERTIFICATE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
 fu_pkcs7_class_init(FuPkcs7Class *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 	firmware_class->parse = fu_pkcs7_parse;
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_X509_CERTIFICATE);
 }
 
 /**

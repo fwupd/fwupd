@@ -517,7 +517,6 @@ fu_ccgx_firmware_init(FuCcgxFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
@@ -539,4 +538,5 @@ fu_ccgx_firmware_class_init(FuCcgxFirmwareClass *klass)
 	firmware_class->write = fu_ccgx_firmware_write;
 	firmware_class->build = fu_ccgx_firmware_build;
 	firmware_class->export = fu_ccgx_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 }

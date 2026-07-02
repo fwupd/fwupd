@@ -216,15 +216,15 @@ fu_elan_ts_firmware_init(FuElanTsFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 4 * FU_MB);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 }
 
 static void
 fu_elan_ts_firmware_class_init(FuElanTsFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->validate = fu_elan_ts_firmware_validate;
 	firmware_class->parse = fu_elan_ts_firmware_parse;
 	firmware_class->export = fu_elan_ts_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 4 * FU_MB);
 }

@@ -621,11 +621,13 @@ fu_efi_load_option_class_init(FuEfiLoadOptionClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_EFI_DEVICE_PATH_LIST);
 	object_class->finalize = fu_efi_load_option_finalize;
 	firmware_class->parse = fu_efi_load_option_parse;
 	firmware_class->write = fu_efi_load_option_write;
 	firmware_class->build = fu_efi_load_option_build;
 	firmware_class->export = fu_efi_load_option_export;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }
 
 static void
@@ -633,8 +635,6 @@ fu_efi_load_option_init(FuEfiLoadOption *self)
 {
 	self->attrs = FU_EFI_LOAD_OPTION_ATTR_ACTIVE;
 	self->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH_LIST);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 /**

@@ -95,18 +95,18 @@ static void
 fu_ebitdo_firmware_init(FuEbitdoFirmware *self)
 {
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
 fu_ebitdo_firmware_class_init(FuEbitdoFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 	firmware_class->convert_version = fu_ebitdo_firmware_convert_version;
 	firmware_class->parse = fu_ebitdo_firmware_parse;
 	firmware_class->write = fu_ebitdo_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
 }

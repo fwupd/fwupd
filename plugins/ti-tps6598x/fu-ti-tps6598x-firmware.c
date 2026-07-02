@@ -152,8 +152,6 @@ static void
 fu_ti_tps6598x_firmware_init(FuTiTps6598xFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 16 * FU_MB);
 }
 
 static void
@@ -163,4 +161,6 @@ fu_ti_tps6598x_firmware_class_init(FuTiTps6598xFirmwareClass *klass)
 	firmware_class->validate = fu_ti_tps6598x_firmware_validate;
 	firmware_class->parse = fu_ti_tps6598x_firmware_parse;
 	firmware_class->write = fu_ti_tps6598x_firmware_write;
+	fu_firmware_set_size_max(firmware_class, 16 * FU_MB);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
 }

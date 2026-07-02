@@ -122,7 +122,6 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 static void
 fu_igsc_code_firmware_init(FuIgscCodeFirmware *self)
 {
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 8 * FU_MB);
 }
 
 static void
@@ -131,4 +130,5 @@ fu_igsc_code_firmware_class_init(FuIgscCodeFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_igsc_code_firmware_parse;
 	firmware_class->export = fu_igsc_code_firmware_export;
+	fu_firmware_set_size_max(firmware_class, 8 * FU_MB);
 }

@@ -144,7 +144,6 @@ fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
-		fu_firmware_add_image_gtype(firmware, FU_TYPE_FIRMWARE);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 		if (!fu_size_checked_inc(&offset, extension_length, error))
@@ -365,22 +364,22 @@ fu_ifwi_cpd_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 static void
 fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
-	fu_firmware_add_image_gtype(FU_FIRMWARE(self), FU_TYPE_FIRMWARE);
-	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 128 * FU_MB);
 }
 
 static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_ifwi_cpd_firmware_validate;
 	firmware_class->export = fu_ifwi_cpd_firmware_export;
 	firmware_class->parse = fu_ifwi_cpd_firmware_parse;
 	firmware_class->write = fu_ifwi_cpd_firmware_write;
 	firmware_class->build = fu_ifwi_cpd_firmware_build;
 	firmware_class->convert_version = fu_ifwi_cpd_firmware_convert_version;
+	fu_firmware_set_images_max(firmware_class, FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
 }
 
 /**
