@@ -104,6 +104,34 @@ fu_unix_seekable_input_stream_sealed_memfd_func(void)
 }
 
 static void
+fu_unix_seekable_input_stream_tmpfs_func(void)
+{
+#if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
+	g_autofd gint fd = -1;
+	g_autofree gchar *fn = g_strdup("/dev/shm/fwupd-test-XXXXXX");
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	const gchar data[] = "hello";
+
+	/* regular files on tmpfs also support F_GET_SEALS, reporting F_SEAL_SEAL */
+	fd = g_mkstemp(fn);
+	if (fd < 0) {
+		g_test_skip("cannot create file on /dev/shm, skipping");
+		return;
+	}
+	g_assert_cmpint(g_unlink(fn), ==, 0);
+	g_assert_cmpint(write(fd, data, sizeof(data)), ==, sizeof(data));
+	g_assert_cmpint(lseek(fd, 0, SEEK_SET), ==, 0);
+
+	stream = fu_unix_seekable_input_stream_new(g_steal_fd(&fd), TRUE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+#else
+	g_test_skip("No gio-unix-2.0 or memfd_create support, skipping");
+#endif
+}
+
+static void
 fu_unix_seekable_input_stream_unsealed_memfd_func(void)
 {
 #if defined(HAVE_GIO_UNIX) && defined(HAVE_MEMFD_CREATE)
@@ -135,6 +163,8 @@ main(int argc, char **argv)
 			fu_unix_seekable_input_stream_non_regular_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream/sealed-memfd",
 			fu_unix_seekable_input_stream_sealed_memfd_func);
+	g_test_add_func("/fwupd/unix-seekable-input-stream/tmpfs",
+			fu_unix_seekable_input_stream_tmpfs_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream/unsealed-memfd",
 			fu_unix_seekable_input_stream_unsealed_memfd_func);
 	return g_test_run();

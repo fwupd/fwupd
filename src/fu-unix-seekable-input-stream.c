@@ -121,8 +121,13 @@ fu_unix_seekable_input_stream_verify_sealed(gint fd, GError **error)
 {
 #ifdef HAVE_MEMFD_CREATE
 	gint seals = fcntl(fd, F_GET_SEALS);
-	if (seals >= 0 && (seals & (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) !=
-			      (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) {
+
+	/* regular files on tmpfs also support F_GET_SEALS and report F_SEAL_SEAL as sealing was
+	 * not enabled at creation time; they can never be sealed and so have to be treated like
+	 * files on any other filesystem */
+	if (seals >= 0 && (seals & F_SEAL_SEAL) == 0 &&
+	    (seals & (F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) !=
+		(F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
