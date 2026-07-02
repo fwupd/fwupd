@@ -292,6 +292,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU "org.fwupd.hsi.SupportedCpu"
 /**
+ * FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST: (skip)
+ *
+ * Host Security ID attribute for firmware root of trust
+ *
+ * Since: 2.1.7
+ **/
+#define FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST "org.fwupd.hsi.FirmwareRootOfTrust"
+/**
  * FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION: (skip)
  *
  * Host Security ID attribute for Rollback protection of AMD platform

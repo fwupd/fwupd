@@ -36,6 +36,18 @@ fu_hp_bioscfg_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **er
 }
 
 static void
+fu_hp_bioscfg_plugin_set_firmware_root(FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST,
+						     NULL);
+	if (attr != NULL)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FwupdBiosSetting *bios_attr;
@@ -76,6 +88,7 @@ fu_hp_bioscfg_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	}
 
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_hp_bioscfg_plugin_set_firmware_root(attrs);
 	fwupd_security_attr_add_obsolete(attr, FWUPD_SECURITY_ATTR_ID_AMD_PLATFORM_SECURE_BOOT);
 }
 

@@ -189,6 +189,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if fwupd supports HSI on this chip */
 		return g_strdup(_("Supported CPU"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return g_strdup(_("Firmware root of trust"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if firmware enforces rollback protection */
 		return g_strdup(_("Processor rollback protection"));
@@ -405,6 +409,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU) == 0) {
 		/* TRANSLATORS: Title: if fwupd supports HSI on this chip */
 		return _("Processor Security Checks");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST) == 0) {
+		/* TRANSLATORS: Title: if firmware verifies the next firmware stage */
+		return _("Firmware Root of Trust");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: if firmware enforces rollback protection */
@@ -637,6 +645,10 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Each system should have tests to ensure firmware security.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Firmware root of trust verifies device firmware before it starts.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION) == 0 ||

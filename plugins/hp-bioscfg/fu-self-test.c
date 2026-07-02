@@ -62,6 +62,7 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_root = NULL;
 	g_autofree gchar *testdatadir = g_test_build_filename(G_TEST_DIST,
 							      "tests",
 							      "firmware-attributes",
@@ -73,6 +74,11 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	attr_root = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_FIRMWARE_ROOT_OF_TRUST);
+	fwupd_security_attr_set_plugin(attr_root, "core");
+	fwupd_security_attr_set_result_success(attr_root, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attrs_append(attrs, attr_root);
+
 	fu_plugin_runner_add_security_attrs(self->plugin_hp_bioscfg, attrs);
 
 	/* check that SureStart attribute is present and has success status */
@@ -83,6 +89,8 @@ fu_plugin_hp_bioscfg_surestart_enabled(gconstpointer user_data)
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+
+	g_assert_true(fwupd_security_attr_has_flag(attr_root, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
 }
 
 static void

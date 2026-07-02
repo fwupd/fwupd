@@ -1,0 +1,20 @@
+{
+  "id": "org.fwupd.hsi.FirmwareRootOfTrust",
+  "name": "Firmware Root of Trust",
+  "description": [
+    "A firmware root of trust verifies early firmware before the device starts.",
+    "This can be provided by processor and platform features such as Intel BootGuard, AMD Platform Secure Boot, HP SureStart, or by firmware implementations such as coreboot verified boot."
+  ],
+  "failure-impact": [
+    "If fwupd cannot detect a firmware root of trust then it cannot verify that early firmware is protected from tampering before the operating system starts."
+  ],
+  "failure-results": {
+    "unknown": "firmware root of trust was not detected"
+  },
+  "success-results": {
+    "valid": "firmware root of trust detected"
+  },
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
+  "hsi-level": 2,
+  "fwupd-version": "2.1.7"
+}
