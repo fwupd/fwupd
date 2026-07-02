@@ -277,6 +277,11 @@
       <package>noto-sans</package>
     </distro>
   </dependency>
+  <dependency type="build" id="dh-sequence-cruft">
+    <distro id="debian">
+      <control />
+    </distro>
+  </dependency>
   <dependency id="devscripts">
     <distro id="debian" />
     <distro id="ubuntu">
