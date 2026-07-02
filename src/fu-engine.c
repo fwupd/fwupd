@@ -5069,8 +5069,14 @@ fu_engine_update_metadata(FuEngine *self,
 	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE, error);
 	if (stream_fd == NULL)
 		return FALSE;
+	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream_fd),
+							error))
+		return FALSE;
 	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE, error);
 	if (stream_sig == NULL)
+		return FALSE;
+	if (!fu_unix_seekable_input_stream_require_seal(FU_UNIX_SEEKABLE_INPUT_STREAM(stream_sig),
+							error))
 		return FALSE;
 
 	/* read the entire file into memory */
