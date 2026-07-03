@@ -28,8 +28,9 @@ def update_debian_control(target):
     with open(control_in) as rfd:
         lines = rfd.readlines()
 
-    deps, QUBES = parse_control_dependencies()
+    (deps, build_indep), QUBES = parse_control_dependencies()
     deps.sort()
+    build_indep.sort()
 
     if QUBES:
         lines += "\n"
@@ -41,8 +42,12 @@ def update_debian_control(target):
         for line in lines:
             if "Build-Depends:" in line and "%%%DYNAMIC%%%" in line:
                 wfd.write("Build-Depends:\n")
-                for i in range(0, len(deps)):
-                    wfd.write(f"\t{deps[i]},\n")
+                for dep in deps:
+                    wfd.write(f"\t{dep},\n")
+            elif "Build-Depends-Indep:" in line and "%%%DYNAMIC_INDEP%%%" in line:
+                wfd.write("Build-Depends-Indep:\n")
+                if build_indep:
+                    wfd.write("\tgi-docgen <!nodoc>,\n")
             elif "fwupd-qubes-vm-whonix" in line and not QUBES:
                 break
             else:

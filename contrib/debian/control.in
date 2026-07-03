@@ -5,7 +5,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <superm1@debian.org>
 Build-Depends: %%%DYNAMIC%%%
-Build-Depends-Indep: gi-docgen <!nodoc>,
+Build-Depends-Indep: %%%DYNAMIC_INDEP%%%
 Rules-Requires-Root: no
 Standards-Version: 4.7.2
 Section: admin
