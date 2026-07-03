@@ -58,7 +58,7 @@
           <li>Do not probe all Nordic devices with USB VID 0x1915</li>
           <li>Do not support JCat files with ID path components</li>
           <li>Do not use capsule-on-disk on Lenovo ThinkCentre M60e Tiny</li>
-          <li>Enable efi_app_location to be overrideable at build-time</li>
+          <li>Enable efi_app_location to be overridable at build-time</li>
           <li>Expand netlink socket buffer to prevent packet loss during event floods</li>
           <li>Fall back to a generic firmware type when parsing unknown mtd devices</li>
           <li>Fix genesys-gl32xx enumeration crash due to argument mismatch</li>
