@@ -280,7 +280,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 		size = fu_struct_efi_section_get_size(st);
 		stlen = st->buf->len;
 	}
-	if (size < FU_STRUCT_EFI_SECTION_SIZE) {
+	if (size < stlen) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
