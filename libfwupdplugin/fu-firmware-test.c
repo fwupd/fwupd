@@ -619,6 +619,30 @@ fu_firmware_ifwi_cpd_manifest_overflow_func(void)
 }
 
 static void
+fu_firmware_efi_section_extended_size_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_efi_section_new();
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* a size of 0xffffff selects the 8-byte extended header, but the declared
+	 * extended_size of 0x7 is smaller than that header, so size - headerlen
+	 * underflows; a value of exactly headerlen-1 wraps to G_MAXSIZE, which the
+	 * partial-stream helper reads as "to end of stream" rather than rejecting */
+	fu_byte_array_append_uint24(buf, 0xffffff, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint8(buf, 0x19); /* raw */
+	fu_byte_array_append_uint32(buf, 0x7, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(buf, 0x20, 0x0);
+
+	blob = g_bytes_new(buf->data, buf->len);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
+static void
 fu_firmware_ifwi_fpt_func(void)
 {
 	g_autofree gchar *filename = NULL;
@@ -1185,6 +1209,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware/ifwi-cpd", fu_firmware_ifwi_cpd_func);
 	g_test_add_func("/fwupd/firmware/ifwi-cpd-manifest-overflow",
 			fu_firmware_ifwi_cpd_manifest_overflow_func);
+	g_test_add_func("/fwupd/firmware/efi-section-extended-size",
+			fu_firmware_efi_section_extended_size_func);
 	g_test_add_func("/fwupd/firmware/ifwi-fpt", fu_firmware_ifwi_fpt_func);
 	g_test_add_func("/fwupd/firmware/oprom", fu_firmware_oprom_func);
 	g_test_add_func("/fwupd/firmware/dfu", fu_firmware_dfu_func);
