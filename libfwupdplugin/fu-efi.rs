@@ -46,6 +46,7 @@ enum FuEfiSignatureKind {
     Unknown,
     Sha256,
     X509,
+    External,
 }
 
 #[repr(u8)]

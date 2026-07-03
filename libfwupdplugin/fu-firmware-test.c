@@ -1075,6 +1075,11 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		"efi-signature-list-external.builder.xml",
+		"4257548735f5f2430fa72ed75f261e7d80faf22e",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		"efi-variable-authentication2.builder.xml",
 		"bd08e81e9c86490dc1ffb32b1e3332606eb0fa97",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,

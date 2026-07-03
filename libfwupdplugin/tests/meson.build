@@ -36,6 +36,7 @@ install_data(
     'efi-section.builder.xml',
     'efi-signature.builder.xml',
     'efi-signature-list.builder.xml',
+    'efi-signature-list-external.builder.xml',
     'efi-variable-authentication2.builder.xml',
     'efi-volume.builder.xml',
     'efi-volume-sized.builder.xml',
