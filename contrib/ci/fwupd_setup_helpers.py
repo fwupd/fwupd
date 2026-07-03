@@ -127,6 +127,7 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
     import xml.etree.ElementTree as etree
 
     deps = []
+    build_indep = []
     dep = ""
     directory = os.path.dirname(sys.argv[0])
     tree = etree.parse(os.path.join(directory, "dependencies.xml"))
@@ -141,10 +142,11 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                 continue
             control = ""
             version = ""
+            is_build_indep = bool(distro.findall("build-indep"))
             if add_control:
                 inclusive = []
                 exclusive = []
-                if not distro.findall("control"):
+                if not distro.findall("control") and not is_build_indep:
                     continue
                 for control_parent in distro.findall("control"):
                     for obj in control_parent.findall("inclusive"):
@@ -170,7 +172,10 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
             if len(distro.findall("package")) == 0:
                 dep = child.attrib["id"]
                 if dep:
-                    deps.append(f"{dep}{arch_suffix}{version}{control}")
+                    if is_build_indep:
+                        build_indep.append(f"{dep}{arch_suffix}{version}{control}")
+                    else:
+                        deps.append(f"{dep}{arch_suffix}{version}{control}")
             for package in distro.findall("package"):
                 if variant and "variant" in package.attrib:
                     if package.attrib["variant"] != variant:
@@ -180,8 +185,11 @@ def parse_dependencies(OS, variant, add_control, cross: bool = False):
                 else:
                     dep = child.attrib["id"]
                 if dep:
-                    deps.append(f"{dep}{arch_suffix}{version}{control}")
-    return deps
+                    if is_build_indep:
+                        build_indep.append(f"{dep}{arch_suffix}{version}{control}")
+                    else:
+                        deps.append(f"{dep}{arch_suffix}{version}{control}")
+    return deps, build_indep
 
 
 def _validate_deps(profile: str, deps):
@@ -205,8 +213,8 @@ def _validate_deps(profile: str, deps):
 
 
 def get_build_dependencies(profile: str, variant: str):
-    parsed = parse_dependencies(profile, variant, False)
-    return _validate_deps(profile, parsed)
+    parsed, build_indep = parse_dependencies(profile, variant, False)
+    return _validate_deps(profile, parsed + build_indep)
 
 
 def _get_installer_cmd(profile: str, yes: bool):

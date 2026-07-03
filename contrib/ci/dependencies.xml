@@ -1203,6 +1203,9 @@
     <distro id="darwin">
       <package variant="x86_64" />
     </distro>
+    <distro id="debian">
+      <build-indep />
+    </distro>
     <distro id="freebsd">
       <package>py312-gi-docgen</package>
     </distro>
