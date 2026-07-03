@@ -37,6 +37,8 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to parse kek: ");
 		return FALSE;
 	}
+	if (fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(siglist)))
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 	sigs = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
