@@ -468,6 +468,7 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	device_class->incorporate = fu_uefi_device_incorporate;
 	device_class->from_json = fu_uefi_device_from_json;
 	device_class->add_json = fu_uefi_device_add_json;
+	fu_device_register_private_flag(device_class, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 }
 
 FuUefiDevice *

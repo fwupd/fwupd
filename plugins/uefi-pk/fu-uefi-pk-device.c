@@ -119,6 +119,8 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to parse PK: ");
 		return FALSE;
 	}
+	if (fu_efi_signature_list_is_external(FU_EFI_SIGNATURE_LIST(pk)))
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL);
 
 	/* by checksum */
 	img = fu_firmware_get_image_by_checksum(pk, FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY, NULL);

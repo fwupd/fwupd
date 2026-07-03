@@ -15,6 +15,13 @@ struct _FuUefiDeviceClass {
 	FuDeviceClass parent_class;
 };
 
+/**
+ * FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL:
+ *
+ * The device is for a platform with an external out-of-band management agent.
+ */
+#define FU_UEFI_DEVICE_PRIVATE_FLAG_IS_EXTERNAL "is-external"
+
 gboolean
 fu_uefi_device_set_efivar_bytes(FuUefiDevice *self,
 				const gchar *guid,
