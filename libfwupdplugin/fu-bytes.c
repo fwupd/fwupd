@@ -238,8 +238,12 @@ fu_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
 	g_return_val_if_fail(bytes2 != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	buf1 = g_bytes_get_data(bytes1, &bufsz1);
-	buf2 = g_bytes_get_data(bytes2, &bufsz2);
+	buf1 = fu_bytes_get_data_safe(bytes1, &bufsz1, error);
+	if (buf1 == NULL)
+		return FALSE;
+	buf2 = fu_bytes_get_data_safe(bytes2, &bufsz2, error);
+	if (buf2 == NULL)
+		return FALSE;
 	return fu_memcmp_safe(buf1, bufsz1, 0x0, buf2, bufsz2, 0x0, MAX(bufsz1, bufsz2), error);
 }
 
