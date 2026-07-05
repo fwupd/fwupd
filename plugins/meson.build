@@ -132,6 +132,7 @@ plugins = {
   'synaptics-rmi': false,
   'synaptics-vmm9': false,
   'system76-launch': false,
+  'systemd-pcrlock': false,
   'test': false,
   'telink-dfu': false,
   'thelio-io': false,

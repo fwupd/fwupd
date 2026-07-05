@@ -594,7 +594,8 @@ fu_engine_ensure_device_maybe_remove_affects_fde(FuEngine *self, FuDevice *devic
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
 		return;
 	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER) &&
-	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD)) {
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD) &&
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SYSTEMD_PCRLOCK)) {
 		g_debug("removing affects-fde from %s as no FDE detected",
 			fu_device_get_id(device));
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
