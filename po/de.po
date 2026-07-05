@@ -19,7 +19,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-23 19:18+0100\n"
-"PO-Revision-Date: 2026-06-12 21:01+0000\n"
+"PO-Revision-Date: 2026-07-05 16:01+0000\n"
 "Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"X-Generator: Weblate 2026.7.1.dev0\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-Hersteller-Firmwaredienst (stabile Firmware)"
@@ -734,7 +734,7 @@ msgstr "SPI-Schreibschutz"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot verified boot"
-msgstr ""
+msgstr "Von Coreboot verifizierter Bootvorgang"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -766,7 +766,7 @@ msgstr "UEFI-Speicherschutz"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX protection"
-msgstr ""
+msgstr "UEFI-NX-Schutz"
 
 #. TRANSLATORS: Title: is UEFI db up-to-date
 msgid "UEFI db"
@@ -929,7 +929,7 @@ msgstr "AMD-Firmware-Schreibschutz"
 
 #. TRANSLATORS: Title: if firmware verifies the next firmware stage
 msgid "coreboot Verified Boot"
-msgstr ""
+msgstr "Von Coreboot verifizierter Bootvorgang"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
@@ -957,7 +957,7 @@ msgstr "UEFI-Speicherschutz"
 
 #. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
 msgid "UEFI NX Protection"
-msgstr ""
+msgstr "UEFI-NX-Schutz"
 
 #. TRANSLATORS: Title: can a user load malicious CPU microcode patches
 msgid "AMD Microcode Signature"
@@ -1088,7 +1088,7 @@ msgstr "Die Secure Boot Plattform verhindert, dass unsignierte Software geladen 
 
 #. TRANSLATORS: longer description
 msgid "coreboot verified boot prevents unsigned firmware from being loaded when the device starts."
-msgstr ""
+msgstr "Der von coreboot verifizierte Bootvorgang verhindert, dass beim Start des Geräts nicht signierte Firmware geladen wird."
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -1108,7 +1108,7 @@ msgstr "Das UEFI-System kann beim Booten Speicherattribute zur Verhinderung gän
 
 #. TRANSLATORS: longer description
 msgid "The UEFI bootloader compiled with Data Execution Prevention support."
-msgstr ""
+msgstr "Der UEFI-Bootloader wurde mit Unterstützung für die Datenausführungsverhinderung kompiliert."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
@@ -1465,7 +1465,7 @@ msgstr "Mit einer Reihe von Veröffentlichungsbitschaltern filtern, wobei ein ~-
 
 #. TRANSLATORS: command line option
 msgid "Filter to specific protocols, e.g. '~org.uefi.capsule' or 'org.nvmexpress'"
-msgstr ""
+msgstr "Nach bestimmten Protokollen filtern, z. B. ‚~org.uefi.capsule‘ oder ‚org.nvmexpress‘"
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -3737,11 +3737,11 @@ msgstr "UEFI-Speicherschutz ist jetzt entsperrt"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now enabled"
-msgstr ""
+msgstr "UEFI-NX-Bootloader-Schutz ist nun aktiviert"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI NX bootloader protection is now disabled"
-msgstr ""
+msgstr "UEFI-NX-Bootloader-Schutz ist nun deaktiviert"
 
 #. TRANSLATORS: HSI event title
 msgid "The UEFI certificate store is now up to date"
