@@ -63,6 +63,7 @@ plugins/pixart-tp/ @PixartHarris
 plugins/qc-firehose/ @hughsie
 plugins/qc-s5gen2/ @d4s
 plugins/qsi-dock/ @hssinf
+plugins/systemd-pcrlock/ @bluca
 plugins/raydium-tp/ @Maker-Rad
 plugins/realtek-mst/ @tari
 plugins/rp-pico/ @mntmn

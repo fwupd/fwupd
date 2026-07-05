@@ -1255,6 +1255,9 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 
 	g_return_if_fail(FU_IS_CONTEXT(self));
 
+	if (g_file_test("/var/lib/systemd/pcrlock.json", G_FILE_TEST_EXISTS))
+		priv->flags |= FU_CONTEXT_FLAG_FDE_SYSTEMD_PCRLOCK;
+
 	devices = fu_common_get_block_devices(&error_local);
 	if (devices == NULL) {
 		g_info("Failed to get block devices: %s", error_local->message);
@@ -1281,12 +1284,13 @@ fu_context_detect_full_disk_encryption(FuContext *self)
 static gboolean
 fu_context_flag_is_quirk_controlled(FuContextFlags flag)
 {
-	return (flag & (FU_CONTEXT_FLAG_SYSTEM_INHIBIT | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT |
-			FU_CONTEXT_FLAG_FDE_BITLOCKER | FU_CONTEXT_FLAG_FDE_SNAPD |
-			FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE | FU_CONTEXT_FLAG_INSECURE_UEFI |
-			FU_CONTEXT_FLAG_IS_HYPERVISOR | FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED |
-			FU_CONTEXT_FLAG_IS_CONTAINER | FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED |
-			FU_CONTEXT_FLAG_IS_SERVER)) > 0;
+	return (flag &
+		(FU_CONTEXT_FLAG_SYSTEM_INHIBIT | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT |
+		 FU_CONTEXT_FLAG_FDE_BITLOCKER | FU_CONTEXT_FLAG_FDE_SNAPD |
+		 FU_CONTEXT_FLAG_FDE_SYSTEMD_PCRLOCK | FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE |
+		 FU_CONTEXT_FLAG_INSECURE_UEFI | FU_CONTEXT_FLAG_IS_HYPERVISOR |
+		 FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED | FU_CONTEXT_FLAG_IS_CONTAINER |
+		 FU_CONTEXT_FLAG_SMBIOS_UEFI_ENABLED | FU_CONTEXT_FLAG_IS_SERVER)) > 0;
 }
 
 static void

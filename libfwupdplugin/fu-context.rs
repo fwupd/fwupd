@@ -23,6 +23,7 @@ enum FuContextFlags {
     ReadonlyFs              = 1 << 16, // ignore readonly filesystem errors
     NoCache                 = 1 << 17, // do not save to a persistent cache
     DualBootWindows         = 1 << 18,
+    FdeSystemdPcrlock       = 1 << 19, // full disk encryption
 }
 
 enum FuContextLoadFlags {
