@@ -186,8 +186,48 @@ fu_unix_seekable_input_stream_require_seal(FuUnixSeekableInputStream *stream, GE
 	fd = g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(stream));
 	seals = fcntl(fd, F_GET_SEALS);
 	if (seals < 0) {
-		/* not supported on this fd */
+		/* F_GET_SEALS not supported — not a memfd */
 		return TRUE;
+	}
+	if (seals == 0) {
+		g_autofree gchar *path = g_strdup_printf ("/proc/self/fd/%d", fd);
+		g_autofree gchar *link = NULL;
+		g_autofree gchar *link2 = NULL;
+
+		link = g_file_read_link (path, NULL);
+		if (link == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "fd must be a sealed memfd");
+			return FALSE;
+		}
+		if (!g_str_has_prefix(link, "/memfd:")) {
+			/* Regular file — no seals to enforce.
+			 * This happens when a file on tmpfs (e.g. /tmp) is
+			 * opened and the kernel allows F_GET_SEALS on it
+			 * (it returns 0 since no seals are set). */
+			return TRUE;
+		}
+		/* Re-read to mitigate TOCTOU — memfds are immutable so
+		 * the window is tiny, but check anyway. */
+		link2 = g_file_read_link (path, NULL);
+		if (link2 == NULL || !g_str_has_prefix(link2, "/memfd:")) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "fd must be a sealed memfd");
+			return FALSE;
+		}
+		/* IS a memfd but unsealed — reject.
+		 * The only caller that creates memfds (fwupd-common.c)
+		 * always seals them before passing over D-Bus, so an
+		 * unsealed memfd reaching here indicates a bug elsewhere. */
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "fd must be a sealed memfd");
+		return FALSE;
 	}
 	if ((seals & F_SEAL_SEAL) == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "fd not sealed");
