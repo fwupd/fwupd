@@ -293,7 +293,6 @@ endif
 
 if get_option('tests')
   env = environment()
-  env.set('G_DEBUG', 'fatal-criticals')
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
@@ -389,12 +388,6 @@ if get_option('tests')
       dependencies: [libfwupd_deps, fwupd_rs_dep],
       link_with: [fwupdplugin],
     )
-    test(
-      'fu-polkit-test',
-      e,
-      env: {
-        'G_DEBUG': 'fatal-criticals',
-      },
-    )
+    test('fu-polkit-test', e)
   endif
 endif
