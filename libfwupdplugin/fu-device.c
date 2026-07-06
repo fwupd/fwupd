@@ -96,7 +96,7 @@ typedef struct {
 	GPtrArray *instance_ids;     /* (nullable) (element-type FuDeviceInstanceIdItem) */
 	GPtrArray *retry_recs;	     /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
-	GArray *private_flags;		  /* (nullable) (element-type GQuark) */
+	GArray *private_flags; /* (nullable) (element-type GQuark) */
 	gchar *custom_flags;
 	gulong notify_flags_proxy_id;
 	GHashTable *instance_hash; /* (nullable) */

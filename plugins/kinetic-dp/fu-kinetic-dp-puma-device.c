@@ -17,9 +17,9 @@
 #define PUMA_DPCD_DATA_SIZE	0x8000ul /* 0x80000ul ~ 0x87FFF, 32 KB*/
 #define PUMA_DPCD_DATA_ADDR_END (PUMA_DPCD_DATA_ADDR + PUMA_DPCD_DATA_SIZE - 1)
 
-#define PUMA_CHUNK_PROCESS_MAX_WAIT		    10000 /* max wait time in ms to process 32KB chunk */
-#define FU_KINETIC_DP_PUMA_REQUEST_FLASH_ERASE_TIME 2  /* typical erase time, ms */
-#define POLL_INTERVAL_MS			    20 /* check the status of installing FW images */
+#define PUMA_CHUNK_PROCESS_MAX_WAIT 10000 /* max wait time in ms to process 32KB chunk */
+#define FU_KINETIC_DP_PUMA_REQUEST_FLASH_ERASE_TIME 2 /* typical erase time, ms */
+#define POLL_INTERVAL_MS 20			      /* check the status of installing FW images */
 
 struct _FuKineticDpPumaDevice {
 	FuKineticDpDevice parent_instance;

@@ -167,8 +167,8 @@ fu_lxs_touch_device_ensure_version(FuLxsTouchDevice *self, GError **error)
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* bootloader version: informational only, not used for comparison */
-	version_bootloader = g_strdup_printf("%04X",
-					     fu_struct_lxs_touch_version_get_boot_ver(st_ver));
+	version_bootloader =
+	    g_strdup_printf("%04X", fu_struct_lxs_touch_version_get_boot_ver(st_ver));
 	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 
 	/* success */
