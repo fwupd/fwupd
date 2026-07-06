@@ -508,8 +508,6 @@ if get_option('tests')
     link_with: [fwupd, libfwupdtest],
   )
 
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
   foreach test_name: [
     'backend',
     'bios-settings',
@@ -584,7 +582,10 @@ if get_option('tests')
       'fwupdplugin-' + test_name + '-test',
       e,
       timeout: 180,
-      env: env,
+      env: {
+        'G_TEST_BUILDDIR': meson.current_build_dir(),
+        'G_TEST_SRCDIR': meson.current_source_dir(),
+      },
     )
   endforeach
 endif

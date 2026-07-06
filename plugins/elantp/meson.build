@@ -37,9 +37,6 @@ device_tests += files(
 if get_option('tests')
   install_data(['tests/elantp.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'elantp-self-test',
     sources: [
@@ -59,5 +56,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('elantp-self-test', e, env: env)
+  test(
+    'elantp-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

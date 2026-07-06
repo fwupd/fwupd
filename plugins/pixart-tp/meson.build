@@ -34,10 +34,6 @@ if get_option('tests')
     install_tag: 'tests',
   )
 
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-
   e = executable(
     'pixart-tp-self-test',
     rustgen.process('fu-pixart-tp.rs'),
@@ -59,5 +55,12 @@ if get_option('tests')
     ],
   )
 
-  test('pixart-tp-self-test', e, env: env)
+  test(
+    'pixart-tp-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

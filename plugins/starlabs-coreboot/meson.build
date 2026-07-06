@@ -31,5 +31,12 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('starlabs-coreboot-self-test', e)
+  test(
+    'starlabs-coreboot-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

@@ -16,9 +16,6 @@ plugin_builtin_pci_bcr = static_library('fu_plugin_pci_bcr',
 plugin_builtins += plugin_builtin_pci_bcr
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'pci-bcr-self-test',
     sources: [
@@ -39,5 +36,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('pci-bcr-self-test', e, env: env)
+  test(
+    'pci-bcr-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif
