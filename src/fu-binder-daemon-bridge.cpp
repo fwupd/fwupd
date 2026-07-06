@@ -26,14 +26,12 @@
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
 
-/* Forward declaration for the C Variant builder we will use for Remotes */
 extern "C" GVariant* fu_binder_daemon_get_remotes_as_variant(FuBinderDaemon* self, GError** error);
 
 static std::vector<std::shared_ptr<aidl_fwupd::IFwupdEventListener>>
     g_listeners;
 static std::mutex g_listeners_mutex;
 
-/* --- Safe GVariant Extraction Helpers --- */
 static std::string ExtractString(GVariant* dict, const char* key) {
   std::string ret = "";
   GVariant* val = g_variant_lookup_value(dict, key, G_VARIANT_TYPE_STRING);
@@ -90,7 +88,6 @@ static int32_t ExtractInt(GVariant* dict, const char* key) {
   return ret;
 }
 
-// For @nullable String[] in AIDL (Nested Optionals)
 static std::optional<std::vector<std::optional<std::string>>>
 ExtractStringArrayOpt(GVariant* dict, const char* key) {
   GVariant* val =
@@ -243,7 +240,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd {
     return ::ndk::ScopedAStatus::ok();
   }
 
-  // FIX 3: Updated signature to accept FwupdInstallRequest struct
   ::ndk::ScopedAStatus install(
       const aidl_fwupd::FwupdInstallRequest& in_request) override {
     g_printerr("DAEMON [BINDER]: Received install request for device %s\n",
@@ -418,7 +414,6 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd {
     return ::ndk::ScopedAStatus::ok();
   }
 
-  // FIX 3: Updated signature to accept FwupdMetadata struct
   ::ndk::ScopedAStatus updateMetadata(
       const aidl_fwupd::FwupdMetadata& in_metadata) override {
     GError* error = nullptr;
