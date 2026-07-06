@@ -851,6 +851,20 @@ class Checker:
                 self.add_failure(
                     f"contains blocked token {token.data}: {msg}", linecnt=token.linecnt
                 )
+        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
+        if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
+            for token, msg in {
+                "~g_memory_input_stream_new*": "Use fu_memory_input_stream_new*() instead",
+                "g_file_read": "Use fu_file_input_stream_from_file() instead",
+                "~g_file_input_stream_*": "Use fu_file_input_stream_*() instead",
+            }.items():
+                idx = node.tokens.find_fuzzy([token, "("])
+                if idx != -1:
+                    token = node.tokens[idx]
+                    self.add_failure(
+                        f"contains blocked token {token.data}: {msg}",
+                        linecnt=token.linecnt,
+                    )
 
         idx = node.tokens.find_fuzzy(["|=", "~1*", "<", "<"])
         if idx != -1:
@@ -885,6 +899,20 @@ class Checker:
                         f"contains blocked token {token.data}: {msg}",
                         linecnt=token.linecnt,
                     )
+
+        # only enforce FuInputStream/FuMemoryInputStream outside of libfwupd
+        if not self._current_fn or not self._current_fn.startswith("libfwupd/"):
+            for search, msg in {
+                "GInputStream": "Use FuInputStream instead",
+                "GMemoryInputStream": "Use FuMemoryInputStream instead",
+                "GFileInputStream": "Use FuFileInputStream instead",
+            }.items():
+                for token in node.tokens:
+                    if token.data == search:
+                        self.add_failure(
+                            f"contains blocked token {token.data}: {msg}",
+                            linecnt=token.linecnt,
+                        )
 
     def _test_magic_numbers_defined(self, nodes: List[Node]) -> None:
         cnt: int = 0
