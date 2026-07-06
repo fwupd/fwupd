@@ -2,10 +2,10 @@
   "id": "org.fwupd.hsi.Coreboot.Vboot",
   "name": "coreboot verified boot",
   "description": [
-    "coreboot verified boot checks that signed firmware stages are loaded when the device starts. On systems that boot from Intel SPI flash this should be paired with Intel SPI protected regions so the verified firmware storage cannot be modified from the host."
+    "coreboot verified boot checks that signed firmware stages are loaded when the device starts. On systems that expose firmware storage as MTD this should be paired with MTD locking so the verified firmware storage cannot be modified from the host."
   ],
   "failure-impact": [
-    "When verified boot is not enabled, or when the protected firmware regions are writable, an attacker may be able to run modified firmware stages."
+    "When verified boot is not enabled, or when the firmware storage is writable, an attacker may be able to run modified firmware stages."
   ],
   "failure-results": {
     "not-enabled": "coreboot verified boot disabled",
