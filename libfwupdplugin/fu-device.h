@@ -507,6 +507,26 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES "enforce-requires"
 /**
+ * FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE:
+ *
+ * Updating this device changes a measured firmware component, so a
+ * systemd-pcrlock policy protecting the firmware measurements has to be
+ * regenerated for the update to be applied.
+ *
+ * Since: 2.1.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_FIRMWARE "requires-unlock-firmware"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT:
+ *
+ * Updating this device changes a measured SecureBoot component, so a
+ * systemd-pcrlock policy protecting the SecureBoot measurements has to be
+ * regenerated for the update to be applied.
+ *
+ * Since: 2.1.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT "requires-unlock-secureboot"
+/**
  * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE:
  *
  * The device represents the main system host firmware.

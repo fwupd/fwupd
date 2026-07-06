@@ -61,6 +61,8 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 			continue;
 		x509_device = fu_efi_x509_device_new(ctx, FU_EFI_X509_SIGNATURE(sig));
 		fu_device_add_flag(FU_DEVICE(x509_device), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+		fu_device_add_private_flag(FU_DEVICE(x509_device),
+					   FU_DEVICE_PRIVATE_FLAG_REQUIRES_UNLOCK_SECUREBOOT);
 		fu_device_set_physical_id(FU_DEVICE(x509_device), "db");
 		fu_device_set_proxy(FU_DEVICE(x509_device), device);
 		if (!fu_device_probe(FU_DEVICE(x509_device), error))
