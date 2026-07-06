@@ -6,6 +6,16 @@
 
 #include "config.h"
 
+#ifdef HAVE_MTD_USER_H
+#include <mtd/mtd-user.h>
+#endif
+
+#ifdef HAVE_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+
+#include <glib/gstdio.h>
+
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
@@ -17,6 +27,8 @@
 typedef struct {
 	FuContext *ctx;
 } FuTest;
+
+#define FU_TEST_MTD_DEVICE_SIZE 0x100000
 
 static void
 fu_test_free(FuTest *self)
@@ -58,6 +70,75 @@ fu_test_mtd_find_mtdram(FuContext *ctx, GError **error)
 		return NULL;
 	return FU_MTD_DEVICE(g_steal_pointer(&device));
 }
+
+#ifdef HAVE_MTD_USER_H
+static void
+fu_test_mtd_device_add_memislocked_event(FuMtdDevice *device, gboolean locked)
+{
+	struct erase_info_user erase = {0x0};
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuDeviceEvent) event = NULL;
+
+	erase.start = 0x0;
+	erase.length = FU_TEST_MTD_DEVICE_SIZE;
+	data = fu_base64_encode((const guint8 *)&erase, sizeof(erase));
+	event_id = g_strdup_printf("Ioctl:Request=0x%04x,Data=%s,Length=0x%x",
+				   (guint)MEMISLOCKED,
+				   data,
+				   (guint)sizeof(erase));
+	event = fu_device_event_new(event_id);
+	fu_device_event_set_data(event, "DataOut", (const guint8 *)&erase, sizeof(erase));
+	fu_device_event_set_i64(event, "Rc", locked ? 1 : 0);
+	fu_device_add_event(FU_DEVICE(device), event);
+}
+
+static void
+fu_test_mtd_device_write_sysfs_attr(const gchar *sysfs_path, const gchar *attr, const gchar *value)
+{
+	g_autofree gchar *fn = g_build_filename(sysfs_path, attr, NULL);
+	g_autoptr(GError) error = NULL;
+
+	g_assert_true(g_file_set_contents(fn, value, -1, &error));
+	g_assert_no_error(error);
+}
+
+static FuMtdDevice *
+fu_test_mtd_device_new_for_security_attrs(FuTest *self, gboolean add_event, gboolean locked)
+{
+	gboolean ret;
+	g_autofree gchar *sysfs_path = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
+	g_autoptr(GError) error = NULL;
+
+	tmpdir = fu_temporary_directory_new("mtd-security-attrs", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+	sysfs_path =
+	    fu_temporary_directory_build(tmpdir, "sys", "devices", "virtual", "mtd", "mtd0", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(sysfs_path, 0700), ==, 0);
+	fu_test_mtd_device_write_sysfs_attr(sysfs_path, "flags", "0x400");
+	fu_test_mtd_device_write_sysfs_attr(sysfs_path, "name", "BIOS");
+	fu_test_mtd_device_write_sysfs_attr(sysfs_path, "type", "nor");
+	fu_test_mtd_device_write_sysfs_attr(sysfs_path, "size", "0x100000");
+	fu_test_mtd_device_write_sysfs_attr(sysfs_path, "erasesize", "0x1000");
+
+	device =
+	    g_object_new(FU_TYPE_MTD_DEVICE, "context", self->ctx, "backend-id", sysfs_path, NULL);
+	fu_device_set_plugin(device, "mtd");
+	fu_udev_device_set_subsystem(FU_UDEV_DEVICE(device), "mtd");
+	fu_udev_device_set_devtype(FU_UDEV_DEVICE(device), "mtd");
+	ret = fu_device_probe(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+	if (add_event)
+		fu_test_mtd_device_add_memislocked_event(FU_MTD_DEVICE(device), locked);
+	return FU_MTD_DEVICE(g_steal_pointer(&device));
+}
+#endif
 
 static FuFirmware *
 fu_test_mtd_prepare_mtdram_device(FuMtdDevice *device,
@@ -235,6 +316,81 @@ fu_test_mtd_ifd_device_security_attrs_non_desc_func(gconstpointer user_data)
 						     FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR,
 						     NULL);
 	g_assert_null(attr);
+}
+
+static void
+fu_test_mtd_device_security_attrs_locked_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, TRUE, TRUE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result_success(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_unlocked_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, TRUE, FALSE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+	g_assert_true(
+	    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM));
+#endif
+}
+
+static void
+fu_test_mtd_device_security_attrs_missing_func(gconstpointer user_data)
+{
+#ifndef HAVE_MTD_USER_H
+	g_test_skip("no mtd-user.h support");
+#else
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuMtdDevice) device = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+
+	device = fu_test_mtd_device_new_for_security_attrs(self, FALSE, FALSE);
+	fu_device_add_security_attrs(FU_DEVICE(device), attrs);
+
+	attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED, NULL);
+	g_assert_nonnull(attr);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA));
+#endif
 }
 
 static void
@@ -598,6 +754,15 @@ main(int argc, char **argv)
 	g_test_add_data_func("/mtd/ifd-device/security-attrs/non-desc",
 			     self,
 			     fu_test_mtd_ifd_device_security_attrs_non_desc_func);
+	g_test_add_data_func("/mtd/device/security-attrs/locked",
+			     self,
+			     fu_test_mtd_device_security_attrs_locked_func);
+	g_test_add_data_func("/mtd/device/security-attrs/unlocked",
+			     self,
+			     fu_test_mtd_device_security_attrs_unlocked_func);
+	g_test_add_data_func("/mtd/device/security-attrs/missing",
+			     self,
+			     fu_test_mtd_device_security_attrs_missing_func);
 	g_test_add_data_func("/mtd/device/quirk/metadata-offset",
 			     self,
 			     fu_test_mtd_device_quirk_metadata_offset_func);

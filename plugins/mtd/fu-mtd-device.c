@@ -21,6 +21,7 @@ typedef struct {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
+	gchar *mtd_type;
 
 	/* FMAP specific */
 	GPtrArray *fmap_regions;
@@ -41,6 +42,7 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", priv->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", priv->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", priv->metadata_size);
+	fwupd_codec_string_append(str, idt, "MtdType", priv->mtd_type);
 	fwupd_codec_string_append_hex(str, idt, "FmapOffset", priv->fmap_offset);
 	if (priv->fmap_regions->len > 0) {
 		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
@@ -456,6 +458,105 @@ fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
 }
 
 static gboolean
+fu_mtd_device_get_locked(FuMtdDevice *self, gboolean *locked, GError **error)
+{
+#ifdef HAVE_MTD_USER_H
+	gint rc = 0;
+	guint64 firmware_size_max = fu_device_get_firmware_size_max(FU_DEVICE(self));
+	struct erase_info_user erase = {0x0};
+	g_autoptr(FuIoctl) ioctl = NULL;
+
+	if (firmware_size_max == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "MTD device size is unknown");
+		return FALSE;
+	}
+	if (firmware_size_max > G_MAXUINT32) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "MTD device size 0x%" G_GINT64_MODIFIER
+			    "x is too large for MEMISLOCKED",
+			    firmware_size_max);
+		return FALSE;
+	}
+
+	erase.start = 0x0;
+	erase.length = firmware_size_max;
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	if (!fu_ioctl_execute(ioctl,
+			      MEMISLOCKED,
+			      (guint8 *)&erase,
+			      sizeof(erase),
+			      &rc,
+			      FU_MTD_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
+		g_prefix_error_literal(error, "failed to get MTD lock status: ");
+		return FALSE;
+	}
+
+	*locked = rc != 0;
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as mtd-user.h is unavailable");
+	return FALSE;
+#endif
+}
+
+static void
+fu_mtd_device_security_attr_set_locked(FwupdSecurityAttr *attr, gboolean locked)
+{
+	if (!locked) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+		return;
+	}
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
+fu_mtd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	gboolean locked = FALSE;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* MEMISLOCKED is only meaningful for this HSI attribute on NOR flash. */
+	if (g_strcmp0(priv->mtd_type, "nor") != 0)
+		return;
+
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_MTD_LOCKED);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr);
+
+	locker = fu_device_locker_new(device, &error_local);
+	if (locker == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to open MTD device for lock status: %s", error_local->message);
+		return;
+	}
+	if (!fu_mtd_device_get_locked(self, &locked, &error_local)) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to get MTD lock status: %s", error_local->message);
+		return;
+	}
+
+	fu_mtd_device_security_attr_set_locked(attr, locked);
+}
+
+static gboolean
 fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
@@ -534,6 +635,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_flags = NULL;
 	g_autofree gchar *attr_size = NULL;
 	g_autofree gchar *attr_name = NULL;
+	g_autofree gchar *attr_type = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
 
@@ -571,6 +673,12 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 					      NULL);
 	if (attr_name != NULL)
 		fu_device_set_name(FU_DEVICE(self), attr_name);
+	attr_type = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "type",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (attr_type != NULL)
+		priv->mtd_type = fu_strstrip(attr_type);
 
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
@@ -1166,6 +1274,7 @@ fu_mtd_device_finalize(GObject *object)
 	FuMtdDevice *self = FU_MTD_DEVICE(object);
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_ptr_array_unref(priv->fmap_regions);
+	g_free(priv->mtd_type);
 	if (priv->fmap_firmware != NULL)
 		g_object_unref(priv->fmap_firmware);
 	G_OBJECT_CLASS(fu_mtd_device_parent_class)->finalize(object);
@@ -1188,4 +1297,5 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->write_firmware = fu_mtd_device_write_firmware;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 	fu_device_register_private_flag(device_class, FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
+	device_class->add_security_attrs = fu_mtd_device_add_security_attrs;
 }

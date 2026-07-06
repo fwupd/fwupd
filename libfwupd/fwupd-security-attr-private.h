@@ -182,6 +182,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP "org.fwupd.hsi.Spi.SmmBwp"
 /**
+ * FWUPD_SECURITY_ATTR_ID_MTD_LOCKED: (skip)
+ *
+ * Host Security ID attribute for MTD lock status
+ *
+ * Since: 2.1.7
+ **/
+#define FWUPD_SECURITY_ATTR_ID_MTD_LOCKED "org.fwupd.hsi.Mtd.Locked"
+/**
  * FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR: (skip)
  *
  * Host Security ID attribute for Intel SPI descriptor
