@@ -25,6 +25,7 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.Mei.ManufacturingMode.json',
   'org.fwupd.hsi.Mei.OverrideStrap.json',
   'org.fwupd.hsi.Mei.Version.json',
+  'org.fwupd.hsi.Mtd.Locked.json',
   'org.fwupd.hsi.PlatformDebugEnabled.json',
   'org.fwupd.hsi.PlatformDebugLocked.json',
   'org.fwupd.hsi.PlatformFused.json',
@@ -47,4 +48,3 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.Uefi.Pk.json',
   'org.fwupd.hsi.Uefi.SecureBoot.json',
 )
-
