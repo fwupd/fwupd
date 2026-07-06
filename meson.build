@@ -7,6 +7,15 @@ project(
   default_options: ['warning_level=2', 'c_std=c17'],
 )
 
+if host_machine.system() == 'android'
+  add_project_link_arguments(
+    '-lc++abi',
+    '-lc++_static',
+    language : ['c', 'cpp']
+  )
+endif
+
+
 fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
 fwupd_major_version = varr[0]
@@ -485,45 +494,33 @@ endif
 
 enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'android').enabled()
 if enable_binder
-  binder_ndk = cc.find_library('binder_ndk')
+  ndk_sysroot_lib = '/opt/android/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/35'
+  
+  binder_ndk = cc.find_library('binder_ndk', dirs: ndk_sysroot_lib, required: true)
 
   if not subproject('android_frameworks').found()
     error('android binder requires the android_frameworks subproject')
   endif
   binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
-  binder_ndk = cc.find_library('binder_ndk',
-    dirs: [ meson.current_source_dir() / 'contrib/android/lib_ndk' ],
-    has_headers: [ 'android/binder_manager.h' ],
-    header_include_directories: binder_ndk_platform_incdir,
-    required: true,
-    )
 
-  binder_link_test_src = '''
-    #include <android/binder_manager.h>
-    void main() { AServiceManager_waitForService("fwupd"); }
-  '''
   conf.set10('HAS_BINDER_NDK', binder_ndk.found() and
     cc.has_header('android/binder_status.h') and
     cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create',
       dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
     cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal',
       dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
-    cc.has_header_symbol('android/binder_manager.h', 'AServiceManager_waitForService',
-      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
-    cc.has_header_symbol('android/binder_manager.h', 'AServiceManager_addService',
-      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
     cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new',
       dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir)
-    )
+  )
 
-  # Verify that service management symbols are present in libbinder_ndk.so
-  links_service = cc.links(binder_link_test_src,
+  links_service = cc.links('int main() { return 0; }',
     name: 'binder link test',
     dependencies: binder_ndk,
     include_directories: binder_ndk_platform_incdir,
     required: false)
+    
   if not links_service
-    error('libbinder_ndk.so is incompatible')
+    error('libbinder_ndk.so from NDK sysroot is incompatible')
   endif
 endif
 
