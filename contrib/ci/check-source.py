@@ -749,7 +749,7 @@ class Checker:
     def _test_blocked_goto(self, node: Node) -> None:
         idx = node.tokens.find_fuzzy(["goto"])
         if idx != -1:
-            token = node.tokens_pre[idx]
+            token = node.tokens[idx]
             self.add_failure(
                 f"do not use goto, refactor into a new block",
                 linecnt=token.linecnt,
