@@ -33,9 +33,6 @@ device_tests += files(
 )
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'devlink-self-test',
     sources: [
@@ -57,5 +54,12 @@ if get_option('tests')
     install_tag: 'tests',
     install_dir: installed_test_bindir,
   )
-  test('devlink-self-test', e, env: env)
+  test(
+    'devlink-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

@@ -41,9 +41,6 @@ device_tests += files(
 if get_option('tests')
   install_data(['tests/wacom-usb.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
     rustgen.process('fu-wacom-usb.rs'),
@@ -65,5 +62,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('wacom-usb-self-test', e, env: env)  # added to installed-tests
+  test(
+    'wacom-usb-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

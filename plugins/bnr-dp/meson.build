@@ -46,11 +46,9 @@ if get_option('tests')
       install_rpath: libdir_pkg,
       c_args: ['-DSRCDIR="@0@"'.format(meson.current_source_dir())],
     ),
-    env: environment(
-      {
-        'G_TEST_BUILDDIR': meson.current_build_dir(),
-        'G_TEST_SRCDIR': meson.current_source_dir(),
-      },
-    ),
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
   )
 endif

@@ -34,9 +34,6 @@ device_tests += files('tests/amd-apu-rembrandt.json',
 )
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable('fu-amd-gpu-uma-test',
     sources: 'fu-amd-gpu-uma-test.c',
     include_directories: plugin_incdirs,
@@ -50,5 +47,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('amd-gpu-uma-self-test', e, env: env)
+  test(
+    'amd-gpu-uma-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

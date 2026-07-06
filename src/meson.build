@@ -292,9 +292,10 @@ if build_daemon
 endif
 
 if get_option('tests')
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  src_tests_env = {
+    'G_TEST_BUILDDIR': meson.current_build_dir(),
+    'G_TEST_SRCDIR': meson.current_source_dir(),
+  }
 
   test_names = [
     'cabinet',
@@ -341,7 +342,7 @@ if get_option('tests')
       'fu-' + test_name + '-test',
       e,
       timeout: 180,
-      env: env,
+      env: src_tests_env,
     )
   endforeach
 
@@ -361,7 +362,7 @@ if get_option('tests')
     'fu-daemon-test',
     e,
     timeout: 180,
-    env: env,
+    env: src_tests_env,
   )
   if libsystemd.found()
     e = executable(
@@ -375,7 +376,7 @@ if get_option('tests')
       'fu-systemd-test',
       e,
       timeout: 180,
-      env: env,
+      env: src_tests_env,
     )
   endif
 
@@ -387,6 +388,10 @@ if get_option('tests')
       dependencies: [libfwupd_deps, fwupd_rs_dep],
       link_with: [fwupdplugin],
     )
-    test('fu-polkit-test', e)
+    test(
+      'fu-polkit-test',
+      e,
+      env: src_tests_env,
+    )
   endif
 endif

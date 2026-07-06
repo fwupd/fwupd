@@ -50,9 +50,6 @@ if get_option('tests')
     install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
   install_data(['tests/efi/efivars/RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70'],
     install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'redfish-self-test',
     rustgen.process('fu-redfish.rs'),
@@ -78,6 +75,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('redfish-self-test', e, env: env)  # added to installed-tests
+  test(
+    'redfish-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif
-

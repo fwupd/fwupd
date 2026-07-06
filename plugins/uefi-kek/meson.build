@@ -36,5 +36,12 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('uefi-kek-self-test', e)
+  test(
+    'uefi-kek-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif

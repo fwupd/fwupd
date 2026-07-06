@@ -22,9 +22,6 @@ device_tests += files('tests/algoltek-au84612.json')
 if get_option('tests')
   install_data(['tests/algoltek-usbcr.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
-  env = environment()
-  env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'algoltek-usbcr-self-test',
     sources: [
@@ -44,5 +41,12 @@ if get_option('tests')
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
   )
-  test('algoltek-usbcr-self-test', e, env: env)
+  test(
+    'algoltek-usbcr-self-test',
+    e,
+    env: {
+      'G_TEST_BUILDDIR': meson.current_build_dir(),
+      'G_TEST_SRCDIR': meson.current_source_dir(),
+    },
+  )
 endif
