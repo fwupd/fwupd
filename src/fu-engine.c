@@ -131,10 +131,10 @@ struct _FuEngine {
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
-	GPtrArray *disabled_devices;   /* (element-type utf-8) */
-	GPtrArray *disabled_plugins;   /* (element-type utf-8) */
-	GPtrArray *trusted_reports;    /* (element-type FwupdReport) */
-	GArray *trusted_uids;	       /* (element-type guint64) */
+	GPtrArray *disabled_devices; /* (element-type utf-8) */
+	GPtrArray *disabled_plugins; /* (element-type utf-8) */
+	GPtrArray *trusted_reports;  /* (element-type FwupdReport) */
+	GArray *trusted_uids;	     /* (element-type guint64) */
 };
 
 enum { PROP_0, PROP_CONTEXT, PROP_LAST };

@@ -219,10 +219,10 @@ fwupd_jcat_pkcs7_engine_func(gconstpointer test_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_sig2);
 	result_pass2 = fu_jcat_engine_pubkey_verify(engine,
-						   data_fwbin,
-						   blob_sig2,
-						   FU_JCAT_VERIFY_FLAG_NONE,
-						   &error);
+						    data_fwbin,
+						    blob_sig2,
+						    FU_JCAT_VERIFY_FLAG_NONE,
+						    &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(result_pass2);
 	g_assert_cmpstr(fu_jcat_result_get_authority(result_pass2), ==, "O=Hughski Limited");
