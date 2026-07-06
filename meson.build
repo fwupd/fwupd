@@ -160,6 +160,9 @@ add_test_setup(
     'G_DEBUG': 'fatal-criticals',
     'LANG': 'C.UTF-8',
     'LC_ALL': 'C.UTF-8',
+    'LSAN_OPTIONS': 'suppressions=@0@'.format(
+      meson.current_source_dir() / 'data' / 'tests' / 'lsan-suppressions.txt'
+    ),
   },
   is_default: true,
 )
