@@ -26,6 +26,9 @@
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
 
+/* Forward declaration for the C Variant builder we will use for Remotes */
+extern "C" GVariant* fu_binder_daemon_get_remotes_as_variant(FuBinderDaemon* self, GError** error);
+
 static std::vector<std::shared_ptr<aidl_fwupd::IFwupdEventListener>>
     g_listeners;
 static std::mutex g_listeners_mutex;
@@ -332,9 +335,10 @@ class FwupdBinderBridge : public aidl_fwupd::BnFwupd {
         fu_binder_daemon_get_remotes_as_variant(m_daemon, &error);
 
     if (val == NULL) {
-      if (error != NULL)
+      if (error != NULL) {
         return ::ndk::ScopedAStatus::fromServiceSpecificErrorWithMessage(
             error->code, error->message);
+      }
       return ::ndk::ScopedAStatus::ok();
     }
 
@@ -495,7 +499,6 @@ static void enqueue_event(std::function<void()> task) {
   }
   g_event_cv.notify_one();
 }
-
 
 void fu_binder_bridge_emit_changed() {
   enqueue_event([]() {

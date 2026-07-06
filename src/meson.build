@@ -294,24 +294,49 @@ endif
 if host_machine.system() == 'android' and binder_ndk.found()
   add_languages('cpp', native: false)
 
-  aidl_inc = include_directories('../aidl_generated/include')
-  gen_path = '../aidl_generated/org/freedesktop/fwupd/'
+  aidl_prog = find_program('aidl', required: true)
+  aidl_dir = join_paths(meson.project_source_root(), 'contrib', 'android', 'aidl',)
 
-  aidl_generated_src = [
-    gen_path + 'IFwupd.cpp',
-    gen_path + 'IFwupdEventListener.cpp',
-    gen_path + 'FwupdUpdate.cpp',
-    gen_path + 'FwupdDevice.cpp',
-    gen_path + 'FwupdHwid.cpp',
-    gen_path + 'FwupdRemote.cpp',
-    gen_path + 'FwupdInstallRequest.cpp',
-    gen_path + 'FwupdInstallOptions.cpp',
-    gen_path + 'FwupdRequest.cpp',
-    gen_path + 'FwupdMetadata.cpp',
-    gen_path + 'FwupdProperties.cpp',
+  aidl_files = [
+    'IFwupd',
+    'IFwupdEventListener',
+    'FwupdUpdate',
+    'FwupdDevice',
+    'FwupdHwid',
+    'FwupdRemote',
+    'FwupdInstallRequest',
+    'FwupdInstallOptions',
+    'FwupdRequest',
+    'FwupdMetadata',
+    'FwupdProperties',
   ]
 
-executable(
+  aidl_generated_src = []
+  foreach a : aidl_files
+    aidl_generated_src += custom_target(
+      'aidl_gen_' + a,
+      input: join_paths(aidl_dir, 'org', 'freedesktop', 'fwupd', a + '.aidl'),
+      output: [a + '.cpp', a + '.h'],
+      command: [
+        'sh', '-c',
+        # Run AIDL with VINTF stability flags, then copy to root
+        '"$2" --lang=ndk --structured --stability vintf -I"$3" --out="$1" --header_out="$1" "$4" && ' +
+        'cp "$1/org/freedesktop/fwupd/$5.cpp" "$1/" && ' +
+        'cp "$1/aidl/org/freedesktop/fwupd/$5.h" "$1/"',
+        'sh',
+        '@OUTDIR@',
+        aidl_prog,
+        aidl_dir,
+        '@INPUT@',
+        a
+      ]
+    )
+  endforeach
+
+  # Include the root build directory so C++ #includes route correctly
+  aidl_inc = include_directories('.')
+
+  executable(
     'fwupd-binder',
     fwupdengine_rs,
     plugins_hdr,
@@ -338,11 +363,12 @@ executable(
       fwupdengine,
       plugin_libs,
     ],
-        link_language: 'c',
-        install: true,
-        install_rpath: libdir_pkg,
-        install_dir: daemon_dir
-      )
+    link_language: 'c',
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: daemon_dir
+  )
+
   fwupdmgr = executable(
     'fwupdmgr-binder',
     sources: [
@@ -375,8 +401,7 @@ endif
 if get_option('tests')
   env = environment()
   env.set('G_DEBUG', 'fatal-criticals')
-  env.set('G_TEST_Ssrc/fu-binder-client-bridge.cpp
-RCDIR', meson.current_source_dir())
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'data', 'tests', 'lsan-suppressions.txt')))
 

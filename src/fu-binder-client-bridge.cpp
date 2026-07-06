@@ -5,6 +5,7 @@
 #include <aidl/org/freedesktop/fwupd/FwupdInstallOptions.h>
 #include <aidl/org/freedesktop/fwupd/FwupdInstallRequest.h>
 #include <aidl/org/freedesktop/fwupd/FwupdProperties.h>
+#include <aidl/org/freedesktop/fwupd/FwupdRemote.h>
 #include <aidl/org/freedesktop/fwupd/FwupdRequest.h>
 #include <aidl/org/freedesktop/fwupd/FwupdUpdate.h>
 
@@ -16,6 +17,7 @@
 #include <glib.h>
 #include <unistd.h>
 #include <vector>
+#include <fwupd-error.h>
 #include "fu-binder-client-bridge.h"
 
 namespace aidl_fwupd = aidl::org::freedesktop::fwupd;
@@ -120,6 +122,30 @@ static GVariant* AidlUpdateToGVariant(const aidl_fwupd::FwupdUpdate& u) {
   return g_variant_builder_end(&builder);
 }
 
+static GVariant* AidlRemoteToGVariant(const aidl_fwupd::FwupdRemote& r) {
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
+
+  if (r.id.has_value() && !r.id.value().empty())
+    g_variant_builder_add(&builder, "{sv}", "RemoteId",
+                          g_variant_new_string(r.id.value().c_str()));
+  if (r.title.has_value() && !r.title.value().empty())
+    g_variant_builder_add(&builder, "{sv}", "Title",
+                          g_variant_new_string(r.title.value().c_str()));
+  if (r.metadataUri.has_value() && !r.metadataUri.value().empty())
+    g_variant_builder_add(&builder, "{sv}", "MetadataURI",
+                          g_variant_new_string(r.metadataUri.value().c_str()));
+
+  g_variant_builder_add(&builder, "{sv}", "Enabled",
+                        g_variant_new_boolean(r.enabled));
+
+  if (r.flags != 0)
+    g_variant_builder_add(&builder, "{sv}", "Flags",
+                          g_variant_new_uint64(r.flags));
+
+  return g_variant_builder_end(&builder);
+}
+
 /* --- 1. Define the Listener Object --- */
 class FwupdEventListenerImpl : public aidl_fwupd::BnFwupdEventListener {
  public:
@@ -208,10 +234,6 @@ GVariant* fu_binder_client_get_devices_aidl(AIBinder* binder, GError** error) {
   auto status = service->getDevices(&aidl_devs);
 
   if (status.isOk()) {
-    g_printerr(
-        "DEBUG C++: Binder transaction OK. Received %zu devices from daemon.\n",
-        aidl_devs.size());
-
     GVariantBuilder builder;
     g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
     for (const auto& dev : aidl_devs) {
@@ -220,9 +242,14 @@ GVariant* fu_binder_client_get_devices_aidl(AIBinder* binder, GError** error) {
     return g_variant_builder_end(&builder);
 
   } else {
-    g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
-                "Binder transaction failed: %s",
-                status.getDescription().c_str());
+    if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+      g_set_error_literal(error, FWUPD_ERROR, status.getServiceSpecificError(),
+                          status.getMessage());
+    } else {
+      g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
+                  "Binder transaction failed: %s",
+                  status.getDescription().c_str());
+    }
     return nullptr;
   }
 }
@@ -258,9 +285,55 @@ GVariant* fu_binder_client_get_upgrades_aidl(AIBinder* binder,
     }
     return g_variant_builder_end(&builder);
   } else {
-    g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
-                "Binder transaction failed: %s",
-                status.getDescription().c_str());
+    if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+      g_set_error_literal(error, FWUPD_ERROR, status.getServiceSpecificError(),
+                          status.getMessage());
+    } else {
+      g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
+                  "Binder transaction failed: %s",
+                  status.getDescription().c_str());
+    }
+    return nullptr;
+  }
+}
+
+extern "C" GVariant* fu_binder_client_get_remotes_aidl(AIBinder* binder, GError** error) {
+  if (binder == nullptr) {
+    g_set_error(error, g_quark_from_string("FwupdBinder"), 0,
+                "Binder handle is null");
+    return nullptr;
+  }
+
+  AIBinder_incStrong(binder);
+  ::ndk::SpAIBinder spBinder;
+  spBinder.set(binder);
+  auto service = aidl_fwupd::IFwupd::fromBinder(spBinder);
+
+  if (!service) {
+    g_set_error(error, g_quark_from_string("FwupdBinder"), 0,
+                "Failed to cast Binder to IFwupd interface");
+    return nullptr;
+  }
+
+  std::vector<aidl_fwupd::FwupdRemote> aidl_remotes;
+  auto status = service->getRemotes(&aidl_remotes);
+
+  if (status.isOk()) {
+    GVariantBuilder builder;
+    g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
+    for (const auto& r : aidl_remotes) {
+      g_variant_builder_add_value(&builder, AidlRemoteToGVariant(r));
+    }
+    return g_variant_builder_end(&builder);
+  } else {
+    if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+      g_set_error_literal(error, FWUPD_ERROR, status.getServiceSpecificError(),
+                          status.getMessage());
+    } else {
+      g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
+                  "Binder transaction failed: %s",
+                  status.getDescription().c_str());
+    }
     return nullptr;
   }
 }
@@ -285,9 +358,14 @@ GVariant* fu_binder_client_get_hwids_aidl(AIBinder* binder, GError** error) {
   ndk::ScopedAStatus status = proxy->getHwids(&aidl_hwids);
 
   if (!status.isOk()) {
-    g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
-                "getHwids AIDL call failed: %s",
-                status.getDescription().c_str());
+    if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+      g_set_error_literal(error, FWUPD_ERROR, status.getServiceSpecificError(),
+                          status.getMessage());
+    } else {
+      g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
+                  "getHwids AIDL call failed: %s",
+                  status.getDescription().c_str());
+    }
     return nullptr;
   }
 
@@ -330,7 +408,6 @@ bool fu_binder_client_setup_listener_aidl(AIBinder* binder_handle) {
         (void (*)())dlsym(handle, "ABinderProcess_startThreadPool");
     if (start_thread_pool) {
       start_thread_pool();
-      g_debug("Started Binder thread pool successfully.\n");
     } else {
       g_printerr(
           "WARNING: Could not find ABinderProcess_startThreadPool in "
@@ -402,8 +479,13 @@ bool fu_binder_client_install_aidl(AIBinder* binder_handle, const char* id,
   auto status = service->install(req);
 
   if (!status.isOk()) {
-    g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
-                "Install failed: %s", status.getDescription().c_str());
+    if (status.getExceptionCode() == EX_SERVICE_SPECIFIC) {
+      g_set_error_literal(error, FWUPD_ERROR, status.getServiceSpecificError(),
+                          status.getMessage());
+    } else {
+      g_set_error(error, g_quark_from_string("FwupdBinder"), status.getStatus(),
+                  "Install failed: %s", status.getDescription().c_str());
+    }
     return false;
   }
 

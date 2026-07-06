@@ -28,6 +28,9 @@
 /* Include the new header for strict 64-bit pointer safety */
 //#include "fu-binder-client-bridge.h"
 
+/* Forward declare the C++ remotes function (ensure it matches your .h file) */
+GVariant* fu_binder_client_get_remotes_aidl(AIBinder* binder, GError** error);
+
 /* Custom return codes */
 #define EXIT_NOTHING_TO_DO 2
 #define EXIT_NOT_FOUND     3
@@ -112,6 +115,28 @@ fu_util_print_error(FuUtil *self, const GError *error)
 }
 
 /* --- Common Core AIDL Calls --- */
+
+static GPtrArray *
+fu_util_get_remotes_call(FuUtil *self, GError **error)
+{
+	GVariant *val = NULL;
+	GVariant *tuple = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+
+	val = fu_binder_client_get_remotes_aidl(self->fwupd_binder, error);
+	if (val == NULL)
+		return NULL;
+
+	tuple = g_variant_ref_sink(g_variant_new_tuple(&val, 1));
+	array = fwupd_codec_array_from_variant(tuple, FWUPD_TYPE_REMOTE, error);
+	g_variant_unref(tuple);
+
+	if (array == NULL)
+		return NULL;
+
+	return g_steal_pointer(&array);
+}
+
 static GPtrArray *
 fu_util_get_upgrades_call(FuUtil *self, const gchar *device_id, GError **error)
 {
@@ -471,6 +496,49 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
+/* --- Remotes Logic --- */
+
+static gboolean
+fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = fu_util_get_remotes_call(self, error);
+
+	if (remotes == NULL)
+		return FALSE;
+
+	/* JSON Path */
+	if (self->as_json) {
+		g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+
+		for (guint i = 0; i < remotes->len; i++) {
+			FwupdRemote *remote = g_ptr_array_index(remotes, i);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(remote), json_obj_tmp, FWUPD_CODEC_FLAG_NONE);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
+		}
+		fwupd_json_object_add_array(json_obj, "Remotes", json_arr);
+		fu_util_print_json_object(self->console, json_obj);
+		return TRUE;
+	}
+
+	/* Standard Print Path */
+	if (remotes->len == 0) {
+		fu_console_print_literal(self->console, _("No remotes found"));
+		return TRUE;
+	}
+
+	g_autoptr(FuUtilNode) root = g_node_new(NULL);
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		g_node_append_data(root, g_object_ref(remote));
+	}
+
+	fu_util_print_node(self->console, self->client, root);
+
+	return TRUE;
+}
+
 /* --- local-install Logic --- */
 
 static gboolean
@@ -512,13 +580,6 @@ fu_util_local_install(FuUtil *self, gchar **values, GError **error)
 }
 
 /* --- Stubs for other commands (Pending AIDL Migration) --- */
-
-static gboolean
-fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
-{
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Not migrated to AIDL yet.");
-	return FALSE;
-}
 
 static gboolean
 fu_util_refresh(FuUtil *self, gchar **values, GError **error)

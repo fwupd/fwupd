@@ -695,7 +695,6 @@ static gboolean fu_binder_daemon_setup(FuDaemon* daemon, const gchar* address,
               FU_ENGINE_LOAD_FLAG_REMOTES |
               FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
               FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-              FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT |
               FU_ENGINE_LOAD_FLAG_PATH_STORE_DEFAULTS |
               FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG | FU_ENGINE_LOAD_FLAG_HISTORY,
           fu_progress_get_child(progress), error)) {
