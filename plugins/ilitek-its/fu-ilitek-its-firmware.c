@@ -113,7 +113,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		const gchar *tag = (i == 0) ? ap_end_tag : block_end_tag;
 		guint32 start;
 		guint32 end;
-		gsize offset;
+		gsize offset = 0;
 		g_autoptr(FuFirmware) block_img = fu_ilitek_its_block_new();
 		g_autoptr(FuStructIlitekItsBlockInfo) st_block = NULL;
 		g_autoptr(GBytes) block_fw_fixed = NULL;
@@ -149,11 +149,12 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 				   strlen(tag),
 				   &offset,
 				   NULL)) {
-			offset = offset + strlen(tag) + 2;
+			offset += strlen(tag) + 2;
 			end = start + offset - 1;
 			block_fw_fixed = fu_bytes_new_offset(blob, start, offset, error);
 			if (block_fw_fixed == NULL)
 				return FALSE;
+			fu_firmware_set_offset(block_img, offset);
 		} else {
 			block_fw_fixed = g_bytes_ref(block_fw);
 		}
@@ -171,7 +172,6 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 			end,
 			fu_ilitek_its_block_get_crc(FU_ILITEK_ITS_BLOCK(block_img)));
 
-		fu_firmware_set_offset(block_img, offset);
 		fu_firmware_set_idx(block_img, i);
 		fu_firmware_set_parent(block_img, firmware);
 		fu_firmware_set_addr(block_img, start);
