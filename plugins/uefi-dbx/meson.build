@@ -24,7 +24,6 @@ if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  env.set('G_DEBUG', 'fatal-criticals')
   e = executable(
     'uefi-dbx-self-test',
     sources: [

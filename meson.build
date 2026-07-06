@@ -157,6 +157,7 @@ endif
 add_test_setup(
   'default',
   env: {
+    'G_DEBUG': 'fatal-criticals',
     'LANG': 'C.UTF-8',
     'LC_ALL': 'C.UTF-8',
   },

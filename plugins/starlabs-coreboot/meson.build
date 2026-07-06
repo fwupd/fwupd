@@ -15,8 +15,6 @@ plugin_builtin_starlabs_coreboot = static_library('fu_plugin_starlabs_coreboot',
 plugin_builtins += plugin_builtin_starlabs_coreboot
 
 if get_option('tests')
-  env = environment()
-  env.set('G_DEBUG', 'fatal-criticals')
   e = executable(
     'starlabs-coreboot-self-test',
     sources: [
@@ -33,5 +31,5 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('starlabs-coreboot-self-test', e, env: env)
+  test('starlabs-coreboot-self-test', e)
 endif
