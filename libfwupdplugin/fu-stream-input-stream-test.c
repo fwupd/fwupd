@@ -18,7 +18,8 @@ fu_stream_input_stream_read_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* read first 4 bytes */
 	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, 4, NULL, &error);
@@ -51,7 +52,8 @@ fu_stream_input_stream_read_short_func(void)
 	guint8 buf[16] = {0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABC", 3);
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 	g_autoptr(GError) error = NULL;
 
 	rc = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf), NULL, &error);
@@ -71,7 +73,8 @@ fu_stream_input_stream_seek_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* can_seek should return TRUE for a seekable base stream */
 	g_assert_true(g_seekable_can_seek(G_SEEKABLE(stream)));
@@ -127,7 +130,8 @@ fu_stream_input_stream_tell_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEF", 6);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* initial position is 0 */
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0);
@@ -156,7 +160,8 @@ fu_stream_input_stream_truncate_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCD", 4);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	g_assert_false(g_seekable_can_truncate(G_SEEKABLE(stream)));
 
@@ -173,7 +178,8 @@ fu_stream_input_stream_read_bytes_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 	g_autoptr(GBytes) result = NULL;
 
 	result = fu_input_stream_read_bytes(stream, 2, 4, NULL, &error);
@@ -196,7 +202,8 @@ fu_stream_input_stream_size_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	ret = fu_input_stream_size(stream, &sz, &error);
 	g_assert_no_error(error);
@@ -212,7 +219,8 @@ fu_stream_input_stream_read_safe_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* read 3 bytes from offset 2 in the stream, store at offset 0 in buf */
 	ret = fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, 0x2, 3, &error);
@@ -229,7 +237,8 @@ fu_stream_input_stream_checksum_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 	g_autofree gchar *csum_wrapper = NULL;
 	g_autofree gchar *csum_expected = NULL;
 
@@ -251,7 +260,8 @@ fu_stream_input_stream_empty_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("", 0);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* size should be 0 */
 	ret = fu_input_stream_size(stream, &sz, &error);
@@ -277,7 +287,8 @@ fu_stream_input_stream_closed_base_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* close the base stream */
 	ret = g_input_stream_close(G_INPUT_STREAM(base_stream), NULL, &error);
@@ -295,7 +306,8 @@ fu_stream_input_stream_type_func(void)
 {
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCD", 4);
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	g_assert_true(G_IS_INPUT_STREAM(stream));
 	g_assert_true(G_IS_SEEKABLE(stream));
@@ -312,7 +324,8 @@ fu_stream_input_stream_seek_read_cycle_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("ABCDEFGH", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
-	g_autoptr(FuInputStream) stream = fu_stream_input_stream_from_stream(base_stream);
+	g_autoptr(FuInputStream) stream =
+	    fu_stream_input_stream_from_stream(G_INPUT_STREAM(base_stream));
 
 	/* read each byte individually by seeking */
 	for (gsize i = 0; i < 8; i++) {

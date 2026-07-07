@@ -15,6 +15,18 @@
 #include "fu-mem-private.h"
 #include "fu-sum.h"
 
+G_DEFINE_TYPE(FuInputStream, fu_input_stream, G_TYPE_INPUT_STREAM)
+
+static void
+fu_input_stream_class_init(FuInputStreamClass *klass)
+{
+}
+
+static void
+fu_input_stream_init(FuInputStream *self)
+{
+}
+
 /**
  * fu_input_stream_from_path:
  * @path: a filename

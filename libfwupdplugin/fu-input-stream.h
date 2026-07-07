@@ -12,14 +12,12 @@
 #include "fu-endian.h"
 #include "fu-progress.h"
 
-typedef GInputStream FuInputStream;	      /* nocheck:blocked */
-typedef GInputStreamClass FuInputStreamClass; /* nocheck:blocked */
+#define FU_TYPE_INPUT_STREAM (fu_input_stream_get_type())
+G_DECLARE_DERIVABLE_TYPE(FuInputStream, fu_input_stream, FU, INPUT_STREAM, GInputStream)
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuInputStream, g_object_unref) /* nocheck:blocked */
-#define FU_INPUT_STREAM	      G_INPUT_STREAM		     /* nocheck:blocked */
-#define FU_TYPE_INPUT_STREAM  G_TYPE_INPUT_STREAM	     /* nocheck:blocked */
-#define FU_IS_INPUT_STREAM    G_IS_INPUT_STREAM		     /* nocheck:blocked */
-#define FU_INPUT_STREAM_CLASS G_INPUT_STREAM_CLASS	     /* nocheck:blocked */
+struct _FuInputStreamClass {
+	GInputStreamClass parent_class;
+};
 
 FuInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
