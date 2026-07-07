@@ -11,6 +11,13 @@
 #include "@INCLUDE@"
 
 int
+LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+	g_type_ensure(@GTYPE@);
+	return 0;
+}
+
+int
 LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 {
 	g_autoptr(GObject) object = g_object_new(@GTYPE@, NULL);
