@@ -137,6 +137,7 @@ fwupdplugin_src = [
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
+  'fu-file-input-stream.c', # fuzzing
   'fu-firmware.c', # fuzzing
   'fu-firmware-common.c', # fuzzing
   'fu-fit-firmware.c', # fuzzing
@@ -310,6 +311,7 @@ fwupdplugin_headers = [
   'fu-endian.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
+  'fu-file-input-stream.h',
   'fu-firmware-common.h',
   'fu-firmware.h',
   'fu-fit-firmware.h',
