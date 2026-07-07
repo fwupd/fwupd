@@ -8059,10 +8059,9 @@ fu_engine_cleanup_state(GError **error)
 static gboolean
 fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 {
-	FuPathStore *pstore = fu_context_get_path_store(self->ctx);
 	const gchar *tmp;
 	g_autofree gchar *dirname = NULL;
-	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(pstore);
+	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new(self->ctx);
 	g_autoptr(GHashTable) hashtable = NULL;
 	g_autoptr(GDir) dir = NULL;
 
