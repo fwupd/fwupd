@@ -1,0 +1,24 @@
+{
+  "id": "org.fwupd.hsi.TcgOpal",
+  "name": "TCG Opal",
+  "description": [
+    "TCG Opal is used by supported storage devices to provide hardware-backed locking.",
+    "fwupd can check this using the Linux Opal status ioctl on internal NVMe devices."
+  ],
+  "failure-impact": [
+    "An attacker with physical access may be able to read data from removed storage media."
+  ],
+  "failure-results": {
+    "not-enabled": "TCG Opal locking is not enabled",
+    "not-supported": "TCG Opal locking is not available"
+  },
+  "success-results": {
+    "enabled": "TCG Opal locking is enabled"
+  },
+  "hsi-level": 4,
+  "resolution": "Ensure that the internal storage device supports TCG Opal, and ensure it is enabled in the UEFI setup screen.",
+  "references": {
+    "https://trustedcomputinggroup.org/resource/storage-work-group-storage-security-subsystem-class-opal/": "TCG Storage Opal specification"
+  },
+  "fwupd-version": "2.1.7"
+}

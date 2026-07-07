@@ -38,6 +38,7 @@ hsi_test_jsons = files(
   'org.fwupd.hsi.SupportedCpu.json',
   'org.fwupd.hsi.SuspendToIdle.json',
   'org.fwupd.hsi.SuspendToRam.json',
+  'org.fwupd.hsi.TcgOpal.json',
   'org.fwupd.hsi.Tpm.EmptyPcr.json',
   'org.fwupd.hsi.Tpm.ReconstructionPcr0.json',
   'org.fwupd.hsi.Tpm.Version20.json',

@@ -7,6 +7,9 @@
 #include "config.h"
 
 #include <linux/nvme_ioctl.h>
+#ifdef HAVE_LINUX_SED_OPAL_H
+#include <linux/sed-opal.h>
+#endif
 #include <sys/ioctl.h>
 
 #include "fu-nvme-device.h"
@@ -34,6 +37,7 @@ struct _FuNvmeDevice {
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
 #define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_NVME_DEVICE_OPAL_IOCTL_TIMEOUT 500  /* ms */
 
 static void
 fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -159,6 +163,71 @@ fu_nvme_device_identify_ctrl(FuNvmeDevice *self, guint8 *buf, gsize bufsz, GErro
 	};
 	return fu_nvme_device_submit_admin_passthru(self, &cmd, buf, bufsz, error);
 }
+
+#ifdef HAVE_LINUX_SED_OPAL_H
+static gboolean
+fu_nvme_device_get_opal_status(FuNvmeDevice *self, struct opal_status *status, GError **error)
+{
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+
+	if (!fu_ioctl_execute(ioctl,
+			      IOC_OPAL_GET_STATUS,
+			      (guint8 *)status,
+			      sizeof(*status),
+			      NULL,
+			      FU_NVME_DEVICE_OPAL_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
+		g_prefix_error_literal(error, "failed to get TCG Opal status: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
+fu_nvme_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuNvmeDevice *self = FU_NVME_DEVICE(device);
+	struct opal_status status = {0};
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL))
+		return;
+
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_TCG_OPAL);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_append(attrs, attr);
+
+	locker = fu_device_locker_new(device, &error_local);
+	if (locker == NULL) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("failed to open NVMe device for TCG Opal status: %s", error_local->message);
+		return;
+	}
+	if (!fu_nvme_device_get_opal_status(self, &status, &error_local)) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		g_debug("%s", error_local->message);
+		return;
+	}
+	if ((status.flags & OPAL_FL_SUPPORTED) == 0 ||
+	    (status.flags & OPAL_FL_LOCKING_SUPPORTED) == 0) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+	if ((status.flags & OPAL_FL_LOCKING_ENABLED) == 0) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+		return;
+	}
+
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+#endif
 
 static gboolean
 fu_nvme_device_fw_commit(FuNvmeDevice *self,
@@ -629,6 +698,9 @@ fu_nvme_device_class_init(FuNvmeDeviceClass *klass)
 	device_class->write_firmware = fu_nvme_device_write_firmware;
 	device_class->probe = fu_nvme_device_probe;
 	device_class->set_progress = fu_nvme_device_set_progress;
+#ifdef HAVE_LINUX_SED_OPAL_H
+	device_class->add_security_attrs = fu_nvme_device_add_security_attrs;
+#endif
 	fu_device_register_private_flag(device_class, FU_NVME_DEVICE_FLAG_FORCE_ALIGN);
 	fu_device_register_private_flag(device_class, FU_NVME_DEVICE_FLAG_COMMIT_CA3);
 }
