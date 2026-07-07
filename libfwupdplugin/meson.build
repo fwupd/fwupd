@@ -202,6 +202,7 @@ fwupdplugin_src = [
   'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
+  'fu-stream-input-stream.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-temporary-directory.c', # fuzzing
@@ -370,6 +371,8 @@ fwupdplugin_headers = [
   'fu-smbios.h',
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
+  'fu-stream-input-stream.h',
+  'fu-stream-input-stream-private.h',
   'fu-string.h',
   'fu-sum.h',
   'fu-temporary-directory.h',
@@ -546,6 +549,7 @@ if get_option('tests')
     'security-attrs',
     'smbios',
     'srec-firmware',
+    'stream-input-stream',
     'string',
     'struct',
     'temporary-directory',
