@@ -159,6 +159,7 @@ fwupdplugin_src = [
   'fu-ifd-firmware.c', # fuzzing
   'fu-ifd-image.c', # fuzzing
   'fu-ifwi-cpd-firmware.c', # fuzzing
+  'fu-ifwi-cpd-image.c', # fuzzing
   'fu-ifwi-fpt-firmware.c', # fuzzing
   'fu-ihex-firmware.c', # fuzzing
   'fu-input-stream.c', # fuzzing
@@ -323,6 +324,7 @@ fwupdplugin_headers = [
   'fu-ifd-firmware.h',
   'fu-ifd-image.h',
   'fu-ifwi-cpd-firmware.h',
+  'fu-ifwi-cpd-image.h',
   'fu-ifwi-fpt-firmware.h',
   'fu-ihex-firmware.h',
   'fu-input-stream.h',

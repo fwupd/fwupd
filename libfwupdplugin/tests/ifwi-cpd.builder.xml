@@ -2,11 +2,11 @@
   <idx>0x1234</idx>
   <header_version>0x1</header_version>
   <entry_version>0x2</entry_version>
-  <firmware gtype="FuFirmware">
+  <firmware gtype="FuIfwiCpdImage">
     <id>one</id>
     <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
-  <firmware gtype="FuFirmware">
+  <firmware gtype="FuIfwiCpdImage">
     <id>two</id>
     <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
