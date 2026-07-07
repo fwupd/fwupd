@@ -12,6 +12,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
+#include "fu-ifwi-cpd-image.h"
 #include "fu-ifwi-struct.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
@@ -199,7 +200,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	for (guint32 i = 0; i < num_of_entries; i++) {
 		guint32 img_offset = 0;
 		g_autofree gchar *id = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = fu_ifwi_cpd_image_new();
 		g_autoptr(FuStructIfwiCpdEntry) st_ent = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
@@ -371,7 +372,7 @@ static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_FIRMWARE);
+	fu_firmware_add_image_gtype(firmware_class, FU_TYPE_IFWI_CPD_IMAGE);
 	fu_firmware_set_size_max(firmware_class, 128 * FU_MB);
 	firmware_class->validate = fu_ifwi_cpd_firmware_validate;
 	firmware_class->export = fu_ifwi_cpd_firmware_export;
