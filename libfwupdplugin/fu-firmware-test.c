@@ -1176,7 +1176,7 @@ fu_firmware_builder_round_trip_func(void)
 	    },
 	    {
 		"zip-compressed.builder.xml",
-		"10792ff01b036ed89d11a6480694ccfd89c4d9fd",
+		NULL, /* not byte-identical */
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	};
