@@ -36,6 +36,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: MTD is the acronym for Memory Technology Device */
 		return g_strdup(_("Locked MTD"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION) == 0) {
+		/* TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group' */
+		return g_strdup(_("Hardware disk encryption"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack  */
 		return g_strdup(_("Pre-boot DMA protection"));
@@ -285,6 +289,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: MTD is the acronym for Memory Technology Device */
 		return _("Locked MTD");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION) == 0) {
+		/* TRANSLATORS: Title: TCG is the acronym for 'Trusted Computing Group' */
+		return _("Hardware Disk Encryption");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack  */
 		return _("Pre-boot DMA Protection");
@@ -503,6 +511,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("Locked MTD prevents device firmware from being changed after the "
 			 "device has started.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("Hardware disk encryption means that an attacker with physical access "
+			 "cannot read data from removed NVMe drives.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION) == 0) {
 		/* TRANSLATORS: longer description */

@@ -9,6 +9,9 @@
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-nvme-device.h"
+#include "fu-nvme-plugin.h"
+#include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 
 static void
 fu_nvme_serial_suffix_func(void)
@@ -123,6 +126,171 @@ fu_nvme_cns_all_func(void)
 	}
 }
 
+static guint fu_test_nvme_device_cnt;
+
+static FuDevice *
+fu_test_nvme_new_device(FuContext *ctx, FuNvmeOpalFlags opal_flags)
+{
+	g_autofree gchar *id = g_strdup_printf("nvme%u", fu_test_nvme_device_cnt++);
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_NVME_DEVICE, "context", ctx, NULL);
+	fu_device_set_id(device, id);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_nvme_device_set_opal_flags(FU_NVME_DEVICE(device), opal_flags);
+	return g_steal_pointer(&device);
+}
+
+static void
+fu_nvme_plugin_opal_no_devices_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	plugin = fu_plugin_new_from_gtype(fu_nvme_plugin_get_type(), ctx);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+						     NULL);
+	g_assert_null(attr);
+}
+
+static void
+fu_nvme_plugin_opal_one_without_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	plugin = fu_plugin_new_from_gtype(fu_nvme_plugin_get_type(), ctx);
+	dev = fu_test_nvme_new_device(ctx, FU_NVME_OPAL_FLAG_UNKNOWN);
+	fu_plugin_add_device(plugin, dev);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_nvme_plugin_opal_one_with_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	plugin = fu_plugin_new_from_gtype(fu_nvme_plugin_get_type(), ctx);
+	dev = fu_test_nvme_new_device(ctx,
+				      FU_NVME_OPAL_FLAG_SUPPORTED |
+					  FU_NVME_OPAL_FLAG_LOCKING_SUPPORTED |
+					  FU_NVME_OPAL_FLAG_LOCKING_ENABLED);
+	fu_plugin_add_device(plugin, dev);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_nvme_plugin_opal_two_without_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) dev1 = NULL;
+	g_autoptr(FuDevice) dev2 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	plugin = fu_plugin_new_from_gtype(fu_nvme_plugin_get_type(), ctx);
+	dev1 = fu_test_nvme_new_device(ctx, FU_NVME_OPAL_FLAG_UNKNOWN);
+	fu_plugin_add_device(plugin, dev1);
+	dev2 = fu_test_nvme_new_device(ctx, FU_NVME_OPAL_FLAG_UNKNOWN);
+	fu_plugin_add_device(plugin, dev2);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_nvme_plugin_opal_two_mixed_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) dev1 = NULL;
+	g_autoptr(FuDevice) dev2 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	plugin = fu_plugin_new_from_gtype(fu_nvme_plugin_get_type(), ctx);
+	dev1 = fu_test_nvme_new_device(ctx,
+				       FU_NVME_OPAL_FLAG_SUPPORTED |
+					   FU_NVME_OPAL_FLAG_LOCKING_SUPPORTED |
+					   FU_NVME_OPAL_FLAG_LOCKING_ENABLED);
+	fu_plugin_add_device(plugin, dev1);
+	dev2 = fu_test_nvme_new_device(ctx, FU_NVME_OPAL_FLAG_UNKNOWN);
+	fu_plugin_add_device(plugin, dev2);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	g_assert_false(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
+static void
+fu_nvme_plugin_opal_two_with_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS);
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuDevice) dev1 = NULL;
+	g_autoptr(FuDevice) dev2 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	plugin = fu_plugin_new_from_gtype(fu_nvme_plugin_get_type(), ctx);
+	dev1 = fu_test_nvme_new_device(ctx,
+				       FU_NVME_OPAL_FLAG_SUPPORTED |
+					   FU_NVME_OPAL_FLAG_LOCKING_SUPPORTED |
+					   FU_NVME_OPAL_FLAG_LOCKING_ENABLED);
+	fu_plugin_add_device(plugin, dev1);
+	dev2 = fu_test_nvme_new_device(ctx,
+				       FU_NVME_OPAL_FLAG_SUPPORTED |
+					   FU_NVME_OPAL_FLAG_LOCKING_SUPPORTED |
+					   FU_NVME_OPAL_FLAG_LOCKING_ENABLED);
+	fu_plugin_add_device(plugin, dev2);
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_HW_DISK_ENCRYPTION,
+						     NULL);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_true(fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -131,5 +299,13 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/serial-suffix", fu_nvme_serial_suffix_func);
 	g_test_add_func("/fwupd/cns", fu_nvme_cns_func);
 	g_test_add_func("/fwupd/cns/all", fu_nvme_cns_all_func);
+
+	/* OPAL security attribute tests */
+	g_test_add_func("/fwupd/opal/no-devices", fu_nvme_plugin_opal_no_devices_func);
+	g_test_add_func("/fwupd/opal/one-without", fu_nvme_plugin_opal_one_without_func);
+	g_test_add_func("/fwupd/opal/one-with", fu_nvme_plugin_opal_one_with_func);
+	g_test_add_func("/fwupd/opal/two-without", fu_nvme_plugin_opal_two_without_func);
+	g_test_add_func("/fwupd/opal/two-mixed", fu_nvme_plugin_opal_two_mixed_func);
+	g_test_add_func("/fwupd/opal/two-with", fu_nvme_plugin_opal_two_with_func);
 	return g_test_run();
 }
