@@ -545,6 +545,9 @@ endif
 if cc.has_header('mtd/mtd-user.h')
   conf.set('HAVE_MTD_USER_H', '1')
 endif
+if cc.has_header_symbol('linux/sed-opal.h', 'IOC_OPAL_GET_STATUS')
+  conf.set('HAVE_LINUX_SED_OPAL_H', '1')
+endif
 has_HIDIOCGINPUT = cc.has_header_symbol('linux/hidraw.h',
   'HIDIOCGINPUT',
    required: false,
