@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-compressor-stream.h"
 #include "fu-input-stream.h"
 #include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
@@ -222,17 +223,17 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 			return NULL;
 	} else if (compression == FU_ZIP_COMPRESSION_DEFLATE) {
 		g_autoptr(GBytes) blob_raw = NULL;
-		g_autoptr(GConverter) conv = NULL;
-		g_autoptr(FuInputStream) stream_deflate = NULL;
+		g_autoptr(FuInputStream) fustream = NULL;
 
-		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_RAW));
 		if (!g_seekable_seek(G_SEEKABLE(stream_compressed), 0, G_SEEK_SET, NULL, error))
 			return NULL;
-		stream_deflate = g_converter_input_stream_new(stream_compressed, conv);
-		g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(stream_deflate),
-							    FALSE);
-		blob_raw =
-		    fu_input_stream_read_bytes(stream_deflate, 0, uncompressed_size, NULL, error);
+
+		fustream = fu_compressor_stream_new_decompress(stream_compressed,
+							       FU_COMPRESSOR_FORMAT_RAW,
+							       error);
+		if (fustream == NULL)
+			return NULL;
+		blob_raw = fu_input_stream_read_bytes(fustream, 0, uncompressed_size, NULL, error);
 		if (blob_raw == NULL) {
 			g_prefix_error_literal(error, "failed to read compressed stream: ");
 			return NULL;
@@ -454,18 +455,16 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 		if (compression == FU_ZIP_COMPRESSION_NONE) {
 			blob_compressed = g_bytes_ref(blob);
 		} else if (compression == FU_ZIP_COMPRESSION_DEFLATE) {
-			g_autoptr(GConverter) conv = NULL;
 			g_autoptr(FuInputStream) istream_raw = NULL;
-			g_autoptr(FuInputStream) istream_compressed = NULL;
-			conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_RAW, -1));
+			g_autoptr(FuInputStream) istream_out = NULL;
 			istream_raw = fu_memory_input_stream_new_from_bytes(blob);
-			istream_compressed =
-			    g_converter_input_stream_new(G_INPUT_STREAM(istream_raw), conv);
-			blob_compressed = fu_input_stream_read_bytes(istream_compressed,
-								     0,
-								     G_MAXSIZE,
-								     NULL,
-								     error);
+			istream_out = fu_compressor_stream_new_compress(istream_raw,
+									FU_COMPRESSOR_FORMAT_RAW,
+									error);
+			if (istream_out == NULL)
+				return NULL;
+			blob_compressed =
+			    fu_input_stream_read_bytes(istream_out, 0, G_MAXSIZE, NULL, error);
 			if (blob_compressed == NULL) {
 				g_prefix_error_literal(error, "failed to read compressed stream: ");
 				return NULL;

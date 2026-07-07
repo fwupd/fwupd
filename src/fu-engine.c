@@ -4348,12 +4348,13 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 {
 	FuEngine *self = FU_ENGINE(user_data);
 	GInputStream *stream = xb_builder_source_ctx_get_stream(ctx); /* nocheck:blocked */
+	g_autoptr(FuInputStream) fustream = fu_stream_input_stream_from_stream(stream);
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
 
 	/* convert the CAB into metadata XML */
-	cabinet = fu_engine_build_cabinet_from_stream(self, stream, error);
+	cabinet = fu_engine_build_cabinet_from_stream(self, fustream, error);
 	if (cabinet == NULL)
 		return NULL;
 	silo = fu_cabinet_get_silo(cabinet, error);
@@ -7712,14 +7713,16 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	if (istream_raw == NULL)
 		return FALSE;
 	if (g_str_has_suffix(fn, ".gz")) {
-		g_autoptr(GConverter) conv =
-		    G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-		istream_json = g_converter_input_stream_new(istream_raw, conv);
+		istream_json = fu_compressor_stream_new_decompress(istream_raw,
+								   FU_COMPRESSOR_FORMAT_GZIP,
+								   error);
+		if (istream_json == NULL)
+			return FALSE;
 	} else {
 		istream_json = g_object_ref(istream_raw);
 	}
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       istream_json,
+						       G_INPUT_STREAM(istream_json),
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
 	if (json_node == NULL)
