@@ -15,14 +15,18 @@
 #include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
 #include "fu-common.h"
+#include "fu-context.h"
 #include "fu-path.h"
+#include "fu-quirks.h"
 #include "fu-string.h"
+
+#include "fwupd-bios-setting-struct.h"
 
 #define LENOVO_READ_ONLY_NEEDLE "[Status:ShowOnly]"
 
 struct _FuBiosSettings {
 	GObject parent_instance;
-	FuPathStore *pstore;
+	FuContext *ctx; /* weak: the context owns us */
 	GHashTable *descriptions;
 	GHashTable *read_only;
 	GPtrArray *attrs;
@@ -40,8 +44,8 @@ static void
 fu_bios_settings_finalize(GObject *obj)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(obj);
-	if (self->pstore != NULL)
-		g_object_unref(self->pstore);
+	if (self->ctx != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(self->ctx), (gpointer *)&self->ctx);
 	g_ptr_array_unref(self->attrs);
 	g_hash_table_unref(self->descriptions);
 	g_hash_table_unref(self->read_only);
@@ -350,6 +354,58 @@ fu_bios_settings_populate_read_only(FuBiosSettings *self)
 			    g_strdup(_("Enabled")));
 }
 
+/* the abstract name and icon for each fwupd AppStream ID; the name is marked
+ * for translation with N_() and translated at runtime by the client. The
+ * vendor-specific ID to AppStream-ID mapping lives in bios-settings.quirk. */
+static const struct {
+	const gchar *appstream_id;
+	const gchar *name;
+	const gchar *icon;
+} fu_bios_settings_appstream[] = {
+    {"org.fwupd.bios.secure-boot", N_("Secure Boot"), "application-certificate"},
+    {"org.fwupd.bios.firmware-update-opt-in", N_("Firmware Update Opt-in"), "system-software-update"},
+    {"org.fwupd.bios.wake-on-lan", N_("Wake on LAN"), "network-wired"},
+    {"org.fwupd.bios.num-lock", N_("Num Lock"), "input-keyboard"},
+    {"org.fwupd.bios.memory-encryption", N_("Memory Encryption"), "security-high"},
+    {"org.fwupd.bios.video-memory", N_("Video Memory"), "video-display"},
+    {"org.fwupd.bios.camera.enabled", N_("Camera"), "camera-web"},
+    {"org.fwupd.bios.microphone.enabled", N_("Microphone"), "audio-input-microphone"},
+    {"org.fwupd.bios.bluetooth.enabled", N_("Bluetooth"), "bluetooth"},
+    {"org.fwupd.bios.wireless-lan.enabled", N_("Wireless LAN"), "network-wireless"},
+    {"org.fwupd.bios.fingerprint-reader.enabled", N_("Fingerprint Reader"), "auth-fingerprint"},
+    {"org.fwupd.bios.touchscreen.enabled", N_("Touchscreen"), "input-touchpad"},
+    {"org.fwupd.bios.audio.enabled", N_("Audio"), "audio-card"},
+    {"org.fwupd.bios.media-card-reader.enabled", N_("Media Card Reader"), "media-flash"},
+    {"org.fwupd.bios.keyboard-backlight.enabled", N_("Keyboard Backlight"), "input-keyboard"},
+};
+
+static void
+fu_bios_settings_set_appstream(FuBiosSettings *self, FwupdBiosSetting *attr)
+{
+	const gchar *id = fwupd_bios_setting_get_id(attr);
+	const gchar *appstream_id;
+	g_autofree gchar *guid = NULL;
+
+	if (self->ctx == NULL || id == NULL)
+		return;
+
+	/* the hardware-assigned setting points at an abstract fwupd AppStream ID */
+	guid = fwupd_guid_hash_string(id);
+	appstream_id = fu_context_lookup_quirk_by_id(self->ctx, guid, FU_QUIRKS_APPSTREAM_ID);
+	if (appstream_id == NULL)
+		return;
+	fwupd_bios_setting_set_appstream_id(attr, appstream_id);
+
+	/* the abstract thing carries the name (translated by the client) and icon */
+	for (guint i = 0; i < G_N_ELEMENTS(fu_bios_settings_appstream); i++) {
+		if (g_strcmp0(appstream_id, fu_bios_settings_appstream[i].appstream_id) != 0)
+			continue;
+		fwupd_bios_setting_set_description(attr, fu_bios_settings_appstream[i].name);
+		fwupd_bios_setting_set_icon(attr, fu_bios_settings_appstream[i].icon);
+		break;
+	}
+}
+
 static void
 fu_bios_settings_combination_fixups(FuBiosSettings *self)
 {
@@ -384,6 +440,7 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 {
 	guint count = 0;
 	const gchar *sysfsfwdir = NULL;
+	FuPathStore *pstore = NULL;
 	g_autoptr(GDir) class_dir = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -399,8 +456,12 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 	if (g_hash_table_size(self->read_only) == 0)
 		fu_bios_settings_populate_read_only(self);
 
-	sysfsfwdir =
-	    fu_path_store_get_path(self->pstore, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, &error_local);
+	if (self->ctx == NULL) {
+		g_debug("ignoring BIOS settings: no context set");
+		return TRUE;
+	}
+	pstore = fu_context_get_path_store(self->ctx);
+	sysfsfwdir = fu_path_store_get_path(pstore, FU_PATH_KIND_SYSFSDIR_FW_ATTRIB, &error_local);
 	if (sysfsfwdir == NULL) {
 		g_debug("ignoring BIOS settings: %s", error_local->message);
 		return TRUE;
@@ -445,6 +506,12 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 	} while (TRUE);
 	g_info("loaded %u BIOS settings", count);
 
+	/* apply the abstract AppStream ID, icon and name from quirks */
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdBiosSetting *attr = g_ptr_array_index(self->attrs, i);
+		fu_bios_settings_set_appstream(self, attr);
+	}
+
 	fu_bios_settings_combination_fixups(self);
 
 	return TRUE;
@@ -461,9 +528,10 @@ fu_bios_settings_init(FuBiosSettings *self)
 /**
  * fu_bios_settings_get_attr:
  * @self: a #FuBiosSettings
- * @val: the attribute ID or name to check for
+ * @val: the attribute ID, name or AppStream ID to check for
  *
- * Returns: (transfer none): the attribute with the given ID or name or NULL if it doesn't exist.
+ * Returns: (transfer none): the attribute with the given ID, name or AppStream ID, or NULL if it
+ * doesn't exist.
  *
  * Since: 1.8.4
  **/
@@ -475,9 +543,9 @@ fu_bios_settings_get_attr(FuBiosSettings *self, const gchar *val)
 
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdBiosSetting *attr = g_ptr_array_index(self->attrs, i);
-		const gchar *tmp_id = fwupd_bios_setting_get_id(attr);
-		const gchar *tmp_name = fwupd_bios_setting_get_name(attr);
-		if (g_strcmp0(val, tmp_id) == 0 || g_strcmp0(val, tmp_name) == 0)
+		if (g_strcmp0(val, fwupd_bios_setting_get_id(attr)) == 0 ||
+		    g_strcmp0(val, fwupd_bios_setting_get_name(attr)) == 0 ||
+		    g_strcmp0(val, fwupd_bios_setting_get_appstream_id(attr)) == 0)
 			return attr;
 	}
 	return NULL;
@@ -642,20 +710,22 @@ fu_bios_settings_is_supported(FuBiosSettings *self)
 
 /**
  * fu_bios_settings_new:
- * @pstore: (nullable): a #FuPathStore
+ * @ctx: (nullable): a #FuContext
  *
  * Returns: #FuBiosSettings
  *
  * Since: 1.8.4
  **/
 FuBiosSettings *
-fu_bios_settings_new(FuPathStore *pstore)
+fu_bios_settings_new(FuContext *ctx)
 {
 	FuBiosSettings *self;
-	g_return_val_if_fail(FU_IS_PATH_STORE(pstore) || pstore == NULL, NULL);
+	g_return_val_if_fail(FU_IS_CONTEXT(ctx) || ctx == NULL, NULL);
 	self = g_object_new(FU_TYPE_FIRMWARE_ATTRS, NULL);
-	if (pstore != NULL)
-		self->pstore = g_object_ref(pstore);
+	if (ctx != NULL) {
+		self->ctx = ctx;
+		g_object_add_weak_pointer(G_OBJECT(ctx), (gpointer *)&self->ctx);
+	}
 	return self;
 }
 

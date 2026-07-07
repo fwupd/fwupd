@@ -1154,6 +1154,9 @@ fu_context_lookup_quirk_by_id(FuContext *self, const gchar *guid, const gchar *k
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
+	if (priv->flags & FU_CONTEXT_FLAG_NO_QUIRKS)
+		return NULL;
+
 	/* exact ID */
 	return fu_quirks_lookup_by_id(priv->quirks, guid, key);
 }
@@ -3017,7 +3020,7 @@ fu_context_init(FuContext *self)
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new(self);
-	priv->host_bios_settings = fu_bios_settings_new(priv->pstore);
+	priv->host_bios_settings = fu_bios_settings_new(self);
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

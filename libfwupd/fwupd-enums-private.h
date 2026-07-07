@@ -655,6 +655,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_BIOS_SETTING_FILENAME "BiosSettingFilename"
 /**
+ * FWUPD_RESULT_KEY_BIOS_SETTING_ICON: (skip)
+ *
+ * Result key to represent the icon name of a BIOS setting.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_BIOS_SETTING_ICON "BiosSettingIcon"
+/**
  * FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE: (skip)
  *
  * Result key to represent the target kernel setting.
