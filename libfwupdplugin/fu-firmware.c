@@ -16,6 +16,7 @@
 #include "fu-fuzzer.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-ptr-array.h"
 #include "fu-string.h"
@@ -723,7 +724,7 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
 	if (priv->bytes != NULL)
-		return g_memory_input_stream_new_from_bytes(priv->bytes);
+		return fu_memory_input_stream_new_from_bytes(priv->bytes);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream or bytes set");
 	return NULL;
 }
@@ -1135,7 +1136,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
 		if (blob == NULL)
 			return FALSE;
-		seekable_stream = g_memory_input_stream_new_from_bytes(blob);
+		seekable_stream = fu_memory_input_stream_new_from_bytes(blob);
 	} else {
 		seekable_stream = g_object_ref(stream);
 	}
@@ -1297,7 +1298,7 @@ fu_firmware_parse_bytes(FuFirmware *self,
 	g_return_val_if_fail(fw != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(fw);
+	stream = fu_memory_input_stream_new_from_bytes(fw);
 	return fu_firmware_parse_stream(self, stream, offset, flags, error);
 }
 

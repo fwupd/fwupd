@@ -22,6 +22,7 @@
 #include "fu-device-poll-locker.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-output-stream.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
@@ -923,7 +924,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 	return fu_device_set_contents(self, filename, stream, progress, error);
 }
 

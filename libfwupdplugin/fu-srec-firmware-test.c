@@ -43,7 +43,7 @@ fu_srec_firmware_tokenization_func(void)
 	data_srec = g_bytes_new_static(buf, strlen(buf));
 	g_assert_no_error(error);
 	g_assert_nonnull(data_srec);
-	stream = g_memory_input_stream_new_from_bytes(data_srec);
+	stream = fu_memory_input_stream_new_from_bytes(data_srec);
 	ret = fu_firmware_tokenize(firmware, stream, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

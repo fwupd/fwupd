@@ -17,6 +17,7 @@
 #include "fu-efi-volume.h"
 #include "fu-input-stream.h"
 #include "fu-lzma-common.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
@@ -91,7 +92,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 		g_prefix_error_literal(error, "failed to decompress: ");
 		return FALSE;
 	}
-	stream_uncomp = g_memory_input_stream_new_from_bytes(blob_uncomp);
+	stream_uncomp = fu_memory_input_stream_new_from_bytes(blob_uncomp);
 	if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream_uncomp, 0, flags, error)) {
 		g_prefix_error_literal(error, "failed to parse sections: ");
 		return FALSE;

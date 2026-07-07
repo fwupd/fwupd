@@ -7,7 +7,7 @@
 #include "config.h"
 
 #include "fu-cbor-common.h"
-#include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 
 /* nocheck:magic-inlines=200 */
 
@@ -35,7 +35,7 @@ fu_cbor_item_depth_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 3);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 2, 0, 0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
@@ -66,7 +66,7 @@ fu_cbor_item_items_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 5);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 1, 0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
@@ -127,7 +127,7 @@ fu_cbor_item_integer_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 29);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
 	g_assert_no_error(error);
@@ -155,7 +155,7 @@ fu_cbor_item_string_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 2);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
 	g_assert_no_error(error);
@@ -191,7 +191,7 @@ fu_cbor_item_bytes_func(void)
 	g_assert_nonnull(buf);
 	g_assert_cmpint(buf->len, ==, 5);
 
-	stream = g_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf->data, buf->len, NULL);
 	g_assert_nonnull(stream);
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);
 	g_assert_no_error(error);
@@ -232,7 +232,7 @@ fu_cbor_item_func(void)
 	 * "uSWID", "54": "def", "52": "Dave", "45": "acb"}, "2": {"31": "Hughski Ltd", "32":
 	 * "hughsie.com", "33": [1, 2, 3, 4, 5, 6]}}
 	 */
-	stream = g_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	stream = fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
 	g_assert_nonnull(stream);
 
 	item = fu_cbor_parse(stream, NULL, 0, 0, 0, &error);

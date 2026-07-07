@@ -13,6 +13,7 @@
 #include "fu-common.h"
 #include "fu-composite-input-stream.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
 /**
@@ -111,7 +112,7 @@ fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes,
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	stream = g_memory_input_stream_new_from_bytes(bytes);
+	stream = fu_memory_input_stream_new_from_bytes(bytes);
 	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), error);
 	if (partial_stream == NULL)
 		return FALSE;

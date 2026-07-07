@@ -381,7 +381,7 @@ fu_firmware_new_from_gtypes_func(void)
 	fw = fu_firmware_write(firmware, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fw);
-	stream = g_memory_input_stream_new_from_bytes(fw);
+	stream = fu_memory_input_stream_new_from_bytes(fw);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 

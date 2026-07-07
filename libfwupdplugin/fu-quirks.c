@@ -21,6 +21,7 @@
 
 #include "fu-context-private.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-quirks.h"

@@ -2079,7 +2079,7 @@ fu_engine_install_loop_restart_func(void)
 	fu_device_set_metadata_integer(device, "nr-update", 0);
 	fu_device_set_metadata_integer(device, "nr-attach", 0);
 
-	stream_fw = g_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL);
+	stream_fw = fu_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL);
 	fu_release_set_stream(release, stream_fw);
 	ret = fu_engine_install_blob(engine,
 				     device,

@@ -10,6 +10,7 @@
 
 #include "fu-dump.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-usb-device-ds20-struct.h"
 #include "fu-usb-device-ds20.h"
 
@@ -109,7 +110,7 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	fu_dump_raw(G_LOG_DOMAIN, "PlatformCapabilityOs20", buf, actual_length);
 
 	/* FuUsbDeviceDs20->parse */
-	stream = g_memory_input_stream_new_from_data(buf, actual_length, NULL);
+	stream = fu_memory_input_stream_new_from_data(buf, actual_length, NULL);
 	return klass->parse(self, stream, device, error);
 }
 

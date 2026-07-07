@@ -20,7 +20,7 @@ fu_input_stream_find_func(void)
 	g_autoptr(FuInputStream) stream = NULL;
 
 	stream =
-	    g_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
+	    fu_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
 	ret = fu_input_stream_find(stream,
 				   (const guint8 *)needle1,
 				   strlen(needle1),
@@ -60,7 +60,7 @@ fu_input_stream_sum_overflow_func(void)
 	guint32 sum32 = 0;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) stream =
-	    g_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+	    fu_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
 
 	ret = fu_input_stream_compute_sum32(stream, &sum32, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
@@ -84,7 +84,7 @@ fu_input_stream_chunkify_func(void)
 	for (guint i = 0; i < 0x80000; i++)
 		fu_byte_array_append_uint8(buf, i);
 	blob = g_bytes_new(buf->data, buf->len);
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 
 	ret = fu_input_stream_compute_sum8(stream, &sum8, &error);
 	g_assert_no_error(error);

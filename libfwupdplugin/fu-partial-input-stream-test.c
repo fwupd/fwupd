@@ -62,7 +62,7 @@ fu_partial_input_stream_simple_func(void)
 	guint8 buf[2] = {0x0};
 	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuInputStream) stream2 = NULL;
 
@@ -97,7 +97,7 @@ fu_partial_input_stream_closed_base_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuInputStream) stream = NULL;
-	g_autoptr(FuInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
 
 	stream = fu_partial_input_stream_new(base_stream, 2, 4, &error);
 	g_assert_no_error(error);
@@ -127,7 +127,7 @@ fu_partial_input_stream_func(void)
 	/*                                             \--/   */
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(FuInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(FuInputStream) base_stream = fu_memory_input_stream_new_from_bytes(blob);
 	g_autoptr(FuInputStream) stream_complete = NULL;
 	g_autoptr(FuInputStream) stream_error = NULL;
 	g_autoptr(FuInputStream) stream_file = NULL;
@@ -178,7 +178,7 @@ fu_partial_input_stream_func(void)
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 10);
 
-	/* check the behavior of GMemoryInputStream */
+	/* check the behavior of FuMemoryInputStream */
 	g_assert_no_error(error);
 	g_assert_nonnull(stream_file);
 	ret = g_seekable_seek(G_SEEKABLE(base_stream), 0x0, G_SEEK_SET, NULL, &error);
