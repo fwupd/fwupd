@@ -8,14 +8,12 @@
 
 #include "fu-input-stream.h"
 
-typedef GMemoryInputStream FuMemoryInputStream;		  /* nocheck:blocked */
-typedef GMemoryInputStreamClass FuMemoryInputStreamClass; /* nocheck:blocked */
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMemoryInputStream, g_object_unref)     /* nocheck:blocked */
-#define FU_MEMORY_INPUT_STREAM(o)	G_MEMORY_INPUT_STREAM(o)       /* nocheck:blocked */
-#define FU_TYPE_MEMORY_INPUT_STREAM	G_TYPE_MEMORY_INPUT_STREAM     /* nocheck:blocked */
-#define FU_IS_MEMORY_INPUT_STREAM(o)	G_IS_MEMORY_INPUT_STREAM(o)    /* nocheck:blocked */
-#define FU_MEMORY_INPUT_STREAM_CLASS(o) G_MEMORY_INPUT_STREAM_CLASS(o) /* nocheck:blocked */
+#define FU_TYPE_MEMORY_INPUT_STREAM (fu_memory_input_stream_get_type())
+G_DECLARE_FINAL_TYPE(FuMemoryInputStream,
+		     fu_memory_input_stream,
+		     FU,
+		     MEMORY_INPUT_STREAM,
+		     FuInputStream)
 
 FuInputStream *
 fu_memory_input_stream_new(void) G_GNUC_WARN_UNUSED_RESULT;
