@@ -201,7 +201,7 @@ fu_partial_input_stream_func(void)
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
 	/* we CANNOT seek past the end... */
 	ret = g_seekable_seek(G_SEEKABLE(base_stream), pos + 10000, G_SEEK_SET, NULL, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 	g_clear_error(&error);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
@@ -279,7 +279,7 @@ fu_partial_input_stream_func(void)
 
 	/* attempt to seek way past the base stream */
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x1000, G_SEEK_SET, NULL, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 	g_clear_error(&error);
 
