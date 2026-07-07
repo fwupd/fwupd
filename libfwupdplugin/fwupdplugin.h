@@ -125,6 +125,7 @@
 #include <libfwupdplugin/fu-serio-device.h>
 #include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-stream-input-stream.h>
 #include <libfwupdplugin/fu-string.h>
 #include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-temporary-directory.h>
