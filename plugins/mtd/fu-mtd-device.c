@@ -85,7 +85,7 @@ fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **erro
 		blob = fu_device_event_get_bytes(event, "Data", error);
 		if (blob == NULL)
 			return NULL;
-		return g_memory_input_stream_new_from_bytes(blob);
+		return fu_memory_input_stream_new_from_bytes(blob);
 	}
 
 	/* save */

@@ -302,7 +302,7 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 		    fu_device_get_contents_bytes(device, nvmem, G_MAXSIZE, progress, error);
 		if (controller_blob == NULL)
 			return NULL;
-		controller_fw = g_memory_input_stream_new_from_bytes(controller_blob);
+		controller_fw = fu_memory_input_stream_new_from_bytes(controller_blob);
 		firmware_old = fu_firmware_new_from_gtypes(controller_fw,
 							   0x0,
 							   flags,

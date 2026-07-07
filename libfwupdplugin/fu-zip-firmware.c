@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-input-stream.h"
+#include "fu-memory-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-path.h"
 #include "fu-string.h"
@@ -457,8 +458,9 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 			g_autoptr(FuInputStream) istream_raw = NULL;
 			g_autoptr(FuInputStream) istream_compressed = NULL;
 			conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_RAW, -1));
-			istream_raw = g_memory_input_stream_new_from_bytes(blob);
-			istream_compressed = g_converter_input_stream_new(istream_raw, conv);
+			istream_raw = fu_memory_input_stream_new_from_bytes(blob);
+			istream_compressed =
+			    g_converter_input_stream_new(G_INPUT_STREAM(istream_raw), conv);
 			blob_compressed = fu_input_stream_read_bytes(istream_compressed,
 								     0,
 								     G_MAXSIZE,

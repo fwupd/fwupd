@@ -31,7 +31,7 @@ fu_engine_plugin_device_gtype(FuContext *ctx, GType gtype, gboolean is_fake)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
-	g_autoptr(FuInputStream) stream = g_memory_input_stream_new();
+	g_autoptr(FuInputStream) stream = fu_memory_input_stream_new();
 
 	g_debug("loading %s", g_type_name(gtype));
 	device = g_object_new(gtype, "context", ctx, "physical-id", "/sys", NULL);

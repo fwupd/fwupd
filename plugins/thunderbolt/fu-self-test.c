@@ -356,7 +356,7 @@ write_controller_fw(const gchar *nvm)
 	g_assert_no_error(error);
 	g_assert_nonnull(os);
 
-	is = g_memory_input_stream_new_from_bytes(fw_blob);
+	is = fu_memory_input_stream_new_from_bytes(fw_blob);
 
 	n = g_output_stream_splice(os, is, G_OUTPUT_STREAM_SPLICE_NONE, NULL, &error);
 	g_assert_no_error(error);
@@ -965,7 +965,7 @@ test_set_up(FuThunderboltTest *tt, gconstpointer params)
 		tt->fw_data = fu_firmware_write(firmware, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(tt->fw_data);
-		tt->fw_stream = g_memory_input_stream_new_from_bytes(tt->fw_data);
+		tt->fw_stream = fu_memory_input_stream_new_from_bytes(tt->fw_data);
 		g_assert_nonnull(tt->fw_stream);
 	}
 }

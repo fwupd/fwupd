@@ -393,7 +393,7 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return FALSE;
-	stream = g_memory_input_stream_new_from_bytes(blob);
+	stream = fu_memory_input_stream_new_from_bytes(blob);
 	eventlog = fu_firmware_new_from_gtypes(stream,
 					       0x0,
 					       FU_FIRMWARE_PARSE_FLAG_NONE,

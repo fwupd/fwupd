@@ -647,7 +647,7 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 	/* write flag indicating device should boot the target partition */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	flag_data_stream = FU_INPUT_STREAM(
-	    g_memory_input_stream_new_from_data(flag_data, sizeof(flag_data), NULL));
+	    fu_memory_input_stream_new_from_data(flag_data, sizeof(flag_data), NULL));
 	if (!fu_parade_lspcon_device_flash_write(self,
 						 0,
 						 flag_data_stream,
