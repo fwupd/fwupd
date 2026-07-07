@@ -494,7 +494,12 @@ endif
 
 enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'android').enabled()
 if enable_binder
-  ndk_sysroot_lib = '/opt/android/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/35'
+  # Read the exact arch string directly from the injected .ini cross-file.
+  # This will intentionally fail the build if 'android_ndk_sysroot_arch' is missing.
+  ndk_arch_dir = meson.get_external_property('android_ndk_sysroot_arch')
+
+  # Construct the precise path
+  ndk_sysroot_lib = '/opt/android/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/' + ndk_arch_dir + '/35'
   
   binder_ndk = cc.find_library('binder_ndk', dirs: ndk_sysroot_lib, required: true)
 
