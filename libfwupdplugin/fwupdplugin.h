@@ -67,6 +67,7 @@
 #include <libfwupdplugin/fu-endian.h>
 #include <libfwupdplugin/fu-fdt-firmware.h>
 #include <libfwupdplugin/fu-fdt-image.h>
+#include <libfwupdplugin/fu-file-input-stream.h>
 #include <libfwupdplugin/fu-firmware-common.h>
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-fit-firmware.h>
@@ -100,6 +101,7 @@
 #include <libfwupdplugin/fu-lzma-common.h>
 #include <libfwupdplugin/fu-mei-device.h>
 #include <libfwupdplugin/fu-mem.h>
+#include <libfwupdplugin/fu-memory-input-stream.h>
 #include <libfwupdplugin/fu-msgpack-item.h>
 #include <libfwupdplugin/fu-msgpack.h>
 #include <libfwupdplugin/fu-oprom-device.h>
