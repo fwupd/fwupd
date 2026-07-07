@@ -1920,6 +1920,11 @@ static gboolean
 fu_firmware_check_image_gtype(FuFirmware *self, GType gtype, GError **error)
 {
 	FuFirmwareClassPrivate *cpriv = fu_firmware_get_class_private(FU_FIRMWARE_GET_CLASS(self));
+
+	/* certain GTypes can opt-out of this check */
+	if (fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_NO_IMAGE_TYPE_CHECK))
+		return TRUE;
+
 	if (cpriv->image_gtypes_cnt == 0) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s did not add image GType %s with fu_firmware_add_image_gtype()",
