@@ -4362,7 +4362,8 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	xml = xb_silo_export(silo, XB_NODE_EXPORT_FLAG_NONE, error);
 	if (xml == NULL)
 		return NULL;
-	return g_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free);
+	return G_INPUT_STREAM(
+	    fu_memory_input_stream_new_from_data(g_steal_pointer(&xml), -1, g_free));
 }
 
 static XbBuilderSource *
@@ -4835,7 +4836,7 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+	if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(istream), error))
 		return NULL;
 	jcat_item = fwupd_jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
@@ -4953,8 +4954,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* verify JCatFile, or create a dummy one from legacy data */
-	istream = g_memory_input_stream_new_from_bytes(bytes_sig);
-	if (!fwupd_jcat_file_import_stream(jcat_file, istream, error))
+	istream = fu_memory_input_stream_new_from_bytes(bytes_sig);
+	if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(istream), error))
 		return FALSE;
 
 	/* distrusting RSA? */
