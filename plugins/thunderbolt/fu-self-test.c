@@ -246,7 +246,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 		g_autoptr(GBytes) b = NULL;
 		const guchar *d;
 
-		b = g_input_stream_read_bytes(is, 4096, NULL, &error);
+		b = g_input_stream_read_bytes(G_INPUT_STREAM(is), 4096, NULL, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(is);
 

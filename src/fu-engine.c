@@ -2506,7 +2506,7 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 		if (!fu_input_stream_size(stream, &streamsz, error))
 			return FALSE;
 		passim_item_set_size(passim_item, streamsz);
-		passim_item_set_stream(passim_item, stream);
+		passim_item_set_stream(passim_item, G_INPUT_STREAM(stream));
 		passim_item_set_hash(passim_item, checksum);
 		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
 			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {

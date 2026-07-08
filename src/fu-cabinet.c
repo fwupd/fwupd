@@ -621,7 +621,9 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 		/* TODO: move this to libjcat? */
 		if (!g_seekable_seek(G_SEEKABLE(istream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream(self->jcat_file, istream, error)) {
+		if (!fwupd_jcat_file_import_stream(self->jcat_file,
+						   G_INPUT_STREAM(istream),
+						   error)) {
 			g_prefix_error_literal(error, "failed to import JCat stream: ");
 			return FALSE;
 		}
@@ -934,7 +936,7 @@ fu_cabinet_sign(FuCabinet *self,
 			return FALSE;
 		if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error))
 			return FALSE;
-		if (!fwupd_jcat_file_import_stream(jcat_file, stream, error))
+		if (!fwupd_jcat_file_import_stream(jcat_file, G_INPUT_STREAM(stream), error))
 			return FALSE;
 	}
 

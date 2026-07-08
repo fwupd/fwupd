@@ -5607,7 +5607,7 @@ fu_util_jcat_load_filename(FuUtil *self, const gchar *filename, GError **error)
 		istream = FU_INPUT_STREAM(g_file_read(gfile, self->cancellable, error));
 		if (istream == NULL)
 			return NULL;
-		if (!fwupd_jcat_file_import_stream(file, istream, error))
+		if (!fwupd_jcat_file_import_stream(file, G_INPUT_STREAM(istream), error))
 			return NULL;
 	}
 

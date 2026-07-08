@@ -46,7 +46,7 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	}
 
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       stream,
+						       G_INPUT_STREAM(stream),
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       error);
 	if (json_node == NULL)
