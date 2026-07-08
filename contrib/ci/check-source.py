@@ -1566,7 +1566,7 @@ class Checker:
                 print(f"failed to read {fn}: {e}")
         if data.find("Copyright") == -1:
             self.add_failure("does not have copyright assigned")
-        if data.find("Copyright") == -1:
+        if data.find("SPDX-License-Identifier") == -1:
             self.add_failure("does not have a SPDX-License-Identifier")
         tokenizer = Tokenizer(data)
         nodes = tokenizer.nodes
