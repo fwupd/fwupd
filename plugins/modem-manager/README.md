@@ -42,6 +42,12 @@ Possible values are `fibocom` or `qdu-quectel` (the default).
 
 Since: 2.2.1
 
+### ModemManagerLibFirmwarePath
+
+The system firmware path to use during the mhi driver switch to EDL (Emergency Download) mode.
+
+Since: 2.1.9
+
 ### `Flags=use-branch`
 
 Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can downgrade
