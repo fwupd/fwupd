@@ -13,6 +13,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-input-stream.h"
 #include "fu-unix-seekable-input-stream.h"
 
 struct _FuUnixSeekableInputStream {
@@ -126,15 +127,15 @@ fu_unix_seekable_input_stream_seekable_iface_init(GSeekableIface *iface)
  *
  * NOTE: @fd has to point to a regular file on disk
  *
- * Returns: (transfer full): a #GInputStream
+ * Returns: (transfer full): a #FuInputStream
  *
  * Since: 2.1.2
  **/
-GInputStream *
+FuInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd, GError **error)
 {
 	GStatBuf st = {0};
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* create wrapper */
 	stream =

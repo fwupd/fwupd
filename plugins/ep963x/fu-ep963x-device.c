@@ -234,7 +234,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuEp963xDevice *self = FU_EP963X_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) blocks = NULL;
 

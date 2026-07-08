@@ -27,7 +27,7 @@ typedef struct {
 	gchar *oem_id;
 	gchar *oem_table_id;
 	guint32 oem_revision;
-	GInputStream *payload;
+	FuInputStream *payload;
 } FuAcpiTablePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuAcpiTable, fu_acpi_table, FU_TYPE_FIRMWARE)
@@ -123,11 +123,11 @@ fu_acpi_table_get_oem_revision(FuAcpiTable *self)
  *
  * Gets the payload after the ACPI header. This function will fail if there is no payload.
  *
- * Returns: (transfer full): a #GInputStream, or %NULL on error
+ * Returns: (transfer full): a #FuInputStream, or %NULL on error
  *
  * Since: 2.1.3
  **/
-GInputStream *
+FuInputStream *
 fu_acpi_table_get_payload(FuAcpiTable *self, GError **error)
 {
 	FuAcpiTablePrivate *priv = GET_PRIVATE(self);
@@ -142,7 +142,7 @@ fu_acpi_table_get_payload(FuAcpiTable *self, GError **error)
 
 static gboolean
 fu_acpi_table_parse(FuFirmware *firmware,
-		    GInputStream *stream,
+		    FuInputStream *stream,
 		    FuFirmwareParseFlags flags,
 		    GError **error)
 {

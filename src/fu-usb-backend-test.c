@@ -27,7 +27,7 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
 	g_autoptr(FwupdJsonNode) json_node = NULL;
 	g_autoptr(FwupdJsonObject) json_obj = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* set appropriate limits */
 	fwupd_json_parser_set_max_depth(json_parser, 10);

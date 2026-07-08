@@ -798,7 +798,7 @@ fu_uefi_capsule_device_build_efi_path(FuUefiCapsuleDevice *self,
 
 static FuFirmware *
 fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)

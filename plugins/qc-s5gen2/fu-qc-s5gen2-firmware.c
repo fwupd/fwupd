@@ -46,7 +46,7 @@ fu_qc_s5gen2_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_qc_s5gen2_firmware_validate(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       GError **error)
 {
@@ -55,7 +55,7 @@ fu_qc_s5gen2_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

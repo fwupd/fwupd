@@ -20,9 +20,9 @@ fu_composite_input_stream_func(void)
 	g_autoptr(GBytes) blob1 = g_bytes_new_static("ab", 2);
 	g_autoptr(GBytes) blob2 = g_bytes_new_static("cde", 3);
 	g_autoptr(GBytes) blob3 = g_bytes_new_static("xxxfgyyy", 8);
-	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
-	g_autoptr(GInputStream) stream3 = g_memory_input_stream_new_from_bytes(blob3);
-	g_autoptr(GInputStream) stream4 = NULL;
+	g_autoptr(FuInputStream) composite_stream = fu_composite_input_stream_new();
+	g_autoptr(FuInputStream) stream3 = g_memory_input_stream_new_from_bytes(blob3);
+	g_autoptr(FuInputStream) stream4 = NULL;
 
 	/* empty */
 	ret = fu_input_stream_size(composite_stream, &streamsz, &error);

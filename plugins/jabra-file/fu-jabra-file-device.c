@@ -629,7 +629,7 @@ fu_jabra_file_device_write_firmware(FuDevice *device,
 	gboolean match = FALSE;
 	g_autofree gchar *firmware_checksum = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* check if firmware file already exists on device */
 	firmware_checksum = fu_firmware_get_checksum(firmware, G_CHECKSUM_MD5, error);

@@ -38,12 +38,12 @@ G_DEFINE_TYPE(FuWacomUsbModuleBluetoothId9,
 /* CRC(concat(spi_cmd, data)) */
 static gboolean
 fu_wacom_usb_module_bluetooth_id9_calculate_crc32(GByteArray *buf,
-						  GInputStream *stream,
+						  FuInputStream *stream,
 						  guint32 *crc,
 						  GError **error)
 {
 	g_autoptr(GBytes) blob = g_bytes_new(buf->data, buf->len);
-	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
+	g_autoptr(FuInputStream) composite_stream = fu_composite_input_stream_new();
 	if (!fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream),
 						 blob,
 						 error))
@@ -59,7 +59,7 @@ fu_wacom_usb_module_bluetooth_id9_calculate_crc32(GByteArray *buf,
 }
 
 static FuChunk *
-fu_wacom_usb_module_bluetooth_id9_get_startcmd(GInputStream *stream,
+fu_wacom_usb_module_bluetooth_id9_get_startcmd(FuInputStream *stream,
 					       gboolean full_erase,
 					       GError **error)
 {
@@ -130,7 +130,7 @@ fu_wacom_usb_module_bluetooth_id9_write_block(FuWacomUsbModule *self,
 static gboolean
 fu_wacom_usb_module_bluetooth_id9_write_blocks(FuWacomUsbModule *self,
 					       guint8 phase,
-					       GInputStream *stream,
+					       FuInputStream *stream,
 					       gsize block_len,
 					       FuProgress *progress,
 					       GError **error)
@@ -168,7 +168,7 @@ fu_wacom_usb_module_bluetooth_id9_write_blocks(FuWacomUsbModule *self,
 
 static FuFirmware *
 fu_wacom_usb_module_bluetooth_id9_prepare_firmware(FuDevice *device,
-						   GInputStream *stream,
+						   FuInputStream *stream,
 						   FuProgress *progress,
 						   FuFirmwareParseFlags flags,
 						   GError **error)
@@ -240,8 +240,8 @@ fu_wacom_usb_module_bluetooth_id9_write_firmware(FuDevice *device,
 	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
 	const guint8 buf_start[] = {FU_WACOM_USB_MODULE_BLUETOOTH_ID9_START_NORMAL};
 	g_autoptr(GBytes) blob_start = g_bytes_new_static(buf_start, sizeof(buf_start));
-	g_autoptr(GInputStream) stream_loader = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_loader = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 	g_autoptr(FuChunk) cmd = NULL;
 
 	/* get firmware images */

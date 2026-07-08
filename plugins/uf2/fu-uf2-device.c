@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuUf2Device, fu_uf2_device, FU_TYPE_BLOCK_PARTITION)
 
 static FuFirmware *
 fu_uf2_device_prepare_firmware(FuDevice *device,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuProgress *progress,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -108,7 +108,7 @@ fu_uf2_device_write_firmware(FuDevice *device,
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get blob */
 	stream = fu_firmware_get_stream(firmware, error);

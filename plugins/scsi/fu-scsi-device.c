@@ -174,7 +174,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_scsi_device_prepare_firmware(FuDevice *device,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuProgress *progress,
 				FuFirmwareParseFlags flags,
 				GError **error)
@@ -360,7 +360,7 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	guint32 chunksz = self->write_buffer_size;
 	guint32 offset = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */

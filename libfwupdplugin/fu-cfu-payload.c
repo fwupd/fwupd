@@ -30,7 +30,7 @@ G_DEFINE_TYPE(FuCfuPayload, fu_cfu_payload, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_cfu_payload_parse(FuFirmware *firmware,
-		     GInputStream *stream,
+		     FuInputStream *stream,
 		     FuFirmwareParseFlags flags,
 		     GError **error)
 {

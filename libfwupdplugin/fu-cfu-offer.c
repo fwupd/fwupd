@@ -11,6 +11,7 @@
 #include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-offer.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
 
@@ -417,7 +418,7 @@ fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id)
 
 static gboolean
 fu_cfu_offer_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {

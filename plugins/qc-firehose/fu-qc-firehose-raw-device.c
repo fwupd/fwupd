@@ -50,7 +50,7 @@ fu_qc_firehose_raw_device_impl_add_function(FuQcFirehoseImpl *impl, FuQcFirehose
 
 static FuFirmware *
 fu_qc_firehose_raw_device_impl_prepare_firmware(FuDevice *device,
-						GInputStream *stream,
+						FuInputStream *stream,
 						FuProgress *progress,
 						FuFirmwareParseFlags flags,
 						GError **error)

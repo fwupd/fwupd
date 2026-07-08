@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-path.h"
 #include "fu-string.h"
@@ -24,7 +25,7 @@ G_DEFINE_TYPE(FuZipFirmware, fu_zip_firmware, FU_TYPE_FIRMWARE)
 #define FU_ZIP_MAX_DECOMPRESSION_RATIO	1000
 
 static gboolean
-fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size, GError **error)
+fu_zip_firmware_parse_extra(FuInputStream *stream, gsize offset, gsize extra_size, GError **error)
 {
 	for (gsize i = 0; i < extra_size; i += FU_STRUCT_ZIP_EXTRA_HDR_SIZE) {
 		guint32 datasz;
@@ -52,7 +53,7 @@ fu_zip_firmware_parse_extra(GInputStream *stream, gsize offset, gsize extra_size
 
 static FuFirmware *
 fu_zip_firmware_parse_lfh(FuZipFirmware *self,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuStructZipCdfh *st_cdfh,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
@@ -67,7 +68,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuStructZipLfh) st_lfh = NULL;
 	g_autoptr(FuFirmware) zip_file = fu_zip_file_new();
-	g_autoptr(GInputStream) stream_compressed = NULL;
+	g_autoptr(FuInputStream) stream_compressed = NULL;
 
 	/* read local file header */
 	fu_firmware_set_offset(zip_file, offset);
@@ -221,7 +222,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 	} else if (compression == FU_ZIP_COMPRESSION_DEFLATE) {
 		g_autoptr(GBytes) blob_raw = NULL;
 		g_autoptr(GConverter) conv = NULL;
-		g_autoptr(GInputStream) stream_deflate = NULL;
+		g_autoptr(FuInputStream) stream_deflate = NULL;
 
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_RAW));
 		if (!g_seekable_seek(G_SEEKABLE(stream_compressed), 0, G_SEEK_SET, NULL, error))
@@ -285,7 +286,7 @@ fu_zip_firmware_parse_lfh(FuZipFirmware *self,
 
 static gboolean
 fu_zip_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -453,8 +454,8 @@ fu_zip_firmware_write(FuFirmware *firmware, GError **error)
 			blob_compressed = g_bytes_ref(blob);
 		} else if (compression == FU_ZIP_COMPRESSION_DEFLATE) {
 			g_autoptr(GConverter) conv = NULL;
-			g_autoptr(GInputStream) istream_raw = NULL;
-			g_autoptr(GInputStream) istream_compressed = NULL;
+			g_autoptr(FuInputStream) istream_raw = NULL;
+			g_autoptr(FuInputStream) istream_compressed = NULL;
 			conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_RAW, -1));
 			istream_raw = g_memory_input_stream_new_from_bytes(blob);
 			istream_compressed = g_converter_input_stream_new(istream_raw, conv);

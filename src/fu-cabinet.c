@@ -114,7 +114,7 @@ fu_cabinet_verify_payload_target(FuCabinet *self,
 	g_autofree gchar *checksum_sha256 = NULL;
 	g_autofree gchar *checksum_sha512 = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FwupdJcatBlob) blob_target_sha256 = NULL;
 	g_autoptr(FwupdJcatBlob) blob_target_sha512 = NULL;
 	g_autoptr(FwupdJcatItem) item = NULL;
@@ -232,7 +232,7 @@ fu_cabinet_parse_release(FuCabinet *self,
 	gsize streamsz = 0;
 	g_autofree gchar *basename = NULL;
 	g_autoptr(FuFirmware) img_blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error_local2 = NULL;
 	g_autoptr(GError) error_payload = NULL;
 	g_autoptr(XbNode) artifact = NULL;
@@ -614,7 +614,7 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 		return FALSE;
 	}
 	if (g_str_has_suffix(fn, ".jcat")) {
-		g_autoptr(GInputStream) istream = NULL;
+		g_autoptr(FuInputStream) istream = NULL;
 		istream = fu_firmware_get_stream(img, error);
 		if (istream == NULL)
 			return FALSE;
@@ -929,7 +929,7 @@ fu_cabinet_sign(FuCabinet *self,
 	/* load existing .jcat file if it exists */
 	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "firmware.jcat", NULL);
 	if (img != NULL) {
-		g_autoptr(GInputStream) stream = fu_firmware_get_stream(img, error);
+		g_autoptr(FuInputStream) stream = fu_firmware_get_stream(img, error);
 		if (stream == NULL)
 			return FALSE;
 		if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error))
@@ -969,7 +969,7 @@ fu_cabinet_sign(FuCabinet *self,
 
 static gboolean
 fu_cabinet_parse(FuFirmware *firmware,
-		 GInputStream *stream,
+		 FuInputStream *stream,
 		 FuFirmwareParseFlags flags,
 		 GError **error)
 {

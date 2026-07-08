@@ -20,6 +20,7 @@
 #include "fwupd-error.h"
 
 #include "fu-context-private.h"
+#include "fu-input-stream.h"
 #include "fu-path-store.h"
 #include "fu-path.h"
 #include "fu-quirks.h"
@@ -953,7 +954,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 		g_autofree gchar *fn = NULL;
 		g_autoptr(FuQuirksDbHelper) helper = g_new0(FuQuirksDbHelper, 1);
 		g_autoptr(GFile) file = NULL;
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(FuInputStream) stream = NULL;
 
 		fn = fu_context_build_filename(self->ctx,
 					       NULL,
@@ -970,7 +971,7 @@ fu_quirks_db_load(FuQuirks *self, GError **error)
 			continue;
 		}
 		g_debug("indexing vendor IDs from %s", fn);
-		stream = G_INPUT_STREAM(g_file_read(file, NULL, error));
+		stream = FU_INPUT_STREAM(g_file_read(file, NULL, error));
 		if (stream == NULL)
 			return FALSE;
 		helper->self = self;

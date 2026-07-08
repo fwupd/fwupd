@@ -788,7 +788,7 @@ fu_ata_device_write_firmware(FuDevice *device,
 	gsize streamsz = 0;
 	guint32 chunksz = (guint32)self->transfer_blocks * FU_ATA_BLOCK_SIZE;
 	guint max_size = 0xffff * FU_ATA_BLOCK_SIZE;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */

@@ -863,7 +863,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 {
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) ds20 = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuDeviceLocker) usb_locker = NULL;
 
 	/* parse either type */

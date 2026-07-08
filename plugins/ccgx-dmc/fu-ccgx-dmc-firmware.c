@@ -87,7 +87,7 @@ fu_ccgx_dmc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 
 static gboolean
 fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
-				   GInputStream *stream,
+				   FuInputStream *stream,
 				   FuCcgxDmcFirmwareRecord *img_rcd,
 				   gsize *seg_off,
 				   FuFirmwareParseFlags flags,
@@ -176,7 +176,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 static gboolean
 fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 				 guint8 image_count,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -247,7 +247,7 @@ fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 
 static gboolean
 fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize offset,
 			      GError **error)
 {
@@ -256,7 +256,7 @@ fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {

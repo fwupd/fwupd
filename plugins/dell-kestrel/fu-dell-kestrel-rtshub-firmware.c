@@ -37,7 +37,7 @@ fu_dell_kestrel_rtshub_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_firmware_set_offset(GInputStream *stream,
+fu_dell_kestrel_rtshub_firmware_set_offset(FuInputStream *stream,
 					   guint16 *version_offset,
 					   guint16 *pid_offset,
 					   GError **error)
@@ -62,7 +62,7 @@ fu_dell_kestrel_rtshub_firmware_set_offset(GInputStream *stream,
 }
 static gboolean
 fu_dell_kestrel_rtshub_firmware_parse(FuFirmware *firmware,
-				      GInputStream *stream,
+				      FuInputStream *stream,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {

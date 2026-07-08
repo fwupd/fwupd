@@ -23,7 +23,7 @@ G_DEFINE_TYPE(FuLxsTouchFirmware, fu_lxs_touch_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_lxs_touch_firmware_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

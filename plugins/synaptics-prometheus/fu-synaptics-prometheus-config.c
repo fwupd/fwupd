@@ -128,7 +128,7 @@ fu_synaptics_prometheus_config_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaptics_prometheus_config_prepare_firmware(FuDevice *device,
-						GInputStream *stream,
+						FuInputStream *stream,
 						FuProgress *progress,
 						FuFirmwareParseFlags flags,
 						GError **error)
@@ -136,7 +136,7 @@ fu_synaptics_prometheus_config_prepare_firmware(FuDevice *device,
 	FuSynapticsPrometheusConfig *self = FU_SYNAPTICS_PROMETHEUS_CONFIG(device);
 	FuDevice *proxy;
 	g_autoptr(FuStructSynapticsPrometheusCfgHdr) st_hdr = NULL;
-	g_autoptr(GInputStream) stream_hdr = NULL;
+	g_autoptr(FuInputStream) stream_hdr = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_prometheus_firmware_new();
 	g_autoptr(FuFirmware) img_hdr = NULL;
 

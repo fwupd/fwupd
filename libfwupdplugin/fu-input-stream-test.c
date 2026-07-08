@@ -17,7 +17,7 @@ fu_input_stream_find_func(void)
 	gboolean ret;
 	gsize offset = 0;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	stream =
 	    g_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
@@ -59,7 +59,7 @@ fu_input_stream_sum_overflow_func(void)
 	gboolean ret;
 	guint32 sum32 = 0;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream =
+	g_autoptr(FuInputStream) stream =
 	    g_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
 
 	ret = fu_input_stream_compute_sum32(stream, &sum32, &error);
@@ -75,7 +75,7 @@ fu_input_stream_chunkify_func(void)
 	guint16 crc16 = 0x0;
 	guint32 crc32 = 0xffffffff;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autofree gchar *checksum = NULL;
@@ -128,7 +128,7 @@ fu_input_stream_func(void)
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
 	g_assert_nonnull(fn);
@@ -139,7 +139,7 @@ fu_input_stream_func(void)
 	csum = g_compute_checksum_for_data(G_CHECKSUM_MD5, (const guchar *)buf, bufsz);
 
 	file = g_file_new_for_path(fn);
-	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error));
+	stream = FU_INPUT_STREAM(g_file_read(file, NULL, &error));
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 

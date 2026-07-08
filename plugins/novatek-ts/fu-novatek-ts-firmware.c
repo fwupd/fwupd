@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuNovatekTsFirmware, fu_novatek_ts_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_novatek_ts_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

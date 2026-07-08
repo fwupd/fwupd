@@ -69,7 +69,7 @@ fu_efi_device_path_list_add_json(FwupdCodec *codec,
 
 static gboolean
 fu_efi_device_path_list_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {

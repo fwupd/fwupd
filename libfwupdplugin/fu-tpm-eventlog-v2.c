@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-tpm-eventlog-common.h"
 #include "fu-tpm-eventlog-item.h"
 #include "fu-tpm-eventlog-v2.h"
@@ -45,7 +46,7 @@ fu_tpm_eventlog_v2_hash_get_size(FuTpmAlg hash_kind)
 
 static gboolean
 fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize *idx,
 			      GError **error)
 {
@@ -144,7 +145,7 @@ fu_tpm_eventlog_v2_parse_item(FuTpmEventlogV2 *self,
 
 static gboolean
 fu_tpm_eventlog_v2_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

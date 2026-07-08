@@ -23,7 +23,7 @@ G_DEFINE_TYPE(FuTpmEventlogV1, fu_tpm_eventlog_v1, FU_TYPE_TPM_EVENTLOG)
 
 static gboolean
 fu_tpm_eventlog_v1_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

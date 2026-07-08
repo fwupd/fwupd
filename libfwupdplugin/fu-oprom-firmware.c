@@ -14,6 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-oprom-firmware.h"
 #include "fu-string.h"
 
@@ -105,14 +106,17 @@ fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static gboolean
-fu_oprom_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_oprom_firmware_validate(FuFirmware *firmware,
+			   FuInputStream *stream,
+			   gsize offset,
+			   GError **error)
 {
 	return fu_struct_oprom_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_oprom_firmware_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {

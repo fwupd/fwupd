@@ -12,6 +12,7 @@
 #include "fu-common.h"
 #include "fu-efi-ftw-store.h"
 #include "fu-efi-struct.h"
+#include "fu-input-stream.h"
 
 /**
  * FuEfiFtwStore:
@@ -39,7 +40,7 @@ fu_efi_ftw_store_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBui
 }
 
 static gboolean
-fu_efi_ftw_store_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_efi_ftw_store_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_efi_fault_tolerant_working_block_header64_validate_stream(stream,
 										   offset,
@@ -48,7 +49,7 @@ fu_efi_ftw_store_validate(FuFirmware *firmware, GInputStream *stream, gsize offs
 
 static gboolean
 fu_efi_ftw_store_parse(FuFirmware *firmware,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {

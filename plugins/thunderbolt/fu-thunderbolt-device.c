@@ -268,7 +268,7 @@ fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
 
 static FuFirmware *
 fu_thunderbolt_device_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
+				       FuInputStream *stream,
 				       FuProgress *progress,
 				       FuFirmwareParseFlags flags,
 				       GError **error)
@@ -292,7 +292,7 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 		g_autofree gchar *nvmem = NULL;
 		g_autoptr(FuFirmware) firmware_old = NULL;
 		g_autoptr(GBytes) controller_blob = NULL;
-		g_autoptr(GInputStream) controller_fw = NULL;
+		g_autoptr(FuInputStream) controller_fw = NULL;
 
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 		nvmem = fu_thunderbolt_device_find_nvmem(self, TRUE, error);

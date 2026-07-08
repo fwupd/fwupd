@@ -371,7 +371,7 @@ fu_firmware_new_from_gtypes_func(void)
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware3 = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);

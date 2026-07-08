@@ -32,14 +32,14 @@ G_DEFINE_TYPE(FuElfFirmware, fu_elf_firmware, FU_TYPE_FIRMWARE)
 #define FU_ELF_FIRMWARE_MAX_SECTIONS 10000
 
 static gboolean
-fu_elf_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_elf_firmware_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_elf_file_header64le_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_elf_firmware_parse(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -150,7 +150,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 			FU_ELF_SECTION_HEADER_TYPE_STRTAB)
 			continue;
 		if (sect_size_safe > 0) {
-			g_autoptr(GInputStream) img_stream =
+			g_autoptr(FuInputStream) img_stream =
 			    fu_partial_input_stream_new(stream,
 							sect_offset_safe,
 							sect_size_safe,

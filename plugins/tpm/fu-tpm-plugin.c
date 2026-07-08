@@ -371,7 +371,7 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	g_autoptr(FuFirmware) eventlog = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
 

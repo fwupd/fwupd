@@ -173,7 +173,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	guint8 read_buf[10] = {0x0};
 	guint8 write_buf[ISP_PACKET_SIZE] = {0x0};
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

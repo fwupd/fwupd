@@ -180,7 +180,7 @@ fu_bnr_dp_firmware_checksum_finish(guint16 csum)
 }
 
 static gboolean
-fu_bnr_dp_firmware_stream_checksum(GInputStream *stream, guint16 *csum, GError **error)
+fu_bnr_dp_firmware_stream_checksum(FuInputStream *stream, guint16 *csum, GError **error)
 {
 	if (!fu_input_stream_compute_sum16(stream, csum, error))
 		return FALSE;
@@ -196,14 +196,14 @@ fu_bnr_dp_firmware_buf_checksum(const guint8 *buf, gsize bufsz)
 
 static gboolean
 fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 gsize payload_offset,
 				 GError **error)
 {
 	gsize streamsz = 0;
 	guint16 xml_checksum = 0;
 	guint16 crc = G_MAXUINT16;
-	g_autoptr(GInputStream) payload_stream = NULL;
+	g_autoptr(FuInputStream) payload_stream = NULL;
 
 	payload_stream = fu_partial_input_stream_new(stream, payload_offset, G_MAXSIZE, error);
 	if (payload_stream == NULL)
@@ -268,7 +268,7 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 
 static gboolean
 fu_bnr_dp_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

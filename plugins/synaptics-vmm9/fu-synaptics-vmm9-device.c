@@ -375,14 +375,14 @@ fu_synaptics_vmm9_device_close(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaptics_vmm9_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
+					  FuInputStream *stream,
 					  FuProgress *progress,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuSynapticsVmm9Device *self = FU_SYNAPTICS_VMM9_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_synaptics_vmm9_firmware_new();
-	g_autoptr(GInputStream) stream_partial = NULL;
+	g_autoptr(FuInputStream) stream_partial = NULL;
 
 	/* parse */
 	stream_partial = fu_partial_input_stream_new(stream,
@@ -541,7 +541,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuSynapticsVmm9Device *self = FU_SYNAPTICS_VMM9_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

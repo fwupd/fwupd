@@ -19,7 +19,7 @@
 struct _FuMsgpackItem {
 	GObject parent_instance;
 	FuMsgpackItemKind kind;
-	GInputStream *stream;
+	FuInputStream *stream;
 	union {
 		gint64 i64;
 		gdouble f64;
@@ -272,7 +272,7 @@ fu_msgpack_item_new_binary(GByteArray *buf)
 
 /**
  * fu_msgpack_item_new_binary_stream:
- * @stream: (not nullable): a #GInputStream
+ * @stream: (not nullable): a #FuInputStream
  *
  * Creates a new msgpack item.
  *
@@ -281,10 +281,10 @@ fu_msgpack_item_new_binary(GByteArray *buf)
  * Since: 2.0.0
  **/
 FuMsgpackItem *
-fu_msgpack_item_new_binary_stream(GInputStream *stream)
+fu_msgpack_item_new_binary_stream(FuInputStream *stream)
 {
 	g_autoptr(FuMsgpackItem) self = g_object_new(FU_TYPE_MSGPACK_ITEM, NULL);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	self->kind = FU_MSGPACK_ITEM_KIND_BINARY;
 	self->stream = g_object_ref(stream);
 	return g_steal_pointer(&self);
@@ -481,7 +481,7 @@ fu_msgpack_item_append_binary_stream_chunk_cb(const guint8 *buf,
 }
 
 static gboolean
-fu_msgpack_item_append_binary_stream(GByteArray *buf, GInputStream *stream, GError **error)
+fu_msgpack_item_append_binary_stream(GByteArray *buf, FuInputStream *stream, GError **error)
 {
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))

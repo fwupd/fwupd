@@ -26,7 +26,7 @@ fu_wacom_usb_module_touch_write_firmware(FuDevice *device,
 					 GError **error)
 {
 	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */

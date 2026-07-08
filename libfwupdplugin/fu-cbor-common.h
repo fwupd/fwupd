@@ -7,9 +7,10 @@
 #pragma once
 
 #include "fu-cbor-item.h"
+#include "fu-input-stream.h"
 
 FuCborItem *
-fu_cbor_parse(GInputStream *stream,
+fu_cbor_parse(FuInputStream *stream,
 	      gsize *offset,
 	      guint max_depth,
 	      guint max_items,

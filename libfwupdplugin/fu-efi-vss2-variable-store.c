@@ -13,6 +13,7 @@
 #include "fu-efi-struct.h"
 #include "fu-efi-vss-auth-variable.h"
 #include "fu-efi-vss2-variable-store.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -31,7 +32,7 @@ G_DEFINE_TYPE(FuEfiVss2VariableStore, fu_efi_vss2_variable_store, FU_TYPE_FIRMWA
 
 static gboolean
 fu_efi_vss2_variable_store_validate(FuFirmware *firmware,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
@@ -40,7 +41,7 @@ fu_efi_vss2_variable_store_validate(FuFirmware *firmware,
 
 static gboolean
 fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
-				 GInputStream *stream,
+				 FuInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {

@@ -27,7 +27,7 @@ G_DEFINE_TYPE(FuUsbDeviceFwDs20, fu_usb_device_fw_ds20, FU_TYPE_USB_DEVICE_DS20)
 
 static gboolean
 fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuUsbDevice *device,
 			    GError **error)
 {

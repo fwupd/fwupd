@@ -9,6 +9,7 @@
 #include "fu-common.h"
 #include "fu-csv-entry.h"
 #include "fu-csv-firmware-private.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -203,7 +204,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 
 static gboolean
 fu_csv_entry_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {

@@ -291,7 +291,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 	gsize streamsz = 0;
 	guint8 buf_init[4] = {0x0};
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
