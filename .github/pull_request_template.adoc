@@ -1,0 +1,8 @@
+Type of pull request:
+
+* ☐ New plugin (Please include
+https://github.com/fwupd/fwupd/wiki/New-plugin-checklist[new plugin
+checklist])
+* ☐ Code fix
+* ☐ Feature
+* ☐ Documentation

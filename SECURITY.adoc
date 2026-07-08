@@ -1,0 +1,233 @@
+== Security Policy
+
+Due to the nature of what we are doing, fwupd takes security very
+seriously. If you have any concerns please
+https://github.com/fwupd/fwupd/security/advisories/new[let us know].
+
+=== Supported Versions
+
+The `main` and `2_0_X` branches are fully supported by the upstream
+authors and releases are tagged approximately monthly.
+
+Additionally, the `1_9_X` branch is supported just for security fixes,
+although no further releases will be tagged.
+
+[cols=",,",options="header",]
+|===
+|Version |Supported |EOL
+|2.1.x |:heavy_check_mark: |2029-01-01
+|2.0.x |:heavy_check_mark: |2028-01-01
+|1.9.x |:white_check_mark: |2027-01-01
+|1.8.x |:x: |2026-01-01
+|1.7.x |:x: |2024-06-01
+|1.6.x |:x: |2024-01-01
+|1.5.x |:x: |2022-01-01
+|1.4.x |:x: |2021-05-01
+|1.3.x |:x: |2020-07-01
+|1.2.x |:x: |2019-12-01
+|1.1.x |:x: |2018-11-01
+|1.0.x |:x: |2018-10-01
+|0.9.x |:x: |2018-02-01
+|===
+
+Older releases than this are unsupported by upstream but may be
+supported by your distributor or distribution. If you open an issue with
+one of these older releases the very first question from us is going to
+be asking if it’s fixed on a supported branch. You can use the flatpak
+or snap packages if your distributor is unwilling to update to a
+supported version.
+
+=== Reporting a Vulnerability
+
+If you find a vulnerability in fwupd you should let us know using a
+https://github.com/fwupd/fwupd/security/advisories/new[private
+vulnerability disclosure] on GitHub, with a description of the issue,
+the steps you took to create the issue, affected versions, and, if
+known, mitigations for the issue.
+
+Failing that, please report the issue against the `fwupd` component in
+Red Hat bugzilla, with the security checkbox set. You should get a
+response within 3 days. We have no bug bounty program, but we’re happy
+to credit you in updates if this is what you would like us to do.
+
+Security bugs found or assisted by AI tools must also include two additional things:
+
+* A reproducer that clearly shows the vulnerability on an unmodified fwupd binary that is running
+  with all the usual OS level protections, e.g. running `fwupd.service` as an auto-launched systemd
+  service.
+
+* A pull requests that fixes the security vulnerability and adds unit tests; the logic being that
+  if you're using an autonomous system to find a theoretical issue you should also have the common
+  courtesy to submit a PR that fixes the vulnerability.
+
+Additionally, we will not issue CVEs or GHSA IDs for AI-discovered security issues lower than
+moderate -- doing so offers nothing to the fwupd community (anyone can use similar tools to find
+the same issue) and adds a huge burden on the existing maintenance team.
+
+The CVSS scoring of reported bugs is often wildly inflated by AI tools (for various reasons), and
+the actual CVSS scoring may be modified at the fwupd maintainers discretion.
+
+So-called "low severity" security bugs or "hardening enhancements" will be treated as normal issues
+and will be fixed as part of the next tarball release with no coordinated disclosure process.
+
+=== Threat Modeling
+
+==== Who We Trust
+
+In this diagram, the arrow shows the flow of _information_ from one
+entity to another.
+
+Important things to note:
+
+* OEMs and ODMs have to apply for a LVFS account and the website and
+email domain is verified
+* OEMs and ODMs can only upload for devices that match their
+device-supplied vendor-id
+* The relationship between the OEM/ODM and affiliate ISV/IBV is
+implemented using per-task ACLs
+* The LVFS is assumed to be managed by a vendor-neutral trusted team
+* Signing of the metadata and firmware is implemented using PKCS#7
+* End users only trust the LVFS signing signatures by default
+* Metadata contains SHA-1 and SHA-256 hashes of the firmware archive
+* Access to the embargo remotes requires knowing the secret vendor hash,
+but not a token
+* The firmware archive internal metadata and firmware payload are both
+signed
+* Reports have to be signed by the user machine key to be attributable
+to an OEM or QA team
+* Signed reports are uploaded using a username and access token
+* SBOM metadata is extracted from the payload by the LVFS and formatted
+into HTML/SWID formats
+* Security researchers can only run FwHunt/Yara scans on public firmware
+
+[source,mermaid]
+----
+  flowchart TD
+      LVFS((LVFS Webservice)) -- "SBOM.html" --> User(End User)
+      LVFS -- "md.[xml|jcat] 🔒" --> CDN(Fastly CDN)
+      CDN -- "md.[xml|jcat] 🔒" --> User
+      LVFS -- "embargo.[xml|jcat] 🔒" --> User
+      LVFS -- "fw.cab 🔒" --> User
+      User -. "report.json" .-> LVFS
+      User -. "hsi.json" .-> LVFS
+      QA(QA Teams) -- "report.json 🔒" --> LVFS
+      OEM(Device Vendor) -- "fw.cab" --> LVFS
+      ODM(Device Manufacturer) -- "fw.[bin|cab]" --> OEM
+      OEM -. "report.json 🔒" .-> LVFS
+      ODM -. "fw.cab" .-> LVFS
+      IBV(BIOS Vendor) -- "fw.bin" --> ODM
+      ISV(Silicon Vendor) -- "fw.bin" --> ODM
+      User -. "md.xml 🔒" .-> User2(Other LAN Users)
+      User -. "fw.cab 🔒" .-> User2
+      LVFS -- "FwHunt|Yara" --> SecAlert(Security Researchers)
+----
+
+==== What We Trust
+
+In this diagram, the arrow shows the flow of _data_ between different
+processes or machines.
+
+Important things to note:
+
+* User-facing clients like `fwupdmgr` and `gnome-software` should not be
+run as the root user
+* The fwupd daemon should be run as a privileged user and have no access
+to the network
+* Privilege escalation is performed using PolicyKit based on
+fine-grained ACLs, if available
+* Passwords may be in plaintext in `remotes.d` or config files, and
+should be readable only by root
+* The fwupd daemon will only install firmware archives signed by the
+LVFS unless modified
+* The fwupd daemon scans and verifies the mtime of various files at
+startup to build caches
+* If SecureBoot is turned on then `fwupd-efi` has to be signed by a
+trusted key
+* Files are passed between the user client and fwupd using an open
+file-descriptor, not a filename
+* There is no public interface to either the PostgreSQL or EFS data
+stores
+* The fwupd daemon may need to mount the EFI system partition to copy in
+capsule payloads
+* The `fwupdtool` debug tool requires root access to perform updates on
+devices
+
+[source,mermaid]
+----
+  flowchart TD
+      subgraph Vendor
+        OEM(OEM/ODM/ISV Firmware)
+      end
+      subgraph User
+        fwupdmgr((fwupdmgr\ngnome-software))
+      end
+      subgraph Local Network User
+        fwupdmgr2((fwupdmgr\ngnome-software))
+      end
+      subgraph Privileged
+        fwupd((fwupd\ndaemon))
+        passim((passimd))
+        fwupdengine(FuEngine)
+        fwupdtool(fwupdtool\ndebug\ntool)
+        fwupd-efi(fwupd capsule loader)
+        Pending[(history.db)]
+        Kernel((OS Kernel))
+        ESP[(EFI\nSystem\nPartition)]
+        SPI[(System SPI)]
+        UsbDevice(USB Device)
+        UsbDeviceEEPROM[(USB Device\nEEPROM)]
+        State[(/var/lib/fwupd)]
+        NVRAM[(Non-volatile\nRAM)]
+      end
+      subgraph Internet
+        LVFS((LVFS\nInstance))
+        CDN(Fastly\nCDN)
+        EFS[(Amazon\nEFS)]
+        Postgres[(Amazon\nRDS)]
+        Worker(Async Workers)
+      end
+      LVFS -- "fw.cab" --> Worker
+      Worker -- "md.xml 🔒" --> EFS
+      EFS <-- "fw.cab 🔒" --> Worker
+      OEM -- "firmware.cab" --> LVFS
+      LVFS -. "report.html" .-> OEM
+      EFS <--> LVFS
+      Postgres <--> Worker
+      Postgres <--> LVFS
+      fwupd <--> fwupdengine
+      fwupdengine <-- "sqlite" --> Pending
+      UsbDevice <-- "i²c" --> UsbDeviceEEPROM
+      fwupdengine <-- "libusb" --> UsbDevice
+      fwupdtool <---> fwupdengine
+      fwupdengine <-- "ioctl()\nread()\nwrite()" --> Kernel
+      fwupdengine -. "fwupdx64.efi" .-> ESP
+      fwupdengine -- "fw.bin" --> ESP
+      fwupdengine -- "fw.bin" --> Kernel
+      fwupdengine -- "efivar" ---> Kernel
+      Kernel -. "HSI attrs" .-> fwupdengine
+      Kernel <-- "efivars" --> NVRAM
+      fwupd-efi -- "fw.cap 🔏" ---> SPI
+      fwupd-efi <-- "efivars" --> NVRAM
+      ESP --> fwupd-efi
+      fwupdmgr -- "md.[xml|jcat] 🔒🚏" --> fwupd
+      fwupd -- "Devices\nHSI attrs\nReleases 🚏" --> fwupdmgr
+      fwupdmgr -- "fw.cab 🔒🚏" --> fwupd
+      CDN -- "md.[xml|jcat] 🔒" --> fwupdmgr
+      LVFS -- "md.[xml|jcat] 🔒" --> CDN
+      LVFS -- "fw.cab 🔒" --> fwupdmgr
+      LVFS -- "embargo.[xml|jcat] 🔒" --> fwupdmgr
+      fwupdmgr -. "report.json" .-> LVFS
+      fwupdmgr -. "report.json 🔒" .-> LVFS
+      State <-- "fw.cab 🔒" --> fwupd
+      passim -. "md.md|fw.cab 🔒\nmDNS with TLS" .-> fwupdmgr2
+      fwupd -. "md.md|fw.cab 🔒🚏" .-> passim
+      User ~~~~ Privileged
+      Internet ~~~~~ User
+      Vendor ~~~~~ Internet
+----
+
+==== Key
+
+* 🚏: D-Bus
+* 🔒: Signed using JCat file
+* 🔏: Signed using Platform Key

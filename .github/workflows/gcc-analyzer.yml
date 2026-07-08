@@ -20,6 +20,12 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      - name: install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |-
+          apt-get update
+          apt-get install --yes --no-install-recommends asciidoctor
       - name: configure
         env:
           # FIXME: really ugly trick to make glib set `G_ANALYZER_NORETURN` to something that GCC
