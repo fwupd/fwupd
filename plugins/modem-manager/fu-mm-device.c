@@ -141,6 +141,32 @@ fu_mm_device_set_device_file(FuMmDevice *self, MMModemPortType port_type, GError
 }
 
 gboolean
+fu_mm_device_get_device_file(FuMmDevice *self,
+                             MMModemPortType port_type,
+                             gchar **out_device_file, 
+                             GError **error)
+{
+    FuMmDevicePrivate *priv = GET_PRIVATE(self);
+    g_return_val_if_fail(FU_IS_MM_DEVICE(self), FALSE);
+    g_return_val_if_fail(out_device_file != NULL, FALSE); 
+
+    for (guint i = 0; i < priv->ports->len; i++) {
+        FuMmDevicePort *port = g_ptr_array_index(priv->ports, i);
+        if (port_type == port->type) {
+            *out_device_file = g_strdup(port->device_file);
+            return TRUE;
+        }
+    }
+
+    g_set_error(error,
+                FWUPD_ERROR,
+                FWUPD_ERROR_NOT_SUPPORTED,
+                "no port of type %s",
+                fu_mm_device_port_type_to_string(port_type));
+    return FALSE;
+}
+
+gboolean
 fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
 {
 	g_autofree gchar *buf = g_strdup_printf("%u", timeout_ms);

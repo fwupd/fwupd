@@ -25,3 +25,8 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 			       MbimMessage *mbim_message,
 			       guint timeout_ms,
 			       GError **error);
+MbimMessage *
+fu_mm_mbim_device_transaction_sync(const gchar *device_file,
+                                   MbimMessage *request,
+                                   guint timeout_ms,
+                                   GError **error);
