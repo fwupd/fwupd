@@ -13,6 +13,7 @@ import glob
 import sys
 import os
 import argparse
+from dataclasses import dataclass, field
 from typing import List, Optional
 from ctokenizer import Tokenizer, Node, NodeHint, Token, TokenHint
 
@@ -43,27 +44,24 @@ def _value_relaxed(data: str) -> str:
     return data
 
 
+@dataclass
 class SourceFailure:
-    def __init__(
-        self, fn=None, linecnt=None, message=None, nocheck=None, expected=False
-    ) -> None:
-        self.fn: Optional[str] = fn
-        self.linecnt: Optional[int] = linecnt
-        self.message: Optional[str] = message
-        self.nocheck: Optional[str] = nocheck
-        self.expected: bool = expected
+    fn: Optional[str] = None
+    linecnt: Optional[int] = None
+    message: Optional[str] = None
+    nocheck: Optional[str] = None
+    expected: bool = False
 
 
+@dataclass
 class Checker:
-
-    def __init__(self, verbose: bool = False) -> None:
-        self.verbose: bool = verbose
-        self.failures: List[SourceFailure] = []
-        self._current_fn: Optional[str] = None
-        self._current_nocheck: Optional[str] = None
-        self._gtype_parents: dict[str, str] = {}
-        self._klass_funcs: List[str] = []
-        self._expected_failure_prefixes: List[str] = []
+    verbose: bool = False
+    failures: List[SourceFailure] = field(default_factory=list)
+    _current_fn: Optional[str] = field(default=None, init=False)
+    _current_nocheck: Optional[str] = field(default=None, init=False)
+    _gtype_parents: dict[str, str] = field(default_factory=dict, init=False)
+    _klass_funcs: List[str] = field(default_factory=list, init=False)
+    _expected_failure_prefixes: List[str] = field(default_factory=list, init=False)
 
     def add_expected_failure(self, message_prefix: str) -> None:
         self._expected_failure_prefixes.append(message_prefix)
