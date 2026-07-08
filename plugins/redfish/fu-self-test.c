@@ -866,6 +866,177 @@ fu_redfish_smc_update_func(gconstpointer user_data)
 }
 
 static void
+fu_redfish_target_identity_func(gconstpointer user_data)
+{
+	FuDevice *dev;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+
+	devices = fu_plugin_get_devices(self->plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+
+	/* the mock reassigns this member to a different component as the task
+	 * completes, so the update must not be credited to the selected device */
+	dev = g_ptr_array_index(devices, 1);
+
+	/* an earlier update on this device may have left the reboot flag set, which
+	 * would short-circuit polling before the task reaches completion */
+	fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+
+	blob_fw = g_bytes_new_static("shift", 5);
+	firmware = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(firmware, "firmware.exe");
+	ret = fu_plugin_runner_write_firmware(self->plugin,
+					      dev,
+					      firmware,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_false(ret);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "target identity changed"));
+}
+
+static void
+fu_redfish_target_identity_reset_func(gconstpointer user_data)
+{
+	FuDevice *dev;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+
+	devices = fu_plugin_get_devices(self->plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+
+	dev = g_ptr_array_index(devices, 1);
+	fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+
+	/* the task signals a required reset before it completes, so polling stops
+	 * early; the member has not settled yet, so identity is not confirmed here
+	 * and the update proceeds with the reboot flag set */
+	blob_fw = g_bytes_new_static("reset-shift", 11);
+	firmware = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(firmware, "firmware.exe");
+	ret = fu_plugin_runner_write_firmware(self->plugin,
+					      dev,
+					      firmware,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+}
+
+static void
+fu_redfish_target_identity_empty_func(gconstpointer user_data)
+{
+	FuDevice *dev;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+
+	devices = fu_plugin_get_devices(self->plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+
+	dev = g_ptr_array_index(devices, 1);
+	fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+
+	/* the task completes, but the member readback returns an empty body; this
+	 * must fail cleanly rather than dereference a missing JSON object */
+	blob_fw = g_bytes_new_static("empty-shift", 11);
+	firmware = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(firmware, "firmware.exe");
+	ret = fu_plugin_runner_write_firmware(self->plugin,
+					      dev,
+					      firmware,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "no object"));
+}
+
+static void
+fu_redfish_target_identity_case_func(gconstpointer user_data)
+{
+	FuDevice *dev;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+
+	devices = fu_plugin_get_devices(self->plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+
+	/* the BMC reports a SoftwareId with capital letters */
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_true(
+	    fu_device_has_guid(dev, "REDFISH\\VENDOR_Lenovo&SOFTWAREID_UEFI-AFE1-6&TYPE_UNSIGNED"));
+	fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+
+	/* the task completes without a reset and the readback reports the same
+	 * SoftwareId, so the identity must be confirmed without any case folding */
+	blob_fw = g_bytes_new_static("same", 4);
+	firmware = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(firmware, "firmware.exe");
+	ret = fu_plugin_runner_write_firmware(self->plugin,
+					      dev,
+					      firmware,
+					      progress,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+}
+
+static void
 fu_self_free(FuTest *self)
 {
 	if (self->plugin != NULL)
@@ -928,5 +1099,17 @@ main(int argc, char **argv)
 	g_test_add_data_func("/redfish/plugin/devices", self, fu_redfish_devices_func);
 	g_test_add_data_func("/redfish/dell/devices", self, fu_redfish_dell_devices_func);
 	g_test_add_data_func("/redfish/plugin/update", self, fu_redfish_update_func);
+	g_test_add_data_func("/redfish/plugin/target-identity",
+			     self,
+			     fu_redfish_target_identity_func);
+	g_test_add_data_func("/redfish/plugin/target-identity-reset",
+			     self,
+			     fu_redfish_target_identity_reset_func);
+	g_test_add_data_func("/redfish/plugin/target-identity-empty",
+			     self,
+			     fu_redfish_target_identity_empty_func);
+	g_test_add_data_func("/redfish/plugin/target-identity-case",
+			     self,
+			     fu_redfish_target_identity_case_func);
 	return g_test_run();
 }
