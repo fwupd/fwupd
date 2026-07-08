@@ -69,7 +69,6 @@ class Checker:
         self._expected_failure_prefixes.append(message_prefix)
 
     def _should_process_node(self, node: Node) -> bool:
-
         if self._current_nocheck:
             if node.tokens_pre.count_fuzzy([f"~/* {self._current_nocheck} */"]) > 0:
                 return False
@@ -78,7 +77,6 @@ class Checker:
         return True
 
     def add_failure(self, message=None, linecnt: Optional[int] = None) -> None:
-
         # we were expecting this
         expected: bool = False
         for message_prefix in self._expected_failure_prefixes:
@@ -104,7 +102,6 @@ class Checker:
         return False
 
     def _test_function_names_prefix_private(self, func_name: str, token: Token) -> None:
-
         if func_name.startswith("__"):
             return
         valid_prefixes = ["_fwupd_", "_fu_", "_g_", "_xb_"]
@@ -432,7 +429,6 @@ class Checker:
                 )
 
     def _test_function_names_prefix(self, node: Node) -> None:
-
         if node.depth != 0:
             return
 
@@ -532,7 +528,6 @@ class Checker:
         )
 
     def _test_struct(self, node: Node) -> None:
-
         if node.depth != 0:
             return
 
@@ -575,7 +570,6 @@ class Checker:
         )
 
     def _test_magic_numbers_buffer(self, node: Node) -> None:
-
         # skip tests
         if self._current_fn:
             basename = os.path.basename(self._current_fn)
@@ -593,7 +587,6 @@ class Checker:
         )
 
     def _test_static_vars(self, node: Node) -> None:
-
         if node.depth != 0:
             return
 
@@ -609,7 +602,6 @@ class Checker:
         )
 
     def _test_rustgen_bitshifts(self, node: Node) -> None:
-
         if node.hint == NodeHint.ENUM:
             return
         idx = node.tokens.find_fuzzy(["]", "<", "<", "16"])
@@ -621,7 +613,6 @@ class Checker:
             )
 
     def _test_rustgen_vars(self, node: Node) -> None:
-
         idx = node.tokens.find_fuzzy(["g_autoptr", "(", "~FuStruct*", ")", "~*", "="])
         if idx == -1:
             return
@@ -650,7 +641,6 @@ class Checker:
             )
 
     def _test_debug_newlines(self, node: Node) -> None:
-
         for func in ["g_info", "g_debug", "g_message"]:
             idx: int = 0
             while True:
@@ -663,7 +653,6 @@ class Checker:
                 )
 
     def _test_debug_fullstops(self, node: Node) -> None:
-
         for func in ["g_error", "g_info", "g_debug", "g_message"]:
             idx: int = 0
             while True:
@@ -676,7 +665,6 @@ class Checker:
                 )
 
     def _test_debug_sentence_case(self, node: Node) -> None:
-
         for func in ["g_error", "g_info", "g_debug", "g_message"]:
             idx: int = 0
             while True:
@@ -761,7 +749,6 @@ class Checker:
         idx1 = node.tokens.find_fuzzy(["fu_device_get_name", "(", "~*", ")"])
         idx2 = node.tokens.find_fuzzy(["fu_device_get_id", "(", "~*", ")"])
         if idx1 != -1 and idx2 != -1:
-
             # check this isn't an assert
             if node.tokens[idx1 - 2].data == "g_assert_cmpstr":
                 return
@@ -805,7 +792,6 @@ class Checker:
                 )
 
     def _test_gobject_finalize(self, node: Node) -> None:
-
         if node.tokens_pre.endswith_fuzzy(
             ["void", "~*_finalize", "(", "GObject", "*", "~*", ")"]
         ):
@@ -819,7 +805,6 @@ class Checker:
                 )
 
     def _test_gobject_constructed(self, node: Node) -> None:
-
         if node.tokens_pre.endswith_fuzzy(
             ["void", "~*_constructed", "(", "GObject", "*", "~*", ")"]
         ):
@@ -833,7 +818,6 @@ class Checker:
                 )
 
     def _test_blocked_funcs(self, node: Node) -> None:
-
         for token, msg in {
             "g_error": "Use GError instead",
             "g_ascii_strtoull": "Use fu_strtoull() instead",
@@ -889,7 +873,6 @@ class Checker:
             self.add_failure("use rustgen instead", linecnt=token.linecnt)
 
     def _test_blocked_tokens(self, node: Node) -> None:
-
         for search, msg in {
             "__FUNCTION__": "Use G_STRFUNC instead",
             "__VA_ARGS__": "Use native functions instead",
@@ -905,7 +888,6 @@ class Checker:
                     )
 
     def _test_magic_numbers_defined(self, nodes: List[Node]) -> None:
-
         cnt: int = 0
         limit: int = 15
         linecnt: int = 0
@@ -928,7 +910,6 @@ class Checker:
             )
 
     def _test_magic_numbers_inline(self, nodes: List[Node]) -> None:
-
         cnt: int = 0
         limit: int = 80
         linecnt: int = 0
@@ -953,7 +934,6 @@ class Checker:
             )
 
     def _test_gerror_false_returns(self, nodes: List[Node]) -> None:
-
         for node in nodes:
             if node.depth == 0:
                 continue
@@ -973,7 +953,6 @@ class Checker:
                     break
 
     def _test_gerror_not_set(self, nodes: List[Node]) -> None:
-
         limit: int = 10
         for node in nodes:
             if node.depth == 0:
@@ -1052,7 +1031,6 @@ class Checker:
         )
 
     def _test_switch(self, nodes: List[Node]) -> None:
-
         limit: int = 2
         cnt: int = 0
         for node in nodes:
@@ -1070,7 +1048,6 @@ class Checker:
                     break
 
     def _test_null_false_returns(self, nodes: List[Node]) -> None:
-
         # allowed values from g_return_val_if_fail()
         types_rvif = {
             "*": ["NULL"],
@@ -1190,7 +1167,6 @@ class Checker:
             )
 
     def _test_function_length(self, node: Node) -> None:
-
         if node.depth != 0:
             return
         limit: int = 400
@@ -1201,7 +1177,6 @@ class Checker:
             )
 
     def _test_firmware_convert_version(self, nodes: List[Node]) -> None:
-
         # contains fu_firmware_set_version_raw()
         _set_version_raw: bool = False
         for node in nodes:
@@ -1228,7 +1203,6 @@ class Checker:
                 )
 
     def _test_device_convert_version(self, nodes: List[Node]) -> None:
-
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-engine-test.c",
         ]:
@@ -1260,7 +1234,6 @@ class Checker:
                 )
 
     def _test_small_conditionals_with_braces_node(self, node: Node) -> None:
-
         # has previous conditional
         idx = node.tokens_pre.find_fuzzy(["else", "if", "("])
         if idx != -1:
@@ -1299,7 +1272,6 @@ class Checker:
             )
 
     def _test_small_conditionals_with_braces(self, nodes: List[Node]) -> None:
-
         # we need to parse the nodes in order
         for idx, node in enumerate(nodes):
             next_node_depth: int = 0
@@ -1324,7 +1296,6 @@ class Checker:
             self._test_small_conditionals_with_braces_node(node)
 
     def _test_nesting_depth(self, node: Node) -> None:
-
         limit: int = 5
         if node.depth >= limit:
             self.add_failure(
@@ -1332,7 +1303,6 @@ class Checker:
             )
 
     def _test_strsafe_offset(self, node: Node) -> None:
-
         idx = node.tokens.find_fuzzy(
             [
                 "fu_strsafe@FUNCTION",
@@ -1384,7 +1354,6 @@ class Checker:
             )
 
     def _test_memread(self, node: Node) -> None:
-
         limit: int = 7
         cnt = node.tokens.count_fuzzy(["~fu_memread_uint*"])
         if cnt >= limit:
@@ -1400,7 +1369,6 @@ class Checker:
             )
 
     def _test_gobject_parents(self, nodes: List[Node]) -> None:
-
         gtype: str = ""
         gtypeparent: str = ""
         for node in nodes:
@@ -1452,7 +1420,6 @@ class Checker:
                     )
 
     def _test_nodes(self, nodes: List[Node]) -> None:
-
         # preroll
         self._klass_funcs.clear()
         for node in nodes:
@@ -1462,7 +1429,6 @@ class Checker:
 
         # tests we can do node by node
         for node in nodes:
-
             # test for missing ->finalize()
             self._current_nocheck = "nocheck:finalize"
             if self._should_process_node(node):
@@ -1656,7 +1622,6 @@ def test_files(fns_optional: List[str], verbose: bool = False) -> int:
 
 
 def unit_test(fn: str, verbose: bool = False) -> int:
-
     # load test file with any expected failures
     rc: int = 0
     checker = Checker(verbose=verbose)
@@ -1694,7 +1659,6 @@ def unit_test(fn: str, verbose: bool = False) -> int:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Check source files")
     parser.add_argument("--test", type=str, help="Run self tests")
     parser.add_argument("--verbose", action="store_true", help="Run in verbose mode")
