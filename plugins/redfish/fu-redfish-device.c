@@ -654,6 +654,82 @@ fu_redfish_device_get_backend(FuRedfishDevice *self, GError **error)
 	return priv->backend;
 }
 
+gboolean
+fu_redfish_device_verify_target_identity(FuRedfishDevice *self, GError **error)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *logical_id = fu_device_get_logical_id(FU_DEVICE(self));
+	const gchar *software_id_now;
+	gboolean reset_pending;
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* a wildcard update has no single member to re-confirm */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS))
+		return TRUE;
+
+	/* nothing was captured at probe to compare against */
+	if (logical_id == NULL || priv->software_id == NULL)
+		return TRUE;
+
+	/* while a reset or activation is pending the member is expected to be
+	 * unreachable or stale, so an unavailable readback is tolerated; otherwise
+	 * the task claimed completion and a missing readback is a real problem */
+	reset_pending = fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
+			fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+
+	request = fu_redfish_backend_request_new(priv->backend);
+	if (!fu_redfish_request_perform(request,
+					logical_id,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					&error_local)) {
+		if (reset_pending) {
+			g_debug("failed to re-read %s to confirm target identity: %s",
+				logical_id,
+				error_local->message);
+			return TRUE;
+		}
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to re-read %s to confirm target identity: ",
+					   logical_id);
+		return FALSE;
+	}
+
+	/* a success with an empty body parses no object, leaving nothing to compare */
+	json_obj = fu_redfish_request_get_json_object(request, &error_local);
+	if (json_obj == NULL) {
+		if (reset_pending) {
+			g_debug("no readback body for %s to confirm target identity", logical_id);
+			return TRUE;
+		}
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to re-read %s to confirm target identity: ",
+					   logical_id);
+		return FALSE;
+	}
+
+	/* the SoftwareId was saved as-provided at probe, so compare it as-provided */
+	software_id_now = fwupd_json_object_get_string(json_obj, "SoftwareId", NULL);
+	if (g_strcmp0(software_id_now, priv->software_id) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "Redfish target identity changed: member %s reported SoftwareId %s at "
+			    "discovery "
+			    "but %s on re-read",
+			    logical_id,
+			    priv->software_id,
+			    software_id_now != NULL ? software_id_now : "(none)");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 typedef struct {
 	gchar *location;
 	gboolean completed;
