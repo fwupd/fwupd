@@ -74,7 +74,7 @@ class Checker:
                 return False
         return True
 
-    def add_failure(self, message=None, linecnt: Optional[int] = None) -> None:
+    def add_failure(self, message, linecnt: Optional[int] = None) -> None:
         # we were expecting this
         expected: bool = False
         for message_prefix in self._expected_failure_prefixes:
