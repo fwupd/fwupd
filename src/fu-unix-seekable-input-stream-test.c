@@ -38,13 +38,13 @@ fu_unix_seekable_input_stream_func(void)
 	g_assert_nonnull(stream);
 
 	/* first chuck */
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
 	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
 
 	/* second chuck */
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
 	g_assert_cmpstr((const gchar *)buf, ==, " vers");
@@ -53,7 +53,7 @@ fu_unix_seekable_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 1);
-	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	ret = g_input_stream_read(G_INPUT_STREAM(stream), buf, sizeof(buf) - 1, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(ret, ==, 5);
 	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");

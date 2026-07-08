@@ -250,7 +250,7 @@ fu_kernel_get_config(FuPathStore *pstore, GError **error)
 		if (istream1 == NULL)
 			return NULL;
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-		istream2 = g_converter_input_stream_new(istream1, conv);
+		istream2 = g_converter_input_stream_new(G_INPUT_STREAM(istream1), conv);
 		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload == NULL)
 			return NULL;

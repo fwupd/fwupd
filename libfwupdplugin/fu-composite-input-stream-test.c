@@ -114,7 +114,7 @@ fu_composite_input_stream_func(void)
 	ret = g_seekable_seek(G_SEEKABLE(composite_stream), 0x1, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	rc = g_input_stream_read(composite_stream, buf, 2, NULL, &error);
+	rc = g_input_stream_read(G_INPUT_STREAM(composite_stream), buf, 2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 'b');
@@ -124,7 +124,7 @@ fu_composite_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x7);
-	rc = g_input_stream_read(composite_stream, buf, sizeof(buf), NULL, &error);
+	rc = g_input_stream_read(G_INPUT_STREAM(composite_stream), buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
@@ -133,7 +133,7 @@ fu_composite_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x7);
-	rc = g_input_stream_read(composite_stream, buf, sizeof(buf), NULL, &error);
+	rc = g_input_stream_read(G_INPUT_STREAM(composite_stream), buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
@@ -142,7 +142,7 @@ fu_composite_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x6);
-	rc = g_input_stream_read(composite_stream, buf, sizeof(buf), NULL, &error);
+	rc = g_input_stream_read(G_INPUT_STREAM(composite_stream), buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 'g');

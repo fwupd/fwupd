@@ -290,7 +290,8 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	}
 
 	/* read out the attributes */
-	attr_sz = g_input_stream_read(istr, &attr_tmp, sizeof(attr_tmp), NULL, error);
+	attr_sz =
+	    g_input_stream_read(G_INPUT_STREAM(istr), &attr_tmp, sizeof(attr_tmp), NULL, error);
 	if (attr_sz == -1) {
 		g_prefix_error_literal(error, "failed to read attr: ");
 		fwupd_error_convert(error);
@@ -312,7 +313,12 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		*data_sz = data_sz_tmp;
 	if (data != NULL) {
 		g_autofree guint8 *data_tmp = g_malloc0(data_sz_tmp);
-		if (!g_input_stream_read_all(istr, data_tmp, data_sz_tmp, NULL, NULL, error)) {
+		if (!g_input_stream_read_all(G_INPUT_STREAM(istr),
+					     data_tmp,
+					     data_sz_tmp,
+					     NULL,
+					     NULL,
+					     error)) {
 			g_prefix_error_literal(error, "failed to read data: ");
 			return FALSE;
 		}

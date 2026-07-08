@@ -39,7 +39,7 @@ fu_usb_backend_load_file(FuBackend *backend, const gchar *fn)
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
 	json_node = fwupd_json_parser_load_from_stream(json_parser,
-						       stream,
+						       G_INPUT_STREAM(stream),
 						       FWUPD_JSON_LOAD_FLAG_NONE,
 						       &error);
 	g_assert_no_error(error);
