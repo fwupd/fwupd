@@ -682,7 +682,7 @@ class Checker:
         if idx != -1:
             token = node.tokens[idx]
             self.add_failure(
-                f"use C style comments, not C++, e.g. /* this */",
+                "use C style comments, not C++, e.g. /* this */",
                 linecnt=token.linecnt,
             )
 
@@ -691,12 +691,12 @@ class Checker:
         for token in node.tokens_pre + node.tokens:
             if token.data.find("/***") != -1:
                 self.add_failure(
-                    f"do not use boxed comment lines, just use /* comment */",
+                    "do not use boxed comment lines, just use /* comment */",
                     linecnt=token.linecnt,
                 )
             if token.data.find("/**@brief") != -1:
                 self.add_failure(
-                    f"do not use doxygen comment lines, just use /* comment */",
+                    "do not use doxygen comment lines, just use /* comment */",
                     linecnt=token.linecnt,
                 )
 
@@ -717,7 +717,7 @@ class Checker:
                 and first_word[1:].islower()
             ):
                 self.add_failure(
-                    f"single line comments should not use sentence case",
+                    "single line comments should not use sentence case",
                     linecnt=token.linecnt,
                 )
 
@@ -728,7 +728,7 @@ class Checker:
         if idx != -1:
             token = node.tokens_pre[idx]
             self.add_failure(
-                f"do not compare a boolean to TRUE",
+                "do not compare a boolean to TRUE",
                 linecnt=token.linecnt,
             )
 
@@ -737,7 +737,7 @@ class Checker:
         if idx != -1:
             token = node.tokens[idx]
             self.add_failure(
-                f"do not use goto, refactor into a new block",
+                "do not use goto, refactor into a new block",
                 linecnt=token.linecnt,
             )
 
@@ -1402,7 +1402,7 @@ class Checker:
                 gtype = node.tokens_pre[idx + 2].data
                 if self.verbose:
                     print("GTYPE", gtype, self._gtype_parents)
-                if not gtype in self._gtype_parents:
+                if gtype not in self._gtype_parents:
                     continue
                 gtypeparent_found: str = node.tokens_pre[idx + 6].data
                 gtype_snake = _camel_to_snake(self._gtype_parents[gtype]).split(
@@ -1565,9 +1565,9 @@ class Checker:
             except UnicodeDecodeError as e:
                 print(f"failed to read {fn}: {e}")
         if data.find("Copyright") == -1:
-            self.add_failure(f"does not have copyright assigned")
+            self.add_failure("does not have copyright assigned")
         if data.find("Copyright") == -1:
-            self.add_failure(f"does not have a SPDX-License-Identifier")
+            self.add_failure("does not have a SPDX-License-Identifier")
         tokenizer = Tokenizer(data)
         nodes = tokenizer.nodes
         if self.verbose:
