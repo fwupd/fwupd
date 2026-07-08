@@ -278,7 +278,7 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	bytes_xml = fu_quirks_convert_keyfile_to_xml(self, bytes, error);
 	if (bytes_xml == NULL)
 		return NULL;
-	return g_memory_input_stream_new_from_bytes(bytes_xml);
+	return G_INPUT_STREAM(fu_memory_input_stream_new_from_bytes(bytes_xml));
 }
 
 static gint
