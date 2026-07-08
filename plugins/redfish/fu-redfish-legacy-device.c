@@ -124,7 +124,9 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 			       fu_redfish_backend_get_push_uri_path(backend));
 		return FALSE;
 	}
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
+	if (!fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error))
+		return FALSE;
+	return fu_redfish_device_verify_target_identity(FU_REDFISH_DEVICE(self), error);
 }
 
 static void
