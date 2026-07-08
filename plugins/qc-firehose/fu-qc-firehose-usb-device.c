@@ -243,7 +243,7 @@ fu_qc_firehose_usb_device_attach(FuDevice *device, FuProgress *progress, GError 
 
 static FuFirmware *
 fu_qc_firehose_usb_device_impl_prepare_firmware(FuDevice *device,
-						GInputStream *stream,
+						FuInputStream *stream,
 						FuProgress *progress,
 						FuFirmwareParseFlags flags,
 						GError **error)

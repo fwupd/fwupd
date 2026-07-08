@@ -25,6 +25,7 @@
 #include "fwupd-error.h"
 
 #include "fu-efivars-private.h"
+#include "fu-input-stream.h"
 #include "fu-linux-efivars.h"
 #include "fu-path.h"
 
@@ -255,14 +256,14 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 
 	/* open file as stream */
 	fn = fu_linux_efivars_get_filename(efivars, guid, name, error);
 	if (fn == NULL)
 		return FALSE;
 	file = g_file_new_for_path(fn);
-	istr = G_INPUT_STREAM(g_file_read(file, NULL, error));
+	istr = FU_INPUT_STREAM(g_file_read(file, NULL, error));
 	if (istr == NULL) {
 		fwupd_error_convert(error);
 		return FALSE;

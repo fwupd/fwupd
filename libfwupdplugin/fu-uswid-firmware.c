@@ -53,7 +53,10 @@ fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static gboolean
-fu_uswid_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_uswid_firmware_validate(FuFirmware *firmware,
+			   FuInputStream *stream,
+			   gsize offset,
+			   GError **error)
 {
 	return fu_struct_uswid_validate_stream(stream, offset, error);
 }
@@ -77,7 +80,7 @@ fu_uswid_firmware_format_to_gtype(FuUswidPayloadFormat format, GError **error)
 
 static gboolean
 fu_uswid_firmware_parse(FuFirmware *firmware,
-			GInputStream *stream,
+			FuInputStream *stream,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
@@ -149,8 +152,8 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	/* zlib stream */
 	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
 		g_autoptr(GConverter) conv = NULL;
-		g_autoptr(GInputStream) istream1 = NULL;
-		g_autoptr(GInputStream) istream2 = NULL;
+		g_autoptr(FuInputStream) istream1 = NULL;
+		g_autoptr(FuInputStream) istream2 = NULL;
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB));
 		istream1 = fu_partial_input_stream_new(stream, hdrsz, payloadsz, error);
 		if (istream1 == NULL) {
@@ -263,8 +266,8 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	/* compression format */
 	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
 		g_autoptr(GConverter) conv = NULL;
-		g_autoptr(GInputStream) istream1 = NULL;
-		g_autoptr(GInputStream) istream2 = NULL;
+		g_autoptr(FuInputStream) istream1 = NULL;
+		g_autoptr(FuInputStream) istream2 = NULL;
 
 		conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB, -1));
 		istream1 = g_memory_input_stream_new_from_data(payload->data, payload->len, NULL);

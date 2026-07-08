@@ -616,7 +616,7 @@ fu_qc_s5gen2_device_write_blocks(FuQcS5gen2Device *self,
 
 static FuFirmware *
 fu_qc_s5gen2_device_prepare_firmware(FuDevice *device,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     FuProgress *progress,
 				     FuFirmwareParseFlags flags,
 				     GError **error)

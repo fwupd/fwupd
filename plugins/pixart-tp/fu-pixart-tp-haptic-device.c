@@ -687,7 +687,7 @@ fu_pixart_tp_haptic_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_pixart_tp_haptic_device_prepare_firmware(FuDevice *device,
-					    GInputStream *stream,
+					    FuInputStream *stream,
 					    FuProgress *progress,
 					    FuFirmwareParseFlags flags,
 					    GError **error)

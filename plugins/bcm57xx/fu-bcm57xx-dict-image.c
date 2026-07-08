@@ -29,11 +29,11 @@ fu_bcm57xx_dict_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
-	g_autoptr(GInputStream) stream_nocrc = NULL;
+	g_autoptr(FuInputStream) stream_nocrc = NULL;
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))

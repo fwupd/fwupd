@@ -130,7 +130,7 @@ fu_pixart_tp_section_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_pixart_tp_section_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   gsize offset,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
@@ -143,7 +143,7 @@ fu_pixart_tp_section_parse(FuFirmware *firmware,
 	g_autoptr(FuStructPixartTpFirmwareSectionHdr) st = NULL;
 
 	g_return_val_if_fail(FU_IS_PIXART_TP_SECTION(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 
 	st = fu_struct_pixart_tp_firmware_section_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
@@ -171,7 +171,7 @@ fu_pixart_tp_section_parse(FuFirmware *firmware,
 
 	/* data */
 	if (section_length != 0) {
-		g_autoptr(GInputStream) partial_stream = NULL;
+		g_autoptr(FuInputStream) partial_stream = NULL;
 		partial_stream = fu_partial_input_stream_new(stream,
 							     fu_firmware_get_offset(firmware),
 							     section_length,

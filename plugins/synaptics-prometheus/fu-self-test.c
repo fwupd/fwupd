@@ -22,7 +22,7 @@ fu_test_synaptics_prometheus_firmware_func(void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_prometheus_firmware_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);

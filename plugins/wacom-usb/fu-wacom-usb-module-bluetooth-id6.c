@@ -63,7 +63,7 @@ fu_wacom_usb_module_bluetooth_id6_calculate_crc(const guint8 *buf, gsize bufsz)
 
 static gboolean
 fu_wacom_usb_module_bluetooth_id6_write_blob(FuWacomUsbModule *self,
-					     GInputStream *stream,
+					     FuInputStream *stream,
 					     FuProgress *progress,
 					     GError **error)
 {
@@ -130,7 +130,7 @@ fu_wacom_usb_module_bluetooth_id6_write_firmware(FuDevice *device,
 	FuWacomUsbModule *self = FU_WACOM_USB_MODULE(device);
 	const guint8 buf_start[] = {FU_WACOM_USB_MODULE_BLUETOOTH_ID6_START_NORMAL};
 	g_autoptr(GBytes) blob_start = g_bytes_new_static(buf_start, sizeof(buf_start));
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

@@ -51,14 +51,14 @@ fu_efi_volume_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilde
 }
 
 static gboolean
-fu_efi_volume_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_efi_volume_validate(FuFirmware *firmware, FuInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_efi_volume_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
@@ -141,7 +141,7 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 
 static gboolean
 fu_efi_volume_parse(FuFirmware *firmware,
-		    GInputStream *stream,
+		    FuInputStream *stream,
 		    FuFirmwareParseFlags flags,
 		    GError **error)
 {
@@ -156,7 +156,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	guint8 alignment;
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(FuStructEfiVolume) st_hdr = NULL;
-	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(FuInputStream) partial_stream = NULL;
 
 	/* parse */
 	st_hdr = fu_struct_efi_volume_parse_stream(stream, 0x0, error);

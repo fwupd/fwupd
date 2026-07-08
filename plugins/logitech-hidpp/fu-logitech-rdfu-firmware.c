@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuLogitechRdfuFirmware, fu_logitech_rdfu_firmware, FU_TYPE_FIRMWAR
 
 static gboolean
 fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
-				GInputStream *stream,
+				FuInputStream *stream,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {

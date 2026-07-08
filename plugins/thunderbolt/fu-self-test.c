@@ -222,7 +222,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 {
 	g_autoptr(GFile) nvm_device = NULL;
 	g_autoptr(GFile) nvm = NULL;
-	g_autoptr(GInputStream) is = NULL;
+	g_autoptr(FuInputStream) is = NULL;
 	g_autoptr(GChecksum) chk = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *sum_data = NULL;
@@ -238,7 +238,7 @@ mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 	nvm_device = g_file_new_for_path(node->nvm_non_active);
 	nvm = g_file_get_child(nvm_device, "nvmem");
 
-	is = (GInputStream *)g_file_read(nvm, NULL, &error);
+	is = FU_INPUT_STREAM(g_file_read(nvm, NULL, &error)); /* nocheck:blocked */
 	g_assert_no_error(error);
 	g_assert_nonnull(is);
 
@@ -331,7 +331,7 @@ write_controller_fw(const gchar *nvm)
 	g_autoptr(GFile) nvmem = NULL;
 	g_autofree gchar *fw_path = NULL;
 	g_autoptr(GBytes) fw_blob = NULL;
-	g_autoptr(GInputStream) is = NULL;
+	g_autoptr(FuInputStream) is = NULL;
 	g_autoptr(GOutputStream) os = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuFirmware) firmware_ctl = NULL;
@@ -857,7 +857,7 @@ typedef struct FuThunderboltTest {
 
 	/* if FuThunderboltTestParam::firmware_file is nonnull */
 	GBytes *fw_data;
-	GInputStream *fw_stream;
+	FuInputStream *fw_stream;
 
 } FuThunderboltTest;
 

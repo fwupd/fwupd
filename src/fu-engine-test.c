@@ -16,6 +16,7 @@
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
+#include "fu-input-stream.h"
 #include "fu-plugin-private.h"
 #include "fu-remote.h"
 #include "fu-test.h"
@@ -833,7 +834,7 @@ fu_engine_require_hwid_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -904,7 +905,7 @@ fu_engine_get_details_added_func(void)
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -960,7 +961,7 @@ fu_engine_get_details_missing_func(void)
 	g_autoptr(FuEngine) engine = fu_engine_new(ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -1837,7 +1838,7 @@ fu_engine_history_func(void)
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2042,7 +2043,7 @@ fu_engine_install_loop_restart_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuInputStream) stream_fw = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
 	/* no metadata in daemon */
@@ -2111,7 +2112,7 @@ fu_engine_multiple_rels_func(void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
@@ -2231,7 +2232,7 @@ fu_engine_history_inherit(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2378,7 +2379,7 @@ fu_engine_install_needs_reboot(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2496,7 +2497,7 @@ fu_engine_install_request(void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2596,7 +2597,7 @@ fu_engine_history_error_func(void)
 	g_autoptr(FuTemporaryDirectory) tmpdir = NULL;
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();

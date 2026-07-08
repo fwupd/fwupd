@@ -32,8 +32,8 @@
  */
 
 struct _FuPartialInputStream {
-	GInputStream parent_instance;
-	GInputStream *base_stream;
+	FuInputStream parent_instance;
+	FuInputStream *base_stream;
 	gsize offset;
 	gsize size;
 };
@@ -45,7 +45,7 @@ fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuPartialInputStream,
 			fu_partial_input_stream,
-			G_TYPE_INPUT_STREAM,
+			FU_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
 					      fu_partial_input_stream_seekable_iface_init)
 			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
@@ -144,7 +144,7 @@ fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
 
 /**
  * fu_partial_input_stream_new:
- * @stream: a base #GInputStream
+ * @stream: a base #FuInputStream
  * @offset: offset into @stream
  * @size: size of @stream in bytes, or %G_MAXSIZE for the "rest" of the stream
  * @error: (nullable): optional return location for an error
@@ -155,13 +155,13 @@ fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
  *
  * Since: 2.0.0
  **/
-GInputStream *
-fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GError **error)
+FuInputStream *
+fu_partial_input_stream_new(FuInputStream *stream, gsize offset, gsize size, GError **error)
 {
 	gsize base_sz = 0;
 	g_autoptr(FuPartialInputStream) self = g_object_new(FU_TYPE_PARTIAL_INPUT_STREAM, NULL);
 
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	self->base_stream = g_object_ref(stream);
@@ -200,7 +200,7 @@ fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GErr
 	}
 
 	/* success */
-	return G_INPUT_STREAM(g_steal_pointer(&self));
+	return FU_INPUT_STREAM(g_steal_pointer(&self));
 }
 
 /**

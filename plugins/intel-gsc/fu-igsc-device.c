@@ -572,7 +572,7 @@ static gboolean
 fu_igsc_device_update_start(FuIgscDevice *self,
 			    guint32 payload_type,
 			    GBytes *fw_info,
-			    GInputStream *fw,
+			    FuInputStream *fw,
 			    GError **error)
 {
 	guint8 res_buf[FU_IGSC_FWU_HECI_START_RES_SIZE] = {0};
@@ -703,7 +703,7 @@ gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
 			  FuIgscFwuHeciPayloadType payload_type,
 			  GBytes *fw_info,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuProgress *progress,
 			  GError **error)
 {
@@ -828,7 +828,7 @@ fu_igsc_device_write_firmware(FuDevice *device,
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
 	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* get image, and install on ourself */
 	fw_info =

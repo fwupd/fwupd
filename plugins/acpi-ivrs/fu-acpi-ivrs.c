@@ -21,13 +21,13 @@ G_DEFINE_TYPE(FuAcpiIvrs, fu_acpi_ivrs, FU_TYPE_ACPI_TABLE)
 
 static gboolean
 fu_acpi_ivrs_parse(FuFirmware *firmware,
-		   GInputStream *stream,
+		   FuInputStream *stream,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
 	FuAcpiIvrs *self = FU_ACPI_IVRS(firmware);
 	guint8 ivinfo = 0;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_ivrs_parent_class)

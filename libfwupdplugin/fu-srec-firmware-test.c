@@ -34,7 +34,7 @@ fu_srec_firmware_tokenization_func(void)
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new();
 	g_autoptr(GBytes) data_srec = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *buf = "S3060000001400E5\r\n"
 			   "S31000000002281102000000007F0304002C\r\n"

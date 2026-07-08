@@ -211,7 +211,7 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 }
 
 static gboolean
-fu_mm_dfota_device_upload_stream(FuMmDfotaDevice *self, GInputStream *stream, GError **error)
+fu_mm_dfota_device_upload_stream(FuMmDfotaDevice *self, FuInputStream *stream, GError **error)
 {
 	gsize size = 0;
 	gsize size_parsed = 0;
@@ -423,7 +423,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 {
 	FuMmDfotaDevice *self = FU_MM_DFOTA_DEVICE(device);
 	g_autofree gchar *upload_cmd = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* get default stream */
 	stream = fu_firmware_get_stream(firmware, error);

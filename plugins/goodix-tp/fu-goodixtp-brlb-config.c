@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuGoodixtpBrlbConfig, fu_goodixtp_brlb_config, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_goodixtp_brlb_config_parse(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {

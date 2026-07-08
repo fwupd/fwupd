@@ -43,7 +43,7 @@ fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 
 static gboolean
 fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
-				     GInputStream *stream,
+				     FuInputStream *stream,
 				     guint8 strapping1,
 				     GError **error)
 {
@@ -128,7 +128,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 
 static gboolean
 fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
+			     FuInputStream *stream,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-cbor-common.h"
+#include "fu-input-stream.h"
 
 /* nocheck:magic-inlines=200 */
 
@@ -20,7 +21,7 @@ fu_cbor_item_depth_func(void)
 	g_autoptr(FuCborItem) item3 = fu_cbor_item_new_array();
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_array_append(item1, item2, &error);
 	g_assert_no_error(error);
@@ -51,7 +52,7 @@ fu_cbor_item_items_func(void)
 	g_autoptr(FuCborItem) item3 = fu_cbor_item_new_integer(2);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_map_append(item1, item2, item3, &error);
 	g_assert_no_error(error);
@@ -112,7 +113,7 @@ fu_cbor_item_integer_func(void)
 	g_autoptr(FuCborItem) item3 = fu_cbor_item_new_integer(G_MAXINT64);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_map_append(item1, item2, item3, &error);
 	g_assert_no_error(error);
@@ -144,7 +145,7 @@ fu_cbor_item_string_func(void)
 	g_autoptr(FuCborItem) item2 = fu_cbor_item_new_string(NULL);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_array_append(item1, item2, &error);
 	g_assert_no_error(error);
@@ -180,7 +181,7 @@ fu_cbor_item_bytes_func(void)
 	g_autoptr(FuCborItem) item2 = fu_cbor_item_new_bytes(blob);
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	ret = fu_cbor_item_array_append(item1, item2, &error);
 	g_assert_no_error(error);
@@ -214,7 +215,7 @@ fu_cbor_item_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuCborItem) item = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	const guint8 buf[] = {
 	    0xa7, 0x0f, 0x65, 0x65, 0x6e, 0x2d, 0x55, 0x53, 0x00, 0x64, 0x64, 0x61, 0x76, 0x65,
 	    0x08, 0xf5, 0x01, 0x6c, 0x66, 0x69, 0x72, 0x6d, 0x77, 0x61, 0x72, 0x65, 0x2e, 0x62,

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-usb-device.h"
 
 #define FU_TYPE_USB_DEVICE_DS20 (fu_usb_device_ds20_get_type())
@@ -15,7 +16,7 @@ G_DECLARE_DERIVABLE_TYPE(FuUsbDeviceDs20, fu_usb_device_ds20, FU, USB_DEVICE_DS2
 struct _FuUsbDeviceDs20Class {
 	FuFirmwareClass parent_class;
 	gboolean (*parse)(FuUsbDeviceDs20 *self,
-			  GInputStream *stream,
+			  FuInputStream *stream,
 			  FuUsbDevice *device,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 };

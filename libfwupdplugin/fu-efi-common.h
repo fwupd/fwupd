@@ -8,6 +8,7 @@
 
 #include "fu-efi-struct.h"
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 
 #define FU_EFI_VOLUME_GUID_FFS1	       "7a9354d9-0468-444a-81ce-0bf617d890df"
 #define FU_EFI_VOLUME_GUID_FFS2	       "8c8ce578-8a3d-4f1c-9935-896185c32dd3"
@@ -41,7 +42,7 @@ const gchar *
 fu_efi_guid_to_name(const gchar *guid);
 gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
-		      GInputStream *stream,
+		      FuInputStream *stream,
 		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_NON_NULL(1, 2);

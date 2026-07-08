@@ -52,8 +52,8 @@ G_DEFINE_TYPE(FuEfiLz77Decompressor, fu_efi_lz77_decompressor, FU_TYPE_FIRMWARE)
 #endif
 
 typedef struct {
-	GInputStream *stream; /* no-ref */
-	GByteArray *dst;      /* no-ref */
+	FuInputStream *stream; /* no-ref */
+	GByteArray *dst;       /* no-ref */
 
 	guint16 bit_count;
 	guint32 bit_buf;
@@ -613,7 +613,7 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 
 static gboolean
 fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
-			       GInputStream *stream,
+			       FuInputStream *stream,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

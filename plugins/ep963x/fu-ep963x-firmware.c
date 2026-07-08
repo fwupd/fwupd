@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuEp963xFirmware, fu_ep963x_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_ep963x_firmware_validate(FuFirmware *firmware,
-			    GInputStream *stream,
+			    FuInputStream *stream,
 			    gsize offset,
 			    GError **error)
 {
@@ -29,7 +29,7 @@ fu_ep963x_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_ep963x_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

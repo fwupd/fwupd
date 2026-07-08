@@ -213,7 +213,7 @@ fu_wacom_usb_module_sub_cpu_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_wacom_usb_module_sub_cpu_prepare_firmware(FuDevice *device,
-					     GInputStream *stream,
+					     FuInputStream *stream,
 					     FuProgress *progress,
 					     FuFirmwareParseFlags flags,
 					     GError **error)

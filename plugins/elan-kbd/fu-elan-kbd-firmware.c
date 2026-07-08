@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuElanKbdFirmware, fu_elan_kbd_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_elan_kbd_firmware_validate(FuFirmware *firmware,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      gsize offset,
 			      GError **error)
 {
@@ -27,16 +27,16 @@ fu_elan_kbd_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_elan_kbd_firmware_parse(FuFirmware *firmware,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	g_autoptr(FuFirmware) firmware_app = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware_bootloader = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware_option = fu_firmware_new();
-	g_autoptr(GInputStream) stream_app = NULL;
-	g_autoptr(GInputStream) stream_bootloader = NULL;
-	g_autoptr(GInputStream) stream_option = NULL;
+	g_autoptr(FuInputStream) stream_app = NULL;
+	g_autoptr(FuInputStream) stream_bootloader = NULL;
+	g_autoptr(FuInputStream) stream_option = NULL;
 
 	/* bootloader */
 	stream_bootloader = fu_partial_input_stream_new(stream,

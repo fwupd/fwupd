@@ -271,7 +271,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) cx3_fw = NULL;
 	g_autoptr(GBytes) m12_fw = NULL;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

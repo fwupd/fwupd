@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuEbitdoFirmware, fu_ebitdo_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_ebitdo_firmware_parse(FuFirmware *firmware,
-			 GInputStream *stream,
+			 FuInputStream *stream,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -26,8 +26,8 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	gsize total_size;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(FuStructEbitdoHdr) st = NULL;
-	g_autoptr(GInputStream) stream_hdr = NULL;
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(FuInputStream) stream_hdr = NULL;
+	g_autoptr(FuInputStream) stream_payload = NULL;
 
 	/* check the file size */
 	st = fu_struct_ebitdo_hdr_parse_stream(stream, 0x0, error);

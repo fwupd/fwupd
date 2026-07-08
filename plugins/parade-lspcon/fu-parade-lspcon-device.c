@@ -399,7 +399,7 @@ fu_parade_lspcon_device_cleanup(FuDevice *device,
 static gboolean
 fu_parade_lspcon_device_flash_write(FuParadeLspconDevice *self,
 				    guint32 base_address,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    GError **error)
 {
@@ -587,8 +587,8 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 	const guint8 flag_data[] = {0x55, 0xaa, target_partition, 1 - target_partition};
 	g_autofree guint8 *readback_buf = NULL;
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GInputStream) flag_data_stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
+	g_autoptr(FuInputStream) flag_data_stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -646,8 +646,8 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 
 	/* write flag indicating device should boot the target partition */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	flag_data_stream =
-	    G_INPUT_STREAM(g_memory_input_stream_new_from_data(flag_data, sizeof(flag_data), NULL));
+	flag_data_stream = FU_INPUT_STREAM(
+	    g_memory_input_stream_new_from_data(flag_data, sizeof(flag_data), NULL));
 	if (!fu_parade_lspcon_device_flash_write(self,
 						 0,
 						 flag_data_stream,

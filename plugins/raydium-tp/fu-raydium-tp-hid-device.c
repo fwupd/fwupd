@@ -647,7 +647,7 @@ fu_raydium_tp_hid_device_bl_write_flash(FuRaydiumTpHidDevice *self,
 {
 	guint page_no = 0;
 	guint8 sub_page_no = 0;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	stream = fu_firmware_get_stream(img, error);

@@ -332,7 +332,7 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 
 static FuFirmware *
 fu_wistron_dock_device_prepare_firmware(FuDevice *device,
-					GInputStream *stream,
+					FuInputStream *stream,
 					FuProgress *progress,
 					FuFirmwareParseFlags flags,
 					GError **error)
@@ -397,7 +397,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
-	g_autoptr(GInputStream) stream_cbin = NULL;
+	g_autoptr(FuInputStream) stream_cbin = NULL;
 	g_autoptr(GBytes) fw_wdfl = NULL;
 	g_autoptr(GBytes) fw_wsig = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;

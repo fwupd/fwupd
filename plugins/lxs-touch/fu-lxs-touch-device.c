@@ -536,7 +536,7 @@ fu_lxs_touch_device_write_firmware(FuDevice *device,
 {
 	FuLxsTouchDevice *self = FU_LXS_TOUCH_DEVICE(device);
 	guint32 fw_offset = fu_lxs_touch_firmware_get_offset(FU_LXS_TOUCH_FIRMWARE(firmware));
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autofree gchar *protocol_name = NULL;
 
 	/* verify in DFUP mode */

@@ -122,7 +122,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	gsize nr_chunks;
 	g_autofree gchar *nvmem = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(FU_THUNDERBOLT_DEVICE(self), TRUE, error);

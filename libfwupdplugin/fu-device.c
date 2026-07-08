@@ -806,7 +806,7 @@ fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 gboolean
 fu_device_set_contents(FuDevice *self,
 		       const gchar *filename,
-		       GInputStream *stream,
+		       FuInputStream *stream,
 		       FuProgress *progress,
 		       GError **error)
 {
@@ -819,7 +819,7 @@ fu_device_set_contents(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -915,7 +915,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 			     FuProgress *progress,
 			     GError **error)
 {
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(filename != NULL, FALSE);
@@ -951,7 +951,7 @@ fu_device_get_contents_bytes(FuDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -1018,7 +1018,7 @@ fu_device_get_contents(FuDevice *self,
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(FuInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(filename != NULL, NULL);
@@ -5733,7 +5733,7 @@ fu_device_write_firmware(FuDevice *self,
 /**
  * fu_device_prepare_firmware:
  * @self: a #FuDevice
- * @stream: a #GInputStream
+ * @stream: a #FuInputStream
  * @flags: #FuFirmwareParseFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -5751,7 +5751,7 @@ fu_device_write_firmware(FuDevice *self,
  **/
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
-			   GInputStream *stream,
+			   FuInputStream *stream,
 			   FuProgress *progress,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
@@ -5762,7 +5762,7 @@ fu_device_prepare_firmware(FuDevice *self,
 	gsize fw_size;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 

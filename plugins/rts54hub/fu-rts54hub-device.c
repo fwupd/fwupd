@@ -453,7 +453,7 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuRts54hubDevice *self = FU_RTS54HUB_DEVICE(device);
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -545,7 +545,7 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_rts54hub_device_prepare_firmware(FuDevice *device,
-				    GInputStream *stream,
+				    FuInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
 				    GError **error)

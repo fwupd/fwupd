@@ -325,7 +325,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 
 static gboolean
 fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self,
-			      GInputStream *stream,
+			      FuInputStream *stream,
 			      FuProgress *progress,
 			      GError **error)
 {
@@ -400,7 +400,7 @@ fu_tpm_v2_device_write_firmware(FuDevice *device,
 	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
 	TPM2B_DIGEST digest = {0x0};
 	TSS2_RC rc;
-	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(FuInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
