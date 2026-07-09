@@ -7,6 +7,7 @@
 //! Core components of fwupd
 
 mod bitflags;
+pub mod streams;
 
 pub use crate::bitflags::{BitflagIter, Bitflags};
 
