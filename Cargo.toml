@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "rust/fwupd",
+    "rust/fwupd-ffi",
+]
+
+# Abort instead of trying to unwind through C FFI which is undefined behavior
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
