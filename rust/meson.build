@@ -13,7 +13,8 @@ fwupd_rust_lib = fwupd_pkg.library(
 )
 fwupd_pkg.override_dependency(
   declare_dependency(
-    link_with: fwupd_rust_lib
+    link_with: fwupd_rust_lib,
+    dependencies: [zlib],
   )
 )
 
