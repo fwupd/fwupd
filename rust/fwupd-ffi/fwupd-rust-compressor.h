@@ -37,23 +37,4 @@ fu_rs_compressor_compress(FuCompressorFormat format,
 void
 fu_rs_compressor_free(guint8 *ptr, gsize len);
 
-typedef struct FuRsCompressorStream FuRsCompressorStream;
-
-typedef gssize (*FuRsCompressorStreamReadFn)(void *handle, guint8 *buf, gsize count);
-
-FuRsCompressorStream *
-fu_rs_compressor_stream_new_decompress(FuRsStreamImpl *base_stream,
-				       FuCompressorFormat format,
-				       GError **error);
-FuRsCompressorStream *
-fu_rs_compressor_stream_new_compress(FuRsStreamImpl *base_stream,
-				     FuCompressorFormat format,
-				     GError **error);
-gssize
-fu_rs_compressor_stream_read(FuRsCompressorStream *stream, guint8 *buf, gsize count);
-void
-fu_rs_compressor_stream_free(FuRsCompressorStream *stream);
-FuRsStreamImpl *
-fu_rs_compressor_stream_get_stream_impl(FuRsCompressorStream *stream);
-
 G_END_DECLS

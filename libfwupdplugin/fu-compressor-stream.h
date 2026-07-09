@@ -7,16 +7,13 @@
 #pragma once
 
 #include "fu-compressor-struct.h"
-#include "fu-stream-input-stream.h"
+#include "fu-input-stream.h"
 
 G_BEGIN_DECLS
 
 #define FU_TYPE_COMPRESSOR_STREAM (fu_compressor_stream_get_type())
-G_DECLARE_FINAL_TYPE(FuCompressorStream,
-		     fu_compressor_stream,
-		     FU,
-		     COMPRESSOR_STREAM,
-		     FuStreamInputStream)
+
+G_DECLARE_FINAL_TYPE(FuCompressorStream, fu_compressor_stream, FU, COMPRESSOR_STREAM, FuInputStream)
 
 FuInputStream *
 fu_compressor_stream_new_decompress(FuInputStream *source,
