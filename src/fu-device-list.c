@@ -87,6 +87,23 @@ fu_device_list_emit_device_changed(FuDeviceList *self, FuDevice *device)
 }
 
 static void
+fu_device_list_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+{
+	FuDeviceList *self = FU_DEVICE_LIST(codec);
+	g_autoptr(FwupdJsonArray) json_array = fwupd_json_array_new();
+
+	g_rw_lock_reader_lock(&self->devices_mutex);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
+		g_autoptr(FwupdJsonObject) json_device = fwupd_json_object_new();
+		fwupd_codec_to_json(FWUPD_CODEC(item->device), json_device, flags);
+		fwupd_json_array_add_object(json_array, json_device);
+	}
+	fwupd_json_object_add_array(json_obj, "Devices", json_array);
+	g_rw_lock_reader_unlock(&self->devices_mutex);
+}
+
+static void
 fu_device_list_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
 	FuDeviceList *self = FU_DEVICE_LIST(codec);
@@ -1103,6 +1120,7 @@ static void
 fu_device_list_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fu_device_list_add_string;
+	iface->add_json = fu_device_list_add_json;
 }
 
 static void
