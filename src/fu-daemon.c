@@ -32,7 +32,16 @@ typedef struct {
 
 enum { PROP_0, PROP_STATUS, PROP_PERCENTAGE, PROP_LAST };
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuDaemon, fu_daemon, G_TYPE_OBJECT)
+static void
+fu_daemon_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuDaemon,
+		       fu_daemon,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FuDaemon)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_daemon_codec_iface_init))
+
 #define GET_PRIVATE(o) (fu_daemon_get_instance_private(o))
 
 #define FU_DAEMON_HOUSEKEEPING_DELAY 10 /* seconds */
@@ -299,19 +308,10 @@ fu_daemon_start(FuDaemon *self, GError **error)
 
 	/* super useful for debugging */
 	if (g_log_get_debug_enabled()) {
-		GHashTableIter iter;
-		const gchar *key;
-		const gchar *value;
-		g_autoptr(GHashTable) metadata = NULL;
-		g_autoptr(GString) str = g_string_new("report metadata:");
-
-		metadata = fu_engine_get_report_metadata(priv->engine, error);
-		if (metadata == NULL)
-			return FALSE;
-		g_hash_table_iter_init(&iter, metadata);
-		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
-			g_string_append_printf(str, "\n - %s=%s", key, value);
-		g_debug("%s", str->str);
+		g_autofree gchar *str =
+		    fwupd_codec_to_json_string(FWUPD_CODEC(self), FWUPD_CODEC_FLAG_NONE, NULL);
+		if (str != NULL)
+			g_debug("%s", str);
 	}
 
 	/* optional */
@@ -346,6 +346,25 @@ fu_daemon_stop(FuDaemon *self, GError **error)
 		return FALSE;
 	g_main_loop_quit(priv->loop);
 	return TRUE;
+}
+
+static void
+fu_daemon_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
+{
+	FuDaemon *self = FU_DAEMON(codec);
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	fwupd_json_object_add_string(json_obj, "Version", PACKAGE_VERSION);
+	fwupd_json_object_add_string(json_obj, "Status", fwupd_status_to_string(priv->status));
+	fwupd_json_object_add_integer(json_obj, "Percentage", (gint64)priv->percentage);
+	fwupd_json_object_add_boolean(json_obj, "UpdateInProgress", priv->update_in_progress);
+	fwupd_json_object_add_boolean(json_obj, "PendingStop", priv->pending_stop);
+	fwupd_codec_to_json(FWUPD_CODEC(priv->engine), json_obj, flags);
+}
+
+static void
+fu_daemon_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_daemon_add_json;
 }
 
 static void
