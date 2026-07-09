@@ -25,12 +25,111 @@ typedef struct {
 	gboolean update_in_progress;
 	gboolean pending_stop;
 	guint process_quit_id;
+	FwupdStatus status; /* last emitted */
+	guint set_status_id;
+	gdouble percentage; /* last emitted */
 } FuDaemonPrivate;
+
+enum { PROP_0, PROP_STATUS, PROP_PERCENTAGE, PROP_LAST };
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuDaemon, fu_daemon, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_daemon_get_instance_private(o))
 
 #define FU_DAEMON_HOUSEKEEPING_DELAY 10 /* seconds */
+
+static void
+fu_daemon_set_status_internal(FuDaemon *self, FwupdStatus status)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+
+	/* sanity check */
+	if (priv->status == status)
+		return;
+	priv->status = status;
+	g_object_notify(G_OBJECT(self), "status");
+}
+
+FwupdStatus
+fu_daemon_get_status(FuDaemon *self)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DAEMON(self), FWUPD_STATUS_UNKNOWN);
+	return priv->status;
+}
+
+typedef struct {
+	FuDaemon *self;
+	FwupdStatus status;
+} FuDaemonSetStatusHelper;
+
+static gboolean
+fu_daemon_set_status_cb(gpointer user_data)
+{
+	FuDaemonSetStatusHelper *helper = (FuDaemonSetStatusHelper *)user_data;
+	FuDaemon *self = FU_DAEMON(helper->self);
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	priv->set_status_id = 0;
+	fu_daemon_set_status_internal(self, helper->status);
+	return G_SOURCE_REMOVE;
+}
+
+void
+fu_daemon_set_status(FuDaemon *self, FwupdStatus status)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	FuDaemonSetStatusHelper *helper;
+
+	g_return_if_fail(FU_IS_DAEMON(self));
+
+	/* cancel anything pending */
+	if (priv->set_status_id != 0) {
+		g_source_remove(priv->set_status_id);
+		priv->set_status_id = 0;
+	}
+
+	/* sanity check */
+	if (priv->status == status)
+		return;
+
+	/* starting or stopping */
+	if ((priv->status == FWUPD_STATUS_IDLE && status != FWUPD_STATUS_WAITING_FOR_AUTH) ||
+	    status == FWUPD_STATUS_IDLE) {
+		fu_daemon_set_status_internal(self, status);
+		return;
+	}
+
+	/* defer all updates to avoid flickering the UI */
+	helper = g_new0(FuDaemonSetStatusHelper, 1);
+	helper->self = self;
+	helper->status = status;
+	priv->set_status_id = g_timeout_add_full(G_PRIORITY_DEFAULT,
+						 250, /* ms */
+						 fu_daemon_set_status_cb,
+						 helper,
+						 g_free);
+}
+
+void
+fu_daemon_set_percentage(FuDaemon *self, gdouble percentage)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	gboolean notify;
+
+	g_return_if_fail(FU_IS_DAEMON(self));
+
+	notify = fwupd_percentage_delta_notify(priv->percentage, percentage);
+	priv->percentage = percentage;
+	if (notify)
+		g_object_notify(G_OBJECT(self), "percentage");
+}
+
+gdouble
+fu_daemon_get_percentage(FuDaemon *self)
+{
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DAEMON(self), -1.f);
+	return priv->percentage;
+}
 
 FuEngine *
 fu_daemon_get_engine(FuDaemon *self)
@@ -250,12 +349,41 @@ fu_daemon_stop(FuDaemon *self, GError **error)
 }
 
 static void
+fu_daemon_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuDaemon *self = FU_DAEMON(object);
+	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_STATUS:
+		g_value_set_uint(value, priv->status);
+		break;
+	case PROP_PERCENTAGE:
+		g_value_set_double(value, priv->percentage);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_daemon_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	switch (prop_id) {
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_daemon_init(FuDaemon *self)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	priv->engine = fu_engine_new(ctx);
 	priv->loop = g_main_loop_new(NULL, FALSE);
+	priv->status = FWUPD_STATUS_IDLE;
 }
 
 static void
@@ -270,6 +398,8 @@ fu_daemon_finalize(GObject *obj)
 		g_source_remove(priv->housekeeping_id);
 	if (priv->process_quit_id != 0)
 		g_source_remove(priv->process_quit_id);
+	if (priv->set_status_id != 0)
+		g_source_remove(priv->set_status_id);
 	if (priv->engine != NULL)
 		g_object_unref(priv->engine);
 
@@ -280,5 +410,27 @@ static void
 fu_daemon_class_init(FuDaemonClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fu_daemon_finalize;
+	object_class->get_property = fu_daemon_get_property;
+	object_class->set_property = fu_daemon_set_property;
+
+	pspec = g_param_spec_uint("status",
+				  NULL,
+				  NULL,
+				  FWUPD_STATUS_UNKNOWN,
+				  FWUPD_STATUS_LAST,
+				  FWUPD_STATUS_UNKNOWN,
+				  G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_STATUS, pspec);
+
+	pspec = g_param_spec_double("percentage",
+				    NULL,
+				    NULL,
+				    0.0,
+				    100.0,
+				    0.0,
+				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PERCENTAGE, pspec);
 }
