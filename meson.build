@@ -1,10 +1,10 @@
 project(
   'fwupd',
-  'c',
+  'c', 'rust',
   version: '2.2.1',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.11.0',
-  default_options: ['warning_level=2', 'c_std=c17'],
+  default_options: ['warning_level=2', 'c_std=c17', 'rust_std=2021'],
 )
 
 fwupd_version = meson.project_version()
@@ -873,7 +873,11 @@ umockdev = dependency(
 allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
   host_machine.cpu_family() in ['x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
+rustmod = import('rust')
+cargo_ws = rustmod.workspace()
+
 subdir('generate-build')
+subdir('rust')
 subdir('libfwupd')
 if polkit.found()
   subdir('policy')
