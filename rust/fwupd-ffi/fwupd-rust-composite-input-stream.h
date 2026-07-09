@@ -31,6 +31,8 @@ gboolean
 fu_rs_composite_input_stream_seek(FuRsCompositeInputStream *stream,
 				  goffset offset,
 				  gint32 seek_type);
+gboolean
+fu_rs_composite_input_stream_can_seek(FuRsCompositeInputStream *stream);
 goffset
 fu_rs_composite_input_stream_tell(FuRsCompositeInputStream *stream);
 gsize

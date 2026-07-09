@@ -31,7 +31,8 @@ use crate::glib::{
 };
 use fwupd::streams::{
     BorrowedMemoryInputStream, CStream, CStreamCallbacks, CStreamHandle, CompositeInputStream,
-    FileInputStream, IsSeekable, MemoryInputStream, PartialInputStream, ReadSeek,
+    CompressorStream, DecompressorStream, FileInputStream, IsSeekable, MemoryInputStream,
+    PartialInputStream, ReadSeek,
 };
 
 /// The type of our underlying Rust stream implementation, wrapped
@@ -637,6 +638,101 @@ pub unsafe extern "C" fn fu_rs_cstream_size(stream: *mut Arc<Mutex<CStream>>) ->
     let mut stream = arc.lock().unwrap();
     stream.size().unwrap_or(0)
 }
+
+/// Create a streaming compressor that reads uncompressed data from a C source.
+///
+/// Returns a heap-allocated handle, or NULL on error
+///
+/// # Safety
+/// `base_stream` must be a valid, non-NULL `StreamImpl` handle previously
+/// returned by an `_get_stream_impl` function. Ownership is transferred.
+#[no_mangle]
+pub unsafe extern "C" fn fu_rs_compressor_stream_new_compress(
+    base_stream: *mut StreamImpl,
+    format: i32,
+    error: *mut *mut GError,
+) -> *mut Arc<Mutex<CompressorStream>> {
+    if base_stream.is_null() {
+        let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "base_stream is NULL");
+        GError::convert(error, &e);
+        return ptr::null_mut();
+    }
+    let stream_impl = unsafe { *Box::from_raw(base_stream) };
+
+    let Some(fmt) = crate::compressor::format_from_c(format) else {
+        let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "Invalid compression format");
+        GError::convert(error, &e);
+        return ptr::null_mut();
+    };
+
+    match CompressorStream::new(stream_impl, fmt) {
+        Ok(c) => Box::into_raw(Box::new(Arc::new(Mutex::new(c)))),
+        Err(e) => {
+            let e = fwupd::Error::new(
+                fwupd::ErrorKind::InvalidData,
+                &format!("Failed to init stream: {e}"),
+            );
+            GError::convert(error, &e);
+            ptr::null_mut()
+        }
+    }
+}
+
+ffi_stream_impl_free!(CompressorStream, fu_rs_compressor_stream_free);
+ffi_stream_impl_read!(CompressorStream, fu_rs_compressor_stream_read);
+ffi_stream_impl_seek!(CompressorStream, fu_rs_compressor_stream_seek);
+ffi_stream_impl_can_seek!(CompressorStream, fu_rs_compressor_stream_can_seek);
+ffi_stream_impl_tell!(CompressorStream, fu_rs_compressor_stream_tell);
+ffi_stream_impl_stream_impl!(CompressorStream, fu_rs_compressor_stream_get_stream_impl);
+
+/// Create a streaming decompressor that reads compressed data from a C source.
+///
+/// Returns a heap-allocated handle, or NULL on error
+///
+/// # Safety
+/// `base_stream` must be a valid, non-NULL `StreamImpl` handle previously
+/// returned by an `_get_stream_impl` function. Ownership is transferred.
+#[no_mangle]
+pub unsafe extern "C" fn fu_rs_compressor_stream_new_decompress(
+    base_stream: *mut StreamImpl,
+    format: i32,
+    error: *mut *mut GError,
+) -> *mut Arc<Mutex<DecompressorStream>> {
+    if base_stream.is_null() {
+        let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "base_stream is NULL");
+        GError::convert(error, &e);
+        return ptr::null_mut();
+    }
+    let stream_impl = unsafe { *Box::from_raw(base_stream) };
+
+    let Some(fmt) = crate::compressor::format_from_c(format) else {
+        let e = fwupd::Error::new(fwupd::ErrorKind::InvalidData, "Invalid compression format");
+        GError::convert(error, &e);
+        return ptr::null_mut();
+    };
+
+    match DecompressorStream::new(stream_impl, fmt) {
+        Ok(c) => Box::into_raw(Box::new(Arc::new(Mutex::new(c)))),
+        Err(e) => {
+            let e = fwupd::Error::new(
+                fwupd::ErrorKind::InvalidData,
+                &format!("Failed to init stream: {e}"),
+            );
+            GError::convert(error, &e);
+            ptr::null_mut()
+        }
+    }
+}
+
+ffi_stream_impl_free!(DecompressorStream, fu_rs_decompressor_stream_free);
+ffi_stream_impl_read!(DecompressorStream, fu_rs_decompressor_stream_read);
+ffi_stream_impl_seek!(DecompressorStream, fu_rs_decompressor_stream_seek);
+ffi_stream_impl_can_seek!(DecompressorStream, fu_rs_decompressor_stream_can_seek);
+ffi_stream_impl_tell!(DecompressorStream, fu_rs_decompressor_stream_tell);
+ffi_stream_impl_stream_impl!(
+    DecompressorStream,
+    fu_rs_decompressor_stream_get_stream_impl
+);
 
 /// Free a shared stream handle.
 ///
