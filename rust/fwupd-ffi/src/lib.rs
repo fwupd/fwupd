@@ -16,3 +16,4 @@
 //! components of fwupd.
 
 pub mod glib;
+pub mod streams;
