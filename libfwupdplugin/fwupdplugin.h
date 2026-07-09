@@ -27,6 +27,7 @@
 #include <libfwupdplugin/fu-common-guid.h>
 #include <libfwupdplugin/fu-common.h>
 #include <libfwupdplugin/fu-composite-input-stream.h>
+#include <libfwupdplugin/fu-compressor-stream.h>
 #include <libfwupdplugin/fu-config.h>
 #include <libfwupdplugin/fu-context-helper.h>
 #include <libfwupdplugin/fu-context.h>

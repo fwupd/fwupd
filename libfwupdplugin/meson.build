@@ -9,6 +9,7 @@ fwupdplugin_structs = [
   'fu-cfu.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-config.rs', # fuzzing
+  'fu-compressor.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-context.rs', # fuzzing
   'fu-device.rs', # fuzzing
@@ -95,6 +96,7 @@ fwupdplugin_src = [
   'fu-common.c', # fuzzing
   'fu-common-guid.c',
   'fu-composite-input-stream.c', # fuzzing
+  'fu-compressor-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
   'fu-context-helper.c',
@@ -267,6 +269,7 @@ fwupdplugin_headers = [
   'fu-chunk-array.h',
   'fu-common-guid.h',
   'fu-common.h',
+  'fu-compressor-stream.h',
   'fu-composite-input-stream.h',
   'fu-config.h',
   'fu-config-private.h',
@@ -517,6 +520,7 @@ if get_option('tests')
     'cbor',
     'chunk-array',
     'common',
+    'compressor-stream',
     'composite-input-stream',
     'config',
     'context',
