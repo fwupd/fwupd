@@ -6,16 +6,12 @@
 
 #pragma once
 
-#include "fu-stream-input-stream.h"
+#include "fu-input-stream.h"
 
 G_BEGIN_DECLS
 
 #define FU_TYPE_FILE_INPUT_STREAM (fu_file_input_stream_get_type())
-G_DECLARE_FINAL_TYPE(FuFileInputStream,
-		     fu_file_input_stream,
-		     FU,
-		     FILE_INPUT_STREAM,
-		     FuStreamInputStream)
+G_DECLARE_FINAL_TYPE(FuFileInputStream, fu_file_input_stream, FU, FILE_INPUT_STREAM, FuInputStream)
 
 FuFileInputStream *
 fu_file_input_stream_from_file(GFile *file,
