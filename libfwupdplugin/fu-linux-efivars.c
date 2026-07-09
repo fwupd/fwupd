@@ -229,7 +229,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	gssize attr_sz;
 	gssize data_sz_tmp;
 	FuEfiVariableAttrs attr_tmp;
-	guint64 sz;
+	gsize sz;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuInputStream) istr = NULL;
 
@@ -253,7 +253,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "efivars file too small: %" G_GUINT64_FORMAT,
+			    "efivars file too small: %" G_GSIZE_FORMAT,
 			    sz);
 		return FALSE;
 	}
