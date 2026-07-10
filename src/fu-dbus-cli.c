@@ -1828,8 +1828,8 @@ fu_dbus_cli_report_export(FuCli *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* write each device report as a new file */
-	for (guint i = 0; i < devices->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index(devices, i);
+	for (guint i = 0; i < devices_filtered->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices_filtered, i);
 		g_autofree gchar *data = NULL;
 		g_autofree gchar *filename = NULL;
 		g_autoptr(FuFirmware) archive = fu_zip_firmware_new();
