@@ -89,9 +89,32 @@ if host_machine.system() == 'windows'
   fwupd_engine_src += windows.compile_resources(fwupd_rc)
 endif
 
-fwupdutil = library(
-  'fwupdutil',
-  sources: ['fu-console.c', 'fu-util-bios-setting.c', 'fu-util-common.c', systemd_src],
+fwupdcli_rs = custom_target(
+  'fu-cli-rs',
+  input: 'fu-cli.rs',
+  output: ['fu-cli-struct.c', 'fu-cli-struct.h'],
+  command: [
+    python3,
+    join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '@INPUT@',
+    '--outc', '@OUTPUT0@',
+    '--outh', '@OUTPUT1@',
+    '--include',
+    'fwupdplugin.h',
+    '--prefix',
+    'Fu',
+  ],
+)
+fwupdcli = library(
+  'fwupdcli',
+  fwupdcli_rs,
+  sources: [
+    'fu-console.c',
+    'fu-bios-setting-common.c',
+    'fu-cli-common.c',
+    'fu-cli.c',
+    systemd_src,
+  ],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: libdir_pkg,
@@ -113,10 +136,10 @@ dbus_interface = custom_target(
 if build_daemon
   executable(
     'fwupdmgr',
-    sources: ['fu-util.c', client_src],
+    sources: ['fu-dbus-cli.c', client_src],
     include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
     dependencies: [libfwupd_deps, client_dep],
-    link_with: [fwupd, fwupdplugin, fwupdutil],
+    link_with: [fwupd, fwupdplugin, fwupdcli],
     install: true,
     install_rpath: libdir_pkg,
     install_dir: bindir,
@@ -179,10 +202,10 @@ executable(
   fwupdengine_rs,
   plugins_hdr,
   export_dynamic: true,
-  sources: ['fu-tool.c'],
+  sources: ['fu-tool-cli.c'],
   include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
   dependencies: [libfwupd_deps, client_dep, valgrind],
-  link_with: [fwupdengine, fwupdutil, plugin_libs],
+  link_with: [fwupdengine, fwupdcli, plugin_libs],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: bindir,
@@ -300,6 +323,7 @@ if get_option('tests')
 
   test_names = [
     'cabinet',
+    'cli',
     'client-list',
     'console',
     'device-list',
@@ -315,7 +339,6 @@ if get_option('tests')
     'remote',
     'remote-list',
     'usb-backend',
-    'util',
   ]
   if jcat_crypto in ['gnutls', 'libcrypto']
     test_names += 'jcat'
@@ -336,7 +359,7 @@ if get_option('tests')
       sources: ['fu-' + test_name + '-test.c'],
       include_directories: [root_incdir, fwupd_incdir, fwupdplugin_incdir],
       dependencies: [engine_dep],
-      link_with: [fwupdengine, fwupdutil, libfutest, plugin_libs],
+      link_with: [fwupdengine, fwupdcli, libfutest, plugin_libs],
       c_args: ['-DSRCDIR="' + meson.current_source_dir() + '"'],
     )
     test(

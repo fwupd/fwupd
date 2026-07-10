@@ -19,10 +19,10 @@
 #define EXIT_NOTHING_TO_DO 2
 
 static void
-fu_util_ignore_cb(const gchar *log_domain,
-		  GLogLevelFlags log_level,
-		  const gchar *message,
-		  gpointer user_data)
+fu_dbxtool_ignore_cb(const gchar *log_domain,
+		     GLogLevelFlags log_level,
+		     const gchar *message,
+		     gpointer user_data)
 {
 }
 
@@ -190,7 +190,7 @@ main(int argc, char *argv[])
 	if (verbose) {
 		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 	} else {
-		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
+		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_dbxtool_ignore_cb, NULL);
 	}
 
 	/* load well-known paths into the context's path store */

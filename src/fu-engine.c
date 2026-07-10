@@ -8876,7 +8876,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* avoid re-loading a second time if fu-tool or fu-util request to */
+	/* avoid re-loading a second time if fu-tool or fu-cli request to */
 	if (self->load_flags & FU_ENGINE_LOAD_FLAG_READY)
 		return TRUE;
 

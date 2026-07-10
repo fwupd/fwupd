@@ -8034,17 +8034,21 @@ fwupd_client_init(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	static FwupdClientSyncImpl impl = {
+	    .activate = fwupd_client_sync_impl_activate,
 	    .connect = fwupd_client_sync_impl_connect,
+	    .get_bios_settings = fwupd_client_sync_impl_get_bios_settings,
 	    .get_devices = fwupd_client_sync_impl_get_devices,
 	    .get_devices_by_guid = fwupd_client_sync_impl_get_devices_by_guid,
 	    .get_device_by_id = fwupd_client_sync_impl_get_device_by_id,
 	    .get_history = fwupd_client_sync_impl_get_history,
 	    .get_releases = fwupd_client_sync_impl_get_releases,
+	    .get_results = fwupd_client_sync_impl_get_results,
 	    .get_upgrades = fwupd_client_sync_impl_get_upgrades,
 	    .get_plugins = fwupd_client_sync_impl_get_plugins,
 	    .get_remotes = fwupd_client_sync_impl_get_remotes,
 	    .get_remote_by_id = fwupd_client_sync_impl_get_remote_by_id,
 	    .get_report_metadata = fwupd_client_sync_impl_get_report_metadata,
+	    .modify_bios_setting = fwupd_client_sync_impl_modify_bios_setting,
 	    .modify_config = fwupd_client_sync_impl_modify_config,
 	    .modify_remote = fwupd_client_sync_impl_modify_remote,
 	    .search = fwupd_client_sync_impl_search,

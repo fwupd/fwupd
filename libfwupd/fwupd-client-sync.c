@@ -1153,6 +1153,25 @@ fwupd_client_activate_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 	g_main_loop_quit(helper->loop);
 }
 
+gboolean
+fwupd_client_sync_impl_activate(FwupdClient *self,
+				const gchar *device_id,
+				gpointer user_data,
+				GCancellable *cancellable,
+				GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_activate_async(self, device_id, cancellable, fwupd_client_activate_cb, helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fwupd_client_activate:
  * @self: a #FwupdClient
@@ -1173,7 +1192,8 @@ fwupd_client_activate(FwupdClient *self,
 		      const gchar *device_id, /* yes, this is the wrong way around :/ */
 		      GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
@@ -1184,15 +1204,14 @@ fwupd_client_activate(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_activate_async(self, device_id, cancellable, fwupd_client_activate_cb, helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->activate == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->activate");
 		return FALSE;
 	}
-	return TRUE;
+	return impl->activate(self, device_id, impl_userdata, cancellable, error);
 }
 
 static void
@@ -1256,6 +1275,29 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 	g_main_loop_quit(helper->loop);
 }
 
+FwupdDevice *
+fwupd_client_sync_impl_get_results(FwupdClient *self,
+				   const gchar *device_id,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new(self);
+
+	/* call async version and run loop until complete */
+	fwupd_client_get_results_async(self,
+				       device_id,
+				       cancellable,
+				       fwupd_client_get_results_cb,
+				       helper);
+	g_main_loop_run(helper->loop);
+	if (helper->device == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->device);
+}
+
 /**
  * fwupd_client_get_results:
  * @self: a #FwupdClient
@@ -1275,7 +1317,8 @@ fwupd_client_get_results(FwupdClient *self,
 			 GCancellable *cancellable,
 			 GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(device_id != NULL, NULL);
@@ -1286,19 +1329,14 @@ fwupd_client_get_results(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return NULL;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_get_results_async(self,
-				       device_id,
-				       cancellable,
-				       fwupd_client_get_results_cb,
-				       helper);
-	g_main_loop_run(helper->loop);
-	if (helper->device == NULL) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->get_results == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->get_results");
 		return NULL;
 	}
-	return g_steal_pointer(&helper->device);
+	return impl->get_results(self, device_id, impl_userdata, cancellable, error);
 }
 
 static void
@@ -1308,6 +1346,30 @@ fwupd_client_modify_bios_setting_cb(GObject *source, GAsyncResult *res, gpointer
 	helper->ret =
 	    fwupd_client_modify_bios_setting_finish(FWUPD_CLIENT(source), res, &helper->error);
 	g_main_loop_quit(helper->loop);
+}
+
+gboolean
+fwupd_client_sync_impl_modify_bios_setting(FwupdClient *self,
+					   GHashTable *settings,
+					   gpointer user_data,
+					   GCancellable *cancellable,
+					   GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_modify_bios_setting_async(self,
+					       settings,
+					       cancellable,
+					       fwupd_client_modify_bios_setting_cb,
+					       helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /**
@@ -1330,7 +1392,8 @@ fwupd_client_modify_bios_setting(FwupdClient *self,
 				 GCancellable *cancellable,
 				 GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(settings != NULL, FALSE);
@@ -1341,19 +1404,14 @@ fwupd_client_modify_bios_setting(FwupdClient *self,
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_modify_bios_setting_async(self,
-					       settings,
-					       cancellable,
-					       fwupd_client_modify_bios_setting_cb,
-					       helper);
-	g_main_loop_run(helper->loop);
-	if (!helper->ret) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->modify_bios_setting == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->modify_bios_setting");
 		return FALSE;
 	}
-	return TRUE;
+	return impl->modify_bios_setting(self, settings, impl_userdata, cancellable, error);
 }
 
 static void
@@ -1363,6 +1421,28 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
 	helper->array =
 	    fwupd_client_get_bios_settings_finish(FWUPD_CLIENT(source), res, &helper->error);
 	g_main_loop_quit(helper->loop);
+}
+
+GPtrArray *
+fwupd_client_sync_impl_get_bios_settings(FwupdClient *self,
+					 gpointer user_data,
+					 GCancellable *cancellable,
+					 GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_get_bios_settings_async(self,
+					     cancellable,
+					     fwupd_client_get_bios_settings_cb,
+					     helper);
+	g_main_loop_run(helper->loop);
+	if (helper->array == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->array);
 }
 
 /**
@@ -1380,7 +1460,8 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
 GPtrArray *
 fwupd_client_get_bios_settings(FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gpointer impl_userdata = NULL;
+	const FwupdClientSyncImpl *impl = fwupd_client_get_sync_impl(self, &impl_userdata);
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
@@ -1390,18 +1471,14 @@ fwupd_client_get_bios_settings(FwupdClient *self, GCancellable *cancellable, GEr
 	if (!fwupd_client_connect(self, cancellable, error))
 		return NULL;
 
-	/* call async version and run loop until complete */
-	helper = fwupd_client_helper_new(self);
-	fwupd_client_get_bios_settings_async(self,
-					     cancellable,
-					     fwupd_client_get_bios_settings_cb,
-					     helper);
-	g_main_loop_run(helper->loop);
-	if (helper->array == NULL) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	if (impl->get_bios_settings == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no FwupdClientSyncImpl->get_bios_settings");
 		return NULL;
 	}
-	return g_steal_pointer(&helper->array);
+	return impl->get_bios_settings(self, impl_userdata, cancellable, error);
 }
 
 static void
