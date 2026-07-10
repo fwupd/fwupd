@@ -1849,7 +1849,7 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		/* convert single device to JSON */
 		g_ptr_array_add(devices_tmp, dev);
 		data = fwupd_client_build_report_history(self->client,
-							 devices,
+							 devices_tmp,
 							 NULL, /* remote */
 							 metadata,
 							 error);
