@@ -65,7 +65,14 @@ struct _FuBinderDaemon {
 	GPtrArray *event_listener_binders;
 };
 
-G_DEFINE_TYPE(FuBinderDaemon, fu_binder_daemon, FU_TYPE_DAEMON)
+static void
+fu_binder_daemon_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(
+    FuBinderDaemon,
+    fu_binder_daemon,
+    FU_TYPE_DAEMON,
+    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_binder_daemon_codec_iface_init))
 
 static void
 fu_binder_daemon_set_status(FuBinderDaemon *self, FwupdStatus status);
@@ -1595,6 +1602,53 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 }
 
 static void
+fu_binder_daemon_add_string(FwupdCodec *codec, guint idt, GString *str)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(codec);
+	fu_daemon_add_string(codec, idt, str);
+	fwupd_codec_string_append(str, idt + 1, "Status", fwupd_status_to_string(self->status));
+	fwupd_codec_string_append_int(str, idt + 1, "Percentage", (guint64)self->percentage);
+}
+
+static void
+fu_binder_daemon_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_binder_daemon_add_string;
+}
+
+static binder_status_t
+binder_class_on_dump(AIBinder *binder, int fd, const char **args, uint32_t numArgs)
+{
+	FuBinderDaemon *self = AIBinder_getUserData(binder);
+	FuEngine *engine;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(GOutputStream) stream = NULL;
+
+	if (!FU_IS_BINDER_DAEMON(self))
+		return STATUS_BAD_VALUE;
+	engine = fu_daemon_get_engine(FU_DAEMON(self));
+
+	fwupd_codec_add_string(FWUPD_CODEC(self), 0, str);
+	devices = fu_engine_get_devices(engine, &error);
+	if (devices == NULL) {
+		fwupd_codec_string_append(str, 1, "Error", error->message);
+	} else {
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *dev = g_ptr_array_index(devices, i);
+			fwupd_codec_add_string(FWUPD_CODEC(dev), 1, str);
+		}
+	}
+
+	stream = g_unix_output_stream_new(fd, FALSE);
+	if (!g_output_stream_write_all(stream, str->str, str->len, NULL, NULL, &error))
+		g_warning("failed to write dumpsys output to fd %d: %s", fd, error->message);
+
+	return STATUS_OK;
+}
+
+static void
 fu_binder_daemon_init(FuBinderDaemon *self)
 {
 	self->event_listener_binders =
@@ -1604,6 +1658,10 @@ fu_binder_daemon_init(FuBinderDaemon *self)
 						   binder_class_on_create,
 						   binder_class_on_destroy,
 						   binder_class_on_transact);
+
+#if __ANDROID_MIN_SDK_VERSION__ >= 29
+	AIBinder_Class_setOnDump(self->binder_class, binder_class_on_dump);
+#endif
 
 	self->listener_binder_class = AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
 							    listener_on_create,
