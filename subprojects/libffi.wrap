@@ -1,0 +1,8 @@
+[wrap-git]
+directory=libffi
+url=https://gitlab.freedesktop.org/gstreamer/meson-ports/libffi.git
+push-url=git@gitlab.freedesktop.org:gstreamer/meson-ports/libffi.git
+revision=meson-3.2.9999.4
+
+[provide]
+libffi = ffi_dep
